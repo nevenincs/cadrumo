@@ -101,17 +101,6 @@ python-version = "3.13"
 [tool.ty.rules]
 all = "error"
 
-[tool.ty.analysis]
-allowed-unresolved-imports = [
-    "gspread",
-    "googleapiclient",
-    "google.auth",
-    "google.oauth2",
-    "google.cloud",
-    "google_auth_oauthlib",
-    "playwright",
-]
-
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
 testpaths = ["tests"]
