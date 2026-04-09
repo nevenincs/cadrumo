@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp", "--headless"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "google-workspace": {
+      "command": "uvx",
+      "args": ["workspace-mcp", "--tool-tier", "core"]
+    }
+  }
+}
