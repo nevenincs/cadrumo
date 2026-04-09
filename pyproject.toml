@@ -108,6 +108,7 @@ module = [
     "google.auth.*",
     "google.oauth2.*",
     "google.cloud.*",
+    "google_auth_oauthlib.*",
     "playwright.*",
 ]
 ignore_missing_imports = true
