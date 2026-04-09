@@ -56,8 +56,8 @@ packages = ["src/aeat"]
 [tool.uv]
 dev-dependencies = [
     "ruff>=0.15.9",
-    "mypy>=1.20.0",
-    "pre-commit>=4.5.1",
+    "ty>=0.0.1a1",
+    "prek>=0.2.0",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.0.0",
     "pytest-playwright>=0.7.0",
@@ -94,25 +94,23 @@ ignore = [
 quote-style = "double"
 indent-style = "space"
 
-# ── Mypy ─────────────────────────────────────────────────────────────────────
-[tool.mypy]
-python_version = "3.13"
-strict = true
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
+# ── ty ───────────────────────────────────────────────────────────────────────
+[tool.ty.environment]
+python-version = "3.13"
 
-[[tool.mypy.overrides]]
-module = [
-    "gspread.*",
-    "googleapiclient.*",
-    "google.auth.*",
-    "google.oauth2.*",
-    "google.cloud.*",
-    "google_auth_oauthlib.*",
-    "playwright.*",
+[tool.ty.rules]
+all = "error"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+    "gspread",
+    "googleapiclient",
+    "google.auth",
+    "google.oauth2",
+    "google.cloud",
+    "google_auth_oauthlib",
+    "playwright",
 ]
-ignore_missing_imports = true
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
