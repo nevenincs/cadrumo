@@ -1,80 +1,100 @@
-"""Configuration management for AEAT automation.
+"""Central settings module for AEAT automation.
 
-Loads settings from environment variables and .env files.
-See .env.example for all available configuration options.
+Single source of truth for all environment variables. Every field in
+:class:`Settings` maps 1:1 to an uppercase environment variable
+(e.g. ``google_oauth_client_id`` → ``GOOGLE_OAUTH_CLIENT_ID``).
+
+The companion test ``tests/test_config.py`` enforces that ``.env.example``
+and this module stay fully aligned.
 """
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-from pydantic import BaseModel, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Project root: three levels up from src/aeat/config.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# Load .env file if present (does not override existing env vars)
-load_dotenv(PROJECT_ROOT / ".env")
 
+class Settings(BaseSettings):
+    """Application settings populated from environment variables and ``.env``.
 
-class GoogleOAuthSettings(BaseModel):
-    """OAuth 2.0 credentials for interactive/desktop authentication."""
+    Field names map directly to env var names (uppercased). For example,
+    ``google_oauth_client_id`` reads ``GOOGLE_OAUTH_CLIENT_ID``.
+    """
 
-    client_id: str = Field(default="")
-    client_secret: str = Field(default="")
-    redirect_uri: str = Field(default="http://localhost:8080")
+    model_config = SettingsConfigDict(
+        env_file=PROJECT_ROOT / ".env",
+        env_file_encoding="utf-8",
+    )
 
+    # ── Google OAuth 2.0 (Desktop / Interactive) ────────────────────────────
+    google_oauth_client_id: str = Field(
+        default="",
+        description="OAuth 2.0 client ID from Google Cloud Console",
+    )
+    google_oauth_client_secret: str = Field(
+        default="",
+        description="OAuth 2.0 client secret",
+    )
+    google_oauth_redirect_uri: str = Field(
+        default="http://localhost:8080",
+        description="OAuth redirect URI for local dev server",
+    )
 
-class GoogleCloudSettings(BaseModel):
-    """Google Cloud project and service account settings."""
+    # ── Google Service Account (Server / Automation) ────────────────────────
+    google_application_credentials: str = Field(
+        default="",
+        description="Path to service account JSON key file",
+    )
+    google_impersonate_email: str = Field(
+        default="",
+        description="Email to impersonate via domain-wide delegation",
+    )
 
-    project_id: str = Field(default="")
-    service_account_key_path: str = Field(default="")
-    impersonate_email: str = Field(default="")
+    # ── Google Cloud Project ────────────────────────────────────────────────
+    google_cloud_project: str = Field(
+        default="",
+        description="GCP project ID (not project number)",
+    )
 
+    # ── Google Resource IDs ─────────────────────────────────────────────────
+    google_sheets_spreadsheet_id: str = Field(
+        default="",
+        description="Target Google Sheets spreadsheet ID",
+    )
+    google_drive_folder_id: str = Field(
+        default="",
+        description="Target Google Drive folder ID",
+    )
+    google_cloud_storage_bucket: str = Field(
+        default="",
+        description="Cloud Storage bucket name (without gs:// prefix)",
+    )
 
-class GoogleResourceSettings(BaseModel):
-    """Target Google Workspace resource identifiers."""
+    # ── Token Storage ───────────────────────────────────────────────────────
+    aeat_token_dir: Path = Field(
+        default=PROJECT_ROOT / ".tokens",
+        description="Directory for cached OAuth tokens",
+    )
 
-    spreadsheet_id: str = Field(default="")
-    drive_folder_id: str = Field(default="")
-    storage_bucket: str = Field(default="")
+    # ── AEAT ────────────────────────────────────────────────────────────────
+    aeat_base_url: str = Field(
+        default="https://sede.agenciatributaria.gob.es",
+        description="AEAT sede electrónica base URL",
+    )
 
+    # ── Introspection ───────────────────────────────────────────────────────
 
-class Settings(BaseModel):
-    """Application settings loaded from environment variables."""
-
-    google_oauth: GoogleOAuthSettings = Field(default_factory=GoogleOAuthSettings)
-    google_cloud: GoogleCloudSettings = Field(default_factory=GoogleCloudSettings)
-    google_resources: GoogleResourceSettings = Field(default_factory=GoogleResourceSettings)
-    token_dir: Path = Field(default=PROJECT_ROOT / ".tokens")
-    aeat_base_url: str = Field(default="https://sede.agenciatributaria.gob.es")
+    @classmethod
+    def env_var_names(cls) -> set[str]:
+        """Return the set of environment variable names this model reads."""
+        return {name.upper() for name in cls.model_fields}
 
 
 def load_settings() -> Settings:
-    """Load settings from environment variables.
-
-    Environment variables take precedence over defaults.
-    See .env.example for the full list of supported variables.
-    """
-    return Settings(
-        google_oauth=GoogleOAuthSettings(
-            client_id=os.environ.get("GOOGLE_OAUTH_CLIENT_ID", ""),
-            client_secret=os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", ""),
-            redirect_uri=os.environ.get("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8080"),
-        ),
-        google_cloud=GoogleCloudSettings(
-            project_id=os.environ.get("GOOGLE_CLOUD_PROJECT", ""),
-            service_account_key_path=os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", ""),
-            impersonate_email=os.environ.get("GOOGLE_IMPERSONATE_EMAIL", ""),
-        ),
-        google_resources=GoogleResourceSettings(
-            spreadsheet_id=os.environ.get("GOOGLE_SHEETS_SPREADSHEET_ID", ""),
-            drive_folder_id=os.environ.get("GOOGLE_DRIVE_FOLDER_ID", ""),
-            storage_bucket=os.environ.get("GOOGLE_CLOUD_STORAGE_BUCKET", ""),
-        ),
-        token_dir=Path(os.environ.get("AEAT_TOKEN_DIR", str(PROJECT_ROOT / ".tokens"))),
-        aeat_base_url=os.environ.get("AEAT_BASE_URL", "https://sede.agenciatributaria.gob.es"),
-    )
+    """Create a Settings instance from environment variables and ``.env`` file."""
+    return Settings()

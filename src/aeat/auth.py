@@ -167,22 +167,22 @@ def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> B
     scopes = scopes or SCOPES
 
     # 1. Service account
-    sa_path = settings.google_cloud.service_account_key_path
+    sa_path = settings.google_application_credentials
     if sa_path and Path(sa_path).exists():
         log.info("Using service account credentials from %s", sa_path)
         return get_service_account_credentials(
             sa_path,
             scopes=scopes,
-            subject=settings.google_cloud.impersonate_email or None,
+            subject=settings.google_impersonate_email or None,
         )
 
     # 2. OAuth 2.0
-    if settings.google_oauth.client_id and settings.google_oauth.client_secret:
+    if settings.google_oauth_client_id and settings.google_oauth_client_secret:
         log.info("Using OAuth 2.0 credentials")
-        token_path = settings.token_dir / "google_oauth_token.json"
+        token_path = settings.aeat_token_dir / "google_oauth_token.json"
         return get_oauth_credentials(
-            settings.google_oauth.client_id,
-            settings.google_oauth.client_secret,
+            settings.google_oauth_client_id,
+            settings.google_oauth_client_secret,
             scopes=scopes,
             token_path=token_path,
         )
