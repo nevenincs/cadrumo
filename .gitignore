@@ -208,11 +208,12 @@ __marimo__/
 
 # Credentials & secrets
 credentials/
-*.json
-!pyproject.toml
 service-account*.json
 token.json
 token.pickle
+gcp-oauth.keys.json
+.gdrive-server-credentials.json
+.mcp-google-sheets-token.json
 
 # Playwright
 playwright-report/
