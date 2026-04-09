@@ -8,18 +8,9 @@
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"]
     },
-    "gdrive": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-gdrive"]
-    },
-    "google-sheets": {
-      "command": "npx",
-      "args": ["-y", "mcp-google-sheets"],
-      "env": {
-        "GOOGLE_SHEETS_CLIENT_ID": "",
-        "GOOGLE_SHEETS_CLIENT_SECRET": "",
-        "TOKEN_PATH": "/home/user/.mcp-google-sheets-token.json"
-      }
+    "google-workspace": {
+      "command": "uvx",
+      "args": ["workspace-mcp", "--tool-tier", "core"]
     }
   }
 }
