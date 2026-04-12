@@ -9,6 +9,7 @@ and the Protocol-stub strategy for in-flight cross-module dependencies.
 from __future__ import annotations
 
 from ._classifier import DivergenceClassifier
+from ._dispatcher import HealingDispatcher, HealingPlan
 from ._divergence import (
     CasillaAddedWithDefault,
     CasillaRemoved,
@@ -45,6 +46,14 @@ from ._protocols import (
     Rule,
     SchemaLoader,
 )
+from ._strategies import (
+    AdditiveAllowlistStrategy,
+    BenignRecordStrategy,
+    EscalateStrategy,
+    HealingStrategy,
+    StrategyAction,
+    StrategyOutcome,
+)
 from ._validator import WireValidator
 from ._wire import (
     WireCasilla,
@@ -57,6 +66,8 @@ from ._wire import (
 )
 
 __all__ = [
+    "AdditiveAllowlistStrategy",
+    "BenignRecordStrategy",
     "CasillaAddedWithDefault",
     "CasillaRemoved",
     "CasillaTypeChanged",
@@ -69,9 +80,13 @@ __all__ = [
     "DivergencePayload",
     "DivergenceRecord",
     "DivergenceRepositoryError",
+    "EscalateStrategy",
     "FilingStatusChanged",
     "FormulaChanged",
+    "HealingDispatcher",
     "HealingError",
+    "HealingPlan",
+    "HealingStrategy",
     "LLMClient",
     "LLMRequest",
     "LabelEsChanged",
@@ -84,6 +99,8 @@ __all__ = [
     "ResolutionState",
     "Rule",
     "SchemaLoader",
+    "StrategyAction",
+    "StrategyOutcome",
     "SyncError",
     "UnknownShape",
     "VigenciaExtended",
