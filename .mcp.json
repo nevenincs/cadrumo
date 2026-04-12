@@ -2,35 +2,19 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp",
-        "--headless"
-      ]
+      "args": ["-y", "@playwright/mcp", "--headless"]
     },
     "context7": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ]
+      "args": ["-y", "@upstash/context7-mcp"]
     },
     "google-workspace": {
       "command": "uvx",
-      "args": [
-        "workspace-mcp",
-        "--tool-tier",
-        "core"
-      ]
+      "args": ["workspace-mcp", "--tool-tier", "core"]
     },
     "vaultspec-core": {
       "command": "uv",
-      "args": [
-        "run",
-        "python",
-        "-m",
-        "vaultspec_core.mcp_server.app"
-      ]
+      "args": ["run", "python", "-m", "vaultspec_core.mcp_server.app"]
     }
   }
 }
