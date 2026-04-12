@@ -376,6 +376,23 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ── Workflow engine (#59) ───────────────────────────────────────────────
+    aeat_workflow_runs_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "workflow-runs",
+        description="Directory where WorkflowResult JSON audit records are persisted",
+    )
+    aeat_workflow_sync_first_default: bool = Field(
+        default=True,
+        description="Default for WorkflowEngine.run_next(sync_first=...) when omitted by the CLI",
+    )
+    aeat_workflow_draft_inputs_path: Path | None = Field(
+        default=None,
+        description=(
+            "Optional path to a JSON file carrying the user's casilla input values "
+            "consumed by the workflow engine's BUILDING_DRAFT stage"
+        ),
+    )
+
     # ── Filing draft engine (#39) ───────────────────────────────────────────
     aeat_drafts_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "drafts",
