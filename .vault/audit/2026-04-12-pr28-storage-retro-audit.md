@@ -151,14 +151,48 @@ This eagerly issues a JOIN on every read and is fine at the current
 data volume (a handful of modelos and portals) but is worth re-examining
 once `corpus_artifacts` grows past a few hundred rows. Not a bug today.
 
+datetime-tz-001 | LOW | `CorpusArtifactRecord.fetched_at` accepts naive datetimes
+`src/aeat/storage/records.py:92` declares `fetched_at: datetime` with no
+timezone constraint. The column is stored as `DateTime(timezone=True)`
+in `_orm.py:109` and the field docstring says "UTC", but pydantic v2
+`strict=True` rejects coercion, not naive datetimes — so a caller can
+construct `CorpusArtifactRecord(..., fetched_at=datetime(2026, 4, 12))`
+without `tzinfo` and the value will be persisted and round-tripped
+under SQLite as a naive timestamp, silently violating the UTC contract.
+Surfaced by the independent local review pass. *Fix (out of scope for
+this branch):* swap the annotation to `pydantic.AwareDatetime`, or add
+a `field_validator` that rejects `tzinfo is None`. Filed as a
+follow-up issue rather than fixed here because the executing-team rule
+on this branch is "minimal, targeted fixes, do not change the public
+API surface other branches stub against," and tightening the field
+validation is observable to callers.
+
+private-import-001 | INFO | `migrations/env.py` reaches into `aeat.storage.engine._ensure_sqlite_parent`
+`migrations/env.py:17` imports the underscore-private helper
+`_ensure_sqlite_parent` from `aeat.storage.engine` so the Alembic
+environment can create the SQLite parent directory before opening a
+connection. The Rule Verification grep below records "no runtime
+caller imports `aeat.storage._*`" — that statement is true for
+`src/aeat/` runtime code, but the Alembic environment file at
+repo-root `migrations/env.py` is technically outside the package and
+*does* reach a private symbol. Acceptable for now (env.py is the
+package's own glue, not a third-party caller), but worth recording so
+it is not rediscovered as a finding on a future audit. *Possible fix:*
+re-export `ensure_sqlite_parent` (no underscore) from
+`aeat.storage` as part of the migration glue surface.
+
 ## Rule Verification
 
 - **`src/aeat/`-only layout:** PASS. Every storage module lives under
   `src/aeat/storage/`.
-- **Public API discipline (runtime callers):** PASS. Grep for
-  `aeat\.storage\._` from outside the package returns zero matches in
-  runtime code; the only hits are the two colocated tests recorded in
-  `public-api-001` above.
+- **Public API discipline (runtime callers):** PASS for `src/aeat/`
+  runtime code. Grep for `aeat\.storage\._` from outside the package
+  returns zero matches in runtime code; the only hits are the two
+  colocated tests recorded in `public-api-001` above and the Alembic
+  glue at `migrations/env.py:17`, recorded as `private-import-001`
+  below. The Alembic env file is the storage package's own glue, not a
+  third-party caller, so this is logged as INFO rather than a
+  discipline violation.
 - **Pydantic v2 mandate:** PASS. Every public record is a pydantic v2
   model with `ConfigDict(strict=True, frozen=True)` via the shared
   `_StrictFrozen` base in `src/aeat/storage/records.py:33-36`.
@@ -226,12 +260,21 @@ reader inside the same diff. The reviewer must produce that grep
 result in the report; an empty result is a `HIGH` finding. This would
 have caught retro-002 on round 1.
 
-R-03 | Closed-catalogue CHECK constraints
+R-03 | Closed-catalogue CHECK constraints with single source of truth
 Any field whose pydantic type is a `StrEnum` or other closed catalogue
 must have a database-level CHECK constraint on the column that stores
 it, mirrored in the latest Alembic revision. The reviewer must confirm
-both the ORM mapper and the migration include the constraint. This
-would have caught retro-003.
+both the ORM mapper and the migration include the constraint *and*
+that the catalogue values are not duplicated as string literals across
+the pydantic enum, the ORM `CheckConstraint`, and the Alembic
+`create_check_constraint` call. Today
+`src/aeat/storage/_orm.py:58` and
+`migrations/versions/0002_constraints.py:21` each spell out the four
+auth-method values independently — if `PortalAuthMethod` grows a fifth
+value, three places drift in lockstep. The reviewer must demand a
+single source of truth (e.g. `tuple(PortalAuthMethod)` consumed by
+both the ORM and migration). This would have caught retro-003 and
+prevents a future drift bug.
 
 R-04 | Natural-key UNIQUE constraints
 Any "natural key" tuple referenced in repository code (typically the
