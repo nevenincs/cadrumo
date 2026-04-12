@@ -57,9 +57,9 @@ class Expediente(_StatusRecord):
     expediente_id: str = Field(min_length=1, max_length=64)
     modelo: str = Field(min_length=1, max_length=16)
     period: str = Field(min_length=1, max_length=16)
-    status: str = Field(min_length=1, max_length=64)
+    status: str = Field(min_length=1, max_length=128)
     presented_at: datetime
-    csv: str | None = Field(default=None, max_length=64)
+    csv: str | None = Field(default=None, min_length=1, max_length=64)
     justificante_url: AnyHttpUrl | None = None
     source_page_url: AnyHttpUrl
     fetched_at: datetime

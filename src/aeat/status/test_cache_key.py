@@ -48,6 +48,20 @@ def test_different_surfaces_collide_never() -> None:
     assert key1 != key2
 
 
+def test_different_base_urls_collide_never() -> None:
+    key1 = make_cache_key(
+        tax_id="X1234567L",
+        surface=AeatStatusKind.EXPEDIENTE,
+        base_url="https://sede.agenciatributaria.gob.es",
+    )
+    key2 = make_cache_key(
+        tax_id="X1234567L",
+        surface=AeatStatusKind.EXPEDIENTE,
+        base_url="https://sede.preprod.agenciatributaria.gob.es",
+    )
+    assert key1 != key2
+
+
 def test_key_shape() -> None:
     key = make_cache_key(tax_id="X1234567L", surface=AeatStatusKind.EXPEDIENTE)
     assert len(key) == 16

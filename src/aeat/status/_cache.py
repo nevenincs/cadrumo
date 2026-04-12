@@ -9,6 +9,7 @@ corruption.
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 from typing import TypeVar
@@ -22,6 +23,18 @@ from ._models import AeatStatusKind
 logger = get_logger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
+
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    """Write ``text`` to ``path`` atomically via a sibling temp file.
+
+    Uses ``os.replace`` which is atomic on both POSIX and Windows when
+    source and destination live on the same filesystem, which they
+    always do here (we build the temp name from ``path``).
+    """
+    tmp = path.with_suffix(path.suffix + f".tmp.{os.getpid()}")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
 
 
 class _CacheMeta(BaseModel):
@@ -91,7 +104,7 @@ class StatusCache:
         except ValidationError:
             logger.debug("cache meta invalid for %s/%s - miss", surface.value, key)
             return None
-        if time.time() - meta.cached_at > meta.ttl_s:
+        if time.time() - meta.cached_at >= meta.ttl_s:
             logger.debug("cache expired for %s/%s - miss", surface.value, key)
             return None
         try:
@@ -99,6 +112,10 @@ class StatusCache:
             if not isinstance(raw, list):
                 logger.debug("cache payload not a list for %s/%s - miss", surface.value, key)
                 return None
+            # Read back through the JSON validator: `strict=True`
+            # rejects string-coerced datetimes via `model_validate`,
+            # but `model_validate_json` honours the JSON coercion
+            # rules and round-trips `model_dump(mode="json")` cleanly.
             return tuple(model.model_validate_json(json.dumps(item)) for item in raw)
         except (ValidationError, json.JSONDecodeError):
             logger.debug("cache payload schema-mismatch for %s/%s - miss", surface.value, key)
@@ -121,6 +138,9 @@ class StatusCache:
         payload_path, meta_path = self._paths(surface, key)
         payload_path.parent.mkdir(parents=True, exist_ok=True)
         payload_json = json.dumps([record.model_dump(mode="json") for record in records])
-        payload_path.write_text(payload_json, encoding="utf-8")
         meta = _CacheMeta(cached_at=time.time(), ttl_s=self._ttl_s)
-        meta_path.write_text(meta.model_dump_json(), encoding="utf-8")
+        # Atomic write: stage to a sibling temp file and os.replace into
+        # position so a crash or concurrent writer can never leave a
+        # half-written payload visible to readers.
+        _atomic_write_text(payload_path, payload_json)
+        _atomic_write_text(meta_path, meta.model_dump_json())
