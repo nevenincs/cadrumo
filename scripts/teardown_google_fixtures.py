@@ -34,6 +34,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from _fixture_catalogue import CATALOGUE  # noqa: E402
+from googleapiclient.errors import HttpError  # noqa: E402
 
 from aeat.auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes  # noqa: E402
 from aeat.config import PROJECT_ROOT, Settings  # noqa: E402
@@ -61,12 +62,13 @@ def _delete_folder(drive: Any, folder_id: str) -> None:
     """
     try:
         drive.files().delete(fileId=folder_id).execute()
-    except Exception as exc:
-        text = repr(exc).lower()
-        if "notfound" in text or "404" in text:
+    except HttpError as exc:
+        # Treat 404 as a successful no-op so the teardown stays
+        # idempotent against partial cleanups or already-deleted trees.
+        if exc.resp.status == 404:
             log.info("fixture folder %s already absent — nothing to delete", folder_id)
             return
-        msg = f"failed to delete fixture folder {folder_id}: {exc}"
+        msg = f"Drive API rejected delete of fixture folder {folder_id}: status={exc.resp.status}"
         raise FixtureProvisioningError(msg) from exc
 
 

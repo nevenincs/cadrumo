@@ -41,6 +41,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from _fixture_catalogue import CATALOGUE, FixtureKind, FixtureSpec  # noqa: E402
+from googleapiclient.errors import HttpError  # noqa: E402
 
 from aeat.auth import (  # noqa: E402
     DOCS_SCOPE,
@@ -232,18 +233,29 @@ def provision() -> list[ProvisioningResult]:
                 raise FixtureProvisioningError(msg)
 
         log.info("provisioning %s (%s) under parent %s", spec.fixture_id, spec.kind.value, parent_drive_id)
-        resource_id, created = _find_or_create(drive, spec.title, mime, parent_drive_id)
-        resolved_ids[spec.fixture_id] = resource_id
+        try:
+            resource_id, created = _find_or_create(drive, spec.title, mime, parent_drive_id)
+            resolved_ids[spec.fixture_id] = resource_id
 
-        # Only seed resources that were freshly created. Re-runs leave
-        # existing fixtures untouched so review annotations survive.
-        if created:
-            if spec.kind is FixtureKind.SHEET and spec.seed_a1 is not None:
-                _seed_sheet(sheets, resource_id, spec.seed_a1)
-                log.info("seeded Sheet %s cell A1", spec.fixture_id)
-            elif spec.kind is FixtureKind.DOC and spec.seed_body is not None:
-                _seed_doc(docs, resource_id, spec.seed_body)
-                log.info("seeded Doc %s body", spec.fixture_id)
+            # Only seed resources that were freshly created. Re-runs leave
+            # existing fixtures untouched so review annotations survive.
+            if created:
+                if spec.kind is FixtureKind.SHEET and spec.seed_a1 is not None:
+                    _seed_sheet(sheets, resource_id, spec.seed_a1)
+                    log.info("seeded Sheet %s cell A1", spec.fixture_id)
+                elif spec.kind is FixtureKind.DOC and spec.seed_body is not None:
+                    _seed_doc(docs, resource_id, spec.seed_body)
+                    log.info("seeded Doc %s body", spec.fixture_id)
+        except HttpError as exc:
+            # Translate every Google API error into a domain error so the
+            # ``main()`` CLI entry point can print a clean summary instead
+            # of a raw traceback. Satisfies ADR D5: only subclasses of
+            # ``AeatError`` ever propagate out of this script.
+            msg = (
+                f"Google API rejected provisioning of fixture "
+                f"{spec.fixture_id!r} ({spec.kind.value}): status={exc.resp.status}"
+            )
+            raise FixtureProvisioningError(msg) from exc
 
         results.append(ProvisioningResult(spec=spec, resource_id=resource_id, created=created))
 
