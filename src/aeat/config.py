@@ -16,7 +16,7 @@ from pathlib import Path
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from aeat.auth.certificate import CertificateBackend
+from aeat.auth import CertificateBackend
 
 
 class DivergenceSink(StrEnum):
