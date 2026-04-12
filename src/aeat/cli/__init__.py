@@ -27,6 +27,7 @@ from aeat.cli import llm as llm_module
 from aeat.cli import manual as manual_module
 from aeat.cli import oauth as oauth_module
 from aeat.cli import sheets as sheets_module
+from aeat.cli import status as status_module
 from aeat.cli import sync as sync_module
 
 app = typer.Typer(
@@ -57,6 +58,7 @@ app.add_typer(manual_module.app, name="manual", help="AEAT Manual práctico corp
 app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
 app.add_typer(deadlines_module.app, name="deadlines", help="Filing-deadline computation engine (#38).")
 app.add_typer(filing_module.app, name="filing", help="Filing draft engine commands (#39).")
+app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#43).")
 
 
 __all__ = ["app"]
