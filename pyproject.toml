@@ -94,6 +94,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "T20"]
+# Typer requires `typer.Argument(...)` / `typer.Option(...)` literally inside
+# parameter defaults; B008 flags this idiom but it is the documented usage.
+"src/aeat/cli/**/*.py" = ["B008"]
 
 [tool.ruff.format]
 quote-style = "double"
