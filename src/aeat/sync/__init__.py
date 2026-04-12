@@ -8,6 +8,24 @@ and the Protocol-stub strategy for in-flight cross-module dependencies.
 
 from __future__ import annotations
 
+from ._classifier import DivergenceClassifier
+from ._divergence import (
+    CasillaAddedWithDefault,
+    CasillaRemoved,
+    CasillaTypeChanged,
+    DivergenceClassification,
+    DivergenceKind,
+    DivergencePayload,
+    DivergenceRecord,
+    FilingStatusChanged,
+    FormulaChanged,
+    LabelEsChanged,
+    LabelTranslationAdded,
+    PortalUrlChanged,
+    ResolutionState,
+    UnknownShape,
+    VigenciaExtended,
+)
 from ._errors import (
     DivergenceClassificationError,
     DivergenceRepositoryError,
@@ -39,20 +57,36 @@ from ._wire import (
 )
 
 __all__ = [
+    "CasillaAddedWithDefault",
+    "CasillaRemoved",
+    "CasillaTypeChanged",
     "CertificateBackend",
     "CorpusLoader",
+    "DivergenceClassification",
     "DivergenceClassificationError",
+    "DivergenceClassifier",
+    "DivergenceKind",
+    "DivergencePayload",
+    "DivergenceRecord",
     "DivergenceRepositoryError",
+    "FilingStatusChanged",
+    "FormulaChanged",
     "HealingError",
     "LLMClient",
     "LLMRequest",
+    "LabelEsChanged",
+    "LabelTranslationAdded",
     "ManualRulesLoader",
     "ModeloIdentifier",
     "ModeloSchema",
     "PortalIdentifier",
+    "PortalUrlChanged",
+    "ResolutionState",
     "Rule",
     "SchemaLoader",
     "SyncError",
+    "UnknownShape",
+    "VigenciaExtended",
     "WireCasilla",
     "WireFilingEntry",
     "WireFilingHistory",
