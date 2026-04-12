@@ -21,6 +21,7 @@ from aeat.cli import cloud as cloud_module
 from aeat.cli import docs as docs_module
 from aeat.cli import doctor as doctor_module
 from aeat.cli import drive as drive_module
+from aeat.cli import manual as manual_module
 from aeat.cli import oauth as oauth_module
 from aeat.cli import sheets as sheets_module
 
@@ -47,6 +48,7 @@ app.add_typer(sheets_module.app, name="sheets", help="Google Sheets helpers.")
 app.add_typer(docs_module.app, name="docs", help="Google Docs helpers.")
 app.add_typer(cloud_module.app, name="cloud", help="GCP product helpers (Functions / Run / Storage).")
 app.add_typer(oauth_module.app, name="oauth-client", help="OAuth 2.0 Desktop client provisioning.")
+app.add_typer(manual_module.app, name="manual", help="AEAT Manual práctico corpus helpers (#25).")
 
 
 __all__ = ["app"]

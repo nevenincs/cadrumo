@@ -129,6 +129,19 @@ class Settings(BaseSettings):
         description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
     )
 
+    # ── Manuals corpus (aeat.manuals, #25) ──────────────────────────────────
+    aeat_manuals_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "manuals",
+        description="Root directory for the structured AEAT Manual práctico corpus",
+    )
+    aeat_manuals_review_required: bool = Field(
+        default=True,
+        description=(
+            "When True, 'aeat manual verify' rejects any Manual/Section/Rule record "
+            "missing reviewer metadata; when False the rejection is downgraded to a warning"
+        ),
+    )
+
     # ── Browser Automation ──────────────────────────────────────────────────
     aeat_browser_channel: str = Field(
         default="chrome",

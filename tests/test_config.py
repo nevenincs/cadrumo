@@ -24,7 +24,7 @@ def _parse_env_example_vars() -> set[str]:
     """Extract variable names from ``env/.env.example``."""
     env_file = ENV_EXAMPLE_PATH
     names: set[str] = set()
-    for line in env_file.read_text().splitlines():
+    for line in env_file.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
         # Skip blank lines and comments
         if not stripped or stripped.startswith("#"):

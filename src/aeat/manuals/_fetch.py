@@ -1,0 +1,251 @@
+"""Raw manual-part downloader and manifest writer.
+
+The v1 fetcher speaks ``httpx`` directly because the ``#17`` corpus
+fetcher ABC has not landed on this branch yet. The :class:`PartSpec`
+table below hard-codes the verified canonical AEAT URLs for every
+``(manual_id, year, part)`` triple this PR supports; the ``fetch``
+CLI looks up a triple in the table, streams the PDF to disk,
+computes its sha256 on the fly, and writes a
+:class:`FetchedManualPart` manifest next to the raw binary.
+
+A follow-up PR rewires this module to delegate through
+``aeat.corpus.Fetcher`` once ``#17`` merges; the ``FetcherProtocol``
+stub in ``_stubs.py`` is the forcing function for that refactor.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+
+import httpx
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict
+
+from aeat.config import Settings, load_settings
+from aeat.logging import get_logger
+
+from ._loader import resolve_part_root
+from ._schema import FetchedManualPart, ManualId, ManualPart
+from .errors import ManifestError
+
+_logger = get_logger(__name__)
+
+_CHUNK_SIZE = 65_536
+_PDF_FILENAME = "source.pdf"
+_MANIFEST_FILENAME = "manifest.json"
+
+
+class PartSpec(BaseModel):
+    """Canonical source URL for a ``(manual_id, year, part)`` triple.
+
+    Strict + frozen so the public surface stays on pydantic v2 per the
+    project mandate; held as a static tuple in :data:`PART_SPECS` and
+    never constructed from untrusted input.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    manual_id: ManualId
+    year: int
+    part: ManualPart
+    source_pdf_url: str
+
+
+PART_SPECS: tuple[PartSpec, ...] = (
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2025,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=(
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
+            "Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+        ),
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2025,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=(
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
+            "Manual/Practicos/IRPF/IRPF-2025-Deducciones-autonomicas/"
+            "ManualRenta2025Parte2_es_es.pdf"
+        ),
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2025,
+        part=ManualPart.SINGLE,
+        source_pdf_url=(
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
+            "Manual/Practicos/IVA/Manual_IVA_2025.pdf"
+        ),
+    ),
+)
+
+
+class FetchResult(BaseModel):
+    """Thin wrapper returned by :func:`fetch_manual_part` to the CLI."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    manifest: FetchedManualPart
+    part_root: Path
+    pdf_path: Path
+    manifest_path: Path
+
+
+def lookup_spec(manual_id: ManualId, year: int, part: ManualPart) -> PartSpec:
+    """Look up a canonical source URL for a ``(manual_id, year, part)`` triple.
+
+    Args:
+        manual_id: Handbook identifier.
+        year: Tax year.
+        part: Volume split within the year.
+
+    Returns:
+        The matching :class:`PartSpec`.
+
+    Raises:
+        ManifestError: If no entry exists in :data:`PART_SPECS`.
+    """
+    for spec in PART_SPECS:
+        if spec.manual_id is manual_id and spec.year == year and spec.part is part:
+            return spec
+    raise ManifestError(
+        f"no canonical URL registered for {manual_id.value}/{year}/{part.value}; "
+        "add a PartSpec entry to aeat.manuals._fetch.PART_SPECS",
+    )
+
+
+def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
+    """Download ``url`` to ``destination`` and return ``(sha256, length)``."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    sha = hashlib.sha256()
+    length = 0
+    with httpx.stream("GET", url, follow_redirects=True, timeout=60.0) as response:
+        response.raise_for_status()
+        with destination.open("wb") as out:
+            for chunk in response.iter_bytes(_CHUNK_SIZE):
+                if not chunk:
+                    continue
+                out.write(chunk)
+                sha.update(chunk)
+                length += len(chunk)
+    return sha.hexdigest(), length
+
+
+def write_manifest(manifest_path: Path, manifest: FetchedManualPart) -> None:
+    """Serialise a :class:`FetchedManualPart` as indented JSON on disk."""
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = manifest.model_dump(mode="json")
+    manifest_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def load_manifest(manifest_path: Path) -> FetchedManualPart:
+    """Load and validate a manifest from disk.
+
+    Args:
+        manifest_path: Path to a ``manifest.json`` file.
+
+    Returns:
+        The parsed :class:`FetchedManualPart` record.
+
+    Raises:
+        ManifestError: If the file is missing, malformed, or fails
+            schema validation.
+    """
+    if not manifest_path.exists():
+        raise ManifestError(f"manifest not found: {manifest_path}")
+    try:
+        return FetchedManualPart.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise ManifestError(f"{manifest_path}: invalid manifest ({exc})") from exc
+
+
+def fetch_manual_part(
+    *,
+    manual_id: ManualId,
+    year: int,
+    part: ManualPart,
+    settings: Settings | None = None,
+) -> FetchResult:
+    """Download a manual part and write its sha256-verified manifest.
+
+    Args:
+        manual_id: Handbook identifier.
+        year: Tax year.
+        part: Volume split within the year.
+        settings: Optional settings instance; loaded on demand otherwise.
+
+    Returns:
+        A :class:`FetchResult` containing the manifest and the resolved
+        paths for the raw PDF and the manifest JSON.
+
+    Raises:
+        ManifestError: If the canonical URL is unknown or the download
+            fails.
+    """
+    resolved = settings or load_settings()
+    spec = lookup_spec(manual_id, year, part)
+    part_root = resolve_part_root(manual_id=manual_id, year=year, part=part, settings=resolved)
+    pdf_path = part_root / _PDF_FILENAME
+    manifest_path = part_root / _MANIFEST_FILENAME
+
+    _logger.info("fetching %s/%s/%s from %s", manual_id.value, year, part.value, spec.source_pdf_url)
+    try:
+        sha256, length = _stream_to_file(spec.source_pdf_url, pdf_path)
+    except httpx.HTTPError as exc:
+        raise ManifestError(f"download failed for {spec.source_pdf_url}: {exc}") from exc
+
+    manifest = FetchedManualPart(
+        manual_id=manual_id,
+        year=year,
+        part=part,
+        source_pdf_url=AnyHttpUrl(spec.source_pdf_url),
+        relative_pdf_path=_PDF_FILENAME,
+        sha256=sha256,
+        content_length=length,
+        fetched_at=datetime.now(tz=UTC),
+        synthetic=False,
+    )
+    write_manifest(manifest_path, manifest)
+    _logger.info("wrote manifest %s (%d bytes, sha256=%s)", manifest_path, length, sha256)
+    return FetchResult(
+        manifest=manifest,
+        part_root=part_root,
+        pdf_path=pdf_path,
+        manifest_path=manifest_path,
+    )
+
+
+def verify_fetched_pdf(manifest: FetchedManualPart, part_root: Path) -> None:
+    """Re-hash the on-disk PDF and compare against the manifest sha256.
+
+    Args:
+        manifest: The manifest record to verify against.
+        part_root: Directory containing the raw PDF.
+
+    Raises:
+        ManifestError: If the PDF is missing or its sha256 diverges.
+    """
+    pdf_path = part_root / manifest.relative_pdf_path
+    if not pdf_path.exists():
+        raise ManifestError(f"raw PDF not found at {pdf_path}; run 'aeat manual fetch' to materialise it")
+    sha = hashlib.sha256()
+    length = 0
+    with pdf_path.open("rb") as handle:
+        while True:
+            chunk = handle.read(_CHUNK_SIZE)
+            if not chunk:
+                break
+            sha.update(chunk)
+            length += len(chunk)
+    if sha.hexdigest() != manifest.sha256:
+        raise ManifestError(f"{pdf_path}: sha256 mismatch (got {sha.hexdigest()}, manifest {manifest.sha256})")
+    if length != manifest.content_length:
+        raise ManifestError(f"{pdf_path}: content_length mismatch (got {length}, manifest {manifest.content_length})")
