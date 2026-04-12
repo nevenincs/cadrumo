@@ -16,7 +16,9 @@ from rich.console import Console
 from rich.table import Table
 
 from aeat.manuals import (
+    ManualError,
     ManualId,
+    ManualNotFoundError,
     ManualPart,
     RuleExtractionError,
     RuleKind,
@@ -28,7 +30,6 @@ from aeat.manuals import (
     raise_on_errors,
     verify_manual_dir,
 )
-from aeat.manuals.errors import ManualError, ManualNotFoundError
 
 app = typer.Typer(name="manual", no_args_is_help=True, help="AEAT Manual práctico corpus helpers (#25).")
 
