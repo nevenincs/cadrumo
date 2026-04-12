@@ -20,3 +20,15 @@ class FixtureProvisioningError(AeatError):
     """
 
     pass
+
+
+class FilingFixtureError(AeatError):
+    """Raised when a synthetic filing-history fixture cannot be loaded.
+
+    Thrown by :mod:`aeat.testing` when the fixtures directory cannot be
+    resolved, a fixture file cannot be read, JSON decoding fails, or a
+    payload fails strict pydantic validation (including the synthetic-
+    only invariant checks on the ``synthetic`` and ``_comment`` fields).
+    """
+
+    pass
