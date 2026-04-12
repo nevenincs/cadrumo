@@ -8,10 +8,14 @@ from __future__ import annotations
 
 from .._builder import FilingBuilder
 from .modelo_130 import Modelo130Builder
+from .modelo_303 import Modelo303Builder
+from .modelo_390 import QUARTERLY_303_INPUT_KEY, Modelo390Builder
 
 #: Registry of available builders, keyed by modelo string ID.
 _BUILDER_REGISTRY: dict[str, type[FilingBuilder]] = {
     Modelo130Builder.modelo_id: Modelo130Builder,
+    Modelo303Builder.modelo_id: Modelo303Builder,
+    Modelo390Builder.modelo_id: Modelo390Builder,
 }
 
 
@@ -37,4 +41,10 @@ def get_builder(modelo: str) -> FilingBuilder:
     return builder_cls()
 
 
-__all__ = ["Modelo130Builder", "get_builder"]
+__all__ = [
+    "QUARTERLY_303_INPUT_KEY",
+    "Modelo130Builder",
+    "Modelo303Builder",
+    "Modelo390Builder",
+    "get_builder",
+]
