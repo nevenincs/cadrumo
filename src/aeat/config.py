@@ -87,6 +87,26 @@ class Settings(BaseSettings):
         description="AEAT sede electrónica base URL",
     )
 
+    # ── Scratch resources (provisioned by `aeat bootstrap`) ─────────────────
+    aeat_scratch_folder_id: str = Field(
+        default="",
+        description="Drive folder ID for the aeat-scratch sandbox",
+    )
+    aeat_scratch_sheet_id: str = Field(
+        default="",
+        description="Spreadsheet ID for the aeat-scratch sandbox sheet",
+    )
+    aeat_scratch_doc_id: str = Field(
+        default="",
+        description="Document ID for the aeat-scratch sandbox doc",
+    )
+
+    # ── Live tests ──────────────────────────────────────────────────────────
+    aeat_live_tests_enabled: bool = Field(
+        default=False,
+        description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
+    )
+
     # ── Introspection ───────────────────────────────────────────────────────
 
     @classmethod
