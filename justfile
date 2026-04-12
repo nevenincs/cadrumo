@@ -407,3 +407,38 @@ playwright-doctor:
 # Walk through OAuth Desktop client provisioning.
 gsuite-oauth-client:
     uv run aeat oauth-client init
+
+# ── Google Workspace test fixtures ──────────────────────────────────────────
+#
+# Idempotent provisioning and teardown of the Drive/Sheets/Docs fixtures
+# consumed by `@pytest.mark.live` tests. See scripts/README.md and
+# .vault/adr/2026-04-12-google-fixtures-adr.md.
+
+# Provision (or discover) every fixture in scripts/_fixture_catalogue.py,
+# seed freshly-created ones, and persist their IDs into env/.env.
+[unix]
+google-fixtures-provision:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python scripts/provision_google_fixtures.py
+
+[windows]
+google-fixtures-provision:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run python scripts/provision_google_fixtures.py
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Permanently delete the fixture folder tree and clear its env footprint.
+[unix]
+google-fixtures-teardown:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python scripts/teardown_google_fixtures.py
+
+[windows]
+google-fixtures-teardown:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run python scripts/teardown_google_fixtures.py
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

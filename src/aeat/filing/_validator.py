@@ -1,0 +1,242 @@
+"""Cross-cutting validator for :mod:`aeat.filing` drafts.
+
+The validator is intentionally pure: it consumes a draft + the
+casilla collection it was built against and returns a tuple of
+:class:`FilingValidationFinding` records. It never raises — strict
+behaviour is the caller's responsibility via
+``fail_on_warning`` on :func:`build_draft`.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from decimal import Decimal
+
+from aeat.logging import get_logger
+
+from ._protocols import (
+    CasillaCollection,
+    CasillaSchemaProvider,
+    DeadlineChecker,
+)
+from ._schema import (
+    FilingDraft,
+    FilingDraftStatus,
+    FilingFindingSeverity,
+    FilingValidationFinding,
+    FilingValueKind,
+)
+
+_logger = get_logger(__name__)
+
+
+class FilingValidator:
+    """Apply cross-cutting validation rules to a :class:`FilingDraft`.
+
+    The validator depends on Protocols, not concrete subpackages,
+    so the in-flight #9 / #23 / #38 work can be plugged in via a
+    rebase later.
+    """
+
+    def __init__(
+        self,
+        *,
+        schema_provider: CasillaSchemaProvider,
+        deadline_checker: DeadlineChecker | None = None,
+    ) -> None:
+        """Construct the validator.
+
+        Args:
+            schema_provider: Resolves the casilla collection used
+                during validation. The collection is the source of
+                truth for required-ness, ranges, and formula
+                inputs.
+            deadline_checker: Optional deadline check Protocol
+                stub. When ``None`` the validator skips the
+                deadline rule.
+        """
+        self._schema_provider = schema_provider
+        self._deadline_checker = deadline_checker
+
+    def validate(self, draft: FilingDraft) -> tuple[FilingValidationFinding, ...]:
+        """Run every validation rule against ``draft``.
+
+        Args:
+            draft: The draft to validate.
+
+        Returns:
+            A tuple of findings, possibly empty.
+        """
+        collection = self._schema_provider.get_collection(draft.modelo)
+        findings: list[FilingValidationFinding] = []
+        findings.extend(self._validate_schema_version(draft, collection))
+        findings.extend(self._validate_required(draft, collection))
+        findings.extend(self._validate_ranges(draft, collection))
+        findings.extend(self._validate_formula_traces(draft, collection))
+        findings.extend(self._validate_deadline(draft))
+        return tuple(findings)
+
+    # ── individual rules ─────────────────────────────────────────
+
+    def _validate_schema_version(
+        self, draft: FilingDraft, collection: CasillaCollection
+    ) -> list[FilingValidationFinding]:
+        if draft.schema_version == collection.schema_version:
+            return []
+        return [
+            FilingValidationFinding(
+                casilla_id=None,
+                severity=FilingFindingSeverity.WARNING,
+                code="filing-schema-version-mismatch",
+                message={
+                    "es": (
+                        f"Versión de esquema del borrador {draft.schema_version!r} "
+                        f"no coincide con la actual {collection.schema_version!r}"
+                    ),
+                    "en": (
+                        f"Draft schema version {draft.schema_version!r} differs from "
+                        f"current {collection.schema_version!r}"
+                    ),
+                    "hu": (
+                        f"A piszkozat sémaverziója {draft.schema_version!r} "
+                        f"eltér a jelenlegitől {collection.schema_version!r}"
+                    ),
+                },
+                references_rules=(),
+            )
+        ]
+
+    def _validate_required(self, draft: FilingDraft, collection: CasillaCollection) -> list[FilingValidationFinding]:
+        by_id = {v.casilla_id: v for v in draft.values}
+        out: list[FilingValidationFinding] = []
+        for casilla in collection.all():
+            if not casilla.required:
+                continue
+            value = by_id.get(casilla.id)
+            if value is None or value.kind is FilingValueKind.EMPTY or value.value is None:
+                out.append(
+                    FilingValidationFinding(
+                        casilla_id=casilla.id,
+                        severity=FilingFindingSeverity.ERROR,
+                        code="casilla-required-missing",
+                        message={
+                            "es": f"Casilla obligatoria {casilla.id} sin valor",
+                            "en": f"Required casilla {casilla.id} has no value",
+                            "hu": f"A kötelező rovat {casilla.id} hiányzik",
+                        },
+                        references_rules=(),
+                    )
+                )
+        return out
+
+    def _validate_ranges(self, draft: FilingDraft, collection: CasillaCollection) -> list[FilingValidationFinding]:
+        out: list[FilingValidationFinding] = []
+        for value in draft.values:
+            casilla = collection.get(value.casilla_id)
+            if casilla is None or value.value is None:
+                continue
+            if not isinstance(value.value, Decimal | int):
+                continue
+            numeric = Decimal(value.value) if isinstance(value.value, int) else value.value
+            if casilla.min_value is not None and numeric < Decimal(str(casilla.min_value)):
+                out.append(self._range_finding(value.casilla_id, "below"))
+            if casilla.max_value is not None and numeric > Decimal(str(casilla.max_value)):
+                out.append(self._range_finding(value.casilla_id, "above"))
+        return out
+
+    @staticmethod
+    def _range_finding(casilla_id: str, direction: str) -> FilingValidationFinding:
+        return FilingValidationFinding(
+            casilla_id=casilla_id,
+            severity=FilingFindingSeverity.ERROR,
+            code="casilla-out-of-range",
+            message={
+                "es": f"Casilla {casilla_id} fuera de rango ({direction})",
+                "en": f"Casilla {casilla_id} out of range ({direction})",
+                "hu": f"A {casilla_id} rovat tartományon kívül ({direction})",
+            },
+            references_rules=(),
+        )
+
+    def _validate_formula_traces(
+        self, draft: FilingDraft, collection: CasillaCollection
+    ) -> list[FilingValidationFinding]:
+        out: list[FilingValidationFinding] = []
+        for value in draft.values:
+            casilla = collection.get(value.casilla_id)
+            if casilla is None:
+                continue
+            if not casilla.formula_inputs:
+                if value.formula_trace:
+                    out.append(self._divergence(value.casilla_id))
+                continue
+            if value.kind is not FilingValueKind.COMPUTED:
+                out.append(self._divergence(value.casilla_id))
+                continue
+            if value.formula_trace is None or set(value.formula_trace) != set(casilla.formula_inputs):
+                out.append(self._divergence(value.casilla_id))
+        return out
+
+    @staticmethod
+    def _divergence(casilla_id: str) -> FilingValidationFinding:
+        return FilingValidationFinding(
+            casilla_id=casilla_id,
+            severity=FilingFindingSeverity.ERROR,
+            code="formula-divergence",
+            message={
+                "es": f"Divergencia de fórmula en casilla {casilla_id}",
+                "en": f"Formula divergence on casilla {casilla_id}",
+                "hu": f"Képlet eltérés a {casilla_id} rovaton",
+            },
+            references_rules=(),
+        )
+
+    def _validate_deadline(self, draft: FilingDraft) -> list[FilingValidationFinding]:
+        if self._deadline_checker is None:
+            return []
+        status = self._deadline_checker.check(draft.modelo, draft.period)
+        if not status.is_overdue:
+            return []
+        return [
+            FilingValidationFinding(
+                casilla_id=None,
+                severity=FilingFindingSeverity.ERROR,
+                code="filing-deadline-missed",
+                message={
+                    "es": (f"Plazo de presentación del modelo {draft.modelo} vencido ({status.due_date.isoformat()})"),
+                    "en": (f"Filing deadline for modelo {draft.modelo} has passed ({status.due_date.isoformat()})"),
+                    "hu": (f"A {draft.modelo} modell beadási határideje lejárt ({status.due_date.isoformat()})"),
+                },
+                references_rules=(),
+            )
+        ]
+
+
+def apply_validation(
+    draft: FilingDraft,
+    findings: tuple[FilingValidationFinding, ...],
+) -> FilingDraft:
+    """Return a copy of ``draft`` with ``findings`` and a fresh status.
+
+    Status promotion logic:
+
+    - Any ``ERROR`` → :attr:`FilingDraftStatus.DRAFT` (still
+      blocking).
+    - Any ``WARNING`` only → :attr:`FilingDraftStatus.VALIDATED`.
+    - No findings → :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
+    """
+    has_error = any(f.severity is FilingFindingSeverity.ERROR for f in findings)
+    has_warning = any(f.severity is FilingFindingSeverity.WARNING for f in findings)
+    if has_error:
+        new_status = FilingDraftStatus.DRAFT
+    elif has_warning:
+        new_status = FilingDraftStatus.VALIDATED
+    else:
+        new_status = FilingDraftStatus.READY_TO_SUBMIT
+    return draft.model_copy(
+        update={
+            "findings": findings,
+            "status": new_status,
+            "updated_at": datetime.now(tz=UTC),
+        }
+    )
