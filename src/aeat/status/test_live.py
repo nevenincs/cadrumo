@@ -2,36 +2,42 @@
 
 These tests hit the real AEAT *Sede Electrónica* through a live
 Playwright browser with a real client certificate. They are
-skipped by default and only run when the environment variable
-``AEAT_LIVE_TESTS=1`` is set.
+skipped by default and only run when the canonical project-wide
+opt-in flag :envvar:`AEAT_LIVE_TESTS_ENABLED` is truthy.
+
+**Status in v1:** this module is an *honest placeholder*. A real
+live fetch requires the cert-auth backend from #8, which is not
+yet merged. Rather than ship a self-fulfilling assertion that
+pretends to be live coverage, the test calls :func:`pytest.skip`
+unconditionally when opted in — so CI surfaces the gap instead of
+masking it with a false-green.
 
 **Known bug:** the shared browser layer currently fails on some
 configurations with a ``playwright_stealth`` error, tracked in
-issue #41. When that hits, the live test reports an environment
-failure; the unit tests colocated alongside this module remain the
-proof of correctness for the reader's logic.
+issue #41. When #8 lands and the real live fetch gets wired here,
+that bug may still bite; the colocated unit tests remain the proof
+of correctness for the reader's logic.
 
 No mocks, no patches, no fakes, no stubs.
 """
 
 from __future__ import annotations
 
-import os
-
 import pytest
+
+from aeat.config import load_settings
 
 pytestmark = pytest.mark.live
 
 
-_RUN_LIVE = os.environ.get("AEAT_LIVE_TESTS") == "1"
+def test_live_fetch_expedientes_pending_cert_backend() -> None:
+    """Live smoke placeholder.
 
-
-@pytest.mark.skipif(not _RUN_LIVE, reason="AEAT_LIVE_TESTS=1 not set")
-def test_live_fetch_expedientes_smoke() -> None:
-    """Smoke test: one fetch against the real AEAT portal.
-
-    Skipped unless ``AEAT_LIVE_TESTS=1`` is set. The full test body
-    lives in a follow-up that wires the real cert backend; for v1
-    we merely assert that the opt-in flag is honoured.
+    Skipped unless ``AEAT_LIVE_TESTS_ENABLED=true`` is set. Even
+    when opted in, the test skips with a clear reason because the
+    real live wiring requires the #8 cert backend — this is
+    deliberate so CI cannot report phantom live coverage.
     """
-    assert os.environ.get("AEAT_LIVE_TESTS") == "1"
+    if not load_settings().aeat_live_tests_enabled:
+        pytest.skip("AEAT_LIVE_TESTS_ENABLED is not set")
+    pytest.skip("live fetch deferred until #8 cert backend lands; see .vault/exec/2026-04-12-status-reader/summary.md")

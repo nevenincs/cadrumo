@@ -9,6 +9,7 @@ trimmed expedientes fixture.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date
 from pathlib import Path
 from typing import Any, cast
@@ -152,6 +153,40 @@ class TestFetchExpedientes:
         await reader.fetch_expedientes(since=date(2025, 4, 20))
         await reader.fetch_expedientes(since=date(2025, 4, 15))
         assert len(session.page.visited) == 1
+
+    async def test_concurrent_fetch_shares_single_context(self, tmp_path: Path) -> None:
+        """Concurrent fetches must not spawn duplicate contexts.
+
+        Regression for the second-pass review finding: before
+        ``_ensure_ready`` got an :class:`asyncio.Lock`, two
+        simultaneous tasks could each call
+        ``browser_session.create_context()`` and leak the loser.
+        """
+        reader, session, cert = _build_reader(tmp_path)
+        await asyncio.gather(
+            reader.fetch_expedientes(use_cache=False),
+            reader.fetch_expedientes(use_cache=False),
+            reader.fetch_expedientes(use_cache=False),
+        )
+        assert session.create_calls == 1
+        assert cert.preload_calls == 1
+
+    async def test_async_context_manager_closes_reader(self, tmp_path: Path) -> None:
+        """`async with` support: __aexit__ must call close()."""
+        html = _FIXTURE.read_text(encoding="utf-8")
+        session = _FakeBrowserSession(html)
+        cert = _FakeCertBackend()
+        settings = load_settings()
+        cache = StatusCache(tmp_path / "cache", ttl_s=60)
+        async with StatusReader(
+            browser_session=cast(BrowserSessionLike, session),
+            cert_backend=cert,
+            cache=cache,
+            settings=settings,
+            tax_id="X1234567L",
+        ) as reader:
+            await reader.fetch_expedientes()
+        assert session.context.closed
 
     async def test_close_is_idempotent(self, tmp_path: Path) -> None:
         reader, _, _ = _build_reader(tmp_path)

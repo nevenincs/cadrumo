@@ -16,11 +16,11 @@ full dataset is observed. See the ADR for the rationale.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyHttpUrl, AwareDatetime, BaseModel, ConfigDict, Field
 
 from aeat.i18n import Translatable
 
@@ -58,11 +58,11 @@ class Expediente(_StatusRecord):
     modelo: str = Field(min_length=1, max_length=16)
     period: str = Field(min_length=1, max_length=16)
     status: str = Field(min_length=1, max_length=128)
-    presented_at: datetime
+    presented_at: AwareDatetime
     csv: str | None = Field(default=None, min_length=1, max_length=64)
     justificante_url: AnyHttpUrl | None = None
     source_page_url: AnyHttpUrl
-    fetched_at: datetime
+    fetched_at: AwareDatetime
 
 
 class Notificacion(_StatusRecord):
@@ -76,10 +76,10 @@ class Notificacion(_StatusRecord):
     kind: str = Field(min_length=1, max_length=64)
     title: Translatable
     body_excerpt: Translatable
-    received_at: datetime
-    due_at: datetime | None = None
+    received_at: AwareDatetime
+    due_at: AwareDatetime | None = None
     source_page_url: AnyHttpUrl
-    fetched_at: datetime
+    fetched_at: AwareDatetime
 
 
 class Devolucion(_StatusRecord):
@@ -91,7 +91,7 @@ class Devolucion(_StatusRecord):
     status: str = Field(min_length=1, max_length=64)
     expected_payment_date: date | None = None
     source_page_url: AnyHttpUrl
-    fetched_at: datetime
+    fetched_at: AwareDatetime
 
 
 class BorradorIrpf(_StatusRecord):
@@ -102,7 +102,7 @@ class BorradorIrpf(_StatusRecord):
     total_a_devolver: Decimal | None = None
     total_a_pagar: Decimal | None = None
     source_page_url: AnyHttpUrl
-    fetched_at: datetime
+    fetched_at: AwareDatetime
 
 
 class Payor(_StatusRecord):
@@ -122,7 +122,7 @@ class DatosFiscales(_StatusRecord):
     year: int = Field(ge=2000, le=2100)
     payors: tuple[Payor, ...]
     source_page_url: AnyHttpUrl
-    fetched_at: datetime
+    fetched_at: AwareDatetime
 
 
 class CalendarioEntry(_StatusRecord):
@@ -133,4 +133,4 @@ class CalendarioEntry(_StatusRecord):
     opens_on: date
     closes_on: date
     source_page_url: AnyHttpUrl
-    fetched_at: datetime
+    fetched_at: AwareDatetime

@@ -166,6 +166,84 @@ Findings deliberately not applied:
 Post-review totals: 391 unit tests passing, ty clean, ruff
 clean, prek clean.
 
+## Code review pass — round 2 (self-run)
+
+Ran a second independent reviewer pass focused on angles the
+first review didn't hit. Findings applied in-branch:
+
+- **Major: async race in `_ensure_ready`.** Two concurrent
+  `fetch_expedientes` tasks could each call `create_context()`
+  and leak the loser. Fixed with a lazy `asyncio.Lock` (allocated
+  on first call so construction stays event-loop-agnostic) +
+  double-check under the lock. New regression test
+  `test_concurrent_fetch_shares_single_context` runs three
+  concurrent fetches through `asyncio.gather` and asserts
+  `session.create_calls == 1`.
+- **Major: no async context manager / ownership contract.**
+  `StatusReader` now implements `__aenter__` / `__aexit__` so
+  `async with StatusReader(...) as reader:` tears down the
+  created `BrowserContext` automatically. `close()` docstring
+  spells out the ownership contract: the caller still owns
+  `browser_session` and `cert_backend`. New regression test
+  `test_async_context_manager_closes_reader`.
+- **Major: naive datetimes slipped through.** Every `datetime`
+  field on every record is now `AwareDatetime` (pydantic v2).
+  The parser's strptime fallback for Spanish shapes now
+  localises to `Europe/Madrid` and converts to UTC before
+  constructing the record. Added `tzdata>=2024.1` as a
+  Windows-only runtime dep so `zoneinfo.ZoneInfo("Europe/Madrid")`
+  resolves on `sys_platform == "win32"`. Updated the Spanish
+  fixture test to assert UTC invariance and round-trip via
+  `astimezone(Europe/Madrid)`.
+- **Major: `AEAT_STATUS_BROWSER_TRACE_DIR` was dead config.**
+  Now wired: `_ensure_ready` calls
+  `context.tracing.start(screenshots=True, snapshots=True)` when
+  the configured trace dir *exists* (we opt in by creation so
+  unit tests don't accidentally trace), and `close()` drops a
+  timestamped zip into that directory. Failures log and
+  degrade silently.
+- **Major: `test_live.py` was a self-fulfilling tautology.**
+  Rewritten as an honest placeholder: gates on
+  `Settings.aeat_live_tests_enabled` (the canonical project
+  flag — memory confirms `AEAT_LIVE_TESTS_ENABLED`, not the
+  bespoke `AEAT_LIVE_TESTS` this file previously checked),
+  then `pytest.skip`s with a clear "deferred until #8" reason.
+  Module docstring flags the #41 `playwright_stealth` risk.
+- **Minor: dead CLI rendering helpers.**
+  `_render_expedientes_table` and `_emit_json` were defined
+  but never reached because every command `_bail_cert_missing`s
+  before rendering. Both deleted; `__all__` narrowed to
+  `["app"]`. The `_parse_since` helper stays because
+  `expedientes` / `notificaciones` still validate the flag
+  eagerly (good ergonomics before the bail-out).
+- **Minor: atomic-write helper uses `tempfile.NamedTemporaryFile`**
+  in the destination directory (safer than `path.with_suffix`
+  + pid) and swallows a Windows `PermissionError` during
+  `os.replace` into a structured log-and-degrade path. The
+  cache `put_tuple` now skips the meta write when the payload
+  write lost the race so readers never see meta without
+  payload.
+- **Nit: logger.info on cache hit.** Demoted to `debug` so the
+  hot path stays quiet.
+
+Deliberately not applied from round 2:
+
+- **`BorradorIrpf` mutual-exclusivity between `total_a_devolver`
+  and `total_a_pagar`**: issue #43 doesn't spell it out and the
+  parser for that surface is not landing in this PR.
+  Follow-up when the real borrador parser arrives.
+- **Dropping the `cast(BrowserSessionLike, session)` in
+  `test_reader.py`**: ty doesn't structurally match
+  `_FakeBrowserSession` to the `Protocol`, so the cast is
+  load-bearing. Kept.
+- **Eliminating the `model_validate_json(json.dumps(item))`
+  round-trip**: `TypeAdapter(list[model])` rejects the runtime
+  type variable with `invalid-type-form`. Documented inline in
+  `_cache.py`.
+
+Post-round-2 totals: **393 unit tests passing**, `ruff check`,
+`ty check`, `prek run --all-files` all clean.
+
 ## Known issues / follow-ups
 
 - The five non-expedientes surfaces ship their wire schemas but
