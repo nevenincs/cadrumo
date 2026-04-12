@@ -109,10 +109,18 @@ gcloud-setup:
     if ($gcloud) {
         $version = (& gcloud version 2>$null | Select-Object -First 1)
         Write-Host "gcloud found: $version"
+        # The Windows installer ships a bundled Python that refuses to
+        # self-update in non-interactive mode. Point CLOUDSDK_PYTHON at
+        # the copied bundled interpreter before invoking `components update`.
         try {
-            & gcloud components update --quiet
+            $bundled = (& $gcloud.Source components copy-bundled-python 2>$null | Select-Object -Last 1)
+            if ($bundled) { $env:CLOUDSDK_PYTHON = $bundled.Trim() }
         } catch {
-            Write-Host "gcloud update failed - continue manually if needed."
+            Write-Host "copy-bundled-python failed - attempting update without override."
+        }
+        & $gcloud.Source components update --quiet
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "gcloud update failed (exit $LASTEXITCODE) - continue manually if needed."
         }
         exit 0
     }
