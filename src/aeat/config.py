@@ -141,6 +141,20 @@ class Settings(BaseSettings):
         description="Document ID for the aeat-scratch sandbox doc",
     )
 
+    # ── Google test fixtures (provisioned by scripts/provision_google_fixtures.py) ──
+    aeat_google_test_fixtures_folder_id: str = Field(
+        default="",
+        description="Drive folder ID that roots every Google Workspace test fixture",
+    )
+    aeat_google_test_fixture_smoke_sheet_id: str = Field(
+        default="",
+        description="Spreadsheet ID for the smoke-test fixture Sheet (A1 seeded sentinel)",
+    )
+    aeat_google_test_fixture_smoke_doc_id: str = Field(
+        default="",
+        description="Document ID for the smoke-test fixture Doc (body seeded sentinel)",
+    )
+
     # ── Storage ─────────────────────────────────────────────────────────────
     aeat_database_url: str = Field(
         default=f"sqlite:///{(PROJECT_ROOT / 'var' / 'aeat.db').as_posix()}",
@@ -160,6 +174,10 @@ class Settings(BaseSettings):
         default=False,
         description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
     )
+    aeat_live_tests_google: bool = Field(
+        default=False,
+        description="Secondary opt-in specifically for Google Workspace fixture live tests",
+    )
 
     # ── Manuals corpus (aeat.manuals, #25) ──────────────────────────────────
     aeat_manuals_root: Path = Field(
@@ -172,6 +190,12 @@ class Settings(BaseSettings):
             "When True, 'aeat manual verify' rejects any Manual/Section/Rule record "
             "missing reviewer metadata; when False the rejection is downgraded to a warning"
         ),
+    )
+
+    # ── Normatives corpus (aeat.normatives, #45) ────────────────────────────
+    aeat_normatives_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "normatives",
+        description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
     # ── Browser Automation ──────────────────────────────────────────────────
@@ -261,6 +285,27 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ── Submission engine (#42) ─────────────────────────────────────────────
+    aeat_submissions_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "submissions",
+        description="Directory where SubmittedFiling JSON audit records are persisted",
+    )
+    aeat_submission_dry_run_default: bool = Field(
+        default=True,
+        description="Default for SubmissionEngine.submit_draft(dry_run=...) when omitted by the CLI",
+    )
+    aeat_submission_require_human_confirmation: bool = Field(
+        default=True,
+        description=(
+            "Belt-and-braces safety gate for live submissions. When False, "
+            "the engine refuses to enter live mode even if override_confirmation=True"
+        ),
+    )
+    aeat_submission_browser_trace_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "browser-traces",
+        description="Directory where submission-engine Playwright traces and screenshots are written",
+    )
+
     # ── Self-healing sync runner (#11) ──────────────────────────────────────
     aeat_sync_concurrency: int = Field(
         default=4,
@@ -288,6 +333,23 @@ class Settings(BaseSettings):
     aeat_sync_retry_backoff_s: float = Field(
         default=5.0,
         description="Initial exponential backoff delay (seconds) between retries",
+    )
+
+    # ── Notifications inbox (#46) ───────────────────────────────────────────
+    aeat_inbox_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "inbox",
+        description="Directory where the persisted Inbox JSON file lives",
+    )
+    aeat_inbox_pdf_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "inbox" / "pdfs",
+        description="Directory where downloaded notification PDFs are stored",
+    )
+    aeat_inbox_alert_lead_days: int = Field(
+        default=7,
+        description=(
+            "Lead window (days) for `aeat inbox next-deadline`: surface CRITICAL/HIGH "
+            "notifications whose appeal_deadline falls within the next N days"
+        ),
     )
 
     # ── Filing draft engine (#39) ───────────────────────────────────────────
