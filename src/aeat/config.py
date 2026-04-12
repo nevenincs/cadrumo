@@ -171,6 +171,16 @@ class Settings(BaseSettings):
         description="Directory where the storage layer writes database backups",
     )
 
+    # ── Casilla corpus ──────────────────────────────────────────────────────
+    aeat_casillas_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "casillas",
+        description="Root directory for canonical casilla catalogue JSON files",
+    )
+    aeat_casillas_review_required: bool = Field(
+        default=True,
+        description="If true, verify rejects casilla records lacking reviewer metadata",
+    )
+
     # ── Live tests ──────────────────────────────────────────────────────────
     aeat_live_tests_enabled: bool = Field(
         default=False,
