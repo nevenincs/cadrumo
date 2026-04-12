@@ -9,3 +9,14 @@ class AeatError(Exception):
     """Base exception for all AEAT domain errors."""
 
     pass
+
+
+class FixtureProvisioningError(AeatError):
+    """Raised when Google Workspace test-fixture provisioning fails.
+
+    Thrown by the provisioning and teardown scripts under ``scripts/``
+    whenever a Drive / Sheets / Docs call cannot satisfy the catalogued
+    intent (missing parent, quota exhausted, unexpected dedup result, etc).
+    """
+
+    pass
