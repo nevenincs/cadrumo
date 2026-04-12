@@ -36,9 +36,9 @@ def _project() -> str:
 
 def _adc() -> Any:
     """Return ADC credentials with the cloud-platform scope."""
-    from aeat.auth import CLOUD_PLATFORM_SCOPE, get_adc_credentials_with_scopes
+    from aeat.auth import CLOUD_PLATFORM_SCOPE, get_credentials_for_scopes
 
-    return get_adc_credentials_with_scopes([CLOUD_PLATFORM_SCOPE])
+    return get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
 
 
 # ── Cloud Functions ─────────────────────────────────────────────────────────

@@ -33,9 +33,9 @@ def _drive() -> Any:
     loading google-auth + googleapiclient when the user only wants to
     see the command tree.
     """
-    from aeat.auth import DRIVE_SCOPE, build_drive_service, get_adc_credentials_with_scopes
+    from aeat.auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes
 
-    creds = get_adc_credentials_with_scopes([DRIVE_SCOPE])
+    creds = get_credentials_for_scopes([DRIVE_SCOPE])
     return build_drive_service(creds)
 
 

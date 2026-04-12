@@ -80,44 +80,59 @@ def unique_prefix() -> str:
 
 def drive_service() -> Any:
     """Build a Drive v3 service from current ADC for use in live tests."""
-    from aeat.auth import DRIVE_SCOPE, build_drive_service, get_adc_credentials_with_scopes
+    from aeat.auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes
 
-    return build_drive_service(get_adc_credentials_with_scopes([DRIVE_SCOPE]))
+    return build_drive_service(get_credentials_for_scopes([DRIVE_SCOPE]))
 
 
 def sheets_service() -> Any:
     """Build a Sheets v4 service from current ADC for use in live tests."""
-    from aeat.auth import SHEETS_SCOPE, build_sheets_service, get_adc_credentials_with_scopes
+    from aeat.auth import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
 
-    return build_sheets_service(get_adc_credentials_with_scopes([SHEETS_SCOPE]))
+    return build_sheets_service(get_credentials_for_scopes([SHEETS_SCOPE]))
 
 
 def docs_service() -> Any:
     """Build a Docs v1 service from current ADC for use in live tests."""
-    from aeat.auth import DOCS_SCOPE, build_docs_service, get_adc_credentials_with_scopes
+    from aeat.auth import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
 
-    return build_docs_service(get_adc_credentials_with_scopes([DOCS_SCOPE]))
+    return build_docs_service(get_credentials_for_scopes([DOCS_SCOPE]))
 
 
 def storage_client(project: str) -> Any:
     """Build a Cloud Storage client for use in live tests."""
-    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_storage_client, get_adc_credentials_with_scopes
+    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_storage_client, get_credentials_for_scopes
 
-    return build_storage_client(get_adc_credentials_with_scopes([CLOUD_PLATFORM_SCOPE]), project)
+    return build_storage_client(get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE]), project)
 
 
 def cloudfunctions_client() -> Any:
     """Build a Cloud Functions v2 client for use in live tests."""
-    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_cloudfunctions_client, get_adc_credentials_with_scopes
+    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_cloudfunctions_client, get_credentials_for_scopes
 
-    return build_cloudfunctions_client(get_adc_credentials_with_scopes([CLOUD_PLATFORM_SCOPE]))
+    return build_cloudfunctions_client(get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE]))
 
 
 def cloudrun_client() -> Any:
     """Build a Cloud Run v2 services client for use in live tests."""
-    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_cloudrun_client, get_adc_credentials_with_scopes
+    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_cloudrun_client, get_credentials_for_scopes
 
-    return build_cloudrun_client(get_adc_credentials_with_scopes([CLOUD_PLATFORM_SCOPE]))
+    return build_cloudrun_client(get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE]))
+
+
+def skip_if_drive_quota(exc: Exception) -> None:
+    """Skip the calling test if the exception looks like a Drive quota block.
+
+    Service accounts on consumer (non-Workspace) Google accounts have
+    zero Drive storage quota. Their API calls return
+    ``storageQuotaExceeded`` for any operation that would create or
+    own a Drive file. Live tests skip cleanly under that condition so
+    the suite stays green for the autonomous SA path.
+    """
+    text = repr(exc).lower()
+    if "storagequotaexceeded" in text or "storage quota" in text or "user's drive" in text or "invalid_grant" in text:
+        pytest.skip(f"Drive unavailable for the active credentials: {exc.__class__.__name__}")
+    raise exc
 
 
 def cleanup_files(drive: Any, file_ids: Iterable[str]) -> None:

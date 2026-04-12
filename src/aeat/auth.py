@@ -329,3 +329,36 @@ def get_adc_credentials_with_scopes(scopes: list[str] | None = None) -> BaseCred
     scopes = scopes or SCOPES
     credentials, _project = google.auth.default(scopes=scopes)
     return credentials
+
+
+def get_credentials_for_scopes(scopes: list[str] | None = None) -> BaseCredentials:
+    """Return credentials for the requested scopes via the configured auth path.
+
+    Resolution order, identical to :func:`get_credentials` but cleaner
+    to call from CLI commands and live tests because it doesn't require
+    the caller to pre-load Settings:
+
+    1. Service account if ``GOOGLE_APPLICATION_CREDENTIALS`` points at
+       a readable JSON key file.
+    2. OAuth 2.0 Desktop installed-app flow if both
+       ``GOOGLE_OAUTH_CLIENT_ID`` and ``GOOGLE_OAUTH_CLIENT_SECRET`` are
+       set in the environment.
+    3. Application Default Credentials via
+       ``gcloud auth application-default login``.
+
+    The unified resolver is the entry point every CLI command should
+    use, so the active auth path is decided in one place and Settings
+    edits propagate without per-call wiring.
+
+    Args:
+        scopes: Scopes to request. Defaults to the full :data:`SCOPES`
+            set.
+
+    Returns:
+        Authenticated credentials suitable for any Google API client.
+    """
+    from aeat.config import Settings  # local import to avoid import cycle
+
+    scopes = scopes or SCOPES
+    settings = Settings()
+    return get_credentials(settings, scopes=scopes)

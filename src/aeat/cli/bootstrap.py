@@ -139,12 +139,9 @@ def bootstrap() -> None:
     """Provision the scratch resource set, persist IDs, print a summary."""
     # Local imports keep the CLI startup path light when only --help is used.
     from aeat.auth import (
-        DOCS_SCOPE,
-        DRIVE_SCOPE,
         REQUIRED_ADC_SCOPES,
-        assert_credentials_have_scopes,
         build_drive_service,
-        get_adc_credentials_with_scopes,
+        get_credentials_for_scopes,
     )
     from aeat.config import Settings
 
@@ -156,23 +153,33 @@ def bootstrap() -> None:
         raise typer.Exit(code=1)
 
     try:
-        creds = get_adc_credentials_with_scopes(REQUIRED_ADC_SCOPES)
+        creds = get_credentials_for_scopes(REQUIRED_ADC_SCOPES)
     except Exception as exc:
-        console.print(f"[red]bootstrap: ADC unavailable: {exc}[/]")
-        console.print("Run `just gcloud-auth` first.")
+        console.print(f"[red]bootstrap: credentials unavailable: {exc}[/]")
+        console.print("Configure GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`.")
         raise typer.Exit(code=1) from exc
-
-    ok, missing = assert_credentials_have_scopes(creds, [DRIVE_SCOPE, DOCS_SCOPE])
-    if not ok:
-        console.print(f"[red]bootstrap: ADC missing required scopes: {missing}[/]")
-        console.print("Re-run `just gcloud-auth` to acquire the full scope set.")
-        raise typer.Exit(code=1)
 
     drive = build_drive_service(creds)
 
-    folder_id = _find_or_create_folder(drive, SCRATCH_FOLDER_NAME)
-    sheet_id = _find_or_create_workspace_doc(drive, SCRATCH_SHEET_NAME, SHEET_MIME, folder_id)
-    doc_id = _find_or_create_workspace_doc(drive, SCRATCH_DOC_NAME, DOC_MIME, folder_id)
+    try:
+        folder_id = _find_or_create_folder(drive, SCRATCH_FOLDER_NAME)
+        sheet_id = _find_or_create_workspace_doc(drive, SCRATCH_SHEET_NAME, SHEET_MIME, folder_id)
+        doc_id = _find_or_create_workspace_doc(drive, SCRATCH_DOC_NAME, DOC_MIME, folder_id)
+    except Exception as exc:
+        text = repr(exc).lower()
+        if "storagequotaexceeded" in text or "storage quota" in text:
+            console.print("[yellow]bootstrap: cannot create Drive resources under the active credentials.[/]")
+            console.print(
+                "Service accounts on consumer (non-Workspace) Google accounts have zero "
+                "Drive storage quota and cannot own Drive files."
+            )
+            console.print(
+                "Run `aeat oauth-client init` to create an OAuth Desktop client + "
+                "`just gcloud-auth`, or operate from a Google Workspace tenant where "
+                "the SA can own files in a Shared Drive."
+            )
+            raise typer.Exit(code=2) from exc
+        raise
 
     resources = ScratchResources(folder_id=folder_id, sheet_id=sheet_id, doc_id=doc_id)
     _persist_ids(resources)

@@ -170,6 +170,41 @@ gcloud iam service-accounts keys create credentials/service-account.json \
 > `GOOGLE_IMPERSONATE_EMAIL` to the target user's email. DWD requires a
 > Workspace tenant — it does not work on consumer Gmail.
 
+## Consumer Gmail vs Workspace tenancy
+
+The bootstrap pipeline is designed to work on both consumer Google
+accounts (`@gmail.com`) and Google Workspace tenants, but consumer
+accounts have one hard limitation worth knowing up front:
+
+**Service accounts on consumer Gmail have zero Drive storage quota.**
+
+That means `just gsuite-bootstrap-sa` (the autonomous service-account
+path) succeeds for IAM, Service Usage, Cloud Storage / Functions /
+Run, but Drive/Sheets/Docs operations under the SA return
+`storageQuotaExceeded`. The bootstrap exits with a clear message
+pointing at the workaround. To use Drive/Sheets/Docs on a consumer
+Gmail account you must instead run the OAuth Desktop client path:
+
+```sh
+just gsuite-oauth-client          # prints Console URL + required fields
+# (operator clicks through, downloads JSON to ~/Downloads/client.json)
+uv run aeat oauth-client init --json ~/Downloads/client.json
+just gcloud-auth                  # uses --client-id-file=env/oauth-client.json
+just gsuite-enable-apis
+uv run aeat bootstrap
+uv run aeat doctor
+```
+
+This is a Google product limitation, not a code issue. Workspace
+tenants get Shared Drives and domain-wide delegation, both of which
+sidestep the SA quota; consumer accounts get neither.
+
+Cloud Functions / Cloud Run / Cloud Storage additionally need an
+active billing account on the project. The
+`just gsuite-enable-apis-billing` recipe enables those three APIs once
+billing is linked. Doctor reports them as advisory rows; live tests
+for the cloud surfaces skip cleanly when billing is not enabled.
+
 ## Live smoke tests
 
 Live tests hit real Google APIs against the scratch resources

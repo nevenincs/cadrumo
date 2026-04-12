@@ -21,6 +21,7 @@ from aeat.cli._live import (
     docs_service,
     requires_live_enabled,
     requires_scratch_doc,
+    skip_if_drive_quota,
     unique_prefix,
 )
 
@@ -36,7 +37,11 @@ class TestDocsLiveRoundTrip:
         service: Any = docs_service()
         marker = f"<{unique_prefix()}>"
         try:
-            document = service.documents().get(documentId=doc_id).execute()
+            try:
+                document = service.documents().get(documentId=doc_id).execute()
+            except Exception as exc:
+                skip_if_drive_quota(exc)
+                return
             end_index = find_end_index(document)
             service.documents().batchUpdate(
                 documentId=doc_id,

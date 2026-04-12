@@ -233,7 +233,8 @@ gcloud-auth:
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "✔ gcloud + ADC ready for project $project"
 
-# Enable every Google API the gsuite-bootstrap ADR commits to.
+# Enable the Google APIs the bootstrap requires (no billing needed).
+# Workspace surfaces (Drive/Sheets/Docs) plus IAM and Service Usage.
 [unix]
 gsuite-enable-apis:
     #!/usr/bin/env bash
@@ -246,12 +247,9 @@ gsuite-enable-apis:
         drive.googleapis.com \
         sheets.googleapis.com \
         docs.googleapis.com \
-        cloudfunctions.googleapis.com \
-        run.googleapis.com \
-        storage.googleapis.com \
         iam.googleapis.com \
         serviceusage.googleapis.com
-    echo "✔ APIs enabled."
+    echo "✔ Required APIs enabled."
 
 [windows]
 gsuite-enable-apis:
@@ -272,18 +270,98 @@ gsuite-enable-apis:
         drive.googleapis.com `
         sheets.googleapis.com `
         docs.googleapis.com `
-        cloudfunctions.googleapis.com `
-        run.googleapis.com `
-        storage.googleapis.com `
         iam.googleapis.com `
         serviceusage.googleapis.com
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ APIs enabled."
+    Write-Host "✔ Required APIs enabled."
+
+# Enable the billing-gated APIs (Cloud Functions, Cloud Run, Cloud Storage).
+# Requires an active billing account linked to the project.
+[unix]
+gsuite-enable-apis-billing:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    gcloud services enable \
+        cloudfunctions.googleapis.com \
+        run.googleapis.com \
+        storage.googleapis.com
+    echo "✔ Billing-gated APIs enabled."
+
+[windows]
+gsuite-enable-apis-billing:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $gcloud = Get-Command gcloud -ErrorAction SilentlyContinue
+    & $gcloud.Source services enable `
+        cloudfunctions.googleapis.com `
+        run.googleapis.com `
+        storage.googleapis.com
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "✔ Billing-gated APIs enabled."
 
 # Compose: install gcloud, authenticate, enable APIs, provision scratch, doctor.
+# This is the OAuth Desktop client / ADC path. Requires the operator to
+# create the OAuth client in Cloud Console first via `just gsuite-oauth-client`.
 gsuite-bootstrap:
     just gcloud-install
     just gcloud-auth
+    just gsuite-enable-apis
+    uv run aeat bootstrap
+    uv run aeat doctor
+
+# Autonomous service-account-driven bootstrap. Creates a service account
+# in the active gcloud project, grants it editor, downloads a key into
+# env/sa.json, sets GOOGLE_APPLICATION_CREDENTIALS in env/.env, enables
+# the required APIs, provisions scratch resources, and runs doctor.
+# Requires gcloud already authenticated as a user with IAM admin on the
+# project. No browser flow.
+[unix]
+gsuite-bootstrap-sa:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PROJECT=$(grep -E '^GOOGLE_CLOUD_PROJECT=' env/.env | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
+    if [ -z "$PROJECT" ]; then
+        echo "GOOGLE_CLOUD_PROJECT is empty in env/.env" >&2
+        exit 1
+    fi
+    SA="aeat-bootstrap@${PROJECT}.iam.gserviceaccount.com"
+    if ! gcloud iam service-accounts describe "$SA" --project="$PROJECT" >/dev/null 2>&1; then
+        gcloud iam service-accounts create aeat-bootstrap --project="$PROJECT" --display-name="AEAT bootstrap automation"
+    fi
+    gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$SA" --role="roles/editor" --quiet
+    if [ ! -f env/sa.json ]; then
+        gcloud iam service-accounts keys create env/sa.json --iam-account="$SA" --project="$PROJECT"
+    fi
+    just gsuite-enable-apis
+    uv run aeat bootstrap
+    uv run aeat doctor
+
+[windows]
+gsuite-bootstrap-sa:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $gcloud = Get-Command gcloud -ErrorAction SilentlyContinue
+    if (-not $gcloud) { Write-Error "gcloud not on PATH"; exit 1 }
+    try {
+        $bundled = (& $gcloud.Source components copy-bundled-python 2>$null | Select-Object -Last 1)
+        if ($bundled) { $env:CLOUDSDK_PYTHON = $bundled.Trim() }
+    } catch {}
+    $line = (Get-Content env/.env | Where-Object { $_ -match '^GOOGLE_CLOUD_PROJECT=' })
+    if (-not $line) { Write-Error "GOOGLE_CLOUD_PROJECT not in env/.env"; exit 1 }
+    $project = ($line -replace '^GOOGLE_CLOUD_PROJECT=', '').Trim().Trim('"').Trim("'")
+    if (-not $project) { Write-Error "GOOGLE_CLOUD_PROJECT empty"; exit 1 }
+    $sa = "aeat-bootstrap@$project.iam.gserviceaccount.com"
+    & $gcloud.Source iam service-accounts describe $sa --project=$project 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        & $gcloud.Source iam service-accounts create aeat-bootstrap --project=$project --display-name="AEAT bootstrap automation"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    & $gcloud.Source projects add-iam-policy-binding $project --member="serviceAccount:$sa" --role="roles/editor" --quiet
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    if (-not (Test-Path 'env/sa.json')) {
+        & $gcloud.Source iam service-accounts keys create env/sa.json --iam-account=$sa --project=$project
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
     just gsuite-enable-apis
     uv run aeat bootstrap
     uv run aeat doctor

@@ -19,6 +19,7 @@ from aeat.cli._live import (
     drive_service,
     requires_live_enabled,
     requires_scratch_folder,
+    skip_if_drive_quota,
     unique_prefix,
 )
 
@@ -37,15 +38,19 @@ class TestDriveLiveRoundTrip:
         payload = b"hello from aeat live tests"
 
         media = MediaIoBaseUpload(io.BytesIO(payload), mimetype="text/plain", resumable=False)
-        created = (
-            drive.files()
-            .create(
-                body={"name": filename, "parents": [folder_id], "mimeType": "text/plain"},
-                media_body=media,
-                fields="id, name, mimeType",
+        try:
+            created = (
+                drive.files()
+                .create(
+                    body={"name": filename, "parents": [folder_id], "mimeType": "text/plain"},
+                    media_body=media,
+                    fields="id, name, mimeType",
+                )
+                .execute()
             )
-            .execute()
-        )
+        except Exception as exc:
+            skip_if_drive_quota(exc)
+            return
         file_id = created["id"]
 
         try:

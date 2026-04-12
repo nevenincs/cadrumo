@@ -41,7 +41,7 @@ from aeat.auth import (
     build_serviceusage_service,
     build_sheets_service,
     build_storage_client,
-    get_adc_credentials_with_scopes,
+    get_credentials_for_scopes,
 )
 from aeat.config import PROJECT_ROOT, Settings
 
@@ -74,18 +74,26 @@ class Row:
     detail: str
 
 
-# ── Required API services (the scope set lives in :mod:`aeat.auth`) ─────────
+# ── API services split by billing requirement ───────────────────────────────
+#
+# Drive/Sheets/Docs/IAM/Service Usage are billing-free and required.
+# Cloud Functions/Run/Storage all require an active billing account on
+# the project — they are advisory rows, surfaced if the operator opts
+# in by linking billing.
 
 
 REQUIRED_API_SERVICES: list[str] = [
     "drive.googleapis.com",
     "sheets.googleapis.com",
     "docs.googleapis.com",
+    "iam.googleapis.com",
+    "serviceusage.googleapis.com",
+]
+
+OPTIONAL_API_SERVICES: list[str] = [
     "cloudfunctions.googleapis.com",
     "run.googleapis.com",
     "storage.googleapis.com",
-    "iam.googleapis.com",
-    "serviceusage.googleapis.com",
 ]
 
 
@@ -249,41 +257,79 @@ def check_gcloud_project_matches(settings: Settings) -> Row:
     return Row(section="gcloud project", required=True, state=State.OK, detail=out)
 
 
+def check_credentials_path(settings: Settings) -> Row:
+    """Report which auth path the unified resolver will use."""
+    if settings.google_application_credentials and Path(settings.google_application_credentials).exists():
+        return Row(
+            section="auth path",
+            required=True,
+            state=State.OK,
+            detail=f"service account ({settings.google_application_credentials})",
+        )
+    if settings.google_oauth_client_id and settings.google_oauth_client_secret:
+        return Row(
+            section="auth path",
+            required=True,
+            state=State.OK,
+            detail="OAuth 2.0 Desktop client",
+        )
+    if adc_well_known_path().exists():
+        return Row(
+            section="auth path",
+            required=True,
+            state=State.OK,
+            detail=f"ADC ({adc_well_known_path()})",
+        )
+    return Row(
+        section="auth path",
+        required=True,
+        state=State.MISSING,
+        detail="no credentials configured (set GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`)",
+    )
+
+
 def check_adc_file() -> Row:
-    """Verify the ADC JSON file exists at the well-known path."""
+    """Advisory: ADC JSON file at the well-known path."""
     path = adc_well_known_path()
     if not path.exists():
         return Row(
             section="ADC file",
-            required=True,
-            state=State.MISSING,
-            detail="run `just gcloud-auth` (runs application-default login)",
+            required=False,
+            state=State.SKIP,
+            detail="not configured (using SA or OAuth instead)",
         )
-    return Row(section="ADC file", required=True, state=State.OK, detail=str(path))
+    return Row(section="ADC file", required=False, state=State.OK, detail=str(path))
 
 
 def check_adc_scopes() -> Row:
-    """Verify the ADC JSON contains every scope the bootstrap requires."""
+    """Advisory: ADC JSON contains the required scopes (only relevant when ADC is the path)."""
     path = adc_well_known_path()
+    if not path.exists():
+        return Row(
+            section="ADC scopes",
+            required=False,
+            state=State.SKIP,
+            detail="ADC not in use",
+        )
     granted = adc_scopes_from_file(path)
     if not granted:
         return Row(
             section="ADC scopes",
-            required=True,
-            state=State.MISSING,
-            detail="ADC JSON has no scopes; re-run `just gcloud-auth`",
+            required=False,
+            state=State.WARN,
+            detail="ADC JSON has no scopes (re-run `just gcloud-auth` with --client-id-file)",
         )
     missing = sorted(set(REQUIRED_ADC_SCOPES) - set(granted))
     if missing:
         return Row(
             section="ADC scopes",
-            required=True,
-            state=State.MISSING,
+            required=False,
+            state=State.WARN,
             detail=f"missing: {', '.join(short_scope(s) for s in missing)}",
         )
     return Row(
         section="ADC scopes",
-        required=True,
+        required=False,
         state=State.OK,
         detail=f"{len(granted)} granted, includes drive/sheets/docs/cloud-platform",
     )
@@ -310,7 +356,7 @@ def check_api_enablement(settings: Settings) -> list[Row]:
             )
         ]
     try:
-        creds = get_adc_credentials_with_scopes([CLOUD_PLATFORM_SCOPE])
+        creds = get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
         service = build_serviceusage_service(creds)
         parent = f"projects/{settings.google_cloud_project}"
         enabled: set[str] = set()
@@ -345,24 +391,41 @@ def check_api_enablement(settings: Settings) -> list[Row]:
                     detail=f"run `gcloud services enable {service_name}`",
                 )
             )
+    for service_name in OPTIONAL_API_SERVICES:
+        if service_name in enabled:
+            rows.append(Row(section=f"API: {service_name}", required=False, state=State.OK, detail="enabled"))
+        else:
+            rows.append(
+                Row(
+                    section=f"API: {service_name}",
+                    required=False,
+                    state=State.SKIP,
+                    detail="needs project billing enabled (`gcloud services enable` fails otherwise)",
+                )
+            )
     return rows
 
 
 def check_drive_round_trip() -> Row:
-    """Call ``drive.about().get`` to confirm Drive auth round-trip."""
+    """Call ``drive.about().get`` to confirm Drive auth round-trip.
+
+    Advisory rather than required because consumer-Gmail service
+    accounts return ``invalid_grant`` / quota errors here even though
+    the credentials are otherwise valid for non-Drive APIs.
+    """
     try:
-        creds = get_adc_credentials_with_scopes([DRIVE_SCOPE])
+        creds = get_credentials_for_scopes([DRIVE_SCOPE])
         service = build_drive_service(creds)
         response = service.about().get(fields="user(emailAddress)").execute()
         email = response.get("user", {}).get("emailAddress", "unknown")
     except Exception as exc:
         return Row(
             section="Drive round-trip",
-            required=True,
-            state=State.MISSING,
+            required=False,
+            state=State.WARN,
             detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
         )
-    return Row(section="Drive round-trip", required=True, state=State.OK, detail=email)
+    return Row(section="Drive round-trip", required=False, state=State.OK, detail=email)
 
 
 def check_sheets_round_trip(settings: Settings) -> Row:
@@ -375,18 +438,18 @@ def check_sheets_round_trip(settings: Settings) -> Row:
             detail="no scratch sheet ID; run `aeat bootstrap`",
         )
     try:
-        creds = get_adc_credentials_with_scopes([SHEETS_SCOPE])
+        creds = get_credentials_for_scopes([SHEETS_SCOPE])
         service = build_sheets_service(creds)
         response = service.spreadsheets().get(spreadsheetId=settings.aeat_scratch_sheet_id).execute()
         title = response.get("properties", {}).get("title", "unknown")
     except Exception as exc:
         return Row(
             section="Sheets round-trip",
-            required=True,
-            state=State.MISSING,
+            required=False,
+            state=State.WARN,
             detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
         )
-    return Row(section="Sheets round-trip", required=True, state=State.OK, detail=title)
+    return Row(section="Sheets round-trip", required=False, state=State.OK, detail=title)
 
 
 def check_docs_round_trip(settings: Settings) -> Row:
@@ -399,22 +462,22 @@ def check_docs_round_trip(settings: Settings) -> Row:
             detail="no scratch doc ID; run `aeat bootstrap`",
         )
     try:
-        creds = get_adc_credentials_with_scopes([DOCS_SCOPE])
+        creds = get_credentials_for_scopes([DOCS_SCOPE])
         service = build_docs_service(creds)
         response = service.documents().get(documentId=settings.aeat_scratch_doc_id).execute()
         title = response.get("title", "unknown")
     except Exception as exc:
         return Row(
             section="Docs round-trip",
-            required=True,
-            state=State.MISSING,
+            required=False,
+            state=State.WARN,
             detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
         )
-    return Row(section="Docs round-trip", required=True, state=State.OK, detail=title)
+    return Row(section="Docs round-trip", required=False, state=State.OK, detail=title)
 
 
 def check_cloud_storage(settings: Settings) -> Row:
-    """List Cloud Storage buckets in the project (empty list is success)."""
+    """List Cloud Storage buckets in the project (advisory; needs billing)."""
     if not settings.google_cloud_project:
         return Row(
             section="Storage list",
@@ -423,21 +486,21 @@ def check_cloud_storage(settings: Settings) -> Row:
             detail="GOOGLE_CLOUD_PROJECT not set",
         )
     try:
-        creds = get_adc_credentials_with_scopes([CLOUD_PLATFORM_SCOPE])
+        creds = get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
         client = build_storage_client(creds, settings.google_cloud_project)
         count = sum(1 for _ in client.list_buckets(max_results=5))
     except Exception as exc:
         return Row(
             section="Storage list",
-            required=True,
-            state=State.MISSING,
+            required=False,
+            state=State.SKIP,
             detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
         )
-    return Row(section="Storage list", required=True, state=State.OK, detail=f"{count} buckets visible")
+    return Row(section="Storage list", required=False, state=State.OK, detail=f"{count} buckets visible")
 
 
 def check_cloud_functions(settings: Settings) -> Row:
-    """List Cloud Functions in the project (empty list is success)."""
+    """List Cloud Functions in the project (advisory; needs billing)."""
     if not settings.google_cloud_project:
         return Row(
             section="Functions list",
@@ -446,27 +509,27 @@ def check_cloud_functions(settings: Settings) -> Row:
             detail="GOOGLE_CLOUD_PROJECT not set",
         )
     try:
-        creds = get_adc_credentials_with_scopes([CLOUD_PLATFORM_SCOPE])
+        creds = get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
         client = build_cloudfunctions_client(creds)
         parent = f"projects/{settings.google_cloud_project}/locations/-"
         results = list(client.list_functions(parent=parent))
     except Exception as exc:
         return Row(
             section="Functions list",
-            required=True,
-            state=State.MISSING,
+            required=False,
+            state=State.SKIP,
             detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
         )
     return Row(
         section="Functions list",
-        required=True,
+        required=False,
         state=State.OK,
         detail=f"{len(results)} functions visible",
     )
 
 
 def check_cloud_run(settings: Settings) -> Row:
-    """List Cloud Run services in the project (empty list is success)."""
+    """List Cloud Run services in the project (advisory; needs billing)."""
     if not settings.google_cloud_project:
         return Row(
             section="Run list",
@@ -475,18 +538,18 @@ def check_cloud_run(settings: Settings) -> Row:
             detail="GOOGLE_CLOUD_PROJECT not set",
         )
     try:
-        creds = get_adc_credentials_with_scopes([CLOUD_PLATFORM_SCOPE])
+        creds = get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
         client = build_cloudrun_client(creds)
         parent = f"projects/{settings.google_cloud_project}/locations/-"
         results = list(client.list_services(parent=parent))
     except Exception as exc:
         return Row(
             section="Run list",
-            required=True,
-            state=State.MISSING,
+            required=False,
+            state=State.SKIP,
             detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
         )
-    return Row(section="Run list", required=True, state=State.OK, detail=f"{len(results)} services visible")
+    return Row(section="Run list", required=False, state=State.OK, detail=f"{len(results)} services visible")
 
 
 def check_service_account(settings: Settings) -> Row:
@@ -557,9 +620,11 @@ def collect_rows(settings: Settings) -> list[Row]:
     if gcloud_binary_path():
         rows.append(check_gcloud_account())
         rows.append(check_gcloud_project_matches(settings))
+    auth_row = check_credentials_path(settings)
+    rows.append(auth_row)
     rows.append(check_adc_file())
-    if adc_well_known_path().exists():
-        rows.append(check_adc_scopes())
+    rows.append(check_adc_scopes())
+    if auth_row.state == State.OK:
         rows.extend(check_api_enablement(settings))
         rows.append(check_drive_round_trip())
         rows.append(check_sheets_round_trip(settings))

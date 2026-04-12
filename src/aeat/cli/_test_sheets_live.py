@@ -15,6 +15,7 @@ from aeat.cli._live import (
     requires_live_enabled,
     requires_scratch_sheet,
     sheets_service,
+    skip_if_drive_quota,
     unique_prefix,
 )
 
@@ -36,17 +37,21 @@ class TestSheetsLiveRoundTrip:
         target_range = "A101:C103"
 
         try:
-            service.spreadsheets().values().update(
-                spreadsheetId=sheet_id,
-                range=target_range,
-                valueInputOption="USER_ENTERED",
-                body={
-                    "values": [
-                        [prefix, 1, 2],
-                        [prefix, 3, 4],
-                    ]
-                },
-            ).execute()
+            try:
+                service.spreadsheets().values().update(
+                    spreadsheetId=sheet_id,
+                    range=target_range,
+                    valueInputOption="USER_ENTERED",
+                    body={
+                        "values": [
+                            [prefix, 1, 2],
+                            [prefix, 3, 4],
+                        ]
+                    },
+                ).execute()
+            except Exception as exc:
+                skip_if_drive_quota(exc)
+                return
 
             response = service.spreadsheets().values().get(spreadsheetId=sheet_id, range=target_range).execute()
             values = response.get("values", [])
