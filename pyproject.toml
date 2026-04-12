@@ -41,6 +41,10 @@ dependencies = [
     "httpx>=0.28.1",
     # HTML parsing (status reader, #43)
     "beautifulsoup4>=4.12",
+    # IANA tz database (bundled on Linux/macOS, missing on Windows
+    # CPython — required by aeat.status._parsers.expedientes to
+    # localise AEAT timestamps to Europe/Madrid).
+    "tzdata>=2024.1 ; sys_platform == 'win32'",
     # Configuration
     "python-dotenv>=1.2.2",
     "vaultspec-core>=0.1.8",

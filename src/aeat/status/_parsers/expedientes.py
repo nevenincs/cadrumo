@@ -9,8 +9,9 @@ the minor layout drift AEAT ships between campaigns.
 from __future__ import annotations
 
 import unicodedata
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urljoin
+from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
@@ -40,6 +41,12 @@ _DATETIME_FORMATS: tuple[str, ...] = (
     "%d/%m/%Y",
 )
 
+# The AEAT portal renders times in Spanish peninsular local time. We
+# localise naive strptime results to Europe/Madrid and convert to UTC
+# so every record carries a strictly tz-aware timestamp — pydantic's
+# `AwareDatetime` rejects anything else.
+_AEAT_TZ = ZoneInfo("Europe/Madrid")
+
 
 def _normalise(text: str) -> str:
     """Return the NFKD-stripped, lowercased, whitespace-collapsed form."""
@@ -49,24 +56,31 @@ def _normalise(text: str) -> str:
 
 
 def _parse_aeat_datetime(raw: str) -> datetime:
-    """Parse an AEAT presented_at field.
+    """Parse an AEAT presented_at field into a UTC-aware datetime.
 
     Accepts ISO-8601 first (fixture shape), then falls back to the
-    Spanish-locale shapes AEAT actually renders.
+    Spanish-locale shapes AEAT actually renders. Naive results from
+    either branch are localised to ``Europe/Madrid`` and converted
+    to UTC so the returned timestamp is always tz-aware.
 
     Raises:
         StatusParseError: If none of the known formats match.
     """
+    parsed: datetime | None = None
     try:
-        return datetime.fromisoformat(raw)
+        parsed = datetime.fromisoformat(raw)
     except ValueError:
-        pass
-    for fmt in _DATETIME_FORMATS:
-        try:
-            return datetime.strptime(raw, fmt)
-        except ValueError:
-            continue
-    raise StatusParseError(f"unparseable presented_at timestamp: {raw!r}")
+        for fmt in _DATETIME_FORMATS:
+            try:
+                parsed = datetime.strptime(raw, fmt)
+                break
+            except ValueError:
+                continue
+    if parsed is None:
+        raise StatusParseError(f"unparseable presented_at timestamp: {raw!r}")
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=_AEAT_TZ)
+    return parsed.astimezone(UTC)
 
 
 def _direct_children(tag: Tag, name: str) -> list[Tag]:

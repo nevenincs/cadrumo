@@ -14,8 +14,10 @@ parsers land.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, date, datetime
-from typing import TYPE_CHECKING
+from types import TracebackType
+from typing import TYPE_CHECKING, Self
 from urllib.parse import urljoin
 
 from pydantic import AnyHttpUrl, TypeAdapter
@@ -51,16 +53,23 @@ _EXPEDIENTES_PATH = "/wlpl/TC-UTIL/Expediente?COPT=Y"
 class StatusReader:
     """Read-only driver for the authenticated AEAT status surfaces.
 
+    Ownership contract:
+        The caller owns the ``browser_session`` and the
+        ``cert_backend``; :meth:`close` only releases the
+        :class:`BrowserContext` the reader itself created. The
+        underlying Playwright runtime and certificate backend must
+        be torn down by the caller.
+
     Example:
         ```python
-        reader = StatusReader(
+        async with StatusReader(
             browser_session=session,
             cert_backend=cert,
             cache=StatusCache(settings.aeat_status_cache_dir, settings.aeat_status_cache_ttl_s),
             settings=settings,
             tax_id="X1234567L",
-        )
-        expedientes = await reader.fetch_expedientes()
+        ) as reader:
+            expedientes = await reader.fetch_expedientes()
         ```
     """
 
@@ -92,12 +101,32 @@ class StatusReader:
         self._tax_id = tax_id
         self._context: BrowserContext | None = None
         self._page: Page | None = None
+        self._tracing_active = False
+        # Lazy lock: allocated on first `_ensure_ready` call so the
+        # reader can be constructed outside a running event loop
+        # without binding to one prematurely.
+        self._ready_lock: asyncio.Lock | None = None
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        del exc_type, exc, tb
+        await self.close()
 
     async def _ensure_ready(self) -> Page:
         """Lazily create the authenticated browser context and page.
 
         The certificate backend is preloaded exactly once, before the
         first navigation. Subsequent calls reuse the same page.
+        Concurrent callers are serialised by :class:`asyncio.Lock` so
+        two in-flight fetches cannot spawn duplicate contexts and
+        leak the loser.
 
         Raises:
             StatusAuthError: If the certificate preload or context
@@ -105,24 +134,32 @@ class StatusReader:
         """
         if self._page is not None:
             return self._page
-        context: BrowserContext | None = None
-        try:
-            context = await self._browser_session.create_context()
-            # Assign first so close() can reach a leaked context if the
-            # cert preload or new_page call fails halfway through.
-            self._context = context
-            await self._cert_backend.preload_into_browser_context(context)
-            page = await context.new_page()
-        except Exception as exc:  # pragma: no cover - live path
-            if context is not None:
-                try:
-                    await context.close()
-                except Exception:  # pragma: no cover - defensive
-                    logger.exception("failed to close leaked browser context")
-            self._context = None
-            raise StatusAuthError(f"failed to prepare authenticated context: {exc}") from exc
-        self._page = page
-        return page
+        if self._ready_lock is None:
+            self._ready_lock = asyncio.Lock()
+        async with self._ready_lock:
+            # Re-check under the lock: another task may have raced
+            # ahead and fully initialised the page while we waited.
+            if self._page is not None:
+                return self._page
+            context: BrowserContext | None = None
+            try:
+                context = await self._browser_session.create_context()
+                # Assign first so close() can reach a leaked context
+                # if the cert preload or new_page call fails halfway.
+                self._context = context
+                await self._cert_backend.preload_into_browser_context(context)
+                await self._maybe_start_tracing(context)
+                page = await context.new_page()
+            except Exception as exc:  # pragma: no cover - live path
+                if context is not None:
+                    try:
+                        await context.close()
+                    except Exception:  # pragma: no cover - defensive
+                        logger.exception("failed to close leaked browser context")
+                self._context = None
+                raise StatusAuthError(f"failed to prepare authenticated context: {exc}") from exc
+            self._page = page
+            return page
 
     async def _fetch_html(self, path: str) -> tuple[str, AnyHttpUrl]:
         """Navigate to ``base_url + path`` and return ``(html, url)``.
@@ -143,12 +180,44 @@ class StatusReader:
             raise StatusAuthError(f"failed to navigate to {url}: {exc}") from exc
         return html, _URL_ADAPTER.validate_python(url)
 
-    async def close(self) -> None:
-        """Close the underlying browser context, if any.
+    async def _maybe_start_tracing(self, context: BrowserContext) -> None:
+        """Start Playwright tracing when a trace dir is configured.
 
+        The trace dir defaults to ``<repo>/var/browser-traces``;
+        operators opt in by *creating* that directory. When the
+        directory does not exist we treat tracing as disabled —
+        otherwise every unit test would accidentally start a
+        tracing session.
+        """
+        trace_dir = self._settings.aeat_status_browser_trace_dir
+        if not trace_dir.is_dir():
+            return
+        try:
+            await context.tracing.start(screenshots=True, snapshots=True)
+        except Exception:  # pragma: no cover - live path
+            logger.exception("failed to start playwright tracing")
+            return
+        self._tracing_active = True
+
+    async def close(self) -> None:
+        """Close the :class:`BrowserContext` the reader created, if any.
+
+        Ownership contract: the caller still owns the
+        ``browser_session`` and ``cert_backend`` and must tear down
+        the Playwright runtime and certificate backend separately.
         Safe to call multiple times.
         """
         if self._context is not None:
+            if self._tracing_active:
+                trace_path = (
+                    self._settings.aeat_status_browser_trace_dir
+                    / f"status-reader-{int(datetime.now(UTC).timestamp())}.zip"
+                )
+                try:
+                    await self._context.tracing.stop(path=trace_path)
+                except Exception:  # pragma: no cover - live path
+                    logger.exception("failed to stop playwright tracing")
+                self._tracing_active = False
             await self._context.close()
             self._context = None
             self._page = None
@@ -188,7 +257,7 @@ class StatusReader:
         if use_cache:
             cached = self._cache.get_tuple(surface=surface, key=key, model=Expediente)
             if cached is not None:
-                logger.info("status cache hit: expedientes (%d row(s))", len(cached))
+                logger.debug("status cache hit: expedientes (%d row(s))", len(cached))
                 return self._filter_since(cached, since)
 
         html, url = await self._fetch_html(_EXPEDIENTES_PATH)

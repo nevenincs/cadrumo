@@ -6,20 +6,21 @@ lands: without a concrete :class:`aeat.status.CertificateBackend`
 implementation the CLI cannot open an authenticated AEAT session
 and will error out cleanly with exit code 2. Programmatic use of
 :class:`aeat.status.StatusReader` is unaffected.
+
+When the rendering path is wired (in a #43 follow-up after #8
+merges), :mod:`aeat.cli.status._render` will host the pretty-table
+and JSON emitters. v1 keeps the CLI deliberately thin: parse
+flags, validate them, bail uniformly.
 """
 
 from __future__ import annotations
 
-import json
 from datetime import date
-from typing import Any
 
 import typer
 from rich.console import Console
-from rich.table import Table
 
 from aeat.logging import get_logger
-from aeat.status import Expediente
 
 logger = get_logger(__name__)
 
@@ -46,32 +47,8 @@ def _bail_cert_missing() -> None:
     raise typer.Exit(code=2)
 
 
-def _render_expedientes_table(records: tuple[Expediente, ...]) -> None:
-    table = Table(title=f"Mis expedientes ({len(records)} row(s))", header_style="bold")
-    table.add_column("expediente_id", style="cyan")
-    table.add_column("modelo")
-    table.add_column("period")
-    table.add_column("status")
-    table.add_column("presented_at")
-    table.add_column("csv")
-    for r in records:
-        table.add_row(
-            r.expediente_id,
-            r.modelo,
-            r.period,
-            r.status,
-            r.presented_at.isoformat(),
-            r.csv or "-",
-        )
-    _CONSOLE.print(table)
-
-
-def _emit_json(records: tuple[Any, ...]) -> None:
-    payload = [r.model_dump(mode="json") for r in records]
-    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False))
-
-
 def _parse_since(raw: str | None) -> date | None:
+    """Parse an optional ``--since`` ISO date, surfacing errors cleanly."""
     if raw is None:
         return None
     try:
@@ -98,9 +75,9 @@ def expedientes(
     Hidden until #8 wires the concrete cert backend; programmatic
     use of :class:`aeat.status.StatusReader` works today.
     """
-    # Validate flags eagerly so the operator gets a clean error even
-    # before the cert-backend bail-out.
-    _ = _parse_since(since)
+    # Validate flags eagerly so the operator gets a clean error
+    # even before the cert-backend bail-out.
+    _parse_since(since)
     _ = json_output
     _bail_cert_missing()
 
@@ -111,7 +88,7 @@ def notificaciones(
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
-    _ = _parse_since(since)
+    _parse_since(since)
     _ = json_output
     _bail_cert_missing()
 
@@ -155,7 +132,4 @@ def calendario(
     _bail_cert_missing()
 
 
-__all__ = [
-    "_render_expedientes_table",
-    "app",
-]
+__all__ = ["app"]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
@@ -81,17 +82,22 @@ class TestParseExpedientes:
             fetched_at=_FETCHED_AT,
         )
         assert len(records) == 2  # totals row dropped
+        madrid = ZoneInfo("Europe/Madrid")
         first = records[0]
         assert first.status == "Presentada - pendiente de compensacion"
-        assert first.presented_at.year == 2025
-        assert first.presented_at.month == 7
-        assert first.presented_at.day == 20
+        # Timestamps must be tz-aware UTC (AwareDatetime mandate).
+        assert first.presented_at.tzinfo == UTC
+        first_local = first.presented_at.astimezone(madrid)
+        assert (first_local.year, first_local.month, first_local.day) == (2025, 7, 20)
+        assert (first_local.hour, first_local.minute, first_local.second) == (12, 34, 56)
         assert first.justificante_url is not None
         assert str(first.justificante_url).startswith("https://sede.agenciatributaria.gob.es/wlpl/justificante"), (
             f"expected absolute url, got {first.justificante_url}"
         )
         second = records[1]
-        assert second.presented_at.day == 15
+        assert second.presented_at.tzinfo == UTC
+        second_local = second.presented_at.astimezone(madrid)
+        assert (second_local.year, second_local.month, second_local.day) == (2025, 7, 15)
         assert second.csv is None
         assert second.justificante_url is None
 

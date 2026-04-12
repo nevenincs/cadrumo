@@ -8,8 +8,10 @@ corruption.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
+import tempfile
 import time
 from pathlib import Path
 from typing import TypeVar
@@ -25,16 +27,42 @@ logger = get_logger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 
-def _atomic_write_text(path: Path, text: str) -> None:
+def _atomic_write_text(path: Path, text: str) -> bool:
     """Write ``text`` to ``path`` atomically via a sibling temp file.
 
-    Uses ``os.replace`` which is atomic on both POSIX and Windows when
-    source and destination live on the same filesystem, which they
-    always do here (we build the temp name from ``path``).
+    Uses :class:`tempfile.NamedTemporaryFile` in the same directory
+    so ``os.replace`` stays cross-filesystem-safe (it isn't: the
+    source and destination have to live on the same mount). On
+    Windows, ``os.replace`` can raise ``PermissionError`` if a
+    reader holds the destination open at the exact instant of the
+    rename; we catch that case, log it, clean up the temp file, and
+    return ``False`` so the caller knows the write did not land.
+
+    Returns:
+        ``True`` if the write succeeded, ``False`` on a graceful
+        Windows ``PermissionError`` race.
     """
-    tmp = path.with_suffix(path.suffix + f".tmp.{os.getpid()}")
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, path)
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=path.name + ".",
+        suffix=".tmp",
+        delete=False,
+    ) as fh:
+        fh.write(text)
+        tmp_path = Path(fh.name)
+    try:
+        os.replace(tmp_path, path)
+    except PermissionError:
+        logger.warning(
+            "atomic cache write lost the race on %s; falling back to fetched-but-not-cached",
+            path,
+        )
+        with contextlib.suppress(OSError):  # pragma: no cover - defensive
+            tmp_path.unlink(missing_ok=True)
+        return False
+    return True
 
 
 class _CacheMeta(BaseModel):
@@ -112,10 +140,11 @@ class StatusCache:
             if not isinstance(raw, list):
                 logger.debug("cache payload not a list for %s/%s - miss", surface.value, key)
                 return None
-            # Read back through the JSON validator: `strict=True`
-            # rejects string-coerced datetimes via `model_validate`,
-            # but `model_validate_json` honours the JSON coercion
-            # rules and round-trips `model_dump(mode="json")` cleanly.
+            # Read back through the JSON validator: ``strict=True``
+            # rejects string-coerced datetimes via ``model_validate``,
+            # but ``model_validate_json`` honours the JSON coercion
+            # rules and round-trips ``model_dump(mode="json")``
+            # cleanly.
             return tuple(model.model_validate_json(json.dumps(item)) for item in raw)
         except (ValidationError, json.JSONDecodeError):
             logger.debug("cache payload schema-mismatch for %s/%s - miss", surface.value, key)
@@ -139,8 +168,11 @@ class StatusCache:
         payload_path.parent.mkdir(parents=True, exist_ok=True)
         payload_json = json.dumps([record.model_dump(mode="json") for record in records])
         meta = _CacheMeta(cached_at=time.time(), ttl_s=self._ttl_s)
-        # Atomic write: stage to a sibling temp file and os.replace into
-        # position so a crash or concurrent writer can never leave a
-        # half-written payload visible to readers.
-        _atomic_write_text(payload_path, payload_json)
+        # Atomic write: stage to a sibling temp file and os.replace
+        # into position so a crash or concurrent writer can never
+        # leave a half-written payload visible to readers. Failures
+        # are non-fatal: the caller gets the freshly-fetched records
+        # regardless, we just don't cache them.
+        if not _atomic_write_text(payload_path, payload_json):
+            return
         _atomic_write_text(meta_path, meta.model_dump_json())
