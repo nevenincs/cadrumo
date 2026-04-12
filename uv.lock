@@ -69,7 +69,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "playwright", specifier = ">=1.58.0" },
-    { name = "playwright-stealth", specifier = ">=1.0.6" },
+    { name = "playwright-stealth", specifier = ">=2.0.3" },
     { name = "prek", specifier = ">=0.2.0" },
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
