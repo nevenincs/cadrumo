@@ -244,6 +244,7 @@ corpus/manuals/**/source.html/
 .vault/.trash/
 .vault/data/
 .vault/logs/
+.vaultspec/
 .vaultspec/_snapshots/
 AGENTS.md
 CLAUDE.md

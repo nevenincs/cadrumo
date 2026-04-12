@@ -275,6 +275,18 @@ class Settings(BaseSettings):
         description="Initial exponential backoff delay (seconds) between retries",
     )
 
+    # ── Filing draft engine (#39) ───────────────────────────────────────────
+    aeat_drafts_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "drafts",
+        description="Directory where filing drafts are written as JSON files",
+    )
+    aeat_draft_fail_on_warning: bool = Field(
+        default=False,
+        description=(
+            "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
+        ),
+    )
+
     # ── Introspection ───────────────────────────────────────────────────────
 
     @classmethod
