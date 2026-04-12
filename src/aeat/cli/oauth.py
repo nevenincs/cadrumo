@@ -4,13 +4,22 @@ There is no public Google API or gcloud command that creates an OAuth
 2.0 client ID for a project; the developer has to click through the
 Cloud Console UI. This sub-app does the next-best thing: prints a deep
 link to the credentials page, lists the exact fields and scopes the
-project needs, and accepts the path to the JSON the developer
-downloads. It then writes ``GOOGLE_OAUTH_CLIENT_ID`` and
-``GOOGLE_OAUTH_CLIENT_SECRET`` into ``env/.env`` from the parsed JSON.
+project needs, accepts the path to the JSON the developer downloads,
+copies it to ``env/oauth-client.json`` (gitignored) so gcloud has a
+stable file path to consume via ``--client-id-file``, and writes
+``GOOGLE_OAUTH_CLIENT_ID`` and ``GOOGLE_OAUTH_CLIENT_SECRET`` into
+``env/.env`` from the parsed JSON.
 
-Off the critical path for vanilla-workstation bootstrap (ADC handles
-the dev case) but shipped so user-delegated scopes can be acquired when
-they are needed.
+This is **on the critical path** for vanilla-workstation bootstrap.
+``gcloud auth application-default login --scopes=...`` against
+gcloud's built-in OAuth client is rejected by Google's "This app is
+blocked" screen for any scope outside gcloud's whitelist
+(cloud-platform, userinfo.email, openid, sqlservice.login). Drive,
+Sheets, and Docs are not in that whitelist. The only way to acquire
+ADC with the Workspace scopes the bootstrap needs is to pass
+``--client-id-file=<your-own-client.json>`` to ``application-default
+login``, which is exactly what ``just gcloud-auth`` does after this
+helper has been run.
 """
 
 from __future__ import annotations
@@ -102,8 +111,9 @@ def init(
         console.print(f"[red]json file does not exist: {json_path}[/]")
         raise typer.Exit(code=1)
 
+    raw = json_path.read_text(encoding="utf-8")
     try:
-        payload = json.loads(json_path.read_text(encoding="utf-8"))
+        payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         console.print(f"[red]could not parse json: {exc}[/]")
         raise typer.Exit(code=1) from exc
@@ -114,14 +124,25 @@ def init(
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=1) from exc
 
+    # Persist a stable copy of the OAuth client JSON inside env/ so
+    # gcloud can consume it via --client-id-file. The env/ directory
+    # is gitignored except for .env.example, so this file never lands
+    # in version control.
+    stable_client_path = PROJECT_ROOT / "env" / "oauth-client.json"
+    stable_client_path.parent.mkdir(parents=True, exist_ok=True)
+    stable_client_path.write_text(raw, encoding="utf-8")
+
     write_env_vars(
         PROJECT_ROOT / "env" / ".env",
         {
             "GOOGLE_OAUTH_CLIENT_ID": client_id,
             "GOOGLE_OAUTH_CLIENT_SECRET": client_secret,
+            "GOOGLE_OAUTH_CLIENT_JSON": str(stable_client_path),
         },
     )
-    console.print("[green]wrote GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET to env/.env[/]")
+    console.print(f"[green]copied OAuth client JSON to {stable_client_path}[/]")
+    console.print("[green]wrote GOOGLE_OAUTH_CLIENT_ID, _SECRET, _JSON to env/.env[/]")
+    console.print("[bold]Next step:[/] run `just gcloud-auth`")
 
 
 __all__ = ["app", "parse_oauth_client_json"]

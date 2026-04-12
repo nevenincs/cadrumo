@@ -149,7 +149,10 @@ gcloud-install:
 gcloud-setup: gcloud-install
 
 # Authenticate gcloud and acquire ADC with the full Workspace scope set.
-# Reads GOOGLE_CLOUD_PROJECT from env/.env. Browser flows fire here.
+# Requires env/oauth-client.json (provisioned by `just gsuite-oauth-client`)
+# because Google blocks Workspace scopes when requested against gcloud's
+# built-in OAuth client. Reads GOOGLE_CLOUD_PROJECT from env/.env.
+# Browser flows fire here.
 [unix]
 gcloud-auth:
     #!/usr/bin/env bash
@@ -162,6 +165,11 @@ gcloud-auth:
         echo "env/.env not found — run 'just env-setup' first." >&2
         exit 1
     fi
+    if [ ! -f env/oauth-client.json ]; then
+        echo "env/oauth-client.json not found — run 'just gsuite-oauth-client' first." >&2
+        echo "Drive/Sheets/Docs scopes cannot be requested against gcloud's built-in OAuth client." >&2
+        exit 1
+    fi
     PROJECT=$(grep -E '^GOOGLE_CLOUD_PROJECT=' env/.env | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
     if [ -z "$PROJECT" ]; then
         echo "GOOGLE_CLOUD_PROJECT is empty in env/.env — set it before continuing." >&2
@@ -171,8 +179,9 @@ gcloud-auth:
     gcloud auth login --quiet
     echo "▶ gcloud config set project $PROJECT"
     gcloud config set project "$PROJECT" --quiet
-    echo "▶ gcloud auth application-default login (with Drive/Sheets/Docs scopes)…"
+    echo "▶ gcloud auth application-default login (with Drive/Sheets/Docs scopes via your OAuth client)…"
     gcloud auth application-default login \
+        --client-id-file=env/oauth-client.json \
         --scopes=openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/documents
     echo "✔ gcloud + ADC ready for project $PROJECT"
 
@@ -187,6 +196,10 @@ gcloud-auth:
     }
     if (-not (Test-Path 'env/.env')) {
         Write-Error "env/.env not found - run 'just env-setup' first."
+        exit 1
+    }
+    if (-not (Test-Path 'env/oauth-client.json')) {
+        Write-Error "env/oauth-client.json not found - run 'just gsuite-oauth-client' first. Drive/Sheets/Docs scopes cannot be requested against gcloud's built-in OAuth client."
         exit 1
     }
     # Pre-set CLOUDSDK_PYTHON once so every gcloud subcommand uses the
@@ -213,8 +226,10 @@ gcloud-auth:
     Write-Host "▶ gcloud config set project $project"
     & $gcloud.Source config set project $project --quiet
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "▶ gcloud auth application-default login (with Drive/Sheets/Docs scopes)…"
-    & $gcloud.Source auth application-default login --scopes='openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/documents'
+    Write-Host "▶ gcloud auth application-default login (with Drive/Sheets/Docs scopes via your OAuth client)…"
+    & $gcloud.Source auth application-default login `
+        --client-id-file=env/oauth-client.json `
+        --scopes='openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/documents'
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "✔ gcloud + ADC ready for project $project"
 

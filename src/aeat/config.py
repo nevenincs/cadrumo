@@ -44,6 +44,10 @@ class Settings(BaseSettings):
         default="http://localhost:8080",
         description="OAuth redirect URI for local dev server",
     )
+    google_oauth_client_json: str = Field(
+        default="",
+        description="Path to the downloaded OAuth Desktop client JSON (used by gcloud --client-id-file)",
+    )
 
     # ── Google Service Account (Server / Automation) ────────────────────────
     google_application_credentials: str = Field(
