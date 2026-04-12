@@ -16,6 +16,8 @@ from pathlib import Path
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from aeat.auth import CertificateBackend
+
 
 class DivergenceSink(StrEnum):
     """Supported sinks for :class:`aeat.sync.DivergenceRecord` persistence."""
@@ -230,6 +232,28 @@ class Settings(BaseSettings):
     aeat_rate_limit_delay_seconds: float = Field(
         default=2.0,
         description="Minimum delay between AEAT requests in seconds",
+    )
+
+    # ── AEAT certificate authentication (#8) ────────────────────────────────
+    aeat_certificate_path: Path | None = Field(
+        default=None,
+        description="Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle",
+    )
+    aeat_certificate_password_secret: SecretStr | None = Field(
+        default=None,
+        description="PKCS#12 passphrase (env only, never logged or persisted)",
+    )
+    aeat_certificate_friendly_name: str | None = Field(
+        default=None,
+        description="Optional human-readable label for the certificate",
+    )
+    aeat_certificate_backend: CertificateBackend = Field(
+        default=CertificateBackend.PLAYWRIGHT_CONTEXT,
+        description="Which cert backend to use (PLAYWRIGHT_CONTEXT by default)",
+    )
+    aeat_certificate_verify_url: str = Field(
+        default="https://sede.agenciatributaria.gob.es/",
+        description="Target URL for aeat.auth.verify_handshake() mTLS smoke test",
     )
 
     # ── LLM ─────────────────────────────────────────────────────────────────

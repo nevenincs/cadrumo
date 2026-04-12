@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import google.auth
 from google.auth.credentials import Credentials as BaseCredentials
@@ -37,7 +37,38 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from aeat.config import Settings
+from aeat.auth.certificate import (
+    CertificateBackend,
+    CertificateBundle,
+    CertificateError,
+    CertificateExpiredError,
+    CertificateHandshakeError,
+    CertificateLoadError,
+    CertificatePasswordError,
+    HandshakeResult,
+    LoadedCertificate,
+    load_certificate,
+    preload_into_browser_context,
+    verify_handshake,
+)
+
+if TYPE_CHECKING:
+    from aeat.config import Settings
+
+__all__ = [
+    "CertificateBackend",
+    "CertificateBundle",
+    "CertificateError",
+    "CertificateExpiredError",
+    "CertificateHandshakeError",
+    "CertificateLoadError",
+    "CertificatePasswordError",
+    "HandshakeResult",
+    "LoadedCertificate",
+    "load_certificate",
+    "preload_into_browser_context",
+    "verify_handshake",
+]
 
 log = logging.getLogger(__name__)
 
