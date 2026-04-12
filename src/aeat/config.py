@@ -261,6 +261,27 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ── Submission engine (#42) ─────────────────────────────────────────────
+    aeat_submissions_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "submissions",
+        description="Directory where SubmittedFiling JSON audit records are persisted",
+    )
+    aeat_submission_dry_run_default: bool = Field(
+        default=True,
+        description="Default for SubmissionEngine.submit_draft(dry_run=...) when omitted by the CLI",
+    )
+    aeat_submission_require_human_confirmation: bool = Field(
+        default=True,
+        description=(
+            "Belt-and-braces safety gate for live submissions. When False, "
+            "the engine refuses to enter live mode even if override_confirmation=True"
+        ),
+    )
+    aeat_submission_browser_trace_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "browser-traces",
+        description="Directory where submission-engine Playwright traces and screenshots are written",
+    )
+
     # ── Self-healing sync runner (#11) ──────────────────────────────────────
     aeat_sync_concurrency: int = Field(
         default=4,
