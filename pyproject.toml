@@ -29,6 +29,7 @@ dependencies = [
     "playwright>=1.58.0",
     # Data validation & models
     "pydantic>=2.12.5",
+    "pydantic-settings>=2.9.1",
     # HTTP client
     "httpx>=0.28.1",
     # Configuration
@@ -104,6 +105,7 @@ allowed-unresolved-imports = [
     "google.auth",
     "google.oauth2",
     "google.cloud",
+    "google_auth_oauthlib",
     "playwright",
 ]
 

@@ -214,6 +214,7 @@ token.pickle
 gcp-oauth.keys.json
 .gdrive-server-credentials.json
 .mcp-google-sheets-token.json
+.tokens/
 
 # Playwright
 playwright-report/
@@ -222,3 +223,20 @@ test-results/
 # IDE
 .idea/
 .vscode/
+
+# >>> vaultspec-managed (do not edit this block) >>>
+.agents/
+.claude/
+.codex/
+.gemini/
+.mcp.json
+.vault/.obsidian/
+.vault/.trash/
+.vault/data/
+.vault/logs/
+.vaultspec/
+.vaultspec/_snapshots/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+# <<< vaultspec-managed <<<
