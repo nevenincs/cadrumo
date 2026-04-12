@@ -1,0 +1,303 @@
+"""Adapter classes wiring on-main components to the workflow Protocols.
+
+Each adapter is a thin translation layer: no domain decisions live
+here, only the minimal surface normalisation required by the narrow
+Protocols in :mod:`aeat.workflow._protocols`. The :func:`default_engine`
+factory composes the adapters into a :class:`WorkflowEngine` and is
+the entry point production call sites (e.g. the CLI) use to obtain a
+fully-wired workflow engine.
+
+The status-reader, inbox, and certificate-bundle slots remain
+``None`` by default: those subpackages are still in flight (#43, #46,
+#8). The workflow engine tolerates ``None`` for each and records the
+skipped stages as "not wired" diagnostics rather than failing.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Mapping
+from datetime import date
+from pathlib import Path
+from typing import cast
+
+from aeat.config import Settings, load_settings
+from aeat.deadlines import (
+    AutonomoProfile,
+    DeadlineEngine,
+    Schedule,
+)
+from aeat.filing import (
+    CasillaSchemaProvider,
+    FilingDraft,
+    FilingProfile,
+    build_draft,
+)
+from aeat.submission import (
+    FilingDraftLike,
+    SubmissionEngine,
+    SubmissionPreflightError,
+)
+from aeat.sync import LiveSyncRunner
+from aeat.sync import ModeloIdentifier as SyncModeloIdentifier
+from aeat.workflow._engine import WorkflowEngine
+from aeat.workflow._errors import WorkflowError
+from aeat.workflow._protocols import (
+    CertificateBundleProtocol,
+    DeadlineEngineProtocol,
+    FilingDraftBuilderProtocol,
+    FilingInputsProviderProtocol,
+    InboxProtocol,
+    StatusReaderProtocol,
+    SubmissionEngineProtocol,
+    SubmittedFilingLike,
+    SyncRunnerProtocol,
+    SyncRunSummary,
+)
+
+
+class DeadlineEngineAdapter:
+    """Wrap :class:`aeat.deadlines.DeadlineEngine` as a workflow Protocol."""
+
+    def __init__(self, engine: DeadlineEngine) -> None:
+        """Store the wrapped :class:`DeadlineEngine`."""
+        self._engine = engine
+
+    def compute(
+        self,
+        profile: AutonomoProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ) -> Schedule:
+        """Delegate to :meth:`DeadlineEngine.compute`."""
+        return self._engine.compute(profile, year, today=today)
+
+
+class FilingDraftBuilderAdapter:
+    """Wrap :func:`aeat.filing.build_draft` as a workflow Protocol.
+
+    A schema provider is stored on construction so the narrow
+    Protocol method does not leak the provider argument into the
+    workflow engine's signature.
+    """
+
+    def __init__(self, *, schema_provider: object) -> None:
+        """Store the schema provider used for every subsequent build."""
+        self._schema_provider = schema_provider
+
+    def build(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+        inputs: Mapping[str, object],
+        fail_on_warning: bool = False,
+    ) -> FilingDraftLike:
+        """Delegate to :func:`build_draft`.
+
+        ``cast`` is used for the filing-engine cross-module types because
+        :class:`AutonomoProfile` and :class:`aeat.filing.FilingProfile`
+        are structurally similar but not declared as the same Protocol
+        — the real adapter hooks in on the call site when the profile
+        loader lands.
+        """
+        draft: FilingDraft = build_draft(
+            modelo=modelo,
+            period=period,
+            profile=cast("FilingProfile", profile),
+            inputs=inputs,
+            schema_provider=cast("CasillaSchemaProvider", self._schema_provider),
+            fail_on_warning=fail_on_warning,
+        )
+        return cast("FilingDraftLike", draft)
+
+
+class SubmissionEngineAdapter:
+    """Wrap :class:`aeat.submission.SubmissionEngine` as a workflow Protocol.
+
+    The real engine does not expose a standalone ``preflight`` method
+    (preflight is run inline inside :meth:`submit_draft`). The adapter
+    re-uses the engine's internal :class:`Preflight` instance so the
+    workflow's ``RUNNING_PREFLIGHT`` stage can still execute the gate
+    without triggering the whole submission machinery.
+    """
+
+    def __init__(self, engine: SubmissionEngine) -> None:
+        """Store the wrapped :class:`SubmissionEngine`."""
+        self._engine = engine
+
+    def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
+        """Delegate to the engine's internal :class:`Preflight`."""
+        self._engine._preflight.check(draft, today=today)
+
+    async def submit_draft(
+        self,
+        draft: FilingDraftLike,
+        *,
+        dry_run: bool = True,
+        override_confirmation: bool = False,
+        today: date | None = None,
+    ) -> SubmittedFilingLike:
+        """Delegate to :meth:`SubmissionEngine.submit_draft` and project."""
+        result = await self._engine.submit_draft(
+            draft,
+            dry_run=dry_run,
+            override_confirmation=override_confirmation,
+            today=today,
+        )
+        return SubmittedFilingLike(
+            submission_id=result.submission_id,
+            draft_id=result.draft_id,
+            modelo=result.modelo,
+            period=result.period,
+            status=result.status.value,
+            submitted_at=result.submitted_at,
+        )
+
+
+class SyncRunnerAdapter:
+    """Wrap :class:`aeat.sync.LiveSyncRunner` as a workflow Protocol."""
+
+    def __init__(self, runner: LiveSyncRunner) -> None:
+        """Store the wrapped :class:`LiveSyncRunner`."""
+        self._runner = runner
+
+    async def run(
+        self,
+        *,
+        modelo: str | None = None,
+        period: str | None = None,
+        auto_heal: bool = False,
+    ) -> SyncRunSummary:
+        """Delegate to :meth:`LiveSyncRunner.run` and project the result."""
+        runner_modelo = cast("SyncModeloIdentifier | None", modelo)
+        result = await self._runner.run(
+            modelo=runner_modelo,
+            period=period,
+            auto_heal=auto_heal,
+        )
+        divergences = len(result.divergence_records)
+        auto_healed = len(result.plan.auto_heal)
+        escalated = len(result.plan.escalate)
+        return SyncRunSummary(
+            divergence_count=divergences,
+            auto_healed_count=auto_healed,
+            escalated_count=escalated,
+        )
+
+
+class JsonFileInputsProvider:
+    """Read casilla inputs from the settings-configured JSON file.
+
+    The JSON file is expected to hold a top-level object whose keys
+    are casilla IDs and whose values are the raw casilla inputs (the
+    shape the filing draft builder expects). Missing files raise
+    :class:`WorkflowError` so the caller's draft stage translates the
+    failure into ``DRAFT_HAS_ERRORS``.
+    """
+
+    def __init__(self, path: Path | None) -> None:
+        """Store the configured inputs file path."""
+        self._path = path
+
+    def load_inputs(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+    ) -> Mapping[str, object]:
+        """Read and return the JSON inputs for ``(modelo, period)``."""
+        del profile  # intentionally unused; profile is read by the builder directly
+        if self._path is None:
+            raise WorkflowError("AEAT_WORKFLOW_DRAFT_INPUTS_PATH is unset; cannot build a draft")
+        if not self._path.exists():
+            raise WorkflowError(f"workflow draft inputs file not found: {self._path}")
+        raw = json.loads(self._path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise WorkflowError(f"workflow draft inputs file {self._path} must be a JSON object")
+        # The structure is "modelo -> period -> {casilla: value}" if the
+        # user nests; otherwise the root is treated as casilla -> value.
+        modelo_section = raw.get(modelo)
+        if isinstance(modelo_section, dict):
+            period_section = modelo_section.get(period, modelo_section)
+            if isinstance(period_section, dict):
+                return period_section
+        return raw
+
+
+def default_engine(
+    *,
+    submission_engine: SubmissionEngineProtocol,
+    deadline_engine: DeadlineEngineProtocol | None = None,
+    filing_draft_builder: FilingDraftBuilderProtocol | None = None,
+    sync_runner: SyncRunnerProtocol | None = None,
+    status_reader: StatusReaderProtocol | None = None,
+    inbox: InboxProtocol | None = None,
+    certificate_bundle: CertificateBundleProtocol | None = None,
+    inputs_provider: FilingInputsProviderProtocol | None = None,
+    settings: Settings | None = None,
+) -> WorkflowEngine:
+    """Build a :class:`WorkflowEngine` wired to the on-main components.
+
+    Args:
+        submission_engine: Required submission Protocol. The caller
+            must build the real :class:`SubmissionEngine` themselves
+            (the composition is complex and already owned by
+            :mod:`aeat.cli.submission`) and pass it wrapped or
+            pre-adapted.
+        deadline_engine: Optional deadline Protocol. ``None`` triggers
+            a :class:`WorkflowError`; deadlines are mandatory for the
+            workflow to have any obligation to work on.
+        filing_draft_builder: Optional draft-builder Protocol.
+            ``None`` triggers a :class:`WorkflowError`.
+        sync_runner: Optional sync Protocol. ``None`` skips the sync
+            stage with a "not wired" diagnostic.
+        status_reader: Optional status-reader Protocol (#43).
+        inbox: Optional inbox Protocol (#46).
+        certificate_bundle: Optional certificate Protocol (#8).
+        inputs_provider: Optional inputs Protocol; defaults to a
+            :class:`JsonFileInputsProvider` backed by
+            ``settings.aeat_workflow_draft_inputs_path``.
+        settings: Optional :class:`Settings` override.
+
+    Returns:
+        A fully wired :class:`WorkflowEngine`.
+
+    Raises:
+        WorkflowError: If any of the required mandatory adapters
+            cannot be constructed.
+    """
+    cfg = settings or load_settings()
+    if deadline_engine is None:
+        raise WorkflowError("default_engine requires a deadline_engine adapter")
+    if filing_draft_builder is None:
+        raise WorkflowError("default_engine requires a filing_draft_builder adapter")
+    provider = inputs_provider or JsonFileInputsProvider(cfg.aeat_workflow_draft_inputs_path)
+    return WorkflowEngine(
+        deadline_engine=deadline_engine,
+        filing_draft_builder=filing_draft_builder,
+        submission_engine=submission_engine,
+        sync_runner=sync_runner,
+        status_reader=status_reader,
+        inbox=inbox,
+        certificate_bundle=certificate_bundle,
+        inputs_provider=provider,
+        settings=cfg,
+    )
+
+
+# Re-exported so importing :mod:`aeat.workflow` surfaces the primary
+# preflight-exception type without callers having to dig into
+# :mod:`aeat.submission` for an isinstance check.
+__all__ = [
+    "DeadlineEngineAdapter",
+    "FilingDraftBuilderAdapter",
+    "JsonFileInputsProvider",
+    "SubmissionEngineAdapter",
+    "SubmissionPreflightError",
+    "SyncRunnerAdapter",
+    "default_engine",
+]
