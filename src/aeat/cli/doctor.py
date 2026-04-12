@@ -32,8 +32,8 @@ from aeat.auth import (
     CLOUD_PLATFORM_SCOPE,
     DOCS_SCOPE,
     DRIVE_SCOPE,
+    REQUIRED_ADC_SCOPES,
     SHEETS_SCOPE,
-    USERINFO_EMAIL_SCOPE,
     build_cloudfunctions_client,
     build_cloudrun_client,
     build_docs_service,
@@ -74,16 +74,8 @@ class Row:
     detail: str
 
 
-# ── Required scope set the bootstrap commits to ─────────────────────────────
+# ── Required API services (the scope set lives in :mod:`aeat.auth`) ─────────
 
-
-REQUIRED_ADC_SCOPES: list[str] = [
-    DRIVE_SCOPE,
-    SHEETS_SCOPE,
-    DOCS_SCOPE,
-    CLOUD_PLATFORM_SCOPE,
-    USERINFO_EMAIL_SCOPE,
-]
 
 REQUIRED_API_SERVICES: list[str] = [
     "drive.googleapis.com",

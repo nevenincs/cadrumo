@@ -60,6 +60,16 @@ SCOPES: list[str] = [
     OPENID_SCOPE,
 ]
 
+# Scopes the bootstrap insists on at ADC acquisition time. The doctor
+# verifies that the on-disk ADC JSON has every scope in this list.
+REQUIRED_ADC_SCOPES: list[str] = [
+    DRIVE_SCOPE,
+    SHEETS_SCOPE,
+    DOCS_SCOPE,
+    CLOUD_PLATFORM_SCOPE,
+    USERINFO_EMAIL_SCOPE,
+]
+
 # Narrower scope sets for least-privilege usage.
 DRIVE_READONLY_SCOPES: list[str] = ["https://www.googleapis.com/auth/drive.readonly"]
 SHEETS_READONLY_SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
