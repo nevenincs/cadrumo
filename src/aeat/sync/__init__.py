@@ -46,6 +46,11 @@ from ._protocols import (
     Rule,
     SchemaLoader,
 )
+from ._repository import (
+    DivergenceRecordRepository,
+    JsonFileDivergenceRepository,
+    StorageDivergenceRepository,
+)
 from ._strategies import (
     AdditiveAllowlistStrategy,
     BenignRecordStrategy,
@@ -79,6 +84,7 @@ __all__ = [
     "DivergenceKind",
     "DivergencePayload",
     "DivergenceRecord",
+    "DivergenceRecordRepository",
     "DivergenceRepositoryError",
     "EscalateStrategy",
     "FilingStatusChanged",
@@ -87,6 +93,7 @@ __all__ = [
     "HealingError",
     "HealingPlan",
     "HealingStrategy",
+    "JsonFileDivergenceRepository",
     "LLMClient",
     "LLMRequest",
     "LabelEsChanged",
@@ -99,6 +106,7 @@ __all__ = [
     "ResolutionState",
     "Rule",
     "SchemaLoader",
+    "StorageDivergenceRepository",
     "StrategyAction",
     "StrategyOutcome",
     "SyncError",
