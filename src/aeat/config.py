@@ -141,6 +141,20 @@ class Settings(BaseSettings):
         description="Document ID for the aeat-scratch sandbox doc",
     )
 
+    # ── Google test fixtures (provisioned by scripts/provision_google_fixtures.py) ──
+    aeat_google_test_fixtures_folder_id: str = Field(
+        default="",
+        description="Drive folder ID that roots every Google Workspace test fixture",
+    )
+    aeat_google_test_fixture_smoke_sheet_id: str = Field(
+        default="",
+        description="Spreadsheet ID for the smoke-test fixture Sheet (A1 seeded sentinel)",
+    )
+    aeat_google_test_fixture_smoke_doc_id: str = Field(
+        default="",
+        description="Document ID for the smoke-test fixture Doc (body seeded sentinel)",
+    )
+
     # ── Storage ─────────────────────────────────────────────────────────────
     aeat_database_url: str = Field(
         default=f"sqlite:///{(PROJECT_ROOT / 'var' / 'aeat.db').as_posix()}",
@@ -159,6 +173,10 @@ class Settings(BaseSettings):
     aeat_live_tests_enabled: bool = Field(
         default=False,
         description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
+    )
+    aeat_live_tests_google: bool = Field(
+        default=False,
+        description="Secondary opt-in specifically for Google Workspace fixture live tests",
     )
 
     # ── Manuals corpus (aeat.manuals, #25) ──────────────────────────────────

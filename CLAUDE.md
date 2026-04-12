@@ -1,7 +1,7 @@
 Spanish tax authority (AEAT) automation — Python 3.13, uv, hatchling, src layout.
 MCP tooling: Playwright (headless browser), Context7 (docs), Google Workspace (Drive, Sheets, Docs) — see `.mcp.json`.
 All environment variables must be defined in `src/aeat/config.py` via the pydantic-settings `Settings` model and documented in `.env.example` — `tests/test_config.py` enforces alignment.
-Testing uses pytest. Unit tests may use mocks; live integration tests must never contain mocks, patches, shadows, fakes, or stubs. All tests must carry `@pytest.mark.unit` or `@pytest.mark.live` markers. Unit tests live inside each module's directory (Rust-style colocated tests).
+Testing uses pytest. Unit tests may use mocks; live integration tests must never contain mocks, patches, shadows, fakes, or stubs. All tests must carry `@pytest.mark.unit` or `@pytest.mark.live` markers. Unit tests live inside each module's directory (Rust-style colocated tests). Live tests are skipped by default; opt in with `AEAT_LIVE_TESTS_ENABLED=1`. Google Workspace live tests additionally require `AEAT_LIVE_TESTS_GOOGLE=1` and project-owned fixtures provisioned via `just google-fixtures-provision` — see `scripts/README.md`.
 Use Google-style docstrings and type hints on all public signatures.
 
 ## Module Structure & API Rules
