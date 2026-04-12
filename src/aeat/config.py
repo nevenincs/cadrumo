@@ -44,6 +44,10 @@ class Settings(BaseSettings):
         default="http://localhost:8080",
         description="OAuth redirect URI for local dev server",
     )
+    google_oauth_client_json: str = Field(
+        default="",
+        description="Path to the downloaded OAuth Desktop client JSON (used by gcloud --client-id-file)",
+    )
 
     # ── Google Service Account (Server / Automation) ────────────────────────
     google_application_credentials: str = Field(
@@ -85,6 +89,26 @@ class Settings(BaseSettings):
     aeat_base_url: str = Field(
         default="https://sede.agenciatributaria.gob.es",
         description="AEAT sede electrónica base URL",
+    )
+
+    # ── Scratch resources (provisioned by `aeat bootstrap`) ─────────────────
+    aeat_scratch_folder_id: str = Field(
+        default="",
+        description="Drive folder ID for the aeat-scratch sandbox",
+    )
+    aeat_scratch_sheet_id: str = Field(
+        default="",
+        description="Spreadsheet ID for the aeat-scratch sandbox sheet",
+    )
+    aeat_scratch_doc_id: str = Field(
+        default="",
+        description="Document ID for the aeat-scratch sandbox doc",
+    )
+
+    # ── Live tests ──────────────────────────────────────────────────────────
+    aeat_live_tests_enabled: bool = Field(
+        default=False,
+        description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
