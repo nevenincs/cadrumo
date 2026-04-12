@@ -62,13 +62,12 @@ class BrowserSession:
             # Prepare proxy settings
             proxy: ProxySettings | None = None
             if self.settings.aeat_proxy_url:
-                proxy_dict: dict[str, str] = {"server": self.settings.aeat_proxy_url}
+                proxy = ProxySettings(server=self.settings.aeat_proxy_url)
                 if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret:
-                    proxy_dict["username"] = self.settings.aeat_proxy_username
-                    proxy_dict["password"] = self.settings.aeat_proxy_password_secret
+                    proxy["username"] = self.settings.aeat_proxy_username
+                    proxy["password"] = self.settings.aeat_proxy_password_secret
                 if self.settings.aeat_proxy_bypass:
-                    proxy_dict["bypass"] = self.settings.aeat_proxy_bypass
-                proxy = proxy_dict  # type: ignore
+                    proxy["bypass"] = self.settings.aeat_proxy_bypass
 
             browser = await self.playwright.chromium.launch(
                 channel=self.settings.aeat_browser_channel,
