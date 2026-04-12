@@ -25,6 +25,11 @@ dependencies = [
     "google-auth-httplib2>=0.3.1",
     "gspread>=6.2.1",
     "google-cloud-storage>=3.10.1",
+    "google-cloud-functions>=1.20.0",
+    "google-cloud-run>=0.10.18",
+    # CLI
+    "typer>=0.20.0",
+    "rich>=14.2.0",
     # Browser automation
     "playwright>=1.58.0",
     # Data validation & models
@@ -36,6 +41,9 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "vaultspec-core>=0.1.8",
 ]
+
+[project.scripts]
+aeat = "aeat.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/wgergely/aeat"
@@ -86,6 +94,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "T20"]
+# Typer requires `typer.Argument(...)` / `typer.Option(...)` literally inside
+# parameter defaults; B008 flags this idiom but it is the documented usage.
+"src/aeat/cli/**/*.py" = ["B008"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -107,10 +118,17 @@ allowed-unresolved-imports = [
     "google.cloud",
     "google_auth_oauthlib",
     "playwright",
+    "typer",
+    "rich",
 ]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["src", "tests"]
 pythonpath = ["src"]
-addopts = "-v --tb=short"
+python_files = ["test_*.py", "_test_*.py"]
+addopts = "-v --tb=short -m 'not live'"
+markers = [
+    "unit: deterministic tests with no external I/O",
+    "live: tests that hit real Google APIs against scratch resources",
+]
