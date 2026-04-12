@@ -4,6 +4,13 @@ All environment variables must be defined in `src/aeat/config.py` via the pydant
 Testing uses pytest. Unit tests may use mocks; live integration tests must never contain mocks, patches, shadows, fakes, or stubs. All tests must carry `@pytest.mark.unit` or `@pytest.mark.live` markers. Unit tests live inside each module's directory (Rust-style colocated tests).
 Use Google-style docstrings and type hints on all public signatures.
 
+## Module Structure & API Rules
+- All Python code lives under `src/aeat/`.
+- **Public API Discipline**: Code outside a subpackage must import only from the subpackage root (e.g., `from aeat.models import ModelCatalogue`).
+- **Types**: Use Enums for closed catalogues, Pydantic models for wire/config, and dataclasses for internal values. No bare dicts.
+- **Errors**: All domain errors inherit from `aeat.errors.AeatError`.
+- **Logging**: Always use `aeat.logging.get_logger(__name__)`.
+
 <vaultspec type="config">
 ## Vaultspec Rules
 

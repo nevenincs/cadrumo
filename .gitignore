@@ -138,7 +138,10 @@ celerybeat.pid
 .env
 .envrc
 .venv
-env/
+# env/ is the canonical container for .env files; ignore everything
+# inside it except the tracked example template.
+env/*
+!env/.env.example
 venv/
 ENV/
 env.bak/

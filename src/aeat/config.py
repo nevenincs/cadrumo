@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=PROJECT_ROOT / ".env",
+        env_file=PROJECT_ROOT / "env" / ".env",
         env_file_encoding="utf-8",
     )
 
@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     google_oauth_redirect_uri: str = Field(
         default="http://localhost:8080",
         description="OAuth redirect URI for local dev server",
+    )
+    google_oauth_client_json: str = Field(
+        default="",
+        description="Path to the downloaded OAuth Desktop client JSON (used by gcloud --client-id-file)",
     )
 
     # ── Google Service Account (Server / Automation) ────────────────────────
@@ -85,6 +89,60 @@ class Settings(BaseSettings):
     aeat_base_url: str = Field(
         default="https://sede.agenciatributaria.gob.es",
         description="AEAT sede electrónica base URL",
+    )
+
+    # ── Scratch resources (provisioned by `aeat bootstrap`) ─────────────────
+    aeat_scratch_folder_id: str = Field(
+        default="",
+        description="Drive folder ID for the aeat-scratch sandbox",
+    )
+    aeat_scratch_sheet_id: str = Field(
+        default="",
+        description="Spreadsheet ID for the aeat-scratch sandbox sheet",
+    )
+    aeat_scratch_doc_id: str = Field(
+        default="",
+        description="Document ID for the aeat-scratch sandbox doc",
+    )
+
+    # ── Live tests ──────────────────────────────────────────────────────────
+    aeat_live_tests_enabled: bool = Field(
+        default=False,
+        description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
+    )
+
+    # ── Browser Automation ──────────────────────────────────────────────────
+    aeat_browser_channel: str = Field(
+        default="chrome",
+        description="Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge')",
+    )
+    aeat_browser_headless: bool = Field(
+        default=True,
+        description="Run browser in headless mode",
+    )
+    aeat_default_profile_name: str = Field(
+        default="default",
+        description="Default profile name for the browser session",
+    )
+    aeat_proxy_url: str = Field(
+        default="",
+        description="Proxy URL (e.g., 'http://proxy.example.com:8080')",
+    )
+    aeat_proxy_username: str = Field(
+        default="",
+        description="Username for proxy authentication",
+    )
+    aeat_proxy_password_secret: str = Field(
+        default="",
+        description="Password for proxy authentication",
+    )
+    aeat_proxy_bypass: str = Field(
+        default="",
+        description="Comma-separated list of domains to bypass the proxy",
+    )
+    aeat_rate_limit_delay_seconds: float = Field(
+        default=2.0,
+        description="Minimum delay between AEAT requests in seconds",
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
