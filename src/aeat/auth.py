@@ -42,17 +42,31 @@ from aeat.config import Settings
 log = logging.getLogger(__name__)
 
 # ── Scope constants ─────────────────────────────────────────────────────────
-# Default: full read/write access to Drive, Sheets, and Cloud Platform.
+# Default: full read/write access to Drive, Sheets, Docs, and Cloud Platform.
+DRIVE_SCOPE = "https://www.googleapis.com/auth/drive"
+SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
+DOCS_SCOPE = "https://www.googleapis.com/auth/documents"
+CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
+USERINFO_EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email"
+OPENID_SCOPE = "openid"
+
+# The full default scope set covering Workspace + GCP admin.
 SCOPES: list[str] = [
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/cloud-platform",
+    DRIVE_SCOPE,
+    SHEETS_SCOPE,
+    DOCS_SCOPE,
+    CLOUD_PLATFORM_SCOPE,
+    USERINFO_EMAIL_SCOPE,
+    OPENID_SCOPE,
 ]
 
 # Narrower scope sets for least-privilege usage.
 DRIVE_READONLY_SCOPES: list[str] = ["https://www.googleapis.com/auth/drive.readonly"]
 SHEETS_READONLY_SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+DOCS_READONLY_SCOPES: list[str] = ["https://www.googleapis.com/auth/documents.readonly"]
 DRIVE_FILE_SCOPES: list[str] = ["https://www.googleapis.com/auth/drive.file"]
+STORAGE_FULL_CONTROL_SCOPE = "https://www.googleapis.com/auth/devstorage.full_control"
+STORAGE_READ_ONLY_SCOPE = "https://www.googleapis.com/auth/devstorage.read_only"
 
 
 # ── OAuth 2.0 ───────────────────────────────────────────────────────────────
@@ -197,10 +211,111 @@ def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> B
 
 
 def build_drive_service(credentials: BaseCredentials) -> Any:
-    """Build an authenticated Google Drive API v3 client."""
-    return build("drive", "v3", credentials=credentials)
+    """Build an authenticated Google Drive API v3 client.
+
+    The discovery cache is disabled because intermittent cache corruption
+    is a long-standing source of test flakes. Each build performs one
+    extra discovery round-trip; we accept the cost.
+    """
+    return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
 def build_sheets_service(credentials: BaseCredentials) -> Any:
     """Build an authenticated Google Sheets API v4 client."""
-    return build("sheets", "v4", credentials=credentials)
+    return build("sheets", "v4", credentials=credentials, cache_discovery=False)
+
+
+def build_docs_service(credentials: BaseCredentials) -> Any:
+    """Build an authenticated Google Docs API v1 client."""
+    return build("docs", "v1", credentials=credentials, cache_discovery=False)
+
+
+def build_serviceusage_service(credentials: BaseCredentials) -> Any:
+    """Build an authenticated Service Usage API v1 client.
+
+    Used by `aeat doctor` to check API enablement state without shelling
+    out to gcloud.
+    """
+    return build("serviceusage", "v1", credentials=credentials, cache_discovery=False)
+
+
+def build_storage_client(credentials: BaseCredentials, project: str) -> Any:
+    """Build a typed Google Cloud Storage client.
+
+    Args:
+        credentials: Authenticated Google credentials.
+        project: GCP project ID for billing and quota.
+
+    Returns:
+        A ``google.cloud.storage.Client`` instance.
+    """
+    from google.cloud import storage  # local import to avoid hard dep at module load
+
+    return storage.Client(project=project, credentials=credentials)
+
+
+def build_cloudfunctions_client(credentials: BaseCredentials) -> Any:
+    """Build a typed Cloud Functions v2 client."""
+    from google.cloud import functions_v2
+
+    return functions_v2.FunctionServiceClient(credentials=credentials)
+
+
+def build_cloudrun_client(credentials: BaseCredentials) -> Any:
+    """Build a typed Cloud Run v2 services client."""
+    from google.cloud import run_v2
+
+    return run_v2.ServicesClient(credentials=credentials)
+
+
+# ── Scope verification helpers ──────────────────────────────────────────────
+
+
+def assert_credentials_have_scopes(
+    credentials: object,
+    required: list[str],
+) -> tuple[bool, list[str]]:
+    """Check whether a credentials-like object covers a required scope set.
+
+    Duck-typed on the ``scopes`` attribute so the helper can be used
+    against real google-auth credential objects, ADC dict payloads, or
+    any test stand-in that exposes a ``scopes`` iterable. Returns the
+    verdict alongside the list of missing scopes so callers can render
+    targeted remediation hints rather than a single boolean.
+
+    Args:
+        credentials: Any object exposing a ``scopes`` attribute.
+        required: Scopes that must be granted.
+
+    Returns:
+        A ``(ok, missing)`` tuple. ``ok`` is True iff every required
+        scope is present in the credentials' scope set. ``missing`` is
+        the sorted list of scopes the credentials lack.
+    """
+    granted = set(getattr(credentials, "scopes", None) or [])
+    missing = sorted(set(required) - granted)
+    return (not missing, missing)
+
+
+def get_adc_credentials_with_scopes(scopes: list[str] | None = None) -> BaseCredentials:
+    """Return Application Default Credentials, requesting the given scopes.
+
+    Wraps ``google.auth.default(scopes=...)`` and re-raises with a clearer
+    message if no ADC are configured. Does not perform any browser flow —
+    the caller must have already run ``gcloud auth application-default
+    login`` with at least the scopes requested here.
+
+    Args:
+        scopes: Scopes to attach to the returned credentials. Defaults
+            to the full ``SCOPES`` set.
+
+    Returns:
+        Authenticated credentials suitable for any Google API client.
+
+    Raises:
+        google.auth.exceptions.DefaultCredentialsError: If ADC are not
+            configured on the workstation.
+    """
+    scopes = scopes or SCOPES
+    credentials, _project = google.auth.default(scopes=scopes)
+    return credentials
