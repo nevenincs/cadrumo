@@ -21,22 +21,10 @@ async def test_live_fetch_and_ack(tmp_path: Path) -> None:
     if not os.environ.get("AEAT_LIVE_TESTS_ENABLED"):
         pytest.skip("AEAT_LIVE_TESTS_ENABLED not set")
 
-    try:
-        from aeat.status import StatusReader  # type: ignore
-    except ImportError:
-        pytest.skip("aeat.status (#43) not yet on main")
-
-    from aeat.inbox import InboxFetcher
-
-    reader = StatusReader()  # type: ignore[call-arg]
-    fetcher = InboxFetcher(
-        source=reader,
-        inbox_file=tmp_path / "inbox.json",
-        pdf_dir=tmp_path / "pdfs",
-    )
-    added = await fetcher.fetch_new()
-    if not added:
-        pytest.skip("No live notifications available for the test profile")
-    first = added[0]
-    acked = await fetcher.acknowledge(first.notificacion_id, by="live-test")
-    assert acked.acknowledged_by == "live-test"
+    # #43 (status reader) is now on this branch, but the real end-to-end
+    # wiring between `aeat.inbox.InboxFetcher` and
+    # `aeat.status.StatusReader` still depends on #8 (cert auth). Until
+    # #8 lands, skip here with a concrete reason so CI cannot report
+    # phantom live coverage.
+    del tmp_path
+    pytest.skip("inbox ↔ status live wiring deferred until #8 cert backend lands")
