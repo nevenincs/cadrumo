@@ -79,7 +79,7 @@ dev = [
     "pytest>=9.0.3",
     "pytest-asyncio>=1.0.0",
     "playwright>=1.58.0",
-    "playwright-stealth>=1.0.6",
+    "playwright-stealth>=2.0.3",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
