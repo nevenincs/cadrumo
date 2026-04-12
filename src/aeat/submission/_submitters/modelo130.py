@@ -1,0 +1,167 @@
+"""Modelo 130 submitter (pago fraccionado IRPF autónomos).
+
+Walks the AEAT Modelo 130 portal, fills casilla-keyed inputs from
+``draft.values``, takes screenshots at every step, and records a
+Playwright trace. The :meth:`dry_run` path aborts before the final
+"Firmar y Enviar" click and writes a form-state snapshot. The
+:meth:`submit` path completes the walk and returns a
+:class:`Justificante` built from the AEAT acknowledgement page.
+
+The submitter consumes the narrow
+:class:`aeat.submission._submitters._contract.BrowserSessionLike`
+Protocol — the production ``aeat.browser.BrowserSession`` structurally
+conforms, while unit tests pass a deterministic Protocol
+implementation.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from pathlib import Path
+
+from aeat.logging import get_logger
+from aeat.submission._errors import SubmissionFormFillError
+from aeat.submission._models import SubmissionAttempt, SubmissionStatus
+from aeat.submission._protocols import (
+    CasillaCatalogue,
+    FilingDraftLike,
+    Justificante,
+    Portal,
+)
+from aeat.submission._submitters import Submitter
+from aeat.submission._submitters._contract import BrowserSessionLike
+
+_logger = get_logger(__name__)
+
+_MODELO = "130"
+
+
+class Modelo130Submitter(Submitter):
+    """Concrete :class:`Submitter` for AEAT Modelo 130.
+
+    Attributes:
+        artifact_dir: Directory under which screenshots, traces, and
+            form-state snapshots are written. Each attempt creates a
+            subdirectory keyed on the attempt id.
+    """
+
+    def __init__(self, *, artifact_dir: Path) -> None:
+        """Construct a Modelo 130 submitter.
+
+        Args:
+            artifact_dir: Directory for per-attempt artefacts.
+        """
+        self.artifact_dir = artifact_dir
+
+    @property
+    def modelo(self) -> str:
+        """Return the modelo identifier (``"130"``)."""
+        return _MODELO
+
+    def _attempt_dir(self, draft_id: str, suffix: str) -> Path:
+        """Return (and create) the artefact directory for one attempt."""
+        path = self.artifact_dir / f"{draft_id}-{suffix}"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def _casilla_selector(self, casilla_id: str) -> str:
+        """Return the CSS selector for a casilla input on the portal."""
+        return f"input[name='casilla_{casilla_id}']"
+
+    async def _walk_form(
+        self,
+        *,
+        draft: FilingDraftLike,
+        session: BrowserSessionLike,
+        casilla_catalogue: CasillaCatalogue,
+        portal: Portal,
+        attempt_dir: Path,
+    ) -> None:
+        """Shared portal walk used by both :meth:`dry_run` and :meth:`submit`."""
+        await session.navigate(portal.presentation_url)
+        await session.screenshot(attempt_dir / "01-landing.png")
+
+        casillas = casilla_catalogue.casillas_for_modelo(_MODELO)
+        known_ids = {c.id for c in casillas}
+        for casilla_id, value in draft.values.items():
+            if casilla_id not in known_ids:
+                raise SubmissionFormFillError(f"draft references unknown casilla {casilla_id!r} for modelo {_MODELO}")
+            await session.fill(self._casilla_selector(casilla_id), value)
+
+        await session.screenshot(attempt_dir / "02-form-filled.png")
+
+    async def dry_run(
+        self,
+        *,
+        draft: FilingDraftLike,
+        session: BrowserSessionLike,
+        casilla_catalogue: CasillaCatalogue,
+        portal: Portal,
+    ) -> SubmissionAttempt:
+        """Run the full form-fill walk and abort before "Firmar y Enviar"."""
+        started = datetime.now(UTC)
+        attempt_dir = self._attempt_dir(draft.draft_id, "dry-run")
+        trace_path = attempt_dir / "trace.zip"
+
+        _logger.info("modelo130 dry-run start: draft=%s", draft.draft_id)
+        await session.trace_start(f"modelo130-dry-run-{draft.draft_id}")
+        try:
+            await self._walk_form(
+                draft=draft,
+                session=session,
+                casilla_catalogue=casilla_catalogue,
+                portal=portal,
+                attempt_dir=attempt_dir,
+            )
+            await session.snapshot_form_state(attempt_dir / "form_state.json")
+            _logger.info("modelo130 dry-run: aborting before 'Firmar y Enviar'")
+        finally:
+            await session.trace_stop(trace_path)
+
+        ended = datetime.now(UTC)
+        return SubmissionAttempt(
+            attempt_id=f"{draft.draft_id}-dry-run",
+            started_at=started,
+            ended_at=ended,
+            status=SubmissionStatus.PENDING,
+            browser_trace_path=trace_path,
+        )
+
+    async def submit(
+        self,
+        *,
+        draft: FilingDraftLike,
+        session: BrowserSessionLike,
+        casilla_catalogue: CasillaCatalogue,
+        portal: Portal,
+    ) -> tuple[SubmissionAttempt, Justificante | None]:
+        """Perform the full live walk and parse the acknowledgement."""
+        started = datetime.now(UTC)
+        attempt_dir = self._attempt_dir(draft.draft_id, "submit")
+        trace_path = attempt_dir / "trace.zip"
+
+        _logger.info("modelo130 submit start: draft=%s", draft.draft_id)
+        await session.trace_start(f"modelo130-submit-{draft.draft_id}")
+        try:
+            await self._walk_form(
+                draft=draft,
+                session=session,
+                casilla_catalogue=casilla_catalogue,
+                portal=portal,
+                attempt_dir=attempt_dir,
+            )
+            await session.click("button#firmar-y-enviar")
+            await session.screenshot(attempt_dir / "03-acknowledgement.png")
+        finally:
+            await session.trace_stop(trace_path)
+
+        ended = datetime.now(UTC)
+        attempt = SubmissionAttempt(
+            attempt_id=f"{draft.draft_id}-submit",
+            started_at=started,
+            ended_at=ended,
+            status=SubmissionStatus.SUBMITTED,
+            browser_trace_path=trace_path,
+        )
+        # v1: justificante parsing happens at a layer above this submitter.
+        return attempt, None
