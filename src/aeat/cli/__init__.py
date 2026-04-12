@@ -32,6 +32,7 @@ from aeat.cli import sheets as sheets_module
 from aeat.cli import status as status_module
 from aeat.cli import submission as submission_module
 from aeat.cli import sync as sync_module
+from aeat.cli import workflow as workflow_module
 
 app = typer.Typer(
     name="aeat",
@@ -65,6 +66,7 @@ app.add_typer(filing_module.app, name="filing", help="Filing draft engine comman
 app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#43).")
 app.add_typer(submission_module.app, name="submission", help="Filing submission engine (#42).")
 app.add_typer(inbox_module.app, name="inbox", help="AEAT notifications inbox (#46).")
+app.add_typer(workflow_module.app, name="workflow", help="End-user composite workflow engine (#59).")
 
 
 __all__ = ["app"]
