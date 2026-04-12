@@ -2,18 +2,17 @@
 
 This module holds a single ``@pytest.mark.live`` test that performs a
 DRY-RUN-ONLY engine invocation. It never enters live submission mode.
-The test is skipped unless the environment variable
-``AEAT_LIVE_TESTS=1`` is set.
+The test is skipped by default via the ``live`` marker; opt in with
+``AEAT_LIVE_TESTS_ENABLED=1`` and run with the ``live`` marker selected.
 
 Running::
 
-    AEAT_LIVE_TESTS=1 uv run pytest src/aeat/submission/test_live_submission.py -q
+    AEAT_LIVE_TESTS_ENABLED=1 uv run pytest -m live src/aeat/submission/test_live_submission.py -q
 """
 
 from __future__ import annotations
 
 import asyncio
-import os
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -36,13 +35,7 @@ from aeat.submission import (
     Submitter,
 )
 
-pytestmark = [
-    pytest.mark.live,
-    pytest.mark.skipif(
-        os.environ.get("AEAT_LIVE_TESTS") != "1",
-        reason="live tests opt-in via AEAT_LIVE_TESTS=1",
-    ),
-]
+pytestmark = [pytest.mark.live]
 
 
 @dataclass

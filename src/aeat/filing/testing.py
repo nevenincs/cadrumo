@@ -20,8 +20,26 @@ from ._builders._modelo_130_schema import (
     StaticCasillaCollection,
     StaticCasillaSchema,
     StaticCasillaSchemaProvider,
-    default_schema_provider,
 )
+from ._builders._modelo_303_schema import MODELO_303_SCHEMA
+from ._builders._modelo_390_schema import MODELO_390_SCHEMA
+
+
+def default_schema_provider() -> StaticCasillaSchemaProvider:
+    """Return a provider seeded with the synthetic 130/303/390 schemas.
+
+    Returns:
+        A frozen :class:`StaticCasillaSchemaProvider` wiring the
+        three hand-curated collections used by the test suite and
+        the ``aeat.filing`` public docstring examples.
+    """
+    return StaticCasillaSchemaProvider(
+        collections={
+            "130": MODELO_130_SCHEMA,
+            "303": MODELO_303_SCHEMA,
+            "390": MODELO_390_SCHEMA,
+        }
+    )
 
 
 class SyntheticProfile(BaseModel):
@@ -63,6 +81,8 @@ class SyntheticDeadlineChecker(BaseModel):
 
 __all__ = [
     "MODELO_130_SCHEMA",
+    "MODELO_303_SCHEMA",
+    "MODELO_390_SCHEMA",
     "StaticCasillaCollection",
     "StaticCasillaSchema",
     "StaticCasillaSchemaProvider",

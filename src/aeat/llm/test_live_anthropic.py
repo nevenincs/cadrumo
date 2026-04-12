@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from pathlib import Path
 
 import pytest
@@ -21,8 +20,6 @@ class _LiveSettings(Settings):
 def test_live_anthropic_round_trip(tmp_path: Path) -> None:
     """Run a tiny Anthropic round trip when live testing is explicitly enabled."""
 
-    if os.getenv("AEAT_LIVE_TESTS") != "1":
-        pytest.skip("Set AEAT_LIVE_TESTS=1 to enable live LLM tests.")
     settings = _LiveSettings(
         aeat_llm_cache_dir=tmp_path / "cache",
         aeat_llm_usage_dir=tmp_path / "usage",

@@ -12,6 +12,11 @@ Use Google-style docstrings and type hints on all public signatures.
 - **Logging**: Always use `aeat.logging.get_logger(__name__)`.
 - **Trilingual Contract**: The system handles Spanish (es), English (en), and Hungarian (hu). Spanish is the authoritative language for AEAT domain terminology. English is the authoritative language for internal code and documentation. Hungarian is the target output language for user-facing content. We use a Nested-dict shape (`Translatable` TypedDict) for storage and avoid gettext or `.po` files.
 
+## Commits & Releases
+- **Conventional commits are mandatory** on every commit on every branch. Format: `<type>(<scope>): <subject>`. Valid types: `feat`, `fix`, `perf`, `revert`, `docs`, `refactor`, `chore`, `test`, `build`, `ci`, `style`. The type drives the CHANGELOG section when `just release` runs — see `RELEASING.md` and `.vault/adr/2026-04-12-release-please-adr.md`.
+- **Releases run LOCALLY, never in CI.** GitHub Actions is permanently disabled on this repo. `just release` previews the next release via release-please in dry-run mode; `just release-apply` guides the human operator through the bump + tag locally. Nothing is ever pushed automatically. **Do not add a `.github/workflows/release-please.yml` file** — `tests/test_release_config.py` fails if one appears.
+- **Version source of truth:** `pyproject.toml [project].version` is canonical. `src/aeat/__init__.py __version__` and `.release-please-manifest.json` mirror it. All three must agree — enforced by `tests/test_release_config.py`.
+
 <vaultspec type="config">
 ## Vaultspec Rules
 

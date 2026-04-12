@@ -17,6 +17,7 @@ from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from aeat.auth import CertificateBackend
+from aeat.justificante import JustificanteParserBackend
 
 
 class DivergenceSink(StrEnum):
@@ -169,6 +170,16 @@ class Settings(BaseSettings):
     aeat_storage_backup_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "backups",
         description="Directory where the storage layer writes database backups",
+    )
+
+    # ── Casilla corpus ──────────────────────────────────────────────────────
+    aeat_casillas_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "casillas",
+        description="Root directory for canonical casilla catalogue JSON files",
+    )
+    aeat_casillas_review_required: bool = Field(
+        default=True,
+        description="If true, verify rejects casilla records lacking reviewer metadata",
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
@@ -376,6 +387,23 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ── Workflow engine (#59) ───────────────────────────────────────────────
+    aeat_workflow_runs_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "workflow-runs",
+        description="Directory where WorkflowResult JSON audit records are persisted",
+    )
+    aeat_workflow_sync_first_default: bool = Field(
+        default=True,
+        description="Default for WorkflowEngine.run_next(sync_first=...) when omitted by the CLI",
+    )
+    aeat_workflow_draft_inputs_path: Path | None = Field(
+        default=None,
+        description=(
+            "Optional path to a JSON file carrying the user's casilla input values "
+            "consumed by the workflow engine's BUILDING_DRAFT stage"
+        ),
+    )
+
     # ── Filing draft engine (#39) ───────────────────────────────────────────
     aeat_drafts_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "drafts",
@@ -386,6 +414,30 @@ class Settings(BaseSettings):
         description=(
             "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
         ),
+    )
+
+    # ── Status reader (#43) ─────────────────────────────────────────────────
+    aeat_status_cache_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "status-cache",
+        description="Directory for the short-lived AEAT status-page cache",
+    )
+    aeat_status_cache_ttl_s: int = Field(
+        default=900,
+        description="TTL in seconds for status cache entries (default 15 min)",
+    )
+    aeat_status_browser_trace_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "browser-traces",
+        description="Directory where the status reader drops Playwright trace files",
+    )
+
+    # ── Justificante parser (#44) ───────────────────────────────────────────
+    aeat_justificantes_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "justificantes",
+        description="Directory where parsed justificante PDFs and metadata are stored",
+    )
+    aeat_justificante_parser_backend: JustificanteParserBackend = Field(
+        default=JustificanteParserBackend.PDFPLUMBER,
+        description="Parser backend for `aeat.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
