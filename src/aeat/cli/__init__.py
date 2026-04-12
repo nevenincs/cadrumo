@@ -22,6 +22,7 @@ from aeat.cli import deadlines as deadlines_module
 from aeat.cli import docs as docs_module
 from aeat.cli import doctor as doctor_module
 from aeat.cli import drive as drive_module
+from aeat.cli import filing as filing_module
 from aeat.cli import llm as llm_module
 from aeat.cli import manual as manual_module
 from aeat.cli import oauth as oauth_module
@@ -55,6 +56,7 @@ app.add_typer(oauth_module.app, name="oauth-client", help="OAuth 2.0 Desktop cli
 app.add_typer(manual_module.app, name="manual", help="AEAT Manual práctico corpus helpers (#25).")
 app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
 app.add_typer(deadlines_module.app, name="deadlines", help="Filing-deadline computation engine (#38).")
+app.add_typer(filing_module.app, name="filing", help="Filing draft engine commands (#39).")
 
 
 __all__ = ["app"]
