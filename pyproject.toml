@@ -58,14 +58,14 @@ build-backend = "hatchling.build"
 packages = ["src/aeat"]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "ruff>=0.15.9",
     "ty>=0.0.1a1",
     "prek>=0.2.0",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.0.0",
-    "pytest-playwright>=0.7.0",
+    "playwright>=1.58.0",
     "playwright-stealth>=1.0.6",
 ]
 

@@ -30,7 +30,7 @@ class BrowserSession:
         playwright: Playwright,
         settings: Settings,
         profile: Profile,
-        auth_backend: Any | None = None,
+        auth_backend: object | None = None,
         evasion_strategy: EvasionStrategy | None = None,
     ) -> None:
         """Initialize the BrowserSession.

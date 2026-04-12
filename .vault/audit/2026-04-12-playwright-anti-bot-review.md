@@ -40,3 +40,21 @@ Dependencies were successfully added to the `pyproject.toml` `dev` group. Siblin
 
 OVERALL STATUS | DONE | Ready for Submission
 The implementation perfectly mirrors the issue requirements and vaultspec constraints. No immediate actions are pending.
+
+TYPES-002 | HIGH | Leaked Any Type in Signature
+The BrowserSession.__init__ constructor defines auth_backend: Any | None = None. This leaks the Any type into the public API, violating the requirement for strict type hints. A proper Protocol or explicit type should be used instead.
+
+TYPES-003 | HIGH | Type Ignoring and Safety Bypass in Session
+In session.py, the proxy configuration explicitly bypasses typing using proxy = proxy_dict # type: ignore. This defeats the type checker. ProxySettings is a TypedDict, and the dictionary should be constructed to conform to it safely without ignoring types.
+
+DEPENDENCIES-002 | HIGH | Playwright Added to Production Dependencies
+The implementation added playwright>=1.58.0 to the [project.dependencies] section in pyproject.toml. Task 2.1 of the plan explicitly mandated adding both playwright and playwright-stealth under the development dependencies group.
+
+DEPENDENCIES-003 | MEDIUM | Deprecated uv Dev Dependencies Group
+The plan explicitly specified using dependency-groups.dev, but the implementation used the deprecated [tool.uv] dev-dependencies table in pyproject.toml. This triggers a deprecation warning during uv pipeline checks.
+
+TESTS-003 | MEDIUM | Unauthorized Pytest Plugin
+The pytest-playwright plugin was added to the development dependencies. The plan only specified adding playwright and playwright-stealth, and explicitly forbade unallowed pytest plugins. Furthermore, the plugin is unused as tests manually use async_playwright() with @pytest.mark.asyncio.
+
+STATUS-002 | REVISION REQUIRED | High Issues Found
+Due to the CRITICAL/HIGH severity issues identified (TYPES-002, TYPES-003, DEPENDENCIES-002) regarding type safety bypasses and incorrect dependency placement, a revision is explicitly requested before this branch can be merged.
