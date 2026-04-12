@@ -30,6 +30,7 @@ from aeat.cli import llm as llm_module
 from aeat.cli import manual as manual_module
 from aeat.cli import normatives as normatives_module
 from aeat.cli import oauth as oauth_module
+from aeat.cli import setup as setup_wizard_module
 from aeat.cli import sheets as sheets_module
 from aeat.cli import status as status_module
 from aeat.cli import submission as submission_module
@@ -75,6 +76,7 @@ app.add_typer(
     name="justificante",
     help="AEAT justificante (PDF receipt) parser and live CSV verifier (#44).",
 )
+app.add_typer(setup_wizard_module.app, name="setup", help="First-run interactive setup wizard (#61).")
 
 
 __all__ = ["app"]
