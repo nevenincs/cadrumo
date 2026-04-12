@@ -1,5 +1,7 @@
 # aeat
 
+[![CI](https://github.com/wgergely/aeat/actions/workflows/ci.yml/badge.svg)](https://github.com/wgergely/aeat/actions/workflows/ci.yml)
+
 Spanish tax authority (AEAT) automation — tax information retrieval and
 filing tools, built on top of Google Workspace and GCP for storage,
 auditing, and orchestration.
@@ -244,6 +246,10 @@ just hooks          # prek run --all-files
 ```
 
 The full just recipe list is `just --list`.
+
+### CI
+
+Every pull request and push to `main` is automatically verified on GitHub Actions across a matrix of Ubuntu and Windows runners. The workflow executes the same checks as the local development loop (`lint`, `typecheck`, `test`, `hooks`). Live tests are explicitly skipped on CI to ensure the build remains secret-free and deterministic.
 
 ## License
 
