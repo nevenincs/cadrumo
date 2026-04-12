@@ -66,6 +66,7 @@ dev-dependencies = [
     "pytest>=9.0.3",
     "pytest-asyncio>=1.0.0",
     "pytest-playwright>=0.7.0",
+    "playwright-stealth>=1.0.6",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
@@ -120,6 +121,7 @@ allowed-unresolved-imports = [
     "playwright",
     "typer",
     "rich",
+    "playwright_stealth",
 ]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────

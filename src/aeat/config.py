@@ -111,6 +111,40 @@ class Settings(BaseSettings):
         description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
     )
 
+    # ── Browser Automation ──────────────────────────────────────────────────
+    aeat_browser_channel: str = Field(
+        default="chrome",
+        description="Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge')",
+    )
+    aeat_browser_headless: bool = Field(
+        default=True,
+        description="Run browser in headless mode",
+    )
+    aeat_default_profile_name: str = Field(
+        default="default",
+        description="Default profile name for the browser session",
+    )
+    aeat_proxy_url: str = Field(
+        default="",
+        description="Proxy URL (e.g., 'http://proxy.example.com:8080')",
+    )
+    aeat_proxy_username: str = Field(
+        default="",
+        description="Username for proxy authentication",
+    )
+    aeat_proxy_password_secret: str = Field(
+        default="",
+        description="Password for proxy authentication",
+    )
+    aeat_proxy_bypass: str = Field(
+        default="",
+        description="Comma-separated list of domains to bypass the proxy",
+    )
+    aeat_rate_limit_delay_seconds: float = Field(
+        default=2.0,
+        description="Minimum delay between AEAT requests in seconds",
+    )
+
     # ── Introspection ───────────────────────────────────────────────────────
 
     @classmethod
