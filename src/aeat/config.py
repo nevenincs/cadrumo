@@ -91,6 +91,24 @@ class Settings(BaseSettings):
         description="AEAT sede electrónica base URL",
     )
 
+    # ── Trilingual i18n ─────────────────────────────────────────────────────
+    aeat_output_language: str = Field(
+        default="hu",
+        description="Target output language for user-facing content (es, en, hu)",
+    )
+    aeat_authoritative_language_aeat_terms: str = Field(
+        default="es",
+        description="Authoritative language for AEAT domain terminology",
+    )
+    aeat_authoritative_language_project_docs: str = Field(
+        default="en",
+        description="Authoritative language for internal code and documentation",
+    )
+    aeat_fallback_languages: str = Field(
+        default="en,es",
+        description="Comma-separated list of fallback languages if the target language is missing",
+    )
+
     # ── Scratch resources (provisioned by `aeat bootstrap`) ─────────────────
     aeat_scratch_folder_id: str = Field(
         default="",
@@ -103,6 +121,20 @@ class Settings(BaseSettings):
     aeat_scratch_doc_id: str = Field(
         default="",
         description="Document ID for the aeat-scratch sandbox doc",
+    )
+
+    # ── Storage ─────────────────────────────────────────────────────────────
+    aeat_database_url: str = Field(
+        default=f"sqlite:///{(PROJECT_ROOT / 'var' / 'aeat.db').as_posix()}",
+        description="SQLAlchemy URL for the primary persistence backend (default: local SQLite)",
+    )
+    aeat_storage_auto_migrate: bool = Field(
+        default=False,
+        description="If true, run `alembic upgrade head` automatically on engine creation (default: false)",
+    )
+    aeat_storage_backup_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "backups",
+        description="Directory where the storage layer writes database backups",
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────

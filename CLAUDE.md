@@ -10,6 +10,7 @@ Use Google-style docstrings and type hints on all public signatures.
 - **Types**: Use Enums for closed catalogues, Pydantic models for wire/config, and dataclasses for internal values. No bare dicts.
 - **Errors**: All domain errors inherit from `aeat.errors.AeatError`.
 - **Logging**: Always use `aeat.logging.get_logger(__name__)`.
+- **Trilingual Contract**: The system handles Spanish (es), English (en), and Hungarian (hu). Spanish is the authoritative language for AEAT domain terminology. English is the authoritative language for internal code and documentation. Hungarian is the target output language for user-facing content. We use a Nested-dict shape (`Translatable` TypedDict) for storage and avoid gettext or `.po` files.
 
 <vaultspec type="config">
 ## Vaultspec Rules

@@ -1,4 +1,6 @@
-"""Smoke tests for the storage subpackage."""
+"""Smoke tests for the storage subpackage public surface."""
+
+from __future__ import annotations
 
 import pytest
 
@@ -9,7 +11,16 @@ import aeat.storage
 
 @pytest.mark.unit
 def test_smoke_storage() -> None:
-    """Asserts the subpackage is importable and conventions hold."""
+    """Assert the subpackage is importable and its conventions hold."""
     assert aeat.storage.__doc__ is not None
-    assert issubclass(aeat.errors.AeatError, Exception)
+    assert issubclass(aeat.storage.StorageError, aeat.errors.AeatError)
+    assert issubclass(aeat.storage.MigrationError, aeat.storage.StorageError)
+    assert issubclass(aeat.storage.RepositoryError, aeat.storage.StorageError)
     assert aeat.logging.get_logger(__name__).name == __name__
+
+
+@pytest.mark.unit
+def test_public_surface_is_complete() -> None:
+    """Every name in ``__all__`` must be importable from the package root."""
+    for name in aeat.storage.__all__:
+        assert hasattr(aeat.storage, name), f"missing public export: {name}"
