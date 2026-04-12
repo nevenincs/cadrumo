@@ -25,6 +25,7 @@ from aeat.cli import doctor as doctor_module
 from aeat.cli import drive as drive_module
 from aeat.cli import filing as filing_module
 from aeat.cli import inbox as inbox_module
+from aeat.cli import justificante as justificante_module
 from aeat.cli import llm as llm_module
 from aeat.cli import manual as manual_module
 from aeat.cli import normatives as normatives_module
@@ -69,6 +70,11 @@ app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#
 app.add_typer(submission_module.app, name="submission", help="Filing submission engine (#42).")
 app.add_typer(inbox_module.app, name="inbox", help="AEAT notifications inbox (#46).")
 app.add_typer(workflow_module.app, name="workflow", help="End-user composite workflow engine (#59).")
+app.add_typer(
+    justificante_module.app,
+    name="justificante",
+    help="AEAT justificante (PDF receipt) parser and live CSV verifier (#44).",
+)
 
 
 __all__ = ["app"]

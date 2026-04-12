@@ -53,6 +53,8 @@ dependencies = [
     # Persistence
     "sqlalchemy>=2.0.36",
     "alembic>=1.14.0",
+    # PDF parsing (#44 justificante)
+    "pdfplumber>=0.11.9",
 ]
 
 [project.scripts]
@@ -80,6 +82,8 @@ dev = [
     "pytest-asyncio>=1.0.0",
     "playwright>=1.58.0",
     "playwright-stealth>=2.0.3",
+    # Used only to generate synthetic fixture PDFs in tests (#44).
+    "reportlab>=4.4.10",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
