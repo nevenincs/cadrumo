@@ -231,6 +231,20 @@ def test_portal_repository_rejects_unknown_auth_method(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+def test_migrations_run_against_injected_in_memory_engine() -> None:
+    """In-memory SQLite proves Alembic uses the caller's engine, not a new one."""
+    settings = Settings(aeat_database_url="sqlite:///:memory:")
+    engine = create_engine_from_settings(settings)
+    try:
+        upgrade_to_head(engine)
+        inspector = inspect(engine)
+        tables = set(inspector.get_table_names())
+        assert {"modelos", "portals", "corpus_artifacts"}.issubset(tables), tables
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.unit
 def test_migrations_round_trip_with_constraints(tmp_path: Path) -> None:
     """head → base → head still round-trips with the 0002 revision in place."""
     settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'rt.db').as_posix()}")

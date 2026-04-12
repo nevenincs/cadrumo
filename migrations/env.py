@@ -44,14 +44,25 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations against a live engine built from the Alembic config."""
-    section = config.get_section(config.config_ini_section) or {}
-    connectable = engine_from_config(
-        section,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-        future=True,
-    )
+    """Run migrations against the injected engine when available.
+
+    :func:`aeat.storage.migrations_api._make_config` passes the caller's
+    engine via ``config.attributes['connection']`` so in-memory SQLite URLs
+    and engines with connect-event listeners (e.g. ``PRAGMA foreign_keys``)
+    are preserved. Falls back to building a fresh engine from the ini config
+    when invoked directly via the ``alembic`` CLI.
+    """
+    injected = config.attributes.get("connection")
+    if injected is not None:
+        connectable = injected
+    else:
+        section = config.get_section(config.config_ini_section) or {}
+        connectable = engine_from_config(
+            section,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+            future=True,
+        )
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():

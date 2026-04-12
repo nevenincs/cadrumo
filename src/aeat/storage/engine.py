@@ -108,20 +108,23 @@ def get_engine(settings: Settings | None = None) -> Engine:
     resolved = settings or load_settings()
     url = resolved.aeat_database_url
     with _lock:
-        engine = _engines.get(url)
-        created = False
-        if engine is None:
-            engine = create_engine_from_settings(resolved)
-            _engines[url] = engine
-            created = True
-    if created and resolved.aeat_storage_auto_migrate:
-        # Imported lazily so `engine` stays free of an Alembic dependency
-        # at module import time.
-        from .migrations_api import upgrade_to_head
+        cached = _engines.get(url)
+        if cached is not None:
+            return cached
+        engine = create_engine_from_settings(resolved)
+        if resolved.aeat_storage_auto_migrate:
+            # Imported lazily so `engine` stays free of an Alembic dependency
+            # at module import time.
+            from .migrations_api import upgrade_to_head
 
-        _log.info("aeat_storage_auto_migrate=true; running alembic upgrade head")
-        upgrade_to_head(engine)
-    return engine
+            _log.info("aeat_storage_auto_migrate=true; running alembic upgrade head")
+            try:
+                upgrade_to_head(engine)
+            except Exception:
+                engine.dispose()
+                raise
+        _engines[url] = engine
+        return engine
 
 
 def dispose_engine(settings: Settings | None = None) -> None:

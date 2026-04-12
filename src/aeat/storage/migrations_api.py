@@ -24,12 +24,19 @@ _ALEMBIC_INI = _REPO_ROOT / "alembic.ini"
 
 
 def _make_config(engine: Engine) -> Config:
-    """Build an Alembic :class:`~alembic.config.Config` bound to ``engine``."""
+    """Build an Alembic :class:`~alembic.config.Config` bound to ``engine``.
+
+    The engine is injected via ``config.attributes['connection']`` so that
+    :mod:`migrations.env` can reuse it instead of creating a fresh one. This
+    matters for ``sqlite:///:memory:`` URLs and for engines that carry
+    per-connection listeners (e.g. ``PRAGMA foreign_keys=ON``).
+    """
     if not _ALEMBIC_INI.exists():
         raise MigrationError(f"alembic.ini not found at {_ALEMBIC_INI}")
     config = Config(str(_ALEMBIC_INI))
     config.set_main_option("script_location", str(_REPO_ROOT / "migrations"))
     config.set_main_option("sqlalchemy.url", str(engine.url))
+    config.attributes["connection"] = engine
     return config
 
 

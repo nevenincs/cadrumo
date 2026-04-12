@@ -35,7 +35,7 @@ def _flush_or_wrap(session: Session, kind: str) -> None:
     try:
         session.flush()
     except IntegrityError as exc:
-        raise RepositoryError(f"integrity violation during {kind} upsert: {exc.orig}") from exc
+        raise RepositoryError(f"integrity violation during {kind} operation: {exc.orig}") from exc
 
 
 class Repository[RecordT](ABC):
