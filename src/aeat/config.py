@@ -192,6 +192,12 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ── Normatives corpus (aeat.normatives, #45) ────────────────────────────
+    aeat_normatives_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "normatives",
+        description="Root directory for the Spanish tax normatives JSON catalogue",
+    )
+
     # ── Browser Automation ──────────────────────────────────────────────────
     aeat_browser_channel: str = Field(
         default="chrome",
