@@ -32,5 +32,8 @@
         "vaultspec_core.mcp_server.app"
       ]
     }
-  }
+  },
+  "_vaultspecManaged": [
+    "vaultspec-core"
+  ]
 }

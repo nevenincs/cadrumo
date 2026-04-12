@@ -370,6 +370,19 @@ gsuite-bootstrap-sa:
 gsuite-doctor:
     uv run aeat doctor
 
+# Run the Playwright doctor health check.
+[unix]
+playwright-doctor:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python -m aeat.browser.health
+
+[windows]
+playwright-doctor:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run python -m aeat.browser.health
+
 # Walk through OAuth Desktop client provisioning.
 gsuite-oauth-client:
     uv run aeat oauth-client init
