@@ -40,6 +40,9 @@ dependencies = [
     # Configuration
     "python-dotenv>=1.2.2",
     "vaultspec-core>=0.1.8",
+    # Persistence
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14.0",
 ]
 
 [project.scripts]

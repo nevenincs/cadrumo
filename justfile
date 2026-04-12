@@ -82,6 +82,27 @@ test-live:
 hooks:
     uv run prek run --all-files
 
+# ── Database migrations (aeat#10) ────────────────────────────────────────────
+
+# Generate a new Alembic revision from the current model metadata.
+# Usage: just db-migrate message="add foo column"
+[unix]
+db-migrate message:
+    uv run alembic revision --autogenerate -m "{{message}}"
+
+[windows]
+db-migrate message:
+    uv run alembic revision --autogenerate -m "{{message}}"
+
+# Apply every pending migration up to head.
+[unix]
+db-upgrade:
+    uv run alembic upgrade head
+
+[windows]
+db-upgrade:
+    uv run alembic upgrade head
+
 # ── Google Cloud CLI ─────────────────────────────────────────────────────────
 
 # Install or update the Google Cloud CLI.
