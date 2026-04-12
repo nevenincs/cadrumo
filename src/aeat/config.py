@@ -16,6 +16,14 @@ from pathlib import Path
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
+class DivergenceSink(StrEnum):
+    """Supported sinks for :class:`aeat.sync.DivergenceRecord` persistence."""
+
+    FILE = "FILE"
+    STORAGE = "STORAGE"
+
+
 # Project root: three levels up from src/aeat/config.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -223,6 +231,35 @@ class Settings(BaseSettings):
     aeat_llm_max_retries: int = Field(
         default=3,
         description="Maximum retry attempts for retryable LLM failures",
+    )
+
+    # ── Self-healing sync runner (#11) ──────────────────────────────────────
+    aeat_sync_concurrency: int = Field(
+        default=4,
+        description="Maximum number of concurrent sync fetches",
+    )
+    aeat_sync_auto_heal_allowlist: str = Field(
+        default="casilla_added_with_default,label_translation_added,vigencia_extended",
+        description=(
+            "CSV list of DivergenceKind values the runner is permitted to "
+            "auto-apply when classification==ADDITIVE and auto_heal=True"
+        ),
+    )
+    aeat_sync_divergence_sink: DivergenceSink = Field(
+        default=DivergenceSink.FILE,
+        description="Divergence record sink: FILE (default) or STORAGE (pending #10)",
+    )
+    aeat_sync_divergence_file_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "divergences",
+        description="Directory for JSON-file divergence records when sink=FILE",
+    )
+    aeat_sync_retry_max: int = Field(
+        default=3,
+        description="Maximum transient-fetch retry attempts during a sync run",
+    )
+    aeat_sync_retry_backoff_s: float = Field(
+        default=5.0,
+        description="Initial exponential backoff delay (seconds) between retries",
     )
 
     # ── Introspection ───────────────────────────────────────────────────────

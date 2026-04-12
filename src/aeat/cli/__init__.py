@@ -24,6 +24,7 @@ from aeat.cli import drive as drive_module
 from aeat.cli import llm as llm_module
 from aeat.cli import oauth as oauth_module
 from aeat.cli import sheets as sheets_module
+from aeat.cli import sync as sync_module
 
 app = typer.Typer(
     name="aeat",
@@ -49,6 +50,7 @@ app.add_typer(docs_module.app, name="docs", help="Google Docs helpers.")
 app.add_typer(cloud_module.app, name="cloud", help="GCP product helpers (Functions / Run / Storage).")
 app.add_typer(llm_module.app, name="llm", help="LLM prompt, translation, cache, and usage helpers.")
 app.add_typer(oauth_module.app, name="oauth-client", help="OAuth 2.0 Desktop client provisioning.")
+app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
 
 
 __all__ = ["app"]
