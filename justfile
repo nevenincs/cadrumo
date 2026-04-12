@@ -408,6 +408,141 @@ playwright-doctor:
 gsuite-oauth-client:
     uv run aeat oauth-client init
 
+# ── Release (local-only; see RELEASING.md + aeat#60) ────────────────────────
+#
+# release-please runs LOCALLY, never in GitHub Actions (Actions is
+# permanently disabled on this repo). `just release` previews the next
+# release in --dry-run mode. `just release-apply` guides the human
+# operator through applying the bump + tagging, never pushing.
+
+# Preview the next release. Dry-run only; never writes to the tree.
+[unix]
+release:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v node >/dev/null 2>&1; then
+        echo "node not on PATH — install Node.js to use release-please (npx)." >&2
+        exit 1
+    fi
+    if ! command -v gh >/dev/null 2>&1; then
+        echo "gh not on PATH — install the GitHub CLI and run 'gh auth login'." >&2
+        exit 1
+    fi
+    if ! TOKEN=$(gh auth token 2>/dev/null); then
+        echo "gh auth token failed — run 'gh auth login' first." >&2
+        exit 1
+    fi
+    mkdir -p var/release
+    LOG=var/release/release-please.log
+    echo "▶ release-please release-pr --dry-run --debug (output → $LOG)"
+    npx --yes release-please@16 release-pr \
+        --token "$TOKEN" \
+        --repo-url wgergely/aeat \
+        --target-branch main \
+        --config-file release-please-config.json \
+        --manifest-file .release-please-manifest.json \
+        --dry-run \
+        --debug \
+        2>&1 | tee "$LOG"
+    echo "✔ dry-run complete — review $LOG, then run 'just release-apply' if the proposal is correct."
+
+[windows]
+release:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Write-Error "node not on PATH - install Node.js to use release-please (npx)."
+        exit 1
+    }
+    if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+        Write-Error "gh not on PATH - install the GitHub CLI and run 'gh auth login'."
+        exit 1
+    }
+    $token = & gh auth token 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $token) {
+        Write-Error "gh auth token failed - run 'gh auth login' first."
+        exit 1
+    }
+    New-Item -ItemType Directory -Force -Path var/release | Out-Null
+    $log = 'var/release/release-please.log'
+    Write-Host "▶ release-please release-pr --dry-run --debug (output → $log)"
+    & npx --yes release-please@16 release-pr `
+        --token $token `
+        --repo-url wgergely/aeat `
+        --target-branch main `
+        --config-file release-please-config.json `
+        --manifest-file .release-please-manifest.json `
+        --dry-run `
+        --debug 2>&1 | Tee-Object -FilePath $log
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "✔ dry-run complete - review $log, then run 'just release-apply' if the proposal is correct."
+
+# Apply the previewed release locally. Human-gated; never pushes.
+[unix]
+release-apply:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f var/release/release-please.log ]; then
+        echo "var/release/release-please.log missing — run 'just release' first." >&2
+        exit 1
+    fi
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    if [ "$BRANCH" != "main" ]; then
+        echo "release-apply must run on main (current: $BRANCH)." >&2
+        exit 1
+    fi
+    if [ -n "$(git status --porcelain)" ]; then
+        echo "working tree is not clean — commit or stash first." >&2
+        exit 1
+    fi
+    echo "Review var/release/release-please.log for the proposed next version."
+    echo "Then, in this order:"
+    echo "  1. Update .release-please-manifest.json to the new version."
+    echo "  2. Update pyproject.toml [project].version to the new version."
+    echo "  3. Update src/aeat/__init__.py __version__ to the new version."
+    echo "  4. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
+    echo "  5. Stage the four files:"
+    echo "       git add .release-please-manifest.json pyproject.toml src/aeat/__init__.py CHANGELOG.md"
+    echo "  6. Commit:"
+    echo '       git commit -m "chore(release): vX.Y.Z"'
+    echo "  7. Tag:"
+    echo '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
+    echo "When ready (human decision only), push with:"
+    echo "  git push origin main --tags"
+
+[windows]
+release-apply:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (-not (Test-Path 'var/release/release-please.log')) {
+        Write-Error "var/release/release-please.log missing - run 'just release' first."
+        exit 1
+    }
+    $branch = (& git rev-parse --abbrev-ref HEAD).Trim()
+    if ($branch -ne 'main') {
+        Write-Error "release-apply must run on main (current: $branch)."
+        exit 1
+    }
+    $dirty = & git status --porcelain
+    if ($dirty) {
+        Write-Error "working tree is not clean - commit or stash first."
+        exit 1
+    }
+    Write-Host "Review var/release/release-please.log for the proposed next version."
+    Write-Host "Then, in this order:"
+    Write-Host "  1. Update .release-please-manifest.json to the new version."
+    Write-Host "  2. Update pyproject.toml [project].version to the new version."
+    Write-Host "  3. Update src/aeat/__init__.py __version__ to the new version."
+    Write-Host "  4. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
+    Write-Host "  5. Stage the four files:"
+    Write-Host "       git add .release-please-manifest.json pyproject.toml src/aeat/__init__.py CHANGELOG.md"
+    Write-Host "  6. Commit:"
+    Write-Host '       git commit -m "chore(release): vX.Y.Z"'
+    Write-Host "  7. Tag:"
+    Write-Host '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
+    Write-Host "When ready (human decision only), push with:"
+    Write-Host "  git push origin main --tags"
+
 # ── Google Workspace test fixtures ──────────────────────────────────────────
 #
 # Idempotent provisioning and teardown of the Drive/Sheets/Docs fixtures
