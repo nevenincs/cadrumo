@@ -27,11 +27,12 @@ def configure_logging() -> None:
                     "level": "INFO",
                     "formatter": "standard",
                     "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stdout",
+                    "stream": "ext://sys.stderr",
                 },
             },
-            "loggers": {
-                "aeat": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            "root": {
+                "handlers": ["default"],
+                "level": "INFO",
             },
         }
     )
