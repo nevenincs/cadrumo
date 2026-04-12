@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -53,6 +53,12 @@ class PortalRow(Base):
     """
 
     __tablename__ = "portals"
+    __table_args__ = (
+        CheckConstraint(
+            "auth_method IN ('clave', 'certificate', 'dnie', 'none')",
+            name="ck_portals_auth_method",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     identifier: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
@@ -82,6 +88,14 @@ class CorpusArtifactRow(Base):
     """
 
     __tablename__ = "corpus_artifacts"
+    __table_args__ = (
+        UniqueConstraint(
+            "year",
+            "modelo_id",
+            "file_path",
+            name="uq_corpus_artifacts_identity",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
