@@ -1,19 +1,127 @@
-"""``aeat oauth-client`` sub-app skeleton — real verbs land in Phase 8."""
+"""``aeat oauth-client`` sub-app — guided OAuth Desktop client provisioning.
+
+There is no public Google API or gcloud command that creates an OAuth
+2.0 client ID for a project; the developer has to click through the
+Cloud Console UI. This sub-app does the next-best thing: prints a deep
+link to the credentials page, lists the exact fields and scopes the
+project needs, and accepts the path to the JSON the developer
+downloads. It then writes ``GOOGLE_OAUTH_CLIENT_ID`` and
+``GOOGLE_OAUTH_CLIENT_SECRET`` into ``env/.env`` from the parsed JSON.
+
+Off the critical path for vanilla-workstation bootstrap (ADC handles
+the dev case) but shipped so user-delegated scopes can be acquired when
+they are needed.
+"""
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+from typing import Any
+
 import typer
+from rich.console import Console
 
 app = typer.Typer(name="oauth-client", no_args_is_help=True, help="OAuth 2.0 Desktop client provisioning.")
 
 
-@app.callback()
-def _callback() -> None:
-    """OAuth client sub-app entry point. Sub-commands are added in Phase 8."""
+CREDENTIALS_PAGE_TEMPLATE = "https://console.cloud.google.com/apis/credentials?project={project}"
+
+REQUIRED_BLOCK = """\
+Required fields when creating the OAuth client in Cloud Console:
+
+  Application type:    Desktop app
+  Name:                aeat-cli (or any name you prefer)
+  Authorized URIs:     not applicable for desktop clients
+  Redirect URI:        http://localhost:8080
+  Scopes (granted on first consent):
+    - https://www.googleapis.com/auth/drive
+    - https://www.googleapis.com/auth/spreadsheets
+    - https://www.googleapis.com/auth/documents
+    - https://www.googleapis.com/auth/cloud-platform
+    - openid
+    - https://www.googleapis.com/auth/userinfo.email
+"""
 
 
-@app.command(name="placeholder", hidden=True)
-def _placeholder() -> None:
-    """Reserve the sub-app surface so the skeleton renders in --help."""
-    typer.secho("oauth-client subcommands land in Phase 8", fg=typer.colors.YELLOW)
-    raise typer.Exit(code=1)
+def parse_oauth_client_json(payload: dict[str, Any]) -> tuple[str, str]:
+    """Extract the client_id and client_secret from a downloaded OAuth JSON.
+
+    Cloud Console writes desktop OAuth credentials under either an
+    ``installed`` or ``web`` top-level key depending on the client type.
+    Only ``installed`` is the documented Desktop shape, but we accept
+    both for resilience.
+
+    Args:
+        payload: Parsed JSON dict from the downloaded credentials file.
+
+    Returns:
+        Tuple of ``(client_id, client_secret)``.
+
+    Raises:
+        ValueError: If the payload does not match either expected shape.
+    """
+    for key in ("installed", "web"):
+        block = payload.get(key)
+        if isinstance(block, dict):
+            client_id = block.get("client_id")
+            client_secret = block.get("client_secret")
+            if isinstance(client_id, str) and isinstance(client_secret, str):
+                return (client_id, client_secret)
+    msg = "OAuth client JSON does not contain installed/web client_id and client_secret"
+    raise ValueError(msg)
+
+
+@app.command(name="init", help="Print the Console deep link, parse the downloaded JSON, write env/.env.")
+def init(
+    json_path: Path | None = typer.Option(
+        None,
+        "--json",
+        "-j",
+        help="Path to the downloaded OAuth client JSON. If omitted, only the instructions are printed.",
+    ),
+) -> None:
+    """Walk the developer through OAuth Desktop client setup."""
+    from aeat.config import PROJECT_ROOT, Settings
+    from aeat.env_io import write_env_vars
+
+    settings = Settings()
+    project = settings.google_cloud_project or "<your-project-id>"
+    console = Console()
+    console.print(f"[bold]Open this URL in a browser:[/]\n  {CREDENTIALS_PAGE_TEMPLATE.format(project=project)}")
+    console.print()
+    console.print(REQUIRED_BLOCK)
+
+    if json_path is None:
+        console.print(
+            "[yellow]Run `aeat oauth-client init --json <path>` after downloading the JSON to write env/.env.[/]"
+        )
+        return
+
+    if not json_path.exists():
+        console.print(f"[red]json file does not exist: {json_path}[/]")
+        raise typer.Exit(code=1)
+
+    try:
+        payload = json.loads(json_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[red]could not parse json: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+
+    try:
+        client_id, client_secret = parse_oauth_client_json(payload)
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from exc
+
+    write_env_vars(
+        PROJECT_ROOT / "env" / ".env",
+        {
+            "GOOGLE_OAUTH_CLIENT_ID": client_id,
+            "GOOGLE_OAUTH_CLIENT_SECRET": client_secret,
+        },
+    )
+    console.print("[green]wrote GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET to env/.env[/]")
+
+
+__all__ = ["app", "parse_oauth_client_json"]
