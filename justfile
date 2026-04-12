@@ -10,7 +10,7 @@ default:
 # Full bootstrap for a fresh clone or worktree: sync deps + install vaultspec.
 bootstrap:
     uv sync
-    uv run vaultspec-core install
+    uv run vaultspec-core install --upgrade
 
 # Install / sync all runtime and dev dependencies via uv.
 install:
