@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import unicodedata
+
 import pytest
 
 from aeat.i18n import (
     Language,
     Translatable,
+    TranslatableObject,
     TranslationError,
     TranslationFallback,
     get_translation,
@@ -22,6 +25,28 @@ class TestLanguage:
         assert Language.ES == "es"
         assert Language.EN == "en"
         assert Language.HU == "hu"
+
+
+@pytest.mark.unit
+class TestNormalization:
+    def test_nfc_normalization_applied(self) -> None:
+        """Test that NFC normalization is applied to translations."""
+        # 'a' + combining acute accent (decomposed)
+        decomposed = "a\u0301"
+        normalized = unicodedata.normalize("NFC", decomposed)
+
+        translatable: Translatable = {"es": decomposed}
+        # get_translation should return normalized
+        assert get_translation(translatable, Language.ES) == normalized
+        assert get_translation(translatable, Language.ES) != decomposed
+
+        # require_authoritative should return normalized
+        assert require_authoritative(translatable, domain="aeat") == normalized
+
+        # with_translation should normalize the dict
+        obj = {}
+        new_obj = with_translation(obj, translatable)
+        assert new_obj["translation"]["es"] == normalized
 
 
 @pytest.mark.unit
@@ -49,13 +74,14 @@ class TestGetTranslation:
         translatable: Translatable = {"es": "Hola"}
         assert get_translation(translatable, Language.HU, fallback_policy=TranslationFallback.FALLBACK_TO_ES) == "Hola"
 
-    def test_default_fallback(self) -> None:
-        """Test default fallback when no specific policy is matched."""
-        translatable: Translatable = {"en": "Hello"}
-        assert get_translation(translatable, Language.HU) == "Hello"
+    def test_config_fallback(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Test fallback using the configuration list."""
+        # Mock settings to prioritize Hungarian then Spanish
+        monkeypatch.setenv("AEAT_FALLBACK_LANGUAGES", "hu,es")
 
-        translatable2: Translatable = {"es": "Hola"}
-        assert get_translation(translatable2, Language.HU) == "Hola"
+        translatable: Translatable = {"es": "Hola", "en": "Hello"}
+        # Target EN is missing, should fall back to ES as per config
+        assert get_translation(translatable, Language.HU) == "Hola"
 
     def test_no_translation_available(self) -> None:
         """Test exception when dictionary is empty."""
@@ -104,6 +130,24 @@ class TestWithTranslation:
         new_obj = with_translation(obj, translatable)
 
         assert new_obj["id"] == 1
-        assert new_obj["translation"] == translatable
+        assert new_obj["translation"]["es"] == "Uno"
         # Original object shouldn't be mutated
         assert "translation" not in obj
+
+
+@pytest.mark.unit
+class TestTranslatableObject:
+    def test_protocol_implementation(self) -> None:
+        """Test that objects matching the TranslatableObject protocol are recognized."""
+
+        class MyObj:
+            def __init__(self) -> None:
+                self.translation: Translatable = {"es": "Test"}
+
+        obj = MyObj()
+        assert isinstance(obj, TranslatableObject)
+
+        class NotTranslatable:
+            pass
+
+        assert not isinstance(NotTranslatable(), TranslatableObject)
