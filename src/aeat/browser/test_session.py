@@ -22,47 +22,47 @@ class DummyEvasion(EvasionStrategy):
         self.called = True
 
 
-class MockContext:
-    """Mock context."""
+class StubContext:
+    """Stub context capturing the kwargs it was created with."""
 
     def __init__(self, kwargs: dict) -> None:
         self.kwargs = kwargs
 
 
-class MockBrowser:
-    """Mock browser."""
+class StubBrowser:
+    """Stub browser that yields a StubContext."""
 
-    async def new_context(self, **kwargs) -> MockContext:
-        """Return a mock context."""
-        return MockContext(kwargs)
-
-
-class MockChromium:
-    """Mock chromium."""
-
-    async def launch(self, **kwargs) -> MockBrowser:
-        """Return a mock browser."""
-        return MockBrowser()
+    async def new_context(self, **kwargs) -> StubContext:
+        """Return a stub context."""
+        return StubContext(kwargs)
 
 
-class MockPlaywright:
-    """Mock playwright instance for unit testing."""
+class StubChromium:
+    """Stub chromium that yields a StubBrowser."""
+
+    async def launch(self, **kwargs) -> StubBrowser:
+        """Return a stub browser."""
+        return StubBrowser()
+
+
+class StubPlaywright:
+    """Stub playwright instance for unit testing."""
 
     def __init__(self) -> None:
-        self.chromium = MockChromium()
+        self.chromium = StubChromium()
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_browser_session_creation(tmp_path: Path) -> None:
-    """Test creating a browser context with a mocked Playwright instance."""
+    """Test creating a browser context with a stub Playwright instance."""
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
     evasion = DummyEvasion()
-    pw_mock = MockPlaywright()
+    pw_stub = StubPlaywright()
 
     session = BrowserSession(
-        playwright=pw_mock,  # type: ignore
+        playwright=pw_stub,  # type: ignore
         settings=settings,
         profile=profile,
         evasion_strategy=evasion,
