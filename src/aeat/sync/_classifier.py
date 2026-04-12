@@ -34,6 +34,7 @@ from ._divergence import (
     VigenciaExtended,
     classify_kind,
 )
+from ._protocols import ModeloIdentifier
 from ._wire import (
     WireFilingHistory,
     WireModeloDefinition,
@@ -189,8 +190,6 @@ class DivergenceClassifier:
         return tuple(records)
 
     def _wrap(self, payload: DivergencePayload, *, modelo: str | None) -> DivergenceRecord:
-        from ._protocols import ModeloIdentifier
-
         classification = classify_kind(payload.kind)
         _LOGGER.debug(
             "classified divergence kind=%s classification=%s",

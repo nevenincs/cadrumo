@@ -19,6 +19,7 @@ Playwright session. This keeps the runner standalone-compilable while
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Protocol, runtime_checkable
 
@@ -237,7 +238,7 @@ class LiveSyncRunner:
             raise WireValidationError(f"Local filing history for {modelo} is not a WireFilingHistory")
         return self._classifier.diff_filing_history(local=local_obj, live=live)
 
-    async def _fetch_with_retry[T](self, operation) -> T:
+    async def _fetch_with_retry[T](self, operation: Callable[[], Awaitable[T]]) -> T:
         """Retry an async fetch with exponential backoff up to ``retry_max``.
 
         Only transient exceptions are retried; validation errors bubble
