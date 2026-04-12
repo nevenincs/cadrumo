@@ -214,6 +214,7 @@ token.pickle
 gcp-oauth.keys.json
 .gdrive-server-credentials.json
 .mcp-google-sheets-token.json
+.tokens/
 
 # Playwright
 playwright-report/
