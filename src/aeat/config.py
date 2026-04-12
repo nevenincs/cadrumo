@@ -17,6 +17,7 @@ from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from aeat.auth import CertificateBackend
+from aeat.justificante import JustificanteParserBackend
 
 
 class DivergenceSink(StrEnum):
@@ -427,6 +428,16 @@ class Settings(BaseSettings):
     aeat_status_browser_trace_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "browser-traces",
         description="Directory where the status reader drops Playwright trace files",
+    )
+
+    # ── Justificante parser (#44) ───────────────────────────────────────────
+    aeat_justificantes_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "justificantes",
+        description="Directory where parsed justificante PDFs and metadata are stored",
+    )
+    aeat_justificante_parser_backend: JustificanteParserBackend = Field(
+        default=JustificanteParserBackend.PDFPLUMBER,
+        description="Parser backend for `aeat.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
