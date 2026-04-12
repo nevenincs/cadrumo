@@ -14,6 +14,7 @@ from sqlalchemy import engine_from_config, pool
 from aeat.config import load_settings
 from aeat.logging import get_logger
 from aeat.storage import _orm
+from aeat.storage.engine import _ensure_sqlite_parent
 
 _log = get_logger(__name__)
 
@@ -21,6 +22,10 @@ config = context.config
 
 if not config.get_main_option("sqlalchemy.url"):
     config.set_main_option("sqlalchemy.url", load_settings().aeat_database_url)
+
+# Make `alembic upgrade head` work from a fresh clone where the default
+# SQLite file's parent directory (e.g. `var/`) does not yet exist.
+_ensure_sqlite_parent(config.get_main_option("sqlalchemy.url") or "")
 
 target_metadata = _orm.metadata
 
