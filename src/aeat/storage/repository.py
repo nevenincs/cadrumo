@@ -1,0 +1,210 @@
+"""Typed repositories for the public storage records.
+
+Each repository exposes a small, explicit CRUD surface against its pydantic
+record type. The repositories translate between the public records and the
+internal :mod:`aeat.storage._orm` mapper classes on every boundary crossing.
+"""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from aeat.logging import get_logger
+
+from . import _orm
+from .errors import RepositoryError
+from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
+
+_log = get_logger(__name__)
+
+
+class Repository[RecordT](ABC):
+    """Abstract base class for every typed record repository.
+
+    Subclasses own a single SQLAlchemy mapper class and are responsible for
+    converting between that mapper class and a pydantic record type.
+    """
+
+    def __init__(self, session: Session) -> None:
+        """Bind this repository to an active SQLAlchemy session.
+
+        Args:
+            session: An open :class:`~sqlalchemy.orm.Session`.
+        """
+        self._session = session
+
+    @abstractmethod
+    def list_all(self) -> list[RecordT]:
+        """Return every row as a pydantic record."""
+
+    @abstractmethod
+    def get(self, record_id: int) -> RecordT:
+        """Return a single row by primary key.
+
+        Raises:
+            RepositoryError: If no row with ``record_id`` exists.
+        """
+
+    @abstractmethod
+    def upsert(self, record: RecordT) -> RecordT:
+        """Insert or update ``record`` and return the persisted value."""
+
+    @abstractmethod
+    def delete(self, record_id: int) -> None:
+        """Delete the row with ``record_id``.
+
+        Raises:
+            RepositoryError: If no row with ``record_id`` exists.
+        """
+
+
+class ModeloRepository(Repository[ModeloRecord]):
+    """Repository for :class:`ModeloRecord`."""
+
+    def list_all(self) -> list[ModeloRecord]:
+        rows = self._session.execute(select(_orm.ModeloRow).order_by(_orm.ModeloRow.id)).scalars().all()
+        return [self._to_record(row) for row in rows]
+
+    def get(self, record_id: int) -> ModeloRecord:
+        row = self._session.get(_orm.ModeloRow, record_id)
+        if row is None:
+            raise RepositoryError(f"modelo id={record_id} not found")
+        return self._to_record(row)
+
+    def upsert(self, record: ModeloRecord) -> ModeloRecord:
+        if record.id is not None:
+            row = self._session.get(_orm.ModeloRow, record.id)
+            if row is None:
+                raise RepositoryError(f"modelo id={record.id} not found for update")
+            row.identifier = record.identifier
+            row.name = record.name
+        else:
+            row = _orm.ModeloRow(identifier=record.identifier, name=record.name)
+            self._session.add(row)
+        self._session.flush()
+        return self._to_record(row)
+
+    def delete(self, record_id: int) -> None:
+        row = self._session.get(_orm.ModeloRow, record_id)
+        if row is None:
+            raise RepositoryError(f"modelo id={record_id} not found")
+        self._session.delete(row)
+        self._session.flush()
+
+    @staticmethod
+    def _to_record(row: _orm.ModeloRow) -> ModeloRecord:
+        return ModeloRecord(id=row.id, identifier=row.identifier, name=row.name)
+
+
+class PortalRepository(Repository[PortalRecord]):
+    """Repository for :class:`PortalRecord`."""
+
+    def list_all(self) -> list[PortalRecord]:
+        rows = self._session.execute(select(_orm.PortalRow).order_by(_orm.PortalRow.id)).scalars().all()
+        return [self._to_record(row) for row in rows]
+
+    def get(self, record_id: int) -> PortalRecord:
+        row = self._session.get(_orm.PortalRow, record_id)
+        if row is None:
+            raise RepositoryError(f"portal id={record_id} not found")
+        return self._to_record(row)
+
+    def upsert(self, record: PortalRecord) -> PortalRecord:
+        if record.id is not None:
+            row = self._session.get(_orm.PortalRow, record.id)
+            if row is None:
+                raise RepositoryError(f"portal id={record.id} not found for update")
+            row.identifier = record.identifier
+            row.base_url = record.base_url
+            row.auth_method = record.auth_method.value
+            row.modelo_id = record.modelo_id
+            row.label = record.label
+        else:
+            row = _orm.PortalRow(
+                identifier=record.identifier,
+                base_url=record.base_url,
+                auth_method=record.auth_method.value,
+                modelo_id=record.modelo_id,
+                label=record.label,
+            )
+            self._session.add(row)
+        self._session.flush()
+        return self._to_record(row)
+
+    def delete(self, record_id: int) -> None:
+        row = self._session.get(_orm.PortalRow, record_id)
+        if row is None:
+            raise RepositoryError(f"portal id={record_id} not found")
+        self._session.delete(row)
+        self._session.flush()
+
+    @staticmethod
+    def _to_record(row: _orm.PortalRow) -> PortalRecord:
+        return PortalRecord(
+            id=row.id,
+            identifier=row.identifier,
+            base_url=row.base_url,
+            auth_method=PortalAuthMethod(row.auth_method),
+            modelo_id=row.modelo_id,
+            label=row.label,
+        )
+
+
+class CorpusArtifactRepository(Repository[CorpusArtifactRecord]):
+    """Repository for :class:`CorpusArtifactRecord`."""
+
+    def list_all(self) -> list[CorpusArtifactRecord]:
+        rows = self._session.execute(select(_orm.CorpusArtifactRow).order_by(_orm.CorpusArtifactRow.id)).scalars().all()
+        return [self._to_record(row) for row in rows]
+
+    def get(self, record_id: int) -> CorpusArtifactRecord:
+        row = self._session.get(_orm.CorpusArtifactRow, record_id)
+        if row is None:
+            raise RepositoryError(f"corpus_artifact id={record_id} not found")
+        return self._to_record(row)
+
+    def upsert(self, record: CorpusArtifactRecord) -> CorpusArtifactRecord:
+        if record.id is not None:
+            row = self._session.get(_orm.CorpusArtifactRow, record.id)
+            if row is None:
+                raise RepositoryError(f"corpus_artifact id={record.id} not found for update")
+            row.year = record.year
+            row.modelo_id = record.modelo_id
+            row.file_path = record.file_path
+            row.sha256 = record.sha256
+            row.source_url = record.source_url
+            row.fetched_at = record.fetched_at
+        else:
+            row = _orm.CorpusArtifactRow(
+                year=record.year,
+                modelo_id=record.modelo_id,
+                file_path=record.file_path,
+                sha256=record.sha256,
+                source_url=record.source_url,
+                fetched_at=record.fetched_at,
+            )
+            self._session.add(row)
+        self._session.flush()
+        return self._to_record(row)
+
+    def delete(self, record_id: int) -> None:
+        row = self._session.get(_orm.CorpusArtifactRow, record_id)
+        if row is None:
+            raise RepositoryError(f"corpus_artifact id={record_id} not found")
+        self._session.delete(row)
+        self._session.flush()
+
+    @staticmethod
+    def _to_record(row: _orm.CorpusArtifactRow) -> CorpusArtifactRecord:
+        return CorpusArtifactRecord(
+            id=row.id,
+            year=row.year,
+            modelo_id=row.modelo_id,
+            file_path=row.file_path,
+            sha256=row.sha256,
+            source_url=row.source_url,
+            fetched_at=row.fetched_at,
+        )
