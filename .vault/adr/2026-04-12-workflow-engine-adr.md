@@ -53,20 +53,38 @@ contract.
 
 ### 2. bailout matrix (the contract)
 
-| stage                | abort reasons reachable                                       |
+| stage                | domain abort reasons reachable                                |
 | -------------------- | ------------------------------------------------------------- |
-| `LOADING_PROFILE`    | `UNHANDLED_EXCEPTION`                                         |
-| `SYNCING_CATALOGUES` | `UNHANDLED_EXCEPTION`                                         |
+| `LOADING_PROFILE`    | — (profile is an already-validated strict pydantic model)     |
+| `SYNCING_CATALOGUES` | —                                                             |
 | `COMPUTING_DEADLINES`| `NO_PENDING_OBLIGATION`, `DEADLINE_PASSED`                    |
 | `CHECKING_INBOX`     | `INBOX_BLOCKING_REQUERIMIENTO`                                |
-| `BUILDING_DRAFT`     | `ALREADY_FILED`, `DRAFT_HAS_ERRORS`, `UNHANDLED_EXCEPTION`    |
+| `BUILDING_DRAFT`     | `ALREADY_FILED`, `DRAFT_HAS_ERRORS`                           |
 | `VALIDATING_DRAFT`   | `DRAFT_HAS_ERRORS`                                            |
 | `RUNNING_PREFLIGHT`  | `PREFLIGHT_FAILED`, `CERT_INVALID`                            |
-| `DRY_RUN_SUBMIT`     | `USER_CANCELLED`, `UNHANDLED_EXCEPTION`                       |
+| `DRY_RUN_SUBMIT`     | `USER_CANCELLED`                                              |
 
-every `WorkflowAbortReason` value is reachable from exactly one or two
-stages and exhaustively tested. the unit test suite is the executable
-specification of this matrix.
+`UNHANDLED_EXCEPTION` is the **universal catch-all**: every stage
+that performs an external Protocol call funnels unexpected component
+exceptions through `_record_unhandled`, which stamps the failing
+stage with `success=False` and raises the internal `_AbortError`
+with `reason=UNHANDLED_EXCEPTION`. Concretely, it is reachable from
+`SYNCING_CATALOGUES`, `COMPUTING_DEADLINES`, `CHECKING_INBOX`,
+`BUILDING_DRAFT`, `RUNNING_PREFLIGHT`, and `DRY_RUN_SUBMIT`.
+`LOADING_PROFILE` cannot raise it in v1 because the profile is
+already a validated pydantic model by the time the engine receives
+it; the stage is preserved as a distinct step for audit visibility.
+
+The universal catch-all is deliberate: the contract downstream
+consumers read is *"any unexpected component failure surfaces as
+`UNHANDLED_EXCEPTION` at the stage where it originated"*. Listing
+the reason once in a dedicated paragraph is clearer than repeating
+it on every row of the domain matrix.
+
+Every domain `WorkflowAbortReason` in the table above is reachable
+from exactly one or two stages and exhaustively tested. The unit
+test suite is the executable specification of this matrix; see
+`src/aeat/workflow/test_engine.py` for the one-to-one mapping.
 
 ### 3. dry-run is the default; live requires double confirmation
 
