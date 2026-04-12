@@ -217,7 +217,7 @@ def provision() -> list[ProvisioningResult]:
     # Walk in catalogue insertion order. The root folder comes first and
     # every child references it via ``parent_id`` → fixture_id, which we
     # translate to the real Drive ID using ``resolved_ids``.
-    for spec in CATALOGUE:
+    for spec in CATALOGUE.iter_specs():
         mime = _MIME_BY_KIND[spec.kind]
         if spec.parent_id is None:
             # Root folder — live under My Drive root.

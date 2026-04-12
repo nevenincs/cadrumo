@@ -77,7 +77,7 @@ def _clear_env_vars() -> Path:
         The absolute path to the env file that was rewritten.
     """
     env_path = PROJECT_ROOT / "env" / ".env"
-    mapping: dict[str, str] = {spec.env_var_name: "" for spec in CATALOGUE}
+    mapping: dict[str, str] = {spec.env_var_name: "" for spec in CATALOGUE.iter_specs()}
     write_env_vars(env_path, mapping)
     return env_path
 

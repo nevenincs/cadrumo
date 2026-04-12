@@ -165,7 +165,7 @@ def test_fixture_catalogue_ids_are_populated(settings: Settings) -> None:
     clearer message than a Google 404 would provide.
     """
     missing: list[str] = []
-    for spec in CATALOGUE:
+    for spec in CATALOGUE.iter_specs():
         value = getattr(settings, spec.env_var_name.lower(), "")
         if not value:
             missing.append(spec.env_var_name)
@@ -211,7 +211,7 @@ def test_every_catalogued_child_lives_under_root(drive_service: Any, settings: S
     up orphaned under My Drive root instead of the dedicated container.
     """
     root_id = settings.aeat_google_test_fixtures_folder_id
-    for spec in CATALOGUE:
+    for spec in CATALOGUE.iter_specs():
         if spec.kind is FixtureKind.DRIVE_FOLDER and spec.parent_id is None:
             continue
         resource_id = getattr(settings, spec.env_var_name.lower(), "")

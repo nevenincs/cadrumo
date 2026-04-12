@@ -119,8 +119,13 @@ class FixtureCatalogue(BaseModel):
         """
         return [spec for spec in self.entries.values() if spec.parent_id == parent_fixture_id]
 
-    def __iter__(self) -> Iterator[FixtureSpec]:  # type: ignore[override]
-        """Iterate specs in catalogue insertion order."""
+    def iter_specs(self) -> Iterator[FixtureSpec]:
+        """Iterate specs in catalogue insertion order.
+
+        Explicitly named (not ``__iter__``) because ``BaseModel.__iter__``
+        yields ``(field_name, value)`` tuples — overriding it would break
+        pydantic's model-iteration contract and force a ``type: ignore``.
+        """
         return iter(self.entries.values())
 
 
