@@ -91,6 +91,81 @@ Self-review against the mandatory code-review checklist:
 - `just test` (`pytest`) — 388 passed, 1 skipped, 10 deselected.
 - `prek run --all-files` — green.
 
+## Code review pass (post-publish)
+
+Independent reviewer produced a numbered findings list; blockers
+and majors were implemented in-branch. Summary of what changed:
+
+- **Blocker #1** — `since` is a post-parse filter and must not
+  be hashed into the cache key. `make_cache_key` lost the
+  `since` param; the reader now caches the full parsed tuple
+  and filters on return. New regression test
+  `test_since_does_not_invalidate_cache` (`test_reader.py`).
+- **Blocker #2** — the parser now resolves relative justificante
+  hrefs against `source_url` via `urllib.parse.urljoin` before
+  validating them as `AnyHttpUrl`. New fixture
+  `sample_spanish.html` carries `/wlpl/justificante?id=…`; new
+  test `test_spanish_locale_fixture`.
+- **Blocker #3** — `_ensure_ready` now assigns `self._context`
+  before the cert preload and closes the context on any failure
+  in the prep sequence, so a mid-sequence raise cannot leak a
+  `BrowserContext`.
+- **Major #4** — cache writes go through `_atomic_write_text`
+  (temp file + `os.replace`) so concurrent writers and mid-write
+  crashes cannot leave a partial payload visible to readers.
+- **Major #5** — `aeat_base_url` is now part of the cache key
+  input so pre-prod / prod cache directories can never collide;
+  new unit test `test_different_base_urls_collide_never`.
+- **Major #6** — parser accepts ISO-8601 *and* the Spanish-locale
+  shapes (`dd/mm/yyyy HH:MM:SS`, `dd/mm/yyyy HH:MM`, `dd/mm/yyyy`)
+  AEAT actually renders live. Covered by `sample_spanish.html`.
+- **Major #7** — header detection restricted to direct children
+  (no more nested-table pollution); rows with fewer cells than
+  the header columns (colspan footer / totals row) are dropped
+  instead of surfacing as parse errors. Covered by the
+  Spanish-fixture totals row.
+- **Major #8** — `page.goto` is now called with
+  `wait_until="domcontentloaded"` and a non-2xx response raises
+  `StatusAuthError` rather than getting swallowed as a
+  `StatusParseError("table not found")`.
+- **Major #9** — the CLI helper `_build_reader_unused_browser`
+  is gone; every status subcommand now validates its flags and
+  bails out cleanly with a uniform `_bail_cert_missing()` exit
+  code 2, and is marked `hidden=True` until #8 lands a
+  concrete cert backend.
+- **Minor #10** — cache TTL expiry now uses `>=` to avoid clock
+  granularity flakes at `ttl_s=0`.
+- **Minor #12** — stub fetchers explicitly `del` their unused
+  kwargs so intent is legible.
+- **Minor #14/15** — `_locate_header_row` prefers `<thead>` and
+  skips the header row explicitly in the data loop; rows whose
+  direct-child `<td>` count is short of the header are dropped.
+- **Minor #17** — `_fetch_html` uses `urljoin` on base + path.
+- **Minor #18** — CLI `--since` parsing is wrapped in
+  `typer.BadParameter` so bad input renders as a clean error.
+- **Nit #21/22** — `Expediente.status` max length bumped to 128
+  to accept real AEAT phrases; `csv` gets an explicit
+  `min_length=1` so the empty-string → None invariant is
+  enforced at the schema boundary.
+
+Findings deliberately not applied:
+
+- **Minor #11** — "drop the `model_validate_json(json.dumps())`
+  double-encode." Attempted and reverted: with `strict=True`,
+  `model_validate(dict_with_iso_strings)` fails on datetime
+  fields because strict mode rejects string→datetime coercion.
+  `model_validate_json` uses the JSON-mode validators which
+  correctly round-trip `model_dump(mode="json")`. Documented
+  inline in `_cache.py`.
+- **Minor #13 (live test)** / **Finding #9** — kept as a hollow
+  opt-in placeholder. A real live fetch requires the #8 cert
+  backend, which is not yet merged; #41's `playwright_stealth`
+  bug is documented in the file's module docstring. Full live
+  wiring tracked as a follow-up.
+
+Post-review totals: 391 unit tests passing, ty clean, ruff
+clean, prek clean.
+
 ## Known issues / follow-ups
 
 - The five non-expedientes surfaces ship their wire schemas but

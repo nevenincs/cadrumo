@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import unicodedata
 from datetime import datetime
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
@@ -31,6 +32,14 @@ _REQUIRED_HEADERS: tuple[str, ...] = (
     "fecha presentacion",
 )
 
+# Date/datetime formats the AEAT portal is known to emit. ISO is the
+# fixture shape; the two Spanish formats are the live-page shapes.
+_DATETIME_FORMATS: tuple[str, ...] = (
+    "%d/%m/%Y %H:%M:%S",
+    "%d/%m/%Y %H:%M",
+    "%d/%m/%Y",
+)
+
 
 def _normalise(text: str) -> str:
     """Return the NFKD-stripped, lowercased, whitespace-collapsed form."""
@@ -39,8 +48,39 @@ def _normalise(text: str) -> str:
     return " ".join(ascii_text.lower().split())
 
 
+def _parse_aeat_datetime(raw: str) -> datetime:
+    """Parse an AEAT presented_at field.
+
+    Accepts ISO-8601 first (fixture shape), then falls back to the
+    Spanish-locale shapes AEAT actually renders.
+
+    Raises:
+        StatusParseError: If none of the known formats match.
+    """
+    try:
+        return datetime.fromisoformat(raw)
+    except ValueError:
+        pass
+    for fmt in _DATETIME_FORMATS:
+        try:
+            return datetime.strptime(raw, fmt)
+        except ValueError:
+            continue
+    raise StatusParseError(f"unparseable presented_at timestamp: {raw!r}")
+
+
+def _direct_children(tag: Tag, name: str) -> list[Tag]:
+    """Return direct child ``<name>`` tags of ``tag``, skipping nested tables."""
+    return [child for child in tag.find_all(name, recursive=False) if isinstance(child, Tag)]
+
+
 def _find_table(soup: BeautifulSoup) -> Tag:
     """Locate the expedientes table by header text.
+
+    The match is tolerant: it looks for tables whose *own* ``<th>``
+    cells (not cells of nested sub-tables) cover every required
+    header. Nested tables are skipped to avoid polluting the header
+    heuristic.
 
     Args:
         soup: The parsed document.
@@ -55,22 +95,49 @@ def _find_table(soup: BeautifulSoup) -> Tag:
     for table in soup.find_all("table"):
         if not isinstance(table, Tag):
             continue
-        header_cells = table.find_all("th")
-        header_texts = {_normalise(cell.get_text(" ", strip=True)) for cell in header_cells}
+        # Walk the table's own tr/th cells, ignoring any inner nested
+        # tables' headers.
+        header_row = _locate_header_row(table)
+        if header_row is None:
+            continue
+        header_texts = {_normalise(cell.get_text(" ", strip=True)) for cell in _direct_children(header_row, "th")}
         if all(required in header_texts for required in _REQUIRED_HEADERS):
             return table
     raise StatusParseError(f"could not locate 'Mis expedientes' table — expected headers {_REQUIRED_HEADERS!r}")
 
 
-def _header_index(table: Tag) -> dict[str, int]:
-    """Map normalised header text → column index for the given table."""
-    index: dict[str, int] = {}
-    header_row = table.find("tr")
-    if not isinstance(header_row, Tag):
+def _locate_header_row(table: Tag) -> Tag | None:
+    """Return the first ``<tr>`` that carries any ``<th>`` cells.
+
+    Prefers a ``<thead>`` if present, otherwise scans the table body
+    for the first row whose direct children include a ``<th>``.
+    """
+    thead = table.find("thead")
+    if isinstance(thead, Tag):
+        for row in _direct_children(thead, "tr"):
+            if _direct_children(row, "th"):
+                return row
+    for row in table.find_all("tr"):
+        if not isinstance(row, Tag):
+            continue
+        if _direct_children(row, "th"):
+            return row
+    return None
+
+
+def _header_index(table: Tag) -> tuple[Tag, dict[str, int]]:
+    """Locate the header row and return ``(row, column_index)``.
+
+    Raises:
+        StatusParseError: If the table has no identifiable header row.
+    """
+    header_row = _locate_header_row(table)
+    if header_row is None:
         raise StatusParseError("expedientes table has no header row")
-    for i, cell in enumerate(header_row.find_all("th")):
-        index[_normalise(cell.get_text(" ", strip=True))] = i
-    return index
+    columns: dict[str, int] = {}
+    for i, cell in enumerate(_direct_children(header_row, "th")):
+        columns[_normalise(cell.get_text(" ", strip=True))] = i
+    return header_row, columns
 
 
 def _cell_text(cells: list[Tag], columns: dict[str, int], key: str) -> str:
@@ -99,6 +166,23 @@ def _cell_anchor_href(cells: list[Tag], columns: dict[str, int], key: str) -> st
     return href
 
 
+def _resolve_url(href: str, base: str) -> AnyHttpUrl:
+    """Resolve ``href`` against ``base`` and validate as ``AnyHttpUrl``.
+
+    AEAT ships many justificante links as relative paths (``/wlpl/...``);
+    this helper absolutises them via :func:`urllib.parse.urljoin` before
+    pydantic strict-validates the result.
+
+    Raises:
+        StatusParseError: If the resolved URL fails validation.
+    """
+    absolute = urljoin(base, href)
+    try:
+        return _URL_ADAPTER.validate_python(absolute)
+    except ValidationError as exc:
+        raise StatusParseError(f"invalid justificante url on expediente row: {href!r}") from exc
+
+
 def parse_expedientes(
     raw_html: str,
     *,
@@ -110,7 +194,8 @@ def parse_expedientes(
     Args:
         raw_html: The raw HTML captured from ``page.content()``.
         source_url: The URL of the rendered page, stored on every
-            produced :class:`Expediente`.
+            produced :class:`Expediente` and used as the base for
+            resolving relative justificante links.
         fetched_at: The UTC timestamp at which ``raw_html`` was
             captured, stored on every produced record.
 
@@ -118,38 +203,38 @@ def parse_expedientes(
         A tuple of :class:`Expediente`, one per data row.
 
     Raises:
-        StatusParseError: If the table cannot be located or any row
-            fails pydantic validation.
+        StatusParseError: If the table cannot be located, a row has
+            the wrong shape (colspan/footer), or any row fails
+            pydantic validation.
     """
     soup = BeautifulSoup(raw_html, "html.parser")
     table = _find_table(soup)
-    columns = _header_index(table)
+    header_row, columns = _header_index(table)
+    source_url_str = str(source_url)
+    expected_cells = (max(columns.values()) + 1) if columns else 0
 
-    body = table.find("tbody") or table
+    # Prefer the tbody rows; fall back to the whole table but
+    # *always* skip the header row explicitly.
+    tbody = table.find("tbody")
+    body: Tag = tbody if isinstance(tbody, Tag) else table
     records: list[Expediente] = []
     for row in body.find_all("tr"):
-        if not isinstance(row, Tag):
+        if not isinstance(row, Tag) or row is header_row:
             continue
-        cells = [cell for cell in row.find_all("td") if isinstance(cell, Tag)]
+        cells = _direct_children(row, "td")
         if not cells:
+            # Header or separator row — skip silently.
+            continue
+        if len(cells) < expected_cells:
+            # Footer / totals row with colspan: not an expediente.
+            logger.debug("skipping short row (%d cells, expected %d)", len(cells), expected_cells)
             continue
 
-        presented_raw = _cell_text(cells, columns, "fecha presentacion")
-        try:
-            presented_at = datetime.fromisoformat(presented_raw)
-        except ValueError as exc:
-            raise StatusParseError(f"unparseable presented_at timestamp: {presented_raw!r}") from exc
+        presented_at = _parse_aeat_datetime(_cell_text(cells, columns, "fecha presentacion"))
 
         csv_text = _cell_text(cells, columns, "csv") or None
         href = _cell_anchor_href(cells, columns, "justificante")
-        justificante_url: AnyHttpUrl | None
-        if href is None:
-            justificante_url = None
-        else:
-            try:
-                justificante_url = _URL_ADAPTER.validate_python(href)
-            except ValidationError as exc:
-                raise StatusParseError(f"invalid justificante url on expediente row: {href!r}") from exc
+        justificante_url = _resolve_url(href, source_url_str) if href else None
 
         try:
             record = Expediente(

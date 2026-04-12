@@ -71,6 +71,30 @@ class TestParseExpedientes:
                 fetched_at=_FETCHED_AT,
             )
 
+    def test_spanish_locale_fixture(self) -> None:
+        """Real AEAT pages render ``dd/mm/yyyy HH:MM:SS`` and ship
+        relative justificante links; the parser must accept both and
+        must drop footer rows with colspan."""
+        records = parse_expedientes(
+            _load("sample_spanish.html"),
+            source_url=_SOURCE_URL,  # type: ignore[arg-type]
+            fetched_at=_FETCHED_AT,
+        )
+        assert len(records) == 2  # totals row dropped
+        first = records[0]
+        assert first.status == "Presentada - pendiente de compensacion"
+        assert first.presented_at.year == 2025
+        assert first.presented_at.month == 7
+        assert first.presented_at.day == 20
+        assert first.justificante_url is not None
+        assert str(first.justificante_url).startswith("https://sede.agenciatributaria.gob.es/wlpl/justificante"), (
+            f"expected absolute url, got {first.justificante_url}"
+        )
+        second = records[1]
+        assert second.presented_at.day == 15
+        assert second.csv is None
+        assert second.justificante_url is None
+
     def test_unparseable_timestamp_raises_parse_error(self) -> None:
         html = """
         <table>

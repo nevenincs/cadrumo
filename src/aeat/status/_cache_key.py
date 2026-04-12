@@ -14,6 +14,7 @@ def make_cache_key(
     *,
     tax_id: str,
     surface: AeatStatusKind,
+    base_url: str = "",
     params: Mapping[str, Any] | None = None,
 ) -> str:
     """Return a stable 16-char hex cache key for a status fetch.
@@ -27,6 +28,9 @@ def make_cache_key(
         tax_id: Spanish tax identifier for the user. Included in the
             hash so multi-tenant caches never collide.
         surface: The :class:`AeatStatusKind` being fetched.
+        base_url: Configured AEAT base URL. Included in the hash so
+            switching between prod / pre-prod against the same cache
+            directory never serves cross-environment stale data.
         params: Optional additional query parameters.
 
     Returns:
@@ -41,6 +45,7 @@ def make_cache_key(
     payload = {
         "tax_id": tax_id,
         "surface": surface.value,
+        "base_url": base_url,
         "params": cleaned,
     }
     blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")

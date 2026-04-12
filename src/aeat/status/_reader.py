@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING
+from urllib.parse import urljoin
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
@@ -104,13 +105,22 @@ class StatusReader:
         """
         if self._page is not None:
             return self._page
+        context: BrowserContext | None = None
         try:
             context = await self._browser_session.create_context()
+            # Assign first so close() can reach a leaked context if the
+            # cert preload or new_page call fails halfway through.
+            self._context = context
             await self._cert_backend.preload_into_browser_context(context)
             page = await context.new_page()
         except Exception as exc:  # pragma: no cover - live path
+            if context is not None:
+                try:
+                    await context.close()
+                except Exception:  # pragma: no cover - defensive
+                    logger.exception("failed to close leaked browser context")
+            self._context = None
             raise StatusAuthError(f"failed to prepare authenticated context: {exc}") from exc
-        self._context = context
         self._page = page
         return page
 
@@ -121,10 +131,14 @@ class StatusReader:
             StatusAuthError: If navigation fails.
         """
         page = await self._ensure_ready()
-        url = self._settings.aeat_base_url.rstrip("/") + path
+        url = urljoin(self._settings.aeat_base_url, path)
         try:
-            await page.goto(url)
+            response = await page.goto(url, wait_until="domcontentloaded")
+            if response is not None and response.status >= 400:
+                raise StatusAuthError(f"AEAT returned HTTP {response.status} for {url}")
             html = await page.content()
+        except StatusAuthError:
+            raise
         except Exception as exc:  # pragma: no cover - live path
             raise StatusAuthError(f"failed to navigate to {url}: {exc}") from exc
         return html, _URL_ADAPTER.validate_python(url)
@@ -162,11 +176,14 @@ class StatusReader:
                 prepared.
             StatusParseError: If the AEAT page cannot be parsed.
         """
+        # `since` is a post-parse filter — omit it from the cache key
+        # so back-to-back invocations with different --since values
+        # still hit the cached page.
         surface = AeatStatusKind.EXPEDIENTE
         key = make_cache_key(
             tax_id=self._tax_id,
             surface=surface,
-            params={"since": since},
+            base_url=self._settings.aeat_base_url,
         )
         if use_cache:
             cached = self._cache.get_tuple(surface=surface, key=key, model=Expediente)
@@ -200,6 +217,7 @@ class StatusReader:
         Raises:
             StatusReaderError: Always — this surface is a v1 stub.
         """
+        del since, use_cache
         raise StatusReaderError("notificaciones surface not yet implemented (#43 follow-up)")
 
     async def fetch_devoluciones(
@@ -213,6 +231,7 @@ class StatusReader:
         Raises:
             StatusReaderError: Always — this surface is a v1 stub.
         """
+        del year, use_cache
         raise StatusReaderError("devoluciones surface not yet implemented (#43 follow-up)")
 
     async def fetch_borrador_irpf(
@@ -226,6 +245,7 @@ class StatusReader:
         Raises:
             StatusReaderError: Always — this surface is a v1 stub.
         """
+        del year, use_cache
         raise StatusReaderError("borrador irpf surface not yet implemented (#43 follow-up)")
 
     async def fetch_datos_fiscales(
@@ -239,6 +259,7 @@ class StatusReader:
         Raises:
             StatusReaderError: Always — this surface is a v1 stub.
         """
+        del year, use_cache
         raise StatusReaderError("datos fiscales surface not yet implemented (#43 follow-up)")
 
     async def fetch_calendario(
@@ -251,4 +272,5 @@ class StatusReader:
         Raises:
             StatusReaderError: Always — this surface is a v1 stub.
         """
+        del use_cache
         raise StatusReaderError("calendario surface not yet implemented (#43 follow-up)")

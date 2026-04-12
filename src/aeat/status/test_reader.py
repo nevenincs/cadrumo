@@ -29,13 +29,25 @@ pytestmark = pytest.mark.unit
 _FIXTURE = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "aeat-pages" / "expedientes" / "sample.html"
 
 
+class _FakeResponse:
+    def __init__(self, status: int) -> None:
+        self.status = status
+
+
 class _FakePage:
     def __init__(self, html: str) -> None:
         self._html = html
         self.visited: list[str] = []
 
-    async def goto(self, url: str) -> None:
+    async def goto(
+        self,
+        url: str,
+        *,
+        wait_until: str | None = None,
+    ) -> _FakeResponse:
+        del wait_until
         self.visited.append(url)
+        return _FakeResponse(status=200)
 
     async def content(self) -> str:
         return self._html
@@ -126,6 +138,20 @@ class TestFetchExpedientes:
         reader, _, _ = _build_reader(tmp_path)
         records = await reader.fetch_expedientes(since=date(2025, 4, 20))
         assert {r.expediente_id for r in records} == {"2025X1234567L0002"}
+
+    async def test_since_does_not_invalidate_cache(self, tmp_path: Path) -> None:
+        """A post-parse ``since`` filter must not force a re-fetch.
+
+        Regression for the review finding: earlier revisions hashed
+        ``since`` into the cache key, so back-to-back invocations
+        with different ``--since`` values burned the cache.
+        """
+        reader, session, _ = _build_reader(tmp_path)
+        await reader.fetch_expedientes()
+        assert len(session.page.visited) == 1
+        await reader.fetch_expedientes(since=date(2025, 4, 20))
+        await reader.fetch_expedientes(since=date(2025, 4, 15))
+        assert len(session.page.visited) == 1
 
     async def test_close_is_idempotent(self, tmp_path: Path) -> None:
         reader, _, _ = _build_reader(tmp_path)

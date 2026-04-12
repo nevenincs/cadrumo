@@ -1,15 +1,15 @@
 """``aeat status`` sub-app — live AEAT status reader CLI (#43).
 
-Wires one subcommand per status surface under ``aeat status``. Only
-the ``expedientes`` command is fully wired in v1; the remaining
-subcommands construct the reader and invoke its stub fetchers,
-which raise :class:`aeat.status.StatusReaderError`. That is
-surfaced to the operator as ``typer.Exit(1)`` with a clear message.
+Wires one subcommand per status surface under ``aeat status``. Every
+command is marked ``hidden=True`` until the cert-auth backend (#8)
+lands: without a concrete :class:`aeat.status.CertificateBackend`
+implementation the CLI cannot open an authenticated AEAT session
+and will error out cleanly with exit code 2. Programmatic use of
+:class:`aeat.status.StatusReader` is unaffected.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 from datetime import date
 from typing import Any
@@ -18,14 +18,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.config import load_settings
 from aeat.logging import get_logger
-from aeat.status import (
-    Expediente,
-    StatusCache,
-    StatusReader,
-    StatusReaderError,
-)
+from aeat.status import Expediente
 
 logger = get_logger(__name__)
 
@@ -40,11 +34,16 @@ app = typer.Typer(
 
 _CONSOLE = Console()
 
+_CERT_BACKEND_MISSING_MSG = (
+    "aeat status CLI requires the cert-auth backend (#8) and a live "
+    "Playwright runtime; run the reader programmatically in the meantime."
+)
 
-def _not_yet_wired(surface: str) -> None:
-    """Emit a uniform "not yet implemented" error for stub surfaces."""
-    _CONSOLE.print(f"[yellow]status surface '{surface}' not yet implemented in v1 — see #43 follow-up[/yellow]")
-    raise typer.Exit(code=1)
+
+def _bail_cert_missing() -> None:
+    """Uniform exit for every hidden status subcommand until #8 lands."""
+    _CONSOLE.print(f"[red]{_CERT_BACKEND_MISSING_MSG}[/red]")
+    raise typer.Exit(code=2)
 
 
 def _render_expedientes_table(records: tuple[Expediente, ...]) -> None:
@@ -72,7 +71,16 @@ def _emit_json(records: tuple[Any, ...]) -> None:
     typer.echo(json.dumps(payload, indent=2, ensure_ascii=False))
 
 
-@app.command("expedientes", help="List 'Mis expedientes' rows.")
+def _parse_since(raw: str | None) -> date | None:
+    if raw is None:
+        return None
+    try:
+        return date.fromisoformat(raw)
+    except ValueError as exc:
+        raise typer.BadParameter(f"--since must be YYYY-MM-DD, got {raw!r}") from exc
+
+
+@app.command("expedientes", help="List 'Mis expedientes' rows.", hidden=True)
 def expedientes(
     since: str | None = typer.Option(
         None,
@@ -85,98 +93,69 @@ def expedientes(
         help="Emit JSON instead of a pretty table.",
     ),
 ) -> None:
-    """Fetch and display the user's expediente history."""
-    since_date = date.fromisoformat(since) if since else None
-    records = asyncio.run(_run_expedientes(since_date))
-    if json_output:
-        _emit_json(records)
-    else:
-        _render_expedientes_table(records)
+    """Fetch and display the user's expediente history.
 
-
-async def _run_expedientes(since: date | None) -> tuple[Expediente, ...]:
-    _, reader = _build_reader_unused_browser()
-    try:
-        return await reader.fetch_expedientes(since=since)
-    except StatusReaderError as exc:
-        _CONSOLE.print(f"[red]status fetch failed:[/red] {exc}")
-        raise typer.Exit(code=1) from exc
-    finally:
-        await reader.close()
-
-
-def _build_reader_unused_browser() -> tuple[None, StatusReader]:
-    """Construct a :class:`StatusReader` for CLI use.
-
-    This helper intentionally raises if called without a live
-    Playwright runtime — in v1 the CLI requires a running browser
-    and a concrete cert backend. Unit tests never call this helper;
-    they build :class:`StatusReader` directly.
+    Hidden until #8 wires the concrete cert backend; programmatic
+    use of :class:`aeat.status.StatusReader` works today.
     """
-    settings = load_settings()
-    cache = StatusCache(
-        settings.aeat_status_cache_dir,
-        ttl_s=settings.aeat_status_cache_ttl_s,
-    )
-    # The concrete browser + cert wiring lands when #8 merges. Until
-    # then, the CLI path errors out cleanly instead of booting a
-    # half-wired pipeline.
-    _ = cache
-    _CONSOLE.print(
-        "[red]aeat status CLI requires the cert auth backend (#8) and a "
-        "live Playwright runtime; run the reader programmatically in the "
-        "meantime.[/red]"
-    )
-    raise typer.Exit(code=2)
+    # Validate flags eagerly so the operator gets a clean error even
+    # before the cert-backend bail-out.
+    _ = _parse_since(since)
+    _ = json_output
+    _bail_cert_missing()
 
 
-@app.command("notificaciones", help="List 'Mis notificaciones' rows.")
+@app.command("notificaciones", help="List 'Mis notificaciones' rows.", hidden=True)
 def notificaciones(
     since: str | None = typer.Option(None, "--since"),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
-    del since, json_output
-    _not_yet_wired("notificaciones")
+    _ = _parse_since(since)
+    _ = json_output
+    _bail_cert_missing()
 
 
-@app.command("devoluciones", help="List 'Mis devoluciones' rows.")
+@app.command("devoluciones", help="List 'Mis devoluciones' rows.", hidden=True)
 def devoluciones(
     year: int | None = typer.Option(None, "--year"),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
     del year, json_output
-    _not_yet_wired("devoluciones")
+    _bail_cert_missing()
 
 
-@app.command("borrador", help="Show the IRPF draft state.")
+@app.command("borrador", help="Show the IRPF draft state.", hidden=True)
 def borrador(
     year: int = typer.Option(..., "--year"),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
     del year, json_output
-    _not_yet_wired("borrador")
+    _bail_cert_missing()
 
 
-@app.command("datos-fiscales", help="Show third-party tax data.")
+@app.command("datos-fiscales", help="Show third-party tax data.", hidden=True)
 def datos_fiscales(
     year: int = typer.Option(..., "--year"),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
     del year, json_output
-    _not_yet_wired("datos-fiscales")
+    _bail_cert_missing()
 
 
-@app.command("calendario", help="Show the personalised filing calendar.")
+@app.command("calendario", help="Show the personalised filing calendar.", hidden=True)
 def calendario(
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
     del json_output
-    _not_yet_wired("calendario")
+    _bail_cert_missing()
 
 
-__all__ = ["app"]
+__all__ = [
+    "_render_expedientes_table",
+    "app",
+]
