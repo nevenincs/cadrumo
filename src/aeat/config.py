@@ -246,6 +246,21 @@ class Settings(BaseSettings):
         description="Maximum retry attempts for retryable LLM failures",
     )
 
+    # ── Filing-deadline engine (#38) ────────────────────────────────────────
+    aeat_default_profile_path: Path | None = Field(
+        default=None,
+        description=(
+            "Optional path to a JSON file with the default AutonomoProfile "
+            "loaded by `aeat deadlines` when --profile is omitted"
+        ),
+    )
+    aeat_deadline_due_soon_days: int = Field(
+        default=14,
+        description=(
+            "Days before an obligation's closes_on date that flag ObligationStatus.DUE_SOON in the deadline engine"
+        ),
+    )
+
     # ── Self-healing sync runner (#11) ──────────────────────────────────────
     aeat_sync_concurrency: int = Field(
         default=4,
