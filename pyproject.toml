@@ -39,6 +39,12 @@ dependencies = [
     "pydantic-settings>=2.9.1",
     # HTTP client
     "httpx>=0.28.1",
+    # HTML parsing (status reader, #43)
+    "beautifulsoup4>=4.12",
+    # IANA tz database (bundled on Linux/macOS, missing on Windows
+    # CPython — required by aeat.status._parsers.expedientes to
+    # localise AEAT timestamps to Europe/Madrid).
+    "tzdata>=2024.1 ; sys_platform == 'win32'",
     # PKCS#12 parsing for client-certificate auth (#8)
     "cryptography>=46.0.7",
     # Configuration
@@ -132,6 +138,7 @@ allowed-unresolved-imports = [
     "typer",
     "rich",
     "playwright_stealth",
+    "bs4",
 ]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────

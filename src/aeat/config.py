@@ -388,6 +388,20 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ── Status reader (#43) ─────────────────────────────────────────────────
+    aeat_status_cache_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "status-cache",
+        description="Directory for the short-lived AEAT status-page cache",
+    )
+    aeat_status_cache_ttl_s: int = Field(
+        default=900,
+        description="TTL in seconds for status cache entries (default 15 min)",
+    )
+    aeat_status_browser_trace_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "browser-traces",
+        description="Directory where the status reader drops Playwright trace files",
+    )
+
     # ── Introspection ───────────────────────────────────────────────────────
 
     @classmethod
