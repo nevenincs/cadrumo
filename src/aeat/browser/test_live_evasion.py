@@ -1,7 +1,5 @@
 """Live tests for bot evasion strategies."""
 
-import os
-
 import pytest
 from playwright.async_api import async_playwright
 
@@ -15,14 +13,8 @@ from aeat.config import load_settings
 async def test_live_bot_detection_probe(tmp_path) -> None:
     """Test the browser session against a live bot detection probe.
 
-    Requires AEAT_LIVE_TESTS_ENABLED=true or AEAT_LIVE_TESTS=1.
+    Requires ``AEAT_LIVE_TESTS_ENABLED=1`` and the ``live`` marker selected.
     """
-    if os.environ.get("AEAT_LIVE_TESTS") != "1" and os.environ.get("AEAT_LIVE_TESTS_ENABLED", "").lower() not in (
-        "true",
-        "1",
-    ):
-        pytest.skip("Live tests disabled")
-
     settings = load_settings()
     profile = Profile(name="live_test", storage_state_path=tmp_path / "live_state.json")
 
