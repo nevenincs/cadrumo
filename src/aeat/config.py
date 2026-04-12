@@ -335,6 +335,23 @@ class Settings(BaseSettings):
         description="Initial exponential backoff delay (seconds) between retries",
     )
 
+    # ── Notifications inbox (#46) ───────────────────────────────────────────
+    aeat_inbox_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "inbox",
+        description="Directory where the persisted Inbox JSON file lives",
+    )
+    aeat_inbox_pdf_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "inbox" / "pdfs",
+        description="Directory where downloaded notification PDFs are stored",
+    )
+    aeat_inbox_alert_lead_days: int = Field(
+        default=7,
+        description=(
+            "Lead window (days) for `aeat inbox next-deadline`: surface CRITICAL/HIGH "
+            "notifications whose appeal_deadline falls within the next N days"
+        ),
+    )
+
     # ── Filing draft engine (#39) ───────────────────────────────────────────
     aeat_drafts_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "drafts",
