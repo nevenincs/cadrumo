@@ -51,6 +51,7 @@ from ._repository import (
     JsonFileDivergenceRepository,
     StorageDivergenceRepository,
 )
+from ._runner import LivePayloadFetcher, LiveSyncRunner, SyncRunResult
 from ._strategies import (
     AdditiveAllowlistStrategy,
     BenignRecordStrategy,
@@ -98,6 +99,8 @@ __all__ = [
     "LLMRequest",
     "LabelEsChanged",
     "LabelTranslationAdded",
+    "LivePayloadFetcher",
+    "LiveSyncRunner",
     "ManualRulesLoader",
     "ModeloIdentifier",
     "ModeloSchema",
@@ -110,6 +113,7 @@ __all__ = [
     "StrategyAction",
     "StrategyOutcome",
     "SyncError",
+    "SyncRunResult",
     "UnknownShape",
     "VigenciaExtended",
     "WireCasilla",
