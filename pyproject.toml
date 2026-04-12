@@ -111,6 +111,10 @@ allowed-unresolved-imports = [
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["src", "tests"]
 pythonpath = ["src"]
 addopts = "-v --tb=short"
+markers = [
+    "unit: Unit tests that do not hit external networks.",
+    "live: Live integration tests that hit external networks."
+]
