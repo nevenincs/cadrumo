@@ -10,13 +10,31 @@ and this module stay fully aligned.
 
 from __future__ import annotations
 
+from enum import StrEnum
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class DivergenceSink(StrEnum):
+    """Supported sinks for :class:`aeat.sync.DivergenceRecord` persistence."""
+
+    FILE = "FILE"
+    STORAGE = "STORAGE"
+
 
 # Project root: three levels up from src/aeat/config.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+class LLMProviderSetting(StrEnum):
+    """Closed set of provider names accepted by Settings."""
+
+    ANTHROPIC = "ANTHROPIC"
+    OPENAI = "OPENAI"
+    GEMINI = "GEMINI"
+    LOCAL = "LOCAL"
 
 
 class Settings(BaseSettings):
@@ -143,6 +161,19 @@ class Settings(BaseSettings):
         description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
     )
 
+    # ── Manuals corpus (aeat.manuals, #25) ──────────────────────────────────
+    aeat_manuals_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "manuals",
+        description="Root directory for the structured AEAT Manual práctico corpus",
+    )
+    aeat_manuals_review_required: bool = Field(
+        default=True,
+        description=(
+            "When True, 'aeat manual verify' rejects any Manual/Section/Rule record "
+            "missing reviewer metadata; when False the rejection is downgraded to a warning"
+        ),
+    )
+
     # ── Browser Automation ──────────────────────────────────────────────────
     aeat_browser_channel: str = Field(
         default="chrome",
@@ -175,6 +206,88 @@ class Settings(BaseSettings):
     aeat_rate_limit_delay_seconds: float = Field(
         default=2.0,
         description="Minimum delay between AEAT requests in seconds",
+    )
+
+    # ── LLM ─────────────────────────────────────────────────────────────────
+    aeat_llm_provider: LLMProviderSetting = Field(
+        default=LLMProviderSetting.ANTHROPIC,
+        description="Default LLM provider name",
+    )
+    aeat_llm_model: str = Field(
+        default="claude-sonnet-4-6",
+        description="Default LLM model identifier",
+    )
+    aeat_llm_anthropic_api_key: SecretStr | None = Field(
+        default=None,
+        description="Anthropic API key (env only, never logged)",
+    )
+    aeat_llm_openai_api_key: SecretStr | None = Field(
+        default=None,
+        description="OpenAI API key (optional)",
+    )
+    aeat_llm_gemini_api_key: SecretStr | None = Field(
+        default=None,
+        description="Google Gemini API key (optional)",
+    )
+    aeat_llm_cache_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "llm-cache",
+        description="Directory for on-disk LLM cache entries",
+    )
+    aeat_llm_usage_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "llm-usage",
+        description="Directory for append-only LLM usage JSONL logs",
+    )
+    aeat_llm_default_timeout_s: int = Field(
+        default=60,
+        description="Default timeout for LLM provider calls in seconds",
+    )
+    aeat_llm_max_retries: int = Field(
+        default=3,
+        description="Maximum retry attempts for retryable LLM failures",
+    )
+
+    # ── Filing-deadline engine (#38) ────────────────────────────────────────
+    aeat_default_profile_path: Path | None = Field(
+        default=None,
+        description=(
+            "Optional path to a JSON file with the default AutonomoProfile "
+            "loaded by `aeat deadlines` when --profile is omitted"
+        ),
+    )
+    aeat_deadline_due_soon_days: int = Field(
+        default=14,
+        description=(
+            "Days before an obligation's closes_on date that flag ObligationStatus.DUE_SOON in the deadline engine"
+        ),
+    )
+
+    # ── Self-healing sync runner (#11) ──────────────────────────────────────
+    aeat_sync_concurrency: int = Field(
+        default=4,
+        description="Maximum number of concurrent sync fetches",
+    )
+    aeat_sync_auto_heal_allowlist: str = Field(
+        default="casilla_added_with_default,label_translation_added,vigencia_extended",
+        description=(
+            "CSV list of DivergenceKind values the runner is permitted to "
+            "auto-apply when classification==ADDITIVE and auto_heal=True"
+        ),
+    )
+    aeat_sync_divergence_sink: DivergenceSink = Field(
+        default=DivergenceSink.FILE,
+        description="Divergence record sink: FILE (default) or STORAGE (pending #10)",
+    )
+    aeat_sync_divergence_file_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "divergences",
+        description="Directory for JSON-file divergence records when sink=FILE",
+    )
+    aeat_sync_retry_max: int = Field(
+        default=3,
+        description="Maximum transient-fetch retry attempts during a sync run",
+    )
+    aeat_sync_retry_backoff_s: float = Field(
+        default=5.0,
+        description="Initial exponential backoff delay (seconds) between retries",
     )
 
     # ── Introspection ───────────────────────────────────────────────────────

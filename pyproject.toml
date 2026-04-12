@@ -18,6 +18,8 @@ classifiers = [
 ]
 
 dependencies = [
+    # LLM providers
+    "anthropic>=0.74.1",
     # Google Cloud / Workspace
     "google-api-python-client>=2.194.0",
     "google-auth>=2.49.1",
