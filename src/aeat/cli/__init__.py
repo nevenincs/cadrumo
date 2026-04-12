@@ -18,6 +18,7 @@ import typer
 
 from aeat.cli import bootstrap as bootstrap_module
 from aeat.cli import cloud as cloud_module
+from aeat.cli import deadlines as deadlines_module
 from aeat.cli import docs as docs_module
 from aeat.cli import doctor as doctor_module
 from aeat.cli import drive as drive_module
@@ -34,7 +35,7 @@ app = typer.Typer(
 )
 
 
-@app.command(name="hello", help="Smoke test command — prints a greeting and exits 0.")
+@app.command(name="hello", help="Smoke test command - prints a greeting and exits 0.")
 def hello() -> None:
     """Sanity check command preserved for the base smoke tests."""
     typer.echo("Hello from AEAT CLI")
@@ -51,6 +52,7 @@ app.add_typer(cloud_module.app, name="cloud", help="GCP product helpers (Functio
 app.add_typer(llm_module.app, name="llm", help="LLM prompt, translation, cache, and usage helpers.")
 app.add_typer(oauth_module.app, name="oauth-client", help="OAuth 2.0 Desktop client provisioning.")
 app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
+app.add_typer(deadlines_module.app, name="deadlines", help="Filing-deadline computation engine (#38).")
 
 
 __all__ = ["app"]
