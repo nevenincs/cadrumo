@@ -223,6 +223,13 @@ gcp-oauth.keys.json
 playwright-report/
 test-results/
 
+# AEAT Manual practico raw PDFs (#25): binaries are materialised by
+# `aeat manual fetch` and verified against the committed manifest.json.
+# Raw-binary storage policy belongs to #17; keep manifests committed
+# but never commit the multi-MB PDF blobs from this branch.
+corpus/manuals/**/source.pdf
+corpus/manuals/**/source.html/
+
 # IDE
 .idea/
 .vscode/
