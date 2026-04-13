@@ -10,7 +10,14 @@ from aeat.i18n import Translatable
 
 from ._casilla_mapping import CasillaMapping, CasillaMappingSign
 from ._profile import CategoryProfile, VatCategory
-from ._proportionality import Citation, CitationSource, ProportionalityKind, ProportionalityRule, parse_http_url
+from ._proportionality import (
+    Citation,
+    CitationSource,
+    ProportionalityKind,
+    ProportionalityRule,
+    StatutoryCapPeriod,
+    parse_http_url,
+)
 from ._spending_category import SpendingCategory
 
 _MANUAL_RENTA_2025 = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
@@ -76,6 +83,8 @@ def _rule(
     fixed_pct: Decimal | None = None,
     default_ratio: Decimal | None = None,
     statutory_cap_eur_per_day: Decimal | None = None,
+    statutory_cap_eur: Decimal | None = None,
+    statutory_cap_period: StatutoryCapPeriod | None = None,
 ) -> ProportionalityRule:
     """Build a proportionality rule."""
 
@@ -84,6 +93,8 @@ def _rule(
         fixed_pct=fixed_pct,
         default_ratio=default_ratio,
         statutory_cap_eur_per_day=statutory_cap_eur_per_day,
+        statutory_cap_eur=statutory_cap_eur,
+        statutory_cap_period=statutory_cap_period,
         citations=citations,
         notes_es=notes_es,
     )
@@ -728,12 +739,13 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             "Vállalkozói egészségbiztosítás",
         ),
         proportionality=_rule(
-            kind=ProportionalityKind.FULL_DEDUCTIBLE,
+            kind=ProportionalityKind.STATUTORY_CAP,
             citations=_CIT_HEALTH_INSURANCE,
             notes_es=(
-                "Sin prorrata especial; la cuantía deducible queda limitada por "
-                "el tope anual legal por persona asegurada."
+                "Tope anual por persona asegurada; el límite asciende a 1.500 euros por persona con discapacidad."
             ),
+            statutory_cap_eur=Decimal("500"),
+            statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
         ),
         casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
