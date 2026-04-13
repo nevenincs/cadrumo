@@ -266,6 +266,23 @@ class Settings(BaseSettings):
         default="https://sede.agenciatributaria.gob.es/",
         description="Target URL for aeat.auth.verify_handshake() mTLS smoke test",
     )
+    aeat_cert_warn_days: int = Field(
+        default=60,
+        gt=0,
+        description=(
+            "Warning threshold (days) for the certificate pre-expiry gate: "
+            "certificates with <= this many days remaining are surfaced as WARN"
+        ),
+    )
+    aeat_cert_critical_days: int = Field(
+        default=14,
+        gt=0,
+        description=(
+            "Critical threshold (days) for the certificate pre-expiry gate: "
+            "certificates with <= this many days remaining are CRITICAL and "
+            "block live submission unless --force-expiring-cert is passed"
+        ),
+    )
 
     # ── LLM ─────────────────────────────────────────────────────────────────
     aeat_llm_provider: LLMProviderSetting = Field(
