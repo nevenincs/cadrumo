@@ -7,7 +7,14 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.financial.categories import Citation, CitationSource, ProportionalityKind, ProportionalityRule, parse_http_url
+from aeat.financial.categories import (
+    Citation,
+    CitationSource,
+    ProportionalityKind,
+    ProportionalityRule,
+    StatutoryCapPeriod,
+    parse_http_url,
+)
 
 
 def _citation() -> Citation:
@@ -55,3 +62,33 @@ def test_full_deductible_rejects_default_ratio() -> None:
             citations=(_citation(),),
             notes_es="Valor incompatible.",
         )
+
+
+@pytest.mark.unit
+def test_usage_ratio_rejects_statutory_cap_fields() -> None:
+    """Usage-ratio rules must reject statutory-cap fields."""
+
+    with pytest.raises(ValidationError):
+        ProportionalityRule(
+            kind=ProportionalityKind.USAGE_RATIO_PERSONAL,
+            default_ratio=Decimal("0.30"),
+            statutory_cap_eur_per_day=Decimal("50"),
+            citations=(_citation(),),
+            notes_es="Forma incompatible.",
+        )
+
+
+@pytest.mark.unit
+def test_statutory_cap_accepts_generic_annual_caps() -> None:
+    """Generic cap fields support non-daily legal limits."""
+
+    rule = ProportionalityRule(
+        kind=ProportionalityKind.STATUTORY_CAP,
+        statutory_cap_eur=Decimal("500"),
+        statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
+        citations=(_citation(),),
+        notes_es="Tope anual.",
+    )
+
+    assert rule.statutory_cap_eur == Decimal("500")
+    assert rule.statutory_cap_period is StatutoryCapPeriod.YEAR_PER_PERSON

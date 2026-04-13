@@ -54,6 +54,13 @@ class ProportionalityKind(StrEnum):
     NON_DEDUCTIBLE = "non_deductible"
 
 
+class StatutoryCapPeriod(StrEnum):
+    """Supported statutory-cap periods."""
+
+    DAY = "day"
+    YEAR_PER_PERSON = "year_per_person"
+
+
 class ProportionalityRule(_StrictFrozenModel):
     """Deductibility and proportionality rule for one spending category."""
 
@@ -61,6 +68,8 @@ class ProportionalityRule(_StrictFrozenModel):
     fixed_pct: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
     default_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
     statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
+    statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
+    statutory_cap_period: StatutoryCapPeriod | None = None
     citations: tuple[Citation, ...] = Field(default_factory=tuple)
     notes_es: str = Field(min_length=1, max_length=2048)
 
@@ -72,15 +81,28 @@ class ProportionalityRule(_StrictFrozenModel):
             raise ValueError("fixed_percentage rules require fixed_pct")
         if self.kind is not ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is not None:
             raise ValueError("fixed_pct is only valid for fixed_percentage rules")
-        if self.kind in {
+        is_usage_ratio = self.kind in {
             ProportionalityKind.USAGE_RATIO_HOME_AREA,
             ProportionalityKind.USAGE_RATIO_PERSONAL,
-        }:
-            return self
-        if self.default_ratio is not None:
+        }
+        if not is_usage_ratio and self.default_ratio is not None:
             raise ValueError("default_ratio is only valid for usage_ratio rules")
-        if self.kind is ProportionalityKind.STATUTORY_CAP and self.statutory_cap_eur_per_day is None:
-            raise ValueError("statutory_cap rules require statutory_cap_eur_per_day")
-        if self.kind is not ProportionalityKind.STATUTORY_CAP and self.statutory_cap_eur_per_day is not None:
+        has_daily_cap = self.statutory_cap_eur_per_day is not None
+        has_generic_cap = self.statutory_cap_eur is not None or self.statutory_cap_period is not None
+        if self.kind is ProportionalityKind.STATUTORY_CAP:
+            if not has_daily_cap and not has_generic_cap:
+                raise ValueError("statutory_cap rules require a cap amount")
+            if has_daily_cap and has_generic_cap:
+                raise ValueError("statutory cap rules must use either daily or generic cap fields, not both")
+            if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
+                raise ValueError("statutory_cap_period requires statutory_cap_eur")
+            if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
+                raise ValueError("statutory_cap_eur requires statutory_cap_period")
+            return self
+        if has_daily_cap:
             raise ValueError("statutory_cap_eur_per_day is only valid for statutory_cap rules")
+        if self.statutory_cap_eur is not None:
+            raise ValueError("statutory_cap_eur is only valid for statutory_cap rules")
+        if self.statutory_cap_period is not None:
+            raise ValueError("statutory_cap_period is only valid for statutory_cap rules")
         return self

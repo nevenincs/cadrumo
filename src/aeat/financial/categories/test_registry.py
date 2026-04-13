@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from aeat.casillas import ModeloCode, load_casillas
@@ -53,7 +55,11 @@ def test_registry_preserves_conservative_semantics_for_special_categories() -> N
 
     assert hardware.proportionality.kind.value == "full_deductible"
     assert vehicle.proportionality.default_ratio is None
+    assert health.proportionality.kind.value == "statutory_cap"
     assert health.proportionality.statutory_cap_eur_per_day is None
+    assert health.proportionality.statutory_cap_eur == Decimal("500")
+    assert health.proportionality.statutory_cap_period is not None
+    assert health.proportionality.statutory_cap_period.value == "year_per_person"
 
 
 @pytest.mark.unit
