@@ -18,6 +18,7 @@ import typer
 
 from aeat.cli import bootstrap as bootstrap_module
 from aeat.cli import casillas as casillas_module
+from aeat.cli import categories as categories_module
 from aeat.cli import cloud as cloud_module
 from aeat.cli import deadlines as deadlines_module
 from aeat.cli import docs as docs_module
@@ -57,6 +58,7 @@ app.command(name="bootstrap", help="Provision scratch resources and persist thei
     bootstrap_module.bootstrap
 )
 app.add_typer(casillas_module.app, name="casillas", help="Curated AEAT casilla catalogue helpers.")
+app.add_typer(categories_module.app, name="categories", help="AEAT spending-category taxonomy helpers (#77).")
 app.add_typer(drive_module.app, name="drive", help="Google Drive helpers.")
 app.add_typer(sheets_module.app, name="sheets", help="Google Sheets helpers.")
 app.add_typer(docs_module.app, name="docs", help="Google Docs helpers.")
