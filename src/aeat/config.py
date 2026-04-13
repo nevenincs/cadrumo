@@ -251,6 +251,17 @@ class Settings(BaseSettings):
         description="Minimum delay between AEAT requests in seconds",
     )
 
+    # ── Site-health detection (#95) ─────────────────────────────────────────
+    site_health_probe_url: str = Field(
+        default="https://sede.agenciatributaria.gob.es/",
+        description="AEAT Sede URL the site-health probe navigates to",
+    )
+    site_health_rate_limit_retry_after_default: int = Field(
+        default=300,
+        ge=1,
+        description="Fallback Retry-After seconds when a 429/503 omits the header",
+    )
+
     # ── AEAT certificate authentication (#8) ────────────────────────────────
     aeat_certificate_path: Path | None = Field(
         default=None,

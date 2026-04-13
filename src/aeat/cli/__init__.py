@@ -17,6 +17,7 @@ from __future__ import annotations
 import typer
 
 from aeat.cli import bootstrap as bootstrap_module
+from aeat.cli import browser as browser_module
 from aeat.cli import casillas as casillas_module
 from aeat.cli import cloud as cloud_module
 from aeat.cli import deadlines as deadlines_module
@@ -56,6 +57,7 @@ app.command(name="doctor", help="Report Google Workspace + GCP health for this w
 app.command(name="bootstrap", help="Provision scratch resources and persist their IDs to env/.env.")(
     bootstrap_module.bootstrap
 )
+app.add_typer(browser_module.app, name="browser", help="Playwright browser session health probes (#95).")
 app.add_typer(casillas_module.app, name="casillas", help="Curated AEAT casilla catalogue helpers.")
 app.add_typer(drive_module.app, name="drive", help="Google Drive helpers.")
 app.add_typer(sheets_module.app, name="sheets", help="Google Sheets helpers.")

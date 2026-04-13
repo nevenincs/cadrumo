@@ -43,6 +43,26 @@ from ._models import (
 )
 from ._protocols import BrowserSessionLike, CertificateBackend
 from ._reader import StatusReader
+from ._site_health import (
+    SiteHealthAlert,
+    SiteHealthEvidence,
+    SiteHealthState,
+    SiteHealthStatus,
+)
+from ._site_health_parsers import (
+    evaluate_response,
+    parse_mantenimiento_banner,
+    parse_rate_limit_response,
+    parse_waf_challenge,
+)
+
+# NOTE: ``SiteHealthAlert.stage`` is a forward reference to
+# ``aeat.workflow.WorkflowStage``. Callers who need to instantiate
+# ``SiteHealthAlert`` must import ``aeat.workflow`` at least once
+# first; that import rebuilds the model in
+# ``aeat.workflow.__init__``. The cycle cannot be broken eagerly
+# here without re-introducing a partial-import ImportError.
+
 
 __all__ = [
     "AeatStatusKind",
@@ -56,10 +76,18 @@ __all__ = [
     "Notificacion",
     "Payor",
     "PayorKind",
+    "SiteHealthAlert",
+    "SiteHealthEvidence",
+    "SiteHealthState",
+    "SiteHealthStatus",
     "StatusAuthError",
     "StatusCache",
     "StatusNotFoundError",
     "StatusParseError",
     "StatusReader",
     "StatusReaderError",
+    "evaluate_response",
+    "parse_mantenimiento_banner",
+    "parse_rate_limit_response",
+    "parse_waf_challenge",
 ]
