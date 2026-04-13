@@ -11,11 +11,14 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import cast
 
 from aeat.config import Settings
+from aeat.filing import FilingAmendment, FilingDraft
 from aeat.logging import get_logger
 from aeat.submission._errors import SubmissionError, SubmissionPreflightError
 from aeat.submission._models import (
+    AmendmentSubmissionResult,
     SubmissionAttempt,
     SubmissionStatus,
     SubmittedFiling,
@@ -119,8 +122,67 @@ class SubmissionEngine:
             SubmissionError: If no submitter is registered for
                 ``draft.modelo``.
         """
+        return await self._submit_with_transport(
+            draft=draft,
+            dry_run=dry_run,
+            override_confirmation=override_confirmation,
+            today=today,
+        )
+
+    async def submit_amendment(
+        self,
+        amendment: FilingAmendment,
+        *,
+        dry_run: bool = True,
+        override_confirmation: bool = False,
+        today: date | None = None,
+    ) -> AmendmentSubmissionResult:
+        """Submit ``amendment`` through the existing per-modelo transport.
+
+        Args:
+            amendment: The amendment produced by
+                :func:`aeat.filing.build_complementaria`.
+            dry_run: When ``True`` (default), stop before the final
+                irreversible submission click.
+            override_confirmation: Explicit live-mode acknowledgement.
+            today: Optional preflight reference date.
+
+        Returns:
+            A typed :class:`AmendmentSubmissionResult` persisted under
+            ``settings.aeat_submissions_dir``.
+        """
+        filing = await self._submit_with_transport(
+            draft=amendment.amended_draft,
+            dry_run=dry_run,
+            override_confirmation=override_confirmation,
+            today=today,
+            amendment_kind=amendment.amendment_kind.value,
+            original_csv=amendment.original_csv,
+        )
+        result = AmendmentSubmissionResult(
+            amendment_id=amendment.amendment_id,
+            amendment=amendment,
+            filing=filing,
+            dry_run=dry_run,
+            submitted_at=filing.submitted_at,
+        )
+        self._persist_amendment_result(result)
+        return result
+
+    async def _submit_with_transport(
+        self,
+        *,
+        draft: FilingDraftLike | FilingDraft,
+        dry_run: bool,
+        override_confirmation: bool,
+        today: date | None,
+        amendment_kind: str | None = None,
+        original_csv: str | None = None,
+    ) -> SubmittedFiling:
+        """Execute the shared preflight + transport flow."""
+        draft_like = cast(FilingDraftLike, draft)
         reference_today = today or date.today()
-        self._preflight.check(draft, today=reference_today)
+        self._preflight.check(draft_like, today=reference_today)
 
         if draft.modelo not in self.submitters:
             raise SubmissionError(f"no submitter registered for modelo {draft.modelo!r}")
@@ -143,20 +205,24 @@ class SubmissionEngine:
         if dry_run:
             _logger.info("engine: dry-run submitting modelo=%s", draft.modelo)
             attempt = await submitter.dry_run(
-                draft=draft,
+                draft=draft_like,
                 session=session,
                 casilla_catalogue=self.casilla_catalogue,
                 portal=portal,
+                amendment_kind=amendment_kind,
+                original_csv=original_csv,
             )
             overall_status = SubmissionStatus.PENDING
             attempts: tuple[SubmissionAttempt, ...] = (attempt,)
         else:
             _logger.info("engine: LIVE submitting modelo=%s", draft.modelo)
             attempt, justificante = await submitter.submit(
-                draft=draft,
+                draft=draft_like,
                 session=session,
                 casilla_catalogue=self.casilla_catalogue,
                 portal=portal,
+                amendment_kind=amendment_kind,
+                original_csv=original_csv,
             )
             overall_status = SubmissionStatus.SUBMITTED
             attempts = (attempt,)
@@ -187,6 +253,14 @@ class SubmissionEngine:
         target = target_dir / f"{filing.submission_id}.json"
         target.write_text(filing.model_dump_json(indent=2), encoding="utf-8")
         _logger.info("engine: persisted %s", target)
+
+    def _persist_amendment_result(self, result: AmendmentSubmissionResult) -> None:
+        """Write ``result`` as pretty JSON under ``aeat_submissions_dir/amendment-results``."""
+        target_dir = self.settings.aeat_submissions_dir / "amendment-results"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / f"{result.amendment_id}.json"
+        target.write_text(result.model_dump_json(indent=2), encoding="utf-8")
+        _logger.info("engine: persisted amendment result %s", target)
 
     def load_submission(self, submission_id: str) -> SubmittedFiling:
         """Load a persisted :class:`SubmittedFiling` by id.
