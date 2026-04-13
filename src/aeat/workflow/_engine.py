@@ -103,6 +103,14 @@ def _t(en: str) -> Translatable:
     return cast(Translatable, {"en": en})
 
 
+def _enum_value(value: object) -> str:
+    """Return ``Enum.value`` when present, otherwise ``str(value)``."""
+    if value is None:
+        return ""
+    raw = getattr(value, "value", value)
+    return str(raw)
+
+
 class _AbortError(Exception):
     """Internal signal raised by a stage method to trigger a bailout.
 
@@ -681,8 +689,9 @@ class WorkflowEngine:
                 exc=exc,
                 steps=steps,
             )
-        if draft.status is not DraftStatus.READY_TO_SUBMIT:
-            status_summary = _t(f"Draft {draft.draft_id} not ready: status={draft.status.value}")
+        if _enum_value(draft.status) != DraftStatus.READY_TO_SUBMIT.value:
+            status_value = _enum_value(draft.status)
+            status_summary = _t(f"Draft {draft.draft_id} not ready: status={status_value}")
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
@@ -690,7 +699,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary=status_summary,
-                    details={"draft_id": draft.draft_id, "status": draft.status.value},
+                    details={"draft_id": draft.draft_id, "status": status_value},
                 )
             )
             raise _AbortError(
@@ -718,7 +727,9 @@ class WorkflowEngine:
     ) -> None:
         """Stage 6 — re-scan the built draft for ERROR-severity findings."""
         started = _utcnow()
-        error_findings = tuple(f for f in draft.findings if f.severity is FilingFindingSeverity.ERROR)
+        error_findings = tuple(
+            f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == FilingFindingSeverity.ERROR
+        )
         if error_findings:
             errors_summary = _t(f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s)")
             steps.append(
