@@ -32,3 +32,17 @@ def test_value_round_trip(raw: str) -> None:
     """``ModeloCode(str)`` round-trips through the value."""
     member = ModeloCode(raw)
     assert member.value == raw
+
+
+def test_error_classes_import() -> None:
+    """Phase 3 error classes import cleanly from the private module."""
+    from aeat.errors import AeatError
+    from aeat.models._errors import (
+        ModeloRegistryError,
+        RegistryIntegrityError,
+        UnknownModeloError,
+    )
+
+    assert issubclass(ModeloRegistryError, AeatError)
+    assert issubclass(UnknownModeloError, ModeloRegistryError)
+    assert issubclass(RegistryIntegrityError, ModeloRegistryError)
