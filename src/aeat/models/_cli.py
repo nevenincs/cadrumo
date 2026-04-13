@@ -14,7 +14,9 @@ Every command supports a ``--json`` flag that emits JSON via
 
 from __future__ import annotations
 
+import contextlib
 import json
+import sys
 
 import typer
 from rich.console import Console
@@ -30,6 +32,16 @@ from aeat.models._registry import (
     modelos_for_profile,
     year_plan,
 )
+
+# The modelo catalogue carries Spanish and Hungarian characters (á, é, ő, …)
+# that Windows legacy code-page stdout (cp1252) cannot encode. Reconfigure the
+# interpreter's stdout/stderr to UTF-8 so `aeat modelos ...` runs cleanly on a
+# vanilla `cmd.exe`; tests via typer.testing.CliRunner already use UTF-8.
+for _stream in (sys.stdout, sys.stderr):
+    reconfigure = getattr(_stream, "reconfigure", None)
+    if callable(reconfigure):
+        with contextlib.suppress(ValueError, OSError):
+            reconfigure(encoding="utf-8", errors="replace")
 
 _CONSOLE = Console()
 
