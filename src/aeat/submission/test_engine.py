@@ -5,13 +5,22 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from aeat.config import Settings
+from aeat.filing import (
+    AmendmentKind,
+    CasillaChange,
+    FilingAmendment,
+    build_draft,
+)
+from aeat.filing.testing import SyntheticProfile, default_schema_provider
 from aeat.submission import (
+    AmendmentSubmissionResult,
     CasillaInputKind,
     CasillaRecord,
     DraftStatus,
@@ -119,6 +128,7 @@ class _RecordingSubmitter(Submitter):
     def __init__(self) -> None:
         self.dry_run_calls = 0
         self.submit_calls = 0
+        self.last_kwargs: dict[str, Any] = {}
 
     @property
     def modelo(self) -> str:
@@ -126,6 +136,7 @@ class _RecordingSubmitter(Submitter):
 
     async def dry_run(self, **kwargs: Any) -> SubmissionAttempt:
         self.dry_run_calls += 1
+        self.last_kwargs = kwargs
         now = datetime.now(UTC)
         return SubmissionAttempt(
             attempt_id="dry-1",
@@ -136,6 +147,7 @@ class _RecordingSubmitter(Submitter):
 
     async def submit(self, **kwargs: Any) -> tuple[SubmissionAttempt, Justificante | None]:
         self.submit_calls += 1
+        self.last_kwargs = kwargs
         now = datetime.now(UTC)
         attempt = SubmissionAttempt(
             attempt_id="live-1",
@@ -165,6 +177,43 @@ def _build_engine(tmp_path: Path, *, require_confirmation: bool = True) -> tuple
         settings=settings,
     )
     return engine, submitter
+
+
+def _build_amendment() -> FilingAmendment:
+    amended_draft = build_draft(
+        modelo="130",
+        period="2024Q1",
+        profile=SyntheticProfile(
+            tax_id="X1234567L",
+            display_name="Amendment subject",
+            applicable_modelos=("130",),
+        ),
+        inputs={
+            "01": 13000,
+            "02": 3500,
+            "05": 400,
+            "06": 0,
+        },
+        schema_provider=default_schema_provider(),
+    )
+    return FilingAmendment(
+        amendment_id="amd-1",
+        submission_id="sub-1",
+        original_csv="CSV-ORIGINAL",
+        original_model="130",
+        original_period="2024Q1",
+        amendment_kind=AmendmentKind.COMPLEMENTARIA,
+        delta=(
+            CasillaChange(
+                casilla_code="01",
+                old_value=None,
+                new_value=Decimal("13000"),
+                reason="Test amendment",
+            ),
+        ),
+        amended_draft=amended_draft,
+        created_at=datetime.now(UTC),
+    )
 
 
 class TestSubmitDraftDryRun:
@@ -214,3 +263,17 @@ class TestListSubmissions:
         assert len(all_) == 1
         assert engine.list_submissions(modelo="130") == all_
         assert engine.list_submissions(modelo="303") == ()
+
+
+class TestSubmitAmendment:
+    def test_defaults_to_dry_run_and_persists_result(self, tmp_path: Path) -> None:
+        engine, submitter = _build_engine(tmp_path)
+        result = asyncio.run(engine.submit_amendment(_build_amendment()))
+        assert isinstance(result, AmendmentSubmissionResult)
+        assert result.dry_run is True
+        assert result.filing.status is SubmissionStatus.PENDING
+        assert submitter.dry_run_calls == 1
+        assert submitter.last_kwargs["amendment_kind"] == "complementaria"
+        assert submitter.last_kwargs["original_csv"] == "CSV-ORIGINAL"
+        persisted = tmp_path / "submissions" / "amendment-results" / "amd-1.json"
+        assert persisted.exists()

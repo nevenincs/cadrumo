@@ -27,3 +27,11 @@ class FilingValidationError(FilingDraftError):
 
 class FilingComputationError(FilingDraftError):
     """Raised when a builder cannot evaluate a formula casilla."""
+
+
+class FilingAmendmentError(FilingDraftError):
+    """Base class for every amendment-related filing error."""
+
+
+class FilingAmendmentValidationError(FilingAmendmentError):
+    """Raised when an amendment violates legal or shape invariants."""

@@ -60,6 +60,19 @@ class CertificateExpiredError(CertificateError):
     """Raised when a loaded certificate's ``not_after`` is in the past."""
 
 
+class CertificatePreExpiryError(CertificateError):
+    """Raised when a certificate is within the pre-expiry danger window.
+
+    Distinct from :class:`CertificateExpiredError` (which fires after
+    ``not_after`` has elapsed): this error is raised proactively by the
+    workflow gate and CLI surfaces when a loaded certificate's
+    ``days_until_expiry`` has fallen below the configured critical
+    threshold, before the bundle becomes technically unusable. Callers
+    may suppress it via an explicit override flag (for example
+    ``aeat submission submit --force-expiring-cert``).
+    """
+
+
 class CertificateHandshakeError(CertificateError):
     """Raised when handshake input is structurally invalid.
 
@@ -91,6 +104,27 @@ class CertificateBackend(StrEnum):
     USER_DATA_DIR = "USER_DATA_DIR"
     MTLS_PROXY = "MTLS_PROXY"
     HTTPX_FALLBACK = "HTTPX_FALLBACK"
+
+
+class CertificateHealthSeverity(StrEnum):
+    """Closed catalogue of certificate health verdicts.
+
+    Mapping from ``days_until_expiry`` to severity is driven by the
+    ``warn_threshold_days`` / ``critical_threshold_days`` fields on the
+    :class:`CertificateHealth` record and the sourced values in
+    :class:`aeat.config.Settings`.
+
+    Attributes:
+        OK: Certificate has more than ``warn_threshold_days`` remaining.
+        WARN: Within the warning window but outside the critical one.
+        CRITICAL: Inside the critical window but not yet expired.
+        EXPIRED: ``not_after`` has already elapsed.
+    """
+
+    OK = "OK"
+    WARN = "WARN"
+    CRITICAL = "CRITICAL"
+    EXPIRED = "EXPIRED"
 
 
 # ── Pydantic boundary records ───────────────────────────────────────────────
@@ -174,6 +208,46 @@ class LoadedCertificate(BaseModel):
             f"sha256_thumbprint={self.sha256_thumbprint!r}, "
             f"backend={self.backend.value})"
         )
+
+
+class CertificateHealth(BaseModel):
+    """Structured health verdict for a PKCS#12 certificate bundle.
+
+    Computed from a loaded certificate's ``not_after`` against a
+    reference ``evaluated_at`` timestamp and a pair of warning /
+    critical thresholds sourced from
+    :class:`aeat.config.Settings`. The record never carries any
+    secret material; it is safe to log, persist, or surface to the
+    CLI.
+
+    Attributes:
+        subject: RFC-4514 subject DN.
+        issuer: RFC-4514 issuer DN.
+        serial_number: Hex-encoded serial number.
+        not_before: Timezone-aware validity start.
+        not_after: Timezone-aware validity end.
+        days_until_expiry: Whole days between ``evaluated_at`` and
+            ``not_after``. Negative when the certificate is expired.
+        severity: :class:`CertificateHealthSeverity` bucket.
+        warn_threshold_days: The WARN cut-off that produced this
+            verdict.
+        critical_threshold_days: The CRITICAL cut-off that produced
+            this verdict.
+        evaluated_at: Timezone-aware reference timestamp.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    subject: str
+    issuer: str
+    serial_number: str
+    not_before: datetime
+    not_after: datetime
+    days_until_expiry: int
+    severity: CertificateHealthSeverity
+    warn_threshold_days: int = Field(gt=0)
+    critical_threshold_days: int = Field(gt=0)
+    evaluated_at: datetime
 
 
 class HandshakeResult(BaseModel):
@@ -324,6 +398,186 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     return loaded
 
 
+# ── Pre-expiry health evaluator ─────────────────────────────────────────────
+
+
+def _bucket_severity(
+    *,
+    days_until_expiry: int,
+    warn_days: int,
+    critical_days: int,
+) -> CertificateHealthSeverity:
+    """Map ``days_until_expiry`` to a :class:`CertificateHealthSeverity`.
+
+    Boundary semantics: a cert with exactly ``critical_days`` remaining
+    is classified CRITICAL (inclusive), and exactly ``warn_days``
+    remaining is classified WARN (inclusive). Negative / zero days
+    (i.e. expired) always produce EXPIRED.
+
+    Args:
+        days_until_expiry: Whole days between ``evaluated_at`` and
+            ``not_after``.
+        warn_days: Warning window in days (must be ``> critical_days``).
+        critical_days: Critical window in days.
+
+    Returns:
+        The appropriate severity bucket.
+    """
+    if days_until_expiry <= 0:
+        return CertificateHealthSeverity.EXPIRED
+    if days_until_expiry <= critical_days:
+        return CertificateHealthSeverity.CRITICAL
+    if days_until_expiry <= warn_days:
+        return CertificateHealthSeverity.WARN
+    return CertificateHealthSeverity.OK
+
+
+def evaluate_loaded_certificate_health(
+    cert: LoadedCertificate,
+    *,
+    warn_days: int,
+    critical_days: int,
+    now: datetime | None = None,
+) -> CertificateHealth:
+    """Compute a :class:`CertificateHealth` from an already-loaded cert.
+
+    The helper exists so callers that have already paid the PKCS#12
+    decode cost (e.g. :class:`aeat.workflow.WorkflowEngine`) can reuse
+    the parsed record rather than re-reading the bundle from disk.
+
+    Args:
+        cert: A previously-loaded :class:`LoadedCertificate`.
+        warn_days: Warning threshold in days. Must be > ``critical_days``.
+        critical_days: Critical threshold in days. Must be positive.
+        now: Optional timezone-aware reference timestamp. Defaults to
+            :func:`datetime.now` in UTC.
+
+    Returns:
+        A frozen :class:`CertificateHealth` record.
+
+    Raises:
+        ValueError: If ``critical_days <= 0`` or ``warn_days <= critical_days``.
+    """
+    if critical_days <= 0:
+        raise ValueError(f"critical_days must be positive, got {critical_days}")
+    if warn_days <= critical_days:
+        raise ValueError(f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})")
+    evaluated_at = now if now is not None else datetime.now(UTC)
+    if evaluated_at.tzinfo is None:
+        evaluated_at = evaluated_at.replace(tzinfo=UTC)
+    delta_seconds = (cert.not_after - evaluated_at).total_seconds()
+    # Floor division keeps "one second before expiry" at 0 days → EXPIRED.
+    days_until_expiry = int(delta_seconds // 86400)
+    severity = _bucket_severity(
+        days_until_expiry=days_until_expiry,
+        warn_days=warn_days,
+        critical_days=critical_days,
+    )
+    return CertificateHealth(
+        subject=cert.subject,
+        issuer=cert.issuer,
+        serial_number=cert.serial_number,
+        not_before=cert.not_before,
+        not_after=cert.not_after,
+        days_until_expiry=days_until_expiry,
+        severity=severity,
+        warn_threshold_days=warn_days,
+        critical_threshold_days=critical_days,
+        evaluated_at=evaluated_at,
+    )
+
+
+def health(
+    path: Path,
+    *,
+    password_env_var: str,
+    warn_days: int,
+    critical_days: int,
+    backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
+    friendly_name: str | None = None,
+    now: datetime | None = None,
+) -> CertificateHealth:
+    """Load ``path`` and return its :class:`CertificateHealth`.
+
+    Unlike :func:`load_certificate`, this function **never** raises on
+    an expired certificate — it returns a
+    :class:`CertificateHealth` record with severity
+    :attr:`CertificateHealthSeverity.EXPIRED` instead. Genuine load
+    failures (missing passphrase, corrupt bytes, I/O) still raise the
+    matching :class:`CertificateError` subclass, because those are not
+    pre-expiry conditions.
+
+    Args:
+        path: Filesystem path to the PKCS#12 bundle.
+        password_env_var: Name of the env var holding the passphrase.
+        warn_days: Warning threshold in days (see
+            :func:`evaluate_loaded_certificate_health`).
+        critical_days: Critical threshold in days.
+        backend: Backend the bundle belongs to (default
+            ``PLAYWRIGHT_CONTEXT``).
+        friendly_name: Optional label propagated to the bundle.
+        now: Optional reference time, for deterministic tests.
+
+    Returns:
+        A frozen :class:`CertificateHealth` record.
+
+    Raises:
+        CertificatePasswordError: Env var unset/empty or wrong password.
+        CertificateLoadError: PKCS#12 bytes cannot be parsed.
+    """
+    bundle = CertificateBundle(
+        path=path,
+        password_env_var=password_env_var,
+        friendly_name=friendly_name,
+        backend=backend,
+    )
+    try:
+        loaded = load_certificate(bundle)
+    except CertificateExpiredError:
+        # Re-load the raw bytes just to extract the metadata for the
+        # health record. load_certificate refuses to return the
+        # LoadedCertificate once expiry is detected, so we repeat the
+        # minimal x509 decode here. A second decode failure is
+        # surfaced as CertificateLoadError rather than swallowed, to
+        # honour the "never-crash on pre-expiry path" contract.
+        password = _read_password_from_env(password_env_var)
+        try:
+            raw_bytes = path.read_bytes()
+            parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode("utf-8"))
+        except (OSError, ValueError) as exc:
+            raise CertificateLoadError(
+                f"could not re-decode PKCS#12 bundle at {path} for expired-cert health report: {exc}"
+            ) from exc
+        if parsed.cert is None or parsed.cert.certificate is None:  # pragma: no cover - defended above
+            raise
+        x509_cert = parsed.cert.certificate
+        not_before = _ensure_utc(x509_cert.not_valid_before_utc)
+        not_after = _ensure_utc(x509_cert.not_valid_after_utc)
+        evaluated_at = now if now is not None else datetime.now(UTC)
+        if evaluated_at.tzinfo is None:
+            evaluated_at = evaluated_at.replace(tzinfo=UTC)
+        delta_seconds = (not_after - evaluated_at).total_seconds()
+        days_until_expiry = int(delta_seconds // 86400)
+        return CertificateHealth(
+            subject=x509_cert.subject.rfc4514_string(),
+            issuer=x509_cert.issuer.rfc4514_string(),
+            serial_number=format(x509_cert.serial_number, "x"),
+            not_before=not_before,
+            not_after=not_after,
+            days_until_expiry=days_until_expiry,
+            severity=CertificateHealthSeverity.EXPIRED,
+            warn_threshold_days=warn_days,
+            critical_threshold_days=critical_days,
+            evaluated_at=evaluated_at,
+        )
+    return evaluate_loaded_certificate_health(
+        loaded,
+        warn_days=warn_days,
+        critical_days=critical_days,
+        now=now,
+    )
+
+
 # ── Backend dispatch ────────────────────────────────────────────────────────
 
 
@@ -413,10 +667,15 @@ __all__ = [
     "CertificateError",
     "CertificateExpiredError",
     "CertificateHandshakeError",
+    "CertificateHealth",
+    "CertificateHealthSeverity",
     "CertificateLoadError",
     "CertificatePasswordError",
+    "CertificatePreExpiryError",
     "HandshakeResult",
     "LoadedCertificate",
+    "evaluate_loaded_certificate_health",
+    "health",
     "load_certificate",
     "preload_into_browser_context",
     "verify_handshake",

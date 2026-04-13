@@ -20,6 +20,14 @@ See [[2026-04-12-workflow-engine-research]],
 
 from __future__ import annotations
 
+# Resolve the ``WorkflowStep.site_health_alert`` forward reference once
+# ``aeat.status.SiteHealthAlert`` is importable. Importing at this
+# layer breaks the cycle: ``aeat.workflow._models`` must not import
+# from ``aeat.status`` at module load time, but the public
+# subpackage boundary is a safe rebuild site.
+from aeat.status import SiteHealthAlert as _SiteHealthAlert
+from aeat.status import _site_health as _site_health_module
+from aeat.workflow import _models as _workflow_models
 from aeat.workflow._adapters import (
     DeadlineEngineAdapter,
     FilingDraftBuilderAdapter,
@@ -56,6 +64,11 @@ from aeat.workflow._protocols import (
     SyncRunnerProtocol,
     SyncRunSummary,
 )
+
+_workflow_models.SiteHealthAlert = _SiteHealthAlert  # type: ignore[attr-defined]
+_site_health_module.WorkflowStage = WorkflowStage  # type: ignore[attr-defined]
+_SiteHealthAlert.model_rebuild()
+WorkflowStep.model_rebuild()
 
 __all__ = [
     "CertificateBundleProtocol",

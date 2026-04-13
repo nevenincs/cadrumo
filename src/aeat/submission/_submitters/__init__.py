@@ -44,6 +44,8 @@ class Submitter(abc.ABC):
         session: BrowserSessionLike,
         casilla_catalogue: CasillaCatalogue,
         portal: Portal,
+        amendment_kind: str | None = None,
+        original_csv: str | None = None,
     ) -> SubmissionAttempt:
         """Perform every portal step EXCEPT the final "Firmar y Enviar" click.
 
@@ -52,6 +54,11 @@ class Submitter(abc.ABC):
             session: Browser session Protocol implementation.
             casilla_catalogue: Casilla metadata catalogue.
             portal: The AEAT portal descriptor for this modelo.
+            amendment_kind: Optional AEAT amendment mode when the
+                filing is being submitted as a complementaria or
+                sustitutiva.
+            original_csv: Optional justificante CSV of the original
+                filing being amended.
 
         Returns:
             A :class:`SubmissionAttempt` recording the dry-run outcome.
@@ -65,6 +72,8 @@ class Submitter(abc.ABC):
         session: BrowserSessionLike,
         casilla_catalogue: CasillaCatalogue,
         portal: Portal,
+        amendment_kind: str | None = None,
+        original_csv: str | None = None,
     ) -> tuple[SubmissionAttempt, Justificante | None]:
         """Perform the full live portal walk and return the justificante.
 
@@ -73,6 +82,11 @@ class Submitter(abc.ABC):
             session: Browser session Protocol implementation.
             casilla_catalogue: Casilla metadata catalogue.
             portal: The AEAT portal descriptor for this modelo.
+            amendment_kind: Optional AEAT amendment mode when the
+                filing is being submitted as a complementaria or
+                sustitutiva.
+            original_csv: Optional justificante CSV of the original
+                filing being amended.
 
         Returns:
             A tuple ``(attempt, justificante)`` where ``justificante``

@@ -29,6 +29,7 @@ from aeat.deadlines import (
 )
 from aeat.submission import DraftStatus, FilingFinding
 from aeat.workflow import (
+    FilingDraftBuilderProtocol,
     SubmissionEngineProtocol,
     SubmittedFilingLike,
     WorkflowEngine,
@@ -143,7 +144,7 @@ def _wire_hooks() -> Iterator[None]:
     def _engine() -> WorkflowEngine:
         return WorkflowEngine(
             deadline_engine=_DeadlineEngine(),
-            filing_draft_builder=_DraftBuilder(),
+            filing_draft_builder=cast(FilingDraftBuilderProtocol, _DraftBuilder()),
             submission_engine=cast(SubmissionEngineProtocol, _SubmissionEngine()),
             sync_runner=None,
             status_reader=None,

@@ -5,10 +5,16 @@ from pathlib import Path
 import pytest
 from playwright.async_api import BrowserContext
 
+from aeat.browser._site_health_probe import probe_response
 from aeat.browser.evasion import EvasionStrategy
 from aeat.browser.profile import Profile
 from aeat.browser.session import BrowserSession
-from aeat.config import Settings
+from aeat.config import PROJECT_ROOT, Settings
+from aeat.errors import SiteHealthError
+from aeat.status import SiteHealthState
+
+_FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
+_PROBE_URL = "https://sede.agenciatributaria.gob.es/"
 
 
 class DummyEvasion(EvasionStrategy):
@@ -73,3 +79,66 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert context.kwargs["locale"] == "es-ES"  # type: ignore
     assert context.kwargs["timezone_id"] == "Europe/Madrid"  # type: ignore
     assert str(tmp_path / "state.json") in context.kwargs["storage_state"]  # type: ignore
+
+
+def _probe_or_raise(
+    url: str,
+    http_status: int,
+    headers: dict[str, str],
+    body: str,
+    *,
+    rate_limit_retry_after_default: int,
+) -> None:
+    """Thin test harness: call the helper and surface a ``SiteHealthError``.
+
+    Mirrors the shape of ``BrowserSession.navigate`` without the
+    Playwright dependency so the classification branch can be
+    exercised via the real parser suite driven from on-disk HTML.
+    """
+    result = probe_response(
+        url,
+        http_status,
+        headers,
+        body,
+        rate_limit_retry_after_default=rate_limit_retry_after_default,
+    )
+    if result is not None:
+        raise SiteHealthError(status=result)
+
+
+@pytest.mark.unit
+def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
+    body = (_FIXTURES_ROOT / "mantenimiento" / "interstitial.html").read_text(encoding="utf-8")
+    with pytest.raises(SiteHealthError) as excinfo:
+        _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
+    assert excinfo.value.status.state is SiteHealthState.MANTENIMIENTO
+
+
+@pytest.mark.unit
+def test_navigate_probe_raises_on_waf_fixture() -> None:
+    body = (_FIXTURES_ROOT / "waf_challenge" / "request_blocked.html").read_text(encoding="utf-8")
+    with pytest.raises(SiteHealthError) as excinfo:
+        _probe_or_raise(_PROBE_URL, 403, {}, body, rate_limit_retry_after_default=300)
+    assert excinfo.value.status.state is SiteHealthState.WAF_CHALLENGE
+
+
+@pytest.mark.unit
+def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
+    body = (_FIXTURES_ROOT / "rate_limited" / "429_retry_after.html").read_text(encoding="utf-8")
+    with pytest.raises(SiteHealthError) as excinfo:
+        _probe_or_raise(
+            _PROBE_URL,
+            429,
+            {"Retry-After": "120"},
+            body,
+            rate_limit_retry_after_default=300,
+        )
+    assert excinfo.value.status.state is SiteHealthState.RATE_LIMITED
+    assert excinfo.value.status.retry_after_seconds == 120
+
+
+@pytest.mark.unit
+def test_navigate_probe_passes_on_ok_fixture() -> None:
+    body = (_FIXTURES_ROOT / "ok" / "sede_landing.html").read_text(encoding="utf-8")
+    # Must not raise.
+    _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
