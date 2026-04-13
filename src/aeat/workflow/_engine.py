@@ -23,6 +23,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from typing import NoReturn, cast
 
+from aeat.auth import CertificateHealthSeverity
 from aeat.config import Settings
 from aeat.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
 from aeat.i18n import Translatable
@@ -59,6 +60,42 @@ _logger = get_logger(__name__)
 def _utcnow() -> datetime:
     """Return current UTC time. Factored for test determinism hooks."""
     return datetime.now(tz=UTC)
+
+
+def _classify_cert_expiry(
+    *,
+    not_after: date,
+    today: date,
+    warn_days: int,
+    critical_days: int,
+) -> tuple[CertificateHealthSeverity, int]:
+    """Classify a certificate's expiry window against operator thresholds.
+
+    Operates on the narrow :class:`aeat.submission.LoadedCertificate`
+    stub surface (``not_after: date``) rather than the rich
+    :class:`aeat.auth.LoadedCertificate`, so it can be called from the
+    workflow engine without forcing a sibling-branch rebase. Boundary
+    semantics match :func:`aeat.auth.evaluate_loaded_certificate_health`:
+    exactly ``critical_days`` remaining is CRITICAL (inclusive), and
+    exactly ``warn_days`` remaining is WARN (inclusive).
+
+    Args:
+        not_after: The certificate's expiry date.
+        today: Reference date (usually the workflow ``today`` arg).
+        warn_days: Warning threshold in days.
+        critical_days: Critical threshold in days.
+
+    Returns:
+        A ``(severity, days_until_expiry)`` tuple.
+    """
+    days_until_expiry = (not_after - today).days
+    if days_until_expiry <= 0:
+        return (CertificateHealthSeverity.EXPIRED, days_until_expiry)
+    if days_until_expiry <= critical_days:
+        return (CertificateHealthSeverity.CRITICAL, days_until_expiry)
+    if days_until_expiry <= warn_days:
+        return (CertificateHealthSeverity.WARN, days_until_expiry)
+    return (CertificateHealthSeverity.OK, days_until_expiry)
 
 
 def _t(en: str) -> Translatable:
@@ -745,10 +782,47 @@ class WorkflowEngine:
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=cert_summary,
                 ) from exc
+            cert_severity, days_until_expiry = _classify_cert_expiry(
+                not_after=certificate.not_after,
+                today=today,
+                warn_days=self._settings.aeat_cert_warn_days,
+                critical_days=self._settings.aeat_cert_critical_days,
+            )
             cert_details = {
                 "cert_subject": certificate.subject,
                 "cert_not_after": certificate.not_after.isoformat(),
+                "cert_severity": cert_severity.value,
+                "cert_days_until_expiry": str(days_until_expiry),
             }
+            if cert_severity in (
+                CertificateHealthSeverity.EXPIRED,
+                CertificateHealthSeverity.CRITICAL,
+            ):
+                expiry_summary = _t(
+                    f"Certificate pre-expiry gate: severity={cert_severity.value} "
+                    f"days_until_expiry={days_until_expiry} "
+                    f"subject={certificate.subject}"
+                )
+                steps.append(
+                    WorkflowStep(
+                        stage=WorkflowStage.RUNNING_PREFLIGHT,
+                        started_at=started,
+                        ended_at=_utcnow(),
+                        success=False,
+                        summary=expiry_summary,
+                        details=cert_details,
+                    )
+                )
+                raise _AbortError(
+                    reason=WorkflowAbortReason.CERT_INVALID,
+                    summary=expiry_summary,
+                )
+            if cert_severity is CertificateHealthSeverity.WARN:
+                _logger.warning(
+                    "workflow: certificate nearing expiry subject=%s days=%d",
+                    certificate.subject,
+                    days_until_expiry,
+                )
         else:
             cert_details = {"cert_skipped": "not_wired"}
 

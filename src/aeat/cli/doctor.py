@@ -34,6 +34,8 @@ from aeat.auth import (
     DRIVE_SCOPE,
     REQUIRED_ADC_SCOPES,
     SHEETS_SCOPE,
+    CertificateError,
+    CertificateHealthSeverity,
     build_cloudfunctions_client,
     build_cloudrun_client,
     build_docs_service,
@@ -43,6 +45,7 @@ from aeat.auth import (
     build_storage_client,
     get_credentials_for_scopes,
 )
+from aeat.auth import health as certificate_health
 from aeat.config import PROJECT_ROOT, Settings
 
 # ── Row primitives ──────────────────────────────────────────────────────────
@@ -598,6 +601,68 @@ def check_oauth_desktop(settings: Settings) -> Row:
     )
 
 
+def check_certificate_health(settings: Settings) -> Row:
+    """Report the AEAT certificate's pre-expiry health (#94).
+
+    Skips cleanly when no certificate is configured. On successful
+    evaluation, maps the :class:`CertificateHealthSeverity` buckets to
+    doctor states:
+
+    - ``OK`` → :attr:`State.OK`, advisory.
+    - ``WARN`` → :attr:`State.WARN`, advisory (not required).
+    - ``CRITICAL`` / ``EXPIRED`` → :attr:`State.MISSING`, required →
+      the doctor exits non-zero.
+
+    Load failures surface as :attr:`State.WARN` with the exception
+    class name so the doctor never aborts mid-table.
+    """
+    if settings.aeat_certificate_path is None:
+        return Row(
+            section="aeat certificate",
+            required=False,
+            state=State.SKIP,
+            detail="AEAT_CERTIFICATE_PATH not set",
+        )
+    if settings.aeat_certificate_password_secret is None:
+        return Row(
+            section="aeat certificate",
+            required=False,
+            state=State.WARN,
+            detail="AEAT_CERTIFICATE_PASSWORD_SECRET not set",
+        )
+    # pydantic-settings loads the passphrase from env/.env into the
+    # Settings model but does NOT export it to os.environ, while the
+    # cert loader reads it via os.environ.get(). Bridge the gap the
+    # same way aeat.auth.test_certificate_live does: export the
+    # SecretStr into the process environment for the duration of
+    # the health call. Scope is the current CLI process only.
+    os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] = settings.aeat_certificate_password_secret.get_secret_value()
+    try:
+        result = certificate_health(
+            settings.aeat_certificate_path,
+            password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
+            warn_days=settings.aeat_cert_warn_days,
+            critical_days=settings.aeat_cert_critical_days,
+            friendly_name=settings.aeat_certificate_friendly_name,
+            backend=settings.aeat_certificate_backend,
+        )
+    except CertificateError as exc:
+        return Row(
+            section="aeat certificate",
+            required=False,
+            state=State.WARN,
+            detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
+        )
+    days = result.days_until_expiry
+    detail = f"severity={result.severity.value} days_until_expiry={days}"
+    if result.severity is CertificateHealthSeverity.OK:
+        return Row(section="aeat certificate", required=False, state=State.OK, detail=detail)
+    if result.severity is CertificateHealthSeverity.WARN:
+        return Row(section="aeat certificate", required=False, state=State.WARN, detail=detail)
+    # CRITICAL or EXPIRED: block the doctor with a required failure.
+    return Row(section="aeat certificate", required=True, state=State.MISSING, detail=detail)
+
+
 def check_live_tests_flag(settings: Settings) -> Row:
     """Report whether live tests are opted in."""
     return Row(
@@ -634,6 +699,7 @@ def collect_rows(settings: Settings) -> list[Row]:
         rows.append(check_cloud_run(settings))
     rows.append(check_service_account(settings))
     rows.append(check_oauth_desktop(settings))
+    rows.append(check_certificate_health(settings))
     rows.append(check_live_tests_flag(settings))
     return rows
 
