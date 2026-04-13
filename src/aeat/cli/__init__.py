@@ -24,6 +24,7 @@ from aeat.cli import docs as docs_module
 from aeat.cli import doctor as doctor_module
 from aeat.cli import drive as drive_module
 from aeat.cli import filing as filing_module
+from aeat.cli import financial as financial_module
 from aeat.cli import inbox as inbox_module
 from aeat.cli import justificante as justificante_module
 from aeat.cli import llm as llm_module
@@ -67,6 +68,11 @@ app.add_typer(normatives_module.app, name="normatives", help="Spanish tax normat
 app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
 app.add_typer(deadlines_module.app, name="deadlines", help="Filing-deadline computation engine (#38).")
 app.add_typer(filing_module.app, name="filing", help="Filing draft engine commands (#39).")
+app.add_typer(
+    financial_module.app,
+    name="financial",
+    help="Financial ingest providers and raw transaction tooling (#73).",
+)
 app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#43).")
 app.add_typer(submission_module.app, name="submission", help="Filing submission engine (#42).")
 app.add_typer(inbox_module.app, name="inbox", help="AEAT notifications inbox (#46).")
