@@ -10,9 +10,12 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import cast
 
 import pytest
 
+from aeat.filing import build_draft
+from aeat.filing.testing import SyntheticProfile, default_schema_provider
 from aeat.submission import (
     BrowserSessionLike,
     CasillaInputKind,
@@ -42,17 +45,14 @@ class _Draft(FilingDraftLike):
 
 class _Catalogue:
     def casillas_for_modelo(self, modelo: str) -> tuple[CasillaRecord, ...]:
-        return (
+        casilla_ids = ("01", "02", "03", "04", "05", "06", "07")
+        return tuple(
             CasillaRecord(
-                id="01",
-                label={"en": "ingresos", "es": "ingresos", "hu": "bevétel"},
+                id=casilla_id,
+                label={"en": f"casilla-{casilla_id}", "es": f"casilla-{casilla_id}", "hu": f"rovat-{casilla_id}"},
                 input_kind=CasillaInputKind.NUMBER,
-            ),
-            CasillaRecord(
-                id="03",
-                label={"en": "gastos", "es": "gastos", "hu": "kiadás"},
-                input_kind=CasillaInputKind.NUMBER,
-            ),
+            )
+            for casilla_id in casilla_ids
         )
 
     def get(self, casilla_id: str) -> CasillaRecord:
@@ -154,3 +154,37 @@ def test_unknown_casilla_raises(tmp_path: Path) -> None:
                 portal=_portal(),
             )
         )
+
+
+def test_real_filing_draft_values_are_supported(tmp_path: Path) -> None:
+    submitter = Modelo130Submitter(artifact_dir=tmp_path)
+    session = RecordingSession()
+    draft = build_draft(
+        modelo="130",
+        period="2024Q1",
+        profile=SyntheticProfile(
+            tax_id="00000000T",
+            display_name="Tuple-backed draft",
+            applicable_modelos=("130",),
+        ),
+        inputs={
+            "01": "12500.00",
+            "02": "3500.00",
+            "05": "400.00",
+            "06": "0.00",
+        },
+        schema_provider=default_schema_provider(),
+    )
+    attempt = asyncio.run(
+        submitter.dry_run(
+            draft=cast(FilingDraftLike, draft),
+            session=session,
+            casilla_catalogue=_Catalogue(),
+            portal=_portal(),
+            amendment_kind="complementaria",
+            original_csv="CSV-ORIGINAL",
+        )
+    )
+    names = [call[0] for call in session.calls]
+    assert names.count("fill") >= 2
+    assert attempt.status is SubmissionStatus.PENDING
