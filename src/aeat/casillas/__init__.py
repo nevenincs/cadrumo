@@ -20,6 +20,8 @@ from .models import (
     CasillaDataType,
     CasillaRecord,
     LLMDraftProvenance,
+    ModeloCode,
+    PeriodType,
     SelectOption,
 )
 
@@ -33,6 +35,8 @@ __all__ = [
     "CrossReferenceError",
     "LLMDraftProvenance",
     "MissingFieldError",
+    "ModeloCode",
+    "PeriodType",
     "SelectOption",
     "UnreviewedRecordError",
     "VerifyError",
