@@ -30,6 +30,7 @@ from aeat.submission._errors import (
     SubmissionRejectionError,
 )
 from aeat.submission._models import (
+    AmendmentSubmissionResult,
     SubmissionAttempt,
     SubmissionStatus,
     SubmittedFiling,
@@ -59,6 +60,7 @@ from aeat.submission._submitters._contract import BrowserSessionLike
 from aeat.submission._submitters.modelo130 import Modelo130Submitter
 
 __all__ = [
+    "AmendmentSubmissionResult",
     "BrowserSessionLike",
     "CasillaCatalogue",
     "CasillaInputKind",
