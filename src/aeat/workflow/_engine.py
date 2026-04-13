@@ -25,8 +25,10 @@ from typing import NoReturn, cast
 
 from aeat.config import Settings
 from aeat.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
+from aeat.errors import SiteHealthError
 from aeat.i18n import Translatable
 from aeat.logging import get_logger
+from aeat.status import SiteHealthAlert
 from aeat.submission import (
     DraftStatus,
     FilingDraftLike,
@@ -134,6 +136,7 @@ class WorkflowEngine:
         self._certificate_bundle = certificate_bundle
         self._inputs_provider = inputs_provider
         self._settings = settings
+        self._current_run_id: str | None = None
 
     # ------------------------------------------------------------------ public
 
@@ -235,6 +238,20 @@ class WorkflowEngine:
         reference_today = today or date.today()
         should_sync = sync_first if sync_first is not None else self._settings.aeat_workflow_sync_first_default
 
+        # Provisional run_id computed from the caller-supplied targets
+        # so site-health alerts raised before the deadline stage
+        # completes can still carry a stable identifier. The final
+        # ``WorkflowResult.run_id`` is re-computed from the resolved
+        # obligation below; both hashes match whenever the resolved
+        # obligation matches the caller targets.
+        provisional_run_id = compute_run_id(
+            tax_id=profile.tax_id,
+            modelo=target_modelo or "-",
+            period=target_period or "-",
+            started_at=started_at,
+        )
+        self._current_run_id = provisional_run_id
+
         steps: list[WorkflowStep] = []
         obligation: FilingObligation | None = None
         draft: FilingDraftLike | None = None
@@ -293,6 +310,7 @@ class WorkflowEngine:
             )
 
         ended_at = _utcnow()
+        self._current_run_id = None
         modelo_for_hash = target_modelo or (obligation.modelo if obligation is not None else "-")
         period_for_hash = target_period or (obligation.period if obligation is not None else "-")
         run_id = compute_run_id(
@@ -388,6 +406,13 @@ class WorkflowEngine:
                 period=target_period,
                 auto_heal=False,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.SYNCING_CATALOGUES,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.SYNCING_CATALOGUES,
@@ -429,6 +454,13 @@ class WorkflowEngine:
         started = _utcnow()
         try:
             schedule: Schedule = self._deadline_engine.compute(profile, today.year, today=today)
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.COMPUTING_DEADLINES,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -529,6 +561,13 @@ class WorkflowEngine:
                 tax_id=profile.tax_id,
                 modelo=obligation.modelo,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.CHECKING_INBOX,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.CHECKING_INBOX,
@@ -587,6 +626,13 @@ class WorkflowEngine:
         if self._status_reader is not None:
             try:
                 expedientes = await self._status_reader.fetch_expedientes(tax_id=profile.tax_id)
+            except SiteHealthError as exc:
+                self._record_site_unavailable(
+                    stage=WorkflowStage.BUILDING_DRAFT,
+                    started=started,
+                    exc=exc,
+                    steps=steps,
+                )
             except Exception as exc:
                 self._record_unhandled(
                     stage=WorkflowStage.BUILDING_DRAFT,
@@ -622,6 +668,13 @@ class WorkflowEngine:
                 period=obligation.period,
                 profile=profile,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.BUILDING_DRAFT,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.BUILDING_DRAFT,
@@ -636,6 +689,13 @@ class WorkflowEngine:
                 profile=profile,
                 inputs=inputs,
                 fail_on_warning=fail_on_warning,
+            )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.BUILDING_DRAFT,
+                started=started,
+                exc=exc,
+                steps=steps,
             )
         except Exception as exc:
             self._record_unhandled(
@@ -754,6 +814,13 @@ class WorkflowEngine:
 
         try:
             self._submission_engine.preflight(draft, today=today)
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.RUNNING_PREFLIGHT,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except SubmissionPreflightError as exc:
             preflight_summary = _t(f"Preflight failed: {exc}")
             steps.append(
@@ -830,6 +897,13 @@ class WorkflowEngine:
                 override_confirmation=override_confirmation,
                 today=today,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.DRY_RUN_SUBMIT,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.DRY_RUN_SUBMIT,
@@ -890,3 +964,49 @@ class WorkflowEngine:
             reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
             summary=unhandled_summary,
         ) from wrapped
+
+    def _record_site_unavailable(
+        self,
+        *,
+        stage: WorkflowStage,
+        started: datetime,
+        exc: SiteHealthError,
+        steps: list[WorkflowStep],
+    ) -> NoReturn:
+        """Record a typed site-health alert and raise ``SITE_UNAVAILABLE``.
+
+        Invoked from the ``except SiteHealthError`` arm inserted
+        strictly *before* the generic ``except Exception`` catch in
+        every stage method that wraps a component call. The helper
+        composes a :class:`aeat.status.SiteHealthAlert` around the
+        caught error, appends a failed :class:`WorkflowStep` carrying
+        the alert, and raises
+        ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``
+        so the collapse to ``UNHANDLED_EXCEPTION`` never fires.
+        """
+        run_id = self._current_run_id or "unassigned"
+        alert = SiteHealthAlert(
+            stage=stage,
+            status=exc.status,
+            run_id=run_id,
+        )
+        state_label = exc.status.state.value
+        summary = _t(f"Site unavailable at stage={stage.value}: {state_label}")
+        steps.append(
+            WorkflowStep(
+                stage=stage,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=False,
+                summary=summary,
+                details={
+                    "site_health_state": state_label,
+                    "http_status": str(exc.status.evidence.http_status),
+                },
+                site_health_alert=alert,
+            )
+        )
+        raise _AbortError(
+            reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+            summary=summary,
+        ) from exc
