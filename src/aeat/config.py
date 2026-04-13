@@ -211,6 +211,12 @@ class Settings(BaseSettings):
         description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
+    # ── VAT catalogue (aeat.financial.vat, #85) ─────────────────────────────
+    aeat_vat_catalogue_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "financial" / "vat",
+        description="Root directory for the hand-reviewed VAT taxonomy catalogue",
+    )
+
     # ── Browser Automation ──────────────────────────────────────────────────
     aeat_browser_channel: str = Field(
         default="chrome",
