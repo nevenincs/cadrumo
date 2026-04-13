@@ -42,3 +42,16 @@ def test_financial_ingest_rejects_invalid_source(tmp_path: Path) -> None:
     result = _RUNNER.invoke(root_app, ["financial", "ingest", str(source)])
     assert result.exit_code == 2
     assert "validation error" in result.output.lower()
+
+
+@pytest.mark.unit
+def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
+    """The CLI should convert ingest-time provider failures into a clean exit."""
+    source = tmp_path / "malformed.csv"
+    source.write_text(
+        "Fecha operación,Importe,Concepto\nNOT-A-DATE,-12.34,Subscription\n",
+        encoding="utf-8",
+    )
+    result = _RUNNER.invoke(root_app, ["financial", "ingest", str(source)])
+    assert result.exit_code == 2
+    assert "ingest error" in result.output.lower()

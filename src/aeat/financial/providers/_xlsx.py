@@ -88,23 +88,28 @@ class XlsxProvider(FinancialProvider):
                 raw_fields = {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
                 if _row_is_blank(raw_fields):
                     continue
-                transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
-                if not transaction_id:
-                    transaction_id = synthesize_transaction_id(
-                        provider_name=f"{layout.bank_name}-{sheet_name}",
-                        source_sha256=source_sha256,
-                        source_row_index=source_row_index,
+                try:
+                    transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
+                    if not transaction_id:
+                        transaction_id = synthesize_transaction_id(
+                            provider_name=f"{layout.bank_name}-{sheet_name}",
+                            source_sha256=source_sha256,
+                            source_row_index=source_row_index,
+                        )
+                    booked_date = parse_date_value(
+                        _required_value(raw_fields, lookup, layout.columns.booked_date, "booked_date"),
+                        day_first=layout.day_first_dates,
                     )
-                booked_date = parse_date_value(
-                    _required_value(raw_fields, lookup, layout.columns.booked_date, "booked_date"),
-                    day_first=layout.day_first_dates,
-                )
-                value_text = _value_from_aliases(raw_fields, lookup, layout.columns.value_date)
-                value_date = parse_date_value(value_text, day_first=layout.day_first_dates) if value_text else None
-                amount = parse_amount_value(_required_value(raw_fields, lookup, layout.columns.amount, "amount"))
-                currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
-                description = _required_value(raw_fields, lookup, layout.columns.description, "description")
-                counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
+                    value_text = _value_from_aliases(raw_fields, lookup, layout.columns.value_date)
+                    value_date = parse_date_value(value_text, day_first=layout.day_first_dates) if value_text else None
+                    amount = parse_amount_value(_required_value(raw_fields, lookup, layout.columns.amount, "amount"))
+                    currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
+                    description = _required_value(raw_fields, lookup, layout.columns.description, "description")
+                    counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
+                except ValueError as exc:
+                    raise InvalidFinancialSourceError(
+                        f"worksheet row {source_row_index} could not be parsed: {exc}",
+                    ) from exc
                 yield build_raw_transaction(
                     provider=self,
                     path=path,

@@ -57,66 +57,82 @@ class OfxProvider(FinancialProvider):
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate that the OFX file can be parsed and contains transactions."""
         try:
-            account, statement = self._load_statement(path)
+            accounts = self._load_accounts(path)
         except InvalidFinancialSourceError as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
-        if not statement.transactions:
+        statements = tuple(_iter_account_statements(accounts))
+        transaction_count = sum(len(statement.transactions) for _, statement in statements)
+        if transaction_count == 0:
             return ProviderValidation(
                 is_valid=False,
                 warnings=("OFX statement contains no transactions",),
             )
-        account_id = getattr(account, "account_id", "") or getattr(account, "number", "")
+        account_ids = [
+            (getattr(account, "account_id", "") or getattr(account, "number", "") or "unknown").strip() or "unknown"
+            for account, _ in statements
+        ]
         return ProviderValidation(
             is_valid=True,
             warnings=(),
             detected_encoding="ofxparse",
-            detected_dialect=f"account={account_id or 'unknown'}",
+            detected_dialect=f"accounts={','.join(account_ids)}",
         )
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict raw transactions from the first OFX account statement."""
+        """Yield strict raw transactions from every OFX account statement."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
-        account, statement = self._load_statement(path)
-        currency = (getattr(statement, "currency", None) or default_currency()).strip().upper()
-        for source_row_index, transaction in enumerate(statement.transactions, start=1):
-            transaction_id = (getattr(transaction, "id", None) or "").strip()
-            if not transaction_id:
-                transaction_id = synthesize_transaction_id(
-                    provider_name=f"{self.name}-{getattr(account, 'account_id', 'account')}",
+        source_row_index = 0
+        for account, statement in _iter_account_statements(self._load_accounts(path)):
+            currency = (getattr(statement, "currency", None) or default_currency()).strip().upper()
+            account_id = getattr(account, "account_id", None) or getattr(account, "number", None) or "account"
+            for transaction in statement.transactions:
+                source_row_index += 1
+                try:
+                    transaction_id = (getattr(transaction, "id", None) or "").strip()
+                    if not transaction_id:
+                        transaction_id = synthesize_transaction_id(
+                            provider_name=f"{self.name}-{account_id}",
+                            source_sha256=source_sha256,
+                            source_row_index=source_row_index,
+                        )
+                    payee = (getattr(transaction, "payee", None) or "").strip() or None
+                    memo = (getattr(transaction, "memo", None) or "").strip()
+                    name = (getattr(transaction, "type", None) or "").strip().upper()
+                    description = memo or payee or name or "OFX transaction"
+                    posted_at = getattr(transaction, "date", None)
+                    amount = Decimal(str(getattr(transaction, "amount", "0")))
+                    booked_date = parse_date_value(posted_at, day_first=False)
+                except ValueError as exc:
+                    raise InvalidFinancialSourceError(
+                        f"OFX transaction {source_row_index} could not be parsed: {exc}",
+                    ) from exc
+                raw_fields = {
+                    "ACCTID": str(account_id),
+                    "TRNTYPE": name,
+                    "DTPOSTED": posted_at.isoformat() if posted_at else "",
+                    "TRNAMT": str(getattr(transaction, "amount", "")),
+                    "FITID": getattr(transaction, "id", None) or "",
+                    "NAME": payee or "",
+                    "MEMO": memo,
+                }
+                yield build_raw_transaction(
+                    provider=self,
+                    path=path,
                     source_sha256=source_sha256,
                     source_row_index=source_row_index,
+                    transaction_id=transaction_id,
+                    booked_date=booked_date,
+                    value_date=None,
+                    amount=amount,
+                    currency=currency,
+                    counterparty=payee,
+                    description=description,
+                    raw_fields=raw_fields,
                 )
-            payee = (getattr(transaction, "payee", None) or "").strip() or None
-            memo = (getattr(transaction, "memo", None) or "").strip()
-            name = (getattr(transaction, "type", None) or "").strip().upper()
-            description = memo or payee or name or "OFX transaction"
-            posted_at = getattr(transaction, "date", None)
-            raw_fields = {
-                "TRNTYPE": name,
-                "DTPOSTED": posted_at.isoformat() if posted_at else "",
-                "TRNAMT": str(getattr(transaction, "amount", "")),
-                "FITID": getattr(transaction, "id", None) or "",
-                "NAME": payee or "",
-                "MEMO": memo,
-            }
-            yield build_raw_transaction(
-                provider=self,
-                path=path,
-                source_sha256=source_sha256,
-                source_row_index=source_row_index,
-                transaction_id=transaction_id,
-                booked_date=parse_date_value(posted_at, day_first=False),
-                value_date=None,
-                amount=Decimal(str(getattr(transaction, "amount", "0"))),
-                currency=currency,
-                counterparty=payee,
-                description=description,
-                raw_fields=raw_fields,
-            )
 
-    def _load_statement(self, path: Path) -> tuple[_OfxAccountLike, _OfxStatementLike]:
-        """Parse the first account statement from an OFX file."""
+    def _load_accounts(self, path: Path) -> tuple[_OfxAccountLike, ...]:
+        """Parse every account exposed by an OFX file."""
         try:
             with path.open("rb") as handle:
                 parsed = OfxParser.parse(handle)
@@ -129,8 +145,24 @@ class OfxProvider(FinancialProvider):
             accounts.append(parsed.account)
         if not accounts:
             raise InvalidFinancialSourceError("OFX file does not contain a bank account statement")
-        account = cast(_OfxAccountLike, accounts[0])
-        statement = getattr(account, "statement", None)
-        if statement is None:
+        typed_accounts: list[_OfxAccountLike] = []
+        seen_accounts: set[int] = set()
+        for account in accounts:
+            marker = id(account)
+            if marker in seen_accounts:
+                continue
+            seen_accounts.add(marker)
+            typed_accounts.append(cast(_OfxAccountLike, account))
+        if not any(getattr(account, "statement", None) is not None for account in typed_accounts):
             raise InvalidFinancialSourceError("OFX account does not expose a statement block")
-        return account, cast(_OfxStatementLike, statement)
+        return tuple(typed_accounts)
+
+
+def _iter_account_statements(
+    accounts: tuple[_OfxAccountLike, ...],
+) -> Iterator[tuple[_OfxAccountLike, _OfxStatementLike]]:
+    """Yield every account that exposes a statement block."""
+    for account in accounts:
+        statement = getattr(account, "statement", None)
+        if statement is not None:
+            yield account, cast(_OfxStatementLike, statement)
