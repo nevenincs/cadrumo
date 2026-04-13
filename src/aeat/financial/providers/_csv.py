@@ -170,23 +170,28 @@ class CsvProvider(FinancialProvider):
             raw_fields = _row_to_mapping(headers, row)
             if _row_is_blank(raw_fields):
                 continue
-            transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
-            if not transaction_id:
-                transaction_id = synthesize_transaction_id(
-                    provider_name=layout.bank_name,
-                    source_sha256=source_sha256,
-                    source_row_index=source_row_index,
+            try:
+                transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
+                if not transaction_id:
+                    transaction_id = synthesize_transaction_id(
+                        provider_name=layout.bank_name,
+                        source_sha256=source_sha256,
+                        source_row_index=source_row_index,
+                    )
+                booked_date = parse_date_value(
+                    _required_value(raw_fields, lookup, layout.columns.booked_date, "booked_date"),
+                    day_first=layout.day_first_dates,
                 )
-            booked_date = parse_date_value(
-                _required_value(raw_fields, lookup, layout.columns.booked_date, "booked_date"),
-                day_first=layout.day_first_dates,
-            )
-            value_text = _value_from_aliases(raw_fields, lookup, layout.columns.value_date)
-            value_date = parse_date_value(value_text, day_first=layout.day_first_dates) if value_text else None
-            amount = parse_amount_value(_required_value(raw_fields, lookup, layout.columns.amount, "amount"))
-            currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
-            description = _required_value(raw_fields, lookup, layout.columns.description, "description")
-            counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
+                value_text = _value_from_aliases(raw_fields, lookup, layout.columns.value_date)
+                value_date = parse_date_value(value_text, day_first=layout.day_first_dates) if value_text else None
+                amount = parse_amount_value(_required_value(raw_fields, lookup, layout.columns.amount, "amount"))
+                currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
+                description = _required_value(raw_fields, lookup, layout.columns.description, "description")
+                counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
+            except ValueError as exc:
+                raise InvalidFinancialSourceError(
+                    f"CSV row {source_row_index} could not be parsed: {exc}",
+                ) from exc
             yield build_raw_transaction(
                 provider=self,
                 path=path,
@@ -227,6 +232,8 @@ class CsvProvider(FinancialProvider):
             seen.add(normalized)
             try:
                 return source_bytes.decode(candidate), candidate
+            except LookupError:
+                continue
             except UnicodeDecodeError:
                 continue
         raise InvalidFinancialSourceError("CSV source could not be decoded as utf-8/cp1252/iso-8859-1")

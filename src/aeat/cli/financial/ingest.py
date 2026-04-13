@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.json import JSON
 
 from aeat.financial import CsvProvider, OfxProvider, XlsxProvider, detect_provider
+from aeat.financial.providers import FinancialProviderError
 
 _CONSOLE = Console()
 
@@ -54,7 +55,11 @@ def ingest_cmd(
         raise typer.Exit(code=2)
     for warning in validation.warnings:
         typer.echo(f"warning: {warning}", err=True)
-    transactions = tuple(provider_impl.ingest(path))
+    try:
+        transactions = tuple(provider_impl.ingest(path))
+    except FinancialProviderError as exc:
+        typer.echo(f"ingest error: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
     if output_json:
         for transaction in transactions:
             typer.echo(transaction.model_dump_json())
