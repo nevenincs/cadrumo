@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from pathlib import Path
 
 import typer
@@ -30,6 +31,15 @@ def _enforce_cert_health(
     """
     if settings.aeat_certificate_path is None:
         return
+    if settings.aeat_certificate_password_secret is None:
+        _CONSOLE.print(
+            "[red]refusing:[/red] AEAT_CERTIFICATE_PASSWORD_SECRET is not set; "
+            "cannot evaluate certificate health for the pre-expiry gate."
+        )
+        raise typer.Exit(code=2)
+    # Bridge pydantic-settings → os.environ for the cert loader.
+    # See doctor.check_certificate_health for the same pattern.
+    os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] = settings.aeat_certificate_password_secret.get_secret_value()
     try:
         result = certificate_health(
             settings.aeat_certificate_path,

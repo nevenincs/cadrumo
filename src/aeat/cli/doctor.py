@@ -630,9 +630,13 @@ def check_certificate_health(settings: Settings) -> Row:
             state=State.WARN,
             detail="AEAT_CERTIFICATE_PASSWORD_SECRET not set",
         )
-    # The pre-expiry evaluator reads the passphrase by env var name,
-    # not by secret value, so we hand it the canonical variable name
-    # used everywhere else in the project.
+    # pydantic-settings loads the passphrase from env/.env into the
+    # Settings model but does NOT export it to os.environ, while the
+    # cert loader reads it via os.environ.get(). Bridge the gap the
+    # same way aeat.auth.test_certificate_live does: export the
+    # SecretStr into the process environment for the duration of
+    # the health call. Scope is the current CLI process only.
+    os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] = settings.aeat_certificate_password_secret.get_secret_value()
     try:
         result = certificate_health(
             settings.aeat_certificate_path,

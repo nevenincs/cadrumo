@@ -470,6 +470,22 @@ class TestAbortReasons:
         assert preflight_step.details["cert_severity"] == "CRITICAL"
         assert preflight_step.details["cert_days_until_expiry"] == "8"
 
+    def test_cert_pre_expiry_expired_aborts(self) -> None:
+        """An already-expired cert aborts CERT_INVALID with EXPIRED detail (#94)."""
+        fx = _fixtures()
+        # today=2026-04-12, not_after=2026-04-01 → -11 days.
+        fx.certificate_bundle = _FakeCertificateBundle(
+            subject="CN=Expired",
+            not_after=date(2026, 4, 1),
+            fingerprint_sha256="d" * 64,
+        )
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
+        preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
+        assert preflight_step.details is not None
+        assert preflight_step.details["cert_severity"] == "EXPIRED"
+        assert preflight_step.details["cert_days_until_expiry"] == "-11"
+
     def test_cert_pre_expiry_warn_proceeds(self) -> None:
         """A cert in the warn window proceeds and reaches DONE (#94)."""
         fx = _fixtures()

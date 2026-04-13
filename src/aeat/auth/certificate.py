@@ -537,10 +537,17 @@ def health(
         # Re-load the raw bytes just to extract the metadata for the
         # health record. load_certificate refuses to return the
         # LoadedCertificate once expiry is detected, so we repeat the
-        # minimal x509 decode here.
+        # minimal x509 decode here. A second decode failure is
+        # surfaced as CertificateLoadError rather than swallowed, to
+        # honour the "never-crash on pre-expiry path" contract.
         password = _read_password_from_env(password_env_var)
-        raw_bytes = path.read_bytes()
-        parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode("utf-8"))
+        try:
+            raw_bytes = path.read_bytes()
+            parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode("utf-8"))
+        except (OSError, ValueError) as exc:
+            raise CertificateLoadError(
+                f"could not re-decode PKCS#12 bundle at {path} for expired-cert health report: {exc}"
+            ) from exc
         if parsed.cert is None or parsed.cert.certificate is None:  # pragma: no cover - defended above
             raise
         x509_cert = parsed.cert.certificate
