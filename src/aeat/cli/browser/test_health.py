@@ -11,6 +11,7 @@ usage.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Callable
 from pathlib import Path
@@ -20,6 +21,7 @@ from typer.testing import CliRunner
 
 from aeat.cli.browser import app
 from aeat.cli.browser import health as health_module
+from aeat.cli.browser.health import _RealProbe
 from aeat.config import PROJECT_ROOT, Settings
 from aeat.errors import SiteHealthError
 from aeat.status import SiteHealthState
@@ -126,6 +128,90 @@ def test_health_exit_code_table(
     result = _RUNNER.invoke(app, ["health"])
     assert result.exit_code == expected_exit
     assert f"state={expected_state.value}" in result.stdout
+
+
+class _StubPlaywright:
+    """Concrete recorder: counts stop() invocations. Never mocked."""
+
+    def __init__(self) -> None:
+        self.stop_calls = 0
+
+    async def stop(self) -> None:
+        self.stop_calls += 1
+
+
+class _StubContext:
+    """Concrete page-producing context that records close() calls."""
+
+    def __init__(self) -> None:
+        self.close_calls = 0
+
+    async def new_page(self) -> object:
+        class _Page:
+            pass
+
+        return _Page()
+
+    async def close(self) -> None:
+        self.close_calls += 1
+
+
+class _RaisingCreateContextSession:
+    """Session double whose create_context() always raises RuntimeError."""
+
+    def __init__(self) -> None:
+        self.create_context_calls = 0
+
+    async def create_context(self) -> object:
+        self.create_context_calls += 1
+        raise RuntimeError("boom from create_context")
+
+    async def navigate(self, page: object, url: str) -> None:
+        del page, url
+        raise AssertionError("navigate must not be reached when create_context raises")
+
+
+class _RaisingNewPageSession:
+    """Session double where create_context() succeeds but new_page() raises."""
+
+    def __init__(self, context: _StubContext) -> None:
+        self._context = context
+
+    async def create_context(self) -> _StubContext:
+        return self._context
+
+    async def navigate(self, page: object, url: str) -> None:
+        del page, url
+        raise AssertionError("navigate must not be reached when new_page raises")
+
+
+class _RaisingNewPageContext(_StubContext):
+    async def new_page(self) -> object:
+        raise RuntimeError("boom from new_page")
+
+
+@pytest.mark.unit
+class TestRealProbeCleanup:
+    """``_RealProbe`` must always release Playwright even on early errors."""
+
+    def test_playwright_stop_runs_when_create_context_raises(self) -> None:
+        session = _RaisingCreateContextSession()
+        playwright = _StubPlaywright()
+        probe = _RealProbe(session=session, playwright=playwright)
+        with pytest.raises(RuntimeError, match="boom from create_context"):
+            asyncio.run(probe.probe("https://sede.agenciatributaria.gob.es/"))
+        assert session.create_context_calls == 1
+        assert playwright.stop_calls == 1
+
+    def test_playwright_stop_and_context_close_run_when_new_page_raises(self) -> None:
+        context = _RaisingNewPageContext()
+        session = _RaisingNewPageSession(context=context)
+        playwright = _StubPlaywright()
+        probe = _RealProbe(session=session, playwright=playwright)
+        with pytest.raises(RuntimeError, match="boom from new_page"):
+            asyncio.run(probe.probe("https://sede.agenciatributaria.gob.es/"))
+        assert context.close_calls == 1
+        assert playwright.stop_calls == 1
 
 
 @pytest.mark.unit
