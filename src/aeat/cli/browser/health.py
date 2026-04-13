@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 import json
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import Any, Protocol
 
 import typer
 
@@ -62,6 +62,35 @@ class HealthProbeLike(Protocol):
     async def probe(self, url: str) -> None: ...
 
 
+class _RealProbe:
+    """Navigation probe that always releases Playwright on exit.
+
+    Extracted to module scope so the cleanup contract (``playwright.stop()``
+    always runs; ``context.close()`` runs when a context was acquired)
+    can be exercised by concrete unit tests without a real Playwright
+    driver. The ``session`` argument only needs to satisfy the two
+    methods used below: ``create_context`` and ``navigate``.
+    """
+
+    def __init__(self, session: Any, playwright: Any) -> None:
+        self._session = session
+        self._playwright = playwright
+
+    async def probe(self, url: str) -> None:
+        context: Any = None
+        try:
+            context = await self._session.create_context()
+            page = await context.new_page()
+            await self._session.navigate(page, url)
+        finally:
+            if context is not None:
+                try:
+                    await context.close()
+                except Exception:
+                    logger.exception("browser_health: context.close() failed")
+            await self._playwright.stop()
+
+
 async def _default_probe_factory(settings: Settings) -> HealthProbeLike:
     """Build the production probe backed by a real ``BrowserSession``.
 
@@ -83,18 +112,7 @@ async def _default_probe_factory(settings: Settings) -> HealthProbeLike:
         settings=settings,
         profile=profile,
     )
-
-    class _RealProbe:
-        async def probe(self, url: str) -> None:
-            context = await session.create_context()
-            page = await context.new_page()
-            try:
-                await session.navigate(page, url)
-            finally:
-                await context.close()
-                await playwright.stop()
-
-    return _RealProbe()
+    return _RealProbe(session=session, playwright=playwright)
 
 
 PROBE_FACTORY = _default_probe_factory

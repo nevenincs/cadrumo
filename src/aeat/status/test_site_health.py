@@ -8,7 +8,8 @@ from real HTML strings loaded off disk under
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime
 from pathlib import Path
 
 import pytest
@@ -169,6 +170,64 @@ def test_ok_fixtures_do_not_classify(path: Path) -> None:
 
 
 @pytest.mark.unit
+class TestMantenimientoTitleOnlyGuard:
+    """ADR Decision 2.1: title-only hits must never classify."""
+
+    def test_title_only_is_not_classified_as_mantenimiento(self) -> None:
+        # Title carries the "interrupcion" marker, body carries none.
+        # Note: _matches_mantenimiento scans the full lowered HTML so
+        # any body-equivalent marker in the title counts as a body hit;
+        # we therefore use "interrupcion" in the title (a title-only
+        # marker per _MANTENIMIENTO_TITLE_MARKERS) rather than
+        # "mantenimiento" (which is also a body marker).
+        html = (
+            "<html><head><title>Interrupcion</title></head>"
+            "<body><p>Welcome to our tax portal. All services are up.</p>"
+            "<p>Please log in to continue.</p></body></html>"
+        )
+        from aeat.status._site_health_parsers import _extract_title, _matches_mantenimiento
+
+        lowered = html.lower()
+        title = _extract_title(html, lowered)
+        hits = _matches_mantenimiento(lowered, title)
+        assert any(h.startswith("title:") for h in hits)
+        assert not any(not h.startswith("title:") for h in hits)
+
+        status = parse_mantenimiento_banner(
+            _PROBE_URL,
+            200,
+            {},
+            html,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert status is None
+
+        via_evaluate = evaluate_response(
+            _PROBE_URL,
+            200,
+            {},
+            html,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert via_evaluate is None
+
+    def test_one_body_marker_plus_title_classifies(self) -> None:
+        html = (
+            "<html><head><title>Interrupcion del servicio</title></head>"
+            "<body><p>Estamos realizando tareas de mantenimiento.</p></body></html>"
+        )
+        status = parse_mantenimiento_banner(
+            _PROBE_URL,
+            503,
+            {},
+            html,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert status is not None
+        assert status.state is SiteHealthState.MANTENIMIENTO
+
+
+@pytest.mark.unit
 class TestRateLimitRetryAfter:
     def test_default_used_when_header_missing(self) -> None:
         path = _FIXTURES_ROOT / "rate_limited" / "429_no_header.html"
@@ -195,6 +254,52 @@ class TestRateLimitRetryAfter:
         )
         assert status is not None
         assert status.retry_after_seconds == 120
+
+    def test_http_date_retry_after_computes_delta(self) -> None:
+        """An RFC 9110 HTTP-date ``Retry-After`` yields a positive delta."""
+        now = datetime(2026, 4, 13, 12, 0, 0, tzinfo=UTC)
+        future = now + timedelta(seconds=180)
+        http_date = format_datetime(future, usegmt=True)
+        body = "<html><body>slow down</body></html>"
+        status = parse_rate_limit_response(
+            _PROBE_URL,
+            429,
+            {"Retry-After": http_date},
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+            now=now,
+        )
+        assert status is not None
+        assert status.retry_after_seconds == 180
+        assert any("http-date" in m for m in status.evidence.detected_markers)
+
+    def test_http_date_retry_after_in_past_falls_back_to_default(self) -> None:
+        """A past HTTP-date clamps to zero and falls back to the default."""
+        now = datetime(2026, 4, 13, 12, 0, 0, tzinfo=UTC)
+        past = now - timedelta(seconds=600)
+        http_date = format_datetime(past, usegmt=True)
+        body = "<html><body>slow down</body></html>"
+        status = parse_rate_limit_response(
+            _PROBE_URL,
+            429,
+            {"Retry-After": http_date},
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+            now=now,
+        )
+        assert status is not None
+        assert status.retry_after_seconds == _RATE_LIMIT_DEFAULT
+
+    def test_invalid_retry_after_falls_back_to_default(self) -> None:
+        status = parse_rate_limit_response(
+            _PROBE_URL,
+            429,
+            {"Retry-After": "not-a-number-nor-a-date"},
+            "<html></html>",
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert status is not None
+        assert status.retry_after_seconds == _RATE_LIMIT_DEFAULT
 
     def test_503_with_mantenimiento_yields_to_mantenimiento(self) -> None:
         """A 503 carrying mantenimiento markers must classify as MANTENIMIENTO."""

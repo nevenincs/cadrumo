@@ -136,7 +136,20 @@ class WorkflowEngine:
         self._certificate_bundle = certificate_bundle
         self._inputs_provider = inputs_provider
         self._settings = settings
-        self._current_run_id: str | None = None
+        # Lazy run-id recomputation state. These are set at the start
+        # of every ``_drive`` call and consumed by
+        # ``_record_site_unavailable`` so an alert raised *after* the
+        # obligation has been resolved carries a ``run_id`` that
+        # matches the final :class:`WorkflowResult.run_id`. When no
+        # obligation is known yet (e.g. ``SiteHealthError`` from the
+        # sync or deadline stage of an open-ended ``run_next`` call)
+        # the ``-`` placeholders are expected and match the
+        # placeholders in the final result.
+        self._run_tax_id: str | None = None
+        self._run_started_at: datetime | None = None
+        self._run_target_modelo: str | None = None
+        self._run_target_period: str | None = None
+        self._run_obligation: FilingObligation | None = None
 
     # ------------------------------------------------------------------ public
 
@@ -238,19 +251,14 @@ class WorkflowEngine:
         reference_today = today or date.today()
         should_sync = sync_first if sync_first is not None else self._settings.aeat_workflow_sync_first_default
 
-        # Provisional run_id computed from the caller-supplied targets
-        # so site-health alerts raised before the deadline stage
-        # completes can still carry a stable identifier. The final
-        # ``WorkflowResult.run_id`` is re-computed from the resolved
-        # obligation below; both hashes match whenever the resolved
-        # obligation matches the caller targets.
-        provisional_run_id = compute_run_id(
-            tax_id=profile.tax_id,
-            modelo=target_modelo or "-",
-            period=target_period or "-",
-            started_at=started_at,
-        )
-        self._current_run_id = provisional_run_id
+        # Record run context so ``_record_site_unavailable`` can lazily
+        # recompute the run_id from whichever information is latest
+        # (preferring a resolved obligation over caller targets).
+        self._run_tax_id = profile.tax_id
+        self._run_started_at = started_at
+        self._run_target_modelo = target_modelo
+        self._run_target_period = target_period
+        self._run_obligation = None
 
         steps: list[WorkflowStep] = []
         obligation: FilingObligation | None = None
@@ -275,6 +283,7 @@ class WorkflowEngine:
                 today=reference_today,
                 steps=steps,
             )
+            self._run_obligation = obligation
             await self._stage_checking_inbox(
                 profile=profile,
                 obligation=obligation,
@@ -310,7 +319,11 @@ class WorkflowEngine:
             )
 
         ended_at = _utcnow()
-        self._current_run_id = None
+        self._run_tax_id = None
+        self._run_started_at = None
+        self._run_target_modelo = None
+        self._run_target_period = None
+        self._run_obligation = None
         modelo_for_hash = target_modelo or (obligation.modelo if obligation is not None else "-")
         period_for_hash = target_period or (obligation.period if obligation is not None else "-")
         run_id = compute_run_id(
@@ -931,6 +944,27 @@ class WorkflowEngine:
 
     # ---------------------------------------------------------------- helpers
 
+    def _compute_current_run_id(self) -> str | None:
+        """Return the run_id for the currently-in-flight ``_drive`` call.
+
+        Prefers a resolved obligation's ``modelo``/``period`` over the
+        caller-supplied targets so a site-health alert raised after
+        ``COMPUTING_DEADLINES`` has resolved an obligation carries the
+        same hash as the final :class:`WorkflowResult.run_id`. Returns
+        ``None`` when called outside an active ``_drive`` call.
+        """
+        if self._run_tax_id is None or self._run_started_at is None:
+            return None
+        obligation = self._run_obligation
+        modelo = self._run_target_modelo or (obligation.modelo if obligation is not None else "-")
+        period = self._run_target_period or (obligation.period if obligation is not None else "-")
+        return compute_run_id(
+            tax_id=self._run_tax_id,
+            modelo=modelo,
+            period=period,
+            started_at=self._run_started_at,
+        )
+
     def _record_unhandled(
         self,
         *,
@@ -984,7 +1018,7 @@ class WorkflowEngine:
         ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``
         so the collapse to ``UNHANDLED_EXCEPTION`` never fires.
         """
-        run_id = self._current_run_id or "unassigned"
+        run_id = self._compute_current_run_id() or "unassigned"
         alert = SiteHealthAlert(
             stage=stage,
             status=exc.status,

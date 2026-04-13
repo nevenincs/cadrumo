@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 
 from aeat.status._site_health import (
     _URL_ADAPTER,
@@ -66,6 +67,34 @@ def _utcnow() -> datetime:
     return datetime.now(tz=UTC)
 
 
+def _parse_http_date_retry_after(
+    value: str,
+    *,
+    now: datetime | None,
+) -> int | None:
+    """Return the clamped delta-seconds for an HTTP-date ``Retry-After``.
+
+    Attempts to parse ``value`` as an RFC 9110 HTTP-date via
+    :func:`email.utils.parsedate_to_datetime`, then returns the
+    integer seconds between ``now`` (UTC) and the parsed instant,
+    clamped to a minimum of zero. Returns ``None`` when ``value`` is
+    not a recognisable HTTP-date.
+    """
+    try:
+        parsed = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if parsed is None:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    reference = now if now is not None else datetime.now(tz=UTC)
+    if reference.tzinfo is None:
+        reference = reference.replace(tzinfo=UTC)
+    delta = int((parsed - reference).total_seconds())
+    return max(delta, 0)
+
+
 def _bounded_fragment(html: str) -> str:
     """Return the first ``_MAX_FRAGMENT_CHARS`` of ``html``.
 
@@ -86,14 +115,15 @@ def _normalise_headers(headers: Mapping[str, str]) -> dict[str, str]:
     return {key.lower(): value for key, value in headers.items()}
 
 
-def _extract_title(html: str) -> str:
+def _extract_title(html: str, lowered: str | None = None) -> str:
     """Return the first ``<title>...</title>`` value, lowercased.
 
     A tiny parser deliberately avoids pulling in an HTML library just
     for the title lookup. Returns an empty string if no title tag is
-    present.
+    present. When the caller has already lowercased the body they may
+    pass it via ``lowered`` to avoid a redundant allocation.
     """
-    lowered = html.lower()
+    lowered = lowered if lowered is not None else html.lower()
     start = lowered.find("<title")
     if start == -1:
         return ""
@@ -135,13 +165,17 @@ def parse_mantenimiento_banner(
     html: str,
     *,
     rate_limit_retry_after_default: int,
+    _lowered: str | None = None,
 ) -> SiteHealthStatus | None:
     """Detect an AEAT maintenance banner or interstitial.
 
     Classifies the response as :attr:`SiteHealthState.MANTENIMIENTO`
     when two or more curated body markers match, or when exactly one
     body marker matches alongside a title containing ``mantenimiento``
-    or ``interrupcion``.
+    or ``interrupcion``. A title-only match with zero body markers
+    **never** classifies: the ADR (Decision 2.1,
+    [[2026-04-13-aeat-mantenimiento-detection-adr]]) requires at least
+    one body-marker hit as corroborating evidence.
 
     Args:
         url: The probe URL.
@@ -151,19 +185,24 @@ def parse_mantenimiento_banner(
         rate_limit_retry_after_default: Ignored here; accepted so the
             three parsers share a uniform signature wired from the
             browser session hook.
+        _lowered: Optional pre-lowercased body forwarded from
+            :func:`evaluate_response` to avoid redundant work. Public
+            callers should leave it ``None``.
 
     Returns:
         A populated :class:`SiteHealthStatus` or ``None`` when no
         maintenance markers fire.
     """
     del headers, rate_limit_retry_after_default
-    lowered = html.lower()
-    title = _extract_title(html)
+    lowered = _lowered if _lowered is not None else html.lower()
+    title = _extract_title(html, lowered)
     hits = _matches_mantenimiento(lowered, title)
     if not hits:
         return None
     title_hit_count = sum(1 for h in hits if h.startswith("title:"))
     body_hit_count = len(hits) - title_hit_count
+    if body_hit_count == 0:
+        return None
     if body_hit_count < 2 and title_hit_count == 0:
         return None
     return SiteHealthStatus(
@@ -185,6 +224,7 @@ def parse_waf_challenge(
     html: str,
     *,
     rate_limit_retry_after_default: int,
+    _lowered: str | None = None,
 ) -> SiteHealthStatus | None:
     """Detect a WAF block / challenge page.
 
@@ -206,7 +246,7 @@ def parse_waf_challenge(
         response does not look WAF-blocked.
     """
     del headers, rate_limit_retry_after_default
-    lowered = html.lower()
+    lowered = _lowered if _lowered is not None else html.lower()
     body_hits = tuple(marker for marker in _WAF_BODY_MARKERS if marker in lowered)
     if not body_hits:
         return None
@@ -234,6 +274,8 @@ def parse_rate_limit_response(
     html: str,
     *,
     rate_limit_retry_after_default: int,
+    now: datetime | None = None,
+    _lowered: str | None = None,
 ) -> SiteHealthStatus | None:
     """Detect a rate-limit response (HTTP 429 or 503).
 
@@ -242,9 +284,13 @@ def parse_rate_limit_response(
     the parser yields ``None`` so the maintenance parser can win —
     AEAT's mantenimiento pages frequently answer with 503.
 
-    ``Retry-After`` is read case-insensitively from ``headers``. A
-    missing or non-integer value falls back to
-    ``rate_limit_retry_after_default``.
+    ``Retry-After`` is read case-insensitively from ``headers`` and
+    supports both forms permitted by RFC 9110 §10.2.3: a non-negative
+    integer delta-seconds, or an HTTP-date. For HTTP-date values the
+    delta is computed against ``now`` (defaulting to
+    :func:`datetime.now` in UTC), clamped to a non-negative integer.
+    If both parses fail, or the computed delta would be zero, the
+    parser falls back to ``rate_limit_retry_after_default``.
 
     Args:
         url: The probe URL.
@@ -253,6 +299,11 @@ def parse_rate_limit_response(
         html: The response body.
         rate_limit_retry_after_default: Fallback value (seconds) when
             the ``Retry-After`` header is missing or unparseable.
+        now: Injection seam for deterministic tests of the HTTP-date
+            branch. Defaults to :func:`datetime.now` in UTC at call
+            time.
+        _lowered: Optional pre-lowercased body forwarded from
+            :func:`evaluate_response`.
 
     Returns:
         A populated :class:`SiteHealthStatus` or ``None`` when the
@@ -260,9 +311,9 @@ def parse_rate_limit_response(
     """
     if http_status not in {429, 503}:
         return None
-    lowered = html.lower()
+    lowered = _lowered if _lowered is not None else html.lower()
     if http_status == 503:
-        title = _extract_title(html)
+        title = _extract_title(html, lowered)
         if _matches_mantenimiento(lowered, title):
             return None
     normalised = _normalise_headers(headers)
@@ -270,10 +321,18 @@ def parse_rate_limit_response(
     retry_after: int = rate_limit_retry_after_default
     marker_value: str
     if raw_retry_after is not None:
+        stripped = raw_retry_after.strip()
         try:
-            parsed = int(raw_retry_after.strip())
+            parsed = int(stripped)
         except ValueError:
-            marker_value = f"retry-after:invalid:{raw_retry_after[:32]}"
+            parsed_seconds = _parse_http_date_retry_after(stripped, now=now)
+            if parsed_seconds is None:
+                marker_value = f"retry-after:invalid:{raw_retry_after[:32]}"
+            elif parsed_seconds >= 1:
+                retry_after = parsed_seconds
+                marker_value = f"retry-after:http-date:{parsed_seconds}"
+            else:
+                marker_value = f"retry-after:http-date-non-positive:{parsed_seconds}"
         else:
             if parsed >= 1:
                 retry_after = parsed
@@ -327,6 +386,7 @@ def evaluate_response(
         non-OK state, or ``None`` when no parser classified the
         response (i.e. the response looks healthy).
     """
+    lowered = html.lower()
     for parser in (
         parse_rate_limit_response,
         parse_mantenimiento_banner,
@@ -338,6 +398,7 @@ def evaluate_response(
             headers,
             html,
             rate_limit_retry_after_default=rate_limit_retry_after_default,
+            _lowered=lowered,
         )
         if result is not None:
             return result
