@@ -1,3 +1,203 @@
-"""``aeat modelos`` Typer sub-app (scaffold; populated in Phase 7)."""
+"""Typer sub-app for the ``aeat modelos`` CLI surface.
+
+Exposes four commands backed by :data:`aeat.models.MODELO_REGISTRY`:
+
+- ``aeat modelos list`` — filter and list catalogue entries.
+- ``aeat modelos show`` — dump a single entry.
+- ``aeat modelos applicable-to`` — list modelos for a profile.
+- ``aeat modelos year-plan`` — resolve filing windows through the
+  deadline engine.
+
+Every command supports a ``--json`` flag that emits JSON via
+:meth:`pydantic.BaseModel.model_dump` instead of a rich table.
+"""
 
 from __future__ import annotations
+
+import json
+
+import typer
+from rich.console import Console
+from rich.table import Table
+
+from aeat.deadlines import AutonomoProfile, IVARegime
+from aeat.models._categories import ModeloCadence, ModeloCategory, TaxpayerProfile
+from aeat.models._errors import UnknownModeloError
+from aeat.models._metadata import ModeloMetadata
+from aeat.models._registry import (
+    MODELO_REGISTRY,
+    get_modelo,
+    modelos_for_profile,
+    year_plan,
+)
+
+_CONSOLE = Console()
+
+app = typer.Typer(
+    name="modelos",
+    help="AEAT modelo inventory and applicability helpers.",
+    no_args_is_help=True,
+)
+
+
+def _entries_sorted() -> tuple[ModeloMetadata, ...]:
+    return tuple(sorted(MODELO_REGISTRY.values(), key=lambda m: m.code.value))
+
+
+def _emit_entries(entries: tuple[ModeloMetadata, ...], json_out: bool) -> None:
+    if json_out:
+        payload = [e.model_dump(mode="json") for e in entries]
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    table = Table(title="aeat modelos", header_style="bold")
+    table.add_column("code", style="cyan")
+    table.add_column("category")
+    table.add_column("cadence")
+    table.add_column("name (es)")
+    for entry in entries:
+        table.add_row(
+            entry.code.value,
+            entry.category.value,
+            entry.cadence.value,
+            entry.display_label.get("es", ""),  # type: ignore[misc]
+        )
+    _CONSOLE.print(table)
+    _CONSOLE.print(f"[dim]{len(entries)} entry(ies)[/dim]")
+
+
+@app.command(name="list", help="List modelo catalogue entries with optional filters.")
+def list_command(
+    category: ModeloCategory | None = typer.Option(None, "--category", help="Filter by modelo category."),
+    cadence: ModeloCadence | None = typer.Option(None, "--cadence", help="Filter by filing cadence."),
+    profile: TaxpayerProfile | None = typer.Option(
+        None,
+        "--profile",
+        help="Filter by taxpayer profile (mandatory OR optional applicability).",
+    ),
+    json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
+) -> None:
+    """List catalogue entries, optionally filtered."""
+    entries = _entries_sorted()
+    if category is not None:
+        entries = tuple(e for e in entries if e.category is category)
+    if cadence is not None:
+        entries = tuple(e for e in entries if e.cadence is cadence)
+    if profile is not None:
+        entries = tuple(
+            e
+            for e in entries
+            if profile in e.applicability.mandatory_profiles or profile in e.applicability.optional_profiles
+        )
+    _emit_entries(entries, json_out)
+
+
+@app.command(name="show", help="Show a single modelo catalogue entry.")
+def show_command(
+    code: str = typer.Argument(..., help="Three-character modelo code, e.g. '303'."),
+    json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
+) -> None:
+    """Resolve a single modelo and print its metadata."""
+    try:
+        metadata = get_modelo(code)
+    except UnknownModeloError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if json_out:
+        typer.echo(json.dumps(metadata.model_dump(mode="json"), ensure_ascii=False, indent=2))
+        return
+    _emit_entries((metadata,), json_out=False)
+    _CONSOLE.print(f"[dim]caps_into:[/dim] {metadata.caps_into.value if metadata.caps_into else '-'}")
+    _CONSOLE.print(f"[dim]submission:[/dim] {metadata.submission_portal_hint}")
+
+
+@app.command(
+    name="applicable-to",
+    help="List every modelo applicable to a taxpayer profile.",
+)
+def applicable_to_command(
+    profile: TaxpayerProfile = typer.Argument(..., help="Taxpayer profile to query."),
+    json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
+) -> None:
+    """List modelos whose applicability matches ``profile``."""
+    entries = modelos_for_profile(profile)
+    _emit_entries(entries, json_out)
+
+
+def _profile_from_autonomo(profile: AutonomoProfile) -> TaxpayerProfile:
+    """Infer the :class:`TaxpayerProfile` from an :class:`AutonomoProfile`.
+
+    The mapping is intentionally narrow for v1: the CLI's ``year-plan``
+    command uses it only to narrow the engine's schedule by the
+    registry's applicability matrix.
+    """
+    if profile.bienes_extranjero_above_threshold:
+        return TaxpayerProfile.AUTONOMO_ED_BIENES_EXTRANJERO
+    if profile.does_intracomunitario:
+        return TaxpayerProfile.AUTONOMO_ED_UE
+    if profile.pays_rent_with_retencion:
+        return TaxpayerProfile.AUTONOMO_ED_CON_ALQUILER
+    if profile.has_employees:
+        return TaxpayerProfile.AUTONOMO_ED_CON_EMPLEADOS
+    return TaxpayerProfile.AUTONOMO_ED_SOLO
+
+
+@app.command(name="year-plan", help="Compute filing obligations for a year + profile.")
+def year_plan_command(
+    year: int = typer.Argument(..., help="Fiscal year to compute the plan for."),
+    tax_id: str = typer.Option(..., "--tax-id", help="NIF / NIE identifier."),
+    iva_regime: IVARegime = typer.Option(
+        IVARegime.GENERAL, "--iva-regime", help="IVA regime the autónomo files under."
+    ),
+    has_employees: bool = typer.Option(False, "--has-employees/--no-has-employees"),
+    pays_rent_with_retencion: bool = typer.Option(
+        False, "--pays-rent/--no-pays-rent", help="Pays local alquiler con retención."
+    ),
+    does_intracomunitario: bool = typer.Option(False, "--intracomunitario/--no-intracomunitario"),
+    bienes_extranjero_above_threshold: bool = typer.Option(
+        False,
+        "--bienes-extranjero/--no-bienes-extranjero",
+        help="Holds bienes en el extranjero above the threshold.",
+    ),
+    json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
+) -> None:
+    """Compute the filing :class:`aeat.deadlines.Schedule` for a profile."""
+    profile = AutonomoProfile(
+        tax_id=tax_id,
+        iva_regime=iva_regime,
+        has_employees=has_employees,
+        pays_rent_with_retencion=pays_rent_with_retencion,
+        does_intracomunitario=does_intracomunitario,
+        bienes_extranjero_above_threshold=bienes_extranjero_above_threshold,
+    )
+    schedule = year_plan(year, profile)
+    taxpayer = _profile_from_autonomo(profile)
+    filtered = []
+    for obligation in schedule.obligations:
+        try:
+            metadata = get_modelo(obligation.modelo)
+        except UnknownModeloError:
+            continue
+        if (
+            taxpayer in metadata.applicability.mandatory_profiles
+            or taxpayer in metadata.applicability.optional_profiles
+        ):
+            filtered.append(obligation)
+    if json_out:
+        payload = [o.model_dump(mode="json") for o in filtered]
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    table = Table(title=f"year plan {year} — {taxpayer.value}", header_style="bold")
+    table.add_column("modelo", style="cyan")
+    table.add_column("period")
+    table.add_column("opens_on")
+    table.add_column("closes_on")
+    table.add_column("status")
+    for obligation in filtered:
+        table.add_row(
+            obligation.modelo,
+            obligation.period,
+            obligation.opens_on.isoformat(),
+            obligation.closes_on.isoformat(),
+            obligation.status.value,
+        )
+    _CONSOLE.print(table)
+    _CONSOLE.print(f"[dim]{len(filtered)} obligation(s)[/dim]")
