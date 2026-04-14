@@ -1,9 +1,12 @@
-"""Financial ingest entry points for Phase 2 Track B.
+"""Track B financial-input subpackage root.
 
-This package defines the T1 ingest boundary for transaction sources:
-strict `RawTransaction` records plus file-backed providers for CSV,
-XLSX, and OFX inputs. Callers outside this package must import only
-from `aeat.financial` or `aeat.financial.providers`.
+This subpackage hosts the Transaction Data Pipeline (TDP) building
+blocks — VAT enumeration (``aeat.financial.vat``, issue #85), provider
+detection (``aeat.financial.providers``, issue #73), and transaction
+categorisation (``aeat.financial.categories``, issue #77). The root
+package re-exports only the T1 ingest boundary defined by issue #73;
+callers should import VAT and category symbols from their dedicated
+child subpackages directly.
 """
 
 from __future__ import annotations

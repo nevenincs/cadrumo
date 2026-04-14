@@ -33,6 +33,21 @@ class CasillaDataType(StrEnum):
     PERCENTAGE = "percentage"
 
 
+class ModeloCode(StrEnum):
+    """Stable modelo identifiers exposed by the public casillas API."""
+
+    MODELO_130 = "MODELO_130"
+    MODELO_303 = "MODELO_303"
+    MODELO_390 = "MODELO_390"
+
+
+class PeriodType(StrEnum):
+    """Supported filing cadences for category-to-casilla mappings."""
+
+    QUARTERLY = "quarterly"
+    ANNUAL = "annual"
+
+
 class SelectOption(_StrictFrozenModel):
     """One selectable option for a select-style casilla."""
 

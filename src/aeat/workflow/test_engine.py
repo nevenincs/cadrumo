@@ -16,11 +16,12 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 from typing import cast
 
 import pytest
 
-from aeat.config import Settings
+from aeat.config import PROJECT_ROOT, Settings
 from aeat.deadlines import (
     AutonomoProfile,
     FilingObligation,
@@ -28,6 +29,9 @@ from aeat.deadlines import (
     ObligationStatus,
     Schedule,
 )
+from aeat.errors import SiteHealthError
+from aeat.status import SiteHealthState
+from aeat.status._site_health_parsers import evaluate_response
 from aeat.submission import (
     DraftStatus,
     FilingFinding,
@@ -188,14 +192,17 @@ class _FakeInbox:
 @dataclass
 class _FakeCertificateBundle:
     raise_exc: BaseException | None = None
+    subject: str = "CN=Test"
+    not_after: date = field(default_factory=lambda: date(2027, 1, 15))
+    fingerprint_sha256: str = "a" * 64
 
     def load(self) -> LoadedCertificate:
         if self.raise_exc is not None:
             raise self.raise_exc
         return LoadedCertificate(
-            subject="CN=Test",
-            not_after=date(2027, 1, 15),
-            fingerprint_sha256="a" * 64,
+            subject=self.subject,
+            not_after=self.not_after,
+            fingerprint_sha256=self.fingerprint_sha256,
         )
 
 
@@ -451,6 +458,54 @@ class TestAbortReasons:
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
 
+    def test_cert_pre_expiry_critical_aborts(self) -> None:
+        """A cert within the critical window aborts CERT_INVALID (#94)."""
+        fx = _fixtures()
+        # today=2026-04-12, default critical_days=14 → cert closes 2026-04-20 ⇒ 8 days.
+        fx.certificate_bundle = _FakeCertificateBundle(
+            subject="CN=Expiring",
+            not_after=date(2026, 4, 20),
+            fingerprint_sha256="b" * 64,
+        )
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
+        preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
+        assert preflight_step.details is not None
+        assert preflight_step.details["cert_severity"] == "CRITICAL"
+        assert preflight_step.details["cert_days_until_expiry"] == "8"
+
+    def test_cert_pre_expiry_expired_aborts(self) -> None:
+        """An already-expired cert aborts CERT_INVALID with EXPIRED detail (#94)."""
+        fx = _fixtures()
+        # today=2026-04-12, not_after=2026-04-01 → -11 days.
+        fx.certificate_bundle = _FakeCertificateBundle(
+            subject="CN=Expired",
+            not_after=date(2026, 4, 1),
+            fingerprint_sha256="d" * 64,
+        )
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
+        preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
+        assert preflight_step.details is not None
+        assert preflight_step.details["cert_severity"] == "EXPIRED"
+        assert preflight_step.details["cert_days_until_expiry"] == "-11"
+
+    def test_cert_pre_expiry_warn_proceeds(self) -> None:
+        """A cert in the warn window proceeds and reaches DONE (#94)."""
+        fx = _fixtures()
+        # today=2026-04-12, default warn_days=60 → cert closes 2026-05-30 ⇒ 48 days.
+        fx.certificate_bundle = _FakeCertificateBundle(
+            subject="CN=Warning",
+            not_after=date(2026, 5, 30),
+            fingerprint_sha256="c" * 64,
+        )
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.final_stage is WorkflowStage.DONE
+        preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
+        assert preflight_step.details is not None
+        assert preflight_step.details["cert_severity"] == "WARN"
+        assert preflight_step.details["cert_days_until_expiry"] == "48"
+
     def test_user_cancelled_without_override(self) -> None:
         """Live mode without override_confirmation aborts without submitting."""
         fx = _fixtures()
@@ -478,3 +533,72 @@ class TestAbortReasons:
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
         assert result.steps[-1].stage is WorkflowStage.COMPUTING_DEADLINES
+
+
+@pytest.mark.unit
+class TestSiteUnavailableArm:
+    """The typed ``SiteHealthError`` arm must fire BEFORE ``Exception``."""
+
+    def test_site_unavailable_from_deadline_engine(self) -> None:
+        """A real ``SiteHealthError`` built from a fixture terminates cleanly."""
+        fixture_path = PROJECT_ROOT / "tests" / "fixtures" / "site_health" / "mantenimiento" / "interstitial.html"
+        body = Path(fixture_path).read_text(encoding="utf-8")
+        real_status = evaluate_response(
+            "https://sede.agenciatributaria.gob.es/",
+            200,
+            {},
+            body,
+            rate_limit_retry_after_default=300,
+        )
+        assert real_status is not None
+        assert real_status.state is SiteHealthState.MANTENIMIENTO
+
+        fx = _fixtures()
+        fx.deadline_engine.raise_exc = SiteHealthError(status=real_status)
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.SITE_UNAVAILABLE
+        assert result.final_stage is WorkflowStage.ABORTED
+        last = result.steps[-1]
+        assert last.stage is WorkflowStage.COMPUTING_DEADLINES
+        assert last.site_health_alert is not None
+        assert last.site_health_alert.status.state is SiteHealthState.MANTENIMIENTO
+        assert last.site_health_alert.run_id == result.run_id
+
+    def test_site_unavailable_after_obligation_resolved_matches_run_id(self) -> None:
+        """A site-health alert raised AFTER deadlines resolved must agree on run_id."""
+        fixture_path = PROJECT_ROOT / "tests" / "fixtures" / "site_health" / "mantenimiento" / "interstitial.html"
+        body = Path(fixture_path).read_text(encoding="utf-8")
+        real_status = evaluate_response(
+            "https://sede.agenciatributaria.gob.es/",
+            200,
+            {},
+            body,
+            rate_limit_retry_after_default=300,
+        )
+        assert real_status is not None
+
+        fx = _fixtures()
+        # Route the SiteHealthError through the inputs provider, which
+        # only runs inside _stage_building_draft AFTER _run_obligation
+        # has been populated. The alert's run_id must therefore be
+        # recomputed from the resolved obligation and match the final
+        # WorkflowResult.run_id.
+        fx.inputs_provider.raise_exc = SiteHealthError(status=real_status)
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.SITE_UNAVAILABLE
+        last = result.steps[-1]
+        assert last.stage is WorkflowStage.BUILDING_DRAFT
+        assert last.site_health_alert is not None
+        assert last.site_health_alert.run_id == result.run_id
+        # Proves the alert's run_id reflects the resolved obligation,
+        # not the "-"/"-" placeholder hash.
+        assert result.obligation is not None
+        from aeat.workflow._models import compute_run_id as _compute_run_id
+
+        placeholder_hash = _compute_run_id(
+            tax_id=fx.profile.tax_id,
+            modelo="-",
+            period="-",
+            started_at=result.started_at,
+        )
+        assert last.site_health_alert.run_id != placeholder_hash
