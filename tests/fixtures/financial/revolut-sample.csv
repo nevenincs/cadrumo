@@ -1,0 +1,3 @@
+Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance
+CARD_PAYMENT,Current,2026-04-16 07:30:00,2026-04-16 07:31:00,Coffee subscription,-12.50,0,EUR,COMPLETED,6546.72
+TRANSFER,Current,2026-04-17 10:00:00,2026-04-17 10:00:05,Client payout,450.00,0,EUR,COMPLETED,6996.72
