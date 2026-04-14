@@ -33,23 +33,36 @@ from aeat.models._registry import (
     year_plan,
 )
 
-# The modelo catalogue carries Spanish and Hungarian characters (á, é, ő, …)
-# that Windows legacy code-page stdout (cp1252) cannot encode. Reconfigure the
-# interpreter's stdout/stderr to UTF-8 so `aeat modelos ...` runs cleanly on a
-# vanilla `cmd.exe`; tests via typer.testing.CliRunner already use UTF-8.
-for _stream in (sys.stdout, sys.stderr):
-    reconfigure = getattr(_stream, "reconfigure", None)
-    if callable(reconfigure):
-        with contextlib.suppress(ValueError, OSError):
-            reconfigure(encoding="utf-8", errors="replace")
-
 _CONSOLE = Console()
+
+
+def _ensure_utf8_streams() -> None:
+    """Reconfigure stdout/stderr to UTF-8 for the current process.
+
+    The modelo catalogue carries Spanish and Hungarian characters
+    (á, é, ő, …) that Windows legacy code-page stdout (cp1252) cannot
+    encode. Calling this from the Typer callback scopes the side effect
+    to ``aeat modelos`` invocations instead of every import of this
+    module.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            with contextlib.suppress(ValueError, OSError):
+                reconfigure(encoding="utf-8", errors="replace")
+
 
 app = typer.Typer(
     name="modelos",
     help="AEAT modelo inventory and applicability helpers.",
     no_args_is_help=True,
 )
+
+
+@app.callback()
+def _main_callback() -> None:
+    """Initialise the ``aeat modelos`` sub-app for the current invocation."""
+    _ensure_utf8_streams()
 
 
 def _entries_sorted() -> tuple[ModeloMetadata, ...]:
@@ -134,22 +147,27 @@ def applicable_to_command(
     _emit_entries(entries, json_out)
 
 
-def _profile_from_autonomo(profile: AutonomoProfile) -> TaxpayerProfile:
-    """Infer the :class:`TaxpayerProfile` from an :class:`AutonomoProfile`.
+def _profiles_from_autonomo(profile: AutonomoProfile) -> frozenset[TaxpayerProfile]:
+    """Infer every :class:`TaxpayerProfile` matching an :class:`AutonomoProfile`.
 
-    The mapping is intentionally narrow for v1: the CLI's ``year-plan``
-    command uses it only to narrow the engine's schedule by the
-    registry's applicability matrix.
+    An autónomo may match multiple archetypes at once (e.g. has employees
+    AND performs intra-EU operations); a single-profile hierarchy would
+    silently discard obligations from the non-selected traits. The CLI
+    uses the returned set via intersection against the registry's
+    applicability matrix so every matching obligation is retained.
     """
+    matched: set[TaxpayerProfile] = set()
     if profile.bienes_extranjero_above_threshold:
-        return TaxpayerProfile.AUTONOMO_ED_BIENES_EXTRANJERO
+        matched.add(TaxpayerProfile.AUTONOMO_ED_BIENES_EXTRANJERO)
     if profile.does_intracomunitario:
-        return TaxpayerProfile.AUTONOMO_ED_UE
+        matched.add(TaxpayerProfile.AUTONOMO_ED_UE)
     if profile.pays_rent_with_retencion:
-        return TaxpayerProfile.AUTONOMO_ED_CON_ALQUILER
+        matched.add(TaxpayerProfile.AUTONOMO_ED_CON_ALQUILER)
     if profile.has_employees:
-        return TaxpayerProfile.AUTONOMO_ED_CON_EMPLEADOS
-    return TaxpayerProfile.AUTONOMO_ED_SOLO
+        matched.add(TaxpayerProfile.AUTONOMO_ED_CON_EMPLEADOS)
+    if not matched:
+        matched.add(TaxpayerProfile.AUTONOMO_ED_SOLO)
+    return frozenset(matched)
 
 
 @app.command(name="year-plan", help="Compute filing obligations for a year + profile.")
@@ -181,23 +199,23 @@ def year_plan_command(
         bienes_extranjero_above_threshold=bienes_extranjero_above_threshold,
     )
     schedule = year_plan(year, profile)
-    taxpayer = _profile_from_autonomo(profile)
+    taxpayers = _profiles_from_autonomo(profile)
     filtered = []
     for obligation in schedule.obligations:
         try:
             metadata = get_modelo(obligation.modelo)
         except UnknownModeloError:
             continue
-        if (
-            taxpayer in metadata.applicability.mandatory_profiles
-            or taxpayer in metadata.applicability.optional_profiles
+        if not taxpayers.isdisjoint(metadata.applicability.mandatory_profiles) or not taxpayers.isdisjoint(
+            metadata.applicability.optional_profiles
         ):
             filtered.append(obligation)
     if json_out:
         payload = [o.model_dump(mode="json") for o in filtered]
         typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-    table = Table(title=f"year plan {year} — {taxpayer.value}", header_style="bold")
+    profile_label = ", ".join(sorted(p.value for p in taxpayers))
+    table = Table(title=f"year plan {year} — {profile_label}", header_style="bold")
     table.add_column("modelo", style="cyan")
     table.add_column("period")
     table.add_column("opens_on")
