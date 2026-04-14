@@ -32,3 +32,11 @@ def test_casillas_command_is_registered() -> None:
     result = runner.invoke(aeat.cli.app, ["--help"])
     assert result.exit_code == 0
     assert "casillas" in result.stdout
+
+
+@pytest.mark.unit
+def test_financial_command_is_registered() -> None:
+    """The root CLI must expose the financial command group."""
+    result = runner.invoke(aeat.cli.app, ["--help"])
+    assert result.exit_code == 0
+    assert "financial" in result.stdout

@@ -55,6 +55,9 @@ dependencies = [
     "alembic>=1.14.0",
     # PDF parsing (#44 justificante)
     "pdfplumber>=0.11.9",
+    # Financial ingest (#73)
+    "ofxparse>=0.21",
+    "openpyxl>=3.1.5",
 ]
 
 [project.scripts]
