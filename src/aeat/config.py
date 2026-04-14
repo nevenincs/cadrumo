@@ -112,6 +112,16 @@ class Settings(BaseSettings):
         description="AEAT sede electrónica base URL",
     )
 
+    # ── Financial ingest (#73) ─────────────────────────────────────────────
+    financial_base_currency: str = Field(
+        default="EUR",
+        description="Fallback ISO 4217 currency used when a financial source omits a per-row currency",
+    )
+    financial_default_csv_encoding: str = Field(
+        default="utf-8",
+        description="Preferred encoding attempted first when decoding financial CSV sources",
+    )
+
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
         default="hu",
