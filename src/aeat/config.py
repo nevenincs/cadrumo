@@ -221,6 +221,12 @@ class Settings(BaseSettings):
         description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
+    # ── VAT catalogue (aeat.financial.vat, #85) ─────────────────────────────
+    aeat_vat_catalogue_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "financial" / "vat",
+        description="Root directory for the hand-reviewed VAT taxonomy catalogue",
+    )
+
     # ── Browser Automation ──────────────────────────────────────────────────
     aeat_browser_channel: str = Field(
         default="chrome",
@@ -255,6 +261,17 @@ class Settings(BaseSettings):
         description="Minimum delay between AEAT requests in seconds",
     )
 
+    # ── Site-health detection (#95) ─────────────────────────────────────────
+    site_health_probe_url: str = Field(
+        default="https://sede.agenciatributaria.gob.es/",
+        description="AEAT Sede URL the site-health probe navigates to",
+    )
+    site_health_rate_limit_retry_after_default: int = Field(
+        default=300,
+        ge=1,
+        description="Fallback Retry-After seconds when a 429/503 omits the header",
+    )
+
     # ── AEAT certificate authentication (#8) ────────────────────────────────
     aeat_certificate_path: Path | None = Field(
         default=None,
@@ -275,6 +292,23 @@ class Settings(BaseSettings):
     aeat_certificate_verify_url: str = Field(
         default="https://sede.agenciatributaria.gob.es/",
         description="Target URL for aeat.auth.verify_handshake() mTLS smoke test",
+    )
+    aeat_cert_warn_days: int = Field(
+        default=60,
+        gt=0,
+        description=(
+            "Warning threshold (days) for the certificate pre-expiry gate: "
+            "certificates with <= this many days remaining are surfaced as WARN"
+        ),
+    )
+    aeat_cert_critical_days: int = Field(
+        default=14,
+        gt=0,
+        description=(
+            "Critical threshold (days) for the certificate pre-expiry gate: "
+            "certificates with <= this many days remaining are CRITICAL and "
+            "block live submission unless --force-expiring-cert is passed"
+        ),
     )
 
     # ── LLM ─────────────────────────────────────────────────────────────────

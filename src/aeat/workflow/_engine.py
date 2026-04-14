@@ -23,10 +23,13 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from typing import NoReturn, cast
 
+from aeat.auth import CertificateHealthSeverity
 from aeat.config import Settings
 from aeat.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
+from aeat.errors import SiteHealthError
 from aeat.i18n import Translatable
 from aeat.logging import get_logger
+from aeat.status import SiteHealthAlert
 from aeat.submission import (
     DraftStatus,
     FilingDraftLike,
@@ -61,9 +64,53 @@ def _utcnow() -> datetime:
     return datetime.now(tz=UTC)
 
 
+def _classify_cert_expiry(
+    *,
+    not_after: date,
+    today: date,
+    warn_days: int,
+    critical_days: int,
+) -> tuple[CertificateHealthSeverity, int]:
+    """Classify a certificate's expiry window against operator thresholds.
+
+    Operates on the narrow :class:`aeat.submission.LoadedCertificate`
+    stub surface (``not_after: date``) rather than the rich
+    :class:`aeat.auth.LoadedCertificate`, so it can be called from the
+    workflow engine without forcing a sibling-branch rebase. Boundary
+    semantics match :func:`aeat.auth.evaluate_loaded_certificate_health`:
+    exactly ``critical_days`` remaining is CRITICAL (inclusive), and
+    exactly ``warn_days`` remaining is WARN (inclusive).
+
+    Args:
+        not_after: The certificate's expiry date.
+        today: Reference date (usually the workflow ``today`` arg).
+        warn_days: Warning threshold in days.
+        critical_days: Critical threshold in days.
+
+    Returns:
+        A ``(severity, days_until_expiry)`` tuple.
+    """
+    days_until_expiry = (not_after - today).days
+    if days_until_expiry <= 0:
+        return (CertificateHealthSeverity.EXPIRED, days_until_expiry)
+    if days_until_expiry <= critical_days:
+        return (CertificateHealthSeverity.CRITICAL, days_until_expiry)
+    if days_until_expiry <= warn_days:
+        return (CertificateHealthSeverity.WARN, days_until_expiry)
+    return (CertificateHealthSeverity.OK, days_until_expiry)
+
+
 def _t(en: str) -> Translatable:
     """Build a :class:`Translatable` carrying a single English message."""
     return cast(Translatable, {"en": en})
+
+
+def _enum_value(value: object) -> str:
+    """Return ``Enum.value`` when present, otherwise ``str(value)``."""
+    if value is None:
+        return ""
+    raw = getattr(value, "value", value)
+    return str(raw)
 
 
 class _AbortError(Exception):
@@ -134,6 +181,20 @@ class WorkflowEngine:
         self._certificate_bundle = certificate_bundle
         self._inputs_provider = inputs_provider
         self._settings = settings
+        # Lazy run-id recomputation state. These are set at the start
+        # of every ``_drive`` call and consumed by
+        # ``_record_site_unavailable`` so an alert raised *after* the
+        # obligation has been resolved carries a ``run_id`` that
+        # matches the final :class:`WorkflowResult.run_id`. When no
+        # obligation is known yet (e.g. ``SiteHealthError`` from the
+        # sync or deadline stage of an open-ended ``run_next`` call)
+        # the ``-`` placeholders are expected and match the
+        # placeholders in the final result.
+        self._run_tax_id: str | None = None
+        self._run_started_at: datetime | None = None
+        self._run_target_modelo: str | None = None
+        self._run_target_period: str | None = None
+        self._run_obligation: FilingObligation | None = None
 
     # ------------------------------------------------------------------ public
 
@@ -235,6 +296,15 @@ class WorkflowEngine:
         reference_today = today or date.today()
         should_sync = sync_first if sync_first is not None else self._settings.aeat_workflow_sync_first_default
 
+        # Record run context so ``_record_site_unavailable`` can lazily
+        # recompute the run_id from whichever information is latest
+        # (preferring a resolved obligation over caller targets).
+        self._run_tax_id = profile.tax_id
+        self._run_started_at = started_at
+        self._run_target_modelo = target_modelo
+        self._run_target_period = target_period
+        self._run_obligation = None
+
         steps: list[WorkflowStep] = []
         obligation: FilingObligation | None = None
         draft: FilingDraftLike | None = None
@@ -258,6 +328,7 @@ class WorkflowEngine:
                 today=reference_today,
                 steps=steps,
             )
+            self._run_obligation = obligation
             await self._stage_checking_inbox(
                 profile=profile,
                 obligation=obligation,
@@ -293,6 +364,11 @@ class WorkflowEngine:
             )
 
         ended_at = _utcnow()
+        self._run_tax_id = None
+        self._run_started_at = None
+        self._run_target_modelo = None
+        self._run_target_period = None
+        self._run_obligation = None
         modelo_for_hash = target_modelo or (obligation.modelo if obligation is not None else "-")
         period_for_hash = target_period or (obligation.period if obligation is not None else "-")
         run_id = compute_run_id(
@@ -388,6 +464,13 @@ class WorkflowEngine:
                 period=target_period,
                 auto_heal=False,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.SYNCING_CATALOGUES,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.SYNCING_CATALOGUES,
@@ -429,6 +512,13 @@ class WorkflowEngine:
         started = _utcnow()
         try:
             schedule: Schedule = self._deadline_engine.compute(profile, today.year, today=today)
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.COMPUTING_DEADLINES,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -529,6 +619,13 @@ class WorkflowEngine:
                 tax_id=profile.tax_id,
                 modelo=obligation.modelo,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.CHECKING_INBOX,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.CHECKING_INBOX,
@@ -587,6 +684,13 @@ class WorkflowEngine:
         if self._status_reader is not None:
             try:
                 expedientes = await self._status_reader.fetch_expedientes(tax_id=profile.tax_id)
+            except SiteHealthError as exc:
+                self._record_site_unavailable(
+                    stage=WorkflowStage.BUILDING_DRAFT,
+                    started=started,
+                    exc=exc,
+                    steps=steps,
+                )
             except Exception as exc:
                 self._record_unhandled(
                     stage=WorkflowStage.BUILDING_DRAFT,
@@ -622,6 +726,13 @@ class WorkflowEngine:
                 period=obligation.period,
                 profile=profile,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.BUILDING_DRAFT,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.BUILDING_DRAFT,
@@ -637,6 +748,13 @@ class WorkflowEngine:
                 inputs=inputs,
                 fail_on_warning=fail_on_warning,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.BUILDING_DRAFT,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.BUILDING_DRAFT,
@@ -644,8 +762,9 @@ class WorkflowEngine:
                 exc=exc,
                 steps=steps,
             )
-        if draft.status is not DraftStatus.READY_TO_SUBMIT:
-            status_summary = _t(f"Draft {draft.draft_id} not ready: status={draft.status.value}")
+        if _enum_value(draft.status) != DraftStatus.READY_TO_SUBMIT.value:
+            status_value = _enum_value(draft.status)
+            status_summary = _t(f"Draft {draft.draft_id} not ready: status={status_value}")
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
@@ -653,7 +772,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary=status_summary,
-                    details={"draft_id": draft.draft_id, "status": draft.status.value},
+                    details={"draft_id": draft.draft_id, "status": status_value},
                 )
             )
             raise _AbortError(
@@ -681,7 +800,9 @@ class WorkflowEngine:
     ) -> None:
         """Stage 6 — re-scan the built draft for ERROR-severity findings."""
         started = _utcnow()
-        error_findings = tuple(f for f in draft.findings if f.severity is FilingFindingSeverity.ERROR)
+        error_findings = tuple(
+            f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == FilingFindingSeverity.ERROR
+        )
         if error_findings:
             errors_summary = _t(f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s)")
             steps.append(
@@ -745,15 +866,59 @@ class WorkflowEngine:
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=cert_summary,
                 ) from exc
+            cert_severity, days_until_expiry = _classify_cert_expiry(
+                not_after=certificate.not_after,
+                today=today,
+                warn_days=self._settings.aeat_cert_warn_days,
+                critical_days=self._settings.aeat_cert_critical_days,
+            )
             cert_details = {
                 "cert_subject": certificate.subject,
                 "cert_not_after": certificate.not_after.isoformat(),
+                "cert_severity": cert_severity.value,
+                "cert_days_until_expiry": str(days_until_expiry),
             }
+            if cert_severity in (
+                CertificateHealthSeverity.EXPIRED,
+                CertificateHealthSeverity.CRITICAL,
+            ):
+                expiry_summary = _t(
+                    f"Certificate pre-expiry gate: severity={cert_severity.value} "
+                    f"days_until_expiry={days_until_expiry} "
+                    f"subject={certificate.subject}"
+                )
+                steps.append(
+                    WorkflowStep(
+                        stage=WorkflowStage.RUNNING_PREFLIGHT,
+                        started_at=started,
+                        ended_at=_utcnow(),
+                        success=False,
+                        summary=expiry_summary,
+                        details=cert_details,
+                    )
+                )
+                raise _AbortError(
+                    reason=WorkflowAbortReason.CERT_INVALID,
+                    summary=expiry_summary,
+                )
+            if cert_severity is CertificateHealthSeverity.WARN:
+                _logger.warning(
+                    "workflow: certificate nearing expiry subject=%s days=%d",
+                    certificate.subject,
+                    days_until_expiry,
+                )
         else:
             cert_details = {"cert_skipped": "not_wired"}
 
         try:
             self._submission_engine.preflight(draft, today=today)
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.RUNNING_PREFLIGHT,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except SubmissionPreflightError as exc:
             preflight_summary = _t(f"Preflight failed: {exc}")
             steps.append(
@@ -830,6 +995,13 @@ class WorkflowEngine:
                 override_confirmation=override_confirmation,
                 today=today,
             )
+        except SiteHealthError as exc:
+            self._record_site_unavailable(
+                stage=WorkflowStage.DRY_RUN_SUBMIT,
+                started=started,
+                exc=exc,
+                steps=steps,
+            )
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.DRY_RUN_SUBMIT,
@@ -856,6 +1028,27 @@ class WorkflowEngine:
         return submission
 
     # ---------------------------------------------------------------- helpers
+
+    def _compute_current_run_id(self) -> str | None:
+        """Return the run_id for the currently-in-flight ``_drive`` call.
+
+        Prefers a resolved obligation's ``modelo``/``period`` over the
+        caller-supplied targets so a site-health alert raised after
+        ``COMPUTING_DEADLINES`` has resolved an obligation carries the
+        same hash as the final :class:`WorkflowResult.run_id`. Returns
+        ``None`` when called outside an active ``_drive`` call.
+        """
+        if self._run_tax_id is None or self._run_started_at is None:
+            return None
+        obligation = self._run_obligation
+        modelo = self._run_target_modelo or (obligation.modelo if obligation is not None else "-")
+        period = self._run_target_period or (obligation.period if obligation is not None else "-")
+        return compute_run_id(
+            tax_id=self._run_tax_id,
+            modelo=modelo,
+            period=period,
+            started_at=self._run_started_at,
+        )
 
     def _record_unhandled(
         self,
@@ -890,3 +1083,49 @@ class WorkflowEngine:
             reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
             summary=unhandled_summary,
         ) from wrapped
+
+    def _record_site_unavailable(
+        self,
+        *,
+        stage: WorkflowStage,
+        started: datetime,
+        exc: SiteHealthError,
+        steps: list[WorkflowStep],
+    ) -> NoReturn:
+        """Record a typed site-health alert and raise ``SITE_UNAVAILABLE``.
+
+        Invoked from the ``except SiteHealthError`` arm inserted
+        strictly *before* the generic ``except Exception`` catch in
+        every stage method that wraps a component call. The helper
+        composes a :class:`aeat.status.SiteHealthAlert` around the
+        caught error, appends a failed :class:`WorkflowStep` carrying
+        the alert, and raises
+        ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``
+        so the collapse to ``UNHANDLED_EXCEPTION`` never fires.
+        """
+        run_id = self._compute_current_run_id() or "unassigned"
+        alert = SiteHealthAlert(
+            stage=stage,
+            status=exc.status,
+            run_id=run_id,
+        )
+        state_label = exc.status.state.value
+        summary = _t(f"Site unavailable at stage={stage.value}: {state_label}")
+        steps.append(
+            WorkflowStep(
+                stage=stage,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=False,
+                summary=summary,
+                details={
+                    "site_health_state": state_label,
+                    "http_status": str(exc.status.evidence.http_status),
+                },
+                site_health_alert=alert,
+            )
+        )
+        raise _AbortError(
+            reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+            summary=summary,
+        ) from exc
