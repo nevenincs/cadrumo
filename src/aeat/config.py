@@ -121,6 +121,10 @@ class Settings(BaseSettings):
         default="utf-8",
         description="Preferred encoding attempted first when decoding financial CSV sources",
     )
+    aeat_financial_txs_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "transactions",
+        description="Directory where the transaction catalogue JSON file is stored",
+    )
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
