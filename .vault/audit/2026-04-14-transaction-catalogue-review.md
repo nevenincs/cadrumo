@@ -11,7 +11,13 @@ related:
 
 # `transaction-catalogue` Code Review
 
-No LOW, MEDIUM, HIGH, or CRITICAL findings were identified across the reviewed change set.
+Follow-up local review on 2026-04-14 found and closed three branch defects before final sign-off:
+
+- `TransactionCatalogue` did not implement the required iteration contract and instead inherited `BaseModel.__iter__`, yielding model field tuples rather than `Transaction` records.
+- `link_invoice()` accepted whitespace-only identifiers and silently normalized them to `None`, turning a link operation into an implicit unlink.
+- `set_classification()` / `link_invoice()` leaked raw `pydantic.ValidationError` exceptions through the public service and CLI surface instead of raising typed AEAT-domain errors.
+
+After those fixes and their regression tests landed, no remaining LOW, MEDIUM, HIGH, or CRITICAL findings were identified across the reviewed change set.
 
 ## Reviewed Scope
 

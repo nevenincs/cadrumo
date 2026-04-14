@@ -144,3 +144,28 @@ def test_financial_txs_classify_updates_catalogue_file(tmp_path: Path) -> None:
     updated = restored.get(transaction.transaction_id)
     assert updated is not None
     assert updated.business_classification is BusinessClassification.MIXED
+
+
+@pytest.mark.unit
+def test_financial_txs_classify_rejects_invalid_business_pct_combo(tmp_path: Path) -> None:
+    """`aeat financial txs classify` should exit cleanly on invalid percentage usage."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--as",
+            "BUSINESS",
+            "--pct",
+            "0.5",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "invalid classification update for transaction" in result.output

@@ -15,6 +15,7 @@ from aeat.financial.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueError,
     TransactionDirection,
     find_transaction,
     link_invoice,
@@ -71,6 +72,19 @@ def test_catalogue_rejects_duplicate_transaction_ids_on_construction() -> None:
 
 
 @pytest.mark.unit
+def test_catalogue_iteration_yields_transactions() -> None:
+    """TransactionCatalogue iteration must expose transactions, not model fields."""
+    first = _sample_transaction(provider_id="provider-row-1")
+    second = _sample_transaction(provider_id="provider-row-2", description="Client payment")
+    catalogue = TransactionCatalogue.from_transactions([first, second])
+
+    assert [transaction.transaction_id for transaction in catalogue] == [
+        first.transaction_id,
+        second.transaction_id,
+    ]
+
+
+@pytest.mark.unit
 def test_link_invoice_returns_new_catalogue_without_mutating_original() -> None:
     """link_invoice must preserve the original catalogue and raw transaction."""
     transaction = _sample_transaction()
@@ -86,6 +100,16 @@ def test_link_invoice_returns_new_catalogue_without_mutating_original() -> None:
     assert linked is not None
     assert linked.invoice_id == "INV-001"
     assert linked.raw == transaction.raw
+
+
+@pytest.mark.unit
+def test_link_invoice_rejects_blank_invoice_identifier() -> None:
+    """link_invoice must reject blank invoice IDs instead of clearing the link."""
+    transaction = _sample_transaction()
+    catalogue = TransactionCatalogue.from_transactions([transaction])
+
+    with pytest.raises(TransactionCatalogueError):
+        link_invoice(catalogue, transaction.transaction_id, "   ")
 
 
 @pytest.mark.unit
@@ -113,6 +137,22 @@ def test_set_classification_returns_new_catalogue_without_mutating_original() ->
     assert after.classified_at is not None
     assert after.classified_at.tzinfo is not None
     assert after.raw == transaction.raw
+
+
+@pytest.mark.unit
+def test_set_classification_raises_typed_error_for_invalid_business_pct() -> None:
+    """set_classification must not leak raw pydantic errors to callers."""
+    transaction = _sample_transaction()
+    catalogue = TransactionCatalogue.from_transactions([transaction])
+
+    with pytest.raises(TransactionCatalogueError):
+        set_classification(
+            catalogue,
+            transaction.transaction_id,
+            classification=BusinessClassification.BUSINESS,
+            business_pct=Decimal("0.5"),
+            classified_by="manual",
+        )
 
 
 @pytest.mark.unit
