@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 
 from openpyxl import load_workbook
 from openpyxl.workbook import Workbook
+from openpyxl.worksheet.worksheet import Worksheet
 
 from aeat.financial._raw_transaction import RawTransaction, SourceFormat
 from aeat.financial.providers._base import (
@@ -15,6 +16,7 @@ from aeat.financial.providers._base import (
     InvalidFinancialSourceError,
     ProviderValidation,
     build_raw_transaction,
+    coerce_cell_text,
     default_currency,
     parse_amount_value,
     parse_date_value,
@@ -46,13 +48,15 @@ class XlsxProvider(FinancialProvider):
 
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate workbook accessibility and header detection."""
+        workbook: Workbook | None = None
         try:
             workbook, rows, _, layout, header_row, _, _ = self._locate_sheet(path)
         except InvalidFinancialSourceError as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
         finally:
-            with suppress(Exception):
-                workbook.close()  # type: ignore[name-defined]
+            if workbook is not None:
+                with suppress(Exception):
+                    workbook.close()
         warnings: list[str] = []
         if layout is None:
             return ProviderValidation(
@@ -85,7 +89,8 @@ class XlsxProvider(FinancialProvider):
             raise InvalidFinancialSourceError("Workbook does not contain a supported bank-statement header row")
         try:
             for source_row_index, row in enumerate(rows[header_index + 1 :], start=header_index + 2):
-                raw_fields = {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
+                raw_fields = _row_to_mapping(headers, row)
+                cell_lookup = _row_to_cells(headers, row)
                 if _row_is_blank(raw_fields):
                     continue
                 try:
@@ -97,12 +102,17 @@ class XlsxProvider(FinancialProvider):
                             source_row_index=source_row_index,
                         )
                     booked_date = parse_date_value(
-                        _required_value(raw_fields, lookup, layout.columns.booked_date, "booked_date"),
+                        _required_cell_value(cell_lookup, lookup, layout.columns.booked_date, "booked_date"),
                         day_first=layout.day_first_dates,
                     )
-                    value_text = _value_from_aliases(raw_fields, lookup, layout.columns.value_date)
-                    value_date = parse_date_value(value_text, day_first=layout.day_first_dates) if value_text else None
-                    amount = parse_amount_value(_required_value(raw_fields, lookup, layout.columns.amount, "amount"))
+                    value_raw = _cell_value_from_aliases(cell_lookup, lookup, layout.columns.value_date)
+                    value_date = (
+                        parse_date_value(value_raw, day_first=layout.day_first_dates) if value_raw is not None else None
+                    )
+                    amount = parse_amount_value(
+                        _required_cell_value(cell_lookup, lookup, layout.columns.amount, "amount"),
+                        decimal_separator=layout.decimal_separator,
+                    )
                     currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
                     description = _required_value(raw_fields, lookup, layout.columns.description, "description")
                     counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
@@ -130,40 +140,82 @@ class XlsxProvider(FinancialProvider):
     def _locate_sheet(
         self,
         path: Path,
-    ) -> tuple[Workbook, list[list[str]], str, CsvBankLayout | None, list[str] | None, dict[str, str] | None, int]:
+    ) -> tuple[Workbook, list[list[object]], str, CsvBankLayout | None, list[str] | None, dict[str, str] | None, int]:
         """Return the first worksheet that matches a known bank layout."""
         try:
             workbook = load_workbook(filename=path, read_only=True, data_only=True)
         except Exception as exc:  # pragma: no cover - exercised via validation path
             raise InvalidFinancialSourceError(f"could not open workbook: {path}") from exc
-        best_rows: list[list[str]] = []
-        best_sheet_name = workbook.sheetnames[0] if workbook.sheetnames else "Sheet1"
-        best_layout: CsvBankLayout | None = None
-        best_headers: list[str] | None = None
-        best_lookup: dict[str, str] | None = None
-        best_header_index = 0
-        best_score = -1
-        for worksheet in workbook.worksheets:
-            rows = [
-                [str(cell).strip() if cell is not None else "" for cell in row]
-                for row in worksheet.iter_rows(values_only=True)
-            ]
-            for index, row in enumerate(rows[:10]):
-                if not any(cell.strip() for cell in row):
-                    continue
-                lookup = _header_lookup(row)
-                for layout in CSV_LAYOUTS:
-                    score = _layout_score(lookup, layout)
-                    if score > best_score:
-                        best_rows = rows
-                        best_sheet_name = worksheet.title
-                        best_layout = layout
-                        best_headers = row
-                        best_lookup = lookup
-                        best_header_index = index
-                        best_score = score
-        self._last_sheet_name = best_sheet_name
-        self._last_header_index = best_header_index + 1
-        if best_score < 3:
-            return workbook, best_rows, best_sheet_name, None, None, None, best_header_index
-        return workbook, best_rows, best_sheet_name, best_layout, best_headers, best_lookup, best_header_index
+        try:
+            best_worksheet: Worksheet | None = workbook.worksheets[0] if workbook.worksheets else None
+            best_sheet_name = best_worksheet.title if best_worksheet is not None else "Sheet1"
+            best_layout: CsvBankLayout | None = None
+            best_headers: list[str] | None = None
+            best_lookup: dict[str, str] | None = None
+            best_header_index = 0
+            best_score = -1
+            for worksheet in workbook.worksheets:
+                sample_rows = [
+                    [coerce_cell_text(cell) for cell in row]
+                    for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)
+                ]
+                for index, row in enumerate(sample_rows):
+                    if not any(cell.strip() for cell in row):
+                        continue
+                    lookup = _header_lookup(row)
+                    for layout in CSV_LAYOUTS:
+                        score = _layout_score(lookup, layout)
+                        if score > best_score:
+                            best_worksheet = worksheet
+                            best_sheet_name = worksheet.title
+                            best_layout = layout
+                            best_headers = row
+                            best_lookup = lookup
+                            best_header_index = index
+                            best_score = score
+            best_rows = [list(row) for row in best_worksheet.iter_rows(values_only=True)] if best_worksheet else []
+            self._last_sheet_name = best_sheet_name
+            self._last_header_index = best_header_index + 1
+            if best_score < 3:
+                return workbook, best_rows, best_sheet_name, None, None, None, best_header_index
+            return workbook, best_rows, best_sheet_name, best_layout, best_headers, best_lookup, best_header_index
+        except Exception:
+            with suppress(Exception):
+                workbook.close()
+            raise
+
+
+def _row_to_mapping(headers: Sequence[str], row: Sequence[object]) -> dict[str, str]:
+    """Convert one worksheet row into the stored raw-field mapping."""
+    return {header: coerce_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)}
+
+
+def _row_to_cells(headers: Sequence[str], row: Sequence[object]) -> dict[str, object]:
+    """Map worksheet headers to the original cell values for typed parsing."""
+    return {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
+
+
+def _cell_value_from_aliases(
+    raw_cells: Mapping[str, object],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+) -> object | None:
+    """Resolve and read the first non-empty cell value for a logical column."""
+    header = _find_column(lookup, aliases)
+    if header is None:
+        return None
+    value = raw_cells.get(header, "")
+    return value if coerce_cell_text(value) else None
+
+
+def _required_cell_value(
+    raw_cells: Mapping[str, object],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+    field_name: str,
+) -> object:
+    """Resolve a required logical column from typed worksheet cell values."""
+    value = _cell_value_from_aliases(raw_cells, lookup, aliases)
+    if value is None:
+        raise InvalidFinancialSourceError(f"worksheet row is missing required field {field_name!r}")
+    return value

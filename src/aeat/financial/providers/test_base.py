@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from aeat.financial import ProviderValidation, RawTransaction, SourceFormat, detect_provider
+from aeat.financial.providers._base import parse_amount_value
 
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
 
@@ -64,3 +65,12 @@ def test_detect_provider_uses_extension_and_validation(fixture_name: str, provid
     provider = detect_provider(_FIXTURES / fixture_name)
     assert provider is not None
     assert provider.name == provider_name
+
+
+@pytest.mark.unit
+def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
+    """Explicit decimal separators should disambiguate locale-specific amounts."""
+    assert parse_amount_value("1.234", decimal_separator=",") == Decimal("1234")
+    assert parse_amount_value("1,234", decimal_separator=".") == Decimal("1234")
+    assert parse_amount_value("1.234,56", decimal_separator=",") == Decimal("1234.56")
+    assert parse_amount_value("1,234.56", decimal_separator=".") == Decimal("1234.56")

@@ -10,7 +10,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -161,12 +161,18 @@ def parse_date_value(value: object, *, day_first: bool = True) -> date:
     raise ValueError(f"unsupported date format: {raw!r}")
 
 
-def parse_amount_value(value: object) -> Decimal:
+def parse_amount_value(
+    value: object,
+    *,
+    decimal_separator: Literal[",", "."] | None = None,
+) -> Decimal:
     """Parse bank-export numeric text into ``Decimal`` without float coercion."""
     if isinstance(value, Decimal):
         return value
     if isinstance(value, int):
         return Decimal(value)
+    if isinstance(value, float):
+        return Decimal(str(value))
     raw = coerce_cell_text(value)
     if not raw:
         raise ValueError("missing amount value")
@@ -178,7 +184,11 @@ def parse_amount_value(value: object) -> Decimal:
     sanitized = "".join(char for char in sanitized if char.isdigit() or char in ",.")
     if not sanitized:
         raise ValueError(f"unsupported amount value: {raw!r}")
-    if "," in sanitized and "." in sanitized:
+    if decimal_separator is not None and decimal_separator not in {",", "."}:
+        raise ValueError(f"unsupported decimal separator: {decimal_separator!r}")
+    if decimal_separator is not None:
+        decimal_sep = decimal_separator
+    elif "," in sanitized and "." in sanitized:
         decimal_sep = "," if sanitized.rfind(",") > sanitized.rfind(".") else "."
     elif "," in sanitized:
         decimal_sep = ","
