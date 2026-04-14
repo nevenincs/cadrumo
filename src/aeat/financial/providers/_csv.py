@@ -6,6 +6,7 @@ import csv
 import io
 from collections.abc import Iterator, Mapping
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -50,6 +51,7 @@ class CsvBankLayout(BaseModel):
     bank_name: str = Field(min_length=1)
     columns: CsvColumnMap
     day_first_dates: bool = True
+    decimal_separator: Literal[",", "."] = ","
 
 
 BBVA_LAYOUT = CsvBankLayout(
@@ -100,6 +102,7 @@ REVOLUT_LAYOUT = CsvBankLayout(
         external_id=("id", "reference"),
     ),
     day_first_dates=False,
+    decimal_separator=".",
 )
 CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
     BBVA_LAYOUT,
@@ -184,7 +187,10 @@ class CsvProvider(FinancialProvider):
                 )
                 value_text = _value_from_aliases(raw_fields, lookup, layout.columns.value_date)
                 value_date = parse_date_value(value_text, day_first=layout.day_first_dates) if value_text else None
-                amount = parse_amount_value(_required_value(raw_fields, lookup, layout.columns.amount, "amount"))
+                amount = parse_amount_value(
+                    _required_value(raw_fields, lookup, layout.columns.amount, "amount"),
+                    decimal_separator=layout.decimal_separator,
+                )
                 currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
                 description = _required_value(raw_fields, lookup, layout.columns.description, "description")
                 counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
