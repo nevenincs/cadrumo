@@ -30,6 +30,7 @@ from aeat.cli import inbox as inbox_module
 from aeat.cli import justificante as justificante_module
 from aeat.cli import llm as llm_module
 from aeat.cli import manual as manual_module
+from aeat.cli import modelos as modelos_module
 from aeat.cli import normatives as normatives_module
 from aeat.cli import oauth as oauth_module
 from aeat.cli import setup as setup_wizard_module
@@ -68,6 +69,7 @@ app.add_typer(cloud_module.app, name="cloud", help="GCP product helpers (Functio
 app.add_typer(llm_module.app, name="llm", help="LLM prompt, translation, cache, and usage helpers.")
 app.add_typer(oauth_module.app, name="oauth-client", help="OAuth 2.0 Desktop client provisioning.")
 app.add_typer(manual_module.app, name="manual", help="AEAT Manual práctico corpus helpers (#25).")
+app.add_typer(modelos_module.app, name="modelos", help="AEAT modelo inventory + applicability helpers.")
 app.add_typer(normatives_module.app, name="normatives", help="Spanish tax normatives corpus helpers (#45).")
 app.add_typer(vat_module.app, name="vat", help="Spanish VAT (IVA) taxonomy + rules (#85).")
 app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
