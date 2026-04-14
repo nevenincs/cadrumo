@@ -67,8 +67,8 @@ def save_transactions(catalogue: TransactionCatalogue, path: Path) -> None:
             suffix=".tmp",
             delete=False,
         ) as handle:
-            handle.write(payload)
             tmp_path = Path(handle.name)
+            handle.write(payload)
         os.replace(tmp_path, target)
     except OSError as exc:
         if tmp_path is not None:
