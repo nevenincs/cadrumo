@@ -12,6 +12,7 @@ import asyncio
 import typer
 from rich.console import Console
 
+from aeat.cli._observability import cli_run_context
 from aeat.cli.inbox._helpers import build_fetcher
 from aeat.inbox import InboxError
 
@@ -26,13 +27,15 @@ def ack_cmd(
 
     This is bookkeeping only — it does not tell AEAT anything.
     """
-    fetcher = build_fetcher()
-    try:
-        record = asyncio.run(fetcher.acknowledge(notificacion_id, by=by))
-    except InboxError as exc:
-        _CONSOLE.print(f"[red]ack failed:[/red] {exc}")
-        raise typer.Exit(code=1) from exc
-    _CONSOLE.print(
-        f"[green]acknowledged[/green] {record.notificacion_id} by {record.acknowledged_by} "
-        f"(local only — AEAT is not notified)"
-    )
+    arguments = {"notificacion_id": notificacion_id, "by": by}
+    with cli_run_context(entrypoint="aeat inbox ack", arguments=arguments):
+        fetcher = build_fetcher()
+        try:
+            record = asyncio.run(fetcher.acknowledge(notificacion_id, by=by))
+        except InboxError as exc:
+            _CONSOLE.print(f"[red]ack failed:[/red] {exc}")
+            raise typer.Exit(code=1) from exc
+        _CONSOLE.print(
+            f"[green]acknowledged[/green] {record.notificacion_id} by {record.acknowledged_by} "
+            f"(local only — AEAT is not notified)"
+        )

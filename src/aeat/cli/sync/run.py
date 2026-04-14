@@ -12,6 +12,7 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
+from aeat.cli._observability import cli_run_context
 from aeat.config import load_settings
 
 _CONSOLE = Console()
@@ -40,17 +41,19 @@ def run(
     listed in the ADR ship. The bounded auto-heal invariant still
     applies when the runner eventually wires up.
     """
-    settings = load_settings()
-    _CONSOLE.print(
-        f"[bold]sync run[/bold]: modelo={modelo or '<all>'} period={period or '<all>'} auto_heal={auto_heal}"
-    )
-    _CONSOLE.print(f"allowlist: {settings.aeat_sync_auto_heal_allowlist}")
-    _CONSOLE.print(
-        f"sink: {settings.aeat_sync_divergence_sink.value} file_dir={settings.aeat_sync_divergence_file_dir}"
-    )
-    _CONSOLE.print(
-        "[yellow]runner prerequisites pending[/yellow]: certificate backend (#8), "
-        "corpus loader (#17), schema loader (#9), manual rules (#25), LLM client "
-        "(#21). The runner refuses to launch until those branches merge."
-    )
-    raise typer.Exit(code=2)
+    arguments = {"modelo": modelo, "period": period, "auto-heal": auto_heal}
+    with cli_run_context(entrypoint="aeat sync run", arguments=arguments):
+        settings = load_settings()
+        _CONSOLE.print(
+            f"[bold]sync run[/bold]: modelo={modelo or '<all>'} period={period or '<all>'} auto_heal={auto_heal}"
+        )
+        _CONSOLE.print(f"allowlist: {settings.aeat_sync_auto_heal_allowlist}")
+        _CONSOLE.print(
+            f"sink: {settings.aeat_sync_divergence_sink.value} file_dir={settings.aeat_sync_divergence_file_dir}"
+        )
+        _CONSOLE.print(
+            "[yellow]runner prerequisites pending[/yellow]: certificate backend (#8), "
+            "corpus loader (#17), schema loader (#9), manual rules (#25), LLM client "
+            "(#21). The runner refuses to launch until those branches merge."
+        )
+        raise typer.Exit(code=2)

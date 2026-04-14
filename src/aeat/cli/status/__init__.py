@@ -20,6 +20,7 @@ from datetime import date
 import typer
 from rich.console import Console
 
+from aeat.cli._observability import cli_run_context
 from aeat.logging import get_logger
 
 logger = get_logger(__name__)
@@ -79,7 +80,11 @@ def expedientes(
     # even before the cert-backend bail-out.
     _parse_since(since)
     _ = json_output
-    _bail_cert_missing()
+    with cli_run_context(
+        entrypoint="aeat status expedientes",
+        arguments={"since": since, "json": json_output},
+    ):
+        _bail_cert_missing()
 
 
 @app.command("notificaciones", help="List 'Mis notificaciones' rows.", hidden=True)
@@ -90,7 +95,11 @@ def notificaciones(
     """Stub: not yet implemented in v1."""
     _parse_since(since)
     _ = json_output
-    _bail_cert_missing()
+    with cli_run_context(
+        entrypoint="aeat status notificaciones",
+        arguments={"since": since, "json": json_output},
+    ):
+        _bail_cert_missing()
 
 
 @app.command("devoluciones", help="List 'Mis devoluciones' rows.", hidden=True)
@@ -99,8 +108,11 @@ def devoluciones(
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
-    del year, json_output
-    _bail_cert_missing()
+    with cli_run_context(
+        entrypoint="aeat status devoluciones",
+        arguments={"year": year, "json": json_output},
+    ):
+        _bail_cert_missing()
 
 
 @app.command("borrador", help="Show the IRPF draft state.", hidden=True)
@@ -109,8 +121,11 @@ def borrador(
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
-    del year, json_output
-    _bail_cert_missing()
+    with cli_run_context(
+        entrypoint="aeat status borrador",
+        arguments={"year": year, "json": json_output},
+    ):
+        _bail_cert_missing()
 
 
 @app.command("datos-fiscales", help="Show third-party tax data.", hidden=True)
@@ -119,8 +134,11 @@ def datos_fiscales(
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
-    del year, json_output
-    _bail_cert_missing()
+    with cli_run_context(
+        entrypoint="aeat status datos-fiscales",
+        arguments={"year": year, "json": json_output},
+    ):
+        _bail_cert_missing()
 
 
 @app.command("calendario", help="Show the personalised filing calendar.", hidden=True)
@@ -128,8 +146,11 @@ def calendario(
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Stub: not yet implemented in v1."""
-    del json_output
-    _bail_cert_missing()
+    with cli_run_context(
+        entrypoint="aeat status calendario",
+        arguments={"json": json_output},
+    ):
+        _bail_cert_missing()
 
 
 __all__ = ["app"]
