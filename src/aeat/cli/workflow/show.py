@@ -6,6 +6,7 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
+from aeat.cli._observability import cli_run_context
 from aeat.config import load_settings
 from aeat.workflow import WorkflowError, load_run
 
@@ -27,14 +28,16 @@ def show_cmd(
             under ``AEAT_WORKFLOW_RUNS_DIR``.
         as_json: When ``True``, emit compact JSON to stdout.
     """
-    settings = load_settings()
-    try:
-        result = load_run(run_id, runs_dir=settings.aeat_workflow_runs_dir)
-    except WorkflowError as exc:
-        _CONSOLE.print(f"[red]not found:[/red] {exc}")
-        raise typer.Exit(code=1) from exc
-    payload = result.model_dump_json(indent=2)
-    if as_json:
-        typer.echo(payload)
-    else:
-        _CONSOLE.print(JSON(payload))
+    arguments = {"run_id": run_id, "json": as_json}
+    with cli_run_context(entrypoint="aeat workflow show", arguments=arguments):
+        settings = load_settings()
+        try:
+            result = load_run(run_id, runs_dir=settings.aeat_workflow_runs_dir)
+        except WorkflowError as exc:
+            _CONSOLE.print(f"[red]not found:[/red] {exc}")
+            raise typer.Exit(code=1) from exc
+        payload = result.model_dump_json(indent=2)
+        if as_json:
+            typer.echo(payload)
+        else:
+            _CONSOLE.print(JSON(payload))

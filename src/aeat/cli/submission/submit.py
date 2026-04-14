@@ -11,6 +11,7 @@ from rich.console import Console
 
 from aeat.auth import CertificateError, CertificateHealthSeverity
 from aeat.auth import health as certificate_health
+from aeat.cli._observability import cli_run_context
 from aeat.cli.submission._helpers import build_engine, load_draft
 from aeat.config import Settings
 
@@ -105,11 +106,17 @@ def submit_cmd(
         _CONSOLE.print("[red]refusing:[/red] live submission requires --i-understand-this-is-real on the command line.")
         raise typer.Exit(code=2)
 
-    _enforce_cert_health(settings=Settings(), force_expiring_cert=force_expiring_cert)
+    arguments = {
+        "draft_path": str(draft_path),
+        "i-understand-this-is-real": i_understand_this_is_real,
+        "force-expiring-cert": force_expiring_cert,
+    }
+    with cli_run_context(entrypoint="aeat submission submit", arguments=arguments):
+        _enforce_cert_health(settings=Settings(), force_expiring_cert=force_expiring_cert)
 
-    draft = load_draft(draft_path)
-    engine = build_engine()
-    filing = asyncio.run(engine.submit_draft(draft, dry_run=False, override_confirmation=True))
-    _CONSOLE.print(
-        f"[green]LIVE submission OK[/green]: submission_id={filing.submission_id} status={filing.status.value}"
-    )
+        draft = load_draft(draft_path)
+        engine = build_engine()
+        filing = asyncio.run(engine.submit_draft(draft, dry_run=False, override_confirmation=True))
+        _CONSOLE.print(
+            f"[green]LIVE submission OK[/green]: submission_id={filing.submission_id} status={filing.status.value}"
+        )

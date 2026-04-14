@@ -474,6 +474,15 @@ class Settings(BaseSettings):
         description="Directory where the status reader drops Playwright trace files",
     )
 
+    # ── Observability (#99) ────────────────────────────────────────────────
+    aeat_runs_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "runs",
+        description=(
+            "Directory where run traces and JSONL event logs are persisted "
+            "(one subdirectory per run_id, containing trace.json + events.jsonl)"
+        ),
+    )
+
     # ── Justificante parser (#44) ───────────────────────────────────────────
     aeat_justificantes_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "justificantes",

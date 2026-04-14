@@ -13,7 +13,14 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
+from aeat.cli._observability import cli_run_context
 from aeat.cli.workflow._helpers import run_engine_next
+from aeat.observability import (
+    RunEventKind,
+    RunEventPayload,
+    WorkflowLinkPayload,
+    record_event,
+)
 
 _CONSOLE = Console()
 
@@ -54,9 +61,24 @@ def next_cmd(
             "[red]refusing:[/red] --no-dry-run requires --i-understand-this-is-real.",
         )
         raise typer.Exit(code=2)
-    run_engine_next(
-        dry_run=not no_dry_run,
-        override_confirmation=i_understand_this_is_real,
-        sync_first=sync_first,
-        as_json=as_json,
-    )
+    arguments = {
+        "no-dry-run": no_dry_run,
+        "i-understand-this-is-real": i_understand_this_is_real,
+        "sync": sync_first,
+        "json": as_json,
+    }
+    with cli_run_context(entrypoint="aeat workflow next", arguments=arguments):
+        result = run_engine_next(
+            dry_run=not no_dry_run,
+            override_confirmation=i_understand_this_is_real,
+            sync_first=sync_first,
+            as_json=as_json,
+        )
+        record_event(
+            RunEventKind.WORKFLOW_STARTED,
+            payload=RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id=result.run_id)),
+        )
+        record_event(
+            RunEventKind.WORKFLOW_COMPLETED,
+            payload=RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id=result.run_id)),
+        )
