@@ -114,12 +114,14 @@ class Transaction(BaseModel):
 
     @field_validator("invoice_id", "category_id")
     @classmethod
-    def _normalize_optional_ids(cls, value: str | None) -> str | None:
-        """Collapse blank foreign keys to ``None``."""
+    def _validate_optional_ids(cls, value: str | None) -> str | None:
+        """Trim optional foreign keys while rejecting blank strings."""
         if value is None:
             return None
         trimmed = value.strip()
-        return trimmed or None
+        if not trimmed:
+            raise ValueError("foreign-key identifiers must not be blank")
+        return trimmed
 
     @field_validator("notes")
     @classmethod
@@ -220,6 +222,10 @@ class TransactionCatalogue(BaseModel):
             A validated immutable transaction catalogue.
         """
         return cls.model_validate(tuple(transactions))
+
+    def __iter__(self):  # type: ignore[override]
+        """Iterate over catalogue transactions."""
+        return iter(self.transactions.values())
 
     def __len__(self) -> int:
         """Return the number of transactions in the catalogue."""

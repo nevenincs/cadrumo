@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from aeat.logging import get_logger
 
 from ._enums import BusinessClassification
-from ._errors import TransactionNotFoundError, TransactionPersistenceError
+from ._errors import TransactionCatalogueError, TransactionNotFoundError, TransactionPersistenceError
 from ._models import Transaction, TransactionCatalogue
 
 _LOGGER = get_logger(__name__)
@@ -105,11 +105,12 @@ def link_invoice(catalogue: TransactionCatalogue, transaction_id: str, invoice_i
         TransactionNotFoundError: If ``transaction_id`` is missing.
     """
     transaction = _require_transaction(catalogue, transaction_id)
-    updated_transaction = Transaction.model_validate(
+    updated_transaction = _validate_transaction_update(
         {
             **transaction.model_dump(mode="python"),
             "invoice_id": invoice_id,
-        }
+        },
+        context=f"invalid invoice link for transaction: {transaction_id}",
     )
     return _replace_transaction(catalogue, updated_transaction)
 
@@ -139,14 +140,15 @@ def set_classification(
         TransactionNotFoundError: If ``transaction_id`` is missing.
     """
     transaction = _require_transaction(catalogue, transaction_id)
-    updated_transaction = Transaction.model_validate(
+    updated_transaction = _validate_transaction_update(
         {
             **transaction.model_dump(mode="python"),
             "business_classification": classification,
             "business_pct": business_pct,
             "classified_at": datetime.now(UTC),
             "classified_by": classified_by,
-        }
+        },
+        context=f"invalid classification update for transaction: {transaction_id}",
     )
     return _replace_transaction(catalogue, updated_transaction)
 
@@ -164,3 +166,11 @@ def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
     return transaction
+
+
+def _validate_transaction_update(payload: dict[str, object], *, context: str) -> Transaction:
+    """Validate one transaction update payload and raise typed domain errors."""
+    try:
+        return Transaction.model_validate(payload)
+    except ValidationError as exc:
+        raise TransactionCatalogueError(context) from exc
