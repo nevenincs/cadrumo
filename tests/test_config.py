@@ -73,3 +73,22 @@ class TestEnvExampleAlignment:
 
         settings = IsolatedSettings()
         assert settings.aeat_base_url == "https://sede.agenciatributaria.gob.es"
+
+    def test_blank_nullable_env_values_coerce_to_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Blank optional env values from env/.env should preserve ``None`` defaults."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        monkeypatch.setenv("AEAT_CERTIFICATE_PATH", "")
+        monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", "")
+        monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", "")
+
+        class IsolatedSettings(Settings):
+            """Settings variant that skips the on-disk env file for test isolation."""
+
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        settings = IsolatedSettings()
+        assert settings.aeat_certificate_path is None
+        assert settings.aeat_certificate_password_secret is None
+        assert settings.aeat_default_profile_path is None
