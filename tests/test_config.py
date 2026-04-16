@@ -19,6 +19,8 @@ from aeat.config import PROJECT_ROOT, Settings
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
 
+pytestmark = pytest.mark.unit
+
 
 def _parse_env_example_vars() -> set[str]:
     """Extract variable names from ``env/.env.example``."""
