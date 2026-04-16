@@ -142,6 +142,9 @@ celerybeat.pid
 # inside it except the tracked example template.
 env/*
 !env/.env.example
+# Explicitly ignored because the google-workspace MCP launcher hard-pins
+# the upstream refresh-token cache into a repo-local secret directory.
+env/workspace-mcp-credentials/
 venv/
 ENV/
 env.bak/
