@@ -342,6 +342,10 @@ def test_playwright_preload_accepts_marked_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    from aeat.auth._certificate_backends._playwright_context import (
+        mark_context_with_certificate,
+    )
+
     p12 = _build_pkcs12_bundle(tmp_path)
     monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
@@ -352,10 +356,36 @@ def test_playwright_preload_accepts_marked_context(
     loaded = load_certificate(bundle)
 
     class _MarkedContext:
-        def __init__(self, thumbprint: str) -> None:
-            self._aeat_certificate_thumbprint = thumbprint
+        pass
 
-    ctx = _MarkedContext(loaded.sha256_thumbprint)
+    ctx = _MarkedContext()
+    mark_context_with_certificate(loaded, ctx)
+    preload_into_browser_context(loaded, ctx)  # must not raise
+
+
+@pytest.mark.unit
+def test_playwright_mark_context_supports_slot_only_objects(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from aeat.auth._certificate_backends._playwright_context import (
+        mark_context_with_certificate,
+    )
+
+    p12 = _build_pkcs12_bundle(tmp_path)
+    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
+    bundle = CertificateBundle(
+        path=p12,
+        password_env_var="AEAT_TEST_CERT_PW",
+        backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
+    )
+    loaded = load_certificate(bundle)
+
+    class _SlotOnlyContext:
+        __slots__ = ("__weakref__",)
+
+    ctx = _SlotOnlyContext()
+    mark_context_with_certificate(loaded, ctx)
     preload_into_browser_context(loaded, ctx)  # must not raise
 
 
@@ -469,7 +499,7 @@ def test_settings_loads_cert_env_vars(
 
 
 @pytest.mark.unit
-def test_load_certificate_from_settings_restores_process_env(
+def test_load_certificate_from_settings_uses_settings_secret_without_mutating_env(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -491,4 +521,6 @@ def test_load_certificate_from_settings_restores_process_env(
     loaded = load_certificate_from_settings(settings)
 
     assert loaded.backend is CertificateBackend.PLAYWRIGHT_CONTEXT
+    assert settings.aeat_certificate_password_secret is not None
+    assert settings.aeat_certificate_password_secret.get_secret_value() == SECRET_PASSPHRASE
     assert os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] == "sentinel-secret"
