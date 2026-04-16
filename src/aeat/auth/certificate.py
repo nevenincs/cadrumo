@@ -326,30 +326,16 @@ def _ensure_utc(value: datetime) -> datetime:
     return value.astimezone(UTC)
 
 
-def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
-    """Load and validate a PKCS#12 bundle from disk.
+def _load_certificate_with_password(
+    bundle: CertificateBundle,
+    password: SecretStr,
+) -> LoadedCertificate:
+    """Load and validate a PKCS#12 bundle from disk using ``password``.
 
-    The passphrase is read from ``os.environ[bundle.password_env_var]``;
-    if the env var is unset or empty a :class:`CertificatePasswordError`
-    is raised *before* any file I/O. On a successful load the returned
-    :class:`LoadedCertificate` carries the raw PKCS#12 bytes and a
-    parsed private-key handle in :class:`PrivateAttr` fields so the
-    backends can consume them without a second on-disk round-trip.
-
-    Args:
-        bundle: Operator-supplied :class:`CertificateBundle`.
-
-    Returns:
-        A frozen :class:`LoadedCertificate`. Its public fields are safe
-        to log; secret material is never serialised.
-
-    Raises:
-        CertificatePasswordError: Env var unset/empty or wrong password.
-        CertificateLoadError: PKCS#12 bytes cannot be parsed.
-        CertificateExpiredError: Certificate's validity has elapsed.
+    This helper centralizes the actual PKCS#12 parsing path so callers
+    that already hold a :class:`SecretStr` do not need to round-trip it
+    through ``os.environ``.
     """
-    password = _read_password_from_env(bundle.password_env_var)
-
     try:
         raw_bytes = bundle.path.read_bytes()
     except OSError as exc:
@@ -410,6 +396,31 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     return loaded
 
 
+def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
+    """Load and validate a PKCS#12 bundle from disk.
+
+    The passphrase is read from ``os.environ[bundle.password_env_var]``;
+    if the env var is unset or empty a :class:`CertificatePasswordError`
+    is raised *before* any file I/O. On a successful load the returned
+    :class:`LoadedCertificate` carries the raw PKCS#12 bytes and a
+    parsed private-key handle in :class:`PrivateAttr` fields so the
+    backends can consume them without a second on-disk round-trip.
+
+    Args:
+        bundle: Operator-supplied :class:`CertificateBundle`.
+
+    Returns:
+        A frozen :class:`LoadedCertificate`. Its public fields are safe
+        to log; secret material is never serialised.
+
+    Raises:
+        CertificatePasswordError: Env var unset/empty or wrong password.
+        CertificateLoadError: PKCS#12 bytes cannot be parsed.
+        CertificateExpiredError: Certificate's validity has elapsed.
+    """
+    return _load_certificate_with_password(bundle, _read_password_from_env(bundle.password_env_var))
+
+
 def load_certificate_from_settings(settings: Settings) -> LoadedCertificate:
     """Load the configured PKCS#12 bundle from :class:`aeat.config.Settings`.
 
@@ -422,22 +433,13 @@ def load_certificate_from_settings(settings: Settings) -> LoadedCertificate:
         raise CertificateLoadError("AEAT_CERTIFICATE_PATH is not set")
     if settings.aeat_certificate_password_secret is None:
         raise CertificatePasswordError("AEAT_CERTIFICATE_PASSWORD_SECRET is not set")
-    env_var = "AEAT_CERTIFICATE_PASSWORD_SECRET"
-    original_secret = os.environ.get(env_var)
-    os.environ[env_var] = settings.aeat_certificate_password_secret.get_secret_value()
-    try:
-        bundle = CertificateBundle(
-            path=settings.aeat_certificate_path,
-            password_env_var=env_var,
-            friendly_name=settings.aeat_certificate_friendly_name,
-            backend=settings.aeat_certificate_backend,
-        )
-        return load_certificate(bundle)
-    finally:
-        if original_secret is None:
-            os.environ.pop(env_var, None)
-        else:
-            os.environ[env_var] = original_secret
+    bundle = CertificateBundle(
+        path=settings.aeat_certificate_path,
+        password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var name, not a secret
+        friendly_name=settings.aeat_certificate_friendly_name,
+        backend=settings.aeat_certificate_backend,
+    )
+    return _load_certificate_with_password(bundle, settings.aeat_certificate_password_secret)
 
 
 # ── Pre-expiry health evaluator ─────────────────────────────────────────────

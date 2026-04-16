@@ -20,6 +20,7 @@ from aeat.auth import (
     CertificateBundle,
     LoadedCertificate,
     load_certificate,
+    preload_into_browser_context,
 )
 from aeat.browser._site_health_probe import probe_response
 from aeat.browser.evasion import EvasionStrategy
@@ -50,7 +51,6 @@ class StubContext:
 
     def __init__(self, kwargs: dict) -> None:
         self.kwargs = kwargs
-        self._aeat_certificate_thumbprint: str | None = None
 
 
 class StubBrowser:
@@ -174,7 +174,7 @@ async def test_browser_session_adds_client_certificates(tmp_path: Path) -> None:
             "passphrase": _TEST_CERT_PASSWORD,
         }
     ]
-    assert context._aeat_certificate_thumbprint == loaded.sha256_thumbprint
+    preload_into_browser_context(loaded, context)
 
 
 def _probe_or_raise(

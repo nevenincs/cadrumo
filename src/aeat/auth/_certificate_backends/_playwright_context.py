@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
+from weakref import WeakKeyDictionary
 
 from aeat.auth._certificate_backends._base import _CertBackend
 from aeat.auth._certificate_backends._httpx_fallback import HttpxFallbackBackend
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_MARKER_ATTR = "_aeat_certificate_thumbprint"
+_CONTEXT_CERTIFICATE_THUMBPRINTS: WeakKeyDictionary[object, str] = WeakKeyDictionary()
 
 
 def build_client_certificates_kwarg(
@@ -65,8 +66,8 @@ def build_client_certificates_kwarg(
 
 
 def mark_context_with_certificate(cert: LoadedCertificate, context: object) -> None:
-    """Tag ``context`` so the preload validator can confirm the cert origin."""
-    setattr(context, _MARKER_ATTR, cert.sha256_thumbprint)
+    """Record cert provenance for ``context`` without mutating the object."""
+    _CONTEXT_CERTIFICATE_THUMBPRINTS[context] = cert.sha256_thumbprint
 
 
 class PlaywrightContextBackend(_CertBackend):
@@ -80,15 +81,16 @@ class PlaywrightContextBackend(_CertBackend):
         """Verify the context was constructed with this cert.
 
         The browser session layer is expected to tag the constructed
-        :class:`playwright.async_api.BrowserContext` with an attribute
-        named ``_aeat_certificate_thumbprint`` matching
-        ``cert.sha256_thumbprint``. If the marker is absent, we raise
+        :class:`playwright.async_api.BrowserContext` in the sidecar
+        registry managed by :func:`mark_context_with_certificate`
+        using a thumbprint matching ``cert.sha256_thumbprint``. If the
+        marker is absent, we raise
         :class:`CertificateError` pointing the operator at
         :func:`build_client_certificates_kwarg`.
         """
         from aeat.auth.certificate import CertificateError
 
-        marker = getattr(context, _MARKER_ATTR, None)
+        marker = _CONTEXT_CERTIFICATE_THUMBPRINTS.get(context)
         if marker != cert.sha256_thumbprint:
             raise CertificateError(
                 "BrowserContext was not constructed with the expected client "
@@ -96,8 +98,8 @@ class PlaywrightContextBackend(_CertBackend):
                 "browser.new_context() time via the client_certificates kwarg; "
                 "use aeat.auth._certificate_backends._playwright_context."
                 "build_client_certificates_kwarg() from the browser session "
-                "factory and tag the resulting context with "
-                f"{_MARKER_ATTR}={cert.sha256_thumbprint!r}."
+                "factory and register the resulting context via "
+                "mark_context_with_certificate()."
             )
         log.info(
             "Verified PLAYWRIGHT_CONTEXT: thumbprint=%s friendly_name=%s",
