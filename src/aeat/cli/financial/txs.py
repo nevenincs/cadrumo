@@ -10,8 +10,8 @@ import typer
 from aeat.config import load_settings
 from aeat.financial.transactions import (
     BusinessClassification,
+    TransactionCatalogue,
     TransactionError,
-    TransactionPersistenceError,
     find_transaction,
     load_transactions,
     save_transactions,
@@ -112,7 +112,7 @@ def classify_cmd(
             classified_by="manual",
         )
         save_transactions(updated, path)
-    except (TransactionError, TransactionPersistenceError) as exc:
+    except TransactionError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
     updated_transaction = find_transaction(updated, transaction_id)
@@ -125,22 +125,20 @@ def _catalogue_path() -> Path:
     return load_settings().aeat_financial_txs_dir.resolve() / _DEFAULT_CATALOGUE_FILENAME
 
 
-def _load_catalogue_or_empty():
+def _load_catalogue_or_empty() -> TransactionCatalogue:
     """Load the configured catalogue, returning an empty one when absent."""
     path = _catalogue_path()
-    if not path.exists():
-        from aeat.financial.transactions import TransactionCatalogue
-
-        return TransactionCatalogue()
-    return _load_catalogue_required()
+    if path.exists():
+        return _load_catalogue_required()
+    return TransactionCatalogue()
 
 
-def _load_catalogue_required():
+def _load_catalogue_required() -> TransactionCatalogue:
     """Load the configured catalogue or exit cleanly on failure."""
     path = _catalogue_path()
     try:
         return load_transactions(path)
-    except TransactionPersistenceError as exc:
+    except TransactionError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
 
