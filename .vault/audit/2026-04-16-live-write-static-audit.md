@@ -23,10 +23,10 @@ Verdict: HARD NO-GO.
 - `src/aeat/submission/_engine.py:132-170` `SubmissionEngine.submit_amendment` — reachable live write; same default-by-omission risk as `submit_draft`.
 - `src/aeat/submission/_engine.py:172-247` `SubmissionEngine._submit_with_transport` — reachable live write; live branch still calls the transport submitter at `219-226`.
 - `src/aeat/submission/_submitters/modelo130.py:163-202` `Modelo130Submitter.submit` — reachable live write; the write leaf is the browser submit click at `190`.
-- `src/aeat/workflow/_engine.py:201-278,957-1028` `WorkflowEngine.run_next` — reachable live write through the workflow submit stage.
-- `src/aeat/workflow/_engine.py:201-278,957-1028` `WorkflowEngine.run_for_period` — reachable live write through the same workflow submit stage.
-- `src/aeat/workflow/_engine.py:201-278,957-1028` `WorkflowEngine._stage_dry_run_submit` — reachable live write gate; still uses the old `override_confirmation` contract.
-- `src/aeat/workflow/_adapters.py:135-149,231-289` `SubmissionEngineAdapter.submit_draft` — reachable live write adapter; passes the submission flags through unchanged.
+- `src/aeat/workflow/_engine.py:201-240` `WorkflowEngine.run_next` — reachable live write through the workflow submit stage.
+- `src/aeat/workflow/_engine.py:242-278` `WorkflowEngine.run_for_period` — reachable live write through the same workflow submit stage.
+- `src/aeat/workflow/_engine.py:957-1028` `WorkflowEngine._stage_dry_run_submit` — reachable live write gate; still uses the old `override_confirmation` contract.
+- `src/aeat/workflow/_adapters.py:135-157,231-289` `SubmissionEngineAdapter.submit_draft`, `default_engine` — reachable live write adapter; passes the submission flags through unchanged.
 
 ### latent/stubbed write
 
@@ -68,9 +68,9 @@ Verdict: HARD NO-GO.
 - `src/aeat/submission/_submitters/modelo130.py:163-202` `Modelo130Submitter.submit` — violates R4 and R6: the live write leaf is a browser submit click with no independent human-confirmation function and no audit log append.
 - `src/aeat/cli/submission/submit.py:80-115` `submit_cmd` — violates R3 and R4 by routing live mode through the legacy `--i-understand-this-is-real` / `override_confirmation` contract instead of the chartered `AEAT_LIVE_SUBMIT_ENABLED` gate plus a blocking confirmation function.
 - `src/aeat/cli/filing/__init__.py:399-427` `submit_complementaria_cmd` — violates R3 and R4: same old live-mode gate, same `typer.confirm` path.
-- `src/aeat/workflow/_engine.py:201-278,957-1028` `WorkflowEngine.run_next` / `run_for_period` / `_stage_dry_run_submit` — violates R2 and R4: workflow submission still defaults through `dry_run` / `override_confirmation` instead of the required hard gate.
-- `src/aeat/workflow/_adapters.py:135-149,231-289` `SubmissionEngineAdapter.submit_draft` — violates R2 and R4 by forwarding the old submission contract unchanged.
-- `src/aeat/config.py:371-385` and `env/.env.example:185` — violates R3: production still documents `aeat_submission_require_human_confirmation` instead of the distinct `AEAT_LIVE_SUBMIT_ENABLED` gate; no runtime pytest refusal exists in `src/aeat/`.
+- `src/aeat/workflow/_engine.py:201-240`, `242-278`, and `957-1028` (`WorkflowEngine.run_next`, `run_for_period`, `_stage_dry_run_submit`) — violates R2 and R4: workflow submission still defaults through `dry_run` / `override_confirmation` instead of the required hard gate.
+- `src/aeat/workflow/_adapters.py:135-157,231-289` `SubmissionEngineAdapter.submit_draft` / `default_engine` — violates R2 and R4 by forwarding the old submission contract unchanged.
+- `src/aeat/config.py:379-385` and `env/.env.example:185` — violates R3: production still documents `aeat_submission_require_human_confirmation` instead of the distinct `AEAT_LIVE_SUBMIT_ENABLED` gate; no runtime pytest refusal exists in `src/aeat/`.
 
 ## filed follow-up issues
 
