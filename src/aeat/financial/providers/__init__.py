@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .._raw_transaction import RawTransaction
 from ._base import (
     FinancialProvider,
     FinancialProviderError,
@@ -21,6 +22,7 @@ __all__ = [
     "InvalidFinancialSourceError",
     "OfxProvider",
     "ProviderValidation",
+    "RawTransaction",
     "UnsupportedFinancialSourceError",
     "XlsxProvider",
     "detect_provider",
