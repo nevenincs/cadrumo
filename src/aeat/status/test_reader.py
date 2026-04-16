@@ -87,7 +87,8 @@ class _FakeCertBackend:
     def __init__(self) -> None:
         self.preload_calls = 0
 
-    async def preload_into_browser_context(self, context: Any) -> None:
+    def preload_into_browser_context(self, context: Any) -> None:
+        del context
         self.preload_calls += 1
 
 

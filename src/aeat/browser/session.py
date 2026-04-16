@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
 from playwright.async_api import (
     BrowserContext,
@@ -30,6 +31,9 @@ from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
 
+if TYPE_CHECKING:
+    from aeat.auth import LoadedCertificate
+
 logger = get_logger(__name__)
 
 
@@ -47,7 +51,7 @@ class BrowserSession:
         playwright: Playwright,
         settings: Settings,
         profile: Profile,
-        auth_backend: object | None = None,
+        auth_backend: LoadedCertificate | None = None,
         evasion_strategy: EvasionStrategy | None = None,
     ) -> None:
         """Initialize the BrowserSession.
@@ -56,7 +60,7 @@ class BrowserSession:
             playwright: The Playwright instance.
             settings: Application configuration settings.
             profile: The user profile to use.
-            auth_backend: Optional authentication backend (from feature #8).
+            auth_backend: Optional loaded certificate for client-auth sessions.
             evasion_strategy: Optional evasion strategy (defaults to PlaywrightStealthEvasion).
         """
         self.playwright = playwright
@@ -104,15 +108,29 @@ class BrowserSession:
             # Playwright will fail if storage_state points to an empty string or invalid JSON
             context_kwargs["storage_state"] = str(self.profile.storage_state_path)
 
+            if self.auth_backend is not None:
+                from aeat.auth._certificate_backends._playwright_context import (
+                    build_client_certificates_kwarg,
+                )
+
+                base = urlsplit(self.settings.aeat_base_url)
+                origin = f"{base.scheme}://{base.netloc}"
+                context_kwargs["client_certificates"] = build_client_certificates_kwarg(
+                    self.auth_backend,
+                    origin,
+                )
+
             context = await browser.new_context(**context_kwargs)
+
+            if self.auth_backend is not None:
+                from aeat.auth._certificate_backends._playwright_context import (
+                    mark_context_with_certificate,
+                )
+
+                mark_context_with_certificate(self.auth_backend, context)
 
             # Apply evasion strategy
             await self.evasion_strategy.apply(context)
-
-            # Apply auth backend if provided (stub for #8)
-            if self.auth_backend:
-                logger.info("Auth backend provided, applying certificate auth (stub).")
-                pass
 
             return context
         except Exception as e:

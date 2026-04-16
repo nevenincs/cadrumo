@@ -37,6 +37,7 @@ from aeat.logging import get_logger
 
 if TYPE_CHECKING:
     from aeat.auth._certificate_backends._base import _CertBackend
+    from aeat.config import Settings
 
 log = get_logger(__name__)
 
@@ -208,6 +209,17 @@ class LoadedCertificate(BaseModel):
             f"sha256_thumbprint={self.sha256_thumbprint!r}, "
             f"backend={self.backend.value})"
         )
+
+    def preload_into_browser_context(self, context: object) -> None:
+        """Validate that ``context`` was created with this certificate.
+
+        This method gives the loaded certificate object the exact
+        browser-preload surface the status reader already expects,
+        while keeping the concrete backend behavior in
+        :mod:`aeat.auth`.
+        """
+        backend = _select_backend(self.backend)
+        backend.preload(self, context)
 
 
 class CertificateHealth(BaseModel):
@@ -396,6 +408,36 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         loaded.backend.value,
     )
     return loaded
+
+
+def load_certificate_from_settings(settings: Settings) -> LoadedCertificate:
+    """Load the configured PKCS#12 bundle from :class:`aeat.config.Settings`.
+
+    The settings model holds the passphrase as ``SecretStr`` but the
+    lower-level loader reads it from the process environment. This
+    helper performs the sanctioned bridge once and reuses the existing
+    loader and validation path.
+    """
+    if settings.aeat_certificate_path is None:
+        raise CertificateLoadError("AEAT_CERTIFICATE_PATH is not set")
+    if settings.aeat_certificate_password_secret is None:
+        raise CertificatePasswordError("AEAT_CERTIFICATE_PASSWORD_SECRET is not set")
+    env_var = "AEAT_CERTIFICATE_PASSWORD_SECRET"
+    original_secret = os.environ.get(env_var)
+    os.environ[env_var] = settings.aeat_certificate_password_secret.get_secret_value()
+    try:
+        bundle = CertificateBundle(
+            path=settings.aeat_certificate_path,
+            password_env_var=env_var,
+            friendly_name=settings.aeat_certificate_friendly_name,
+            backend=settings.aeat_certificate_backend,
+        )
+        return load_certificate(bundle)
+    finally:
+        if original_secret is None:
+            os.environ.pop(env_var, None)
+        else:
+            os.environ[env_var] = original_secret
 
 
 # ── Pre-expiry health evaluator ─────────────────────────────────────────────
@@ -632,8 +674,7 @@ def preload_into_browser_context(
             (for example, when the Playwright backend is asked to
             retrofit a cert after construction, which is not supported).
     """
-    backend = _select_backend(cert.backend)
-    backend.preload(cert, context)
+    cert.preload_into_browser_context(context)
 
 
 def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
@@ -677,6 +718,7 @@ __all__ = [
     "evaluate_loaded_certificate_health",
     "health",
     "load_certificate",
+    "load_certificate_from_settings",
     "preload_into_browser_context",
     "verify_handshake",
 ]

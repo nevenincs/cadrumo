@@ -8,6 +8,7 @@ non-leakage.
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -28,6 +29,7 @@ from aeat.auth import (
     HandshakeResult,
     LoadedCertificate,
     load_certificate,
+    load_certificate_from_settings,
     preload_into_browser_context,
     verify_handshake,
 )
@@ -464,3 +466,29 @@ def test_settings_loads_cert_env_vars(
 
     # SecretStr must not leak via repr()
     assert SECRET_PASSPHRASE not in repr(settings)
+
+
+@pytest.mark.unit
+def test_load_certificate_from_settings_restores_process_env(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from pydantic_settings import SettingsConfigDict
+
+    from aeat.config import Settings
+
+    class IsolatedSettings(Settings):
+        model_config = SettingsConfigDict(env_file=None)
+
+    p12 = _build_pkcs12_bundle(tmp_path)
+    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(p12))
+    monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", SECRET_PASSPHRASE)
+    monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "PLAYWRIGHT_CONTEXT")
+
+    settings = IsolatedSettings()
+    monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", "sentinel-secret")
+
+    loaded = load_certificate_from_settings(settings)
+
+    assert loaded.backend is CertificateBackend.PLAYWRIGHT_CONTEXT
+    assert os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] == "sentinel-secret"

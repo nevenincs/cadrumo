@@ -1,10 +1,26 @@
 """Unit tests for BrowserSession factory."""
 
+from __future__ import annotations
+
+import os
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509.oid import NameOID
 from playwright.async_api import BrowserContext
 
+from aeat.auth import (
+    CertificateBackend,
+    CertificateBundle,
+    LoadedCertificate,
+    load_certificate,
+)
 from aeat.browser._site_health_probe import probe_response
 from aeat.browser.evasion import EvasionStrategy
 from aeat.browser.profile import Profile
@@ -15,6 +31,7 @@ from aeat.status import SiteHealthState
 
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
+_TEST_CERT_PASSWORD = "browser-session-test-password"  # noqa: S105 - synthetic test passphrase
 
 
 class DummyEvasion(EvasionStrategy):
@@ -33,6 +50,7 @@ class StubContext:
 
     def __init__(self, kwargs: dict) -> None:
         self.kwargs = kwargs
+        self._aeat_certificate_thumbprint: str | None = None
 
 
 class StubBrowser:
@@ -58,6 +76,55 @@ class StubPlaywright:
         self.chromium = StubChromium()
 
 
+def _build_pkcs12_bundle(tmp_path: Path) -> Path:
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "browser-test-subject"),
+        ]
+    )
+    now = datetime.now(UTC)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(days=1))
+        .not_valid_after(now + timedelta(days=30))
+        .sign(key, hashes.SHA256())
+    )
+    pfx_bytes = pkcs12.serialize_key_and_certificates(
+        name=b"browser-test-cert",
+        key=key,
+        cert=cert,
+        cas=None,
+        encryption_algorithm=serialization.BestAvailableEncryption(_TEST_CERT_PASSWORD.encode("utf-8")),
+    )
+    bundle_path = tmp_path / "browser-test.p12"
+    bundle_path.write_bytes(pfx_bytes)
+    return bundle_path
+
+
+def _load_test_certificate(tmp_path: Path) -> LoadedCertificate:
+    bundle_path = _build_pkcs12_bundle(tmp_path)
+    original = os.environ.get("AEAT_BROWSER_TEST_CERT_PASSWORD")
+    os.environ["AEAT_BROWSER_TEST_CERT_PASSWORD"] = _TEST_CERT_PASSWORD
+    try:
+        bundle = CertificateBundle(
+            path=bundle_path,
+            password_env_var="AEAT_BROWSER_TEST_CERT_PASSWORD",  # noqa: S106 - env var name, not a secret
+            backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
+        )
+        return load_certificate(bundle)
+    finally:
+        if original is None:
+            os.environ.pop("AEAT_BROWSER_TEST_CERT_PASSWORD", None)
+        else:
+            os.environ["AEAT_BROWSER_TEST_CERT_PASSWORD"] = original
+
+
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_browser_session_creation(tmp_path: Path) -> None:
@@ -79,6 +146,35 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert context.kwargs["locale"] == "es-ES"  # type: ignore
     assert context.kwargs["timezone_id"] == "Europe/Madrid"  # type: ignore
     assert str(tmp_path / "state.json") in context.kwargs["storage_state"]  # type: ignore
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_browser_session_adds_client_certificates(tmp_path: Path) -> None:
+    settings = Settings()
+    profile = Profile(name="cert", storage_state_path=tmp_path / "cert-state.json")
+    evasion = DummyEvasion()
+    pw_stub = cast(Any, StubPlaywright())
+    loaded = _load_test_certificate(tmp_path)
+
+    session = BrowserSession(
+        playwright=pw_stub,
+        settings=settings,
+        profile=profile,
+        auth_backend=loaded,
+        evasion_strategy=evasion,
+    )
+
+    context = cast(StubContext, await session.create_context())
+    assert evasion.called
+    assert context.kwargs["client_certificates"] == [
+        {
+            "origin": "https://sede.agenciatributaria.gob.es",
+            "pfxPath": str(loaded.source_path),
+            "passphrase": _TEST_CERT_PASSWORD,
+        }
+    ]
+    assert context._aeat_certificate_thumbprint == loaded.sha256_thumbprint
 
 
 def _probe_or_raise(
