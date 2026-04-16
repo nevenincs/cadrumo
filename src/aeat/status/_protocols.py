@@ -1,9 +1,8 @@
 """Protocol stubs for cross-module contracts used by the status reader.
 
-We deliberately do not import from ``aeat.auth.certificate`` — that
-subpackage is owned by the in-flight #8 branch. Instead, we declare
-the minimal surface we need as a :class:`typing.Protocol`, which
-lets the real implementation slot in without a hard import.
+The reader still prefers structural typing over hard imports from
+the browser/auth layers, but the Protocol surface now mirrors the
+real loaded-certificate object exposed by :mod:`aeat.auth`.
 """
 
 from __future__ import annotations
@@ -32,14 +31,14 @@ class BrowserSessionLike(Protocol):
 class CertificateBackend(Protocol):
     """Minimal certificate-backend surface consumed by the status reader.
 
-    Mirrors the planned #8 public API:
+    Mirrors the real auth object surface now exposed by :mod:`aeat.auth`:
 
     - ``preload_into_browser_context`` is invoked exactly once per
       :class:`aeat.status.StatusReader` lifetime, before the first
       navigation to an authenticated AEAT surface.
     """
 
-    async def preload_into_browser_context(self, context: BrowserContext) -> None:
+    def preload_into_browser_context(self, context: BrowserContext) -> None:
         """Preload the user's certificate into the given Playwright context.
 
         Args:

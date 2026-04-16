@@ -147,7 +147,7 @@ class StatusReader:
                 # Assign first so close() can reach a leaked context
                 # if the cert preload or new_page call fails halfway.
                 self._context = context
-                await self._cert_backend.preload_into_browser_context(context)
+                self._cert_backend.preload_into_browser_context(context)
                 await self._maybe_start_tracing(context)
                 page = await context.new_page()
             except Exception as exc:  # pragma: no cover - live path

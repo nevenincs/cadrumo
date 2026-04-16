@@ -64,6 +64,11 @@ def build_client_certificates_kwarg(
     ]
 
 
+def mark_context_with_certificate(cert: LoadedCertificate, context: object) -> None:
+    """Tag ``context`` so the preload validator can confirm the cert origin."""
+    setattr(context, _MARKER_ATTR, cert.sha256_thumbprint)
+
+
 class PlaywrightContextBackend(_CertBackend):
     """Primary backend — per-context client cert via Playwright."""
 

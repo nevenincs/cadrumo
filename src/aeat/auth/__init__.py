@@ -53,6 +53,7 @@ from aeat.auth.certificate import (
     evaluate_loaded_certificate_health,
     health,
     load_certificate,
+    load_certificate_from_settings,
     preload_into_browser_context,
     verify_handshake,
 )
@@ -76,6 +77,7 @@ __all__ = [
     "evaluate_loaded_certificate_health",
     "health",
     "load_certificate",
+    "load_certificate_from_settings",
     "preload_into_browser_context",
     "verify_handshake",
 ]

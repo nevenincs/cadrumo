@@ -3,20 +3,8 @@
 These tests hit the real AEAT *Sede Electrónica* through a live
 Playwright browser with a real client certificate. They are
 skipped by default and only run when the canonical project-wide
-opt-in flag :envvar:`AEAT_LIVE_TESTS_ENABLED` is truthy.
-
-**Status in v1:** this module is an *honest placeholder*. A real
-live fetch requires the cert-auth backend from #8, which is not
-yet merged. Rather than ship a self-fulfilling assertion that
-pretends to be live coverage, the test calls :func:`pytest.skip`
-unconditionally when opted in — so CI surfaces the gap instead of
-masking it with a false-green.
-
-**Known bug:** the shared browser layer currently fails on some
-configurations with a ``playwright_stealth`` error, tracked in
-issue #41. When #8 lands and the real live fetch gets wired here,
-that bug may still bite; the colocated unit tests remain the proof
-of correctness for the reader's logic.
+opt-in flag :envvar:`AEAT_LIVE_TESTS_ENABLED` is truthy and the
+operator has configured the certificate settings.
 
 No mocks, no patches, no fakes, no stubs.
 """
@@ -24,20 +12,49 @@ No mocks, no patches, no fakes, no stubs.
 from __future__ import annotations
 
 import pytest
+from playwright.async_api import async_playwright
 
+from aeat.auth import CertificateBackend, load_certificate_from_settings
+from aeat.browser.profile import Profile
+from aeat.browser.session import BrowserSession
 from aeat.config import load_settings
+from aeat.status import StatusCache, StatusReader
 
-pytestmark = pytest.mark.live
+pytestmark = [pytest.mark.live, pytest.mark.asyncio]
 
 
-def test_live_fetch_expedientes_pending_cert_backend() -> None:
-    """Live smoke placeholder.
-
-    Skipped unless ``AEAT_LIVE_TESTS_ENABLED=true`` is set. Even
-    when opted in, the test skips with a clear reason because the
-    real live wiring requires the #8 cert backend — this is
-    deliberate so CI cannot report phantom live coverage.
-    """
-    if not load_settings().aeat_live_tests_enabled:
+async def test_live_fetch_expedientes(tmp_path) -> None:
+    """Exercise one real read-only `fetch_expedientes()` pass."""
+    settings = load_settings()
+    if not settings.aeat_live_tests_enabled:
         pytest.skip("AEAT_LIVE_TESTS_ENABLED is not set")
-    pytest.skip("live fetch deferred until #8 cert backend lands; see .vault/exec/2026-04-12-status-reader/summary.md")
+    if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
+        pytest.skip("AEAT certificate env vars are not fully configured")
+    if settings.aeat_certificate_backend is not CertificateBackend.PLAYWRIGHT_CONTEXT:
+        pytest.skip("AEAT_CERTIFICATE_BACKEND must be PLAYWRIGHT_CONTEXT for live browser verification")
+
+    cert = load_certificate_from_settings(settings)
+
+    async with async_playwright() as playwright:
+        profile = Profile(
+            name="status-live",
+            storage_state_path=tmp_path / "status-live-state.json",
+        )
+        session = BrowserSession(
+            playwright=playwright,
+            settings=settings,
+            profile=profile,
+            auth_backend=cert,
+        )
+        reader = StatusReader(
+            browser_session=session,
+            cert_backend=cert,
+            cache=StatusCache(tmp_path / "cache", ttl_s=settings.aeat_status_cache_ttl_s),
+            settings=settings,
+            tax_id=cert.sha256_thumbprint,
+        )
+        async with reader:
+            records = await reader.fetch_expedientes(use_cache=False)
+
+    assert isinstance(records, tuple)
+    assert all(record.expediente_id for record in records)
