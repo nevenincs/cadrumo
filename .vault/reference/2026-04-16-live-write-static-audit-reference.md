@@ -25,8 +25,10 @@ Scope: `src/aeat/` production code only, centered on `aeat.submission`, `aeat.wo
 - `src/aeat/submission/_engine.py:132-170` `SubmissionEngine.submit_amendment`
 - `src/aeat/submission/_engine.py:172-247` `SubmissionEngine._submit_with_transport` (`submitter.submit` live branch at `219-226`)
 - `src/aeat/submission/_submitters/modelo130.py:163-202` `Modelo130Submitter.submit` (`session.click("button#firmar-y-enviar")` at `190`)
-- `src/aeat/workflow/_engine.py:201-278, 957-1028` `WorkflowEngine.run_next`, `WorkflowEngine.run_for_period`, `WorkflowEngine._stage_dry_run_submit`
-- `src/aeat/workflow/_adapters.py:135-149, 231-289` `SubmissionEngineAdapter.submit_draft`, `default_engine`
+- `src/aeat/workflow/_engine.py:201-240` `WorkflowEngine.run_next`
+- `src/aeat/workflow/_engine.py:242-278` `WorkflowEngine.run_for_period`
+- `src/aeat/workflow/_engine.py:957-1028` `WorkflowEngine._stage_dry_run_submit`
+- `src/aeat/workflow/_adapters.py:135-157, 231-289` `SubmissionEngineAdapter.submit_draft`, `default_engine`
 
 ### Latent or stubbed write
 - `src/aeat/submission/_submitters/modelo130.py:122-161` `Modelo130Submitter.dry_run` walks the form but aborts before the final submit click.
@@ -54,7 +56,7 @@ Scope: `src/aeat/` production code only, centered on `aeat.submission`, `aeat.wo
 
 ## Charter mapping
 - R2: violated. `SubmissionEngine.submit_draft` and `submit_amendment` still default `dry_run=True` (`src/aeat/submission/_engine.py:94-139`), and the workflow protocol/adapters still default `dry_run=True` / `override_confirmation=False` (`src/aeat/workflow/_protocols.py:99-107`, `src/aeat/workflow/_adapters.py:135-149`).
-- R3: violated. The only submission gate in production is `aeat_submission_require_human_confirmation` in `src/aeat/config.py:371-385`, with `AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION` still documented in `env/.env.example:185`; no `AEAT_LIVE_SUBMIT_ENABLED` or `PYTEST_CURRENT_TEST` guard exists in `src/aeat/`.
+- R3: violated. The only submission gate in production is `aeat_submission_require_human_confirmation` in `src/aeat/config.py:379-385`, with `AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION` still documented in `env/.env.example:185`; no `AEAT_LIVE_SUBMIT_ENABLED` or `PYTEST_CURRENT_TEST` guard exists in `src/aeat/`.
 - R4: violated. The live path uses `override_confirmation` and `typer.confirm` (`src/aeat/cli/submission/submit.py:80-112`, `src/aeat/cli/filing/__init__.py:411-418`) instead of a blocking confirmation function, checksum, and exact phrase prompt.
 - R5: violated. No production file under `src/aeat/` checks `PYTEST_CURRENT_TEST`; the only live-test gating remains `AEAT_LIVE_TESTS_ENABLED` in `src/aeat/cli/_live.py:33-36`.
 - R6: violated. Submission persistence writes to `aeat_submissions_dir` and `aeat_submissions_dir/amendment-results` (`src/aeat/submission/_engine.py:249-263`) rather than an append-only `.aeat/live-submit-audit.log`; no audit-log writer exists.
@@ -82,6 +84,6 @@ Scope: `src/aeat/` production code only, centered on `aeat.submission`, `aeat.wo
 - `src/aeat/submission/_submitters/modelo130.py:163-202` (`Modelo130Submitter.submit`) violates R4 and R6 if called directly as a live leaf.
 - `src/aeat/cli/submission/submit.py:80-115` (`submit_cmd`) violates R3 and R4; it also uses a stubbed browser session via `src/aeat/cli/submission/_helpers.py:148-199`.
 - `src/aeat/cli/filing/__init__.py:399-427` (`submit_complementaria_cmd`) violates R3 and R4; it also flows through the same stubbed engine.
-- `src/aeat/workflow/_engine.py:201-278, 957-1028` (`run_next`, `run_for_period`, `_stage_dry_run_submit`) violates R2 and R4 and still reflects the old `override_confirmation` gate.
-- `src/aeat/config.py:371-385` and `env/.env.example:97,185` violate R3 because they still model live-submit safety with the wrong env variable.
+- `src/aeat/workflow/_engine.py:201-240`, `242-278`, and `957-1028` (`run_next`, `run_for_period`, `_stage_dry_run_submit`) violate R2 and R4 and still reflect the old `override_confirmation` gate.
+- `src/aeat/config.py:379-385` and `env/.env.example:97,185` violate R3 because they still model live-submit safety with the wrong env variable.
 - `src/aeat/cli/workflow/_helpers.py:69-159` (`_build_engine`, `_build_profile`, `run_engine_next`, `run_engine_for_period`) is currently inert for production because no default workflow engine/profile factory is wired.
