@@ -48,7 +48,7 @@ def submissions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target.mkdir()
     monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(target))
     monkeypatch.setenv("AEAT_SUBMISSION_BROWSER_TRACE_DIR", str(tmp_path / "traces"))
-    monkeypatch.setenv("AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION", "true")
+    monkeypatch.setenv("AEAT_LIVE_SUBMIT_ENABLED", "true")
     return target
 
 
@@ -181,6 +181,32 @@ class TestFilingCLI:
         assert len(amendment_files) == 1
         amendment_id = amendment_files[0].stem
 
-        submit_result = runner.invoke(app, ["filing", "complementaria", "submit", amendment_id])
+        submit_result = runner.invoke(app, ["filing", "complementaria", "submit", amendment_id, "--dry-run"])
         assert submit_result.exit_code == 0, submit_result.output
         assert "dry-run amendment submission OK" in submit_result.output
+
+    def test_complementaria_submit_live_refuses_on_null_session(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+    ) -> None:
+        submission_id = _write_original_submission(drafts_dir, submissions_dir)
+        payload = {
+            "original_submission_id": submission_id,
+            "updated_inputs": {"01": 13000, "02": 3500, "05": 400, "06": 0},
+            "reasons": {"01": "Late income invoice received after original filing."},
+        }
+        payload_path = tmp_path / "amendment-live.json"
+        payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+        build_result = runner.invoke(
+            app,
+            ["filing", "complementaria", "build", "130", "2024Q1", str(payload_path)],
+        )
+        assert build_result.exit_code == 0, build_result.output
+        amendment_id = next((submissions_dir / "amendments").glob("*.json")).stem
+
+        submit_result = runner.invoke(app, ["filing", "complementaria", "submit", amendment_id, "--live"])
+        assert submit_result.exit_code == 2, submit_result.output
+        assert "_nullsession" in submit_result.output.lower()

@@ -131,6 +131,7 @@ def test_live_dry_run_only(tmp_path: Path) -> None:
         justificante_parser=_Parser(),
         submitters={"130": _NoopSubmitter()},
         settings=settings,
+        audit_log_path=tmp_path / ".aeat" / "live-submit-audit.log",
     )
-    filing = asyncio.run(engine.submit_draft(_Draft()))
+    filing = asyncio.run(engine.submit_draft(_Draft(), dry_run=True))
     assert filing.status is SubmissionStatus.PENDING

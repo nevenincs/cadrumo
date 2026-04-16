@@ -10,9 +10,8 @@ Exposes four subcommands tied to the workflow engine
 - ``aeat workflow list [--since <iso-date>]`` — enumerate persisted
   runs.
 
-All live-submit subcommands require ``--no-dry-run`` *and*
-``--i-understand-this-is-real`` to match the safety contract of the
-submission engine. The default remains dry-run.
+Submit-oriented commands require an explicit ``--dry-run`` or
+``--live`` choice to match the hardened submission-engine contract.
 """
 
 from __future__ import annotations
@@ -32,11 +31,11 @@ app = typer.Typer(
 
 app.command(
     name="next",
-    help="Run the workflow for the next pending obligation (dry-run by default).",
+    help="Run the workflow for the next pending obligation with explicit mode selection.",
 )(next_cmd)
 app.command(
     name="run",
-    help="Run the workflow for a specific (modelo, period) target.",
+    help="Run the workflow for a specific (modelo, period) target with explicit mode selection.",
 )(run_cmd)
 app.command(name="show", help="Pretty-print a persisted WorkflowResult by run_id.")(show_cmd)
 app.command(name="list", help="List persisted WorkflowResult records.")(list_cmd)

@@ -13,6 +13,7 @@ from aeat.auth import CertificateError, CertificateHealthSeverity
 from aeat.auth import health as certificate_health
 from aeat.cli.submission._helpers import build_engine, load_draft
 from aeat.config import Settings
+from aeat.submission import SubmissionError, SubmissionPreflightError
 
 _CONSOLE = Console()
 
@@ -79,10 +80,15 @@ def _enforce_cert_health(
 
 def submit_cmd(
     draft_path: Path = typer.Argument(..., help="Path to a CLI-format draft JSON."),
-    i_understand_this_is_real: bool = typer.Option(
+    dry_run: bool = typer.Option(
         False,
-        "--i-understand-this-is-real",
-        help=("Explicit consent flag required to enter live submission mode. Without this flag the command exits 2."),
+        "--dry-run",
+        help="Run the submit command in dry-run mode.",
+    ),
+    live: bool = typer.Option(
+        False,
+        "--live",
+        help="Attempt a real AEAT submission.",
     ),
     force_expiring_cert: bool = typer.Option(
         False,
@@ -94,22 +100,31 @@ def submit_cmd(
         ),
     ),
 ) -> None:
-    """Submit ``draft_path`` to the real AEAT portal — IRREVERSIBLE.
-
-    The command refuses to run unless ``--i-understand-this-is-real``
-    is explicitly passed on the command line. Even with the flag set,
-    the engine enforces the ``AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION``
-    settings gate.
-    """
-    if not i_understand_this_is_real:
-        _CONSOLE.print("[red]refusing:[/red] live submission requires --i-understand-this-is-real on the command line.")
+    """Submit ``draft_path`` with an explicit ``--dry-run`` or ``--live`` choice."""
+    if dry_run == live:
+        _CONSOLE.print("[red]refusing:[/red] choose exactly one of --dry-run or --live.")
         raise typer.Exit(code=2)
-
-    _enforce_cert_health(settings=Settings(), force_expiring_cert=force_expiring_cert)
 
     draft = load_draft(draft_path)
     engine = build_engine()
-    filing = asyncio.run(engine.submit_draft(draft, dry_run=False, override_confirmation=True))
+    if live and not engine.supports_live_submission():
+        _CONSOLE.print(
+            "[red]refusing:[/red] live submission is unavailable because this CLI runtime is backed by _NullSession."
+        )
+        raise typer.Exit(code=2)
+    if live:
+        _enforce_cert_health(settings=Settings(), force_expiring_cert=force_expiring_cert)
+
+    try:
+        filing = asyncio.run(engine.submit_draft(draft, dry_run=dry_run))
+    except SubmissionPreflightError as exc:
+        _CONSOLE.print(f"[red]refusing:[/red] {exc}")
+        raise typer.Exit(code=2) from exc
+    except SubmissionError as exc:
+        _CONSOLE.print(f"[red]failed:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    mode_label = "dry-run" if dry_run else "LIVE"
     _CONSOLE.print(
-        f"[green]LIVE submission OK[/green]: submission_id={filing.submission_id} status={filing.status.value}"
+        f"[green]{mode_label} submission OK[/green]: submission_id={filing.submission_id} status={filing.status.value}"
     )

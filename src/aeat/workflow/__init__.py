@@ -5,9 +5,9 @@ The :mod:`aeat.workflow` subpackage owns the project's first
 the deadline engine (#38), the self-healing sync runner (#11), the
 filing draft engine (#39), the submission engine (#42), and the
 in-flight status / inbox / certificate surfaces into one ordered
-pipeline. The workflow is **dry-run by default**; the live path
-requires both ``dry_run=False`` and ``override_confirmation=True`` at
-the API level, mirroring the submission engine's gate verbatim.
+pipeline. The workflow requires callers to choose ``dry_run=True`` or
+``dry_run=False`` explicitly, mirroring the hardened submission engine
+contract verbatim.
 
 Public API discipline: callers outside this subpackage must import
 only from :mod:`aeat.workflow`. The underscored modules are

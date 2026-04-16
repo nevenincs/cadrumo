@@ -5,9 +5,9 @@ engine ADR [[2026-04-12-submission-engine-adr]]:
 
 - ``aeat submission preflight <draft-path>`` — run preflight only.
 - ``aeat submission dry-run <draft-path>`` — full walk, abort before submit.
-- ``aeat submission submit <draft-path> --i-understand-this-is-real`` —
-  live submit. The explicit flag is required and is intentionally
-  awkward; AEAT submissions are irreversible.
+- ``aeat submission submit <draft-path> --dry-run|--live`` — explicit
+  execution-mode entry point for the submit leg.
+- ``aeat submission audit-log`` — inspect append-only audit records.
 - ``aeat submission show <submission-id>`` — pretty-print a persisted
   :class:`aeat.submission.SubmittedFiling`.
 - ``aeat submission list [--modelo ...] [--status ...]`` — list every
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import typer
 
+from .audit_log import audit_log_cmd
 from .dry_run import dry_run_cmd
 from .list import list_cmd
 from .preflight import preflight_cmd
@@ -34,8 +35,9 @@ app.command(name="preflight", help="Run preflight gates against a draft (no brow
 app.command(name="dry-run", help="Run the full portal walk, aborting before the final submit.")(dry_run_cmd)
 app.command(
     name="submit",
-    help="Live-submit a draft. Requires --i-understand-this-is-real.",
+    help="Explicit submit entry point. Requires exactly one of --dry-run or --live.",
 )(submit_cmd)
+app.command(name="audit-log", help="Inspect append-only submission audit records.")(audit_log_cmd)
 app.command(name="show", help="Pretty-print a persisted SubmittedFiling by submission_id.")(show_cmd)
 app.command(name="list", help="List persisted SubmittedFiling records.")(list_cmd)
 

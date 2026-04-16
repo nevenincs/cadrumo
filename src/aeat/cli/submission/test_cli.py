@@ -23,7 +23,7 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Point the submission engine at tmp dirs via env vars."""
     monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(tmp_path / "submissions"))
     monkeypatch.setenv("AEAT_SUBMISSION_BROWSER_TRACE_DIR", str(tmp_path / "traces"))
-    monkeypatch.setenv("AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION", "true")
+    monkeypatch.setenv("AEAT_LIVE_SUBMIT_ENABLED", "true")
     return tmp_path
 
 
@@ -75,19 +75,24 @@ class TestDryRunCommand:
 
 
 class TestSubmitCommand:
-    def test_refuses_without_flag(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
+    def test_refuses_without_explicit_mode(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
         result = runner.invoke(app, ["submit", str(draft_path)])
         assert result.exit_code == 2
         assert "refusing" in result.output.lower()
 
-    def test_runs_live_with_flag(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
+    def test_refuses_live_on_null_session(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
         result = runner.invoke(
             app,
-            ["submit", str(draft_path), "--i-understand-this-is-real"],
+            ["submit", str(draft_path), "--live"],
         )
+        assert result.exit_code == 2
+        assert "_nullsession" in result.output.lower()
+
+    def test_runs_dry_run_with_explicit_flag(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
+        result = runner.invoke(app, ["submit", str(draft_path), "--dry-run"])
         assert result.exit_code == 0, result.output
-        assert "LIVE submission OK" in result.output
-        assert "SUBMITTED" in result.output
+        assert "dry-run submission OK" in result.output
+        assert "PENDING" in result.output
 
 
 class TestShowAndList:
@@ -114,3 +119,10 @@ class TestShowAndList:
         empty = runner.invoke(app, ["list", "--modelo", "303"])
         assert empty.exit_code == 0
         assert "0 record" in empty.output
+
+    def test_audit_log_lists_recent_records(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
+        dry = runner.invoke(app, ["dry-run", str(draft_path)])
+        assert dry.exit_code == 0
+        result = runner.invoke(app, ["audit-log", "--limit", "5"])
+        assert result.exit_code == 0, result.output
+        assert "DRY_RUN" in result.output

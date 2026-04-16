@@ -5,11 +5,11 @@ session, a pluggable :class:`Submitter` per modelo, and a strict
 :class:`Preflight` validator to drive a ``READY_TO_SUBMIT``
 ``FilingDraft`` (from #39) through the AEAT presentation portal. The
 engine is **dry-run by default**: every call to
-:meth:`SubmissionEngine.submit_draft` walks the portal up to (but not
-including) the final submit click unless the caller explicitly passes
-``dry_run=False`` **and** ``override_confirmation=True``. AEAT
-submissions are irreversible legal acts; the double gate is a
-non-negotiable safety net.
+:meth:`SubmissionEngine.submit_draft` requires an explicit keyword-only
+``dry_run=...`` choice. Live execution additionally requires the
+distinct `AEAT_LIVE_SUBMIT_ENABLED` env gate, passes through the
+internal confirmation hook in `_confirm.py`, refuses under pytest, and
+records append-only audit events in `.aeat/live-submit-audit.log`.
 
 Public API discipline: callers outside this subpackage must import
 only from :mod:`aeat.submission` (the package root); the underscored
@@ -24,6 +24,9 @@ from __future__ import annotations
 
 from aeat.submission._engine import SubmissionEngine
 from aeat.submission._errors import (
+    AeatLiveSubmitConfirmationRefusedError,
+    AeatLiveSubmitNotEnabledError,
+    AeatPytestLiveWriteRefusedError,
     SubmissionError,
     SubmissionFormFillError,
     SubmissionPreflightError,
@@ -60,6 +63,9 @@ from aeat.submission._submitters._contract import BrowserSessionLike
 from aeat.submission._submitters.modelo130 import Modelo130Submitter
 
 __all__ = [
+    "AeatLiveSubmitConfirmationRefusedError",
+    "AeatLiveSubmitNotEnabledError",
+    "AeatPytestLiveWriteRefusedError",
     "AmendmentSubmissionResult",
     "BrowserSessionLike",
     "CasillaCatalogue",

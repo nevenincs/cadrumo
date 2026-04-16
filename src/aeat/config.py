@@ -373,15 +373,11 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "submissions",
         description="Directory where SubmittedFiling JSON audit records are persisted",
     )
-    aeat_submission_dry_run_default: bool = Field(
-        default=True,
-        description="Default for SubmissionEngine.submit_draft(dry_run=...) when omitted by the CLI",
-    )
-    aeat_submission_require_human_confirmation: bool = Field(
-        default=True,
+    aeat_live_submit_enabled: bool = Field(
+        default=False,
         description=(
-            "Belt-and-braces safety gate for live submissions. When False, "
-            "the engine refuses to enter live mode even if override_confirmation=True"
+            "Opt-in flag that permits real AEAT live submissions. Dry-run and "
+            "read-only live tests do not consult this flag."
         ),
     )
     aeat_submission_browser_trace_dir: Path = Field(

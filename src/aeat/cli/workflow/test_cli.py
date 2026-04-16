@@ -93,8 +93,7 @@ class _SubmissionEngine:
         self,
         draft: _Draft,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         today: date | None = None,
     ) -> SubmittedFilingLike:
         return SubmittedFilingLike(
@@ -163,7 +162,7 @@ def _wire_hooks() -> Iterator[None]:
 class TestWorkflowCli:
     def test_next_json_round_trips(self, _isolated_runs_dir: Path) -> None:
         runner = CliRunner()
-        result = runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync"])
+        result = runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync", "--dry-run"])
         assert result.exit_code == 0, result.output
         payload = json.loads(result.output)
         assert payload["final_stage"] == "DONE"
@@ -171,18 +170,18 @@ class TestWorkflowCli:
         persisted = _isolated_runs_dir / f"{run_id}.json"
         assert persisted.exists()
 
-    def test_next_live_without_flag_exits_2(self) -> None:
+    def test_next_without_explicit_mode_exits_2(self) -> None:
         runner = CliRunner()
-        result = runner.invoke(root_app, ["workflow", "next", "--no-dry-run"])
+        result = runner.invoke(root_app, ["workflow", "next"])
         assert result.exit_code == 2
         assert "refusing" in result.output.lower()
 
-    def test_run_live_without_flag_exits_2(self) -> None:
-        """Symmetric safety gate on the ``run`` subcommand."""
+    def test_run_without_explicit_mode_exits_2(self) -> None:
+        """Symmetric explicit-mode gate on the ``run`` subcommand."""
         runner = CliRunner()
         result = runner.invoke(
             root_app,
-            ["workflow", "run", "--modelo", "130", "--period", "2026Q1", "--no-dry-run"],
+            ["workflow", "run", "--modelo", "130", "--period", "2026Q1"],
         )
         assert result.exit_code == 2
         assert "refusing" in result.output.lower()
@@ -200,13 +199,14 @@ class TestWorkflowCli:
                 "2026Q1",
                 "--json",
                 "--no-sync",
+                "--dry-run",
             ],
         )
         assert result.exit_code == 0, result.output
 
     def test_show_round_trips(self, _isolated_runs_dir: Path) -> None:
         runner = CliRunner()
-        first = runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync"])
+        first = runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync", "--dry-run"])
         assert first.exit_code == 0
         run_id = json.loads(first.output)["run_id"]
         second = runner.invoke(root_app, ["workflow", "show", run_id, "--json"])
@@ -215,7 +215,7 @@ class TestWorkflowCli:
 
     def test_list_enumerates(self, _isolated_runs_dir: Path) -> None:
         runner = CliRunner()
-        runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync"])
+        runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync", "--dry-run"])
         listing = runner.invoke(root_app, ["workflow", "list", "--json"])
         assert listing.exit_code == 0, listing.output
         payload = json.loads(listing.output)

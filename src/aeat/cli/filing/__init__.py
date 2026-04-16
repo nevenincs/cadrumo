@@ -26,7 +26,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli._live import requires_live_enabled
 from aeat.cli.submission._helpers import build_engine as build_submission_engine
 from aeat.config import load_settings
 from aeat.filing import (
@@ -399,28 +398,28 @@ def build_complementaria_cmd(
 @complementaria_app.command("submit")
 def submit_complementaria_cmd(
     amendment_id: Annotated[str, typer.Argument(help="Persisted amendment id to submit")],
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Run the amendment submit command in dry-run mode."),
+    ] = False,
     live: Annotated[
         bool,
-        typer.Option("--live", help="Perform a live submission instead of the safe dry-run default."),
+        typer.Option("--live", help="Attempt a real amendment submission."),
     ] = False,
 ) -> None:
-    """Submit a persisted amendment, dry-run by default."""
+    """Submit a persisted amendment with an explicit ``--dry-run`` or ``--live`` choice."""
     amendment = load_amendment(amendment_id)
     engine = _submission_engine()
 
-    dry_run = not live
-    override_confirmation = False
-    if live:
-        requires_live_enabled()
-        override_confirmation = typer.confirm(
-            "This will perform a real AEAT amendment submission. Continue?",
-            abort=True,
-        )
+    if dry_run == live:
+        raise typer.BadParameter("choose exactly one of --dry-run or --live")
+    if live and not engine.supports_live_submission():
+        typer.echo("refusing: live amendment submission is unavailable because this runtime is backed by _NullSession")
+        raise typer.Exit(code=2)
     submission_result = asyncio.run(
         engine.submit_amendment(
             amendment,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
         )
     )
     status_label = "dry-run" if submission_result.dry_run else "LIVE"

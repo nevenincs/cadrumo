@@ -8,11 +8,8 @@ method to see exactly which abort reasons it can produce.
 
 Safety invariants enforced by this module:
 
-- Dry-run is the default at the API level.
-- Live submit requires **both** ``dry_run=False`` and
-  ``override_confirmation=True`` — missing either triggers
-  :attr:`aeat.workflow.WorkflowAbortReason.USER_CANCELLED` without
-  ever calling :meth:`SubmissionEngineProtocol.submit_draft`.
+- Callers must state ``dry_run=True`` or ``dry_run=False`` explicitly
+  at the API level.
 - The engine never touches AEAT-side state directly; every boundary
   call flows through an injected Protocol.
 """
@@ -202,8 +199,7 @@ class WorkflowEngine:
         self,
         profile: AutonomoProfile,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         sync_first: bool | None = None,
         fail_on_warning: bool = False,
         today: date | None = None,
@@ -212,12 +208,7 @@ class WorkflowEngine:
 
         Args:
             profile: The :class:`AutonomoProfile` to run for.
-            dry_run: When ``True`` (default) the dry-run submit leg is
-                taken; no live AEAT submission is attempted. When
-                ``False``, live mode additionally requires
-                ``override_confirmation=True`` — otherwise the engine
-                aborts at ``DRY_RUN_SUBMIT`` with ``USER_CANCELLED``.
-            override_confirmation: Must be ``True`` in live mode.
+            dry_run: Explicit execution mode for the submission stage.
             sync_first: Whether to run the sync runner before the
                 deadline computation. ``None`` means "use the
                 ``AEAT_WORKFLOW_SYNC_FIRST_DEFAULT`` setting".
@@ -233,7 +224,6 @@ class WorkflowEngine:
             target_modelo=None,
             target_period=None,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
             sync_first=sync_first,
             fail_on_warning=fail_on_warning,
             today=today,
@@ -245,8 +235,7 @@ class WorkflowEngine:
         modelo: str,
         period: str,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         sync_first: bool | None = None,
         fail_on_warning: bool = False,
         today: date | None = None,
@@ -258,7 +247,6 @@ class WorkflowEngine:
             modelo: Target modelo identifier.
             period: Target period identifier.
             dry_run: See :meth:`run_next`.
-            override_confirmation: See :meth:`run_next`.
             sync_first: See :meth:`run_next`.
             fail_on_warning: See :meth:`run_next`.
             today: See :meth:`run_next`.
@@ -271,7 +259,6 @@ class WorkflowEngine:
             target_modelo=modelo,
             target_period=period,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
             sync_first=sync_first,
             fail_on_warning=fail_on_warning,
             today=today,
@@ -286,7 +273,6 @@ class WorkflowEngine:
         target_modelo: str | None,
         target_period: str | None,
         dry_run: bool,
-        override_confirmation: bool,
         sync_first: bool | None,
         fail_on_warning: bool,
         today: date | None,
@@ -349,7 +335,6 @@ class WorkflowEngine:
             submission = await self._stage_dry_run_submit(
                 draft=draft,
                 dry_run=dry_run,
-                override_confirmation=override_confirmation,
                 today=reference_today,
                 steps=steps,
             )
@@ -959,40 +944,15 @@ class WorkflowEngine:
         *,
         draft: FilingDraftLike,
         dry_run: bool,
-        override_confirmation: bool,
         today: date,
         steps: list[WorkflowStep],
     ) -> SubmittedFilingLike:
-        """Stage 8 — dispatch to the submission engine.
-
-        Enforces the double gate: live mode (``dry_run=False``)
-        **also** requires ``override_confirmation=True`` or the engine
-        aborts with ``USER_CANCELLED`` without ever calling
-        :meth:`SubmissionEngineProtocol.submit_draft`.
-        """
+        """Stage 8 — dispatch to the submission engine."""
         started = _utcnow()
-        if not dry_run and not override_confirmation:
-            cancelled_summary = _t("Live submission refused: override_confirmation=False")
-            steps.append(
-                WorkflowStep(
-                    stage=WorkflowStage.DRY_RUN_SUBMIT,
-                    started_at=started,
-                    ended_at=_utcnow(),
-                    success=False,
-                    summary=cancelled_summary,
-                    details={"dry_run": "False", "override_confirmation": "False"},
-                )
-            )
-            raise _AbortError(
-                reason=WorkflowAbortReason.USER_CANCELLED,
-                summary=cancelled_summary,
-            )
-
         try:
             submission = await self._submission_engine.submit_draft(
                 draft,
                 dry_run=dry_run,
-                override_confirmation=override_confirmation,
                 today=today,
             )
         except SiteHealthError as exc:

@@ -100,11 +100,10 @@ class SubmissionEngineProtocol(Protocol):
         self,
         draft: FilingDraftLike,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         today: date | None = None,
     ) -> SubmittedFilingLike:
-        """Submit ``draft``. Dry-run by default."""
+        """Submit ``draft`` using an explicit execution mode."""
         ...
 
 
