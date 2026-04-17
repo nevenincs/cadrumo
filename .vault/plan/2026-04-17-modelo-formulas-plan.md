@@ -24,10 +24,14 @@ ruleset as the proof-of-concept. Wave 1 scope only — future waves
 
 - New subpackage `src/aeat/formulas/` with: `_codes.py`,
   `_casilla.py`, `_formula.py`, `_period.py`, `_ruleset.py`,
-  `_registry.py`, `_ledger.py`, `_engine.py`, `_errors.py`,
+  `_registry.py`, `_ledger.py`, `_engine.py`,
   `_rulesets/` (two rulesets + shared helpers),
   `_cli.py`, colocated `test_*.py` files, and a thin public API
   re-exported from `src/aeat/formulas/__init__.py`.
+  **Error types live in `src/aeat/errors.py`** (project-wide
+  mandate: "All domain errors inherit from
+  `aeat.errors.AeatError`"); the subpackage has **no
+  `_errors.py`**.
 - New CLI shim `src/aeat/cli/formulas.py` mirroring the `modelos`
   shim pattern.
 - Wire the shim into `src/aeat/cli/__init__.py`.
@@ -56,7 +60,7 @@ ruleset as the proof-of-concept. Wave 1 scope only — future waves
      comment block so the file stays navigable.
   2. Create `src/aeat/formulas/__init__.py` (empty stub for now).
   3. Create `src/aeat/formulas/_codes.py` with the `FormulaOp`
-     StrEnum (14 members exactly — LITERAL, CASILLA_REF,
+     StrEnum (13 members exactly — LITERAL, CASILLA_REF,
      PARAM_REF, ADD, SUB, MUL, DIV, MIN, MAX, CLAMP_POSITIVE,
      PERCENT, BRACKETS, ROUND; plus `Quarter` enum: Q1..Q4).
   4. Create `src/aeat/formulas/_period.py` with `FiscalPeriod`
@@ -150,6 +154,14 @@ ruleset as the proof-of-concept. Wave 1 scope only — future waves
        `FormulaOp` is exhaustive.
      - Uses `decimal.localcontext(prec=28)` around each
        evaluation. No floats.
+     - **Missing-input contract**: any non-computed casilla
+       not present in `inputs` defaults to `Decimal("0")`.
+       Rationale: Modelo 130 treats blank casillas as zero
+       (AEAT Instrucciones). The engine logs one `debug`
+       line per defaulted casilla for audit trail. A
+       strict-mode flag (`Engine.derive(..., strict=True)`)
+       is **not** added in wave 1 — adding later is
+       additive.
 - `Phase 4 — Modelo 130 rulesets`
   1. Create `src/aeat/formulas/_rulesets/__init__.py` exposing
      `ALL_RULESETS: tuple[Ruleset, ...]`.
@@ -163,11 +175,26 @@ ruleset as the proof-of-concept. Wave 1 scope only — future waves
        mainland.
      - 19 casilla definitions (01–19) per research doc §Modelo
        130 per-casilla reference.
-     - 11 formula definitions (03, 04, 05, 07, 09, 11, 12, 14,
-       17, 19 are computed; casilla 18 is user-input so NOT
-       computed; casilla 13, 15, 16 are user-input (conditional)
-       and NOT computed; casilla 01, 02, 06, 08, 10 are user
-       inputs).
+     - **9 formula definitions** for the single-period
+       evaluator: `03, 04, 07, 09, 11, 12, 14, 17, 19` are
+       computed.
+     - User-input casillas: `01, 02, 06, 08, 10` (data
+       entry), `05` (cross-quarter accumulator — supplied by
+       caller, same treatment as `15`), `13` (minoración —
+       supplied via the `compute_casilla_13` helper or direct
+       entry), `15` (arrastre — supplied by caller), `16`
+       (vivienda habitual — supplied by caller under
+       eligibility gating), `18` (complementarias — usually
+       0).
+     - **Cross-quarter policy**: the engine evaluates one
+       `FiscalPeriod` at a time. Casillas whose value depends
+       on prior quarters (`05` pagos fraccionados anteriores
+       and `15` arrastre) are **user-input** in this wave.
+       The caller is responsible for maintaining the
+       cross-quarter state; `Engine.audit_against` will flag
+       a discrepancy if the caller mis-accumulates. A future
+       wave may introduce a cross-period orchestration layer
+       above the engine — NOT in scope here.
      - Parameter table with `irpf.trimestral_rate=0.20`,
        `agraria.trimestral_rate=0.02`, and the art 110.3.c
        brackets encoded inside a `BracketsFormula` referenced
@@ -211,7 +238,7 @@ ruleset as the proof-of-concept. Wave 1 scope only — future waves
      help="Per-modelo calculation formula engine (#173).")`.
 - `Phase 7 — Unit tests (@pytest.mark.unit, colocated)`
   1. `src/aeat/formulas/test_codes.py` — `FormulaOp` has
-     exactly 14 members; values match member names lowercased;
+     exactly 13 members; values match member names lowercased;
      no duplicates. `Quarter` has 4 members.
   2. `src/aeat/formulas/test_period.py` — `FiscalPeriod`
      start/end for every quarter of 2024 and 2025; `contains`
@@ -246,16 +273,25 @@ ruleset as the proof-of-concept. Wave 1 scope only — future waves
        restricted enum).
   6. `src/aeat/formulas/test_engine.py` — the bulk:
      - **Q1 ordinary (Ap. I only, positive)**: inputs
-       `{01: 12000, 02: 3500, 06: 500}`. Expected: `03=8500,
+       `{01: 12000, 02: 3500, 06: 500}` — user-input casillas
+       `05, 08, 10, 13, 15, 16, 18` omitted, default to 0
+       per the missing-input contract. Expected: `03=8500,
        04=1700.00, 07=1200.00, 11=0, 12=1200.00, 14=1200.00,
        17=1200.00, 19=1200.00` (assuming casilla 13=0 and
        15=0 and 16=0 and 18=0). Every casilla checked.
      - **Q1 loss (negative 03)**: `{01: 1000, 02: 3000}`.
        Expected: `03=-2000, 04=0 (clamp), 07=-500 (if 06=500),
        12=0 (floor), 14=0, 17=0, 19=0`.
-     - **Arrastre across Q1→Q2**: Q1 derives 19=-500.
-       Q2 inputs include `15=500`; engine verifies 15≤14 and
-       propagates 19 correctly.
+     - **Arrastre across Q1→Q2 (caller-maintained)**:
+       Q1 derives 19=-500. Q2 inputs include `15=500` and
+       `05=<prior-quarter accumulator>`; the engine
+       propagates both as user-inputs without deriving them.
+       Test asserts the engine does NOT enforce `15 ≤ 14`
+       (cap enforcement belongs to the caller); audit mode
+       would flag a breach of the cap via a discrepancy
+       against a synthetic reference computation if the
+       caller builds one. Documented as a wave-2 candidate
+       for cross-period orchestration.
      - **Casilla 13 sliding-scale helper (BRACKETS)**:
        previous-year RN = 8500 → 100; 9500 → 75; 10500 → 50;
        11500 → 25; 12500 → 0. Step function boundary tests
