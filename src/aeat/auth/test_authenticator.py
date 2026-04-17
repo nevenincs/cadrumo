@@ -257,7 +257,7 @@ class _FakePage:
     def __init__(self, recognised: bool) -> None:
         self._recognised = recognised
 
-    async def goto(self, url: str) -> _FakeResponse:
+    async def goto(self, url: str, *, timeout: float | None = None) -> _FakeResponse:
         return _FakeResponse(200 if self._recognised else 401)
 
     async def close(self) -> None:
