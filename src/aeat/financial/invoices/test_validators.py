@@ -112,6 +112,21 @@ def test_validate_spanish_tax_id_rejects_malformed_shapes(value: str) -> None:
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("12.345.678-Z", "12345678Z"),
+        (" 12-345-678-Z ", "12345678Z"),
+        ("B-12345674", "B12345674"),
+        ("X.1234567.L", "X1234567L"),
+    ],
+)
+def test_validate_spanish_tax_id_strips_common_separators(value: str, expected: str) -> None:
+    """NIF/NIE/CIF inputs commonly carry dots or hyphens and must be normalised."""
+    assert validate_spanish_tax_id(value) == expected
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
     ("value", "country", "expected"),
     [
         ("DE123456789", "DE", "DE123456789"),

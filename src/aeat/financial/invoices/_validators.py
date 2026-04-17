@@ -60,7 +60,7 @@ def validate_spanish_tax_id(value: str) -> str:
     Raises:
         ValueError: If the identifier is malformed or the checksum fails.
     """
-    normalized = value.strip().upper()
+    normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
     if not normalized:
         raise ValueError("tax identifier must not be blank")
     if len(normalized) != 9:

@@ -288,6 +288,15 @@ def test_derive_invoice_id_is_stable_over_equivalent_decimals() -> None:
 
 
 @pytest.mark.unit
+def test_invoice_number_is_uppercased_for_identity() -> None:
+    """Invoice number casing must not yield distinct identities."""
+    lower = _valid_invoice(invoice_number="inv-001")
+    upper = _valid_invoice(invoice_number="INV-001")
+    assert lower.invoice_id == upper.invoice_id
+    assert lower.invoice_number == "INV-001"
+
+
+@pytest.mark.unit
 def test_catalogue_rejects_duplicate_invoice_ids_on_construction() -> None:
     """Duplicate logical IDs must be rejected when building a catalogue."""
     invoice = _valid_invoice()
