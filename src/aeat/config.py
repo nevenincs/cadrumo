@@ -16,6 +16,10 @@ from pathlib import Path
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from aeat._paths import (
+    normalize_project_relative_path,
+    normalize_project_relative_str,
+)
 from aeat.auth import CertificateBackend
 from aeat.justificante import JustificanteParserBackend
 
@@ -50,6 +54,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / "env" / ".env",
         env_file_encoding="utf-8",
+        env_ignore_empty=True,
     )
 
     # ── Google OAuth 2.0 (Desktop / Interactive) ────────────────────────────
@@ -521,6 +526,44 @@ class Settings(BaseSettings):
     def env_var_names(cls) -> set[str]:
         """Return the set of environment variable names this model reads."""
         return {name.upper() for name in cls.model_fields}
+
+    @field_validator(
+        "aeat_token_dir",
+        "aeat_financial_txs_dir",
+        "aeat_storage_backup_dir",
+        "aeat_casillas_root",
+        "aeat_manuals_root",
+        "aeat_normatives_root",
+        "aeat_vat_catalogue_root",
+        "aeat_certificate_path",
+        "aeat_llm_cache_dir",
+        "aeat_llm_usage_dir",
+        "aeat_default_profile_path",
+        "aeat_submissions_dir",
+        "aeat_submission_browser_trace_dir",
+        "aeat_sync_divergence_file_dir",
+        "aeat_inbox_dir",
+        "aeat_inbox_pdf_dir",
+        "aeat_workflow_runs_dir",
+        "aeat_workflow_draft_inputs_path",
+        "aeat_drafts_dir",
+        "aeat_status_cache_dir",
+        "aeat_status_browser_trace_dir",
+        "aeat_justificantes_dir",
+        mode="after",
+    )
+    @classmethod
+    def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
+        """Anchor repo-relative path settings to ``PROJECT_ROOT``."""
+
+        return normalize_project_relative_path(value)
+
+    @field_validator("google_oauth_client_json", "google_application_credentials", mode="after")
+    @classmethod
+    def _normalize_repo_relative_path_strings(cls, value: str) -> str:
+        """Anchor string-backed path settings to ``PROJECT_ROOT``."""
+
+        return normalize_project_relative_str(value)
 
 
 def load_settings() -> Settings:
