@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_369,
@@ -52,7 +53,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_303,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 369",
+    submission_portal=Portal.PORTAL_M369_OSS_IOSS,
     known_gotchas=(
         "OSS requiere alta censal separada (Modelo 035).",
         "OSS Título IX Cap. XI no disponible en corpus on-disk.",

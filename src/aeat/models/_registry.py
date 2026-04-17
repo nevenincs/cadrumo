@@ -92,6 +92,48 @@ def _check_caps_into(entries: Mapping[ModeloCode, ModeloMetadata]) -> None:
             raise RegistryIntegrityError(f"modelo {code.value} caps_into {target.value} which is not in the registry")
 
 
+def _check_submission_portal(entries: Mapping[ModeloCode, ModeloMetadata]) -> None:
+    """Validate every ``submission_portal`` round-trips through the portal registry.
+
+    When :attr:`ModeloMetadata.submission_portal` is non-``None``, it
+    must resolve inside :data:`aeat.portals.PORTAL_REGISTRY` and the
+    portal's ``related_modelo`` must equal the modelo's own code. This
+    closes the cross-reference round-trip at import time and is the
+    type-level replacement for the free-form hint string shipped in
+    the first cut of this registry.
+
+    Args:
+        entries: The assembled registry mapping.
+
+    Raises:
+        RegistryIntegrityError: If any ``submission_portal`` points at
+            an unknown portal, or the portal's ``related_modelo`` does
+            not match the modelo's code.
+    """
+    # Local import to avoid a circular module-level dependency with
+    # aeat.portals (which itself imports aeat.models.ModeloCode). The
+    # import is routed through the public package root so it exercises
+    # the lazy __getattr__ surface, keeping us on the documented API.
+    from aeat.portals import PORTAL_REGISTRY
+
+    for code, metadata in entries.items():
+        portal = metadata.submission_portal
+        if portal is None:
+            continue
+        try:
+            portal_metadata = PORTAL_REGISTRY[portal]
+        except KeyError as exc:
+            raise RegistryIntegrityError(
+                f"modelo {code.value} submission_portal {portal.value!r} is not in PORTAL_REGISTRY"
+            ) from exc
+        if portal_metadata.related_modelo is not code:
+            related = portal_metadata.related_modelo.value if portal_metadata.related_modelo is not None else None
+            raise RegistryIntegrityError(
+                f"modelo {code.value} submission_portal {portal.value!r} has "
+                f"related_modelo {related!r} (expected {code.value!r})"
+            )
+
+
 def _finalise_registry(
     entries: tuple[ModeloMetadata, ...],
 ) -> Mapping[ModeloCode, ModeloMetadata]:
@@ -125,6 +167,7 @@ def _finalise_registry(
         if metadata.code is not key:
             raise RegistryIntegrityError(f"entry for {key.value} has mismatched code {metadata.code.value}")
     _check_caps_into(materialised)
+    _check_submission_portal(materialised)
     _LOG.info("loaded %d modelo entries", len(materialised))
     return MappingProxyType(materialised)
 

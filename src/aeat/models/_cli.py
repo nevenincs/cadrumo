@@ -131,7 +131,8 @@ def show_command(
         return
     _emit_entries((metadata,), json_out=False)
     _CONSOLE.print(f"[dim]caps_into:[/dim] {metadata.caps_into.value if metadata.caps_into else '-'}")
-    _CONSOLE.print(f"[dim]submission:[/dim] {metadata.submission_portal_hint}")
+    submission = metadata.submission_portal.value if metadata.submission_portal else "-"
+    _CONSOLE.print(f"[dim]submission portal:[/dim] {submission}")
 
 
 @app.command(
