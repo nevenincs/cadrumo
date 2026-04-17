@@ -9,17 +9,18 @@ from aeat.models._applicability import ModeloApplicability
 from aeat.models._categories import ModeloCadence, ModeloCategory
 from aeat.models._citations import LegalCitation
 from aeat.models._codes import ModeloCode
+from aeat.portals import Portal
 
 
 class ModeloMetadata(BaseModel):
     """Authoritative, curated metadata for a single AEAT modelo.
 
     One instance per modelo in the registry. The model is strict,
-    frozen, and rejects unknown keys. The ``caps_into`` cross-reference
-    invariant (every non-None value must resolve inside
-    ``MODELO_REGISTRY``) is enforced at registry-assembly time, not
-    here, so individual entries can be constructed in isolation in
-    unit tests.
+    frozen, and rejects unknown keys. Cross-reference invariants that
+    span the registry as a whole (``caps_into`` resolution,
+    ``submission_portal`` round-trip against ``PORTAL_REGISTRY``) are
+    enforced at registry-assembly time, not here, so individual entries
+    can be constructed in isolation in unit tests.
 
     Attributes:
         code: The :class:`ModeloCode` this entry describes.
@@ -40,8 +41,10 @@ class ModeloMetadata(BaseModel):
             into 390). ``None`` when there is no cap relationship.
         related_modelos: Tuple of related :class:`ModeloCode` entries
             (``receives_from`` / ``replaces`` / sibling forms).
-        submission_portal_hint: Short Spanish free-form hint about
-            the Sede Electrónica submission channel. Non-empty.
+        submission_portal: Typed cross-reference into the AEAT portal
+            catalogue. Required non-``None`` for every v1 modelo; the
+            field type is ``Portal | None`` to keep the schema open
+            for future modelos that may not have a dedicated portal.
         known_gotchas: Tuple of Spanish short-form gotcha strings
             copied from the research doc.
     """
@@ -57,10 +60,10 @@ class ModeloMetadata(BaseModel):
     applicability: ModeloApplicability
     caps_into: ModeloCode | None = None
     related_modelos: tuple[ModeloCode, ...] = ()
-    submission_portal_hint: str = Field(min_length=1)
+    submission_portal: Portal | None = None
     known_gotchas: tuple[str, ...] = ()
 
-    @field_validator("official_name_es", "submission_portal_hint")
+    @field_validator("official_name_es")
     @classmethod
     def _not_blank(cls, value: str) -> str:
         """Reject whitespace-only strings on string fields."""

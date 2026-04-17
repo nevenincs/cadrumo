@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_131,
@@ -52,6 +53,6 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=ModeloCode.MODELO_100,
     related_modelos=(ModeloCode.MODELO_100, ModeloCode.MODELO_130),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 131",
+    submission_portal=Portal.PORTAL_M131_PAGO_FRACCIONADO_EO,
     known_gotchas=("Aplica solo al perfil autonomo_eo.",),
 )

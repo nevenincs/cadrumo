@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_100,
@@ -63,7 +64,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_130, ModeloCode.MODELO_131),
-    submission_portal_hint="Sede Electrónica AEAT — Renta / Modelo 100",
+    submission_portal=Portal.PORTAL_M100_RENTA,
     known_gotchas=(
         "Deducciones autonómicas varían por CCAA.",
         "El flujo del borrador tiene endpoint propio distinto del modelo raw.",

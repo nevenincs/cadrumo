@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_200,
@@ -43,7 +44,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_202, ModeloCode.MODELO_232),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 200",
+    submission_portal=Portal.PORTAL_M200_SOCIEDADES_ANUAL,
     known_gotchas=(
         "Solo aplicable a SL.",
         "Ley 27/2014 del Impuesto sobre Sociedades no disponible en corpus on-disk.",

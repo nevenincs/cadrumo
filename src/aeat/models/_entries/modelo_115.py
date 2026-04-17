@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_115,
@@ -60,7 +61,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=ModeloCode.MODELO_180,
     related_modelos=(ModeloCode.MODELO_180,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 115",
+    submission_portal=Portal.PORTAL_M115_RETENCIONES_ARRENDAMIENTOS,
     known_gotchas=(
         "Arrendamiento de vivienda LAU exento.",
         "RIRPF art 100 específico no disponible en corpus on-disk.",

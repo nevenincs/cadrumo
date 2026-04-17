@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_202,
@@ -46,7 +47,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=ModeloCode.MODELO_200,
     related_modelos=(ModeloCode.MODELO_200,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 202",
+    submission_portal=Portal.PORTAL_M202_SOCIEDADES_FRACCIONADO,
     known_gotchas=(
         "Solo aplicable a SL.",
         "Tres periodos (abril/octubre/diciembre) en lugar de cuatro trimestres.",

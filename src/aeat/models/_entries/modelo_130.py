@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_130,
@@ -61,6 +62,6 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=ModeloCode.MODELO_100,
     related_modelos=(ModeloCode.MODELO_100, ModeloCode.MODELO_131),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 130",
+    submission_portal=Portal.PORTAL_M130_PAGO_FRACCIONADO_ED,
     known_gotchas=("Negativo acumulado se arrastra dentro del año; resultado del período no puede ser negativo.",),
 )

@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_347,
@@ -55,7 +56,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 347",
+    submission_portal=Portal.PORTAL_M347_OPERACIONES_TERCEROS,
     known_gotchas=(
         "Reglas de exclusión complejas.",
         "Los obligados a SII están exentos.",
