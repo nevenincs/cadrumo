@@ -8,8 +8,9 @@ import aeat.casillas
 import aeat.errors
 import aeat.logging
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.unit
+
 def test_smoke_casillas() -> None:
     """Assert the subpackage is importable and conventions hold."""
     assert aeat.casillas.__doc__ is not None
@@ -18,7 +19,6 @@ def test_smoke_casillas() -> None:
     assert aeat.logging.get_logger(__name__).name == __name__
 
 
-@pytest.mark.unit
 def test_public_surface_is_complete() -> None:
     """Every exported symbol must be importable from the package root."""
     for name in aeat.casillas.__all__:

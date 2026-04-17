@@ -28,7 +28,7 @@ from aeat.status import (
     PayorKind,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _URL = "https://sede.agenciatributaria.gob.es/wlpl/TC-UTIL/Expediente?COPT=Y"
 _NOW = datetime(2026, 4, 12, 10, 0, tzinfo=UTC)

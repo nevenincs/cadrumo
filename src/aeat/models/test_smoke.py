@@ -6,8 +6,9 @@ import aeat.errors
 import aeat.logging
 import aeat.models
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
-@pytest.mark.unit
+
 def test_smoke_models() -> None:
     """Asserts the subpackage is importable and conventions hold."""
     assert aeat.models.__doc__ is not None

@@ -23,7 +23,7 @@ from aeat.justificante import (
     verify_csv,
 )
 
-pytestmark = pytest.mark.live
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 
 
 @pytest.mark.asyncio

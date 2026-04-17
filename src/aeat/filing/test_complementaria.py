@@ -21,7 +21,7 @@ from aeat.filing import (
 from aeat.filing.testing import SyntheticProfile, default_schema_provider
 from aeat.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _profile(*modelos: str) -> SyntheticProfile:

@@ -7,8 +7,9 @@ from typer.testing import CliRunner
 
 from aeat.cli import app
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
-@pytest.mark.unit
+
 def test_vat_categories_list() -> None:
     """`aeat vat categories list` prints every category with exit 0."""
     runner = CliRunner()
@@ -19,7 +20,6 @@ def test_vat_categories_list() -> None:
     assert "16 category(ies)" in result.output
 
 
-@pytest.mark.unit
 def test_vat_rates_list_filtered_by_spain() -> None:
     """`aeat vat rates list --member-state es` shows the ES rates."""
     runner = CliRunner()
@@ -29,7 +29,6 @@ def test_vat_rates_list_filtered_by_spain() -> None:
     assert "es" in result.output
 
 
-@pytest.mark.unit
 def test_vat_show_domestic_general_21() -> None:
     """`aeat vat show` surfaces the DOMESTIC_GENERAL_21 regulation."""
     runner = CliRunner()
@@ -39,7 +38,6 @@ def test_vat_show_domestic_general_21() -> None:
     assert "Operación interior" in result.output or "domestic_general_21" in result.output
 
 
-@pytest.mark.unit
 def test_vat_rule_includes_canonical_citation() -> None:
     """`aeat vat rule` appends the `cite()` canonical citation line."""
     runner = CliRunner()
@@ -49,7 +47,6 @@ def test_vat_rule_includes_canonical_citation() -> None:
     assert "Ley 37/1992" in result.output
 
 
-@pytest.mark.unit
 def test_vat_verify_exits_zero_on_shipped_catalogue() -> None:
     """`aeat vat verify` reports a clean shipped catalogue."""
     runner = CliRunner()
@@ -58,7 +55,6 @@ def test_vat_verify_exits_zero_on_shipped_catalogue() -> None:
     assert "verify clean" in result.output
 
 
-@pytest.mark.unit
 def test_vat_show_unknown_category_exits_nonzero() -> None:
     """`aeat vat show` rejects an unknown category."""
     runner = CliRunner()

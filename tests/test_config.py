@@ -19,7 +19,7 @@ from aeat.config import PROJECT_ROOT, Settings
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 def _parse_env_example_vars() -> set[str]:

@@ -58,6 +58,8 @@ from aeat.workflow import (
     WorkflowStage,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+
 # ── Test doubles ────────────────────────────────────────────────────────
 
 
@@ -311,7 +313,6 @@ def _fixtures() -> _Fixtures:
 # ── Happy path + dry-run default ────────────────────────────────────────
 
 
-@pytest.mark.unit
 class TestHappyPath:
     def test_run_next_happy_path(self) -> None:
         """Every stage fires and the engine reaches DONE."""
@@ -370,7 +371,6 @@ def _result(fx: _Fixtures) -> WorkflowResult:
 # ── Every abort reason ──────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 class TestAbortReasons:
     def test_no_pending_obligation(self) -> None:
         fx = _fixtures()
@@ -530,7 +530,6 @@ class TestAbortReasons:
         assert result.steps[-1].stage is WorkflowStage.COMPUTING_DEADLINES
 
 
-@pytest.mark.unit
 class TestSiteUnavailableArm:
     """The typed ``SiteHealthError`` arm must fire BEFORE ``Exception``."""
 

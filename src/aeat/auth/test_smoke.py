@@ -6,8 +6,9 @@ import aeat.auth
 import aeat.errors
 import aeat.logging
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.unit
+
 def test_smoke_auth() -> None:
     """Asserts the subpackage is importable and conventions hold."""
     assert aeat.auth.__doc__ is not None

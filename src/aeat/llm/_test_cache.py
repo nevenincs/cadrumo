@@ -10,6 +10,8 @@ import pytest
 
 from aeat.llm import LLMCache, LLMProvider, LLMRequest, LLMResponse
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+
 
 def _response() -> LLMResponse:
     return LLMResponse(
@@ -25,7 +27,6 @@ def _response() -> LLMResponse:
     )
 
 
-@pytest.mark.unit
 def test_cache_key_is_deterministic(tmp_path: Path) -> None:
     """The same request should derive the same cache key every time."""
 
@@ -36,7 +37,6 @@ def test_cache_key_is_deterministic(tmp_path: Path) -> None:
     )
 
 
-@pytest.mark.unit
 def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
     """Cache should miss before write and hit after write."""
 

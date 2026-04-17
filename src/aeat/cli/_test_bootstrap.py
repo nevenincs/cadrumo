@@ -20,8 +20,9 @@ from aeat.cli.bootstrap import (
     dedup_existing_resource,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
-@pytest.mark.unit
+
 class TestDedupExistingResource:
     """Behaviour of ``dedup_existing_resource``."""
 
@@ -61,7 +62,6 @@ class TestDedupExistingResource:
         assert dedup_existing_resource("aeat-scratch", FOLDER_MIME, listing) == "good"
 
 
-@pytest.mark.unit
 class TestScratchConstants:
     """The scratch resource names and MIME types must match the documented contract."""
 
@@ -80,7 +80,6 @@ class TestScratchConstants:
         assert SCRATCH_DOC_NAME == "aeat-scratch-doc"
 
 
-@pytest.mark.unit
 class TestScratchResources:
     """The ``ScratchResources`` dataclass is frozen and value-equal."""
 

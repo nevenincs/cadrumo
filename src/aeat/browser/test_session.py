@@ -13,6 +13,8 @@ from aeat.config import PROJECT_ROOT, Settings
 from aeat.errors import SiteHealthError
 from aeat.status import SiteHealthState
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
 
@@ -59,7 +61,6 @@ class StubPlaywright:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
 async def test_browser_session_creation(tmp_path: Path) -> None:
     """Test creating a browser context with a stub Playwright instance."""
     settings = Settings()
@@ -106,7 +107,6 @@ def _probe_or_raise(
         raise SiteHealthError(status=result)
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
     body = (_FIXTURES_ROOT / "mantenimiento" / "interstitial.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -114,7 +114,6 @@ def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
     assert excinfo.value.status.state is SiteHealthState.MANTENIMIENTO
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_waf_fixture() -> None:
     body = (_FIXTURES_ROOT / "waf_challenge" / "request_blocked.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -122,7 +121,6 @@ def test_navigate_probe_raises_on_waf_fixture() -> None:
     assert excinfo.value.status.state is SiteHealthState.WAF_CHALLENGE
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
     body = (_FIXTURES_ROOT / "rate_limited" / "429_retry_after.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -137,7 +135,6 @@ def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
     assert excinfo.value.status.retry_after_seconds == 120
 
 
-@pytest.mark.unit
 def test_navigate_probe_passes_on_ok_fixture() -> None:
     body = (_FIXTURES_ROOT / "ok" / "sede_landing.html").read_text(encoding="utf-8")
     # Must not raise.

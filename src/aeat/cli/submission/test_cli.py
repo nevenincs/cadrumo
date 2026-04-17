@@ -10,7 +10,7 @@ from typer.testing import CliRunner
 
 from aeat.cli.submission import app
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 @pytest.fixture()

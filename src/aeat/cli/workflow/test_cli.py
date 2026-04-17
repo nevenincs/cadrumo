@@ -35,6 +35,8 @@ from aeat.workflow import (
     WorkflowEngine,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 
 @dataclass
 class _Draft:
@@ -158,7 +160,6 @@ def _wire_hooks() -> Iterator[None]:
     clear_test_hooks()
 
 
-@pytest.mark.unit
 class TestWorkflowCli:
     def test_next_json_round_trips(self, _isolated_runs_dir: Path) -> None:
         runner = CliRunner()

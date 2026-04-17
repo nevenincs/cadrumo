@@ -6,8 +6,9 @@ import aeat.errors
 import aeat.logging
 import aeat.portals
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.unit
+
 def test_smoke_portals() -> None:
     """Asserts the subpackage is importable and conventions hold."""
     assert aeat.portals.__doc__ is not None

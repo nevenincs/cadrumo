@@ -1,10 +1,10 @@
 """Opt-in live smoke test for the self-healing sync runner.
 
-Marked ``@pytest.mark.live``. The default ``just test`` invocation
-excludes ``live``-marked tests via ``-m 'not live'``; ``just test-live``
-opts in. This test exercises a single end-to-end fetch → validate →
-classify cycle against a low-risk AEAT endpoint (the sede landing
-page).
+Marked ``live_read`` (historical - previously ``@pytest.mark.live``).
+The default ``just test`` invocation runs unit tests only via
+``-m 'unit'``; ``just test-live`` opts into ``live_read`` selection.
+This test exercises a single end-to-end fetch → validate → classify
+cycle against a low-risk AEAT endpoint (the sede landing page).
 
 The real #8 certificate backend is a hard requirement: the test uses
 ``pytest.importorskip`` so that it becomes actionable the moment #8
@@ -15,8 +15,9 @@ from __future__ import annotations
 
 import pytest
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.live
+
 def test_live_sync_smoke() -> None:
     """End-to-end smoke test against real AEAT.
 

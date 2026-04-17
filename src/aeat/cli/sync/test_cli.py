@@ -19,6 +19,8 @@ from aeat.sync import (
     ResolutionState,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 
 @pytest.fixture()
 def repo_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
@@ -44,7 +46,6 @@ def _make_record() -> DivergenceRecord:
     )
 
 
-@pytest.mark.unit
 def test_sync_run_refuses_until_dependencies_merge(repo_root: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(app, ["run", "--modelo", "100"])
@@ -52,7 +53,6 @@ def test_sync_run_refuses_until_dependencies_merge(repo_root: Path) -> None:
     assert "runner prerequisites pending" in result.stdout
 
 
-@pytest.mark.unit
 def test_sync_list_divergences_empty(repo_root: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(app, ["list-divergences"])
@@ -60,7 +60,6 @@ def test_sync_list_divergences_empty(repo_root: Path) -> None:
     assert "0 record(s)" in result.stdout
 
 
-@pytest.mark.unit
 def test_sync_list_and_show_divergence(repo_root: Path) -> None:
     repo = JsonFileDivergenceRepository(repo_root)
     record = _make_record()
@@ -78,7 +77,6 @@ def test_sync_list_and_show_divergence(repo_root: Path) -> None:
     assert "casilla_added_with_default" in show.stdout
 
 
-@pytest.mark.unit
 def test_sync_show_divergence_missing(repo_root: Path) -> None:
     repo_root.mkdir(parents=True, exist_ok=True)
     runner = CliRunner()
@@ -86,7 +84,6 @@ def test_sync_show_divergence_missing(repo_root: Path) -> None:
     assert result.exit_code == 1
 
 
-@pytest.mark.unit
 def test_sync_resolve_divergence_approve(repo_root: Path) -> None:
     repo = JsonFileDivergenceRepository(repo_root)
     record = _make_record()
@@ -110,7 +107,6 @@ def test_sync_resolve_divergence_approve(repo_root: Path) -> None:
     assert reloaded.notes == "approved in cli test"
 
 
-@pytest.mark.unit
 def test_sync_resolve_divergence_reject(repo_root: Path) -> None:
     repo = JsonFileDivergenceRepository(repo_root)
     record = _make_record()
@@ -126,7 +122,6 @@ def test_sync_resolve_divergence_reject(repo_root: Path) -> None:
     assert reloaded.resolution_state == ResolutionState.REJECTED
 
 
-@pytest.mark.unit
 def test_sync_list_filters_by_state(repo_root: Path) -> None:
     repo = JsonFileDivergenceRepository(repo_root)
     r1 = _make_record()

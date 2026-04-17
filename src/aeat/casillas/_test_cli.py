@@ -10,6 +10,8 @@ from typer.testing import CliRunner
 
 from aeat.cli.casillas import app
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 runner = CliRunner()
 
 
@@ -53,7 +55,6 @@ def _write_catalogue(root: Path, *, reviewed_by: str = "codex") -> None:
     )
 
 
-@pytest.mark.unit
 def test_verify_cli_rejects_records_lacking_reviewer_fields(tmp_path: Path) -> None:
     """The verify command must fail when reviewed_by is blank."""
     root = tmp_path / "casillas"
@@ -65,7 +66,6 @@ def test_verify_cli_rejects_records_lacking_reviewer_fields(tmp_path: Path) -> N
     assert "unreviewed_record" in result.stdout
 
 
-@pytest.mark.unit
 def test_list_command_prints_catalogue(tmp_path: Path) -> None:
     """The list command must print the canonical JSON payload."""
     root = tmp_path / "casillas"
@@ -77,7 +77,6 @@ def test_list_command_prints_catalogue(tmp_path: Path) -> None:
     assert '"modelo": "MODELO_130"' in result.stdout
 
 
-@pytest.mark.unit
 def test_extract_and_translate_report_issue21_dependency(tmp_path: Path) -> None:
     """Draft commands must fail clearly until the real LLM client lands."""
     root = tmp_path / "casillas"

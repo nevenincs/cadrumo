@@ -23,6 +23,8 @@ import pytest
 
 from aeat.config import PROJECT_ROOT
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 PROJECT_NAME = "aeat"
 
 ON_MAIN_SUBPACKAGES = (
@@ -54,24 +56,20 @@ def _read(path: Path) -> str:
     return text
 
 
-@pytest.mark.unit
 def test_readme_exists_and_names_the_project() -> None:
     text = _read(PROJECT_ROOT / "README.md")
     assert PROJECT_NAME in text
 
 
-@pytest.mark.unit
 def test_getting_started_exists_and_is_non_empty() -> None:
     _read(PROJECT_ROOT / "docs" / "getting-started.md")
 
 
-@pytest.mark.unit
 def test_releasing_exists_and_references_just_release() -> None:
     text = _read(PROJECT_ROOT / "RELEASING.md")
     assert "just release" in text
 
 
-@pytest.mark.unit
 def test_architecture_references_at_least_five_subpackages() -> None:
     text = _read(PROJECT_ROOT / "docs" / "architecture.md")
     hits = {name for name in ON_MAIN_SUBPACKAGES if name in text}

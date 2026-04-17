@@ -8,8 +8,9 @@ import pytest
 
 from aeat.env_io import read_env_file, write_env_var, write_env_vars
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
-@pytest.mark.unit
+
 class TestReadEnvFile:
     """Behaviour of ``read_env_file``."""
 
@@ -41,7 +42,6 @@ class TestReadEnvFile:
             read_env_file(path)
 
 
-@pytest.mark.unit
 class TestWriteEnvVars:
     """Behaviour of ``write_env_var`` and ``write_env_vars``."""
 
