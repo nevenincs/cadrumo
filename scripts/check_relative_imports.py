@@ -18,6 +18,15 @@ Intended invocation:
 Boundaries: `tests/` and `scripts/` live outside the package and may
 import `aeat.*` absolutely; this script does not scan them.
 
+Known blind-spot: dynamic-import strings such as
+``pytest.importorskip("aeat.X")`` or ``importlib.import_module("aeat.X")``
+are NOT flagged because the AST sees them as plain string constants.
+This is intentional — string-form module names are sometimes the
+right tool (placeholder gates, plugin loaders), and a heuristic match
+on every "aeat."-prefixed string would produce noise. New contributors
+adding dynamic-import sites should prefer relative-equivalent helpers
+where possible; reviewers should grep for `"aeat\\."` in any new code.
+
 See `.vault/adr/2026-04-17-relative-imports-adr.md`.
 """
 
