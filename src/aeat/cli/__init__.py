@@ -81,6 +81,11 @@ app.add_typer(
     name="financial",
     help="Financial ingest providers and raw transaction tooling (#73).",
 )
+app.add_typer(
+    financial_module.invoices_app,
+    name="invoices",
+    help="Invoice catalogue helpers (#75) — alias for `aeat financial invoices`.",
+)
 app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#43).")
 app.add_typer(submission_module.app, name="submission", help="Filing submission engine (#42).")
 app.add_typer(inbox_module.app, name="inbox", help="AEAT notifications inbox (#46).")
