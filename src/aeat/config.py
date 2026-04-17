@@ -513,6 +513,20 @@ class Settings(BaseSettings):
         description="Parser backend for `aeat.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
     )
 
+    # ── Filing history (#168) ───────────────────────────────────────────────
+    aeat_filing_history_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "filing-history",
+        description="Directory where the persisted FilingHistory JSON file lives",
+    )
+    aeat_filing_history_cache_ttl_s: int = Field(
+        default=900,
+        description="TTL in seconds for per-expediente filing-history cache entries (default 15 min)",
+    )
+    aeat_filing_history_archive_html: bool = Field(
+        default=False,
+        description="If true, archive fetched detail-page HTML under <aeat_filing_history_dir>/pages/",
+    )
+
     # ── Introspection ───────────────────────────────────────────────────────
 
     @field_validator(
@@ -570,6 +584,7 @@ class Settings(BaseSettings):
         "aeat_status_cache_dir",
         "aeat_status_browser_trace_dir",
         "aeat_justificantes_dir",
+        "aeat_filing_history_dir",
         mode="after",
     )
     @classmethod
