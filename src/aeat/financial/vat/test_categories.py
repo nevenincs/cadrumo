@@ -9,7 +9,14 @@ from . import EUMemberState, VATCategory, VATRateKind
 
 @pytest.mark.unit
 def test_vat_category_has_every_named_member() -> None:
-    """VATCategory must carry all 16 members from the issue body."""
+    """VATCategory must carry all 17 members.
+
+    The 17th member ``DOMESTIC_REVERSE_CHARGE`` was added in
+    wave 2 (#183) to disambiguate inversión del sujeto pasivo on
+    domestic transactions (Art. 84.Uno.2º) from intra-community
+    acquisitions (which already use
+    ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE``).
+    """
     expected = {
         "DOMESTIC_GENERAL_21",
         "DOMESTIC_REDUCED_10",
@@ -17,6 +24,7 @@ def test_vat_category_has_every_named_member() -> None:
         "DOMESTIC_ZERO",
         "DOMESTIC_EXEMPT",
         "DOMESTIC_NOT_SUBJECT",
+        "DOMESTIC_REVERSE_CHARGE",
         "INTRA_COMMUNITY_SUPPLY",
         "INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE",
         "INTRA_COMMUNITY_TRIANGULATION",

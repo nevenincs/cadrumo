@@ -16,7 +16,7 @@ def test_vat_categories_list() -> None:
     assert result.exit_code == 0, result.output
     assert "domestic_general_21" in result.output
     assert "intra_community_supply" in result.output
-    assert "16 category(ies)" in result.output
+    assert "17 category(ies)" in result.output
 
 
 @pytest.mark.unit

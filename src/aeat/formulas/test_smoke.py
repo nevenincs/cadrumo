@@ -17,11 +17,21 @@ def test_every_public_name_imports() -> None:
 
 @pytest.mark.unit
 def test_registry_has_shipped_rulesets() -> None:
-    """The default registry must expose the two Modelo-130 rulesets."""
+    """The default registry must expose every shipped ruleset.
+
+    Wave 1 (#173) shipped two Modelo 130 rulesets (2024, 2025).
+    Wave 2 (#183) added two Modelo 303 rulesets (2024, 2025).
+    """
     from . import get_registry
 
     registry = get_registry()
-    assert len(registry.rulesets) == 2
+    ruleset_ids = {r.ruleset_id for r in registry.rulesets}
+    assert ruleset_ids == {
+        "modelo_130.2024",
+        "modelo_130.2025",
+        "modelo_303.2024",
+        "modelo_303.2025",
+    }
 
 
 @pytest.mark.unit
