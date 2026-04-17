@@ -3,8 +3,7 @@ tags:
   - "#research"
   - "#relative-imports"
 date: 2026-04-17
-related:
-  - "[[2026-04-17-relative-imports-adr]]"
+related: []
 ---
 
 # relative-imports research: enforce relative imports inside src/aeat/
