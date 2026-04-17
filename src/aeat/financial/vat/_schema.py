@@ -47,6 +47,7 @@ class VATCategory(StrEnum):
     DOMESTIC_ZERO = "domestic_zero"
     DOMESTIC_EXEMPT = "domestic_exempt"
     DOMESTIC_NOT_SUBJECT = "domestic_not_subject"
+    DOMESTIC_REVERSE_CHARGE = "domestic_reverse_charge"
     INTRA_COMMUNITY_SUPPLY = "intra_community_supply"
     INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE = "intra_community_acquisition_reverse_charge"
     INTRA_COMMUNITY_TRIANGULATION = "intra_community_triangulation"

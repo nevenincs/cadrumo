@@ -19,11 +19,20 @@ from ._rulesets.modelo_130_2025 import RULESET as MODELO_130_2025
 
 
 @pytest.mark.unit
-def test_registry_ships_modelo_130_2024_and_2025() -> None:
-    """The registry contains exactly the two shipped rulesets."""
+def test_registry_ships_modelo_130_and_303_rulesets() -> None:
+    """The registry contains every shipped ruleset.
+
+    Wave 1 (#173) added the Modelo 130 2024+2025 pair; wave 2
+    (#183) added the Modelo 303 2024+2025 pair.
+    """
     registry = get_registry()
     ids = sorted(r.ruleset_id for r in registry.rulesets)
-    assert ids == ["modelo_130.2024", "modelo_130.2025"]
+    assert ids == [
+        "modelo_130.2024",
+        "modelo_130.2025",
+        "modelo_303.2024",
+        "modelo_303.2025",
+    ]
 
 
 @pytest.mark.unit

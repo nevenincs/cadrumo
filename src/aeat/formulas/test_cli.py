@@ -17,12 +17,21 @@ def runner() -> CliRunner:
 
 @pytest.mark.unit
 def test_list_subcommand(runner: CliRunner) -> None:
-    """``aeat formulas list`` emits the registered rulesets as JSON."""
+    """``aeat formulas list`` emits the registered rulesets as JSON.
+
+    Wave 2 (#183) added two Modelo 303 rulesets alongside the
+    Modelo 130 pair.
+    """
     result = runner.invoke(app, ["list"])
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
     ids = sorted(row["ruleset_id"] for row in payload)
-    assert ids == ["modelo_130.2024", "modelo_130.2025"]
+    assert ids == [
+        "modelo_130.2024",
+        "modelo_130.2025",
+        "modelo_303.2024",
+        "modelo_303.2025",
+    ]
 
 
 @pytest.mark.unit
