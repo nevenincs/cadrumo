@@ -125,6 +125,10 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "financial" / "transactions",
         description="Directory where the transaction catalogue JSON file is stored",
     )
+    aeat_invoices_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "invoices",
+        description="Directory where the invoice catalogue JSON file is stored (#75)",
+    )
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
