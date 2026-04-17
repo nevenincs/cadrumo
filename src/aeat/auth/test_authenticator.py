@@ -14,7 +14,7 @@ import json
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from cryptography import x509
@@ -40,6 +40,9 @@ from . import (
     load_certificate,
 )
 from .certificate import CertificateBundle
+
+if TYPE_CHECKING:
+    from ..config import Settings
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 
@@ -344,6 +347,42 @@ def _settings_for(path: Path, monkeypatch: pytest.MonkeyPatch):
     return Settings()
 
 
+async def _seed_persisted_session(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    storage_state_path: Path | None = None,
+) -> tuple[Settings, Path, LoadedCertificate]:
+    """Create a valid persisted storage-state pair for resume-path tests."""
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    persisted_path = storage_state_path or (tmp_path / "persisted-storage.json")
+
+    seed_auth = AeatAuthenticator(settings)
+    cert = seed_auth.load_certificate()
+    context = _FakeBrowserContext(
+        cert,
+        storage_state={
+            "cookies": [{"name": "AEATSESSID", "value": "resume-ok"}],
+            "origins": [{"origin": "https://sede.agenciatributaria.gob.es", "localStorage": []}],
+        },
+    )
+    seeded_at = datetime.now(UTC)
+    seeded_session = AeatSession(
+        certificate_thumbprint=cert.sha256_thumbprint,
+        certificate_subject=cert.subject,
+        certificate_nif=extract_nif_from_subject(cert),
+        authenticated_at=seeded_at,
+        idle_deadline=seeded_at + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=persisted_path,
+        handshake=_fake_handshake(),
+    )
+    seed_auth._context = cast(BrowserContextLike, context)
+    seed_auth._active_session = seeded_session
+    await seed_auth.capture_storage_state(seeded_session)
+    return settings, persisted_path, cert
+
+
 @pytest.mark.asyncio
 async def test_capture_storage_state_writes_storage_and_metadata(
     tmp_path: Path,
@@ -429,6 +468,124 @@ async def test_resume_from_storage_state_reuses_persisted_session_without_handsh
     assert resumed.storage_state_path == storage_state_path
     assert verifier.calls == 0
     assert browser_session.storage_state_paths == [storage_state_path]
+
+
+def _invalidate_by_missing_storage(path: Path, _cert: LoadedCertificate) -> None:
+    path.unlink()
+
+
+def _invalidate_by_invalid_storage_json(path: Path, _cert: LoadedCertificate) -> None:
+    path.write_text("{not-json", encoding="utf-8")
+
+
+def _invalidate_by_storage_root_list(path: Path, _cert: LoadedCertificate) -> None:
+    path.write_text("[]", encoding="utf-8")
+
+
+def _invalidate_by_missing_cookies(path: Path, _cert: LoadedCertificate) -> None:
+    path.write_text('{"origins":[]}', encoding="utf-8")
+
+
+def _invalidate_by_missing_origins(path: Path, _cert: LoadedCertificate) -> None:
+    path.write_text('{"cookies":[]}', encoding="utf-8")
+
+
+def _invalidate_by_missing_metadata(path: Path, _cert: LoadedCertificate) -> None:
+    path.with_suffix(".meta.json").unlink()
+
+
+def _invalidate_by_malformed_metadata(path: Path, _cert: LoadedCertificate) -> None:
+    path.with_suffix(".meta.json").write_text("{bad-json", encoding="utf-8")
+
+
+def _invalidate_by_schema_mismatch(path: Path, _cert: LoadedCertificate) -> None:
+    metadata_path = path.with_suffix(".meta.json")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["schema_version"] = 999
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+
+def _invalidate_by_hash_mismatch(path: Path, _cert: LoadedCertificate) -> None:
+    metadata_path = path.with_suffix(".meta.json")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["storage_state_sha256"] = "0" * 64
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+
+def _invalidate_by_expired_idle_deadline(path: Path, _cert: LoadedCertificate) -> None:
+    metadata_path = path.with_suffix(".meta.json")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["idle_deadline"] = (datetime.now(UTC) - timedelta(minutes=1)).isoformat()
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+
+def _invalidate_by_thumbprint_mismatch(path: Path, _cert: LoadedCertificate) -> None:
+    metadata_path = path.with_suffix(".meta.json")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["certificate_thumbprint"] = "f" * 64
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+
+def _invalidate_by_subject_mismatch(path: Path, _cert: LoadedCertificate) -> None:
+    metadata_path = path.with_suffix(".meta.json")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["certificate_subject"] = "CN=DIFFERENT"
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("mutator", "case_id"),
+    [
+        (_invalidate_by_missing_storage, "missing-storage"),
+        (_invalidate_by_invalid_storage_json, "invalid-storage-json"),
+        (_invalidate_by_storage_root_list, "storage-root-not-object"),
+        (_invalidate_by_missing_cookies, "missing-cookies-array"),
+        (_invalidate_by_missing_origins, "missing-origins-array"),
+        (_invalidate_by_missing_metadata, "missing-metadata"),
+        (_invalidate_by_malformed_metadata, "malformed-metadata"),
+        (_invalidate_by_schema_mismatch, "schema-mismatch"),
+        (_invalidate_by_hash_mismatch, "hash-mismatch"),
+        (_invalidate_by_expired_idle_deadline, "expired-idle-deadline"),
+        (_invalidate_by_thumbprint_mismatch, "thumbprint-mismatch"),
+        (_invalidate_by_subject_mismatch, "subject-mismatch"),
+    ],
+    ids=[  # keep explicit ids stable in pytest output
+        "missing-storage",
+        "invalid-storage-json",
+        "storage-root-not-object",
+        "missing-cookies-array",
+        "missing-origins-array",
+        "missing-metadata",
+        "malformed-metadata",
+        "schema-mismatch",
+        "hash-mismatch",
+        "expired-idle-deadline",
+        "thumbprint-mismatch",
+        "subject-mismatch",
+    ],
+)
+async def test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mutator,
+    case_id: str,
+) -> None:
+    settings, storage_state_path, cert = await _seed_persisted_session(tmp_path, monkeypatch)
+    mutator(storage_state_path, cert)
+
+    auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
+    browser_session = _FakeBrowserSession(cert_ok=True)
+
+    with pytest.raises(AeatLoginAssertionError):
+        await auth.resume_from_storage_state(
+            storage_state_path,
+            browser_session=cast(BrowserSessionLike, browser_session),
+        )
+
+    assert not storage_state_path.exists(), case_id
+    assert not storage_state_path.with_suffix(".meta.json").exists(), case_id
 
 
 @pytest.mark.unit
@@ -520,27 +677,28 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 
 
 @pytest.mark.unit
-def test_restrict_file_permissions_windows(tmp_path: Path) -> None:
-    if os.name != "nt":
-        pytest.skip("Windows-only ACL assertion")
-
+def test_restrict_file_permissions_best_effort(tmp_path: Path) -> None:
     import getpass
     import subprocess
 
     path = tmp_path / "permissions.json"
     path.write_text("{}", encoding="utf-8")
-    icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\Windows")) / "System32" / "icacls.exe"
 
     AeatAuthenticator._restrict_file_permissions(path)
 
-    result = subprocess.run(  # noqa: S603 - local ACL inspection against a temp file
-        [str(icacls_path), str(path)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert result.returncode == 0
-    assert getpass.getuser().lower() in result.stdout.lower()
+    if os.name == "nt":
+        icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\Windows")) / "System32" / "icacls.exe"
+        result = subprocess.run(  # noqa: S603 - local ACL inspection against a temp file
+            [str(icacls_path), str(path)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0
+        assert getpass.getuser().lower() in result.stdout.lower()
+        return
+
+    assert path.exists()
 
 
 @pytest.mark.unit
