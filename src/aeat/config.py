@@ -212,11 +212,27 @@ class Settings(BaseSettings):
     # ── Live tests ──────────────────────────────────────────────────────────
     aeat_live_tests_enabled: bool = Field(
         default=False,
-        description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
+        description="Opt-in flag to run @pytest.mark.live_read tests against real external services",
     )
     aeat_live_tests_google: bool = Field(
         default=False,
         description="Secondary opt-in specifically for Google Workspace fixture live tests",
+    )
+
+    # ── Live-write bypass (charter #116 R1) ─────────────────────────────────
+    aeat_live_write_unsafe_bypass: bool = Field(
+        default=False,
+        description=(
+            "UNSAFE. Pytest collection bypass factor 1 of 3 for @pytest.mark.live_write tests. "
+            "NEVER set outside an interactive live-filing session. See charter #116."
+        ),
+    )
+    aeat_live_write_unsafe_bypass_confirm: str = Field(
+        default="",
+        description=(
+            "UNSAFE. Pytest collection bypass factor 2 of 3. Must equal the phrase: "
+            "I ACCEPT THE RISK OF FILING A LIVE TAX RETURN. NEVER set outside an interactive live-filing session."
+        ),
     )
 
     # ── Manuals corpus (aeat.manuals, #25) ──────────────────────────────────

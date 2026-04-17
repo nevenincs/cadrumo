@@ -11,15 +11,15 @@ from . import (
     verify_catalogue,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
-@pytest.mark.unit
+
 def test_shipped_catalogue_is_clean() -> None:
     """The shipped VAT_CATALOGUE_2025 must verify without errors."""
     report = verify_catalogue(VAT_CATALOGUE_2025)
     assert report.clean, [issue.model_dump() for issue in report.errors]
 
 
-@pytest.mark.unit
 def test_empty_catalogue_reports_missing_categories() -> None:
     """An empty catalogue flags every VATCategory as missing."""
     empty = VATCatalogue()
@@ -29,7 +29,6 @@ def test_empty_catalogue_reports_missing_categories() -> None:
     assert len(report.errors) >= len(list(VATCategory))
 
 
-@pytest.mark.unit
 def test_partial_catalogue_reports_only_the_gaps() -> None:
     """A catalogue missing one category yields one missing_category error."""
     reduced = VATCatalogue(

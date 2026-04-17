@@ -8,13 +8,14 @@ from typer.testing import CliRunner
 from ..manuals.errors import RuleExtractionError
 from . import app
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 _runner = CliRunner()
 
 
 class TestManualCli:
     """CLI subcommands are reachable and the planned-blocker shape holds."""
 
-    @pytest.mark.unit
     def test_manual_help_lists_all_subcommands(self) -> None:
         """`aeat manual --help` enumerates every v1 subcommand."""
         result = _runner.invoke(app, ["manual", "--help"])
@@ -22,7 +23,6 @@ class TestManualCli:
         for name in ("fetch", "structure", "extract-rules", "translate", "verify", "list", "show"):
             assert name in result.output
 
-    @pytest.mark.unit
     def test_structure_command_raises_pending_21(self) -> None:
         """`aeat manual structure` raises RuleExtractionError referencing #21."""
         result = _runner.invoke(
@@ -33,7 +33,6 @@ class TestManualCli:
         assert isinstance(result.exception, RuleExtractionError)
         assert "#21" in str(result.exception)
 
-    @pytest.mark.unit
     def test_extract_rules_command_raises_pending_21(self) -> None:
         """`aeat manual extract-rules` raises RuleExtractionError referencing #21."""
         result = _runner.invoke(
@@ -52,7 +51,6 @@ class TestManualCli:
         assert result.exit_code != 0
         assert isinstance(result.exception, RuleExtractionError)
 
-    @pytest.mark.unit
     def test_translate_command_raises_pending_21(self) -> None:
         """`aeat manual translate` raises RuleExtractionError referencing #21."""
         result = _runner.invoke(
@@ -71,7 +69,6 @@ class TestManualCli:
         assert result.exit_code != 0
         assert isinstance(result.exception, RuleExtractionError)
 
-    @pytest.mark.unit
     def test_fetch_rejects_unknown_manual(self) -> None:
         """Invalid --manual triggers a typer BadParameter exit."""
         result = _runner.invoke(

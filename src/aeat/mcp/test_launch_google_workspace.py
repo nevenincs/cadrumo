@@ -21,6 +21,8 @@ from .launch_google_workspace import (
     ensure_credentials_dir,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 
 class IsolatedSettings(Settings):
     """Settings variant that does not read the on-disk env file."""
@@ -28,7 +30,6 @@ class IsolatedSettings(Settings):
     model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
 
-@pytest.mark.unit
 class TestBuildLaunchSpec:
     """Behaviour of the pure launch-spec builder."""
 
@@ -133,7 +134,6 @@ class TestBuildLaunchSpec:
         assert "GOOGLE_APPLICATION_CREDENTIALS" not in spec.env
 
 
-@pytest.mark.unit
 class TestEnsureCredentialsDir:
     """The credential-cache hardening path is explicit and creatable."""
 
@@ -151,7 +151,6 @@ class TestEnsureCredentialsDir:
         assert PROJECT_WORKSPACE_MCP_CREDENTIALS_DIR == PROJECT_ROOT / "env" / "workspace-mcp-credentials"
 
 
-@pytest.mark.unit
 class TestLauncherBoundary:
     """Fresh-clone boundary checks for env loading and MCP handoff."""
 

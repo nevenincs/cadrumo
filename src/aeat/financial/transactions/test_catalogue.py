@@ -24,6 +24,8 @@ from . import (
     set_classification,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _sample_raw(*, provider_id: str, amount: Decimal, description: str) -> RawTransaction:
     return RawTransaction(
@@ -62,7 +64,6 @@ def _sample_transaction(
     )
 
 
-@pytest.mark.unit
 def test_catalogue_rejects_duplicate_transaction_ids_on_construction() -> None:
     """Duplicate logical IDs must be rejected when building a catalogue."""
     transaction = _sample_transaction()
@@ -71,7 +72,6 @@ def test_catalogue_rejects_duplicate_transaction_ids_on_construction() -> None:
         TransactionCatalogue.from_transactions([transaction, transaction])
 
 
-@pytest.mark.unit
 def test_catalogue_iteration_yields_transactions() -> None:
     """TransactionCatalogue iteration must expose transactions, not model fields."""
     first = _sample_transaction(provider_id="provider-row-1")
@@ -84,7 +84,6 @@ def test_catalogue_iteration_yields_transactions() -> None:
     ]
 
 
-@pytest.mark.unit
 def test_link_invoice_returns_new_catalogue_without_mutating_original() -> None:
     """link_invoice must preserve the original catalogue and raw transaction."""
     transaction = _sample_transaction()
@@ -102,7 +101,6 @@ def test_link_invoice_returns_new_catalogue_without_mutating_original() -> None:
     assert linked.raw == transaction.raw
 
 
-@pytest.mark.unit
 def test_link_invoice_rejects_blank_invoice_identifier() -> None:
     """link_invoice must reject blank invoice IDs instead of clearing the link."""
     transaction = _sample_transaction()
@@ -112,7 +110,6 @@ def test_link_invoice_rejects_blank_invoice_identifier() -> None:
         link_invoice(catalogue, transaction.transaction_id, "   ")
 
 
-@pytest.mark.unit
 def test_set_classification_returns_new_catalogue_without_mutating_original() -> None:
     """set_classification must return a fresh catalogue with validated metadata."""
     transaction = _sample_transaction()
@@ -139,7 +136,6 @@ def test_set_classification_returns_new_catalogue_without_mutating_original() ->
     assert after.raw == transaction.raw
 
 
-@pytest.mark.unit
 def test_set_classification_raises_typed_error_for_invalid_business_pct() -> None:
     """set_classification must not leak raw pydantic errors to callers."""
     transaction = _sample_transaction()
@@ -155,7 +151,6 @@ def test_set_classification_raises_typed_error_for_invalid_business_pct() -> Non
         )
 
 
-@pytest.mark.unit
 def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
     """Saving then loading should round-trip the full catalogue."""
     catalogue = TransactionCatalogue.from_transactions(
@@ -180,7 +175,6 @@ def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
     assert restored == catalogue
 
 
-@pytest.mark.unit
 def test_find_transaction_returns_none_for_missing_transaction() -> None:
     """Missing transactions should yield None rather than raising."""
     catalogue = TransactionCatalogue.from_transactions([_sample_transaction()])

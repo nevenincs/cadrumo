@@ -198,8 +198,18 @@ class SetupWizard:
         )
         has_employees = prompter.prompt_bool(
             key="has_employees",
-            prompt="Do you pay salaries or professional fees with retención?",
+            prompt="Do you pay salaries with retención?",
             default=defaults.has_employees if defaults else False,
+        )
+        pays_professionals_with_retencion = prompter.prompt_bool(
+            key="pays_professionals_with_retencion",
+            prompt="Do you pay professional fees with retención?",
+            default=defaults.pays_professionals_with_retencion if defaults else False,
+        )
+        professional_income_withholding_ge_70pct = prompter.prompt_bool(
+            key="professional_income_withholding_ge_70pct",
+            prompt="Was at least 70% of your prior-year professional income already subject to withholding?",
+            default=defaults.professional_income_withholding_ge_70pct if defaults else False,
         )
         pays_rent_with_retencion = prompter.prompt_bool(
             key="pays_rent_with_retencion",
@@ -210,6 +220,11 @@ class SetupWizard:
             key="does_intracomunitario",
             prompt="Do you conduct operaciones intracomunitarias?",
             default=defaults.does_intracomunitario if defaults else False,
+        )
+        third_party_transactions_above_347_threshold = prompter.prompt_bool(
+            key="third_party_transactions_above_347_threshold",
+            prompt="Did you exceed the Modelo 347 threshold with any third party last year?",
+            default=defaults.third_party_transactions_above_347_threshold if defaults else False,
         )
         bienes_extranjero = prompter.prompt_bool(
             key="bienes_extranjero_above_threshold",
@@ -275,7 +290,7 @@ class SetupWizard:
 
         live_tests = prompter.prompt_bool(
             key="aeat_live_tests_enabled",
-            prompt="Opt in to @pytest.mark.live tests?",
+            prompt="Opt in to @pytest.mark.live_read tests?",
             default=defaults.aeat_live_tests_enabled if defaults else False,
         )
         live_tests_google = prompter.prompt_bool(
@@ -293,8 +308,11 @@ class SetupWizard:
             tax_id=tax_id,
             iva_regime=IVARegime(iva_regime_raw),
             has_employees=has_employees,
+            pays_professionals_with_retencion=pays_professionals_with_retencion,
+            professional_income_withholding_ge_70pct=professional_income_withholding_ge_70pct,
             pays_rent_with_retencion=pays_rent_with_retencion,
             does_intracomunitario=does_intracomunitario,
+            third_party_transactions_above_347_threshold=third_party_transactions_above_347_threshold,
             bienes_extranjero_above_threshold=bienes_extranjero,
             certificate_path=cert_path,
             certificate_password_secret_var_name=cert_password_var,

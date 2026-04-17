@@ -7,8 +7,9 @@ import pytest
 
 from .profile import Profile
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.unit
+
 def test_profile_ensure_storage_dir(tmp_path: Path) -> None:
     """Test that ensure_storage_dir creates the path and writes valid JSON."""
     storage_path = tmp_path / "test_state.json"

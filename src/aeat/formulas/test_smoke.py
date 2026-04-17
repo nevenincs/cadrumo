@@ -6,6 +6,8 @@ import importlib
 
 import pytest
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 @pytest.mark.unit
 def test_every_public_name_imports() -> None:

@@ -6,7 +6,7 @@ import pytest
 
 from .. import errors, logging, portals
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def test_smoke_portals_public_surface() -> None:
@@ -20,4 +20,4 @@ def test_smoke_portals_public_surface() -> None:
         assert hasattr(portals, name), name
 
     # Sanity: the registry materialises on first access.
-    assert len(portals.PORTAL_REGISTRY) == 41
+    assert len(portals.PORTAL_REGISTRY) == 42

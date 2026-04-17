@@ -10,6 +10,8 @@ from pydantic import ValidationError
 
 from . import Attachment, AttachmentKind, AttachmentSource
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _digest_for(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
@@ -39,7 +41,6 @@ def _sample_payload(
     }
 
 
-@pytest.mark.unit
 def test_attachment_round_trips_through_json() -> None:
     """Attachment must survive a JSON round-trip with tuple ordering intact."""
     payload = _sample_payload(
@@ -55,7 +56,6 @@ def test_attachment_round_trips_through_json() -> None:
     assert dict(restored.metadata) == {"gmail_message_id": "abc123"}
 
 
-@pytest.mark.unit
 def test_attachment_rejects_hash_mismatch_between_id_and_sha256() -> None:
     """attachment_id must equal sha256; otherwise validation fails."""
     payload = _sample_payload()
@@ -64,7 +64,6 @@ def test_attachment_rejects_hash_mismatch_between_id_and_sha256() -> None:
         Attachment.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_attachment_rejects_invalid_sha256_shape() -> None:
     """Non-hex or wrong-length digests must be rejected."""
     payload = _sample_payload()
@@ -74,7 +73,6 @@ def test_attachment_rejects_invalid_sha256_shape() -> None:
         Attachment.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_attachment_rejects_naive_captured_at() -> None:
     """Naive capture timestamps must be rejected to preserve audit integrity."""
     payload = _sample_payload()
@@ -83,7 +81,6 @@ def test_attachment_rejects_naive_captured_at() -> None:
         Attachment.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_attachment_linked_ids_are_deduplicated_preserving_first_seen_order() -> None:
     """Duplicate linked IDs collapse; first-seen order is preserved."""
     payload = _sample_payload(
@@ -95,7 +92,6 @@ def test_attachment_linked_ids_are_deduplicated_preserving_first_seen_order() ->
     assert attachment.linked_invoice_ids == ("inv-2", "inv-1")
 
 
-@pytest.mark.unit
 def test_attachment_rejects_blank_linked_identifier() -> None:
     """Blank linked IDs must fail validation rather than be silently dropped."""
     payload = _sample_payload(linked_transaction_ids=("tx-a", "  "))
@@ -103,7 +99,6 @@ def test_attachment_rejects_blank_linked_identifier() -> None:
         Attachment.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_attachment_rejects_scalar_linked_ids() -> None:
     """A bare string for linked_transaction_ids must be rejected."""
     payload = _sample_payload()
@@ -112,7 +107,6 @@ def test_attachment_rejects_scalar_linked_ids() -> None:
         Attachment.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_attachment_metadata_rejects_empty_keys() -> None:
     """Metadata keys must be non-blank strings."""
     payload = _sample_payload(metadata={"   ": "value"})
@@ -120,7 +114,6 @@ def test_attachment_metadata_rejects_empty_keys() -> None:
         Attachment.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_attachment_metadata_rejects_non_string_values() -> None:
     """Metadata values must be strings; the escape hatch is string-only."""
     payload = _sample_payload()
@@ -129,7 +122,6 @@ def test_attachment_metadata_rejects_non_string_values() -> None:
         Attachment.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_attachment_trims_required_text_and_notes() -> None:
     """source_reference, mime_type, and notes are trimmed on validation."""
     payload = _sample_payload()

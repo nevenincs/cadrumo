@@ -4,8 +4,9 @@ import pytest
 
 from .. import errors, logging, sync
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.unit
+
 def test_smoke_sync() -> None:
     """Asserts the subpackage is importable and conventions hold."""
     assert sync.__doc__ is not None

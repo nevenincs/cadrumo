@@ -13,6 +13,8 @@ from .evasion import EvasionStrategy
 from .profile import Profile
 from .session import BrowserSession
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
 
@@ -59,7 +61,6 @@ class StubPlaywright:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
 async def test_browser_session_creation(tmp_path: Path) -> None:
     """Test creating a browser context with a stub Playwright instance."""
     settings = Settings()
@@ -79,6 +80,89 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert context.kwargs["locale"] == "es-ES"  # type: ignore
     assert context.kwargs["timezone_id"] == "Europe/Madrid"  # type: ignore
     assert str(tmp_path / "state.json") in context.kwargs["storage_state"]  # type: ignore
+    # No cert supplied → marker must NOT be stamped on the context.
+    assert not hasattr(context, "_aeat_certificate_thumbprint")
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
+    """Certificate propagates into new_context kwargs and thumbprint marker."""
+    import os
+    from datetime import UTC, datetime, timedelta
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives.serialization import pkcs12
+    from cryptography.x509.oid import NameOID
+
+    from ..auth import CertificateBackend, CertificateBundle, load_certificate
+    from .session import CERTIFICATE_THUMBPRINT_MARKER
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "test - 12345678Z"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678Z"),
+        ]
+    )
+    now = datetime.now(UTC)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(days=1))
+        .not_valid_after(now + timedelta(days=365))
+        .sign(key, hashes.SHA256())
+    )
+    pfx_bytes = pkcs12.serialize_key_and_certificates(
+        name=b"test",
+        key=key,
+        cert=cert,
+        cas=None,
+        encryption_algorithm=serialization.BestAvailableEncryption(b"pw"),
+    )
+    bundle_path = tmp_path / "bundle.p12"
+    bundle_path.write_bytes(pfx_bytes)
+    os.environ["AEAT_BROWSER_TEST_PW"] = "pw"
+    loaded = load_certificate(
+        CertificateBundle(
+            path=bundle_path,
+            password_env_var="AEAT_BROWSER_TEST_PW",  # noqa: S106 — env var NAME
+            friendly_name=None,
+            backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
+        )
+    )
+
+    settings = Settings()
+    profile = Profile(name="cert-test", storage_state_path=tmp_path / "state.json")
+    session = BrowserSession(
+        playwright=StubPlaywright(),  # type: ignore
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+    context = await session.create_context(cert=loaded)
+
+    # StubContext (returned by our fake chromium) exposes .kwargs for
+    # assertions; Playwright's real BrowserContext does not.
+    from typing import cast
+
+    kwargs: dict[str, object] = cast("StubContext", context).kwargs
+    assert "client_certificates" in kwargs
+    cc = kwargs["client_certificates"]
+    assert isinstance(cc, list) and len(cc) == 1
+    assert cc[0]["pfxPath"] == str(bundle_path)
+    # passphrase is materialised here only; confirm it is present so
+    # Playwright can consume it, then the caller hands the list
+    # straight to new_context and does not persist the dict.
+    assert cc[0]["passphrase"] == "pw"  # noqa: S105 — test fixture
+    marker = getattr(context, CERTIFICATE_THUMBPRINT_MARKER, None)
+    assert marker == loaded.sha256_thumbprint
 
 
 def _probe_or_raise(
@@ -106,7 +190,6 @@ def _probe_or_raise(
         raise SiteHealthError(status=result)
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
     body = (_FIXTURES_ROOT / "mantenimiento" / "interstitial.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -114,7 +197,6 @@ def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
     assert excinfo.value.status.state is SiteHealthState.MANTENIMIENTO
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_waf_fixture() -> None:
     body = (_FIXTURES_ROOT / "waf_challenge" / "request_blocked.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -122,7 +204,6 @@ def test_navigate_probe_raises_on_waf_fixture() -> None:
     assert excinfo.value.status.state is SiteHealthState.WAF_CHALLENGE
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
     body = (_FIXTURES_ROOT / "rate_limited" / "429_retry_after.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -137,7 +218,6 @@ def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
     assert excinfo.value.status.retry_after_seconds == 120
 
 
-@pytest.mark.unit
 def test_navigate_probe_passes_on_ok_fixture() -> None:
     body = (_FIXTURES_ROOT / "ok" / "sede_landing.html").read_text(encoding="utf-8")
     # Must not raise.
