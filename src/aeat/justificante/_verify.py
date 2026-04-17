@@ -16,13 +16,11 @@ cannot be constructed and surfaces the underlying error to the caller.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Awaitable, Callable
+from typing import Protocol, cast
 
 from ..logging import get_logger
 from ._errors import JustificanteVerificationError
-
-if TYPE_CHECKING:  # pragma: no cover - typing only, avoids aeat.config cycle
-    from ..browser import BrowserSession
 
 _logger = get_logger(__name__)
 
@@ -32,10 +30,65 @@ _VERIFY_URL = (
 )
 
 
+class BrowserKeyboardLike(Protocol):
+    async def type(self, value: str) -> None: ...
+    async def press(self, key: str) -> None: ...
+
+
+class BrowserPageLike(Protocol):
+    keyboard: BrowserKeyboardLike
+
+    async def goto(self, url: str) -> object | None: ...
+    async def fill(self, selector: str, value: str) -> None: ...
+    async def press(self, selector: str, key: str) -> None: ...
+    async def content(self) -> str: ...
+
+
+class BrowserContextLike(Protocol):
+    async def new_page(self) -> BrowserPageLike: ...
+    async def close(self) -> None: ...
+
+
+class BrowserSessionLike(Protocol):
+    async def create_context(self) -> BrowserContextLike: ...
+    async def close(self) -> None: ...
+
+
+class PlaywrightOwnerLike(Protocol):
+    async def stop(self) -> None: ...
+
+
+BrowserSessionFactory = Callable[[], Awaitable[tuple[BrowserSessionLike, PlaywrightOwnerLike]]]
+
+
+async def _build_default_browser_session() -> tuple[BrowserSessionLike, PlaywrightOwnerLike]:
+    """Construct the default browser session and its Playwright owner."""
+    from playwright.async_api import async_playwright
+
+    from ..browser import BrowserSession
+    from ..browser.profile import Profile
+    from ..config import load_settings
+
+    settings = load_settings()
+    storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json"
+    profile = Profile(
+        name=settings.aeat_default_profile_name,
+        storage_state_path=storage_state_path,
+    )
+    profile.ensure_storage_dir()
+    playwright = await async_playwright().start()
+    session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
+    return cast(BrowserSessionLike, session), cast(PlaywrightOwnerLike, playwright)
+
+
+DEFAULT_BROWSER_SESSION_FACTORY: BrowserSessionFactory = _build_default_browser_session
+"""Module-level factory seam for the self-owned browser path."""
+
+
 async def verify_csv(
     csv: str,
     *,
-    browser: BrowserSession | None = None,
+    browser: BrowserSessionLike | None = None,
 ) -> bool:
     """Verify a justificante CSV against AEAT's Sede electrónica.
 
@@ -58,23 +111,10 @@ async def verify_csv(
 
     own_browser = False
     session = browser
+    playwright_owner: PlaywrightOwnerLike | None = None
     if session is None:
         try:
-            from playwright.async_api import async_playwright
-
-            from ..browser import BrowserSession
-            from ..browser.profile import Profile
-            from ..config import load_settings
-
-            settings = load_settings()
-            storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json"
-            profile = Profile(
-                name=settings.aeat_default_profile_name,
-                storage_state_path=storage_state_path,
-            )
-            profile.ensure_storage_dir()
-            playwright = await async_playwright().start()
-            session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
+            session, playwright_owner = await DEFAULT_BROWSER_SESSION_FACTORY()
             own_browser = True
         except Exception as exc:
             raise JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc
@@ -104,9 +144,12 @@ async def verify_csv(
         raise JustificanteVerificationError(f"live CSV verification failed for {csv}: {exc}") from exc
     finally:
         if own_browser and session is not None:
-            playwright_ref = getattr(session, "playwright", None)
-            if playwright_ref is not None:
+            try:
+                await session.close()
+            except Exception as exc:  # pragma: no cover - defensive
+                _logger.debug("browser session close failed: %s", exc)
+            if playwright_owner is not None:
                 try:
-                    await playwright_ref.stop()
+                    await playwright_owner.stop()
                 except Exception as exc:  # pragma: no cover - defensive
                     _logger.debug("playwright stop failed: %s", exc)
