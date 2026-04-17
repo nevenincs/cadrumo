@@ -84,6 +84,8 @@ class TestSubmitCommand:
             app,
             ["submit", str(draft_path), "--i-understand-this-is-real"],
             env={
+                "AEAT_CERTIFICATE_PATH": "",
+                "AEAT_CERTIFICATE_PASSWORD_SECRET": "",
                 "AEAT_LIVE_SUBMIT_ENABLED": "true",
             },
         )

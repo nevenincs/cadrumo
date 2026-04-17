@@ -13,7 +13,7 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from aeat.auth import CertificateBackend
@@ -485,6 +485,33 @@ class Settings(BaseSettings):
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
+
+    @field_validator(
+        "aeat_certificate_path",
+        "aeat_default_profile_path",
+        "aeat_workflow_draft_inputs_path",
+        mode="before",
+    )
+    @classmethod
+    def _empty_optional_paths_are_none(cls, value: object) -> object:
+        """Treat blank env vars for optional path fields as unset."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
+    @field_validator(
+        "aeat_certificate_password_secret",
+        "aeat_llm_anthropic_api_key",
+        "aeat_llm_openai_api_key",
+        "aeat_llm_gemini_api_key",
+        mode="before",
+    )
+    @classmethod
+    def _empty_optional_secrets_are_none(cls, value: object) -> object:
+        """Treat blank env vars for optional secret fields as unset."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
 
     @classmethod
     def env_var_names(cls) -> set[str]:

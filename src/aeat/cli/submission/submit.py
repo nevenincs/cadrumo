@@ -106,10 +106,11 @@ def submit_cmd(
         _CONSOLE.print("[red]refusing:[/red] live submission requires --i-understand-this-is-real on the command line.")
         raise typer.Exit(code=2)
 
-    _enforce_cert_health(settings=Settings(), force_expiring_cert=force_expiring_cert)
-
     draft = load_draft(draft_path)
-    engine = build_engine()
+    settings = Settings()
+    engine = build_engine(settings)
+    if engine.live_transport_supported:
+        _enforce_cert_health(settings=settings, force_expiring_cert=force_expiring_cert)
     try:
         filing = asyncio.run(engine.submit_draft(draft, dry_run=False))
     except SubmissionError as exc:
