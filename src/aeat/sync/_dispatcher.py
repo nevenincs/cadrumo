@@ -17,8 +17,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from ._divergence import (
     DivergenceClassification,
     DivergenceKind,

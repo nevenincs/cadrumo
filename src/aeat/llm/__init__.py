@@ -7,7 +7,7 @@ Example:
     ```python
     import asyncio
 
-    from aeat.llm import LLMClient, LLMRequest
+    from . import LLMClient, LLMRequest
 
     async def main() -> None:
         client = LLMClient()
@@ -20,16 +20,16 @@ Example:
     ```
 """
 
-from aeat.llm._cache import LLMCache
-from aeat.llm._client import LLMClient
-from aeat.llm._errors import (
+from ._cache import LLMCache
+from ._client import LLMClient
+from ._errors import (
     LLMCacheError,
     LLMConfigError,
     LLMError,
     LLMProviderError,
     LLMRateLimitError,
 )
-from aeat.llm._models import (
+from ._models import (
     CachedEntry,
     CacheKey,
     CacheStats,
@@ -42,9 +42,9 @@ from aeat.llm._models import (
     UsageRecord,
     UsageSummary,
 )
-from aeat.llm._providers import ProviderRequest, _FakeAdapter
-from aeat.llm._translator import BulkTranslator, Translator
-from aeat.llm._usage import UsageRecorder
+from ._providers import ProviderRequest, _FakeAdapter
+from ._translator import BulkTranslator, Translator
+from ._usage import UsageRecorder
 
 __all__ = [
     "BulkTranslator",

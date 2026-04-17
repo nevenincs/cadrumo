@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from aeat.auth.certificate import HandshakeResult, LoadedCertificate
+    from ..certificate import HandshakeResult, LoadedCertificate
 
 
 class _CertBackend(ABC):

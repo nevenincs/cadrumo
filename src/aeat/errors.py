@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from aeat.status import SiteHealthStatus
+    from .status import SiteHealthStatus
 
 
 class AeatError(Exception):

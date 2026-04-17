@@ -6,7 +6,8 @@ Use Google-style docstrings and type hints on all public signatures.
 
 ## Module Structure & API Rules
 - All Python code lives under `src/aeat/`.
-- **Public API Discipline**: Code outside a subpackage must import only from the subpackage root (e.g., `from aeat.models import ModelCatalogue`).
+- **Relative-Imports Mandate (#162)**: Inside `src/aeat/`, every internal `aeat.*` import MUST use relative syntax (`from .module import X` or `from ..sibling import Y`). Absolute `aeat.*` imports are allowed only in `tests/` and `scripts/`. Enforced by `scripts/check_relative_imports.py`, wired into both `just lint` and `prek run`. Ruff TID251 cannot enforce this directly because its banned-api resolves relative imports to their absolute path.
+- **Public API Discipline**: Code outside a subpackage must import only from the subpackage root (e.g., `from ..models import ModelCatalogue` from another subpackage's interior, or `from .models import ModelCatalogue` from a top-level `src/aeat/*.py`).
 - **Types**: Use Enums for closed catalogues, Pydantic models for wire/config, and dataclasses for internal values. No bare dicts.
 - **Errors**: All domain errors inherit from `aeat.errors.AeatError`.
 - **Logging**: Always use `aeat.logging.get_logger(__name__)`.

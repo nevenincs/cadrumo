@@ -7,8 +7,8 @@ from pathlib import Path
 
 import typer
 
-from aeat.config import load_settings
-from aeat.financial.invoices import (
+from ...config import load_settings
+from ...financial.invoices import (
     InvoiceCatalogue,
     InvoiceError,
     InvoiceKind,
@@ -21,7 +21,7 @@ from aeat.financial.invoices import (
     suggest_reconciliations,
     verify_link_consistency,
 )
-from aeat.financial.transactions import (
+from ...financial.transactions import (
     TransactionCatalogue,
     TransactionError,
     load_transactions,

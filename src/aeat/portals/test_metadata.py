@@ -5,10 +5,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from aeat.models import ModeloCode
-from aeat.portals._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
-from aeat.portals._codes import Portal
-from aeat.portals._metadata import PortalMetadata
+from ..models import ModeloCode
+from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._codes import Portal
+from ._metadata import PortalMetadata
 
 pytestmark = pytest.mark.unit
 

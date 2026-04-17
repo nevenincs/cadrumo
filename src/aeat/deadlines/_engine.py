@@ -11,25 +11,25 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from aeat.deadlines._applies import applies_to, explain
-from aeat.deadlines._calendar import (
+from ..logging import get_logger
+from ._applies import applies_to, explain
+from ._calendar import (
     CALENDAR,
     KNOWN_AUTONOMO_MODELOS,
     CanonicalWindow,
 )
-from aeat.deadlines._errors import ScheduleComputationError
-from aeat.deadlines._models import (
+from ._errors import ScheduleComputationError
+from ._models import (
     AutonomoProfile,
     FilingObligation,
     ObligationStatus,
     Schedule,
 )
-from aeat.deadlines._protocols import (
+from ._protocols import (
     CorpusReader,
     ModeloCatalogueLoader,
     ModeloIdentifier,
 )
-from aeat.logging import get_logger
 
 _logger = get_logger(__name__)
 

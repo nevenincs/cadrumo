@@ -28,8 +28,7 @@ from typing import Annotated
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-from aeat.i18n import Translatable
-
+from ..i18n import Translatable
 from ._stubs import MODELO_CASILLA_PATTERN
 
 

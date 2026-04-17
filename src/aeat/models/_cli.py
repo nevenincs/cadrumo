@@ -22,11 +22,11 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.deadlines import AutonomoProfile, IVARegime
-from aeat.models._categories import ModeloCadence, ModeloCategory, TaxpayerProfile
-from aeat.models._errors import UnknownModeloError
-from aeat.models._metadata import ModeloMetadata
-from aeat.models._registry import (
+from ..deadlines import AutonomoProfile, IVARegime
+from ._categories import ModeloCadence, ModeloCategory, TaxpayerProfile
+from ._errors import UnknownModeloError
+from ._metadata import ModeloMetadata
+from ._registry import (
     MODELO_REGISTRY,
     get_modelo,
     modelos_for_profile,

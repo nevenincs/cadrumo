@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from aeat.financial.attachments import Attachment, AttachmentKind, AttachmentSource
+from . import Attachment, AttachmentKind, AttachmentSource
 
 
 def _digest_for(data: bytes) -> str:

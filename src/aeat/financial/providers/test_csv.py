@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import CsvProvider
+from .. import CsvProvider
 
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
 

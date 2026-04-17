@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.models import ModeloCode
-from aeat.portals._categories import PortalCategory
-from aeat.portals._registry import PORTAL_REGISTRY
+from ..models import ModeloCode
+from ._categories import PortalCategory
+from ._registry import PORTAL_REGISTRY
 
 pytestmark = pytest.mark.unit
 

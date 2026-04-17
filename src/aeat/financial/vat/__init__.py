@@ -17,7 +17,7 @@ Example:
     ```python
     from datetime import date
 
-    from aeat.financial.vat import (
+    from . import (
         EUMemberState,
         VATCategory,
         VATRateKind,

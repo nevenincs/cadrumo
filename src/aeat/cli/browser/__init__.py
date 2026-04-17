@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import typer
 
-from aeat.cli.browser import health as _health_module
+from . import health as _health_module
 
 app = typer.Typer(
     name="browser",

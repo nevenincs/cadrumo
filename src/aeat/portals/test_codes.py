@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.portals._codes import Portal
+from ._codes import Portal
 
 pytestmark = pytest.mark.unit
 

@@ -18,8 +18,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel, ValidationError
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from ._models import AeatStatusKind
 
 logger = get_logger(__name__)

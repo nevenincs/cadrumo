@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import Settings
-from aeat.manuals import (
+from ..config import Settings
+from . import (
     ManualCatalogue,
     ManualId,
     ManualPart,
@@ -21,7 +21,7 @@ from aeat.manuals import (
     load_section,
     resolve_part_root,
 )
-from aeat.manuals.errors import ManualNotFoundError, ManualParseError
+from .errors import ManualNotFoundError, ManualParseError
 
 
 class _IsolatedSettings(Settings):

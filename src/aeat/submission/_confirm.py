@@ -11,9 +11,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from aeat.filing import FilingValue
-from aeat.submission._errors import AeatLiveConfirmationDeclinedError
-from aeat.submission._protocols import FilingDraftLike, Portal
+from ..filing import FilingValue
+from ._errors import AeatLiveConfirmationDeclinedError
+from ._protocols import FilingDraftLike, Portal
 
 
 @dataclass(frozen=True, slots=True)

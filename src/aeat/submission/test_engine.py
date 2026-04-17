@@ -11,15 +11,15 @@ from typing import Any
 
 import pytest
 
-from aeat.config import Settings
-from aeat.filing import (
+from ..config import Settings
+from ..filing import (
     AmendmentKind,
     CasillaChange,
     FilingAmendment,
     build_draft,
 )
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
-from aeat.submission import (
+from ..filing.testing import SyntheticProfile, default_schema_provider
+from . import (
     AeatLiveSubmitNotEnabledError,
     AeatLiveTransportUnavailableError,
     AeatPytestLiveWriteRefusedError,

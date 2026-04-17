@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.financial.vat import (
+from . import (
     VAT_RATE_TABLE,
     EUMemberState,
     VATRateKind,

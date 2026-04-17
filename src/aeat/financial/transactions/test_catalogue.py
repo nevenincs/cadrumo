@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.financial import RawProvenance, SourceFormat
-from aeat.financial.providers import RawTransaction
-from aeat.financial.transactions import (
+from .. import RawProvenance, SourceFormat
+from ..providers import RawTransaction
+from . import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,

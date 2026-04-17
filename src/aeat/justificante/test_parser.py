@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from aeat.config import PROJECT_ROOT
-from aeat.justificante import (
+from ..config import PROJECT_ROOT
+from . import (
     Justificante,
     JustificanteCsvNotFoundError,
     JustificanteParseError,

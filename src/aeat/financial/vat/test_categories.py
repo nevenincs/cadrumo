@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.financial.vat import EUMemberState, VATCategory, VATRateKind
+from . import EUMemberState, VATCategory, VATRateKind
 
 
 @pytest.mark.unit
