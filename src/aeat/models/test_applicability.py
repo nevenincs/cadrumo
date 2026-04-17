@@ -8,8 +8,7 @@ from pydantic import ValidationError
 from aeat.models._applicability import ModeloApplicability
 from aeat.models._categories import TaxpayerProfile
 
-pytestmark = pytest.mark.unit
-
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 _ALL: frozenset[TaxpayerProfile] = frozenset(TaxpayerProfile)
 

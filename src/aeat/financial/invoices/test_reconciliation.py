@@ -28,6 +28,8 @@ from ._service import (
     verify_link_consistency,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _invoice(
     *,
@@ -104,7 +106,6 @@ def _transaction(
     return Transaction.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_issued_invoice_matches_positive_incoming_transaction() -> None:
     """ISSUED invoices should match positive transaction amounts."""
     invoice = _invoice(counterparty_name="Cliente SL")
@@ -123,7 +124,6 @@ def test_issued_invoice_matches_positive_incoming_transaction() -> None:
     assert suggestions[0].score == Decimal("1.0")
 
 
-@pytest.mark.unit
 def test_received_invoice_matches_negative_outgoing_transaction() -> None:
     """RECEIVED invoices should match negative transaction amounts."""
     invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_name="Proveedor SL")
@@ -140,7 +140,6 @@ def test_received_invoice_matches_negative_outgoing_transaction() -> None:
     assert suggestions[0].score == Decimal("1.0")
 
 
-@pytest.mark.unit
 def test_amount_match_without_counterparty_scores_half() -> None:
     """A counterparty mismatch still emits a score-0.5 suggestion when amounts align."""
     invoice = _invoice(counterparty_name="Very Specific Customer Name")
@@ -159,7 +158,6 @@ def test_amount_match_without_counterparty_scores_half() -> None:
     assert suggestions[0].score == Decimal("0.5")
 
 
-@pytest.mark.unit
 def test_none_counterparty_does_not_boost_score() -> None:
     """A transaction without a counterparty must not score a false-positive boost.
 
@@ -182,7 +180,6 @@ def test_none_counterparty_does_not_boost_score() -> None:
     assert suggestions[0].score == Decimal("0.5")
 
 
-@pytest.mark.unit
 def test_counterparty_only_match_emits_no_suggestion() -> None:
     """Counterparty-only matches are never emitted (would be too noisy)."""
     invoice = _invoice(counterparty_name="Cliente SL")
@@ -200,7 +197,6 @@ def test_counterparty_only_match_emits_no_suggestion() -> None:
     )
 
 
-@pytest.mark.unit
 def test_already_linked_items_are_excluded() -> None:
     """Linked invoices and transactions do not appear in suggestions."""
     hex_a = "a" * 64
@@ -225,7 +221,6 @@ def test_already_linked_items_are_excluded() -> None:
     assert all(s.transaction_id == unlinked_transaction.transaction_id for s in suggestions)
 
 
-@pytest.mark.unit
 def test_suggestion_ordering_is_deterministic() -> None:
     """Suggestions must sort by (score desc, invoice_id asc, transaction_id asc)."""
     invoice_a = _invoice(invoice_number="INV-001", counterparty_name="Cliente SL")
@@ -243,7 +238,6 @@ def test_suggestion_ordering_is_deterministic() -> None:
     assert scores == sorted(scores, reverse=True)
 
 
-@pytest.mark.unit
 def test_verify_link_consistency_detects_one_sided_links() -> None:
     """verify_link_consistency must find invoice-only and transaction-only drifts."""
     hex_a = "a" * 64
@@ -265,7 +259,6 @@ def test_verify_link_consistency_detects_one_sided_links() -> None:
     assert any(item.transaction_id == transaction.transaction_id for item in inconsistencies)
 
 
-@pytest.mark.unit
 def test_link_bidirectional_updates_both_files(tmp_path: Path) -> None:
     """The happy path writes both catalogues with the link in place."""
     invoice = _invoice()
@@ -294,7 +287,6 @@ def test_link_bidirectional_updates_both_files(tmp_path: Path) -> None:
     assert load_transactions(transactions_path).get(transaction.transaction_id) == updated_transaction
 
 
-@pytest.mark.unit
 def test_link_bidirectional_restores_invoice_on_transaction_write_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -337,7 +329,6 @@ def test_link_bidirectional_restores_invoice_on_transaction_write_failure(
     assert invoices_path.read_bytes() == prior_invoice_bytes
 
 
-@pytest.mark.unit
 def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

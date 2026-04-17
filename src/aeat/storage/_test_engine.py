@@ -10,12 +10,13 @@ from sqlalchemy import text
 from aeat.config import Settings
 from aeat.storage import StorageError, create_engine_from_settings, dispose_engine
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 def _settings_for(url: str) -> Settings:
     return Settings(aeat_database_url=url)
 
 
-@pytest.mark.unit
 def test_engine_round_trips_query_against_tmp_sqlite(tmp_path: Path) -> None:
     """A fresh engine built from settings can execute SQL against a tmp file."""
     db_file = tmp_path / "engine.db"
@@ -31,7 +32,6 @@ def test_engine_round_trips_query_against_tmp_sqlite(tmp_path: Path) -> None:
         dispose_engine(settings)
 
 
-@pytest.mark.unit
 def test_engine_creates_parent_directory(tmp_path: Path) -> None:
     """The factory creates missing parent directories for SQLite files."""
     db_file = tmp_path / "nested" / "missing" / "engine.db"
@@ -46,7 +46,6 @@ def test_engine_creates_parent_directory(tmp_path: Path) -> None:
         dispose_engine(settings)
 
 
-@pytest.mark.unit
 def test_engine_rejects_empty_url() -> None:
     """An empty URL is fail-fast, not a silent fallback."""
     settings = _settings_for("")

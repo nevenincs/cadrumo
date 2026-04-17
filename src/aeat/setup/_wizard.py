@@ -275,7 +275,7 @@ class SetupWizard:
 
         live_tests = prompter.prompt_bool(
             key="aeat_live_tests_enabled",
-            prompt="Opt in to @pytest.mark.live tests?",
+            prompt="Opt in to @pytest.mark.live_read tests?",
             default=defaults.aeat_live_tests_enabled if defaults else False,
         )
         live_tests_google = prompter.prompt_bool(

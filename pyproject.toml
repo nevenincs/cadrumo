@@ -158,8 +158,15 @@ allowed-unresolved-imports = [
 testpaths = ["src", "tests"]
 pythonpath = ["src"]
 python_files = ["test_*.py", "_test_*.py"]
-addopts = "-v --tb=short -m 'not live'"
+addopts = "-v --tb=short -m 'unit'"
 markers = [
-    "unit: deterministic tests with no external I/O",
-    "live: tests that hit real Google APIs against scratch resources",
+    "unit: deterministic tests with no external I/O; mocks/stubs permitted per CLAUDE.md",
+    "live_read: opt-in tests that READ from a real external service (covers Google scratch round-trips; see tests/README.md)",
+    "live_write: opt-in tests that WRITE to a real external service; collection-banned by default (charter #116 R1)",
+    "domain_aeat_remote: exercises AEAT Sede Electronica read paths (auth, browser, casillas, inbox, justificante, portals, status, sync)",
+    "domain_submission: exercises the AEAT-write-capable submission boundary (filing, submission)",
+    "domain_financial_input: exercises financial ingest (financial, cli/financial)",
+    "domain_local_state: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, schema, deadlines, cli/deadlines)",
+    "domain_mediation: exercises workflow orchestration, LLM, i18n, testing subpackages",
+    "domain_infra: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
 ]

@@ -6,8 +6,9 @@ import aeat.errors
 import aeat.logging
 import aeat.sync
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.unit
+
 def test_smoke_sync() -> None:
     """Asserts the subpackage is importable and conventions hold."""
     assert aeat.sync.__doc__ is not None

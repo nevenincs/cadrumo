@@ -4,8 +4,9 @@ import pytest
 
 from aeat.llm import PromptDefinition, PromptRegistry
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
-@pytest.mark.unit
+
 def test_prompt_registry_returns_latest_version_by_default() -> None:
     """Registry lookups should return the highest version when unspecified."""
 
@@ -23,7 +24,6 @@ def test_prompt_registry_returns_latest_version_by_default() -> None:
     assert registry.get("translation_v1", version=1).version == 1
 
 
-@pytest.mark.unit
 def test_prompt_registry_seed_contains_required_prompts() -> None:
     """Seeded registry should include the prompts expected by downstream work."""
 

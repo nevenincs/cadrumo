@@ -16,7 +16,7 @@ from aeat.deadlines import (
     explain,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def _make_profile(

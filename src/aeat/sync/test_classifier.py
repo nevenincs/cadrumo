@@ -20,6 +20,8 @@ from aeat.sync import (
     WirePortalManifest,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 
 def _casilla(
     id_: str = "C1",
@@ -51,14 +53,12 @@ def _modelo(
     )
 
 
-@pytest.mark.unit
 def test_no_divergence_baseline() -> None:
     base = _modelo(casillas=(_casilla(),))
     records = DivergenceClassifier().diff_modelo(local=base, live=base)
     assert records == ()
 
 
-@pytest.mark.unit
 def test_vigencia_extended_is_additive() -> None:
     local = _modelo(casillas=(_casilla(),))
     live = _modelo(casillas=(_casilla(),), vigencia_end=date(2025, 6, 30))
@@ -68,7 +68,6 @@ def test_vigencia_extended_is_additive() -> None:
     assert records[0].classification == DivergenceClassification.ADDITIVE
 
 
-@pytest.mark.unit
 def test_casilla_added_with_default_is_additive() -> None:
     local = _modelo(casillas=(_casilla("C1"),))
     live = _modelo(casillas=(_casilla("C1"), _casilla("C2", default="1")))
@@ -79,7 +78,6 @@ def test_casilla_added_with_default_is_additive() -> None:
     assert record.classification == DivergenceClassification.ADDITIVE
 
 
-@pytest.mark.unit
 def test_casilla_added_without_default_is_suspicious() -> None:
     local = _modelo(casillas=(_casilla("C1"),))
     live = _modelo(casillas=(_casilla("C1"), _casilla("C2", default=None)))
@@ -88,7 +86,6 @@ def test_casilla_added_without_default_is_suspicious() -> None:
     assert record.classification == DivergenceClassification.SUSPICIOUS
 
 
-@pytest.mark.unit
 def test_casilla_removed_is_breaking() -> None:
     local = _modelo(casillas=(_casilla("C1"), _casilla("C2")))
     live = _modelo(casillas=(_casilla("C1"),))
@@ -98,7 +95,6 @@ def test_casilla_removed_is_breaking() -> None:
     assert records[0].classification == DivergenceClassification.BREAKING
 
 
-@pytest.mark.unit
 def test_casilla_type_changed_is_breaking() -> None:
     local = _modelo(casillas=(_casilla("C1", type_="decimal"),))
     live = _modelo(casillas=(_casilla("C1", type_="text"),))
@@ -107,7 +103,6 @@ def test_casilla_type_changed_is_breaking() -> None:
     assert records[0].classification == DivergenceClassification.BREAKING
 
 
-@pytest.mark.unit
 def test_formula_changed_is_breaking() -> None:
     local = _modelo(casillas=(_casilla("C1", formula="A+B"),))
     live = _modelo(casillas=(_casilla("C1", formula="A-B"),))
@@ -116,7 +111,6 @@ def test_formula_changed_is_breaking() -> None:
     assert records[0].classification == DivergenceClassification.BREAKING
 
 
-@pytest.mark.unit
 def test_label_es_changed_is_breaking() -> None:
     local_casilla = _casilla("C1", label={"es": "Base", "en": "Base", "hu": "Alap"})
     live_casilla = _casilla("C1", label={"es": "Importe", "en": "Base", "hu": "Alap"})
@@ -128,7 +122,6 @@ def test_label_es_changed_is_breaking() -> None:
     assert records[0].classification == DivergenceClassification.BREAKING
 
 
-@pytest.mark.unit
 def test_label_translation_added_is_additive() -> None:
     local_casilla = _casilla("C1", label={"es": "Base"})
     live_casilla = _casilla("C1", label={"es": "Base", "hu": "Alap"})
@@ -140,7 +133,6 @@ def test_label_translation_added_is_additive() -> None:
     assert records[0].classification == DivergenceClassification.ADDITIVE
 
 
-@pytest.mark.unit
 def test_portal_url_changed_is_suspicious() -> None:
     local_link = WirePortalLink.model_validate(
         {"url": "https://sede.agenciatributaria.gob.es/a", "label": {"es": "A", "en": "A", "hu": "A"}, "modelo": "100"}
@@ -155,7 +147,6 @@ def test_portal_url_changed_is_suspicious() -> None:
     assert records[0].classification == DivergenceClassification.SUSPICIOUS
 
 
-@pytest.mark.unit
 def test_filing_status_changed_is_benign() -> None:
     local_entry = WireFilingEntry(
         modelo=ModeloIdentifier("303"),

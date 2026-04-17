@@ -21,6 +21,8 @@ from aeat.inbox import (
     RawNotificacion,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 
 class _InMemorySource:
     """Real concrete :class:`NotificacionSource` backed by a list.
@@ -69,7 +71,6 @@ def _fetcher(tmp_path: Path, payloads: tuple[RawNotificacion, ...]) -> InboxFetc
     )
 
 
-@pytest.mark.unit
 class TestInboxFetcher:
     @pytest.mark.asyncio
     async def test_fetch_classifies_and_persists(self, tmp_path: Path) -> None:

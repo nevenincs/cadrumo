@@ -20,7 +20,7 @@ from aeat.config import Settings
 from aeat.filing import AmendmentKind, CasillaChange, FilingAmendment, build_draft
 from aeat.filing.testing import SyntheticProfile, default_schema_provider
 
-pytestmark = pytest.mark.live
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_submission]
 
 
 def test_live_complementaria_dry_run_only(tmp_path) -> None:

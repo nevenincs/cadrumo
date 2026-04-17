@@ -22,6 +22,8 @@ from aeat.auth import (
     assert_credentials_have_scopes,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 
 @dataclass
 class _ScopedCreds:
@@ -36,7 +38,6 @@ class _ScopedCreds:
     scopes: list[str] | None
 
 
-@pytest.mark.unit
 class TestScopeConstants:
     """The default scope set must cover every surface the bootstrap touches."""
 
@@ -56,7 +57,6 @@ class TestScopeConstants:
         assert USERINFO_EMAIL_SCOPE in SCOPES
 
 
-@pytest.mark.unit
 class TestAssertCredentialsHaveScopes:
     """Behaviour of ``assert_credentials_have_scopes``."""
 

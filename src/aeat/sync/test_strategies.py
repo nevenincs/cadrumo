@@ -23,6 +23,8 @@ from aeat.sync import (
 )
 from aeat.sync._divergence import classify_kind
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 
 def _record(payload, classification: DivergenceClassification) -> DivergenceRecord:
     return DivergenceRecord(
@@ -34,7 +36,6 @@ def _record(payload, classification: DivergenceClassification) -> DivergenceReco
     )
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_additive_allowlist_auto_heals() -> None:
     payload = CasillaAddedWithDefault(
@@ -50,7 +51,6 @@ async def test_additive_allowlist_auto_heals() -> None:
     assert outcome.record.resolution_state == ResolutionState.AUTO_HEALED
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_additive_allowlist_refuses_without_auto_heal_flag() -> None:
     payload = CasillaAddedWithDefault(
@@ -66,7 +66,6 @@ async def test_additive_allowlist_refuses_without_auto_heal_flag() -> None:
     assert outcome.record.resolution_state == ResolutionState.PENDING
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_additive_allowlist_refuses_non_allowlisted_kind() -> None:
     payload = CasillaAddedWithDefault(
@@ -81,7 +80,6 @@ async def test_additive_allowlist_refuses_non_allowlisted_kind() -> None:
     assert outcome.action == StrategyAction.ESCALATED
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_escalate_always_escalates() -> None:
     payload = FormulaChanged(
@@ -96,7 +94,6 @@ async def test_escalate_always_escalates() -> None:
     assert outcome.record.resolution_state == ResolutionState.PENDING
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_benign_records_only() -> None:
     payload = FilingStatusChanged(

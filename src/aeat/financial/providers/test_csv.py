@@ -9,10 +9,11 @@ import pytest
 
 from aeat.financial import CsvProvider
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("fixture_name", "expected_currency", "expected_description"),
     [
@@ -39,7 +40,6 @@ def test_csv_provider_ingests_supported_bank_layouts(
     assert transactions[0].provenance.source_format.value == "csv"
 
 
-@pytest.mark.unit
 def test_csv_provider_synthesizes_ids_when_source_has_none() -> None:
     """Synthetic CSV rows should receive deterministic synthetic IDs."""
     provider = CsvProvider()
@@ -49,7 +49,6 @@ def test_csv_provider_synthesizes_ids_when_source_has_none() -> None:
     assert transactions[0].provenance.source_row_index == 2
 
 
-@pytest.mark.unit
 def test_csv_provider_rejects_unknown_headers(tmp_path: Path) -> None:
     """Unknown CSV headers should fail validation instead of guessing."""
     source = tmp_path / "unknown.csv"
@@ -59,7 +58,6 @@ def test_csv_provider_rejects_unknown_headers(tmp_path: Path) -> None:
     assert "headers" in validation.warnings[0].lower()
 
 
-@pytest.mark.unit
 def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
     """An invalid preferred encoding should not break the fallback decode order."""
     key = "FINANCIAL_DEFAULT_CSV_ENCODING"

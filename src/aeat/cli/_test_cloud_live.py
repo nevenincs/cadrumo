@@ -22,6 +22,8 @@ from aeat.cli._live import (
     storage_client,
 )
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
+
 
 def _skip_if_no_billing(exc: Exception) -> None:
     """Skip the calling test if the exception looks like a billing block."""
@@ -31,7 +33,6 @@ def _skip_if_no_billing(exc: Exception) -> None:
     raise exc
 
 
-@pytest.mark.live
 class TestCloudLive:
     """Read-only Cloud surface smoke tests."""
 

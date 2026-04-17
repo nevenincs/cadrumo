@@ -13,6 +13,8 @@ from aeat.manuals import ManualId, ManualPart, verify_manual_dir
 from aeat.manuals._verify import raise_on_errors
 from aeat.manuals.errors import ManualNotFoundError, ManualReviewRequiredError
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 class _IsolatedSettings(Settings):
     """Settings variant that skips the on-disk env file for test isolation."""
@@ -92,7 +94,6 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
 class TestVerify:
     """Verification walks every record and surfaces issues."""
 
-    @pytest.mark.unit
     def test_missing_part_root_raises(self, tmp_path: Path) -> None:
         """A non-existent part root is a hard error, not a report."""
         settings = _settings(tmp_path)
@@ -104,7 +105,6 @@ class TestVerify:
                 settings=settings,
             )
 
-    @pytest.mark.unit
     def test_empty_part_root_reports_missing_manifest(self, tmp_path: Path) -> None:
         """A part directory without a manifest produces a warning, not an error."""
         root = tmp_path / "corpus" / "manuals"
@@ -119,7 +119,6 @@ class TestVerify:
         assert report.ok
         assert any(issue.code == "missing-manifest" for issue in report.warnings)
 
-    @pytest.mark.unit
     def test_clean_structure_is_ok(self, tmp_path: Path) -> None:
         """A well-formed structure produces no error-level issues."""
         root = tmp_path / "corpus" / "manuals"
@@ -133,7 +132,6 @@ class TestVerify:
         )
         assert report.ok
 
-    @pytest.mark.unit
     def test_empty_reviewer_surfaces_as_load_error(self, tmp_path: Path) -> None:
         """Empty reviewed_by on the manual root fails schema load → verify error.
 
@@ -159,7 +157,6 @@ class TestVerify:
         assert not report.ok
         assert any(issue.code == "load-failed" for issue in report.errors)
 
-    @pytest.mark.unit
     def test_load_failure_is_error(self, tmp_path: Path) -> None:
         """A corrupt manual.json is reported as a load-failed error."""
         root = tmp_path / "corpus" / "manuals"
@@ -175,7 +172,6 @@ class TestVerify:
         assert not report.ok
         assert any(issue.code == "load-failed" for issue in report.errors)
 
-    @pytest.mark.unit
     def test_raise_on_errors_raises_for_non_ok(self, tmp_path: Path) -> None:
         """raise_on_errors turns a failing report into an exception."""
         root = tmp_path / "corpus" / "manuals"

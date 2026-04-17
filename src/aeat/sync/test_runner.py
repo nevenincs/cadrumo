@@ -34,6 +34,8 @@ from aeat.sync import (
     WireValidator,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 
 class _FakeCert:
     async def preload_into_browser_context(self, session: Any) -> None:
@@ -199,7 +201,6 @@ def _build_runner(
     )
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_runner_happy_path_emits_additive_healing(tmp_path: Path) -> None:
     local_modelo = _modelo()
@@ -220,7 +221,6 @@ async def test_runner_happy_path_emits_additive_healing(tmp_path: Path) -> None:
     assert result.outcomes[0].action == StrategyAction.AUTO_HEALED
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_runner_bounded_policy_blocks_breaking_even_with_auto_heal(
     tmp_path: Path,
@@ -242,7 +242,6 @@ async def test_runner_bounded_policy_blocks_breaking_even_with_auto_heal(
     assert result.plan.escalate[0].payload.kind == DivergenceKind.CASILLA_REMOVED
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_runner_wire_validation_failure_raises(tmp_path: Path) -> None:
     fetcher = _StaticFetcher(
@@ -257,7 +256,6 @@ async def test_runner_wire_validation_failure_raises(tmp_path: Path) -> None:
         await runner.run(modelo=ModeloIdentifier("100"), auto_heal=False)
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_runner_retries_transient_fetch_failures(tmp_path: Path) -> None:
     local = _modelo()
@@ -275,7 +273,6 @@ async def test_runner_retries_transient_fetch_failures(tmp_path: Path) -> None:
     assert len(result.plan.auto_heal) == 1
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_runner_gives_up_after_retry_max(tmp_path: Path) -> None:
     fetcher = _FlakyFetcher(

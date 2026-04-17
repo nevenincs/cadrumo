@@ -13,7 +13,7 @@ from aeat.deadlines import IVARegime
 from aeat.i18n import Language
 from aeat.setup import SetupAnswers
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 _runner = CliRunner()
 

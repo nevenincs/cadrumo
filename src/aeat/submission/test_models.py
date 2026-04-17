@@ -15,7 +15,7 @@ from aeat.submission import (
     make_submission_id,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _attempt(

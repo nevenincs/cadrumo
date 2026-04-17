@@ -19,6 +19,8 @@ from aeat.normatives import (
     short_title,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 def _catalogue() -> NormativeCatalogue:
     articulo = Articulo(
@@ -43,7 +45,6 @@ def _catalogue() -> NormativeCatalogue:
     return NormativeCatalogue(references={reference.id: reference})
 
 
-@pytest.mark.unit
 class TestLookup:
     def test_find_reference_hit(self) -> None:
         catalogue = _catalogue()
@@ -70,7 +71,6 @@ class TestLookup:
             find_articulo(catalogue, "ley-35-2006", "999")
 
 
-@pytest.mark.unit
 class TestCite:
     def test_short_title_ley(self) -> None:
         reference = find_reference(_catalogue(), "ley-35-2006")

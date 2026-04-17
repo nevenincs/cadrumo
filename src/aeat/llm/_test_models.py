@@ -9,8 +9,9 @@ import pytest
 
 from aeat.llm import LLMProvider, LLMRequest, LLMResponse, Translation
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
-@pytest.mark.unit
+
 def test_llm_request_round_trip() -> None:
     """LLMRequest should round-trip through JSON."""
 
@@ -27,7 +28,6 @@ def test_llm_request_round_trip() -> None:
     assert LLMRequest.model_validate_json(request.model_dump_json()) == request
 
 
-@pytest.mark.unit
 def test_llm_response_round_trip() -> None:
     """LLMResponse should round-trip through JSON."""
 
@@ -45,7 +45,6 @@ def test_llm_response_round_trip() -> None:
     assert LLMResponse.model_validate_json(response.model_dump_json()) == response
 
 
-@pytest.mark.unit
 def test_translation_round_trip() -> None:
     """Translation should round-trip through JSON."""
 

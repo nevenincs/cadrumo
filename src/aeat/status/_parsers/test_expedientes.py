@@ -12,7 +12,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from aeat.status import Expediente, StatusParseError
 from aeat.status._parsers import parse_expedientes
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _FIXTURE_DIR = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "aeat-pages" / "expedientes"
 _SOURCE_URL: AnyHttpUrl = TypeAdapter(AnyHttpUrl).validate_python(

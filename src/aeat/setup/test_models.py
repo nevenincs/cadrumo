@@ -12,7 +12,7 @@ from aeat.deadlines import IVARegime
 from aeat.i18n import Language
 from aeat.setup import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 def _canonical_answers(tmp_path: Path) -> SetupAnswers:

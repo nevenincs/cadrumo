@@ -25,8 +25,9 @@ from aeat.cli._live import (
     unique_prefix,
 )
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
 
-@pytest.mark.live
+
 class TestDocsLiveRoundTrip:
     """End-to-end Docs append-and-rollback round-trip."""
 

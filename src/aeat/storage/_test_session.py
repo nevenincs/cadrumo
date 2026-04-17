@@ -11,6 +11,8 @@ from aeat.config import Settings
 from aeat.storage import create_engine_from_settings, session_scope
 from aeat.storage._orm import Base
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 def _engine(tmp_path: Path):
     settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'session.db').as_posix()}")
@@ -19,7 +21,6 @@ def _engine(tmp_path: Path):
     return engine
 
 
-@pytest.mark.unit
 def test_session_scope_commits_on_success(tmp_path: Path) -> None:
     """A normal exit from session_scope must persist the unit of work."""
     engine = _engine(tmp_path)
@@ -36,7 +37,6 @@ def test_session_scope_commits_on_success(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_session_scope_rolls_back_on_exception(tmp_path: Path) -> None:
     """An exception inside session_scope must roll back the unit of work."""
     engine = _engine(tmp_path)

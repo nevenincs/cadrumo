@@ -1,6 +1,6 @@
 """Unit tests for Modelo 303 + Modelo 390 builders and reconciliation.
 
-Every test is marked ``@pytest.mark.unit`` per the project rule.
+The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]`` per the project rule.
 No mocks, patches, fakes, or stubs — every test double is a
 hand-written strict pydantic model that conforms to the relevant
 Protocol via duck typing.
@@ -29,6 +29,8 @@ from aeat.filing.testing import (
     SyntheticProfile,
     default_schema_provider,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _profile() -> SyntheticProfile:
@@ -60,7 +62,6 @@ def _build_303(quarter: int, inputs: dict[str, object] | None = None) -> FilingD
     )
 
 
-@pytest.mark.unit
 class TestModelo303Builder:
     """Hand-calculated arithmetic and validation for Modelo 303."""
 
@@ -181,7 +182,6 @@ class TestModelo303Builder:
         assert draft.modelo == "303"
 
 
-@pytest.mark.unit
 class TestModelo390Builder:
     """Hand-calculated arithmetic for Modelo 390."""
 
@@ -286,7 +286,6 @@ class TestModelo390Builder:
         assert restored.values == annual.values
 
 
-@pytest.mark.unit
 class TestModelo390CrossValidation:
     """Cross-validation rules between 390 and its four 303 drafts."""
 

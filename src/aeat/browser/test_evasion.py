@@ -6,6 +6,8 @@ import pytest
 
 from aeat.browser.evasion import PlaywrightStealthEvasion
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 
 class StubContext:
     """Minimal Playwright BrowserContext stand-in for stealth application.
@@ -23,7 +25,6 @@ class StubContext:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
 async def test_playwright_stealth_evasion_applies_init_script() -> None:
     """``PlaywrightStealthEvasion`` must drive the 2.x ``Stealth`` class API."""
     evasion = PlaywrightStealthEvasion()
