@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 
 from aeat.errors import AeatError
@@ -698,8 +699,6 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
             explicitly autónomo-only and does not support
             *persona jurídica* certificates.
     """
-    from cryptography.x509.oid import NameOID
-
     subject = cert.subject
 
     for raw in _iter_rdn_values(subject, NameOID.SERIAL_NUMBER):
