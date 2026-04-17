@@ -105,14 +105,23 @@ def _live_item_paths(items: Iterable[pytest.Item]) -> set[Path]:
 
 
 def _check_markers(items: Iterable[pytest.Item]) -> list[str]:
-    """Return a list of violation strings for items lacking exactly one required marker."""
+    """Return a list of violation strings for items violating the marker contract.
+
+    Enforces three invariants:
+
+    * exactly one of :data:`REQUIRED_MARKERS` is present;
+    * ``@pytest.mark.flaky`` is only permitted on live tests (ADR scope);
+    """
     violations: list[str] = []
     for item in items:
-        marks = _marker_names(item) & REQUIRED_MARKERS
-        if not marks:
+        marks = _marker_names(item)
+        required = marks & REQUIRED_MARKERS
+        if not required:
             violations.append(f"{item.nodeid}: missing required marker (one of {sorted(REQUIRED_MARKERS)})")
-        elif len(marks) > 1:
-            violations.append(f"{item.nodeid}: has more than one of {sorted(REQUIRED_MARKERS)} ({sorted(marks)})")
+        elif len(required) > 1:
+            violations.append(f"{item.nodeid}: has more than one of {sorted(REQUIRED_MARKERS)} ({sorted(required)})")
+        elif "flaky" in marks and "unit" in required:
+            violations.append(f"{item.nodeid}: @pytest.mark.flaky is only permitted on live tests")
     return violations
 
 
