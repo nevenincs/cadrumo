@@ -83,6 +83,20 @@ dev = [
     "prek>=0.2.0",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.0.0",
+    # Live browser harness — #15 ADR (live only).
+    "pytest-playwright>=0.6.0",
+    # httpx wire-shape assertions — #15 ADR (unit only; banned in live files).
+    "pytest-httpx>=0.35.0",
+    # Per-test retries for genuinely flaky live endpoints — #15 ADR (live only, opt-in per test).
+    "pytest-rerunfailures>=15.0",
+    # Snapshot diffing for modelo schemas / casilla extractions — #15 ADR (both scopes).
+    "syrupy>=4.7.0",
+    # Parallel unit suite via opt-in `just test-parallel` — #15 ADR (unit only).
+    "pytest-xdist>=3.6.0",
+    # Coverage measurement + fail-under gate — #15 ADR (unit only).
+    "pytest-cov>=6.0.0",
+    # Wall-clock control for deadline/expedientes tests — #15 ADR (unit only; banned in live files).
+    "time-machine>=2.16.0",
     "playwright>=1.58.0",
     "playwright-stealth>=2.0.3",
     # Used only to generate synthetic fixture PDFs in tests (#44).
@@ -107,10 +121,12 @@ select = [
     "S",    # flake8-bandit (security)
     "T20",  # flake8-print
     "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports (enforces banned-api below) — #15 ADR
     "RUF",  # ruff-specific rules
 ]
 ignore = [
-    "S101",  # allow assert in tests
+    "S101",   # allow assert in tests
+    "TID252", # tolerate relative parent imports within subpackages; the ban we care about is TID251 (#15 ADR)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -127,6 +143,12 @@ ignore = [
 "src/aeat/cli/**/*.py" = ["B008"]
 "src/aeat/models/_cli.py" = ["B008"]
 "src/aeat/portals/_cli.py" = ["B008"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+# #15 ADR: lock the project into pytest-only testing. See .vault/adr/2026-04-17-pytest-only-testing-adr.md.
+"unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See tests/README.md."
+"unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See tests/README.md."
+"mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See tests/README.md."
 
 [tool.ruff.format]
 quote-style = "double"
@@ -159,8 +181,27 @@ allowed-unresolved-imports = [
 testpaths = ["src", "tests"]
 pythonpath = ["src"]
 python_files = ["test_*.py", "_test_*.py"]
-addopts = "-v --tb=short -m 'not live'"
+addopts = "-v --tb=short -m 'not live' --strict-markers"
+asyncio_mode = "strict"
 markers = [
     "unit: deterministic tests with no external I/O",
-    "live: tests that hit real Google APIs against scratch resources",
+    "live: tests that hit real AEAT / Google / external endpoints against scratch resources",
+    "flaky: opt-in retry via pytest-rerunfailures; live tests only — #15 ADR",
 ]
+
+# ── Coverage (pytest-cov) — #15 ADR ──────────────────────────────────────────
+[tool.coverage.run]
+source = ["src/aeat"]
+branch = true
+omit = [
+    "*/test_*.py",
+    "*/_test_*.py",
+    "*/tests/*",
+]
+
+[tool.coverage.report]
+# Starting floor per #15 ADR. Ratchet upward in a follow-up ADR once the
+# first real measurement is in. Never lower without a documented ADR update.
+fail_under = 60
+show_missing = true
+skip_covered = false
