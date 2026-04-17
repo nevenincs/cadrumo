@@ -699,7 +699,13 @@ def check_live_access_gate(settings: Settings) -> Row:
         state = State.WARN
     else:
         live_writes = "writes: unset (charter #116 default)"
-    if snapshot.pytest_current_test:
+    # submit_env + pytest_current_test together is the most dangerous
+    # state: a live-write capability inside a test runtime. R5 of the
+    # charter refuses the actual call, but the doctor must shout.
+    if snapshot.pytest_current_test and snapshot.aeat_live_submit_enabled:
+        state = State.MISSING
+        live_writes += " [DANGER: PYTEST_CURRENT_TEST + submit both set]"
+    elif snapshot.pytest_current_test:
         state = State.WARN
         live_writes += " [PYTEST_CURRENT_TEST present]"
     detail = f"{live_reads}; {live_writes}"

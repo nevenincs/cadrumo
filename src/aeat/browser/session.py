@@ -135,7 +135,19 @@ class BrowserSession:
                     self.settings.aeat_certificate_verify_url,
                 )
 
-            context = await browser.new_context(**context_kwargs)
+            try:
+                context = await browser.new_context(**context_kwargs)
+            finally:
+                # The client_certificates list carries the plaintext
+                # passphrase that build_client_certificates_kwarg
+                # materialised from SecretStr. Drop the reference as
+                # soon as Playwright has consumed it so the
+                # passphrase cannot be retained in a locals-capturing
+                # logger, an exception traceback, or a debugger
+                # `repr(locals())` call. See the live-write safety
+                # charter: secrets only live at the exact call
+                # boundary.
+                context_kwargs.pop("client_certificates", None)
 
             # Apply evasion strategy
             await self.evasion_strategy.apply(context)
@@ -143,6 +155,9 @@ class BrowserSession:
             if cert is not None:
                 # The Playwright backend's preload() validator reads this
                 # attribute to confirm the cert was wired at construction.
+                # BrowserContext does not declare the marker field, so
+                # setattr with a module-level constant is the only way
+                # to stamp it without a mypy-only type ignore.
                 setattr(context, CERTIFICATE_THUMBPRINT_MARKER, cert.sha256_thumbprint)
 
             return context

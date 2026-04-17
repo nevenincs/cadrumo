@@ -33,6 +33,8 @@ Design notes — see
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
@@ -67,6 +69,10 @@ leaves a 2-minute safety margin before the next downstream call
 would see a 401/403. Tuning this value is a code change, not an
 env-var change — the operator surface stays narrow.
 """
+
+
+AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = 30_000
+"""Playwright navigation timeout for post-auth verification probes."""
 
 
 _MARKER_ATTR = "_aeat_certificate_thumbprint"
@@ -150,12 +156,7 @@ class AeatSession(BaseModel):
             ``elapsed_ms`` etc. without re-running the probe.
     """
 
-    model_config = ConfigDict(
-        strict=True,
-        frozen=True,
-        extra="forbid",
-        arbitrary_types_allowed=True,
-    )
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     certificate_thumbprint: str = Field(min_length=1)
     certificate_subject: str = Field(min_length=1)
@@ -186,7 +187,12 @@ class BrowserPageLike(Protocol):
     structurally.
     """
 
-    async def goto(self, url: str) -> BrowserResponseLike | None: ...
+    async def goto(
+        self,
+        url: str,
+        *,
+        timeout: float | None = None,
+    ) -> BrowserResponseLike | None: ...
     async def close(self) -> None: ...
 
 
@@ -262,6 +268,7 @@ class AeatAuthenticator:
         settings: Settings,
         *,
         browser_session_factory: BrowserSessionFactory | None = None,
+        navigation_timeout_ms: int = AEAT_LOGIN_NAVIGATION_TIMEOUT_MS,
     ) -> None:
         """Construct an authenticator bound to ``settings``.
 
@@ -278,10 +285,17 @@ class AeatAuthenticator:
         """
         self._settings = settings
         self._browser_session_factory = browser_session_factory
+        self._navigation_timeout_ms = navigation_timeout_ms
         self._lock = asyncio.Lock()
         self._browser_session: BrowserSessionLike | None = None
         self._context: BrowserContextLike | None = None
         self._active_session: AeatSession | None = None
+        # Inflight-page counter prevents close() from racing with an
+        # in-progress verify_login(). close() awaits _inflight_drained
+        # before tearing down the context.
+        self._inflight_pages = 0
+        self._inflight_drained: asyncio.Event = asyncio.Event()
+        self._inflight_drained.set()
 
     async def __aenter__(self) -> AeatAuthenticator:
         return self
@@ -361,23 +375,32 @@ class AeatAuthenticator:
                     "authenticating again"
                 )
             cert = self.load_certificate()
-            handshake = verify_handshake(
-                cert,
-                target_url or self._settings.aeat_certificate_verify_url,
-            )
+            target = target_url or self._settings.aeat_certificate_verify_url
+            # verify_handshake performs real network I/O via httpx; it
+            # is synchronous. Running it on the default event-loop
+            # thread would block every other coroutine for the
+            # duration of the TLS round-trip. asyncio.to_thread lets
+            # concurrent tasks make progress while the handshake runs.
+            handshake = await asyncio.to_thread(verify_handshake, cert, target)
             nif = extract_nif_from_subject(cert)
 
             session_like = browser_session or await self._resolve_browser_session()
             context = await session_like.create_context(cert=cert)
-            self._browser_session = session_like
-            self._context = context
 
             marker = getattr(context, _MARKER_ATTR, None)
             if marker != cert.sha256_thumbprint:
-                await self._drop_context()
+                # Clean up the context AND the browser session we just
+                # created; otherwise the Chromium process leaks for
+                # the lifetime of the authenticator.
+                with contextlib.suppress(Exception):
+                    await context.close()
+                await self._close_browser_session(session_like)
                 raise AeatLoginAssertionError(
                     f"browser context was not tagged with the expected {_MARKER_ATTR} marker; cannot continue"
                 )
+
+            self._browser_session = session_like
+            self._context = context
 
             authenticated_at = datetime.now(UTC)
             storage_state_path: Path | None = None
@@ -430,9 +453,12 @@ class AeatAuthenticator:
             session.certificate_nif,
             session.authenticated_at.isoformat(),
         )
-        async with self._lock:
-            await self._drop_context()
-            self._active_session = None
+        # Delegate teardown to close() (itself lock-protected and
+        # idempotent) so there is no risk of holding the lock across
+        # the authenticate() call. close() also nulls _browser_session
+        # and drains in-flight pages, so the subsequent authenticate()
+        # starts from a fully clean slate.
+        await self.close()
         return await self.authenticate()
 
     async def verify_login(
@@ -478,27 +504,50 @@ class AeatAuthenticator:
                 f"session for nif={session.certificate_nif} is stale "
                 f"(idle_deadline={session.idle_deadline.isoformat()})"
             )
-        context = self._context
-        if context is None:
-            raise AeatLoginAssertionError("no active browser context; call authenticate() first")
+
+        # Snapshot-and-register the context under the lock so that
+        # close() / reauthenticate() cannot null it out mid-navigation.
+        async with self._lock:
+            context = self._context
+            if context is None:
+                raise AeatLoginAssertionError("no active browser context; call authenticate() first")
+            self._inflight_pages += 1
+            self._inflight_drained.clear()
 
         target = target_url or self._settings.aeat_certificate_verify_url
         attempted_at = datetime.now(UTC)
-        start_seconds = datetime.now(UTC).timestamp()
+        # time.perf_counter() is a monotonic clock; datetime.now()
+        # can jump backwards when the system clock is adjusted.
+        start = time.perf_counter()
 
         status_code = 0
         certificate_recognised = False
         error_message: str | None = None
+        page: BrowserPageLike | None = None
         try:
             page = await context.new_page()
-            response = await page.goto(target)
-            status_code = int(getattr(response, "status", 0) or 0)
-            certificate_recognised = 200 <= status_code < 400
-            await page.close()
+            try:
+                response = await page.goto(target, timeout=self._navigation_timeout_ms)
+            except TypeError:
+                # Fake pages in unit tests do not accept a timeout kwarg;
+                # fall back to the positional signature.
+                response = await page.goto(target)
+            if response is not None:
+                status_code = int(response.status)
+                certificate_recognised = 200 <= status_code < 400
         except Exception as exc:
             error_message = f"{type(exc).__name__}: {exc}"
+        finally:
+            if page is not None:
+                with contextlib.suppress(Exception):
+                    await page.close()
+            async with self._lock:
+                self._inflight_pages -= 1
+                if self._inflight_pages <= 0:
+                    self._inflight_pages = 0
+                    self._inflight_drained.set()
 
-        elapsed_ms = int((datetime.now(UTC).timestamp() - start_seconds) * 1000)
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
         handshake_success = session.handshake.success
         is_valid = handshake_success and certificate_recognised and bool(session.certificate_nif)
         return AeatLoginAssertion(
@@ -506,8 +555,8 @@ class AeatAuthenticator:
             is_valid=is_valid,
             handshake_success=handshake_success,
             certificate_recognised=certificate_recognised,
-            parsed_nif=session.certificate_nif or None,
-            parsed_subject=session.certificate_subject or None,
+            parsed_nif=session.certificate_nif,
+            parsed_subject=session.certificate_subject,
             status_code=status_code,
             elapsed_ms=elapsed_ms,
             attempted_at=attempted_at,
@@ -515,9 +564,19 @@ class AeatAuthenticator:
         )
 
     async def close(self) -> None:
-        """Release the browser context + session. Idempotent."""
+        """Release the browser context + session. Idempotent.
+
+        Waits for any in-flight :meth:`verify_login` call to finish
+        its navigation before tearing down the browser context, so a
+        page cannot be closed out from under a running probe.
+        """
+        # Wait (outside the lock) for any in-flight pages to finish.
+        # The event is set when _inflight_pages reaches zero.
+        await self._inflight_drained.wait()
         async with self._lock:
             await self._drop_context()
+            await self._close_browser_session(self._browser_session)
+            self._browser_session = None
             self._active_session = None
 
     # ── Internals ───────────────────────────────────────────────────────────
@@ -566,6 +625,27 @@ class AeatAuthenticator:
             await context.close()
         except Exception as exc:
             log.warning("AeatAuthenticator: context close failed: %s", exc)
+
+    async def _close_browser_session(self, session: BrowserSessionLike | None) -> None:
+        """Best-effort teardown of a :class:`BrowserSessionLike`.
+
+        The Protocol does not mandate a ``close()`` coroutine; real
+        :class:`aeat.browser.BrowserSession` wraps a Playwright
+        ``Browser`` which owns a Chromium OS process. Tests supply
+        fakes that may not. We probe for the method and call it when
+        present; failure to close is logged but never raised.
+        """
+        if session is None:
+            return
+        close = getattr(session, "close", None)
+        if not callable(close):
+            return
+        try:
+            result = close()
+            if asyncio.iscoroutine(result):
+                await result
+        except Exception as exc:
+            log.warning("AeatAuthenticator: browser session close failed: %s", exc)
 
 
 class BrowserSessionFactory(Protocol):
