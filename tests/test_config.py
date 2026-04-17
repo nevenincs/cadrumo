@@ -11,6 +11,7 @@ environment variable the application reads.  These tests enforce that:
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 from pydantic_settings import SettingsConfigDict
@@ -75,3 +76,37 @@ class TestEnvExampleAlignment:
 
         settings = IsolatedSettings()
         assert settings.aeat_base_url == "https://sede.agenciatributaria.gob.es"
+
+    def test_blank_env_values_are_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Blank values in env/.env must not coerce optional settings into live values."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            "\n".join(
+                (
+                    "AEAT_DEFAULT_PROFILE_PATH=",
+                    "AEAT_CERTIFICATE_PATH=",
+                    "AEAT_CERTIFICATE_PASSWORD_SECRET=",
+                    "GOOGLE_OAUTH_REDIRECT_URI=",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        class BlankEnvSettings(Settings):
+            """Settings variant bound to a temp env file that contains blank assignments."""
+
+            model_config = SettingsConfigDict(
+                env_file=env_path,
+                env_file_encoding="utf-8",
+                env_ignore_empty=True,
+            )
+
+        settings = BlankEnvSettings()
+        assert settings.aeat_default_profile_path is None
+        assert settings.aeat_certificate_path is None
+        assert settings.aeat_certificate_password_secret is None
+        assert settings.google_oauth_redirect_uri == "http://localhost:8080"
