@@ -26,6 +26,8 @@ from ._formula import (
 from ._ruleset import ParameterTable, ParameterValue, Ruleset
 from ._rulesets.modelo_130_2024 import RULESET as MODELO_130_2024
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 def _make_casilla(casilla_id: str, *, computed: bool) -> CasillaDefinition:
     return CasillaDefinition(

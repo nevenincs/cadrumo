@@ -10,6 +10,8 @@ from pydantic import ValidationError
 from ._codes import Quarter
 from ._period import FiscalPeriod
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 @pytest.mark.unit
 def test_annual_period_spans_full_year() -> None:

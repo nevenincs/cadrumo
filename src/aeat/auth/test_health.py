@@ -32,6 +32,8 @@ from . import (
     load_certificate,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 _SECRET = "correct-horse-battery-staple"
 _WARN_DAYS = 60
 _CRITICAL_DAYS = 14
@@ -101,7 +103,6 @@ def _loaded_cert_for_window(
 # ── Severity buckets ────────────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_health_ok_bucket(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(
@@ -121,7 +122,6 @@ def test_health_ok_bucket(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     assert result.critical_threshold_days == _CRITICAL_DAYS
 
 
-@pytest.mark.unit
 def test_health_warn_exact_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A cert with exactly ``warn_days`` remaining is WARN (inclusive)."""
     now = datetime.now(UTC)
@@ -135,7 +135,6 @@ def test_health_warn_exact_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     assert result.days_until_expiry == _WARN_DAYS
 
 
-@pytest.mark.unit
 def test_health_warn_below_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=30))
@@ -143,7 +142,6 @@ def test_health_warn_below_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     assert result.severity is CertificateHealthSeverity.WARN
 
 
-@pytest.mark.unit
 def test_health_critical_exact_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Exactly ``critical_days`` remaining → CRITICAL (inclusive)."""
     now = datetime.now(UTC)
@@ -157,7 +155,6 @@ def test_health_critical_exact_boundary(tmp_path: Path, monkeypatch: pytest.Monk
     assert result.days_until_expiry == _CRITICAL_DAYS
 
 
-@pytest.mark.unit
 def test_health_critical_below_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=3))
@@ -166,7 +163,6 @@ def test_health_critical_below_boundary(tmp_path: Path, monkeypatch: pytest.Monk
     assert 0 < result.days_until_expiry < _CRITICAL_DAYS
 
 
-@pytest.mark.unit
 def test_health_expired(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """An expired cert never raises from ``health()`` — returns EXPIRED."""
     now = datetime.now(UTC)
@@ -190,7 +186,6 @@ def test_health_expired(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
 # ── health() disk path ──────────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_health_disk_path_ok(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     now = datetime.now(UTC)
     p12 = _build_pkcs12(
@@ -213,7 +208,6 @@ def test_health_disk_path_ok(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
 # ── Model & error invariants ────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_health_model_is_frozen(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=200))
@@ -223,12 +217,10 @@ def test_health_model_is_frozen(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         result.severity = CertificateHealthSeverity.CRITICAL  # type: ignore[misc]
 
 
-@pytest.mark.unit
 def test_pre_expiry_error_is_aeat_error() -> None:
     assert issubclass(CertificatePreExpiryError, AeatError)
 
 
-@pytest.mark.unit
 def test_evaluate_rejects_inverted_thresholds(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=100))
@@ -236,7 +228,6 @@ def test_evaluate_rejects_inverted_thresholds(tmp_path: Path, monkeypatch: pytes
         evaluate_loaded_certificate_health(cert, warn_days=10, critical_days=30, now=now)
 
 
-@pytest.mark.unit
 def test_evaluate_rejects_nonpositive_critical(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=100))

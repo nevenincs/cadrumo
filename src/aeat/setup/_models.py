@@ -98,10 +98,13 @@ class SetupAnswers(BaseModel):
     # ── profile ──────────────────────────────────────────────────────────
     tax_id: str = Field(min_length=1)
     iva_regime: IVARegime
-    has_employees: bool
-    pays_rent_with_retencion: bool
-    does_intracomunitario: bool
-    bienes_extranjero_above_threshold: bool
+    has_employees: bool = False
+    pays_professionals_with_retencion: bool = False
+    professional_income_withholding_ge_70pct: bool = False
+    pays_rent_with_retencion: bool = False
+    does_intracomunitario: bool = False
+    third_party_transactions_above_347_threshold: bool = False
+    bienes_extranjero_above_threshold: bool = False
 
     # ── certificate (NEVER the password value) ───────────────────────────
     certificate_path: Path

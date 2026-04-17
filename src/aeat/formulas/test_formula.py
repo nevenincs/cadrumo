@@ -23,6 +23,8 @@ from ._formula import (
     iter_param_refs,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 @pytest.mark.unit
 def test_literal_coerces_strings_and_ints() -> None:

@@ -212,11 +212,27 @@ class Settings(BaseSettings):
     # ── Live tests ──────────────────────────────────────────────────────────
     aeat_live_tests_enabled: bool = Field(
         default=False,
-        description="Opt-in flag to run @pytest.mark.live tests against real Google APIs",
+        description="Opt-in flag to run @pytest.mark.live_read tests against real external services",
     )
     aeat_live_tests_google: bool = Field(
         default=False,
         description="Secondary opt-in specifically for Google Workspace fixture live tests",
+    )
+
+    # ── Live-write bypass (charter #116 R1) ─────────────────────────────────
+    aeat_live_write_unsafe_bypass: bool = Field(
+        default=False,
+        description=(
+            "UNSAFE. Pytest collection bypass factor 1 of 3 for @pytest.mark.live_write tests. "
+            "NEVER set outside an interactive live-filing session. See charter #116."
+        ),
+    )
+    aeat_live_write_unsafe_bypass_confirm: str = Field(
+        default="",
+        description=(
+            "UNSAFE. Pytest collection bypass factor 2 of 3. Must equal the phrase: "
+            "I ACCEPT THE RISK OF FILING A LIVE TAX RETURN. NEVER set outside an interactive live-filing session."
+        ),
     )
 
     # ── Manuals corpus (aeat.manuals, #25) ──────────────────────────────────
@@ -487,6 +503,26 @@ class Settings(BaseSettings):
         description="Directory where the status reader drops Playwright trace files",
     )
 
+    # ── Schema extraction (aeat.schema, #9) ────────────────────────────────
+    aeat_schema_cache_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "schema-cache",
+        description=(
+            "Directory where extracted Modelo schemas and their provenance manifests are persisted by aeat.schema."
+        ),
+    )
+    aeat_schema_source_urls_override: str = Field(
+        default="",
+        description=(
+            "Optional JSON-encoded mapping of {modelo_code: {boe_ref: url}} "
+            "that overrides the built-in BOE URL table (used for offline CI)."
+        ),
+    )
+    aeat_schema_extraction_concurrency: int = Field(
+        default=2,
+        ge=1,
+        description="Maximum number of BOE PDFs fetched in parallel by `aeat schema refresh`.",
+    )
+
     # ── Justificante parser (#44) ───────────────────────────────────────────
     aeat_justificantes_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "justificantes",
@@ -495,6 +531,20 @@ class Settings(BaseSettings):
     aeat_justificante_parser_backend: JustificanteParserBackend = Field(
         default=JustificanteParserBackend.PDFPLUMBER,
         description="Parser backend for `aeat.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
+    )
+
+    # ── Filing history (#168) ───────────────────────────────────────────────
+    aeat_filing_history_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "filing-history",
+        description="Directory where the persisted FilingHistory JSON file lives",
+    )
+    aeat_filing_history_cache_ttl_s: int = Field(
+        default=900,
+        description="TTL in seconds for per-expediente filing-history cache entries (default 15 min)",
+    )
+    aeat_filing_history_archive_html: bool = Field(
+        default=False,
+        description="If true, archive fetched detail-page HTML under <aeat_filing_history_dir>/pages/",
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
@@ -554,6 +604,8 @@ class Settings(BaseSettings):
         "aeat_status_cache_dir",
         "aeat_status_browser_trace_dir",
         "aeat_justificantes_dir",
+        "aeat_filing_history_dir",
+        "aeat_schema_cache_dir",
         mode="after",
     )
     @classmethod

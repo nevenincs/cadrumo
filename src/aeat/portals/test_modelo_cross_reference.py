@@ -8,7 +8,7 @@ from ..models import ModeloCode
 from ._categories import PortalCategory
 from ._registry import PORTAL_REGISTRY
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 _FILING_CENSUS_BORRADOR = {

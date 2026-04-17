@@ -15,6 +15,8 @@ from . import (
     next_appeal_deadline,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 
 def _make(
     nid: str,
@@ -46,7 +48,6 @@ def _inbox(*records: Notificacion) -> Inbox:
 TODAY = date(2026, 4, 10)
 
 
-@pytest.mark.unit
 class TestNextAppealDeadline:
     def test_empty_inbox(self) -> None:
         assert next_appeal_deadline(_inbox(), today=TODAY) is None

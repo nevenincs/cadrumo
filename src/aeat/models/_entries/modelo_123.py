@@ -52,11 +52,8 @@ ENTRY: ModeloMetadata = build_entry(
             "Fuera de alcance para autónomos ED en v1."
         ),
     ),
-    caps_into=None,
-    related_modelos=(),
+    caps_into=ModeloCode.MODELO_193,
+    related_modelos=(ModeloCode.MODELO_193,),
     submission_portal=Portal.PORTAL_M123_RETENCIONES_CAPITAL,
-    known_gotchas=(
-        "Modelo 193 ausente del registro v1; caps_into deliberadamente None.",
-        "RIRPF arts 74-76 no disponibles en corpus on-disk.",
-    ),
+    known_gotchas=("RIRPF arts 74-76 no disponibles en corpus on-disk.",),
 )

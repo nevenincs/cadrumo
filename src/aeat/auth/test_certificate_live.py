@@ -19,8 +19,9 @@ from . import (
     verify_handshake,
 )
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.live
+
 def test_verify_handshake_live_against_aeat() -> None:
     """Load the operator's cert and hit the configured AEAT verify URL."""
     if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":

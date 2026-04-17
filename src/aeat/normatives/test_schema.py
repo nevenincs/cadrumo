@@ -13,6 +13,8 @@ from . import (
     NormativeReference,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 def _articulo(numero: str = "32") -> Articulo:
     return Articulo(
@@ -51,7 +53,6 @@ def _reference(
     )
 
 
-@pytest.mark.unit
 class TestArticulo:
     def test_happy_path(self) -> None:
         articulo = _articulo()
@@ -82,7 +83,6 @@ class TestArticulo:
             articulo.notes = "mutated"  # type: ignore[misc]
 
 
-@pytest.mark.unit
 class TestNormativeReference:
     def test_happy_path(self) -> None:
         ref = _reference()

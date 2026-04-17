@@ -18,8 +18,7 @@ from ._citations import LegalCitation
 from ._codes import ModeloCode
 from ._metadata import ModeloMetadata
 
-pytestmark = pytest.mark.unit
-
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 _ALL: frozenset[TaxpayerProfile] = frozenset(TaxpayerProfile)
 

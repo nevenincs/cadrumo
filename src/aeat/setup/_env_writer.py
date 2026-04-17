@@ -140,8 +140,11 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         tax_id=answers.tax_id,
         iva_regime=answers.iva_regime,
         has_employees=answers.has_employees,
+        pays_professionals_with_retencion=answers.pays_professionals_with_retencion,
+        professional_income_withholding_ge_70pct=answers.professional_income_withholding_ge_70pct,
         pays_rent_with_retencion=answers.pays_rent_with_retencion,
         does_intracomunitario=answers.does_intracomunitario,
+        third_party_transactions_above_347_threshold=answers.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=answers.bienes_extranjero_above_threshold,
         notes=answers.notes,
     )

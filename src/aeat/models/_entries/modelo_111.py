@@ -61,9 +61,9 @@ ENTRY: ModeloMetadata = build_entry(
         ),
         optional=(TaxpayerProfile.AUTONOMO_EO,),
         trigger_notes_es=(
-            "Obligatorio cuando el autónomo paga salarios o honorarios profesionales bajo "
-            "retención; mapea a AutonomoProfile.has_employees o al pago de profesionales con "
-            "retención."
+            "Obligatorio cuando el autónomo paga salarios u honorarios profesionales bajo "
+            "retención; mapea a AutonomoProfile.has_employees o "
+            "AutonomoProfile.pays_professionals_with_retencion."
         ),
     ),
     caps_into=ModeloCode.MODELO_190,

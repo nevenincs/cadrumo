@@ -7,6 +7,8 @@ import pytest
 from ..models import MODELO_REGISTRY, ModeloCode
 from ._registry import get_registry
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 @pytest.mark.unit
 def test_every_ruleset_binds_to_a_registered_modelo() -> None:

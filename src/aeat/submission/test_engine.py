@@ -39,8 +39,7 @@ from . import (
     Submitter,
 )
 
-pytestmark = pytest.mark.unit
-
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 # ------------------------------ test doubles ---------------------------------
 

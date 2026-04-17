@@ -6,12 +6,12 @@ import pytest
 
 from ._codes import ModeloCode
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
-def test_modelo_code_has_exactly_twenty_members() -> None:
-    """The v1 inventory locks exactly 20 modelos."""
-    assert len(list(ModeloCode)) == 20
+def test_modelo_code_has_exactly_twenty_one_members() -> None:
+    """The inventory locks exactly 21 modelos."""
+    assert len(list(ModeloCode)) == 21
 
 
 def test_every_value_is_three_digit_string() -> None:

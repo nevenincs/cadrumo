@@ -11,6 +11,8 @@ from pydantic import ValidationError
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _valid_line(
     *,
@@ -75,7 +77,6 @@ def _valid_invoice(
     )
 
 
-@pytest.mark.unit
 def test_invoice_id_is_64_char_lowercase_hex_and_stable() -> None:
     """Invoice ID must be derived and stable across equivalent re-construction."""
     first = _valid_invoice()
@@ -85,7 +86,6 @@ def test_invoice_id_is_64_char_lowercase_hex_and_stable() -> None:
     assert all(ch in "0123456789abcdef" for ch in first.invoice_id)
 
 
-@pytest.mark.unit
 def test_invoice_is_frozen_and_rejects_mutation() -> None:
     """Invoice models must be frozen."""
     invoice = _valid_invoice()
@@ -93,7 +93,6 @@ def test_invoice_is_frozen_and_rejects_mutation() -> None:
         invoice.notes = "mutated"  # type: ignore[misc]
 
 
-@pytest.mark.unit
 def test_invoice_line_accepts_one_cent_rounding() -> None:
     """Line-level rounding within 1 cent must pass the subtotal/iva checks."""
     line = InvoiceLine.model_validate(
@@ -109,7 +108,6 @@ def test_invoice_line_accepts_one_cent_rounding() -> None:
     assert line.subtotal == Decimal("1.00")
 
 
-@pytest.mark.unit
 def test_invoice_line_rejects_larger_rounding_drift() -> None:
     """Drift beyond 1 cent on a line must fail validation."""
     with pytest.raises(ValidationError):
@@ -125,7 +123,6 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
         )
 
 
-@pytest.mark.unit
 def test_invoice_exempt_lines_require_zero_iva() -> None:
     """EXEMPT and NOT_SUBJECT lines must carry iva_amount == 0 exactly."""
     with pytest.raises(ValidationError):
@@ -141,7 +138,6 @@ def test_invoice_exempt_lines_require_zero_iva() -> None:
         )
 
 
-@pytest.mark.unit
 def test_invoice_requires_exact_invoice_level_totals() -> None:
     """Invoice-level totals must equal the line sums exactly (no tolerance)."""
     line = _valid_line(quantity="1", unit_price="100.00")
@@ -164,7 +160,6 @@ def test_invoice_requires_exact_invoice_level_totals() -> None:
         )
 
 
-@pytest.mark.unit
 def test_invoice_rejects_accumulated_line_drift() -> None:
     """Per-line 1-cent drift that accumulates at the invoice level is rejected."""
     line_a = InvoiceLine.model_validate(
@@ -207,7 +202,6 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
         )
 
 
-@pytest.mark.unit
 def test_invoice_exempt_invoice_enforces_zero_iva_total() -> None:
     """An invoice with only EXEMPT / NOT_SUBJECT lines must have iva_total == 0."""
     exempt_line = InvoiceLine.model_validate(
@@ -225,14 +219,12 @@ def test_invoice_exempt_invoice_enforces_zero_iva_total() -> None:
     assert invoice.grand_total == invoice.base_total
 
 
-@pytest.mark.unit
 def test_invoice_validates_spanish_tax_id_for_es_country() -> None:
     """ES counterparties must pass NIF/NIE/CIF validation."""
     with pytest.raises(ValidationError):
         _valid_invoice(counterparty_country="ES", counterparty_tax_id="INVALID")
 
 
-@pytest.mark.unit
 def test_invoice_validates_vat_prefix_for_non_es_country() -> None:
     """Non-ES counterparties must carry a VAT number with the country prefix."""
     invoice = _valid_invoice(counterparty_country="DE", counterparty_tax_id="DE123456789")
@@ -241,7 +233,6 @@ def test_invoice_validates_vat_prefix_for_non_es_country() -> None:
         _valid_invoice(counterparty_country="DE", counterparty_tax_id="123456789")
 
 
-@pytest.mark.unit
 def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> None:
     """Linked transaction IDs must be 64-char lowercase hex and deduplicated."""
     hex_a = "a" * 64
@@ -252,7 +243,6 @@ def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> 
         _valid_invoice(linked_transaction_ids=("not-hex",))
 
 
-@pytest.mark.unit
 def test_invoice_rejects_caller_supplied_invoice_id_mismatch() -> None:
     """A caller-supplied ``invoice_id`` must match the derived digest."""
     invoice = _valid_invoice()
@@ -265,7 +255,6 @@ def test_invoice_rejects_caller_supplied_invoice_id_mismatch() -> None:
         )
 
 
-@pytest.mark.unit
 def test_derive_invoice_id_is_stable_over_equivalent_decimals() -> None:
     """Derivation must be invariant under equivalent Decimal forms."""
     first = derive_invoice_id(
@@ -287,7 +276,6 @@ def test_derive_invoice_id_is_stable_over_equivalent_decimals() -> None:
     assert first == second
 
 
-@pytest.mark.unit
 def test_invoice_number_is_uppercased_for_identity() -> None:
     """Invoice number casing must not yield distinct identities."""
     lower = _valid_invoice(invoice_number="inv-001")
@@ -296,7 +284,6 @@ def test_invoice_number_is_uppercased_for_identity() -> None:
     assert lower.invoice_number == "INV-001"
 
 
-@pytest.mark.unit
 def test_catalogue_rejects_duplicate_invoice_ids_on_construction() -> None:
     """Duplicate logical IDs must be rejected when building a catalogue."""
     invoice = _valid_invoice()
@@ -304,7 +291,6 @@ def test_catalogue_rejects_duplicate_invoice_ids_on_construction() -> None:
         InvoiceCatalogue.from_invoices([invoice, invoice])
 
 
-@pytest.mark.unit
 def test_catalogue_iteration_yields_invoices() -> None:
     """Iteration yields invoices, not model fields."""
     first = _valid_invoice(invoice_number="INV-001")

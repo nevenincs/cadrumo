@@ -11,8 +11,9 @@ from ._docs_helpers import (
     find_end_index,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
-@pytest.mark.unit
+
 class TestExtractPlaintext:
     """Behaviour of ``extract_plaintext``."""
 
@@ -82,7 +83,6 @@ class TestExtractPlaintext:
         assert extract_plaintext(doc) == "x\n"
 
 
-@pytest.mark.unit
 class TestFindEndIndex:
     """Behaviour of ``find_end_index``."""
 
@@ -98,7 +98,6 @@ class TestFindEndIndex:
         assert find_end_index(doc) == 1
 
 
-@pytest.mark.unit
 class TestBuildRequests:
     """Behaviour of ``build_append_request`` and ``build_replace_all_request``."""
 

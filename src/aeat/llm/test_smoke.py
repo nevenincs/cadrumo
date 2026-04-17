@@ -4,8 +4,9 @@ import pytest
 
 from .. import errors, llm, logging
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
-@pytest.mark.unit
+
 def test_smoke_llm() -> None:
     """Assert the public package is importable and convention-compliant."""
 

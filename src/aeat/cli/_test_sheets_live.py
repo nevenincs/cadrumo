@@ -19,8 +19,9 @@ from ._live import (
     unique_prefix,
 )
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
 
-@pytest.mark.live
+
 class TestSheetsLiveRoundTrip:
     """End-to-end Sheets round-trip in the scratch sheet."""
 

@@ -16,8 +16,9 @@ from . import (
     compute_run_id,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
-@pytest.mark.unit
+
 class TestWorkflowStageOrdering:
     """The ten-stage enum must stay exact and ordered."""
 
@@ -38,7 +39,6 @@ class TestWorkflowStageOrdering:
         assert tuple(s.value for s in WorkflowStage) == expected
 
 
-@pytest.mark.unit
 class TestWorkflowAbortReasons:
     """The abort reasons must match the issue spec exactly.
 
@@ -64,7 +64,6 @@ class TestWorkflowAbortReasons:
         assert {r.value for r in WorkflowAbortReason} == expected
 
 
-@pytest.mark.unit
 class TestComputeRunId:
     """Stable hash for a workflow run."""
 
@@ -85,7 +84,6 @@ class TestComputeRunId:
         assert a != b
 
 
-@pytest.mark.unit
 class TestWorkflowStepValidation:
     """Strict pydantic validation on workflow step records."""
 
@@ -129,7 +127,6 @@ class TestWorkflowStepValidation:
             )
 
 
-@pytest.mark.unit
 class TestWorkflowResultTerminal:
     """Terminal-state invariants on the result envelope."""
 

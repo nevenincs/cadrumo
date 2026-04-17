@@ -13,6 +13,7 @@ to the engine; absent that, the entries here are authoritative.
 
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date
 from enum import StrEnum
 
@@ -74,6 +75,7 @@ _CITE_RET_IRPF = "BOE-Orden-Retenciones-IRPF-trabajo-profesionales"
 _CITE_RET_IRPF_ANUAL = "BOE-Orden-Retenciones-IRPF-resumen-anual"
 _CITE_RET_ALQUILER = "BOE-Orden-Retenciones-Alquiler-Inmuebles-Urbanos"
 _CITE_RET_ALQUILER_ANUAL = "BOE-Orden-Retenciones-Alquiler-Resumen-Anual"
+_CITE_OPERACIONES_TERCEROS = "BOE-Orden-347-Operaciones-Terceros"
 _CITE_INTRA_EU = "BOE-Orden-Recapitulativa-Intracomunitaria"
 _CITE_BIENES_EXTRANJERO = "BOE-Orden-720-Bienes-Extranjero"
 
@@ -141,6 +143,14 @@ def _annual_window(
     )
 
 
+def _last_business_day(year: int, month: int) -> date:
+    """Return the month-end date extended to the next Monday when needed."""
+    closes_on = date(year, month, monthrange(year, month)[1])
+    while closes_on.weekday() >= 5:
+        closes_on = date.fromordinal(closes_on.toordinal() + 1)
+    return closes_on
+
+
 def _build_year(year: int) -> tuple[CanonicalWindow, ...]:
     """Materialise the canonical windows for ``year``.
 
@@ -192,6 +202,17 @@ def _build_year(year: int) -> tuple[CanonicalWindow, ...]:
             citations=(_CITE_RET_ALQUILER_ANUAL,),
         )
     )
+    # Annual third-party transactions.
+    out.append(
+        _annual_window(
+            "347",
+            year,
+            opens_on=date(year + 1, 2, 1),
+            closes_on=_last_business_day(year + 1, 2),
+            payment_cutoff_on=None,
+            citations=(_CITE_OPERACIONES_TERCEROS,),
+        )
+    )
     # Modelo 100 - IRPF anual: filed in year+1 for income earned in year.
     # Window for v1: 2 April → 30 June of year+1.
     out.append(
@@ -235,6 +256,7 @@ KNOWN_AUTONOMO_MODELOS: tuple[str, ...] = (
     "180",
     "190",
     "303",
+    "347",
     "349",
     "390",
     "720",

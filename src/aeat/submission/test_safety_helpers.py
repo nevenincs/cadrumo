@@ -23,7 +23,7 @@ from ._audit import append_live_submit_audit, build_live_submit_audit_record
 from ._confirm import compute_draft_checksum, confirm_live_submission
 from ._errors import AeatLiveConfirmationDeclinedError
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 @dataclass(frozen=True)
@@ -147,7 +147,6 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
             Submitter,
         )
 
-
         @dataclass
         class Draft(FilingDraftLike):
             draft_id: str = "draft-1"
@@ -158,7 +157,6 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
             values: dict[str, str] = field(default_factory=lambda: {"07": "2150.00"})
             findings: tuple[FilingFinding, ...] = ()
 
-
         class Session:
             async def navigate(self, url: str) -> None: ...
             async def fill(self, selector: str, value: str) -> None: ...
@@ -168,11 +166,9 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
             async def trace_stop(self, path: Path) -> None: ...
             async def snapshot_form_state(self, path: Path) -> None: ...
 
-
         class Deadlines:
             def is_window_open(self, modelo: str, period: str, today: date) -> bool:
                 return True
-
 
         class Certs:
             def load(self) -> LoadedCertificate:
@@ -184,11 +180,9 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
 
             async def preload_into_browser_context(self, context: Any) -> None: ...
 
-
         class Portals:
             def portal_for(self, modelo: str) -> Portal:
                 return Portal(modelo=modelo, presentation_url="https://sede.example.test/130")
-
 
         class Casillas:
             def casillas_for_modelo(self, modelo: str) -> tuple[CasillaRecord, ...]:
@@ -203,11 +197,9 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
             def get(self, casilla_id: str) -> CasillaRecord:
                 return self.casillas_for_modelo("130")[0]
 
-
         class Drafts:
             def load(self, draft_path: Path) -> Any:
                 raise NotImplementedError
-
 
         class FailingSubmitter(Submitter):
             @property
@@ -219,7 +211,6 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
 
             async def submit(self, **kwargs: Any):
                 raise RuntimeError("transport blew up after dispatch")
-
 
         settings = Settings(
             aeat_submissions_dir=Path(sys.argv[1]),

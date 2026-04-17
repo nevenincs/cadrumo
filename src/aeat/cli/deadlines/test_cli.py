@@ -10,7 +10,7 @@ from typer.testing import CliRunner
 from ...deadlines import AutonomoProfile, IVARegime
 from . import app
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 @pytest.fixture()

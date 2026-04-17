@@ -12,7 +12,7 @@ from . import (
     SubmissionRejectionError,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def test_every_error_inherits_aeat_error() -> None:

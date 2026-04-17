@@ -71,13 +71,46 @@ fmt:
 typecheck:
     uv run ty check src tests
 
-# Run the pytest suite (excludes @pytest.mark.live by default).
+# Run the pytest suite (unit-only by default via pyproject addopts).
 test:
     uv run pytest
 
-# Run only the live smoke tests against real Google APIs.
+# Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
 test-live:
-    uv run pytest -m live
+    uv run pytest -m "unit or live_read"
+
+# Run only live_read tests.
+test-live-read:
+    uv run pytest -m "live_read"
+
+# Run unit tests in a single domain, e.g. `just test-domain financial_input`.
+test-domain DOMAIN:
+    uv run pytest -m "unit and domain_{{DOMAIN}}"
+
+# Documentation surface for @pytest.mark.live_write tests. Charter #116 R1
+# categorically forbids any automated live write against AEAT Sede
+# Electronica - AEAT has no sandbox and every successful write is a
+# legally binding filing. The collection hook in conftest.py DROPS every
+# live_write item unless all three bypass factors are active:
+#   1. AEAT_LIVE_WRITE_UNSAFE_BYPASS=1
+#   2. AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM="I ACCEPT THE RISK OF FILING A LIVE TAX RETURN"
+#   3. stdin attached to an interactive TTY
+# This recipe does NOT enable a live submission; charter R3 (env gate) and
+# R5 (SubmissionEngine.__init__ runtime refusal) remain the last-line
+# defences. Under default operation the recipe collects zero items.
+[unix]
+test-live-write:
+    #!/usr/bin/env bash
+    echo "WARNING: @pytest.mark.live_write tests are collection-banned by default (charter #116 R1)."
+    echo "This recipe does NOT enable a live submission. See tests/README.md for the three-factor bypass."
+    uv run pytest -m live_write
+
+[windows]
+test-live-write:
+    #!pwsh
+    Write-Host "WARNING: @pytest.mark.live_write tests are collection-banned by default (charter #116 R1)."
+    Write-Host "This recipe does NOT enable a live submission. See tests/README.md for the three-factor bypass."
+    uv run pytest -m live_write
 
 # Run the unit suite with coverage and enforce the fail-under floor.
 # See .vault/adr/2026-04-17-pytest-only-testing-adr.md (#15).
@@ -572,7 +605,7 @@ release-apply:
 # ── Google Workspace test fixtures ──────────────────────────────────────────
 #
 # Idempotent provisioning and teardown of the Drive/Sheets/Docs fixtures
-# consumed by `@pytest.mark.live` tests. See scripts/README.md and
+# consumed by `@pytest.mark.live_read` tests. See scripts/README.md and
 # .vault/adr/2026-04-12-google-fixtures-adr.md.
 
 # Provision (or discover) every fixture in scripts/_fixture_catalogue.py,

@@ -23,8 +23,9 @@ from ._live import (
     unique_prefix,
 )
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
 
-@pytest.mark.live
+
 class TestDriveLiveRoundTrip:
     """End-to-end Drive round-trip in the scratch folder."""
 

@@ -20,6 +20,8 @@ from . import (
     parse_http_url,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _citation() -> Citation:
     return Citation(
@@ -48,7 +50,6 @@ def _rule() -> ProportionalityRule:
     )
 
 
-@pytest.mark.unit
 def test_category_profile_requires_authoritative_spanish_label() -> None:
     """Profiles must reject labels missing the authoritative Spanish string."""
 
@@ -62,7 +63,6 @@ def test_category_profile_requires_authoritative_spanish_label() -> None:
         )
 
 
-@pytest.mark.unit
 def test_category_profile_rejects_duplicate_mappings() -> None:
     """Profiles must reject duplicate modelo/period/casilla combinations."""
 

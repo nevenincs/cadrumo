@@ -1,4 +1,4 @@
-"""Shared fixtures and skip helpers for ``@pytest.mark.live`` tests.
+"""Shared fixtures and skip helpers for ``@pytest.mark.live_read`` tests.
 
 Live tests run against real Google APIs and must satisfy two
 preconditions:

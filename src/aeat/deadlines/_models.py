@@ -52,12 +52,22 @@ class AutonomoProfile(BaseModel):
     Attributes:
         tax_id: NIF / NIE. Stored verbatim, no normalisation.
         iva_regime: The IVA regime the autónomo files under.
-        has_employees: Whether the autónomo pays salaries / professional
-            fees with retención. Drives Modelo 111 and 190.
+        has_employees: Whether the autónomo pays salaries with
+            retención. Drives Modelo 111 and 190.
+        pays_professionals_with_retencion: Whether the autónomo pays
+            professional fees subject to retención. Also drives Modelo
+            111 and 190.
+        professional_income_withholding_ge_70pct: Whether at least 70%
+            of the autónomo's prior-year professional income was
+            already subject to withholding. This waives Modelo 130 for
+            the professional-activity case.
         pays_rent_with_retencion: Whether the autónomo pays alquiler de
             local with retención. Drives Modelo 115 and 180.
         does_intracomunitario: Whether the autónomo conducts
             operaciones intracomunitarias. Drives Modelo 349.
+        third_party_transactions_above_347_threshold: Whether the
+            profile exceeded the Modelo 347 threshold with any third
+            party during the prior year.
         bienes_extranjero_above_threshold: Whether the autónomo holds
             bienes en el extranjero above the legal threshold. Drives
             Modelo 720.
@@ -69,10 +79,13 @@ class AutonomoProfile(BaseModel):
 
     tax_id: str = Field(min_length=1)
     iva_regime: IVARegime
-    has_employees: bool
-    pays_rent_with_retencion: bool
-    does_intracomunitario: bool
-    bienes_extranjero_above_threshold: bool
+    has_employees: bool = False
+    pays_professionals_with_retencion: bool = False
+    professional_income_withholding_ge_70pct: bool = False
+    pays_rent_with_retencion: bool = False
+    does_intracomunitario: bool = False
+    third_party_transactions_above_347_threshold: bool = False
+    bienes_extranjero_above_threshold: bool = False
     notes: str = ""
 
 

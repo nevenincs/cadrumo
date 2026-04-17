@@ -25,6 +25,8 @@ from ._service import (
     save_invoices,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _valid_invoice(
     *,
@@ -64,7 +66,6 @@ def _valid_invoice(
     )
 
 
-@pytest.mark.unit
 def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
     """Saving then loading should round-trip the full catalogue."""
     catalogue = InvoiceCatalogue.from_invoices(
@@ -79,14 +80,12 @@ def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
     assert restored == catalogue
 
 
-@pytest.mark.unit
 def test_load_raises_typed_error_for_missing_file(tmp_path: Path) -> None:
     """Reading a non-existent catalogue file must surface a typed error."""
     with pytest.raises(InvoicePersistenceError):
         load_invoices(tmp_path / "missing.json")
 
 
-@pytest.mark.unit
 def test_load_raises_typed_error_for_invalid_json(tmp_path: Path) -> None:
     """Invalid JSON must surface a typed persistence error, not a ValidationError."""
     target = tmp_path / "broken.json"
@@ -95,14 +94,12 @@ def test_load_raises_typed_error_for_invalid_json(tmp_path: Path) -> None:
         load_invoices(target)
 
 
-@pytest.mark.unit
 def test_find_invoice_returns_none_for_missing_id() -> None:
     """Missing IDs return None rather than raising."""
     catalogue = InvoiceCatalogue.from_invoices([_valid_invoice()])
     assert find_invoice(catalogue, "missing") is None
 
 
-@pytest.mark.unit
 def test_find_unmatched_filters_by_kind() -> None:
     """find_unmatched returns empty-link invoices, filtered by kind when requested."""
     hex_a = "a" * 64
@@ -116,7 +113,6 @@ def test_find_unmatched_filters_by_kind() -> None:
     assert find_unmatched(catalogue, kind=InvoiceKind.RECEIVED) == (received_unlinked,)
 
 
-@pytest.mark.unit
 def test_link_transaction_appends_id_and_returns_new_catalogue() -> None:
     """link_transaction must return a fresh catalogue with the transaction appended."""
     invoice = _valid_invoice()
@@ -131,7 +127,6 @@ def test_link_transaction_appends_id_and_returns_new_catalogue() -> None:
     assert after is not None and after.linked_transaction_ids == (hex_a,)
 
 
-@pytest.mark.unit
 def test_link_transaction_is_idempotent_on_duplicate() -> None:
     """Re-linking an already-present transaction returns a value-equal catalogue."""
     hex_a = "a" * 64
@@ -141,7 +136,6 @@ def test_link_transaction_is_idempotent_on_duplicate() -> None:
     assert updated == catalogue
 
 
-@pytest.mark.unit
 def test_link_transaction_rejects_non_hex_transaction_id() -> None:
     """Invalid transaction IDs must raise a typed link error."""
     invoice = _valid_invoice()
@@ -150,7 +144,6 @@ def test_link_transaction_rejects_non_hex_transaction_id() -> None:
         link_transaction(catalogue, invoice.invoice_id, "not-hex")
 
 
-@pytest.mark.unit
 def test_link_transaction_raises_typed_not_found() -> None:
     """Missing invoice IDs must raise InvoiceNotFoundError."""
     catalogue = InvoiceCatalogue.from_invoices([_valid_invoice()])
@@ -158,7 +151,6 @@ def test_link_transaction_raises_typed_not_found() -> None:
         link_transaction(catalogue, "nonexistent", "a" * 64)
 
 
-@pytest.mark.unit
 def test_catalogue_rejects_mapping_with_mismatched_keys() -> None:
     """Mapping keys must match each nested invoice's ``invoice_id``."""
     invoice = _valid_invoice()
@@ -167,7 +159,6 @@ def test_catalogue_rejects_mapping_with_mismatched_keys() -> None:
         InvoiceCatalogue.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_catalogue_error_hierarchy_reachable() -> None:
     """Error subclasses must be catchable through a single parent."""
     with pytest.raises(InvoiceCatalogueError):

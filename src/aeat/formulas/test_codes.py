@@ -6,6 +6,8 @@ import pytest
 
 from ._codes import FormulaOp, Quarter
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 @pytest.mark.unit
 def test_formula_op_has_13_members() -> None:

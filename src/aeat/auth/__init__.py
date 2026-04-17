@@ -37,7 +37,25 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from ._authenticator import (
+    AEAT_SESSION_IDLE_TTL,
+    AeatAuthenticator,
+    AeatLoginAssertion,
+    AeatSession,
+    BrowserContextLike,
+    BrowserPageLike,
+    BrowserResponseLike,
+    BrowserSessionFactory,
+    BrowserSessionLike,
+)
+from ._certificate_backends._playwright_context import (
+    build_client_certificates_kwarg,
+)
+from ._gate import AeatAccessGate, AeatGateEnvSnapshot
 from .certificate import (
+    AeatLiveReadNotEnabledError,
+    AeatLoginAssertionError,
+    AeatSessionExpiredError,
     CertificateBackend,
     CertificateBundle,
     CertificateError,
@@ -46,11 +64,13 @@ from .certificate import (
     CertificateHealth,
     CertificateHealthSeverity,
     CertificateLoadError,
+    CertificateNifParseError,
     CertificatePasswordError,
     CertificatePreExpiryError,
     HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
+    extract_nif_from_subject,
     health,
     load_certificate,
     preload_into_browser_context,
@@ -61,6 +81,20 @@ if TYPE_CHECKING:
     from ..config import Settings
 
 __all__ = [
+    "AEAT_SESSION_IDLE_TTL",
+    "AeatAccessGate",
+    "AeatAuthenticator",
+    "AeatGateEnvSnapshot",
+    "AeatLiveReadNotEnabledError",
+    "AeatLoginAssertion",
+    "AeatLoginAssertionError",
+    "AeatSession",
+    "AeatSessionExpiredError",
+    "BrowserContextLike",
+    "BrowserPageLike",
+    "BrowserResponseLike",
+    "BrowserSessionFactory",
+    "BrowserSessionLike",
     "CertificateBackend",
     "CertificateBundle",
     "CertificateError",
@@ -69,11 +103,14 @@ __all__ = [
     "CertificateHealth",
     "CertificateHealthSeverity",
     "CertificateLoadError",
+    "CertificateNifParseError",
     "CertificatePasswordError",
     "CertificatePreExpiryError",
     "HandshakeResult",
     "LoadedCertificate",
+    "build_client_certificates_kwarg",
     "evaluate_loaded_certificate_health",
+    "extract_nif_from_subject",
     "health",
     "load_certificate",
     "preload_into_browser_context",

@@ -13,6 +13,8 @@ from typer.testing import CliRunner
 from ...cli import app as root_app
 from . import AttachmentKind, AttachmentSource, AttachmentStore
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 _RUNNER = CliRunner()
 
 
@@ -26,7 +28,6 @@ def _invoke(args: list[str], store_root: Path) -> Result:
     return _RUNNER.invoke(root_app, args, env={"AEAT_ATTACHMENTS_DIR": str(store_root)})
 
 
-@pytest.mark.unit
 def test_attachments_add_persists_manifest_and_blob(tmp_path: Path) -> None:
     """`aeat attachments add` should persist both the blob and the manifest."""
     store_root = tmp_path / "store"
@@ -69,7 +70,6 @@ def test_attachments_add_persists_manifest_and_blob(tmp_path: Path) -> None:
     assert store.manifest_path(digest).exists()
 
 
-@pytest.mark.unit
 def test_attachments_add_merges_links_on_re_ingest(tmp_path: Path) -> None:
     """Re-ingesting the same file must merge link sets in the manifest."""
     store_root = tmp_path / "store"
@@ -90,7 +90,6 @@ def test_attachments_add_merges_links_on_re_ingest(tmp_path: Path) -> None:
     assert final["linked_invoice_ids"] == ["inv-1"]
 
 
-@pytest.mark.unit
 def test_attachments_list_filters_by_linked_to(tmp_path: Path) -> None:
     """`aeat attachments list --linked-to` should filter output."""
     store_root = tmp_path / "store"
@@ -109,7 +108,6 @@ def test_attachments_list_filters_by_linked_to(tmp_path: Path) -> None:
     assert second_digest not in filtered.output
 
 
-@pytest.mark.unit
 def test_attachments_show_prints_manifest_json(tmp_path: Path) -> None:
     """`aeat attachments show <id>` should emit the manifest JSON."""
     store_root = tmp_path / "store"
@@ -124,7 +122,6 @@ def test_attachments_show_prints_manifest_json(tmp_path: Path) -> None:
     assert payload["attachment_id"] == digest
 
 
-@pytest.mark.unit
 def test_attachments_show_reports_missing_attachment_cleanly(tmp_path: Path) -> None:
     """Show must exit cleanly with code 2 when the manifest is absent."""
     store_root = tmp_path / "store"
@@ -134,7 +131,6 @@ def test_attachments_show_reports_missing_attachment_cleanly(tmp_path: Path) -> 
     assert "attachment manifest not found" in result.output
 
 
-@pytest.mark.unit
 def test_attachments_add_rejects_metadata_without_equals(tmp_path: Path) -> None:
     """--metadata must reject entries missing the ``=`` separator."""
     store_root = tmp_path / "store"
@@ -147,7 +143,6 @@ def test_attachments_add_rejects_metadata_without_equals(tmp_path: Path) -> None
     assert "--metadata entry must be key=value" in result.output
 
 
-@pytest.mark.unit
 def test_attachments_add_rejects_duplicate_metadata_keys(tmp_path: Path) -> None:
     """Duplicate metadata keys within one invocation must exit with code 2."""
     store_root = tmp_path / "store"

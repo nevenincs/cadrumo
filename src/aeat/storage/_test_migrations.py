@@ -20,8 +20,9 @@ from . import (
     session_scope,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
-@pytest.mark.unit
+
 def test_migrations_round_trip(tmp_path: Path) -> None:
     """head → base → head must leave the schema writable and consistent."""
     settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'migrations.db').as_posix()}")

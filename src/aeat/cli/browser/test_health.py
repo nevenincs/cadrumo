@@ -27,6 +27,8 @@ from . import app
 from . import health as health_module
 from .health import _RealProbe
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 _RUNNER = CliRunner()
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
 
@@ -74,7 +76,6 @@ def _install_factory(
     monkeypatch.setattr(health_module, "PROBE_FACTORY", _factory)
 
 
-@pytest.mark.unit
 def test_health_ok_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
     _install_factory(monkeypatch, _HealthyProbe)
     result = _RUNNER.invoke(app, ["health"])
@@ -82,7 +83,6 @@ def test_health_ok_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "state=ok" in result.stdout
 
 
-@pytest.mark.unit
 def test_health_ok_json_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
     _install_factory(monkeypatch, _HealthyProbe)
     result = _RUNNER.invoke(app, ["health", "--json"])
@@ -91,7 +91,6 @@ def test_health_ok_json_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
     assert payload["state"] == "ok"
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("fixture_rel", "http_status", "expected_state", "expected_exit"),
     [
@@ -190,7 +189,6 @@ class _RaisingNewPageContext(_StubContext):
         raise RuntimeError("boom from new_page")
 
 
-@pytest.mark.unit
 class TestRealProbeCleanup:
     """``_RealProbe`` must always release Playwright even on early errors."""
 
@@ -214,7 +212,6 @@ class TestRealProbeCleanup:
         assert playwright.stop_calls == 1
 
 
-@pytest.mark.unit
 def test_health_json_emits_parseable_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     error = _status_from_fixture(
         _FIXTURES_ROOT / "mantenimiento" / "interstitial.html",

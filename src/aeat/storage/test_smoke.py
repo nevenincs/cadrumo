@@ -6,8 +6,9 @@ import pytest
 
 from .. import errors, logging, storage
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
-@pytest.mark.unit
+
 def test_smoke_storage() -> None:
     """Assert the subpackage is importable and its conventions hold."""
     assert storage.__doc__ is not None
@@ -17,7 +18,6 @@ def test_smoke_storage() -> None:
     assert logging.get_logger(__name__).name == __name__
 
 
-@pytest.mark.unit
 def test_public_surface_is_complete() -> None:
     """Every name in ``__all__`` must be importable from the package root."""
     for name in storage.__all__:

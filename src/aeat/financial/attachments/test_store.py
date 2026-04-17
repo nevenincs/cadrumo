@@ -19,6 +19,8 @@ from . import (
     load_attachment,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _write_source(path: Path, content: bytes) -> Path:
     path.write_bytes(content)
@@ -46,7 +48,6 @@ def _add_default(
     )
 
 
-@pytest.mark.unit
 def test_put_bytes_is_deterministic_and_idempotent(tmp_path: Path) -> None:
     """Same bytes always hash to the same digest and reuse the existing blob."""
     store = AttachmentStore.at(tmp_path)
@@ -66,7 +67,6 @@ def test_put_bytes_is_deterministic_and_idempotent(tmp_path: Path) -> None:
     assert blob_path.stat().st_mtime_ns == first_written_at
 
 
-@pytest.mark.unit
 def test_read_bytes_returns_raw_content(tmp_path: Path) -> None:
     """read_bytes must return the exact bytes previously stored."""
     store = AttachmentStore.at(tmp_path)
@@ -75,7 +75,6 @@ def test_read_bytes_returns_raw_content(tmp_path: Path) -> None:
     assert store.read_bytes(digest) == data
 
 
-@pytest.mark.unit
 def test_read_bytes_raises_not_found_for_missing_blob(tmp_path: Path) -> None:
     """Reading an unknown digest must raise the typed not-found error."""
     store = AttachmentStore.at(tmp_path)
@@ -83,7 +82,6 @@ def test_read_bytes_raises_not_found_for_missing_blob(tmp_path: Path) -> None:
         store.read_bytes("a" * 64)
 
 
-@pytest.mark.unit
 def test_add_attachment_stores_bytes_and_manifest_separately(tmp_path: Path) -> None:
     """Bytes land in blobs/ and manifests land in manifests/."""
     store = AttachmentStore.at(tmp_path)
@@ -101,7 +99,6 @@ def test_add_attachment_stores_bytes_and_manifest_separately(tmp_path: Path) -> 
     assert reloaded == attachment
 
 
-@pytest.mark.unit
 def test_re_ingesting_same_bytes_merges_links_without_duplicating_blob(tmp_path: Path) -> None:
     """A second add with a new link must merge, not replace."""
     store = AttachmentStore.at(tmp_path)
@@ -119,7 +116,6 @@ def test_re_ingesting_same_bytes_merges_links_without_duplicating_blob(tmp_path:
     assert len(manifest_files) == 1
 
 
-@pytest.mark.unit
 def test_list_attachments_filters_by_linked_transaction_or_invoice(tmp_path: Path) -> None:
     """list_attachments respects linked_to filtering across both link sets."""
     store = AttachmentStore.at(tmp_path)
@@ -140,7 +136,6 @@ def test_list_attachments_filters_by_linked_transaction_or_invoice(tmp_path: Pat
     assert linked_to_missing == ()
 
 
-@pytest.mark.unit
 def test_list_attachments_filters_by_kind(tmp_path: Path) -> None:
     """list_attachments respects the kind filter independent of linkage."""
     store = AttachmentStore.at(tmp_path)
@@ -154,7 +149,6 @@ def test_list_attachments_filters_by_kind(tmp_path: Path) -> None:
     assert tuple(item.kind for item in invoices) == (AttachmentKind.INVOICE_PDF,)
 
 
-@pytest.mark.unit
 def test_blob_without_manifest_is_not_surfaced_by_listing(tmp_path: Path) -> None:
     """Orphan bytes must not appear in iter_manifests / list_attachments output."""
     store = AttachmentStore.at(tmp_path)
@@ -163,7 +157,6 @@ def test_blob_without_manifest_is_not_surfaced_by_listing(tmp_path: Path) -> Non
     assert list_attachments(store) == ()
 
 
-@pytest.mark.unit
 def test_iter_manifests_is_sorted_by_filename(tmp_path: Path) -> None:
     """Iteration order is deterministic by sorted manifest filename."""
     store = AttachmentStore.at(tmp_path)
@@ -179,7 +172,6 @@ def test_iter_manifests_is_sorted_by_filename(tmp_path: Path) -> None:
     assert ids_list == sorted(ids_list)
 
 
-@pytest.mark.unit
 def test_add_attachment_raises_persistence_error_for_missing_source(tmp_path: Path) -> None:
     """Source-read failures are translated to AttachmentPersistenceError."""
     from . import AttachmentPersistenceError
@@ -190,7 +182,6 @@ def test_add_attachment_raises_persistence_error_for_missing_source(tmp_path: Pa
         _add_default(store, missing)
 
 
-@pytest.mark.unit
 def test_put_file_streams_large_payloads_and_is_idempotent(tmp_path: Path) -> None:
     """put_file must stream in chunks and honour the write-once invariant."""
     store = AttachmentStore.at(tmp_path)
@@ -214,7 +205,6 @@ def test_put_file_streams_large_payloads_and_is_idempotent(tmp_path: Path) -> No
     assert stray == []
 
 
-@pytest.mark.unit
 def test_put_file_raises_persistence_error_for_missing_source(tmp_path: Path) -> None:
     """Missing source paths must surface as AttachmentPersistenceError."""
     from . import AttachmentPersistenceError
@@ -225,7 +215,6 @@ def test_put_file_raises_persistence_error_for_missing_source(tmp_path: Path) ->
         store.put_file(missing)
 
 
-@pytest.mark.unit
 def test_list_attachments_kind_filter_accepts_str_enum_value(tmp_path: Path) -> None:
     """Kind filtering must compare by value so string-like enum inputs work."""
     store = AttachmentStore.at(tmp_path)
@@ -238,7 +227,6 @@ def test_list_attachments_kind_filter_accepts_str_enum_value(tmp_path: Path) -> 
     assert matches[0].kind == AttachmentKind.INVOICE_PDF
 
 
-@pytest.mark.unit
 def test_manifest_round_trips_to_and_from_disk(tmp_path: Path) -> None:
     """A stored manifest reloads into an equal Attachment."""
     store = AttachmentStore.at(tmp_path)

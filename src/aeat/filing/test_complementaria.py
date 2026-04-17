@@ -22,7 +22,7 @@ from . import (
 )
 from .testing import SyntheticProfile, default_schema_provider
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _profile(*modelos: str) -> SyntheticProfile:

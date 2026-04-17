@@ -104,7 +104,7 @@ async def _default_probe_factory(settings: Settings) -> HealthProbeLike:
 
     profile = Profile(
         name=settings.aeat_default_profile_name,
-        storage_state_path=settings.aeat_token_dir / f"{settings.aeat_default_profile_name}.json",
+        storage_state_path=settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json",
     )
     playwright = await async_playwright().start()
     session = BrowserSession(

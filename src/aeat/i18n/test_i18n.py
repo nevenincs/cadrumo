@@ -17,8 +17,9 @@ from . import (
     with_translation,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
-@pytest.mark.unit
+
 class TestLanguage:
     def test_language_values(self) -> None:
         """Test the trilingual contract language values."""
@@ -27,7 +28,6 @@ class TestLanguage:
         assert Language.HU == "hu"
 
 
-@pytest.mark.unit
 class TestNormalization:
     def test_nfc_normalization_applied(self) -> None:
         """Test that NFC normalization is applied to translations."""
@@ -49,7 +49,6 @@ class TestNormalization:
         assert new_obj["translation"]["es"] == normalized
 
 
-@pytest.mark.unit
 class TestGetTranslation:
     def test_exact_match(self) -> None:
         """Test getting exact translation."""
@@ -90,7 +89,6 @@ class TestGetTranslation:
             get_translation(translatable, Language.HU)
 
 
-@pytest.mark.unit
 class TestRequireAuthoritative:
     def test_aeat_domain(self) -> None:
         """Test aeat domain authoritative logic."""
@@ -121,7 +119,6 @@ class TestRequireAuthoritative:
             require_authoritative(translatable, domain="unknown")
 
 
-@pytest.mark.unit
 class TestWithTranslation:
     def test_injects_translation(self) -> None:
         """Test injection of Translatable."""
@@ -135,7 +132,6 @@ class TestWithTranslation:
         assert "translation" not in obj
 
 
-@pytest.mark.unit
 class TestTranslatableObject:
     def test_protocol_implementation(self) -> None:
         """Test that objects matching the TranslatableObject protocol are recognized."""

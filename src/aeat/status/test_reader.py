@@ -25,7 +25,7 @@ from . import (
     StatusReaderError,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _FIXTURE = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "aeat-pages" / "expedientes" / "sample.html"
 

@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 from ._cli import app
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 _runner = CliRunner()
@@ -21,11 +21,11 @@ def _invoke(*args: str) -> tuple[int, str]:
 
 
 def test_list_json_emits_all_entries() -> None:
-    """``list --json`` emits 41 entries."""
+    """``list --json`` emits 42 entries."""
     code, out = _invoke("list", "--json")
     assert code == 0, out
     payload = json.loads(out)
-    assert len(payload) == 41
+    assert len(payload) == 42
 
 
 def test_list_filter_by_category() -> None:

@@ -11,12 +11,13 @@ from pydantic_settings import SettingsConfigDict
 from ..config import LLMProviderSetting, Settings
 from . import LLMCache, LLMClient, Translator, UsageRecorder, _FakeAdapter
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+
 
 class _IsolatedSettings(Settings):
     model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
 
-@pytest.mark.unit
 def test_translator_uses_seeded_prompt_and_returns_translation(tmp_path: Path) -> None:
     """Translator should build a translation request and return a Translation model."""
 
