@@ -673,6 +673,44 @@ def check_live_tests_flag(settings: Settings) -> Row:
     )
 
 
+def check_live_access_gate(settings: Settings) -> Row:
+    """Report the :class:`aeat.auth.AeatAccessGate` env-var state (#167).
+
+    The doctor row surfaces the three env vars that gate live AEAT
+    operations without ever exposing a secret value. It states
+    whether live READS are currently enabled (the only operator-
+    settable dial for day-to-day live work). Live WRITES gate on
+    ``AEAT_LIVE_SUBMIT_ENABLED`` which is **never** expected to be
+    persisted, so the row treats the common "not set" case as the
+    desired state and only surfaces a diagnostic when the var is
+    present.
+    """
+    from aeat.auth import AeatAccessGate
+
+    snapshot = AeatAccessGate(settings).snapshot_env()
+    if snapshot.aeat_live_tests_enabled == "1":
+        live_reads = "reads: ENABLED"
+        state = State.OK
+    else:
+        live_reads = "reads: skipped (AEAT_LIVE_TESTS_ENABLED!=1)"
+        state = State.SKIP
+    if snapshot.aeat_live_submit_enabled:
+        live_writes = f"writes: {snapshot.aeat_live_submit_enabled!r} (charter #116 — unset after filing)"
+        state = State.WARN
+    else:
+        live_writes = "writes: unset (charter #116 default)"
+    if snapshot.pytest_current_test:
+        state = State.WARN
+        live_writes += " [PYTEST_CURRENT_TEST present]"
+    detail = f"{live_reads}; {live_writes}"
+    return Row(
+        section="live access gate",
+        required=False,
+        state=state,
+        detail=detail,
+    )
+
+
 # ── Orchestrator ────────────────────────────────────────────────────────────
 
 
@@ -701,6 +739,7 @@ def collect_rows(settings: Settings) -> list[Row]:
     rows.append(check_oauth_desktop(settings))
     rows.append(check_certificate_health(settings))
     rows.append(check_live_tests_flag(settings))
+    rows.append(check_live_access_gate(settings))
     return rows
 
 

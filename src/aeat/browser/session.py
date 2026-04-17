@@ -16,6 +16,7 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
+from aeat.auth import LoadedCertificate, build_client_certificates_kwarg
 from aeat.config import Settings
 from aeat.errors import AeatError, SiteHealthError
 from aeat.logging import get_logger
@@ -29,6 +30,15 @@ from aeat.status._site_health import _URL_ADAPTER
 from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
+
+CERTIFICATE_THUMBPRINT_MARKER = "_aeat_certificate_thumbprint"
+"""Attribute stamped on a ``BrowserContext`` that was constructed with a cert.
+
+The :class:`aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
+reads the same attribute to validate that callers actually wired
+the client certificate into ``browser.new_context()``. The value
+is the cert's SHA-256 thumbprint (hex).
+"""
 
 logger = get_logger(__name__)
 
@@ -47,7 +57,6 @@ class BrowserSession:
         playwright: Playwright,
         settings: Settings,
         profile: Profile,
-        auth_backend: object | None = None,
         evasion_strategy: EvasionStrategy | None = None,
     ) -> None:
         """Initialize the BrowserSession.
@@ -56,20 +65,36 @@ class BrowserSession:
             playwright: The Playwright instance.
             settings: Application configuration settings.
             profile: The user profile to use.
-            auth_backend: Optional authentication backend (from feature #8).
             evasion_strategy: Optional evasion strategy (defaults to PlaywrightStealthEvasion).
         """
         self.playwright = playwright
         self.settings = settings
         self.profile = profile
-        self.auth_backend = auth_backend
         self.evasion_strategy = evasion_strategy or PlaywrightStealthEvasion()
 
-    async def create_context(self) -> BrowserContext:
+    async def create_context(
+        self,
+        *,
+        cert: LoadedCertificate | None = None,
+    ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
+        When ``cert`` is supplied, the certificate is wired into the
+        context via the ``client_certificates`` kwarg on
+        ``browser.new_context()`` (Playwright ≥1.46) and the
+        resulting context is tagged with the
+        :data:`CERTIFICATE_THUMBPRINT_MARKER` attribute so the
+        :class:`aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
+        validator accepts it.
+
+        Args:
+            cert: Optional loaded PKCS#12 certificate to present
+                when the authenticated context hits AEAT origins.
+
         Returns:
-            A configured BrowserContext with evasion strategies applied.
+            A configured BrowserContext with evasion strategies
+            applied and — when ``cert`` is supplied — the cert wired
+            through at construction time.
 
         Raises:
             BrowserError: If the browser cannot be launched.
@@ -104,15 +129,21 @@ class BrowserSession:
             # Playwright will fail if storage_state points to an empty string or invalid JSON
             context_kwargs["storage_state"] = str(self.profile.storage_state_path)
 
+            if cert is not None:
+                context_kwargs["client_certificates"] = build_client_certificates_kwarg(
+                    cert,
+                    self.settings.aeat_certificate_verify_url,
+                )
+
             context = await browser.new_context(**context_kwargs)
 
             # Apply evasion strategy
             await self.evasion_strategy.apply(context)
 
-            # Apply auth backend if provided (stub for #8)
-            if self.auth_backend:
-                logger.info("Auth backend provided, applying certificate auth (stub).")
-                pass
+            if cert is not None:
+                # The Playwright backend's preload() validator reads this
+                # attribute to confirm the cert was wired at construction.
+                setattr(context, CERTIFICATE_THUMBPRINT_MARKER, cert.sha256_thumbprint)
 
             return context
         except Exception as e:
