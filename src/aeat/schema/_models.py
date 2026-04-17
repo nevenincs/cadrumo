@@ -117,7 +117,7 @@ class SchemaProvenance(_StrictFrozenModel):
         ``source_page`` requirement. Gate v1 to BOE_ORDEN only; the
         gate is removed per extractor when each backend lands.
         """
-        if value is not SchemaSource.BOE_ORDEN:
+        if value != SchemaSource.BOE_ORDEN:
             raise ValueError(
                 f"SchemaSource.{value.name} is a reserved enum slot; the "
                 "extractor for this source has not yet landed. Only "
