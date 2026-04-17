@@ -17,7 +17,6 @@ from aeat.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
     ModeloIdentifier,
-    ProfileError,
 )
 
 
@@ -73,15 +72,17 @@ def load_profile(path: Path) -> AutonomoProfile:
         The validated profile.
 
     Raises:
-        ProfileError: If the file does not exist or its contents are
-            not a valid profile.
+        typer.BadParameter: If ``path`` does not point to a readable
+            JSON file matching the :class:`AutonomoProfile` schema.
     """
     if not path.exists():
-        raise ProfileError(f"profile file not found: {path}")
+        raise typer.BadParameter(f"profile file not found: {path}")
+    if path.is_dir():
+        raise typer.BadParameter(f"profile path must point to a JSON file, got directory: {path}")
     try:
         return AutonomoProfile.model_validate_json(path.read_text(encoding="utf-8"))
     except Exception as exc:  # pragma: no cover - defensive: covered by tests
-        raise ProfileError(f"invalid profile JSON at {path}: {exc}") from exc
+        raise typer.BadParameter(f"invalid profile JSON at {path}: {exc}") from exc
 
 
 def build_engine() -> DeadlineEngine:

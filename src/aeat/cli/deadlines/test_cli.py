@@ -71,3 +71,14 @@ def test_next_uses_default_profile_path(
     monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", str(profile_path))
     result = runner.invoke(app, ["next", "--year", "2026"])
     assert result.exit_code == 0, result.output
+
+
+def test_list_rejects_directory_default_profile_path(
+    runner: CliRunner,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", ".")
+    result = runner.invoke(app, ["list", "--year", "2026"])
+    assert result.exit_code != 0
+    assert "profile" in result.output.lower()
+    assert "directory" in result.output.lower()
