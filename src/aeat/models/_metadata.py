@@ -9,7 +9,7 @@ from aeat.models._applicability import ModeloApplicability
 from aeat.models._categories import ModeloCadence, ModeloCategory
 from aeat.models._citations import LegalCitation
 from aeat.models._codes import ModeloCode
-from aeat.portals._codes import Portal
+from aeat.portals import Portal
 
 
 class ModeloMetadata(BaseModel):

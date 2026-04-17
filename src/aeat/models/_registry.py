@@ -111,8 +111,10 @@ def _check_submission_portal(entries: Mapping[ModeloCode, ModeloMetadata]) -> No
             not match the modelo's code.
     """
     # Local import to avoid a circular module-level dependency with
-    # aeat.portals (which itself imports aeat.models.ModeloCode).
-    from aeat.portals._registry import PORTAL_REGISTRY
+    # aeat.portals (which itself imports aeat.models.ModeloCode). The
+    # import is routed through the public package root so it exercises
+    # the lazy __getattr__ surface, keeping us on the documented API.
+    from aeat.portals import PORTAL_REGISTRY
 
     for code, metadata in entries.items():
         portal = metadata.submission_portal

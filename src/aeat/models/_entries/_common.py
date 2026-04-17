@@ -23,7 +23,7 @@ from aeat.models._categories import (
 from aeat.models._citations import LegalCitation
 from aeat.models._codes import ModeloCode
 from aeat.models._metadata import ModeloMetadata
-from aeat.portals._codes import Portal
+from aeat.portals import Portal
 
 RETRIEVAL_DATE: date = date(2026, 4, 13)
 
