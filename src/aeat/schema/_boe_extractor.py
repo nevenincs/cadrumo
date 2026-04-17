@@ -55,7 +55,7 @@ matches because ``$`` is in the alternation.
 """
 
 _CASILLA_DECL_RE = re.compile(
-    r"^\s*(?P<id>\d{2,3})\s+(?P<label>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ¿\(].*?)\s*$",
+    r"^\s*(?P<id>\d{2,4})\s+(?P<label>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ¿\(].*?)\s*$",
 )
 """Matches ``NN <Spanish label>`` where the label starts with a letter,
 Spanish inverted question mark (``¿`` — interrogative casillas on
@@ -68,11 +68,11 @@ typesetting artifacts.
 """
 
 _FORMULA_RE = re.compile(
-    r"^\s*Casilla\s+(?P<id>\d{2,3})\s*=\s*(?P<body>.+?)\s*$",
+    r"^\s*Casilla\s+(?P<id>\d{2,4})\s*=\s*(?P<body>.+?)\s*$",
     re.IGNORECASE,
 )
 _BLOCK_RE = re.compile(r"^\s*#\s+(?P<heading>.+?)\s*$")
-_CASILLA_REF_IN_BODY = re.compile(r"Casilla\s+(\d{2,3})", re.IGNORECASE)
+_CASILLA_REF_IN_BODY = re.compile(r"Casilla\s+(\d{2,4})", re.IGNORECASE)
 _PERCENT_LITERAL_RE = re.compile(r"0[,\.](\d+)")
 
 _MINUS_CHARS = ("\u2212", "\u2013", "\u2014")
@@ -186,7 +186,7 @@ def _parse_signed_terms(normalised: str) -> tuple[tuple[str, str], ...]:
     back to other shapes when this happens.
     """
     pattern = re.compile(
-        r"(?P<sign>[+\-])?\s*Casilla\s+(?P<id>\d{2,3})",
+        r"(?P<sign>[+\-])?\s*Casilla\s+(?P<id>\d{2,4})",
         re.IGNORECASE,
     )
     matches = list(pattern.finditer(normalised))

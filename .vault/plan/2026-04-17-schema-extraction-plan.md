@@ -399,7 +399,9 @@ via subclass + additional `_FORMULA_*_RE` patterns.
 
 ## Step 7 — CLI wiring
 
-`_cli.py`:
+`src/aeat/cli/schema.py` (the file that owns the Typer app in the
+final implementation; `aeat.schema._cli` does not exist per the
+plan's own §1 resolution):
 
 - `app = typer.Typer(name="schema", help="Extract AEAT modelo
   schemas from authoritative sources.", no_args_is_help=True,

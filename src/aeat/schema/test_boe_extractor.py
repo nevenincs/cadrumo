@@ -272,6 +272,31 @@ def test_extractor_accepts_interrogative_and_parenthesised_labels(tmp_path: Path
     assert ids == {"15", "21"}
 
 
+def test_extractor_handles_four_digit_casilla_ids(tmp_path: Path) -> None:
+    """4-digit casilla IDs (legitimate on Modelo 390) parse correctly."""
+    path = tmp_path / "four-digit.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=(
+            "0001 Ejercicio de referencia",
+            "1000 Base imponible al 4% anual",
+            "1001 Cuota devengada anual al 4%",
+            "Casilla 1001 = Casilla 1000 x 0,04",
+        ),
+    )
+    source = _build_source(path)
+    modelo = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    ).extract()
+    ids = {c.casilla_id for c in modelo.casillas}
+    assert ids == {"0001", "1000", "1001"}
+    casilla_1001 = next(c for c in modelo.casillas if c.casilla_id == "1001")
+    assert isinstance(casilla_1001.formula, BinaryOp)
+    assert casilla_1001.formula.op == BinaryFormulaOp.MUL
+
+
 def test_extractor_raises_on_unparseable_formula(tmp_path: Path) -> None:
     path = tmp_path / "bad-formula.pdf"
     build_fake_boe_pdf(

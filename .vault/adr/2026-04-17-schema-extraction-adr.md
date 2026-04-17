@@ -188,7 +188,7 @@ This is the project-wide pydantic mandate (memory:
     is needed it is derived from the enum member, not redefined.
   - `casillas: tuple[Casilla, ...]` — non-empty.
   - `provenance: SchemaProvenance`
-  - `extracted_at: datetime`
+  - `extracted_at: pydantic.AwareDatetime`
   - `schema_version: int = 1` — the *shape* of this pydantic model;
     bumped when the model hierarchy changes (not per AEAT change).
 
@@ -240,7 +240,7 @@ This is the project-wide pydantic mandate (memory:
   shape and matches the research-doc convention.
 - File name: `<boe_ref>.json` when source is `BOE_ORDEN`,
   `<document_ref>_<fetched_at_date>.json` otherwise.
-- Format: `Modelo.model_dump_json(indent=2, by_alias=False)`
+- Format: `Modelo.model_dump_json(indent=2, by_alias=True)`
   with sorted keys (stable diff). Re-loadable with
   `Modelo.model_validate_json`.
 - Manifest sidecar `<file>.manifest.json` records
@@ -277,14 +277,21 @@ Three new env-backed settings, added to `Settings` and mirrored in
 
 ### 6. CLI and refresh workflow
 
-- New Typer subcommand group `aeat schema` mounted from
-  `aeat.schema._cli`, registered in `src/aeat/cli/__init__.py`.
+- New Typer subcommand group `aeat schema` authored in
+  `src/aeat/cli/schema.py`, registered in
+  `src/aeat/cli/__init__.py`. (The ADR originally proposed
+  `aeat.schema._cli` as the owning module; the plan-audit round
+  moved the CLI into `aeat.cli.schema` to match the existing
+  `aeat.cli.casillas` precedent and preserve public-API discipline
+  — see plan §7.)
 - Commands in v1:
   - `aeat schema refresh --modelo MODELO_130 --boe-ref
-    BOE-A-2023-15412 [--period 2025Q4]` — fetch BOE PDF,
-    extract, persist.
-  - `aeat schema show --modelo MODELO_130 [--period 2025Q4]` —
-    pretty-print the cached `Modelo`.
+    BOE-A-2023-15412 --period 2025Q4` — fetch BOE PDF, extract,
+    persist.
+  - `aeat schema show --modelo MODELO_130 --boe-ref
+    BOE-A-2023-15412` — pretty-print the cached `Modelo`. The
+    cache key is `(modelo_code, boe_ref)`; `--period` is a
+    refresh-time input, not a show-time lookup key.
 - **Fetch helper** — `aeat.schema._fetch.fetch_boe_pdf(boe_ref,
   origin_url, cache_dir) -> FetchedSchemaSource` mirrors the
   `aeat.manuals._fetch` pattern exactly: streams the bytes via
