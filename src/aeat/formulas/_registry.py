@@ -45,7 +45,7 @@ class RulesetRegistry(BaseModel):
         matches = [
             ruleset
             for ruleset in self.rulesets
-            if ruleset.modelo is modelo and ruleset.covers(period.start, period.end)
+            if ruleset.modelo == modelo and ruleset.covers(period.start, period.end)
         ]
         if not matches:
             raise MissingRulesetError(

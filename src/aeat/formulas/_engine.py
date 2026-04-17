@@ -95,7 +95,7 @@ class Engine:
 
                 values[casilla_id] = value
                 refs = tuple(iter_casilla_refs(formula_def.formula))
-                ref_values = tuple(values[ref] for ref in refs if ref in values)
+                ref_values = tuple(values[ref] for ref in refs)
                 entry = LedgerEntry(
                     casilla_id=casilla_id,
                     value=value,
@@ -205,7 +205,7 @@ class Engine:
             den = self._evaluate_operand(operand.operands[1], values=values, ruleset=ruleset, on_date=on_date)
             if den == _ZERO:
                 raise EvaluationError("division by zero")
-            return (num / den).quantize(operand.quantize)
+            return (num / den).quantize(operand.quantize, rounding=ROUND_HALF_UP)
         if isinstance(operand, MinFormula):
             evaluated = [
                 self._evaluate_operand(child, values=values, ruleset=ruleset, on_date=on_date)
