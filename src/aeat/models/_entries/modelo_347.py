@@ -50,7 +50,8 @@ ENTRY: ModeloMetadata = build_entry(
         trigger_notes_es=(
             "Obligatorio para contribuyentes con operaciones con un mismo tercero superiores "
             "a 3 005,06 EUR (IVA incluido). Los obligados a SII quedan exentos. Default "
-            "opcional; se convierte en obligatorio una vez superado el umbral."
+            "opcional; se convierte en obligatorio una vez superado el umbral. En el motor "
+            "de plazos mapea a AutonomoProfile.third_party_transactions_above_347_threshold."
         ),
     ),
     caps_into=None,

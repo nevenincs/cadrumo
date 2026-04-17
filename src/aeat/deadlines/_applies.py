@@ -14,32 +14,43 @@ to :mod:`aeat.deadlines._calendar`, (d) add a truth-table case to
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+
+from pydantic import BaseModel, ConfigDict
 
 from aeat.deadlines._errors import ScheduleComputationError
 from aeat.deadlines._models import AutonomoProfile, IVARegime
 
 
-@dataclass(frozen=True, slots=True)
-class _Rule:
+class _Rule(BaseModel):
     """Internal applicability rule. Not exported."""
+
+    model_config = ConfigDict(
+        strict=True,
+        frozen=True,
+        extra="forbid",
+        arbitrary_types_allowed=True,
+    )
 
     predicate: Callable[[AutonomoProfile], bool]
     explanation: str
 
 
+def _has_withholding_outflows(profile: AutonomoProfile) -> bool:
+    """Return whether the profile must remit work/professional withholdings."""
+    return profile.has_employees or profile.pays_professionals_with_retencion
+
+
 def _applies_130(profile: AutonomoProfile) -> bool:
     """Modelo 130 - IRPF pagos fraccionados (estimación directa).
 
-    Always applies for the v1 autónomo set: the project assumes the
-    autónomo is in estimación directa. Estimación objetiva (modelo
-    131) is explicitly out of scope per the ADR.
+    Applies for the direct-estimation autónomo set except when the
+    professional-income exception is active: at least 70% of the prior
+    year's professional income was already subject to withholding.
 
-    Cite: ``BOE-Orden-IRPF-pagos-fraccionados``; Manual práctico IRPF
-    cap. pagos fraccionados.
+    Estimación objetiva (modelo 131) is explicitly out of scope per
+    the ADR, so the engine only models the direct-estimation branch.
     """
-    del profile
-    return True
+    return not profile.professional_income_withholding_ge_70pct
 
 
 def _applies_303(profile: AutonomoProfile) -> bool:
@@ -83,13 +94,11 @@ def _applies_111(profile: AutonomoProfile) -> bool:
     """Modelo 111 - Retenciones IRPF rendimientos del trabajo y profesionales.
 
     Applies iff the profile pays salaries or professional fees with
-    retención. The v1 engine collapses both into the
-    ``has_employees`` flag - if you withhold IRPF for any reason, you
-    file 111.
+    retención.
 
     Cite: ``BOE-Orden-Retenciones-IRPF-trabajo-profesionales``.
     """
-    return profile.has_employees
+    return _has_withholding_outflows(profile)
 
 
 def _applies_190(profile: AutonomoProfile) -> bool:
@@ -132,6 +141,16 @@ def _applies_349(profile: AutonomoProfile) -> bool:
     return profile.does_intracomunitario
 
 
+def _applies_347(profile: AutonomoProfile) -> bool:
+    """Modelo 347 - Operaciones con terceras personas.
+
+    Applies iff the annual third-party threshold was exceeded.
+
+    Cite: ``BOE-Orden-347-Operaciones-Terceros``.
+    """
+    return profile.third_party_transactions_above_347_threshold
+
+
 def _applies_720(profile: AutonomoProfile) -> bool:
     """Modelo 720 - Bienes en el extranjero.
 
@@ -144,24 +163,33 @@ def _applies_720(profile: AutonomoProfile) -> bool:
 
 
 _RULES: dict[str, _Rule] = {
-    "100": _Rule(_applies_100, "Toda persona física obligada a declarar IRPF."),
-    "111": _Rule(_applies_111, "El autónomo paga retenciones a trabajadores o profesionales."),
-    "115": _Rule(_applies_115, "El autónomo paga alquiler con retención."),
+    "100": _Rule(predicate=_applies_100, explanation="Toda persona física obligada a declarar IRPF."),
+    "111": _Rule(
+        predicate=_applies_111,
+        explanation="El autónomo paga retenciones a trabajadores o profesionales.",
+    ),
+    "115": _Rule(predicate=_applies_115, explanation="El autónomo paga alquiler con retención."),
     "130": _Rule(
-        _applies_130,
-        "Autónomo en estimación directa: pagos fraccionados IRPF trimestrales.",
+        predicate=_applies_130,
+        explanation=(
+            "Autónomo en estimación directa salvo la exención del 70% de ingresos profesionales ya retenidos."
+        ),
     ),
-    "180": _Rule(_applies_180, "Resumen anual del modelo 115."),
-    "190": _Rule(_applies_190, "Resumen anual del modelo 111."),
+    "180": _Rule(predicate=_applies_180, explanation="Resumen anual del modelo 115."),
+    "190": _Rule(predicate=_applies_190, explanation="Resumen anual del modelo 111."),
     "303": _Rule(
-        _applies_303,
-        "Autónomo en régimen general o simplificado de IVA.",
+        predicate=_applies_303,
+        explanation="Autónomo en régimen general o simplificado de IVA.",
     ),
-    "349": _Rule(_applies_349, "Autónomo con operaciones intracomunitarias."),
-    "390": _Rule(_applies_390, "Resumen anual del modelo 303."),
+    "347": _Rule(
+        predicate=_applies_347,
+        explanation="Operaciones con terceros por encima del umbral legal.",
+    ),
+    "349": _Rule(predicate=_applies_349, explanation="Autónomo con operaciones intracomunitarias."),
+    "390": _Rule(predicate=_applies_390, explanation="Resumen anual del modelo 303."),
     "720": _Rule(
-        _applies_720,
-        "Bienes en el extranjero por encima del umbral legal.",
+        predicate=_applies_720,
+        explanation="Bienes en el extranjero por encima del umbral legal.",
     ),
 }
 

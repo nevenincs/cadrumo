@@ -165,6 +165,8 @@ def _profiles_from_autonomo(profile: AutonomoProfile) -> frozenset[TaxpayerProfi
         matched.add(TaxpayerProfile.AUTONOMO_ED_CON_ALQUILER)
     if profile.has_employees:
         matched.add(TaxpayerProfile.AUTONOMO_ED_CON_EMPLEADOS)
+    if profile.pays_professionals_with_retencion:
+        matched.add(TaxpayerProfile.AUTONOMO_ED_CON_PROFESIONALES)
     if not matched:
         matched.add(TaxpayerProfile.AUTONOMO_ED_SOLO)
     return frozenset(matched)
@@ -178,10 +180,25 @@ def year_plan_command(
         IVARegime.GENERAL, "--iva-regime", help="IVA regime the autónomo files under."
     ),
     has_employees: bool = typer.Option(False, "--has-employees/--no-has-employees"),
+    pays_professionals_with_retencion: bool = typer.Option(
+        False,
+        "--pays-professionals/--no-pays-professionals",
+        help="Pays professional fees subject to retención.",
+    ),
+    professional_income_withholding_ge_70pct: bool = typer.Option(
+        False,
+        "--professional-income-withholding-ge-70pct/--no-professional-income-withholding-ge-70pct",
+        help="At least 70% of prior-year professional income was already subject to withholding.",
+    ),
     pays_rent_with_retencion: bool = typer.Option(
         False, "--pays-rent/--no-pays-rent", help="Pays local alquiler con retención."
     ),
     does_intracomunitario: bool = typer.Option(False, "--intracomunitario/--no-intracomunitario"),
+    third_party_transactions_above_347_threshold: bool = typer.Option(
+        False,
+        "--third-party-threshold-347/--no-third-party-threshold-347",
+        help="Exceeded the modelo 347 annual threshold with any third party.",
+    ),
     bienes_extranjero_above_threshold: bool = typer.Option(
         False,
         "--bienes-extranjero/--no-bienes-extranjero",
@@ -194,8 +211,11 @@ def year_plan_command(
         tax_id=tax_id,
         iva_regime=iva_regime,
         has_employees=has_employees,
+        pays_professionals_with_retencion=pays_professionals_with_retencion,
+        professional_income_withholding_ge_70pct=professional_income_withholding_ge_70pct,
         pays_rent_with_retencion=pays_rent_with_retencion,
         does_intracomunitario=does_intracomunitario,
+        third_party_transactions_above_347_threshold=third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=bienes_extranjero_above_threshold,
     )
     schedule = year_plan(year, profile)

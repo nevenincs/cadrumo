@@ -41,3 +41,11 @@ def test_quarterly_modelo_303_2026_count() -> None:
     entries = [w for w in CALENDAR if w.modelo == "303" and w.year == 2026]
     assert len(entries) == 4
     assert {w.period for w in entries} == {"2026Q1", "2026Q2", "2026Q3", "2026Q4"}
+
+
+def test_annual_modelo_347_2026_window() -> None:
+    """The 2026 calendar must contain one annual 347 entry."""
+    entries = [w for w in CALENDAR if w.modelo == "347" and w.year == 2026]
+    assert len(entries) == 1
+    assert entries[0].opens_on.isoformat() == "2027-02-01"
+    assert entries[0].closes_on.isoformat() == "2027-03-01"
