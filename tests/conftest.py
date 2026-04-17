@@ -65,9 +65,11 @@ def _scan_banned_imports(path: Path) -> set[str]:
 
     The file is never executed; this is a syntactic scan. Handles both
     ``import X`` / ``import X.Y`` and ``from X import Y`` / ``from X.Y import Z``.
+    Reads as bytes so ``ast.parse`` honours any PEP 263 encoding cookie and
+    cannot raise ``UnicodeDecodeError`` on an unusual source encoding.
     """
     try:
-        source = path.read_text(encoding="utf-8")
+        source = path.read_bytes()
     except OSError:
         return set()
     try:
@@ -99,7 +101,7 @@ def _scan_banned_imports(path: Path) -> set[str]:
 
 def _live_item_paths(items: Iterable[pytest.Item]) -> set[Path]:
     """Return every source file that contributed at least one live-marked item."""
-    return {Path(item.fspath) for item in items if "live" in _marker_names(item)}
+    return {item.path for item in items if "live" in _marker_names(item)}
 
 
 def _check_markers(items: Iterable[pytest.Item]) -> list[str]:
