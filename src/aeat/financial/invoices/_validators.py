@@ -14,7 +14,6 @@ _NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
 _NIE_LEADERS = {"X": "0", "Y": "1", "Z": "2"}
 _CIF_LEADERS = "ABCDEFGHJKLMNPQRSUVW"
 _CIF_LETTER_CONTROL_LEADERS = set("KPQRSNW")
-_CIF_DIGIT_CONTROL_LEADERS = set("ABEH")
 _CIF_CONTROL_LETTERS = "JABCDEFGHI"
 
 
@@ -154,18 +153,10 @@ def _validate_cif(value: str) -> str:
     if leader in _CIF_LETTER_CONTROL_LEADERS:
         if not control.isalpha() or control != letter_control:
             raise ValueError("CIF letter-control checksum is invalid")
-    elif leader in _CIF_DIGIT_CONTROL_LEADERS:
-        # ABEH leaders accept either the digit-control form or the
-        # letter-control form — both circulated historically.
-        if control.isdigit():
-            if int(control) != digit_control:
-                raise ValueError("CIF digit-control checksum is invalid")
-        elif control.isalpha():
-            if control != letter_control:
-                raise ValueError("CIF letter-control checksum is invalid")
-        else:
-            raise ValueError("CIF control character must be a digit or uppercase letter")
     else:
+        # ABEH leaders AND all other leaders (C, D, F, G, J, L, M, U, V)
+        # accept either the digit-control or the letter-control form —
+        # both circulated historically.
         if control.isdigit():
             if int(control) != digit_control:
                 raise ValueError("CIF digit-control checksum is invalid")
