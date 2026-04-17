@@ -14,7 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.cli.doctor import (
+from ..config import Settings
+from .doctor import (
     REQUIRED_ADC_SCOPES,
     Row,
     State,
@@ -24,10 +25,10 @@ from aeat.cli.doctor import (
     render_table,
     short_scope,
 )
-from aeat.config import Settings
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
-@pytest.mark.unit
 class TestAdcWellKnownPath:
     """Behaviour of ``adc_well_known_path``."""
 
@@ -53,7 +54,6 @@ class TestAdcWellKnownPath:
         assert "gcloud" in result.parts
 
 
-@pytest.mark.unit
 class TestAdcScopesFromFile:
     """Behaviour of ``adc_scopes_from_file``."""
 
@@ -93,7 +93,6 @@ class TestAdcScopesFromFile:
         assert adc_scopes_from_file(path) == []
 
 
-@pytest.mark.unit
 class TestShortScope:
     """Behaviour of ``short_scope``."""
 
@@ -104,7 +103,6 @@ class TestShortScope:
         assert short_scope("openid") == "openid"
 
 
-@pytest.mark.unit
 class TestRequiredScopes:
     """The required ADC scope set must include every Workspace surface."""
 
@@ -121,7 +119,6 @@ class TestRequiredScopes:
         assert "https://www.googleapis.com/auth/cloud-platform" in REQUIRED_ADC_SCOPES
 
 
-@pytest.mark.unit
 class TestRenderTable:
     """``render_table`` must produce a non-empty table for at least one row."""
 
@@ -145,7 +142,6 @@ class TestRenderTable:
         assert len(table.columns) == 4
 
 
-@pytest.mark.unit
 class TestLiveAccessGateRow:
     """Behaviour of ``check_live_access_gate``."""
 

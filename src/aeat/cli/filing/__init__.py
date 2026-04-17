@@ -26,9 +26,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli.submission._helpers import build_engine as build_submission_engine
-from aeat.config import load_settings
-from aeat.filing import (
+from ...config import load_settings
+from ...filing import (
     FilingAmendment,
     FilingAmendmentError,
     FilingDraft,
@@ -41,12 +40,13 @@ from aeat.filing import (
     load_amendment,
     validate_draft,
 )
-from aeat.filing.testing import (
+from ...filing.testing import (
     SyntheticProfile,
     default_schema_provider,
 )
-from aeat.logging import get_logger
-from aeat.submission import SubmissionEngine, SubmissionError
+from ...logging import get_logger
+from ...submission import SubmissionEngine, SubmissionError
+from ..submission._helpers import build_engine as build_submission_engine
 
 app = typer.Typer(
     name="filing",

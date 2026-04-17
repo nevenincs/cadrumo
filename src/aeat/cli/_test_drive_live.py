@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
-from aeat.cli._live import (
+from ._live import (
     cleanup_files,
     drive_service,
     requires_live_enabled,
@@ -23,8 +23,9 @@ from aeat.cli._live import (
     unique_prefix,
 )
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
 
-@pytest.mark.live
+
 class TestDriveLiveRoundTrip:
     """End-to-end Drive round-trip in the scratch folder."""
 

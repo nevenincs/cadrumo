@@ -1,6 +1,6 @@
 """Unit tests for :mod:`aeat.filing`.
 
-Every test is marked ``@pytest.mark.unit`` per the project rule.
+The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]`` per the project rule.
 The tests use real Protocol-conforming pydantic doubles defined
 in :mod:`aeat.filing.testing` — no mocks, patches, fakes, or
 stubs.
@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.filing import (
+from . import (
     FilingComputationError,
     FilingDraft,
     FilingDraftStatus,
@@ -30,12 +30,14 @@ from aeat.filing import (
     iter_findings,
     validate_draft,
 )
-from aeat.filing.testing import (
+from .testing import (
     SyntheticDeadlineChecker,
     SyntheticDeadlineStatus,
     SyntheticProfile,
     default_schema_provider,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _profile() -> SyntheticProfile:
@@ -55,7 +57,6 @@ def _clean_inputs() -> dict[str, object]:
     }
 
 
-@pytest.mark.unit
 class TestModelo130Builder:
     """Verify the Modelo 130 builder against hand-calculated values."""
 
@@ -123,7 +124,6 @@ class TestModelo130Builder:
             )
 
 
-@pytest.mark.unit
 class TestFilingValidator:
     """Verify the cross-cutting validator rules."""
 
@@ -212,7 +212,6 @@ class TestFilingValidator:
         assert draft.findings == ()
 
 
-@pytest.mark.unit
 class TestPublicAPI:
     """Tests for build_draft / validate_draft / iter_findings."""
 

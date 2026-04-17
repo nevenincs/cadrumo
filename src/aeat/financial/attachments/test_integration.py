@@ -23,8 +23,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app as root_app
-from aeat.financial.attachments import (
+from ...cli import app as root_app
+from . import (
     AttachmentKind,
     AttachmentNotFoundError,
     AttachmentPersistenceError,
@@ -34,6 +34,8 @@ from aeat.financial.attachments import (
     add_attachment,
     list_attachments,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
 _MANIFEST_SUFFIX = ".json"
@@ -66,7 +68,6 @@ def _add(
     return attachment.attachment_id
 
 
-@pytest.mark.unit
 def test_empty_file_ingest_produces_zero_byte_attachment(tmp_path: Path) -> None:
     """A zero-byte source must still produce a valid attachment manifest."""
     store = AttachmentStore.at(tmp_path)
@@ -81,7 +82,6 @@ def test_empty_file_ingest_produces_zero_byte_attachment(tmp_path: Path) -> None
         assert handle.read() == b""
 
 
-@pytest.mark.unit
 def test_verify_blob_detects_tampered_bytes(tmp_path: Path) -> None:
     """A blob modified on disk must fail verification."""
     store = AttachmentStore.at(tmp_path)
@@ -95,7 +95,6 @@ def test_verify_blob_detects_tampered_bytes(tmp_path: Path) -> None:
         store.verify_blob(digest)
 
 
-@pytest.mark.unit
 def test_verify_blob_passes_for_untouched_bytes(tmp_path: Path) -> None:
     """A healthy blob must verify without error."""
     store = AttachmentStore.at(tmp_path)
@@ -105,7 +104,6 @@ def test_verify_blob_passes_for_untouched_bytes(tmp_path: Path) -> None:
     store.verify_blob(digest)
 
 
-@pytest.mark.unit
 def test_verify_blob_rejects_non_hex_attachment_id(tmp_path: Path) -> None:
     """Non-hex attachment IDs must be rejected before touching the filesystem."""
     store = AttachmentStore.at(tmp_path)
@@ -113,7 +111,6 @@ def test_verify_blob_rejects_non_hex_attachment_id(tmp_path: Path) -> None:
         store.verify_blob("not-a-digest")
 
 
-@pytest.mark.unit
 def test_verify_blob_raises_not_found_for_missing_blob(tmp_path: Path) -> None:
     """Missing blob files must surface as AttachmentNotFoundError."""
     store = AttachmentStore.at(tmp_path)
@@ -121,7 +118,6 @@ def test_verify_blob_raises_not_found_for_missing_blob(tmp_path: Path) -> None:
         store.verify_blob("a" * 64)
 
 
-@pytest.mark.unit
 def test_load_manifest_surfaces_corrupt_json_as_validation_error(tmp_path: Path) -> None:
     """Corrupted JSON manifests must surface as AttachmentValidationError."""
     store = AttachmentStore.at(tmp_path)
@@ -133,7 +129,6 @@ def test_load_manifest_surfaces_corrupt_json_as_validation_error(tmp_path: Path)
         store.load_manifest("a" * 64)
 
 
-@pytest.mark.unit
 def test_load_manifest_rejects_filename_payload_mismatch(tmp_path: Path) -> None:
     """A manifest whose filename digest disagrees with its stored attachment_id must raise."""
     store = AttachmentStore.at(tmp_path)
@@ -153,7 +148,6 @@ def test_load_manifest_rejects_filename_payload_mismatch(tmp_path: Path) -> None
         list(store.iter_manifests())
 
 
-@pytest.mark.unit
 def test_iter_manifests_skips_non_digest_filenames(tmp_path: Path) -> None:
     """Files under manifests/ that are not 64-char hex digests must be ignored."""
     store = AttachmentStore.at(tmp_path)
@@ -168,7 +162,6 @@ def test_iter_manifests_skips_non_digest_filenames(tmp_path: Path) -> None:
     assert [attachment.attachment_id for attachment in results] == [digest]
 
 
-@pytest.mark.unit
 def test_path_traversal_attempt_on_load_manifest_is_rejected(tmp_path: Path) -> None:
     """Untrusted attachment_id inputs must not escape the store root."""
     store = AttachmentStore.at(tmp_path)
@@ -176,7 +169,6 @@ def test_path_traversal_attempt_on_load_manifest_is_rejected(tmp_path: Path) -> 
         store.load_manifest("../../etc/passwd")
 
 
-@pytest.mark.unit
 def test_path_traversal_attempt_on_read_bytes_is_rejected(tmp_path: Path) -> None:
     """Untrusted sha256 inputs must not escape the blobs directory."""
     store = AttachmentStore.at(tmp_path)
@@ -184,7 +176,6 @@ def test_path_traversal_attempt_on_read_bytes_is_rejected(tmp_path: Path) -> Non
         store.read_bytes("../../etc/passwd")
 
 
-@pytest.mark.unit
 def test_uppercase_hex_digest_is_rejected_for_ntfs_case_safety(tmp_path: Path) -> None:
     """Uppercase hex digests must be rejected so NTFS case-insensitivity cannot alias blobs."""
     store = AttachmentStore.at(tmp_path)
@@ -194,7 +185,6 @@ def test_uppercase_hex_digest_is_rejected_for_ntfs_case_safety(tmp_path: Path) -
         store.manifest_path("A" * 64)
 
 
-@pytest.mark.unit
 def test_concurrent_put_bytes_preserves_first_writer_blob(tmp_path: Path) -> None:
     """Two threads ingesting the same bytes must converge on one unchanged blob."""
     store = AttachmentStore.at(tmp_path)
@@ -221,7 +211,6 @@ def test_concurrent_put_bytes_preserves_first_writer_blob(tmp_path: Path) -> Non
     assert stray == []
 
 
-@pytest.mark.unit
 def test_concurrent_put_file_preserves_first_writer_blob(tmp_path: Path) -> None:
     """Streaming writers racing on the same source must converge on one blob."""
     store = AttachmentStore.at(tmp_path)
@@ -247,7 +236,6 @@ def test_concurrent_put_file_preserves_first_writer_blob(tmp_path: Path) -> None
     assert stray == []
 
 
-@pytest.mark.unit
 def test_end_to_end_cli_round_trip_with_utf8_source_path(tmp_path: Path) -> None:
     """The CLI must survive a UTF-8 source path and produce a verifiable blob."""
     store_root = tmp_path / "store"
@@ -279,7 +267,6 @@ def test_end_to_end_cli_round_trip_with_utf8_source_path(tmp_path: Path) -> None
     store.verify_blob(digest)
 
 
-@pytest.mark.unit
 def test_list_attachments_linked_to_invoice_matches_invoice_links(tmp_path: Path) -> None:
     """linked_to must filter attachments whose invoice link contains the identifier."""
     store = AttachmentStore.at(tmp_path)
@@ -295,7 +282,6 @@ def test_list_attachments_linked_to_invoice_matches_invoice_links(tmp_path: Path
     assert [attachment.attachment_id for attachment in inv2] == [digest_b]
 
 
-@pytest.mark.unit
 def test_add_attachment_raises_persistence_error_on_unreadable_source(tmp_path: Path) -> None:
     """An unreadable source (missing file) must raise AttachmentPersistenceError."""
     store = AttachmentStore.at(tmp_path)
@@ -312,7 +298,6 @@ def test_add_attachment_raises_persistence_error_on_unreadable_source(tmp_path: 
         )
 
 
-@pytest.mark.unit
 def test_cli_show_on_malformed_attachment_id_surfaces_typed_error(tmp_path: Path) -> None:
     """`aeat attachments show <non-hex>` must exit cleanly with the typed error."""
     store_root = tmp_path / "store"
@@ -325,7 +310,6 @@ def test_cli_show_on_malformed_attachment_id_surfaces_typed_error(tmp_path: Path
     assert "64-character lowercase hex digest" in result.output
 
 
-@pytest.mark.unit
 def test_cli_add_rejects_blank_metadata_value(tmp_path: Path) -> None:
     """`--metadata key=` (empty value) must exit 2 and persist nothing."""
     store_root = tmp_path / "store"

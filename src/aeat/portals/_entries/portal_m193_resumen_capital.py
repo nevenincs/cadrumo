@@ -1,0 +1,33 @@
+"""Portal: Modelo 193 — resumen anual retenciones capital mobiliario."""
+
+from __future__ import annotations
+
+from ...models import ModeloCode
+from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._codes import Portal
+from .._metadata import PortalMetadata
+from ._common import build_entry
+
+ENTRY: PortalMetadata = build_entry(
+    portal=Portal.PORTAL_M193_RESUMEN_CAPITAL,
+    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI12.shtml",
+    subdomain=Subdomain.SEDE,
+    category=PortalCategory.FILING,
+    auth_methods=(
+        AuthMethod.CERTIFICATE,
+        AuthMethod.CLAVE_PIN,
+        AuthMethod.CLAVE_PERMANENTE,
+        AuthMethod.DNIE,
+    ),
+    url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
+    related_modelo=ModeloCode.MODELO_193,
+    label={
+        "es": "Modelo 193 — Resumen anual retenciones capital mobiliario",
+        "en": "Modelo 193 — Annual summary of movable-capital withholdings",
+        "hu": "193-as űrlap — Éves tőkejövedelem-forrásadó összefoglaló",
+    },
+    purpose_es=(
+        "Resumen anual de retenciones e ingresos a cuenta sobre determinados rendimientos "
+        "del capital mobiliario (complementa al Modelo 123)."
+    ),
+)

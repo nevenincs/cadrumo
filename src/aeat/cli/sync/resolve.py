@@ -7,8 +7,8 @@ from enum import StrEnum
 import typer
 from rich.console import Console
 
-from aeat.config import load_settings
-from aeat.sync import (
+from ...config import load_settings
+from ...sync import (
     DivergenceRepositoryError,
     JsonFileDivergenceRepository,
     ResolutionState,

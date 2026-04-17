@@ -6,8 +6,9 @@ import pytest
 
 from ._validators import validate_country_code, validate_spanish_tax_id, validate_vat_number
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
-@pytest.mark.unit
+
 @pytest.mark.parametrize(
     "value",
     [
@@ -22,7 +23,6 @@ def test_validate_spanish_tax_id_accepts_known_valid_nif(value: str) -> None:
     assert validate_spanish_tax_id(value) == value
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     "value",
     [
@@ -36,7 +36,6 @@ def test_validate_spanish_tax_id_accepts_known_valid_nie(value: str) -> None:
     assert validate_spanish_tax_id(value) == value
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     "value",
     [
@@ -54,7 +53,6 @@ def test_validate_spanish_tax_id_accepts_cif_digit_control(value: str) -> None:
     assert validate_spanish_tax_id(value) == value
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     "value",
     [
@@ -73,7 +71,6 @@ def test_validate_spanish_tax_id_accepts_cif_letter_control(value: str) -> None:
     assert validate_spanish_tax_id(value) == value
 
 
-@pytest.mark.unit
 def test_validate_spanish_tax_id_accepts_abeh_letter_form() -> None:
     """ABEH CIF leaders historically accept either digit- or letter-control form."""
     # body 1234567 digit-control is 4 (above); letter-control is 'D' — both
@@ -82,7 +79,6 @@ def test_validate_spanish_tax_id_accepts_abeh_letter_form() -> None:
     assert validate_spanish_tax_id("B1234567D") == "B1234567D"
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     "value",
     [
@@ -99,7 +95,6 @@ def test_validate_spanish_tax_id_rejects_invalid_checksum(value: str) -> None:
         validate_spanish_tax_id(value)
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     "value",
     ["", "12345", "12345678ZA", "?23456781"],
@@ -110,7 +105,6 @@ def test_validate_spanish_tax_id_rejects_malformed_shapes(value: str) -> None:
         validate_spanish_tax_id(value)
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
@@ -125,7 +119,6 @@ def test_validate_spanish_tax_id_strips_common_separators(value: str, expected: 
     assert validate_spanish_tax_id(value) == expected
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
@@ -139,7 +132,6 @@ def test_validate_spanish_tax_id_strips_es_vat_prefix(value: str, expected: str)
     assert validate_spanish_tax_id(value) == expected
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("value", "country", "expected"),
     [
@@ -152,7 +144,6 @@ def test_validate_vat_number_strips_dot_separators(value: str, country: str, exp
     assert validate_vat_number(value, country) == expected
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("value", "country", "expected"),
     [
@@ -166,7 +157,6 @@ def test_validate_vat_number_accepts_expected_prefixes(value: str, country: str,
     assert validate_vat_number(value, country) == expected
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("value", "country"),
     [
@@ -183,7 +173,6 @@ def test_validate_vat_number_rejects_bad_shapes(value: str, country: str) -> Non
         validate_vat_number(value, country)
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
@@ -197,7 +186,6 @@ def test_validate_country_code_normalises(value: str, expected: str) -> None:
     assert validate_country_code(value) == expected
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize("value", ["", "E", "ESP", "E3"])
 def test_validate_country_code_rejects_invalid_shapes(value: str) -> None:
     """Non-2-letter or non-alphabetic country codes are rejected."""

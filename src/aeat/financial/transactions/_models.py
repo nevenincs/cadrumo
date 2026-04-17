@@ -12,8 +12,7 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
 
-from aeat.financial.providers import RawTransaction
-
+from ..providers import RawTransaction
 from ._enums import BusinessClassification, TransactionDirection
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")

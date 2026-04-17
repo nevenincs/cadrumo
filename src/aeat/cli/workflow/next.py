@@ -13,7 +13,7 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from aeat.cli.workflow._helpers import run_engine_next
+from ._helpers import run_engine_next
 
 _CONSOLE = Console()
 

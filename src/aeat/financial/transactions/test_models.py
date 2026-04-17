@@ -9,13 +9,15 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.financial import RawProvenance, SourceFormat
-from aeat.financial.providers import RawTransaction
-from aeat.financial.transactions import (
+from .. import RawProvenance, SourceFormat
+from ..providers import RawTransaction
+from . import (
     BusinessClassification,
     Transaction,
     TransactionDirection,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 
 def _sample_raw(
@@ -47,7 +49,6 @@ def _sample_raw(
     )
 
 
-@pytest.mark.unit
 def test_transaction_id_hash_is_stable_for_same_identity_tuple() -> None:
     """Equal identity tuples must derive the same transaction ID."""
     raw_a = _sample_raw(source_row_index=1, counterparty="First counterparty")
@@ -59,7 +60,6 @@ def test_transaction_id_hash_is_stable_for_same_identity_tuple() -> None:
     assert tx_a.transaction_id == tx_b.transaction_id
 
 
-@pytest.mark.unit
 def test_direction_enum_round_trips_through_json() -> None:
     """TransactionDirection must survive a JSON round-trip."""
     original = Transaction.model_validate(
@@ -75,7 +75,6 @@ def test_direction_enum_round_trips_through_json() -> None:
     assert restored.direction is TransactionDirection.INTERNAL_TRANSFER
 
 
-@pytest.mark.unit
 def test_business_pct_is_only_allowed_for_mixed_transactions() -> None:
     """business_pct must be constrained to MIXED transactions in the 0..1 range."""
     with pytest.raises(ValidationError):
@@ -108,7 +107,6 @@ def test_business_pct_is_only_allowed_for_mixed_transactions() -> None:
     assert mixed.business_pct == Decimal("0.5")
 
 
-@pytest.mark.unit
 def test_classified_by_accepts_only_whitelisted_shapes() -> None:
     """classified_by must be auto, manual, or rule:<rule-id>."""
     auto = Transaction.model_validate(

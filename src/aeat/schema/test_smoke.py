@@ -2,14 +2,13 @@
 
 import pytest
 
-import aeat.errors
-import aeat.logging
-import aeat.schema
+from .. import errors, logging, schema
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
-@pytest.mark.unit
 def test_smoke_schema() -> None:
     """Asserts the subpackage is importable and conventions hold."""
-    assert aeat.schema.__doc__ is not None
-    assert issubclass(aeat.errors.AeatError, Exception)
-    assert aeat.logging.get_logger(__name__).name == __name__
+    assert schema.__doc__ is not None
+    assert issubclass(errors.AeatError, Exception)
+    assert logging.get_logger(__name__).name == __name__

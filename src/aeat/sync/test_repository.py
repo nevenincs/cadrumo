@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.sync import (
+from . import (
     CasillaAddedWithDefault,
     DivergenceClassification,
     DivergenceRecord,
@@ -18,6 +18,8 @@ from aeat.sync import (
     ResolutionState,
     StorageDivergenceRepository,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def _record() -> DivergenceRecord:
@@ -36,7 +38,6 @@ def _record() -> DivergenceRecord:
     )
 
 
-@pytest.mark.unit
 def test_json_file_repository_roundtrip(tmp_path: Path) -> None:
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
     record = _record()
@@ -45,7 +46,6 @@ def test_json_file_repository_roundtrip(tmp_path: Path) -> None:
     assert loaded == record
 
 
-@pytest.mark.unit
 def test_json_file_repository_list_returns_saved(tmp_path: Path) -> None:
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
     r1 = _record()
@@ -56,7 +56,6 @@ def test_json_file_repository_list_returns_saved(tmp_path: Path) -> None:
     assert {rec.record_id for rec in listing} == {r1.record_id, r2.record_id}
 
 
-@pytest.mark.unit
 def test_json_file_repository_update_resolution(tmp_path: Path) -> None:
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
     record = _record()
@@ -72,21 +71,18 @@ def test_json_file_repository_update_resolution(tmp_path: Path) -> None:
     assert reloaded.resolution_state == ResolutionState.HUMAN_APPROVED
 
 
-@pytest.mark.unit
 def test_json_file_repository_missing_record(tmp_path: Path) -> None:
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
     with pytest.raises(DivergenceRepositoryError):
         repo.load("does-not-exist")
 
 
-@pytest.mark.unit
 def test_json_file_repository_rejects_traversal_on_load(tmp_path: Path) -> None:
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
     with pytest.raises(DivergenceRepositoryError, match="simple filename token"):
         repo.load("../escape")
 
 
-@pytest.mark.unit
 def test_json_file_repository_rejects_traversal_on_save(tmp_path: Path) -> None:
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
     record = _record().model_copy(update={"record_id": "../escape"})
@@ -94,7 +90,6 @@ def test_json_file_repository_rejects_traversal_on_save(tmp_path: Path) -> None:
         repo.save(record)
 
 
-@pytest.mark.unit
 def test_storage_repository_stub_refuses_construction() -> None:
     with pytest.raises(NotImplementedError):
         StorageDivergenceRepository()

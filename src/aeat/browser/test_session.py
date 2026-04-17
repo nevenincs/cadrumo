@@ -5,13 +5,15 @@ from pathlib import Path
 import pytest
 from playwright.async_api import BrowserContext
 
-from aeat.browser._site_health_probe import probe_response
-from aeat.browser.evasion import EvasionStrategy
-from aeat.browser.profile import Profile
-from aeat.browser.session import BrowserSession
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.errors import SiteHealthError
-from aeat.status import SiteHealthState
+from ..config import PROJECT_ROOT, Settings
+from ..errors import SiteHealthError
+from ..status import SiteHealthState
+from ._site_health_probe import probe_response
+from .evasion import EvasionStrategy
+from .profile import Profile
+from .session import BrowserSession
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
@@ -59,7 +61,6 @@ class StubPlaywright:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
 async def test_browser_session_creation(tmp_path: Path) -> None:
     """Test creating a browser context with a stub Playwright instance."""
     settings = Settings()
@@ -96,8 +97,8 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     from cryptography.hazmat.primitives.serialization import pkcs12
     from cryptography.x509.oid import NameOID
 
-    from aeat.auth import CertificateBackend, CertificateBundle, load_certificate
-    from aeat.browser.session import CERTIFICATE_THUMBPRINT_MARKER
+    from ..auth import CertificateBackend, CertificateBundle, load_certificate
+    from .session import CERTIFICATE_THUMBPRINT_MARKER
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     subject = issuer = x509.Name(
@@ -189,7 +190,6 @@ def _probe_or_raise(
         raise SiteHealthError(status=result)
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
     body = (_FIXTURES_ROOT / "mantenimiento" / "interstitial.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -197,7 +197,6 @@ def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
     assert excinfo.value.status.state is SiteHealthState.MANTENIMIENTO
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_waf_fixture() -> None:
     body = (_FIXTURES_ROOT / "waf_challenge" / "request_blocked.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -205,7 +204,6 @@ def test_navigate_probe_raises_on_waf_fixture() -> None:
     assert excinfo.value.status.state is SiteHealthState.WAF_CHALLENGE
 
 
-@pytest.mark.unit
 def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
     body = (_FIXTURES_ROOT / "rate_limited" / "429_retry_after.html").read_text(encoding="utf-8")
     with pytest.raises(SiteHealthError) as excinfo:
@@ -220,7 +218,6 @@ def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
     assert excinfo.value.status.retry_after_seconds == 120
 
 
-@pytest.mark.unit
 def test_navigate_probe_passes_on_ok_fixture() -> None:
     body = (_FIXTURES_ROOT / "ok" / "sede_landing.html").read_text(encoding="utf-8")
     # Must not raise.

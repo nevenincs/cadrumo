@@ -32,10 +32,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.auth.certificate import AeatLiveReadNotEnabledError
+from .certificate import AeatLiveReadNotEnabledError
 
 if TYPE_CHECKING:
-    from aeat.config import Settings
+    from ..config import Settings
 
 
 _LIVE_TESTS_ENV = "AEAT_LIVE_TESTS_ENABLED"
@@ -117,7 +117,7 @@ class AeatAccessGate:
         # Local import to avoid a cycle: `aeat.submission` imports
         # from `aeat.auth`, so `aeat.auth` must not import from
         # `aeat.submission` at module top level.
-        from aeat.submission import (
+        from ..submission import (
             AeatLiveSubmitNotEnabledError,
             AeatPytestLiveWriteRefusedError,
         )

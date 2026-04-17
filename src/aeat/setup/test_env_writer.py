@@ -17,18 +17,18 @@ from pathlib import Path
 
 import pytest
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.env_io import read_env_file
-from aeat.i18n import Language
-from aeat.setup import (
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..env_io import read_env_file
+from ..i18n import Language
+from . import (
     SetupAnswers,
     owned_env_keys,
     write_env_file,
     write_profile_file,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 def _answers(tmp_path: Path) -> SetupAnswers:
@@ -38,8 +38,11 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         tax_id="87654321X",
         iva_regime=IVARegime.SIMPLIFICADO,
         has_employees=True,
+        pays_professionals_with_retencion=True,
+        professional_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=True,
+        third_party_transactions_above_347_threshold=True,
         bienes_extranjero_above_threshold=False,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
@@ -144,11 +147,13 @@ def test_write_profile_file_emits_valid_autonomo_profile(tmp_path: Path) -> None
     target = tmp_path / "profile.json"
     write_profile_file(answers, target)
 
-    from aeat.deadlines import AutonomoProfile
+    from ..deadlines import AutonomoProfile
 
     profile = AutonomoProfile.model_validate_json(target.read_text(encoding="utf-8"))
     assert profile.tax_id == "87654321X"
     assert profile.iva_regime is IVARegime.SIMPLIFICADO
+    assert profile.pays_professionals_with_retencion is True
+    assert profile.third_party_transactions_above_347_threshold is True
 
 
 def test_owned_env_keys_are_stable_and_unique() -> None:

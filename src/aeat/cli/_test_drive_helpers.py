@@ -6,14 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.cli._drive_helpers import (
+from ._drive_helpers import (
     build_listing_query,
     escape_drive_query_literal,
     guess_mime_type,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
-@pytest.mark.unit
+
 class TestEscapeDriveQueryLiteral:
     """Behaviour of ``escape_drive_query_literal``."""
 
@@ -34,7 +35,6 @@ class TestEscapeDriveQueryLiteral:
         )
 
 
-@pytest.mark.unit
 class TestGuessMimeType:
     """Behaviour of ``guess_mime_type``."""
 
@@ -48,7 +48,6 @@ class TestGuessMimeType:
         assert guess_mime_type(Path("README")) == "application/octet-stream"
 
 
-@pytest.mark.unit
 class TestBuildListingQuery:
     """Behaviour of ``build_listing_query``."""
 

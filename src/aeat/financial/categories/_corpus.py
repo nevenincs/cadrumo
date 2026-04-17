@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from aeat.logging import get_logger
-from aeat.manuals import ManualId, ManualPart, load_manual
-from aeat.manuals.errors import ManualNotFoundError, ManualParseError
-
+from ...logging import get_logger
+from ...manuals import ManualId, ManualPart, load_manual
+from ...manuals.errors import ManualNotFoundError, ManualParseError
 from ._profile import CategoryProfile
 from ._registry import CATEGORY_PROFILES_2025
 from ._spending_category import SpendingCategory

@@ -11,10 +11,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.config import Settings, load_settings
-from aeat.i18n import Language
-from aeat.logging import get_logger
-
+from ..config import Settings, load_settings
+from ..i18n import Language
+from ..logging import get_logger
 from ._loader import iter_sections, load_manual, resolve_part_root
 from ._schema import ManualId, ManualPart, Section
 from .errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError

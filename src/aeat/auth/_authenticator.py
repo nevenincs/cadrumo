@@ -41,7 +41,8 @@ from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.auth.certificate import (
+from ..logging import get_logger
+from .certificate import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
     CertificateBundle,
@@ -53,10 +54,9 @@ from aeat.auth.certificate import (
     load_certificate,
     verify_handshake,
 )
-from aeat.logging import get_logger
 
 if TYPE_CHECKING:
-    from aeat.config import Settings
+    from ..config import Settings
 
 log = get_logger(__name__)
 

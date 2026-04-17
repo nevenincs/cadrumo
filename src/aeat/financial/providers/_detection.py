@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.financial.providers._base import FinancialProvider
-from aeat.financial.providers._csv import CsvProvider
-from aeat.financial.providers._ofx import OfxProvider
-from aeat.financial.providers._xlsx import XlsxProvider
+from ._base import FinancialProvider
+from ._csv import CsvProvider
+from ._ofx import OfxProvider
+from ._xlsx import XlsxProvider
 
 
 def detect_provider(path: Path) -> FinancialProvider | None:

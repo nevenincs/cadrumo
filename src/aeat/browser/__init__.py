@@ -7,8 +7,8 @@ Example:
     ```python
     from pathlib import Path
     from playwright.async_api import async_playwright
-    from aeat.config import load_settings
-    from aeat.browser import BrowserSession, Profile
+    from ..config import load_settings
+    from . import BrowserSession, Profile
 
     async def main():
         settings = load_settings()

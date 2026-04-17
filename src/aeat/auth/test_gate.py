@@ -4,16 +4,18 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.auth import (
+from ..config import Settings
+from ..submission import (
+    AeatLiveSubmitNotEnabledError,
+    AeatPytestLiveWriteRefusedError,
+)
+from . import (
     AeatAccessGate,
     AeatGateEnvSnapshot,
     AeatLiveReadNotEnabledError,
 )
-from aeat.config import Settings
-from aeat.submission import (
-    AeatLiveSubmitNotEnabledError,
-    AeatPytestLiveWriteRefusedError,
-)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def _fresh_settings(monkeypatch: pytest.MonkeyPatch, **overrides: str) -> Settings:
@@ -25,7 +27,6 @@ def _fresh_settings(monkeypatch: pytest.MonkeyPatch, **overrides: str) -> Settin
     return Settings()
 
 
-@pytest.mark.unit
 def test_snapshot_env_reports_present_values(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
     monkeypatch.setenv("AEAT_LIVE_SUBMIT_ENABLED", "true")
@@ -42,7 +43,6 @@ def test_snapshot_env_reports_present_values(monkeypatch: pytest.MonkeyPatch) ->
     assert snapshot.pytest_current_test == ""
 
 
-@pytest.mark.unit
 def test_snapshot_env_reports_absent_vars_as_empty(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
     monkeypatch.delenv("AEAT_LIVE_SUBMIT_ENABLED", raising=False)
@@ -54,7 +54,6 @@ def test_snapshot_env_reports_absent_vars_as_empty(monkeypatch: pytest.MonkeyPat
     assert snapshot.pytest_current_test == ""
 
 
-@pytest.mark.unit
 def test_snapshot_as_audit_dict_matches_engine_schema(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
     monkeypatch.setenv("AEAT_LIVE_SUBMIT_ENABLED", "false")
@@ -72,7 +71,6 @@ def test_snapshot_as_audit_dict_matches_engine_schema(monkeypatch: pytest.Monkey
     }
 
 
-@pytest.mark.unit
 def test_require_live_read_passes_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
     settings = _fresh_settings(monkeypatch, AEAT_LIVE_TESTS_ENABLED="1")
@@ -80,7 +78,6 @@ def test_require_live_read_passes_when_enabled(monkeypatch: pytest.MonkeyPatch) 
     AeatAccessGate(settings).require_live_read()
 
 
-@pytest.mark.unit
 def test_require_live_read_raises_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
     settings = _fresh_settings(monkeypatch)
@@ -88,7 +85,6 @@ def test_require_live_read_raises_when_unset(monkeypatch: pytest.MonkeyPatch) ->
         AeatAccessGate(settings).require_live_read()
 
 
-@pytest.mark.unit
 def test_require_live_read_raises_when_not_one(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "true")
     settings = _fresh_settings(monkeypatch, AEAT_LIVE_TESTS_ENABLED="true")
@@ -96,7 +92,6 @@ def test_require_live_read_raises_when_not_one(monkeypatch: pytest.MonkeyPatch) 
         AeatAccessGate(settings).require_live_read()
 
 
-@pytest.mark.unit
 def test_require_live_write_raises_without_submit_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("AEAT_LIVE_SUBMIT_ENABLED", raising=False)
     monkeypatch.setenv("PYTEST_CURRENT_TEST", "placeholder")  # would trigger the other check
@@ -105,7 +100,6 @@ def test_require_live_write_raises_without_submit_env(monkeypatch: pytest.Monkey
         AeatAccessGate(settings).require_live_write()
 
 
-@pytest.mark.unit
 def test_require_live_write_raises_under_pytest(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AEAT_LIVE_SUBMIT_ENABLED", "true")
     monkeypatch.setenv("PYTEST_CURRENT_TEST", "placeholder")
@@ -114,7 +108,6 @@ def test_require_live_write_raises_under_pytest(monkeypatch: pytest.MonkeyPatch)
         AeatAccessGate(settings).require_live_write()
 
 
-@pytest.mark.unit
 def test_access_gate_is_frozen(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = _fresh_settings(monkeypatch)
     gate = AeatAccessGate(settings)

@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from aeat.auth import (
+from . import (
     CertificateBackend,
     CertificateBundle,
     CertificateExpiredError,
@@ -31,7 +31,9 @@ from aeat.auth import (
     preload_into_browser_context,
     verify_handshake,
 )
-from aeat.auth.certificate import _select_backend
+from .certificate import _select_backend
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 
@@ -78,7 +80,6 @@ def _build_pkcs12_bundle(
 # ── CertificateBundle schema ────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_bundle_rejects_extra_fields(tmp_path: Path) -> None:
     with pytest.raises(ValueError):
         CertificateBundle.model_validate(
@@ -91,7 +92,6 @@ def test_bundle_rejects_extra_fields(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.unit
 def test_bundle_is_frozen(tmp_path: Path) -> None:
     bundle = CertificateBundle(
         path=tmp_path / "x.p12",
@@ -102,7 +102,6 @@ def test_bundle_is_frozen(tmp_path: Path) -> None:
         bundle.path = tmp_path / "y.p12"  # type: ignore[misc]
 
 
-@pytest.mark.unit
 def test_bundle_rejects_empty_env_var_name(tmp_path: Path) -> None:
     with pytest.raises(ValueError):
         CertificateBundle(
@@ -115,7 +114,6 @@ def test_bundle_rejects_empty_env_var_name(tmp_path: Path) -> None:
 # ── load_certificate happy path ─────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_load_certificate_happy_path(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -139,7 +137,6 @@ def test_load_certificate_happy_path(
 # ── Error paths ─────────────────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_load_certificate_missing_env_var(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -155,7 +152,6 @@ def test_load_certificate_missing_env_var(
         load_certificate(bundle)
 
 
-@pytest.mark.unit
 def test_load_certificate_wrong_password(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -171,7 +167,6 @@ def test_load_certificate_wrong_password(
         load_certificate(bundle)
 
 
-@pytest.mark.unit
 def test_load_certificate_expired(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -192,7 +187,6 @@ def test_load_certificate_expired(
         load_certificate(bundle)
 
 
-@pytest.mark.unit
 def test_load_certificate_garbage_bytes(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -212,7 +206,6 @@ def test_load_certificate_garbage_bytes(
 # ── SecretStr / PrivateAttr non-leakage ─────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_loaded_certificate_does_not_leak_secrets(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -249,15 +242,14 @@ def test_loaded_certificate_does_not_leak_secrets(
 # ── Backend dispatch ────────────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize("backend", list(CertificateBackend))
 def test_select_backend_returns_matching_class(backend: CertificateBackend) -> None:
-    from aeat.auth._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from aeat.auth._certificate_backends._mtls_proxy import MtlsProxyBackend
-    from aeat.auth._certificate_backends._playwright_context import (
+    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from ._certificate_backends._mtls_proxy import MtlsProxyBackend
+    from ._certificate_backends._playwright_context import (
         PlaywrightContextBackend,
     )
-    from aeat.auth._certificate_backends._user_data_dir import UserDataDirBackend
+    from ._certificate_backends._user_data_dir import UserDataDirBackend
 
     expected = {
         CertificateBackend.PLAYWRIGHT_CONTEXT: PlaywrightContextBackend,
@@ -271,7 +263,6 @@ def test_select_backend_returns_matching_class(backend: CertificateBackend) -> N
 # ── verify_handshake input validation ──────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_verify_handshake_rejects_empty_url(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -288,7 +279,6 @@ def test_verify_handshake_rejects_empty_url(
         verify_handshake(loaded, "")
 
 
-@pytest.mark.unit
 def test_verify_handshake_returns_failure_on_tls_error(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -312,12 +302,11 @@ def test_verify_handshake_returns_failure_on_tls_error(
 # ── Playwright backend contract ─────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_playwright_preload_rejects_unmarked_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from aeat.auth.certificate import CertificateError
+    from .certificate import CertificateError
 
     p12 = _build_pkcs12_bundle(tmp_path)
     monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
@@ -335,7 +324,6 @@ def test_playwright_preload_rejects_unmarked_context(
         preload_into_browser_context(loaded, _FakeContext())
 
 
-@pytest.mark.unit
 def test_playwright_preload_accepts_marked_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -357,12 +345,11 @@ def test_playwright_preload_accepts_marked_context(
     preload_into_browser_context(loaded, ctx)  # must not raise
 
 
-@pytest.mark.unit
 def test_playwright_client_certificates_kwarg_materialises_secret(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from aeat.auth._certificate_backends._playwright_context import (
+    from ._certificate_backends._playwright_context import (
         build_client_certificates_kwarg,
     )
 
@@ -387,12 +374,11 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
 # ── Stub backends ───────────────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_httpx_fallback_preload_raises_not_implemented(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from aeat.auth._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
 
     p12 = _build_pkcs12_bundle(tmp_path)
     monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
@@ -406,7 +392,6 @@ def test_httpx_fallback_preload_raises_not_implemented(
         HttpxFallbackBackend().preload(loaded, object())
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     "backend_enum",
     [CertificateBackend.USER_DATA_DIR, CertificateBackend.MTLS_PROXY],
@@ -434,14 +419,13 @@ def test_deferred_backends_raise_not_implemented(
 # ── Settings integration ────────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_settings_loads_cert_env_vars(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     from pydantic_settings import SettingsConfigDict
 
-    from aeat.config import Settings
+    from ..config import Settings
 
     class IsolatedSettings(Settings):
         model_config = SettingsConfigDict(env_file=None)

@@ -6,10 +6,10 @@ from datetime import date
 
 import pytest
 
-from aeat.status._cache_key import make_cache_key
-from aeat.status._models import AeatStatusKind
+from ._cache_key import make_cache_key
+from ._models import AeatStatusKind
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def test_stable_across_param_order() -> None:

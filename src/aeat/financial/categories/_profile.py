@@ -6,8 +6,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.i18n import Translatable, require_authoritative
-
+from ...i18n import Translatable, require_authoritative
 from ._casilla_mapping import CasillaMapping
 from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory

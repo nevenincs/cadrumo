@@ -18,17 +18,18 @@ import os
 
 import pytest
 
-from aeat.auth import (
+from ..config import Settings
+from . import (
     AeatAuthenticator,
     AeatLoginAssertion,
     AeatSession,
     CertificateHealthSeverity,
     HandshakeResult,
 )
-from aeat.config import Settings
+
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 
 
-@pytest.mark.live
 def test_aeat_authenticator_synchronous_surface_live() -> None:
     """Exercise the sync authenticator surface against the real cert.
 
@@ -75,7 +76,6 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     assert len(nif) in {8, 9}, f"unexpected NIF shape: {nif!r}"
 
 
-@pytest.mark.live
 @pytest.mark.asyncio
 async def test_aeat_authenticator_full_live_flow() -> None:
     """End-to-end live authentication + login assertion.
@@ -98,9 +98,9 @@ async def test_aeat_authenticator_full_live_flow() -> None:
 
     from playwright.async_api import async_playwright
 
-    from aeat.auth import BrowserSessionFactory
-    from aeat.browser.profile import Profile
-    from aeat.browser.session import BrowserSession
+    from ..browser.profile import Profile
+    from ..browser.session import BrowserSession
+    from . import BrowserSessionFactory
 
     async with async_playwright() as playwright:
         profile = Profile(

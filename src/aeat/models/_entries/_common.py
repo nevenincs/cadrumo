@@ -12,18 +12,18 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date
 
-from aeat.i18n import Translatable
-from aeat.models._applicability import ModeloApplicability
-from aeat.models._categories import (
+from ...i18n import Translatable
+from ...portals import Portal
+from .._applicability import ModeloApplicability
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._citations import LegalCitation
-from aeat.models._codes import ModeloCode
-from aeat.models._metadata import ModeloMetadata
-from aeat.portals import Portal
+from .._citations import LegalCitation
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
 
 RETRIEVAL_DATE: date = date(2026, 4, 13)
 

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.browser.evasion import PlaywrightStealthEvasion
+from .evasion import PlaywrightStealthEvasion
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 class StubContext:
@@ -23,7 +25,6 @@ class StubContext:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
 async def test_playwright_stealth_evasion_applies_init_script() -> None:
     """``PlaywrightStealthEvasion`` must drive the 2.x ``Stealth`` class API."""
     evasion = PlaywrightStealthEvasion()

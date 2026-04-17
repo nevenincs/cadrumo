@@ -12,10 +12,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aeat.auth._certificate_backends._base import _CertBackend
+from ._base import _CertBackend
 
 if TYPE_CHECKING:
-    from aeat.auth.certificate import HandshakeResult, LoadedCertificate
+    from ..certificate import HandshakeResult, LoadedCertificate
 
 
 class UserDataDirBackend(_CertBackend):

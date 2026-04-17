@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.filing import (
+from ..submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+from . import (
     QUARTERLY_303_INPUT_KEY,
     AmendmentKind,
     FilingAmendmentError,
@@ -19,10 +20,9 @@ from aeat.filing import (
     list_amendments,
     load_amendment,
 )
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
-from aeat.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+from .testing import SyntheticProfile, default_schema_provider
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _profile(*modelos: str) -> SyntheticProfile:

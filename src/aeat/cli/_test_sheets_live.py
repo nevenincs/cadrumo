@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from aeat.cli._live import (
+from ._live import (
     requires_live_enabled,
     requires_scratch_sheet,
     sheets_service,
@@ -19,8 +19,9 @@ from aeat.cli._live import (
     unique_prefix,
 )
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
 
-@pytest.mark.live
+
 class TestSheetsLiveRoundTrip:
     """End-to-end Sheets round-trip in the scratch sheet."""
 
