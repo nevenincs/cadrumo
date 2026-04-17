@@ -237,7 +237,12 @@ def suggest_reconciliations(
             counterparty_match = False
             if tx_counterparty is not None and invoice_counterparty:
                 tx_normalised = tx_counterparty.strip().lower()
-                counterparty_match = invoice_counterparty in tx_normalised or tx_normalised in invoice_counterparty
+                # ``bool(tx_normalised)`` guards against the empty-string case;
+                # without it ``"" in invoice_counterparty`` returns True and
+                # grants a false-positive 0.5 score boost.
+                counterparty_match = bool(tx_normalised) and (
+                    invoice_counterparty in tx_normalised or tx_normalised in invoice_counterparty
+                )
             score = Decimal("0.5") * (1 if amount_match else 0)
             score += Decimal("0.5") * (1 if counterparty_match else 0)
             suggestions.append(
