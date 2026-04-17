@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.models._codes import ModeloCode
-from aeat.models._registry import MODELO_REGISTRY
-from aeat.portals._codes import Portal
-from aeat.portals._registry import PORTAL_REGISTRY
+from ..portals._codes import Portal
+from ..portals._registry import PORTAL_REGISTRY
+from ._codes import ModeloCode
+from ._registry import MODELO_REGISTRY
 
 pytestmark = pytest.mark.unit
 
@@ -38,7 +38,7 @@ def test_submission_portal_round_trips_related_modelo() -> None:
 
 def test_submission_portal_is_filing_family_category() -> None:
     """Every bound portal is in the FILING / CENSUS family of categories."""
-    from aeat.portals._categories import PortalCategory
+    from ..portals._categories import PortalCategory
 
     allowed = {PortalCategory.FILING, PortalCategory.CENSUS}
     for metadata in MODELO_REGISTRY.values():

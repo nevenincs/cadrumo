@@ -13,9 +13,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language, Translatable
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language, Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

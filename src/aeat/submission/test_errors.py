@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.errors import AeatError
-from aeat.submission import (
+from ..errors import AeatError
+from . import (
     SubmissionError,
     SubmissionFormFillError,
     SubmissionPreflightError,
@@ -26,7 +26,7 @@ def test_every_error_inherits_aeat_error() -> None:
 
 
 def test_translatable_message_preserved() -> None:
-    from aeat.i18n import Translatable
+    from ..i18n import Translatable
 
     translatable: Translatable = {
         "en": "draft not ready",

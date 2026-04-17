@@ -6,7 +6,7 @@ from datetime import date, datetime
 
 import pytest
 
-from aeat.sync import (
+from . import (
     DivergenceClassification,
     DivergenceClassifier,
     DivergenceKind,

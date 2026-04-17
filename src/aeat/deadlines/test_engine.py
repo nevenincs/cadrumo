@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from aeat.deadlines import (
+from . import (
     KNOWN_AUTONOMO_MODELOS,
     AutonomoProfile,
     DeadlineEngine,

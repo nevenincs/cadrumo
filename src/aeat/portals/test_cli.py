@@ -7,7 +7,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from aeat.portals._cli import app
+from ._cli import app
 
 pytestmark = pytest.mark.unit
 

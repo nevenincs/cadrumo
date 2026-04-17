@@ -10,8 +10,8 @@ import unicodedata
 from enum import StrEnum
 from typing import Any, Protocol, TypedDict, cast, runtime_checkable
 
-from aeat.config import load_settings
-from aeat.errors import AeatError
+from ..config import load_settings
+from ..errors import AeatError
 
 
 class TranslationError(AeatError):

@@ -18,7 +18,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from aeat.setup._errors import SetupError
+from ._errors import SetupError
 
 
 class QueuedPrompter:

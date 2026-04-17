@@ -8,8 +8,8 @@ from pathlib import Path
 
 import typer
 
-from aeat.config import load_settings
-from aeat.financial.attachments import (
+from ..config import load_settings
+from ..financial.attachments import (
     Attachment,
     AttachmentError,
     AttachmentKind,

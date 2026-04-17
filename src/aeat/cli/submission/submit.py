@@ -9,11 +9,11 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from aeat.auth import CertificateError, CertificateHealthSeverity
-from aeat.auth import health as certificate_health
-from aeat.cli.submission._helpers import build_engine, load_draft
-from aeat.config import Settings
-from aeat.submission import SubmissionError
+from ...auth import CertificateError, CertificateHealthSeverity
+from ...auth import health as certificate_health
+from ...config import Settings
+from ...submission import SubmissionError
+from ._helpers import build_engine, load_draft
 
 _CONSOLE = Console()
 

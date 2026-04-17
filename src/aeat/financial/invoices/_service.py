@@ -10,21 +10,20 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from aeat.financial.transactions import (
+from ...logging import get_logger
+from ..transactions import (
     TransactionCatalogue,
     TransactionError,
 )
-from aeat.financial.transactions import (
+from ..transactions import (
     link_invoice as _transactions_link_invoice,
 )
-from aeat.financial.transactions import (
+from ..transactions import (
     load_transactions as _load_transactions,
 )
-from aeat.financial.transactions import (
+from ..transactions import (
     save_transactions as _save_transactions,
 )
-from aeat.logging import get_logger
-
 from ._enums import InvoiceKind
 from ._errors import (
     InvoiceLinkError,

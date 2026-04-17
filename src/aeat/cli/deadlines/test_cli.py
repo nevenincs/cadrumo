@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.deadlines import app
-from aeat.deadlines import AutonomoProfile, IVARegime
+from ...deadlines import AutonomoProfile, IVARegime
+from . import app
 
 pytestmark = pytest.mark.unit
 

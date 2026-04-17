@@ -126,7 +126,7 @@ select = [
 ]
 ignore = [
     "S101",   # allow assert in tests
-    "TID252", # tolerate relative parent imports within subpackages; the ban we care about is TID251 (#15 ADR)
+    "TID252", # tolerate relative parent imports within subpackages; #15 + #162 require relative imports inside src/aeat/
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -149,6 +149,13 @@ ignore = [
 "unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See tests/README.md."
 "unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See tests/README.md."
 "mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See tests/README.md."
+
+# #162 — the relative-imports mandate is enforced by the custom
+# scripts/check_relative_imports.py script, not by Ruff TID251. Ruff's
+# banned-api resolves relative imports back to their absolute path
+# before matching the banned prefix, which would flag every legitimate
+# `from .module import X` inside src/aeat/ when `aeat` is banned.
+# See .vault/adr/2026-04-17-relative-imports-adr.md.
 
 [tool.ruff.format]
 quote-style = "double"

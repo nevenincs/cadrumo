@@ -22,11 +22,11 @@ from typing import TYPE_CHECKING
 import httpx
 from cryptography.hazmat.primitives import serialization
 
-from aeat.auth._certificate_backends._base import _CertBackend
-from aeat.logging import get_logger
+from ...logging import get_logger
+from ._base import _CertBackend
 
 if TYPE_CHECKING:
-    from aeat.auth.certificate import HandshakeResult, LoadedCertificate
+    from ..certificate import HandshakeResult, LoadedCertificate
 
 log = get_logger(__name__)
 
@@ -94,7 +94,7 @@ class HttpxFallbackBackend(_CertBackend):
         :class:`HandshakeResult` with ``success=False``. The method
         never logs the passphrase or any PEM byte.
         """
-        from aeat.auth.certificate import HandshakeResult
+        from ..certificate import HandshakeResult
 
         attempted_at = datetime.now(UTC)
         started = time.perf_counter()

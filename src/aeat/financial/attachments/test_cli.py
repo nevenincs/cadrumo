@@ -10,8 +10,8 @@ import pytest
 from click.testing import Result
 from typer.testing import CliRunner
 
-from aeat.cli import app as root_app
-from aeat.financial.attachments import AttachmentKind, AttachmentSource, AttachmentStore
+from ...cli import app as root_app
+from . import AttachmentKind, AttachmentSource, AttachmentStore
 
 _RUNNER = CliRunner()
 

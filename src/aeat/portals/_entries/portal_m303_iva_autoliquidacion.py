@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from aeat.models import ModeloCode
-from aeat.portals._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
-from aeat.portals._codes import Portal
-from aeat.portals._entries._common import build_entry
-from aeat.portals._metadata import PortalMetadata
+from ...models import ModeloCode
+from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._codes import Portal
+from .._metadata import PortalMetadata
+from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M303_IVA_AUTOLIQUIDACION,

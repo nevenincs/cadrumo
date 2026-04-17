@@ -58,9 +58,10 @@ env-setup:
 
 # ── Dev loop ─────────────────────────────────────────────────────────────────
 
-# Lint with ruff.
+# Lint with ruff and enforce the #162 relative-imports mandate.
 lint:
     uv run ruff check .
+    uv run python scripts/check_relative_imports.py
 
 # Format with ruff.
 fmt:

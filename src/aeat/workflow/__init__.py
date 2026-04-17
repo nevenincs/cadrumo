@@ -25,10 +25,10 @@ from __future__ import annotations
 # layer breaks the cycle: ``aeat.workflow._models`` must not import
 # from ``aeat.status`` at module load time, but the public
 # subpackage boundary is a safe rebuild site.
-from aeat.status import SiteHealthAlert as _SiteHealthAlert
-from aeat.status import _site_health as _site_health_module
-from aeat.workflow import _models as _workflow_models
-from aeat.workflow._adapters import (
+from ..status import SiteHealthAlert as _SiteHealthAlert
+from ..status import _site_health as _site_health_module
+from . import _models as _workflow_models
+from ._adapters import (
     DeadlineEngineAdapter,
     FilingDraftBuilderAdapter,
     JsonFileInputsProvider,
@@ -36,21 +36,21 @@ from aeat.workflow._adapters import (
     SyncRunnerAdapter,
     default_engine,
 )
-from aeat.workflow._engine import WorkflowEngine
-from aeat.workflow._errors import (
+from ._engine import WorkflowEngine
+from ._errors import (
     WorkflowAbortedError,
     WorkflowComponentError,
     WorkflowError,
 )
-from aeat.workflow._models import (
+from ._models import (
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
     compute_run_id,
 )
-from aeat.workflow._persistence import list_runs, load_run, save_run
-from aeat.workflow._protocols import (
+from ._persistence import list_runs, load_run, save_run
+from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
     ExpedienteLike,

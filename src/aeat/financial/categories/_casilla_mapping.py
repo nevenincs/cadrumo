@@ -6,7 +6,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.casillas import ModeloCode, PeriodType
+from ...casillas import ModeloCode, PeriodType
 
 
 class _StrictFrozenModel(BaseModel):

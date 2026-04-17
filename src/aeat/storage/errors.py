@@ -6,7 +6,7 @@ catch domain-wide failures with a single base class.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
+from ..errors import AeatError
 
 
 class StorageError(AeatError):

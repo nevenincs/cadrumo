@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pdfplumber
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from .._errors import JustificanteParseError
 
 _logger = get_logger(__name__)

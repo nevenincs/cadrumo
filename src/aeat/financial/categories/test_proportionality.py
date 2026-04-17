@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.financial.categories import (
+from . import (
     Citation,
     CitationSource,
     ProportionalityKind,
