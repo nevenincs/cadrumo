@@ -208,7 +208,7 @@ class Invoice(BaseModel):
             payload["payment_status"] = PaymentStatus(payload["payment_status"])
 
         if "invoice_number" in payload and isinstance(payload["invoice_number"], str):
-            payload["invoice_number"] = payload["invoice_number"].strip()
+            payload["invoice_number"] = payload["invoice_number"].strip().upper()
 
         if "issued_at" in payload:
             payload["issued_at"] = _coerce_date(payload["issued_at"])
