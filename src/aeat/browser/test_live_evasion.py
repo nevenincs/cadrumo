@@ -37,3 +37,4 @@ async def test_live_bot_detection_probe(tmp_path) -> None:
         assert webdriver_result is False, "navigator.webdriver is True, bot detected!"
 
         await context.close()
+        await session.close()
