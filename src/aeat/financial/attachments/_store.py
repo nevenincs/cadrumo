@@ -33,6 +33,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _BLOBS_DIRNAME = "blobs"
 _MANIFESTS_DIRNAME = "manifests"
 _MANIFEST_SUFFIX = ".json"
+_STREAM_CHUNK_SIZE = 1024 * 1024  # 1 MiB
 
 
 class AttachmentStore(BaseModel):
@@ -102,6 +103,60 @@ class AttachmentStore(BaseModel):
             raise AttachmentPersistenceError(f"unable to write attachment blob: {target}") from exc
         _LOGGER.info("stored attachment blob %s (%d bytes)", digest, len(data))
         return digest
+
+    def put_file(self, source: Path) -> tuple[str, int]:
+        """Stream ``source`` into the store, hashing and writing in chunks.
+
+        Reads and writes happen in 1 MiB chunks so large attachments (scans,
+        multi-page invoices) never force the full payload into memory. If a
+        blob for the resulting digest already exists the streamed tempfile is
+        discarded to preserve the write-once invariant.
+
+        Args:
+            source: Filesystem path of the bytes to stream into the store.
+
+        Returns:
+            A ``(digest, bytes_size)`` tuple with the lowercase hex SHA-256
+            digest and the exact byte count of the source payload.
+
+        Raises:
+            AttachmentPersistenceError: When the source cannot be read or the
+                blob cannot be written.
+        """
+        hasher = hashlib.sha256()
+        bytes_size = 0
+        tmp_path: Path | None = None
+        try:
+            self.blobs_dir.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                mode="wb",
+                dir=self.blobs_dir,
+                prefix="stream.",
+                suffix=".tmp",
+                delete=False,
+            ) as tmp_handle:
+                tmp_path = Path(tmp_handle.name)
+                with source.open("rb") as reader:
+                    while True:
+                        chunk = reader.read(_STREAM_CHUNK_SIZE)
+                        if not chunk:
+                            break
+                        hasher.update(chunk)
+                        bytes_size += len(chunk)
+                        tmp_handle.write(chunk)
+            digest = hasher.hexdigest()
+            target = self.blob_path(digest)
+            if target.exists():
+                tmp_path.unlink(missing_ok=True)
+                _LOGGER.debug("reusing existing blob for %s", digest)
+            else:
+                os.replace(tmp_path, target)
+                _LOGGER.info("stored attachment blob %s (%d bytes)", digest, bytes_size)
+            return digest, bytes_size
+        except OSError as exc:
+            if tmp_path is not None:
+                tmp_path.unlink(missing_ok=True)
+            raise AttachmentPersistenceError(f"unable to stream attachment source: {source}") from exc
 
     def read_bytes(self, sha256: str) -> bytes:
         """Return the raw bytes for ``sha256``.
