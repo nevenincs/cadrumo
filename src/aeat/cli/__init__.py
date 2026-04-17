@@ -28,6 +28,7 @@ from . import doctor as doctor_module
 from . import drive as drive_module
 from . import filing as filing_module
 from . import financial as financial_module
+from . import formulas as formulas_module
 from . import inbox as inbox_module
 from . import justificante as justificante_module
 from . import llm as llm_module
@@ -84,6 +85,7 @@ app.add_typer(vat_module.app, name="vat", help="Spanish VAT (IVA) taxonomy + rul
 app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
 app.add_typer(deadlines_module.app, name="deadlines", help="Filing-deadline computation engine (#38).")
 app.add_typer(filing_module.app, name="filing", help="Filing draft engine commands (#39).")
+app.add_typer(formulas_module.app, name="formulas", help="Per-modelo calculation formula engine (#173).")
 app.add_typer(
     financial_module.app,
     name="financial",
