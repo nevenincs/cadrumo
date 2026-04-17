@@ -88,6 +88,10 @@ class _RealProbe:
                     await context.close()
                 except Exception:
                     logger.exception("browser_health: context.close() failed")
+            try:
+                await self._session.close()
+            except Exception:
+                logger.exception("browser_health: session.close() failed")
             await self._playwright.stop()
 
 
