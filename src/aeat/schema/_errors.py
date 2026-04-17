@@ -34,3 +34,15 @@ class SchemaCacheError(SchemaError):
 
 class SchemaValidationError(SchemaError):
     """Raised when a cached :class:`Modelo` JSON blob fails validation."""
+
+
+class SchemaEvaluationError(SchemaError):
+    """Raised when :func:`evaluate` cannot compute a formula AST.
+
+    Distinct from :class:`SchemaExtractionError` (which covers
+    source-parse failures) and :class:`SchemaValidationError` (which
+    covers cached-blob validation): evaluation failures surface at
+    runtime when a fully-extracted formula cannot be resolved against
+    a concrete ``values`` mapping — typically division by zero or a
+    casilla_id that the caller did not provide.
+    """

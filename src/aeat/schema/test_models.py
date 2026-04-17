@@ -23,7 +23,7 @@ from . import (
     Modelo,
     RangeRule,
     RegexRule,
-    SchemaExtractionError,
+    SchemaEvaluationError,
     SchemaProvenance,
     SchemaSource,
     SchemaValidationError,
@@ -111,9 +111,18 @@ class TestEvaluate:
         node = CasillaRef(casilla_id="01")
         assert evaluate(node, {"01": Decimal("100")}) == Decimal("100")
 
-    def test_ref_missing_raises_validation_error(self) -> None:
-        with pytest.raises(SchemaValidationError):
+    def test_ref_missing_raises_evaluation_error(self) -> None:
+        with pytest.raises(SchemaEvaluationError):
             evaluate(CasillaRef(casilla_id="99"), {})
+
+    def test_div_by_zero_includes_casilla_id(self) -> None:
+        zero = BinaryOp(
+            op=BinaryFormulaOp.DIV,
+            left=LiteralFormula(value=Decimal("10")),
+            right=LiteralFormula(value=Decimal("0")),
+        )
+        with pytest.raises(SchemaEvaluationError, match="'71'"):
+            evaluate(zero, {}, casilla_id="71")
 
     def test_binop_add_sub_mul(self) -> None:
         values = {"01": Decimal("200"), "03": Decimal("60")}
@@ -149,7 +158,7 @@ class TestEvaluate:
             left=CasillaRef(casilla_id="10"),
             right=CasillaRef(casilla_id="30"),
         )
-        with pytest.raises(SchemaExtractionError):
+        with pytest.raises(SchemaEvaluationError):
             evaluate(zero, values)
 
     def test_sum(self) -> None:

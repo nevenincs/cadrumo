@@ -36,6 +36,7 @@ from ._enums import (
 from ._errors import (
     SchemaCacheError,
     SchemaError,
+    SchemaEvaluationError,
     SchemaExtractionError,
     SchemaValidationError,
 )
@@ -86,6 +87,7 @@ __all__ = (
     "RegexRule",
     "SchemaCacheError",
     "SchemaError",
+    "SchemaEvaluationError",
     "SchemaExtractionError",
     "SchemaProvenance",
     "SchemaSource",

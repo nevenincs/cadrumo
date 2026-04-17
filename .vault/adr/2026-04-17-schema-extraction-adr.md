@@ -136,8 +136,11 @@ This is the project-wide pydantic mandate (memory:
   fully implemented in v1 — no `NotImplementedError` stubs — and
   each is directly exercised by `test_models.py`. `BinaryFormulaOp`
   division applies `Decimal` quantization with `ROUND_HALF_UP` and
-  raises `SchemaExtractionError` on division by zero with the
-  casilla ID in the message.
+  raises `SchemaEvaluationError` (a dedicated subclass of
+  `SchemaError`, distinct from extraction and cache-validation
+  errors) on division by zero or on a missing casilla_id lookup,
+  with the target casilla ID included in the message when the
+  caller passes the optional `casilla_id=` kwarg.
 
 - **`ValidationRule`** — discriminated union tagged by `kind`:
   - `RangeRule(kind: "range", min: Decimal | None,
@@ -342,6 +345,8 @@ Three new env-backed settings, added to `Settings` and mirrored in
   failures.
 - `SchemaValidationError(SchemaError)` — pydantic validation
   wrapped at loader boundary.
+- `SchemaEvaluationError(SchemaError)` — runtime formula-AST
+  evaluation failures (missing casilla lookup, division by zero).
 
 Extractor failures MUST include the BOE ref and page number in
 the exception message; pdfplumber exceptions are wrapped with

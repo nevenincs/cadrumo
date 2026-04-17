@@ -47,6 +47,7 @@ from ._enums import (
     SchemaSource,
 )
 from ._errors import (
+    SchemaEvaluationError,
     SchemaExtractionError,
     SchemaValidationError,
 )
@@ -227,22 +228,31 @@ def _collect_refs(node: FormulaNode) -> frozenset[str]:
     raise SchemaExtractionError(f"unknown formula node kind: {type(node)!r}")
 
 
-def evaluate(node: FormulaNode, values: dict[str, Decimal]) -> Decimal:
+def evaluate(
+    node: FormulaNode,
+    values: dict[str, Decimal],
+    *,
+    casilla_id: str | None = None,
+) -> Decimal:
     """Evaluate a formula AST against a casilla-value mapping.
 
     Args:
         node: Root of the formula AST.
         values: Mapping from casilla_id to its resolved
             :class:`~decimal.Decimal` value.
+        casilla_id: Optional identifier of the target casilla whose
+            formula is being evaluated; included in error messages
+            (particularly division by zero) so a human reviewer can
+            locate the offending row in the BOE annex.
 
     Returns:
         The computed :class:`~decimal.Decimal`. Division results are
         quantised to two decimal places using ``ROUND_HALF_UP``.
 
     Raises:
-        SchemaValidationError: If the AST references a casilla_id not
-            present in ``values``.
-        SchemaExtractionError: On division by zero.
+        SchemaEvaluationError: If the AST references a casilla_id
+            not present in ``values`` or a division by zero is
+            encountered.
     """
     if isinstance(node, LiteralFormula):
         return node.value
@@ -250,12 +260,13 @@ def evaluate(node: FormulaNode, values: dict[str, Decimal]) -> Decimal:
         try:
             return values[node.casilla_id]
         except KeyError as exc:
-            raise SchemaValidationError(
-                f"formula references unknown casilla {node.casilla_id!r}",
+            owner = f" for casilla {casilla_id!r}" if casilla_id else ""
+            raise SchemaEvaluationError(
+                f"formula{owner} references unknown casilla {node.casilla_id!r}",
             ) from exc
     if isinstance(node, BinaryOp):
-        left = evaluate(node.left, values)
-        right = evaluate(node.right, values)
+        left = evaluate(node.left, values, casilla_id=casilla_id)
+        right = evaluate(node.right, values, casilla_id=casilla_id)
         if node.op == BinaryFormulaOp.ADD:
             return left + right
         if node.op == BinaryFormulaOp.SUB:
@@ -264,15 +275,18 @@ def evaluate(node: FormulaNode, values: dict[str, Decimal]) -> Decimal:
             return left * right
         if node.op == BinaryFormulaOp.DIV:
             if right == 0:
-                raise SchemaExtractionError("division by zero in formula AST")
+                owner = f" evaluating casilla {casilla_id!r}" if casilla_id else ""
+                raise SchemaEvaluationError(
+                    f"division by zero{owner} in formula AST",
+                )
             return (left / right).quantize(_DIV_QUANT, rounding=ROUND_HALF_UP)
-        raise SchemaExtractionError(f"unknown binary op: {node.op!r}")
+        raise SchemaEvaluationError(f"unknown binary op: {node.op!r}")
     if isinstance(node, SumFormula):
         total = Decimal("0")
         for term in node.terms:
-            total = total + evaluate(term, values)
+            total = total + evaluate(term, values, casilla_id=casilla_id)
         return total
-    raise SchemaExtractionError(f"unknown formula node kind: {type(node)!r}")
+    raise SchemaEvaluationError(f"unknown formula node kind: {type(node)!r}")
 
 
 def validate_period_for_modelo(code: ModeloCode, period: str) -> None:

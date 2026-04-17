@@ -114,9 +114,17 @@ def refresh(
                 raise typer.BadParameter(
                     f"--_pdf-path-override: file not found: {pdf_path_override}",
                 )
-            pdf_bytes = pdf_path_override.read_bytes()
-            sha256 = hashlib.sha256(pdf_bytes).hexdigest()
-            content_length = len(pdf_bytes)
+            # Stream the override PDF so we never hold the full file
+            # in memory, even though `--_pdf-path-override` is a
+            # test-only hidden flag. Matches the production
+            # `_stream_to_file` pattern for consistency.
+            sha_hasher = hashlib.sha256()
+            content_length = 0
+            with pdf_path_override.open("rb") as handle:
+                while chunk := handle.read(65536):
+                    sha_hasher.update(chunk)
+                    content_length += len(chunk)
+            sha256 = sha_hasher.hexdigest()
             origin_url = _resolve_origin_url(code, boe_ref)
             source = FetchedSchemaSource(
                 modelo_code=code,
