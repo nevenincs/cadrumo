@@ -23,9 +23,10 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import StrEnum
+from pathlib import PurePosixPath
 from typing import Annotated
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from aeat.i18n import Translatable
 
@@ -214,6 +215,14 @@ class SectionRef(_StrictFrozen):
         ),
     )
 
+    @field_validator("relative_path")
+    @classmethod
+    def _validate_relative_path(cls, value: str) -> str:
+        pure = PurePosixPath(value)
+        if "\\" in value or pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
+            raise ValueError("SectionRef.relative_path must be a contained POSIX relative path")
+        return pure.as_posix()
+
 
 class Section(_StrictFrozen):
     """A structured section of a handbook chapter."""
@@ -303,6 +312,14 @@ class FetchedManualPart(_StrictFrozen):
         default=False,
         description="Always False for fetched records; kept for diff-friendliness with synthetic fixtures.",
     )
+
+    @field_validator("relative_pdf_path")
+    @classmethod
+    def _validate_relative_pdf_path(cls, value: str) -> str:
+        pure = PurePosixPath(value)
+        if "\\" in value or pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
+            raise ValueError("FetchedManualPart.relative_pdf_path must be a contained POSIX relative path")
+        return pure.as_posix()
 
 
 class ManualCatalogue(_StrictLoose):

@@ -115,3 +115,10 @@ class TestManifestIO:
         manifest = _manifest()
         with pytest.raises(ManifestError, match="raw PDF not found"):
             verify_fetched_pdf(manifest, tmp_path)
+
+    @pytest.mark.unit
+    def test_verify_fetched_pdf_rejects_traversal_path(self, tmp_path: Path) -> None:
+        """A tampered relative_pdf_path must not escape the part root."""
+        manifest = _manifest().model_copy(update={"relative_pdf_path": "../outside.pdf"})
+        with pytest.raises(ManifestError, match="must stay within the owning root"):
+            verify_fetched_pdf(manifest, tmp_path)
