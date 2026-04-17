@@ -132,8 +132,11 @@ def _resolve_targets(args: list[str]) -> list[Path]:
     targets: list[Path] = []
     src_aeat_resolved = SRC_AEAT.resolve()
     for raw in args:
-        candidate = Path(raw)
-        candidate = (REPO_ROOT / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
+        # Resolve relative to the current working directory — standard
+        # CLI semantics. prek invokes hooks from the repo root, so this
+        # also handles repo-root-relative paths correctly. Per Gemini
+        # PR-review feedback on #162.
+        candidate = Path(raw).resolve()
         if candidate.suffix != ".py":
             continue
         try:
