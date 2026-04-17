@@ -132,5 +132,5 @@ def test_live_dry_run_only(tmp_path: Path) -> None:
         submitters={"130": _NoopSubmitter()},
         settings=settings,
     )
-    filing = asyncio.run(engine.submit_draft(_Draft()))
+    filing = asyncio.run(engine.submit_draft(_Draft(), dry_run=True))
     assert filing.status is SubmissionStatus.PENDING

@@ -75,3 +75,37 @@ class TestEnvExampleAlignment:
 
         settings = IsolatedSettings()
         assert settings.aeat_base_url == "https://sede.agenciatributaria.gob.es"
+
+    def test_blank_optional_path_env_vars_are_treated_as_unset(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Blank optional path env vars must normalize to ``None``."""
+        monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", "")
+        monkeypatch.setenv("AEAT_CERTIFICATE_PATH", "")
+
+        class IsolatedSettings(Settings):
+            """Settings variant that skips the on-disk env file for test isolation."""
+
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        settings = IsolatedSettings()
+        assert settings.aeat_default_profile_path is None
+        assert settings.aeat_certificate_path is None
+
+    def test_blank_optional_secret_env_vars_are_treated_as_unset(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Blank optional secret env vars must normalize to ``None``."""
+        monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", "")
+        monkeypatch.setenv("AEAT_LLM_OPENAI_API_KEY", "")
+
+        class IsolatedSettings(Settings):
+            """Settings variant that skips the on-disk env file for test isolation."""
+
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        settings = IsolatedSettings()
+        assert settings.aeat_certificate_password_secret is None
+        assert settings.aeat_llm_openai_api_key is None
