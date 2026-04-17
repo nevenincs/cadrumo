@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.llm import LLMProvider, LLMResponse, UsageRecorder
+from . import LLMProvider, LLMResponse, UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 

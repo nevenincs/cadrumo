@@ -9,10 +9,9 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from aeat.config import PROJECT_ROOT, load_settings
-from aeat.i18n import require_authoritative
-from aeat.logging import get_logger
-
+from ..config import PROJECT_ROOT, load_settings
+from ..i18n import require_authoritative
+from ..logging import get_logger
 from .errors import (
     CasillaParseError,
     CrossReferenceError,

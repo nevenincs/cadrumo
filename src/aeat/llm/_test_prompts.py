@@ -2,7 +2,7 @@
 
 import pytest
 
-from aeat.llm import PromptDefinition, PromptRegistry
+from . import PromptDefinition, PromptRegistry
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 

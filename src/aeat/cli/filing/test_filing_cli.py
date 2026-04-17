@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app
-from aeat.filing import build_draft
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
+from ...filing import build_draft
+from ...filing.testing import SyntheticProfile, default_schema_provider
+from .. import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 

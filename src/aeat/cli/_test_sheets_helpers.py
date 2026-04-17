@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.cli._sheets_helpers import coerce_value_input_option, parse_values_json
+from ._sheets_helpers import coerce_value_input_option, parse_values_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 

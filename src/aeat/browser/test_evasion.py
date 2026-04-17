@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.browser.evasion import PlaywrightStealthEvasion
+from .evasion import PlaywrightStealthEvasion
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 

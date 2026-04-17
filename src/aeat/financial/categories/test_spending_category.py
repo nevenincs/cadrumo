@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.financial.categories import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily, family_for
+from . import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily, family_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 

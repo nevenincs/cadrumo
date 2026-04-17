@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.sync import (
+from . import (
     CasillaAddedWithDefault,
     DivergenceClassification,
     DivergenceRecord,
@@ -75,6 +75,19 @@ def test_json_file_repository_missing_record(tmp_path: Path) -> None:
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
     with pytest.raises(DivergenceRepositoryError):
         repo.load("does-not-exist")
+
+
+def test_json_file_repository_rejects_traversal_on_load(tmp_path: Path) -> None:
+    repo = JsonFileDivergenceRepository(tmp_path / "divergences")
+    with pytest.raises(DivergenceRepositoryError, match="simple filename token"):
+        repo.load("../escape")
+
+
+def test_json_file_repository_rejects_traversal_on_save(tmp_path: Path) -> None:
+    repo = JsonFileDivergenceRepository(tmp_path / "divergences")
+    record = _record().model_copy(update={"record_id": "../escape"})
+    with pytest.raises(DivergenceRepositoryError, match="simple filename token"):
+        repo.save(record)
 
 
 def test_storage_repository_stub_refuses_construction() -> None:

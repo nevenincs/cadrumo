@@ -11,15 +11,15 @@ from typing import Any
 
 import pytest
 
-from aeat.config import Settings
-from aeat.filing import (
+from ..config import Settings
+from ..filing import (
     AmendmentKind,
     CasillaChange,
     FilingAmendment,
     build_draft,
 )
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
-from aeat.submission import (
+from ..filing.testing import SyntheticProfile, default_schema_provider
+from . import (
     AeatLiveSubmitNotEnabledError,
     AeatLiveTransportUnavailableError,
     AeatPytestLiveWriteRefusedError,
@@ -34,6 +34,7 @@ from aeat.submission import (
     Portal,
     SubmissionAttempt,
     SubmissionEngine,
+    SubmissionError,
     SubmissionStatus,
     Submitter,
 )
@@ -240,6 +241,11 @@ class TestSubmitDraftDryRun:
         restored = engine.load_submission(filing.submission_id)
         assert restored == filing
 
+    def test_load_submission_rejects_traversal_id(self, tmp_path: Path) -> None:
+        engine, _ = _build_engine(tmp_path)
+        with pytest.raises(SubmissionError, match="simple filename token"):
+            engine.load_submission("../escape")
+
 
 class TestSubmitDraftLiveGating:
     def test_live_refused_when_live_submit_gate_off(self, tmp_path: Path) -> None:
@@ -290,3 +296,9 @@ class TestSubmitAmendment:
         assert submitter.last_kwargs["original_csv"] == "CSV-ORIGINAL"
         persisted = tmp_path / "submissions" / "amendment-results" / "amd-1.json"
         assert persisted.exists()
+
+    def test_submit_amendment_rejects_traversal_id(self, tmp_path: Path) -> None:
+        engine, _ = _build_engine(tmp_path)
+        amendment = _build_amendment().model_copy(update={"amendment_id": "../escape"})
+        with pytest.raises(SubmissionError, match="simple filename token"):
+            asyncio.run(engine.submit_amendment(amendment, dry_run=True))

@@ -12,9 +12,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.config import load_settings
-from aeat.justificante import parse_justificante
-
+from .._paths import resolve_record_json_path
+from ..config import load_settings
+from ..justificante import parse_justificante
 from ._errors import FilingAmendmentError, FilingAmendmentValidationError
 from ._schema import FilingDraft, FilingScalar, FilingValue
 from .testing import SyntheticProfile, default_schema_provider
@@ -112,7 +112,10 @@ def build_complementaria(original, updated_inputs: CasillaInputs) -> FilingAmend
 
 def load_amendment(amendment_id: str) -> FilingAmendment:
     """Load a previously persisted amendment by id."""
-    target = _amendments_dir() / f"{amendment_id}.json"
+    try:
+        target = resolve_record_json_path(_amendments_dir(), amendment_id, context="amendment id")
+    except ValueError as exc:
+        raise FilingAmendmentError(str(exc)) from exc
     if not target.exists():
         raise FilingAmendmentError(f"no persisted amendment with id {amendment_id!r}")
     return FilingAmendment.model_validate_json(target.read_text(encoding="utf-8"))
@@ -156,7 +159,10 @@ def _amendments_dir() -> Path:
 
 
 def _persist_amendment(amendment: FilingAmendment) -> Path:
-    target = _amendments_dir() / f"{amendment.amendment_id}.json"
+    try:
+        target = resolve_record_json_path(_amendments_dir(), amendment.amendment_id, context="amendment id")
+    except ValueError as exc:
+        raise FilingAmendmentError(str(exc)) from exc
     target.write_text(amendment.model_dump_json(indent=2), encoding="utf-8")
     return target
 

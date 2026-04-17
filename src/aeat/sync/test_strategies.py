@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from aeat.sync import (
+from . import (
     AdditiveAllowlistStrategy,
     BenignRecordStrategy,
     CasillaAddedWithDefault,
@@ -21,7 +21,7 @@ from aeat.sync import (
     ResolutionState,
     StrategyAction,
 )
-from aeat.sync._divergence import classify_kind
+from ._divergence import classify_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 

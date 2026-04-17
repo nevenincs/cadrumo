@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import inspect, text
 
-from aeat.config import Settings
-from aeat.storage import (
+from ..config import Settings
+from . import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
     ModeloRecord,

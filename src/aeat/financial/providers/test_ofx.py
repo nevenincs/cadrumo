@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import OfxProvider
+from .. import OfxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 

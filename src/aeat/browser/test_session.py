@@ -5,13 +5,13 @@ from pathlib import Path
 import pytest
 from playwright.async_api import BrowserContext
 
-from aeat.browser._site_health_probe import probe_response
-from aeat.browser.evasion import EvasionStrategy
-from aeat.browser.profile import Profile
-from aeat.browser.session import BrowserSession
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.errors import SiteHealthError
-from aeat.status import SiteHealthState
+from ..config import PROJECT_ROOT, Settings
+from ..errors import SiteHealthError
+from ..status import SiteHealthState
+from ._site_health_probe import probe_response
+from .evasion import EvasionStrategy
+from .profile import Profile
+from .session import BrowserSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 

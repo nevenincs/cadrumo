@@ -16,8 +16,8 @@ from typing import Any, cast
 
 import pytest
 
-from aeat.config import load_settings
-from aeat.status import (
+from ..config import load_settings
+from . import (
     AeatStatusKind,
     BrowserSessionLike,
     StatusCache,

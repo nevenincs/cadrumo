@@ -21,25 +21,25 @@ from typing import cast
 
 import pytest
 
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.deadlines import (
+from ..config import PROJECT_ROOT, Settings
+from ..deadlines import (
     AutonomoProfile,
     FilingObligation,
     IVARegime,
     ObligationStatus,
     Schedule,
 )
-from aeat.errors import SiteHealthError
-from aeat.status import SiteHealthState
-from aeat.status._site_health_parsers import evaluate_response
-from aeat.submission import (
+from ..errors import SiteHealthError
+from ..status import SiteHealthState
+from ..status._site_health_parsers import evaluate_response
+from ..submission import (
     DraftStatus,
     FilingFinding,
     FilingFindingSeverity,
     LoadedCertificate,
     SubmissionPreflightError,
 )
-from aeat.workflow import (
+from . import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
     ExpedienteLike,
@@ -587,7 +587,7 @@ class TestSiteUnavailableArm:
         # Proves the alert's run_id reflects the resolved obligation,
         # not the "-"/"-" placeholder hash.
         assert result.obligation is not None
-        from aeat.workflow._models import compute_run_id as _compute_run_id
+        from ._models import compute_run_id as _compute_run_id
 
         placeholder_hash = _compute_run_id(
             tax_id=fx.profile.tax_id,

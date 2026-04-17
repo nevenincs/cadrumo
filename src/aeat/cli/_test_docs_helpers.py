@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.cli._docs_helpers import (
+from ._docs_helpers import (
     build_append_request,
     build_replace_all_request,
     extract_plaintext,

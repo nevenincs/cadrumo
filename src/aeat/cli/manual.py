@@ -15,7 +15,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.manuals import (
+from ..manuals import (
     ManualError,
     ManualId,
     ManualNotFoundError,

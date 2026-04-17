@@ -18,7 +18,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.filing import FilingDraftStatus
+from ..filing import FilingDraftStatus
 
 SYNTHETIC_COMMENT_REQUIRED_SUBSTRING = "SYNTHETIC"
 

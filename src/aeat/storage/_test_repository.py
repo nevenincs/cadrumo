@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.config import Settings
-from aeat.storage import (
+from ..config import Settings
+from . import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
     ModeloRecord,
@@ -20,7 +20,7 @@ from aeat.storage import (
     create_engine_from_settings,
     session_scope,
 )
-from aeat.storage._orm import Base
+from ._orm import Base
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 

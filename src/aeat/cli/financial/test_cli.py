@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app as root_app
+from .. import app as root_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 

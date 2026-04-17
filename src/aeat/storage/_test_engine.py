@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from aeat.config import Settings
-from aeat.storage import StorageError, create_engine_from_settings, dispose_engine
+from ..config import PROJECT_ROOT, Settings
+from . import StorageError, create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -51,3 +51,34 @@ def test_engine_rejects_empty_url() -> None:
     settings = _settings_for("")
     with pytest.raises(StorageError):
         create_engine_from_settings(settings)
+
+
+@pytest.mark.unit
+def test_engine_anchors_relative_sqlite_urls_to_project_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Relative SQLite URLs must resolve against PROJECT_ROOT, not the process cwd."""
+    relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
+    anchored_db = PROJECT_ROOT / relative_db
+    settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
+    monkeypatch.chdir(tmp_path)
+    engine = create_engine_from_settings(settings)
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("select 1"))
+        assert Path(engine.url.database or "") == anchored_db
+        assert anchored_db.exists()
+        assert not (tmp_path / relative_db).exists()
+    finally:
+        engine.dispose()
+        dispose_engine(settings)
+        if anchored_db.exists():
+            anchored_db.unlink()
+        parent = anchored_db.parent
+        while parent != PROJECT_ROOT and parent.exists():
+            try:
+                parent.rmdir()
+            except OSError:
+                break
+            parent = parent.parent

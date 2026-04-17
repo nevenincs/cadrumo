@@ -24,7 +24,7 @@ from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
 if TYPE_CHECKING:  # pragma: no cover - import-cycle break
-    from aeat.deadlines._calendar import CanonicalWindow
+    from ._calendar import CanonicalWindow
 
 _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
 

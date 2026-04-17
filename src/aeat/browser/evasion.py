@@ -6,7 +6,7 @@ from typing import Protocol
 
 from playwright.async_api import BrowserContext
 
-from aeat.logging import get_logger
+from ..logging import get_logger
 
 logger = get_logger(__name__)
 

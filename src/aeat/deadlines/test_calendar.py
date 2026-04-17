@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.deadlines import CALENDAR, KNOWN_AUTONOMO_MODELOS, SUPPORTED_YEARS
+from . import CALENDAR, KNOWN_AUTONOMO_MODELOS, SUPPORTED_YEARS
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 

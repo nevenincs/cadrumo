@@ -9,8 +9,8 @@ from zoneinfo import ZoneInfo
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from aeat.status import Expediente, StatusParseError
-from aeat.status._parsers import parse_expedientes
+from .. import Expediente, StatusParseError
+from . import parse_expedientes
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 

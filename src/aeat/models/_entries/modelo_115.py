@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from aeat.models._categories import (
+from ...portals import Portal
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._codes import ModeloCode
-from aeat.models._entries._common import (
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
+from ._common import (
     build_applicability,
     build_entry,
     make_citation,
 )
-from aeat.models._metadata import ModeloMetadata
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_115,
@@ -60,7 +61,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=ModeloCode.MODELO_180,
     related_modelos=(ModeloCode.MODELO_180,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 115",
+    submission_portal=Portal.PORTAL_M115_RETENCIONES_ARRENDAMIENTOS,
     known_gotchas=(
         "Arrendamiento de vivienda LAU exento.",
         "RIRPF art 100 específico no disponible en corpus on-disk.",

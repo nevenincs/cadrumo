@@ -16,31 +16,33 @@ from __future__ import annotations
 
 import typer
 
-from aeat.cli import bootstrap as bootstrap_module
-from aeat.cli import browser as browser_module
-from aeat.cli import casillas as casillas_module
-from aeat.cli import categories as categories_module
-from aeat.cli import cloud as cloud_module
-from aeat.cli import deadlines as deadlines_module
-from aeat.cli import docs as docs_module
-from aeat.cli import doctor as doctor_module
-from aeat.cli import drive as drive_module
-from aeat.cli import filing as filing_module
-from aeat.cli import financial as financial_module
-from aeat.cli import inbox as inbox_module
-from aeat.cli import justificante as justificante_module
-from aeat.cli import llm as llm_module
-from aeat.cli import manual as manual_module
-from aeat.cli import modelos as modelos_module
-from aeat.cli import normatives as normatives_module
-from aeat.cli import oauth as oauth_module
-from aeat.cli import setup as setup_wizard_module
-from aeat.cli import sheets as sheets_module
-from aeat.cli import status as status_module
-from aeat.cli import submission as submission_module
-from aeat.cli import sync as sync_module
-from aeat.cli import vat as vat_module
-from aeat.cli import workflow as workflow_module
+from . import attachments as attachments_module
+from . import bootstrap as bootstrap_module
+from . import browser as browser_module
+from . import casillas as casillas_module
+from . import categories as categories_module
+from . import cloud as cloud_module
+from . import deadlines as deadlines_module
+from . import docs as docs_module
+from . import doctor as doctor_module
+from . import drive as drive_module
+from . import filing as filing_module
+from . import financial as financial_module
+from . import inbox as inbox_module
+from . import justificante as justificante_module
+from . import llm as llm_module
+from . import manual as manual_module
+from . import modelos as modelos_module
+from . import normatives as normatives_module
+from . import oauth as oauth_module
+from . import portals as portals_module
+from . import setup as setup_wizard_module
+from . import sheets as sheets_module
+from . import status as status_module
+from . import submission as submission_module
+from . import sync as sync_module
+from . import vat as vat_module
+from . import workflow as workflow_module
 
 app = typer.Typer(
     name="aeat",
@@ -60,6 +62,11 @@ app.command(name="doctor", help="Report Google Workspace + GCP health for this w
 app.command(name="bootstrap", help="Provision scratch resources and persist their IDs to env/.env.")(
     bootstrap_module.bootstrap
 )
+app.add_typer(
+    attachments_module.app,
+    name="attachments",
+    help="Content-addressed attachment service (#76).",
+)
 app.add_typer(browser_module.app, name="browser", help="Playwright browser session health probes (#95).")
 app.add_typer(casillas_module.app, name="casillas", help="Curated AEAT casilla catalogue helpers.")
 app.add_typer(categories_module.app, name="categories", help="AEAT spending-category taxonomy helpers (#77).")
@@ -72,6 +79,7 @@ app.add_typer(oauth_module.app, name="oauth-client", help="OAuth 2.0 Desktop cli
 app.add_typer(manual_module.app, name="manual", help="AEAT Manual práctico corpus helpers (#25).")
 app.add_typer(modelos_module.app, name="modelos", help="AEAT modelo inventory + applicability helpers.")
 app.add_typer(normatives_module.app, name="normatives", help="Spanish tax normatives corpus helpers (#45).")
+app.add_typer(portals_module.app, name="portals", help="AEAT portal catalogue + modelo cross-reference (#7).")
 app.add_typer(vat_module.app, name="vat", help="Spanish VAT (IVA) taxonomy + rules (#85).")
 app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
 app.add_typer(deadlines_module.app, name="deadlines", help="Filing-deadline computation engine (#38).")

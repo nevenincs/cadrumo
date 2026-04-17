@@ -7,7 +7,7 @@ from typing import Any
 
 import typer
 
-from aeat.cli._docs_helpers import (
+from ._docs_helpers import (
     build_append_request,
     build_replace_all_request,
     extract_plaintext,
@@ -19,7 +19,7 @@ app = typer.Typer(name="docs", no_args_is_help=True, help="Google Docs helpers."
 
 def _docs() -> Any:
     """Build an authenticated Docs v1 service lazily."""
-    from aeat.auth import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
+    from ..auth import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
 
     creds = get_credentials_for_scopes([DOCS_SCOPE])
     return build_docs_service(creds)

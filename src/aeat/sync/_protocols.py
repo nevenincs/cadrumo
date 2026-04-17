@@ -27,7 +27,7 @@ from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
 if TYPE_CHECKING:  # pragma: no cover - import side effects only
-    from aeat.browser import BrowserSession
+    from ..browser import BrowserSession
 
 
 _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")

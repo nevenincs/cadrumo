@@ -14,7 +14,7 @@ Usage::
 
     from datetime import date
 
-    from aeat.deadlines import (
+    from . import (
         AutonomoProfile,
         DeadlineEngine,
         IVARegime,
@@ -43,28 +43,28 @@ Usage::
 
 from __future__ import annotations
 
-from aeat.deadlines._applies import applies_to, explain
-from aeat.deadlines._calendar import (
+from ._applies import applies_to, explain
+from ._calendar import (
     CALENDAR,
     KNOWN_AUTONOMO_MODELOS,
     SUPPORTED_YEARS,
     CanonicalWindow,
     PeriodKind,
 )
-from aeat.deadlines._engine import DeadlineEngine, next_deadline
-from aeat.deadlines._errors import (
+from ._engine import DeadlineEngine, next_deadline
+from ._errors import (
     DeadlineError,
     ProfileError,
     ScheduleComputationError,
 )
-from aeat.deadlines._models import (
+from ._models import (
     AutonomoProfile,
     FilingObligation,
     IVARegime,
     ObligationStatus,
     Schedule,
 )
-from aeat.deadlines._protocols import (
+from ._protocols import (
     CorpusReader,
     ModeloCatalogueLoader,
     ModeloIdentifier,
