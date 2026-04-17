@@ -9,6 +9,8 @@ import pytest
 from .._engine import Engine
 from .modelo_303_2025 import RULESET as MODELO_303_2025
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 def _ledger_dict(inputs: dict[str, Decimal]) -> dict[str, Decimal]:
     """Derive ``MODELO_303_2025`` and return ``{casilla_id: value}``."""
@@ -17,7 +19,6 @@ def _ledger_dict(inputs: dict[str, Decimal]) -> dict[str, Decimal]:
     return {entry.casilla_id: entry.value for entry in ledger.entries}
 
 
-@pytest.mark.unit
 def test_all_zero_quarter() -> None:
     """Every input zero => every computed casilla 0.00."""
     values = _ledger_dict({})
@@ -25,7 +26,6 @@ def test_all_zero_quarter() -> None:
         assert values[casilla_id] == Decimal("0.00"), casilla_id
 
 
-@pytest.mark.unit
 def test_general_only_quarter_missing_65_yields_zero_attribution() -> None:
     """Base 07 = 10000 with 65 omitted => 66/69/71 collapse to 0.
 
@@ -44,7 +44,6 @@ def test_general_only_quarter_missing_65_yields_zero_attribution() -> None:
     assert values["71"] == Decimal("0.00")
 
 
-@pytest.mark.unit
 def test_general_only_ordinary_quarter_with_explicit_65() -> None:
     """Base 07 = 10000, 65 = 100 => 71 = 2100.00."""
     values = _ledger_dict({"07": Decimal("10000.00"), "65": Decimal("100")})
@@ -56,7 +55,6 @@ def test_general_only_ordinary_quarter_with_explicit_65() -> None:
     assert values["71"] == Decimal("2100.00")
 
 
-@pytest.mark.unit
 def test_mixed_rates_quarter() -> None:
     """Bases 01=1000, 04=2000, 07=5000 => cuotas 40, 200, 1050."""
     values = _ledger_dict(
@@ -74,7 +72,6 @@ def test_mixed_rates_quarter() -> None:
     assert values["71"] == Decimal("1290.00")
 
 
-@pytest.mark.unit
 def test_heavy_deducible_negative_result() -> None:
     """Devengado 1000, deducible 1500 => 45 = -500.00."""
     values = _ledger_dict(
@@ -92,7 +89,6 @@ def test_heavy_deducible_negative_result() -> None:
     assert values["71"] == Decimal("-1290.00")
 
 
-@pytest.mark.unit
 def test_negative_rectification() -> None:
     """40 = -200 (negative rectification) => 44 reflects the negative."""
     values = _ledger_dict(
@@ -107,7 +103,6 @@ def test_negative_rectification() -> None:
     assert values["45"] == Decimal("-300.00")
 
 
-@pytest.mark.unit
 def test_intra_community_acquisition() -> None:
     """36/37 self-assessed contribution feeds into 44 deducible."""
     values = _ledger_dict(
@@ -126,7 +121,6 @@ def test_intra_community_acquisition() -> None:
     # belong to a downstream draft-builder layer.
 
 
-@pytest.mark.unit
 def test_import_third_country() -> None:
     """32/33 import contribution feeds into 44 deducible."""
     values = _ledger_dict(
@@ -139,7 +133,6 @@ def test_import_third_country() -> None:
     assert values["44"] == Decimal("630.00")
 
 
-@pytest.mark.unit
 def test_partial_state_attribution() -> None:
     """65 = 50 => 66 = 64 / 2."""
     values = _ledger_dict(
@@ -153,7 +146,6 @@ def test_partial_state_attribution() -> None:
     assert values["69"] == Decimal("1050.00")
 
 
-@pytest.mark.unit
 def test_carry_over_compensation() -> None:
     """67 reduces the resultado."""
     values = _ledger_dict(
@@ -168,7 +160,6 @@ def test_carry_over_compensation() -> None:
     assert values["71"] == Decimal("1600.00")
 
 
-@pytest.mark.unit
 def test_boundary_rounding() -> None:
     """333.33 x 0.21 = 69.9993 → ROUND_HALF_UP to 70.00."""
     values = _ledger_dict(
@@ -180,7 +171,6 @@ def test_boundary_rounding() -> None:
     assert values["09"] == Decimal("70.00")
 
 
-@pytest.mark.unit
 def test_constant_rates_emerge_from_engine() -> None:
     """Casillas 02/05/08 surface their printed rate constants."""
     values = _ledger_dict({"65": Decimal("100")})
@@ -189,7 +179,6 @@ def test_constant_rates_emerge_from_engine() -> None:
     assert values["08"] == Decimal("21.00")
 
 
-@pytest.mark.unit
 def test_audit_against_clean() -> None:
     """Feeding inputs + correct computed values yields zero discrepancies."""
     inputs = {
@@ -205,7 +194,6 @@ def test_audit_against_clean() -> None:
     assert report.discrepancies == ()
 
 
-@pytest.mark.unit
 def test_audit_against_divergence_surfaces() -> None:
     """A wrong computed value surfaces as a Discrepancy."""
     engine = Engine()

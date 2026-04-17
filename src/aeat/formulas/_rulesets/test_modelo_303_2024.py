@@ -16,6 +16,8 @@ from .._engine import Engine
 from .modelo_303_2024 import RULESET as MODELO_303_2024
 from .modelo_303_2025 import RULESET as MODELO_303_2025
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 def _ledger(ruleset, inputs):
     """Convenience derivation."""
@@ -23,7 +25,6 @@ def _ledger(ruleset, inputs):
     return engine.derive(ruleset=ruleset, inputs=inputs)
 
 
-@pytest.mark.unit
 def test_modelo_303_2024_general_only() -> None:
     """Base 07 = 10000, 65 = 100 ⇒ 71 = 2100.00 (2024 ruleset)."""
     ledger = _ledger(MODELO_303_2024, {"07": Decimal("10000.00"), "65": Decimal("100")})
@@ -32,7 +33,6 @@ def test_modelo_303_2024_general_only() -> None:
     assert values["71"] == Decimal("2100.00")
 
 
-@pytest.mark.unit
 def test_modelo_303_2024_constants() -> None:
     """Casillas 02/05/08 carry the 4 / 10 / 21 printed rates."""
     ledger = _ledger(MODELO_303_2024, {"65": Decimal("100")})
@@ -42,7 +42,6 @@ def test_modelo_303_2024_constants() -> None:
     assert values["08"] == Decimal("21.00")
 
 
-@pytest.mark.unit
 def test_cross_year_parity_at_cent_for_baseline_inputs() -> None:
     """The 2024 and 2025 rulesets produce the same ledger for the same inputs.
 

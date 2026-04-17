@@ -20,6 +20,8 @@ from . import (
     classify_vat,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _criteria(**overrides: object) -> VATClassificationCriteria:
     """Build a baseline ES-to-ES B2B goods ISSUED criteria with overrides."""
@@ -36,7 +38,6 @@ def _criteria(**overrides: object) -> VATClassificationCriteria:
     return VATClassificationCriteria.model_validate(base)
 
 
-@pytest.mark.unit
 def test_r01_construction_reverse_charge() -> None:
     result = classify_vat(_criteria(kind=TransactionKind.CONSTRUCTION_REVERSE_CHARGE))
     assert result.category is VATCategory.DOMESTIC_REVERSE_CHARGE
@@ -44,14 +45,12 @@ def test_r01_construction_reverse_charge() -> None:
     assert result.matched_rule_id == "R01_construction_reverse_charge"
 
 
-@pytest.mark.unit
 def test_r02_waste_reverse_charge() -> None:
     result = classify_vat(_criteria(kind=TransactionKind.WASTE_REVERSE_CHARGE))
     assert result.category is VATCategory.DOMESTIC_REVERSE_CHARGE
     assert result.matched_rule_id == "R02_waste_reverse_charge"
 
 
-@pytest.mark.unit
 def test_r03_electronics_reverse_charge() -> None:
     result = classify_vat(
         _criteria(
@@ -63,7 +62,6 @@ def test_r03_electronics_reverse_charge() -> None:
     assert result.matched_rule_id == "R03_electronics_reverse_charge"
 
 
-@pytest.mark.unit
 def test_r03_electronics_b2c_does_not_trigger_reverse_charge() -> None:
     """Electronics RC requires B2B; a B2C consumer falls through to R05."""
     result = classify_vat(
@@ -75,7 +73,6 @@ def test_r03_electronics_b2c_does_not_trigger_reverse_charge() -> None:
     assert result.matched_rule_id != "R03_electronics_reverse_charge"
 
 
-@pytest.mark.unit
 def test_r04_immovable_b2c_exempt() -> None:
     result = classify_vat(
         _criteria(
@@ -87,7 +84,6 @@ def test_r04_immovable_b2c_exempt() -> None:
     assert result.matched_rule_id == "R04_immovable_property_exempt"
 
 
-@pytest.mark.unit
 def test_r05_domestic_general_21() -> None:
     result = classify_vat(_criteria(rate_tier=VATRateKind.GENERAL))
     assert result.category is VATCategory.DOMESTIC_GENERAL_21
@@ -96,7 +92,6 @@ def test_r05_domestic_general_21() -> None:
     assert result.rate.pct == Decimal("21")
 
 
-@pytest.mark.unit
 def test_r05_domestic_reduced_10() -> None:
     result = classify_vat(_criteria(rate_tier=VATRateKind.REDUCED))
     assert result.category is VATCategory.DOMESTIC_REDUCED_10
@@ -104,7 +99,6 @@ def test_r05_domestic_reduced_10() -> None:
     assert result.rate.pct == Decimal("10")
 
 
-@pytest.mark.unit
 def test_r05_domestic_super_reduced_4() -> None:
     result = classify_vat(_criteria(rate_tier=VATRateKind.SUPER_REDUCED))
     assert result.category is VATCategory.DOMESTIC_SUPER_REDUCED_4
@@ -112,7 +106,6 @@ def test_r05_domestic_super_reduced_4() -> None:
     assert result.rate.pct == Decimal("4")
 
 
-@pytest.mark.unit
 def test_r10_intra_community_supply_goods() -> None:
     result = classify_vat(
         _criteria(
@@ -126,7 +119,6 @@ def test_r10_intra_community_supply_goods() -> None:
     assert result.matched_rule_id == "R10_intra_community_supply"
 
 
-@pytest.mark.unit
 def test_r11_intra_community_acquisition_goods() -> None:
     result = classify_vat(
         _criteria(
@@ -141,7 +133,6 @@ def test_r11_intra_community_acquisition_goods() -> None:
     assert result.requires_reverse_charge is True
 
 
-@pytest.mark.unit
 def test_r12_services_b2b_eu_outbound_is_not_subject_in_es() -> None:
     result = classify_vat(
         _criteria(
@@ -155,7 +146,6 @@ def test_r12_services_b2b_eu_outbound_is_not_subject_in_es() -> None:
     assert result.matched_rule_id == "R12_services_b2b_eu_outbound"
 
 
-@pytest.mark.unit
 def test_r13_services_b2b_eu_inbound_reverse_charge() -> None:
     result = classify_vat(
         _criteria(
@@ -170,7 +160,6 @@ def test_r13_services_b2b_eu_inbound_reverse_charge() -> None:
     assert result.matched_rule_id == "R13_services_b2b_eu_inbound"
 
 
-@pytest.mark.unit
 def test_r14_digital_b2c_oss() -> None:
     result = classify_vat(
         _criteria(
@@ -185,7 +174,6 @@ def test_r14_digital_b2c_oss() -> None:
     assert result.matched_rule_id == "R14_digital_b2c_oss"
 
 
-@pytest.mark.unit
 def test_r20_export_goods() -> None:
     result = classify_vat(
         _criteria(
@@ -198,7 +186,6 @@ def test_r20_export_goods() -> None:
     assert result.matched_rule_id == "R20_export_goods"
 
 
-@pytest.mark.unit
 def test_r21_import_goods() -> None:
     result = classify_vat(
         _criteria(
@@ -211,7 +198,6 @@ def test_r21_import_goods() -> None:
     assert result.category is VATCategory.IMPORT_THIRD_COUNTRY
 
 
-@pytest.mark.unit
 def test_r22_services_outbound_third_country() -> None:
     result = classify_vat(
         _criteria(
@@ -224,14 +210,12 @@ def test_r22_services_outbound_third_country() -> None:
     assert result.matched_rule_id == "R22_services_outbound_third_country"
 
 
-@pytest.mark.unit
 def test_r30_canarias_issuer_short_circuits_to_not_subject() -> None:
     result = classify_vat(_criteria(issuer_residency=IssuerResidency.ES_CANARIAS))
     assert result.category is VATCategory.DOMESTIC_NOT_SUBJECT
     assert result.matched_rule_id == "R30_canarias_ceuta_melilla"
 
 
-@pytest.mark.unit
 def test_r99_fallthrough_returns_unknown() -> None:
     """A non-matching THIRD_COUNTRY-to-EU pair has no rule ⇒ UNKNOWN."""
     result = classify_vat(
@@ -248,7 +232,6 @@ def test_r99_fallthrough_returns_unknown() -> None:
     assert result.matched_rule_id == "R99_fallthrough"
 
 
-@pytest.mark.unit
 def test_classify_vat_is_deterministic() -> None:
     """Same criteria ⇒ same rule + same category across N invocations."""
     criteria = _criteria()
@@ -259,7 +242,6 @@ def test_classify_vat_is_deterministic() -> None:
         assert repeat.category is first.category
 
 
-@pytest.mark.unit
 def test_eu_member_residency_requires_member_state() -> None:
     """Constructing a criteria with EU_MEMBER but no state is a ValidationError."""
     with pytest.raises(ValueError):
@@ -274,7 +256,6 @@ def test_eu_member_residency_requires_member_state() -> None:
         )
 
 
-@pytest.mark.unit
 def test_classification_rate_resolution_uses_transaction_date() -> None:
     """The 2024 baseline lookup returns the 2024 rate record."""
     result = classify_vat(
@@ -288,7 +269,6 @@ def test_classification_rate_resolution_uses_transaction_date() -> None:
     assert result.rate.effective_until == date(2024, 12, 31)
 
 
-@pytest.mark.unit
 def test_classification_rate_resolution_returns_none_for_export() -> None:
     """Exports carry no domestic rate; rate is None."""
     result = classify_vat(

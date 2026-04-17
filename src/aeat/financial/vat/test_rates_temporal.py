@@ -12,8 +12,9 @@ from ._rates import _assert_no_overlap
 from ._schema import VATRate
 from .errors import VatRateNotFoundError, VatRateOverlapError
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
-@pytest.mark.unit
+
 def test_es_general_2024_rate() -> None:
     rate = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2024, 6, 15))
     assert rate.pct == Decimal("21")
@@ -21,7 +22,6 @@ def test_es_general_2024_rate() -> None:
     assert rate.effective_until == date(2024, 12, 31)
 
 
-@pytest.mark.unit
 def test_es_general_2025_rate() -> None:
     rate = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2025, 6, 15))
     assert rate.pct == Decimal("21")
@@ -29,21 +29,18 @@ def test_es_general_2025_rate() -> None:
     assert rate.effective_until is None
 
 
-@pytest.mark.unit
 def test_es_general_2024_last_day() -> None:
     """December 31 2024 still resolves to the 2024 record."""
     rate = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2024, 12, 31))
     assert rate.effective_until == date(2024, 12, 31)
 
 
-@pytest.mark.unit
 def test_es_general_2025_first_day() -> None:
     """January 1 2025 resolves to the 2025 record (no overlap)."""
     rate = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2025, 1, 1))
     assert rate.effective_from == date(2025, 1, 1)
 
 
-@pytest.mark.unit
 def test_es_super_reduced_2024_and_2025_both_resolve() -> None:
     """The 4 % super-reducido is registered for both years."""
     rate_2024 = lookup_rate(EUMemberState.ES, VATRateKind.SUPER_REDUCED, date(2024, 6, 15))
@@ -52,7 +49,6 @@ def test_es_super_reduced_2024_and_2025_both_resolve() -> None:
     assert rate_2025.pct == Decimal("4")
 
 
-@pytest.mark.unit
 def test_es_reduced_2024_and_2025_both_resolve() -> None:
     """The 10 % reducido is registered for both years."""
     rate_2024 = lookup_rate(EUMemberState.ES, VATRateKind.REDUCED, date(2024, 6, 15))
@@ -61,14 +57,12 @@ def test_es_reduced_2024_and_2025_both_resolve() -> None:
     assert rate_2025.pct == Decimal("10")
 
 
-@pytest.mark.unit
 def test_es_pre_2024_lookup_raises() -> None:
     """Dates before the 2024 baseline have no registered rate."""
     with pytest.raises(VatRateNotFoundError):
         lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2023, 6, 1))
 
 
-@pytest.mark.unit
 def test_overlap_invariant_rejects_clashing_windows() -> None:
     """Synthetic overlapping windows must raise :class:`VatRateOverlapError`."""
     overlapping = (
@@ -93,7 +87,6 @@ def test_overlap_invariant_rejects_clashing_windows() -> None:
         _assert_no_overlap(EUMemberState.DE, overlapping)
 
 
-@pytest.mark.unit
 def test_overlap_invariant_accepts_disjoint_windows() -> None:
     """Disjoint windows are accepted without error."""
     disjoint = (
