@@ -13,8 +13,8 @@ from typing import Any, cast
 
 import pytest
 
-from aeat.browser import BrowserSession
-from aeat.sync import (
+from ..browser import BrowserSession
+from . import (
     AdditiveAllowlistStrategy,
     BenignRecordStrategy,
     DivergenceClassifier,
@@ -141,7 +141,7 @@ def _modelo(
 
 
 def _manifest() -> WirePortalManifest:
-    from aeat.sync import PortalIdentifier, WirePortalLink
+    from . import PortalIdentifier, WirePortalLink
 
     link = WirePortalLink.model_validate(
         {

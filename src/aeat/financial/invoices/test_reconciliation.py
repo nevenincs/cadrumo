@@ -8,16 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import RawProvenance, SourceFormat
-from aeat.financial.providers import RawTransaction
-from aeat.financial.transactions import (
+from .. import RawProvenance, SourceFormat
+from ..providers import RawTransaction
+from ..transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
     load_transactions,
     save_transactions,
 )
-
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._errors import InvoiceLinkInconsistencyError
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -316,8 +315,8 @@ def test_link_bidirectional_restores_invoice_on_transaction_write_failure(
     # Cross-platform approach: patch the transactions module's save helper to
     # raise a TransactionPersistenceError on second invocation, which is what
     # link_transaction_bidirectional catches.
-    from aeat.financial.invoices import _service as service_module
-    from aeat.financial.transactions import TransactionPersistenceError
+    from ..transactions import TransactionPersistenceError
+    from . import _service as service_module
 
     original_save = service_module._save_transactions
 
@@ -353,8 +352,8 @@ def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(
     save_invoices(InvoiceCatalogue.from_invoices([invoice]), invoices_path)
     save_transactions(TransactionCatalogue.from_transactions([transaction]), transactions_path)
 
-    from aeat.financial.invoices import _service as service_module
-    from aeat.financial.transactions import TransactionPersistenceError
+    from ..transactions import TransactionPersistenceError
+    from . import _service as service_module
 
     def _fail_save(*args: object, **kwargs: object) -> None:
         raise TransactionPersistenceError("simulated failure")

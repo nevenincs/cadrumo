@@ -12,7 +12,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
-from aeat.models._categories import LegalCitationSource
+from ._categories import LegalCitationSource
 
 
 class LegalCitation(BaseModel):

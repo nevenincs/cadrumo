@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.manuals import (
+from . import (
     PART_SPECS,
     FetchedManualPart,
     ManualId,
@@ -18,7 +18,7 @@ from aeat.manuals import (
     verify_fetched_pdf,
     write_manifest,
 )
-from aeat.manuals.errors import ManifestError
+from .errors import ManifestError
 
 
 def _manifest(sha256: str = "a" * 64, length: int = 10) -> FetchedManualPart:

@@ -5,9 +5,9 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.llm._errors import LLMProviderError
-from aeat.llm._models import LLMProvider
-from aeat.llm._providers.base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+from .._errors import LLMProviderError
+from .._models import LLMProvider
+from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
 _OLLAMA_API_URL = "http://127.0.0.1:11434/api/chat"
 

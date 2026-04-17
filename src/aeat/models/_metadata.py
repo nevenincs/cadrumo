@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from aeat.i18n import Translatable
-from aeat.models._applicability import ModeloApplicability
-from aeat.models._categories import ModeloCadence, ModeloCategory
-from aeat.models._citations import LegalCitation
-from aeat.models._codes import ModeloCode
-from aeat.portals import Portal
+from ..i18n import Translatable
+from ..portals import Portal
+from ._applicability import ModeloApplicability
+from ._categories import ModeloCadence, ModeloCategory
+from ._citations import LegalCitation
+from ._codes import ModeloCode
 
 
 class ModeloMetadata(BaseModel):

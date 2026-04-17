@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.submission import app
+from . import app
 
 pytestmark = pytest.mark.unit
 

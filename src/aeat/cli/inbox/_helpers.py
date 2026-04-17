@@ -17,8 +17,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.config import Settings, load_settings
-from aeat.inbox import InboxFetcher, RawNotificacion
+from ...config import Settings, load_settings
+from ...inbox import InboxFetcher, RawNotificacion
 
 
 class _FileBackedNotificacionSource:

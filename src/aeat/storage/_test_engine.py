@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.storage import StorageError, create_engine_from_settings, dispose_engine
+from ..config import PROJECT_ROOT, Settings
+from . import StorageError, create_engine_from_settings, dispose_engine
 
 
 def _settings_for(url: str) -> Settings:

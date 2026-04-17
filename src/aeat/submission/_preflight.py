@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from datetime import date
 
-from aeat.logging import get_logger
-from aeat.submission._errors import SubmissionPreflightError
-from aeat.submission._protocols import (
+from ..logging import get_logger
+from ._errors import SubmissionPreflightError
+from ._protocols import (
     CertificateBackend,
     DeadlineWindowChecker,
     DraftStatus,

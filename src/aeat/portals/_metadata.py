@@ -6,10 +6,10 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
-from aeat.i18n import Translatable
-from aeat.models import ModeloCode
-from aeat.portals._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
-from aeat.portals._codes import Portal
+from ..i18n import Translatable
+from ..models import ModeloCode
+from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._codes import Portal
 
 _CATEGORIES_REQUIRING_MODELO: frozenset[PortalCategory] = frozenset(
     {PortalCategory.FILING, PortalCategory.CENSUS, PortalCategory.BORRADOR}

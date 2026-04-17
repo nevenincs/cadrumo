@@ -10,10 +10,10 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.env_io import write_env_vars
-from aeat.errors import AeatError
-from aeat.mcp.launch_google_workspace import (
+from ..config import PROJECT_ROOT, Settings
+from ..env_io import write_env_vars
+from ..errors import AeatError
+from .launch_google_workspace import (
     PROJECT_WORKSPACE_MCP_CREDENTIALS_DIR,
     WORKSPACE_MCP_CREDENTIALS_DIR_ENV,
     WORKSPACE_MCP_USER_EMAIL_ENV,

@@ -20,8 +20,8 @@ from typing import Any
 
 import pytest
 
-from aeat.config import Settings
-from aeat.submission import (
+from ..config import Settings
+from . import (
     CasillaRecord,
     DraftStatus,
     FilingDraftLike,

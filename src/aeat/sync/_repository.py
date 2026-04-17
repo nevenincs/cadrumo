@@ -16,9 +16,8 @@ import tempfile
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from aeat._paths import resolve_record_json_path
-from aeat.logging import get_logger
-
+from .._paths import resolve_record_json_path
+from ..logging import get_logger
 from ._divergence import DivergenceRecord, ResolutionState
 from ._errors import DivergenceRepositoryError
 

@@ -7,8 +7,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.casillas import ModeloCode, PeriodType
-from aeat.financial.categories import (
+from ...casillas import ModeloCode, PeriodType
+from . import (
     CasillaMapping,
     CasillaMappingSign,
     CategoryProfile,

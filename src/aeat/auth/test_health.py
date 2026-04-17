@@ -19,7 +19,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from aeat.auth import (
+from ..errors import AeatError
+from . import (
     CertificateBackend,
     CertificateBundle,
     CertificateHealth,
@@ -30,7 +31,6 @@ from aeat.auth import (
     health,
     load_certificate,
 )
-from aeat.errors import AeatError
 
 _SECRET = "correct-horse-battery-staple"
 _WARN_DAYS = 60

@@ -16,12 +16,12 @@ from pathlib import Path
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from aeat._paths import (
+from ._paths import (
     normalize_project_relative_path,
     normalize_project_relative_str,
 )
-from aeat.auth import CertificateBackend
-from aeat.justificante import JustificanteParserBackend
+from .auth import CertificateBackend
+from .justificante import JustificanteParserBackend
 
 
 class DivergenceSink(StrEnum):

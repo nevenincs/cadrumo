@@ -32,11 +32,11 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 
-from aeat.errors import AeatError
-from aeat.logging import get_logger
+from ..errors import AeatError
+from ..logging import get_logger
 
 if TYPE_CHECKING:
-    from aeat.auth._certificate_backends._base import _CertBackend
+    from ._certificate_backends._base import _CertBackend
 
 log = get_logger(__name__)
 
@@ -588,12 +588,12 @@ def _select_backend(backend: CertificateBackend) -> _CertBackend:
     dependency cost is paid only when the relevant backend is actually
     requested.
     """
-    from aeat.auth._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from aeat.auth._certificate_backends._mtls_proxy import MtlsProxyBackend
-    from aeat.auth._certificate_backends._playwright_context import (
+    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from ._certificate_backends._mtls_proxy import MtlsProxyBackend
+    from ._certificate_backends._playwright_context import (
         PlaywrightContextBackend,
     )
-    from aeat.auth._certificate_backends._user_data_dir import UserDataDirBackend
+    from ._certificate_backends._user_data_dir import UserDataDirBackend
 
     match backend:
         case CertificateBackend.PLAYWRIGHT_CONTEXT:

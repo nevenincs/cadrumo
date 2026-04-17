@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app as root_app
+from .. import app as root_app
 
 _RUNNER = CliRunner()
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"

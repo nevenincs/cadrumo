@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from aeat.financial.attachments import Attachment, AttachmentCatalogue, AttachmentKind, AttachmentSource
+from . import Attachment, AttachmentCatalogue, AttachmentKind, AttachmentSource
 
 
 def _attachment(data: bytes) -> Attachment:

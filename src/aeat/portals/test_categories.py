@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.portals._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 
 pytestmark = pytest.mark.unit
 

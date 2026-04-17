@@ -13,11 +13,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from aeat.logging import get_logger
-from aeat.models import ModeloCode, UnknownModeloError
-from aeat.portals._categories import PortalCategory
-from aeat.portals._codes import Portal
-from aeat.portals._entries import (
+from ..logging import get_logger
+from ..models import ModeloCode, UnknownModeloError
+from ._categories import PortalCategory
+from ._codes import Portal
+from ._entries import (
     portal_calendario_contribuyente,
     portal_cert_selection,
     portal_cert_validation_rest,
@@ -60,8 +60,8 @@ from aeat.portals._entries import (
     portal_renta_web_borrador,
     portal_sede_root,
 )
-from aeat.portals._errors import PortalIntegrityError, UnknownPortalError
-from aeat.portals._metadata import PortalMetadata
+from ._errors import PortalIntegrityError, UnknownPortalError
+from ._metadata import PortalMetadata
 
 _LOG = get_logger(__name__)
 

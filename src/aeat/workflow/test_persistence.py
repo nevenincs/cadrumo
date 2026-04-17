@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.workflow import (
+from . import (
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
@@ -15,7 +15,7 @@ from aeat.workflow import (
     load_run,
     save_run,
 )
-from aeat.workflow._errors import WorkflowError
+from ._errors import WorkflowError
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:
