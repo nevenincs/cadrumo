@@ -229,6 +229,49 @@ def test_guess_data_type_respects_word_boundaries(tmp_path: Path) -> None:
     assert modelo.casillas[0].data_type is CasillaDataType.CURRENCY_EUR
 
 
+def test_extractor_tolerates_trailing_punctuation(tmp_path: Path) -> None:
+    """Formula bodies ending in `.` or `;` (BOE prose punctuation) still parse."""
+    path = tmp_path / "trailing-punct.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=(
+            "01 Base imponible 1T",
+            "03 Ingresos computables 1T",
+            "07 Rendimiento neto 1T",
+            "Casilla 07 = Casilla 01 - Casilla 03.",
+        ),
+    )
+    source = _build_source(path)
+    modelo = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    ).extract()
+    casilla_07 = next(c for c in modelo.casillas if c.casilla_id == "07")
+    assert isinstance(casilla_07.formula, BinaryOp)
+    assert casilla_07.formula.op == BinaryFormulaOp.SUB
+
+
+def test_extractor_accepts_interrogative_and_parenthesised_labels(tmp_path: Path) -> None:
+    """Labels starting with `¿` or `(` are still recognised as casilla declarations."""
+    path = tmp_path / "interrogative.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=(
+            "15 ¿Ha obtenido rendimientos en el extranjero?",
+            "21 (Antes: Casilla 9a) Rendimientos del trabajo",
+        ),
+    )
+    source = _build_source(path)
+    modelo = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    ).extract()
+    ids = {c.casilla_id for c in modelo.casillas}
+    assert ids == {"15", "21"}
+
+
 def test_extractor_raises_on_unparseable_formula(tmp_path: Path) -> None:
     path = tmp_path / "bad-formula.pdf"
     build_fake_boe_pdf(

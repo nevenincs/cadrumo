@@ -55,13 +55,16 @@ matches because ``$`` is in the alternation.
 """
 
 _CASILLA_DECL_RE = re.compile(
-    r"^\s*(?P<id>\d{2,3})\s+(?P<label>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ].*?)\s*$",
+    r"^\s*(?P<id>\d{2,3})\s+(?P<label>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ¿\(].*?)\s*$",
 )
-"""Matches ``NN <Spanish label>`` where the label starts with a letter.
+"""Matches ``NN <Spanish label>`` where the label starts with a letter,
+Spanish inverted question mark (``¿`` — interrogative casillas on
+Modelos 303 / 390), or an opening parenthesis (``(`` — qualified
+labels like ``"(Antes: Casilla 9a)"``).
 
-Constraining the leading character to a letter (not ``\\S``) rules out
-page-footer lines that start with another digit (``"29330 Viernes..."``),
-URLs, or typesetting artifacts.
+Constraining the leading character rules out page-footer lines that
+start with another digit (``"29330 Viernes..."``), URLs, or
+typesetting artifacts.
 """
 
 _FORMULA_RE = re.compile(
@@ -160,13 +163,19 @@ def _guess_data_type(label: str) -> CasillaDataType:
 
 
 def _normalise_formula_body(body: str) -> str:
-    """Normalise BOE typographic variants to ASCII operators."""
+    """Normalise BOE typographic variants to ASCII operators.
+
+    BOE Ordenes typeset formula lines as Spanish sentences; trailing
+    sentence punctuation (``.``, ``,``, ``;``, ``:``) is stripped
+    here so :func:`_parse_signed_terms` can anchor on the body's
+    true end without false negatives.
+    """
     out = body
     for mul in _MUL_CHARS:
         out = out.replace(mul, "*")
     for minus in _MINUS_CHARS:
         out = out.replace(minus, "-")
-    return out
+    return out.rstrip(".,;: \t")
 
 
 def _parse_signed_terms(normalised: str) -> tuple[tuple[str, str], ...]:

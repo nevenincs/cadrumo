@@ -54,10 +54,28 @@ class TestValidateOverrideUrl:
         target.write_bytes(b"%PDF-1.4\n%EOF\n")
         _validate_override_url(target.resolve().as_uri())
 
-    def test_file_url_outside_allowed_roots_rejected(self) -> None:
-        bogus = Path.home() / "..." / "secret.pdf"
+    def test_file_url_outside_allowed_roots_rejected(self, tmp_path: Path) -> None:
+        # Construct an explicitly-outside path: the filesystem anchor
+        # ("C:/" on Windows, "/" on POSIX) + a name that cannot
+        # coincide with PROJECT_ROOT or the OS temp dir on any
+        # realistic layout.
+        import sys
+
+        if sys.platform == "win32":
+            bogus = Path("C:/Windows/System32/drivers/etc/hosts")
+        else:
+            bogus = Path("/etc/shadow-schema-extraction-audit-sentinel")
+        from ._fetch import _allowed_file_roots
+
+        resolved = bogus.resolve(strict=False)
+        for root in _allowed_file_roots():
+            try:
+                resolved.relative_to(root)
+            except ValueError:
+                continue
+            pytest.skip(f"allow-list unexpectedly covers {resolved}; test cannot assert rejection on this host")
         with pytest.raises(SchemaCacheError, match="file://"):
-            _validate_override_url(bogus.resolve().as_uri())
+            _validate_override_url(bogus.as_uri())
 
 
 class TestBoeRefFieldValidator:
@@ -68,6 +86,16 @@ class TestBoeRefFieldValidator:
             BoeOrdenSource(
                 modelo_code=ModeloCode.MODELO_130,
                 boe_ref="../etc/passwd",
+                origin_url=TypeAdapter(AnyHttpUrl).validate_python("https://www.boe.es/x.pdf"),
+            )
+
+    def test_all_hyphen_boe_ref_rejected(self) -> None:
+        from pydantic import AnyHttpUrl, TypeAdapter
+
+        with pytest.raises(ValidationError):
+            BoeOrdenSource(
+                modelo_code=ModeloCode.MODELO_130,
+                boe_ref="---",
                 origin_url=TypeAdapter(AnyHttpUrl).validate_python("https://www.boe.es/x.pdf"),
             )
 

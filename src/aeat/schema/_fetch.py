@@ -58,8 +58,13 @@ _MAX_PDF_BYTES = 64 * 1024 * 1024
 _MAX_OVERRIDE_BYTES = 64 * 1024
 """Hard cap on the JSON-encoded override env var (64 KiB)."""
 
-_BOE_REF_RE = re.compile(r"^[A-Z0-9-]+$")
-"""Allowed character set for ``boe_ref`` wherever it becomes part of a filesystem path."""
+_BOE_REF_RE = re.compile(r"^(?=.*[A-Z0-9])[A-Z0-9-]+$")
+"""Allowed character set for ``boe_ref`` wherever it becomes part of a filesystem path.
+
+Requires at least one alphanumeric character so pathological refs
+like ``"-"`` or ``"---"`` — structurally valid filenames but
+semantically nonsense — are rejected at the boundary.
+"""
 
 _ALLOWED_HTTPS_HOSTS: frozenset[str] = frozenset({"boe.es", "www.boe.es"})
 """Host allow-list for ``https://`` BOE source URLs.
