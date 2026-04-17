@@ -134,6 +134,11 @@ class HistoryFetcher:
     ) -> FiledModelo:
         """Fetch and parse the detail page for a single ``expediente``.
 
+        Loads the persisted :class:`FilingHistory` once, resolves the
+        record, and persists only when a refresh actually happened.
+        Batch callers should prefer :meth:`fetch_for_modelo` — it
+        accumulates N refreshes into a single write.
+
         Args:
             expediente: The :class:`aeat.status.Expediente` row to
                 expand into a :class:`FiledModelo`.
@@ -153,6 +158,30 @@ class HistoryFetcher:
                 detail page.
         """
         history = self.load_history()
+        record, refreshed = await self._resolve_expediente(
+            expediente,
+            history=history,
+            use_cache=use_cache,
+        )
+        if refreshed:
+            self.save_history(history)
+        return record
+
+    async def _resolve_expediente(
+        self,
+        expediente: Expediente,
+        *,
+        history: FilingHistory,
+        use_cache: bool,
+    ) -> tuple[FiledModelo, bool]:
+        """Resolve ``expediente`` against ``history``, mutating in place.
+
+        Returns ``(record, refreshed)``. When ``refreshed`` is False
+        the record came straight from the cache and the caller does
+        not need to persist. Batch callers (:meth:`fetch_for_modelo`)
+        use the returned flag to skip the write when every record was
+        a cache hit, and to collapse N writes into one otherwise.
+        """
         if use_cache:
             existing = history.get(expediente.expediente_id)
             if existing is not None and self._is_fresh(existing):
@@ -160,7 +189,7 @@ class HistoryFetcher:
                     "filing-history cache hit: %s",
                     expediente.expediente_id,
                 )
-                return existing
+                return existing, False
 
         modelo_key: HistoryModelo = coerce_modelo(expediente.modelo)
         try:
@@ -179,9 +208,8 @@ class HistoryFetcher:
             fetched_at=fetched_at,
         )
         history.upsert(record)
-        self.save_history(history)
         self._archive_html_if_enabled(expediente.expediente_id, raw_html)
-        return record
+        return record, True
 
     async def fetch_for_modelo(
         self,
@@ -192,14 +220,20 @@ class HistoryFetcher:
     ) -> tuple[FiledModelo, ...]:
         """List expedientes for ``modelo`` and expand every one.
 
+        Loads the persisted :class:`FilingHistory` **once**,
+        accumulates every refreshed record in memory, and persists
+        **once** at the end — so the number of writes is O(1) per
+        call, not O(N) over the listed expedientes.
+
         Args:
             modelo: The :class:`HistoryModelo` or raw modelo string.
                 Unsupported modelos raise
                 :class:`HistoryUnsupportedModeloError`.
             period: Optional period filter (``"2025-1T"``, ``"2025"``)
                 passed straight to the :class:`ExpedienteSource`.
-            use_cache: Per-record cache honouring per
-                :meth:`fetch_filed_modelo`.
+            use_cache: When True (default), serve each record from
+                the persisted history when it is fresher than
+                ``aeat_filing_history_cache_ttl_s``.
 
         Returns:
             A tuple of :class:`FiledModelo`, one per listed
@@ -219,11 +253,17 @@ class HistoryFetcher:
         except Exception as exc:
             raise HistoryFetchError(f"expediente source failed for modelo {modelo_key.value!r}: {exc}") from exc
 
+        history = self.load_history()
         records: list[FiledModelo] = []
+        any_refreshed = False
         for expediente in expedientes:
-            record = await self.fetch_filed_modelo(
+            record, refreshed = await self._resolve_expediente(
                 expediente,
+                history=history,
                 use_cache=use_cache,
             )
             records.append(record)
+            any_refreshed = any_refreshed or refreshed
+        if any_refreshed:
+            self.save_history(history)
         return tuple(records)
