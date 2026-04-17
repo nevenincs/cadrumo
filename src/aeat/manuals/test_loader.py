@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import Settings
-from aeat.manuals import (
+from ..config import Settings
+from . import (
     ManualCatalogue,
     ManualId,
     ManualPart,
@@ -21,7 +21,9 @@ from aeat.manuals import (
     load_section,
     resolve_part_root,
 )
-from aeat.manuals.errors import ManualNotFoundError, ManualParseError
+from .errors import ManualNotFoundError, ManualParseError
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 class _IsolatedSettings(Settings):
@@ -126,7 +128,6 @@ def _seed_iva(tmp_path: Path) -> Settings:
 class TestLoader:
     """Loader happy-path and error behaviour."""
 
-    @pytest.mark.unit
     def test_resolve_part_root_single(self, tmp_path: Path) -> None:
         """SINGLE parts flatten the directory layout."""
         settings = _settings_with_root(tmp_path)
@@ -138,7 +139,6 @@ class TestLoader:
         )
         assert path == tmp_path / "iva" / "2025"
 
-    @pytest.mark.unit
     def test_resolve_part_root_parte1(self, tmp_path: Path) -> None:
         """Split parts nest a subdirectory under the year."""
         settings = _settings_with_root(tmp_path)
@@ -150,7 +150,6 @@ class TestLoader:
         )
         assert path == tmp_path / "renta" / "2025" / "parte1"
 
-    @pytest.mark.unit
     def test_load_manual_happy_path(self, tmp_path: Path) -> None:
         """A seeded IVA manual loads and reports one chapter."""
         settings = _seed_iva(tmp_path)
@@ -159,14 +158,12 @@ class TestLoader:
         assert len(manual.chapters) == 1
         assert manual.chapters[0].chapter_id == "cap1"
 
-    @pytest.mark.unit
     def test_load_manual_missing_structure_raises_not_found(self, tmp_path: Path) -> None:
         """A part root without structure/ raises ManualNotFoundError."""
         settings = _settings_with_root(tmp_path)
         with pytest.raises(ManualNotFoundError):
             load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
 
-    @pytest.mark.unit
     def test_load_manual_rejects_malformed_section(self, tmp_path: Path) -> None:
         """A section file with a missing required field fails loud."""
         settings = _seed_iva(tmp_path)
@@ -197,7 +194,6 @@ class TestLoader:
                 manual.chapters[0].sections[0],
             )
 
-    @pytest.mark.unit
     def test_load_section_rejects_traversal_ref(self, tmp_path: Path) -> None:
         """A tampered section ref must not escape the owning part root."""
         settings = _seed_iva(tmp_path)
@@ -206,7 +202,6 @@ class TestLoader:
         with pytest.raises(ManualParseError, match="must stay within the owning root"):
             load_section(settings.aeat_manuals_root / "iva" / "2025", bad_ref)
 
-    @pytest.mark.unit
     def test_load_catalogue_and_find_rules(self, tmp_path: Path) -> None:
         """find_rules iterates rules loaded through the catalogue."""
         settings = _seed_iva(tmp_path)
@@ -217,7 +212,6 @@ class TestLoader:
         assert len(rules) == 1
         assert rules[0].rule_id == "iva-2025-cap1-sec1-rule0001"
 
-    @pytest.mark.unit
     def test_find_rules_casilla_filter_prunes_non_matching(self, tmp_path: Path) -> None:
         """Casilla filter skips rules without the referenced casilla."""
         settings = _seed_iva(tmp_path)
@@ -227,7 +221,6 @@ class TestLoader:
         misses = list(find_rules(catalogue, casilla_id="MODELO_130:07", settings=settings))
         assert misses == []
 
-    @pytest.mark.unit
     def test_fetched_at_precision_round_trips(self, tmp_path: Path) -> None:
         """fetched_at timestamps survive the load cycle."""
         settings = _seed_iva(tmp_path)

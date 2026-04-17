@@ -10,19 +10,20 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app as root_app
-from aeat.financial import RawProvenance, SourceFormat
-from aeat.financial.providers import RawTransaction
-from aeat.financial.transactions import (
+from ...cli import app as root_app
+from .. import RawProvenance, SourceFormat
+from ..providers import RawTransaction
+from ..transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
     save_transactions,
 )
-
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
 from ._service import load_invoices, save_invoices
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
 _INVOICE_FILENAME = "invoices.json"
@@ -114,7 +115,6 @@ def _seed_environment(tmp_path: Path) -> tuple[InvoiceCatalogue, TransactionCata
     return invoice_catalogue, transaction_catalogue, env
 
 
-@pytest.mark.unit
 def test_financial_invoices_list_emits_full_catalogue(tmp_path: Path) -> None:
     """`aeat financial invoices list` must print every stored invoice."""
     invoices, _, env = _seed_environment(tmp_path)
@@ -124,7 +124,6 @@ def test_financial_invoices_list_emits_full_catalogue(tmp_path: Path) -> None:
         assert invoice.invoice_id in result.output
 
 
-@pytest.mark.unit
 def test_financial_invoices_list_filters_by_kind(tmp_path: Path) -> None:
     """`--kind issued` filters to ISSUED invoices only."""
     invoices, _, env = _seed_environment(tmp_path)
@@ -138,7 +137,6 @@ def test_financial_invoices_list_filters_by_kind(tmp_path: Path) -> None:
         assert invoice_id not in result.output
 
 
-@pytest.mark.unit
 def test_financial_invoices_show_emits_json(tmp_path: Path) -> None:
     """`aeat financial invoices show <id>` must emit the stored invoice JSON."""
     invoices, _, env = _seed_environment(tmp_path)
@@ -149,7 +147,6 @@ def test_financial_invoices_show_emits_json(tmp_path: Path) -> None:
     assert payload["invoice_id"] == invoice.invoice_id
 
 
-@pytest.mark.unit
 def test_financial_invoices_show_missing_id_exits_two(tmp_path: Path) -> None:
     """Missing invoice ID must exit code 2."""
     _, _, env = _seed_environment(tmp_path)
@@ -157,7 +154,6 @@ def test_financial_invoices_show_missing_id_exits_two(tmp_path: Path) -> None:
     assert result.exit_code == 2
 
 
-@pytest.mark.unit
 def test_financial_invoices_link_updates_both_files(tmp_path: Path) -> None:
     """`aeat financial invoices link` must update both catalogues on disk."""
     invoices, transactions, env = _seed_environment(tmp_path)
@@ -179,7 +175,6 @@ def test_financial_invoices_link_updates_both_files(tmp_path: Path) -> None:
     assert transaction.transaction_id in updated_invoice.linked_transaction_ids
 
 
-@pytest.mark.unit
 def test_financial_invoices_reconcile_prints_suggestions(tmp_path: Path) -> None:
     """`aeat financial invoices reconcile` prints the suggestion table."""
     _, transactions, env = _seed_environment(tmp_path)
@@ -190,7 +185,6 @@ def test_financial_invoices_reconcile_prints_suggestions(tmp_path: Path) -> None
     assert transaction.transaction_id in result.output
 
 
-@pytest.mark.unit
 def test_financial_invoices_reconcile_apply_persists_links(tmp_path: Path) -> None:
     """`reconcile --apply` performs the bidirectional link on each match."""
     _, transactions, env = _seed_environment(tmp_path)
@@ -203,7 +197,6 @@ def test_financial_invoices_reconcile_apply_persists_links(tmp_path: Path) -> No
     assert any(transaction.transaction_id in invoice.linked_transaction_ids for invoice in updated.values())
 
 
-@pytest.mark.unit
 def test_financial_invoices_verify_exits_zero_when_consistent(tmp_path: Path) -> None:
     """`aeat financial invoices verify` exits 0 when no drift exists."""
     _, _, env = _seed_environment(tmp_path)
@@ -211,7 +204,6 @@ def test_financial_invoices_verify_exits_zero_when_consistent(tmp_path: Path) ->
     assert result.exit_code == 0, result.output
 
 
-@pytest.mark.unit
 def test_financial_invoices_verify_exits_two_when_drifted(tmp_path: Path) -> None:
     """`verify` must exit code 2 when the two catalogues disagree."""
     env_initial = _seed_environment(tmp_path)
@@ -255,7 +247,6 @@ def test_financial_invoices_verify_exits_two_when_drifted(tmp_path: Path) -> Non
     assert result.exit_code == 2, result.output
 
 
-@pytest.mark.unit
 def test_financial_invoices_unmatched_lists_unlinked_invoices(tmp_path: Path) -> None:
     """`aeat financial invoices unmatched` prints invoices without transactions."""
     invoices, _, env = _seed_environment(tmp_path)
@@ -265,7 +256,6 @@ def test_financial_invoices_unmatched_lists_unlinked_invoices(tmp_path: Path) ->
         assert invoice.invoice_id in result.output
 
 
-@pytest.mark.unit
 def test_top_level_invoices_alias_works(tmp_path: Path) -> None:
     """`aeat invoices list` (top-level alias) must match the nested command."""
     invoices, _, env = _seed_environment(tmp_path)

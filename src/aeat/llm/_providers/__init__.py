@@ -1,11 +1,11 @@
 """Private provider adapters for the LLM package."""
 
-from aeat.llm._providers.anthropic import AnthropicAdapter
-from aeat.llm._providers.base import ProviderCompletion, ProviderRequest, _ProviderAdapter
-from aeat.llm._providers.fake import _FakeAdapter
-from aeat.llm._providers.gemini import GeminiAdapter
-from aeat.llm._providers.local import LocalAdapter
-from aeat.llm._providers.openai import OpenAIAdapter
+from .anthropic import AnthropicAdapter
+from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter
+from .fake import _FakeAdapter
+from .gemini import GeminiAdapter
+from .local import LocalAdapter
+from .openai import OpenAIAdapter
 
 __all__ = [
     "AnthropicAdapter",

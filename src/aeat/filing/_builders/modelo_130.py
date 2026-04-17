@@ -16,8 +16,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from .._builder import FilingBuilder
 from .._errors import FilingComputationError
 from .._protocols import (

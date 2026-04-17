@@ -6,12 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import XlsxProvider
+from .. import XlsxProvider
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
 
 
-@pytest.mark.unit
 def test_xlsx_provider_ingests_header_detected_worksheet() -> None:
     """XlsxProvider should locate the header row and ingest transactions."""
     provider = XlsxProvider()
@@ -24,7 +25,6 @@ def test_xlsx_provider_ingests_header_detected_worksheet() -> None:
     assert transactions[1].amount < 0
 
 
-@pytest.mark.unit
 def test_xlsx_provider_validation_handles_unopenable_workbook(tmp_path: Path) -> None:
     """Validation should fail cleanly for malformed workbooks without cleanup errors."""
     source = tmp_path / "broken.xlsx"

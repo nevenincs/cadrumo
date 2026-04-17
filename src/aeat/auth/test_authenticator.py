@@ -20,7 +20,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from aeat.auth import (
+from . import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
     AeatLoginAssertion,
@@ -34,7 +34,9 @@ from aeat.auth import (
     extract_nif_from_subject,
     load_certificate,
 )
-from aeat.auth.certificate import CertificateBundle
+from .certificate import CertificateBundle
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 
@@ -103,13 +105,11 @@ def _load_cert(
 # ── extract_nif_from_subject ────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_extract_nif_from_serial_with_idces_prefix(tmp_path: Path) -> None:
     cert = _load_cert(tmp_path)
     assert extract_nif_from_subject(cert) == "12345678Z"
 
 
-@pytest.mark.unit
 def test_extract_nif_from_bare_serial(tmp_path: Path) -> None:
     cert = _load_cert(
         tmp_path,
@@ -122,7 +122,6 @@ def test_extract_nif_from_bare_serial(tmp_path: Path) -> None:
     assert extract_nif_from_subject(cert) == "87654321A"
 
 
-@pytest.mark.unit
 def test_extract_nif_accepts_nie(tmp_path: Path) -> None:
     cert = _load_cert(
         tmp_path,
@@ -135,7 +134,6 @@ def test_extract_nif_accepts_nie(tmp_path: Path) -> None:
     assert extract_nif_from_subject(cert) == "X1234567L"
 
 
-@pytest.mark.unit
 def test_extract_nif_cn_fallback(tmp_path: Path) -> None:
     cert = _load_cert(
         tmp_path,
@@ -147,7 +145,6 @@ def test_extract_nif_cn_fallback(tmp_path: Path) -> None:
     assert extract_nif_from_subject(cert) == "22334455B"
 
 
-@pytest.mark.unit
 def test_extract_nif_rejects_cif(tmp_path: Path) -> None:
     cert = _load_cert(
         tmp_path,
@@ -161,7 +158,6 @@ def test_extract_nif_rejects_cif(tmp_path: Path) -> None:
         extract_nif_from_subject(cert)
 
 
-@pytest.mark.unit
 def test_extract_nif_rejects_unparseable(tmp_path: Path) -> None:
     cert = _load_cert(
         tmp_path,
@@ -177,7 +173,6 @@ def test_extract_nif_rejects_unparseable(tmp_path: Path) -> None:
 # ── AeatSession record ──────────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_aeat_session_is_stale_predicate(tmp_path: Path) -> None:
     authenticated_at = datetime.now(UTC)
     session = AeatSession(
@@ -194,7 +189,6 @@ def test_aeat_session_is_stale_predicate(tmp_path: Path) -> None:
     assert session.is_stale(authenticated_at + timedelta(minutes=30)) is True
 
 
-@pytest.mark.unit
 def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
     authenticated_at = datetime.now(UTC)
     session = AeatSession(
@@ -214,7 +208,6 @@ def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
 # ── AeatLoginAssertion record ───────────────────────────────────────────────
 
 
-@pytest.mark.unit
 def test_aeat_login_assertion_is_valid_composite() -> None:
     assertion = AeatLoginAssertion(
         target_url="https://sede/",
@@ -297,7 +290,7 @@ def _fake_handshake() -> HandshakeResult:
 
 
 def _settings_for(path: Path, monkeypatch: pytest.MonkeyPatch):
-    from aeat.config import Settings
+    from ..config import Settings
 
     monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(path))
     monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", SECRET_PASSPHRASE)
@@ -306,7 +299,6 @@ def _settings_for(path: Path, monkeypatch: pytest.MonkeyPatch):
     return Settings()
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_authenticator_synchronous_surface(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Synchronous helpers work under the async context manager.
@@ -326,7 +318,6 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, monkeypatch: py
         assert nif == "12345678Z"
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_verify_login_raises_on_stale_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bundle_path = _build_bundle(tmp_path)
@@ -346,7 +337,6 @@ async def test_verify_login_raises_on_stale_session(tmp_path: Path, monkeypatch:
             await auth.verify_login(stale)
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_verify_login_raises_without_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bundle_path = _build_bundle(tmp_path)
@@ -366,7 +356,6 @@ async def test_verify_login_raises_without_context(tmp_path: Path, monkeypatch: 
             await auth.verify_login(session)
 
 
-@pytest.mark.unit
 def test_extract_nif_handles_escaped_comma_in_cn(tmp_path: Path) -> None:
     """RFC 4514 escaped commas in CN must not split the DN parser.
 
@@ -387,7 +376,6 @@ def test_extract_nif_handles_escaped_comma_in_cn(tmp_path: Path) -> None:
     assert extract_nif_from_subject(cert) == "12345678Z"
 
 
-@pytest.mark.unit
 def test_extract_nif_handles_quoted_plus_in_cn(tmp_path: Path) -> None:
     """RFC 4514 escaped ``+`` in a value must not split RDNs."""
     cert = _load_cert(
@@ -400,7 +388,6 @@ def test_extract_nif_handles_quoted_plus_in_cn(tmp_path: Path) -> None:
     assert extract_nif_from_subject(cert) == "X1234567L"
 
 
-@pytest.mark.unit
 def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
     """Naive datetimes passed to is_stale are coerced to UTC.
 
@@ -424,7 +411,6 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
     assert session.is_stale(naive_future) is True
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Regression test: reauthenticate must not deadlock on self._lock.
@@ -461,7 +447,6 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pyt
             await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Regression test for the close()/verify_login TOCTOU race.
@@ -487,7 +472,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkey
     cert = authenticator.load_certificate()
     from typing import cast
 
-    from aeat.auth import BrowserContextLike
+    from . import BrowserContextLike
 
     fake_ctx = _FakeBrowserContext(cert, recognised=True)
     authenticator._context = cast(BrowserContextLike, fake_ctx)
@@ -513,7 +498,6 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkey
     assert authenticator._closing is False
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """True interleaved race: start verify_login + close concurrently.
@@ -526,7 +510,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatc
     """
     from typing import cast
 
-    from aeat.auth import BrowserContextLike
+    from . import BrowserContextLike
 
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
@@ -591,7 +575,6 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatc
     assert authenticator._context is None
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_close_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bundle_path = _build_bundle(tmp_path)

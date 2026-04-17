@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import inspect, text
 
-from aeat.config import Settings
-from aeat.storage import (
+from ..config import Settings
+from . import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
     ModeloRecord,
@@ -40,6 +40,8 @@ from aeat.storage import (
     upgrade_to_head,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 def _migrated_engine(tmp_path: Path, name: str = "constraints.db"):
     settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / name).as_posix()}")
@@ -48,7 +50,6 @@ def _migrated_engine(tmp_path: Path, name: str = "constraints.db"):
     return engine
 
 
-@pytest.mark.unit
 def test_sqlite_foreign_keys_cascade(tmp_path: Path) -> None:
     """Deleting a modelo cascades to its corpus artifacts under SQLite."""
     engine = _migrated_engine(tmp_path, "fk.db")
@@ -75,7 +76,6 @@ def test_sqlite_foreign_keys_cascade(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_portal_auth_method_check_constraint(tmp_path: Path) -> None:
     """A raw insert with an unknown auth_method value is rejected by SQLite."""
     engine = _migrated_engine(tmp_path, "check.db")
@@ -95,7 +95,6 @@ def test_portal_auth_method_check_constraint(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_corpus_artifact_unique_identity(tmp_path: Path) -> None:
     """Duplicate (year, modelo_id, file_path) tuples surface as RepositoryError."""
     engine = _migrated_engine(tmp_path, "unique.db")
@@ -136,7 +135,6 @@ def test_corpus_artifact_unique_identity(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_modelo_upsert_natural_key(tmp_path: Path) -> None:
     """Upserting a modelo without id but with an existing identifier updates it."""
     engine = _migrated_engine(tmp_path, "natural.db")
@@ -151,7 +149,6 @@ def test_modelo_upsert_natural_key(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_portal_upsert_wraps_integrity_error(tmp_path: Path) -> None:
     """A portal upsert with a non-existent modelo_id surfaces as RepositoryError."""
     engine = _migrated_engine(tmp_path, "wrap.db")
@@ -170,7 +167,6 @@ def test_portal_upsert_wraps_integrity_error(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_get_engine_honours_auto_migrate(tmp_path: Path) -> None:
     """``get_engine`` applies migrations when ``aeat_storage_auto_migrate`` is true."""
     db_path = tmp_path / "auto.db"
@@ -187,7 +183,6 @@ def test_get_engine_honours_auto_migrate(tmp_path: Path) -> None:
         dispose_engine(settings)
 
 
-@pytest.mark.unit
 def test_portal_repository_rejects_unknown_auth_method(tmp_path: Path) -> None:
     """A legacy row with an unknown auth_method surfaces as RepositoryError.
 
@@ -230,7 +225,6 @@ def test_portal_repository_rejects_unknown_auth_method(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_migrations_run_against_injected_in_memory_engine() -> None:
     """In-memory SQLite proves Alembic uses the caller's engine, not a new one."""
     settings = Settings(aeat_database_url="sqlite:///:memory:")
@@ -244,7 +238,6 @@ def test_migrations_run_against_injected_in_memory_engine() -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_migrations_round_trip_with_constraints(tmp_path: Path) -> None:
     """head → base → head still round-trips with the 0002 revision in place."""
     settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'rt.db').as_posix()}")

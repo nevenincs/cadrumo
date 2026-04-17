@@ -20,7 +20,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
-from aeat.status._site_health import (
+from ._site_health import (
     _URL_ADAPTER,
     SiteHealthEvidence,
     SiteHealthState,

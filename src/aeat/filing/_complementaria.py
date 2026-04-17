@@ -12,10 +12,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat._paths import resolve_record_json_path
-from aeat.config import load_settings
-from aeat.justificante import parse_justificante
-
+from .._paths import resolve_record_json_path
+from ..config import load_settings
+from ..justificante import parse_justificante
 from ._errors import FilingAmendmentError, FilingAmendmentValidationError
 from ._schema import FilingDraft, FilingScalar, FilingValue
 from .testing import SyntheticProfile, default_schema_provider

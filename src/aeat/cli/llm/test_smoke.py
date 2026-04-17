@@ -3,10 +3,11 @@
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.llm import app
+from . import app
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
-@pytest.mark.unit
 def test_llm_cli_has_expected_subcommands() -> None:
     """The llm subtree should expose the required verbs."""
 

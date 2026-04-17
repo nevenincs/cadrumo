@@ -16,17 +16,16 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
-from aeat.auth import LoadedCertificate, build_client_certificates_kwarg
-from aeat.config import Settings
-from aeat.errors import AeatError, SiteHealthError
-from aeat.logging import get_logger
-from aeat.status import (
+from ..auth import LoadedCertificate, build_client_certificates_kwarg
+from ..config import Settings
+from ..errors import AeatError, SiteHealthError
+from ..logging import get_logger
+from ..status import (
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
 )
-from aeat.status._site_health import _URL_ADAPTER
-
+from ..status._site_health import _URL_ADAPTER
 from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile

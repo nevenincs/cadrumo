@@ -7,6 +7,6 @@ other sub-apps (e.g. :mod:`aeat.cli.modelos`).
 
 from __future__ import annotations
 
-from aeat.portals._cli import app
+from ...portals._cli import app
 
 __all__ = ["app"]

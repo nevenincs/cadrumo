@@ -21,11 +21,11 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.models import UnknownModeloError
-from aeat.portals._categories import PortalCategory
-from aeat.portals._errors import UnknownPortalError
-from aeat.portals._metadata import PortalMetadata
-from aeat.portals._registry import (
+from ..models import UnknownModeloError
+from ._categories import PortalCategory
+from ._errors import UnknownPortalError
+from ._metadata import PortalMetadata
+from ._registry import (
     PORTAL_REGISTRY,
     get_portal,
     portals_for_modelo,

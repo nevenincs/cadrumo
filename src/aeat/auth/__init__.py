@@ -37,7 +37,7 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from aeat.auth._authenticator import (
+from ._authenticator import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
     AeatLoginAssertion,
@@ -48,11 +48,11 @@ from aeat.auth._authenticator import (
     BrowserSessionFactory,
     BrowserSessionLike,
 )
-from aeat.auth._certificate_backends._playwright_context import (
+from ._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
 )
-from aeat.auth._gate import AeatAccessGate, AeatGateEnvSnapshot
-from aeat.auth.certificate import (
+from ._gate import AeatAccessGate, AeatGateEnvSnapshot
+from .certificate import (
     AeatLiveReadNotEnabledError,
     AeatLoginAssertionError,
     AeatSessionExpiredError,
@@ -78,7 +78,7 @@ from aeat.auth.certificate import (
 )
 
 if TYPE_CHECKING:
-    from aeat.config import Settings
+    from ..config import Settings
 
 __all__ = [
     "AEAT_SESSION_IDLE_TTL",
@@ -435,7 +435,7 @@ def get_credentials_for_scopes(scopes: list[str] | None = None) -> BaseCredentia
     Returns:
         Authenticated credentials suitable for any Google API client.
     """
-    from aeat.config import Settings  # local import to avoid import cycle
+    from ..config import Settings  # local import to avoid import cycle
 
     scopes = scopes or SCOPES
     settings = Settings()

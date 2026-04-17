@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.casillas import (
+from . import (
     CasillaCatalogue,
     CasillaDataType,
     CasillaParseError,
@@ -20,6 +20,8 @@ from aeat.casillas import (
     save_casillas,
     verify_casillas,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def _record(
@@ -54,7 +56,6 @@ def _record(
     )
 
 
-@pytest.mark.unit
 def test_loader_rejects_malformed_records(tmp_path: Path) -> None:
     """The loader must reject records that violate the strict schema."""
     root = tmp_path / "casillas"
@@ -98,7 +99,6 @@ def test_loader_rejects_malformed_records(tmp_path: Path) -> None:
         load_casillas("MODELO_130", "2025Q4", root=root)
 
 
-@pytest.mark.unit
 def test_cross_reference_validator_catches_dangling_refs() -> None:
     """Verification must flag references to casillas that are not present."""
     catalogue = CasillaCatalogue(
@@ -115,7 +115,6 @@ def test_cross_reference_validator_catches_dangling_refs() -> None:
     assert errors[0].code == "cross_reference"
 
 
-@pytest.mark.unit
 def test_schema_upgrade_path_round_trips_optional_fields(tmp_path: Path) -> None:
     """Older payloads that omit optional fields must still round-trip cleanly."""
     root = tmp_path / "casillas"
@@ -127,7 +126,6 @@ def test_schema_upgrade_path_round_trips_optional_fields(tmp_path: Path) -> None
     assert reloaded.records[0].llm_draft_provenance is None
 
 
-@pytest.mark.unit
 def test_llm_provenance_is_optional_but_strict() -> None:
     """Provenance can be omitted, but invalid typed values must be rejected."""
     ok = _record(
@@ -158,7 +156,6 @@ def test_llm_provenance_is_optional_but_strict() -> None:
         )
 
 
-@pytest.mark.unit
 def test_trilingual_authoritative_spanish_is_required() -> None:
     """Label and help must both carry the authoritative Spanish text."""
     with pytest.raises(ValidationError):
@@ -172,7 +169,6 @@ def test_trilingual_authoritative_spanish_is_required() -> None:
         )
 
 
-@pytest.mark.unit
 def test_select_options_require_select_data_type() -> None:
     """Select options are only valid for SELECT casillas."""
     options = (SelectOption(value="A", label={"es": "Alta", "en": "High", "hu": "Magas"}),)

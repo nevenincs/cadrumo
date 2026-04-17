@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.workflow import (
+from . import (
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
@@ -15,7 +15,9 @@ from aeat.workflow import (
     load_run,
     save_run,
 )
-from aeat.workflow._errors import WorkflowError
+from ._errors import WorkflowError
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:
@@ -37,7 +39,6 @@ def _result(run_id: str, started: datetime) -> WorkflowResult:
     )
 
 
-@pytest.mark.unit
 class TestPersistenceRoundTrip:
     def test_save_load_round_trip(self, tmp_path: Path) -> None:
         original = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC))

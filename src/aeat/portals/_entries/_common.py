@@ -13,11 +13,11 @@ from collections.abc import Iterable
 
 from pydantic import HttpUrl, TypeAdapter
 
-from aeat.i18n import Translatable
-from aeat.models import ModeloCode
-from aeat.portals._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
-from aeat.portals._codes import Portal
-from aeat.portals._metadata import PortalMetadata
+from ...i18n import Translatable
+from ...models import ModeloCode
+from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._codes import Portal
+from .._metadata import PortalMetadata
 
 _URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 

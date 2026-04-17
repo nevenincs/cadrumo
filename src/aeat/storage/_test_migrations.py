@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import inspect
 
-from aeat.config import Settings
-from aeat.storage import (
+from ..config import Settings
+from . import (
     ModeloRecord,
     ModeloRepository,
     create_engine_from_settings,
@@ -20,8 +20,9 @@ from aeat.storage import (
     session_scope,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
-@pytest.mark.unit
+
 def test_migrations_round_trip(tmp_path: Path) -> None:
     """head → base → head must leave the schema writable and consistent."""
     settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'migrations.db').as_posix()}")

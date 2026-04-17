@@ -14,13 +14,15 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.cli._live import (
+from ._live import (
     cloudfunctions_client,
     cloudrun_client,
     requires_live_enabled,
     requires_project,
     storage_client,
 )
+
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
 
 
 def _skip_if_no_billing(exc: Exception) -> None:
@@ -31,7 +33,6 @@ def _skip_if_no_billing(exc: Exception) -> None:
     raise exc
 
 
-@pytest.mark.live
 class TestCloudLive:
     """Read-only Cloud surface smoke tests."""
 

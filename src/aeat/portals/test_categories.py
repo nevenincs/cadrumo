@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.portals._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def test_portal_category_has_exactly_7_members() -> None:

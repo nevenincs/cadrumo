@@ -10,10 +10,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app as root_app
-from aeat.financial import RawProvenance, SourceFormat
-from aeat.financial.providers import RawTransaction
-from aeat.financial.transactions import (
+from ...cli import app as root_app
+from .. import RawProvenance, SourceFormat
+from ..providers import RawTransaction
+from . import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
@@ -21,6 +21,8 @@ from aeat.financial.transactions import (
     load_transactions,
     save_transactions,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
 _CATALOGUE_FILENAME = "transactions.json"
@@ -80,7 +82,6 @@ def _write_catalogue(tmp_path: Path) -> TransactionCatalogue:
     return catalogue
 
 
-@pytest.mark.unit
 def test_financial_txs_list_filters_to_unclassified_records(tmp_path: Path) -> None:
     """`aeat financial txs list --unclassified` should filter catalogue output."""
     catalogue = _write_catalogue(tmp_path)
@@ -97,7 +98,6 @@ def test_financial_txs_list_filters_to_unclassified_records(tmp_path: Path) -> N
     assert ids[1] not in result.output
 
 
-@pytest.mark.unit
 def test_financial_txs_show_emits_json_payload(tmp_path: Path) -> None:
     """`aeat financial txs show <id>` should emit the stored transaction JSON."""
     catalogue = _write_catalogue(tmp_path)
@@ -115,7 +115,6 @@ def test_financial_txs_show_emits_json_payload(tmp_path: Path) -> None:
     assert payload["business_classification"] == "UNCLASSIFIED"
 
 
-@pytest.mark.unit
 def test_financial_txs_classify_updates_catalogue_file(tmp_path: Path) -> None:
     """`aeat financial txs classify` should persist a manual classification."""
     catalogue = _write_catalogue(tmp_path)
@@ -146,7 +145,6 @@ def test_financial_txs_classify_updates_catalogue_file(tmp_path: Path) -> None:
     assert updated.business_classification is BusinessClassification.MIXED
 
 
-@pytest.mark.unit
 def test_financial_txs_classify_rejects_invalid_business_pct_combo(tmp_path: Path) -> None:
     """`aeat financial txs classify` should exit cleanly on invalid percentage usage."""
     catalogue = _write_catalogue(tmp_path)

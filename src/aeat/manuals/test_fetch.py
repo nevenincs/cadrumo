@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.manuals import (
+from . import (
     PART_SPECS,
     FetchedManualPart,
     ManualId,
@@ -18,7 +18,9 @@ from aeat.manuals import (
     verify_fetched_pdf,
     write_manifest,
 )
-from aeat.manuals.errors import ManifestError
+from .errors import ManifestError
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def _manifest(sha256: str = "a" * 64, length: int = 10) -> FetchedManualPart:
@@ -37,7 +39,6 @@ def _manifest(sha256: str = "a" * 64, length: int = 10) -> FetchedManualPart:
 class TestPartSpecs:
     """The PartSpec table covers every v1 triple and only those triples."""
 
-    @pytest.mark.unit
     def test_part_specs_cover_v1_triples(self) -> None:
         """PART_SPECS contains exactly the three v1 (renta p1, renta p2, iva) entries."""
         triples = {(spec.manual_id, spec.year, spec.part) for spec in PART_SPECS}
@@ -47,13 +48,11 @@ class TestPartSpecs:
             (ManualId.IVA, 2025, ManualPart.SINGLE),
         }
 
-    @pytest.mark.unit
     def test_part_specs_urls_are_aeat(self) -> None:
         """Every URL points at the AEAT sede static_files host."""
         for spec in PART_SPECS:
             assert spec.source_pdf_url.startswith("https://sede.agenciatributaria.gob.es/static_files/")
 
-    @pytest.mark.unit
     def test_lookup_spec_hit(self) -> None:
         """lookup_spec returns the matching entry for a known triple."""
         spec = lookup_spec(ManualId.IVA, 2025, ManualPart.SINGLE)
@@ -61,7 +60,6 @@ class TestPartSpecs:
         assert spec.year == 2025
         assert spec.part is ManualPart.SINGLE
 
-    @pytest.mark.unit
     def test_lookup_spec_miss_raises(self) -> None:
         """lookup_spec raises ManifestError for an unregistered triple."""
         with pytest.raises(ManifestError):
@@ -71,7 +69,6 @@ class TestPartSpecs:
 class TestManifestIO:
     """Manifest round-trips cleanly and rejects tampering."""
 
-    @pytest.mark.unit
     def test_write_then_load_round_trips(self, tmp_path: Path) -> None:
         """A written manifest reloads equal to the original record."""
         manifest = _manifest()
@@ -80,13 +77,11 @@ class TestManifestIO:
         reloaded = load_manifest(path)
         assert reloaded == manifest
 
-    @pytest.mark.unit
     def test_load_manifest_missing_raises(self, tmp_path: Path) -> None:
         """load_manifest raises ManifestError when the file is absent."""
         with pytest.raises(ManifestError):
             load_manifest(tmp_path / "absent.json")
 
-    @pytest.mark.unit
     def test_verify_fetched_pdf_success(self, tmp_path: Path) -> None:
         """Matching sha256 and length pass verification silently."""
         part_root = tmp_path
@@ -99,7 +94,6 @@ class TestManifestIO:
         manifest = _manifest(sha256=sha256, length=len(b"hello pdf\n"))
         verify_fetched_pdf(manifest, part_root)
 
-    @pytest.mark.unit
     def test_verify_fetched_pdf_sha_mismatch(self, tmp_path: Path) -> None:
         """A sha256 mismatch raises ManifestError."""
         part_root = tmp_path
@@ -109,7 +103,6 @@ class TestManifestIO:
         with pytest.raises(ManifestError, match="sha256 mismatch"):
             verify_fetched_pdf(manifest, part_root)
 
-    @pytest.mark.unit
     def test_verify_fetched_pdf_missing_file(self, tmp_path: Path) -> None:
         """A missing raw PDF raises a clear ManifestError."""
         manifest = _manifest()

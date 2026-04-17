@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
-from aeat.models._categories import (
+from ...portals import Portal
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._codes import ModeloCode
-from aeat.models._entries._common import (
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
+from ._common import (
     build_applicability,
     build_entry,
     make_citation,
 )
-from aeat.models._metadata import ModeloMetadata
-from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_347,
@@ -51,7 +51,8 @@ ENTRY: ModeloMetadata = build_entry(
         trigger_notes_es=(
             "Obligatorio para contribuyentes con operaciones con un mismo tercero superiores "
             "a 3 005,06 EUR (IVA incluido). Los obligados a SII quedan exentos. Default "
-            "opcional; se convierte en obligatorio una vez superado el umbral."
+            "opcional; se convierte en obligatorio una vez superado el umbral. En el motor "
+            "de plazos mapea a AutonomoProfile.third_party_transactions_above_347_threshold."
         ),
     ),
     caps_into=None,

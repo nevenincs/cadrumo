@@ -4,7 +4,7 @@ Exercises the Drive + Sheets + Docs read paths against the real,
 project-owned fixtures provisioned by
 ``scripts/provision_google_fixtures.py``. Every assertion round-trips
 through the credential resolver, service builders, and fixture
-catalogue that any future `@pytest.mark.live` test will use, so a
+catalogue that any future `@pytest.mark.live_read` test will use, so a
 passing run certifies the entire Google integration path end-to-end.
 
 The test is **strictly opt-in**. It collects only when both
@@ -91,7 +91,8 @@ _LIVE_ENABLED = _truthy(os.environ.get("AEAT_LIVE_TESTS_ENABLED"))
 _GOOGLE_ENABLED = _truthy(os.environ.get("AEAT_LIVE_TESTS_GOOGLE"))
 
 pytestmark = [
-    pytest.mark.live,
+    pytest.mark.live_read,
+    pytest.mark.domain_infra,
     pytest.mark.skipif(
         not (_LIVE_ENABLED and _GOOGLE_ENABLED),
         reason=(

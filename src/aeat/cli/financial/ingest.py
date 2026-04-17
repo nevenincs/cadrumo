@@ -9,8 +9,8 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.financial import CsvProvider, OfxProvider, XlsxProvider, detect_provider
-from aeat.financial.providers import FinancialProviderError
+from ...financial import CsvProvider, OfxProvider, XlsxProvider, detect_provider
+from ...financial.providers import FinancialProviderError
 
 _CONSOLE = Console()
 

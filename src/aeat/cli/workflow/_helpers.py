@@ -20,9 +20,9 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.config import load_settings
-from aeat.deadlines import AutonomoProfile
-from aeat.workflow import (
+from ...config import load_settings
+from ...deadlines import AutonomoProfile
+from ...workflow import (
     WorkflowEngine,
     WorkflowError,
     WorkflowResult,

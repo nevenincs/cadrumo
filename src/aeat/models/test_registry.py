@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.deadlines import AutonomoProfile, IVARegime
-from aeat.models._categories import TaxpayerProfile
-from aeat.models._codes import ModeloCode
-from aeat.models._errors import RegistryIntegrityError, UnknownModeloError
-from aeat.models._metadata import ModeloMetadata
-from aeat.models._registry import (
+from ..deadlines import AutonomoProfile, IVARegime
+from ._categories import TaxpayerProfile
+from ._codes import ModeloCode
+from ._errors import RegistryIntegrityError, UnknownModeloError
+from ._metadata import ModeloMetadata
+from ._registry import (
     MODELO_REGISTRY,
     _check_caps_into,
     get_modelo,
@@ -17,7 +17,7 @@ from aeat.models._registry import (
     year_plan,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def test_registry_completeness() -> None:
@@ -68,12 +68,19 @@ def test_modelos_for_autonomo_ed_solo() -> None:
         ModeloCode.MODELO_303,
         ModeloCode.MODELO_390,
         ModeloCode.MODELO_130,
-        ModeloCode.MODELO_037,
+        ModeloCode.MODELO_036,
         ModeloCode.MODELO_100,
     ):
         assert required in codes
-    for excluded in (ModeloCode.MODELO_720, ModeloCode.MODELO_200):
+    for excluded in (ModeloCode.MODELO_037, ModeloCode.MODELO_720, ModeloCode.MODELO_200):
         assert excluded not in codes
+
+
+def test_modelo_123_caps_into_193() -> None:
+    """Modelo 123 resolves to its annual summary counterpart."""
+    metadata = get_modelo(ModeloCode.MODELO_123)
+    assert metadata.caps_into is ModeloCode.MODELO_193
+    assert ModeloCode.MODELO_193 in metadata.related_modelos
 
 
 def test_check_caps_into_rejects_dangling_reference() -> None:

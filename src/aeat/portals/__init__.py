@@ -2,8 +2,8 @@
 
 This subpackage exposes the closed, strict, pydantic v2 registry of
 every AEAT (and adjacent) portal the project interacts with for
-Spanish autónomo and small-SL tax filing. Membership is fixed at 41
-entries (8 AUTH + 20 FILING/CENSUS + 2 BORRADOR + 4 CONSULTATION + 5
+Spanish autónomo and small-SL tax filing. Membership is fixed at 42
+entries (8 AUTH + 21 FILING/CENSUS + 2 BORRADOR + 4 CONSULTATION + 5
 PAYMENT + 2 CALENDAR_REFERENCE). The registry is built at import time
 from the per-portal entries under the private ``_entries`` package and
 is frozen as a :class:`types.MappingProxyType`.
@@ -29,17 +29,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from aeat.portals._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
-from aeat.portals._codes import Portal
-from aeat.portals._errors import (
+from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._codes import Portal
+from ._errors import (
     PortalIntegrityError,
     PortalRegistryError,
     UnknownPortalError,
 )
 
 if TYPE_CHECKING:
-    from aeat.portals._metadata import PortalMetadata
-    from aeat.portals._registry import (
+    from ._metadata import PortalMetadata
+    from ._registry import (
         PORTAL_REGISTRY,
         get_portal,
         portals_by_category,
@@ -67,7 +67,7 @@ def __getattr__(name: str) -> Any:
     """
     if name not in _LAZY_NAMES:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    from aeat.portals import _metadata, _registry
+    from . import _metadata, _registry
 
     resolved = {
         "PORTAL_REGISTRY": _registry.PORTAL_REGISTRY,

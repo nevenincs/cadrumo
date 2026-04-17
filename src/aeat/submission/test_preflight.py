@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from aeat.submission import (
+from . import (
     DraftStatus,
     FilingDraftLike,
     FilingFinding,
@@ -18,7 +18,7 @@ from aeat.submission import (
     SubmissionPreflightError,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 @dataclass

@@ -6,25 +6,24 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.casillas import ModeloCode, load_casillas
-from aeat.financial.categories import CATEGORY_PROFILES_2025, SpendingCategory, load_category_profiles_from_manual
+from ...casillas import ModeloCode, load_casillas
+from . import CATEGORY_PROFILES_2025, SpendingCategory, load_category_profiles_from_manual
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 
-@pytest.mark.unit
 def test_registry_covers_every_spending_category() -> None:
     """Every enum member must have a concrete profile in the 2025 registry."""
 
     assert set(CATEGORY_PROFILES_2025) == set(SpendingCategory)
 
 
-@pytest.mark.unit
 def test_every_profile_has_at_least_one_citation() -> None:
     """Explainable category profiles must carry at least one citation."""
 
     assert all(profile.proportionality.citations for profile in CATEGORY_PROFILES_2025.values())
 
 
-@pytest.mark.unit
 def test_every_mapping_points_to_real_public_casillas() -> None:
     """Every referenced casilla code must exist in the committed public corpus."""
 
@@ -37,7 +36,6 @@ def test_every_mapping_points_to_real_public_casillas() -> None:
             assert mapping.casilla_code in valid_codes[mapping.modelo]
 
 
-@pytest.mark.unit
 def test_load_category_profiles_from_manual_returns_2025_registry() -> None:
     """The manual loader must resolve to the curated 2025 registry surface."""
 
@@ -45,7 +43,6 @@ def test_load_category_profiles_from_manual_returns_2025_registry() -> None:
     assert loaded.keys() == CATEGORY_PROFILES_2025.keys()
 
 
-@pytest.mark.unit
 def test_registry_preserves_conservative_semantics_for_special_categories() -> None:
     """Known edge categories must keep the intended non-numeric rule encoding."""
 
@@ -62,7 +59,6 @@ def test_registry_preserves_conservative_semantics_for_special_categories() -> N
     assert health.proportionality.statutory_cap_period.value == "year_per_person"
 
 
-@pytest.mark.unit
 def test_load_category_profiles_from_manual_rejects_unknown_year() -> None:
     """Unsupported handbook years must fail loud."""
 

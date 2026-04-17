@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.models._codes import ModeloCode
+from ._codes import ModeloCode
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
-def test_modelo_code_has_exactly_twenty_members() -> None:
-    """The v1 inventory locks exactly 20 modelos."""
-    assert len(list(ModeloCode)) == 20
+def test_modelo_code_has_exactly_twenty_one_members() -> None:
+    """The inventory locks exactly 21 modelos."""
+    assert len(list(ModeloCode)) == 21
 
 
 def test_every_value_is_three_digit_string() -> None:
@@ -36,8 +36,8 @@ def test_value_round_trip(raw: str) -> None:
 
 def test_error_classes_import() -> None:
     """Phase 3 error classes import cleanly from the private module."""
-    from aeat.errors import AeatError
-    from aeat.models._errors import (
+    from ..errors import AeatError
+    from ._errors import (
         ModeloRegistryError,
         RegistryIntegrityError,
         UnknownModeloError,

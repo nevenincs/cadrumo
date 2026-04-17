@@ -13,9 +13,11 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app
-from aeat.filing import build_draft
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
+from ...filing import build_draft
+from ...filing.testing import SyntheticProfile, default_schema_provider
+from .. import app
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 runner = CliRunner()
 
@@ -93,7 +95,6 @@ def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
     return "sub-cli-1"
 
 
-@pytest.mark.unit
 class TestFilingCLI:
     def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)

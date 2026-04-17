@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from aeat.manuals import (
+from . import (
     Chapter,
     FetchedManualPart,
     LLMProvenance,
@@ -23,6 +23,8 @@ from aeat.manuals import (
     SectionSource,
     generate_rule_id,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def _llm_provenance() -> LLMProvenance:
@@ -124,7 +126,6 @@ def _manual() -> Manual:
 class TestStrictSchema:
     """Models reject invalid inputs and accept well-formed ones."""
 
-    @pytest.mark.unit
     def test_rule_happy_path(self) -> None:
         """A well-formed rule round-trips through model_validate_json."""
         rule = _rule()
@@ -132,7 +133,6 @@ class TestStrictSchema:
         reloaded = Rule.model_validate_json(payload)
         assert reloaded == rule
 
-    @pytest.mark.unit
     def test_rule_rejects_missing_spanish_statement(self) -> None:
         """A rule with a statement lacking 'es' must fail validation."""
         with pytest.raises(ValidationError):
@@ -155,7 +155,6 @@ class TestStrictSchema:
                 reviewed_at=date(2026, 4, 12),
             )
 
-    @pytest.mark.unit
     def test_rule_rejects_invalid_casilla_reference(self) -> None:
         """Casilla references must match the MODELO_NNN[:CODE] pattern."""
         with pytest.raises(ValidationError):
@@ -178,7 +177,6 @@ class TestStrictSchema:
                 reviewed_at=date(2026, 4, 12),
             )
 
-    @pytest.mark.unit
     def test_rule_rejects_empty_reviewer(self) -> None:
         """Reviewer metadata must be a non-empty trimmed string."""
         with pytest.raises(ValidationError):
@@ -201,7 +199,6 @@ class TestStrictSchema:
                 reviewed_at=date(2026, 4, 12),
             )
 
-    @pytest.mark.unit
     def test_section_rejects_missing_spanish_title(self) -> None:
         """A section with a title lacking 'es' must fail validation."""
         with pytest.raises(ValidationError):
@@ -219,7 +216,6 @@ class TestStrictSchema:
                 reviewed_at=date(2026, 4, 12),
             )
 
-    @pytest.mark.unit
     def test_chapter_rejects_missing_spanish_title(self) -> None:
         """Chapters must carry an 'es' title."""
         with pytest.raises(ValidationError):
@@ -230,7 +226,6 @@ class TestStrictSchema:
                 sections=(),
             )
 
-    @pytest.mark.unit
     def test_manual_rejects_year_below_2000(self) -> None:
         """Year bounds guard against obviously bogus values."""
         with pytest.raises(ValidationError):
@@ -248,7 +243,6 @@ class TestStrictSchema:
                 chapters=(),
             )
 
-    @pytest.mark.unit
     def test_manual_round_trip_preserves_structure(self) -> None:
         """Dump + reload must preserve a full Manual tree."""
         manual = _manual()
@@ -256,7 +250,6 @@ class TestStrictSchema:
         reloaded = Manual.model_validate_json(payload)
         assert reloaded == manual
 
-    @pytest.mark.unit
     def test_fetched_manifest_rejects_bad_sha256(self) -> None:
         """sha256 must be a 64-char lower-case hex string."""
         with pytest.raises(ValidationError):
@@ -275,7 +268,6 @@ class TestStrictSchema:
 class TestRuleIds:
     """Deterministic rule-id generation."""
 
-    @pytest.mark.unit
     def test_deterministic_for_fixed_inputs(self) -> None:
         """Same inputs always produce the same identifier."""
         first = generate_rule_id(
@@ -296,7 +288,6 @@ class TestRuleIds:
         )
         assert first == second == "renta-2025-parte1-cap5-sec2-rule0007"
 
-    @pytest.mark.unit
     def test_single_part_is_collapsed(self) -> None:
         """IVA (SINGLE) rule IDs omit the part segment."""
         assert (
@@ -311,7 +302,6 @@ class TestRuleIds:
             == "iva-2025-cap3-sec1-rule0001"
         )
 
-    @pytest.mark.unit
     def test_ordinal_must_be_positive(self) -> None:
         """Ordinals below 1 raise ValueError."""
         with pytest.raises(ValueError, match="ordinal must be >= 1"):
@@ -324,7 +314,6 @@ class TestRuleIds:
                 ordinal=0,
             )
 
-    @pytest.mark.unit
     def test_empty_chapter_after_slug_rejected(self) -> None:
         """A chapter id that slugs to the empty string is rejected."""
         with pytest.raises(ValueError, match="chapter_id"):

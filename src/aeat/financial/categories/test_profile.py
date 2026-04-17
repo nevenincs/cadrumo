@@ -7,8 +7,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.casillas import ModeloCode, PeriodType
-from aeat.financial.categories import (
+from ...casillas import ModeloCode, PeriodType
+from . import (
     CasillaMapping,
     CasillaMappingSign,
     CategoryProfile,
@@ -19,6 +19,8 @@ from aeat.financial.categories import (
     SpendingCategory,
     parse_http_url,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 
 def _citation() -> Citation:
@@ -48,7 +50,6 @@ def _rule() -> ProportionalityRule:
     )
 
 
-@pytest.mark.unit
 def test_category_profile_requires_authoritative_spanish_label() -> None:
     """Profiles must reject labels missing the authoritative Spanish string."""
 
@@ -62,7 +63,6 @@ def test_category_profile_requires_authoritative_spanish_label() -> None:
         )
 
 
-@pytest.mark.unit
 def test_category_profile_rejects_duplicate_mappings() -> None:
     """Profiles must reject duplicate modelo/period/casilla combinations."""
 

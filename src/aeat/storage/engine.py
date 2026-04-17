@@ -15,10 +15,9 @@ from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.pool import ConnectionPoolEntry
 
-from aeat._paths import resolve_project_path
-from aeat.config import Settings, load_settings
-from aeat.logging import get_logger
-
+from .._paths import resolve_project_path
+from ..config import Settings, load_settings
+from ..logging import get_logger
 from .errors import StorageError
 
 _log = get_logger(__name__)

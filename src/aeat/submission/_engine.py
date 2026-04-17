@@ -14,28 +14,28 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import cast
 
-from aeat._paths import resolve_record_json_path
-from aeat.auth import AeatAccessGate
-from aeat.config import Settings
-from aeat.filing import FilingAmendment, FilingDraft
-from aeat.logging import get_logger
-from aeat.submission._audit import append_live_submit_audit, build_live_submit_audit_record
-from aeat.submission._confirm import confirm_live_submission
-from aeat.submission._errors import (
+from .._paths import resolve_record_json_path
+from ..auth import AeatAccessGate
+from ..config import Settings
+from ..filing import FilingAmendment, FilingDraft
+from ..logging import get_logger
+from ._audit import append_live_submit_audit, build_live_submit_audit_record
+from ._confirm import confirm_live_submission
+from ._errors import (
     AeatLiveSubmitNotEnabledError,
     AeatLiveTransportUnavailableError,
     AeatPytestLiveWriteRefusedError,
     SubmissionError,
 )
-from aeat.submission._models import (
+from ._models import (
     AmendmentSubmissionResult,
     SubmissionAttempt,
     SubmissionStatus,
     SubmittedFiling,
     make_submission_id,
 )
-from aeat.submission._preflight import Preflight
-from aeat.submission._protocols import (
+from ._preflight import Preflight
+from ._protocols import (
     CasillaCatalogue,
     CertificateBackend,
     DeadlineWindowChecker,
@@ -44,7 +44,7 @@ from aeat.submission._protocols import (
     JustificanteParser,
     PortalCatalogue,
 )
-from aeat.submission._submitters import BrowserSessionLike, Submitter
+from ._submitters import BrowserSessionLike, Submitter
 
 _logger = get_logger(__name__)
 

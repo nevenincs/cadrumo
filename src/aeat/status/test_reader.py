@@ -16,8 +16,8 @@ from typing import Any, cast
 
 import pytest
 
-from aeat.config import load_settings
-from aeat.status import (
+from ..config import load_settings
+from . import (
     AeatStatusKind,
     BrowserSessionLike,
     StatusCache,
@@ -25,7 +25,7 @@ from aeat.status import (
     StatusReaderError,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _FIXTURE = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "aeat-pages" / "expedientes" / "sample.html"
 

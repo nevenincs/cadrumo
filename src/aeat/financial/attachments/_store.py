@@ -23,8 +23,7 @@ from typing import BinaryIO, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from ._errors import AttachmentNotFoundError, AttachmentPersistenceError, AttachmentValidationError
 from ._models import Attachment
 

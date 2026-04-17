@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.status import AeatStatusKind, Expediente, StatusCache
+from . import AeatStatusKind, Expediente, StatusCache
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _URL = "https://sede.agenciatributaria.gob.es/wlpl/TC-UTIL/Expediente?COPT=Y"
 

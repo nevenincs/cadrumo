@@ -1,16 +1,22 @@
 """Shared pytest fixtures and collection-time guards for the AEAT test suite.
 
-See ``tests/README.md`` and ``.vault/adr/2026-04-17-pytest-only-testing-adr.md``.
+See ``tests/README.md`` and ``.vault/adr/2026-04-17-pytest-markers-adr.md``.
 
-This module enforces three invariants at collection time:
+This module enforces the following invariants at collection time:
 
-1. Every collected test carries exactly one of ``@pytest.mark.unit`` or
-   ``@pytest.mark.live``.
-2. No file containing a ``@pytest.mark.live`` item imports any symbol from
-   :data:`BANNED_LIVE_IMPORTS`.
-3. Live tests are skipped unless ``AEAT_LIVE_TESTS_ENABLED`` is truthy.
+1. The nine-marker taxonomy contract (access axis + domain axis) via the
+   shared helper in :mod:`tests._marker_hook`. Also hosted from the
+   repo-root ``conftest.py`` so items collected under ``src/aeat/`` pass
+   through the same enforcement surface; double invocation is safe
+   because the helper enforces invariants on items it receives and
+   filters in-place.
+2. No file containing a ``live_read`` or ``live_write`` item may import
+   any symbol in :data:`BANNED_LIVE_IMPORTS` (carried over from PR #160).
+3. ``live_read`` items are skipped unless ``AEAT_LIVE_TESTS_ENABLED`` is
+   truthy; ``live_write`` items are dropped by the shared helper (see
+   :mod:`tests._marker_hook`).
 
-All three failures are hard ``pytest.exit`` rather than warnings.
+Banned-import hits are hard ``pytest.exit`` rather than warnings.
 """
 
 from __future__ import annotations
@@ -22,8 +28,10 @@ from pathlib import Path
 
 import pytest
 
-REQUIRED_MARKERS: frozenset[str] = frozenset({"unit", "live"})
-"""Every test must carry exactly one of these markers."""
+from tests._marker_hook import apply as _apply_marker_contract
+
+LIVE_ACCESS_MARKERS: frozenset[str] = frozenset({"live_read", "live_write"})
+"""Access markers that count as ``live`` for banned-import / opt-in gating."""
 
 BANNED_LIVE_IMPORTS: frozenset[str] = frozenset(
     {
@@ -43,7 +51,7 @@ BANNED_LIVE_IMPORTS: frozenset[str] = frozenset(
 """Import targets that may never appear in a file containing a live-marked test."""
 
 LIVE_OPT_IN_ENV: str = "AEAT_LIVE_TESTS_ENABLED"
-"""Environment variable that opts live tests into execution."""
+"""Environment variable that opts ``live_read`` tests into execution."""
 
 _TRUTHY: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 
@@ -61,7 +69,7 @@ def _marker_names(item: pytest.Item) -> set[str]:
 
 
 def _scan_banned_imports(path: Path) -> set[str]:
-    """AST-scan a file and return any import target that is in :data:`BANNED_LIVE_IMPORTS`.
+    """AST-scan a file and return any import target in :data:`BANNED_LIVE_IMPORTS`.
 
     The file is never executed; this is a syntactic scan. Handles both
     ``import X`` / ``import X.Y`` and ``from X import Y`` / ``from X.Y import Z``.
@@ -101,28 +109,7 @@ def _scan_banned_imports(path: Path) -> set[str]:
 
 def _live_item_paths(items: Iterable[pytest.Item]) -> set[Path]:
     """Return every source file that contributed at least one live-marked item."""
-    return {item.path for item in items if "live" in _marker_names(item)}
-
-
-def _check_markers(items: Iterable[pytest.Item]) -> list[str]:
-    """Return a list of violation strings for items violating the marker contract.
-
-    Enforces three invariants:
-
-    * exactly one of :data:`REQUIRED_MARKERS` is present;
-    * ``@pytest.mark.flaky`` is only permitted on live tests (ADR scope);
-    """
-    violations: list[str] = []
-    for item in items:
-        marks = _marker_names(item)
-        required = marks & REQUIRED_MARKERS
-        if not required:
-            violations.append(f"{item.nodeid}: missing required marker (one of {sorted(REQUIRED_MARKERS)})")
-        elif len(required) > 1:
-            violations.append(f"{item.nodeid}: has more than one of {sorted(REQUIRED_MARKERS)} ({sorted(required)})")
-        elif "flaky" in marks and "unit" in required:
-            violations.append(f"{item.nodeid}: @pytest.mark.flaky is only permitted on live tests")
-    return violations
+    return {item.path for item in items if _marker_names(item) & LIVE_ACCESS_MARKERS}
 
 
 def _check_banned_live_imports(paths: Iterable[Path]) -> list[str]:
@@ -131,28 +118,33 @@ def _check_banned_live_imports(paths: Iterable[Path]) -> list[str]:
     for path in sorted(paths):
         hits = _scan_banned_imports(path)
         if hits:
-            violations.append(f"{path}: imports banned symbol(s) {sorted(hits)} in a file containing @pytest.mark.live")
+            violations.append(
+                f"{path}: imports banned symbol(s) {sorted(hits)} in a file containing a live_read or live_write item"
+            )
     return violations
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Enforce marker discipline, banned-import scan, and live opt-in gating.
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Enforce the nine-marker contract, banned-import scan, and live opt-in gate.
 
     Runs ``tryfirst=True`` so it sees every collected item *before* pytest's
     built-in ``-m`` keyword filter deselects anything. This ensures the
     banned-live-import scan catches regressions even when the default
-    ``-m 'not live'`` would otherwise deselect the offending items.
+    ``-m 'unit'`` selector would otherwise deselect the offending items.
+
+    Ordering: the nine-marker contract (``_apply_marker_contract``) runs
+    first so any taxonomy violation short-circuits with a
+    :class:`pytest.UsageError` and so ``live_write`` items without the
+    three-factor bypass are dropped before the banned-import and opt-in
+    passes operate on the surviving items.
 
     Args:
-        items: Collected test items; mutated in place to add skip markers when
-            live tests are not opted in.
+        config: The active :class:`pytest.Config` for the session.
+        items: Collected test items; mutated in place by the shared helper
+            and by the live-opt-in skip step.
     """
-    marker_violations = _check_markers(items)
-    if marker_violations:
-        header = "Marker discipline violated (every test must be @pytest.mark.unit XOR @pytest.mark.live):"
-        message = header + "\n  " + "\n  ".join(marker_violations)
-        pytest.exit(message, returncode=2)
+    _apply_marker_contract(config, items)
 
     live_paths = _live_item_paths(items)
     if live_paths:
@@ -161,7 +153,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
             header = (
                 "Banned import in live-marked file "
                 "(see tests/README.md and "
-                ".vault/adr/2026-04-17-pytest-only-testing-adr.md):"
+                ".vault/adr/2026-04-17-pytest-markers-adr.md):"
             )
             message = header + "\n  " + "\n  ".join(import_violations)
             pytest.exit(message, returncode=2)
@@ -170,5 +162,5 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         skip_reason = f"Live tests disabled — set {LIVE_OPT_IN_ENV}=1 to enable"
         skip_marker = pytest.mark.skip(reason=skip_reason)
         for item in items:
-            if "live" in _marker_names(item):
+            if "live_read" in _marker_names(item):
                 item.add_marker(skip_marker)

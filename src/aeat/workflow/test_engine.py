@@ -21,25 +21,25 @@ from typing import cast
 
 import pytest
 
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.deadlines import (
+from ..config import PROJECT_ROOT, Settings
+from ..deadlines import (
     AutonomoProfile,
     FilingObligation,
     IVARegime,
     ObligationStatus,
     Schedule,
 )
-from aeat.errors import SiteHealthError
-from aeat.status import SiteHealthState
-from aeat.status._site_health_parsers import evaluate_response
-from aeat.submission import (
+from ..errors import SiteHealthError
+from ..status import SiteHealthState
+from ..status._site_health_parsers import evaluate_response
+from ..submission import (
     DraftStatus,
     FilingFinding,
     FilingFindingSeverity,
     LoadedCertificate,
     SubmissionPreflightError,
 )
-from aeat.workflow import (
+from . import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
     ExpedienteLike,
@@ -57,6 +57,8 @@ from aeat.workflow import (
     WorkflowResult,
     WorkflowStage,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
 # ── Test doubles ────────────────────────────────────────────────────────
 
@@ -311,7 +313,6 @@ def _fixtures() -> _Fixtures:
 # ── Happy path + dry-run default ────────────────────────────────────────
 
 
-@pytest.mark.unit
 class TestHappyPath:
     def test_run_next_happy_path(self) -> None:
         """Every stage fires and the engine reaches DONE."""
@@ -370,7 +371,6 @@ def _result(fx: _Fixtures) -> WorkflowResult:
 # ── Every abort reason ──────────────────────────────────────────────────
 
 
-@pytest.mark.unit
 class TestAbortReasons:
     def test_no_pending_obligation(self) -> None:
         fx = _fixtures()
@@ -530,7 +530,6 @@ class TestAbortReasons:
         assert result.steps[-1].stage is WorkflowStage.COMPUTING_DEADLINES
 
 
-@pytest.mark.unit
 class TestSiteUnavailableArm:
     """The typed ``SiteHealthError`` arm must fire BEFORE ``Exception``."""
 
@@ -588,7 +587,7 @@ class TestSiteUnavailableArm:
         # Proves the alert's run_id reflects the resolved obligation,
         # not the "-"/"-" placeholder hash.
         assert result.obligation is not None
-        from aeat.workflow._models import compute_run_id as _compute_run_id
+        from ._models import compute_run_id as _compute_run_id
 
         placeholder_hash = _compute_run_id(
             tax_id=fx.profile.tax_id,
