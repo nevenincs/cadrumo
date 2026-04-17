@@ -297,6 +297,96 @@ def test_extractor_handles_four_digit_casilla_ids(tmp_path: Path) -> None:
     assert casilla_1001.formula.op == BinaryFormulaOp.MUL
 
 
+def test_extractor_handles_compact_anexo_same_line(tmp_path: Path) -> None:
+    """``ANEXO I 01 Base imponible`` on one line — the post-heading content is kept."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    path = tmp_path / "compact.pdf"
+    pdf = canvas.Canvas(str(path), pagesize=A4)
+    pdf.setFont("Helvetica", 10)
+    # Heading + first casilla on the same physical line.
+    pdf.drawString(72, 720, "ANEXO I 01 Base imponible 1T")
+    pdf.drawString(72, 700, "03 Ingresos computables 1T")
+    pdf.showPage()
+    pdf.save()
+
+    source = _build_source(path)
+    modelo = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    ).extract()
+    ids = {c.casilla_id for c in modelo.casillas}
+    assert ids == {"01", "03"}
+
+
+def test_extractor_tolerates_identical_duplicate_declarations(tmp_path: Path) -> None:
+    """Benign repeated layouts (multilingual annex, summary page) are ignored."""
+    path = tmp_path / "dup.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=(
+            "01 Base imponible 1T",
+            "03 Ingresos computables 1T",
+            # Repeated layout further down the annex.
+            "01 Base imponible 1T",
+            "03 Ingresos computables 1T",
+        ),
+    )
+    source = _build_source(path)
+    modelo = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    ).extract()
+    ids = [c.casilla_id for c in modelo.casillas]
+    assert ids == ["01", "03"]
+
+
+def test_extractor_rejects_conflicting_duplicate_declarations(tmp_path: Path) -> None:
+    """A second declaration with a different label raises, not silently wins."""
+    path = tmp_path / "conflict.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=(
+            "01 Base imponible 1T",
+            "01 Otro valor inesperado",
+        ),
+    )
+    source = _build_source(path)
+    with pytest.raises(SchemaExtractionError, match="conflicting duplicate"):
+        BoeOrdenExtractor(
+            source=source,
+            modelo_code=ModeloCode.MODELO_130,
+            period="2025Q4",
+        ).extract()
+
+
+def test_extractor_accepts_formula_before_declaration(tmp_path: Path) -> None:
+    """Two-pass parser allows a formula to appear before its casilla declaration."""
+    path = tmp_path / "out-of-order.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=(
+            # Formula appears first — column-layout PDFs sometimes do this.
+            "Casilla 07 = Casilla 01 - Casilla 03",
+            "01 Base imponible 1T",
+            "03 Ingresos computables 1T",
+            "07 Rendimiento neto 1T",
+        ),
+    )
+    source = _build_source(path)
+    modelo = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    ).extract()
+    casilla_07 = next(c for c in modelo.casillas if c.casilla_id == "07")
+    assert isinstance(casilla_07.formula, BinaryOp)
+    assert casilla_07.formula.op == BinaryFormulaOp.SUB
+
+
 def test_extractor_raises_on_unparseable_formula(tmp_path: Path) -> None:
     path = tmp_path / "bad-formula.pdf"
     build_fake_boe_pdf(

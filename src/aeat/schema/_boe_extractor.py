@@ -354,7 +354,13 @@ class BoeOrdenExtractor:
         )
 
     def _read_annex_lines(self) -> list[tuple[int, str]]:
-        """Return ``(page_number, line)`` tuples starting after the annex heading."""
+        """Return ``(page_number, line)`` tuples starting after the annex heading.
+
+        For compact BOE layouts where the annex heading and the first
+        casilla share a single line (e.g. ``"ANEXO I 01 Base..."``),
+        the residue to the right of the heading match is preserved as
+        its own synthetic line so no declaration is lost.
+        """
         # Lazy import: pdfplumber pulls in pdfminer.six + pillow, adding
         # hundreds of ms to every `aeat` CLI help screen. Defer the cost
         # to the point where it is actually required.
@@ -368,8 +374,12 @@ class BoeOrdenExtractor:
                 lines = text.splitlines()
                 if annex_start_page is None:
                     for index, line in enumerate(lines):
-                        if _ANNEX_RE.match(line):
+                        match = _ANNEX_RE.match(line)
+                        if match:
                             annex_start_page = page.page_number
+                            residue = line[match.end() :].strip()
+                            if residue:
+                                collected.append((page.page_number, residue))
                             for remaining in lines[index + 1 :]:
                                 collected.append((page.page_number, remaining))
                             break
@@ -390,7 +400,26 @@ class BoeOrdenExtractor:
         self,
         annex_lines: list[tuple[int, str]],
     ) -> list[_CasillaDraft]:
+        """Two-pass parse: declarations first, formulas second.
+
+        Pass 1 walks every line and records casilla declarations +
+        block headings. Pass 2 walks again and binds formulas to
+        already-declared casillas. This decouples the parser from
+        pdfplumber's line-ordering guarantees (which can invert in
+        column-based layouts) and allows a formula line to appear
+        above its declaration without raising.
+
+        Duplicate declarations: if a second declaration is *identical*
+        to the first (same label and block heading), it is silently
+        ignored — BOE Ordenes occasionally repeat the form layout
+        (e.g. multilingual annexes or summary pages). A conflicting
+        duplicate (different label or different block) still raises
+        so silent data loss is impossible.
+        """
         declarations: dict[str, _CasillaDraft] = {}
+        pending_formulas: list[tuple[int, str, str]] = []
+
+        # Pass 1 — declarations and blocks.
         current_block: str | None = None
         for page_number, raw_line in annex_lines:
             line = raw_line.strip()
@@ -402,45 +431,56 @@ class BoeOrdenExtractor:
                 continue
             formula_match = _FORMULA_RE.match(line)
             if formula_match:
-                formula_id = formula_match.group("id")
-                if formula_id not in declarations:
-                    raise SchemaExtractionError(
-                        f"formula references undeclared casilla {formula_id!r} on page {page_number}",
-                    )
-                draft = declarations[formula_id]
-                if draft.formula is not None:
-                    raise SchemaExtractionError(
-                        f"casilla {formula_id!r} has more than one formula",
-                    )
-                declarations[formula_id] = _CasillaDraft(
-                    casilla_id=draft.casilla_id,
-                    label_es=draft.label_es,
-                    data_type=draft.data_type,
-                    block_es=draft.block_es,
-                    source_page=draft.source_page,
-                    formula=_parse_formula_prose(
-                        formula_id,
-                        formula_match.group("body"),
-                    ),
+                pending_formulas.append(
+                    (page_number, formula_match.group("id"), formula_match.group("body")),
                 )
                 continue
             casilla_match = _CASILLA_DECL_RE.match(line)
             if casilla_match and not line.lower().startswith("casilla"):
                 casilla_id = casilla_match.group("id")
-                if casilla_id in declarations:
-                    raise SchemaExtractionError(
-                        f"duplicate declaration for casilla {casilla_id!r} on page {page_number}",
-                    )
                 label_es = casilla_match.group("label")
+                incoming_block = current_block
+                if casilla_id in declarations:
+                    existing = declarations[casilla_id]
+                    if existing.label_es == label_es and existing.block_es == incoming_block:
+                        # Benign duplicate (repeated layout) — ignore.
+                        continue
+                    raise SchemaExtractionError(
+                        f"conflicting duplicate declaration for casilla "
+                        f"{casilla_id!r} on page {page_number}: existing "
+                        f"label/block {(existing.label_es, existing.block_es)!r} vs "
+                        f"new {(label_es, incoming_block)!r}",
+                    )
                 declarations[casilla_id] = _CasillaDraft(
                     casilla_id=casilla_id,
                     label_es=label_es,
                     data_type=_guess_data_type(label_es),
-                    block_es=current_block,
+                    block_es=incoming_block,
                     source_page=page_number,
                     formula=None,
                 )
                 continue
+
+        # Pass 2 — bind formulas to already-declared casillas.
+        for page_number, formula_id, formula_body in pending_formulas:
+            if formula_id not in declarations:
+                raise SchemaExtractionError(
+                    f"formula references undeclared casilla {formula_id!r} on page {page_number}",
+                )
+            draft = declarations[formula_id]
+            if draft.formula is not None:
+                raise SchemaExtractionError(
+                    f"casilla {formula_id!r} has more than one formula",
+                )
+            declarations[formula_id] = _CasillaDraft(
+                casilla_id=draft.casilla_id,
+                label_es=draft.label_es,
+                data_type=draft.data_type,
+                block_es=draft.block_es,
+                source_page=draft.source_page,
+                formula=_parse_formula_prose(formula_id, formula_body),
+            )
+
         if not declarations:
             raise SchemaExtractionError(
                 f"no casillas detected in BOE PDF {self._source.boe_ref!r}",

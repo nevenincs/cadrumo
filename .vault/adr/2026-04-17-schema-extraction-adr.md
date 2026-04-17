@@ -215,12 +215,25 @@ This is the project-wide pydantic mandate (memory:
     AnyHttpUrl)`.
   - `extract()` opens the PDF with `pdfplumber`, finds the annex
     start page by scanning for the heading `"ANEXO"` (Spanish),
-    walks tables on each annex page with
-    `page.extract_tables()`, parses casilla rows via a small
-    row-classifier (heading row vs. numbered casilla row vs.
-    formula row), matches Spanish formula prose against a regex
+    then walks lines via `page.extract_text()` through a small
+    two-pass classifier (heading, numbered casilla declaration,
+    formula). Matches Spanish formula prose against a regex
     library (`r"Casilla\s+(\d{2,4})\s*[=]\s*(.+)"` and the
     arithmetic operators), and returns a `Modelo` record.
+    Same-page annex content (`"ANEXO I 01 Base..."`) is
+    preserved via a post-match residue; duplicate declarations
+    are tolerated when identical, rejected when conflicting.
+    **Decision amendment (round-4 audit):** the original ADR
+    specified `page.extract_tables()` for column geometry.
+    Implementation switched to `page.extract_text()` + line
+    classifier because (a) BOE Ordenes use legal-prose layout
+    with inconsistent column alignment that degrades
+    `extract_tables` output, (b) the line-based pattern library
+    is simpler to extend for 303 / 390 follow-ups, and (c) every
+    observed Modelo 130 layout fits the line shape. A
+    table-geometry extractor is reserved for future modelos that
+    genuinely require column-based parsing — it would subclass
+    the line-based extractor rather than replace it.
   - The extractor is **deliberately narrow for v1**: it covers
     the patterns needed by Modelo 130. Follow-up PRs extend the
     pattern library for 303/390.
