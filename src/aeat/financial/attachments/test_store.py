@@ -189,6 +189,54 @@ def test_add_attachment_raises_persistence_error_for_missing_source(tmp_path: Pa
 
 
 @pytest.mark.unit
+def test_put_file_streams_large_payloads_and_is_idempotent(tmp_path: Path) -> None:
+    """put_file must stream in chunks and honour the write-once invariant."""
+    store = AttachmentStore.at(tmp_path)
+    source = tmp_path / "large.bin"
+    chunk_count = 3
+    data = b"x" * (chunk_count * 1024 * 1024 + 123)
+    source.write_bytes(data)
+    expected = hashlib.sha256(data).hexdigest()
+
+    first_digest, first_size = store.put_file(source)
+    blob_path = store.blob_path(first_digest)
+    first_mtime = blob_path.stat().st_mtime_ns
+
+    second_digest, second_size = store.put_file(source)
+
+    assert first_digest == second_digest == expected
+    assert first_size == second_size == len(data)
+    assert blob_path.stat().st_size == len(data)
+    assert blob_path.stat().st_mtime_ns == first_mtime
+    stray = sorted(p.name for p in store.blobs_dir.iterdir() if p.name != expected)
+    assert stray == []
+
+
+@pytest.mark.unit
+def test_put_file_raises_persistence_error_for_missing_source(tmp_path: Path) -> None:
+    """Missing source paths must surface as AttachmentPersistenceError."""
+    from aeat.financial.attachments import AttachmentPersistenceError
+
+    store = AttachmentStore.at(tmp_path)
+    missing = tmp_path / "absent.bin"
+    with pytest.raises(AttachmentPersistenceError):
+        store.put_file(missing)
+
+
+@pytest.mark.unit
+def test_list_attachments_kind_filter_accepts_str_enum_value(tmp_path: Path) -> None:
+    """Kind filtering must compare by value so string-like enum inputs work."""
+    store = AttachmentStore.at(tmp_path)
+    source = _write_source(tmp_path / "a.pdf", b"a-bytes")
+    _add_default(store, source, kind=AttachmentKind.INVOICE_PDF)
+
+    kind_as_enum = AttachmentKind(AttachmentKind.INVOICE_PDF.value)
+    matches = list_attachments(store, kind=kind_as_enum)
+    assert len(matches) == 1
+    assert matches[0].kind == AttachmentKind.INVOICE_PDF
+
+
+@pytest.mark.unit
 def test_manifest_round_trips_to_and_from_disk(tmp_path: Path) -> None:
     """A stored manifest reloads into an equal Attachment."""
     store = AttachmentStore.at(tmp_path)

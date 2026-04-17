@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from aeat.logging import get_logger
 
 from ._enums import AttachmentKind, AttachmentSource
-from ._errors import AttachmentNotFoundError, AttachmentPersistenceError, AttachmentValidationError
+from ._errors import AttachmentNotFoundError, AttachmentValidationError
 from ._models import Attachment
 from ._store import AttachmentStore
 
@@ -62,11 +62,7 @@ def add_attachment(
         AttachmentValidationError: When the supplied payload fails domain
             validation.
     """
-    try:
-        data = path.read_bytes()
-    except OSError as exc:
-        raise AttachmentPersistenceError(f"unable to read attachment source: {path}") from exc
-    digest = store.put_bytes(data)
+    digest, bytes_size = store.put_file(path)
     existing_transactions: tuple[str, ...] = ()
     existing_invoices: tuple[str, ...] = ()
     try:
@@ -87,7 +83,7 @@ def add_attachment(
                 "source_reference": source_reference,
                 "sha256": digest,
                 "mime_type": mime_type,
-                "bytes_size": len(data),
+                "bytes_size": bytes_size,
                 "captured_at": captured_at,
                 "linked_transaction_ids": merged_transactions,
                 "linked_invoice_ids": merged_invoices,
@@ -98,7 +94,7 @@ def add_attachment(
     except ValidationError as exc:
         raise AttachmentValidationError(f"invalid attachment payload for source: {path}") from exc
     store.write_manifest(attachment)
-    _LOGGER.info("added attachment %s from %s (%d bytes)", digest, path, len(data))
+    _LOGGER.info("added attachment %s from %s (%d bytes)", digest, path, bytes_size)
     return attachment
 
 
@@ -140,7 +136,7 @@ def list_attachments(
     """
     matches: list[Attachment] = []
     for attachment in store.iter_manifests():
-        if kind is not None and attachment.kind is not kind:
+        if kind is not None and attachment.kind != kind:
             continue
         if linked_to is not None and (
             linked_to not in attachment.linked_transaction_ids and linked_to not in attachment.linked_invoice_ids
