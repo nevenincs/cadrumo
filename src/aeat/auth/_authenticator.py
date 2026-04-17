@@ -550,12 +550,7 @@ class AeatAuthenticator:
         page: BrowserPageLike | None = None
         try:
             page = await context.new_page()
-            try:
-                response = await page.goto(target, timeout=self._navigation_timeout_ms)
-            except TypeError:
-                # Fake pages in unit tests do not accept a timeout kwarg;
-                # fall back to the positional signature.
-                response = await page.goto(target)
+            response = await page.goto(target, timeout=self._navigation_timeout_ms)
             if response is not None:
                 status_code = int(response.status)
                 certificate_recognised = 200 <= status_code < 400
