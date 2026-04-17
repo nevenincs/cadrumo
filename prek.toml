@@ -44,5 +44,8 @@ id = "relative-imports-mandate"
 name = "enforce relative imports inside src/aeat/ (#162)"
 language = "system"
 entry = "uv run python scripts/check_relative_imports.py"
-pass_filenames = false
+# Per-file scan keeps pre-commit fast on big repos; the script silently
+# drops paths outside src/aeat/ (tests/, scripts/, etc.) by design.
+pass_filenames = true
+files = "^src/aeat/.*\\.py$"
 types = ["python"]
