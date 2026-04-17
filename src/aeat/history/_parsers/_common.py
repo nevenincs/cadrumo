@@ -90,14 +90,56 @@ def find_casillas_table(soup: BeautifulSoup) -> Tag:
     raise HistoryParseError("could not locate casillas table in detail page")
 
 
+def _resolve_column_indices(table: Tag) -> tuple[int, int]:
+    """Return ``(casilla_col, valor_col)`` by header-text match.
+
+    Falls back to the canonical order ``(0, 1)`` when the table has
+    no ``<th>`` header row — preserves compatibility with AEAT
+    legacy pages that render the casillas table as a headerless
+    ``<tbody>``.
+
+    Raises:
+        HistoryParseError: If the header is present but neither the
+            "casilla" nor the "valor" column can be located.
+    """
+    header_cells: list[Tag] = []
+    for th in table.find_all("th"):
+        if isinstance(th, Tag):
+            header_cells.append(th)
+    if not header_cells:
+        return 0, 1
+    casilla_idx: int | None = None
+    valor_idx: int | None = None
+    for i, cell in enumerate(header_cells):
+        label = normalise(cell.get_text(" ", strip=True))
+        if casilla_idx is None and label == "casilla":
+            casilla_idx = i
+        elif valor_idx is None and label == "valor":
+            valor_idx = i
+    if casilla_idx is None or valor_idx is None:
+        raise HistoryParseError("casillas table header does not expose 'Casilla' and 'Valor' columns")
+    return casilla_idx, valor_idx
+
+
 def extract_casillas(table: Tag) -> tuple[dict[str, str], tuple[str, ...]]:
     """Extract the ``{casilla_id: raw_value}`` mapping from ``table``.
+
+    Column indices are resolved from the header row so AEAT column
+    reordering between campaigns does not break the parser (Gemini
+    review #195). Headerless legacy layouts fall back to the
+    canonical ``(0, 1)`` order.
 
     Returns:
         A tuple ``(casillas, warnings)``. ``warnings`` carries
         non-fatal observations (empty table, dropped rows) for the
         caller to attach to :attr:`FiledModelo.parse_warnings`.
+
+    Raises:
+        HistoryParseError: If the header row exists but does not
+            carry both ``Casilla`` and ``Valor`` columns.
     """
+    casilla_idx, valor_idx = _resolve_column_indices(table)
+    required_width = max(casilla_idx, valor_idx) + 1
     warnings: list[str] = []
     casillas: dict[str, str] = {}
     tbody = table.find("tbody")
@@ -107,11 +149,11 @@ def extract_casillas(table: Tag) -> tuple[dict[str, str], tuple[str, ...]]:
         if not isinstance(row, Tag):
             continue
         cells = _direct_children(row, "td")
-        if len(cells) < 2:
+        if len(cells) < required_width:
             continue
         rows_seen += 1
-        casilla_id = cells[0].get_text(" ", strip=True)
-        value = cells[1].get_text(" ", strip=True)
+        casilla_id = cells[casilla_idx].get_text(" ", strip=True)
+        value = cells[valor_idx].get_text(" ", strip=True)
         if not casilla_id:
             warnings.append("row with empty casilla id skipped")
             continue
