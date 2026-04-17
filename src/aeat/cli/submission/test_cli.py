@@ -23,7 +23,6 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Point the submission engine at tmp dirs via env vars."""
     monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(tmp_path / "submissions"))
     monkeypatch.setenv("AEAT_SUBMISSION_BROWSER_TRACE_DIR", str(tmp_path / "traces"))
-    monkeypatch.setenv("AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION", "true")
     return tmp_path
 
 
@@ -80,14 +79,19 @@ class TestSubmitCommand:
         assert result.exit_code == 2
         assert "refusing" in result.output.lower()
 
-    def test_runs_live_with_flag(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
+    def test_live_submit_refuses_stub_transport(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
         result = runner.invoke(
             app,
             ["submit", str(draft_path), "--i-understand-this-is-real"],
+            env={
+                "AEAT_CERTIFICATE_PATH": "",
+                "AEAT_CERTIFICATE_PASSWORD_SECRET": "",
+                "AEAT_LIVE_SUBMIT_ENABLED": "true",
+            },
         )
-        assert result.exit_code == 0, result.output
-        assert "LIVE submission OK" in result.output
-        assert "SUBMITTED" in result.output
+        assert result.exit_code == 1, result.output
+        assert "refusing" in result.output.lower()
+        assert "stubbed" in result.output.lower()
 
 
 class TestShowAndList:
