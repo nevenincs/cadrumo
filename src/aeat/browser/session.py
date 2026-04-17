@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from playwright.async_api import (
@@ -75,6 +76,7 @@ class BrowserSession:
         self,
         *,
         cert: LoadedCertificate | None = None,
+        storage_state_path: Path | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
@@ -117,6 +119,7 @@ class BrowserSession:
             )
 
             self.profile.ensure_storage_dir()
+            effective_storage_state_path = storage_state_path or self.profile.storage_state_path
 
             context_kwargs: dict[str, Any] = {
                 "locale": self.profile.locale,
@@ -125,8 +128,8 @@ class BrowserSession:
             if self.profile.user_agent:
                 context_kwargs["user_agent"] = self.profile.user_agent
 
-            # Playwright will fail if storage_state points to an empty string or invalid JSON
-            context_kwargs["storage_state"] = str(self.profile.storage_state_path)
+            if effective_storage_state_path.exists():
+                context_kwargs["storage_state"] = str(effective_storage_state_path)
 
             if cert is not None:
                 context_kwargs["client_certificates"] = build_client_certificates_kwarg(

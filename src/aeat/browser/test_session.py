@@ -79,9 +79,45 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert evasion.called
     assert context.kwargs["locale"] == "es-ES"  # type: ignore
     assert context.kwargs["timezone_id"] == "Europe/Madrid"  # type: ignore
-    assert str(tmp_path / "state.json") in context.kwargs["storage_state"]  # type: ignore
+    assert "storage_state" not in context.kwargs  # type: ignore
     # No cert supplied → marker must NOT be stamped on the context.
     assert not hasattr(context, "_aeat_certificate_thumbprint")
+
+
+@pytest.mark.asyncio
+async def test_browser_session_uses_existing_storage_state_file(tmp_path: Path) -> None:
+    """Existing storage-state JSON is passed through to new_context."""
+    settings = Settings()
+    storage_state_path = tmp_path / "state.json"
+    storage_state_path.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
+    profile = Profile(name="test", storage_state_path=storage_state_path)
+    session = BrowserSession(
+        playwright=StubPlaywright(),  # type: ignore
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    context = await session.create_context()
+    assert context.kwargs["storage_state"] == str(storage_state_path)  # type: ignore
+
+
+@pytest.mark.asyncio
+async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Path) -> None:
+    """Explicit resume paths override the profile default when provided."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "profile.json")
+    override_path = tmp_path / "resume.json"
+    override_path.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
+    session = BrowserSession(
+        playwright=StubPlaywright(),  # type: ignore
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    context = await session.create_context(storage_state_path=override_path)
+    assert context.kwargs["storage_state"] == str(override_path)  # type: ignore
 
 
 @pytest.mark.asyncio
