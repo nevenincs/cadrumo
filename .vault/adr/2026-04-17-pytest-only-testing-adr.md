@@ -69,7 +69,7 @@ A single `tests/conftest.py` `pytest_collection_modifyitems` hook implements thr
    `pytest_httpx`, `freezegun`, and `time_machine` are unit-only by ADR and must not appear in a live file even if installed. AST-based scan; never execute the file.
 3. **Live opt-in gate**: when any collected item is marked `live`, the hook checks `AEAT_LIVE_TESTS_ENABLED`. If unset/false, the entire live subset is skipped with a single, clear reason string. Individual tests are not silently skipped.
 
-Collection-time failure surface = hard, single-line `pytest.fail` with the offending file and symbol. No warnings, no "--strict" flag required.
+Collection-time failure surface = hard, single-line `pytest.exit(..., returncode=2)` with the offending file and symbol. `pytest.exit` (not `pytest.fail`) is the correct primitive here because the violations are session-wide — a single malformed live file taints the whole collection. No warnings, no "--strict" flag required.
 
 ### 4 — marker configuration
 
