@@ -256,6 +256,68 @@ def test_eu_member_residency_requires_member_state() -> None:
         )
 
 
+def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
+    """ES-to-ES domestic GOODS / SERVICES criteria without rate_tier raise."""
+    with pytest.raises(ValueError, match="rate_tier is required"):
+        VATClassificationCriteria(
+            transaction_date=date(2025, 6, 15),
+            issuer_residency=IssuerResidency.ES_MAINLAND,
+            customer_residency=CustomerResidency.ES_MAINLAND,
+            customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+            kind=TransactionKind.GOODS,
+            direction=InvoiceDirection.ISSUED,
+            rate_tier=None,
+        )
+
+
+def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
+    """RC-kind transactions route through R01-R03, not R05 — rate_tier optional."""
+    # Should NOT raise: construction RC routes to DOMESTIC_REVERSE_CHARGE.
+    criteria = VATClassificationCriteria(
+        transaction_date=date(2025, 6, 15),
+        issuer_residency=IssuerResidency.ES_MAINLAND,
+        customer_residency=CustomerResidency.ES_MAINLAND,
+        customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+        kind=TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
+        direction=InvoiceDirection.ISSUED,
+        rate_tier=None,
+    )
+    result = classify_vat(criteria)
+    assert result.matched_rule_id == "R01_construction_reverse_charge"
+
+
+def test_es_to_es_immovable_property_does_not_require_rate_tier() -> None:
+    """Immovable property routes to DOMESTIC_EXEMPT (R04) — rate_tier not needed."""
+    criteria = VATClassificationCriteria(
+        transaction_date=date(2025, 6, 15),
+        issuer_residency=IssuerResidency.ES_MAINLAND,
+        customer_residency=CustomerResidency.ES_MAINLAND,
+        customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
+        kind=TransactionKind.IMMOVABLE_PROPERTY,
+        direction=InvoiceDirection.ISSUED,
+        rate_tier=None,
+    )
+    result = classify_vat(criteria)
+    assert result.category is VATCategory.DOMESTIC_EXEMPT
+
+
+def test_cross_border_criteria_do_not_require_rate_tier() -> None:
+    """Non-ES-to-ES criteria never require rate_tier (classifier resolves it from substrate)."""
+    # Should NOT raise: ES->DE intra-community supply doesn't need rate_tier.
+    criteria = VATClassificationCriteria(
+        transaction_date=date(2025, 6, 15),
+        issuer_residency=IssuerResidency.ES_MAINLAND,
+        customer_residency=CustomerResidency.EU_MEMBER,
+        customer_member_state=EUMemberState.DE,
+        customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+        kind=TransactionKind.GOODS,
+        direction=InvoiceDirection.ISSUED,
+        rate_tier=None,
+    )
+    result = classify_vat(criteria)
+    assert result.category is VATCategory.INTRA_COMMUNITY_SUPPLY
+
+
 def test_classification_rate_resolution_uses_transaction_date() -> None:
     """The 2024 baseline lookup returns the 2024 rate record."""
     result = classify_vat(
