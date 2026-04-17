@@ -134,6 +134,10 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "financial" / "invoices",
         description="Directory where the invoice catalogue JSON file is stored (#75)",
     )
+    aeat_attachments_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "attachments",
+        description="Root directory for the attachment byte and manifest store",
+    )
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
