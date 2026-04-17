@@ -56,7 +56,6 @@ def next_cmd(
         raise typer.Exit(code=2)
     run_engine_next(
         dry_run=not no_dry_run,
-        override_confirmation=i_understand_this_is_real,
         sync_first=sync_first,
         as_json=as_json,
     )
