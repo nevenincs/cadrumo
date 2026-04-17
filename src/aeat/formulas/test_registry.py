@@ -17,6 +17,8 @@ from ._registry import RulesetRegistry, get_registry
 from ._rulesets.modelo_130_2024 import RULESET as MODELO_130_2024
 from ._rulesets.modelo_130_2025 import RULESET as MODELO_130_2025
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
 
 @pytest.mark.unit
 def test_registry_ships_modelo_130_2024_and_2025() -> None:
