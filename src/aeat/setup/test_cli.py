@@ -7,11 +7,11 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.auth import CertificateBackend
-from aeat.cli import app
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.setup import SetupAnswers
+from ..auth import CertificateBackend
+from ..cli import app
+from ..deadlines import IVARegime
+from ..i18n import Language
+from . import SetupAnswers
 
 pytestmark = pytest.mark.unit
 

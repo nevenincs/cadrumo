@@ -12,17 +12,18 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date
 
-from aeat.i18n import Translatable
-from aeat.models._applicability import ModeloApplicability
-from aeat.models._categories import (
+from ...i18n import Translatable
+from ...portals import Portal
+from .._applicability import ModeloApplicability
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._citations import LegalCitation
-from aeat.models._codes import ModeloCode
-from aeat.models._metadata import ModeloMetadata
+from .._citations import LegalCitation
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
 
 RETRIEVAL_DATE: date = date(2026, 4, 13)
 
@@ -100,7 +101,7 @@ def build_entry(
     applicability: ModeloApplicability,
     caps_into: ModeloCode | None,
     related_modelos: Sequence[ModeloCode],
-    submission_portal_hint: str,
+    submission_portal: Portal | None,
     known_gotchas: Sequence[str],
 ) -> ModeloMetadata:
     """Assemble a :class:`ModeloMetadata` entry for a single modelo."""
@@ -114,6 +115,6 @@ def build_entry(
         applicability=applicability,
         caps_into=caps_into,
         related_modelos=tuple(related_modelos),
-        submission_portal_hint=submission_portal_hint,
+        submission_portal=submission_portal,
         known_gotchas=tuple(known_gotchas),
     )

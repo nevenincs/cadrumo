@@ -18,12 +18,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from ._errors import JustificanteVerificationError
 
 if TYPE_CHECKING:  # pragma: no cover - typing only, avoids aeat.config cycle
-    from aeat.browser import BrowserSession
+    from ..browser import BrowserSession
 
 _logger = get_logger(__name__)
 
@@ -63,9 +62,9 @@ async def verify_csv(
         try:
             from playwright.async_api import async_playwright
 
-            from aeat.browser import BrowserSession
-            from aeat.browser.profile import Profile
-            from aeat.config import load_settings
+            from ..browser import BrowserSession
+            from ..browser.profile import Profile
+            from ..config import load_settings
 
             settings = load_settings()
             storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json"

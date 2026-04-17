@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from aeat.inbox._models import Inbox, Notificacion, NotificacionPriority
+from ._models import Inbox, Notificacion, NotificacionPriority
 
 
 def next_appeal_deadline(

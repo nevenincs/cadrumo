@@ -12,8 +12,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from ._protocols import (
     CasillaCollection,
     CasillaSchemaProvider,

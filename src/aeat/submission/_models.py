@@ -14,7 +14,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.i18n import Translatable
+from ..filing import FilingAmendment
+from ..i18n import Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -118,6 +119,30 @@ class SubmittedFiling(BaseModel):
         if self.acknowledged_at is not None and self.acknowledged_at < self.submitted_at:
             raise ValueError(f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})")
         return self
+
+
+class AmendmentSubmissionResult(BaseModel):
+    """Typed submission audit record for one :class:`FilingAmendment`.
+
+    Attributes:
+        amendment_id: Stable identifier of the amendment that was
+            submitted.
+        amendment: The amendment payload used for transport.
+        filing: The persisted submission record emitted by the
+            underlying submission engine.
+        dry_run: Whether the submission stopped before the final
+            irreversible AEAT confirmation click.
+        submitted_at: UTC timestamp of the delegated submission
+            attempt.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    amendment_id: str = Field(min_length=1)
+    amendment: FilingAmendment
+    filing: SubmittedFiling
+    dry_run: bool = True
+    submitted_at: datetime
 
 
 def make_submission_id(draft_id: str, attempt_ordinal: int) -> str:

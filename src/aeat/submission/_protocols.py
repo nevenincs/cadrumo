@@ -25,7 +25,7 @@ Rebase-swap against the real siblings is a mechanical one-file diff.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
@@ -34,7 +34,7 @@ from typing import Any, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from aeat.i18n import Translatable
+from ..i18n import Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -232,9 +232,9 @@ class FilingDraftLike(Protocol):
     modelo: str
     period: str
     profile_tax_id: str
-    status: DraftStatus
-    values: Mapping[str, str]
-    findings: tuple[FilingFinding, ...]
+    status: object
+    values: Mapping[str, str] | Iterable[object]
+    findings: tuple[object, ...]
 
 
 @runtime_checkable

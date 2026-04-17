@@ -15,35 +15,48 @@ yet. Wiring the production providers is a follow-up rebase.
 
 from __future__ import annotations
 
+import asyncio
 import json
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, cast
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.config import load_settings
-from aeat.filing import (
+from ...config import load_settings
+from ...filing import (
+    FilingAmendment,
+    FilingAmendmentError,
     FilingDraft,
     FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
+    build_complementaria,
     build_draft,
     iter_findings,
+    load_amendment,
     validate_draft,
 )
-from aeat.filing.testing import (
+from ...filing.testing import (
     SyntheticProfile,
     default_schema_provider,
 )
-from aeat.logging import get_logger
+from ...logging import get_logger
+from ...submission import SubmissionEngine, SubmissionError
+from ..submission._helpers import build_engine as build_submission_engine
 
 app = typer.Typer(
     name="filing",
     no_args_is_help=True,
     help="Filing draft engine commands (#39).",
+)
+complementaria_app = typer.Typer(
+    name="complementaria",
+    no_args_is_help=True,
+    help="Build and submit amendment filings (#93).",
 )
 
 _console = Console()
@@ -64,6 +77,11 @@ def _drafts_dir() -> Path:
 def _draft_filename(draft: FilingDraft) -> str:
     """Build the canonical filename for a draft on disk."""
     return f"{draft.modelo}_{draft.period}_{draft.draft_id}.json"
+
+
+def _submission_engine() -> SubmissionEngine:
+    """Return a submission engine instance for amendment commands."""
+    return build_submission_engine()
 
 
 def _load_inputs(path: Path) -> dict[str, object]:
@@ -108,6 +126,62 @@ def _save_draft(draft: FilingDraft) -> Path:
         encoding="utf-8",
     )
     return target
+
+
+def _parse_json_argument(raw: str) -> dict[str, object]:
+    """Parse ``raw`` as either an inline JSON object or a JSON file path."""
+    candidate = Path(raw)
+    payload_text = candidate.read_text(encoding="utf-8") if candidate.exists() else raw
+    try:
+        payload = json.loads(payload_text)
+    except json.JSONDecodeError as exc:
+        raise typer.BadParameter(f"invalid amendment JSON {raw!r}: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise typer.BadParameter("amendment payload must be a JSON object")
+    return payload
+
+
+def _parse_amendment_inputs(raw_inputs: Mapping[str, object]) -> dict[str, object]:
+    """Coerce the amendment input payload into filing-builder-compatible values."""
+    parsed: dict[str, object] = {}
+    for key, value in raw_inputs.items():
+        if not isinstance(key, str):
+            raise typer.BadParameter(f"updated input key must be a string, got {type(key).__name__}")
+        if isinstance(value, dict):
+            parsed[key] = _parse_amendment_inputs(cast(Mapping[str, object], value))
+        elif isinstance(value, str | int | bool) or value is None:
+            parsed[key] = value
+        elif isinstance(value, float):
+            parsed[key] = Decimal(str(value))
+        else:
+            raise typer.BadParameter(f"unsupported amendment value type for {key!r}: {type(value).__name__}")
+    return parsed
+
+
+def _render_amendment(amendment: FilingAmendment) -> None:
+    """Pretty-print a built amendment for operator review."""
+    header = Table(title=f"Amendment {amendment.amendment_id}", show_header=False)
+    header.add_row("submission_id", amendment.submission_id)
+    header.add_row("modelo", amendment.original_model)
+    header.add_row("period", amendment.original_period)
+    header.add_row("kind", amendment.amendment_kind.value)
+    header.add_row("original_csv", amendment.original_csv)
+    header.add_row("created_at", amendment.created_at.isoformat())
+    _console.print(header)
+
+    delta_table = Table(title="Casilla delta")
+    delta_table.add_column("casilla")
+    delta_table.add_column("old")
+    delta_table.add_column("new")
+    delta_table.add_column("reason")
+    for change in amendment.delta:
+        delta_table.add_row(
+            change.casilla_code,
+            "" if change.old_value is None else str(change.old_value),
+            str(change.new_value),
+            change.reason,
+        )
+    _console.print(delta_table)
 
 
 def _render_draft(draft: FilingDraft, *, findings_only: bool = False) -> None:
@@ -276,6 +350,83 @@ def list_drafts(
             str(path),
         )
     _console.print(table)
+
+
+@complementaria_app.command("build")
+def build_complementaria_cmd(
+    modelo: Annotated[str, typer.Argument(help="Modelo string ID, e.g. 130")],
+    period: Annotated[str, typer.Argument(help="Period identifier, e.g. 2024Q1")],
+    delta_json: Annotated[
+        str,
+        typer.Argument(
+            help="Inline JSON object or path to JSON with original_submission_id + updated_inputs",
+        ),
+    ],
+) -> None:
+    """Build an amendment from a persisted submission plus revised inputs."""
+    payload = _parse_json_argument(delta_json)
+    original_submission_id = payload.get("original_submission_id")
+    if not isinstance(original_submission_id, str) or not original_submission_id:
+        raise typer.BadParameter("amendment payload must include non-empty 'original_submission_id'")
+    raw_inputs = payload.get("updated_inputs")
+    if not isinstance(raw_inputs, dict):
+        raise typer.BadParameter("amendment payload must include object 'updated_inputs'")
+    reasons = payload.get("reasons")
+    parsed_inputs = _parse_amendment_inputs(cast(Mapping[str, object], raw_inputs))
+    if reasons is not None:
+        if not isinstance(reasons, dict):
+            raise typer.BadParameter("'reasons' must be a JSON object of casilla -> reason")
+        parsed_inputs["_reasons"] = _parse_amendment_inputs(cast(Mapping[str, object], reasons))
+
+    engine = _submission_engine()
+    original = engine.load_submission(original_submission_id)
+    if original.modelo != modelo:
+        raise typer.BadParameter(
+            f"payload modelo {modelo!r} does not match original submission modelo {original.modelo!r}"
+        )
+    if original.period != period:
+        raise typer.BadParameter(
+            f"payload period {period!r} does not match original submission period {original.period!r}"
+        )
+    try:
+        amendment = build_complementaria(original, parsed_inputs)
+    except FilingAmendmentError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    _render_amendment(amendment)
+
+
+@complementaria_app.command("submit")
+def submit_complementaria_cmd(
+    amendment_id: Annotated[str, typer.Argument(help="Persisted amendment id to submit")],
+    live: Annotated[
+        bool,
+        typer.Option("--live", help="Perform a live submission instead of the safe dry-run default."),
+    ] = False,
+) -> None:
+    """Submit a persisted amendment, dry-run by default."""
+    amendment = load_amendment(amendment_id)
+    engine = _submission_engine()
+
+    dry_run = not live
+    try:
+        submission_result = asyncio.run(
+            engine.submit_amendment(
+                amendment,
+                dry_run=dry_run,
+            )
+        )
+    except SubmissionError as exc:
+        _console.print(f"[red]refusing:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    status_label = "dry-run" if submission_result.dry_run else "LIVE"
+    typer.echo(
+        f"{status_label} amendment submission OK amendment_id={submission_result.amendment_id} "
+        f"submission_id={submission_result.filing.submission_id} "
+        f"status={submission_result.filing.status.value}"
+    )
+
+
+app.add_typer(complementaria_app, name="complementaria", help="Build and submit amendment filings (#93).")
 
 
 __all__ = ["app"]

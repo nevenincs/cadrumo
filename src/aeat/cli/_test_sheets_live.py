@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from aeat.cli._live import (
+from ._live import (
     requires_live_enabled,
     requires_scratch_sheet,
     sheets_service,

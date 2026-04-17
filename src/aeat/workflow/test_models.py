@@ -8,7 +8,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from aeat.workflow import (
+from . import (
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
@@ -40,7 +40,12 @@ class TestWorkflowStageOrdering:
 
 @pytest.mark.unit
 class TestWorkflowAbortReasons:
-    """The nine abort reasons must match the issue spec exactly."""
+    """The abort reasons must match the issue spec exactly.
+
+    ``SITE_UNAVAILABLE`` was added for #95 to carry the typed
+    site-health pause-and-alert contract alongside the original nine
+    reasons.
+    """
 
     def test_exact_nine_reasons(self) -> None:
         """Every abort reason declared in the ADR is present exactly once."""
@@ -53,6 +58,7 @@ class TestWorkflowAbortReasons:
             "PREFLIGHT_FAILED",
             "CERT_INVALID",
             "USER_CANCELLED",
+            "SITE_UNAVAILABLE",
             "UNHANDLED_EXCEPTION",
         }
         assert {r.value for r in WorkflowAbortReason} == expected

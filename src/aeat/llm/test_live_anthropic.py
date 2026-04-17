@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import Settings
-from aeat.llm import LLMClient, LLMRequest
+from ..config import Settings
+from . import LLMClient, LLMRequest
 
 
 class _LiveSettings(Settings):

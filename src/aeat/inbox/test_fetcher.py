@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.inbox import (
+from . import (
     InboxAcknowledgeError,
     InboxFetcher,
     NotificacionKind,

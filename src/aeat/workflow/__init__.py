@@ -6,8 +6,8 @@ the deadline engine (#38), the self-healing sync runner (#11), the
 filing draft engine (#39), the submission engine (#42), and the
 in-flight status / inbox / certificate surfaces into one ordered
 pipeline. The workflow is **dry-run by default**; the live path
-requires both ``dry_run=False`` and ``override_confirmation=True`` at
-the API level, mirroring the submission engine's gate verbatim.
+requires an explicit ``dry_run=False`` call at the API level, after
+which the submission engine owns the live-write gates verbatim.
 
 Public API discipline: callers outside this subpackage must import
 only from :mod:`aeat.workflow`. The underscored modules are
@@ -20,7 +20,15 @@ See [[2026-04-12-workflow-engine-research]],
 
 from __future__ import annotations
 
-from aeat.workflow._adapters import (
+# Resolve the ``WorkflowStep.site_health_alert`` forward reference once
+# ``aeat.status.SiteHealthAlert`` is importable. Importing at this
+# layer breaks the cycle: ``aeat.workflow._models`` must not import
+# from ``aeat.status`` at module load time, but the public
+# subpackage boundary is a safe rebuild site.
+from ..status import SiteHealthAlert as _SiteHealthAlert
+from ..status import _site_health as _site_health_module
+from . import _models as _workflow_models
+from ._adapters import (
     DeadlineEngineAdapter,
     FilingDraftBuilderAdapter,
     JsonFileInputsProvider,
@@ -28,21 +36,21 @@ from aeat.workflow._adapters import (
     SyncRunnerAdapter,
     default_engine,
 )
-from aeat.workflow._engine import WorkflowEngine
-from aeat.workflow._errors import (
+from ._engine import WorkflowEngine
+from ._errors import (
     WorkflowAbortedError,
     WorkflowComponentError,
     WorkflowError,
 )
-from aeat.workflow._models import (
+from ._models import (
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
     compute_run_id,
 )
-from aeat.workflow._persistence import list_runs, load_run, save_run
-from aeat.workflow._protocols import (
+from ._persistence import list_runs, load_run, save_run
+from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
     ExpedienteLike,
@@ -56,6 +64,11 @@ from aeat.workflow._protocols import (
     SyncRunnerProtocol,
     SyncRunSummary,
 )
+
+_workflow_models.SiteHealthAlert = _SiteHealthAlert  # type: ignore[attr-defined]
+_site_health_module.WorkflowStage = WorkflowStage  # type: ignore[attr-defined]
+_SiteHealthAlert.model_rebuild()
+WorkflowStep.model_rebuild()
 
 __all__ = [
     "CertificateBundleProtocol",
