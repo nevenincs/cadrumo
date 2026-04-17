@@ -31,11 +31,10 @@ from typing import Any
 
 from pydantic import TypeAdapter
 
-from aeat._paths import resolve_relative_subpath
-from aeat.config import Settings, load_settings
-from aeat.i18n import Language, TranslationError, get_translation
-from aeat.logging import get_logger
-
+from .._paths import resolve_relative_subpath
+from ..config import Settings, load_settings
+from ..i18n import Language, TranslationError, get_translation
+from ..logging import get_logger
 from ._schema import (
     Chapter,
     Manual,

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.llm import LLMProvider, LLMRequest, LLMResponse, Translation
+from . import LLMProvider, LLMRequest, LLMResponse, Translation
 
 
 @pytest.mark.unit

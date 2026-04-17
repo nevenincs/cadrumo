@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
-from aeat.models._categories import (
+from ...portals import Portal
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._codes import ModeloCode
-from aeat.models._entries._common import (
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
+from ._common import (
     build_applicability,
     build_entry,
     make_citation,
 )
-from aeat.models._metadata import ModeloMetadata
-from aeat.portals import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_100,

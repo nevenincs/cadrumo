@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import ProviderValidation, RawTransaction, SourceFormat, detect_provider
-from aeat.financial.providers._base import parse_amount_value
+from .. import ProviderValidation, RawTransaction, SourceFormat, detect_provider
+from ._base import parse_amount_value
 
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
 

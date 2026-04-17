@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.status import AeatStatusKind, Expediente, StatusCache
+from . import AeatStatusKind, Expediente, StatusCache
 
 pytestmark = pytest.mark.unit
 

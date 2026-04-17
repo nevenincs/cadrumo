@@ -10,9 +10,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.config import load_settings
-from aeat.financial._raw_transaction import RawTransaction, SourceFormat
-from aeat.financial.providers._base import (
+from ...config import load_settings
+from .._raw_transaction import RawTransaction, SourceFormat
+from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
     ProviderValidation,

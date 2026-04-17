@@ -13,16 +13,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from aeat.deadlines import (
+from ..deadlines import (
     AutonomoProfile,
     DeadlineEngine,
     ModeloIdentifier,
     Schedule,
 )
-from aeat.logging import get_logger
-from aeat.models._categories import TaxpayerProfile
-from aeat.models._codes import ModeloCode
-from aeat.models._entries import (
+from ..logging import get_logger
+from ._categories import TaxpayerProfile
+from ._codes import ModeloCode
+from ._entries import (
     modelo_036,
     modelo_037,
     modelo_100,
@@ -44,8 +44,8 @@ from aeat.models._entries import (
     modelo_720,
     modelo_840,
 )
-from aeat.models._errors import RegistryIntegrityError, UnknownModeloError
-from aeat.models._metadata import ModeloMetadata
+from ._errors import RegistryIntegrityError, UnknownModeloError
+from ._metadata import ModeloMetadata
 
 _LOG = get_logger(__name__)
 
@@ -114,7 +114,7 @@ def _check_submission_portal(entries: Mapping[ModeloCode, ModeloMetadata]) -> No
     # aeat.portals (which itself imports aeat.models.ModeloCode). The
     # import is routed through the public package root so it exercises
     # the lazy __getattr__ surface, keeping us on the documented API.
-    from aeat.portals import PORTAL_REGISTRY
+    from ..portals import PORTAL_REGISTRY
 
     for code, metadata in entries.items():
         portal = metadata.submission_portal

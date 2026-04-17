@@ -22,8 +22,8 @@ context.
 
 from __future__ import annotations
 
-from aeat.submission._engine import SubmissionEngine
-from aeat.submission._errors import (
+from ._engine import SubmissionEngine
+from ._errors import (
     AeatLiveConfirmationDeclinedError,
     AeatLiveSubmitNotEnabledError,
     AeatLiveTransportUnavailableError,
@@ -33,15 +33,15 @@ from aeat.submission._errors import (
     SubmissionPreflightError,
     SubmissionRejectionError,
 )
-from aeat.submission._models import (
+from ._models import (
     AmendmentSubmissionResult,
     SubmissionAttempt,
     SubmissionStatus,
     SubmittedFiling,
     make_submission_id,
 )
-from aeat.submission._preflight import Preflight
-from aeat.submission._protocols import (
+from ._preflight import Preflight
+from ._protocols import (
     CasillaCatalogue,
     CasillaInputKind,
     CasillaRecord,
@@ -59,9 +59,9 @@ from aeat.submission._protocols import (
     Portal,
     PortalCatalogue,
 )
-from aeat.submission._submitters import Submitter
-from aeat.submission._submitters._contract import BrowserSessionLike
-from aeat.submission._submitters.modelo130 import Modelo130Submitter
+from ._submitters import Submitter
+from ._submitters._contract import BrowserSessionLike
+from ._submitters.modelo130 import Modelo130Submitter
 
 __all__ = [
     "AeatLiveConfirmationDeclinedError",

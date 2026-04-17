@@ -12,7 +12,7 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from aeat.config import load_settings
+from ...config import load_settings
 
 _CONSOLE = Console()
 

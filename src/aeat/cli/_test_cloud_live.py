@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.cli._live import (
+from ._live import (
     cloudfunctions_client,
     cloudrun_client,
     requires_live_enabled,

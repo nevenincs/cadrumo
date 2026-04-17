@@ -23,10 +23,9 @@ from pathlib import Path
 import httpx
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict
 
-from aeat._paths import resolve_relative_subpath
-from aeat.config import Settings, load_settings
-from aeat.logging import get_logger
-
+from .._paths import resolve_relative_subpath
+from ..config import Settings, load_settings
+from ..logging import get_logger
 from ._loader import resolve_part_root
 from ._schema import FetchedManualPart, ManualId, ManualPart
 from .errors import ManifestError

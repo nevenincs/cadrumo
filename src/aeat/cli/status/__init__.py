@@ -20,7 +20,7 @@ from datetime import date
 import typer
 from rich.console import Console
 
-from aeat.logging import get_logger
+from ...logging import get_logger
 
 logger = get_logger(__name__)
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial.attachments import (
+from . import (
     Attachment,
     AttachmentKind,
     AttachmentNotFoundError,
@@ -182,7 +182,7 @@ def test_iter_manifests_is_sorted_by_filename(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_add_attachment_raises_persistence_error_for_missing_source(tmp_path: Path) -> None:
     """Source-read failures are translated to AttachmentPersistenceError."""
-    from aeat.financial.attachments import AttachmentPersistenceError
+    from . import AttachmentPersistenceError
 
     store = AttachmentStore.at(tmp_path)
     missing = tmp_path / "does-not-exist.bin"
@@ -217,7 +217,7 @@ def test_put_file_streams_large_payloads_and_is_idempotent(tmp_path: Path) -> No
 @pytest.mark.unit
 def test_put_file_raises_persistence_error_for_missing_source(tmp_path: Path) -> None:
     """Missing source paths must surface as AttachmentPersistenceError."""
-    from aeat.financial.attachments import AttachmentPersistenceError
+    from . import AttachmentPersistenceError
 
     store = AttachmentStore.at(tmp_path)
     missing = tmp_path / "absent.bin"

@@ -19,8 +19,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
 
-from aeat.config import PROJECT_ROOT, Settings, load_settings
-from aeat.errors import AeatError
+from ..config import PROJECT_ROOT, Settings, load_settings
+from ..errors import AeatError
 
 WORKSPACE_MCP_CREDENTIALS_DIR_ENV = "WORKSPACE_MCP_CREDENTIALS_DIR"
 WORKSPACE_MCP_SERVICE_ACCOUNT_FILE_ENV = "GOOGLE_SERVICE_ACCOUNT_KEY_FILE"

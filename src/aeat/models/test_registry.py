@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.deadlines import AutonomoProfile, IVARegime
-from aeat.models._categories import TaxpayerProfile
-from aeat.models._codes import ModeloCode
-from aeat.models._errors import RegistryIntegrityError, UnknownModeloError
-from aeat.models._metadata import ModeloMetadata
-from aeat.models._registry import (
+from ..deadlines import AutonomoProfile, IVARegime
+from ._categories import TaxpayerProfile
+from ._codes import ModeloCode
+from ._errors import RegistryIntegrityError, UnknownModeloError
+from ._metadata import ModeloMetadata
+from ._registry import (
     MODELO_REGISTRY,
     _check_caps_into,
     get_modelo,

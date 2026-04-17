@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.llm import LLMCache, LLMProvider, LLMRequest, LLMResponse
+from . import LLMCache, LLMProvider, LLMRequest, LLMResponse
 
 
 def _response() -> LLMResponse:

@@ -15,7 +15,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, model_validator
 
-from aeat.i18n import Translatable
+from ..i18n import Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _STRICT_MUTABLE = ConfigDict(strict=True, extra="forbid")

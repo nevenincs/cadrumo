@@ -29,17 +29,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from aeat.portals._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
-from aeat.portals._codes import Portal
-from aeat.portals._errors import (
+from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._codes import Portal
+from ._errors import (
     PortalIntegrityError,
     PortalRegistryError,
     UnknownPortalError,
 )
 
 if TYPE_CHECKING:
-    from aeat.portals._metadata import PortalMetadata
-    from aeat.portals._registry import (
+    from ._metadata import PortalMetadata
+    from ._registry import (
         PORTAL_REGISTRY,
         get_portal,
         portals_by_category,
@@ -67,7 +67,7 @@ def __getattr__(name: str) -> Any:
     """
     if name not in _LAZY_NAMES:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    from aeat.portals import _metadata, _registry
+    from . import _metadata, _registry
 
     resolved = {
         "PORTAL_REGISTRY": _registry.PORTAL_REGISTRY,

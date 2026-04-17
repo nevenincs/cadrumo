@@ -10,16 +10,15 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app as root_app
-from aeat.financial import RawProvenance, SourceFormat
-from aeat.financial.providers import RawTransaction
-from aeat.financial.transactions import (
+from ...cli import app as root_app
+from .. import RawProvenance, SourceFormat
+from ..providers import RawTransaction
+from ..transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
     save_transactions,
 )
-
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
 from ._service import load_invoices, save_invoices

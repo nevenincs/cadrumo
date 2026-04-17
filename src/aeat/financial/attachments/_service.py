@@ -8,8 +8,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentNotFoundError, AttachmentValidationError
 from ._models import Attachment

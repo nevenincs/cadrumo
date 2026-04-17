@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.sync import (
+from . import (
     CasillaAddedWithDefault,
     DivergenceClassification,
     DivergenceRecord,

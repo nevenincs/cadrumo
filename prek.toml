@@ -34,3 +34,15 @@ language = "system"
 entry = "uv run ty check src/"
 pass_filenames = false
 types = ["python"]
+
+# ── #162 relative-imports mandate ───────────────────────────────────────────
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "relative-imports-mandate"
+name = "enforce relative imports inside src/aeat/ (#162)"
+language = "system"
+entry = "uv run python scripts/check_relative_imports.py"
+pass_filenames = false
+types = ["python"]

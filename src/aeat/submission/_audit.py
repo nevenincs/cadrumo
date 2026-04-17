@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.config import PROJECT_ROOT
+from ..config import PROJECT_ROOT
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _AUDIT_LOG_PATH = PROJECT_ROOT / ".aeat" / "live-submit-audit.log"

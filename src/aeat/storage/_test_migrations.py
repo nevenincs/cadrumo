@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import inspect
 
-from aeat.config import Settings
-from aeat.storage import (
+from ..config import Settings
+from . import (
     ModeloRecord,
     ModeloRepository,
     create_engine_from_settings,

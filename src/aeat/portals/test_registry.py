@@ -7,12 +7,12 @@ from types import MappingProxyType
 
 import pytest
 
-from aeat.models import ModeloCode
-from aeat.models._errors import UnknownModeloError
-from aeat.portals._categories import PortalCategory
-from aeat.portals._codes import Portal
-from aeat.portals._errors import PortalIntegrityError, UnknownPortalError
-from aeat.portals._registry import (
+from ..models import ModeloCode
+from ..models._errors import UnknownModeloError
+from ._categories import PortalCategory
+from ._codes import Portal
+from ._errors import PortalIntegrityError, UnknownPortalError
+from ._registry import (
     PORTAL_REGISTRY,
     _finalise_registry,
     get_portal,
