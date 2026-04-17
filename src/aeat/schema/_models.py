@@ -104,6 +104,27 @@ class SchemaProvenance(_StrictFrozenModel):
             )
         return value
 
+    @field_validator("source")
+    @classmethod
+    def _reject_unimplemented_sources(cls, value: SchemaSource) -> SchemaSource:
+        """Reject non-BOE_ORDEN sources until their extractors land.
+
+        ``SchemaSource.PORTAL_HTML_PROBE``, ``MANUAL_LLM_DRAFT``, and
+        ``XSD_WIRE`` are reserved enum slots for follow-up extractors
+        (see ADR §2 / §Deferred). Accepting them through the
+        pydantic loader would let an attacker-controlled JSON blob
+        construct a record that bypasses the BOE-specific
+        ``source_page`` requirement. Gate v1 to BOE_ORDEN only; the
+        gate is removed per extractor when each backend lands.
+        """
+        if value is not SchemaSource.BOE_ORDEN:
+            raise ValueError(
+                f"SchemaSource.{value.name} is a reserved enum slot; the "
+                "extractor for this source has not yet landed. Only "
+                "SchemaSource.BOE_ORDEN is accepted in v1.",
+            )
+        return value
+
 
 class LiteralFormula(_StrictFrozenModel):
     """Numeric literal node in the formula AST."""
@@ -221,10 +242,7 @@ def _collect_refs(node: FormulaNode) -> frozenset[str]:
     if isinstance(node, BinaryOp):
         return _collect_refs(node.left) | _collect_refs(node.right)
     if isinstance(node, SumFormula):
-        out: frozenset[str] = frozenset()
-        for term in node.terms:
-            out = out | _collect_refs(term)
-        return out
+        return frozenset().union(*(_collect_refs(term) for term in node.terms))
     raise SchemaExtractionError(f"unknown formula node kind: {type(node)!r}")
 
 

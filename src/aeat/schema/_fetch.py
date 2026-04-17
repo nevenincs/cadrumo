@@ -116,14 +116,23 @@ BOE_ORDEN_SOURCES: tuple[BoeOrdenSource, ...] = (
         modelo_code=ModeloCode.MODELO_130,
         boe_ref="BOE-A-2023-15412",
         origin_url=TypeAdapter(AnyHttpUrl).validate_python(
-            "https://www.boe.es/boe/dias/2023/07/13/pdfs/BOE-A-2023-15412.pdf",
+            "https://www.boe.es/boe/dias/2023/07/03/pdfs/BOE-A-2023-15412.pdf",
         ),
     ),
 )
 """Canonical BOE sources covered by the v1 extractor.
 
-Follow-up issues extend this tuple with 303 / 390 entries. Runtime
-overrides (used by offline CI and unit tests) go through
+**Verification status.** The ``BOE-A-2023-15412`` entry is a
+placeholder identifier pending hand-verification against BOE's
+legislation search (the correct BOE-A ID for *Orden HAC/665/2023*
+approving the current Modelo 130 layout must be confirmed by a
+human before the extractor is pointed at production data). The
+extractor pipeline wiring is verified end-to-end by unit tests
+against a reportlab-generated fixture; real-BOE round-trip is a
+follow-up issue. See ``TODO(#9-followup-live-boe-verification)``.
+
+Follow-up issues extend this tuple with 303 / 390 entries.
+Runtime overrides (used by offline CI and unit tests) go through
 :attr:`Settings.aeat_schema_source_urls_override`.
 """
 
