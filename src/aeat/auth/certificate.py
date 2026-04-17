@@ -23,6 +23,7 @@ Design constraints (see
 from __future__ import annotations
 
 import os
+import re
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -80,6 +81,65 @@ class CertificateHandshakeError(CertificateError):
     returned as ``HandshakeResult(success=False, ...)`` rather than
     raised; this exception is reserved for cases where the caller
     passed nonsense (e.g. an empty URL).
+    """
+
+
+class CertificateNifParseError(CertificateError):
+    """Raised when no NIF / NIE can be parsed from a certificate subject.
+
+    The project's authenticator derives the taxpayer NIF from the
+    FNMT certificate subject (canonical source: the ``serialNumber``
+    RDN, OID 2.5.4.5). Certificates that carry no such attribute,
+    that use a CIF (legal-entity) shape, or whose CN/serialNumber
+    lacks a recognisable DNI (``[0-9]{7,8}[A-Z]``) or NIE
+    (``[XYZ][0-9]{7}[A-Z]``) identifier produce this error. Callers
+    MUST propagate it rather than guess the identifier from other
+    fields.
+    """
+
+
+class AeatLoginAssertionError(CertificateError):
+    """Raised when a post-auth verification attempt cannot be produced.
+
+    Distinct from a *negative* assertion result (which returns a
+    :class:`AeatLoginAssertion` with ``is_valid=False``). This
+    exception fires when the assertion cannot even be built — for
+    example a Playwright context is missing the thumbprint marker,
+    the authenticator was never authenticated, or a structural
+    precondition failed before the navigation could complete.
+    """
+
+
+class AeatSessionExpiredError(CertificateError):
+    """Raised when an authenticated AEAT session is no longer usable.
+
+    Three conditions feed this error:
+
+    1. An :class:`AeatSession` whose ``idle_deadline`` has elapsed
+       (``is_stale`` returns True) is passed to
+       :meth:`AeatAuthenticator.verify_login`.
+    2. A single :meth:`AeatAuthenticator.reauthenticate` attempt
+       still yields ``certificate_recognised=False``; the caller
+       MUST NOT loop and MUST raise this upwards.
+    3. An HTTP 401 / 403 surfaced by a downstream live-read call
+       site that consumed the session.
+
+    The error deliberately does not carry the session instance —
+    callers re-derive authentication from ``Settings`` rather than
+    retry with stale state.
+    """
+
+
+class AeatLiveReadNotEnabledError(AeatError):
+    """Raised when live-read access is required but the gate is shut.
+
+    Mirror of :class:`AeatLiveSubmitNotEnabledError` on the read side.
+    Emitted by :meth:`AeatAccessGate.require_live_read` when
+    ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``. The existing
+    per-test ``if os.environ[...] != "1": pytest.skip(...)``
+    boilerplate is not replaced — this error gives non-test callers
+    (future live-read CLI commands, sync runners) a typed failure
+    shape.
     """
 
 
@@ -578,6 +638,75 @@ def health(
     )
 
 
+# ── NIF / NIE extraction from FNMT subject ──────────────────────────────────
+
+
+_SERIAL_PREFIX_RE = re.compile(r"^IDCES-", re.IGNORECASE)
+_DNI_RE = re.compile(r"^[0-9]{7,8}[A-Z]$")
+_NIE_RE = re.compile(r"^[XYZ][0-9]{7}[A-Z]$")
+_CIF_RE = re.compile(r"^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$")
+_SERIAL_RDN_RE = re.compile(r"(?:^|,)\s*(?:2\.5\.4\.5|SERIALNUMBER|serialNumber)\s*=\s*([^,]+)")
+_CN_RDN_RE = re.compile(r"(?:^|,)\s*CN\s*=\s*([^,]+)", re.IGNORECASE)
+_TRAILING_NIF_RE = re.compile(r"([0-9]{7,8}[A-Z]|[XYZ][0-9]{7}[A-Z])\s*$", re.IGNORECASE)
+
+
+def _normalise_candidate(candidate: str) -> str:
+    """Strip surrounding whitespace and the optional ``IDCES-`` prefix."""
+    stripped = candidate.strip()
+    return _SERIAL_PREFIX_RE.sub("", stripped).upper()
+
+
+def extract_nif_from_subject(cert: LoadedCertificate) -> str:
+    """Return the FNMT taxpayer identifier encoded in ``cert``'s subject.
+
+    FNMT *persona física* certificates carry the subject's NIF or
+    NIE in the ``serialNumber`` RDN (OID ``2.5.4.5``), optionally
+    prefixed with ``IDCES-``. Some older bundles repeat it in the
+    common name with the format ``NAME SURNAME - NNNNNNNNL``.
+
+    Args:
+        cert: The loaded PKCS#12 certificate.
+
+    Returns:
+        The uppercase normalised NIF/NIE (e.g. ``"12345678Z"`` or
+        ``"X1234567L"``).
+
+    Raises:
+        CertificateNifParseError: When the subject contains no
+            recognisable DNI / NIE identifier, or when the value
+            present is a CIF (legal-entity) — this project is
+            explicitly autónomo-only and does not support
+            *persona jurídica* certificates.
+    """
+    subject = cert.subject
+
+    serial_match = _SERIAL_RDN_RE.search(subject)
+    if serial_match is not None:
+        candidate = _normalise_candidate(serial_match.group(1))
+        if _CIF_RE.match(candidate):
+            raise CertificateNifParseError(
+                f"subject serialNumber {candidate!r} looks like a CIF "
+                "(legal-entity). This project supports autónomo "
+                "(persona física) certificates only."
+            )
+        if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
+            return candidate
+
+    cn_match = _CN_RDN_RE.search(subject)
+    if cn_match is not None:
+        trailing = _TRAILING_NIF_RE.search(cn_match.group(1))
+        if trailing is not None:
+            candidate = trailing.group(1).upper()
+            if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
+                return candidate
+
+    raise CertificateNifParseError(
+        f"cannot parse a DNI or NIE from certificate subject "
+        f"{subject!r}; expected serialNumber or CN to carry "
+        "a valid persona-física identifier"
+    )
+
+
 # ── Backend dispatch ────────────────────────────────────────────────────────
 
 
@@ -662,6 +791,9 @@ def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
 
 
 __all__ = [
+    "AeatLiveReadNotEnabledError",
+    "AeatLoginAssertionError",
+    "AeatSessionExpiredError",
     "CertificateBackend",
     "CertificateBundle",
     "CertificateError",
@@ -670,11 +802,13 @@ __all__ = [
     "CertificateHealth",
     "CertificateHealthSeverity",
     "CertificateLoadError",
+    "CertificateNifParseError",
     "CertificatePasswordError",
     "CertificatePreExpiryError",
     "HandshakeResult",
     "LoadedCertificate",
     "evaluate_loaded_certificate_health",
+    "extract_nif_from_subject",
     "health",
     "load_certificate",
     "preload_into_browser_context",
