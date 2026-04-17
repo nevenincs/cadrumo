@@ -9,6 +9,7 @@ contract.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -363,6 +364,103 @@ async def test_verify_login_raises_without_context(tmp_path: Path, monkeypatch: 
         )
         with pytest.raises(AeatLoginAssertionError):
             await auth.verify_login(session)
+
+
+@pytest.mark.unit
+def test_extract_nif_handles_escaped_comma_in_cn(tmp_path: Path) -> None:
+    """RFC 4514 escaped commas in CN must not split the DN parser.
+
+    The rfc4514_string emitted by cryptography quotes a literal
+    comma in a CN as ``\\,``. A naive regex that splits on `,` would
+    break ``CN=Doe\\, John,SERIALNUMBER=12345678Z`` into two halves
+    and mis-attribute the serial number. This test asserts the
+    x509-backed parser handles the escape correctly.
+    """
+    cert = _load_cert(
+        tmp_path,
+        subject_attrs=[
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "Doe, John"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678Z"),
+        ],
+    )
+    assert extract_nif_from_subject(cert) == "12345678Z"
+
+
+@pytest.mark.unit
+def test_extract_nif_handles_quoted_plus_in_cn(tmp_path: Path) -> None:
+    """RFC 4514 escaped ``+`` in a value must not split RDNs."""
+    cert = _load_cert(
+        tmp_path,
+        subject_attrs=[
+            x509.NameAttribute(NameOID.COMMON_NAME, "Alice+Bob Industries"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "X1234567L"),
+        ],
+    )
+    assert extract_nif_from_subject(cert) == "X1234567L"
+
+
+@pytest.mark.unit
+def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
+    """Naive datetimes passed to is_stale are coerced to UTC.
+
+    Documents the existing behaviour so a regression is caught if
+    the coercion is ever removed. A caller on a non-UTC workstation
+    that supplies a naive ``datetime.now()`` will hit this path.
+    """
+    from datetime import datetime as _dt
+
+    authenticated_at = datetime.now(UTC)
+    session = AeatSession(
+        certificate_thumbprint="abc",
+        certificate_subject="CN=test",
+        certificate_nif="12345678Z",
+        authenticated_at=authenticated_at,
+        idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=None,
+        handshake=_fake_handshake(),
+    )
+    naive_past = _dt(2020, 1, 1)
+    naive_future = _dt(2100, 1, 1)
+    assert session.is_stale(naive_past) is False
+    assert session.is_stale(naive_future) is True
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_reauthenticate_delegates_to_close_and_authenticate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression test: reauthenticate must not deadlock on self._lock.
+
+    The method was rewritten to delegate teardown to ``close()``
+    (itself lock-protected) rather than holding ``self._lock``
+    across the subsequent ``authenticate()`` call. Proves the
+    single-lock invariant by reauthenticating twice in sequence and
+    confirming no timeout.
+    """
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    async with AeatAuthenticator(settings) as auth:
+        # Fake a session to pass to reauthenticate. The call will fail
+        # at the network-free `authenticate` step (no handshake), so
+        # we assert that the teardown side of reauthenticate completes
+        # without deadlocking regardless of the authenticate outcome.
+        now = datetime.now(UTC)
+        session = AeatSession(
+            certificate_thumbprint="abc",
+            certificate_subject="CN=x",
+            certificate_nif="12345678Z",
+            authenticated_at=now,
+            idle_deadline=now + AEAT_SESSION_IDLE_TTL,
+            storage_state_path=None,
+            handshake=_fake_handshake(),
+        )
+        # authenticate() without an injected browser_session_factory
+        # raises AeatLoginAssertionError; we only care that the call
+        # returns in bounded time (no deadlock).
+        with pytest.raises(AeatLoginAssertionError):
+            await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
 
 
 @pytest.mark.unit

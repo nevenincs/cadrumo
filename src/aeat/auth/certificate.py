@@ -29,6 +29,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
+from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
@@ -645,8 +646,6 @@ _SERIAL_PREFIX_RE = re.compile(r"^IDCES-", re.IGNORECASE)
 _DNI_RE = re.compile(r"^[0-9]{7,8}[A-Z]$")
 _NIE_RE = re.compile(r"^[XYZ][0-9]{7}[A-Z]$")
 _CIF_RE = re.compile(r"^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$")
-_SERIAL_RDN_RE = re.compile(r"(?:^|,)\s*(?:2\.5\.4\.5|SERIALNUMBER|serialNumber)\s*=\s*([^,]+)")
-_CN_RDN_RE = re.compile(r"(?:^|,)\s*CN\s*=\s*([^,]+)", re.IGNORECASE)
 _TRAILING_NIF_RE = re.compile(r"([0-9]{7,8}[A-Z]|[XYZ][0-9]{7}[A-Z])\s*$", re.IGNORECASE)
 
 
@@ -656,6 +655,23 @@ def _normalise_candidate(candidate: str) -> str:
     return _SERIAL_PREFIX_RE.sub("", stripped).upper()
 
 
+def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
+    """Return every attribute value in ``subject`` matching ``oid``.
+
+    Parses the subject via
+    :meth:`cryptography.x509.Name.from_rfc4514_string`, which handles
+    RFC 4514 escape sequences (``\\,``, ``\\+``, ``\\"``, ``\\#``) and
+    multi-valued RDNs correctly — regex cannot. Returns the raw
+    attribute values with no normalisation; callers strip prefixes
+    and validate shape.
+    """
+    try:
+        name = x509.Name.from_rfc4514_string(subject)
+    except ValueError:
+        return []
+    return [attribute.value for attribute in name.get_attributes_for_oid(oid) if isinstance(attribute.value, str)]
+
+
 def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     """Return the FNMT taxpayer identifier encoded in ``cert``'s subject.
 
@@ -663,6 +679,10 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     NIE in the ``serialNumber`` RDN (OID ``2.5.4.5``), optionally
     prefixed with ``IDCES-``. Some older bundles repeat it in the
     common name with the format ``NAME SURNAME - NNNNNNNNL``.
+
+    Uses :meth:`cryptography.x509.Name.from_rfc4514_string` to
+    parse the subject so that RFC 4514 escape sequences (``\\,``,
+    ``\\+``, etc.) and multi-valued RDNs are handled correctly.
 
     Args:
         cert: The loaded PKCS#12 certificate.
@@ -678,11 +698,12 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
             explicitly autónomo-only and does not support
             *persona jurídica* certificates.
     """
+    from cryptography.x509.oid import NameOID
+
     subject = cert.subject
 
-    serial_match = _SERIAL_RDN_RE.search(subject)
-    if serial_match is not None:
-        candidate = _normalise_candidate(serial_match.group(1))
+    for raw in _iter_rdn_values(subject, NameOID.SERIAL_NUMBER):
+        candidate = _normalise_candidate(raw)
         if _CIF_RE.match(candidate):
             raise CertificateNifParseError(
                 f"subject serialNumber {candidate!r} looks like a CIF "
@@ -692,9 +713,8 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
         if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
             return candidate
 
-    cn_match = _CN_RDN_RE.search(subject)
-    if cn_match is not None:
-        trailing = _TRAILING_NIF_RE.search(cn_match.group(1))
+    for cn in _iter_rdn_values(subject, NameOID.COMMON_NAME):
+        trailing = _TRAILING_NIF_RE.search(cn)
         if trailing is not None:
             candidate = trailing.group(1).upper()
             if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
