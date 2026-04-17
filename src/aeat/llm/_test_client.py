@@ -21,12 +21,13 @@ from . import (
     _FakeAdapter,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+
 
 class _IsolatedSettings(Settings):
     model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
 
-@pytest.mark.unit
 def test_fake_adapter_contract() -> None:
     """The fake adapter should satisfy the provider contract without mocks."""
 
@@ -48,7 +49,6 @@ def test_fake_adapter_contract() -> None:
     assert adapter.calls == 1
 
 
-@pytest.mark.unit
 def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:
     """A repeated request should hit the cache instead of re-calling the adapter."""
 
@@ -73,7 +73,6 @@ def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:
     assert adapter.calls == 1
 
 
-@pytest.mark.unit
 def test_client_surfaces_provider_error(tmp_path: Path) -> None:
     """Provider failures should surface as LLM provider errors."""
 
@@ -93,7 +92,6 @@ def test_client_surfaces_provider_error(tmp_path: Path) -> None:
         asyncio.run(client.complete(LLMRequest(prompt="hello")))
 
 
-@pytest.mark.unit
 def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
     """Rate-limit failures should surface as the dedicated rate-limit error."""
 
@@ -113,7 +111,6 @@ def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
         asyncio.run(client.complete(LLMRequest(prompt="hello")))
 
 
-@pytest.mark.unit
 def test_secretstr_masks_llm_keys_in_settings_repr() -> None:
     """LLM API keys should never appear in repr or serialized JSON."""
 

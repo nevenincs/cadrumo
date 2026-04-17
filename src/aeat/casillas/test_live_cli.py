@@ -6,8 +6,9 @@ import pytest
 
 from ..cli._live import requires_live_enabled
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.live
+
 @pytest.mark.parametrize(
     ("modelo", "period"),
     [

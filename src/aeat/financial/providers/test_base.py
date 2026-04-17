@@ -11,10 +11,11 @@ import pytest
 from .. import ProviderValidation, RawTransaction, SourceFormat, detect_provider
 from ._base import parse_amount_value
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
 
 
-@pytest.mark.unit
 def test_raw_transaction_round_trip_uses_mapping_field() -> None:
     """RawTransaction should round-trip through JSON with immutable raw_fields."""
     original = RawTransaction.model_validate(
@@ -42,7 +43,6 @@ def test_raw_transaction_round_trip_uses_mapping_field() -> None:
     assert round_tripped.currency == "EUR"
 
 
-@pytest.mark.unit
 def test_provider_validation_defaults() -> None:
     """ProviderValidation should remain a strict frozen boundary record."""
     validation = ProviderValidation(is_valid=True)
@@ -51,7 +51,6 @@ def test_provider_validation_defaults() -> None:
     assert validation.detected_dialect is None
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("fixture_name", "provider_name"),
     [
@@ -67,7 +66,6 @@ def test_detect_provider_uses_extension_and_validation(fixture_name: str, provid
     assert provider.name == provider_name
 
 
-@pytest.mark.unit
 def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
     """Explicit decimal separators should disambiguate locale-specific amounts."""
     assert parse_amount_value("1.234", decimal_separator=",") == Decimal("1234")

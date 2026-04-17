@@ -6,8 +6,9 @@ import pytest
 
 from .. import casillas, errors, logging
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.unit
+
 def test_smoke_casillas() -> None:
     """Assert the subpackage is importable and conventions hold."""
     assert casillas.__doc__ is not None
@@ -16,7 +17,6 @@ def test_smoke_casillas() -> None:
     assert logging.get_logger(__name__).name == __name__
 
 
-@pytest.mark.unit
 def test_public_surface_is_complete() -> None:
     """Every exported symbol must be importable from the package root."""
     for name in casillas.__all__:

@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import cast
 
 from .._paths import resolve_record_json_path
+from ..auth import AeatAccessGate
 from ..config import Settings
 from ..filing import FilingAmendment, FilingDraft
 from ..logging import get_logger
@@ -210,11 +211,14 @@ class SubmissionEngine:
                 raise AeatPytestLiveWriteRefusedError(
                     "pytest may never execute a live AEAT write; refusing dry_run=False submission"
                 )
-            audit_env_state = {
-                "AEAT_LIVE_TESTS_ENABLED": os.environ.get("AEAT_LIVE_TESTS_ENABLED", ""),
-                "AEAT_LIVE_SUBMIT_ENABLED": os.environ.get("AEAT_LIVE_SUBMIT_ENABLED", ""),
-                "PYTEST_CURRENT_TEST": os.environ.get("PYTEST_CURRENT_TEST", ""),
-            }
+            # Gate is constructed inline from Settings — never injected,
+            # never stored on self, never accepted as a kwarg on the
+            # engine. This preserves R5 of the live-write safety
+            # charter (#116): no substitutable dependency on the
+            # write-gate. The three inline checks above (lines 207-212)
+            # remain the authoritative gate; the snapshot is consumed
+            # only by the audit log.
+            audit_env_state = AeatAccessGate(self.settings).snapshot_env().as_audit_dict()
             confirmation = confirm_live_submission(draft_like, portal=portal)
 
         submission_id = make_submission_id(draft.draft_id, attempt_ordinal=1)

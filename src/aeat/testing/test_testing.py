@@ -26,6 +26,8 @@ from . import (
     load_filing_history,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+
 _EXPECTED_MODELOS = frozenset({"130", "303", "390"})
 _EXPECTED_SCENARIOS = frozenset(
     {
@@ -71,40 +73,34 @@ def _valid_payload() -> dict[str, object]:
     }
 
 
-@pytest.mark.unit
 def test_synthetic_fixtures_root_points_at_expected_directory() -> None:
     assert SYNTHETIC_FIXTURES_ROOT.is_dir()
     assert SYNTHETIC_FIXTURES_ROOT.name == "filing_history"
     assert SYNTHETIC_FIXTURES_ROOT.parent.name == "fixtures"
 
 
-@pytest.mark.unit
 def test_load_all_records_parse_cleanly() -> None:
     records = list(load_filing_history())
     assert len(records) >= 17
     assert all(isinstance(r, FilingRecord) for r in records)
 
 
-@pytest.mark.unit
 def test_expected_modelo_set() -> None:
     modelos = {r.modelo for r in load_filing_history()}
     assert modelos == _EXPECTED_MODELOS
 
 
-@pytest.mark.unit
 def test_every_scenario_is_covered() -> None:
     scenarios = {r.scenario for r in load_filing_history()}
     assert scenarios == _EXPECTED_SCENARIOS
 
 
-@pytest.mark.unit
 def test_every_record_is_synthetic() -> None:
     for record in load_filing_history():
         assert record.synthetic is True
         assert record.source == "synthetic"
 
 
-@pytest.mark.unit
 def test_every_file_has_comment_marker() -> None:
     for path in SYNTHETIC_FIXTURES_ROOT.rglob("*.json"):
         data = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -114,14 +110,12 @@ def test_every_file_has_comment_marker() -> None:
         assert "SYNTHETIC" in comment.upper(), f"{path} _comment lacks SYNTHETIC keyword"
 
 
-@pytest.mark.unit
 def test_filter_by_modelo() -> None:
     records = list(load_filing_history(modelo="130"))
     assert records, "expected at least one modelo 130 record"
     assert {r.modelo for r in records} == {"130"}
 
 
-@pytest.mark.unit
 def test_filter_by_modelo_and_period() -> None:
     records = list(load_filing_history(modelo="130", period="2024Q1"))
     assert records, "expected at least one 130/2024Q1 record"
@@ -130,13 +124,11 @@ def test_filter_by_modelo_and_period() -> None:
         assert r.period == "2024Q1"
 
 
-@pytest.mark.unit
 def test_filter_by_unknown_modelo_raises() -> None:
     with pytest.raises(FilingFixtureError):
         list(load_filing_history(modelo="999"))
 
 
-@pytest.mark.unit
 def test_period_kind_matches_period_string() -> None:
     for record in load_filing_history():
         period = record.period
@@ -149,19 +141,16 @@ def test_period_kind_matches_period_string() -> None:
             assert len(period) == 7 and period[4] == "-"
 
 
-@pytest.mark.unit
 def test_status_enum_is_filing_draft_status() -> None:
     for record in load_filing_history():
         assert isinstance(record.status, FilingDraftStatus)
 
 
-@pytest.mark.unit
 def test_record_ids_are_unique() -> None:
     ids = [r.record_id for r in load_filing_history()]
     assert len(ids) == len(set(ids))
 
 
-@pytest.mark.unit
 def test_totals_are_decimals() -> None:
     for record in load_filing_history():
         assert record.totals, f"{record.record_id} has empty totals"
@@ -169,7 +158,6 @@ def test_totals_are_decimals() -> None:
             assert isinstance(value, Decimal), f"{record.record_id} total {name} is {type(value)}"
 
 
-@pytest.mark.unit
 def test_refuses_non_synthetic_flag() -> None:
     payload = _valid_payload()
     payload["synthetic"] = False
@@ -177,7 +165,6 @@ def test_refuses_non_synthetic_flag() -> None:
         FilingRecord.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_refuses_missing_comment_marker() -> None:
     payload = _valid_payload()
     payload.pop("_comment")
@@ -185,7 +172,6 @@ def test_refuses_missing_comment_marker() -> None:
         FilingRecord.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_refuses_empty_comment_marker() -> None:
     payload = _valid_payload()
     payload["_comment"] = ""
@@ -193,7 +179,6 @@ def test_refuses_empty_comment_marker() -> None:
         FilingRecord.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_refuses_non_synthetic_source() -> None:
     payload = _valid_payload()
     payload["source"] = "real"
@@ -201,7 +186,6 @@ def test_refuses_non_synthetic_source() -> None:
         FilingRecord.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_extra_fields_forbidden() -> None:
     payload = _valid_payload()
     payload["mystery"] = "boom"
@@ -209,7 +193,6 @@ def test_extra_fields_forbidden() -> None:
         FilingRecord.model_validate(payload)
 
 
-@pytest.mark.unit
 def test_compute_record_id_is_stable_and_order_independent() -> None:
     casillas = _sample_casillas()
     a = compute_record_id(
@@ -228,7 +211,6 @@ def test_compute_record_id_is_stable_and_order_independent() -> None:
     assert len(a) == 16
 
 
-@pytest.mark.unit
 def test_malformed_json_raises_filing_fixture_error(tmp_path: Path) -> None:
     from ._loader import _load_one
 
@@ -238,7 +220,6 @@ def test_malformed_json_raises_filing_fixture_error(tmp_path: Path) -> None:
         _load_one(bad)
 
 
-@pytest.mark.unit
 def test_complementaria_of_targets_existing_records() -> None:
     by_id = {r.record_id: r for r in load_filing_history()}
     for record in by_id.values():
