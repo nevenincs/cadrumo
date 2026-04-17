@@ -6,7 +6,7 @@ callers can catch the project-wide base.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
+from ..errors import AeatError
 
 
 class FilingDraftError(AeatError):
@@ -27,3 +27,11 @@ class FilingValidationError(FilingDraftError):
 
 class FilingComputationError(FilingDraftError):
     """Raised when a builder cannot evaluate a formula casilla."""
+
+
+class FilingAmendmentError(FilingDraftError):
+    """Base class for every amendment-related filing error."""
+
+
+class FilingAmendmentValidationError(FilingAmendmentError):
+    """Raised when an amendment violates legal or shape invariants."""

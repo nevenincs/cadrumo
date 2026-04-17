@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.cloud import app
+from .cloud import app
 
 
 @pytest.mark.unit

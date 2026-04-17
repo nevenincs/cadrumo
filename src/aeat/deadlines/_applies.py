@@ -17,8 +17,8 @@ from collections.abc import Callable
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.deadlines._errors import ScheduleComputationError
-from aeat.deadlines._models import AutonomoProfile, IVARegime
+from ._errors import ScheduleComputationError
+from ._models import AutonomoProfile, IVARegime
 
 
 class _Rule(BaseModel):

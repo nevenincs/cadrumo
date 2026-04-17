@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-from aeat.models._categories import (
+from ...portals import Portal
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
 )
-from aeat.models._codes import ModeloCode
-from aeat.models._entries._common import (
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
+from ._common import (
     build_applicability,
     build_entry,
     make_citation,
 )
-from aeat.models._metadata import ModeloMetadata
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_037,
@@ -52,7 +53,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_036,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 037 (histórico hasta 2025-02-02)",
+    submission_portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
     known_gotchas=(
         "Suprimido desde 2025-02-03; no debe aparecer como camino censal corriente.",
         "El filing history previo a la supresión sigue pudiendo contener 037.",

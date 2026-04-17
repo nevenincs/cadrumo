@@ -21,8 +21,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from aeat.config import Settings, load_settings
-from aeat.submission import (
+from ...config import Settings, load_settings
+from ...submission import (
     CasillaInputKind,
     CasillaRecord,
     DraftStatus,
@@ -196,6 +196,7 @@ def build_engine(settings: Settings | None = None) -> SubmissionEngine:
         justificante_parser=_StubJustificanteParser(),
         submitters=submitters,
         settings=cfg,
+        live_transport_supported=False,
     )
 
 

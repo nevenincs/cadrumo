@@ -13,11 +13,15 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from aeat.auth import CertificateBackend
-from aeat.justificante import JustificanteParserBackend
+from ._paths import (
+    normalize_project_relative_path,
+    normalize_project_relative_str,
+)
+from .auth import CertificateBackend
+from .justificante import JustificanteParserBackend
 
 
 class DivergenceSink(StrEnum):
@@ -50,6 +54,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / "env" / ".env",
         env_file_encoding="utf-8",
+        env_ignore_empty=True,
     )
 
     # ── Google OAuth 2.0 (Desktop / Interactive) ────────────────────────────
@@ -110,6 +115,28 @@ class Settings(BaseSettings):
     aeat_base_url: str = Field(
         default="https://sede.agenciatributaria.gob.es",
         description="AEAT sede electrónica base URL",
+    )
+
+    # ── Financial ingest (#73) ─────────────────────────────────────────────
+    financial_base_currency: str = Field(
+        default="EUR",
+        description="Fallback ISO 4217 currency used when a financial source omits a per-row currency",
+    )
+    financial_default_csv_encoding: str = Field(
+        default="utf-8",
+        description="Preferred encoding attempted first when decoding financial CSV sources",
+    )
+    aeat_financial_txs_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "transactions",
+        description="Directory where the transaction catalogue JSON file is stored",
+    )
+    aeat_invoices_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "invoices",
+        description="Directory where the invoice catalogue JSON file is stored (#75)",
+    )
+    aeat_attachments_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "attachments",
+        description="Root directory for the attachment byte and manifest store",
     )
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
@@ -211,6 +238,12 @@ class Settings(BaseSettings):
         description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
+    # ── VAT catalogue (aeat.financial.vat, #85) ─────────────────────────────
+    aeat_vat_catalogue_root: Path = Field(
+        default=PROJECT_ROOT / "corpus" / "financial" / "vat",
+        description="Root directory for the hand-reviewed VAT taxonomy catalogue",
+    )
+
     # ── Browser Automation ──────────────────────────────────────────────────
     aeat_browser_channel: str = Field(
         default="chrome",
@@ -243,6 +276,17 @@ class Settings(BaseSettings):
     aeat_rate_limit_delay_seconds: float = Field(
         default=2.0,
         description="Minimum delay between AEAT requests in seconds",
+    )
+
+    # ── Site-health detection (#95) ─────────────────────────────────────────
+    site_health_probe_url: str = Field(
+        default="https://sede.agenciatributaria.gob.es/",
+        description="AEAT Sede URL the site-health probe navigates to",
+    )
+    site_health_rate_limit_retry_after_default: int = Field(
+        default=300,
+        ge=1,
+        description="Fallback Retry-After seconds when a 429/503 omits the header",
     )
 
     # ── AEAT certificate authentication (#8) ────────────────────────────────
@@ -342,15 +386,11 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "submissions",
         description="Directory where SubmittedFiling JSON audit records are persisted",
     )
-    aeat_submission_dry_run_default: bool = Field(
-        default=True,
-        description="Default for SubmissionEngine.submit_draft(dry_run=...) when omitted by the CLI",
-    )
-    aeat_submission_require_human_confirmation: bool = Field(
-        default=True,
+    aeat_live_submit_enabled: bool = Field(
+        default=False,
         description=(
-            "Belt-and-braces safety gate for live submissions. When False, "
-            "the engine refuses to enter live mode even if override_confirmation=True"
+            "Interactive-only opt-in for real AEAT writes. Must never be enabled "
+            "from pytest, CI, fixtures, or background jobs."
         ),
     )
     aeat_submission_browser_trace_dir: Path = Field(
@@ -459,10 +499,75 @@ class Settings(BaseSettings):
 
     # ── Introspection ───────────────────────────────────────────────────────
 
+    @field_validator(
+        "aeat_certificate_path",
+        "aeat_default_profile_path",
+        "aeat_workflow_draft_inputs_path",
+        mode="before",
+    )
+    @classmethod
+    def _empty_optional_paths_are_none(cls, value: object) -> object:
+        """Treat blank env vars for optional path fields as unset."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
+    @field_validator(
+        "aeat_certificate_password_secret",
+        "aeat_llm_anthropic_api_key",
+        "aeat_llm_openai_api_key",
+        "aeat_llm_gemini_api_key",
+        mode="before",
+    )
+    @classmethod
+    def _empty_optional_secrets_are_none(cls, value: object) -> object:
+        """Treat blank env vars for optional secret fields as unset."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
     @classmethod
     def env_var_names(cls) -> set[str]:
         """Return the set of environment variable names this model reads."""
         return {name.upper() for name in cls.model_fields}
+
+    @field_validator(
+        "aeat_token_dir",
+        "aeat_financial_txs_dir",
+        "aeat_storage_backup_dir",
+        "aeat_casillas_root",
+        "aeat_manuals_root",
+        "aeat_normatives_root",
+        "aeat_vat_catalogue_root",
+        "aeat_certificate_path",
+        "aeat_llm_cache_dir",
+        "aeat_llm_usage_dir",
+        "aeat_default_profile_path",
+        "aeat_submissions_dir",
+        "aeat_submission_browser_trace_dir",
+        "aeat_sync_divergence_file_dir",
+        "aeat_inbox_dir",
+        "aeat_inbox_pdf_dir",
+        "aeat_workflow_runs_dir",
+        "aeat_workflow_draft_inputs_path",
+        "aeat_drafts_dir",
+        "aeat_status_cache_dir",
+        "aeat_status_browser_trace_dir",
+        "aeat_justificantes_dir",
+        mode="after",
+    )
+    @classmethod
+    def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
+        """Anchor repo-relative path settings to ``PROJECT_ROOT``."""
+
+        return normalize_project_relative_path(value)
+
+    @field_validator("google_oauth_client_json", "google_application_credentials", mode="after")
+    @classmethod
+    def _normalize_repo_relative_path_strings(cls, value: str) -> str:
+        """Anchor string-backed path settings to ``PROJECT_ROOT``."""
+
+        return normalize_project_relative_str(value)
 
 
 def load_settings() -> Settings:

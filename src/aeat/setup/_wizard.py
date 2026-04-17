@@ -13,21 +13,21 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.logging import get_logger
-from aeat.setup._env_writer import write_env_file, write_profile_file
-from aeat.setup._errors import SetupError
-from aeat.setup._models import (
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language
+from ..logging import get_logger
+from ._env_writer import write_env_file, write_profile_file
+from ._errors import SetupError
+from ._models import (
     SetupAnswers,
     SetupOutcome,
     SetupResult,
     SetupStep,
     VerifyFinding,
 )
-from aeat.setup._protocols import FirstRunRunner, Prompter
-from aeat.setup._verifier import Verifier
+from ._protocols import FirstRunRunner, Prompter
+from ._verifier import Verifier
 
 log = get_logger(__name__)
 

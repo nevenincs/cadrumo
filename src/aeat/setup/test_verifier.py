@@ -6,17 +6,17 @@ from pathlib import Path
 
 import pytest
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.setup import (
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language
+from . import (
     SetupAnswers,
     SetupAnswersError,
     Verifier,
     VerifySeverity,
     load_answers_from_file,
 )
-from aeat.setup._verifier import (
+from ._verifier import (
     _check_answers_self_consistency,
     _check_certificate_path,
     _check_directory,
@@ -59,7 +59,7 @@ def test_verifier_happy_path(
     monkeypatch.setenv("AEAT_TEST_PW", "something")
     answers = _answers(tmp_path)
     # Pre-seed the profile JSON so the profile check reports OK.
-    from aeat.setup import write_profile_file
+    from . import write_profile_file
 
     write_profile_file(answers, answers.default_profile_path)
 

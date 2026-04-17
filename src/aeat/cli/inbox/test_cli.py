@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.inbox import app as inbox_app
-from aeat.config import Settings, load_settings
+from ...config import Settings, load_settings
+from . import app as inbox_app
 
 _RUNNER = CliRunner()
 

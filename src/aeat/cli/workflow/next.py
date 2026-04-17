@@ -13,7 +13,7 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from aeat.cli.workflow._helpers import run_engine_next
+from ._helpers import run_engine_next
 
 _CONSOLE = Console()
 
@@ -56,7 +56,6 @@ def next_cmd(
         raise typer.Exit(code=2)
     run_engine_next(
         dry_run=not no_dry_run,
-        override_confirmation=i_understand_this_is_real,
         sync_first=sync_first,
         as_json=as_json,
     )

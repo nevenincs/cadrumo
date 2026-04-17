@@ -20,9 +20,9 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.config import load_settings
-from aeat.deadlines import AutonomoProfile
-from aeat.workflow import (
+from ...config import load_settings
+from ...deadlines import AutonomoProfile
+from ...workflow import (
     WorkflowEngine,
     WorkflowError,
     WorkflowResult,
@@ -102,7 +102,6 @@ def _emit(result: WorkflowResult, *, as_json: bool) -> None:
 def run_engine_next(
     *,
     dry_run: bool,
-    override_confirmation: bool,
     sync_first: bool,
     as_json: bool,
     today: date | None = None,
@@ -118,7 +117,6 @@ def run_engine_next(
         engine.run_next(
             profile,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
             sync_first=sync_first,
             today=today,
         )
@@ -132,7 +130,6 @@ def run_engine_for_period(
     modelo: str,
     period: str,
     dry_run: bool,
-    override_confirmation: bool,
     sync_first: bool,
     as_json: bool,
     today: date | None = None,
@@ -150,7 +147,6 @@ def run_engine_for_period(
             modelo,
             period,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
             sync_first=sync_first,
             today=today,
         )

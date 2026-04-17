@@ -12,9 +12,10 @@ from __future__ import annotations
 from datetime import date, datetime
 from pathlib import Path
 
-from aeat.logging import get_logger
-from aeat.workflow._errors import WorkflowError
-from aeat.workflow._models import WorkflowResult
+from .._paths import resolve_record_json_path
+from ..logging import get_logger
+from ._errors import WorkflowError
+from ._models import WorkflowResult
 
 _logger = get_logger(__name__)
 
@@ -30,7 +31,10 @@ def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
         The path of the file written.
     """
     runs_dir.mkdir(parents=True, exist_ok=True)
-    target = runs_dir / f"{result.run_id}.json"
+    try:
+        target = resolve_record_json_path(runs_dir, result.run_id, context="workflow run id")
+    except ValueError as exc:
+        raise WorkflowError(str(exc)) from exc
     target.write_text(result.model_dump_json(indent=2), encoding="utf-8")
     _logger.info("workflow: persisted run %s to %s", result.run_id, target)
     return target
@@ -49,7 +53,10 @@ def load_run(run_id: str, *, runs_dir: Path) -> WorkflowResult:
     Raises:
         WorkflowError: If no run with ``run_id`` exists in ``runs_dir``.
     """
-    target = runs_dir / f"{run_id}.json"
+    try:
+        target = resolve_record_json_path(runs_dir, run_id, context="workflow run id")
+    except ValueError as exc:
+        raise WorkflowError(str(exc)) from exc
     if not target.exists():
         raise WorkflowError(f"no persisted workflow run with id {run_id!r}")
     return WorkflowResult.model_validate_json(target.read_text(encoding="utf-8"))

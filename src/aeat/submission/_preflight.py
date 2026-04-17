@@ -10,14 +10,13 @@ from __future__ import annotations
 
 from datetime import date
 
-from aeat.logging import get_logger
-from aeat.submission._errors import SubmissionPreflightError
-from aeat.submission._protocols import (
+from ..logging import get_logger
+from ._errors import SubmissionPreflightError
+from ._protocols import (
     CertificateBackend,
     DeadlineWindowChecker,
     DraftStatus,
     FilingDraftLike,
-    FilingFindingSeverity,
 )
 
 _logger = get_logger(__name__)
@@ -75,12 +74,12 @@ class Preflight:
             draft.period,
         )
 
-        if draft.status != DraftStatus.READY_TO_SUBMIT:
+        if _enum_value(draft.status) != DraftStatus.READY_TO_SUBMIT.value:
             _logger.info("preflight gate-1 FAIL: draft status=%s", draft.status)
-            raise SubmissionPreflightError(f"draft not ready to submit (status={draft.status.value})")
+            raise SubmissionPreflightError(f"draft not ready to submit (status={_enum_value(draft.status)})")
         _logger.info("preflight gate-1 OK: draft is READY_TO_SUBMIT")
 
-        error_findings = tuple(f for f in draft.findings if f.severity == FilingFindingSeverity.ERROR)
+        error_findings = tuple(f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == "ERROR")
         if error_findings:
             _logger.info(
                 "preflight gate-2 FAIL: %d ERROR-severity findings",
@@ -113,3 +112,11 @@ class Preflight:
             loaded.subject,
             loaded.not_after,
         )
+
+
+def _enum_value(value: object) -> str:
+    """Return ``Enum.value`` when present, otherwise ``str(value)``."""
+    if value is None:
+        return ""
+    raw = getattr(value, "value", value)
+    return str(raw)

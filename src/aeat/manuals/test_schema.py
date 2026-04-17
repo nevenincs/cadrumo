@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from aeat.manuals import (
+from . import (
     Chapter,
     FetchedManualPart,
     LLMProvenance,

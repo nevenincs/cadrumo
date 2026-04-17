@@ -17,11 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.env_io import read_env_file
-from aeat.i18n import Language
-from aeat.setup import (
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..env_io import read_env_file
+from ..i18n import Language
+from . import (
     SetupAnswers,
     owned_env_keys,
     write_env_file,
@@ -147,7 +147,7 @@ def test_write_profile_file_emits_valid_autonomo_profile(tmp_path: Path) -> None
     target = tmp_path / "profile.json"
     write_profile_file(answers, target)
 
-    from aeat.deadlines import AutonomoProfile
+    from ..deadlines import AutonomoProfile
 
     profile = AutonomoProfile.model_validate_json(target.read_text(encoding="utf-8"))
     assert profile.tax_id == "87654321X"

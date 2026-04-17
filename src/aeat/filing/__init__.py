@@ -14,13 +14,13 @@ Example:
     ```python
     from decimal import Decimal
 
-    from aeat.filing import (
+    from . import (
         FilingDraft,
         FilingDraftStatus,
         build_draft,
         iter_findings,
     )
-    from aeat.filing.testing import (
+    from .testing import (
         SyntheticProfile,
         default_schema_provider,
     )
@@ -54,8 +54,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from ._builder import FilingBuilder
 from ._builders import (
     QUARTERLY_303_INPUT_KEY,
@@ -64,7 +63,21 @@ from ._builders import (
     Modelo390Builder,
     get_builder,
 )
+from ._complementaria import (
+    AmendmentKind,
+    CasillaChange,
+    CasillaDelta,
+    CasillaInputs,
+    FilingAmendment,
+    ModeloCode,
+    build_complementaria,
+    list_amendments,
+    load_amendment,
+    make_amendment_id,
+)
 from ._errors import (
+    FilingAmendmentError,
+    FilingAmendmentValidationError,
     FilingBuilderError,
     FilingComputationError,
     FilingDraftError,
@@ -259,11 +272,18 @@ def utc_now() -> datetime:
 __all__ = [
     "QUARTERLY_303_INPUT_KEY",
     "SCHEMA_VERSION_DEFAULT",
+    "AmendmentKind",
+    "CasillaChange",
     "CasillaCollection",
+    "CasillaDelta",
+    "CasillaInputs",
     "CasillaSchema",
     "CasillaSchemaProvider",
     "DeadlineChecker",
     "DeadlineStatus",
+    "FilingAmendment",
+    "FilingAmendmentError",
+    "FilingAmendmentValidationError",
     "FilingBuilder",
     "FilingBuilderError",
     "FilingComputationError",
@@ -282,12 +302,17 @@ __all__ = [
     "Modelo130Builder",
     "Modelo303Builder",
     "Modelo390Builder",
+    "ModeloCode",
     "ModeloIdentity",
     "apply_validation",
+    "build_complementaria",
     "build_draft",
     "compute_draft_id",
     "get_builder",
     "iter_findings",
+    "list_amendments",
+    "load_amendment",
+    "make_amendment_id",
     "utc_now",
     "validate_draft",
 ]

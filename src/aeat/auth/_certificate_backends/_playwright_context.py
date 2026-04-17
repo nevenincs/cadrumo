@@ -20,12 +20,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from aeat.auth._certificate_backends._base import _CertBackend
-from aeat.auth._certificate_backends._httpx_fallback import HttpxFallbackBackend
-from aeat.logging import get_logger
+from ...logging import get_logger
+from ._base import _CertBackend
+from ._httpx_fallback import HttpxFallbackBackend
 
 if TYPE_CHECKING:
-    from aeat.auth.certificate import HandshakeResult, LoadedCertificate
+    from ..certificate import HandshakeResult, LoadedCertificate
 
 log = get_logger(__name__)
 
@@ -81,7 +81,7 @@ class PlaywrightContextBackend(_CertBackend):
         :class:`CertificateError` pointing the operator at
         :func:`build_client_certificates_kwarg`.
         """
-        from aeat.auth.certificate import CertificateError
+        from ..certificate import CertificateError
 
         marker = getattr(context, _MARKER_ATTR, None)
         if marker != cert.sha256_thumbprint:

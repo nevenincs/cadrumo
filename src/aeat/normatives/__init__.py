@@ -12,7 +12,7 @@ modules.
 
 Example:
     ```python
-    from aeat.normatives import NORMATIVE_CATALOGUE, cite, find_articulo
+    from . import NORMATIVE_CATALOGUE, cite, find_articulo
 
     reference = NORMATIVE_CATALOGUE.get("ley-35-2006")
     if reference is not None:

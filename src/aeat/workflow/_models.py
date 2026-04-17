@@ -12,11 +12,15 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.deadlines import FilingObligation
-from aeat.i18n import Translatable
+from ..deadlines import FilingObligation
+from ..i18n import Translatable
+
+if TYPE_CHECKING:
+    from ..status import SiteHealthAlert
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -57,6 +61,7 @@ class WorkflowAbortReason(StrEnum):
     PREFLIGHT_FAILED = "PREFLIGHT_FAILED"
     CERT_INVALID = "CERT_INVALID"
     USER_CANCELLED = "USER_CANCELLED"
+    SITE_UNAVAILABLE = "SITE_UNAVAILABLE"
     UNHANDLED_EXCEPTION = "UNHANDLED_EXCEPTION"
 
 
@@ -90,6 +95,7 @@ class WorkflowStep(BaseModel):
     success: bool | None = None
     summary: Translatable
     details: dict[str, str] | None = None
+    site_health_alert: SiteHealthAlert | None = None
 
     @model_validator(mode="after")
     def _check_timestamps(self) -> WorkflowStep:

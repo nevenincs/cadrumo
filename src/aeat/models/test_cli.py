@@ -7,7 +7,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from aeat.models._cli import app
+from ._cli import app
 
 pytestmark = pytest.mark.unit
 
@@ -44,7 +44,7 @@ def test_list_category_filter_iva() -> None:
 
 def test_show_round_trip_via_model_validate_json() -> None:
     """``aeat modelos show 303 --json`` round-trips through ``model_validate_json``."""
-    from aeat.models._metadata import ModeloMetadata
+    from ._metadata import ModeloMetadata
 
     result = _runner.invoke(app, ["show", "303", "--json"])
     assert result.exit_code == 0, result.output

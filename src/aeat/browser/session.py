@@ -2,14 +2,30 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
-from playwright.async_api import BrowserContext, Playwright, ProxySettings
+from playwright.async_api import (
+    BrowserContext,
+    Page,
+    Playwright,
+    ProxySettings,
+    Response,
+)
+from playwright.async_api import (
+    TimeoutError as PlaywrightTimeoutError,
+)
 
-from aeat.config import Settings
-from aeat.errors import AeatError
-from aeat.logging import get_logger
-
+from ..config import Settings
+from ..errors import AeatError, SiteHealthError
+from ..logging import get_logger
+from ..status import (
+    SiteHealthEvidence,
+    SiteHealthState,
+    SiteHealthStatus,
+)
+from ..status._site_health import _URL_ADAPTER
+from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
 
@@ -101,3 +117,77 @@ class BrowserSession:
         except Exception as e:
             logger.error("Failed to create browser context: %s", e)
             raise BrowserError(f"Failed to create browser context: {e}") from e
+
+    async def navigate(self, page: Page, url: str) -> Response | None:
+        """Navigate ``page`` to ``url`` and probe the response health.
+
+        This is an additive helper; direct ``page.goto`` calls remain
+        legal but bypass the health probe. Stages that have migrated
+        to :meth:`navigate` gain automatic classification of AEAT
+        mantenimiento banners, WAF challenges, and rate-limit
+        responses as typed :class:`SiteHealthError` instances.
+
+        Args:
+            page: The Playwright :class:`Page` to navigate.
+            url: The target URL.
+
+        Returns:
+            The :class:`Response` Playwright yielded for the
+            navigation (may be ``None`` when Playwright skipped the
+            response — e.g. cached navigations).
+
+        Raises:
+            SiteHealthError: Either when the parser suite classifies
+                the response as non-OK, or when the underlying
+                ``page.goto`` fails with a transport-level error
+                (DNS / TCP / TLS / Playwright timeout). In the latter
+                case the error carries a sentinel HTTP status of
+                ``599`` and a ``transport-error:<exc-type>`` marker.
+        """
+        try:
+            response = await page.goto(url)
+        except PlaywrightTimeoutError as exc:
+            raise SiteHealthError(status=self._build_unreachable_status(url, exc)) from exc
+        except Exception as exc:
+            raise SiteHealthError(status=self._build_unreachable_status(url, exc)) from exc
+
+        http_status = response.status if response is not None else 599
+        headers_raw = dict(response.headers) if response is not None else {}
+        html = await page.content()
+
+        result = probe_response(
+            url,
+            http_status,
+            headers_raw,
+            html,
+            rate_limit_retry_after_default=self.settings.site_health_rate_limit_retry_after_default,
+        )
+        if result is not None:
+            raise SiteHealthError(status=result)
+        return response
+
+    @staticmethod
+    def _build_unreachable_status(url: str, exc: BaseException) -> SiteHealthStatus:
+        """Compose an UNREACHABLE :class:`SiteHealthStatus` from ``exc``.
+
+        Args:
+            url: The target URL that failed to load.
+            exc: The transport-layer exception raised by Playwright.
+
+        Returns:
+            A populated :class:`SiteHealthStatus` carrying state
+            :attr:`SiteHealthState.UNREACHABLE`, HTTP status ``599``
+            (sentinel within the bounded 100..599 range), and a
+            ``transport-error:<exc-type>`` detected marker.
+        """
+        exc_type_name = type(exc).__name__
+        return SiteHealthStatus(
+            state=SiteHealthState.UNREACHABLE,
+            evidence=SiteHealthEvidence(
+                url=_URL_ADAPTER.validate_python(url),
+                http_status=599,
+                html_fragment="",
+                detected_markers=(f"transport-error:{exc_type_name}",),
+            ),
+            observed_at=datetime.now(tz=UTC),
+        )
