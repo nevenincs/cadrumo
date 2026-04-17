@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import re
 from decimal import ROUND_HALF_UP, Decimal
+from graphlib import CycleError, TopologicalSorter
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -36,7 +37,7 @@ from pydantic import (
     model_validator,
 )
 
-from ..i18n import Translatable, require_authoritative
+from ..i18n import Translatable, TranslationError, require_authoritative
 from ..models import ModeloCadence, ModeloCode, get_modelo
 from ..portals import Portal
 from ._enums import (
@@ -255,13 +256,13 @@ def evaluate(node: FormulaNode, values: dict[str, Decimal]) -> Decimal:
     if isinstance(node, BinaryOp):
         left = evaluate(node.left, values)
         right = evaluate(node.right, values)
-        if node.op is BinaryFormulaOp.ADD:
+        if node.op == BinaryFormulaOp.ADD:
             return left + right
-        if node.op is BinaryFormulaOp.SUB:
+        if node.op == BinaryFormulaOp.SUB:
             return left - right
-        if node.op is BinaryFormulaOp.MUL:
+        if node.op == BinaryFormulaOp.MUL:
             return left * right
-        if node.op is BinaryFormulaOp.DIV:
+        if node.op == BinaryFormulaOp.DIV:
             if right == 0:
                 raise SchemaExtractionError("division by zero in formula AST")
             return (left / right).quantize(_DIV_QUANT, rounding=ROUND_HALF_UP)
@@ -287,16 +288,21 @@ def validate_period_for_modelo(code: ModeloCode, period: str) -> None:
 
     Raises:
         SchemaValidationError: If ``period`` does not match the regex
-            implied by the modelo's cadence.
+            implied by the modelo's cadence, or if ``period`` carries
+            leading / trailing whitespace (callers must strip first).
     """
+    if period != period.strip():
+        raise SchemaValidationError(
+            f"period must not carry surrounding whitespace: {period!r}",
+        )
     cadence = get_modelo(code).cadence
-    if cadence is ModeloCadence.QUARTERLY:
+    if cadence == ModeloCadence.QUARTERLY:
         pattern = _PERIOD_QUARTERLY_RE
-    elif cadence is ModeloCadence.ANNUAL:
+    elif cadence == ModeloCadence.ANNUAL:
         pattern = _PERIOD_ANNUAL_RE
-    elif cadence is ModeloCadence.MONTHLY:
+    elif cadence == ModeloCadence.MONTHLY:
         pattern = _PERIOD_MONTHLY_RE
-    elif cadence is ModeloCadence.AD_HOC:
+    elif cadence == ModeloCadence.AD_HOC:
         pattern = _PERIOD_AD_HOC_RE
     else:
         raise SchemaValidationError(f"unknown cadence: {cadence!r}")
@@ -352,7 +358,7 @@ class Casilla(_StrictFrozenModel):
     def _validate_casilla(self) -> Casilla:
         try:
             require_authoritative(self.label, domain="aeat")
-        except Exception as exc:
+        except TranslationError as exc:
             raise ValueError(str(exc)) from exc
         has_formula = self.formula is not None
         if has_formula != self.computed:
@@ -399,13 +405,32 @@ class Modelo(_StrictFrozenModel):
                     raise ValueError(
                         f"Modelo references unknown casilla {ref!r} from casilla {casilla.casilla_id!r}",
                     )
-        if self.provenance.source is SchemaSource.BOE_ORDEN:
+        if self.provenance.source == SchemaSource.BOE_ORDEN:
             for casilla in self.casillas:
                 if casilla.source_page is None:
                     raise ValueError(
                         "BOE_ORDEN provenance requires a source_page on every "
                         f"casilla; missing on {casilla.casilla_id!r}",
                     )
+            if self.schema_version.boe_ref is None:
+                raise ValueError(
+                    "BOE_ORDEN provenance requires schema_version.boe_ref to be set for traceability",
+                )
+            if self.schema_version.boe_ref != self.provenance.document_ref:
+                raise ValueError(
+                    f"schema_version.boe_ref {self.schema_version.boe_ref!r} "
+                    f"must match provenance.document_ref "
+                    f"{self.provenance.document_ref!r}",
+                )
+        formula_graph: dict[str, set[str]] = {
+            casilla.casilla_id: set(casilla.references_casillas) for casilla in self.casillas
+        }
+        try:
+            TopologicalSorter(formula_graph).prepare()
+        except CycleError as exc:
+            raise ValueError(
+                f"Modelo formula graph has a cycle: {exc.args[1] if len(exc.args) > 1 else exc}",
+            ) from exc
         if self.portal is not None:
             from ..portals import get_portal
 

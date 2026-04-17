@@ -30,9 +30,11 @@ from ..schema import (
     FetchedSchemaSource,
     SchemaCacheError,
     SchemaError,
+    SchemaValidationError,
     fetch_boe_pdf,
     load_modelo_from_cache,
     save_modelo_to_cache,
+    validate_period_for_modelo,
 )
 
 app = typer.Typer(
@@ -45,21 +47,24 @@ app = typer.Typer(
 
 def _resolve_modelo_code(value: str) -> ModeloCode:
     """Accept either the enum name (``MODELO_130``) or the value (``130``)."""
+    stripped = (value or "").strip()
+    if not stripped:
+        raise typer.BadParameter("--modelo is required")
     try:
-        return ModeloCode(value)
+        return ModeloCode(stripped)
     except ValueError:
         try:
-            return ModeloCode[value]
+            return ModeloCode[stripped]
         except KeyError as exc:
             raise typer.BadParameter(
-                f"unknown modelo code: {value!r}",
+                f"unknown modelo code: {stripped!r}",
             ) from exc
 
 
 def _resolve_origin_url(code: ModeloCode, boe_ref: str) -> AnyHttpUrl:
     """Look up the BOE origin URL for ``(code, boe_ref)`` in the public table."""
     for entry in BOE_ORDEN_SOURCES:
-        if entry.modelo_code is code and entry.boe_ref == boe_ref:
+        if entry.modelo_code == code and entry.boe_ref == boe_ref:
             return entry.origin_url
     raise typer.BadParameter(
         f"no BOE_ORDEN_SOURCES entry for ({code.value}, {boe_ref})",
@@ -96,6 +101,13 @@ def refresh(
     """Refresh the cache for ``(modelo, boe_ref)``."""
     settings = load_settings()
     code = _resolve_modelo_code(modelo)
+    period = period.strip()
+    boe_ref = boe_ref.strip()
+    try:
+        validate_period_for_modelo(code, period)
+    except SchemaValidationError as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
     try:
         if pdf_path_override is not None:
             if not pdf_path_override.exists():

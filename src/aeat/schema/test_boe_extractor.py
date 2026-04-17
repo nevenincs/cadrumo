@@ -160,6 +160,75 @@ def test_extractor_raises_on_missing_annex(tmp_path: Path) -> None:
         extractor.extract()
 
 
+def test_extractor_collects_same_page_annex_content(tmp_path: Path) -> None:
+    """Regression: lines after the ANEXO heading on the same page must be parsed."""
+    path = tmp_path / "same-page.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=_ANNEX_LINES,
+        preamble_lines=_PREAMBLE_LINES,
+        same_page_layout=True,
+    )
+    source = _build_source(path)
+    extractor = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    )
+    modelo = extractor.extract()
+    assert {c.casilla_id for c in modelo.casillas} == {"01", "03", "07", "13"}
+
+
+def test_extractor_mixed_plus_minus_chain(tmp_path: Path) -> None:
+    """Mixed +/- chains are preserved as a signed SumFormula."""
+    from . import BinaryFormulaOp as _BinaryFormulaOp
+    from . import BinaryOp as _BinaryOp
+    from . import CasillaRef as _CasillaRef
+    from . import SumFormula as _SumFormula
+
+    path = tmp_path / "mixed.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=(
+            "01 Base imponible 1T",
+            "03 Ingresos computables 1T",
+            "07 Gastos deducibles 1T",
+            "13 Rendimiento neto 1T",
+            "Casilla 13 = Casilla 01 + Casilla 03 \u2212 Casilla 07",
+        ),
+    )
+    source = _build_source(path)
+    modelo = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    ).extract()
+    by_id = {c.casilla_id: c for c in modelo.casillas}
+    formula = by_id["13"].formula
+    assert isinstance(formula, _SumFormula)
+    assert len(formula.terms) == 3
+    assert isinstance(formula.terms[0], _CasillaRef)
+    assert isinstance(formula.terms[1], _CasillaRef)
+    assert isinstance(formula.terms[2], _BinaryOp)
+    assert formula.terms[2].op == _BinaryFormulaOp.SUB
+
+
+def test_guess_data_type_respects_word_boundaries(tmp_path: Path) -> None:
+    """A currency label with 'ejercicios' stays currency, not integer."""
+    path = tmp_path / "boundary.pdf"
+    build_fake_boe_pdf(
+        path,
+        annex_lines=("11 Cuota a compensar de ejercicios anteriores",),
+    )
+    source = _build_source(path)
+    modelo = BoeOrdenExtractor(
+        source=source,
+        modelo_code=ModeloCode.MODELO_130,
+        period="2025Q4",
+    ).extract()
+    assert modelo.casillas[0].data_type is CasillaDataType.CURRENCY_EUR
+
+
 def test_extractor_raises_on_unparseable_formula(tmp_path: Path) -> None:
     path = tmp_path / "bad-formula.pdf"
     build_fake_boe_pdf(

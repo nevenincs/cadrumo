@@ -306,6 +306,40 @@ class TestModeloValidators:
                 ),
             )
 
+    def test_circular_formula_graph_rejected(self) -> None:
+        casillas = (
+            _minimal_casilla(
+                casilla_id="01",
+                formula=CasillaRef(casilla_id="03"),
+                refs=("03",),
+            ),
+            _minimal_casilla(
+                casilla_id="03",
+                formula=CasillaRef(casilla_id="01"),
+                refs=("01",),
+            ),
+        )
+        with pytest.raises(ValidationError, match="cycle"):
+            _build_modelo(casillas=casillas)
+
+    def test_boe_orden_requires_schema_version_boe_ref(self) -> None:
+        with pytest.raises(ValidationError, match="schema_version"):
+            Modelo(
+                modelo_code=ModeloCode.MODELO_130,
+                portal=None,
+                period="2025Q4",
+                casillas=(_minimal_casilla(),),
+                provenance=_provenance(),
+                extracted_at=datetime(2026, 4, 17, 9, 5, tzinfo=UTC),
+                schema_version=SchemaVersion(),
+            )
+
+
+class TestValidatePeriodWhitespace:
+    def test_rejects_surrounding_whitespace(self) -> None:
+        with pytest.raises(SchemaValidationError, match="whitespace"):
+            validate_period_for_modelo(ModeloCode.MODELO_130, " 2025Q4")
+
 
 class TestValidatePeriodForModelo:
     def test_quarterly_accepts_period(self) -> None:

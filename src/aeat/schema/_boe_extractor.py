@@ -24,9 +24,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 
-import pdfplumber
-from pydantic import AnyHttpUrl, AwareDatetime
-
 from ..i18n import Translatable
 from ..logging import get_logger
 from ..models import ModeloCode
@@ -49,17 +46,39 @@ from ._models import (
 
 _logger = get_logger(__name__)
 
-_ANNEX_RE = re.compile(r"^\s*ANEXO(?:\s+[IVX]+)?\s*$", re.IGNORECASE)
+_ANNEX_RE = re.compile(r"^\s*ANEXO(?:\s+[IVX]+)?(?:\W|$)", re.IGNORECASE)
+"""Matches ``ANEXO``, ``ANEXO I``, ``Anexo I — Modelo 130``, etc.
+
+Accepts a trailing word-boundary so inline headings (the shape real
+BOE PDFs typeset) are recognised; a standalone ``ANEXO`` line still
+matches because ``$`` is in the alternation.
+"""
+
 _CASILLA_DECL_RE = re.compile(
-    r"^\s*(?P<id>\d{2,4})\s+(?P<label>\S.+?)\s*$",
+    r"^\s*(?P<id>\d{2,3})\s+(?P<label>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ].*?)\s*$",
 )
+"""Matches ``NN <Spanish label>`` where the label starts with a letter.
+
+Constraining the leading character to a letter (not ``\\S``) rules out
+page-footer lines that start with another digit (``"29330 Viernes..."``),
+URLs, or typesetting artifacts.
+"""
+
 _FORMULA_RE = re.compile(
-    r"^\s*Casilla\s+(?P<id>\d{2,4})\s*=\s*(?P<body>.+?)\s*$",
+    r"^\s*Casilla\s+(?P<id>\d{2,3})\s*=\s*(?P<body>.+?)\s*$",
     re.IGNORECASE,
 )
 _BLOCK_RE = re.compile(r"^\s*#\s+(?P<heading>.+?)\s*$")
-_CASILLA_REF_IN_BODY = re.compile(r"Casilla\s+(\d{2,4})", re.IGNORECASE)
+_CASILLA_REF_IN_BODY = re.compile(r"Casilla\s+(\d{2,3})", re.IGNORECASE)
 _PERCENT_LITERAL_RE = re.compile(r"0[,\.](\d+)")
+
+_MINUS_CHARS = ("\u2212", "\u2013", "\u2014")
+"""Unicode minus variants (U+2212, en-dash, em-dash) BOE typesets."""
+
+_MUL_CHARS = ("x", "X", "\u00d7")
+"""Characters normalised to ASCII ``*`` in formula bodies."""
+
+_WORD_BOUNDARY_ES_TEMPLATE = r"(?<![\wáéíóúñüÁÉÍÓÚÑÜ]){word}(?![\wáéíóúñüÁÉÍÓÚÑÜ])"
 
 _CURRENCY_KEYWORDS: tuple[str, ...] = (
     "cuota",
@@ -74,9 +93,27 @@ _CURRENCY_KEYWORDS: tuple[str, ...] = (
     "retencion",
     "retención",
 )
-_PERCENT_KEYWORDS: tuple[str, ...] = ("%", "tipo", "porcentaje")
-_INTEGER_KEYWORDS: tuple[str, ...] = ("ejercicio", "año", "ano")
+_PERCENT_KEYWORDS: tuple[str, ...] = ("%", "porcentaje")
+"""Drop ``"tipo"`` — it collides with currency labels like
+*"Base del tipo general"*. The word ``%`` remains as the canonical
+percent marker; ``"porcentaje"`` covers labels that spell it out.
+"""
+
+_INTEGER_KEYWORDS: tuple[str, ...] = ("ejercicio", "año", "ejercicios")
+"""Drop the accentless ``"ano"`` variant: it matched ``"año"`` as a
+substring and mis-classified currency labels containing ``"ano"``
+(frequent in gerund / plural forms).
+"""
+
 _DATE_KEYWORDS: tuple[str, ...] = ("fecha",)
+
+
+def _has_word(text: str, word: str) -> bool:
+    """Word-boundary aware keyword match that handles Spanish diacritics."""
+    if word in {"%"}:
+        return word in text
+    pattern = _WORD_BOUNDARY_ES_TEMPLATE.format(word=re.escape(word))
+    return re.search(pattern, text) is not None
 
 
 @dataclass(frozen=True)
@@ -97,20 +134,65 @@ class _CasillaDraft:
 
 
 def _guess_data_type(label: str) -> CasillaDataType:
+    """Classify a Spanish casilla label into a :class:`CasillaDataType`.
+
+    Currency is checked before integer/date/percentage so that a
+    compound label like *"Cuota a compensar de ejercicios anteriores"*
+    (currency + integer keyword) resolves to ``CURRENCY_EUR``, not
+    ``INTEGER``. Keyword matches use whole-word comparison with
+    Spanish-diacritic-aware boundaries so ``"ano"`` does not match
+    ``"año"`` and ``"base"`` is not swallowed by the percent branch.
+    """
     lowered = label.lower()
+    for kw in _CURRENCY_KEYWORDS:
+        if _has_word(lowered, kw):
+            return CasillaDataType.CURRENCY_EUR
     for kw in _PERCENT_KEYWORDS:
-        if kw in lowered:
+        if _has_word(lowered, kw):
             return CasillaDataType.PERCENTAGE
     for kw in _DATE_KEYWORDS:
-        if kw in lowered:
+        if _has_word(lowered, kw):
             return CasillaDataType.DATE
     for kw in _INTEGER_KEYWORDS:
-        if kw in lowered:
+        if _has_word(lowered, kw):
             return CasillaDataType.INTEGER
-    for kw in _CURRENCY_KEYWORDS:
-        if kw in lowered:
-            return CasillaDataType.CURRENCY_EUR
     return CasillaDataType.CURRENCY_EUR
+
+
+def _normalise_formula_body(body: str) -> str:
+    """Normalise BOE typographic variants to ASCII operators."""
+    out = body
+    for mul in _MUL_CHARS:
+        out = out.replace(mul, "*")
+    for minus in _MINUS_CHARS:
+        out = out.replace(minus, "-")
+    return out
+
+
+def _parse_signed_terms(normalised: str) -> tuple[tuple[str, str], ...]:
+    """Tokenise a normalised additive chain into ``((sign, casilla_id), ...)``.
+
+    Returns an empty tuple if the body is not a pure
+    ``[+|-] Casilla N ( [+|-] Casilla M )*`` chain — the caller falls
+    back to other shapes when this happens.
+    """
+    pattern = re.compile(
+        r"(?P<sign>[+\-])?\s*Casilla\s+(?P<id>\d{2,3})",
+        re.IGNORECASE,
+    )
+    matches = list(pattern.finditer(normalised))
+    if not matches:
+        return ()
+    # Require the chain to cover the body (ignoring trailing whitespace).
+    last = matches[-1]
+    if last.end() != len(normalised.rstrip()):
+        # Trailing content we do not understand — refuse to guess.
+        return ()
+    terms: list[tuple[str, str]] = []
+    for match in matches:
+        sign = match.group("sign") or "+"
+        terms.append((sign, match.group("id")))
+    return tuple(terms)
 
 
 def _parse_formula_prose(casilla_id: str, body: str) -> FormulaNode:
@@ -118,17 +200,23 @@ def _parse_formula_prose(casilla_id: str, body: str) -> FormulaNode:
 
     Supported shapes:
 
-    - ``Casilla A + Casilla B`` (and ``+ ... + Casilla N`` chains).
-    - ``Casilla A - Casilla B`` (two-term difference).
-    - ``Casilla A x 0,20`` / ``* 0,20`` (percent multiply — the BOE
-      glyph is U+00D7 MULTIPLICATION SIGN, normalised to ASCII ``*``).
+    - ``Casilla A + Casilla B`` and arbitrary ``+ / -`` chains (e.g.
+      ``Casilla 01 + Casilla 02 - Casilla 03``). Unicode minus
+      variants (``U+2212``, en-dash, em-dash) are normalised to ASCII.
+    - ``Casilla A x 0,20`` / ``* 0,20`` (percent multiply — BOE glyph
+      U+00D7 MULTIPLICATION SIGN is normalised to ASCII ``*``).
     - A single ``Casilla A`` passthrough.
+
+    Mixed ``+ / -`` chains are represented as a :class:`SumFormula`
+    where the negative terms are wrapped in
+    ``BinaryOp(SUB, 0, CasillaRef(id))``. Two-term subtractions
+    collapse to a single :class:`BinaryOp` for readability.
 
     Raises:
         SchemaExtractionError: For any body that does not match one
             of the above shapes.
     """
-    normalised = re.sub(r"[xX\u00d7]", "*", body)
+    normalised = _normalise_formula_body(body)
     refs = _CASILLA_REF_IN_BODY.findall(body)
     if not refs:
         raise SchemaExtractionError(
@@ -142,23 +230,30 @@ def _parse_formula_prose(casilla_id: str, body: str) -> FormulaNode:
             left=CasillaRef(casilla_id=refs[0]),
             right=LiteralFormula(value=literal),
         )
-    if "-" in normalised:
-        if len(refs) != 2:
-            raise SchemaExtractionError(
-                f"formula for casilla {casilla_id!r} uses subtraction but "
-                f"has {len(refs)} refs; only two-term differences are "
-                f"supported in v1: {body!r}",
+    terms = _parse_signed_terms(normalised)
+    if terms:
+        if len(terms) == 1 and terms[0][0] == "+":
+            return CasillaRef(casilla_id=terms[0][1])
+        if len(terms) == 2 and terms[0][0] == "+" and terms[1][0] == "-":
+            return BinaryOp(
+                op=BinaryFormulaOp.SUB,
+                left=CasillaRef(casilla_id=terms[0][1]),
+                right=CasillaRef(casilla_id=terms[1][1]),
             )
-        return BinaryOp(
-            op=BinaryFormulaOp.SUB,
-            left=CasillaRef(casilla_id=refs[0]),
-            right=CasillaRef(casilla_id=refs[1]),
-        )
-    if "+" in normalised or len(refs) > 1:
-        terms: tuple[FormulaNode, ...] = tuple(CasillaRef(casilla_id=r) for r in refs)
-        return SumFormula(terms=terms)
-    if len(refs) == 1:
-        return CasillaRef(casilla_id=refs[0])
+        sum_terms: list[FormulaNode] = []
+        for sign, cid in terms:
+            ref = CasillaRef(casilla_id=cid)
+            if sign == "+":
+                sum_terms.append(ref)
+            else:
+                sum_terms.append(
+                    BinaryOp(
+                        op=BinaryFormulaOp.SUB,
+                        left=LiteralFormula(value=Decimal("0")),
+                        right=ref,
+                    ),
+                )
+        return SumFormula(terms=tuple(sum_terms))
     raise SchemaExtractionError(
         f"cannot parse formula body for casilla {casilla_id!r}: {body!r}",
     )
@@ -193,7 +288,7 @@ class BoeOrdenExtractor:
             period: Filing period string (validated against the
                 modelo's cadence during :meth:`extract`).
         """
-        if source.modelo_code is not modelo_code:
+        if source.modelo_code != modelo_code:
             raise SchemaExtractionError(
                 "BoeOrdenExtractor source.modelo_code "
                 f"{source.modelo_code!r} does not match modelo_code "
@@ -231,15 +326,13 @@ class BoeOrdenExtractor:
             )
             for draft in drafts
         )
-        fetched_at: AwareDatetime = self._source.fetched_at
-        origin_url: AnyHttpUrl = self._source.origin_url
         provenance = SchemaProvenance(
             source=SchemaSource.BOE_ORDEN,
-            origin_url=origin_url,
+            origin_url=self._source.origin_url,
             document_ref=self._source.boe_ref,
             sha256=self._source.sha256,
             content_length=self._source.content_length,
-            fetched_at=fetched_at,
+            fetched_at=self._source.fetched_at,
         )
         return Modelo(
             modelo_code=self._modelo_code,
@@ -253,6 +346,11 @@ class BoeOrdenExtractor:
 
     def _read_annex_lines(self) -> list[tuple[int, str]]:
         """Return ``(page_number, line)`` tuples starting after the annex heading."""
+        # Lazy import: pdfplumber pulls in pdfminer.six + pillow, adding
+        # hundreds of ms to every `aeat` CLI help screen. Defer the cost
+        # to the point where it is actually required.
+        import pdfplumber
+
         annex_start_page: int | None = None
         collected: list[tuple[int, str]] = []
         with pdfplumber.open(str(self._source.pdf_path)) as pdf:
@@ -260,9 +358,11 @@ class BoeOrdenExtractor:
                 text = page.extract_text() or ""
                 lines = text.splitlines()
                 if annex_start_page is None:
-                    for line in lines:
+                    for index, line in enumerate(lines):
                         if _ANNEX_RE.match(line):
                             annex_start_page = page.page_number
+                            for remaining in lines[index + 1 :]:
+                                collected.append((page.page_number, remaining))
                             break
                     continue
                 for line in lines:
