@@ -49,6 +49,17 @@ class TestPersistenceRoundTrip:
         with pytest.raises(WorkflowError):
             load_run("missing", runs_dir=tmp_path)
 
+    def test_load_rejects_traversal_id(self, tmp_path: Path) -> None:
+        with pytest.raises(WorkflowError, match="simple filename token"):
+            load_run("../escape", runs_dir=tmp_path)
+
+    def test_save_rejects_traversal_id(self, tmp_path: Path) -> None:
+        escaped = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)).model_copy(
+            update={"run_id": "../escape"}
+        )
+        with pytest.raises(WorkflowError, match="simple filename token"):
+            save_run(escaped, runs_dir=tmp_path)
+
     def test_list_runs_sorted_descending(self, tmp_path: Path) -> None:
         early = _result("a" * 16, datetime(2026, 4, 10, tzinfo=UTC))
         late = _result("b" * 16, datetime(2026, 4, 12, tzinfo=UTC))

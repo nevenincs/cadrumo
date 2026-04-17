@@ -13,6 +13,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import cast
 
+from aeat._paths import resolve_record_json_path
 from aeat.config import Settings
 from aeat.filing import FilingAmendment, FilingDraft
 from aeat.logging import get_logger
@@ -250,7 +251,10 @@ class SubmissionEngine:
         """Write ``filing`` as pretty JSON under ``aeat_submissions_dir``."""
         target_dir = self.settings.aeat_submissions_dir
         target_dir.mkdir(parents=True, exist_ok=True)
-        target = target_dir / f"{filing.submission_id}.json"
+        try:
+            target = resolve_record_json_path(target_dir, filing.submission_id, context="submission id")
+        except ValueError as exc:
+            raise SubmissionError(str(exc)) from exc
         target.write_text(filing.model_dump_json(indent=2), encoding="utf-8")
         _logger.info("engine: persisted %s", target)
 
@@ -258,7 +262,10 @@ class SubmissionEngine:
         """Write ``result`` as pretty JSON under ``aeat_submissions_dir/amendment-results``."""
         target_dir = self.settings.aeat_submissions_dir / "amendment-results"
         target_dir.mkdir(parents=True, exist_ok=True)
-        target = target_dir / f"{result.amendment_id}.json"
+        try:
+            target = resolve_record_json_path(target_dir, result.amendment_id, context="amendment id")
+        except ValueError as exc:
+            raise SubmissionError(str(exc)) from exc
         target.write_text(result.model_dump_json(indent=2), encoding="utf-8")
         _logger.info("engine: persisted amendment result %s", target)
 
@@ -275,7 +282,14 @@ class SubmissionEngine:
         Raises:
             SubmissionError: If no record exists for ``submission_id``.
         """
-        target = self.settings.aeat_submissions_dir / f"{submission_id}.json"
+        try:
+            target = resolve_record_json_path(
+                self.settings.aeat_submissions_dir,
+                submission_id,
+                context="submission id",
+            )
+        except ValueError as exc:
+            raise SubmissionError(str(exc)) from exc
         if not target.exists():
             raise SubmissionError(f"no persisted submission with id {submission_id!r}")
         return SubmittedFiling.model_validate_json(target.read_text(encoding="utf-8"))

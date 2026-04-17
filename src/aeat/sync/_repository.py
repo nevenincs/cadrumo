@@ -16,6 +16,7 @@ import tempfile
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
+from aeat._paths import resolve_record_json_path
 from aeat.logging import get_logger
 
 from ._divergence import DivergenceRecord, ResolutionState
@@ -68,7 +69,10 @@ class JsonFileDivergenceRepository:
         return self._root
 
     def _path_for(self, record_id: str) -> Path:
-        return self._root / f"{record_id}.json"
+        try:
+            return resolve_record_json_path(self._root, record_id, context="divergence record id")
+        except ValueError as exc:
+            raise DivergenceRepositoryError(str(exc)) from exc
 
     def save(self, record: DivergenceRecord) -> None:
         target = self._path_for(record.record_id)
