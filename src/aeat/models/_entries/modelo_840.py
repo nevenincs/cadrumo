@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_840,
@@ -46,7 +47,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 840",
+    submission_portal=Portal.PORTAL_M840_IAE,
     known_gotchas=(
         "Default-exento para todo autónomo persona física.",
         "TRLHL arts 78-91 no disponibles en corpus on-disk.",

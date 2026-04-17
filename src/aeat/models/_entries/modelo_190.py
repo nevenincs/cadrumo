@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_190,
@@ -58,6 +59,6 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_111,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 190",
+    submission_portal=Portal.PORTAL_M190_RESUMEN_TRABAJO,
     known_gotchas=("La taxonomía de subclaves es la máquina de estados del modelo.",),
 )

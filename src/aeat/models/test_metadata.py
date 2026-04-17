@@ -55,7 +55,7 @@ def _make(**overrides: object) -> ModeloMetadata:
         "applicability": _make_applicability(),
         "caps_into": ModeloCode.MODELO_390,
         "related_modelos": (ModeloCode.MODELO_349,),
-        "submission_portal_hint": "Sede Electrónica AEAT — Modelo 303",
+        "submission_portal": None,
         "known_gotchas": ("SII exoneración",),
     }
     base.update(overrides)

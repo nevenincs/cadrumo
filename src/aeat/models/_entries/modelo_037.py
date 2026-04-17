@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_037,
@@ -57,6 +58,6 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_036,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 037 (Censo G322)",
+    submission_portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
     known_gotchas=("Camino de upgrade a 036 ante cambios de régimen.",),
 )

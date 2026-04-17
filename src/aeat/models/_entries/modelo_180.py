@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_180,
@@ -55,6 +56,6 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_115,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 180",
+    submission_portal=Portal.PORTAL_M180_RESUMEN_ARRENDAMIENTOS,
     known_gotchas=("Debe reconciliar con la suma de los cuatro 115 del ejercicio.",),
 )

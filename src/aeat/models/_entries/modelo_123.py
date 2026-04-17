@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_123,
@@ -53,7 +54,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 123",
+    submission_portal=Portal.PORTAL_M123_RETENCIONES_CAPITAL,
     known_gotchas=(
         "Modelo 193 ausente del registro v1; caps_into deliberadamente None.",
         "RIRPF arts 74-76 no disponibles en corpus on-disk.",

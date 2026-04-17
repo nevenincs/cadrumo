@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_349,
@@ -56,7 +57,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_303,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 349",
+    submission_portal=Portal.PORTAL_M349_INTRACOMUNITARIAS,
     known_gotchas=(
         "Requiere alta en ROI (censo) vía Modelo 036.",
         "RIVA art 81.3 no disponible en corpus on-disk.",

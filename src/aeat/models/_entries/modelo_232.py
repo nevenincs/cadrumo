@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_232,
@@ -51,6 +52,6 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_200,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 232",
+    submission_portal=Portal.PORTAL_M232_VINCULADAS,
     known_gotchas=("Solo aplicable a SL; candidato a aplazamiento.",),
 )

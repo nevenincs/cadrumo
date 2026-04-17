@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_111,
@@ -67,7 +68,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=ModeloCode.MODELO_190,
     related_modelos=(ModeloCode.MODELO_190,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 111",
+    submission_portal=Portal.PORTAL_M111_RETENCIONES_TRABAJO,
     known_gotchas=(
         "Períodos con cero actividad siguen exigiendo presentación; suspensión requiere "
         "modificación censal vía Modelo 036.",

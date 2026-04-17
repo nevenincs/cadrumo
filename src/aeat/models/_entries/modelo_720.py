@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_720,
@@ -46,7 +47,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 720",
+    submission_portal=Portal.PORTAL_M720_BIENES_EXTRANJERO,
     known_gotchas=(
         "Sanciones específicas derogadas por STJUE C-788/19; la obligación informativa se mantiene.",
         "RGAT arts 42 bis/ter/54 bis no disponibles en corpus on-disk.",

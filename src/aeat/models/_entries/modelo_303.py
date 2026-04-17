@@ -15,6 +15,7 @@ from aeat.models._entries._common import (
     make_citation,
 )
 from aeat.models._metadata import ModeloMetadata
+from aeat.portals._codes import Portal
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_303,
@@ -55,7 +56,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=ModeloCode.MODELO_390,
     related_modelos=(ModeloCode.MODELO_390, ModeloCode.MODELO_349, ModeloCode.MODELO_369),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 303",
+    submission_portal=Portal.PORTAL_M303_IVA_AUTOLIQUIDACION,
     known_gotchas=(
         "La pro-rata (art 104 LIVA) muta varias casillas.",
         "Los obligados a SII usan plazos mensuales distintos.",
