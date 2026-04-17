@@ -93,8 +93,7 @@ class _SubmissionEngine:
         self,
         draft: _Draft,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         today: date | None = None,
     ) -> SubmittedFilingLike:
         return SubmittedFilingLike(

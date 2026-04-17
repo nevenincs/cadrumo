@@ -20,6 +20,9 @@ from aeat.filing import (
 )
 from aeat.filing.testing import SyntheticProfile, default_schema_provider
 from aeat.submission import (
+    AeatLiveSubmitNotEnabledError,
+    AeatLiveTransportUnavailableError,
+    AeatPytestLiveWriteRefusedError,
     AmendmentSubmissionResult,
     CasillaInputKind,
     CasillaRecord,
@@ -31,7 +34,6 @@ from aeat.submission import (
     Portal,
     SubmissionAttempt,
     SubmissionEngine,
-    SubmissionPreflightError,
     SubmissionStatus,
     Submitter,
 )
@@ -158,11 +160,16 @@ class _RecordingSubmitter(Submitter):
         return attempt, Justificante(csv="CSV-99", pdf_path=Path("var/j.pdf"))
 
 
-def _build_engine(tmp_path: Path, *, require_confirmation: bool = True) -> tuple[SubmissionEngine, _RecordingSubmitter]:
+def _build_engine(
+    tmp_path: Path,
+    *,
+    live_submit_enabled: bool = False,
+    live_transport_supported: bool = True,
+) -> tuple[SubmissionEngine, _RecordingSubmitter]:
     settings = Settings(
         aeat_submissions_dir=tmp_path / "submissions",
         aeat_submission_browser_trace_dir=tmp_path / "traces",
-        aeat_submission_require_human_confirmation=require_confirmation,
+        aeat_live_submit_enabled=live_submit_enabled,
     )
     submitter = _RecordingSubmitter()
     engine = SubmissionEngine(
@@ -175,6 +182,7 @@ def _build_engine(tmp_path: Path, *, require_confirmation: bool = True) -> tuple
         justificante_parser=_Parser(),
         submitters={"130": submitter},
         settings=settings,
+        live_transport_supported=live_transport_supported,
     )
     return engine, submitter
 
@@ -217,9 +225,9 @@ def _build_amendment() -> FilingAmendment:
 
 
 class TestSubmitDraftDryRun:
-    def test_defaults_to_dry_run(self, tmp_path: Path) -> None:
+    def test_explicit_dry_run(self, tmp_path: Path) -> None:
         engine, submitter = _build_engine(tmp_path)
-        filing = asyncio.run(engine.submit_draft(_Draft()))
+        filing = asyncio.run(engine.submit_draft(_Draft(), dry_run=True))
         assert submitter.dry_run_calls == 1
         assert submitter.submit_calls == 0
         assert filing.status is SubmissionStatus.PENDING
@@ -229,36 +237,42 @@ class TestSubmitDraftDryRun:
 
     def test_dry_run_roundtrip(self, tmp_path: Path) -> None:
         engine, _ = _build_engine(tmp_path)
-        filing = asyncio.run(engine.submit_draft(_Draft()))
+        filing = asyncio.run(engine.submit_draft(_Draft(), dry_run=True))
         restored = engine.load_submission(filing.submission_id)
         assert restored == filing
 
 
 class TestSubmitDraftLiveGating:
-    def test_live_requires_override(self, tmp_path: Path) -> None:
+    def test_live_refused_when_live_submit_gate_off(self, tmp_path: Path) -> None:
         engine, submitter = _build_engine(tmp_path)
-        with pytest.raises(SubmissionPreflightError, match="override_confirmation"):
+        with pytest.raises(AeatLiveSubmitNotEnabledError, match="AEAT_LIVE_SUBMIT_ENABLED"):
             asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
         assert submitter.submit_calls == 0
 
-    def test_live_refused_when_settings_gate_off(self, tmp_path: Path) -> None:
-        engine, submitter = _build_engine(tmp_path, require_confirmation=False)
-        with pytest.raises(SubmissionPreflightError, match="HUMAN_CONFIRMATION"):
-            asyncio.run(engine.submit_draft(_Draft(), dry_run=False, override_confirmation=True))
+    def test_live_refused_under_pytest_even_with_env_open(self, tmp_path: Path) -> None:
+        engine, submitter = _build_engine(
+            tmp_path,
+            live_submit_enabled=True,
+        )
+        with pytest.raises(AeatPytestLiveWriteRefusedError, match="pytest"):
+            asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
         assert submitter.submit_calls == 0
 
-    def test_live_double_gate_open(self, tmp_path: Path) -> None:
-        engine, submitter = _build_engine(tmp_path)
-        filing = asyncio.run(engine.submit_draft(_Draft(), dry_run=False, override_confirmation=True))
-        assert submitter.submit_calls == 1
-        assert filing.status is SubmissionStatus.SUBMITTED
-        assert filing.justificante_csv == "CSV-99"
+    def test_live_refused_when_transport_is_stubbed(self, tmp_path: Path) -> None:
+        engine, submitter = _build_engine(
+            tmp_path,
+            live_submit_enabled=True,
+            live_transport_supported=False,
+        )
+        with pytest.raises(AeatLiveTransportUnavailableError, match="stubbed"):
+            asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
+        assert submitter.submit_calls == 0
 
 
 class TestListSubmissions:
     def test_filter_by_modelo(self, tmp_path: Path) -> None:
         engine, _ = _build_engine(tmp_path)
-        asyncio.run(engine.submit_draft(_Draft()))
+        asyncio.run(engine.submit_draft(_Draft(), dry_run=True))
         all_ = engine.list_submissions()
         assert len(all_) == 1
         assert engine.list_submissions(modelo="130") == all_
@@ -268,7 +282,7 @@ class TestListSubmissions:
 class TestSubmitAmendment:
     def test_defaults_to_dry_run_and_persists_result(self, tmp_path: Path) -> None:
         engine, submitter = _build_engine(tmp_path)
-        result = asyncio.run(engine.submit_amendment(_build_amendment()))
+        result = asyncio.run(engine.submit_amendment(_build_amendment(), dry_run=True))
         assert isinstance(result, AmendmentSubmissionResult)
         assert result.dry_run is True
         assert result.filing.status is SubmissionStatus.PENDING

@@ -34,6 +34,22 @@ class SubmissionPreflightError(SubmissionError):
     """Raised when preflight gating rejects a draft before any browser work."""
 
 
+class AeatLiveSubmitNotEnabledError(SubmissionPreflightError):
+    """Raised when the live-submit env gate is not enabled."""
+
+
+class AeatPytestLiveWriteRefusedError(SubmissionPreflightError):
+    """Raised when pytest reaches a live-capable submission call."""
+
+
+class AeatLiveTransportUnavailableError(SubmissionPreflightError):
+    """Raised when a live write is requested on a stubbed transport."""
+
+
+class AeatLiveConfirmationDeclinedError(SubmissionPreflightError):
+    """Raised when the operator does not type the exact live-submit phrase."""
+
+
 class SubmissionFormFillError(SubmissionError):
     """Raised when the submitter cannot fill a casilla-keyed input on the portal."""
 

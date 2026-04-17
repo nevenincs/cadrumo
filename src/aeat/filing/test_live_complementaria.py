@@ -59,7 +59,6 @@ def test_live_complementaria_dry_run_only(tmp_path) -> None:
         Settings(
             aeat_submissions_dir=tmp_path / "submissions",
             aeat_submission_browser_trace_dir=tmp_path / "traces",
-            aeat_submission_require_human_confirmation=True,
         )
     )
     result = asyncio.run(engine.submit_amendment(amendment, dry_run=True))

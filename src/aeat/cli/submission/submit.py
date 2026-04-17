@@ -13,6 +13,7 @@ from aeat.auth import CertificateError, CertificateHealthSeverity
 from aeat.auth import health as certificate_health
 from aeat.cli.submission._helpers import build_engine, load_draft
 from aeat.config import Settings
+from aeat.submission import SubmissionError
 
 _CONSOLE = Console()
 
@@ -98,18 +99,23 @@ def submit_cmd(
 
     The command refuses to run unless ``--i-understand-this-is-real``
     is explicitly passed on the command line. Even with the flag set,
-    the engine enforces the ``AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION``
-    settings gate.
+    the engine still owns the env gates, pytest refusal, exact phrase
+    confirmation, and live transport checks.
     """
     if not i_understand_this_is_real:
         _CONSOLE.print("[red]refusing:[/red] live submission requires --i-understand-this-is-real on the command line.")
         raise typer.Exit(code=2)
 
-    _enforce_cert_health(settings=Settings(), force_expiring_cert=force_expiring_cert)
-
     draft = load_draft(draft_path)
-    engine = build_engine()
-    filing = asyncio.run(engine.submit_draft(draft, dry_run=False, override_confirmation=True))
+    settings = Settings()
+    engine = build_engine(settings)
+    if engine.live_transport_supported:
+        _enforce_cert_health(settings=settings, force_expiring_cert=force_expiring_cert)
+    try:
+        filing = asyncio.run(engine.submit_draft(draft, dry_run=False))
+    except SubmissionError as exc:
+        _CONSOLE.print(f"[red]refusing:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
     _CONSOLE.print(
         f"[green]LIVE submission OK[/green]: submission_id={filing.submission_id} status={filing.status.value}"
     )

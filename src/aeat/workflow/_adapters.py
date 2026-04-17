@@ -136,15 +136,13 @@ class SubmissionEngineAdapter:
         self,
         draft: FilingDraftLike,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         today: date | None = None,
     ) -> SubmittedFilingLike:
         """Delegate to :meth:`SubmissionEngine.submit_draft` and project."""
         result = await self._engine.submit_draft(
             draft,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
             today=today,
         )
         return SubmittedFilingLike(

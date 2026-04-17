@@ -57,7 +57,7 @@ def test_list_requires_profile_when_setting_unset(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("AEAT_DEFAULT_PROFILE_PATH", raising=False)
+    monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", "")
     result = runner.invoke(app, ["list", "--year", "2026"])
     assert result.exit_code != 0
     assert "profile" in result.output.lower()

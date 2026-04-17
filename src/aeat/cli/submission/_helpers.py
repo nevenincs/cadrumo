@@ -196,6 +196,7 @@ def build_engine(settings: Settings | None = None) -> SubmissionEngine:
         justificante_parser=_StubJustificanteParser(),
         submitters=submitters,
         settings=cfg,
+        live_transport_supported=False,
     )
 
 

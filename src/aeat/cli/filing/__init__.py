@@ -26,7 +26,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli._live import requires_live_enabled
 from aeat.cli.submission._helpers import build_engine as build_submission_engine
 from aeat.config import load_settings
 from aeat.filing import (
@@ -47,7 +46,7 @@ from aeat.filing.testing import (
     default_schema_provider,
 )
 from aeat.logging import get_logger
-from aeat.submission import SubmissionEngine
+from aeat.submission import SubmissionEngine, SubmissionError
 
 app = typer.Typer(
     name="filing",
@@ -409,20 +408,16 @@ def submit_complementaria_cmd(
     engine = _submission_engine()
 
     dry_run = not live
-    override_confirmation = False
-    if live:
-        requires_live_enabled()
-        override_confirmation = typer.confirm(
-            "This will perform a real AEAT amendment submission. Continue?",
-            abort=True,
+    try:
+        submission_result = asyncio.run(
+            engine.submit_amendment(
+                amendment,
+                dry_run=dry_run,
+            )
         )
-    submission_result = asyncio.run(
-        engine.submit_amendment(
-            amendment,
-            dry_run=dry_run,
-            override_confirmation=override_confirmation,
-        )
-    )
+    except SubmissionError as exc:
+        _console.print(f"[red]refusing:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
     status_label = "dry-run" if submission_result.dry_run else "LIVE"
     typer.echo(
         f"{status_label} amendment submission OK amendment_id={submission_result.amendment_id} "

@@ -13,7 +13,7 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from aeat.auth import CertificateBackend
@@ -373,15 +373,11 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "submissions",
         description="Directory where SubmittedFiling JSON audit records are persisted",
     )
-    aeat_submission_dry_run_default: bool = Field(
-        default=True,
-        description="Default for SubmissionEngine.submit_draft(dry_run=...) when omitted by the CLI",
-    )
-    aeat_submission_require_human_confirmation: bool = Field(
-        default=True,
+    aeat_live_submit_enabled: bool = Field(
+        default=False,
         description=(
-            "Belt-and-braces safety gate for live submissions. When False, "
-            "the engine refuses to enter live mode even if override_confirmation=True"
+            "Interactive-only opt-in for real AEAT writes. Must never be enabled "
+            "from pytest, CI, fixtures, or background jobs."
         ),
     )
     aeat_submission_browser_trace_dir: Path = Field(
@@ -489,6 +485,33 @@ class Settings(BaseSettings):
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
+
+    @field_validator(
+        "aeat_certificate_path",
+        "aeat_default_profile_path",
+        "aeat_workflow_draft_inputs_path",
+        mode="before",
+    )
+    @classmethod
+    def _empty_optional_paths_are_none(cls, value: object) -> object:
+        """Treat blank env vars for optional path fields as unset."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
+    @field_validator(
+        "aeat_certificate_password_secret",
+        "aeat_llm_anthropic_api_key",
+        "aeat_llm_openai_api_key",
+        "aeat_llm_gemini_api_key",
+        mode="before",
+    )
+    @classmethod
+    def _empty_optional_secrets_are_none(cls, value: object) -> object:
+        """Treat blank env vars for optional secret fields as unset."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
 
     @classmethod
     def env_var_names(cls) -> set[str]:
