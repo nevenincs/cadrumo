@@ -286,13 +286,24 @@ class AeatAuthenticator:
         self._settings = settings
         self._browser_session_factory = browser_session_factory
         self._navigation_timeout_ms = navigation_timeout_ms
+        # All asyncio primitives below are bound to the first event
+        # loop that awaits the authenticator. The class assumes a
+        # single-loop lifetime — constructing an instance in one loop
+        # (e.g. a pytest-asyncio fixture) and reusing it in another
+        # will trip "attached to a different loop" errors. Callers
+        # that need cross-loop reuse must construct a fresh instance.
         self._lock = asyncio.Lock()
         self._browser_session: BrowserSessionLike | None = None
         self._context: BrowserContextLike | None = None
         self._active_session: AeatSession | None = None
-        # Inflight-page counter prevents close() from racing with an
-        # in-progress verify_login(). close() awaits _inflight_drained
-        # before tearing down the context.
+        # _closing is a one-way latch that, once set under the lock,
+        # prevents new verify_login() calls from registering in-flight
+        # pages. Together with _inflight_drained it forms a strict
+        # barrier: close() first latches _closing, then waits for
+        # the drain event, then tears down the context. Any
+        # verify_login() call that arrives after the latch is set
+        # raises rather than starting a navigation.
+        self._closing = False
         self._inflight_pages = 0
         self._inflight_drained: asyncio.Event = asyncio.Event()
         self._inflight_drained.set()
@@ -439,6 +450,15 @@ class AeatAuthenticator:
         ``certificate_recognised=False`` — MUST raise
         :class:`AeatSessionExpiredError` upwards rather than loop.
 
+        **Not atomic across the teardown + authenticate boundary.**
+        If another task calls :meth:`authenticate` between this
+        method's ``close()`` completing and its ``authenticate()``
+        starting, the second call wins the "already has active
+        session" guard check and this call raises
+        :class:`AeatLoginAssertionError`. External serialisation is
+        required if concurrent ``reauthenticate`` / ``authenticate``
+        is a real scenario for the caller.
+
         Args:
             session: The session to replace. Passed for traceability
                 (logging, audit) and to document that the caller
@@ -507,7 +527,11 @@ class AeatAuthenticator:
 
         # Snapshot-and-register the context under the lock so that
         # close() / reauthenticate() cannot null it out mid-navigation.
+        # The _closing latch is checked inside the lock to close the
+        # TOCTOU window between close()'s drain-wait and its teardown.
         async with self._lock:
+            if self._closing:
+                raise AeatLoginAssertionError("authenticator is closing; no new verify_login allowed")
             context = self._context
             if context is None:
                 raise AeatLoginAssertionError("no active browser context; call authenticate() first")
@@ -568,16 +592,34 @@ class AeatAuthenticator:
 
         Waits for any in-flight :meth:`verify_login` call to finish
         its navigation before tearing down the browser context, so a
-        page cannot be closed out from under a running probe.
+        page cannot be closed out from under a running probe. A
+        one-way ``_closing`` latch is set under the lock before the
+        drain wait so that a new ``verify_login`` cannot slip in
+        between the wait returning and the teardown acquiring the
+        lock — the latch forces any arriving probe to raise.
+
+        After ``close()`` returns, the authenticator is re-usable
+        (the latch is reset, the browser session is nulled, the
+        context is nulled). ``reauthenticate()`` depends on this
+        re-use path.
         """
-        # Wait (outside the lock) for any in-flight pages to finish.
-        # The event is set when _inflight_pages reaches zero.
+        # Step 1: latch _closing under the lock so subsequent
+        # verify_login() calls raise before they register.
+        async with self._lock:
+            self._closing = True
+        # Step 2: wait for any already-registered verify_login() to
+        # finish. No new registrations can clear the event because
+        # the latch blocks them at their own lock acquisition.
         await self._inflight_drained.wait()
+        # Step 3: tear down under the lock. Reset the latch at the
+        # end so the instance is usable again (reauthenticate relies
+        # on this).
         async with self._lock:
             await self._drop_context()
             await self._close_browser_session(self._browser_session)
             self._browser_session = None
             self._active_session = None
+            self._closing = False
 
     # ── Internals ───────────────────────────────────────────────────────────
 

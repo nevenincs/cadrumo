@@ -408,8 +408,6 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
     the coercion is ever removed. A caller on a non-UTC workstation
     that supplies a naive ``datetime.now()`` will hit this path.
     """
-    from datetime import datetime as _dt
-
     authenticated_at = datetime.now(UTC)
     session = AeatSession(
         certificate_thumbprint="abc",
@@ -420,24 +418,24 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
         storage_state_path=None,
         handshake=_fake_handshake(),
     )
-    naive_past = _dt(2020, 1, 1)
-    naive_future = _dt(2100, 1, 1)
+    naive_past = datetime(2020, 1, 1)
+    naive_future = datetime(2100, 1, 1)
     assert session.is_stale(naive_past) is False
     assert session.is_stale(naive_future) is True
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_reauthenticate_delegates_to_close_and_authenticate(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Regression test: reauthenticate must not deadlock on self._lock.
 
     The method was rewritten to delegate teardown to ``close()``
     (itself lock-protected) rather than holding ``self._lock``
     across the subsequent ``authenticate()`` call. Proves the
-    single-lock invariant by reauthenticating twice in sequence and
-    confirming no timeout.
+    single-lock invariant by reauthenticating and confirming no
+    timeout. Does NOT prove correct delegation (no happy-path
+    browser factory is injected here); that is covered by the live
+    test suite in ``test_authenticator_live.py``.
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
@@ -461,6 +459,136 @@ async def test_reauthenticate_delegates_to_close_and_authenticate(
         # returns in bounded time (no deadlock).
         with pytest.raises(AeatLoginAssertionError):
             await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression test for the close()/verify_login TOCTOU race.
+
+    The fix uses a one-way ``_closing`` latch checked inside
+    ``verify_login`` under the lock. Once ``close()`` sets the
+    latch, any subsequent ``verify_login`` — even one that arrives
+    between the drain-wait returning and the teardown acquiring
+    the lock — must raise rather than start a navigation on a
+    stale context.
+
+    The test simulates the race by directly toggling the latch
+    (no true concurrency needed to exercise the guard) and
+    confirms ``verify_login`` refuses.
+    """
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    authenticator = AeatAuthenticator(settings)
+
+    # Install a fake context so the lock-protected snapshot would
+    # otherwise succeed — we want the latch to be the cause of the
+    # refusal.
+    cert = authenticator.load_certificate()
+    from typing import cast
+
+    from aeat.auth import BrowserContextLike
+
+    fake_ctx = _FakeBrowserContext(cert, recognised=True)
+    authenticator._context = cast(BrowserContextLike, fake_ctx)
+    authenticator._closing = True
+
+    now = datetime.now(UTC)
+    session = AeatSession(
+        certificate_thumbprint=cert.sha256_thumbprint,
+        certificate_subject=cert.subject,
+        certificate_nif="12345678Z",
+        authenticated_at=now,
+        idle_deadline=now + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=None,
+        handshake=_fake_handshake(),
+    )
+    with pytest.raises(AeatLoginAssertionError, match="closing"):
+        await authenticator.verify_login(session)
+
+    # Reset + confirm post-close the latch is clear again (so that
+    # reauthenticate can re-use the authenticator).
+    authenticator._closing = False
+    await authenticator.close()
+    assert authenticator._closing is False
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """True interleaved race: start verify_login + close concurrently.
+
+    Uses an ``asyncio.Event`` inside the fake page's ``goto`` to
+    deterministically suspend mid-navigation, letting ``close()``
+    progress to its drain-wait. close()'s wait should block until
+    goto is allowed to complete; after that, the teardown runs
+    under the lock and leaves the authenticator in a clean state.
+    """
+    from typing import cast
+
+    from aeat.auth import BrowserContextLike
+
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    authenticator = AeatAuthenticator(settings)
+
+    proceed = asyncio.Event()
+
+    class _SuspendingPage:
+        async def goto(self, url: str, *, timeout: float | None = None) -> object:
+            # Block until the test releases us; proves close() waits.
+            await proceed.wait()
+            return type("R", (), {"status": 200})()
+
+        async def close(self) -> None:
+            return None
+
+    class _SuspendingContext:
+        _aeat_certificate_thumbprint: str = ""
+
+        async def new_page(self) -> _SuspendingPage:
+            return _SuspendingPage()
+
+        async def close(self) -> None:
+            return None
+
+    cert = authenticator.load_certificate()
+    ctx = _SuspendingContext()
+    ctx._aeat_certificate_thumbprint = cert.sha256_thumbprint
+    authenticator._context = cast(BrowserContextLike, ctx)
+
+    now = datetime.now(UTC)
+    session = AeatSession(
+        certificate_thumbprint=cert.sha256_thumbprint,
+        certificate_subject=cert.subject,
+        certificate_nif="12345678Z",
+        authenticated_at=now,
+        idle_deadline=now + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=None,
+        handshake=_fake_handshake(),
+    )
+
+    # Start verify_login; it will suspend inside goto until proceed.set().
+    verify_task = asyncio.create_task(authenticator.verify_login(session))
+    # Yield so verify_login enters the lock, bumps _inflight_pages, clears
+    # _inflight_drained, and begins the suspended goto.
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    # Start close; it should latch _closing, then block on the drain.
+    close_task = asyncio.create_task(authenticator.close())
+    # Give close a tick to reach drain-wait.
+    await asyncio.sleep(0.05)
+    # close must still be pending — verify_login is holding a page.
+    assert not close_task.done(), "close() returned before verify_login finished"
+    # Release the navigation; both tasks should now complete.
+    proceed.set()
+    assertion = await asyncio.wait_for(verify_task, timeout=5.0)
+    await asyncio.wait_for(close_task, timeout=5.0)
+    # verify_login saw a live context and a successful goto.
+    assert assertion.certificate_recognised is True
+    # close() cleanly reset state.
+    assert authenticator._closing is False
+    assert authenticator._context is None
 
 
 @pytest.mark.unit
