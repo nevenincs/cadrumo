@@ -40,8 +40,8 @@ ENTRY: ModeloMetadata = build_entry(
         ),
         make_citation(
             LegalCitationSource.REAL_DECRETO,
-            "109",
-            "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a109",
+            "108",
+            "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a108",
             "Desarrolla las obligaciones formales de los retenedores y obligados a ingresar "
             "a cuenta, incluyendo la presentación de resúmenes anuales.",
         ),
