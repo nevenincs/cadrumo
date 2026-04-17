@@ -6,15 +6,15 @@ import pytest
 
 from . import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily, family_for
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
-@pytest.mark.unit
+
 def test_spending_category_catalogue_is_large_enough() -> None:
     """The taxonomy must expose at least the mandated category count."""
 
     assert len(SpendingCategory) >= 25
 
 
-@pytest.mark.unit
 def test_every_category_belongs_to_exactly_one_family() -> None:
     """Each category must be assigned to one and only one coarse family."""
 

@@ -10,6 +10,8 @@ from pydantic import ValidationError
 
 from . import Attachment, AttachmentCatalogue, AttachmentKind, AttachmentSource
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
 
 def _attachment(data: bytes) -> Attachment:
     digest = hashlib.sha256(data).hexdigest()
@@ -27,7 +29,6 @@ def _attachment(data: bytes) -> Attachment:
     )
 
 
-@pytest.mark.unit
 def test_catalogue_rejects_duplicate_attachment_ids_on_construction() -> None:
     """Duplicate attachment IDs must be rejected when building a catalogue."""
     attachment = _attachment(b"hello")
@@ -35,7 +36,6 @@ def test_catalogue_rejects_duplicate_attachment_ids_on_construction() -> None:
         AttachmentCatalogue.from_attachments([attachment, attachment])
 
 
-@pytest.mark.unit
 def test_catalogue_iteration_yields_attachments_not_mapping_entries() -> None:
     """AttachmentCatalogue iteration must expose attachments directly."""
     first = _attachment(b"first")
@@ -52,7 +52,6 @@ def test_catalogue_iteration_yields_attachments_not_mapping_entries() -> None:
     assert catalogue.get("missing") is None
 
 
-@pytest.mark.unit
 def test_catalogue_round_trips_through_json() -> None:
     """Catalogue serialisation must survive a JSON round-trip unchanged."""
     first = _attachment(b"alpha")

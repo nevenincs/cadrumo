@@ -20,7 +20,7 @@ from . import (
     next_deadline,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 class _Catalogue:

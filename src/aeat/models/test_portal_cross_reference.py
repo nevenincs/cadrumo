@@ -9,7 +9,7 @@ from ..portals._registry import PORTAL_REGISTRY
 from ._codes import ModeloCode
 from ._registry import MODELO_REGISTRY
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def test_every_modelo_has_a_submission_portal() -> None:

@@ -12,7 +12,7 @@ from . import (
     StatusReaderError,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def test_all_errors_inherit_from_aeat_error() -> None:

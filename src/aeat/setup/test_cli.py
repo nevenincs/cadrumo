@@ -13,7 +13,7 @@ from ..deadlines import IVARegime
 from ..i18n import Language
 from . import SetupAnswers
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 _runner = CliRunner()
 
