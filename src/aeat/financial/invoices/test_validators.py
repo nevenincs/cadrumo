@@ -127,6 +127,33 @@ def test_validate_spanish_tax_id_strips_common_separators(value: str, expected: 
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("ESB12345674", "B12345674"),
+        ("es-b-12345674", "B12345674"),
+        ("ES 12345678Z", "12345678Z"),
+    ],
+)
+def test_validate_spanish_tax_id_strips_es_vat_prefix(value: str, expected: str) -> None:
+    """Spanish IDs carrying the intra-EU ES prefix must validate equivalently."""
+    assert validate_spanish_tax_id(value) == expected
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("value", "country", "expected"),
+    [
+        ("BE 0123.456.789", "BE", "BE0123456789"),
+        ("FR.12.345.678.901", "FR", "FR12345678901"),
+    ],
+)
+def test_validate_vat_number_strips_dot_separators(value: str, country: str, expected: str) -> None:
+    """Non-ES VAT numbers frequently carry dot separators and must be normalised."""
+    assert validate_vat_number(value, country) == expected
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
     ("value", "country", "expected"),
     [
         ("DE123456789", "DE", "DE123456789"),

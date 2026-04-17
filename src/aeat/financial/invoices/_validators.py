@@ -63,6 +63,11 @@ def validate_spanish_tax_id(value: str) -> str:
     normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
     if not normalized:
         raise ValueError("tax identifier must not be blank")
+    # Strip the ES VAT prefix when present so callers that pass the
+    # intra-EU form (e.g. "ESB12345674") hit the same checksum path as
+    # the bare domestic form ("B12345674").
+    if len(normalized) == 11 and normalized.startswith("ES"):
+        normalized = normalized[2:]
     if len(normalized) != 9:
         raise ValueError("tax identifier must be 9 characters long")
 
@@ -94,7 +99,7 @@ def validate_vat_number(value: str, country: str) -> str:
         ValueError: If the value is malformed or the prefix does not match
             ``country``.
     """
-    normalized = value.strip().upper().replace(" ", "").replace("-", "")
+    normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
     if not normalized:
         raise ValueError("VAT number must not be blank")
     country_upper = country.strip().upper()
