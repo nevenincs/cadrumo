@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.models._registry import get_modelo
+from ._registry import get_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 

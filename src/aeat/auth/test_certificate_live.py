@@ -11,13 +11,13 @@ import os
 
 import pytest
 
-from aeat.auth import (
+from ..config import Settings
+from . import (
     CertificateBundle,
     HandshakeResult,
     load_certificate,
     verify_handshake,
 )
-from aeat.config import Settings
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 

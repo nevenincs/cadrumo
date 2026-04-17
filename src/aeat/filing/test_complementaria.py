@@ -8,9 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.filing import (
+from ..submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+from . import (
     QUARTERLY_303_INPUT_KEY,
     AmendmentKind,
+    FilingAmendmentError,
     FilingAmendmentValidationError,
     FilingDraft,
     build_complementaria,
@@ -18,8 +20,7 @@ from aeat.filing import (
     list_amendments,
     load_amendment,
 )
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
-from aeat.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+from .testing import SyntheticProfile, default_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
@@ -131,6 +132,13 @@ class TestBuildComplementaria:
         assert by_casilla["07"].new_value == Decimal("1500.0000")
         assert load_amendment(amendment.amendment_id) == amendment
         assert list_amendments(modelo="130") == (amendment,)
+
+    def test_load_amendment_rejects_traversal_id(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        submissions_dir = tmp_path / "submissions"
+        submissions_dir.mkdir()
+        monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(submissions_dir))
+        with pytest.raises(FilingAmendmentError, match="simple filename token"):
+            load_amendment("../escape")
 
     def test_complementaria_cannot_reduce_liability(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         original_draft = _build_130_draft(ingresos="12500.00")

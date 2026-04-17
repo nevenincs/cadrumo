@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import ProviderValidation, RawTransaction, SourceFormat, detect_provider
-from aeat.financial.providers._base import parse_amount_value
+from .. import ProviderValidation, RawTransaction, SourceFormat, detect_provider
+from ._base import parse_amount_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 

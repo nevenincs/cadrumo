@@ -14,9 +14,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.errors import FilingFixtureError
-from aeat.filing import FilingDraftStatus
-from aeat.testing import (
+from ..errors import FilingFixtureError
+from ..filing import FilingDraftStatus
+from . import (
     SYNTHETIC_FIXTURES_ROOT,
     FilingRecord,
     FilingRecordPeriodKind,
@@ -212,7 +212,7 @@ def test_compute_record_id_is_stable_and_order_independent() -> None:
 
 
 def test_malformed_json_raises_filing_fixture_error(tmp_path: Path) -> None:
-    from aeat.testing._loader import _load_one
+    from ._loader import _load_one
 
     bad = tmp_path / "bad.json"
     bad.write_text("{not json", encoding="utf-8")

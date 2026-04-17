@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.cli.bootstrap import (
+from .bootstrap import (
     DOC_MIME,
     FOLDER_MIME,
     SCRATCH_DOC_NAME,

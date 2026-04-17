@@ -19,13 +19,13 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.browser import app
-from aeat.cli.browser import health as health_module
-from aeat.cli.browser.health import _RealProbe
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.errors import SiteHealthError
-from aeat.status import SiteHealthState
-from aeat.status._site_health_parsers import evaluate_response
+from ...config import PROJECT_ROOT, Settings
+from ...errors import SiteHealthError
+from ...status import SiteHealthState
+from ...status._site_health_parsers import evaluate_response
+from . import app
+from . import health as health_module
+from .health import _RealProbe
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 

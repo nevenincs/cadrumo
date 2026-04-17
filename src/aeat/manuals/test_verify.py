@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import Settings
-from aeat.manuals import ManualId, ManualPart, verify_manual_dir
-from aeat.manuals._verify import raise_on_errors
-from aeat.manuals.errors import ManualNotFoundError, ManualReviewRequiredError
+from ..config import Settings
+from . import ManualId, ManualPart, verify_manual_dir
+from ._verify import raise_on_errors
+from .errors import ManualNotFoundError, ManualReviewRequiredError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 

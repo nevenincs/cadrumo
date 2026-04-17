@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.env_io import read_env_file, write_env_var, write_env_vars
+from .env_io import read_env_file, write_env_var, write_env_vars
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 

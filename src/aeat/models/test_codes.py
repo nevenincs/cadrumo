@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.models._codes import ModeloCode
+from ._codes import ModeloCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -36,8 +36,8 @@ def test_value_round_trip(raw: str) -> None:
 
 def test_error_classes_import() -> None:
     """Phase 3 error classes import cleanly from the private module."""
-    from aeat.errors import AeatError
-    from aeat.models._errors import (
+    from ..errors import AeatError
+    from ._errors import (
         ModeloRegistryError,
         RegistryIntegrityError,
         UnknownModeloError,

@@ -29,7 +29,7 @@ from pydantic import (
     model_validator,
 )
 
-from aeat.i18n import Translatable
+from ...i18n import Translatable
 
 
 class VATCategory(StrEnum):

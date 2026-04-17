@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.llm import LLMProvider, LLMRequest, LLMResponse, Translation
+from . import LLMProvider, LLMRequest, LLMResponse, Translation
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 

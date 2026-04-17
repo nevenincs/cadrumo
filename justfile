@@ -58,9 +58,10 @@ env-setup:
 
 # ── Dev loop ─────────────────────────────────────────────────────────────────
 
-# Lint with ruff.
+# Lint with ruff and enforce the #162 relative-imports mandate.
 lint:
     uv run ruff check .
+    uv run python scripts/check_relative_imports.py
 
 # Format with ruff.
 fmt:
@@ -110,6 +111,31 @@ test-live-write:
     Write-Host "WARNING: @pytest.mark.live_write tests are collection-banned by default (charter #116 R1)."
     Write-Host "This recipe does NOT enable a live submission. See tests/README.md for the three-factor bypass."
     uv run pytest -m live_write
+
+# Run the unit suite with coverage and enforce the fail-under floor.
+# See .vault/adr/2026-04-17-pytest-only-testing-adr.md (#15).
+[unix]
+test-cov:
+    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+
+[windows]
+test-cov:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Run the unit suite in parallel via pytest-xdist. Opt-in; never on live tests.
+[unix]
+test-parallel:
+    uv run pytest -n auto
+
+[windows]
+test-parallel:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run pytest -n auto
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Run all pre-commit hooks via prek.
 hooks:

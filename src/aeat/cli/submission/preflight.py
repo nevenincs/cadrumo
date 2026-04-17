@@ -8,8 +8,8 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from aeat.cli.submission._helpers import build_engine, load_draft
-from aeat.submission import Preflight, SubmissionPreflightError
+from ...submission import Preflight, SubmissionPreflightError
+from ._helpers import build_engine, load_draft
 
 _CONSOLE = Console()
 

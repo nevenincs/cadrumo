@@ -7,16 +7,16 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from aeat.models._applicability import ModeloApplicability
-from aeat.models._categories import (
+from ._applicability import ModeloApplicability
+from ._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._citations import LegalCitation
-from aeat.models._codes import ModeloCode
-from aeat.models._metadata import ModeloMetadata
+from ._citations import LegalCitation
+from ._codes import ModeloCode
+from ._metadata import ModeloMetadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -54,7 +54,7 @@ def _make(**overrides: object) -> ModeloMetadata:
         "applicability": _make_applicability(),
         "caps_into": ModeloCode.MODELO_390,
         "related_modelos": (ModeloCode.MODELO_349,),
-        "submission_portal_hint": "Sede Electrónica AEAT — Modelo 303",
+        "submission_portal": None,
         "known_gotchas": ("SII exoneración",),
     }
     base.update(overrides)

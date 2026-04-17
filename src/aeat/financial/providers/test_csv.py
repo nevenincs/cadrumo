@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import CsvProvider
+from .. import CsvProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 

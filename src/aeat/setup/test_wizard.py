@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.setup import (
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language
+from . import (
     QueuedPrompter,
     SetupAnswers,
     SetupError,

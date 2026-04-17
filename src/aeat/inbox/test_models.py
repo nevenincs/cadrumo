@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from aeat.i18n import Translatable
-from aeat.inbox import (
+from ..i18n import Translatable
+from . import (
     Inbox,
     Notificacion,
     NotificacionKind,

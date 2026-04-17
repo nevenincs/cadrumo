@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     # package boundary, where ``SiteHealthAlert.model_rebuild(...)`` is
     # called with ``WorkflowStage`` in scope. See the ADR and the
     # ``aeat.workflow.__init__`` rebuild site for the rationale.
-    from aeat.workflow._models import WorkflowStage as WorkflowStage
+    from ..workflow._models import WorkflowStage as WorkflowStage
 
 
 class SiteHealthState(StrEnum):

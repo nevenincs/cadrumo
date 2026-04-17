@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.cli.oauth import parse_oauth_client_json
+from .oauth import parse_oauth_client_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 

@@ -17,13 +17,13 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.justificante import (
+from ...justificante import (
     Justificante,
     JustificanteError,
     parse_justificante,
     verify_csv,
 )
-from aeat.logging import get_logger
+from ...logging import get_logger
 
 app = typer.Typer(
     name="justificante",

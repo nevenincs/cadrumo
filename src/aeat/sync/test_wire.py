@@ -6,7 +6,7 @@ from datetime import datetime
 
 import pytest
 
-from aeat.sync import (
+from . import (
     ModeloIdentifier,
     PortalIdentifier,
     WireCasilla,

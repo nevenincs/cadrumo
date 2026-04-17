@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.errors import AeatError
-from aeat.status import (
+from ..errors import AeatError
+from . import (
     StatusAuthError,
     StatusNotFoundError,
     StatusParseError,

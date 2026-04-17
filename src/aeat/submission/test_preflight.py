@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from aeat.submission import (
+from . import (
     DraftStatus,
     FilingDraftLike,
     FilingFinding,

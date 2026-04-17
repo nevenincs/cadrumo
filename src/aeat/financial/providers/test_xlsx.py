@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import XlsxProvider
+from .. import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 

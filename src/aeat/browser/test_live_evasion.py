@@ -3,10 +3,10 @@
 import pytest
 from playwright.async_api import async_playwright
 
-from aeat.browser.profile import Profile
-from aeat.browser.session import BrowserSession
-from aeat.cli._live import requires_live_enabled
-from aeat.config import load_settings
+from ..cli._live import requires_live_enabled
+from ..config import load_settings
+from .profile import Profile
+from .session import BrowserSession
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 

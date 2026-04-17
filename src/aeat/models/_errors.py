@@ -13,7 +13,7 @@ failure modes surfaced to external callers:
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
+from ..errors import AeatError
 
 
 class ModeloRegistryError(AeatError):

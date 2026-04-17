@@ -15,20 +15,20 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.config import PROJECT_ROOT
-from aeat.status import (
+from ..config import PROJECT_ROOT
+from ..workflow import WorkflowStage
+from . import (
     SiteHealthAlert,
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
     evaluate_response,
 )
-from aeat.status._site_health_parsers import (
+from ._site_health_parsers import (
     parse_mantenimiento_banner,
     parse_rate_limit_response,
     parse_waf_challenge,
 )
-from aeat.workflow import WorkflowStage
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
@@ -181,7 +181,7 @@ class TestMantenimientoTitleOnlyGuard:
             "<body><p>Welcome to our tax portal. All services are up.</p>"
             "<p>Please log in to continue.</p></body></html>"
         )
-        from aeat.status._site_health_parsers import _extract_title, _matches_mantenimiento
+        from ._site_health_parsers import _extract_title, _matches_mantenimiento
 
         lowered = html.lower()
         title = _extract_title(html, lowered)
@@ -314,7 +314,7 @@ class TestRateLimitRetryAfter:
 
 
 def _evidence(**overrides: object) -> SiteHealthEvidence:
-    from aeat.status._site_health import _URL_ADAPTER
+    from ._site_health import _URL_ADAPTER
 
     base: dict[str, object] = {
         "url": _URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/"),
@@ -333,7 +333,7 @@ class TestSiteHealthModels:
         assert ev.detected_markers == ("marker",)
 
     def test_evidence_rejects_unknown_key(self) -> None:
-        from aeat.status._site_health import _URL_ADAPTER
+        from ._site_health import _URL_ADAPTER
 
         valid_url = _URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/")
         with pytest.raises(ValidationError):

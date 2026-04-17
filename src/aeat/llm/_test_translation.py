@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import LLMProviderSetting, Settings
-from aeat.llm import LLMCache, LLMClient, Translator, UsageRecorder, _FakeAdapter
+from ..config import LLMProviderSetting, Settings
+from . import LLMCache, LLMClient, Translator, UsageRecorder, _FakeAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 

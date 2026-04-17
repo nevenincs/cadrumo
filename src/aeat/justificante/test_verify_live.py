@@ -18,7 +18,7 @@ import os
 
 import pytest
 
-from aeat.justificante import (
+from . import (
     JustificanteError,
     verify_csv,
 )

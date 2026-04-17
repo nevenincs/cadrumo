@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.normatives import (
+from . import (
     Articulo,
     NormativeCatalogue,
     NormativeKind,
