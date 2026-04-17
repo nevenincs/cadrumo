@@ -37,7 +37,7 @@ def _parse_kv_pairs(pairs: tuple[str, ...]) -> dict[str, Decimal]:
         key, value = raw.split("=", 1)
         try:
             mapping[key.strip()] = Decimal(value.strip())
-        except Exception as exc:
+        except (ArithmeticError, ValueError) as exc:
             raise typer.BadParameter(f"invalid decimal for {key!r}: {value!r}") from exc
     return mapping
 
