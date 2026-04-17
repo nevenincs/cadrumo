@@ -198,6 +198,15 @@ class TestLoader:
             )
 
     @pytest.mark.unit
+    def test_load_section_rejects_traversal_ref(self, tmp_path: Path) -> None:
+        """A tampered section ref must not escape the owning part root."""
+        settings = _seed_iva(tmp_path)
+        manual = load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
+        bad_ref = manual.chapters[0].sections[0].model_copy(update={"relative_path": "../outside.json"})
+        with pytest.raises(ManualParseError, match="must stay within the owning root"):
+            load_section(settings.aeat_manuals_root / "iva" / "2025", bad_ref)
+
+    @pytest.mark.unit
     def test_load_catalogue_and_find_rules(self, tmp_path: Path) -> None:
         """find_rules iterates rules loaded through the catalogue."""
         settings = _seed_iva(tmp_path)

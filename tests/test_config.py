@@ -110,3 +110,41 @@ class TestEnvExampleAlignment:
         assert settings.aeat_certificate_path is None
         assert settings.aeat_certificate_password_secret is None
         assert settings.google_oauth_redirect_uri == "http://localhost:8080"
+
+    def test_relative_env_paths_resolve_from_project_root(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Relative env-backed paths must anchor to PROJECT_ROOT, not the process cwd."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            "\n".join(
+                (
+                    "AEAT_DEFAULT_PROFILE_PATH=env/profiles/dev.json",
+                    "AEAT_SYNC_DIVERGENCE_FILE_DIR=var/divergences",
+                    "GOOGLE_APPLICATION_CREDENTIALS=env/google-service-account.json",
+                    "GOOGLE_OAUTH_CLIENT_JSON=env/google-oauth-client.json",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        class RelativeEnvSettings(Settings):
+            """Settings variant bound to a temp env file with relative path assignments."""
+
+            model_config = SettingsConfigDict(
+                env_file=env_path,
+                env_file_encoding="utf-8",
+                env_ignore_empty=True,
+            )
+
+        settings = RelativeEnvSettings()
+        assert settings.aeat_default_profile_path == PROJECT_ROOT / "env" / "profiles" / "dev.json"
+        assert settings.aeat_sync_divergence_file_dir == PROJECT_ROOT / "var" / "divergences"
+        assert settings.google_application_credentials == str(PROJECT_ROOT / "env" / "google-service-account.json")
+        assert settings.google_oauth_client_json == str(PROJECT_ROOT / "env" / "google-oauth-client.json")
