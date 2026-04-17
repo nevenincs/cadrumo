@@ -681,10 +681,7 @@ class AeatAuthenticator:
         page: BrowserPageLike | None = None
         try:
             page = await context.new_page()
-            try:
-                response = await page.goto(target, timeout=self._navigation_timeout_ms)
-            except TypeError:
-                response = await page.goto(target)
+            response = await page.goto(target, timeout=self._navigation_timeout_ms)
             if response is not None:
                 status_code = int(response.status)
                 certificate_recognised = 200 <= status_code < 400
@@ -955,23 +952,27 @@ class AeatAuthenticator:
         """Atomically write ``payload`` as JSON to ``path``."""
         path.parent.mkdir(parents=True, exist_ok=True)
         json_text = json.dumps(payload, indent=2, sort_keys=True)
-        fd, tmp_name = tempfile.mkstemp(
-            dir=str(path.parent),
-            prefix=f".{path.name}.",
-            suffix=".tmp",
-            text=True,
-        )
-        tmp_path = Path(tmp_name)
+        tmp_path: Path | None = None
         try:
-            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            with tempfile.NamedTemporaryFile(
+                dir=str(path.parent),
+                prefix=f".{path.name}.",
+                suffix=".tmp",
+                mode="w",
+                encoding="utf-8",
+                newline="\n",
+                delete=False,
+            ) as handle:
+                tmp_path = Path(handle.name)
                 handle.write(json_text)
                 handle.write("\n")
             self._restrict_file_permissions(tmp_path)
             os.replace(tmp_path, path)
             self._restrict_file_permissions(path)
         finally:
-            with contextlib.suppress(FileNotFoundError):
-                tmp_path.unlink()
+            if tmp_path is not None:
+                with contextlib.suppress(FileNotFoundError):
+                    tmp_path.unlink()
 
     @staticmethod
     def _restrict_file_permissions(path: Path) -> None:

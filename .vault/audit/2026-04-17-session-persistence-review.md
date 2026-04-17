@@ -54,3 +54,37 @@ The resumed-session failure branch now invalidates the persisted storage-state p
 
 SESS-005 | RESOLVED
 Windows runs now receive a best-effort ACL hardening pass through `icacls.exe`, and regression coverage asserts the current user remains on the temp-file ACL after the hardening step in `src/aeat/auth/test_authenticator.py::test_restrict_file_permissions_windows`.
+
+SESS-006 | HIGH | Real BrowserSession instances cannot be torn down, so auth/resume cycles leak launched Chromium browsers
+`src/aeat/browser/session.py:115-165` launches a Playwright `Browser` into a local `browser` variable, creates one context, and then drops the handle without storing it on `self` or exposing a `close()` method on `BrowserSession`. Meanwhile `src/aeat/auth/_authenticator.py:1058-1077` only tears down a browser session by calling `session.close()` when that method exists. With the real `BrowserSession` class in this branch, `AeatAuthenticator.close()` therefore closes only the context and never the underlying browser process, which is especially problematic in the new resume/invalidation loops where multiple auth attempts can occur in one run.
+
+SESS-007 | MEDIUM | The invalidation matrix still lacks coverage for several file-integrity branches
+`src/aeat/auth/_authenticator.py:751-769` and `src/aeat/auth/_authenticator.py:874-928` contain distinct invalidation branches for metadata-sidecar absence/malformed JSON, unsupported schema version, SHA-256 mismatch, and malformed Playwright payload shape (`cookies` / `origins` arrays). The scoped tests in `src/aeat/auth/test_authenticator.py` now cover success, stale fallback, failed live probe, and Windows ACL hardening, but they still do not exercise those integrity branches. Given that one invalidation bug already escaped into the earlier review loop, the missing coverage here is material.
+
+## Continuous Audit Update | 2026-04-17
+
+SESS-006 | RESOLVED
+`src/aeat/browser/session.py` now owns the launched Playwright `Browser` on `self`, reuses that handle for context creation, and exposes an idempotent `close()` so `AeatAuthenticator.close()` can tear the browser down instead of only closing the active context. Regression coverage in `src/aeat/browser/test_session.py::test_browser_session_close_closes_owned_browser_and_is_idempotent` proves the owned browser is closed exactly once.
+
+SESS-007 | RESOLVED
+`src/aeat/auth/test_authenticator.py` now drives the full persisted-session invalidation matrix with real temp-dir artifacts: missing storage file, invalid JSON, non-object JSON root, missing `cookies`, missing `origins`, missing metadata sidecar, malformed metadata JSON, unsupported schema version, SHA-256 mismatch, expired idle deadline, certificate thumbprint mismatch, certificate subject mismatch, and failed live login probe. This closes the remaining integrity-branch coverage gap in `src/aeat/auth/_authenticator.py`.
+
+SESS-008 | RESOLVED
+The previous Windows ACL regression test relied on `pytest.skip` outside Windows. It now runs as a best-effort cross-platform test: Windows still inspects the resulting ACL via `icacls`, and non-Windows runs assert the helper remains non-destructive. That removes the skip-based shortcut from the scoped session-persistence tests.
+
+Final scoped verification pass succeeded:
+- `uv run pytest src/aeat/auth/test_authenticator.py src/aeat/browser/test_profile.py src/aeat/browser/test_session.py -m unit`
+- `uv run ruff check src/aeat/auth/_authenticator.py src/aeat/auth/test_authenticator.py src/aeat/browser/profile.py src/aeat/browser/session.py src/aeat/browser/test_profile.py src/aeat/browser/test_session.py src/aeat/cli/browser/health.py`
+
+After this loop, no additional low / medium / high findings surfaced in the requested review scope (`src/aeat/auth/_authenticator.py`, `src/aeat/auth/test_authenticator.py`, `src/aeat/browser/profile.py`, `src/aeat/browser/session.py`, `src/aeat/browser/test_profile.py`, `src/aeat/browser/test_session.py`, `src/aeat/cli/browser/health.py`, and the session-persistence `.vault` artifacts).
+
+## PR Thread Reconciliation | 2026-04-17
+
+Gemini review threads on `wgergely/aeat#200` were checked explicitly against the current branch state.
+
+- Gemini thread on `src/aeat/auth/_authenticator.py` (`TypeError` fallback in `_run_login_probe`) is addressed: the defensive `TypeError` catch was removed, and the local browser-page test doubles already honor the protocol-level `goto(..., timeout=...)` signature.
+- Gemini thread on `src/aeat/auth/_authenticator.py` (`mkstemp` / `os.fdopen` in `_write_json_atomic`) is addressed: the writer now uses `tempfile.NamedTemporaryFile(delete=False)` with immediate `tmp_path` capture and best-effort cleanup.
+
+Post-reconciliation verification succeeded:
+- `uv run pytest src/aeat/auth/test_authenticator.py src/aeat/browser/test_profile.py src/aeat/browser/test_session.py -m unit`
+- `uv run ruff check src/aeat/auth/_authenticator.py src/aeat/auth/test_authenticator.py src/aeat/browser/profile.py src/aeat/browser/session.py src/aeat/browser/test_profile.py src/aeat/browser/test_session.py src/aeat/cli/browser/health.py`

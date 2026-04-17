@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from playwright.async_api import (
+    Browser,
     BrowserContext,
     Page,
     Playwright,
@@ -71,6 +72,7 @@ class BrowserSession:
         self.settings = settings
         self.profile = profile
         self.evasion_strategy = evasion_strategy or PlaywrightStealthEvasion()
+        self._browser: Browser | None = None
 
     async def create_context(
         self,
@@ -100,7 +102,6 @@ class BrowserSession:
         Raises:
             BrowserError: If the browser cannot be launched.
         """
-        logger.info("Launching browser with channel: %s", self.settings.aeat_browser_channel)
         try:
             # Prepare proxy settings
             proxy: ProxySettings | None = None
@@ -112,11 +113,15 @@ class BrowserSession:
                 if self.settings.aeat_proxy_bypass:
                     proxy["bypass"] = self.settings.aeat_proxy_bypass
 
-            browser = await self.playwright.chromium.launch(
-                channel=self.settings.aeat_browser_channel,
-                headless=self.settings.aeat_browser_headless,
-                proxy=proxy,
-            )
+            browser = self._browser
+            if browser is None:
+                logger.info("Launching browser with channel: %s", self.settings.aeat_browser_channel)
+                browser = await self.playwright.chromium.launch(
+                    channel=self.settings.aeat_browser_channel,
+                    headless=self.settings.aeat_browser_headless,
+                    proxy=proxy,
+                )
+                self._browser = browser
 
             self.profile.ensure_storage_dir()
             effective_storage_state_path = storage_state_path or self.profile.storage_state_path
@@ -166,6 +171,17 @@ class BrowserSession:
         except Exception as e:
             logger.error("Failed to create browser context: %s", e)
             raise BrowserError(f"Failed to create browser context: {e}") from e
+
+    async def close(self) -> None:
+        """Close the owned Playwright browser. Idempotent."""
+        browser = self._browser
+        self._browser = None
+        if browser is None:
+            return
+        try:
+            await browser.close()
+        except Exception as exc:
+            logger.warning("Failed to close browser session browser: %s", exc)
 
     async def navigate(self, page: Page, url: str) -> Response | None:
         """Navigate ``page`` to ``url`` and probe the response health.

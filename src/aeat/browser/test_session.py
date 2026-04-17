@@ -40,17 +40,29 @@ class StubContext:
 class StubBrowser:
     """Stub browser that yields a StubContext."""
 
+    def __init__(self) -> None:
+        self.closed = False
+
     async def new_context(self, **kwargs) -> StubContext:
         """Return a stub context."""
         return StubContext(kwargs)
+
+    async def close(self) -> None:
+        """Record the close call."""
+        self.closed = True
 
 
 class StubChromium:
     """Stub chromium that yields a StubBrowser."""
 
+    def __init__(self) -> None:
+        self.launch_calls = 0
+        self.browser = StubBrowser()
+
     async def launch(self, **kwargs) -> StubBrowser:
         """Return a stub browser."""
-        return StubBrowser()
+        self.launch_calls += 1
+        return self.browser
 
 
 class StubPlaywright:
@@ -118,6 +130,29 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
 
     context = await session.create_context(storage_state_path=override_path)
     assert context.kwargs["storage_state"] == str(override_path)  # type: ignore
+
+
+@pytest.mark.asyncio
+async def test_browser_session_close_closes_owned_browser_and_is_idempotent(tmp_path: Path) -> None:
+    """Closing the session tears down the owned browser exactly once."""
+    settings = Settings()
+    pw_stub = StubPlaywright()
+    session = BrowserSession(
+        playwright=pw_stub,  # type: ignore
+        settings=settings,
+        profile=Profile(name="test", storage_state_path=tmp_path / "state.json"),
+        evasion_strategy=DummyEvasion(),
+    )
+
+    await session.create_context()
+    assert pw_stub.chromium.launch_calls == 1
+    assert pw_stub.chromium.browser.closed is False
+
+    await session.close()
+    assert pw_stub.chromium.browser.closed is True
+
+    await session.close()
+    assert pw_stub.chromium.launch_calls == 1
 
 
 @pytest.mark.asyncio
