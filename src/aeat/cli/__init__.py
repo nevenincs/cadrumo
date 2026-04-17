@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import typer
 
+from aeat.cli import attachments as attachments_module
 from aeat.cli import bootstrap as bootstrap_module
 from aeat.cli import browser as browser_module
 from aeat.cli import casillas as casillas_module
@@ -60,6 +61,11 @@ def hello() -> None:
 app.command(name="doctor", help="Report Google Workspace + GCP health for this workstation.")(doctor_module.doctor)
 app.command(name="bootstrap", help="Provision scratch resources and persist their IDs to env/.env.")(
     bootstrap_module.bootstrap
+)
+app.add_typer(
+    attachments_module.app,
+    name="attachments",
+    help="Content-addressed attachment service (#76).",
 )
 app.add_typer(browser_module.app, name="browser", help="Playwright browser session health probes (#95).")
 app.add_typer(casillas_module.app, name="casillas", help="Curated AEAT casilla catalogue helpers.")
