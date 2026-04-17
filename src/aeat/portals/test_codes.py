@@ -9,9 +9,9 @@ from ._codes import Portal
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
-def test_portal_has_exactly_41_members() -> None:
-    """Membership is fixed at 41 (ADR §2)."""
-    assert len(list(Portal)) == 41
+def test_portal_has_exactly_42_members() -> None:
+    """Membership is fixed at 42 (ADR §2)."""
+    assert len(list(Portal)) == 42
 
 
 def test_portal_values_are_member_names_lowercased() -> None:

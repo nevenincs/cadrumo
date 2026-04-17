@@ -45,9 +45,9 @@ def test_registry_closure_over_portal_enum() -> None:
     assert set(PORTAL_REGISTRY.keys()) == set(Portal)
 
 
-def test_registry_count_is_41() -> None:
-    """ADR §2: exactly 41 entries."""
-    assert len(PORTAL_REGISTRY) == 41
+def test_registry_count_is_42() -> None:
+    """ADR §2: exactly 42 entries."""
+    assert len(PORTAL_REGISTRY) == 42
 
 
 def test_every_entry_matches_its_key() -> None:
@@ -145,7 +145,7 @@ def test_portals_by_category_auth_is_sorted() -> None:
 def test_portals_by_category_counts_match_adr() -> None:
     """Per-category counts match the ADR §2 breakdown."""
     assert len(portals_by_category(PortalCategory.AUTH)) == 8
-    assert len(portals_by_category(PortalCategory.FILING)) == 18
+    assert len(portals_by_category(PortalCategory.FILING)) == 19
     assert len(portals_by_category(PortalCategory.CENSUS)) == 2
     assert len(portals_by_category(PortalCategory.BORRADOR)) == 2
     assert len(portals_by_category(PortalCategory.CONSULTATION)) == 4
@@ -160,10 +160,10 @@ def test_finalise_registry_logs_info_on_success(
     caplog.clear()
     with caplog.at_level(logging.INFO, logger="aeat.portals._registry"):
         mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
-    assert len(mapping) == 41
+    assert len(mapping) == 42
     info_records = [r for r in caplog.records if r.name == "aeat.portals._registry"]
     assert len(info_records) == 1
-    assert "loaded 41 portal entries" in info_records[0].getMessage()
+    assert "loaded 42 portal entries" in info_records[0].getMessage()
 
 
 def test_registry_module_has_no_print_calls() -> None:

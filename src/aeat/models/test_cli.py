@@ -29,7 +29,8 @@ def test_list_json_contains_codes() -> None:
     codes = {entry["code"] for entry in payload}
     assert "303" in codes
     assert "390" in codes
-    assert len(codes) == 20
+    assert "193" in codes
+    assert len(codes) == 21
 
 
 def test_list_category_filter_iva() -> None:
@@ -67,6 +68,8 @@ def test_applicable_to_autonomo_ed_solo_contains_303() -> None:
     payload = json.loads(result.output)
     codes = {entry["code"] for entry in payload}
     assert "303" in codes
+    assert "036" in codes
+    assert "037" not in codes
 
 
 def test_year_plan_autonomo_ed_solo_has_obligations() -> None:
@@ -87,3 +90,45 @@ def test_year_plan_autonomo_ed_solo_has_obligations() -> None:
     payload = json.loads(result.output)
     assert isinstance(payload, list)
     assert len(payload) > 0
+
+
+def test_year_plan_includes_347_when_threshold_flag_enabled() -> None:
+    """``year-plan`` surfaces modelo 347 when the threshold flag is on."""
+    result = _runner.invoke(
+        app,
+        [
+            "year-plan",
+            "2026",
+            "--tax-id",
+            "X1234567L",
+            "--iva-regime",
+            "GENERAL",
+            "--third-party-threshold-347",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    codes = {entry["modelo"] for entry in payload}
+    assert "347" in codes
+
+
+def test_year_plan_drops_130_for_professional_withholding_exception() -> None:
+    """``year-plan`` omits 130 when the professional 70% withholding rule applies."""
+    result = _runner.invoke(
+        app,
+        [
+            "year-plan",
+            "2026",
+            "--tax-id",
+            "X1234567L",
+            "--iva-regime",
+            "GENERAL",
+            "--professional-income-withholding-ge-70pct",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    codes = {entry["modelo"] for entry in payload}
+    assert "130" not in codes

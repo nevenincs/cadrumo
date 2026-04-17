@@ -34,8 +34,11 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         tax_id="12345678Z",
         iva_regime=IVARegime.GENERAL,
         has_employees=False,
+        pays_professionals_with_retencion=False,
+        professional_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
+        third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
@@ -146,7 +149,11 @@ def test_interactive_collects_from_queued_prompter(
         # tax_id, iva_regime
         "12345678Z",
         IVARegime.GENERAL.value,
-        # bools: has_employees, pays_rent, intracomunitario, bienes
+        # bools: has_employees, pays_professionals, 130 exception, pays_rent,
+        # intracomunitario, 347 threshold, bienes
+        False,
+        False,
+        False,
         False,
         False,
         False,

@@ -20,4 +20,4 @@ def test_smoke_portals_public_surface() -> None:
         assert hasattr(portals, name), name
 
     # Sanity: the registry materialises on first access.
-    assert len(portals.PORTAL_REGISTRY) == 41
+    assert len(portals.PORTAL_REGISTRY) == 42

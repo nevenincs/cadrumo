@@ -2,8 +2,8 @@
 
 This subpackage exposes the closed, strict, pydantic v2 registry of
 every AEAT (and adjacent) portal the project interacts with for
-Spanish autónomo and small-SL tax filing. Membership is fixed at 41
-entries (8 AUTH + 20 FILING/CENSUS + 2 BORRADOR + 4 CONSULTATION + 5
+Spanish autónomo and small-SL tax filing. Membership is fixed at 42
+entries (8 AUTH + 21 FILING/CENSUS + 2 BORRADOR + 4 CONSULTATION + 5
 PAYMENT + 2 CALENDAR_REFERENCE). The registry is built at import time
 from the per-portal entries under the private ``_entries`` package and
 is frozen as a :class:`types.MappingProxyType`.

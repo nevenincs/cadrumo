@@ -23,8 +23,11 @@ def _profile() -> AutonomoProfile:
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
         has_employees=True,
+        pays_professionals_with_retencion=False,
+        professional_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=True,
         does_intracomunitario=False,
+        third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
         notes="example",
     )
@@ -40,8 +43,11 @@ class TestAutonomoProfile:
                     "tax_id": "X",
                     "iva_regime": "GENERAL",
                     "has_employees": True,
+                    "pays_professionals_with_retencion": False,
+                    "professional_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
+                    "third_party_transactions_above_347_threshold": False,
                     "bienes_extranjero_above_threshold": False,
                     "extra_field": "nope",
                 }
@@ -59,8 +65,11 @@ class TestAutonomoProfile:
                     "tax_id": "X",
                     "iva_regime": "GENERAL",
                     "has_employees": 1,
+                    "pays_professionals_with_retencion": False,
+                    "professional_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
+                    "third_party_transactions_above_347_threshold": False,
                     "bienes_extranjero_above_threshold": False,
                 }
             )
@@ -72,8 +81,11 @@ class TestAutonomoProfile:
                     "tax_id": "X",
                     "iva_regime": "WHATEVER",
                     "has_employees": False,
+                    "pays_professionals_with_retencion": False,
+                    "professional_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
+                    "third_party_transactions_above_347_threshold": False,
                     "bienes_extranjero_above_threshold": False,
                 }
             )
