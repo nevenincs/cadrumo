@@ -107,11 +107,18 @@ _MAPPING: dict[tuple[VATCategory, InvoiceDirection], tuple[Modelo303Contribution
     # Exempt + not-subject + intra-community supply: informational only.
     # Out-of-scope categories are handled below via _OUT_OF_SCOPE_V1.
     # ── Domestic reverse charge ───────────────────────────────────────
-    # Issuer side: invoice base contributes to the appropriate
-    # devengado base casilla (rate_tier-aware); no cuota line.
-    (VATCategory.DOMESTIC_REVERSE_CHARGE, InvoiceDirection.ISSUED): (_BASE_PLUS("07", VATRateKind.GENERAL),),
-    # Recipient side: self-assessed cuota lands on both the
-    # devengado side (operaciones interiores) and the deducible side.
+    # Issuer side: the base lands on the rate-specific devengado
+    # casilla (01 for SUPER_REDUCED, 04 for REDUCED, 07 for GENERAL).
+    # The default rate_kind on the contribution is GENERAL so a
+    # lookup with ``rate_tier=None`` still returns a sane default;
+    # rate-tier-aware callers use :func:`lookup_modelo_303_contribution`
+    # with an explicit ``rate_tier`` to pick the correct casilla.
+    # This is the only category whose Modelo 303 bucket depends on
+    # the rate tier; the table below handles it via a second-level
+    # lookup to keep the top-level mapping shape uniform.
+    # Recipient side: self-assessed cuota on the deducible side;
+    # Spanish 303 lumps every input-VAT base on casilla 28 / cuota
+    # on 29 regardless of the supplier's rate tier.
     (VATCategory.DOMESTIC_REVERSE_CHARGE, InvoiceDirection.RECEIVED): (
         _BASE_PLUS("28", VATRateKind.GENERAL),
         _CUOTA_PLUS("29", VATRateKind.GENERAL),
@@ -146,14 +153,40 @@ _OUT_OF_SCOPE_V1: frozenset[VATCategory] = frozenset(
 )
 
 
+_DOMESTIC_REVERSE_CHARGE_ISSUED_BY_TIER: Mapping[VATRateKind, tuple[Modelo303Contribution, ...]] = MappingProxyType(
+    {
+        VATRateKind.GENERAL: (_BASE_PLUS("07", VATRateKind.GENERAL),),
+        VATRateKind.REDUCED: (_BASE_PLUS("04", VATRateKind.REDUCED),),
+        VATRateKind.SUPER_REDUCED: (_BASE_PLUS("01", VATRateKind.SUPER_REDUCED),),
+        VATRateKind.ZERO: (_BASE_PLUS("01", VATRateKind.ZERO),),
+    }
+)
+"""Rate-tier-keyed contributions for DOMESTIC_REVERSE_CHARGE + ISSUED.
+
+The wave-2 ADR pins reverse-charge issued contributions to the
+rate-specific devengado base casilla (01 / 04 / 07). The top-level
+:data:`MODELO_303_CASILLA_MAPPING` is keyed by
+``(VATCategory, InvoiceDirection)`` and therefore cannot vary by
+rate tier on its own — this secondary mapping is consulted by
+:func:`lookup_modelo_303_contribution` when the caller supplies
+an explicit ``rate_tier``. Callers that omit ``rate_tier`` receive
+the GENERAL default so the lookup never returns an empty tuple for
+a valid reverse-charge issued transaction.
+"""
+
+
 def _validate_coverage() -> None:
     """Assert every :class:`VATCategory` is mapped or explicitly out-of-scope.
 
     Runs at module import time. The check guards against silent
     classification drift when a future enum addition is missed by
-    the bridge update.
+    the bridge update. DOMESTIC_REVERSE_CHARGE ISSUED is covered by
+    :data:`_DOMESTIC_REVERSE_CHARGE_ISSUED_BY_TIER` and therefore
+    exempted from the top-level mapping requirement for that
+    direction only.
     """
     mapped_categories = {category for category, _ in _MAPPING}
+    mapped_categories.add(VATCategory.DOMESTIC_REVERSE_CHARGE)  # covered via tier dispatch
     seen = mapped_categories | _OUT_OF_SCOPE_V1
     missing = [m for m in VATCategory if m not in seen]
     if missing:
@@ -180,12 +213,18 @@ def lookup_modelo_303_contribution(
     *,
     category: VATCategory,
     direction: InvoiceDirection,
+    rate_tier: VATRateKind | None = None,
 ) -> tuple[Modelo303Contribution, ...]:
-    """Return the Modelo 303 contributions for a ``(category, direction)``.
+    """Return the Modelo 303 contributions for a classified transaction.
 
     Args:
         category: The :class:`VATCategory` of the classified transaction.
         direction: Whether the autónomo issued or received the invoice.
+        rate_tier: Optional explicit rate tier; required for
+            ``(DOMESTIC_REVERSE_CHARGE, ISSUED)`` to dispatch to the
+            rate-specific devengado base casilla (01 / 04 / 07).
+            Defaults to ``VATRateKind.GENERAL`` when omitted for the
+            reverse-charge case; ignored for every other pair.
 
     Returns:
         A tuple of :class:`Modelo303Contribution`. Returns an empty
@@ -193,6 +232,9 @@ def lookup_modelo_303_contribution(
         category is documented in ``_OUT_OF_SCOPE_V1`` for the v1
         wave).
     """
+    if category is VATCategory.DOMESTIC_REVERSE_CHARGE and direction is InvoiceDirection.ISSUED:
+        effective_tier = rate_tier if rate_tier is not None else VATRateKind.GENERAL
+        return _DOMESTIC_REVERSE_CHARGE_ISSUED_BY_TIER.get(effective_tier, ())
     return MODELO_303_CASILLA_MAPPING.get((category, direction), ())
 
 

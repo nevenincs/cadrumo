@@ -113,3 +113,78 @@ def test_every_contribution_has_valid_shape() -> None:
             assert 2 <= len(contribution.casilla_id) <= 4
             assert contribution.sign in {-1, 1}
             assert contribution.role in {CasillaRole.BASE, CasillaRole.CUOTA}
+
+
+def test_domestic_reverse_charge_issued_general_lands_on_07() -> None:
+    """DOMESTIC_REVERSE_CHARGE ISSUED at GENERAL -> casilla 07 (base)."""
+    contributions = lookup_modelo_303_contribution(
+        category=VATCategory.DOMESTIC_REVERSE_CHARGE,
+        direction=InvoiceDirection.ISSUED,
+        rate_tier=VATRateKind.GENERAL,
+    )
+    assert contributions == (
+        Modelo303Contribution(
+            casilla_id="07",
+            role=CasillaRole.BASE,
+            sign=1,
+            rate_kind=VATRateKind.GENERAL,
+        ),
+    )
+
+
+def test_domestic_reverse_charge_issued_reduced_lands_on_04() -> None:
+    """DOMESTIC_REVERSE_CHARGE ISSUED at REDUCED -> casilla 04 (base)."""
+    contributions = lookup_modelo_303_contribution(
+        category=VATCategory.DOMESTIC_REVERSE_CHARGE,
+        direction=InvoiceDirection.ISSUED,
+        rate_tier=VATRateKind.REDUCED,
+    )
+    assert contributions == (
+        Modelo303Contribution(
+            casilla_id="04",
+            role=CasillaRole.BASE,
+            sign=1,
+            rate_kind=VATRateKind.REDUCED,
+        ),
+    )
+
+
+def test_domestic_reverse_charge_issued_super_reduced_lands_on_01() -> None:
+    """DOMESTIC_REVERSE_CHARGE ISSUED at SUPER_REDUCED -> casilla 01 (base)."""
+    contributions = lookup_modelo_303_contribution(
+        category=VATCategory.DOMESTIC_REVERSE_CHARGE,
+        direction=InvoiceDirection.ISSUED,
+        rate_tier=VATRateKind.SUPER_REDUCED,
+    )
+    assert contributions == (
+        Modelo303Contribution(
+            casilla_id="01",
+            role=CasillaRole.BASE,
+            sign=1,
+            rate_kind=VATRateKind.SUPER_REDUCED,
+        ),
+    )
+
+
+def test_domestic_reverse_charge_issued_defaults_to_general_when_tier_omitted() -> None:
+    """Caller-omitted rate_tier for DOMESTIC_REVERSE_CHARGE ISSUED defaults to GENERAL."""
+    contributions = lookup_modelo_303_contribution(
+        category=VATCategory.DOMESTIC_REVERSE_CHARGE,
+        direction=InvoiceDirection.ISSUED,
+    )
+    assert contributions[0].casilla_id == "07"
+    assert contributions[0].rate_kind is VATRateKind.GENERAL
+
+
+def test_domestic_reverse_charge_received_ignores_rate_tier() -> None:
+    """DOMESTIC_REVERSE_CHARGE RECEIVED always lands on 28 / 29 regardless of tier."""
+    for tier in (VATRateKind.GENERAL, VATRateKind.REDUCED, VATRateKind.SUPER_REDUCED):
+        contributions = lookup_modelo_303_contribution(
+            category=VATCategory.DOMESTIC_REVERSE_CHARGE,
+            direction=InvoiceDirection.RECEIVED,
+            rate_tier=tier,
+        )
+        assert {(c.casilla_id, c.role) for c in contributions} == {
+            ("28", CasillaRole.BASE),
+            ("29", CasillaRole.CUOTA),
+        }

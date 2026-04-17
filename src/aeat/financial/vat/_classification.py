@@ -183,11 +183,43 @@ class VATClassificationCriteria(_StrictFrozen):
 
     @model_validator(mode="after")
     def _validate_member_state_consistency(self) -> VATClassificationCriteria:
-        """Ensure ``EU_MEMBER`` residency carries a non-null member state."""
+        """Enforce residency and rate-tier invariants.
+
+        Three checks, each raising :class:`ValueError` on violation:
+
+        * ``issuer_residency == EU_MEMBER`` requires ``issuer_member_state``.
+        * ``customer_residency == EU_MEMBER`` requires ``customer_member_state``.
+        * ES-to-ES domestic transactions (both residencies
+          ``ES_MAINLAND``) that would fall through to the R05
+          ``DOMESTIC_*`` rule require an explicit ``rate_tier``. The
+          classifier never silently defaults to ``GENERAL``; the
+          caller must supply the tier that applied at invoice time.
+          Dedicated reverse-charge ``TransactionKind`` values
+          (CONSTRUCTION / WASTE / ELECTRONICS) are exempted because
+          rules R01-R03 route them to ``DOMESTIC_REVERSE_CHARGE``
+          before R05 runs, so their rate tier is a payload concern,
+          not a classification axis.
+        """
         if self.issuer_residency is IssuerResidency.EU_MEMBER and self.issuer_member_state is None:
             raise ValueError("issuer_member_state is required when issuer_residency is EU_MEMBER")
         if self.customer_residency is CustomerResidency.EU_MEMBER and self.customer_member_state is None:
             raise ValueError("customer_member_state is required when customer_residency is EU_MEMBER")
+        if (
+            self.issuer_residency is IssuerResidency.ES_MAINLAND
+            and self.customer_residency is CustomerResidency.ES_MAINLAND
+            and self.kind
+            not in {
+                TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
+                TransactionKind.WASTE_REVERSE_CHARGE,
+                TransactionKind.ELECTRONICS_REVERSE_CHARGE,
+                TransactionKind.IMMOVABLE_PROPERTY,
+            }
+            and self.rate_tier is None
+        ):
+            raise ValueError(
+                "rate_tier is required for ES-to-ES domestic transactions; "
+                "supply GENERAL / REDUCED / SUPER_REDUCED / ZERO / EXEMPT explicitly"
+            )
         return self
 
 
@@ -393,6 +425,11 @@ _RATE_TIER_TO_CATEGORY: dict[VATRateKind, VATCategory] = {
 }
 
 
+_CATEGORY_TO_RATE_TIER: dict[VATCategory, VATRateKind] = {
+    category: tier for tier, category in _RATE_TIER_TO_CATEGORY.items()
+}
+
+
 class _Rule(NamedTuple):
     """Module-private decision-table row."""
 
@@ -564,12 +601,7 @@ def _resolve_rate_for_category(
     looked up against the issuer's residency on the transaction
     date.
     """
-    if category not in _RATE_TIER_TO_CATEGORY.values():
-        return None
-    tier = next(
-        (tier for tier, cat in _RATE_TIER_TO_CATEGORY.items() if cat is category),
-        None,
-    )
+    tier = _CATEGORY_TO_RATE_TIER.get(category)
     if tier is None:
         return None
     member_state = criteria.issuer_member_state if criteria.issuer_member_state is not None else EUMemberState.ES
