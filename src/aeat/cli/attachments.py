@@ -180,6 +180,9 @@ def _parse_metadata(items: list[str]) -> dict[str, str]:
         if not key:
             typer.echo(f"--metadata key must not be blank: {raw!r}", err=True)
             raise typer.Exit(code=2)
+        if not value:
+            typer.echo(f"--metadata value must not be blank: {raw!r}", err=True)
+            raise typer.Exit(code=2)
         if key in parsed:
             typer.echo(f"--metadata key repeated: {key!r}", err=True)
             raise typer.Exit(code=2)

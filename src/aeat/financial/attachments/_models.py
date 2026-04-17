@@ -137,6 +137,8 @@ class Attachment(BaseModel):
                 raise ValueError("metadata keys must not be blank")
             if not isinstance(raw_val, str):
                 raise ValueError(f"metadata value for {key!r} must be a string")
+            if not raw_val:
+                raise ValueError(f"metadata value for {key!r} must not be blank")
             normalized[key] = raw_val
         return MappingProxyType(normalized)
 
