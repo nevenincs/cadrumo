@@ -22,11 +22,11 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.deadlines import AutonomoProfile, IVARegime
-from aeat.models._categories import ModeloCadence, ModeloCategory, TaxpayerProfile
-from aeat.models._errors import UnknownModeloError
-from aeat.models._metadata import ModeloMetadata
-from aeat.models._registry import (
+from ..deadlines import AutonomoProfile, IVARegime
+from ._categories import ModeloCadence, ModeloCategory, TaxpayerProfile
+from ._errors import UnknownModeloError
+from ._metadata import ModeloMetadata
+from ._registry import (
     MODELO_REGISTRY,
     get_modelo,
     modelos_for_profile,
@@ -131,7 +131,8 @@ def show_command(
         return
     _emit_entries((metadata,), json_out=False)
     _CONSOLE.print(f"[dim]caps_into:[/dim] {metadata.caps_into.value if metadata.caps_into else '-'}")
-    _CONSOLE.print(f"[dim]submission:[/dim] {metadata.submission_portal_hint}")
+    submission = metadata.submission_portal.value if metadata.submission_portal else "-"
+    _CONSOLE.print(f"[dim]submission portal:[/dim] {submission}")
 
 
 @app.command(

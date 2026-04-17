@@ -16,8 +16,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from aeat.deadlines._errors import ScheduleComputationError
-from aeat.deadlines._models import AutonomoProfile, IVARegime
+from ._errors import ScheduleComputationError
+from ._models import AutonomoProfile, IVARegime
 
 
 @dataclass(frozen=True, slots=True)

@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from aeat.deadlines import (
+from . import (
     AutonomoProfile,
     FilingObligation,
     IVARegime,

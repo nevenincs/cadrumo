@@ -13,8 +13,7 @@ from __future__ import annotations
 
 import re
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from ._schema import (
     VATCatalogue,
     VATCategory,

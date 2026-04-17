@@ -15,13 +15,13 @@ from typing import cast
 
 import pytest
 
-from aeat.config import PROJECT_ROOT
-from aeat.filing import build_draft
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
-from aeat.submission import DraftStatus, FilingDraftLike, FilingFinding, Portal
-from aeat.submission._audit import append_live_submit_audit, build_live_submit_audit_record
-from aeat.submission._confirm import compute_draft_checksum, confirm_live_submission
-from aeat.submission._errors import AeatLiveConfirmationDeclinedError
+from ..config import PROJECT_ROOT
+from ..filing import build_draft
+from ..filing.testing import SyntheticProfile, default_schema_provider
+from . import DraftStatus, FilingDraftLike, FilingFinding, Portal
+from ._audit import append_live_submit_audit, build_live_submit_audit_record
+from ._confirm import compute_draft_checksum, confirm_live_submission
+from ._errors import AeatLiveConfirmationDeclinedError
 
 pytestmark = pytest.mark.unit
 

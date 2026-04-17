@@ -16,8 +16,7 @@ from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from .._errors import StatusParseError
 from .._models import Expediente
 

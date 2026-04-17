@@ -7,7 +7,8 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from aeat.financial.vat import (
+from ...i18n import Translatable
+from . import (
     VAT_CATALOGUE_2025,
     Citation,
     CitationSource,
@@ -15,7 +16,6 @@ from aeat.financial.vat import (
     VATRegulation,
     cite,
 )
-from aeat.i18n import Translatable
 
 
 @pytest.mark.unit

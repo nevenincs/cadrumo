@@ -6,7 +6,7 @@ import unicodedata
 
 import pytest
 
-from aeat.i18n import (
+from . import (
     Language,
     Translatable,
     TranslatableObject,

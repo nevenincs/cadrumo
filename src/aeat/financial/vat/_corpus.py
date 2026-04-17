@@ -14,9 +14,8 @@ pydantic-driven loader without changing its signature.
 
 from __future__ import annotations
 
-from aeat.config import Settings
-from aeat.logging import get_logger
-
+from ...config import Settings
+from ...logging import get_logger
 from ._catalogue import VAT_CATALOGUE_2025
 from ._schema import VATCatalogue
 from .errors import VatCatalogueError

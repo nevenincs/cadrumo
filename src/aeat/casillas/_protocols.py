@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from aeat.i18n import Translatable
+from ..i18n import Translatable
 
 
 @runtime_checkable

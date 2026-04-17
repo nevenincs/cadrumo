@@ -8,7 +8,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from aeat.storage import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
+from . import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 
 
 @pytest.mark.unit

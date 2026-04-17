@@ -6,7 +6,7 @@ callers can catch the project-wide base.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
+from ..errors import AeatError
 
 
 class FilingDraftError(AeatError):

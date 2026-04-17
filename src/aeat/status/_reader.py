@@ -22,9 +22,8 @@ from urllib.parse import urljoin
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from aeat.config import Settings
-from aeat.logging import get_logger
-
+from ..config import Settings
+from ..logging import get_logger
 from ._cache import StatusCache
 from ._cache_key import make_cache_key
 from ._errors import StatusAuthError, StatusReaderError

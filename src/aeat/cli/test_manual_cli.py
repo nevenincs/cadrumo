@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app
-from aeat.manuals.errors import RuleExtractionError
+from ..manuals.errors import RuleExtractionError
+from . import app
 
 _runner = CliRunner()
 

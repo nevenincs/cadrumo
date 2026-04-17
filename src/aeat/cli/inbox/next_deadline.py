@@ -6,9 +6,9 @@ from datetime import date
 
 from rich.console import Console
 
-from aeat.cli.inbox._helpers import build_fetcher
-from aeat.config import load_settings
-from aeat.inbox import next_appeal_deadline
+from ...config import load_settings
+from ...inbox import next_appeal_deadline
+from ._helpers import build_fetcher
 
 _CONSOLE = Console()
 

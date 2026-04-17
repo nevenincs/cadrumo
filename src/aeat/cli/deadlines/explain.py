@@ -7,8 +7,8 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from aeat.cli.deadlines._helpers import load_profile, resolve_profile_path
-from aeat.deadlines import explain
+from ...deadlines import explain
+from ._helpers import load_profile, resolve_profile_path
 
 _CONSOLE = Console()
 

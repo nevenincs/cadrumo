@@ -14,13 +14,13 @@ Example:
     ```python
     from decimal import Decimal
 
-    from aeat.filing import (
+    from . import (
         FilingDraft,
         FilingDraftStatus,
         build_draft,
         iter_findings,
     )
-    from aeat.filing.testing import (
+    from .testing import (
         SyntheticProfile,
         default_schema_provider,
     )
@@ -54,8 +54,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from ._builder import FilingBuilder
 from ._builders import (
     QUARTERLY_303_INPUT_KEY,

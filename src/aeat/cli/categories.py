@@ -6,8 +6,8 @@ import json
 
 import typer
 
-from aeat.casillas import ModeloCode
-from aeat.financial.categories import CATEGORY_PROFILES_2025, SpendingCategory, family_for
+from ..casillas import ModeloCode
+from ..financial.categories import CATEGORY_PROFILES_2025, SpendingCategory, family_for
 
 app = typer.Typer(
     name="categories",

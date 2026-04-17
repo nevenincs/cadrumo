@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.sync import app
-from aeat.sync import (
+from ...sync import (
     CasillaAddedWithDefault,
     DivergenceClassification,
     DivergenceRecord,
@@ -18,6 +17,7 @@ from aeat.sync import (
     ModeloIdentifier,
     ResolutionState,
 )
+from . import app
 
 
 @pytest.fixture()

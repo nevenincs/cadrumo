@@ -91,8 +91,8 @@ def init(
     ),
 ) -> None:
     """Walk the developer through OAuth Desktop client setup."""
-    from aeat.config import PROJECT_ROOT, Settings
-    from aeat.env_io import write_env_vars
+    from ..config import PROJECT_ROOT, Settings
+    from ..env_io import write_env_vars
 
     settings = Settings()
     project = settings.google_cloud_project or "<your-project-id>"

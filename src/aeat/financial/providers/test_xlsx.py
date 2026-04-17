@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import XlsxProvider
+from .. import XlsxProvider
 
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
 

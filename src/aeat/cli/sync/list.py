@@ -6,8 +6,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.config import load_settings
-from aeat.sync import JsonFileDivergenceRepository, ResolutionState
+from ...config import load_settings
+from ...sync import JsonFileDivergenceRepository, ResolutionState
 
 _CONSOLE = Console()
 

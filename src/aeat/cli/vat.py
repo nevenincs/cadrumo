@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.financial.vat import (
+from ..financial.vat import (
     VAT_CATALOGUE_2025,
     VAT_RATE_TABLE,
     EUMemberState,

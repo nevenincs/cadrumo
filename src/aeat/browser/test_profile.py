@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.browser.profile import Profile
+from .profile import Profile
 
 
 @pytest.mark.unit

@@ -11,14 +11,14 @@ the project's public-API-discipline rule.
 
 from __future__ import annotations
 
-from aeat.setup._env_writer import owned_env_keys, write_env_file, write_profile_file
-from aeat.setup._errors import (
+from ._env_writer import owned_env_keys, write_env_file, write_profile_file
+from ._errors import (
     SetupAbortedError,
     SetupAnswersError,
     SetupError,
     SetupVerifyError,
 )
-from aeat.setup._models import (
+from ._models import (
     SetupAnswers,
     SetupOutcome,
     SetupResult,
@@ -26,10 +26,10 @@ from aeat.setup._models import (
     VerifyFinding,
     VerifySeverity,
 )
-from aeat.setup._prompter import QueuedPrompter, TyperPrompter
-from aeat.setup._protocols import FirstRunRunner, Prompter
-from aeat.setup._verifier import Verifier, load_answers_from_file
-from aeat.setup._wizard import SetupWizard
+from ._prompter import QueuedPrompter, TyperPrompter
+from ._protocols import FirstRunRunner, Prompter
+from ._verifier import Verifier, load_answers_from_file
+from ._wizard import SetupWizard
 
 __all__ = [
     "FirstRunRunner",

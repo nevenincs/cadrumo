@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from aeat.llm._errors import LLMConfigError
-from aeat.llm._models import PromptDefinition
+from ._errors import LLMConfigError
+from ._models import PromptDefinition
 
 
 def render_prompt(definition: PromptDefinition, values: Mapping[str, str]) -> str:

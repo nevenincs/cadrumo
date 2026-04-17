@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.cli._drive_helpers import (
+from ._drive_helpers import (
     build_listing_query,
     escape_drive_query_literal,
     guess_mime_type,

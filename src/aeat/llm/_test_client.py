@@ -9,8 +9,8 @@ import pytest
 from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import LLMProviderSetting, Settings
-from aeat.llm import (
+from ..config import LLMProviderSetting, Settings
+from . import (
     LLMCache,
     LLMClient,
     LLMProviderError,

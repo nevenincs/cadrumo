@@ -6,7 +6,7 @@ so consumers can catch the package-wide base class.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
+from ..errors import AeatError
 
 
 class StatusReaderError(AeatError):

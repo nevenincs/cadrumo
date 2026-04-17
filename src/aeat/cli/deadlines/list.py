@@ -8,7 +8,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli.deadlines._helpers import build_engine, load_profile, resolve_profile_path
+from ._helpers import build_engine, load_profile, resolve_profile_path
 
 _CONSOLE = Console()
 

@@ -6,8 +6,8 @@ a single root they can catch at integration boundaries.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
-from aeat.i18n import Translatable
+from ..errors import AeatError
+from ..i18n import Translatable
 
 
 class SubmissionError(AeatError):

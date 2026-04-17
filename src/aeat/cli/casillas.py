@@ -7,8 +7,8 @@ from pathlib import Path
 
 import typer
 
-from aeat.casillas import CasillaCatalogue, CasillaParseError, load_casillas, verify_casillas
-from aeat.config import load_settings
+from ..casillas import CasillaCatalogue, CasillaParseError, load_casillas, verify_casillas
+from ..config import load_settings
 
 app = typer.Typer(
     name="casillas",

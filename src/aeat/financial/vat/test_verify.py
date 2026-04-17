@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.financial.vat import (
+from . import (
     VAT_CATALOGUE_2025,
     VATCatalogue,
     VATCategory,

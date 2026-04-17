@@ -13,8 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from . import _orm
 from .errors import RepositoryError
 from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord

@@ -11,14 +11,14 @@ from __future__ import annotations
 
 import abc
 
-from aeat.submission._models import SubmissionAttempt
-from aeat.submission._protocols import (
+from .._models import SubmissionAttempt
+from .._protocols import (
     CasillaCatalogue,
     FilingDraftLike,
     Justificante,
     Portal,
 )
-from aeat.submission._submitters._contract import BrowserSessionLike
+from ._contract import BrowserSessionLike
 
 
 class Submitter(abc.ABC):

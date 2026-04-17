@@ -6,8 +6,8 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.llm._errors import LLMRateLimitError
-from aeat.llm._models import LLMProvider
+from .._errors import LLMRateLimitError
+from .._models import LLMProvider
 
 
 class ProviderRequest(BaseModel):

@@ -9,8 +9,8 @@
       "args": ["-y", "@upstash/context7-mcp"]
     },
     "google-workspace": {
-      "command": "uvx",
-      "args": ["workspace-mcp", "--tool-tier", "core"]
+      "command": "uv",
+      "args": ["run", "python", "-m", "aeat.mcp.launch_google_workspace"]
     },
     "vaultspec-core": {
       "command": "uv",

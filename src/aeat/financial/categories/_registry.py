@@ -5,9 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 from types import MappingProxyType
 
-from aeat.casillas import ModeloCode, PeriodType
-from aeat.i18n import Translatable
-
+from ...casillas import ModeloCode, PeriodType
+from ...i18n import Translatable
 from ._casilla_mapping import CasillaMapping, CasillaMappingSign
 from ._profile import CategoryProfile, VatCategory
 from ._proportionality import (

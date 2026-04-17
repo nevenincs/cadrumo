@@ -17,8 +17,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from ._divergence import (
     CasillaAddedWithDefault,
     CasillaRemoved,

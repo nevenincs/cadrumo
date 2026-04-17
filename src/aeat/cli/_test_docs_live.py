@@ -11,13 +11,13 @@ from typing import Any
 
 import pytest
 
-from aeat.cli._docs_helpers import (
+from ._docs_helpers import (
     build_append_request,
     build_replace_all_request,
     extract_plaintext,
     find_end_index,
 )
-from aeat.cli._live import (
+from ._live import (
     docs_service,
     requires_live_enabled,
     requires_scratch_doc,

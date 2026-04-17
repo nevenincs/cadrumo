@@ -6,9 +6,8 @@ import asyncio
 
 from playwright.async_api import async_playwright
 
-from aeat.config import load_settings
-from aeat.logging import get_logger
-
+from ..config import load_settings
+from ..logging import get_logger
 from .session import BrowserError
 
 logger = get_logger(__name__)

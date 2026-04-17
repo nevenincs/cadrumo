@@ -19,7 +19,7 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
-from aeat.i18n import Translatable
+from ..i18n import Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

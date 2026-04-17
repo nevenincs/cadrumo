@@ -8,9 +8,8 @@ shape, citation-renderer smoke test.
 
 from __future__ import annotations
 
-from aeat.config import Settings
-from aeat.logging import get_logger
-
+from ..config import Settings
+from ..logging import get_logger
 from ._cite import cite
 from ._loader import load_catalogue
 from ._schema import (

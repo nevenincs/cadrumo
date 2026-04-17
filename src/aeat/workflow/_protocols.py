@@ -31,8 +31,8 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.deadlines import AutonomoProfile, Schedule
-from aeat.submission import FilingDraftLike, LoadedCertificate
+from ..deadlines import AutonomoProfile, Schedule
+from ..submission import FilingDraftLike, LoadedCertificate
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

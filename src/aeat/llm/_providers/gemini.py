@@ -5,9 +5,9 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.llm._errors import LLMConfigError, LLMProviderError
-from aeat.llm._models import LLMProvider
-from aeat.llm._providers.base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+from .._errors import LLMConfigError, LLMProviderError
+from .._models import LLMProvider
+from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
 
 class _GeminiPart(BaseModel):

@@ -6,8 +6,8 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.cli.submission._helpers import build_engine
-from aeat.submission import SubmissionError
+from ...submission import SubmissionError
+from ._helpers import build_engine
 
 _CONSOLE = Console()
 

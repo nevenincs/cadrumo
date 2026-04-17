@@ -25,9 +25,8 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.browser import BrowserSession
-from aeat.logging import get_logger
-
+from ..browser import BrowserSession
+from ..logging import get_logger
 from ._classifier import DivergenceClassifier
 from ._dispatcher import HealingDispatcher, HealingPlan
 from ._divergence import DivergenceRecord

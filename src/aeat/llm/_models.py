@@ -9,7 +9,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from aeat.llm._i18n_compat import normalize_language_code
+from ._i18n_compat import normalize_language_code
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 

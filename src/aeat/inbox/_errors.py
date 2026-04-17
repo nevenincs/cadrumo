@@ -6,8 +6,8 @@ boundaries have a single root they can catch.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
-from aeat.i18n import Translatable
+from ..errors import AeatError
+from ..i18n import Translatable
 
 
 class InboxError(AeatError):

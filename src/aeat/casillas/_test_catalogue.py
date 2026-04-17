@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.casillas import (
+from . import (
     CasillaCatalogue,
     CasillaDataType,
     CasillaParseError,

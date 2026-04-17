@@ -28,7 +28,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.auth import (
+from ..auth import (
     CLOUD_PLATFORM_SCOPE,
     DOCS_SCOPE,
     DRIVE_SCOPE,
@@ -45,8 +45,8 @@ from aeat.auth import (
     build_storage_client,
     get_credentials_for_scopes,
 )
-from aeat.auth import health as certificate_health
-from aeat.config import PROJECT_ROOT, Settings
+from ..auth import health as certificate_health
+from ..config import PROJECT_ROOT, Settings
 
 # ── Row primitives ──────────────────────────────────────────────────────────
 

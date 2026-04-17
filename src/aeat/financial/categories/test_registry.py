@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.casillas import ModeloCode, load_casillas
-from aeat.financial.categories import CATEGORY_PROFILES_2025, SpendingCategory, load_category_profiles_from_manual
+from ...casillas import ModeloCode, load_casillas
+from . import CATEGORY_PROFILES_2025, SpendingCategory, load_category_profiles_from_manual
 
 
 @pytest.mark.unit

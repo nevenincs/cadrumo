@@ -122,8 +122,8 @@ def _find_or_create_workspace_doc(
 
 def _persist_ids(resources: ScratchResources) -> None:
     """Write the scratch IDs back into ``env/.env``."""
-    from aeat.config import PROJECT_ROOT
-    from aeat.env_io import write_env_vars
+    from ..config import PROJECT_ROOT
+    from ..env_io import write_env_vars
 
     write_env_vars(
         PROJECT_ROOT / "env" / ".env",
@@ -138,12 +138,12 @@ def _persist_ids(resources: ScratchResources) -> None:
 def bootstrap() -> None:
     """Provision the scratch resource set, persist IDs, print a summary."""
     # Local imports keep the CLI startup path light when only --help is used.
-    from aeat.auth import (
+    from ..auth import (
         REQUIRED_ADC_SCOPES,
         build_drive_service,
         get_credentials_for_scopes,
     )
-    from aeat.config import Settings
+    from ..config import Settings
 
     console = Console()
     settings = Settings()

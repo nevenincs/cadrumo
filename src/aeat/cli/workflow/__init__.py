@@ -19,10 +19,10 @@ from __future__ import annotations
 
 import typer
 
-from aeat.cli.workflow.list_cmd import list_cmd
-from aeat.cli.workflow.next import next_cmd
-from aeat.cli.workflow.run import run_cmd
-from aeat.cli.workflow.show import show_cmd
+from .list_cmd import list_cmd
+from .next import next_cmd
+from .run import run_cmd
+from .show import show_cmd
 
 app = typer.Typer(
     name="workflow",

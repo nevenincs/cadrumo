@@ -2,15 +2,13 @@
 
 import pytest
 
-import aeat.errors
-import aeat.llm
-import aeat.logging
+from .. import errors, llm, logging
 
 
 @pytest.mark.unit
 def test_smoke_llm() -> None:
     """Assert the public package is importable and convention-compliant."""
 
-    assert aeat.llm.__doc__ is not None
-    assert issubclass(aeat.errors.AeatError, Exception)
-    assert aeat.logging.get_logger(__name__).name == __name__
+    assert llm.__doc__ is not None
+    assert issubclass(errors.AeatError, Exception)
+    assert logging.get_logger(__name__).name == __name__

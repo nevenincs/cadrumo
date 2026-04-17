@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Protocol
 
-from aeat.llm._errors import LLMConfigError
+from ._errors import LLMConfigError
 
 _LANGUAGE_CODE_PATTERN = re.compile(r"^[a-z]{2}$")
 

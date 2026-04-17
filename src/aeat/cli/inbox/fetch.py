@@ -9,8 +9,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli.inbox._helpers import build_fetcher
-from aeat.inbox import InboxError
+from ...inbox import InboxError
+from ._helpers import build_fetcher
 
 _CONSOLE = Console()
 

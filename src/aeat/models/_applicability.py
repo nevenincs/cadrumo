@@ -6,7 +6,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from aeat.models._categories import TaxpayerProfile
+from ._categories import TaxpayerProfile
 
 
 class ModeloApplicability(BaseModel):

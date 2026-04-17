@@ -6,12 +6,12 @@ import asyncio
 import secrets
 from collections.abc import Callable, Sequence
 
-from aeat.config import Settings
-from aeat.llm._client import LLMClient
-from aeat.llm._errors import LLMRateLimitError
-from aeat.llm._i18n_compat import normalize_language_code
-from aeat.llm._models import LLMRequest, PromptRegistry, Translation
-from aeat.llm._prompts import render_prompt
+from ..config import Settings
+from ._client import LLMClient
+from ._errors import LLMRateLimitError
+from ._i18n_compat import normalize_language_code
+from ._models import LLMRequest, PromptRegistry, Translation
+from ._prompts import render_prompt
 
 
 class Translator:

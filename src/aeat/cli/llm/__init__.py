@@ -7,7 +7,7 @@ from datetime import date
 
 import typer
 
-from aeat.llm import LLMCache, LLMClient, LLMRequest, PromptRegistry, Translator, UsageRecorder
+from ...llm import LLMCache, LLMClient, LLMRequest, PromptRegistry, Translator, UsageRecorder
 
 app = typer.Typer(name="llm", no_args_is_help=True, help="LLM helpers.")
 cache_app = typer.Typer(name="cache", no_args_is_help=True, help="LLM cache helpers.")

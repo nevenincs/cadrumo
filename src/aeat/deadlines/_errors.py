@@ -6,7 +6,7 @@ have a single root they can catch when integrating with the engine.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
+from ..errors import AeatError
 
 
 class DeadlineError(AeatError):

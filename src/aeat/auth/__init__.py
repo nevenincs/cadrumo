@@ -37,7 +37,7 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from aeat.auth.certificate import (
+from .certificate import (
     CertificateBackend,
     CertificateBundle,
     CertificateError,
@@ -58,7 +58,7 @@ from aeat.auth.certificate import (
 )
 
 if TYPE_CHECKING:
-    from aeat.config import Settings
+    from ..config import Settings
 
 __all__ = [
     "CertificateBackend",
@@ -398,7 +398,7 @@ def get_credentials_for_scopes(scopes: list[str] | None = None) -> BaseCredentia
     Returns:
         Authenticated credentials suitable for any Google API client.
     """
-    from aeat.config import Settings  # local import to avoid import cycle
+    from ..config import Settings  # local import to avoid import cycle
 
     scopes = scopes or SCOPES
     settings = Settings()

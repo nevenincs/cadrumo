@@ -66,7 +66,7 @@ Example
 
 .. code-block:: python
 
-    from aeat.testing import load_filing_history
+    from . import load_filing_history
 
     for record in load_filing_history(modelo="130"):
         assert record.synthetic is True
@@ -76,8 +76,7 @@ Example
 
 from __future__ import annotations
 
-from aeat.errors import FilingFixtureError
-
+from ..errors import FilingFixtureError
 from ._loader import SYNTHETIC_FIXTURES_ROOT, load_filing_history
 from ._schema import (
     FilingRecord,

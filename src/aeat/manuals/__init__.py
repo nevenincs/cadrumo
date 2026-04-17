@@ -15,7 +15,7 @@ exclusively from ``aeat.manuals`` and MUST NOT reach into private
 
 Example:
     ```python
-    from aeat.manuals import ManualId, ManualPart, fetch_manual_part, load_manual
+    from . import ManualId, ManualPart, fetch_manual_part, load_manual
 
     # Materialise the raw PDF + manifest (first run only):
     result = fetch_manual_part(

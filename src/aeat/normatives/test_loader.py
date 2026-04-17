@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.config import Settings
-from aeat.normatives import (
+from ..config import Settings
+from . import (
     NormativeCatalogue,
     NormativeNotFoundError,
     NormativeParseError,

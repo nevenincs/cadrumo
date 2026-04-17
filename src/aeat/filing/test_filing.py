@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.filing import (
+from . import (
     FilingComputationError,
     FilingDraft,
     FilingDraftStatus,
@@ -30,7 +30,7 @@ from aeat.filing import (
     iter_findings,
     validate_draft,
 )
-from aeat.filing.testing import (
+from .testing import (
     SyntheticDeadlineChecker,
     SyntheticDeadlineStatus,
     SyntheticProfile,

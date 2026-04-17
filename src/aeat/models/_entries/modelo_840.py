@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from aeat.models._categories import (
+from ...portals import Portal
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._codes import ModeloCode
-from aeat.models._entries._common import (
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
+from ._common import (
     build_applicability,
     build_entry,
     make_citation,
 )
-from aeat.models._metadata import ModeloMetadata
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_840,
@@ -46,7 +47,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 840",
+    submission_portal=Portal.PORTAL_M840_IAE,
     known_gotchas=(
         "Default-exento para todo autónomo persona física.",
         "TRLHL arts 78-91 no disponibles en corpus on-disk.",

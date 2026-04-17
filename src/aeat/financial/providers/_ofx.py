@@ -9,8 +9,8 @@ from typing import Protocol, cast
 
 from ofxparse import OfxParser
 
-from aeat.financial._raw_transaction import RawTransaction, SourceFormat
-from aeat.financial.providers._base import (
+from .._raw_transaction import RawTransaction, SourceFormat
+from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
     ProviderValidation,

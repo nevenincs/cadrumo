@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.cli.doctor import (
+from .doctor import (
     REQUIRED_ADC_SCOPES,
     Row,
     State,

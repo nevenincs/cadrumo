@@ -22,7 +22,7 @@ from enum import StrEnum
 
 from pydantic import AnyHttpUrl, AwareDatetime, BaseModel, ConfigDict, Field
 
-from aeat.i18n import Translatable
+from ..i18n import Translatable
 
 
 class AeatStatusKind(StrEnum):

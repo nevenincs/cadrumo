@@ -13,10 +13,10 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from aeat.deadlines import AutonomoProfile
-from aeat.i18n import Translatable
-from aeat.logging import get_logger
-from aeat.setup._models import SetupAnswers, VerifyFinding, VerifySeverity
+from ..deadlines import AutonomoProfile
+from ..i18n import Translatable
+from ..logging import get_logger
+from ._models import SetupAnswers, VerifyFinding, VerifySeverity
 
 log = get_logger(__name__)
 
@@ -211,7 +211,7 @@ def load_answers_from_file(path: Path) -> SetupAnswers:
         SetupAnswersError: If the file is missing or its contents do
             not validate.
     """
-    from aeat.setup._errors import SetupAnswersError
+    from ._errors import SetupAnswersError
 
     if not path.exists():
         raise SetupAnswersError(f"answers file not found: {path}")

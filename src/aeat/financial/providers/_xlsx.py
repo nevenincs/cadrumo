@@ -10,8 +10,8 @@ from openpyxl import load_workbook
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from aeat.financial._raw_transaction import RawTransaction, SourceFormat
-from aeat.financial.providers._base import (
+from .._raw_transaction import RawTransaction, SourceFormat
+from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
     ProviderValidation,
@@ -22,7 +22,7 @@ from aeat.financial.providers._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
-from aeat.financial.providers._csv import (
+from ._csv import (
     CSV_LAYOUTS,
     CsvBankLayout,
     _find_column,

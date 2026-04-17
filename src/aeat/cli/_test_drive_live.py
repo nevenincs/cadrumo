@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
-from aeat.cli._live import (
+from ._live import (
     cleanup_files,
     drive_service,
     requires_live_enabled,

@@ -9,8 +9,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.config import load_settings
-from aeat.workflow import list_runs
+from ...config import load_settings
+from ...workflow import list_runs
 
 _CONSOLE = Console()
 

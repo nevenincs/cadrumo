@@ -7,9 +7,9 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from aeat.config import PROJECT_ROOT
-from aeat.llm._errors import LLMCacheError
-from aeat.llm._models import (
+from ..config import PROJECT_ROOT
+from ._errors import LLMCacheError
+from ._models import (
     CachedEntry,
     CacheKey,
     CacheStats,

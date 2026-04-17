@@ -7,8 +7,8 @@ from pathlib import Path
 
 import typer
 
-from aeat.config import load_settings
-from aeat.financial.transactions import (
+from ...config import load_settings
+from ...financial.transactions import (
     BusinessClassification,
     TransactionCatalogue,
     TransactionError,

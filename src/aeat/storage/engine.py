@@ -12,12 +12,12 @@ from threading import Lock
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.engine.interfaces import DBAPIConnection
-from sqlalchemy.engine.url import make_url
+from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.pool import ConnectionPoolEntry
 
-from aeat.config import Settings, load_settings
-from aeat.logging import get_logger
-
+from .._paths import resolve_project_path
+from ..config import Settings, load_settings
+from ..logging import get_logger
 from .errors import StorageError
 
 _log = get_logger(__name__)
@@ -25,22 +25,38 @@ _engines: dict[str, Engine] = {}
 _lock = Lock()
 
 
-def _ensure_sqlite_parent(url: str) -> None:
-    """Create the parent directory of a SQLite database file if needed.
+def _normalize_sqlite_url(url: str) -> str:
+    """Anchor relative SQLite database files to ``PROJECT_ROOT``.
 
     Args:
         url: SQLAlchemy URL. No-op for non-SQLite URLs and in-memory databases.
     """
     parsed = make_url(url)
     if not parsed.drivername.startswith("sqlite"):
-        return
+        return url
     database = parsed.database
     if not database or database == ":memory:":
-        return
-    db_path = Path(database)
-    if not db_path.is_absolute():
-        db_path = Path.cwd() / db_path
-    db_path.parent.mkdir(parents=True, exist_ok=True)
+        return url
+    resolved_db = resolve_project_path(database)
+    normalized = URL.create(
+        drivername=parsed.drivername,
+        username=parsed.username,
+        password=parsed.password,
+        host=parsed.host,
+        port=parsed.port,
+        database=str(resolved_db),
+        query=parsed.query,
+    )
+    return normalized.render_as_string(hide_password=False)
+
+
+def _ensure_sqlite_parent(url: str) -> None:
+    """Create the parent directory of a SQLite database file if needed."""
+
+    parsed = make_url(_normalize_sqlite_url(url))
+    database = parsed.database
+    if database and database != ":memory:":
+        Path(database).parent.mkdir(parents=True, exist_ok=True)
 
 
 def _enable_sqlite_foreign_keys(engine: Engine) -> None:
@@ -86,8 +102,9 @@ def create_engine_from_settings(settings: Settings) -> Engine:
     if not url:
         raise StorageError("aeat_database_url is empty; set AEAT_DATABASE_URL.")
     try:
-        _ensure_sqlite_parent(url)
-        engine = create_engine(url, future=True)
+        normalized_url = _normalize_sqlite_url(url)
+        _ensure_sqlite_parent(normalized_url)
+        engine = create_engine(normalized_url, future=True)
     except Exception as exc:  # pragma: no cover - defensive
         raise StorageError(f"Failed to create engine for {url!r}: {exc}") from exc
     _enable_sqlite_foreign_keys(engine)

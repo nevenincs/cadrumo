@@ -15,9 +15,9 @@ from anthropic import (
 )
 from anthropic.types import Message, MessageParam, MetadataParam, TextBlock
 
-from aeat.llm._errors import LLMConfigError, LLMProviderError
-from aeat.llm._models import LLMProvider
-from aeat.llm._providers.base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+from .._errors import LLMConfigError, LLMProviderError
+from .._models import LLMProvider
+from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
 
 class AnthropicAdapter(_ProviderAdapter):

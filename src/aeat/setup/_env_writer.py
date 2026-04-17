@@ -15,10 +15,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.deadlines import AutonomoProfile
-from aeat.env_io import write_env_vars
-from aeat.logging import get_logger
-from aeat.setup._models import SetupAnswers
+from ..deadlines import AutonomoProfile
+from ..env_io import write_env_vars
+from ..logging import get_logger
+from ._models import SetupAnswers
 
 log = get_logger(__name__)
 

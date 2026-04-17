@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from aeat.config import Settings
-from aeat.storage import create_engine_from_settings, session_scope
-from aeat.storage._orm import Base
+from ..config import Settings
+from . import create_engine_from_settings, session_scope
+from ._orm import Base
 
 
 def _engine(tmp_path: Path):

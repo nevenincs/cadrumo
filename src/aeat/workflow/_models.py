@@ -16,11 +16,11 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.deadlines import FilingObligation
-from aeat.i18n import Translatable
+from ..deadlines import FilingObligation
+from ..i18n import Translatable
 
 if TYPE_CHECKING:
-    from aeat.status import SiteHealthAlert
+    from ..status import SiteHealthAlert
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

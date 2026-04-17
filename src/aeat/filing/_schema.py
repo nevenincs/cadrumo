@@ -15,7 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.i18n import Translatable
+from ..i18n import Translatable
 
 # Default schema version stamped on a freshly built draft. The real
 # casilla DB version is supplied via the CasillaCollection Protocol;

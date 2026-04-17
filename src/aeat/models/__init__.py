@@ -21,22 +21,22 @@ of any deadline dependency.
 
 from __future__ import annotations
 
-from aeat.models._applicability import ModeloApplicability
-from aeat.models._categories import (
+from ._applicability import ModeloApplicability
+from ._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._citations import LegalCitation
-from aeat.models._codes import ModeloCode
-from aeat.models._errors import (
+from ._citations import LegalCitation
+from ._codes import ModeloCode
+from ._errors import (
     ModeloRegistryError,
     RegistryIntegrityError,
     UnknownModeloError,
 )
-from aeat.models._metadata import ModeloMetadata
-from aeat.models._registry import (
+from ._metadata import ModeloMetadata
+from ._registry import (
     MODELO_REGISTRY,
     get_modelo,
     modelos_for_profile,

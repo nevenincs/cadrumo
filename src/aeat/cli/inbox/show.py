@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.cli.inbox._helpers import build_fetcher
+from ._helpers import build_fetcher
 
 _CONSOLE = Console()
 

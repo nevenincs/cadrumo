@@ -8,7 +8,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from aeat.workflow import (
+from . import (
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,

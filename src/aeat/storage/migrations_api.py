@@ -13,8 +13,7 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import Engine
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from .errors import MigrationError
 
 _log = get_logger(__name__)

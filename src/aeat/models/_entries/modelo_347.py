@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from aeat.models._categories import (
+from ...portals import Portal
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._codes import ModeloCode
-from aeat.models._entries._common import (
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
+from ._common import (
     build_applicability,
     build_entry,
     make_citation,
 )
-from aeat.models._metadata import ModeloMetadata
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_347,
@@ -55,7 +56,7 @@ ENTRY: ModeloMetadata = build_entry(
     ),
     caps_into=None,
     related_modelos=(),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 347",
+    submission_portal=Portal.PORTAL_M347_OPERACIONES_TERCEROS,
     known_gotchas=(
         "Reglas de exclusión complejas.",
         "Los obligados a SII están exentos.",

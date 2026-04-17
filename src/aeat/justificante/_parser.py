@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from ._errors import JustificanteParseError
 from ._extract import extract_justificante
 from ._parsers import extract_text
@@ -44,7 +43,7 @@ def parse_justificante(
         # Deferred import: ``aeat.config`` imports the public justificante
         # surface for the ``JustificanteParserBackend`` enum, so importing
         # it at module scope would form a cycle.
-        from aeat.config import load_settings
+        from ..config import load_settings
 
         settings = load_settings()
         resolved_backend = settings.aeat_justificante_parser_backend

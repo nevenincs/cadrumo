@@ -11,8 +11,8 @@ from pathlib import Path
 
 import typer
 
-from aeat.config import load_settings
-from aeat.deadlines import (
+from ...config import load_settings
+from ...deadlines import (
     KNOWN_AUTONOMO_MODELOS,
     AutonomoProfile,
     DeadlineEngine,

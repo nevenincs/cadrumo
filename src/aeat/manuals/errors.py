@@ -7,7 +7,7 @@ which in turn inherits from :class:`aeat.errors.AeatError`.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
+from ..errors import AeatError
 
 
 class ManualError(AeatError):

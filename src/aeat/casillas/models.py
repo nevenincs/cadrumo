@@ -8,7 +8,7 @@ from enum import StrEnum
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
-from aeat.i18n import Translatable, require_authoritative
+from ..i18n import Translatable, require_authoritative
 
 KNOWN_MODELO_IDS = frozenset({"MODELO_130", "MODELO_303", "MODELO_390"})
 _PERIOD_RE = re.compile(r"^\d{4}(Q[1-4]|-\d{2})?$")

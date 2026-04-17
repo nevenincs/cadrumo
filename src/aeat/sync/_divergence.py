@@ -20,8 +20,7 @@ from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
-from aeat.i18n import Translatable
-
+from ..i18n import Translatable
 from ._protocols import ModeloIdentifier, PortalIdentifier
 
 

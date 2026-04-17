@@ -20,17 +20,17 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
-from aeat.logging import get_logger
-from aeat.submission._errors import SubmissionFormFillError
-from aeat.submission._models import SubmissionAttempt, SubmissionStatus
-from aeat.submission._protocols import (
+from ...logging import get_logger
+from .._errors import SubmissionFormFillError
+from .._models import SubmissionAttempt, SubmissionStatus
+from .._protocols import (
     CasillaCatalogue,
     FilingDraftLike,
     Justificante,
     Portal,
 )
-from aeat.submission._submitters import Submitter
-from aeat.submission._submitters._contract import BrowserSessionLike
+from . import Submitter
+from ._contract import BrowserSessionLike
 
 _logger = get_logger(__name__)
 

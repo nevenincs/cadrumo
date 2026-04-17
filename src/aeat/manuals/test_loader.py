@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import Settings
-from aeat.manuals import (
+from ..config import Settings
+from . import (
     ManualCatalogue,
     ManualId,
     ManualPart,
@@ -21,7 +21,7 @@ from aeat.manuals import (
     load_section,
     resolve_part_root,
 )
-from aeat.manuals.errors import ManualNotFoundError, ManualParseError
+from .errors import ManualNotFoundError, ManualParseError
 
 
 class _IsolatedSettings(Settings):
@@ -196,6 +196,15 @@ class TestLoader:
                 settings.aeat_manuals_root / "iva" / "2025",
                 manual.chapters[0].sections[0],
             )
+
+    @pytest.mark.unit
+    def test_load_section_rejects_traversal_ref(self, tmp_path: Path) -> None:
+        """A tampered section ref must not escape the owning part root."""
+        settings = _seed_iva(tmp_path)
+        manual = load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
+        bad_ref = manual.chapters[0].sections[0].model_copy(update={"relative_path": "../outside.json"})
+        with pytest.raises(ManualParseError, match="must stay within the owning root"):
+            load_section(settings.aeat_manuals_root / "iva" / "2025", bad_ref)
 
     @pytest.mark.unit
     def test_load_catalogue_and_find_rules(self, tmp_path: Path) -> None:

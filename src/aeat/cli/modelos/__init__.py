@@ -7,6 +7,6 @@ other sub-apps (e.g. :mod:`aeat.cli.deadlines`).
 
 from __future__ import annotations
 
-from aeat.models._cli import app
+from ...models._cli import app
 
 __all__ = ["app"]

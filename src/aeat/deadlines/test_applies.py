@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.deadlines import (
+from . import (
     AutonomoProfile,
     IVARegime,
     ScheduleComputationError,

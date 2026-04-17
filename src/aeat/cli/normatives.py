@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.normatives import (
+from ..normatives import (
     NormativeError,
     NormativeNotFoundError,
     cite,

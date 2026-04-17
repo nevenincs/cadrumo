@@ -15,11 +15,11 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-from aeat.inbox._classifier import classify, compute_appeal_deadline
-from aeat.inbox._errors import InboxAcknowledgeError, InboxFetchError
-from aeat.inbox._models import Inbox, Notificacion
-from aeat.inbox._protocols import NotificacionSource, RawNotificacion
-from aeat.logging import get_logger
+from ..logging import get_logger
+from ._classifier import classify, compute_appeal_deadline
+from ._errors import InboxAcknowledgeError, InboxFetchError
+from ._models import Inbox, Notificacion
+from ._protocols import NotificacionSource, RawNotificacion
 
 _LOGGER = get_logger(__name__)
 

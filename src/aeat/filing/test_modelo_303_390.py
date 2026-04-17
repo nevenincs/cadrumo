@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.filing import (
+from . import (
     QUARTERLY_303_INPUT_KEY,
     FilingComputationError,
     FilingDraft,
@@ -25,7 +25,7 @@ from aeat.filing import (
     build_draft,
     validate_draft,
 )
-from aeat.filing.testing import (
+from .testing import (
     SyntheticProfile,
     default_schema_provider,
 )
@@ -329,7 +329,7 @@ class TestModelo390CrossValidation:
         # Re-run full validation via the low-level validator to thread the
         # quarterly drafts explicitly — validate_draft cannot because it
         # constructs its own validator without them.
-        from aeat.filing import FilingValidator, apply_validation
+        from . import FilingValidator, apply_validation
 
         validator = FilingValidator(
             schema_provider=default_schema_provider(),
@@ -368,7 +368,7 @@ class TestModelo390CrossValidation:
             inputs={"01": 2025, QUARTERLY_303_INPUT_KEY: quarterly},
             schema_provider=default_schema_provider(),
         )
-        from aeat.filing import FilingValidator
+        from . import FilingValidator
 
         validator = FilingValidator(
             schema_provider=default_schema_provider(),
@@ -402,7 +402,7 @@ class TestModelo390CrossValidation:
             for v in annual.values
         )
         tampered = annual.model_copy(update={"values": tampered_values})
-        from aeat.filing import FilingValidator
+        from . import FilingValidator
 
         validator = FilingValidator(
             schema_provider=default_schema_provider(),

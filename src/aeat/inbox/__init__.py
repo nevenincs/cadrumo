@@ -26,25 +26,25 @@ Non-goals (see ADR decision D7):
 
 from __future__ import annotations
 
-from aeat.inbox._classifier import (
+from ._classifier import (
     appeal_window_for,
     classify,
     compute_appeal_deadline,
 )
-from aeat.inbox._deadline import next_appeal_deadline
-from aeat.inbox._errors import (
+from ._deadline import next_appeal_deadline
+from ._errors import (
     InboxAcknowledgeError,
     InboxError,
     InboxFetchError,
 )
-from aeat.inbox._fetcher import InboxFetcher
-from aeat.inbox._models import (
+from ._fetcher import InboxFetcher
+from ._models import (
     Inbox,
     Notificacion,
     NotificacionKind,
     NotificacionPriority,
 )
-from aeat.inbox._protocols import NotificacionSource, RawNotificacion
+from ._protocols import NotificacionSource, RawNotificacion
 
 __all__ = [
     "Inbox",

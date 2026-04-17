@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.setup import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language
+from . import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
 
 pytestmark = pytest.mark.unit
 

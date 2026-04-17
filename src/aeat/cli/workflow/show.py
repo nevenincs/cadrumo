@@ -6,8 +6,8 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.config import load_settings
-from aeat.workflow import WorkflowError, load_run
+from ...config import load_settings
+from ...workflow import WorkflowError, load_run
 
 _CONSOLE = Console()
 

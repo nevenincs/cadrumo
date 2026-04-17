@@ -9,9 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.config import Settings, load_settings
-from aeat.logging import get_logger
-
+from ..config import Settings, load_settings
+from ..logging import get_logger
 from ._schema import NormativeCatalogue, NormativeReference
 from .errors import NormativeNotFoundError, NormativeParseError
 

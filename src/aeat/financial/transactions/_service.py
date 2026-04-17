@@ -10,8 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from ._enums import BusinessClassification
 from ._errors import TransactionCatalogueError, TransactionNotFoundError, TransactionPersistenceError
 from ._models import Transaction, TransactionCatalogue

@@ -14,10 +14,10 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.config import load_settings
-from aeat.errors import AeatError
-from aeat.financial._raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from aeat.logging import get_logger
+from ...config import load_settings
+from ...errors import AeatError
+from ...logging import get_logger
+from .._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")

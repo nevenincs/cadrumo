@@ -9,14 +9,14 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli._sheets_helpers import coerce_value_input_option, parse_values_json
+from ._sheets_helpers import coerce_value_input_option, parse_values_json
 
 app = typer.Typer(name="sheets", no_args_is_help=True, help="Google Sheets helpers.")
 
 
 def _sheets() -> Any:
     """Build an authenticated Sheets v4 service lazily."""
-    from aeat.auth import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
+    from ..auth import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
 
     creds = get_credentials_for_scopes([SHEETS_SCOPE])
     return build_sheets_service(creds)

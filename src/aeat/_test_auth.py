@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from aeat.auth import (
+from .auth import (
     CLOUD_PLATFORM_SCOPE,
     DOCS_SCOPE,
     DRIVE_SCOPE,

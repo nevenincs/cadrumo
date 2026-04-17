@@ -25,15 +25,15 @@ from typing import Any, Protocol
 
 import typer
 
-from aeat.config import Settings
-from aeat.errors import SiteHealthError
-from aeat.logging import get_logger
-from aeat.status import (
+from ...config import Settings
+from ...errors import SiteHealthError
+from ...logging import get_logger
+from ...status import (
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
 )
-from aeat.status._site_health import _URL_ADAPTER
+from ...status._site_health import _URL_ADAPTER
 
 logger = get_logger(__name__)
 
@@ -99,8 +99,8 @@ async def _default_probe_factory(settings: Settings) -> HealthProbeLike:
     """
     from playwright.async_api import async_playwright
 
-    from aeat.browser.profile import Profile
-    from aeat.browser.session import BrowserSession
+    from ...browser.profile import Profile
+    from ...browser.session import BrowserSession
 
     profile = Profile(
         name=settings.aeat_default_profile_name,

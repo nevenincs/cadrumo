@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.normatives import (
+from . import (
     NormativeError,
     cite,
     load_catalogue,
@@ -52,7 +52,7 @@ class TestRealCorpus:
 @pytest.mark.unit
 class TestRaiseOnErrors:
     def test_raises_on_dirty_report(self) -> None:
-        from aeat.normatives import VerificationIssue, VerificationReport
+        from . import VerificationIssue, VerificationReport
 
         report = VerificationReport(
             issues=(

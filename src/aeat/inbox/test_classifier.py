@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.inbox import (
+from . import (
     NotificacionKind,
     NotificacionPriority,
     RawNotificacion,

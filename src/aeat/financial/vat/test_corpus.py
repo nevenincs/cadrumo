@@ -6,7 +6,7 @@ import logging
 
 import pytest
 
-from aeat.financial.vat import (
+from . import (
     VAT_CATALOGUE_2025,
     VatCatalogueError,
     load_vat_rules_from_manual,
