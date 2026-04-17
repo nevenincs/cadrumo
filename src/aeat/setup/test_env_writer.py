@@ -38,8 +38,11 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         tax_id="87654321X",
         iva_regime=IVARegime.SIMPLIFICADO,
         has_employees=True,
+        pays_professionals_with_retencion=True,
+        professional_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=True,
+        third_party_transactions_above_347_threshold=True,
         bienes_extranjero_above_threshold=False,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
@@ -149,6 +152,8 @@ def test_write_profile_file_emits_valid_autonomo_profile(tmp_path: Path) -> None
     profile = AutonomoProfile.model_validate_json(target.read_text(encoding="utf-8"))
     assert profile.tax_id == "87654321X"
     assert profile.iva_regime is IVARegime.SIMPLIFICADO
+    assert profile.pays_professionals_with_retencion is True
+    assert profile.third_party_transactions_above_347_threshold is True
 
 
 def test_owned_env_keys_are_stable_and_unique() -> None:

@@ -42,8 +42,11 @@ def _profile(**overrides: object) -> AutonomoProfile:
         "tax_id": "X1234567L",
         "iva_regime": IVARegime.GENERAL,
         "has_employees": False,
+        "pays_professionals_with_retencion": False,
+        "professional_income_withholding_ge_70pct": False,
         "pays_rent_with_retencion": False,
         "does_intracomunitario": False,
+        "third_party_transactions_above_347_threshold": False,
         "bienes_extranjero_above_threshold": False,
     }
     base.update(overrides)
@@ -72,14 +75,17 @@ class TestComputeMembership:
         assert "115" not in modelos
         assert "180" not in modelos
         assert "190" not in modelos
+        assert "347" not in modelos
         assert "349" not in modelos
         assert "720" not in modelos
 
     def test_full_flagged_profile_emits_everything(self) -> None:
         profile = _profile(
             has_employees=True,
+            pays_professionals_with_retencion=True,
             pays_rent_with_retencion=True,
             does_intracomunitario=True,
+            third_party_transactions_above_347_threshold=True,
             bienes_extranjero_above_threshold=True,
         )
         schedule = _engine().compute(profile, 2026, today=date(2026, 1, 1))
@@ -95,6 +101,14 @@ class TestComputeMembership:
         assert "130" in modelos
         assert "100" in modelos
 
+    def test_professional_withholding_exception_drops_130(self) -> None:
+        profile = _profile(professional_income_withholding_ge_70pct=True)
+        schedule = _engine().compute(profile, 2026, today=date(2026, 1, 1))
+        modelos = {o.modelo for o in schedule.obligations}
+        assert "130" not in modelos
+        assert "100" in modelos
+        assert "303" in modelos
+
 
 class TestComputeWindows:
     """Each emitted obligation matches the canonical window for its period."""
@@ -106,6 +120,17 @@ class TestComputeWindows:
         assert q1.closes_on == date(2026, 4, 20)
         assert q1.payment_cutoff_on == date(2026, 4, 15)
         assert "BOE-Orden-IVA-autoliquidacion" in q1.boe_references
+
+    def test_347_2026_window(self) -> None:
+        schedule = _engine().compute(
+            _profile(third_party_transactions_above_347_threshold=True),
+            2026,
+            today=date(2026, 1, 1),
+        )
+        annual = next(o for o in schedule.obligations if o.modelo == "347" and o.period == "2026")
+        assert annual.opens_on == date(2027, 2, 1)
+        assert annual.closes_on == date(2027, 3, 1)
+        assert "BOE-Orden-347-Operaciones-Terceros" in annual.boe_references
 
     def test_obligations_sorted_by_close_date(self) -> None:
         schedule = _engine().compute(

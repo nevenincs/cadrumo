@@ -6,7 +6,6 @@ from aeat.models._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
-    TaxpayerProfile,
 )
 from aeat.models._codes import ModeloCode
 from aeat.models._entries._common import (
@@ -42,21 +41,20 @@ ENTRY: ModeloMetadata = build_entry(
         ),
     ),
     applicability=build_applicability(
-        mandatory=(TaxpayerProfile.AUTONOMO_ED_SOLO, TaxpayerProfile.AUTONOMO_EO),
-        optional=(
-            TaxpayerProfile.AUTONOMO_ED_CON_EMPLEADOS,
-            TaxpayerProfile.AUTONOMO_ED_CON_PROFESIONALES,
-            TaxpayerProfile.AUTONOMO_ED_CON_ALQUILER,
-            TaxpayerProfile.AUTONOMO_ED_BIENES_EXTRANJERO,
-        ),
+        mandatory=(),
+        optional=(),
         trigger_notes_es=(
-            "Opción simplificada para autónomos personas físicas que encajan en el "
-            "subconjunto. Default para autonomo_ed_solo. El alta en ROI fuerza el paso a "
-            "036."
+            "Modelo histórico suprimido por la Orden HAC/1526/2024 con efectos desde "
+            "2025-02-03. Se conserva en el inventario para filing history anterior a esa "
+            "fecha; las altas, modificaciones y bajas censales corrientes se canalizan por "
+            "el modelo 036."
         ),
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_036,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 037 (Censo G322)",
-    known_gotchas=("Camino de upgrade a 036 ante cambios de régimen.",),
+    submission_portal_hint="Sede Electrónica AEAT — Modelo 037 (histórico hasta 2025-02-02)",
+    known_gotchas=(
+        "Suprimido desde 2025-02-03; no debe aparecer como camino censal corriente.",
+        "El filing history previo a la supresión sigue pudiendo contener 037.",
+    ),
 )

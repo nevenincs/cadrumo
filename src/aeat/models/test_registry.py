@@ -68,12 +68,19 @@ def test_modelos_for_autonomo_ed_solo() -> None:
         ModeloCode.MODELO_303,
         ModeloCode.MODELO_390,
         ModeloCode.MODELO_130,
-        ModeloCode.MODELO_037,
+        ModeloCode.MODELO_036,
         ModeloCode.MODELO_100,
     ):
         assert required in codes
-    for excluded in (ModeloCode.MODELO_720, ModeloCode.MODELO_200):
+    for excluded in (ModeloCode.MODELO_037, ModeloCode.MODELO_720, ModeloCode.MODELO_200):
         assert excluded not in codes
+
+
+def test_modelo_123_caps_into_193() -> None:
+    """Modelo 123 resolves to its annual summary counterpart."""
+    metadata = get_modelo(ModeloCode.MODELO_123)
+    assert metadata.caps_into is ModeloCode.MODELO_193
+    assert ModeloCode.MODELO_193 in metadata.related_modelos
 
 
 def test_check_caps_into_rejects_dangling_reference() -> None:
