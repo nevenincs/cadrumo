@@ -15,8 +15,9 @@ from .._registry import RulesetRegistry
 from .modelo_303_2024 import RULESET as MODELO_303_2024
 from .modelo_303_2025 import RULESET as MODELO_303_2025
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
-@pytest.mark.unit
+
 def test_modelo_303_2024_loads() -> None:
     """The 2024 ruleset validates at import time."""
     assert MODELO_303_2024.ruleset_id == "modelo_303.2024"
@@ -25,7 +26,6 @@ def test_modelo_303_2024_loads() -> None:
     assert MODELO_303_2024.effective_to == date(2024, 12, 31)
 
 
-@pytest.mark.unit
 def test_modelo_303_2025_loads() -> None:
     """The 2025 ruleset validates at import time."""
     assert MODELO_303_2025.ruleset_id == "modelo_303.2025"
@@ -34,7 +34,6 @@ def test_modelo_303_2025_loads() -> None:
     assert MODELO_303_2025.effective_to == date(2025, 12, 31)
 
 
-@pytest.mark.unit
 def test_modelo_303_rulesets_have_25_casillas() -> None:
     """v1 coverage: 25 casillas — 01-09, 28-45, 64, 65, 66, 67, 69, 71."""
     expected_ids = {
@@ -77,7 +76,6 @@ def test_modelo_303_rulesets_have_25_casillas() -> None:
         assert actual_ids == expected_ids, ruleset.ruleset_id
 
 
-@pytest.mark.unit
 def test_modelo_303_rulesets_have_12_formulas() -> None:
     """Twelve computed casillas: 02, 03, 05, 06, 08, 09, 44, 45, 64, 66, 69, 71."""
     expected_ids = {"02", "03", "05", "06", "08", "09", "44", "45", "64", "66", "69", "71"}
@@ -86,7 +84,6 @@ def test_modelo_303_rulesets_have_12_formulas() -> None:
         assert actual_ids == expected_ids, ruleset.ruleset_id
 
 
-@pytest.mark.unit
 def test_modelo_303_evaluation_order_is_deterministic() -> None:
     """Two consecutive ``evaluation_order()`` calls return the same tuple."""
     first = MODELO_303_2025.evaluation_order()
@@ -94,7 +91,6 @@ def test_modelo_303_evaluation_order_is_deterministic() -> None:
     assert first == second
 
 
-@pytest.mark.unit
 def test_modelo_303_registry_resolution_2024() -> None:
     """The registry returns the 2024 ruleset for a 2024 period."""
     registry = RulesetRegistry(rulesets=(MODELO_303_2024, MODELO_303_2025))
@@ -103,7 +99,6 @@ def test_modelo_303_registry_resolution_2024() -> None:
     assert resolved.ruleset_id == "modelo_303.2024"
 
 
-@pytest.mark.unit
 def test_modelo_303_registry_resolution_2025() -> None:
     """The registry returns the 2025 ruleset for a 2025 period."""
     registry = RulesetRegistry(rulesets=(MODELO_303_2024, MODELO_303_2025))
@@ -112,7 +107,6 @@ def test_modelo_303_registry_resolution_2025() -> None:
     assert resolved.ruleset_id == "modelo_303.2025"
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("ruleset_param_id", "rate_kind"),
     [
@@ -131,7 +125,6 @@ def test_modelo_303_2024_rate_consistency_with_substrate(ruleset_param_id: str, 
     )
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("ruleset_param_id", "rate_kind"),
     [
@@ -150,7 +143,6 @@ def test_modelo_303_2025_rate_consistency_with_substrate(ruleset_param_id: str, 
     )
 
 
-@pytest.mark.unit
 def test_modelo_303_2024_and_2025_share_casilla_definitions() -> None:
     """The 2024 and 2025 rulesets carry equal casilla definitions.
 
@@ -162,7 +154,6 @@ def test_modelo_303_2024_and_2025_share_casilla_definitions() -> None:
     assert MODELO_303_2024.casillas == MODELO_303_2025.casillas
 
 
-@pytest.mark.unit
 def test_modelo_303_2024_and_2025_share_citation_records() -> None:
     """The 2024 and 2025 rulesets carry equal legal citations."""
     assert MODELO_303_2024.legal_citations == MODELO_303_2025.legal_citations

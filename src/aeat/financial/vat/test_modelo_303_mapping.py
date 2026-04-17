@@ -15,8 +15,9 @@ from . import (
 )
 from ._modelo_303_mapping import _OUT_OF_SCOPE_V1
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
-@pytest.mark.unit
+
 def test_every_vat_category_is_either_mapped_or_out_of_scope() -> None:
     """Every :class:`VATCategory` member must be classified.
 
@@ -28,7 +29,6 @@ def test_every_vat_category_is_either_mapped_or_out_of_scope() -> None:
     assert missing == [], f"unhandled VATCategory members: {missing}"
 
 
-@pytest.mark.unit
 def test_no_overlap_between_mapping_and_out_of_scope() -> None:
     """A category cannot be both mapped and explicitly out-of-scope."""
     mapped = {category for category, _ in MODELO_303_CASILLA_MAPPING}
@@ -36,7 +36,6 @@ def test_no_overlap_between_mapping_and_out_of_scope() -> None:
     assert overlap == set(), f"categories listed in both mapping + out-of-scope: {overlap}"
 
 
-@pytest.mark.unit
 def test_mapping_is_immutable() -> None:
     """The mapping is a MappingProxyType; runtime mutation must fail."""
     from types import MappingProxyType
@@ -44,7 +43,6 @@ def test_mapping_is_immutable() -> None:
     assert isinstance(MODELO_303_CASILLA_MAPPING, MappingProxyType)
 
 
-@pytest.mark.unit
 def test_lookup_returns_empty_for_out_of_scope_category() -> None:
     """Unmapped + out-of-scope categories return ``()``."""
     contributions = lookup_modelo_303_contribution(
@@ -54,7 +52,6 @@ def test_lookup_returns_empty_for_out_of_scope_category() -> None:
     assert contributions == ()
 
 
-@pytest.mark.unit
 def test_domestic_general_21_issued_lands_on_07() -> None:
     contributions = lookup_modelo_303_contribution(
         category=VATCategory.DOMESTIC_GENERAL_21,
@@ -70,7 +67,6 @@ def test_domestic_general_21_issued_lands_on_07() -> None:
     )
 
 
-@pytest.mark.unit
 def test_domestic_general_21_received_lands_on_28_29() -> None:
     contributions = lookup_modelo_303_contribution(
         category=VATCategory.DOMESTIC_GENERAL_21,
@@ -82,7 +78,6 @@ def test_domestic_general_21_received_lands_on_28_29() -> None:
     }
 
 
-@pytest.mark.unit
 def test_intra_community_acquisition_lands_on_36_37() -> None:
     contributions = lookup_modelo_303_contribution(
         category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
@@ -94,7 +89,6 @@ def test_intra_community_acquisition_lands_on_36_37() -> None:
     }
 
 
-@pytest.mark.unit
 def test_import_third_country_lands_on_32_33() -> None:
     contributions = lookup_modelo_303_contribution(
         category=VATCategory.IMPORT_THIRD_COUNTRY,
@@ -106,14 +100,12 @@ def test_import_third_country_lands_on_32_33() -> None:
     }
 
 
-@pytest.mark.unit
 def test_modelo_303_contribution_rejects_zero_sign() -> None:
     """Sign must be ±1; zero is not modelable."""
     with pytest.raises(ValueError, match="must be -1 or"):
         Modelo303Contribution(casilla_id="07", role=CasillaRole.BASE, sign=0)
 
 
-@pytest.mark.unit
 def test_every_contribution_has_valid_shape() -> None:
     """Every shipped contribution validates: casilla id length + sign."""
     for contributions in MODELO_303_CASILLA_MAPPING.values():
