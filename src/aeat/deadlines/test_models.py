@@ -15,7 +15,7 @@ from . import (
     Schedule,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def _profile() -> AutonomoProfile:

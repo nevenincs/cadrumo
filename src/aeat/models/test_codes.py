@@ -6,7 +6,7 @@ import pytest
 
 from ._codes import ModeloCode
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def test_modelo_code_has_exactly_twenty_members() -> None:

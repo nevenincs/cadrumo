@@ -6,7 +6,7 @@ import pytest
 
 from .. import errors, logging, portals
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def test_smoke_portals_public_surface() -> None:

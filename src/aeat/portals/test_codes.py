@@ -6,7 +6,7 @@ import pytest
 
 from ._codes import Portal
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def test_portal_has_exactly_41_members() -> None:

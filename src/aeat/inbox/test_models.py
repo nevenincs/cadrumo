@@ -20,6 +20,8 @@ from . import (
     NotificacionPriority,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 _SUBJECT: Translatable = {"es": "Requerimiento de información", "en": "Information request", "hu": "Tájékoztatáskérés"}
 _BODY: Translatable = {"es": "Solicitamos...", "en": "We request...", "hu": "Kérjük..."}
 _URL = AnyHttpUrl("https://sede.agenciatributaria.gob.es/notif/AEAT-0001")
@@ -55,7 +57,6 @@ def _sample_notificacion(
     )
 
 
-@pytest.mark.unit
 class TestNotificacion:
     def test_round_trip(self) -> None:
         original = _sample_notificacion()
@@ -96,7 +97,6 @@ class TestNotificacion:
             record.notificacion_id = "AEAT-0002"  # type: ignore[misc]
 
 
-@pytest.mark.unit
 class TestInbox:
     def test_round_trip(self) -> None:
         record = _sample_notificacion()

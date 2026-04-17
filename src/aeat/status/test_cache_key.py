@@ -9,7 +9,7 @@ import pytest
 from ._cache_key import make_cache_key
 from ._models import AeatStatusKind
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def test_stable_across_param_order() -> None:

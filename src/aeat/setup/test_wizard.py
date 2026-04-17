@@ -24,7 +24,7 @@ from . import (
     SetupWizard,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 def _answers(tmp_path: Path) -> SetupAnswers:

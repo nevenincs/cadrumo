@@ -4,8 +4,9 @@ import pytest
 
 from .. import corpus, errors, logging
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
-@pytest.mark.unit
+
 def test_smoke_corpus() -> None:
     """Asserts the subpackage is importable and conventions hold."""
     assert corpus.__doc__ is not None

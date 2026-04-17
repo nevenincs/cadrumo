@@ -22,8 +22,9 @@ import pytest
 from ..cli._live import requires_live_enabled
 from . import SubmissionEngineProtocol, WorkflowError, default_engine
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_mediation]
 
-@pytest.mark.live
+
 def test_default_engine_requires_adapters() -> None:
     """Without adapters, :func:`default_engine` rejects the call cleanly."""
     requires_live_enabled()
