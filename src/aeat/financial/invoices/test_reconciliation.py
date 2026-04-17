@@ -160,6 +160,29 @@ def test_amount_match_without_counterparty_scores_half() -> None:
 
 
 @pytest.mark.unit
+def test_none_counterparty_does_not_boost_score() -> None:
+    """A transaction without a counterparty must not score a false-positive boost.
+
+    Guards against the regression where an empty-string counterparty would
+    make ``invoice_counterparty in tx_normalised`` evaluate ``True`` and
+    grant an undeserved 0.5 score.
+    """
+    invoice = _invoice(counterparty_name="Cliente SL")
+    transaction = _transaction(
+        provider_id="row-none",
+        amount=Decimal("121.00"),
+        counterparty=None,
+    )
+    suggestions = suggest_reconciliations(
+        InvoiceCatalogue.from_invoices([invoice]),
+        TransactionCatalogue.from_transactions([transaction]),
+    )
+    assert len(suggestions) == 1
+    assert suggestions[0].counterparty_match is False
+    assert suggestions[0].score == Decimal("0.5")
+
+
+@pytest.mark.unit
 def test_counterparty_only_match_emits_no_suggestion() -> None:
     """Counterparty-only matches are never emitted (would be too noisy)."""
     invoice = _invoice(counterparty_name="Cliente SL")
