@@ -6,9 +6,10 @@ shared configured root:
 * ``<root>/blobs/<sha256>``      — raw bytes, write-once.
 * ``<root>/manifests/<sha256>.json`` — JSON manifest, rewritten as links evolve.
 
-Reads of blobs return ``bytes`` directly; the ``bytes`` type is itself a
-structural read-only sequence, which satisfies the ``BytesView`` Protocol
-shape required by issue #76 without introducing a dedicated wrapper.
+Every public method that composes a path from an ``attachment_id`` / ``sha256``
+input first validates the token is a 64-character lowercase hex digest, so
+untrusted CLI inputs cannot traverse out of the store root or exploit NTFS
+case-insensitivity to alias blobs.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ import os
 import tempfile
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Self
+from typing import BinaryIO, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
@@ -34,6 +35,30 @@ _BLOBS_DIRNAME = "blobs"
 _MANIFESTS_DIRNAME = "manifests"
 _MANIFEST_SUFFIX = ".json"
 _STREAM_CHUNK_SIZE = 1024 * 1024  # 1 MiB
+_HEX_DIGITS = frozenset("0123456789abcdef")
+
+
+def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
+    """Reject any digest input that is not a 64-char lowercase hex string.
+
+    Args:
+        value: Untrusted digest candidate.
+        field_name: Human-readable field name used in the raised error.
+
+    Returns:
+        The validated digest, lowercase.
+
+    Raises:
+        AttachmentValidationError: When the input is not a 64-char lowercase
+            hex digest. The validation deliberately rejects uppercase digests
+            so NTFS case-insensitivity cannot be used to alias blobs across
+            `<digest>` and `<DIGEST>` on case-preserving filesystems.
+    """
+    if not isinstance(value, str):
+        raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
+    if len(value) != 64 or any(char not in _HEX_DIGITS for char in value):
+        raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
+    return value
 
 
 class AttachmentStore(BaseModel):
@@ -72,12 +97,22 @@ class AttachmentStore(BaseModel):
         return self.root / _MANIFESTS_DIRNAME
 
     def blob_path(self, sha256: str) -> Path:
-        """Return the on-disk blob path for ``sha256``."""
-        return self.blobs_dir / sha256
+        """Return the on-disk blob path for ``sha256``.
+
+        Raises:
+            AttachmentValidationError: When ``sha256`` is not a 64-char hex digest.
+        """
+        return self.blobs_dir / _require_digest(sha256, field_name="sha256")
 
     def manifest_path(self, attachment_id: str) -> Path:
-        """Return the on-disk manifest path for ``attachment_id``."""
-        return self.manifests_dir / f"{attachment_id}{_MANIFEST_SUFFIX}"
+        """Return the on-disk manifest path for ``attachment_id``.
+
+        Raises:
+            AttachmentValidationError: When ``attachment_id`` is not a
+                64-char hex digest.
+        """
+        digest = _require_digest(attachment_id)
+        return self.manifests_dir / f"{digest}{_MANIFEST_SUFFIX}"
 
     def put_bytes(self, data: bytes) -> str:
         """Write ``data`` under its SHA-256 digest if not already present.
@@ -98,7 +133,7 @@ class AttachmentStore(BaseModel):
             return digest
         try:
             self.blobs_dir.mkdir(parents=True, exist_ok=True)
-            _atomic_write_bytes(target, data)
+            _write_once_bytes(target, data)
         except OSError as exc:
             raise AttachmentPersistenceError(f"unable to write attachment blob: {target}") from exc
         _LOGGER.info("stored attachment blob %s (%d bytes)", digest, len(data))
@@ -110,7 +145,10 @@ class AttachmentStore(BaseModel):
         Reads and writes happen in 1 MiB chunks so large attachments (scans,
         multi-page invoices) never force the full payload into memory. If a
         blob for the resulting digest already exists the streamed tempfile is
-        discarded to preserve the write-once invariant.
+        discarded to preserve the write-once invariant. If a concurrent
+        writer creates the target blob between the streaming pass and the
+        final rename, the rename is retried as a no-op and the tempfile is
+        unlinked so the original blob survives untouched.
 
         Args:
             source: Filesystem path of the bytes to stream into the store.
@@ -146,12 +184,9 @@ class AttachmentStore(BaseModel):
                         tmp_handle.write(chunk)
             digest = hasher.hexdigest()
             target = self.blob_path(digest)
-            if target.exists():
-                tmp_path.unlink(missing_ok=True)
-                _LOGGER.debug("reusing existing blob for %s", digest)
-            else:
-                os.replace(tmp_path, target)
-                _LOGGER.info("stored attachment blob %s (%d bytes)", digest, bytes_size)
+            _commit_write_once(tmp_path, target)
+            tmp_path = None
+            _LOGGER.info("stored attachment blob %s (%d bytes)", digest, bytes_size)
             return digest, bytes_size
         except OSError as exc:
             if tmp_path is not None:
@@ -161,6 +196,9 @@ class AttachmentStore(BaseModel):
     def read_bytes(self, sha256: str) -> bytes:
         """Return the raw bytes for ``sha256``.
 
+        Small helper for callers that can reasonably materialise the entire
+        blob in memory. Prefer :meth:`open_bytes` for large payloads.
+
         Args:
             sha256: 64-character lowercase hex digest of the blob to read.
 
@@ -168,6 +206,7 @@ class AttachmentStore(BaseModel):
             The raw attachment bytes.
 
         Raises:
+            AttachmentValidationError: When ``sha256`` is not a 64-char hex digest.
             AttachmentNotFoundError: When no blob exists for ``sha256``.
             AttachmentPersistenceError: When the blob cannot be read.
         """
@@ -178,6 +217,67 @@ class AttachmentStore(BaseModel):
             return target.read_bytes()
         except OSError as exc:
             raise AttachmentPersistenceError(f"unable to read attachment blob: {target}") from exc
+
+    def open_bytes(self, sha256: str) -> BinaryIO:
+        """Open the blob for ``sha256`` as a streaming binary handle.
+
+        Callers must close the returned handle (use a ``with`` block). This is
+        the memory-safe read path for large attachments and satisfies the
+        ``BytesView`` Protocol shape named in issue #76.
+
+        Args:
+            sha256: 64-character lowercase hex digest of the blob to read.
+
+        Returns:
+            A binary file handle positioned at byte zero.
+
+        Raises:
+            AttachmentValidationError: When ``sha256`` is not a 64-char hex digest.
+            AttachmentNotFoundError: When no blob exists for ``sha256``.
+            AttachmentPersistenceError: When the blob cannot be opened.
+        """
+        target = self.blob_path(sha256)
+        if not target.exists():
+            raise AttachmentNotFoundError(f"attachment blob not found: {sha256}")
+        try:
+            return target.open("rb")
+        except OSError as exc:
+            raise AttachmentPersistenceError(f"unable to open attachment blob: {target}") from exc
+
+    def verify_blob(self, attachment_id: str) -> None:
+        """Re-hash the on-disk blob and verify it matches ``attachment_id``.
+
+        The audit guarantee the feature sells is that every attachment is
+        provable end-to-end: if a tax inspector asks "did this blob change?",
+        a SHA-256 rescan must answer. This helper provides that guarantee.
+
+        Args:
+            attachment_id: Stable attachment identifier (SHA-256 hex digest).
+
+        Raises:
+            AttachmentValidationError: When ``attachment_id`` is not a
+                64-char hex digest, or when the on-disk blob's SHA-256
+                disagrees with ``attachment_id``.
+            AttachmentNotFoundError: When no blob exists for ``attachment_id``.
+            AttachmentPersistenceError: When the blob cannot be read.
+        """
+        digest = _require_digest(attachment_id)
+        target = self.blob_path(digest)
+        if not target.exists():
+            raise AttachmentNotFoundError(f"attachment blob not found: {digest}")
+        hasher = hashlib.sha256()
+        try:
+            with target.open("rb") as reader:
+                while True:
+                    chunk = reader.read(_STREAM_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    hasher.update(chunk)
+        except OSError as exc:
+            raise AttachmentPersistenceError(f"unable to re-hash attachment blob: {target}") from exc
+        actual = hasher.hexdigest()
+        if actual != digest:
+            raise AttachmentValidationError(f"blob digest drift for {digest}: on-disk sha256 is {actual}")
 
     def write_manifest(self, attachment: Attachment) -> None:
         """Persist ``attachment`` to its manifest file atomically.
@@ -199,6 +299,12 @@ class AttachmentStore(BaseModel):
     def load_manifest(self, attachment_id: str) -> Attachment:
         """Load and validate the manifest for ``attachment_id``.
 
+        The filename-derived digest and the manifest's internal
+        ``attachment_id`` field must agree. A manifest file whose name
+        disagrees with its payload surfaces as
+        :class:`AttachmentValidationError` rather than being silently
+        returned.
+
         Args:
             attachment_id: Stable attachment identifier (SHA-256 hex digest).
 
@@ -206,24 +312,37 @@ class AttachmentStore(BaseModel):
             The validated attachment manifest.
 
         Raises:
+            AttachmentValidationError: When ``attachment_id`` is not a
+                64-char hex digest, the manifest JSON is invalid, or the
+                stored ``attachment_id`` disagrees with the filename.
             AttachmentNotFoundError: When no manifest exists.
             AttachmentPersistenceError: When the manifest cannot be read.
-            AttachmentValidationError: When the manifest fails validation.
         """
-        target = self.manifest_path(attachment_id)
+        digest = _require_digest(attachment_id)
+        target = self.manifest_path(digest)
         if not target.exists():
-            raise AttachmentNotFoundError(f"attachment manifest not found: {attachment_id}")
+            raise AttachmentNotFoundError(f"attachment manifest not found: {digest}")
         try:
             raw = target.read_text(encoding="utf-8")
         except OSError as exc:
             raise AttachmentPersistenceError(f"unable to read attachment manifest: {target}") from exc
         try:
-            return Attachment.model_validate_json(raw)
+            attachment = Attachment.model_validate_json(raw)
         except ValidationError as exc:
             raise AttachmentValidationError(f"invalid attachment manifest: {target}") from exc
+        if attachment.attachment_id != digest:
+            raise AttachmentValidationError(
+                f"manifest filename {digest} does not match stored attachment_id {attachment.attachment_id}"
+            )
+        return attachment
 
     def iter_manifests(self) -> Iterator[Attachment]:
         """Iterate over every manifest on disk in sorted-filename order.
+
+        Only filenames whose stem is a valid 64-char lowercase hex digest are
+        yielded; any other ``.json`` file under ``manifests/`` is ignored.
+        Each yielded manifest additionally satisfies the filename-vs-payload
+        cross-check enforced by :meth:`load_manifest`.
 
         Yields:
             Each validated ``Attachment`` manifest stored under the root.
@@ -241,12 +360,38 @@ class AttachmentStore(BaseModel):
         for entry in entries:
             if entry.suffix != _MANIFEST_SUFFIX or not entry.is_file():
                 continue
-            attachment_id = entry.stem
-            yield self.load_manifest(attachment_id)
+            stem = entry.stem
+            if len(stem) != 64 or any(char not in _HEX_DIGITS for char in stem):
+                _LOGGER.debug("skipping non-digest manifest filename: %s", entry.name)
+                continue
+            yield self.load_manifest(stem)
 
 
-def _atomic_write_bytes(target: Path, data: bytes) -> None:
-    """Atomically write ``data`` to ``target`` via a sibling tempfile."""
+def _commit_write_once(tmp_path: Path, target: Path) -> None:
+    """Commit ``tmp_path`` as ``target`` while preserving write-once.
+
+    Uses ``os.link`` to atomically publish the blob; if the target already
+    exists the existing bytes are preserved and the tempfile is removed. On
+    filesystems that do not support hardlinks (FAT, some network shares) the
+    code falls back to an ``exists`` check + ``os.replace`` — a best-effort
+    degradation that matches the original single-writer contract.
+    """
+    try:
+        os.link(tmp_path, target)
+    except FileExistsError:
+        tmp_path.unlink(missing_ok=True)
+        return
+    except OSError:
+        if target.exists():
+            tmp_path.unlink(missing_ok=True)
+            return
+        os.replace(tmp_path, target)
+        return
+    tmp_path.unlink(missing_ok=True)
+
+
+def _write_once_bytes(target: Path, data: bytes) -> None:
+    """Atomically write ``data`` to ``target`` if and only if it does not yet exist."""
     tmp_path: Path | None = None
     try:
         with tempfile.NamedTemporaryFile(
@@ -258,7 +403,8 @@ def _atomic_write_bytes(target: Path, data: bytes) -> None:
         ) as handle:
             tmp_path = Path(handle.name)
             handle.write(data)
-        os.replace(tmp_path, target)
+        _commit_write_once(tmp_path, target)
+        tmp_path = None
     except OSError:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
@@ -266,7 +412,12 @@ def _atomic_write_bytes(target: Path, data: bytes) -> None:
 
 
 def _atomic_write_text(target: Path, payload: str) -> None:
-    """Atomically write ``payload`` (UTF-8) to ``target`` via a sibling tempfile."""
+    """Atomically write ``payload`` (UTF-8) to ``target`` via a sibling tempfile.
+
+    Manifests are mutable (links evolve), so this helper uses ``os.replace``
+    for full overwrite semantics. Byte blobs must instead route through
+    :func:`_write_once_bytes` / :func:`_commit_write_once`.
+    """
     tmp_path: Path | None = None
     try:
         with tempfile.NamedTemporaryFile(

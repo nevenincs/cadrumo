@@ -128,13 +128,15 @@ def test_list_attachments_filters_by_linked_transaction_or_invoice(tmp_path: Pat
 
     _add_default(store, source_a, link_transaction_ids=("tx-1",))
     _add_default(store, source_b, link_invoice_ids=("inv-9",))
+    digest_a = hashlib.sha256(b"a-bytes").hexdigest()
+    digest_b = hashlib.sha256(b"b-bytes").hexdigest()
 
     linked_to_tx1 = list_attachments(store, linked_to="tx-1")
     linked_to_inv9 = list_attachments(store, linked_to="inv-9")
     linked_to_missing = list_attachments(store, linked_to="nope")
 
-    assert len(linked_to_tx1) == 1
-    assert len(linked_to_inv9) == 1
+    assert [attachment.attachment_id for attachment in linked_to_tx1] == [digest_a]
+    assert [attachment.attachment_id for attachment in linked_to_inv9] == [digest_b]
     assert linked_to_missing == ()
 
 
