@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import deque
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -13,9 +14,11 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from aeat.logging import get_logger
 from aeat.submission._protocols import FilingDraftLike
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_logger = get_logger(__name__)
 
 
 class SubmissionAuditEvent(StrEnum):
@@ -98,14 +101,25 @@ def read_audit_records(path: Path, *, limit: int | None = None) -> tuple[LiveSub
     """Read and parse every audit record in ``path``."""
     if not path.exists():
         return ()
-    records = [
-        LiveSubmitAuditRecord.model_validate_json(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line
-    ]
-    if limit is not None:
-        return tuple(records[-limit:])
-    return tuple(records)
+    window: deque[LiveSubmitAuditRecord] | list[LiveSubmitAuditRecord]
+    window = deque(maxlen=limit) if limit is not None else []
+    with path.open(encoding="utf-8") as handle:
+        for line_number, raw_line in enumerate(handle, start=1):
+            line = raw_line.strip()
+            if not line:
+                continue
+            try:
+                record = LiveSubmitAuditRecord.model_validate_json(line)
+            except Exception as exc:  # pragma: no cover - defensive log path
+                _logger.warning(
+                    "submission audit log: skipping malformed line %s in %s: %s",
+                    line_number,
+                    path,
+                    exc,
+                )
+                continue
+            window.append(record)
+    return tuple(window)
 
 
 def compute_draft_checksum(draft: FilingDraftLike) -> str:
