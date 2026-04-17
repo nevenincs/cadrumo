@@ -37,6 +37,7 @@ from . import modelos as modelos_module
 from . import normatives as normatives_module
 from . import oauth as oauth_module
 from . import portals as portals_module
+from . import schema as schema_module
 from . import setup as setup_wizard_module
 from . import sheets as sheets_module
 from . import status as status_module
@@ -81,6 +82,7 @@ app.add_typer(manual_module.app, name="manual", help="AEAT Manual práctico corp
 app.add_typer(modelos_module.app, name="modelos", help="AEAT modelo inventory + applicability helpers.")
 app.add_typer(normatives_module.app, name="normatives", help="Spanish tax normatives corpus helpers (#45).")
 app.add_typer(portals_module.app, name="portals", help="AEAT portal catalogue + modelo cross-reference (#7).")
+app.add_typer(schema_module.app, name="schema", help="Programmatic AEAT modelo schema extraction (#9).")
 app.add_typer(vat_module.app, name="vat", help="Spanish VAT (IVA) taxonomy + rules (#85).")
 app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
 app.add_typer(deadlines_module.app, name="deadlines", help="Filing-deadline computation engine (#38).")
