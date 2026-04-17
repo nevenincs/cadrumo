@@ -6,12 +6,12 @@ name lowercased (e.g. ``"portal_m303_iva_autoliquidacion"``), which
 gives callers a stable, machine-predictable identifier safe to emit
 over CLI / JSON without further mapping.
 
-Membership is fixed at 41 entries grouped as follows (see the
+Membership is fixed at 42 entries grouped as follows (see the
 portal-catalogue research doc §6 for the enumeration):
 
 - 8 AUTH entry points (Sede root, Mi área personal, Cl@ve + cert + DNIe
   gateways).
-- 20 FILING / CENSUS procedures (one per :class:`aeat.models.ModeloCode`,
+- 21 FILING / CENSUS procedures (one per :class:`aeat.models.ModeloCode`,
   including the retired Modelo 037 simplificada).
 - 2 BORRADOR entries (Renta Web borrador, Pre303 ayuda).
 - 4 CONSULTATION entries (Mis expedientes, Mis notificaciones, Mis datos
@@ -45,7 +45,7 @@ class Portal(StrEnum):
     PORTAL_CERT_VALIDATION_REST = "portal_cert_validation_rest"
     PORTAL_DNIE_SEDE_ENTRY = "portal_dnie_sede_entry"
 
-    # Filing / census (20 — includes retired M037)
+    # Filing / census (21 — includes retired M037)
     PORTAL_M036_CENSAL = "portal_m036_censal"
     PORTAL_M037_CENSAL_SIMPLIFICADA = "portal_m037_censal_simplificada"
     PORTAL_M100_RENTA = "portal_m100_renta"
@@ -56,6 +56,7 @@ class Portal(StrEnum):
     PORTAL_M131_PAGO_FRACCIONADO_EO = "portal_m131_pago_fraccionado_eo"
     PORTAL_M180_RESUMEN_ARRENDAMIENTOS = "portal_m180_resumen_arrendamientos"
     PORTAL_M190_RESUMEN_TRABAJO = "portal_m190_resumen_trabajo"
+    PORTAL_M193_RESUMEN_CAPITAL = "portal_m193_resumen_capital"
     PORTAL_M200_SOCIEDADES_ANUAL = "portal_m200_sociedades_anual"
     PORTAL_M202_SOCIEDADES_FRACCIONADO = "portal_m202_sociedades_fraccionado"
     PORTAL_M232_VINCULADAS = "portal_m232_vinculadas"

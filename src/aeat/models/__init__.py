@@ -1,9 +1,9 @@
 """Authoritative AEAT modelo catalogue and metadata.
 
 This subpackage exposes the closed, strict, pydantic v2 registry of
-every AEAT modelo the project tracks in v1 (twenty codes: 036, 037,
-100, 111, 115, 123, 130, 131, 180, 190, 200, 202, 232, 303, 347, 349,
-369, 390, 720, 840). The registry is built at import time from the
+every AEAT modelo the project tracks in v1 (twenty-one codes: 036, 037,
+100, 111, 115, 123, 130, 131, 180, 190, 193, 200, 202, 232, 303, 347,
+349, 369, 390, 720, 840). The registry is built at import time from the
 per-modelo entries under the private ``_entries`` package and is
 frozen as a :class:`types.MappingProxyType`.
 
