@@ -110,6 +110,19 @@ def _validate_classified_by_shape(value: str) -> str:
     raise ValueError("classified_by must be 'auto', 'manual', or 'rule:<rule-id>'")
 
 
+_CONFIDENCE_MIN = Decimal("0")
+_CONFIDENCE_MAX = Decimal("1")
+
+
+def _validate_confidence_range(value: Decimal | None) -> Decimal | None:
+    """Restrict confidence to the inclusive 0..1 range when not None."""
+    if value is None:
+        return None
+    if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+        raise ValueError("confidence must be within the inclusive 0..1 range")
+    return value
+
+
 def _validate_business_pct_coupling(
     state: BusinessClassification,
     pct: Decimal | None,
@@ -191,6 +204,12 @@ class ClassificationHistoryEntry(BaseModel):
         """Trim free-text reasons while allowing the empty string."""
         return value.strip()
 
+    @field_validator("confidence")
+    @classmethod
+    def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
+        """Restrict confidence to the inclusive 0..1 range when not None."""
+        return _validate_confidence_range(value)
+
     @model_validator(mode="after")
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling for a history entry."""
@@ -214,6 +233,7 @@ class Transaction(BaseModel):
     classified_at: datetime | None = None
     classified_by: str = Field(default="auto", min_length=1)
     classification_reason: str = ""
+    classification_confidence: Decimal | None = None
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()
 
     @model_validator(mode="before")
@@ -249,6 +269,8 @@ class Transaction(BaseModel):
             payload["business_pct"] = Decimal(payload["business_pct"])
         if isinstance(payload.get("classified_at"), str):
             payload["classified_at"] = _parse_datetime(payload["classified_at"])
+        if isinstance(payload.get("classification_confidence"), str):
+            payload["classification_confidence"] = Decimal(payload["classification_confidence"])
         history = payload.get("classification_history")
         if history is not None:
             payload["classification_history"] = _coerce_history(history)
@@ -285,6 +307,12 @@ class Transaction(BaseModel):
         if value is None:
             return None
         return _require_aware_datetime(value)
+
+    @field_validator("classification_confidence")
+    @classmethod
+    def _validate_classification_confidence(cls, value: Decimal | None) -> Decimal | None:
+        """Restrict classification_confidence to the inclusive 0..1 range when not None."""
+        return _validate_confidence_range(value)
 
     @model_validator(mode="after")
     def _enforce_business_pct(self) -> Self:

@@ -335,3 +335,230 @@ def test_financial_txs_classify_accepts_category_and_reason(tmp_path: Path) -> N
     assert updated is not None
     assert updated.category_id == "cuotas_autonomos_ss"
     assert updated.notes == "Payment for social security"
+
+
+def _write_confidence_catalogue(tmp_path: Path) -> TransactionCatalogue:
+    """Seed a catalogue with confidences set at distinct levels.
+
+    Two transactions start as NOT_YET_PROCESSED; the CLI classifies them
+    manually with different confidence levels, then a third remains
+    unclassified. This mirrors the Kent scenario from #236.
+    """
+    catalogue = TransactionCatalogue.from_transactions(
+        [
+            _sample_transaction(
+                provider_id="conf-row-low",
+                amount=Decimal("-10.00"),
+                description="Uncertain expense",
+            ),
+            _sample_transaction(
+                provider_id="conf-row-high",
+                amount=Decimal("-20.00"),
+                description="Certain expense",
+            ),
+            _sample_transaction(
+                provider_id="conf-row-bare",
+                amount=Decimal("-5.00"),
+                description="Still unclassified",
+            ),
+        ]
+    )
+    save_transactions(catalogue, tmp_path / _CATALOGUE_FILENAME)
+    return catalogue
+
+
+def test_financial_txs_classify_accepts_confidence_flag(tmp_path: Path) -> None:
+    """`--confidence 0.42` must be persisted on the transaction (#236)."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--as",
+            "BUSINESS",
+            "--reason",
+            "rule match",
+            "--confidence",
+            "0.42",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["classification_confidence"] == "0.42"
+
+
+def test_financial_txs_classify_defaults_manual_confidence_to_one(tmp_path: Path) -> None:
+    """Omitting `--confidence` on a manual classify must default to 1.0 (#236)."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--as",
+            "BUSINESS",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["classification_confidence"] == "1.0"
+
+
+def test_financial_txs_classify_rejects_invalid_confidence(tmp_path: Path) -> None:
+    """A non-numeric `--confidence` must exit with code 2."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--as",
+            "BUSINESS",
+            "--confidence",
+            "abc",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "invalid --confidence value" in result.output
+
+
+def test_financial_txs_classify_rejects_out_of_range_confidence(tmp_path: Path) -> None:
+    """An out-of-range `--confidence` must exit with code 2."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--as",
+            "BUSINESS",
+            "--confidence",
+            "1.5",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "0..1 range" in result.output
+
+
+def test_financial_txs_list_filters_by_confidence_below(tmp_path: Path) -> None:
+    """`--confidence-below 0.5` must return only low-confidence classifications (#236)."""
+    _write_confidence_catalogue(tmp_path)
+    env = {"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)}
+
+    def _classify(provider_id: str, classification: str, confidence: str) -> None:
+        catalogue = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+        target_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == provider_id)
+        result = _RUNNER.invoke(
+            root_app,
+            [
+                "financial",
+                "txs",
+                "classify",
+                target_id,
+                "--as",
+                classification,
+                "--confidence",
+                confidence,
+            ],
+            env=env,
+        )
+        assert result.exit_code == 0, result.output
+
+    _classify("conf-row-low", "BUSINESS", "0.4")
+    _classify("conf-row-high", "BUSINESS", "0.9")
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "list", "--confidence-below", "0.5"],
+        env=env,
+    )
+
+    assert result.exit_code == 0, result.output
+    catalogue = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    ids_by_provider = {tx.raw.transaction_id: tx.transaction_id for tx in catalogue.values()}
+    assert ids_by_provider["conf-row-low"] in result.output
+    assert ids_by_provider["conf-row-high"] not in result.output
+    assert ids_by_provider["conf-row-bare"] not in result.output
+
+
+def test_financial_txs_list_composes_state_and_confidence_filters(tmp_path: Path) -> None:
+    """`--state BUSINESS --confidence-below 0.5` must AND the two filters (#236 + #237)."""
+    _write_confidence_catalogue(tmp_path)
+    env = {"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)}
+
+    catalogue = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    low_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == "conf-row-low")
+    high_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == "conf-row-high")
+    bare_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == "conf-row-bare")
+
+    for target_id, label, confidence in (
+        (low_id, "BUSINESS", "0.4"),
+        (high_id, "BUSINESS", "0.9"),
+    ):
+        assert (
+            _RUNNER.invoke(
+                root_app,
+                [
+                    "financial",
+                    "txs",
+                    "classify",
+                    target_id,
+                    "--as",
+                    label,
+                    "--confidence",
+                    confidence,
+                ],
+                env=env,
+            ).exit_code
+            == 0
+        )
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "list", "--state", "BUSINESS", "--confidence-below", "0.5"],
+        env=env,
+    )
+
+    assert result.exit_code == 0, result.output
+    assert low_id in result.output
+    assert high_id not in result.output
+    assert bare_id not in result.output
+
+
+def test_financial_txs_list_rejects_out_of_range_confidence_below(tmp_path: Path) -> None:
+    """An out-of-range `--confidence-below` must exit with code 2."""
+    _write_catalogue(tmp_path)
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "list", "--confidence-below", "1.5"],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "0..1 range" in result.output
