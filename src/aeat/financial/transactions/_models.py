@@ -101,13 +101,20 @@ def _require_aware_datetime(value: datetime) -> datetime:
 
 
 def _validate_classified_by_shape(value: str) -> str:
-    """Restrict ``classified_by`` to ``auto`` / ``manual`` / ``rule:<rule-id>``."""
+    """Restrict ``classified_by`` to ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>``.
+
+    The ``llm:<model>`` shape is required by #236 so an LLM classifier can
+    emit confidence scores alongside its predictions; the pipeline
+    distinguishes its output from manual and rule-based decisions via
+    this prefix.
+    """
     normalized = value.strip()
     if normalized in {"auto", "manual"}:
         return normalized
-    if normalized.startswith("rule:") and normalized.removeprefix("rule:").strip():
-        return normalized
-    raise ValueError("classified_by must be 'auto', 'manual', or 'rule:<rule-id>'")
+    for prefix in ("rule:", "llm:"):
+        if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
+            return normalized
+    raise ValueError("classified_by must be 'auto', 'manual', 'rule:<rule-id>', or 'llm:<model>'")
 
 
 _CONFIDENCE_MIN = Decimal("0")
