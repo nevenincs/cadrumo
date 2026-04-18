@@ -26,9 +26,9 @@ from ...financial.transactions import (
     TransactionError,
     load_transactions,
 )
+from ._catalogue import catalogue_path as _transaction_catalogue_path
 
 _DEFAULT_INVOICE_FILENAME = "invoices.json"
-_DEFAULT_TRANSACTION_FILENAME = "transactions.json"
 
 app = typer.Typer(
     name="invoices",
@@ -201,11 +201,6 @@ def unmatched_cmd(
 def _invoice_catalogue_path() -> Path:
     """Return the default on-disk invoice catalogue path from settings."""
     return load_settings().aeat_invoices_dir.resolve() / _DEFAULT_INVOICE_FILENAME
-
-
-def _transaction_catalogue_path() -> Path:
-    """Return the default on-disk transaction catalogue path from settings."""
-    return load_settings().aeat_financial_txs_dir.resolve() / _DEFAULT_TRANSACTION_FILENAME
 
 
 def _load_invoice_catalogue_required() -> InvoiceCatalogue:

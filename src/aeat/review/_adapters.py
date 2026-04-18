@@ -31,6 +31,7 @@ from ..financial.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    is_classified,
     load_transactions,
 )
 from ..i18n import Translatable
@@ -69,17 +70,42 @@ def transactions_pending(
     *,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[TransactionReviewItem, ...]:
-    """Return one :class:`TransactionReviewItem` per UNCLASSIFIED transaction."""
+    """Return one :class:`TransactionReviewItem` per pending-review transaction.
+
+    Skips fully-classified rows (BUSINESS / PERSONAL / MIXED) and rows
+    explicitly skipped by rule (``SKIPPED_BY_RULE``) — those have a
+    final disposition and do not want Kent's attention.
+    """
     if catalogue is None:
         catalogue = _load_transactions(settings)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
     for transaction in catalogue.values():
-        if transaction.business_classification is not BusinessClassification.UNCLASSIFIED:
+        severity = _classify_transaction(transaction.business_classification)
+        if severity is None:
             continue
-        items.append(_to_transaction_item(transaction))
+        items.append(_to_transaction_item(transaction, severity=severity))
     return tuple(items)
+
+
+def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | None:
+    """First-match-wins severity per the post-#237 BusinessClassification states.
+
+    Returns ``None`` when the state has a final disposition that does
+    not warrant Kent's attention (classified or rule-excluded).
+    """
+    if is_classified(state):
+        return None
+    if state is BusinessClassification.SKIPPED_BY_RULE:
+        return None
+    if state is BusinessClassification.FAILED_VALIDATION:
+        return ReviewSeverity.CRITICAL
+    if state is BusinessClassification.PROCESSED_UNCLASSIFIED:
+        return ReviewSeverity.HIGH
+    if state is BusinessClassification.NOT_YET_PROCESSED:
+        return ReviewSeverity.NORMAL
+    return ReviewSeverity.NORMAL
 
 
 def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
@@ -92,7 +118,11 @@ def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
         raise ReviewSourceLoadError(f"failed to load transactions catalogue at {path}: {exc}") from exc
 
 
-def _to_transaction_item(transaction: Transaction) -> TransactionReviewItem:
+def _to_transaction_item(
+    transaction: Transaction,
+    *,
+    severity: ReviewSeverity,
+) -> TransactionReviewItem:
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
     since = transaction.classified_at or datetime.combine(effective_date, time.min, tzinfo=UTC)
@@ -100,15 +130,13 @@ def _to_transaction_item(transaction: Transaction) -> TransactionReviewItem:
     if len(description) > _SUMMARY_MAX:
         description = description[: _SUMMARY_MAX - 1] + "…"
     amount = format(raw.amount.normalize(), "f") if not raw.amount.is_zero() else "0"
-    summary: Translatable = {
-        "es": f"{transaction.direction.value} {amount} {raw.currency}: {description}",
-        "en": f"{transaction.direction.value} {amount} {raw.currency}: {description}",
-        "hu": f"{transaction.direction.value} {amount} {raw.currency}: {description}",
-    }
+    state_label = transaction.business_classification.value
+    summary_text = f"[{state_label}] {transaction.direction.value} {amount} {raw.currency}: {description}"
+    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
     return TransactionReviewItem(
         item_id=transaction.transaction_id,
         modelo=None,
-        severity=ReviewSeverity.NORMAL,
+        severity=severity,
         summary=summary,
         drill_command=f"aeat financial txs classify {transaction.transaction_id} --as ...",
         since=since,

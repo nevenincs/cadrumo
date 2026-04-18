@@ -78,6 +78,24 @@ class TestEnvExampleAlignment:
         assert settings.aeat_base_url == "https://sede.agenciatributaria.gob.es"
         assert settings.aeat_output_language == "es"
 
+
+class TestStatusDetailUrlTemplate:
+    """#227 validator: template must contain ``{expediente_id}``."""
+
+    def test_default_contains_placeholder(self) -> None:
+        settings = Settings(aeat_status_detail_url_template="/x/{expediente_id}/y")
+        assert settings.aeat_status_detail_url_template == "/x/{expediente_id}/y"
+
+    def test_default_is_well_formed(self) -> None:
+        settings = Settings()
+        assert "{expediente_id}" in settings.aeat_status_detail_url_template
+
+    def test_rejects_template_without_placeholder(self) -> None:
+        import pydantic
+
+        with pytest.raises(pydantic.ValidationError):
+            Settings(aeat_status_detail_url_template="/x/no-placeholder/y")
+
     def test_blank_env_values_are_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Blank values in env/.env must not coerce optional settings into live values."""
         for name in Settings.env_var_names():

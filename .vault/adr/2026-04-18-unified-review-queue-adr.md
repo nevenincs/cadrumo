@@ -69,7 +69,7 @@ Five concrete adapter functions live in `src/aeat/review/_adapters.py`. Each ada
 
 | Adapter | Source | Pending predicate |
 |---|---|---|
-| `transactions_pending` | `TransactionCatalogue` (`<aeat_financial_txs_dir>/transactions.json`) | `business_classification is BusinessClassification.UNCLASSIFIED` |
+| `transactions_pending` | `TransactionCatalogue` (`<aeat_financial_txs_dir>/transactions.json`) | `not is_classified(business_classification)` AND `business_classification is not BusinessClassification.SKIPPED_BY_RULE` (post-#237 state model: NOT_YET_PROCESSED → NORMAL, PROCESSED_UNCLASSIFIED → HIGH, FAILED_VALIDATION → CRITICAL; SKIPPED_BY_RULE has a final disposition and is excluded) |
 | `invoices_pending` | `InvoiceCatalogue` loaded via `aeat.financial.invoices.load_invoices(<aeat_invoices_dir>/invoices.json)` | `linked_transaction_ids == ()` OR `payment_status in {PENDING, PARTIALLY_PAID, OVERDUE}` (severity per D5 first-match-wins table) |
 | `divergences_pending` | `JsonFileDivergenceRepository.list()` | `resolution_state is ResolutionState.PENDING` |
 | `drafts_pending` | every JSON under `<aeat_drafts_dir>` (loaded via `Path.glob("*.json")` + `FilingDraft.model_validate_json`) | one row per finding with severity `ERROR`/`WARNING`/`INFO` (kind=FINDING); plus, **only if** the draft has zero findings AND `status in {DRAFT, VALIDATED}`, one extra row (kind=FINDING, severity=NORMAL, summary "draft not ready to submit"). Deduped by `(draft_path, finding.code, finding.casilla_id)` |
@@ -136,11 +136,15 @@ The issue body also uses `aeat-inbox`. This ADR adopts the shorter `inbox` token
 
 Severity is **derived per adapter**, not stored on the source. The evaluation rule per source is **first-match-wins, top-down** within the source's section. An item that matches multiple rows lands in the first matching severity bucket — never two.
 
-`transactions` source (top-down):
+`transactions` source (top-down) — using the post-#237 `BusinessClassification` state model:
 
 | Predicate | Severity |
 |---|---|
-| `business_classification is BusinessClassification.UNCLASSIFIED` | NORMAL |
+| `is_classified(state)` (BUSINESS / PERSONAL / MIXED) | (skipped — final disposition) |
+| `state is BusinessClassification.SKIPPED_BY_RULE` | (skipped — final disposition) |
+| `state is BusinessClassification.FAILED_VALIDATION` | CRITICAL |
+| `state is BusinessClassification.PROCESSED_UNCLASSIFIED` | HIGH |
+| `state is BusinessClassification.NOT_YET_PROCESSED` | NORMAL |
 
 `invoices` source (top-down) — using the actual `PaymentStatus` enum from `aeat.financial.invoices` (`PAID`, `PENDING`, `PARTIALLY_PAID`, `OVERDUE`, `CANCELLED`):
 
@@ -198,7 +202,8 @@ Rendered in the table's last column. Acceptance criterion: Kent never needs to r
 
 When sibling issues land:
 
-- **#224** (`REVIEWED_EXCLUDED`): the `transactions_pending` adapter's filter naturally excludes the new state without code change. **Assumption:** #224 introduces `REVIEWED_EXCLUDED` as a new `BusinessClassification` enum member (additive). If #224 instead refines `UNCLASSIFIED` semantics (e.g. by adding a sibling `excluded: bool` field), this adapter requires a one-line predicate update — call out in plan as a follow-up touch-point.
+- **#224** (`REVIEWED_EXCLUDED`): the `transactions_pending` adapter's filter naturally excludes the new state without code change once added to the `_classify_transaction` early-return branch alongside `SKIPPED_BY_RULE`. **Assumption:** #224 introduces `REVIEWED_EXCLUDED` as a new `BusinessClassification` enum member (additive, post-#237 model). One-line predicate update required.
+- **#237** (state-distinguished `BusinessClassification`): **shipped** via PR #252 (merged 2026-04-18). The adapter now uses the `is_classified()` helper plus first-match-wins severity per the four pending states (`NOT_YET_PROCESSED` → NORMAL, `PROCESSED_UNCLASSIFIED` → HIGH, `FAILED_VALIDATION` → CRITICAL, `SKIPPED_BY_RULE` excluded).
 - **#230 / #231** (`APPROVED` + `APPROVAL_STALE`): a new `approval_stale_pending` adapter is added; aggregator concatenation picks it up; `ReviewItemKind.APPROVAL_STALE` member added.
 - **C4h** (`ClassificationDecision`): a new `classifications_pending` adapter is added; `ReviewItemKind.CLASSIFICATION` member added.
 - **C4p-port** (Catalogue/Invoice/Attachment findings): each new findings type adds one adapter; existing `FINDING` enum member is reused (per-source attribution lives on the wrapped record).
