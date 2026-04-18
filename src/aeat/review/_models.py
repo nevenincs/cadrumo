@@ -47,7 +47,12 @@ class _ReviewItemBase(BaseModel):
 
 
 class TransactionReviewItem(_ReviewItemBase):
-    """One pending transaction (UNCLASSIFIED) wrapped for the queue."""
+    """One pending transaction wrapped for the queue.
+
+    Pending states (post-#237): ``NOT_YET_PROCESSED``,
+    ``PROCESSED_UNCLASSIFIED``, ``FAILED_VALIDATION``. Severity is
+    derived per state by ``_classify_transaction`` in ``_adapters``.
+    """
 
     kind: Literal[ReviewItemKind.TRANSACTION] = ReviewItemKind.TRANSACTION
     source: Transaction

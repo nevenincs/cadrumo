@@ -119,7 +119,7 @@ The umbrella #202 explicitly splits the C4 cluster:
 - #230 — `FilingDraftStatus.APPROVED` lifecycle.
 - #231 — Approval CLI + diff + staleness.
 
-Each is a separate `parallel-safe` issue. #232 must **not** make changes that pre-empt them. The queue's adapter for transactions filters on `BusinessClassification.UNCLASSIFIED` only; when #224 lands and `REVIEWED_EXCLUDED` exists, the adapter's filter naturally excludes it without code change. The queue's adapter for drafts treats DRAFT/VALIDATED as pending; when #230's APPROVED state lands, it can extend the filter.
+Each is a separate `parallel-safe` issue. #232 must **not** make changes that pre-empt them. The queue's adapter for transactions uses `not is_classified(state)` AND `state is not SKIPPED_BY_RULE` (post-#237 model); when #224 lands and `REVIEWED_EXCLUDED` exists, it joins `SKIPPED_BY_RULE` in the early-return branch as a one-line predicate change. The queue's adapter for drafts treats DRAFT/VALIDATED as pending; when #230's APPROVED state lands, it can extend the filter.
 
 ### `FilingValidationFinding` port (C4p) — defer
 
@@ -152,7 +152,7 @@ Existing patterns:
 
 - `pytestmark = [pytest.mark.unit, pytest.mark.domain_<x>]` per [[2026-04-17-pytest-markers-adr]].
 - Adapters can be exercised with synthetic catalogues built in-process (no fixtures dir).
-- Aggregator test: build five mini-fixtures (one transaction UNCLASSIFIED, one invoice unmatched, one divergence PENDING, one draft with ERROR finding, one notificacion unacked), point the aggregator at a `tmp_path`, assert the unified queue lists exactly five rows with expected kinds.
+- Aggregator test: build five mini-fixtures (one transaction NOT_YET_PROCESSED, one invoice unmatched, one divergence PENDING, one draft with ERROR finding, one notificacion unacked), point the aggregator at a `tmp_path`, assert the unified queue lists exactly five rows with expected kinds.
 
 ## options considered
 
