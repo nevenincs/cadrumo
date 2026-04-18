@@ -23,7 +23,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Run one command for pipeline health | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#238](https://github.com/wgergely/aeat/issues/238) |
 | Mark transaction reviewed-and-excluded | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#224](https://github.com/wgergely/aeat/issues/224) |
 | See WHY each classification was made | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#231](https://github.com/wgergely/aeat/issues/231) |
-| See pending reviews in one dashboard | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#232](https://github.com/wgergely/aeat/issues/232) |
+| See pending reviews in one dashboard | ❌ | ✅ | ✅ | ❌ | 0.1.0 | [#232](https://github.com/wgergely/aeat/issues/232) |
 | Authenticate against AEAT Sede Electrónica | 🚧 | 🚧 | partial | ❌ | 0.1.1 | [#141](https://github.com/wgergely/aeat/issues/141) |
 | Retrieve previously-filed casilla values | ❌ | ❌ | ❌ | ❌ | 0.1.1 | [#222](https://github.com/wgergely/aeat/issues/222) |
 | Ask "what filings did I miss?" | ❌ | ❌ | ❌ | ❌ | 0.1.1 | [#215](https://github.com/wgergely/aeat/issues/215) |
