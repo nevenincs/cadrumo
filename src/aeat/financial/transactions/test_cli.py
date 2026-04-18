@@ -15,11 +15,14 @@ from .. import RawProvenance, SourceFormat
 from ..providers import RawTransaction
 from . import (
     BusinessClassification,
+    LLMClassificationResponse,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
     load_transactions,
+    register_classifier,
     save_transactions,
+    unregister_classifier,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
@@ -584,3 +587,194 @@ def test_financial_txs_list_empty_confidence_filter_guides_kent(tmp_path: Path) 
     assert result.exit_code == 0, result.output
     assert "manual classifications default to confidence 1.0" in result.output
     assert "--confidence-below only surfaces results when a rule engine" in result.output
+
+
+# ── classify-llm (no mocks: concrete test classifiers via registry) ─────
+
+
+from dataclasses import dataclass  # noqa: E402 — local-only in this section
+
+
+@dataclass(frozen=True)
+class _ScriptedLLMClassifier:
+    """Real LLMClassifier implementation that returns a scripted response.
+
+    Used to exercise the classify-llm CLI end-to-end without shelling
+    out to a real LLM. Not a mock: it's a plain dataclass with the
+    two attributes the protocol requires.
+    """
+
+    response: LLMClassificationResponse
+    decided_by_value: str
+
+    @property
+    def decided_by(self) -> str:
+        return self.decided_by_value
+
+    def classify(self, transaction: Transaction) -> LLMClassificationResponse:
+        return self.response
+
+
+from collections.abc import Iterator  # noqa: E402 — local to LLM CLI tests
+
+
+@pytest.fixture
+def scripted_provider() -> Iterator[str]:
+    """Register a deterministic classifier; yield its provider name; unregister."""
+    name = "test-scripted-0.75"
+    response = LLMClassificationResponse(
+        classification=BusinessClassification.BUSINESS,
+        confidence=Decimal("0.75"),
+        reason="scripted test decision",
+    )
+    classifier = _ScriptedLLMClassifier(response=response, decided_by_value=f"llm:{name}")
+    register_classifier(name, lambda **_: classifier)
+    try:
+        yield name
+    finally:
+        unregister_classifier(name)
+
+
+def test_classify_llm_single_persists_the_classifier_decision(
+    tmp_path: Path,
+    scripted_provider: str,
+) -> None:
+    """`aeat financial txs classify-llm <id> --provider <scripted>` writes the decision."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify-llm",
+            transaction.transaction_id,
+            "--provider",
+            scripted_provider,
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    updated = restored.get(transaction.transaction_id)
+    assert updated is not None
+    assert updated.business_classification is BusinessClassification.BUSINESS
+    assert updated.classification_confidence == Decimal("0.75")
+    assert updated.classified_by == f"llm:{scripted_provider}"
+    assert updated.classification_reason == "scripted test decision"
+
+
+def test_classify_llm_dry_run_does_not_persist(
+    tmp_path: Path,
+    scripted_provider: str,
+) -> None:
+    """`--dry-run` must print results without mutating the catalogue."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+    original_state = transaction.business_classification
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify-llm",
+            transaction.transaction_id,
+            "--provider",
+            scripted_provider,
+            "--dry-run",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "dry-run" in result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    reloaded = restored.get(transaction.transaction_id)
+    assert reloaded is not None
+    assert reloaded.business_classification is original_state
+
+
+def test_classify_llm_all_only_targets_unclassified(
+    tmp_path: Path,
+    scripted_provider: str,
+) -> None:
+    """`--all` must classify only NOT_YET_PROCESSED transactions."""
+    _write_catalogue(tmp_path)  # seeds one NOT_YET_PROCESSED + one BUSINESS
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "classify-llm", "--provider", scripted_provider, "--all"],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "1 classified" in result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    classifier_key = f"llm:{scripted_provider}"
+    classifier_touched = [tx for tx in restored.values() if tx.classified_by == classifier_key]
+    assert len(classifier_touched) == 1
+
+
+def test_classify_llm_rejects_both_id_and_all(
+    tmp_path: Path,
+    scripted_provider: str,
+) -> None:
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify-llm",
+            transaction.transaction_id,
+            "--provider",
+            scripted_provider,
+            "--all",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "mutually exclusive" in result.output
+
+
+def test_classify_llm_rejects_missing_target(
+    tmp_path: Path,
+    scripted_provider: str,
+) -> None:
+    _write_catalogue(tmp_path)
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "classify-llm", "--provider", scripted_provider],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "transaction-id argument or use --all" in result.output
+
+
+def test_classify_llm_rejects_unknown_provider(tmp_path: Path) -> None:
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify-llm",
+            transaction.transaction_id,
+            "--provider",
+            "not-a-real-provider",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "unknown LLM provider" in result.output

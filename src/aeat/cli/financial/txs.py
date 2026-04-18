@@ -10,9 +10,13 @@ from ...financial._decimal import canonical_decimal
 from ...financial.categories import SpendingCategory
 from ...financial.transactions import (
     BusinessClassification,
+    LLMClassifierError,
     Transaction,
+    TransactionCatalogue,
     TransactionError,
     find_transaction,
+    is_classified,
+    resolve_classifier,
     save_transactions,
     set_classification,
 )
@@ -181,6 +185,119 @@ def classify_cmd(
     updated_transaction = find_transaction(updated, transaction_id)
     assert updated_transaction is not None
     typer.echo(updated_transaction.model_dump_json(indent=2))
+
+
+@app.command(
+    name="classify-llm",
+    help=(
+        "Classify transactions via an LLM (claude / gemini / codex). "
+        "Pass a transaction ID for one record, or --all to process every "
+        "NOT_YET_PROCESSED transaction. Results feed the same history "
+        "chain as manual or rule-based decisions."
+    ),
+)
+def classify_llm_cmd(
+    transaction_id: str | None = typer.Argument(None, help="Stable transaction identifier (omit with --all)."),
+    provider: str = typer.Option(
+        ...,
+        "--provider",
+        case_sensitive=False,
+        help="LLM provider: claude, gemini, or codex (must be on PATH).",
+    ),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="Optional model override passed through to the CLI.",
+    ),
+    all_pending: bool = typer.Option(
+        False,
+        "--all",
+        help="Classify every NOT_YET_PROCESSED transaction in the catalogue.",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Run the classifier and print the results without saving.",
+    ),
+) -> None:
+    """Classify one or many transactions through an LLM CLI."""
+    if all_pending and transaction_id is not None:
+        typer.echo("--all is mutually exclusive with a transaction-id argument.", err=True)
+        raise typer.Exit(code=2)
+    if not all_pending and transaction_id is None:
+        typer.echo("Pass a transaction-id argument or use --all.", err=True)
+        raise typer.Exit(code=2)
+    try:
+        classifier = resolve_classifier(provider, model=model)
+    except LLMClassifierError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+
+    path = catalogue_path()
+    catalogue = load_catalogue_required()
+    targets = _select_llm_targets(catalogue, transaction_id=transaction_id, all_pending=all_pending)
+    if not targets:
+        typer.echo("No transactions selected for LLM classification.")
+        return
+
+    updated_catalogue = catalogue
+    successes = 0
+    failures = 0
+    for target in targets:
+        try:
+            response = classifier.classify(target)
+        except LLMClassifierError as exc:
+            failures += 1
+            typer.echo(f"[{target.transaction_id[:16]}] {provider} error: {exc}", err=True)
+            continue
+        line = (
+            f"[{target.transaction_id[:16]}] {response.classification.value} "
+            f"@ {canonical_decimal(response.confidence)} — {response.reason}"
+        )
+        typer.echo(line)
+        if not dry_run:
+            try:
+                updated_catalogue = set_classification(
+                    updated_catalogue,
+                    target.transaction_id,
+                    classification=response.classification,
+                    classified_by=classifier.decided_by,
+                    reason=response.reason,
+                    confidence=response.confidence,
+                )
+            except TransactionError as exc:
+                failures += 1
+                typer.echo(f"[{target.transaction_id[:16]}] persist error: {exc}", err=True)
+                continue
+        successes += 1
+
+    if not dry_run and successes:
+        try:
+            save_transactions(updated_catalogue, path)
+        except TransactionError as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(code=2) from exc
+
+    summary = f"{successes} classified / {failures} failed / {'dry-run' if dry_run else 'persisted'}"
+    typer.echo(summary)
+    if failures and successes == 0:
+        raise typer.Exit(code=2)
+
+
+def _select_llm_targets(
+    catalogue: TransactionCatalogue,
+    *,
+    transaction_id: str | None,
+    all_pending: bool,
+) -> list[Transaction]:
+    """Return the transactions the classify-llm command should process."""
+    if transaction_id is not None:
+        transaction = find_transaction(catalogue, transaction_id)
+        if transaction is None:
+            typer.echo(f"transaction not found: {transaction_id}", err=True)
+            raise typer.Exit(code=2)
+        return [transaction]
+    return [tx for tx in catalogue.values() if not is_classified(tx.business_classification)]
 
 
 def _parse_confidence_threshold(value: str | None) -> Decimal | None:
