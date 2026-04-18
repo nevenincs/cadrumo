@@ -26,6 +26,12 @@ from ._validator import derive_validation_status
 
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:Q(?P<quarter>[1-4]))?$")
 _DEFAULT_TRANSACTION_CATALOGUE_FILENAME = "transactions.json"
+_REVIEW_STATUSES = frozenset(
+    {
+        FilingDraftStatus.APPROVED,
+        FilingDraftStatus.APPROVAL_STALE,
+    }
+)
 
 
 class FilingApprovalStaleReason(StrEnum):
@@ -181,19 +187,21 @@ def refresh_review_status(
     """Return ``draft`` with its approval status synchronized to current state."""
 
     timestamp = refreshed_at or datetime.now(tz=UTC)
+    if draft.status not in _REVIEW_STATUSES:
+        cleared = _review_metadata_reset()
+        if any(getattr(draft, key) != value for key, value in cleared.items()):
+            cleared["updated_at"] = timestamp
+            return draft.model_copy(update=cleared)
+        return draft
+
     if (
         draft.approval_basis is None
         or draft.approved_at is None
         or draft.approved_by is None
         or draft.review_checksum is None
     ):
-        cleared: dict[str, object] = {
-            "status": derive_validation_status(draft.findings),
-            "approved_at": None,
-            "approved_by": None,
-            "approval_basis": None,
-            "review_checksum": None,
-        }
+        cleared: dict[str, object] = _review_metadata_reset()
+        cleared["status"] = derive_validation_status(draft.findings)
         if any(getattr(draft, key) != value for key, value in cleared.items()):
             cleared["updated_at"] = timestamp
             return draft.model_copy(update=cleared)
@@ -234,6 +242,15 @@ def describe_stale_reason(reason: FilingApprovalStaleReason) -> str:
         case FilingApprovalStaleReason.SCHEMA_FORMULA_CHANGED:
             return "schema or formula provenance changed"
     return reason.value.lower().replace("_", " ")
+
+
+def _review_metadata_reset() -> dict[str, object]:
+    return {
+        "approved_at": None,
+        "approved_by": None,
+        "approval_basis": None,
+        "review_checksum": None,
+    }
 
 
 def _load_transaction_catalogue(path: Path | None) -> TransactionCatalogue:

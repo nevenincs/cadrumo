@@ -495,3 +495,31 @@ class TestPublicAPI:
         assert unapproved.approved_by is None
         assert unapproved.review_checksum is None
         assert unapproved.approval_basis is None
+
+    def test_refresh_review_status_preserves_downstream_statuses(self) -> None:
+        draft = build_draft(
+            modelo="130",
+            period="2026Q1",
+            profile=_profile(),
+            inputs=_clean_inputs(),
+            schema_provider=default_schema_provider(),
+        ).model_copy(
+            update={
+                "status": FilingDraftStatus.SUBMITTED,
+                "approved_at": datetime(2026, 4, 18, 8, 0, tzinfo=UTC),
+                "approved_by": "kent",
+                "review_checksum": "a" * 64,
+                "approval_basis": None,
+            }
+        )
+
+        refreshed = refresh_review_status(
+            draft,
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue(),
+        )
+
+        assert refreshed.status is FilingDraftStatus.SUBMITTED
+        assert refreshed.approved_at is None
+        assert refreshed.approved_by is None
+        assert refreshed.review_checksum is None
