@@ -52,7 +52,14 @@ class _StatusRecord(BaseModel):
 
 
 class Expediente(_StatusRecord):
-    """A single filing expediente row from *Mis expedientes*."""
+    """A single filing expediente row from *Mis expedientes*.
+
+    ``detail_url`` is optional: AEAT renders an ``Acciones`` / ``Detalle``
+    anchor in some campaigns but not others. Populated by
+    :func:`aeat.status._parsers.parse_expedientes` when the listing
+    carries one; otherwise ``None`` and the consumer constructs the URL
+    from ``aeat_status_detail_url_template``.
+    """
 
     expediente_id: str = Field(min_length=1, max_length=64)
     modelo: str = Field(min_length=1, max_length=16)
@@ -61,6 +68,7 @@ class Expediente(_StatusRecord):
     presented_at: AwareDatetime
     csv: str | None = Field(default=None, min_length=1, max_length=64)
     justificante_url: AnyHttpUrl | None = None
+    detail_url: AnyHttpUrl | None = None
     source_page_url: AnyHttpUrl
     fetched_at: AwareDatetime
 
