@@ -1,4 +1,24 @@
-"""`aeat review` command group for draft and transaction review surfaces."""
+"""``aeat review`` sub-app — pipeline-decision review surfaces.
+
+Wires the review subcommands per the feature ADRs:
+
+- ``aeat review queue [--kind K]... [--state pending|all] [--modelo M]
+  [--format table|json]`` — unified pending-review dashboard
+  (#232, [[2026-04-18-unified-review-queue-adr]]).
+- ``aeat review history <transaction-id>`` — classification history
+  chain for one transaction (#237).
+- ``aeat review approve <draft>`` — record an approval for one
+  persisted draft (#230).
+- ``aeat review unapprove <draft>`` — rescind a stored approval (#230).
+- ``aeat review show <draft>`` — show the current review state for
+  one draft including any staleness reasons (#230).
+- ``aeat review stale`` — list every persisted draft whose approval
+  is currently stale (#230).
+
+These commands delegate every domain decision to :mod:`aeat.review`,
+:mod:`aeat.financial.transactions`, or :mod:`aeat.filing`; this
+module is pure CLI glue.
+"""
 
 from __future__ import annotations
 
@@ -23,11 +43,12 @@ from ...filing import (
 )
 from ...filing.runtime import build_runtime_schema_provider
 from .history import history_cmd
+from .queue import queue_cmd
 
 app = typer.Typer(
     name="review",
     no_args_is_help=True,
-    help="Review helpers for draft approvals and transaction history.",
+    help="Review surfaces: queue (#232), history (#237), draft approve/unapprove/show/stale (#230).",
 )
 
 _CONSOLE = Console()
@@ -186,6 +207,10 @@ def stale_cmd() -> None:
     _CONSOLE.print(table)
 
 
+app.command(
+    name="queue",
+    help="List every pending review item across the pipeline in one table.",
+)(queue_cmd)
 app.command(
     name="history",
     help="Show the classification history chain for one transaction (#237).",
