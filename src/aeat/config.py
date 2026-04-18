@@ -141,7 +141,7 @@ class Settings(BaseSettings):
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
-        default="hu",
+        default="es",
         description="Target output language for user-facing content (es, en, hu)",
     )
     aeat_authoritative_language_aeat_terms: str = Field(
@@ -206,7 +206,7 @@ class Settings(BaseSettings):
     )
     aeat_casillas_review_required: bool = Field(
         default=True,
-        description="If true, verify rejects casilla records lacking reviewer metadata",
+        description="If true, verify rejects casilla records lacking definition-review metadata",
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ class Settings(BaseSettings):
         default=True,
         description=(
             "When True, 'aeat manual verify' rejects any Manual/Section/Rule record "
-            "missing reviewer metadata; when False the rejection is downgraded to a warning"
+            "missing definition-review metadata; when False the rejection is downgraded to a warning"
         ),
     )
 
@@ -502,6 +502,13 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "browser-traces",
         description="Directory where the status reader drops Playwright trace files",
     )
+    aeat_status_detail_url_template: str = Field(
+        default="/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}",
+        description=(
+            "URL path template for an expediente detail page. "
+            "Must contain '{expediente_id}'. Overrideable per campaign."
+        ),
+    )
 
     # ── Schema extraction (aeat.schema, #9) ────────────────────────────────
     aeat_schema_cache_dir: Path = Field(
@@ -574,6 +581,14 @@ class Settings(BaseSettings):
         """Treat blank env vars for optional secret fields as unset."""
         if isinstance(value, str) and value.strip() == "":
             return None
+        return value
+
+    @field_validator("aeat_status_detail_url_template")
+    @classmethod
+    def _detail_url_template_has_expediente_id(cls, value: str) -> str:
+        """Reject templates that omit the ``{expediente_id}`` placeholder."""
+        if "{expediente_id}" not in value:
+            raise ValueError("aeat_status_detail_url_template must contain '{expediente_id}'")
         return value
 
     @classmethod

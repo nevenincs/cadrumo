@@ -259,3 +259,23 @@ GEMINI.md
 # custom mandate rule; it is force-added to git (`git add -f`) despite the
 # vaultspec-managed ignore above, so every workstation + agent reads the
 # same mandates after running `uv run vaultspec-core install`.
+
+# Scratch / ad-hoc workspace
+#
+# Canonical home for PM triage dumps, one-off parsers, gh-issue exports,
+# and any other ephemeral output. Nothing under scratch/ ever enters git.
+# Authored artifacts belong in `.vault/` via the vaultspec pipeline
+# (research → adr → plan → exec → audit), never at the repo root.
+scratch/*
+!scratch/README.md
+
+# Root-level safety net for common ad-hoc output patterns that tend to
+# appear when agents shortcut past the scratch/ convention. Narrow,
+# leading-slash patterns so nothing nested gets hidden.
+/out.*
+/*_issues.json
+/*_issues.txt
+/issues_*.json
+/issues_*.txt
+/open_issues.json
+/parsed_issues.txt

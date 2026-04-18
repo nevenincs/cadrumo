@@ -3,23 +3,18 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
 
 import typer
 
-from ...config import load_settings
 from ...financial.categories import SpendingCategory
 from ...financial.transactions import (
     BusinessClassification,
-    TransactionCatalogue,
     TransactionError,
     find_transaction,
-    load_transactions,
     save_transactions,
     set_classification,
 )
-
-_DEFAULT_CATALOGUE_FILENAME = "transactions.json"
+from ._catalogue import catalogue_path, load_catalogue_or_empty, load_catalogue_required
 
 app = typer.Typer(
     name="txs",
@@ -28,20 +23,36 @@ app = typer.Typer(
 )
 
 
-@app.command(name="list", help="List stored transactions, optionally filtering to UNCLASSIFIED records.")
+@app.command(name="list", help="List stored transactions, optionally filtering by classification state.")
 def list_cmd(
+    state: BusinessClassification | None = typer.Option(
+        None,
+        "--state",
+        case_sensitive=False,
+        help=(
+            "Filter to one BusinessClassification value: BUSINESS, PERSONAL, MIXED, "
+            "NOT_YET_PROCESSED, PROCESSED_UNCLASSIFIED, SKIPPED_BY_RULE, or FAILED_VALIDATION."
+        ),
+    ),
     unclassified: bool = typer.Option(
         False,
         "--unclassified",
-        help="Show only UNCLASSIFIED transactions.",
+        help="Deprecated; alias for --state PROCESSED_UNCLASSIFIED.",
+        hidden=True,
     ),
 ) -> None:
     """List transactions from the configured catalogue file."""
-    catalogue = _load_catalogue_or_empty()
+    if state is not None and unclassified:
+        typer.echo("--state and --unclassified are mutually exclusive.", err=True)
+        raise typer.Exit(code=2)
+    effective_state: BusinessClassification | None = state
+    if effective_state is None and unclassified:
+        effective_state = BusinessClassification.PROCESSED_UNCLASSIFIED
+    catalogue = load_catalogue_or_empty()
     transactions = tuple(
         transaction
         for transaction in catalogue.values()
-        if not unclassified or transaction.business_classification is BusinessClassification.UNCLASSIFIED
+        if effective_state is None or transaction.business_classification is effective_state
     )
     if not transactions:
         typer.echo("No transactions found.")
@@ -70,7 +81,7 @@ def show_cmd(
     transaction_id: str = typer.Argument(..., help="Stable transaction identifier."),
 ) -> None:
     """Show one transaction from the configured catalogue file."""
-    catalogue = _load_catalogue_required()
+    catalogue = load_catalogue_required()
     transaction = find_transaction(catalogue, transaction_id)
     if transaction is None:
         typer.echo(f"transaction not found: {transaction_id}", err=True)
@@ -88,7 +99,10 @@ def classify_cmd(
         ...,
         "--as",
         case_sensitive=False,
-        help="Classification target: BUSINESS, PERSONAL, MIXED, or UNCLASSIFIED.",
+        help=(
+            "Classification target: BUSINESS, PERSONAL, MIXED, "
+            "NOT_YET_PROCESSED, PROCESSED_UNCLASSIFIED, SKIPPED_BY_RULE, or FAILED_VALIDATION."
+        ),
     ),
     pct: str | None = typer.Option(
         None,
@@ -101,15 +115,15 @@ def classify_cmd(
         case_sensitive=False,
         help="Specific spending category from the AEAT 39-category catalogue.",
     ),
-    reason: str | None = typer.Option(
-        None,
+    reason: str = typer.Option(
+        "",
         "--reason",
-        help="Reason or notes justifying the classification.",
+        help="Optional free-text override justification; recorded in the history chain.",
     ),
 ) -> None:
     """Classify one transaction and write the updated catalogue to disk."""
-    path = _catalogue_path()
-    catalogue = _load_catalogue_required()
+    path = catalogue_path()
+    catalogue = load_catalogue_required()
     try:
         business_pct = Decimal(pct) if pct is not None else None
     except InvalidOperation as exc:
@@ -124,6 +138,7 @@ def classify_cmd(
             category_id=category.value if category else None,
             notes=reason,
             classified_by="manual",
+            reason=reason,
         )
         save_transactions(updated, path)
     except TransactionError as exc:
@@ -132,29 +147,6 @@ def classify_cmd(
     updated_transaction = find_transaction(updated, transaction_id)
     assert updated_transaction is not None
     typer.echo(updated_transaction.model_dump_json(indent=2))
-
-
-def _catalogue_path() -> Path:
-    """Return the default on-disk catalogue path from settings."""
-    return load_settings().aeat_financial_txs_dir.resolve() / _DEFAULT_CATALOGUE_FILENAME
-
-
-def _load_catalogue_or_empty() -> TransactionCatalogue:
-    """Load the configured catalogue, returning an empty one when absent."""
-    path = _catalogue_path()
-    if path.exists():
-        return _load_catalogue_required()
-    return TransactionCatalogue()
-
-
-def _load_catalogue_required() -> TransactionCatalogue:
-    """Load the configured catalogue or exit cleanly on failure."""
-    path = _catalogue_path()
-    try:
-        return load_transactions(path)
-    except TransactionError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(code=2) from exc
 
 
 def _format_amount(value: Decimal) -> str:
