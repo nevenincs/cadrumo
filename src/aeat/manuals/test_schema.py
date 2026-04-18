@@ -74,8 +74,8 @@ def _rule(rule_id: str = "renta-2025-parte1-cap5-sec2-rule0001", kind: RuleKind 
         references_legal_acts=("Ley 35/2006, art. 32",),
         source=_rule_source(),
         extracted_by=_llm_provenance(),
-        reviewed_by="gw",
-        reviewed_at=date(2026, 4, 12),
+        definition_reviewed_by="gw",
+        definition_reviewed_at=date(2026, 4, 12),
     )
 
 
@@ -90,8 +90,8 @@ def _section(section_id: str = "sec2") -> Section:
         references_sections=(),
         references_legal_acts=(),
         source=_section_source(),
-        reviewed_by="gw",
-        reviewed_at=date(2026, 4, 12),
+        definition_reviewed_by="gw",
+        definition_reviewed_at=date(2026, 4, 12),
     )
 
 
@@ -117,8 +117,8 @@ def _manual() -> Manual:
         ),
         source_html_url=None,
         fetched_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
-        reviewed_by="gw",
-        reviewed_at=date(2026, 4, 12),
+        definition_reviewed_by="gw",
+        definition_reviewed_at=date(2026, 4, 12),
         chapters=(_chapter(),),
     )
 
@@ -151,8 +151,8 @@ class TestStrictSchema:
                 references_legal_acts=(),
                 source=_rule_source(),
                 extracted_by=_llm_provenance(),
-                reviewed_by="gw",
-                reviewed_at=date(2026, 4, 12),
+                definition_reviewed_by="gw",
+                definition_reviewed_at=date(2026, 4, 12),
             )
 
     def test_rule_rejects_invalid_casilla_reference(self) -> None:
@@ -173,8 +173,8 @@ class TestStrictSchema:
                 references_legal_acts=(),
                 source=_rule_source(),
                 extracted_by=_llm_provenance(),
-                reviewed_by="gw",
-                reviewed_at=date(2026, 4, 12),
+                definition_reviewed_by="gw",
+                definition_reviewed_at=date(2026, 4, 12),
             )
 
     def test_rule_rejects_empty_reviewer(self) -> None:
@@ -195,8 +195,8 @@ class TestStrictSchema:
                 references_legal_acts=(),
                 source=_rule_source(),
                 extracted_by=_llm_provenance(),
-                reviewed_by="   ",
-                reviewed_at=date(2026, 4, 12),
+                definition_reviewed_by="   ",
+                definition_reviewed_at=date(2026, 4, 12),
             )
 
     def test_section_rejects_missing_spanish_title(self) -> None:
@@ -212,8 +212,8 @@ class TestStrictSchema:
                 references_sections=(),
                 references_legal_acts=(),
                 source=_section_source(),
-                reviewed_by="gw",
-                reviewed_at=date(2026, 4, 12),
+                definition_reviewed_by="gw",
+                definition_reviewed_at=date(2026, 4, 12),
             )
 
     def test_chapter_rejects_missing_spanish_title(self) -> None:
@@ -238,8 +238,8 @@ class TestStrictSchema:
                 source_pdf_url=AnyHttpUrl("https://example.com/x.pdf"),
                 source_html_url=None,
                 fetched_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
-                reviewed_by="gw",
-                reviewed_at=date(2026, 4, 12),
+                definition_reviewed_by="gw",
+                definition_reviewed_at=date(2026, 4, 12),
                 chapters=(),
             )
 
@@ -249,6 +249,10 @@ class TestStrictSchema:
         payload = manual.model_dump_json()
         reloaded = Manual.model_validate_json(payload)
         assert reloaded == manual
+        assert '"definition_reviewed_by"' in payload
+        assert '"definition_reviewed_at"' in payload
+        assert '"reviewed_by"' not in payload
+        assert '"reviewed_at"' not in payload
 
     def test_fetched_manifest_rejects_bad_sha256(self) -> None:
         """sha256 must be a 64-char lower-case hex string."""

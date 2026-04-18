@@ -13,6 +13,7 @@ from . import (
     TranslationError,
     TranslationFallback,
     get_translation,
+    normalize_language_code,
     require_authoritative,
     with_translation,
 )
@@ -29,6 +30,16 @@ class TestLanguage:
 
 
 class TestNormalization:
+    def test_language_codes_are_normalized(self) -> None:
+        """Language code normalization lowercases and trims valid inputs."""
+        assert normalize_language_code(" ES ") == "es"
+        assert normalize_language_code(Language.HU) == "hu"
+
+    def test_invalid_language_codes_raise(self) -> None:
+        """Non-ISO-639-1 values must be rejected."""
+        with pytest.raises(TranslationError, match="two-letter ISO 639-1 code"):
+            normalize_language_code("spanish")
+
     def test_nfc_normalization_applied(self) -> None:
         """Test that NFC normalization is applied to translations."""
         # 'a' + combining acute accent (decomposed)

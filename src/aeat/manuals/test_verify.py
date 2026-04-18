@@ -54,8 +54,8 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
                 "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
                 "page": 10,
             },
-            "reviewed_by": reviewer,
-            "reviewed_at": "2026-04-12",
+            "definition_reviewed_by": reviewer,
+            "definition_reviewed_at": "2026-04-12",
         },
     )
     _write_json(
@@ -85,8 +85,8 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
             "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
             "source_html_url": None,
             "fetched_at": "2026-04-12T00:00:00Z",
-            "reviewed_by": reviewer,
-            "reviewed_at": "2026-04-12",
+            "definition_reviewed_by": reviewer,
+            "definition_reviewed_at": "2026-04-12",
         },
     )
 
@@ -133,7 +133,7 @@ class TestVerify:
         assert report.ok
 
     def test_empty_reviewer_surfaces_as_load_error(self, tmp_path: Path) -> None:
-        """Empty reviewed_by on the manual root fails schema load → verify error.
+        """Empty definition_reviewed_by on the manual root fails schema load → verify error.
 
         The schema-level constraint (_Reviewer min_length=1 after
         stripping) is the absolute review gate. Attempting to land an
@@ -145,7 +145,7 @@ class TestVerify:
         _seed_structure(root)
         manual_path = root / "iva" / "2025" / "structure" / "manual.json"
         payload = json.loads(manual_path.read_text(encoding="utf-8"))
-        payload["reviewed_by"] = ""
+        payload["definition_reviewed_by"] = ""
         manual_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         settings = _settings(root, review_required=True)
         report = verify_manual_dir(
