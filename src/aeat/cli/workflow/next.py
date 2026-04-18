@@ -2,10 +2,9 @@
 
 The command refuses to enter live mode unless the caller passes both
 ``--no-dry-run`` *and* ``--i-understand-this-is-real``, mirroring the
-submission engine's double-gate contract. Until the in-flight
-sibling branches (#43, #46, #8) land, invoking this command outside
-a test context raises a :class:`WorkflowError` because the
-certificate / inbox / status protocols cannot be wired without them.
+submission engine's double-gate contract. The production path now
+wires the on-main deadline engine, filing runtime schema provider,
+and dry-run-safe submission helper.
 """
 
 from __future__ import annotations

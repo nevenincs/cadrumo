@@ -21,7 +21,7 @@ from ...filing import (
     refresh_review_status,
     unapprove_draft,
 )
-from ...filing.testing import default_schema_provider
+from ...filing.runtime import build_runtime_schema_provider
 from .history import history_cmd
 
 app = typer.Typer(
@@ -48,7 +48,7 @@ def _load_review_draft(path: Path) -> FilingDraft:
         raise typer.BadParameter(f"invalid draft in {path}: {exc}") from exc
     refreshed = refresh_review_status(
         draft,
-        schema_provider=default_schema_provider(),
+        schema_provider=build_runtime_schema_provider(),
     )
     if refreshed != draft:
         _save_draft(path, refreshed)
@@ -89,7 +89,7 @@ def approve_cmd(
         approved = approve_draft(
             draft,
             approved_by=_resolve_approver(approved_by),
-            schema_provider=default_schema_provider(),
+            schema_provider=build_runtime_schema_provider(),
         )
     except FilingDraftError as exc:
         _CONSOLE.print(f"[red]refusing:[/red] {exc}")
@@ -129,7 +129,7 @@ def show_cmd(
     draft = _load_review_draft(draft_path)
     reasons = approval_stale_reasons(
         draft,
-        schema_provider=default_schema_provider(),
+        schema_provider=build_runtime_schema_provider(),
     )
     table = Table(title=f"Review {draft.draft_id}", show_header=False)
     table.add_row("modelo", draft.modelo)
@@ -168,7 +168,7 @@ def stale_cmd() -> None:
             continue
         reasons = approval_stale_reasons(
             draft,
-            schema_provider=default_schema_provider(),
+            schema_provider=build_runtime_schema_provider(),
         )
         if draft.status is not FilingDraftStatus.APPROVAL_STALE or not reasons:
             continue
