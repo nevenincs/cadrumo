@@ -218,6 +218,8 @@ class DraftStatus(StrEnum):
     DRAFT = "DRAFT"
     INCOMPLETE = "INCOMPLETE"
     READY_TO_SUBMIT = "READY_TO_SUBMIT"
+    APPROVED = "APPROVED"
+    APPROVAL_STALE = "APPROVAL_STALE"
 
 
 @runtime_checkable
