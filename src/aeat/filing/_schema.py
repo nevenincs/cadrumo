@@ -21,19 +21,22 @@ from ..i18n import Translatable
 # casilla DB version is supplied via the CasillaCollection Protocol;
 # this constant is the fallback used by the synthetic test schemas.
 SCHEMA_VERSION_DEFAULT = "filing-schema-0.1.0"
+APPROVAL_BASIS_VERSION = "review-basis-v1"
 
 
 class FilingDraftStatus(StrEnum):
     """Lifecycle status of a :class:`FilingDraft`.
 
-    This issue produces drafts only up to ``READY_TO_SUBMIT``. The
-    later states are reserved for the future submission engine and
-    exist now so downstream callers can pin the enum without churn.
+    Drafts still build and validate up to ``READY_TO_SUBMIT``. Review adds
+    the local approval states ``APPROVED`` and ``APPROVAL_STALE`` without
+    introducing any write-path coupling.
     """
 
     DRAFT = "DRAFT"
     VALIDATED = "VALIDATED"
     READY_TO_SUBMIT = "READY_TO_SUBMIT"
+    APPROVED = "APPROVED"
+    APPROVAL_STALE = "APPROVAL_STALE"
     SUBMITTED = "SUBMITTED"
     ACKNOWLEDGED = "ACKNOWLEDGED"
     REJECTED = "REJECTED"
@@ -117,6 +120,19 @@ class FilingValidationFinding(BaseModel):
     references_rules: tuple[str, ...] = Field(default_factory=tuple)
 
 
+class FilingApprovalBasis(BaseModel):
+    """Persisted approval-basis digests for deterministic stale detection."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    version: str = APPROVAL_BASIS_VERSION
+    draft_payload_fingerprint: str
+    draft_review_fingerprint: str
+    transaction_catalogue_fingerprint: str
+    category_profiles_fingerprint: str
+    schema_formula_fingerprint: str
+
+
 class FilingDraft(BaseModel):
     """A typed, validated draft of one filing.
 
@@ -140,6 +156,10 @@ class FilingDraft(BaseModel):
     updated_at: datetime
     schema_version: str
     notes: str = ""
+    approved_at: datetime | None = None
+    approved_by: str | None = None
+    review_checksum: str | None = None
+    approval_basis: FilingApprovalBasis | None = None
 
 
 def compute_draft_id(

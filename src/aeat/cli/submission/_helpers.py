@@ -1,16 +1,4 @@
-"""Shared helpers for the ``aeat submission`` CLI sub-app.
-
-Pure CLI glue: builds a :class:`SubmissionEngine` with in-process
-Protocol stubs for every in-flight sibling (#6 / #7 / #8 / #23 / #39 /
-#44). Production call sites swap the stubs for the real
-implementations via DI as each sibling merges.
-
-The CLI also needs to read a draft JSON off disk for the subcommands.
-Because ``aeat.filing.FilingDraft`` does not yet exist (it is #39),
-the CLI accepts a JSON file whose fields match the
-:class:`FilingDraftLike` Protocol and builds a small concrete
-:class:`_CliDraft` record in-process.
-"""
+"""Shared helpers for the ``aeat submission`` CLI sub-app."""
 
 from __future__ import annotations
 
