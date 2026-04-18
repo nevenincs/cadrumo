@@ -105,7 +105,7 @@ app.add_typer(inbox_module.app, name="inbox", help="AEAT notifications inbox (#4
 app.add_typer(
     review_module.app,
     name="review",
-    help="Pipeline-decision review surfaces (#232 unified queue, #237 classification history).",
+    help="Review surfaces: queue (#232), history (#237), draft approve/unapprove/show/stale (#230).",
 )
 app.add_typer(workflow_module.app, name="workflow", help="End-user composite workflow engine (#59).")
 app.add_typer(

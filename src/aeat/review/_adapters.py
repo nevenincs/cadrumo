@@ -294,6 +294,13 @@ def drafts_pending(
                     path_str=path_str,
                 )
             )
+        elif draft.status is FilingDraftStatus.APPROVAL_STALE:
+            items.append(
+                _to_stale_approval_item(
+                    draft=draft,
+                    path_str=path_str,
+                )
+            )
     return tuple(items)
 
 
@@ -360,6 +367,23 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
         severity=ReviewSeverity.NORMAL,
         summary=summary,
         drill_command=f"aeat filing show {path_str}",
+        since=draft.updated_at,
+        source=None,
+        draft_id=draft.draft_id,
+        draft_path=path_str,
+    )
+
+
+def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
+    """Emit a high-severity item for drafts whose stored approval is stale (#230)."""
+    summary_text = "approval stale — re-review required (status=APPROVAL_STALE)"
+    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+    return FindingReviewItem(
+        item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
+        modelo=draft.modelo,
+        severity=ReviewSeverity.HIGH,
+        summary=summary,
+        drill_command=f"aeat review show {path_str}",
         since=draft.updated_at,
         source=None,
         draft_id=draft.draft_id,

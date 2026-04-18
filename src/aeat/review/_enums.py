@@ -89,7 +89,10 @@ class ReviewFormat(StrEnum):
 _RESERVED_KINDS: Mapping[str, str] = MappingProxyType(
     {
         "classification": "blocked on ClassificationDecision record (umbrella #202 child C4h)",
-        "approval-stale": "blocked on FilingDraftStatus.APPROVED (#230) and staleness detector (C4f)",
+        "approval-stale": (
+            "now surfaced under --kind finding since #230 shipped — "
+            "drafts with FilingDraftStatus.APPROVAL_STALE emit a HIGH-severity finding row"
+        ),
     }
 )
 
