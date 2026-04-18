@@ -63,11 +63,11 @@ Kent imports three bank CSVs (BBVA, Wise EUR, Wise GBP — multi-currency work w
 
 ### success moment
 
-After cert auth lands, Kent runs `aeat status expedientes` and sees every return he has previously filed with AEAT — with casilla-level values, not just metadata. `aeat inbox list` shows pending notifications fetched live from his buzón electrónico.
+After pluggable auth lands (P12 certificate or Cl@ve), Kent runs `aeat status expedientes` and sees every return he has previously filed with AEAT — with casilla-level values, not just metadata. `aeat inbox list` shows pending notifications fetched live from his buzón electrónico.
 
 ### What Kent can do at the end of this milestone
 
-- Authenticate against AEAT Sede Electrónica with his cert ([#141](https://github.com/wgergely/aeat/issues/141))
+- Authenticate against AEAT Sede Electrónica via a pluggable Auth Provider (P12 cert or Cl@ve 2FA) ([#141](https://github.com/wgergely/aeat/issues/141), [#270](https://github.com/wgergely/aeat/issues/270))
 - Retrieve previously-filed casilla values from AEAT ([#222](https://github.com/wgergely/aeat/issues/222)) — **load-bearing for revise**
 - Ask "what filings did I miss?" and get a correct answer ([#215](https://github.com/wgergely/aeat/issues/215))
 - See live AEAT inbox notifications ([#170](https://github.com/wgergely/aeat/issues/170))
