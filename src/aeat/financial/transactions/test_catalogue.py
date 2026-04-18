@@ -438,6 +438,39 @@ def test_set_classification_propagates_confidence_into_history_on_reclassificati
     assert mid.confidence == Decimal("0.4")
 
 
+def test_set_classification_normalises_classified_by_whitespace_for_idempotence() -> None:
+    """Reclassifying with whitespace-padded classified_by must not force a spurious history entry.
+
+    Pydantic's field validator strips `classified_by` so the stored
+    value is always trimmed. Without stripping in the service layer,
+    the idempotence signature would use the raw padded value and
+    never match the stored trimmed value — every no-op re-classify
+    would append to history. This test pins the fix.
+    """
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+
+    first = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+        reason="first",
+    )
+    second = set_classification(
+        first,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="  manual  ",
+        reason="first",
+    )
+
+    first_head = find_transaction(first, transaction.transaction_id)
+    second_head = find_transaction(second, transaction.transaction_id)
+    assert first_head is not None and second_head is not None
+    assert len(first_head.classification_history) == len(second_head.classification_history)
+
+
 def test_confidence_survives_json_round_trip(tmp_path: Path) -> None:
     """Saving then loading must preserve both current and historical confidence (#236)."""
     catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])

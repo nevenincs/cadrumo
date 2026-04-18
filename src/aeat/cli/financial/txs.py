@@ -69,7 +69,15 @@ def list_cmd(
         if _matches_filters(transaction, state=effective_state, threshold=threshold)
     )
     if not transactions:
-        typer.echo("No transactions found.")
+        if threshold is not None and len(catalogue) > 0:
+            typer.echo(
+                "No transactions found below that confidence threshold. "
+                "Note: manual classifications default to confidence 1.0, so --confidence-below "
+                "only surfaces results when a rule engine or LLM classifier has assigned a "
+                "lower score (not yet implemented for transactions)."
+            )
+        else:
+            typer.echo("No transactions found.")
         return
     typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tconfidence\tnarrative")
     for transaction in sorted(
@@ -138,7 +146,11 @@ def classify_cmd(
     confidence: str | None = typer.Option(
         None,
         "--confidence",
-        help="Decision confidence in the inclusive 0..1 range. Defaults to 1.0 for manual classifications.",
+        help=(
+            "Advanced: record a non-default decision confidence (0..1). "
+            "Manual classifications default to 1.0; override only when recording the score "
+            "of a rule engine or LLM output rather than your own judgement."
+        ),
     ),
 ) -> None:
     """Classify one transaction and write the updated catalogue to disk."""
