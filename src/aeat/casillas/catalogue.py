@@ -74,22 +74,22 @@ def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
             )
 
         if review_required:
-            if not record.reviewed_by.strip():
+            if not record.definition_reviewed_by.strip():
                 errors.append(
                     UnreviewedRecordError(
                         modelo=record.modelo,
                         period=record.period,
                         casilla_id=record.casilla_id,
-                        message="reviewed_by is required for canonical records",
+                        message="definition_reviewed_by is required for canonical records",
                     )
                 )
-            if record.reviewed_at is None:
+            if record.definition_reviewed_at is None:
                 errors.append(
                     UnreviewedRecordError(
                         modelo=record.modelo,
                         period=record.period,
                         casilla_id=record.casilla_id,
-                        message="reviewed_at is required for canonical records",
+                        message="definition_reviewed_at is required for canonical records",
                     )
                 )
 

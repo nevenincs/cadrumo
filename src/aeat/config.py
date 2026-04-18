@@ -206,7 +206,7 @@ class Settings(BaseSettings):
     )
     aeat_casillas_review_required: bool = Field(
         default=True,
-        description="If true, verify rejects casilla records lacking reviewer metadata",
+        description="If true, verify rejects casilla records lacking definition-review metadata",
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ class Settings(BaseSettings):
         default=True,
         description=(
             "When True, 'aeat manual verify' rejects any Manual/Section/Rule record "
-            "missing reviewer metadata; when False the rejection is downgraded to a warning"
+            "missing definition-review metadata; when False the rejection is downgraded to a warning"
         ),
     )
 

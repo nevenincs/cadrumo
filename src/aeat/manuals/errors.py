@@ -26,7 +26,7 @@ class ManualReviewRequiredError(ManualError):
     """Raised when a persisted record lacks reviewer metadata.
 
     The verify CLI rejects any ``Manual`` / ``Section`` / ``Rule``
-    record missing ``reviewed_by`` or ``reviewed_at`` when the
+    record missing ``definition_reviewed_by`` or ``definition_reviewed_at`` when the
     ``AEAT_MANUALS_REVIEW_REQUIRED`` setting is enabled.
     """
 
