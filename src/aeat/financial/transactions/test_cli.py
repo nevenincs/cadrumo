@@ -167,3 +167,38 @@ def test_financial_txs_classify_rejects_invalid_business_pct_combo(tmp_path: Pat
 
     assert result.exit_code == 2
     assert "invalid classification update for transaction" in result.output
+
+
+def test_financial_txs_classify_accepts_category_and_reason(tmp_path: Path) -> None:
+    """`aeat financial txs classify` should persist category and reason/notes."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--as",
+            "BUSINESS",
+            "--category",
+            "cuotas_autonomos_ss",
+            "--reason",
+            "Payment for social security",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["business_classification"] == "BUSINESS"
+    assert payload["category_id"] == "cuotas_autonomos_ss"
+    assert payload["notes"] == "Payment for social security"
+
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    updated = restored.get(transaction.transaction_id)
+    assert updated is not None
+    assert updated.category_id == "cuotas_autonomos_ss"
+    assert updated.notes == "Payment for social security"

@@ -8,6 +8,7 @@ from pathlib import Path
 import typer
 
 from ...config import load_settings
+from ...financial.categories import SpendingCategory
 from ...financial.transactions import (
     BusinessClassification,
     TransactionCatalogue,
@@ -94,6 +95,17 @@ def classify_cmd(
         "--pct",
         help="Business-use percentage in the inclusive 0..1 range for MIXED.",
     ),
+    category: SpendingCategory | None = typer.Option(
+        None,
+        "--category",
+        case_sensitive=False,
+        help="Specific spending category from the AEAT 39-category catalogue.",
+    ),
+    reason: str | None = typer.Option(
+        None,
+        "--reason",
+        help="Reason or notes justifying the classification.",
+    ),
 ) -> None:
     """Classify one transaction and write the updated catalogue to disk."""
     path = _catalogue_path()
@@ -109,6 +121,8 @@ def classify_cmd(
             transaction_id,
             classification=classification,
             business_pct=business_pct,
+            category_id=category.value if category else None,
+            notes=reason,
             classified_by="manual",
         )
         save_transactions(updated, path)
