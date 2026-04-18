@@ -20,7 +20,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from ...logging import get_logger
+from .....logging import get_logger
 from ._base import _CertBackend
 from ._httpx_fallback import HttpxFallbackBackend
 

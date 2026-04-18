@@ -35,8 +35,8 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 
-from ..errors import AeatError
-from ..logging import get_logger
+from ....errors import AeatError
+from ....logging import get_logger
 
 if TYPE_CHECKING:
     from ._certificate_backends._base import _CertBackend
