@@ -8,7 +8,6 @@ Settings into one async entry point —
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable, Mapping
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -22,9 +21,7 @@ from ..logging import get_logger
 from ._audit import append_live_submit_audit, build_live_submit_audit_record
 from ._confirm import confirm_live_submission
 from ._errors import (
-    AeatLiveSubmitNotEnabledError,
     AeatLiveTransportUnavailableError,
-    AeatPytestLiveWriteRefusedError,
     SubmissionError,
 )
 from ._models import (
@@ -36,8 +33,8 @@ from ._models import (
 )
 from ._preflight import Preflight
 from ._protocols import (
+    AuthProviderProbe,
     CasillaCatalogue,
-    CertificateBackend,
     DeadlineWindowChecker,
     DraftLoader,
     FilingDraftLike,
@@ -61,7 +58,7 @@ class SubmissionEngine:
         self,
         *,
         browser_session_factory: Callable[[], BrowserSessionLike],
-        cert_backend: CertificateBackend,
+        auth_provider: AuthProviderProbe,
         portal_catalogue: PortalCatalogue,
         draft_loader: DraftLoader,
         deadline_checker: DeadlineWindowChecker,
@@ -77,7 +74,7 @@ class SubmissionEngine:
         Args:
             browser_session_factory: Zero-argument factory returning a
                 fresh :class:`BrowserSessionLike`.
-            cert_backend: Certificate Protocol implementation.
+            auth_provider: Auth-provider Protocol implementation.
             portal_catalogue: Portal catalogue Protocol implementation.
             draft_loader: Draft loader Protocol (used by the CLI to
                 read drafts off disk; the engine itself accepts
@@ -99,7 +96,7 @@ class SubmissionEngine:
                 append-only live submit audit log path.
         """
         self.browser_session_factory = browser_session_factory
-        self.cert_backend = cert_backend
+        self.auth_provider = auth_provider
         self.portal_catalogue = portal_catalogue
         self.draft_loader = draft_loader
         self.deadline_checker = deadline_checker
@@ -111,8 +108,13 @@ class SubmissionEngine:
         self.live_submit_audit_log_path = live_submit_audit_log_path
         self._preflight = Preflight(
             deadline_checker=deadline_checker,
-            cert_backend=cert_backend,
+            auth_provider=auth_provider,
         )
+
+    def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
+        """Run the engine's preflight gates without dispatching a submission."""
+
+        self._preflight.check(draft, today=today)
 
     async def submit_draft(
         self,
@@ -196,7 +198,7 @@ class SubmissionEngine:
         """Execute the shared preflight + transport flow."""
         draft_like = cast(FilingDraftLike, draft)
         reference_today = today or date.today()
-        self._preflight.check(draft_like, today=reference_today)
+        self.preflight(draft_like, today=reference_today)
 
         if draft.modelo not in self.submitters:
             raise SubmissionError(f"no submitter registered for modelo {draft.modelo!r}")
@@ -210,12 +212,8 @@ class SubmissionEngine:
                 raise AeatLiveTransportUnavailableError(
                     "live submission requires a real browser/certificate transport; this engine is stubbed"
                 )
-            if not self.settings.aeat_live_submit_enabled:
-                raise AeatLiveSubmitNotEnabledError("live submission requires AEAT_LIVE_SUBMIT_ENABLED=true")
-            if "PYTEST_CURRENT_TEST" in os.environ:
-                raise AeatPytestLiveWriteRefusedError(
-                    "pytest may never execute a live AEAT write; refusing dry_run=False submission"
-                )
+            gate = AeatAccessGate(self.settings)
+            gate.require_live_write()
             # Gate is constructed inline from Settings — never injected,
             # never stored on self, never accepted as a kwarg on the
             # engine. This preserves R5 of the live-write safety
@@ -223,7 +221,7 @@ class SubmissionEngine:
             # write-gate. The three inline checks above (lines 207-212)
             # remain the authoritative gate; the snapshot is consumed
             # only by the audit log.
-            audit_env_state = AeatAccessGate(self.settings).snapshot_env().as_audit_dict()
+            audit_env_state = gate.snapshot_env().as_audit_dict()
             confirmation = confirm_live_submission(draft_like, portal=portal)
 
         submission_id = make_submission_id(draft.draft_id, attempt_ordinal=1)

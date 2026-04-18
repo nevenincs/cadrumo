@@ -69,11 +69,11 @@ def _classify_cert_expiry(
 ) -> tuple[CertificateHealthSeverity, int]:
     """Classify a certificate's expiry window against operator thresholds.
 
-    Operates on the narrow :class:`aeat.submission.LoadedCertificate`
-    stub surface (``not_after: date``) rather than the rich
-    :class:`aeat.auth.LoadedCertificate`, so it can be called from the
-    workflow engine without forcing a sibling-branch rebase. Boundary
-    semantics match :func:`aeat.auth.evaluate_loaded_certificate_health`:
+    Operates on the provider description's expiry date rather than the
+    rich :class:`aeat.auth.LoadedCertificate`, so it can be called from
+    the workflow engine without forcing certificate-only types into the
+    workflow boundary. Boundary semantics match
+    :func:`aeat.auth.evaluate_loaded_certificate_health`:
     exactly ``critical_days`` remaining is CRITICAL (inclusive), and
     exactly ``warn_days`` remaining is WARN (inclusive).
 
@@ -821,9 +821,9 @@ class WorkflowEngine:
         today: date,
         steps: list[WorkflowStep],
     ) -> None:
-        """Stage 7 — run preflight gates and verify the certificate.
+        """Stage 7 — run preflight gates and verify the auth provider.
 
-        Aborts with ``CERT_INVALID`` if the certificate bundle Protocol
+        Aborts with ``CERT_INVALID`` if the auth-provider Protocol
         raises, and with ``PREFLIGHT_FAILED`` on any
         :class:`aeat.submission.SubmissionPreflightError`.
         """
@@ -831,7 +831,7 @@ class WorkflowEngine:
         cert_details: dict[str, str]
         if self._certificate_bundle is not None:
             try:
-                certificate = self._certificate_bundle.load()
+                certificate = self._certificate_bundle.describe()
             except Exception as exc:
                 cert_summary = _t(f"Certificate load failed: {type(exc).__name__}")
                 steps.append(
@@ -851,18 +851,42 @@ class WorkflowEngine:
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=cert_summary,
                 ) from exc
-            cert_severity, days_until_expiry = _classify_cert_expiry(
-                not_after=certificate.not_after,
-                today=today,
-                warn_days=self._settings.aeat_cert_warn_days,
-                critical_days=self._settings.aeat_cert_critical_days,
-            )
             cert_details = {
-                "cert_subject": certificate.subject,
-                "cert_not_after": certificate.not_after.isoformat(),
-                "cert_severity": cert_severity.value,
-                "cert_days_until_expiry": str(days_until_expiry),
+                "cert_subject": certificate.subject or "",
+                "provider_kind": certificate.kind.value,
             }
+            if not certificate.configured or not certificate.available:
+                provider_summary = _t(
+                    f"Auth provider unavailable: kind={certificate.kind.value} "
+                    f"configured={certificate.configured} available={certificate.available}"
+                )
+                steps.append(
+                    WorkflowStep(
+                        stage=WorkflowStage.RUNNING_PREFLIGHT,
+                        started_at=started,
+                        ended_at=_utcnow(),
+                        success=False,
+                        summary=provider_summary,
+                        details=cert_details,
+                    )
+                )
+                raise _AbortError(
+                    reason=WorkflowAbortReason.CERT_INVALID,
+                    summary=provider_summary,
+                )
+            if certificate.expires_on is not None:
+                cert_severity, days_until_expiry = _classify_cert_expiry(
+                    not_after=certificate.expires_on,
+                    today=today,
+                    warn_days=self._settings.aeat_cert_warn_days,
+                    critical_days=self._settings.aeat_cert_critical_days,
+                )
+                cert_details["cert_not_after"] = certificate.expires_on.isoformat()
+                cert_details["cert_severity"] = cert_severity.value
+                cert_details["cert_days_until_expiry"] = str(days_until_expiry)
+            else:
+                cert_severity = None
+                days_until_expiry = None
             if cert_severity in (
                 CertificateHealthSeverity.EXPIRED,
                 CertificateHealthSeverity.CRITICAL,
