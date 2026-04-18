@@ -31,7 +31,7 @@ def history_cmd(
         raise typer.Exit(code=2)
     head = snapshot_classification_state(transaction)
     entries = (*transaction.classification_history, head)
-    typer.echo(json.dumps([_entry_payload(entry) for entry in entries], indent=2, default=str))
+    typer.echo(json.dumps([_entry_payload(entry) for entry in entries], indent=2))
 
 
 def _entry_payload(entry: ClassificationHistoryEntry) -> dict[str, Any]:
