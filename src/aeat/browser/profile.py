@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,5 +27,3 @@ class Profile:
     def ensure_storage_dir(self) -> None:
         """Create the parent directory for the storage state if it doesn't exist."""
         self.storage_state_path.parent.mkdir(parents=True, exist_ok=True)
-        if not self.storage_state_path.exists():
-            self.storage_state_path.write_text(json.dumps({}))

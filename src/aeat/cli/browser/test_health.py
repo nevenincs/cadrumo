@@ -160,10 +160,14 @@ class _RaisingCreateContextSession:
 
     def __init__(self) -> None:
         self.create_context_calls = 0
+        self.close_calls = 0
 
     async def create_context(self) -> object:
         self.create_context_calls += 1
         raise RuntimeError("boom from create_context")
+
+    async def close(self) -> None:
+        self.close_calls += 1
 
     async def navigate(self, page: object, url: str) -> None:
         del page, url
@@ -175,9 +179,13 @@ class _RaisingNewPageSession:
 
     def __init__(self, context: _StubContext) -> None:
         self._context = context
+        self.close_calls = 0
 
     async def create_context(self) -> _StubContext:
         return self._context
+
+    async def close(self) -> None:
+        self.close_calls += 1
 
     async def navigate(self, page: object, url: str) -> None:
         del page, url
@@ -199,6 +207,7 @@ class TestRealProbeCleanup:
         with pytest.raises(RuntimeError, match="boom from create_context"):
             asyncio.run(probe.probe("https://sede.agenciatributaria.gob.es/"))
         assert session.create_context_calls == 1
+        assert session.close_calls == 1
         assert playwright.stop_calls == 1
 
     def test_playwright_stop_and_context_close_run_when_new_page_raises(self) -> None:
@@ -209,6 +218,7 @@ class TestRealProbeCleanup:
         with pytest.raises(RuntimeError, match="boom from new_page"):
             asyncio.run(probe.probe("https://sede.agenciatributaria.gob.es/"))
         assert context.close_calls == 1
+        assert session.close_calls == 1
         assert playwright.stop_calls == 1
 
 
