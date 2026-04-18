@@ -168,11 +168,18 @@ def set_classification(
     transaction = _require_transaction(catalogue, transaction_id)
     now = datetime.now(UTC)
     normalised_reason = reason.strip()
-    resolved_confidence = _resolve_confidence(classified_by=classified_by, confidence=confidence)
+    # Strip classified_by here so the idempotence signature below matches the
+    # value the model will store (the field validator also strips, so a raw
+    # "  manual  " parameter would otherwise force a spurious history entry).
+    normalised_classified_by = classified_by.strip()
+    resolved_confidence = _resolve_confidence(
+        classified_by=normalised_classified_by,
+        confidence=confidence,
+    )
     proposed_signature: _EntrySignature = (
         classification,
         business_pct,
-        classified_by,
+        normalised_classified_by,
         normalised_reason,
         resolved_confidence,
     )
@@ -194,7 +201,7 @@ def set_classification(
         "business_classification": classification,
         "business_pct": business_pct,
         "classified_at": now,
-        "classified_by": classified_by,
+        "classified_by": normalised_classified_by,
         "classification_reason": normalised_reason,
         "classification_confidence": resolved_confidence,
         "classification_history": history,

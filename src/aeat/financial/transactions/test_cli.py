@@ -562,3 +562,25 @@ def test_financial_txs_list_rejects_out_of_range_confidence_below(tmp_path: Path
 
     assert result.exit_code == 2
     assert "0..1 range" in result.output
+
+
+def test_financial_txs_list_empty_confidence_filter_guides_kent(tmp_path: Path) -> None:
+    """When a confidence filter matches nothing, Kent must hear WHY, not a bare silence.
+
+    A Kent whose catalogue contains only manual (confidence=1.0) or bare
+    (confidence=None) classifications gets empty results from any
+    sensible threshold. The message must tell him his manual
+    classifications default to 1.0 and that a rule engine / LLM is
+    what populates lower scores.
+    """
+    _write_catalogue(tmp_path)
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "list", "--confidence-below", "0.5"],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "manual classifications default to confidence 1.0" in result.output
+    assert "--confidence-below only surfaces results when a rule engine" in result.output
