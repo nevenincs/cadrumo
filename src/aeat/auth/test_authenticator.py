@@ -40,6 +40,7 @@ from . import (
     LoadedCertificate,
     extract_nif_from_subject,
     load_certificate,
+    select_provider,
 )
 from .certificate import CertificateBundle
 
@@ -676,3 +677,21 @@ def test_auth_provider_protocol_conformance() -> None:
 
     provider = _NullAuthProvider()
     assert isinstance(provider, AuthProvider)
+
+
+def test_select_provider_returns_certificate_provider(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+
+    provider = select_provider(AuthProviderKind.CERTIFICATE, settings=settings)
+
+    assert isinstance(provider, AeatAuthenticator)
+    assert isinstance(provider, AuthProvider)
+
+
+def test_select_provider_rejects_unimplemented_kind(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+
+    with pytest.raises(NotImplementedError, match="clave_permanente"):
+        select_provider(AuthProviderKind.CLAVE_PERMANENTE, settings=settings)
