@@ -42,6 +42,7 @@ from . import (
     load_certificate,
     select_provider,
 )
+from . import _authenticator as authenticator_module
 from .certificate import CertificateBundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
@@ -381,6 +382,54 @@ def test_describe_preserves_expired_certificate_severity(tmp_path: Path, monkeyp
     assert description.health_severity == "EXPIRED"
     assert description.days_until_expiry is not None
     assert description.days_until_expiry <= 0
+
+
+def test_describe_forwards_bundle_backend_and_friendly_name(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    monkeypatch.setenv("AEAT_CERTIFICATE_FRIENDLY_NAME", "Kent cert")
+    settings = _settings_for(bundle_path, monkeypatch)
+
+    captured: dict[str, object] = {}
+    real_certificate_health = authenticator_module.certificate_health
+
+    def _capture_certificate_health(
+        path: Path,
+        *,
+        password_env_var: str,
+        warn_days: int,
+        critical_days: int,
+        backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
+        friendly_name: str | None = None,
+        now: datetime | None = None,
+    ):
+        captured["path"] = path
+        captured["password_env_var"] = password_env_var
+        captured["warn_days"] = warn_days
+        captured["critical_days"] = critical_days
+        captured["backend"] = backend
+        captured["friendly_name"] = friendly_name
+        return real_certificate_health(
+            path,
+            password_env_var=password_env_var,
+            warn_days=warn_days,
+            critical_days=critical_days,
+            backend=backend,
+            friendly_name=friendly_name,
+            now=now,
+        )
+
+    monkeypatch.setattr(authenticator_module, "certificate_health", _capture_certificate_health)
+
+    description = AeatAuthenticator(settings).describe()
+
+    assert description.available is True
+    assert captured["path"] == bundle_path
+    assert captured["password_env_var"] == "AEAT_CERTIFICATE_PASSWORD_SECRET"
+    assert captured["backend"] == CertificateBackend.HTTPX_FALLBACK
+    assert captured["friendly_name"] == "Kent cert"
 
 
 @pytest.mark.asyncio

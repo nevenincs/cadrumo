@@ -723,6 +723,8 @@ class AeatAuthenticator:
                 password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
                 warn_days=self._settings.aeat_cert_warn_days,
                 critical_days=self._settings.aeat_cert_critical_days,
+                backend=self._settings.aeat_certificate_backend,
+                friendly_name=self._settings.aeat_certificate_friendly_name,
             )
             identity_nif: str | None = None
             try:
