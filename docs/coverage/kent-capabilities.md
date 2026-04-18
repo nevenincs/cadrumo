@@ -36,6 +36,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Import a past filing made outside the tool | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#233](https://github.com/wgergely/aeat/issues/233) |
 | File autoliquidación rectificativa | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#234](https://github.com/wgergely/aeat/issues/234) |
 | Amend any supported modelo via wizard | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#235](https://github.com/wgergely/aeat/issues/235) |
+| Fetch previously-filed casilla values from AEAT (wall 23) | ❌ | 🚧 | ready | ❌ | 0.1.0-pre-alpha | [#227](https://github.com/wgergely/aeat/issues/227) |
 | Multi-currency income + expenses end-to-end | ❌ | ❌ | ❌ | ❌ | 0.3.1 | [#103](https://github.com/wgergely/aeat/issues/103) |
 | Compute + export 111, 115, 190, 347 | ❌ | ❌ | ❌ | ❌ | 0.3.1 | TBD |
 | Prove exported numbers match AEAT's record | ❌ | ❌ | ❌ | ❌ | 0.4.0 | [#239](https://github.com/wgergely/aeat/issues/239) |

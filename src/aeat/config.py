@@ -502,6 +502,13 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "browser-traces",
         description="Directory where the status reader drops Playwright trace files",
     )
+    aeat_status_detail_url_template: str = Field(
+        default="/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}",
+        description=(
+            "URL path template for an expediente detail page. "
+            "Must contain '{expediente_id}'. Overrideable per campaign."
+        ),
+    )
 
     # ── Schema extraction (aeat.schema, #9) ────────────────────────────────
     aeat_schema_cache_dir: Path = Field(
@@ -574,6 +581,14 @@ class Settings(BaseSettings):
         """Treat blank env vars for optional secret fields as unset."""
         if isinstance(value, str) and value.strip() == "":
             return None
+        return value
+
+    @field_validator("aeat_status_detail_url_template")
+    @classmethod
+    def _detail_url_template_has_expediente_id(cls, value: str) -> str:
+        """Reject templates that omit the ``{expediente_id}`` placeholder."""
+        if "{expediente_id}" not in value:
+            raise ValueError("aeat_status_detail_url_template must contain '{expediente_id}'")
         return value
 
     @classmethod
