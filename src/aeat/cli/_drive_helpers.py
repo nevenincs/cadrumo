@@ -43,6 +43,22 @@ def guess_mime_type(path: Path) -> str:
     return guess or "application/octet-stream"
 
 
+def build_name_query(name: str) -> str:
+    """Compose a Drive ``q=`` filter for an exact-name lookup.
+
+    Returns a query that matches non-trashed files whose ``name``
+    field equals ``name`` exactly. Used by ``aeat drive fetch``
+    (#227 follow-up) to locate a single file by a stable filename.
+
+    Args:
+        name: Exact Drive file name to look up.
+
+    Returns:
+        Drive query string.
+    """
+    return f"name = '{escape_drive_query_literal(name)}' and trashed=false"
+
+
 def build_listing_query(folder_id: str | None) -> str:
     """Compose a Drive ``q=`` filter for listing inside an optional folder.
 
