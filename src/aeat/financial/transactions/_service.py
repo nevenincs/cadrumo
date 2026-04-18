@@ -122,6 +122,8 @@ def set_classification(
     *,
     classification: BusinessClassification,
     business_pct: Decimal | None = None,
+    category_id: str | None = None,
+    notes: str | None = None,
     classified_by: str,
     reason: str = "",
 ) -> TransactionCatalogue:
@@ -139,6 +141,8 @@ def set_classification(
         transaction_id: Stable transaction identifier to update.
         classification: New business-classification state.
         business_pct: Business-use percentage for ``MIXED`` classifications.
+        category_id: Optional category ID for the transaction.
+        notes: Optional notes or reasoning for the classification.
         classified_by: Classifier source string: ``auto``, ``manual``, or
             ``rule:<rule-id>``.
         reason: Free-text override justification; embedded in the
@@ -165,16 +169,23 @@ def set_classification(
     else:
         prior_snapshot = snapshot_classification_state(transaction, fallback_at=now)
         history = (*transaction.classification_history, prior_snapshot)
+
+    payload = {
+        **transaction.model_dump(mode="python"),
+        "business_classification": classification,
+        "business_pct": business_pct,
+        "classified_at": now,
+        "classified_by": classified_by,
+        "classification_reason": normalised_reason,
+        "classification_history": history,
+    }
+    if category_id is not None:
+        payload["category_id"] = category_id
+    if notes is not None:
+        payload["notes"] = notes
+
     updated_transaction = _validate_transaction_update(
-        {
-            **transaction.model_dump(mode="python"),
-            "business_classification": classification,
-            "business_pct": business_pct,
-            "classified_at": now,
-            "classified_by": classified_by,
-            "classification_reason": normalised_reason,
-            "classification_history": history,
-        },
+        payload,
         context=f"invalid classification update for transaction: {transaction_id}",
     )
     return _replace_transaction(catalogue, updated_transaction)
