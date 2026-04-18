@@ -6,8 +6,6 @@ sorted tuple of review items.
 
 from __future__ import annotations
 
-from typing import cast
-
 from ..config import Settings
 from ._adapters import (
     divergences_pending,
@@ -49,23 +47,16 @@ class ReviewQueue:
         Returns:
             A tuple sorted by ``(severity desc, since asc, item_id asc)``.
         """
-        items: list[ReviewItem] = []
-        # Each adapter returns a per-kind tuple; the discriminated
-        # union keeps every member assignable to ReviewItem.
-        items.extend(cast(list[ReviewItem], list(transactions_pending(settings))))
-        items.extend(cast(list[ReviewItem], list(invoices_pending(settings))))
-        items.extend(cast(list[ReviewItem], list(divergences_pending(settings))))
-        items.extend(cast(list[ReviewItem], list(drafts_pending(settings))))
-        items.extend(cast(list[ReviewItem], list(inbox_pending(settings))))
-
+        items: list[ReviewItem] = [
+            *transactions_pending(settings),
+            *invoices_pending(settings),
+            *divergences_pending(settings),
+            *drafts_pending(settings),
+            *inbox_pending(settings),
+        ]
         if kinds is not None:
             items = [item for item in items if item.kind in kinds]
         if modelo is not None:
             items = [item for item in items if item.modelo == modelo]
-
-        # state=ALL is currently identical to PENDING (no adapter emits
-        # non-pending items yet); preserved as a forward-compatible flag.
-        _ = state
-
         items.sort(key=lambda item: (-severity_rank(item.severity), item.since, item.item_id))
         return tuple(items)

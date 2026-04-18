@@ -22,7 +22,6 @@ from ...review import (
 )
 
 _CONSOLE = Console()
-_STDERR = Console(stderr=True)
 
 _SEVERITY_STYLE: dict[ReviewSeverity, str] = {
     ReviewSeverity.CRITICAL: "bold red",
