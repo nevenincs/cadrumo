@@ -76,15 +76,18 @@ The existing session record splits into a **provider-agnostic core** and a **pro
 
 ```python
 class AeatSession(BaseModel, frozen=True):
-    provider_kind: AuthProviderKind
     authenticated_at: datetime
     idle_deadline: datetime
     storage_state_path: Path | None
     identity_nif: str            # the taxpayer's NIF/NIE, obtained however
     provider_detail: CertificateSessionDetail | ClavePermanenteSessionDetail | ClaveMovilSessionDetail | ClavePinSessionDetail = Field(discriminator="kind")
+
+    @property
+    def provider_kind(self) -> AuthProviderKind:
+        return self.provider_detail.kind
 ```
 
-The cert-specific fields (`certificate_thumbprint`, `certificate_subject`, `handshake`) move to `CertificateSessionDetail`. Other providers have their own detail types.
+`provider_kind` is derived from the discriminated union rather than stored separately, eliminating the desync risk of two parallel fields. Cert-specific fields (`certificate_thumbprint`, `certificate_subject`, `handshake`) move to `CertificateSessionDetail`. Other providers have their own detail types.
 
 ### browser session generalisation
 
