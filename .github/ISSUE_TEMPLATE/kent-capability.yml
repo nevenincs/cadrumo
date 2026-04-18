@@ -1,0 +1,86 @@
+name: Kent capability
+description: Describe something Kent should be able to do that he can't yet
+title: "Kent can {capability}"
+labels: ["kent-journey"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every issue answers one question: **what can Kent do at the end of this issue that he could not do at the start?**
+
+        Kent is our target user — a Spanish autónomo who needs to file his tax returns. See [Kent journey audit](../blob/main/.vault/audit/2026-04-17-kent-ux-journey-audit.md).
+
+  - type: input
+    id: success-moment
+    attributes:
+      label: Kent success moment (one sentence)
+      description: One observable event a non-developer could verify.
+      placeholder: "Kent runs `aeat ...` and sees ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this matters for Kent
+      description: Which Kent wall does this close? Cite audit doc or prior issue if applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Kent-observable acceptance criteria
+      description: Bullet list. Each criterion a non-developer could verify.
+      placeholder: |
+        - Kent runs `aeat ...` and sees the table with columns ...
+        - Kent's output is in Spanish by default
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "priority:P0-blocker"
+        - "priority:P1-high"
+        - "priority:P2-medium"
+        - "priority:P3-low"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Effort
+      options:
+        - "effort:XS (<1h)"
+        - "effort:S (1-4h)"
+        - "effort:M (1d)"
+        - "effort:L (2-3d)"
+        - "effort:XL (1w+)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: parallel
+    attributes:
+      label: Parallel safety
+      options:
+        - "parallel-safe"
+        - "parallel-risky (touches shared module)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Issue numbers that block this, and issues this blocks.
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Design / implementation notes (optional)
+      description: Only if needs-design; otherwise keep brief.
