@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from playwright.async_api import (
+    Browser,
     BrowserContext,
     Page,
     Playwright,
@@ -64,11 +67,14 @@ class BrowserSession:
         self.settings = settings
         self.profile = profile
         self.evasion_strategy = evasion_strategy or PlaywrightStealthEvasion()
+        self._browser: Browser | None = None
+        self._lifecycle_lock = asyncio.Lock()
 
     async def create_context(
         self,
         *,
         provisioner: BrowserContextProvisioner | None = None,
+        storage_state_path: Path | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
@@ -82,69 +88,91 @@ class BrowserSession:
 
         Returns:
             A configured BrowserContext with evasion strategies
-            applied and — when ``cert`` is supplied — the cert wired
-            through at construction time.
+            applied and — when ``provisioner`` is supplied — the
+            provider-specific context kwargs wired through at
+            construction time.
 
         Raises:
             BrowserError: If the browser cannot be launched.
         """
-        logger.info("Launching browser with channel: %s", self.settings.aeat_browser_channel)
-        try:
-            # Prepare proxy settings
-            proxy: ProxySettings | None = None
-            if self.settings.aeat_proxy_url:
-                proxy = ProxySettings(server=self.settings.aeat_proxy_url)
-                if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret:
-                    proxy["username"] = self.settings.aeat_proxy_username
-                    proxy["password"] = self.settings.aeat_proxy_password_secret
-                if self.settings.aeat_proxy_bypass:
-                    proxy["bypass"] = self.settings.aeat_proxy_bypass
-
-            browser = await self.playwright.chromium.launch(
-                channel=self.settings.aeat_browser_channel,
-                headless=self.settings.aeat_browser_headless,
-                proxy=proxy,
-            )
-
-            self.profile.ensure_storage_dir()
-
-            context_kwargs: dict[str, Any] = {
-                "locale": self.profile.locale,
-                "timezone_id": self.profile.timezone_id,
-            }
-            if self.profile.user_agent:
-                context_kwargs["user_agent"] = self.profile.user_agent
-
-            # Playwright will fail if storage_state points to an empty string or invalid JSON
-            context_kwargs["storage_state"] = str(self.profile.storage_state_path)
-
-            if provisioner is not None:
-                context_kwargs.update(dict(provisioner.build_context_kwargs()))
-
+        async with self._lifecycle_lock:
+            if self._browser is not None:
+                raise BrowserError(
+                    "BrowserSession already owns a live browser; call close() before create_context() again"
+                )
+            logger.info("Launching browser with channel: %s", self.settings.aeat_browser_channel)
             try:
-                context = await browser.new_context(**context_kwargs)
-            finally:
-                # The client_certificates list carries the plaintext
-                # passphrase that build_client_certificates_kwarg
-                # materialised from SecretStr. Drop the reference as
-                # soon as Playwright has consumed it so the
-                # passphrase cannot be retained in a locals-capturing
-                # logger, an exception traceback, or a debugger
-                # `repr(locals())` call. See the live-write safety
-                # charter: secrets only live at the exact call
-                # boundary.
-                context_kwargs.pop("client_certificates", None)
+                proxy: ProxySettings | None = None
+                if self.settings.aeat_proxy_url:
+                    proxy = ProxySettings(server=self.settings.aeat_proxy_url)
+                    if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret:
+                        proxy["username"] = self.settings.aeat_proxy_username
+                        proxy["password"] = self.settings.aeat_proxy_password_secret
+                    if self.settings.aeat_proxy_bypass:
+                        proxy["bypass"] = self.settings.aeat_proxy_bypass
 
-            # Apply evasion strategy
-            await self.evasion_strategy.apply(context)
+                browser = await self.playwright.chromium.launch(
+                    channel=self.settings.aeat_browser_channel,
+                    headless=self.settings.aeat_browser_headless,
+                    proxy=proxy,
+                )
+                self._browser = browser
 
-            if provisioner is not None:
-                provisioner.annotate_context(context)
+                self.profile.ensure_storage_dir()
+                effective_storage_state_path = storage_state_path or self.profile.storage_state_path
 
-            return context
-        except Exception as e:
-            logger.error("Failed to create browser context: %s", e)
-            raise BrowserError(f"Failed to create browser context: {e}") from e
+                context_kwargs: dict[str, Any] = {
+                    "locale": self.profile.locale,
+                    "timezone_id": self.profile.timezone_id,
+                }
+                if self.profile.user_agent:
+                    context_kwargs["user_agent"] = self.profile.user_agent
+
+                if effective_storage_state_path.exists():
+                    context_kwargs["storage_state"] = str(effective_storage_state_path)
+
+                if provisioner is not None:
+                    context_kwargs.update(dict(provisioner.build_context_kwargs()))
+
+                try:
+                    context = await browser.new_context(**context_kwargs)
+                finally:
+                    # Keep provider materialised secrets live only for the
+                    # exact Playwright construction boundary.
+                    context_kwargs.pop("client_certificates", None)
+
+                await self.evasion_strategy.apply(context)
+
+                if provisioner is not None:
+                    provisioner.annotate_context(context)
+
+                return context
+            except BrowserError:
+                raise
+            except Exception as exc:
+                try:
+                    await self._close_browser_locked()
+                except BrowserError as cleanup_error:
+                    logger.warning(
+                        "Failed to close partially created browser after context failure: %s",
+                        cleanup_error,
+                    )
+                logger.error("Failed to create browser context: %s", exc)
+                raise BrowserError(f"Failed to create browser context: {exc}") from exc
+
+    async def close(self) -> None:
+        """Close the retained Playwright browser, if any.
+
+        Safe to call multiple times. The caller still owns any previously
+        returned :class:`BrowserContext` objects and should close them before
+        closing the session.
+
+        Raises:
+            BrowserError: If the retained browser cannot be closed. The
+                browser handle is preserved so the caller can retry cleanup.
+        """
+        async with self._lifecycle_lock:
+            await self._close_browser_locked()
 
     async def navigate(self, page: Page, url: str) -> Response | None:
         """Navigate ``page`` to ``url`` and probe the response health.
@@ -219,3 +247,15 @@ class BrowserSession:
             ),
             observed_at=datetime.now(tz=UTC),
         )
+
+    async def _close_browser_locked(self) -> None:
+        """Close the retained browser while the lifecycle lock is held."""
+        browser = self._browser
+        if browser is None:
+            return
+        try:
+            await browser.close()
+        except Exception as exc:
+            logger.warning("Failed to close retained browser: %s", exc)
+            raise BrowserError("Failed to close retained browser") from exc
+        self._browser = None
