@@ -163,16 +163,23 @@ def write_translate_draft(catalogue: CasillaCatalogue) -> Path:
 def _write_temp_catalogue(catalogue: CasillaCatalogue, *, suffix: str) -> Path:
     """Persist a catalogue to a named temporary file."""
     prefix = f"aeat-casillas-{catalogue.modelo.lower()}-{catalogue.period}-{suffix}-"
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding="utf-8",
-        suffix=".json",
-        prefix=prefix,
-        delete=False,
-    ) as handle:
-        json.dump(catalogue.model_dump(mode="json"), handle, indent=2, sort_keys=True, ensure_ascii=False)
-        handle.write("\n")
-        draft_path = Path(handle.name)
+    draft_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            suffix=".json",
+            prefix=prefix,
+            delete=False,
+        ) as handle:
+            draft_path = Path(handle.name)
+            json.dump(catalogue.model_dump(mode="json"), handle, indent=2, sort_keys=True, ensure_ascii=False)
+            handle.write("\n")
+    except Exception:
+        if draft_path is not None:
+            draft_path.unlink(missing_ok=True)
+        raise
+    assert draft_path is not None
     _log.info("wrote casilla draft file to %s", draft_path)
     return draft_path
 
