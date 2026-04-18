@@ -15,8 +15,8 @@ Project mandates for every contributor (human or agent). Read before any change.
 
 ## Live AEAT writes (non-negotiable)
 - DO NOT introduce a default-enabled AEAT write path.
-- DO NOT register `aeat submission submit` in the default CLI; it lives in a hidden `aeat live-submit` group gated behind env vars.
-- FOLLOW the 4-factor gate: `AEAT_ALLOW_LIVE_SUBMIT_OPT_IN=1` + `AEAT_LIVE_SUBMIT_ENABLED=1` + `--i-understand-this-is-real` + per-submission prompt.
+- DO NOT register `aeat submission submit` in the default CLI; it lives in a hidden `aeat live-submit` group gated behind a Pluggable Auth Provider (e.g., P12 Cert or Cl@ve).
+- FOLLOW the 4-factor gate: Explicit user configuration flag + Decoupled provider-specific write authorization gate + `--i-understand-this-is-real` + per-submission prompt.
 - Live submission is deferred to milestone 1.0.0.
 - DO keep `aeat submission preflight` and `aeat submission dry-run` — they are primary pre-export gates.
 - Must READ `.vault/adr/2026-04-17-export-first-adr.md` before touching submission code.
