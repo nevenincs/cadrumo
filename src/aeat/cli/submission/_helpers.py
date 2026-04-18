@@ -7,13 +7,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Any, cast
-
-from pydantic import ValidationError
+from typing import Any
 
 from ...config import Settings, load_settings
-from ...filing import FilingDraft, refresh_review_status
-from ...filing.testing import default_schema_provider
 from ...submission import (
     CasillaInputKind,
     CasillaRecord,
@@ -195,16 +191,5 @@ def build_engine(settings: Settings | None = None) -> SubmissionEngine:
 
 
 def load_draft(path: Path) -> FilingDraftLike:
-    """Load a draft JSON from disk, preferring the real filing model."""
-
-    try:
-        draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-    except ValidationError:
-        return _CliDraftLoader().load(path)
-    refreshed = refresh_review_status(
-        draft,
-        schema_provider=default_schema_provider(),
-    )
-    if refreshed != draft:
-        path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
-    return cast(FilingDraftLike, refreshed)
+    """Load a CLI-format draft JSON from disk."""
+    return _CliDraftLoader().load(path)

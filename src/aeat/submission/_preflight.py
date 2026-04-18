@@ -74,17 +74,10 @@ class Preflight:
             draft.period,
         )
 
-        status_value = _enum_value(draft.status)
-        if status_value == DraftStatus.APPROVAL_STALE.value:
+        if _enum_value(draft.status) != DraftStatus.READY_TO_SUBMIT.value:
             _logger.info("preflight gate-1 FAIL: draft status=%s", draft.status)
-            raise SubmissionPreflightError("draft approval is stale; review and re-approve before submission")
-        if status_value not in {
-            DraftStatus.READY_TO_SUBMIT.value,
-            DraftStatus.APPROVED.value,
-        }:
-            _logger.info("preflight gate-1 FAIL: draft status=%s", draft.status)
-            raise SubmissionPreflightError(f"draft not ready to submit (status={status_value})")
-        _logger.info("preflight gate-1 OK: draft status=%s", status_value)
+            raise SubmissionPreflightError(f"draft not ready to submit (status={_enum_value(draft.status)})")
+        _logger.info("preflight gate-1 OK: draft is READY_TO_SUBMIT")
 
         error_findings = tuple(f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == "ERROR")
         if error_findings:

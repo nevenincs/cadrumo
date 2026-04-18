@@ -16,10 +16,9 @@ related:
 
 Issue #230 requires Kent to approve a draft and later trust that the system will
 detect when that approval is no longer valid. The current branch persists filing
-drafts in JSON and gates submission on `READY_TO_SUBMIT`, but it does not
-persist review approval metadata and it has no deterministic way to invalidate
-an approval when the underlying transaction catalogue, category mappings, or
-schema/formula context change.
+drafts in JSON, but it does not persist review approval metadata and it has no
+deterministic way to invalidate an approval when the underlying transaction
+catalogue, category mappings, or schema/formula context change.
 
 ## Considerations
 
@@ -49,10 +48,9 @@ roadmap.
 
 Drafts are persisted as plain JSON files under `Settings.aeat_drafts_dir`, so
 the new review state must serialize cleanly without database migration support.
-Existing drafts on disk must keep loading after the change. Submission and
-workflow code currently assume `READY_TO_SUBMIT` at their boundaries, so the
-solution must avoid destabilizing non-review flows while still allowing submit
-and future export flows to reject stale approvals.
+Existing drafts on disk must keep loading after the change. The solution must
+avoid coupling the new review state to any live-write surface; stale detection
+belongs to review and draft inspection only on this branch.
 
 Tests must exercise real draft and transaction behaviour without mocks or
 tautological state manipulation.
@@ -109,17 +107,9 @@ approval token. It is not reused from the live-submit checksum.
 
 Existing JSON drafts receive no backfill. Missing approval fields deserialize as
 `None` and therefore behave as unapproved. They must never be auto-upgraded into
-an approved state by validation, load, or submission paths. Re-approving the
-draft writes a full approval record using the current basis and replaces any
-stale approval record.
-
-Submission and workflow boundary helpers are updated to understand the new
-status values without breaking the existing `READY_TO_SUBMIT` happy path for
-freshly built drafts. Boundary protocols must therefore recognise
-`APPROVED` / `APPROVAL_STALE`, and preflight-style checks must reject
-`APPROVAL_STALE` explicitly instead of treating it as an unknown status. The
-future export gate required by issue #201 will consume the same status contract
-and refuse any draft whose status is not `APPROVED`.
+an approved state by validation or load paths. Re-approving the draft writes a
+full approval record using the current basis and replaces any stale approval
+record.
 
 Verification must cover:
 
@@ -127,7 +117,8 @@ Verification must cover:
 - stale detection after transaction catalogue mutation
 - stale detection after category or schema/formula basis changes
 - preservation of existing non-approval validation flows
-- submission gate rejection for unapproved or stale drafts
+- filing/review CLI visibility of stale approvals without any write-path
+  integration
 
 ## Rationale
 
@@ -150,16 +141,16 @@ has not yet been rebuilt.
 ## Consequences
 
 The implementation must add stable normalization helpers for every approval-basis
-surface and thread review-state checks into CLI and submission helpers. This is
-more work than a timestamp flag, but it is the minimum needed for deterministic
-stale detection.
+surface and thread review-state checks into the filing/review CLI surfaces. This
+is more work than a timestamp flag, but it is the minimum needed for
+deterministic stale detection.
 
 Because stale state is derived from approval-basis mismatch, any command that
-surfaces or enforces approval validity must recompute the current basis before
-trusting a stored approval record. That adds predictable read-time work, but it
-avoids silent drift and keeps stale detection correct.
+surfaces approval validity must recompute the current basis before trusting a
+stored approval record. That adds predictable read-time work, but it avoids
+silent drift and keeps stale detection correct.
 
 Existing drafts remain usable without migration, but they will load as
-unapproved until explicitly approved on the new branch. Future review/export
-work can build on the same approval-basis model without redefining the filing
-identity model or changing `draft_id`.
+unapproved until explicitly approved on the new branch. Future review work can
+build on the same approval-basis model without redefining the filing identity
+model or changing `draft_id`.
