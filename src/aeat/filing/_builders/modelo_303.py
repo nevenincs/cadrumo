@@ -52,12 +52,12 @@ class Modelo303Builder(FilingBuilder):
         from decimal import Decimal
 
         from .. import build_draft
-        from ..testing import (
-            SyntheticProfile,
-            default_schema_provider,
+        from ..runtime import (
+            FilingOperatorProfile,
+            build_runtime_schema_provider,
         )
 
-        profile = SyntheticProfile(
+        profile = FilingOperatorProfile(
             tax_id="12345678Z",
             display_name="Demo S.L.",
             applicable_modelos=("303",),
@@ -70,7 +70,7 @@ class Modelo303Builder(FilingBuilder):
                 "07": Decimal("10000.00"),  # base gravada al 21%
                 "29": Decimal("200.00"),    # cuota deducible
             },
-            schema_provider=default_schema_provider(),
+            schema_provider=build_runtime_schema_provider(),
         )
         ```
     """

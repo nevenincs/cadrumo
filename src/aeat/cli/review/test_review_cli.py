@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...filing import FilingDraft, FilingDraftStatus, build_draft
-from ...filing.testing import SyntheticProfile, default_schema_provider
+from ...filing import FilingDraft, FilingDraftStatus, FilingOperatorProfile, build_draft
+from ...filing.runtime import build_runtime_schema_provider
 from ...financial import RawProvenance, RawTransaction, SourceFormat
 from ...financial.transactions import (
     BusinessClassification,
@@ -26,8 +26,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 _RUNNER = CliRunner()
 
 
-def _profile() -> SyntheticProfile:
-    return SyntheticProfile(
+def _profile() -> FilingOperatorProfile:
+    return FilingOperatorProfile(
         tax_id="00000000T",
         display_name="Kent",
         applicable_modelos=("130",),
@@ -40,7 +40,7 @@ def _write_draft(path: Path) -> Path:
         period="2026Q1",
         profile=_profile(),
         inputs={"01": 12500, "02": 3500, "05": 400, "06": 0},
-        schema_provider=default_schema_provider(),
+        schema_provider=build_runtime_schema_provider(),
     )
     target = path / f"130_2026Q1_{draft.draft_id}.json"
     target.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
