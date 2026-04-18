@@ -83,7 +83,7 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
             "produce, verify, and export filings locally, but AEAT-backed reads "
             "and live submit stay unavailable until auth is fixed."
         )
-    if description.kind is AuthProviderKind.CERTIFICATE:
+    if description.kind == AuthProviderKind.CERTIFICATE:
         return (
             "Certificate auth is ready. Kent keeps the same CLI filing flow for "
             "AEAT-backed reads, live submit remains separately gated, and future "
