@@ -93,8 +93,20 @@ from ._protocols import (
     FilingProfile,
     ModeloIdentity,
 )
+from ._review import (
+    FilingApprovalStaleReason,
+    approval_stale_reasons,
+    approve_draft,
+    compute_current_approval_basis,
+    compute_review_checksum,
+    describe_stale_reason,
+    refresh_review_status,
+    unapprove_draft,
+)
 from ._schema import (
+    APPROVAL_BASIS_VERSION,
     SCHEMA_VERSION_DEFAULT,
+    FilingApprovalBasis,
     FilingDraft,
     FilingDraftStatus,
     FilingFindingSeverity,
@@ -104,7 +116,7 @@ from ._schema import (
     FilingValueKind,
     compute_draft_id,
 )
-from ._validator import FilingValidator, apply_validation
+from ._validator import FilingValidator, apply_validation, derive_validation_status
 
 _logger = get_logger(__name__)
 
@@ -270,6 +282,7 @@ def utc_now() -> datetime:
 
 
 __all__ = [
+    "APPROVAL_BASIS_VERSION",
     "QUARTERLY_303_INPUT_KEY",
     "SCHEMA_VERSION_DEFAULT",
     "AmendmentKind",
@@ -284,6 +297,8 @@ __all__ = [
     "FilingAmendment",
     "FilingAmendmentError",
     "FilingAmendmentValidationError",
+    "FilingApprovalBasis",
+    "FilingApprovalStaleReason",
     "FilingBuilder",
     "FilingBuilderError",
     "FilingComputationError",
@@ -305,14 +320,22 @@ __all__ = [
     "ModeloCode",
     "ModeloIdentity",
     "apply_validation",
+    "approval_stale_reasons",
+    "approve_draft",
     "build_complementaria",
     "build_draft",
+    "compute_current_approval_basis",
     "compute_draft_id",
+    "compute_review_checksum",
+    "derive_validation_status",
+    "describe_stale_reason",
     "get_builder",
     "iter_findings",
     "list_amendments",
     "load_amendment",
     "make_amendment_id",
+    "refresh_review_status",
+    "unapprove_draft",
     "utc_now",
     "validate_draft",
 ]

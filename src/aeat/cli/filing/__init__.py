@@ -34,10 +34,13 @@ from ...filing import (
     FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
+    approval_stale_reasons,
     build_complementaria,
     build_draft,
+    describe_stale_reason,
     iter_findings,
     load_amendment,
+    refresh_review_status,
     validate_draft,
 )
 from ...filing.testing import (
@@ -118,6 +121,19 @@ def _load_draft(path: Path) -> FilingDraft:
         raise typer.BadParameter(f"invalid draft in {path}: {exc}") from exc
 
 
+def _refresh_persisted_draft(path: Path, draft: FilingDraft | None = None) -> FilingDraft:
+    """Refresh review status for a persisted draft and rewrite it when needed."""
+
+    loaded = draft or _load_draft(path)
+    refreshed = refresh_review_status(
+        loaded,
+        schema_provider=default_schema_provider(),
+    )
+    if refreshed != loaded:
+        path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
+    return refreshed
+
+
 def _save_draft(draft: FilingDraft) -> Path:
     """Write a draft to the configured drafts directory."""
     target = _drafts_dir() / _draft_filename(draft)
@@ -195,6 +211,22 @@ def _render_draft(draft: FilingDraft, *, findings_only: bool = False) -> None:
         header.add_row("schema_version", draft.schema_version)
         header.add_row("created_at", draft.created_at.isoformat())
         header.add_row("updated_at", draft.updated_at.isoformat())
+        if draft.approved_at is not None:
+            header.add_row("approved_at", draft.approved_at.isoformat())
+        if draft.approved_by is not None:
+            header.add_row("approved_by", draft.approved_by)
+        if draft.review_checksum is not None:
+            header.add_row("review_checksum", draft.review_checksum)
+        if draft.status is FilingDraftStatus.APPROVAL_STALE:
+            reasons = approval_stale_reasons(
+                draft,
+                schema_provider=default_schema_provider(),
+            )
+            if reasons:
+                header.add_row(
+                    "stale_reason",
+                    ", ".join(describe_stale_reason(reason) for reason in reasons),
+                )
         _console.print(header)
 
         values_table = Table(title="Casillas", show_lines=False)
@@ -281,6 +313,7 @@ def validate(
         draft,
         schema_provider=default_schema_provider(),
     )
+    refreshed = _refresh_persisted_draft(draft_path, refreshed)
     draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
     typer.echo(f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})")
     _render_draft(refreshed)
@@ -295,7 +328,7 @@ def show(
     ] = False,
 ) -> None:
     """Pretty-print a draft to the console."""
-    draft = _load_draft(draft_path)
+    draft = _refresh_persisted_draft(draft_path)
     _render_draft(draft, findings_only=findings_only)
     if findings_only:
         for finding in iter_findings(draft, severity_at_least="INFO"):
@@ -329,6 +362,7 @@ def list_drafts(
     table.add_column("modelo")
     table.add_column("period")
     table.add_column("status")
+    table.add_column("approved_by")
     table.add_column("path")
 
     drafts_dir = _drafts_dir()
@@ -338,6 +372,7 @@ def list_drafts(
         except FilingDraftError:
             _logger.warning("Skipping invalid draft file: %s", path)
             continue
+        draft = _refresh_persisted_draft(path, draft)
         if modelo is not None and draft.modelo != modelo:
             continue
         if target_status is not None and draft.status is not target_status:
@@ -347,6 +382,7 @@ def list_drafts(
             draft.modelo,
             draft.period,
             draft.status.value,
+            draft.approved_by or "-",
             str(path),
         )
     _console.print(table)
