@@ -314,6 +314,26 @@ def test_divergences_pending_severity_mapping(
     assert isinstance(items[0], DivergenceReviewItem)
 
 
+def test_divergences_pending_skips_non_pending_records(tmp_path: Path) -> None:
+    """Records that already transitioned out of PENDING must not appear in the queue."""
+    from ..sync import ResolutionState
+
+    settings = _build_settings(tmp_path)
+    repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
+    pending = _divergence_record(classification=DivergenceClassification.BREAKING)
+    repo.save(pending)
+    resolved = pending.model_copy(
+        update={
+            "record_id": uuid.uuid4().hex,
+            "resolution_state": ResolutionState.HUMAN_APPROVED,
+        }
+    )
+    repo.save(resolved)
+    items = divergences_pending(settings)
+    assert len(items) == 1
+    assert items[0].source.record_id == pending.record_id
+
+
 # ── drafts adapter ────────────────────────────────────────────────
 
 
@@ -374,15 +394,33 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
             code="casilla-required-missing",
             message=_summary("missing"),
         ),
+        FilingValidationFinding(
+            casilla_id="05",
+            severity=FilingFindingSeverity.INFO,
+            code="casilla-info-note",
+            message=_summary("info"),
+        ),
     )
     _write_draft(settings, _draft(draft_id="d1", findings=findings))
     items = drafts_pending(settings)
-    assert len(items) == 2
+    assert len(items) == 3
     severities = {item.severity for item in items}
-    assert severities == {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH}
+    assert severities == {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH, ReviewSeverity.INFO}
     for item in items:
         assert isinstance(item, FindingReviewItem)
         assert item.draft_id == "d1"
+
+
+def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> None:
+    """`status=DRAFT` with no findings must emit the same placeholder as VALIDATED."""
+    settings = _build_settings(tmp_path)
+    _write_draft(settings, _draft(draft_id="d_draft", status=FilingDraftStatus.DRAFT))
+    items = drafts_pending(settings)
+    assert len(items) == 1
+    assert items[0].source is None
+    assert items[0].severity is ReviewSeverity.NORMAL
+    summary_en = items[0].summary.get("en", "")
+    assert "DRAFT" in summary_en
 
 
 def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
