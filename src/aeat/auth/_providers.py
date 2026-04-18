@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-CERTIFICATE_CONTEXT_MARKER = "_aeat_certificate_thumbprint"
+CERTIFICATE_CONTEXT_MARKER = "aeat_certificate_context_marker"
 
 
 class AuthProviderKind(StrEnum):

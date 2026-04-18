@@ -3,7 +3,7 @@
 Zero mocks / patches / fakes (global ban) — we exercise the
 authenticator with a real ``LoadedCertificate`` (generated at
 runtime via :mod:`cryptography`) and a stand-in browser session
-factory that honours the ``_aeat_certificate_thumbprint`` marker
+factory that honours the ``CERTIFICATE_CONTEXT_MARKER`` marker
 contract.
 """
 
@@ -22,6 +22,7 @@ from cryptography.x509.oid import NameOID
 
 from . import (
     AEAT_SESSION_IDLE_TTL,
+    CERTIFICATE_CONTEXT_MARKER,
     AeatAuthenticator,
     AeatLoginAssertion,
     AeatLoginAssertionError,
@@ -222,7 +223,7 @@ class _FakeBrowserContext:
     """Stand-in Playwright context that honours the marker contract."""
 
     def __init__(self, cert: LoadedCertificate, recognised: bool = True) -> None:
-        self._aeat_certificate_thumbprint = cert.sha256_thumbprint
+        setattr(self, CERTIFICATE_CONTEXT_MARKER, cert.sha256_thumbprint)
         self._recognised = recognised
         self._pages: list[_FakePage] = []
         self.closed = False
@@ -625,8 +626,6 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatc
             return None
 
     class _SuspendingContext:
-        _aeat_certificate_thumbprint: str = ""
-
         async def new_page(self) -> _SuspendingPage:
             return _SuspendingPage()
 
@@ -635,7 +634,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatc
 
     cert = authenticator.load_certificate()
     ctx = _SuspendingContext()
-    ctx._aeat_certificate_thumbprint = cert.sha256_thumbprint
+    setattr(ctx, CERTIFICATE_CONTEXT_MARKER, cert.sha256_thumbprint)
     authenticator._context = cast(BrowserContextLike, ctx)
 
     now = datetime.now(UTC)
@@ -663,7 +662,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatc
     assertion = await asyncio.wait_for(verify_task, timeout=5.0)
     await asyncio.wait_for(close_task, timeout=5.0)
     # verify_login saw a live context and a successful goto.
-    assert assertion.certificate_recognised is True
+    assert assertion.assertion_detail.certificate_recognised is True
     # close() cleanly reset state.
     assert authenticator._closing is False
     assert authenticator._context is None

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from playwright.async_api import BrowserContext
 
+from ..auth import CERTIFICATE_CONTEXT_MARKER
 from ..config import PROJECT_ROOT, Settings
 from ..errors import SiteHealthError
 from ..status import SiteHealthState
@@ -81,7 +82,7 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert context.kwargs["timezone_id"] == "Europe/Madrid"  # type: ignore
     assert str(tmp_path / "state.json") in context.kwargs["storage_state"]  # type: ignore
     # No cert supplied → marker must NOT be stamped on the context.
-    assert not hasattr(context, "_aeat_certificate_thumbprint")
+    assert not hasattr(context, CERTIFICATE_CONTEXT_MARKER)
 
 
 @pytest.mark.asyncio
@@ -103,7 +104,6 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         CertificateContextProvisioner,
         load_certificate,
     )
-    from .session import CERTIFICATE_THUMBPRINT_MARKER
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     subject = issuer = x509.Name(
@@ -171,7 +171,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     # Playwright can consume it, then the caller hands the list
     # straight to new_context and does not persist the dict.
     assert cc[0]["passphrase"] == "pw"  # noqa: S105 — test fixture
-    marker = getattr(context, CERTIFICATE_THUMBPRINT_MARKER, None)
+    marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
     assert marker == loaded.sha256_thumbprint
 
 

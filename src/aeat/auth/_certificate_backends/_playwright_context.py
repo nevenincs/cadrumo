@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_MARKER_ATTR = "_aeat_certificate_thumbprint"
+_MARKER_ATTR = "aeat_certificate_context_marker"
 
 
 def build_client_certificates_kwarg(
@@ -75,11 +75,10 @@ class PlaywrightContextBackend(_CertBackend):
         """Verify the context was constructed with this cert.
 
         The browser session layer is expected to tag the constructed
-        :class:`playwright.async_api.BrowserContext` with an attribute
-        named ``_aeat_certificate_thumbprint`` matching
-        ``cert.sha256_thumbprint``. If the marker is absent, we raise
-        :class:`CertificateError` pointing the operator at
-        :func:`build_client_certificates_kwarg`.
+        :class:`playwright.async_api.BrowserContext` with a marker
+        attribute matching ``cert.sha256_thumbprint``. If the marker
+        is absent, we raise :class:`CertificateError` pointing the
+        operator at :func:`build_client_certificates_kwarg`.
         """
         from ..certificate import CertificateError
 

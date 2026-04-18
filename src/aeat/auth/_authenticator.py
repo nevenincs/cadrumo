@@ -21,9 +21,9 @@ Design notes — see
   operator surface is kept narrow, and AEAT's observed idle window
   is ~20 minutes (the extra 2 minutes is safety margin).
 * ``authenticate()`` accepts an optional injectable browser session
-  factory. Unit tests pass a fake factory that produces a stand-in
-  context honouring the ``_aeat_certificate_thumbprint`` marker
-  contract. This lets the whole authenticator exercise run under
+  factory. Unit tests pass a stand-in factory that produces a
+  browser context tagged with ``CERTIFICATE_CONTEXT_MARKER``. This
+  lets the whole authenticator exercise run under
   ``@pytest.mark.unit`` without importing Playwright.
 * ``reauthenticate()`` is single-shot. Callers cap retries at ONE
   per downstream call-site; a second consecutive failure raises
@@ -38,9 +38,9 @@ import os
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..logging import get_logger
 from ._providers import (
@@ -94,30 +94,10 @@ AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = 30_000
 class AeatLoginAssertion(BaseModel):
     """Structured outcome of a single live AEAT verification attempt.
 
-    The record captures the three independent signals the
-    authenticator collects during ``verify_login()`` — the TLS
-    handshake, the post-auth portal reachability, and the
-    cert-derived identity — plus a composite ``is_valid`` predicate
-    downstream code should read.
-
-    Attributes:
-        target_url: Navigation target used for the verification.
-        is_valid: Composite predicate:
-            ``handshake_success AND certificate_recognised AND
-            parsed_nif is not None``.
-        handshake_success: TLS handshake leg.
-        certificate_recognised: Playwright navigation returned a
-            non-challenge response (HTTP 2xx / 3xx) with the cert
-            supplied.
-        parsed_nif: NIF / NIE extracted from the certificate subject
-            (authoritative — never scraped from AEAT HTML).
-        parsed_subject: RFC-4514 subject DN of the cert.
-        status_code: HTTP status of the navigation probe.
-        elapsed_ms: Wall-clock elapsed time for the full
-            verification (handshake + navigation).
-        attempted_at: Timezone-aware UTC timestamp of the attempt.
-        error_message: Human-readable failure reason when the
-            assertion is not valid.
+    The record captures the navigation target, the provider kind,
+    the extracted identity NIF, the status code, the elapsed time,
+    the verification timestamp, and the provider-specific detail
+    payload returned by :meth:`verify_login`.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -132,77 +112,14 @@ class AeatLoginAssertion(BaseModel):
     error_message: str | None = None
     assertion_detail: AuthLoginAssertionDetail = Field(discriminator="kind")
 
-    @model_validator(mode="before")
-    @classmethod
-    def _upgrade_legacy_certificate_shape(cls, value: Any) -> Any:
-        if not isinstance(value, dict):
-            return value
-        if "assertion_detail" in value or "handshake_success" not in value:
-            return value
-        data = dict(value)
-        data["provider_kind"] = AuthProviderKind.CERTIFICATE
-        data["identity_nif"] = data.pop("parsed_nif", None)
-        data["assertion_detail"] = {
-            "kind": AuthProviderKind.CERTIFICATE,
-            "handshake_success": data.pop("handshake_success"),
-            "certificate_recognised": data.pop("certificate_recognised"),
-            "parsed_subject": data.pop("parsed_subject", None),
-        }
-        return data
-
-    @property
-    def handshake_success(self) -> bool | None:
-        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
-            return self.assertion_detail.handshake_success
-        return None
-
-    @property
-    def certificate_recognised(self) -> bool | None:
-        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
-            return self.assertion_detail.certificate_recognised
-        return None
-
-    @property
-    def parsed_nif(self) -> str | None:
-        return self.identity_nif
-
-    @property
-    def parsed_subject(self) -> str | None:
-        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
-            return self.assertion_detail.parsed_subject
-        return None
-
 
 class AeatSession(BaseModel):
     """Record describing an authenticated live AEAT session.
 
-    The session carries **no secret material** — every field is
-    safe to log, serialise into audit trails, and surface via CLI
-    diagnostics. Secrets (passphrase, raw PKCS#12 bytes, private-key
-    handle) live on :class:`LoadedCertificate` via
-    :class:`pydantic.PrivateAttr` and never bleed into this record.
-
-    Attributes:
-        certificate_thumbprint: SHA-256 hex of the cert's DER
-            encoding. Ties the session to a specific PKCS#12
-            bundle; the browser context's
-            ``_aeat_certificate_thumbprint`` marker attribute is
-            set to the same value.
-        certificate_subject: RFC-4514 subject DN of the cert.
-        certificate_nif: DNI / NIE extracted from the subject via
-            :func:`extract_nif_from_subject`.
-        authenticated_at: Timezone-aware UTC timestamp of the
-            successful ``authenticate()`` call that produced this
-            record.
-        idle_deadline: Timezone-aware UTC timestamp beyond which the
-            session MUST be reauthenticated. Derived as
-            ``authenticated_at + AEAT_SESSION_IDLE_TTL``.
-        storage_state_path: Playwright ``storage_state`` JSON
-            location (cookies + localStorage), or ``None`` if the
-            caller chose not to persist.
-        handshake: Embedded :class:`HandshakeResult` from the TLS
-            leg of the authentication. Kept so callers can inspect
-            ``elapsed_ms`` etc. without re-running the probe.
+    The session carries no secret material. The safe-to-log fields
+    are the provider kind, the authenticated timestamp, the idle
+    deadline, the optional storage-state path, the extracted
+    identity NIF, and the provider-specific detail payload.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -213,46 +130,6 @@ class AeatSession(BaseModel):
     storage_state_path: Path | None
     identity_nif: str = Field(min_length=1)
     provider_detail: AuthSessionDetail = Field(discriminator="kind")
-
-    @model_validator(mode="before")
-    @classmethod
-    def _upgrade_legacy_certificate_shape(cls, value: Any) -> Any:
-        if not isinstance(value, dict):
-            return value
-        if "provider_detail" in value or "certificate_thumbprint" not in value:
-            return value
-        data = dict(value)
-        data["provider_kind"] = AuthProviderKind.CERTIFICATE
-        data["identity_nif"] = data.pop("certificate_nif")
-        data["provider_detail"] = {
-            "kind": AuthProviderKind.CERTIFICATE,
-            "certificate_thumbprint": data.pop("certificate_thumbprint"),
-            "certificate_subject": data.pop("certificate_subject"),
-            "handshake": data.pop("handshake"),
-        }
-        return data
-
-    @property
-    def certificate_thumbprint(self) -> str | None:
-        if isinstance(self.provider_detail, CertificateSessionDetail):
-            return self.provider_detail.certificate_thumbprint
-        return None
-
-    @property
-    def certificate_subject(self) -> str | None:
-        if isinstance(self.provider_detail, CertificateSessionDetail):
-            return self.provider_detail.certificate_subject
-        return None
-
-    @property
-    def certificate_nif(self) -> str:
-        return self.identity_nif
-
-    @property
-    def handshake(self) -> HandshakeResult | None:
-        if isinstance(self.provider_detail, CertificateSessionDetail):
-            return self.provider_detail.handshake
-        return None
 
     def is_stale(self, now: datetime | None = None) -> bool:
         """Return True when the session's idle deadline has elapsed."""
@@ -456,10 +333,9 @@ class AeatAuthenticator:
         3. Construct a Playwright context via the injected (or
            lazily-constructed) browser session factory, passing the
            cert through to ``browser.new_context(client_certificates=...)``
-           via the session's ``cert`` kwarg. The resulting context
-           is tagged with the ``_aeat_certificate_thumbprint``
-           marker so :func:`preload_into_browser_context` validation
-           passes.
+           via the session's cert kwarg. The resulting context is
+           tagged with ``CERTIFICATE_CONTEXT_MARKER`` so browser
+           validation passes.
         4. Compose and return the frozen session record.
 
         Raises:
@@ -531,11 +407,12 @@ class AeatAuthenticator:
                     handshake=handshake,
                 ),
             )
+            provider_detail = session.provider_detail
             self._active_session = session
             log.info(
                 "AeatAuthenticator: authenticated nif=%s thumbprint=%s",
-                session.certificate_nif,
-                session.certificate_thumbprint,
+                session.identity_nif,
+                provider_detail.certificate_thumbprint,
             )
             return session
 
@@ -569,7 +446,7 @@ class AeatAuthenticator:
         """
         log.info(
             "AeatAuthenticator: reauthenticate old_nif=%s old_authenticated_at=%s",
-            session.certificate_nif,
+            session.identity_nif,
             session.authenticated_at.isoformat(),
         )
         # Delegate teardown to close() (itself lock-protected and
@@ -588,16 +465,9 @@ class AeatAuthenticator:
     ) -> AeatLoginAssertion:
         """Navigate the authenticated context to ``target_url``.
 
-        The assertion record captures three independent signals:
-
-        * ``handshake_success`` — the TLS handshake attached to the
-          session completed successfully.
-        * ``certificate_recognised`` — the post-auth navigation
-          returned a non-challenge HTTP response.
-        * ``parsed_nif`` — the NIF / NIE extracted from the
-          certificate subject (always populated when the session
-          carries a cert; ``None`` only in exceptional structural
-          failures).
+        The assertion record captures the TLS handshake outcome, the
+        post-auth navigation response, and the provider-specific
+        verification detail payload.
 
         Args:
             session: The :class:`AeatSession` returned from
@@ -620,8 +490,7 @@ class AeatAuthenticator:
         """
         if session.is_stale():
             raise AeatSessionExpiredError(
-                f"session for nif={session.certificate_nif} is stale "
-                f"(idle_deadline={session.idle_deadline.isoformat()})"
+                f"session for nif={session.identity_nif} is stale (idle_deadline={session.idle_deadline.isoformat()})"
             )
 
         # Snapshot-and-register the context under the lock so that
@@ -647,6 +516,9 @@ class AeatAuthenticator:
         certificate_recognised = False
         error_message: str | None = None
         page: BrowserPageLike | None = None
+        provider_detail = session.provider_detail
+        if not isinstance(provider_detail, CertificateSessionDetail):
+            raise AeatLoginAssertionError("certificate authenticator received a non-certificate session detail")
         try:
             page = await context.new_page()
             response = await page.goto(target, timeout=self._navigation_timeout_ms)
@@ -666,7 +538,7 @@ class AeatAuthenticator:
                     self._inflight_drained.set()
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
-        handshake = session.handshake
+        handshake = provider_detail.handshake
         handshake_success = bool(handshake.success) if handshake is not None else False
         is_valid = handshake_success and certificate_recognised and bool(session.identity_nif)
         return AeatLoginAssertion(
@@ -681,7 +553,7 @@ class AeatAuthenticator:
             assertion_detail=CertificateLoginAssertionDetail(
                 handshake_success=handshake_success,
                 certificate_recognised=certificate_recognised,
-                parsed_subject=session.certificate_subject,
+                parsed_subject=provider_detail.certificate_subject,
             ),
         )
 
