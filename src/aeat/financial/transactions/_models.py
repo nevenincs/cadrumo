@@ -4,18 +4,20 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
 
+from ...logging import get_logger
 from ..providers import RawTransaction
-from ._enums import BusinessClassification, TransactionDirection
+from ._enums import LEGACY_UNCLASSIFIED_ALIAS, BusinessClassification, TransactionDirection
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_LOGGER = get_logger(__name__)
 
 
 def derive_transaction_id(raw: RawTransaction) -> str:
@@ -60,21 +62,138 @@ def _parse_datetime(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
+def _coerce_classification_state(raw: str) -> BusinessClassification:
+    """Coerce a string classification value, normalising the legacy alias.
+
+    Pre-#237 catalogues stored the literal ``"UNCLASSIFIED"``. New
+    enum members do not include that value, so the loader normalises
+    it to ``NOT_YET_PROCESSED`` and logs one INFO line per process so
+    Kent knows to re-save his catalogue.
+    """
+    if raw == LEGACY_UNCLASSIFIED_ALIAS:
+        if not Transaction._legacy_alias_logged:
+            _LOGGER.info(
+                "legacy classification value 'UNCLASSIFIED' aliased to 'NOT_YET_PROCESSED' "
+                "(issue #237). Re-save the catalogue to migrate."
+            )
+            Transaction._legacy_alias_logged = True
+        return BusinessClassification.NOT_YET_PROCESSED
+    return BusinessClassification(raw)
+
+
+def _coerce_history(raw: Any) -> tuple[Any, ...]:
+    """Freeze an inbound history sequence into a tuple; leave items for pydantic to validate."""
+    if isinstance(raw, tuple):
+        return raw
+    if isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
+        return tuple(raw)
+    raise ValueError("classification_history must be a sequence of history entries")
+
+
+class ClassificationHistoryEntry(BaseModel):
+    """One frozen record in a transaction's classification chain.
+
+    Reserved `confidence` and `provenance` slots anticipate issue #236
+    (decision confidence and `DecisionProvenance`). Today both default to
+    ``None``; future writers populate them without a schema bump because
+    the field list is stable.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    business_classification: BusinessClassification
+    business_pct: Decimal | None = None
+    classified_at: datetime
+    classified_by: str = Field(min_length=1)
+    reason: str = ""
+    confidence: Decimal | None = None
+    # Placeholder for the future ``DecisionProvenance`` pydantic record added
+    # by issue #236. Because this model declares ``extra="forbid"``, the next
+    # ADR must widen this type via a compatible union (``dict[str, Any] |
+    # DecisionProvenance | None``) rather than swap it, so payloads written
+    # under #237 keep validating once #236 lands.
+    provenance: dict[str, Any] | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_inbound(cls, data: Any) -> Any:
+        """Parse JSON-mode strings back into strict Python types on load."""
+        if isinstance(data, cls):
+            return data
+        if not isinstance(data, Mapping):
+            return data
+        payload = dict(data)
+        raw_state = payload.get("business_classification")
+        if isinstance(raw_state, str):
+            payload["business_classification"] = _coerce_classification_state(raw_state)
+        if isinstance(payload.get("business_pct"), str):
+            payload["business_pct"] = Decimal(payload["business_pct"])
+        if isinstance(payload.get("classified_at"), str):
+            payload["classified_at"] = _parse_datetime(payload["classified_at"])
+        if isinstance(payload.get("confidence"), str):
+            payload["confidence"] = Decimal(payload["confidence"])
+        return payload
+
+    @field_validator("classified_at")
+    @classmethod
+    def _require_aware_timestamp(cls, value: datetime) -> datetime:
+        """Reject naive classification timestamps."""
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("classified_at must be timezone-aware")
+        return value
+
+    @field_validator("classified_by")
+    @classmethod
+    def _validate_classified_by(cls, value: str) -> str:
+        """Restrict ``classified_by`` to the approved shapes."""
+        normalized = value.strip()
+        if normalized in {"auto", "manual"}:
+            return normalized
+        if normalized.startswith("rule:") and normalized.removeprefix("rule:").strip():
+            return normalized
+        raise ValueError("classified_by must be 'auto', 'manual', or 'rule:<rule-id>'")
+
+    @field_validator("reason")
+    @classmethod
+    def _normalize_reason(cls, value: str) -> str:
+        """Trim free-text reasons while allowing the empty string."""
+        return value.strip()
+
+    @model_validator(mode="after")
+    def _validate_business_pct(self) -> Self:
+        """Enforce the classification/business percentage coupling for a history entry."""
+        if self.business_classification is BusinessClassification.MIXED:
+            if self.business_pct is None:
+                raise ValueError("business_pct is required when classification is MIXED")
+            if not Decimal("0") <= self.business_pct <= Decimal("1"):
+                raise ValueError("business_pct must be within 0..1 when classification is MIXED")
+            return self
+        if self.business_pct is not None:
+            raise ValueError("business_pct must be None unless classification is MIXED")
+        return self
+
+
 class Transaction(BaseModel):
     """Immutable transaction wrapper that preserves raw provenance verbatim."""
 
     model_config = _STRICT_FROZEN
 
+    # Process-local flag used to rate-limit the legacy-alias INFO log so a
+    # large catalogue load does not spam one line per transaction.
+    _legacy_alias_logged: ClassVar[bool] = False
+
     transaction_id: str = Field(min_length=64, max_length=64)
     raw: RawTransaction
     direction: TransactionDirection
-    business_classification: BusinessClassification = BusinessClassification.UNCLASSIFIED
+    business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
     business_pct: Decimal | None = None
     invoice_id: str | None = None
     category_id: str | None = None
     notes: str = ""
     classified_at: datetime | None = None
     classified_by: str = Field(default="auto", min_length=1)
+    classification_reason: str = ""
+    classification_history: tuple[ClassificationHistoryEntry, ...] = ()
 
     @model_validator(mode="before")
     @classmethod
@@ -102,12 +221,16 @@ class Transaction(BaseModel):
         payload["raw"] = raw_transaction
         if isinstance(payload.get("direction"), str):
             payload["direction"] = TransactionDirection(payload["direction"])
-        if isinstance(payload.get("business_classification"), str):
-            payload["business_classification"] = BusinessClassification(payload["business_classification"])
+        raw_state = payload.get("business_classification")
+        if isinstance(raw_state, str):
+            payload["business_classification"] = _coerce_classification_state(raw_state)
         if isinstance(payload.get("business_pct"), str):
             payload["business_pct"] = Decimal(payload["business_pct"])
         if isinstance(payload.get("classified_at"), str):
             payload["classified_at"] = _parse_datetime(payload["classified_at"])
+        history = payload.get("classification_history")
+        if history is not None:
+            payload["classification_history"] = _coerce_history(history)
         payload["transaction_id"] = derived
         return payload
 
@@ -122,10 +245,10 @@ class Transaction(BaseModel):
             raise ValueError("foreign-key identifiers must not be blank")
         return trimmed
 
-    @field_validator("notes")
+    @field_validator("notes", "classification_reason")
     @classmethod
-    def _normalize_notes(cls, value: str) -> str:
-        """Trim stored notes while allowing the empty string."""
+    def _normalize_text(cls, value: str) -> str:
+        """Trim free-text fields while allowing the empty string."""
         return value.strip()
 
     @field_validator("classified_by")
