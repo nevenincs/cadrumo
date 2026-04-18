@@ -467,6 +467,51 @@ playwright-doctor:
 gsuite-oauth-client:
     uv run aeat oauth-client init
 
+# Fetch the AEAT PKCS#12 certificate from Google Drive into credentials/.
+# Requires `just gcloud-auth` to have been run (Drive scope on ADC).
+# Usage: `just aeat-cert-fetch WOOTSCH_GERGELY_DOMOKOS_Y4113523X.p12`.
+# After it succeeds, edit env/.env to set:
+#   AEAT_LIVE_TESTS_ENABLED=1
+#   AEAT_CERTIFICATE_PATH=<absolute path printed by this recipe>
+#   AEAT_CERTIFICATE_PASSWORD_SECRET=<your cert passphrase>
+[unix]
+aeat-cert-fetch NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f env/.env ]; then
+        echo "env/.env not found — run 'just env-setup' first." >&2
+        exit 1
+    fi
+    mkdir -p credentials
+    uv run aeat drive fetch "{{NAME}}" --out "credentials/{{NAME}}"
+    echo ""
+    echo "next steps:"
+    echo "  1. Edit env/.env and set AEAT_CERTIFICATE_PATH=$(pwd)/credentials/{{NAME}}"
+    echo "  2. Set AEAT_CERTIFICATE_PASSWORD_SECRET=<passphrase>"
+    echo "  3. Set AEAT_LIVE_TESTS_ENABLED=1"
+    echo "  4. Run 'just test-live-read' to verify the live AEAT read path."
+
+[windows]
+aeat-cert-fetch NAME:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (-not (Test-Path 'env/.env')) {
+        Write-Error "env/.env not found - run 'just env-setup' first."
+        exit 1
+    }
+    if (-not (Test-Path 'credentials')) {
+        New-Item -ItemType Directory -Path 'credentials' | Out-Null
+    }
+    uv run aeat drive fetch "{{NAME}}" --out "credentials/{{NAME}}"
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $abs = (Resolve-Path "credentials/{{NAME}}").Path
+    Write-Host ""
+    Write-Host "next steps:"
+    Write-Host "  1. Edit env/.env and set AEAT_CERTIFICATE_PATH=$abs"
+    Write-Host "  2. Set AEAT_CERTIFICATE_PASSWORD_SECRET=<passphrase>"
+    Write-Host "  3. Set AEAT_LIVE_TESTS_ENABLED=1"
+    Write-Host "  4. Run 'just test-live-read' to verify the live AEAT read path."
+
 # ── Release (local-only; see RELEASING.md + aeat#60) ────────────────────────
 #
 # release-please runs LOCALLY, never in GitHub Actions (Actions is

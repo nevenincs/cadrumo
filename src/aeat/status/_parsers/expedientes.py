@@ -32,6 +32,15 @@ _REQUIRED_HEADERS: tuple[str, ...] = (
     "fecha presentacion",
 )
 
+# Columns AEAT uses for the HTML-detail anchor across campaigns. Order
+# matters: the first header present in the row wins. Normalised
+# (accent-stripped, lowercased) per :func:`_normalise`.
+_DETAIL_COLUMN_CANDIDATES: tuple[str, ...] = (
+    "detalle",
+    "accion",
+    "acciones",
+)
+
 # Date/datetime formats the AEAT portal is known to emit. ISO is the
 # fixture shape; the two Spanish formats are the live-page shapes.
 _DATETIME_FORMATS: tuple[str, ...] = (
@@ -179,6 +188,24 @@ def _cell_anchor_href(cells: list[Tag], columns: dict[str, int], key: str) -> st
     return href
 
 
+def _extract_detail_anchor(
+    cells: list[Tag],
+    columns: dict[str, int],
+    base: str,
+) -> AnyHttpUrl | None:
+    """Return the absolutised detail URL from the first matching column.
+
+    Scans :data:`_DETAIL_COLUMN_CANDIDATES` in order and returns the
+    ``<a href>`` under the first column that has one. Returns ``None``
+    when no detail column is present or no anchor is found.
+    """
+    for candidate in _DETAIL_COLUMN_CANDIDATES:
+        href = _cell_anchor_href(cells, columns, candidate)
+        if href is not None:
+            return _resolve_url(href, base)
+    return None
+
+
 def _resolve_url(href: str, base: str) -> AnyHttpUrl:
     """Resolve ``href`` against ``base`` and validate as ``AnyHttpUrl``.
 
@@ -248,6 +275,7 @@ def parse_expedientes(
         csv_text = _cell_text(cells, columns, "csv") or None
         href = _cell_anchor_href(cells, columns, "justificante")
         justificante_url = _resolve_url(href, source_url_str) if href else None
+        detail_url = _extract_detail_anchor(cells, columns, source_url_str)
 
         try:
             record = Expediente(
@@ -258,6 +286,7 @@ def parse_expedientes(
                 presented_at=presented_at,
                 csv=csv_text,
                 justificante_url=justificante_url,
+                detail_url=detail_url,
                 source_page_url=source_url,
                 fetched_at=fetched_at,
             )

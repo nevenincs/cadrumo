@@ -71,8 +71,9 @@ class CertificatePreExpiryError(CertificateError):
     workflow gate and CLI surfaces when a loaded certificate's
     ``days_until_expiry`` has fallen below the configured critical
     threshold, before the bundle becomes technically unusable. Callers
-    may suppress it via an explicit override flag (for example
-    ``aeat submission submit --force-expiring-cert``).
+    may suppress it via an explicit override flag (the
+    ``--force-expiring-cert`` flag survives only on programmatic
+    surfaces — the live-submit CLI was removed by the 2026-04-18 ADR).
     """
 
 

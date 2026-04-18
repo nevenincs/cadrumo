@@ -186,6 +186,9 @@ def build_engine(settings: Settings | None = None) -> SubmissionEngine:
     submitters: dict[str, Submitter] = {
         "130": Modelo130Submitter(artifact_dir=cfg.aeat_submission_browser_trace_dir),
     }
+    # live_transport_supported defaults to False (engine-level opt-in
+    # only, see 2026-04-18-live-submit-cli-excision-adr). The CLI
+    # surface never opts in.
     return SubmissionEngine(
         browser_session_factory=_NullSession,
         cert_backend=_StubCertBackend(),
@@ -196,7 +199,6 @@ def build_engine(settings: Settings | None = None) -> SubmissionEngine:
         justificante_parser=_StubJustificanteParser(),
         submitters=submitters,
         settings=cfg,
-        live_transport_supported=False,
     )
 
 

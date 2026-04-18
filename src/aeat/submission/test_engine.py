@@ -273,6 +273,40 @@ class TestSubmitDraftLiveGating:
             asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
         assert submitter.submit_calls == 0
 
+    def test_default_engine_construction_is_safe_against_live(self, tmp_path: Path) -> None:
+        """Default ``SubmissionEngine(...)`` is inert against live writes.
+
+        Regression guard for the 2026-04-18 ADR: the default of
+        ``live_transport_supported`` was flipped from True to False so
+        that callers who omit the flag cannot accidentally reach the
+        per-modelo ``submit()`` transport. ``live_submit_enabled=True``
+        in Settings is intentionally on here to prove that even with
+        the env gate flipped open the default-constructed engine still
+        refuses.
+        """
+        settings = Settings(
+            aeat_submissions_dir=tmp_path / "submissions",
+            aeat_submission_browser_trace_dir=tmp_path / "traces",
+            aeat_live_submit_enabled=True,
+        )
+        submitter = _RecordingSubmitter()
+        engine = SubmissionEngine(
+            browser_session_factory=_Session,
+            cert_backend=_OkCerts(),
+            portal_catalogue=_PortalCat(),
+            draft_loader=_Drafts(),
+            deadline_checker=_OpenDeadlines(),
+            casilla_catalogue=_Casillas(),
+            justificante_parser=_Parser(),
+            submitters={"130": submitter},
+            settings=settings,
+            # NOTE: live_transport_supported intentionally omitted.
+        )
+        assert engine.live_transport_supported is False
+        with pytest.raises(AeatLiveTransportUnavailableError, match="stubbed"):
+            asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
+        assert submitter.submit_calls == 0
+
 
 class TestListSubmissions:
     def test_filter_by_modelo(self, tmp_path: Path) -> None:

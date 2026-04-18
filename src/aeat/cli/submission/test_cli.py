@@ -73,25 +73,35 @@ class TestDryRunCommand:
         assert "PENDING" in result.output
 
 
-class TestSubmitCommand:
-    def test_refuses_without_flag(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        result = runner.invoke(app, ["submit", str(draft_path)])
-        assert result.exit_code == 2
-        assert "refusing" in result.output.lower()
+class TestSubmitCommandRemoved:
+    """The ``submit`` subcommand was removed by the 2026-04-18 ADR.
 
-    def test_live_submit_refuses_stub_transport(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        result = runner.invoke(
-            app,
-            ["submit", str(draft_path), "--i-understand-this-is-real"],
-            env={
-                "AEAT_CERTIFICATE_PATH": "",
-                "AEAT_CERTIFICATE_PASSWORD_SECRET": "",
-                "AEAT_LIVE_SUBMIT_ENABLED": "true",
-            },
+    Replaced :class:`TestSubmitCommand`. The new tests assert that
+    invocation falls through to Typer's "no such command" path with
+    exit code 2 and that the help surface does not advertise it.
+    """
+
+    def test_invocation_fails_with_no_such_command(
+        self, runner: CliRunner, draft_path: Path, isolated_dirs: Path
+    ) -> None:
+        del isolated_dirs
+        result = runner.invoke(app, ["submit", str(draft_path)])
+        # Typer/click returns 2 for unknown commands.
+        assert result.exit_code == 2, result.output
+        assert (
+            "submit" not in (result.output or "").split("\nUsage")[0].lower()
+            or "no such command" in (result.output or "").lower()
         )
-        assert result.exit_code == 1, result.output
-        assert "refusing" in result.output.lower()
-        assert "stubbed" in result.output.lower()
+
+    def test_help_does_not_list_submit(self, runner: CliRunner) -> None:
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0, result.output
+        # The four allowed commands are present; "submit" is not.
+        for cmd in ("preflight", "dry-run", "show", "list"):
+            assert cmd in result.output, f"expected `{cmd}` in --help, got: {result.output!r}"
+        assert " submit " not in result.output, (
+            "submission CLI must not advertise `submit` (see .vault/adr/2026-04-18-live-submit-cli-excision-adr.md)"
+        )
 
 
 class TestShowAndList:
