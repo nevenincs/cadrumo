@@ -472,6 +472,20 @@ def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tm
     assert items[0].severity is ReviewSeverity.NORMAL
 
 
+def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -> None:
+    """`status=APPROVAL_STALE` (#230) must surface as a HIGH-severity finding row."""
+    settings = _build_settings(tmp_path)
+    _write_draft(settings, _draft(draft_id="d_stale", status=FilingDraftStatus.APPROVAL_STALE))
+    items = drafts_pending(settings)
+    assert len(items) == 1
+    assert items[0].source is None
+    assert items[0].severity is ReviewSeverity.HIGH
+    assert items[0].draft_id == "d_stale"
+    summary_en = items[0].summary.get("en", "")
+    assert "APPROVAL_STALE" in summary_en
+    assert items[0].drill_command.startswith("aeat review show ")
+
+
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     _write_draft(settings, _draft(draft_id="d3", status=FilingDraftStatus.READY_TO_SUBMIT))
