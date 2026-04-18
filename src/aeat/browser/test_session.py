@@ -205,7 +205,12 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     from cryptography.hazmat.primitives.serialization import pkcs12
     from cryptography.x509.oid import NameOID
 
-    from ..auth import CertificateBackend, CertificateBundle, load_certificate
+    from ..auth import (
+        CertificateBackend,
+        CertificateBundle,
+        CertificateContextProvisioner,
+        load_certificate,
+    )
     from .session import CERTIFICATE_THUMBPRINT_MARKER
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -254,7 +259,12 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         profile=profile,
         evasion_strategy=DummyEvasion(),
     )
-    context = await session.create_context(cert=loaded)
+    context = await session.create_context(
+        provisioner=CertificateContextProvisioner(
+            loaded,
+            origin=settings.aeat_certificate_verify_url,
+        )
+    )
 
     kwargs: dict[str, object] = cast(StubContext, context).kwargs
     assert "client_certificates" in kwargs
