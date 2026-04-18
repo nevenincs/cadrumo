@@ -34,14 +34,25 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import os
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Final, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..logging import get_logger
+from ._providers import (
+    CERTIFICATE_CONTEXT_MARKER,
+    AuthLoginAssertionDetail,
+    AuthProviderDescription,
+    AuthProviderKind,
+    AuthSessionDetail,
+    CertificateContextProvisioner,
+    CertificateLoginAssertionDetail,
+    CertificateSessionDetail,
+)
 from .certificate import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
@@ -53,6 +64,9 @@ from .certificate import (
     extract_nif_from_subject,
     load_certificate,
     verify_handshake,
+)
+from .certificate import (
+    health as certificate_health,
 )
 
 if TYPE_CHECKING:
@@ -73,10 +87,6 @@ env-var change — the operator surface stays narrow.
 
 AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = 30_000
 """Playwright navigation timeout for post-auth verification probes."""
-
-
-_MARKER_ATTR = "_aeat_certificate_thumbprint"
-
 
 # ── Boundary records ────────────────────────────────────────────────────────
 
@@ -114,14 +124,53 @@ class AeatLoginAssertion(BaseModel):
 
     target_url: str
     is_valid: bool
-    handshake_success: bool
-    certificate_recognised: bool
-    parsed_nif: str | None
-    parsed_subject: str | None
+    provider_kind: AuthProviderKind
+    identity_nif: str | None
     status_code: int
     elapsed_ms: int
     attempted_at: datetime
     error_message: str | None = None
+    assertion_detail: AuthLoginAssertionDetail = Field(discriminator="kind")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _upgrade_legacy_certificate_shape(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        if "assertion_detail" in value or "handshake_success" not in value:
+            return value
+        data = dict(value)
+        data["provider_kind"] = AuthProviderKind.CERTIFICATE
+        data["identity_nif"] = data.pop("parsed_nif", None)
+        data["assertion_detail"] = {
+            "kind": AuthProviderKind.CERTIFICATE,
+            "handshake_success": data.pop("handshake_success"),
+            "certificate_recognised": data.pop("certificate_recognised"),
+            "parsed_subject": data.pop("parsed_subject", None),
+        }
+        return data
+
+    @property
+    def handshake_success(self) -> bool | None:
+        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
+            return self.assertion_detail.handshake_success
+        return None
+
+    @property
+    def certificate_recognised(self) -> bool | None:
+        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
+            return self.assertion_detail.certificate_recognised
+        return None
+
+    @property
+    def parsed_nif(self) -> str | None:
+        return self.identity_nif
+
+    @property
+    def parsed_subject(self) -> str | None:
+        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
+            return self.assertion_detail.parsed_subject
+        return None
 
 
 class AeatSession(BaseModel):
@@ -158,13 +207,52 @@ class AeatSession(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    certificate_thumbprint: str = Field(min_length=1)
-    certificate_subject: str = Field(min_length=1)
-    certificate_nif: str = Field(min_length=1)
+    provider_kind: AuthProviderKind
     authenticated_at: datetime
     idle_deadline: datetime
     storage_state_path: Path | None
-    handshake: HandshakeResult
+    identity_nif: str = Field(min_length=1)
+    provider_detail: AuthSessionDetail = Field(discriminator="kind")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _upgrade_legacy_certificate_shape(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        if "provider_detail" in value or "certificate_thumbprint" not in value:
+            return value
+        data = dict(value)
+        data["provider_kind"] = AuthProviderKind.CERTIFICATE
+        data["identity_nif"] = data.pop("certificate_nif")
+        data["provider_detail"] = {
+            "kind": AuthProviderKind.CERTIFICATE,
+            "certificate_thumbprint": data.pop("certificate_thumbprint"),
+            "certificate_subject": data.pop("certificate_subject"),
+            "handshake": data.pop("handshake"),
+        }
+        return data
+
+    @property
+    def certificate_thumbprint(self) -> str | None:
+        if isinstance(self.provider_detail, CertificateSessionDetail):
+            return self.provider_detail.certificate_thumbprint
+        return None
+
+    @property
+    def certificate_subject(self) -> str | None:
+        if isinstance(self.provider_detail, CertificateSessionDetail):
+            return self.provider_detail.certificate_subject
+        return None
+
+    @property
+    def certificate_nif(self) -> str:
+        return self.identity_nif
+
+    @property
+    def handshake(self) -> HandshakeResult | None:
+        if isinstance(self.provider_detail, CertificateSessionDetail):
+            return self.provider_detail.handshake
+        return None
 
     def is_stale(self, now: datetime | None = None) -> bool:
         """Return True when the session's idle deadline has elapsed."""
@@ -221,7 +309,7 @@ class BrowserContextLike(Protocol):
 class BrowserSessionLike(Protocol):
     """Structural shape of :class:`aeat.browser.BrowserSession`.
 
-    We depend on a single coroutine — ``create_context(cert=...)``
+    We depend on a single coroutine — ``create_context(provisioner=...)``
     — and a ``close()``. The authenticator does not reach into the
     session's evasion or profile machinery.
     """
@@ -229,7 +317,7 @@ class BrowserSessionLike(Protocol):
     async def create_context(
         self,
         *,
-        cert: LoadedCertificate | None = None,
+        provisioner: object | None = None,
     ) -> BrowserContextLike: ...
 
 
@@ -262,6 +350,8 @@ class AeatAuthenticator:
     NIF extraction) can instantiate without entering the async
     context.
     """
+
+    kind: AuthProviderKind = AuthProviderKind.CERTIFICATE
 
     def __init__(
         self,
@@ -396,9 +486,14 @@ class AeatAuthenticator:
             nif = extract_nif_from_subject(cert)
 
             session_like = browser_session or await self._resolve_browser_session()
-            context = await session_like.create_context(cert=cert)
+            context = await session_like.create_context(
+                provisioner=CertificateContextProvisioner(
+                    cert,
+                    origin=self._settings.aeat_certificate_verify_url,
+                )
+            )
 
-            marker = getattr(context, _MARKER_ATTR, None)
+            marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
             if marker != cert.sha256_thumbprint:
                 # Clean up the context AND the browser session we just
                 # created; otherwise the Chromium process leaks for
@@ -407,7 +502,8 @@ class AeatAuthenticator:
                     await context.close()
                 await self._close_browser_session(session_like)
                 raise AeatLoginAssertionError(
-                    f"browser context was not tagged with the expected {_MARKER_ATTR} marker; cannot continue"
+                    "browser context was not tagged with the expected "
+                    f"{CERTIFICATE_CONTEXT_MARKER} marker; cannot continue"
                 )
 
             self._browser_session = session_like
@@ -424,13 +520,16 @@ class AeatAuthenticator:
                 )
 
             session = AeatSession(
-                certificate_thumbprint=cert.sha256_thumbprint,
-                certificate_subject=cert.subject,
-                certificate_nif=nif,
+                provider_kind=self.kind,
                 authenticated_at=authenticated_at,
                 idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
                 storage_state_path=storage_state_path,
-                handshake=handshake,
+                identity_nif=nif,
+                provider_detail=CertificateSessionDetail(
+                    certificate_thumbprint=cert.sha256_thumbprint,
+                    certificate_subject=cert.subject,
+                    handshake=handshake,
+                ),
             )
             self._active_session = session
             log.info(
@@ -567,20 +666,89 @@ class AeatAuthenticator:
                     self._inflight_drained.set()
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
-        handshake_success = session.handshake.success
-        is_valid = handshake_success and certificate_recognised and bool(session.certificate_nif)
+        handshake = session.handshake
+        handshake_success = bool(handshake.success) if handshake is not None else False
+        is_valid = handshake_success and certificate_recognised and bool(session.identity_nif)
         return AeatLoginAssertion(
             target_url=target,
             is_valid=is_valid,
-            handshake_success=handshake_success,
-            certificate_recognised=certificate_recognised,
-            parsed_nif=session.certificate_nif,
-            parsed_subject=session.certificate_subject,
+            provider_kind=session.provider_kind,
+            identity_nif=session.identity_nif,
             status_code=status_code,
             elapsed_ms=elapsed_ms,
             attempted_at=attempted_at,
             error_message=error_message,
+            assertion_detail=CertificateLoginAssertionDetail(
+                handshake_success=handshake_success,
+                certificate_recognised=certificate_recognised,
+                parsed_subject=session.certificate_subject,
+            ),
         )
+
+    async def verify(
+        self,
+        session: AeatSession,
+        *,
+        target_url: str | None = None,
+    ) -> AeatLoginAssertion:
+        """Provider-protocol alias for :meth:`verify_login`."""
+
+        return await self.verify_login(session, target_url=target_url)
+
+    def describe(self) -> AuthProviderDescription:
+        """Return a safe summary of the configured auth provider."""
+
+        if self._settings.aeat_certificate_path is None:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=False,
+                available=False,
+                health_summary="certificate path not configured",
+            )
+        if self._settings.aeat_certificate_password_secret is None:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=True,
+                available=False,
+                health_summary="AEAT_CERTIFICATE_PASSWORD_SECRET not set",
+            )
+        try:
+            os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] = (
+                self._settings.aeat_certificate_password_secret.get_secret_value()
+            )
+            health = certificate_health(
+                self._settings.aeat_certificate_path,
+                password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
+                warn_days=self._settings.aeat_cert_warn_days,
+                critical_days=self._settings.aeat_cert_critical_days,
+            )
+            identity_nif: str | None = None
+            try:
+                identity_nif = extract_nif_from_subject(self.load_certificate())
+            except Exception:
+                identity_nif = None
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=True,
+                available=True,
+                identity_nif=identity_nif,
+                subject=health.subject,
+                expires_on=health.not_after.date(),
+                health_severity=health.severity.value,
+                days_until_expiry=health.days_until_expiry,
+                health_summary=f"{health.severity.value}:{health.days_until_expiry}",
+            )
+        except Exception as exc:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=True,
+                available=False,
+                health_summary=f"{type(exc).__name__}: {exc}",
+            )
 
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.

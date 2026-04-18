@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from pathlib import Path
 
 import typer
 from rich.console import Console
 
-from ...auth import CertificateError, CertificateHealthSeverity
-from ...auth import health as certificate_health
+from ...auth import AeatAuthenticator
 from ...config import Settings
 from ...submission import SubmissionError
 from ._helpers import build_engine, load_draft
@@ -18,60 +16,46 @@ from ._helpers import build_engine, load_draft
 _CONSOLE = Console()
 
 
-def _enforce_cert_health(
+def _enforce_auth_provider_health(
     *,
     settings: Settings,
     force_expiring_cert: bool,
 ) -> None:
-    """Block live submission when the configured cert is CRITICAL/EXPIRED.
+    """Block live submission when the configured auth material is not healthy.
 
     Skips silently when no certificate is configured (the engine will
     raise its own preflight error). Emits a yellow warning line when
     the cert is in the WARN window. Exits with code 2 on
     CRITICAL/EXPIRED unless ``--force-expiring-cert`` was passed.
     """
-    if settings.aeat_certificate_path is None:
+    description = AeatAuthenticator(settings).describe()
+    if not description.configured:
         return
-    if settings.aeat_certificate_password_secret is None:
+    if not description.available:
         _CONSOLE.print(
-            "[red]refusing:[/red] AEAT_CERTIFICATE_PASSWORD_SECRET is not set; "
-            "cannot evaluate certificate health for the pre-expiry gate."
+            "[red]refusing:[/red] auth provider health check failed: "
+            f"{description.health_summary or 'provider unavailable'}"
         )
         raise typer.Exit(code=2)
-    # Bridge pydantic-settings → os.environ for the cert loader.
-    # See doctor.check_certificate_health for the same pattern.
-    os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] = settings.aeat_certificate_password_secret.get_secret_value()
-    try:
-        result = certificate_health(
-            settings.aeat_certificate_path,
-            password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
-            warn_days=settings.aeat_cert_warn_days,
-            critical_days=settings.aeat_cert_critical_days,
-            friendly_name=settings.aeat_certificate_friendly_name,
-            backend=settings.aeat_certificate_backend,
-        )
-    except CertificateError as exc:
-        _CONSOLE.print(f"[red]refusing:[/red] certificate health check failed: {exc.__class__.__name__}: {exc}")
-        raise typer.Exit(code=2) from exc
-    severity = result.severity
-    days = result.days_until_expiry
-    if severity is CertificateHealthSeverity.OK:
+    severity = description.health_severity
+    days = description.days_until_expiry
+    if severity is None or days is None or severity == "OK":
         return
-    if severity is CertificateHealthSeverity.WARN:
+    if severity == "WARN":
         _CONSOLE.print(
-            f"[yellow]warning:[/yellow] certificate nearing expiry "
-            f"(severity={severity.value}, days_until_expiry={days}). Proceeding."
+            f"[yellow]warning:[/yellow] auth provider nearing expiry "
+            f"(severity={severity}, days_until_expiry={days}). Proceeding."
         )
         return
     if force_expiring_cert:
         _CONSOLE.print(
             f"[yellow]override:[/yellow] --force-expiring-cert set; "
-            f"proceeding despite severity={severity.value} "
+            f"proceeding despite severity={severity} "
             f"(days_until_expiry={days})."
         )
         return
     _CONSOLE.print(
-        f"[red]refusing:[/red] certificate severity={severity.value} "
+        f"[red]refusing:[/red] auth provider severity={severity} "
         f"(days_until_expiry={days}). Renew the certificate or pass "
         f"--force-expiring-cert to override."
     )
@@ -110,7 +94,7 @@ def submit_cmd(
     settings = Settings()
     engine = build_engine(settings)
     if engine.live_transport_supported:
-        _enforce_cert_health(settings=settings, force_expiring_cert=force_expiring_cert)
+        _enforce_auth_provider_health(settings=settings, force_expiring_cert=force_expiring_cert)
     try:
         filing = asyncio.run(engine.submit_draft(draft, dry_run=False))
     except SubmissionError as exc:

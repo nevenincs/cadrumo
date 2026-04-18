@@ -5,8 +5,8 @@ upstream siblings land on ``main``:
 
 - ``ModeloIdentifier`` — rebase-swap stub for ``aeat.models`` (#6).
 - ``Portal`` / ``PortalCatalogue`` — stubs for ``aeat.portals`` (#7).
-- ``LoadedCertificate`` / ``CertificateBackend`` — stubs for
-  ``aeat.auth.certificate`` (#8).
+- ``AuthProviderDescription`` / ``AuthProviderProbe`` — stubs for
+  the provider-agnostic auth surface (#281).
 - ``CasillaRecord`` / ``CasillaCatalogue`` — stubs for
   ``aeat.casillas`` (#23).
 - ``DeadlineWindowChecker`` — narrow stub that mirrors the surface
@@ -106,33 +106,40 @@ class PortalCatalogue(Protocol):
         ...
 
 
-class LoadedCertificate(BaseModel):
-    """Rebase-swap stub for ``aeat.auth.certificate.LoadedCertificate`` (#8).
+class AuthProviderKind(StrEnum):
+    """Local stub for the auth-provider kind enum."""
 
-    Attributes:
-        subject: The certificate subject DN as a single string.
-        not_after: The certificate's ``notAfter`` date.
-        fingerprint_sha256: Hex-encoded SHA-256 fingerprint of the
-            full DER-encoded certificate.
-    """
+    CERTIFICATE = "certificate"
+    CLAVE_PERMANENTE = "clave_permanente"
+    CLAVE_MOVIL = "clave_movil"
+    CLAVE_PIN = "clave_pin"
+
+
+class AuthProviderDescription(BaseModel):
+    """Safe description of one auth provider's current state."""
 
     model_config = _STRICT_FROZEN
 
-    subject: str = Field(min_length=1)
-    not_after: date
-    fingerprint_sha256: str = Field(min_length=64, max_length=64)
+    kind: AuthProviderKind
+    label: str = Field(min_length=1)
+    configured: bool
+    available: bool
+    identity_nif: str | None = None
+    subject: str | None = None
+    expires_on: date | None = None
+    health_severity: str | None = None
+    days_until_expiry: int | None = None
+    health_summary: str | None = None
 
 
 @runtime_checkable
-class CertificateBackend(Protocol):
-    """Rebase-swap stub for ``aeat.auth.certificate.CertificateBackend`` (#8)."""
+class AuthProviderProbe(Protocol):
+    """Narrow submission-facing auth-provider surface."""
 
-    def load(self) -> LoadedCertificate:
-        """Load and return the currently configured certificate."""
-        ...
+    kind: AuthProviderKind
 
-    async def preload_into_browser_context(self, context: Any) -> None:
-        """Inject the certificate into a browser context before navigation."""
+    def describe(self) -> AuthProviderDescription:
+        """Return a safe description of the active auth provider."""
         ...
 
 
