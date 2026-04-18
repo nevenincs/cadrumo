@@ -24,13 +24,14 @@ from . import (
     AeatLiveTransportUnavailableError,
     AeatPytestLiveWriteRefusedError,
     AmendmentSubmissionResult,
+    AuthProviderDescription,
+    AuthProviderKind,
     CasillaInputKind,
     CasillaRecord,
     DraftStatus,
     FilingDraftLike,
     FilingFinding,
     Justificante,
-    LoadedCertificate,
     Portal,
     SubmissionAttempt,
     SubmissionEngine,
@@ -83,16 +84,20 @@ class _OpenDeadlines:
         return True
 
 
-class _OkCerts:
-    def load(self) -> LoadedCertificate:
-        return LoadedCertificate(
-            subject="CN=Test",
-            not_after=date(2099, 12, 31),
-            fingerprint_sha256="a" * 64,
-        )
+class _OkAuthProvider:
+    kind = AuthProviderKind.CERTIFICATE
 
-    async def preload_into_browser_context(self, context: Any) -> None:
-        pass
+    def describe(self) -> AuthProviderDescription:
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="Test certificate",
+            configured=True,
+            available=True,
+            identity_nif="X1234567L",
+            subject="CN=Test",
+            expires_on=date(2099, 12, 31),
+            health_summary="OK:26800",
+        )
 
 
 class _PortalCat:
@@ -174,7 +179,7 @@ def _build_engine(
     submitter = _RecordingSubmitter()
     engine = SubmissionEngine(
         browser_session_factory=_Session,
-        cert_backend=_OkCerts(),
+        auth_provider=_OkAuthProvider(),
         portal_catalogue=_PortalCat(),
         draft_loader=_Drafts(),
         deadline_checker=_OpenDeadlines(),

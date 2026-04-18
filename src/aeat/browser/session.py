@@ -16,7 +16,7 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
-from ..auth import LoadedCertificate, build_client_certificates_kwarg
+from ..auth import CERTIFICATE_CONTEXT_MARKER, BrowserContextProvisioner
 from ..config import Settings
 from ..errors import AeatError, SiteHealthError
 from ..logging import get_logger
@@ -30,16 +30,10 @@ from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
 
-CERTIFICATE_THUMBPRINT_MARKER = "_aeat_certificate_thumbprint"
-"""Attribute stamped on a ``BrowserContext`` that was constructed with a cert.
-
-The :class:`aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
-reads the same attribute to validate that callers actually wired
-the client certificate into ``browser.new_context()``. The value
-is the cert's SHA-256 thumbprint (hex).
-"""
-
 logger = get_logger(__name__)
+
+CERTIFICATE_THUMBPRINT_MARKER = CERTIFICATE_CONTEXT_MARKER
+"""Backward-compatible alias for the certificate context marker name."""
 
 
 class BrowserError(AeatError):
@@ -74,21 +68,17 @@ class BrowserSession:
     async def create_context(
         self,
         *,
-        cert: LoadedCertificate | None = None,
+        provisioner: BrowserContextProvisioner | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
-        When ``cert`` is supplied, the certificate is wired into the
-        context via the ``client_certificates`` kwarg on
-        ``browser.new_context()`` (Playwright ≥1.46) and the
-        resulting context is tagged with the
-        :data:`CERTIFICATE_THUMBPRINT_MARKER` attribute so the
-        :class:`aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
-        validator accepts it.
+        When ``provisioner`` is supplied, it can inject auth-provider-
+        specific ``browser.new_context(...)`` kwargs and tag the
+        resulting context after construction.
 
         Args:
-            cert: Optional loaded PKCS#12 certificate to present
-                when the authenticated context hits AEAT origins.
+            provisioner: Optional auth-provider hook used to decorate
+                the new context call.
 
         Returns:
             A configured BrowserContext with evasion strategies
@@ -128,11 +118,8 @@ class BrowserSession:
             # Playwright will fail if storage_state points to an empty string or invalid JSON
             context_kwargs["storage_state"] = str(self.profile.storage_state_path)
 
-            if cert is not None:
-                context_kwargs["client_certificates"] = build_client_certificates_kwarg(
-                    cert,
-                    self.settings.aeat_certificate_verify_url,
-                )
+            if provisioner is not None:
+                context_kwargs.update(dict(provisioner.build_context_kwargs()))
 
             try:
                 context = await browser.new_context(**context_kwargs)
@@ -151,13 +138,8 @@ class BrowserSession:
             # Apply evasion strategy
             await self.evasion_strategy.apply(context)
 
-            if cert is not None:
-                # The Playwright backend's preload() validator reads this
-                # attribute to confirm the cert was wired at construction.
-                # BrowserContext does not declare the marker field, so
-                # setattr with a module-level constant is the only way
-                # to stamp it without a mypy-only type ignore.
-                setattr(context, CERTIFICATE_THUMBPRINT_MARKER, cert.sha256_thumbprint)
+            if provisioner is not None:
+                provisioner.annotate_context(context)
 
             return context
         except Exception as e:

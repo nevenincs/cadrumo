@@ -27,8 +27,15 @@ from . import (
     AeatLoginAssertionError,
     AeatSession,
     AeatSessionExpiredError,
+    AuthProvider,
+    AuthProviderDescription,
+    AuthProviderKind,
     CertificateBackend,
+    CertificateLoginAssertionDetail,
     CertificateNifParseError,
+    CertificateSessionDetail,
+    ClavePermanenteLoginAssertionDetail,
+    ClavePermanenteSessionDetail,
     HandshakeResult,
     LoadedCertificate,
     extract_nif_from_subject,
@@ -175,14 +182,9 @@ def test_extract_nif_rejects_unparseable(tmp_path: Path) -> None:
 
 def test_aeat_session_is_stale_predicate(tmp_path: Path) -> None:
     authenticated_at = datetime.now(UTC)
-    session = AeatSession(
-        certificate_thumbprint="abc123",
-        certificate_subject="CN=test",
-        certificate_nif="12345678Z",
+    session = _certificate_session(
         authenticated_at=authenticated_at,
         idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
-        storage_state_path=None,
-        handshake=_fake_handshake(),
     )
     assert session.is_stale(authenticated_at) is False
     assert session.is_stale(authenticated_at + timedelta(minutes=1)) is False
@@ -191,14 +193,11 @@ def test_aeat_session_is_stale_predicate(tmp_path: Path) -> None:
 
 def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
     authenticated_at = datetime.now(UTC)
-    session = AeatSession(
-        certificate_thumbprint="abc123",
-        certificate_subject="CN=NOMBRE,SERIALNUMBER=12345678Z",
-        certificate_nif="12345678Z",
+    session = _certificate_session(
         authenticated_at=authenticated_at,
         idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
+        subject="CN=NOMBRE,SERIALNUMBER=12345678Z",
         storage_state_path=tmp_path / "storage.json",
-        handshake=_fake_handshake(),
     )
     dumped = session.model_dump_json()
     assert SECRET_PASSPHRASE not in dumped
@@ -209,18 +208,7 @@ def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
 
 
 def test_aeat_login_assertion_is_valid_composite() -> None:
-    assertion = AeatLoginAssertion(
-        target_url="https://sede/",
-        is_valid=True,
-        handshake_success=True,
-        certificate_recognised=True,
-        parsed_nif="12345678Z",
-        parsed_subject="CN=NOMBRE",
-        status_code=200,
-        elapsed_ms=123,
-        attempted_at=datetime.now(UTC),
-        error_message=None,
-    )
+    assertion = _certificate_assertion()
     assert assertion.is_valid is True
     assert assertion.model_config["frozen"] is True
 
@@ -270,12 +258,19 @@ class _FakeBrowserSession:
     async def create_context(
         self,
         *,
-        cert: LoadedCertificate | None = None,
+        provisioner: object | None = None,
     ) -> _FakeBrowserContext:
-        assert cert is not None
+        assert provisioner is not None
+        cert = self._resolve_cert(provisioner)
         ctx = _FakeBrowserContext(cert, recognised=self._cert_ok)
         self.created.append(ctx)
         return ctx
+
+    @staticmethod
+    def _resolve_cert(provisioner: object) -> LoadedCertificate:
+        cert = getattr(provisioner, "_cert", None)
+        assert isinstance(cert, LoadedCertificate)
+        return cert
 
 
 def _fake_handshake() -> HandshakeResult:
@@ -286,6 +281,47 @@ def _fake_handshake() -> HandshakeResult:
         elapsed_ms=10,
         attempted_at=datetime.now(UTC),
         error_message=None,
+    )
+
+
+def _certificate_session(
+    *,
+    authenticated_at: datetime,
+    idle_deadline: datetime,
+    thumbprint: str = "abc123",
+    subject: str = "CN=test",
+    identity_nif: str = "12345678Z",
+    storage_state_path: Path | None = None,
+) -> AeatSession:
+    return AeatSession(
+        provider_kind=AuthProviderKind.CERTIFICATE,
+        authenticated_at=authenticated_at,
+        idle_deadline=idle_deadline,
+        storage_state_path=storage_state_path,
+        identity_nif=identity_nif,
+        provider_detail=CertificateSessionDetail(
+            certificate_thumbprint=thumbprint,
+            certificate_subject=subject,
+            handshake=_fake_handshake(),
+        ),
+    )
+
+
+def _certificate_assertion() -> AeatLoginAssertion:
+    return AeatLoginAssertion(
+        target_url="https://sede/",
+        is_valid=True,
+        provider_kind=AuthProviderKind.CERTIFICATE,
+        identity_nif="12345678Z",
+        status_code=200,
+        elapsed_ms=123,
+        attempted_at=datetime.now(UTC),
+        error_message=None,
+        assertion_detail=CertificateLoginAssertionDetail(
+            handshake_success=True,
+            certificate_recognised=True,
+            parsed_subject="CN=NOMBRE",
+        ),
     )
 
 
@@ -318,20 +354,45 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, monkeypatch: py
         assert nif == "12345678Z"
 
 
+def test_describe_warns_when_password_missing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    from ..config import Settings
+
+    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(bundle_path))
+    monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
+    settings = Settings()
+    description = AeatAuthenticator(settings).describe()
+
+    assert description.configured is True
+    assert description.available is False
+    assert description.health_summary == "AEAT_CERTIFICATE_PASSWORD_SECRET not set"
+
+
+def test_describe_preserves_expired_certificate_severity(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    bundle_path = _build_bundle(
+        tmp_path,
+        not_valid_after=datetime.now(UTC) - timedelta(hours=12),
+    )
+    settings = _settings_for(bundle_path, monkeypatch)
+    description = AeatAuthenticator(settings).describe()
+
+    assert description.available is True
+    assert description.health_severity == "EXPIRED"
+    assert description.days_until_expiry is not None
+    assert description.days_until_expiry <= 0
+
+
 @pytest.mark.asyncio
 async def test_verify_login_raises_on_stale_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
     async with AeatAuthenticator(settings) as auth:
         now = datetime.now(UTC)
-        stale = AeatSession(
-            certificate_thumbprint="abc",
-            certificate_subject="CN=x",
-            certificate_nif="12345678Z",
+        stale = _certificate_session(
             authenticated_at=now - timedelta(hours=1),
             idle_deadline=now - timedelta(minutes=30),
-            storage_state_path=None,
-            handshake=_fake_handshake(),
+            thumbprint="abc",
+            subject="CN=x",
         )
         with pytest.raises(AeatSessionExpiredError):
             await auth.verify_login(stale)
@@ -343,14 +404,11 @@ async def test_verify_login_raises_without_context(tmp_path: Path, monkeypatch: 
     settings = _settings_for(bundle_path, monkeypatch)
     async with AeatAuthenticator(settings) as auth:
         now = datetime.now(UTC)
-        session = AeatSession(
-            certificate_thumbprint="abc",
-            certificate_subject="CN=x",
-            certificate_nif="12345678Z",
+        session = _certificate_session(
             authenticated_at=now,
             idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-            storage_state_path=None,
-            handshake=_fake_handshake(),
+            thumbprint="abc",
+            subject="CN=x",
         )
         with pytest.raises(AeatLoginAssertionError):
             await auth.verify_login(session)
@@ -396,14 +454,9 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
     that supplies a naive ``datetime.now()`` will hit this path.
     """
     authenticated_at = datetime.now(UTC)
-    session = AeatSession(
-        certificate_thumbprint="abc",
-        certificate_subject="CN=test",
-        certificate_nif="12345678Z",
+    session = _certificate_session(
         authenticated_at=authenticated_at,
         idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
-        storage_state_path=None,
-        handshake=_fake_handshake(),
     )
     naive_past = datetime(2020, 1, 1)
     naive_future = datetime(2100, 1, 1)
@@ -431,14 +484,11 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pyt
         # we assert that the teardown side of reauthenticate completes
         # without deadlocking regardless of the authenticate outcome.
         now = datetime.now(UTC)
-        session = AeatSession(
-            certificate_thumbprint="abc",
-            certificate_subject="CN=x",
-            certificate_nif="12345678Z",
+        session = _certificate_session(
             authenticated_at=now,
             idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-            storage_state_path=None,
-            handshake=_fake_handshake(),
+            thumbprint="abc",
+            subject="CN=x",
         )
         # authenticate() without an injected browser_session_factory
         # raises AeatLoginAssertionError; we only care that the call
@@ -479,14 +529,11 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkey
     authenticator._closing = True
 
     now = datetime.now(UTC)
-    session = AeatSession(
-        certificate_thumbprint=cert.sha256_thumbprint,
-        certificate_subject=cert.subject,
-        certificate_nif="12345678Z",
+    session = _certificate_session(
         authenticated_at=now,
         idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-        storage_state_path=None,
-        handshake=_fake_handshake(),
+        thumbprint=cert.sha256_thumbprint,
+        subject=cert.subject,
     )
     with pytest.raises(AeatLoginAssertionError, match="closing"):
         await authenticator.verify_login(session)
@@ -542,14 +589,11 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatc
     authenticator._context = cast(BrowserContextLike, ctx)
 
     now = datetime.now(UTC)
-    session = AeatSession(
-        certificate_thumbprint=cert.sha256_thumbprint,
-        certificate_subject=cert.subject,
-        certificate_nif="12345678Z",
+    session = _certificate_session(
         authenticated_at=now,
         idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-        storage_state_path=None,
-        handshake=_fake_handshake(),
+        thumbprint=cert.sha256_thumbprint,
+        subject=cert.subject,
     )
 
     # Start verify_login; it will suspend inside goto until proceed.set().
@@ -582,3 +626,53 @@ async def test_close_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     auth = AeatAuthenticator(settings)
     await auth.close()
     await auth.close()  # must not raise
+
+
+def test_auth_provider_protocol_conformance() -> None:
+    class _NullAuthProvider:
+        kind = AuthProviderKind.CLAVE_PERMANENTE
+
+        async def authenticate(
+            self,
+            *,
+            browser_session: object | None = None,
+            target_url: str | None = None,
+        ) -> AeatSession:
+            now = datetime.now(UTC)
+            return AeatSession(
+                provider_kind=self.kind,
+                authenticated_at=now,
+                idle_deadline=now + AEAT_SESSION_IDLE_TTL,
+                storage_state_path=None,
+                identity_nif="X1234567L",
+                provider_detail=ClavePermanenteSessionDetail(),
+            )
+
+        async def verify(
+            self,
+            session: AeatSession,
+            *,
+            target_url: str | None = None,
+        ) -> AeatLoginAssertion:
+            return AeatLoginAssertion(
+                target_url=target_url or "https://example.invalid/",
+                is_valid=True,
+                provider_kind=session.provider_kind,
+                identity_nif=session.identity_nif,
+                status_code=200,
+                elapsed_ms=1,
+                attempted_at=datetime.now(UTC),
+                assertion_detail=ClavePermanenteLoginAssertionDetail(),
+            )
+
+        def describe(self) -> AuthProviderDescription:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="Null provider",
+                configured=True,
+                available=True,
+                identity_nif="X1234567L",
+            )
+
+    provider = _NullAuthProvider()
+    assert isinstance(provider, AuthProvider)
