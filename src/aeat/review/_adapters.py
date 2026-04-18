@@ -1,0 +1,472 @@
+"""Read-only source adapters for the unified review queue.
+
+Each adapter loads pending items from one on-disk source and emits a
+tuple of typed :class:`ReviewItem` records. Adapters are pure and
+stateless; they tolerate missing source files by returning an empty
+tuple. Severity is derived per source via a first-match-wins
+predicate table (see ADR D5).
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, date, datetime, time, timedelta
+from pathlib import Path
+
+from pydantic import ValidationError
+
+from ..config import Settings
+from ..filing import (
+    FilingDraft,
+    FilingDraftStatus,
+    FilingFindingSeverity,
+    FilingValidationFinding,
+)
+from ..financial.invoices import (
+    Invoice,
+    InvoiceCatalogue,
+    PaymentStatus,
+    load_invoices,
+)
+from ..financial.transactions import (
+    BusinessClassification,
+    Transaction,
+    TransactionCatalogue,
+    is_classified,
+    load_transactions,
+)
+from ..i18n import Translatable
+from ..inbox import Inbox, Notificacion, NotificacionPriority
+from ..logging import get_logger
+from ..sync import (
+    DivergenceClassification,
+    DivergenceRecord,
+    JsonFileDivergenceRepository,
+    ResolutionState,
+)
+from ._enums import ReviewSeverity
+from ._errors import ReviewSourceLoadError
+from ._models import (
+    DivergenceReviewItem,
+    FindingReviewItem,
+    InboxReviewItem,
+    InvoiceReviewItem,
+    TransactionReviewItem,
+)
+
+_LOGGER = get_logger(__name__)
+
+_TRANSACTIONS_FILENAME = "transactions.json"
+_INVOICES_FILENAME = "invoices.json"
+_INBOX_FILENAME = "inbox.json"
+
+_SUMMARY_MAX = 80
+
+
+# ── transactions ──────────────────────────────────────────────────
+
+
+def transactions_pending(
+    settings: Settings,
+    *,
+    catalogue: TransactionCatalogue | None = None,
+) -> tuple[TransactionReviewItem, ...]:
+    """Return one :class:`TransactionReviewItem` per pending-review transaction.
+
+    Skips fully-classified rows (BUSINESS / PERSONAL / MIXED) and rows
+    explicitly skipped by rule (``SKIPPED_BY_RULE``) — those have a
+    final disposition and do not want Kent's attention.
+    """
+    if catalogue is None:
+        catalogue = _load_transactions(settings)
+        if catalogue is None:
+            return ()
+    items: list[TransactionReviewItem] = []
+    for transaction in catalogue.values():
+        severity = _classify_transaction(transaction.business_classification)
+        if severity is None:
+            continue
+        items.append(_to_transaction_item(transaction, severity=severity))
+    return tuple(items)
+
+
+def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | None:
+    """First-match-wins severity per the post-#237 BusinessClassification states.
+
+    Returns ``None`` when the state has a final disposition that does
+    not warrant Kent's attention (classified or rule-excluded).
+    """
+    if is_classified(state):
+        return None
+    if state is BusinessClassification.SKIPPED_BY_RULE:
+        return None
+    if state is BusinessClassification.FAILED_VALIDATION:
+        return ReviewSeverity.CRITICAL
+    if state is BusinessClassification.PROCESSED_UNCLASSIFIED:
+        return ReviewSeverity.HIGH
+    if state is BusinessClassification.NOT_YET_PROCESSED:
+        return ReviewSeverity.NORMAL
+    return ReviewSeverity.NORMAL
+
+
+def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
+    path = settings.aeat_financial_txs_dir.resolve() / _TRANSACTIONS_FILENAME
+    if not path.exists():
+        return None
+    try:
+        return load_transactions(path)
+    except (ValidationError, OSError, ValueError) as exc:
+        raise ReviewSourceLoadError(f"failed to load transactions catalogue at {path}: {exc}") from exc
+
+
+def _to_transaction_item(
+    transaction: Transaction,
+    *,
+    severity: ReviewSeverity,
+) -> TransactionReviewItem:
+    raw = transaction.raw
+    effective_date = raw.value_date or raw.booked_date
+    since = transaction.classified_at or datetime.combine(effective_date, time.min, tzinfo=UTC)
+    description = raw.description.strip()
+    if len(description) > _SUMMARY_MAX:
+        description = description[: _SUMMARY_MAX - 1] + "…"
+    amount = format(raw.amount.normalize(), "f") if not raw.amount.is_zero() else "0"
+    state_label = transaction.business_classification.value
+    summary_text = f"[{state_label}] {transaction.direction.value} {amount} {raw.currency}: {description}"
+    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+    return TransactionReviewItem(
+        item_id=transaction.transaction_id,
+        modelo=None,
+        severity=severity,
+        summary=summary,
+        drill_command=f"aeat financial txs classify {transaction.transaction_id} --as ...",
+        since=since,
+        source=transaction,
+    )
+
+
+# ── invoices ──────────────────────────────────────────────────────
+
+
+def invoices_pending(
+    settings: Settings,
+    *,
+    catalogue: InvoiceCatalogue | None = None,
+) -> tuple[InvoiceReviewItem, ...]:
+    """Return :class:`InvoiceReviewItem`s for unmatched / disputed / pending invoices."""
+    if catalogue is None:
+        catalogue = _load_invoices(settings)
+        if catalogue is None:
+            return ()
+    items: list[InvoiceReviewItem] = []
+    for invoice in catalogue.values():
+        result = _classify_invoice(invoice)
+        if result is None:
+            continue
+        severity, reason = result
+        items.append(_to_invoice_item(invoice, severity=severity, reason=reason))
+    return tuple(items)
+
+
+def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
+    path = settings.aeat_invoices_dir.resolve() / _INVOICES_FILENAME
+    if not path.exists():
+        return None
+    try:
+        return load_invoices(path)
+    except (ValidationError, OSError, ValueError) as exc:
+        raise ReviewSourceLoadError(f"failed to load invoices catalogue at {path}: {exc}") from exc
+
+
+def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:
+    """First-match-wins severity + reason per ADR D5 invoices table."""
+    if invoice.linked_transaction_ids == ():
+        return ReviewSeverity.HIGH, "unmatched"
+    if invoice.payment_status is PaymentStatus.OVERDUE:
+        return ReviewSeverity.HIGH, "overdue"
+    if invoice.payment_status is PaymentStatus.PENDING:
+        return ReviewSeverity.NORMAL, "payment-pending"
+    if invoice.payment_status is PaymentStatus.PARTIALLY_PAID:
+        return ReviewSeverity.NORMAL, "partially-paid"
+    return None
+
+
+def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str) -> InvoiceReviewItem:
+    grand_total = format(invoice.grand_total.normalize(), "f") if not invoice.grand_total.is_zero() else "0"
+    summary_text = (
+        f"[{reason}] {invoice.kind.value} {invoice.invoice_number} "
+        f"{grand_total} {invoice.currency} ← {invoice.counterparty_name}"
+    )
+    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+    since = datetime.combine(invoice.issued_at, time.min, tzinfo=UTC)
+    return InvoiceReviewItem(
+        item_id=invoice.invoice_id,
+        modelo=None,
+        severity=severity,
+        summary=summary,
+        drill_command=f"aeat financial invoices show {invoice.invoice_id}",
+        since=since,
+        source=invoice,
+    )
+
+
+# ── divergences ───────────────────────────────────────────────────
+
+
+def divergences_pending(
+    settings: Settings,
+    *,
+    records: tuple[DivergenceRecord, ...] | None = None,
+) -> tuple[DivergenceReviewItem, ...]:
+    """Return :class:`DivergenceReviewItem`s for PENDING divergence records."""
+    if records is None:
+        repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
+        try:
+            records = repo.list()
+        except (ValidationError, OSError, ValueError) as exc:
+            raise ReviewSourceLoadError(
+                f"failed to list divergences at {settings.aeat_sync_divergence_file_dir}: {exc}"
+            ) from exc
+    items: list[DivergenceReviewItem] = []
+    for record in records:
+        if record.resolution_state is not ResolutionState.PENDING:
+            continue
+        items.append(_to_divergence_item(record))
+    return tuple(items)
+
+
+def _classify_divergence(record: DivergenceRecord) -> ReviewSeverity:
+    """First-match-wins severity per ADR D5 divergences table."""
+    if record.classification in {
+        DivergenceClassification.BREAKING,
+        DivergenceClassification.SUSPICIOUS,
+    }:
+        return ReviewSeverity.CRITICAL
+    return ReviewSeverity.NORMAL
+
+
+def _to_divergence_item(record: DivergenceRecord) -> DivergenceReviewItem:
+    summary_text = f"[{record.classification.value}] {record.payload.kind.value}"
+    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+    return DivergenceReviewItem(
+        item_id=record.record_id,
+        modelo=str(record.modelo) if record.modelo is not None else None,
+        severity=_classify_divergence(record),
+        summary=summary,
+        drill_command=f"aeat sync show-divergence {record.record_id}",
+        since=record.detected_at,
+        source=record,
+    )
+
+
+# ── filing drafts ─────────────────────────────────────────────────
+
+
+def drafts_pending(
+    settings: Settings,
+    *,
+    drafts: tuple[tuple[Path, FilingDraft], ...] | None = None,
+) -> tuple[FindingReviewItem, ...]:
+    """Return :class:`FindingReviewItem`s for findings + unready drafts."""
+    if drafts is None:
+        drafts = _load_drafts(settings)
+    items: list[FindingReviewItem] = []
+    seen: set[tuple[str, str, str]] = set()
+    for path, draft in drafts:
+        path_str = str(path)
+        if draft.findings:
+            for finding in draft.findings:
+                dedup_key = (draft.draft_id, finding.code, finding.casilla_id or "-")
+                if dedup_key in seen:
+                    continue
+                seen.add(dedup_key)
+                items.append(
+                    _to_finding_item(
+                        draft=draft,
+                        path_str=path_str,
+                        finding=finding,
+                    )
+                )
+            continue
+        if draft.status in {FilingDraftStatus.DRAFT, FilingDraftStatus.VALIDATED}:
+            items.append(
+                _to_placeholder_item(
+                    draft=draft,
+                    path_str=path_str,
+                )
+            )
+        elif draft.status is FilingDraftStatus.APPROVAL_STALE:
+            items.append(
+                _to_stale_approval_item(
+                    draft=draft,
+                    path_str=path_str,
+                )
+            )
+    return tuple(items)
+
+
+def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
+    root = settings.aeat_drafts_dir.resolve()
+    if not root.exists():
+        return ()
+    out: list[tuple[Path, FilingDraft]] = []
+    for path in sorted(root.glob("*.json")):
+        try:
+            draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
+        except ValidationError:
+            _LOGGER.warning("skipping invalid draft file: %s", path)
+            continue
+        except OSError:
+            _LOGGER.warning("skipping unreadable draft file: %s", path)
+            continue
+        out.append((path, draft))
+    return tuple(out)
+
+
+def _classify_finding(severity: FilingFindingSeverity) -> ReviewSeverity:
+    """Map FilingFindingSeverity to ReviewSeverity per ADR D5 findings table."""
+    if severity is FilingFindingSeverity.ERROR:
+        return ReviewSeverity.CRITICAL
+    if severity is FilingFindingSeverity.WARNING:
+        return ReviewSeverity.HIGH
+    return ReviewSeverity.INFO
+
+
+def _to_finding_item(
+    *,
+    draft: FilingDraft,
+    path_str: str,
+    finding: FilingValidationFinding,
+) -> FindingReviewItem:
+    casilla = finding.casilla_id or "-"
+    summary_text = finding.message.get("en") or _first_translation(finding.message) or finding.code
+    summary_prefix = f"[casilla {casilla}] " if casilla != "-" else ""
+    summary: Translatable = {
+        "es": summary_prefix + (finding.message.get("es") or summary_text),
+        "en": summary_prefix + (finding.message.get("en") or summary_text),
+        "hu": summary_prefix + (finding.message.get("hu") or summary_text),
+    }
+    return FindingReviewItem(
+        item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
+        modelo=draft.modelo,
+        severity=_classify_finding(finding.severity),
+        summary=summary,
+        drill_command=f"aeat filing show {path_str} --findings-only",
+        since=draft.updated_at,
+        source=finding,
+        draft_id=draft.draft_id,
+        draft_path=path_str,
+    )
+
+
+def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
+    summary_text = f"draft not ready to submit (status={draft.status.value})"
+    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+    return FindingReviewItem(
+        item_id=f"{draft.draft_id}:_status:{draft.status.value}",
+        modelo=draft.modelo,
+        severity=ReviewSeverity.NORMAL,
+        summary=summary,
+        drill_command=f"aeat filing show {path_str}",
+        since=draft.updated_at,
+        source=None,
+        draft_id=draft.draft_id,
+        draft_path=path_str,
+    )
+
+
+def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
+    """Emit a high-severity item for drafts whose stored approval is stale (#230)."""
+    summary_text = "approval stale — re-review required (status=APPROVAL_STALE)"
+    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+    return FindingReviewItem(
+        item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
+        modelo=draft.modelo,
+        severity=ReviewSeverity.HIGH,
+        summary=summary,
+        drill_command=f"aeat review show {path_str}",
+        since=draft.updated_at,
+        source=None,
+        draft_id=draft.draft_id,
+        draft_path=path_str,
+    )
+
+
+def _first_translation(message: Translatable) -> str | None:
+    for lang in ("es", "en", "hu"):
+        value = message.get(lang)
+        if value:
+            return value
+    return None
+
+
+# ── inbox ─────────────────────────────────────────────────────────
+
+
+def inbox_pending(
+    settings: Settings,
+    *,
+    inbox: Inbox | None = None,
+    today: date | None = None,
+) -> tuple[InboxReviewItem, ...]:
+    """Return :class:`InboxReviewItem`s for unacknowledged notifications."""
+    if inbox is None:
+        inbox = _load_inbox(settings)
+        if inbox is None:
+            return ()
+    today_value = today or datetime.now(tz=UTC).date()
+    lead_window = today_value + timedelta(days=settings.aeat_inbox_alert_lead_days)
+    items: list[InboxReviewItem] = []
+    for notificacion in inbox.values():
+        if notificacion.acknowledged_at is not None:
+            continue
+        items.append(
+            _to_inbox_item(
+                notificacion=notificacion,
+                lead_window=lead_window,
+            )
+        )
+    return tuple(items)
+
+
+def _load_inbox(settings: Settings) -> Inbox | None:
+    path = settings.aeat_inbox_dir.resolve() / _INBOX_FILENAME
+    if not path.exists():
+        return None
+    try:
+        return Inbox.model_validate_json(path.read_text(encoding="utf-8"))
+    except (ValidationError, OSError) as exc:
+        raise ReviewSourceLoadError(f"failed to load inbox at {path}: {exc}") from exc
+
+
+def _classify_inbox(notificacion: Notificacion, *, lead_window: date) -> ReviewSeverity:
+    """First-match-wins severity per ADR D5 inbox table."""
+    if notificacion.priority is NotificacionPriority.CRITICAL:
+        return ReviewSeverity.CRITICAL
+    if notificacion.priority is NotificacionPriority.HIGH:
+        return ReviewSeverity.HIGH
+    deadline = notificacion.appeal_deadline
+    if deadline is not None and deadline <= lead_window:
+        return ReviewSeverity.HIGH
+    if notificacion.priority is NotificacionPriority.NORMAL:
+        return ReviewSeverity.NORMAL
+    return ReviewSeverity.INFO
+
+
+def _to_inbox_item(*, notificacion: Notificacion, lead_window: date) -> InboxReviewItem:
+    subject_text = notificacion.subject.get("en") or _first_translation(notificacion.subject) or notificacion.kind.value
+    deadline_suffix = f" [deadline {notificacion.appeal_deadline.isoformat()}]" if notificacion.appeal_deadline else ""
+    summary_text = f"[{notificacion.kind.value}]{deadline_suffix} {subject_text}"
+    summary: Translatable = {
+        "es": summary_text,
+        "en": summary_text,
+        "hu": summary_text,
+    }
+    return InboxReviewItem(
+        item_id=notificacion.notificacion_id,
+        modelo=notificacion.references_modelo,
+        severity=_classify_inbox(notificacion, lead_window=lead_window),
+        summary=summary,
+        drill_command=f"aeat inbox show {notificacion.notificacion_id}",
+        since=notificacion.received_at,
+        source=notificacion,
+    )

@@ -6,11 +6,6 @@ Subcommands:
 - ``aeat filing validate`` — re-validate a saved draft.
 - ``aeat filing show`` — pretty-print a draft.
 - ``aeat filing list`` — list drafts under the configured drafts dir.
-
-The CLI deliberately consumes the synthetic Modelo 130 schema
-provider exposed by :mod:`aeat.filing.testing`, because the real
-casilla DB (#23) and modelo catalogue (#6) are not on ``main``
-yet. Wiring the production providers is a follow-up rebase.
 """
 
 from __future__ import annotations
@@ -34,6 +29,7 @@ from ...filing import (
     FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
+    FilingOperatorProfile,
     approval_stale_reasons,
     build_complementaria,
     build_draft,
@@ -43,10 +39,7 @@ from ...filing import (
     refresh_review_status,
     validate_draft,
 )
-from ...filing.testing import (
-    SyntheticProfile,
-    default_schema_provider,
-)
+from ...filing.runtime import build_runtime_schema_provider, load_default_filing_profile
 from ...logging import get_logger
 from ...submission import SubmissionEngine, SubmissionError
 from ..submission._helpers import build_engine as build_submission_engine
@@ -85,6 +78,11 @@ def _draft_filename(draft: FilingDraft) -> str:
 def _submission_engine() -> SubmissionEngine:
     """Return a submission engine instance for amendment commands."""
     return build_submission_engine()
+
+
+def _schema_provider():
+    """Return the production filing schema provider."""
+    return build_runtime_schema_provider()
 
 
 def _load_inputs(path: Path) -> dict[str, object]:
@@ -127,7 +125,7 @@ def _refresh_persisted_draft(path: Path, draft: FilingDraft | None = None) -> Fi
     loaded = draft or _load_draft(path)
     refreshed = refresh_review_status(
         loaded,
-        schema_provider=default_schema_provider(),
+        schema_provider=_schema_provider(),
     )
     if refreshed != loaded:
         path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
@@ -220,7 +218,7 @@ def _render_draft(draft: FilingDraft, *, findings_only: bool = False) -> None:
         if draft.status is FilingDraftStatus.APPROVAL_STALE:
             reasons = approval_stale_reasons(
                 draft,
-                schema_provider=default_schema_provider(),
+                schema_provider=_schema_provider(),
             )
             if reasons:
                 header.add_row(
@@ -267,6 +265,13 @@ def build(
         Path,
         typer.Option("--inputs", help="Path to a JSON file with casilla → value mapping"),
     ],
+    profile: Annotated[
+        Path | None,
+        typer.Option(
+            "--profile",
+            help="Optional path to an AutonomoProfile JSON file (defaults to AEAT_DEFAULT_PROFILE_PATH).",
+        ),
+    ] = None,
     profile_tax_id: Annotated[
         str,
         typer.Option(
@@ -282,18 +287,35 @@ def build(
     """Build a draft from a JSON inputs file and save it to disk."""
     settings = load_settings()
     parsed_inputs = _load_inputs(inputs)
-    profile = SyntheticProfile(
-        tax_id=profile_tax_id,
-        display_name=profile_name,
-        applicable_modelos=(modelo,),
-    )
+    resolved_display_name = None if profile_name == _DEFAULT_PROFILE_NAME else profile_name
+    operator_profile: FilingOperatorProfile
+    if profile is not None:
+        try:
+            operator_profile = load_default_filing_profile(profile, display_name=resolved_display_name)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    elif (
+        settings.aeat_default_profile_path is not None
+        and profile_tax_id == _DEFAULT_PROFILE_TAX_ID
+        and profile_name == _DEFAULT_PROFILE_NAME
+    ):
+        try:
+            operator_profile = load_default_filing_profile(display_name=resolved_display_name)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    else:
+        operator_profile = FilingOperatorProfile(
+            tax_id=profile_tax_id,
+            display_name=profile_name,
+            applicable_modelos=(modelo,),
+        )
     try:
         draft = build_draft(
             modelo=modelo,
             period=period,
-            profile=profile,
+            profile=operator_profile,
             inputs=parsed_inputs,
-            schema_provider=default_schema_provider(),
+            schema_provider=_schema_provider(),
             fail_on_warning=settings.aeat_draft_fail_on_warning,
         )
     except FilingDraftError as exc:
@@ -311,7 +333,7 @@ def validate(
     draft = _load_draft(draft_path)
     refreshed = validate_draft(
         draft,
-        schema_provider=default_schema_provider(),
+        schema_provider=_schema_provider(),
     )
     refreshed = _refresh_persisted_draft(draft_path, refreshed)
     draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")

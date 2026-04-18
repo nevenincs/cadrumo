@@ -17,7 +17,7 @@ from ..config import load_settings
 from ..justificante import parse_justificante
 from ._errors import FilingAmendmentError, FilingAmendmentValidationError
 from ._schema import FilingDraft, FilingScalar, FilingValue
-from .testing import SyntheticProfile, default_schema_provider
+from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
 type ModeloCode = str
 type CasillaInputs = Mapping[str, object]
@@ -228,7 +228,7 @@ def _build_updated_draft(
     profile_tax_id: str,
     updated_inputs: CasillaInputs,
 ) -> FilingDraft:
-    profile = SyntheticProfile(
+    profile = FilingOperatorProfile(
         tax_id=profile_tax_id,
         display_name=f"Amendment {profile_tax_id}",
         applicable_modelos=(modelo,),
@@ -244,7 +244,7 @@ def _build_updated_draft(
         period=period,
         profile=profile,
         inputs=draft_inputs,
-        schema_provider=default_schema_provider(),
+        schema_provider=build_runtime_schema_provider(),
     )
 
 

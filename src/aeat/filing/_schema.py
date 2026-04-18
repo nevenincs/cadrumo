@@ -17,9 +17,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ..i18n import Translatable
 
-# Default schema version stamped on a freshly built draft. The real
-# casilla DB version is supplied via the CasillaCollection Protocol;
-# this constant is the fallback used by the synthetic test schemas.
+# Default schema version stamped on a freshly built draft when a
+# caller provides an ad hoc collection without an explicit runtime
+# schema version.
 SCHEMA_VERSION_DEFAULT = "filing-schema-0.1.0"
 APPROVAL_BASIS_VERSION = "review-basis-v1"
 

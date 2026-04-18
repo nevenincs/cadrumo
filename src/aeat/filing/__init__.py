@@ -20,12 +20,12 @@ Example:
         build_draft,
         iter_findings,
     )
-    from .testing import (
-        SyntheticProfile,
-        default_schema_provider,
+    from .runtime import (
+        FilingOperatorProfile,
+        build_runtime_schema_provider,
     )
 
-    profile = SyntheticProfile(
+    profile = FilingOperatorProfile(
         tax_id="00000000T",
         display_name="Autónomo Demo",
         applicable_modelos=("130",),
@@ -41,7 +41,7 @@ Example:
         period="2026Q1",
         profile=profile,
         inputs=inputs,
-        schema_provider=default_schema_provider(),
+        schema_provider=build_runtime_schema_provider(),
     )
     assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
     for finding in iter_findings(draft, severity_at_least="ERROR"):
@@ -117,6 +117,15 @@ from ._schema import (
     compute_draft_id,
 )
 from ._validator import FilingValidator, apply_validation, derive_validation_status
+from .runtime import (
+    FilingOperatorProfile,
+    RuntimeCasillaCollection,
+    RuntimeCasillaSchema,
+    RuntimeCasillaSchemaProvider,
+    build_runtime_schema_provider,
+    filing_profile_from_autonomo,
+    load_default_filing_profile,
+)
 
 _logger = get_logger(__name__)
 
@@ -307,6 +316,7 @@ __all__ = [
     "FilingDraftStatus",
     "FilingFindingSeverity",
     "FilingInputs",
+    "FilingOperatorProfile",
     "FilingProfile",
     "FilingScalar",
     "FilingValidationError",
@@ -319,20 +329,26 @@ __all__ = [
     "Modelo390Builder",
     "ModeloCode",
     "ModeloIdentity",
+    "RuntimeCasillaCollection",
+    "RuntimeCasillaSchema",
+    "RuntimeCasillaSchemaProvider",
     "apply_validation",
     "approval_stale_reasons",
     "approve_draft",
     "build_complementaria",
     "build_draft",
+    "build_runtime_schema_provider",
     "compute_current_approval_basis",
     "compute_draft_id",
     "compute_review_checksum",
     "derive_validation_status",
     "describe_stale_reason",
+    "filing_profile_from_autonomo",
     "get_builder",
     "iter_findings",
     "list_amendments",
     "load_amendment",
+    "load_default_filing_profile",
     "make_amendment_id",
     "refresh_review_status",
     "unapprove_draft",

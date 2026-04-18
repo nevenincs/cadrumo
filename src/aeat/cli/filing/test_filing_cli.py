@@ -13,8 +13,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...filing import build_draft
-from ...filing.testing import SyntheticProfile, default_schema_provider
+from ...deadlines import AutonomoProfile, IVARegime
+from ...filing import FilingOperatorProfile, build_draft
+from ...filing.runtime import build_runtime_schema_provider
 from .. import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -53,17 +54,33 @@ def submissions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return target
 
 
+@pytest.fixture
+def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    profile = AutonomoProfile(
+        tax_id="00000000T",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+    )
+    target = tmp_path / "profile.json"
+    target.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+    monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", str(target))
+    return target
+
+
 def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
     draft = build_draft(
         modelo="130",
         period="2024Q1",
-        profile=SyntheticProfile(
+        profile=FilingOperatorProfile(
             tax_id="00000000T",
             display_name="CLI amendment subject",
             applicable_modelos=("130",),
         ),
         inputs={"01": 12500, "02": 3500, "05": 400, "06": 0},
-        schema_provider=default_schema_provider(),
+        schema_provider=build_runtime_schema_provider(),
     )
     draft_path = drafts_dir / f"130_2024Q1_{draft.draft_id}.json"
     draft_path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
@@ -96,6 +113,34 @@ def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
 
 
 class TestFilingCLI:
+    def test_build_uses_configured_profile_file(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        profile_path: Path,
+    ) -> None:
+        inputs = _write_inputs(tmp_path)
+        result = runner.invoke(
+            app,
+            [
+                "filing",
+                "build",
+                "--modelo",
+                "130",
+                "--period",
+                "2026Q1",
+                "--inputs",
+                str(inputs),
+                "--profile",
+                str(profile_path),
+                "--profile-name",
+                "Configured operator",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        produced = sorted(drafts_dir.glob("130_2026Q1_*.json"))
+        assert len(produced) == 1
+
     def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
         result = runner.invoke(

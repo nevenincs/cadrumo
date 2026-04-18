@@ -1,14 +1,11 @@
-"""Modelo 130 builder — proof of concept for :mod:`aeat.filing`.
+"""Modelo 130 builder for :mod:`aeat.filing`.
 
 Modelo 130 is the quarterly *pago fraccionado IRPF* form filed
 by Spanish autónomos in régimen de estimación directa. Its
 casilla shape is small enough to exercise every
 :class:`aeat.filing._schema.FilingValueKind` while remaining
-hand-verifiable in unit tests.
-
-The casilla schema is loaded from the synthetic provider in
-:mod:`aeat.filing._builders._modelo_130_schema` and will be
-swapped for the real casilla DB once #23 lands.
+hand-verifiable in unit tests while remaining compatible with the
+runtime schema provider backed by the canonical casilla corpus.
 """
 
 from __future__ import annotations
@@ -36,7 +33,7 @@ from .._schema import (
 
 _logger = get_logger(__name__)
 
-#: 20% advance payment rate, locked into the synthetic Modelo 130 PoC.
+#: 20% advance payment rate for the ordinary Modelo 130 flow.
 _PAGO_FRACCIONADO_RATE = Decimal("0.20")
 
 
@@ -85,9 +82,8 @@ class Modelo130Builder(FilingBuilder):
             values[casilla.id] = self._materialise_literal(casilla, inputs)
 
         # Second pass: computed casillas in dependency order. The
-        # synthetic Modelo 130 schema is small and acyclic so a
-        # bounded fixed-point loop is enough; production builders
-        # will use the formula AST from #9.
+        # current corpus-backed schema is small and acyclic, so a
+        # bounded fixed-point loop is enough here.
         pending = [c for c in collection.all() if c.formula_inputs]
         max_passes = len(pending) + 1
         for _ in range(max_passes):
