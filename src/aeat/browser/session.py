@@ -19,7 +19,7 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
-from ..auth import LoadedCertificate, build_client_certificates_kwarg
+from ..auth import CERTIFICATE_CONTEXT_MARKER, BrowserContextProvisioner
 from ..config import Settings
 from ..errors import AeatError, SiteHealthError
 from ..logging import get_logger
@@ -33,16 +33,10 @@ from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
 
-CERTIFICATE_THUMBPRINT_MARKER = "_aeat_certificate_thumbprint"
-"""Attribute stamped on a ``BrowserContext`` that was constructed with a cert.
-
-The :class:`aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
-reads the same attribute to validate that callers actually wired
-the client certificate into ``browser.new_context()``. The value
-is the cert's SHA-256 thumbprint (hex).
-"""
-
 logger = get_logger(__name__)
+
+CERTIFICATE_THUMBPRINT_MARKER = CERTIFICATE_CONTEXT_MARKER
+"""Backward-compatible alias for the certificate context marker name."""
 
 
 class BrowserError(AeatError):
@@ -79,29 +73,24 @@ class BrowserSession:
     async def create_context(
         self,
         *,
-        cert: LoadedCertificate | None = None,
+        provisioner: BrowserContextProvisioner | None = None,
         storage_state_path: Path | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
-        When ``cert`` is supplied, the certificate is wired into the
-        context via the ``client_certificates`` kwarg on
-        ``browser.new_context()`` (Playwright ≥1.46) and the
-        resulting context is tagged with the
-        :data:`CERTIFICATE_THUMBPRINT_MARKER` attribute so the
-        :class:`aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
-        validator accepts it.
+        When ``provisioner`` is supplied, it can inject auth-provider-
+        specific ``browser.new_context(...)`` kwargs and tag the
+        resulting context after construction.
 
         Args:
-            cert: Optional loaded PKCS#12 certificate to present
-                when the authenticated context hits AEAT origins.
-            storage_state_path: Optional override for the storage-state
-                JSON file to resume from.
+            provisioner: Optional auth-provider hook used to decorate
+                the new context call.
 
         Returns:
             A configured BrowserContext with evasion strategies
-            applied and — when ``cert`` is supplied — the cert wired
-            through at construction time.
+            applied and — when ``provisioner`` is supplied — the
+            provider-specific context kwargs wired through at
+            construction time.
 
         Raises:
             BrowserError: If the browser cannot be launched.
@@ -142,23 +131,20 @@ class BrowserSession:
                 if effective_storage_state_path.exists():
                     context_kwargs["storage_state"] = str(effective_storage_state_path)
 
-                if cert is not None:
-                    context_kwargs["client_certificates"] = build_client_certificates_kwarg(
-                        cert,
-                        self.settings.aeat_certificate_verify_url,
-                    )
+                if provisioner is not None:
+                    context_kwargs.update(dict(provisioner.build_context_kwargs()))
 
                 try:
                     context = await browser.new_context(**context_kwargs)
                 finally:
-                    # Keep client-certificate passphrases live only for the
+                    # Keep provider materialised secrets live only for the
                     # exact Playwright construction boundary.
                     context_kwargs.pop("client_certificates", None)
 
                 await self.evasion_strategy.apply(context)
 
-                if cert is not None:
-                    setattr(context, CERTIFICATE_THUMBPRINT_MARKER, cert.sha256_thumbprint)
+                if provisioner is not None:
+                    provisioner.annotate_context(context)
 
                 return context
             except BrowserError:
@@ -270,8 +256,6 @@ class BrowserSession:
         try:
             await browser.close()
         except Exception as exc:
-            # Keep the retained browser handle on close failure so callers can
-            # retry teardown; dropping it here would orphan the leaked process.
             logger.warning("Failed to close retained browser: %s", exc)
             raise BrowserError("Failed to close retained browser") from exc
         self._browser = None

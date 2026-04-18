@@ -9,11 +9,12 @@ from typing import Any
 import pytest
 
 from . import (
+    AuthProviderDescription,
+    AuthProviderKind,
     DraftStatus,
     FilingDraftLike,
     FilingFinding,
     FilingFindingSeverity,
-    LoadedCertificate,
     Preflight,
     SubmissionPreflightError,
 )
@@ -48,24 +49,27 @@ class _AlwaysClosedChecker:
         return False
 
 
-class _OkCertBackend:
-    def load(self) -> LoadedCertificate:
-        return LoadedCertificate(
+class _OkAuthProvider:
+    kind = AuthProviderKind.CERTIFICATE
+
+    def describe(self) -> AuthProviderDescription:
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="Test certificate",
+            configured=True,
+            available=True,
+            identity_nif="X1234567L",
             subject="CN=Test",
-            not_after=date(2099, 12, 31),
-            fingerprint_sha256="a" * 64,
+            expires_on=date(2099, 12, 31),
+            health_summary="OK:26800",
         )
 
-    async def preload_into_browser_context(self, context: Any) -> None:
-        return None
 
+class _FailingAuthProvider:
+    kind = AuthProviderKind.CERTIFICATE
 
-class _FailingCertBackend:
-    def load(self) -> LoadedCertificate:
+    def describe(self) -> AuthProviderDescription:
         raise RuntimeError("no smartcard")
-
-    async def preload_into_browser_context(self, context: Any) -> None:
-        return None
 
 
 _TODAY = date(2026, 4, 10)
@@ -74,7 +78,7 @@ _TODAY = date(2026, 4, 10)
 def _preflight(*, checker: Any | None = None, cert: Any | None = None) -> Preflight:
     return Preflight(
         deadline_checker=checker or _AlwaysOpenChecker(),
-        cert_backend=cert or _OkCertBackend(),
+        auth_provider=cert or _OkAuthProvider(),
     )
 
 
@@ -110,5 +114,5 @@ class TestPreflightGates:
             _preflight(checker=_AlwaysClosedChecker()).check(_Draft(), today=_TODAY)
 
     def test_gate_4_cert_load_fails(self) -> None:
-        with pytest.raises(SubmissionPreflightError, match="certificate"):
-            _preflight(cert=_FailingCertBackend()).check(_Draft(), today=_TODAY)
+        with pytest.raises(SubmissionPreflightError, match="auth provider"):
+            _preflight(cert=_FailingAuthProvider()).check(_Draft(), today=_TODAY)

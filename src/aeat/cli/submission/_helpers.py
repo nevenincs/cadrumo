@@ -7,10 +7,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Any
 
 from ...config import Settings, load_settings
 from ...submission import (
+    AuthProviderDescription,
+    AuthProviderKind,
     CasillaInputKind,
     CasillaRecord,
     DraftStatus,
@@ -18,7 +19,6 @@ from ...submission import (
     FilingFinding,
     FilingFindingSeverity,
     Justificante,
-    LoadedCertificate,
     Modelo130Submitter,
     Portal,
     SubmissionEngine,
@@ -78,22 +78,25 @@ class _OpenDeadlineChecker:
         return True
 
 
-class _StubCertBackend:
-    """Stub :class:`CertificateBackend` used by the CLI.
+class _StubAuthProvider:
+    """Stub auth-provider probe used by the CLI.
 
-    Always returns a placeholder :class:`LoadedCertificate`. Swap for
-    the real backend when #8 merges.
+    Always reports a ready certificate-backed provider description.
     """
 
-    def load(self) -> LoadedCertificate:
-        return LoadedCertificate(
-            subject="CN=cli-stub",
-            not_after=date(2099, 12, 31),
-            fingerprint_sha256="a" * 64,
-        )
+    kind = AuthProviderKind.CERTIFICATE
 
-    async def preload_into_browser_context(self, context: Any) -> None:
-        return None
+    def describe(self) -> AuthProviderDescription:
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="CLI stub certificate",
+            configured=True,
+            available=True,
+            identity_nif="12345678Z",
+            subject="CN=cli-stub",
+            expires_on=date(2099, 12, 31),
+            health_summary="OK:26800",
+        )
 
 
 class _StubPortalCatalogue:
@@ -179,7 +182,7 @@ def build_engine(settings: Settings | None = None) -> SubmissionEngine:
     # surface never opts in.
     return SubmissionEngine(
         browser_session_factory=_NullSession,
-        cert_backend=_StubCertBackend(),
+        auth_provider=_StubAuthProvider(),
         portal_catalogue=_StubPortalCatalogue(),
         draft_loader=_CliDraftLoader(),
         deadline_checker=_OpenDeadlineChecker(),
