@@ -1,4 +1,4 @@
-"""``aeat submission`` sub-app — CLI surface for the filing submission engine.
+"""``aeat submission`` sub-app — preflight and dry-run filing helpers.
 
 Wires four subcommands under ``aeat submission`` per the submission
 engine ADR [[2026-04-12-submission-engine-adr]] and the live-submit
@@ -12,10 +12,11 @@ excision ADR [[2026-04-18-live-submit-cli-excision-adr]]:
   persisted filing, optionally filtered.
 
 The previously-registered ``submit`` subcommand was removed per the
-2026-04-18 excision ADR. Charter #197 (produce-verify-export) and
-charter #116 (live-write safety) jointly defer live submission to
-1.0.0. Programmatic callers that genuinely need the live path must
-construct :class:`aeat.submission.SubmissionEngine` with explicit
+2026-04-18 excision ADR. Kent's normal CLI path remains produce →
+verify → export, with live submission deferred to 1.0.0 behind
+stricter gates outside the default surface. Programmatic callers that
+genuinely need the live path must construct
+:class:`aeat.submission.SubmissionEngine` with explicit
 ``live_transport_supported=True`` — a default-constructed engine
 raises :class:`AeatLiveTransportUnavailableError` on
 ``submit_draft(dry_run=False)``.
@@ -33,7 +34,7 @@ from .show import show_cmd
 app = typer.Typer(
     name="submission",
     no_args_is_help=True,
-    help="Filing submission engine (#42) — preflight / dry-run / show / list only.",
+    help="Preflight, dry-run, and inspect AEAT filing attempts; no default CLI live-submit command.",
 )
 
 app.command(name="preflight", help="Run preflight gates against a draft (no browser action).")(preflight_cmd)

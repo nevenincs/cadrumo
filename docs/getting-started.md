@@ -28,6 +28,15 @@ You will need:
 > variable whose name is documented during `aeat setup`; the actual
 > value is never logged or echoed.
 
+## Authentication today
+
+The current Kent-facing login path is certificate-only. You need a
+working FNMT-compatible certificate setup for live AEAT access.
+
+Internally, the auth layer now hangs off a provider-generic seam so
+future login providers can plug into the same workflow. Those future
+providers are not shipped as usable CLI login options today.
+
 ## 2. Install
 
 Clone the repository and run the bootstrap recipe:
@@ -81,7 +90,7 @@ directly — every field is documented inline in `env/.env.example`.
 
 ```sh
 aeat doctor              # full read-only health check
-aeat setup verify        # certificate + AEAT round-trip          (merging in #61)
+aeat setup verify --from path/to/setup-answers.json
 ```
 
 `aeat doctor` walks every dependency the CLI needs (binaries on
@@ -90,9 +99,9 @@ readable, storage root writable) and prints a single pass/fail table.
 It exits non-zero on any required failure, so it is safe to drop into
 a pre-flight script.
 
-`aeat setup verify` additionally opens a real AEAT session with your
-certificate and reads back your taxpayer profile to confirm the
-end-to-end credential chain works. It does not submit anything.
+`aeat setup verify` is a local verifier for a `SetupAnswers` JSON
+file. It checks whether the recorded certificate/tooling setup is
+internally consistent; it does not open a real AEAT session.
 
 ## 5. First run
 
@@ -106,10 +115,10 @@ builds a typed draft against the manual práctico and the casilla
 catalogue, and prints the dry-run submission payload along with the
 diff against the last successful filing for the same modelo.
 
-**Nothing is sent to AEAT.** The default mode is dry-run. To actually
-submit, you re-run with the explicit confirm flag the dry-run output
-prints — the project never escalates from dry-run to submit
-automatically.
+**Nothing is sent to AEAT.** The default mode is dry-run. The default
+CLI intentionally is not a one-shot live-submit path, so Kent's
+normal command-line flow remains produce → verify → export, then
+upload through AEAT's portal himself.
 
 If the engine encounters a captcha, an unexpected modal, or any AEAT
 response it does not recognise, it pauses, takes a screenshot into
@@ -123,8 +132,8 @@ relevant env var (set by `aeat setup`) at the absolute path. The
 project does not move or copy your certificate.
 
 **How do I rotate the certificate?** Replace the `.p12` file at the
-configured path and re-run `aeat setup verify`. There is no per-tenant
-state tied to the certificate fingerprint.
+configured path and re-run the relevant local verification checks.
+There is no per-tenant state tied to the certificate fingerprint.
 
 **The dry-run says "deadline passed" — now what?** AEAT charges
 late-filing surcharges. The project will still build the draft but

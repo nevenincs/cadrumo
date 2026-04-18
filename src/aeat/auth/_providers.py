@@ -63,6 +63,38 @@ class AuthProviderDescription(BaseModel):
     health_summary: str | None = None
 
 
+def describe_provider_operator_impact(description: AuthProviderDescription) -> str:
+    """Explain what ``description`` means for Kent's CLI workflow today.
+
+    The auth provider contract is infrastructure, but the operator-facing
+    question is simpler: what can Kent do right now, and what is still blocked?
+    This helper keeps that answer consistent across CLI and workflow surfaces.
+    """
+
+    if not description.configured:
+        return (
+            "Kent can still produce, verify, and export filings locally, but "
+            "AEAT-backed reads and live submit stay unavailable until an auth "
+            "provider is configured."
+        )
+    if not description.available:
+        return (
+            f"{description.label} is configured but not ready yet. Kent can still "
+            "produce, verify, and export filings locally, but AEAT-backed reads "
+            "and live submit stay unavailable until auth is fixed."
+        )
+    if description.kind is AuthProviderKind.CERTIFICATE:
+        return (
+            "Certificate auth is ready. Kent keeps the same CLI filing flow for "
+            "AEAT-backed reads, live submit remains separately gated, and future "
+            "providers can plug into the same commands without changing the workflow."
+        )
+    return (
+        f"{description.label} is ready. Kent keeps the same CLI filing flow while "
+        "this provider plugs into the shared auth protocol."
+    )
+
+
 class CertificateSessionDetail(BaseModel):
     """Certificate-backed session details."""
 
@@ -268,5 +300,6 @@ __all__ = [
     "ClavePinLoginAssertionDetail",
     "ClavePinSessionDetail",
     "describe_certificate_provider",
+    "describe_provider_operator_impact",
     "select_provider",
 ]
