@@ -19,8 +19,8 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 |---|---|---|
 | Confidence on every decision | ❌ | [#236](https://github.com/wgergely/aeat/issues/236) |
 | Decision provenance (`decided_by`, `reason`) | partial (classified_by only) | [#231](https://github.com/wgergely/aeat/issues/231) |
-| Classification history (versioned) | ❌ | [#237](https://github.com/wgergely/aeat/issues/237) |
-| `PROCESSED_UNCLASSIFIED` state distinct from `NOT_YET_PROCESSED` | ❌ | [#237](https://github.com/wgergely/aeat/issues/237) |
+| Classification history (versioned) | ✅ | [#237](https://github.com/wgergely/aeat/issues/237) |
+| `PROCESSED_UNCLASSIFIED` state distinct from `NOT_YET_PROCESSED` | ✅ | [#237](https://github.com/wgergely/aeat/issues/237) |
 | Per-catalogue findings (not just per-draft) | ❌ | [#238](https://github.com/wgergely/aeat/issues/238) |
 | Unified review queue | ❌ | [#232](https://github.com/wgergely/aeat/issues/232) |
 | `aeat pipeline status` dashboard | ❌ | [#238](https://github.com/wgergely/aeat/issues/238) |
@@ -29,4 +29,4 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 
 ## provenance
 
-Last updated **2026-04-17**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
+Last updated **2026-04-18**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
