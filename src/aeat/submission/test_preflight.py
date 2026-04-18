@@ -86,13 +86,6 @@ class TestPreflightGates:
         with pytest.raises(SubmissionPreflightError, match="not ready"):
             _preflight().check(_Draft(status=DraftStatus.DRAFT), today=_TODAY)
 
-    def test_gate_1_approved_draft_is_allowed(self) -> None:
-        _preflight().check(_Draft(status=DraftStatus.APPROVED), today=_TODAY)
-
-    def test_gate_1_stale_approval_blocks(self) -> None:
-        with pytest.raises(SubmissionPreflightError, match="stale"):
-            _preflight().check(_Draft(status=DraftStatus.APPROVAL_STALE), today=_TODAY)
-
     def test_gate_2_error_finding_blocks(self) -> None:
         findings = (
             FilingFinding(

@@ -27,9 +27,9 @@ APPROVAL_BASIS_VERSION = "review-basis-v1"
 class FilingDraftStatus(StrEnum):
     """Lifecycle status of a :class:`FilingDraft`.
 
-    This issue produces drafts only up to ``READY_TO_SUBMIT``. The
-    later states are reserved for the future submission engine and
-    exist now so downstream callers can pin the enum without churn.
+    Drafts still build and validate up to ``READY_TO_SUBMIT``. Review adds
+    the local approval states ``APPROVED`` and ``APPROVAL_STALE`` without
+    introducing any write-path coupling.
     """
 
     DRAFT = "DRAFT"

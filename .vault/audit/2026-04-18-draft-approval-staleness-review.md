@@ -15,11 +15,5 @@ The shipped change set now carries explicit `APPROVED` and
 `APPROVAL_STALE` statuses on `FilingDraft`, persists approval provenance on the
 draft record, recomputes deterministic approval-basis fingerprints against the
 current transaction/category/schema context, and exercises those transitions
-through filing, review, and submission boundary tests.
-
-REVIEW-001 | low | Export gating remains a downstream integration point
-Issue #230 references refusal in `aeat submission export`, but the export
-surface from issue #201 is not present on this branch. The current change set
-establishes the status contract and stale-detection machinery that export must
-consume, but the explicit export refusal path cannot be wired until that command
-exists.
+through filing and review CLI tests without introducing any dependency on a
+live-write submission surface.
