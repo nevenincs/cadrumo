@@ -96,7 +96,7 @@ def _sample_transaction(*, provider_id: str = "tx-1") -> Transaction:
         {
             "raw": _sample_raw_transaction(provider_id=provider_id),
             "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.UNCLASSIFIED,
+            "business_classification": BusinessClassification.NOT_YET_PROCESSED,
         }
     )
 
