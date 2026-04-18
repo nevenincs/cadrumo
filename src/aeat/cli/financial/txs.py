@@ -6,15 +6,20 @@ from decimal import Decimal, InvalidOperation
 
 import typer
 
+from ...financial._decimal import canonical_decimal
 from ...financial.categories import SpendingCategory
 from ...financial.transactions import (
     BusinessClassification,
+    Transaction,
     TransactionError,
     find_transaction,
     save_transactions,
     set_classification,
 )
 from ._catalogue import catalogue_path, load_catalogue_or_empty, load_catalogue_required
+
+_CONFIDENCE_MIN = Decimal("0")
+_CONFIDENCE_MAX = Decimal("1")
 
 app = typer.Typer(
     name="txs",
@@ -23,7 +28,10 @@ app = typer.Typer(
 )
 
 
-@app.command(name="list", help="List stored transactions, optionally filtering by classification state.")
+@app.command(
+    name="list",
+    help="List stored transactions, optionally filtering by classification state or decision confidence.",
+)
 def list_cmd(
     state: BusinessClassification | None = typer.Option(
         None,
@@ -40,6 +48,11 @@ def list_cmd(
         help="Deprecated; alias for --state PROCESSED_UNCLASSIFIED.",
         hidden=True,
     ),
+    confidence_below: str | None = typer.Option(
+        None,
+        "--confidence-below",
+        help="Show only transactions whose classification confidence is strictly below this threshold (0..1).",
+    ),
 ) -> None:
     """List transactions from the configured catalogue file."""
     if state is not None and unclassified:
@@ -48,16 +61,17 @@ def list_cmd(
     effective_state: BusinessClassification | None = state
     if effective_state is None and unclassified:
         effective_state = BusinessClassification.PROCESSED_UNCLASSIFIED
+    threshold = _parse_confidence_threshold(confidence_below)
     catalogue = load_catalogue_or_empty()
     transactions = tuple(
         transaction
         for transaction in catalogue.values()
-        if effective_state is None or transaction.business_classification is effective_state
+        if _matches_filters(transaction, state=effective_state, threshold=threshold)
     )
     if not transactions:
         typer.echo("No transactions found.")
         return
-    typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tnarrative")
+    typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tconfidence\tnarrative")
     for transaction in sorted(
         transactions,
         key=lambda item: ((item.raw.value_date or item.raw.booked_date), item.transaction_id),
@@ -67,9 +81,10 @@ def list_cmd(
                 [
                     transaction.transaction_id,
                     transaction.direction.value,
-                    _format_amount(transaction.raw.amount),
+                    canonical_decimal(transaction.raw.amount),
                     transaction.raw.currency,
                     transaction.business_classification.value,
+                    _format_optional_decimal(transaction.classification_confidence),
                     transaction.raw.description,
                 ]
             )
@@ -120,6 +135,11 @@ def classify_cmd(
         "--reason",
         help="Optional free-text override justification; recorded in the history chain.",
     ),
+    confidence: str | None = typer.Option(
+        None,
+        "--confidence",
+        help="Decision confidence in the inclusive 0..1 range. Defaults to 1.0 for manual classifications.",
+    ),
 ) -> None:
     """Classify one transaction and write the updated catalogue to disk."""
     path = catalogue_path()
@@ -129,6 +149,7 @@ def classify_cmd(
     except InvalidOperation as exc:
         typer.echo(f"invalid --pct value: {pct}", err=True)
         raise typer.Exit(code=2) from exc
+    resolved_confidence = _parse_confidence_option(confidence)
     try:
         updated = set_classification(
             catalogue,
@@ -139,6 +160,7 @@ def classify_cmd(
             notes=reason,
             classified_by="manual",
             reason=reason,
+            confidence=resolved_confidence,
         )
         save_transactions(updated, path)
     except TransactionError as exc:
@@ -149,8 +171,54 @@ def classify_cmd(
     typer.echo(updated_transaction.model_dump_json(indent=2))
 
 
-def _format_amount(value: Decimal) -> str:
-    """Render a ``Decimal`` for CLI tables without exponent notation."""
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")
+def _parse_confidence_threshold(value: str | None) -> Decimal | None:
+    """Parse and range-check the ``--confidence-below`` option value."""
+    if value is None:
+        return None
+    try:
+        threshold = Decimal(value)
+    except InvalidOperation as exc:
+        typer.echo(f"invalid --confidence-below value: {value}", err=True)
+        raise typer.Exit(code=2) from exc
+    if not _CONFIDENCE_MIN <= threshold <= _CONFIDENCE_MAX:
+        typer.echo("--confidence-below must be within the inclusive 0..1 range", err=True)
+        raise typer.Exit(code=2)
+    return threshold
+
+
+def _parse_confidence_option(value: str | None) -> Decimal | None:
+    """Parse and range-check the ``--confidence`` option value."""
+    if value is None:
+        return None
+    try:
+        resolved = Decimal(value)
+    except InvalidOperation as exc:
+        typer.echo(f"invalid --confidence value: {value}", err=True)
+        raise typer.Exit(code=2) from exc
+    if not _CONFIDENCE_MIN <= resolved <= _CONFIDENCE_MAX:
+        typer.echo("--confidence must be within the inclusive 0..1 range", err=True)
+        raise typer.Exit(code=2)
+    return resolved
+
+
+def _matches_filters(
+    transaction: Transaction,
+    *,
+    state: BusinessClassification | None,
+    threshold: Decimal | None,
+) -> bool:
+    """Return whether a transaction passes the current list filters (AND semantics)."""
+    if state is not None and transaction.business_classification is not state:
+        return False
+    if threshold is not None:
+        current = transaction.classification_confidence
+        if current is None or current >= threshold:
+            return False
+    return True
+
+
+def _format_optional_decimal(value: Decimal | None) -> str:
+    """Render an optional ``Decimal`` for CLI tables, empty string for None."""
+    if value is None:
+        return ""
+    return canonical_decimal(value)
