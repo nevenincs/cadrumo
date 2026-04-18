@@ -7,7 +7,11 @@ from typing import Any
 
 import typer
 
-from ...financial.transactions import ClassificationHistoryEntry, find_transaction, snapshot_classification_state
+from ...financial.transactions import (
+    ClassificationHistoryEntry,
+    find_transaction,
+    snapshot_classification_state,
+)
 from ..financial._catalogue import load_catalogue_required
 
 
@@ -32,4 +36,4 @@ def history_cmd(
 
 def _entry_payload(entry: ClassificationHistoryEntry) -> dict[str, Any]:
     """Return a JSON-serialisable payload for one history entry."""
-    return json.loads(entry.model_dump_json())
+    return entry.model_dump(mode="json")

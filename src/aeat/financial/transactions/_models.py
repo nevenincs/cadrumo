@@ -90,6 +90,42 @@ def _coerce_history(raw: Any) -> tuple[Any, ...]:
     raise ValueError("classification_history must be a sequence of history entries")
 
 
+def _require_aware_datetime(value: datetime) -> datetime:
+    """Reject naive ``classified_at`` timestamps; enum-safe for both models."""
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("classified_at must be timezone-aware")
+    return value
+
+
+def _validate_classified_by_shape(value: str) -> str:
+    """Restrict ``classified_by`` to ``auto`` / ``manual`` / ``rule:<rule-id>``."""
+    normalized = value.strip()
+    if normalized in {"auto", "manual"}:
+        return normalized
+    if normalized.startswith("rule:") and normalized.removeprefix("rule:").strip():
+        return normalized
+    raise ValueError("classified_by must be 'auto', 'manual', or 'rule:<rule-id>'")
+
+
+def _validate_business_pct_coupling(
+    state: BusinessClassification,
+    pct: Decimal | None,
+) -> None:
+    """Enforce the classification/business-percentage coupling rule.
+
+    Raises ``ValueError`` when the pct field is set without ``MIXED``,
+    missing for ``MIXED``, or outside the inclusive 0..1 range.
+    """
+    if state is BusinessClassification.MIXED:
+        if pct is None:
+            raise ValueError("business_pct is required when classification is MIXED")
+        if not Decimal("0") <= pct <= Decimal("1"):
+            raise ValueError("business_pct must be within 0..1 when classification is MIXED")
+        return
+    if pct is not None:
+        raise ValueError("business_pct must be None unless classification is MIXED")
+
+
 class ClassificationHistoryEntry(BaseModel):
     """One frozen record in a transaction's classification chain.
 
@@ -138,20 +174,13 @@ class ClassificationHistoryEntry(BaseModel):
     @classmethod
     def _require_aware_timestamp(cls, value: datetime) -> datetime:
         """Reject naive classification timestamps."""
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("classified_at must be timezone-aware")
-        return value
+        return _require_aware_datetime(value)
 
     @field_validator("classified_by")
     @classmethod
     def _validate_classified_by(cls, value: str) -> str:
         """Restrict ``classified_by`` to the approved shapes."""
-        normalized = value.strip()
-        if normalized in {"auto", "manual"}:
-            return normalized
-        if normalized.startswith("rule:") and normalized.removeprefix("rule:").strip():
-            return normalized
-        raise ValueError("classified_by must be 'auto', 'manual', or 'rule:<rule-id>'")
+        return _validate_classified_by_shape(value)
 
     @field_validator("reason")
     @classmethod
@@ -160,16 +189,9 @@ class ClassificationHistoryEntry(BaseModel):
         return value.strip()
 
     @model_validator(mode="after")
-    def _validate_business_pct(self) -> Self:
+    def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling for a history entry."""
-        if self.business_classification is BusinessClassification.MIXED:
-            if self.business_pct is None:
-                raise ValueError("business_pct is required when classification is MIXED")
-            if not Decimal("0") <= self.business_pct <= Decimal("1"):
-                raise ValueError("business_pct must be within 0..1 when classification is MIXED")
-            return self
-        if self.business_pct is not None:
-            raise ValueError("business_pct must be None unless classification is MIXED")
+        _validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
 
@@ -255,34 +277,20 @@ class Transaction(BaseModel):
     @classmethod
     def _validate_classified_by(cls, value: str) -> str:
         """Restrict ``classified_by`` to the approved shapes."""
-        normalized = value.strip()
-        if normalized in {"auto", "manual"}:
-            return normalized
-        if normalized.startswith("rule:") and normalized.removeprefix("rule:").strip():
-            return normalized
-        raise ValueError("classified_by must be 'auto', 'manual', or 'rule:<rule-id>'")
+        return _validate_classified_by_shape(value)
 
     @field_validator("classified_at")
     @classmethod
     def _require_aware_timestamp(cls, value: datetime | None) -> datetime | None:
-        """Reject naive classification timestamps."""
+        """Reject naive classification timestamps; ``None`` remains valid here."""
         if value is None:
             return None
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("classified_at must be timezone-aware")
-        return value
+        return _require_aware_datetime(value)
 
     @model_validator(mode="after")
-    def _validate_business_pct(self) -> Self:
+    def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling."""
-        if self.business_classification is BusinessClassification.MIXED:
-            if self.business_pct is None:
-                raise ValueError("business_pct is required when classification is MIXED")
-            if not Decimal("0") <= self.business_pct <= Decimal("1"):
-                raise ValueError("business_pct must be within 0..1 when classification is MIXED")
-            return self
-        if self.business_pct is not None:
-            raise ValueError("business_pct must be None unless classification is MIXED")
+        _validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
 
