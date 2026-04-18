@@ -107,7 +107,7 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
     1.  `transactions_pending(settings) -> tuple[TransactionReviewItem, ...]`
         -   Path: `settings.aeat_financial_txs_dir / "transactions.json"` (matches `cli/financial/txs.py:21`).
         -   Missing file → `()`.
-        -   Predicate: `t.business_classification is BusinessClassification.UNCLASSIFIED`.
+        -   Predicate (post-#237 state model): `not is_classified(t.business_classification)` AND `t.business_classification is not BusinessClassification.SKIPPED_BY_RULE`. Severity per first-match-wins table: NOT_YET_PROCESSED → NORMAL, PROCESSED_UNCLASSIFIED → HIGH, FAILED_VALIDATION → CRITICAL.
         -   Severity: NORMAL (per D5 transactions table).
         -   `item_id`: `t.transaction_id`.
         -   `since`: `t.classified_at` if not None, else `datetime.combine(t.raw.value_date or t.raw.booked_date, time.min, tzinfo=UTC)`.
@@ -208,7 +208,7 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
     -   Filters by `kinds` (None → all) and `modelo` (None → no filter; when set, items with `modelo is None` are excluded).
     -   `state == ALL` is reserved for a future "show resolved too" mode and **today is identical to PENDING** because adapters only emit pending items. The flag is wired so the CLI surface is forward-compatible without breaking changes.
     -   Sort key: `(-_severity_rank(item.severity), item.since, item.item_id)` so highest severity, oldest first, deterministic.
-9.  Create `test_aggregator.py`: build five mini-sources on `tmp_path` with one pending item each (one transaction UNCLASSIFIED, one invoice unmatched, one divergence PENDING + BREAKING, one draft with one ERROR finding, one notification with priority CRITICAL); assert the aggregator returns exactly five items, sort order is severity-desc-then-since, and `kinds=frozenset({DIVERGENCE, INBOX})` returns exactly two items.
+9.  Create `test_aggregator.py`: build five mini-sources on `tmp_path` with one pending item each (one transaction NOT_YET_PROCESSED, one invoice unmatched, one divergence PENDING + BREAKING, one draft with one ERROR finding, one notification with priority CRITICAL); assert the aggregator returns exactly five items, sort order is severity-desc-then-since, and `kinds=frozenset({DIVERGENCE, INBOX})` returns exactly two items.
 
 ### Phase 5 — CLI surface
 

@@ -34,14 +34,16 @@ This is the only working "review queue" today, and it is scoped to sync deltas.
 
 ### 2 — transactions (`src/aeat/financial/transactions/`)
 
-- `Transaction` (`src/aeat/financial/transactions/_models.py:63`) carries `business_classification`, `business_pct`, `classified_by` (`auto` | `manual` | `rule:<rule-id>`), `classified_at`, `notes`, plus links to `invoice_id` and `category_id`.
-- `BusinessClassification` (`src/aeat/financial/transactions/_enums.py:16`) — closed enum: BUSINESS / PERSONAL / MIXED / UNCLASSIFIED.
-- `TransactionCatalogue` (`_models.py:166`) — frozen mapping keyed by `transaction_id`. Loaded via `load_transactions(path)` (`_service.py:21`) from `<aeat_financial_txs_dir>/transactions.json`.
-- CLI surface: `aeat financial txs list --unclassified` (`src/aeat/cli/financial/txs.py:30`) filters to UNCLASSIFIED rows. No needs-review queue.
+> **Post-#237 update (2026-04-18):** PR #252 split the legacy `UNCLASSIFIED` value into `NOT_YET_PROCESSED`, `PROCESSED_UNCLASSIFIED`, `SKIPPED_BY_RULE`, and `FAILED_VALIDATION`, plus added the `is_classified()` helper. The adapter described below now uses `not is_classified(state)` AND `state is not SKIPPED_BY_RULE`, with first-match-wins severity per the four pending states (see ADR D5 transactions table).
 
-Pending = `business_classification is BusinessClassification.UNCLASSIFIED`.
+- `Transaction` (`src/aeat/financial/transactions/_models.py`) carries `business_classification`, `business_pct`, `classified_by` (`auto` | `manual` | `rule:<rule-id>`), `classified_at`, `notes`, plus links to `invoice_id` and `category_id`.
+- `BusinessClassification` (`src/aeat/financial/transactions/_enums.py`) — post-#237 closed enum: BUSINESS / PERSONAL / MIXED / NOT_YET_PROCESSED / PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION. The `is_classified()` helper returns True only for the first three.
+- `TransactionCatalogue` — frozen mapping keyed by `transaction_id`. Loaded via `load_transactions(path)` from `<aeat_financial_txs_dir>/transactions.json`.
+- CLI surface: `aeat financial txs list --unclassified` filters to non-classified rows. No needs-review queue prior to this PR.
 
-The audit (kent-revise-review wall 28) records that `UNCLASSIFIED` conflates four states (not-yet-seen / could-not-decide / skipped / personal) — the planned `REVIEWED_EXCLUDED` state lives in [#224](https://github.com/wgergely/aeat/issues/224). For #232 we surface "still UNCLASSIFIED" as pending and accept this conflation; #224 will refine the state without changing the queue contract.
+Pending = `not is_classified(state)` AND `state is not BusinessClassification.SKIPPED_BY_RULE`.
+
+The audit (kent-revise-review wall 28) noted that the pre-#237 `UNCLASSIFIED` value conflated four states. PR #252 (#237) resolved that conflation; this queue consumes the new state model directly. The further `REVIEWED_EXCLUDED` (Kent's manual-exclusion) state remains scoped to [#224](https://github.com/wgergely/aeat/issues/224) and will be added to the early-return branch alongside `SKIPPED_BY_RULE` when it lands.
 
 ### 3 — invoices (`src/aeat/financial/invoices/`)
 

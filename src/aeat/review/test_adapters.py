@@ -120,7 +120,7 @@ def _raw(*, source_row_index: int = 1, description: str = "Office") -> RawTransa
 def _transaction(
     *,
     source_row_index: int = 1,
-    classification: BusinessClassification = BusinessClassification.UNCLASSIFIED,
+    classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
     description: str = "Office supplies",
 ) -> Transaction:
     return Transaction.model_validate(
@@ -141,7 +141,7 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions(
         (
-            _transaction(source_row_index=1),  # UNCLASSIFIED
+            _transaction(source_row_index=1),  # NOT_YET_PROCESSED
             _transaction(source_row_index=2, classification=BusinessClassification.BUSINESS),
         )
     )
@@ -152,7 +152,47 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
     assert isinstance(item, TransactionReviewItem)
     assert item.severity is ReviewSeverity.NORMAL
     assert item.modelo is None
-    assert item.source.business_classification is BusinessClassification.UNCLASSIFIED
+    assert item.source.business_classification is BusinessClassification.NOT_YET_PROCESSED
+
+
+@pytest.mark.parametrize(
+    ("state", "expected_severity"),
+    [
+        (BusinessClassification.NOT_YET_PROCESSED, ReviewSeverity.NORMAL),
+        (BusinessClassification.PROCESSED_UNCLASSIFIED, ReviewSeverity.HIGH),
+        (BusinessClassification.FAILED_VALIDATION, ReviewSeverity.CRITICAL),
+    ],
+)
+def test_transactions_pending_severity_mapping(
+    tmp_path: Path,
+    state: BusinessClassification,
+    expected_severity: ReviewSeverity,
+) -> None:
+    settings = _build_settings(tmp_path)
+    catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1, classification=state),))
+    save_transactions(catalogue, settings.aeat_financial_txs_dir / "transactions.json")
+    items = transactions_pending(settings)
+    assert len(items) == 1
+    assert items[0].severity is expected_severity
+
+
+def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
+    """``SKIPPED_BY_RULE`` rows have a final disposition and must not appear."""
+    settings = _build_settings(tmp_path)
+    catalogue = TransactionCatalogue.from_transactions(
+        (
+            _transaction(
+                source_row_index=1,
+                classification=BusinessClassification.SKIPPED_BY_RULE,
+            ),
+            _transaction(
+                source_row_index=2,
+                classification=BusinessClassification.BUSINESS,
+            ),
+        )
+    )
+    save_transactions(catalogue, settings.aeat_financial_txs_dir / "transactions.json")
+    assert transactions_pending(settings) == ()
 
 
 # ── invoices adapter ──────────────────────────────────────────────
