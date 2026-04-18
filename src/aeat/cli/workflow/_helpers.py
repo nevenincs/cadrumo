@@ -1,13 +1,9 @@
 """Shared helpers for the ``aeat workflow`` CLI sub-app.
 
-Construction of the real :class:`aeat.workflow.WorkflowEngine`
-requires wiring components that still live on sibling branches
-(#43 status reader, #46 inbox, #8 cert auth). Until those land, the
-command surface emits a typer-friendly error directing the user at
-the missing sibling branch. The helpers are also the single seam
-the CLI unit tests hook into via monkeypatched constructors, so no
-``unittest.mock.patch`` is ever needed — tests substitute a real
-engine instance by assigning ``_engine_factory``.
+Production wiring composes the on-main deadline engine, filing runtime
+schema provider, and dry-run-safe submission engine helper into a real
+:class:`aeat.workflow.WorkflowEngine`. Tests can still override the
+construction seam by assigning ``_engine_factory`` / ``_profile_factory``.
 """
 
 from __future__ import annotations
@@ -22,12 +18,20 @@ from rich.json import JSON
 
 from ...config import load_settings
 from ...deadlines import AutonomoProfile
+from ...filing.runtime import build_runtime_schema_provider
 from ...workflow import (
+    DeadlineEngineAdapter,
+    FilingDraftBuilderAdapter,
+    SubmissionEngineAdapter,
     WorkflowEngine,
     WorkflowError,
     WorkflowResult,
+    default_engine,
     save_run,
 )
+from ..deadlines._helpers import build_engine as build_deadline_engine
+from ..deadlines._helpers import load_profile, resolve_profile_path
+from ..submission._helpers import build_engine as build_submission_engine
 
 _CONSOLE = Console()
 
@@ -70,22 +74,23 @@ def _build_engine() -> WorkflowEngine:
     """Return a :class:`WorkflowEngine` — test seam or production path."""
     if _engine_factory is not None:
         return _engine_factory()
-    raise WorkflowError(
-        "aeat workflow requires sibling-branch adapters for #43/#46/#8 which are not yet wired; "
-        "use aeat.workflow.default_engine(...) in your own code or wait for the rebase."
+    deadline_engine = build_deadline_engine()
+    submission_engine = build_submission_engine()
+    return default_engine(
+        deadline_engine=DeadlineEngineAdapter(deadline_engine),
+        filing_draft_builder=FilingDraftBuilderAdapter(schema_provider=build_runtime_schema_provider()),
+        submission_engine=SubmissionEngineAdapter(submission_engine),
     )
 
 
 def _build_profile() -> AutonomoProfile:
-    """Return the :class:`AutonomoProfile` — test seam or a placeholder."""
+    """Return the :class:`AutonomoProfile` — test seam or configured default."""
     if _profile_factory is not None:
         return _profile_factory()
-    # Production callers need to provide a profile via settings (#38 will wire this
-    # once the profile loader lands); until then we surface a clear WorkflowError.
-    raise WorkflowError(
-        "aeat workflow CLI needs a profile loader; inject one via set_test_hooks() "
-        "or wait for the deadline-engine profile loader to land (TODO: wire via #38)."
-    )
+    try:
+        return load_profile(resolve_profile_path(None))
+    except Exception as exc:
+        raise WorkflowError(str(exc)) from exc
 
 
 def _emit(result: WorkflowResult, *, as_json: bool) -> None:
