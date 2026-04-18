@@ -120,6 +120,8 @@ def set_classification(
     *,
     classification: BusinessClassification,
     business_pct: Decimal | None = None,
+    category_id: str | None = None,
+    notes: str | None = None,
     classified_by: str,
 ) -> TransactionCatalogue:
     """Return a new catalogue with updated classification metadata.
@@ -129,6 +131,8 @@ def set_classification(
         transaction_id: Stable transaction identifier to update.
         classification: New business-classification state.
         business_pct: Business-use percentage for ``MIXED`` classifications.
+        category_id: Optional category ID for the transaction.
+        notes: Optional notes or reasoning for the classification.
         classified_by: Classifier source string: ``auto``, ``manual``, or
             ``rule:<rule-id>``.
 
@@ -139,14 +143,20 @@ def set_classification(
         TransactionNotFoundError: If ``transaction_id`` is missing.
     """
     transaction = _require_transaction(catalogue, transaction_id)
+    payload = {
+        **transaction.model_dump(mode="python"),
+        "business_classification": classification,
+        "business_pct": business_pct,
+        "classified_at": datetime.now(UTC),
+        "classified_by": classified_by,
+    }
+    if category_id is not None:
+        payload["category_id"] = category_id
+    if notes is not None:
+        payload["notes"] = notes
+
     updated_transaction = _validate_transaction_update(
-        {
-            **transaction.model_dump(mode="python"),
-            "business_classification": classification,
-            "business_pct": business_pct,
-            "classified_at": datetime.now(UTC),
-            "classified_by": classified_by,
-        },
+        payload,
         context=f"invalid classification update for transaction: {transaction_id}",
     )
     return _replace_transaction(catalogue, updated_transaction)
