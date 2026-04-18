@@ -37,6 +37,7 @@ from . import modelos as modelos_module
 from . import normatives as normatives_module
 from . import oauth as oauth_module
 from . import portals as portals_module
+from . import review as review_module
 from . import schema as schema_module
 from . import setup as setup_wizard_module
 from . import sheets as sheets_module
@@ -101,6 +102,11 @@ app.add_typer(
 app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#43).")
 app.add_typer(submission_module.app, name="submission", help="Filing submission engine (#42).")
 app.add_typer(inbox_module.app, name="inbox", help="AEAT notifications inbox (#46).")
+app.add_typer(
+    review_module.app,
+    name="review",
+    help="Pipeline-decision review surfaces (#237/#232/#204).",
+)
 app.add_typer(workflow_module.app, name="workflow", help="End-user composite workflow engine (#59).")
 app.add_typer(
     justificante_module.app,

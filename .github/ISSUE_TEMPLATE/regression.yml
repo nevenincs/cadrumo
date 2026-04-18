@@ -1,0 +1,46 @@
+name: Kent wall / regression
+description: A Kent capability that used to work, or never worked, and must be fixed
+title: "REGRESSION: {Kent can no longer / still cannot} ..."
+labels: ["regression-prevention", "kent-journey"]
+body:
+  - type: textarea
+    id: what-kent-cant-do
+    attributes:
+      label: What Kent cannot do
+      description: One sentence, Kent's perspective.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Exact commands or flow a reviewer can run to reproduce.
+    validations:
+      required: true
+
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: Root cause (if known)
+      description: If not known, leave blank; the fix PR must fill this in.
+
+  - type: textarea
+    id: preventive-test
+    attributes:
+      label: Preventive test
+      description: Describe the test that will guarantee this wall does not return.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "priority:P0-blocker"
+        - "priority:P1-high"
+        - "priority:P2-medium"
+        - "priority:P3-low"
+    validations:
+      required: true

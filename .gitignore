@@ -221,6 +221,7 @@ gcp-oauth.keys.json
 .gdrive-server-credentials.json
 .mcp-google-sheets-token.json
 .tokens/
+providers.json
 
 # Playwright
 playwright-report/
@@ -253,3 +254,8 @@ AGENTS.md
 CLAUDE.md
 GEMINI.md
 # <<< vaultspec-managed <<<
+
+# Note: `.vaultspec/rules/rules/aeat-project-mandates.md` is the project's
+# custom mandate rule; it is force-added to git (`git add -f`) despite the
+# vaultspec-managed ignore above, so every workstation + agent reads the
+# same mandates after running `uv run vaultspec-core install`.

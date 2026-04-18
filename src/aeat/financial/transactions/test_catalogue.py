@@ -53,7 +53,7 @@ def _sample_transaction(
     provider_id: str = "provider-row-1",
     amount: Decimal = Decimal("-80.00"),
     description: str = "Software subscription",
-    classification: BusinessClassification = BusinessClassification.UNCLASSIFIED,
+    classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
 ) -> Transaction:
     return Transaction.model_validate(
         {
@@ -126,7 +126,7 @@ def test_set_classification_returns_new_catalogue_without_mutating_original() ->
     before = find_transaction(original, transaction.transaction_id)
     after = find_transaction(updated, transaction.transaction_id)
 
-    assert before is not None and before.business_classification is BusinessClassification.UNCLASSIFIED
+    assert before is not None and before.business_classification is BusinessClassification.NOT_YET_PROCESSED
     assert after is not None
     assert after.business_classification is BusinessClassification.MIXED
     assert after.business_pct == Decimal("0.5")
@@ -180,3 +180,126 @@ def test_find_transaction_returns_none_for_missing_transaction() -> None:
     catalogue = TransactionCatalogue.from_transactions([_sample_transaction()])
 
     assert find_transaction(catalogue, "missing-id") is None
+
+
+def test_set_classification_appends_one_history_entry_on_first_transition() -> None:
+    """The very first `set_classification` call should seed the history chain."""
+    transaction = _sample_transaction()
+    catalogue = TransactionCatalogue.from_transactions([transaction])
+
+    updated = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+    )
+    result = find_transaction(updated, transaction.transaction_id)
+    assert result is not None
+    assert len(result.classification_history) == 1
+    head = result.classification_history[0]
+    assert head.business_classification is BusinessClassification.NOT_YET_PROCESSED
+    assert head.classified_by == "auto"
+    assert result.business_classification is BusinessClassification.BUSINESS
+
+
+def test_set_classification_does_not_append_when_signature_is_byte_identical() -> None:
+    """Idempotent re-classifies (same state / pct / classified_by / reason) must not append."""
+    transaction = _sample_transaction()
+    catalogue = TransactionCatalogue.from_transactions([transaction])
+
+    once = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+        reason="client invoice",
+    )
+    twice = set_classification(
+        once,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+        reason="client invoice",
+    )
+    first_result = find_transaction(once, transaction.transaction_id)
+    second_result = find_transaction(twice, transaction.transaction_id)
+    assert first_result is not None
+    assert second_result is not None
+    assert len(first_result.classification_history) == len(second_result.classification_history)
+
+
+def test_set_classification_appends_when_only_reason_changes() -> None:
+    """Changing only `reason` is a meaningful transition and must append."""
+    transaction = _sample_transaction()
+    catalogue = TransactionCatalogue.from_transactions([transaction])
+
+    once = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+        reason="initial",
+    )
+    twice = set_classification(
+        once,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+        reason="revised after review",
+    )
+    result = find_transaction(twice, transaction.transaction_id)
+    assert result is not None
+    assert len(result.classification_history) == 2
+    assert result.classification_history[-1].reason == "initial"
+
+
+def test_set_classification_skips_append_on_pure_timestamp_drift() -> None:
+    """`classified_at` differences alone must not trigger a history append."""
+    transaction = _sample_transaction()
+    catalogue = TransactionCatalogue.from_transactions([transaction])
+
+    once = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+    )
+    twice = set_classification(
+        once,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+    )
+    first_result = find_transaction(once, transaction.transaction_id)
+    second_result = find_transaction(twice, transaction.transaction_id)
+    assert first_result is not None
+    assert second_result is not None
+    assert first_result.classified_at is not None
+    assert second_result.classified_at is not None
+    assert len(first_result.classification_history) == len(second_result.classification_history)
+
+
+def test_legacy_unclassified_payload_loads_as_not_yet_processed(tmp_path: Path) -> None:
+    """Pre-#237 catalogue JSON with `"UNCLASSIFIED"` must load transparently."""
+    raw = _sample_raw(provider_id="legacy-row-1", amount=Decimal("-10.00"), description="Legacy row")
+    transaction = Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.BUSINESS,
+        }
+    )
+    catalogue = TransactionCatalogue.from_transactions([transaction])
+    target = tmp_path / "legacy-transactions.json"
+    save_transactions(catalogue, target)
+
+    # Hand-rewrite the on-disk payload so the classification field carries
+    # the legacy literal.
+    contents = target.read_text(encoding="utf-8")
+    contents = contents.replace('"business_classification": "BUSINESS"', '"business_classification": "UNCLASSIFIED"')
+    target.write_text(contents, encoding="utf-8")
+
+    restored = load_transactions(target)
+    legacy = find_transaction(restored, transaction.transaction_id)
+    assert legacy is not None
+    assert legacy.business_classification is BusinessClassification.NOT_YET_PROCESSED

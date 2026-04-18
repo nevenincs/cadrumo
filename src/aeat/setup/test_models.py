@@ -48,6 +48,14 @@ def test_setup_answers_roundtrip(tmp_path: Path) -> None:
     assert reparsed == answers
 
 
+def test_setup_answers_default_output_language_is_spanish(tmp_path: Path) -> None:
+    """SetupAnswers defaults the user-facing output language to Spanish."""
+    payload = _canonical_answers(tmp_path).model_dump()
+    payload.pop("output_language")
+    reparsed = SetupAnswers.model_validate(payload)
+    assert reparsed.output_language is Language.ES
+
+
 def test_setup_answers_is_frozen(tmp_path: Path) -> None:
     answers = _canonical_answers(tmp_path)
     with pytest.raises(ValidationError):

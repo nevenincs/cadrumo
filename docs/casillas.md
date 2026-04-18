@@ -106,8 +106,8 @@ Every checked-in canonical record must include:
 - `references_rules`
 - `validation`
 - `source_manual_url`
-- `reviewed_by`
-- `reviewed_at`
+- `definition_reviewed_by`
+- `definition_reviewed_at`
 
 Current validator rules:
 
@@ -118,13 +118,13 @@ Current validator rules:
 - `select_options` are required only when `data_type=select`
 - duplicate `(modelo, period, casilla_id)` keys are rejected
 - `references_casillas` must point to records in the same catalogue
-- `reviewed_by` and `reviewed_at` are required when review enforcement is enabled
+- `definition_reviewed_by` and `definition_reviewed_at` are required when review enforcement is enabled
 
 ## Human Review Policy
 
 LLM output is draft-only. It is never the source of truth for committed corpus data.
 
-Canonical corpus files are expected to be human-reviewed before commit. Records lacking `reviewed_by` or `reviewed_at` fail verification by default.
+Canonical corpus files are expected to be human-reviewed before commit. Records lacking `definition_reviewed_by` or `definition_reviewed_at` fail verification by default.
 
 ## Draft Workflow
 
@@ -154,8 +154,8 @@ JSON yourself at the canonical path.
    - trilingual `label`
    - trilingual `help`
    - `source_manual_url`
-   - `reviewed_by`
-   - `reviewed_at`
+   - `definition_reviewed_by`
+   - `definition_reviewed_at`
 4. Ensure `references_casillas` only point to records in the same file.
 5. Ensure `select_options` are present only for `data_type=select`.
 6. Verify the canonical file until it passes:
@@ -217,7 +217,7 @@ Use the checked-in catalogues as references for shape and path conventions:
 - The issue text expects live extract/translate tests against a real LLM provider. Current live tests stay skipped until the real issue-21 client surface lands.
 - The issue text mentions glossary constraints. Current verification enforces authoritative Spanish text, but there is no separate glossary-specific verifier yet.
 - Current code uses `AEAT_LIVE_TESTS_ENABLED=true`, not `AEAT_LIVE_TESTS=1`.
-- Current reviewer enforcement is minimal: non-empty `reviewed_by` plus non-null `reviewed_at`.
+- Current reviewer enforcement is minimal: non-empty `definition_reviewed_by` plus non-null `definition_reviewed_at`.
 
 ## Quick Reference
 

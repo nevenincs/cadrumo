@@ -264,7 +264,7 @@ class SetupWizard:
             key="output_language",
             prompt="User-facing output language",
             choices=tuple(lang.value for lang in Language),
-            default=(defaults.output_language.value if defaults else Language.HU.value),
+            default=(defaults.output_language.value if defaults else Language.ES.value),
         )
 
         drafts_dir = prompter.prompt_path(

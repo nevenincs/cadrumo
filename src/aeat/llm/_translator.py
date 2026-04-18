@@ -7,9 +7,9 @@ import secrets
 from collections.abc import Callable, Sequence
 
 from ..config import Settings
+from ..i18n import normalize_language_code
 from ._client import LLMClient
 from ._errors import LLMRateLimitError
-from ._i18n_compat import normalize_language_code
 from ._models import LLMRequest, PromptRegistry, Translation
 from ._prompts import render_prompt
 

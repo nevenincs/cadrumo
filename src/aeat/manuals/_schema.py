@@ -188,8 +188,8 @@ class Rule(_StrictFrozen):
     )
     source: RuleSource
     extracted_by: LLMProvenance
-    reviewed_by: _Reviewer
-    reviewed_at: date
+    definition_reviewed_by: _Reviewer
+    definition_reviewed_at: date
 
     @model_validator(mode="after")
     def _check_spanish_statement(self) -> Rule:
@@ -235,8 +235,8 @@ class Section(_StrictFrozen):
     references_sections: tuple[_StableId, ...] = Field(default_factory=tuple)
     references_legal_acts: tuple[_LegalActRef, ...] = Field(default_factory=tuple)
     source: SectionSource
-    reviewed_by: _Reviewer
-    reviewed_at: date
+    definition_reviewed_by: _Reviewer
+    definition_reviewed_at: date
 
     @model_validator(mode="after")
     def _check_spanish_translations(self) -> Section:
@@ -271,8 +271,8 @@ class Manual(_StrictFrozen):
     source_pdf_url: AnyHttpUrl
     source_html_url: AnyHttpUrl | None = None
     fetched_at: datetime
-    reviewed_by: _Reviewer
-    reviewed_at: date
+    definition_reviewed_by: _Reviewer
+    definition_reviewed_at: date
     chapters: tuple[Chapter, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
