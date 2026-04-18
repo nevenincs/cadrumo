@@ -105,7 +105,7 @@ Project mandates for every contributor (human or agent). Read before any change.
 - CONSULT `tests/README.md` and `.vault/adr/2026-04-17-pytest-markers-adr.md`.
 
 ## Trilingual contract
-- Handle es / en / hu. Spanish is authoritative for AEAT domain terminology, English for code and docs, Hungarian for user-facing output.
+- Handle `es` / `en` / `hu`: Spanish is the default output language and the authoritative AEAT terminology baseline, English is for code and docs, and Hungarian is used for user-facing output when `AEAT_OUTPUT_LANGUAGE=hu`.
 - DO use the nested-dict `Translatable` TypedDict for stored user-facing strings.
 - DO NOT use gettext or `.po` files.
 - `AEAT_OUTPUT_LANGUAGE` default is `es`.

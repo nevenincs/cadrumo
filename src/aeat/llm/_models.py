@@ -9,7 +9,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ._i18n_compat import normalize_language_code
+from ..i18n import normalize_language_code
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 
@@ -104,7 +104,7 @@ class PromptDefinition(BaseModel):
         """Ensure prompt identifiers are kebab-case."""
 
         if not _PROMPT_ID_PATTERN.fullmatch(value):
-            msg = f"Prompt id must be kebab-case-with-version-suffix compatibility, got {value!r}"
+            msg = f"Prompt id must be kebab-case, got {value!r}"
             raise ValueError(msg)
         return value
 

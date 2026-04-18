@@ -108,8 +108,8 @@ class CasillaRecord(_StrictFrozenModel):
     source_manual_url: AnyHttpUrl | None = None
     source_page: int | None = Field(default=None, ge=1)
     source_section: str | None = Field(default=None, max_length=128)
-    reviewed_by: str = Field(default="", max_length=64)
-    reviewed_at: date | None = None
+    definition_reviewed_by: str = Field(default="", max_length=64)
+    definition_reviewed_at: date | None = None
     llm_draft_provenance: LLMDraftProvenance | None = None
 
     @model_validator(mode="after")
