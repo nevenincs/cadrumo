@@ -18,6 +18,7 @@ Project mandates for every contributor (human or agent). Read before any change.
 - DO NOT register `aeat submission submit` in any CLI surface (default OR hidden) until 1.0.0 reintroduces live submission. The CLI module was excised on 2026-04-18 per `.vault/adr/2026-04-18-live-submit-cli-excision-adr.md`. Programmatic callers that genuinely need the live path MUST construct `SubmissionEngine(..., live_transport_supported=True)` explicitly.
 - DO NOT add `live_transport_supported=True` as a default to any new `SubmissionEngine` factory or constructor wrapper; the engine default is False (opt-in only). Verify with `rg -n 'live_transport_supported=True' src/aeat/` — only test sites should match.
 - FOLLOW the 4-factor gate (kept as defense in depth for any future reintroduction): `AEAT_ALLOW_LIVE_SUBMIT_OPT_IN=1` + `AEAT_LIVE_SUBMIT_ENABLED=1` + `--i-understand-this-is-real` + per-submission prompt.
+- When live submission is reintroduced in 1.0.0, it MUST route through a pluggable `AuthProvider` (see `.vault/adr/2026-04-18-auth-provider-abstraction-adr.md`, EPIC #279): certificate, Cl@ve Permanente, Cl@ve Móvil, or Cl@ve PIN.
 - Live submission is deferred to milestone 1.0.0.
 - DO keep `aeat submission preflight` and `aeat submission dry-run` — they are primary pre-export gates.
 - Must READ `.vault/adr/2026-04-17-export-first-adr.md` AND `.vault/adr/2026-04-18-live-submit-cli-excision-adr.md` before touching submission code.
