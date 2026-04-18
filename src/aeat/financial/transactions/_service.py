@@ -13,9 +13,11 @@ from pydantic import ValidationError
 from ...logging import get_logger
 from ._enums import BusinessClassification
 from ._errors import TransactionCatalogueError, TransactionNotFoundError, TransactionPersistenceError
-from ._models import Transaction, TransactionCatalogue
+from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
 
 _LOGGER = get_logger(__name__)
+
+_EntrySignature = tuple[BusinessClassification, Decimal | None, str, str]
 
 
 def load_transactions(path: Path) -> TransactionCatalogue:
@@ -121,8 +123,16 @@ def set_classification(
     classification: BusinessClassification,
     business_pct: Decimal | None = None,
     classified_by: str,
+    reason: str = "",
 ) -> TransactionCatalogue:
     """Return a new catalogue with updated classification metadata.
+
+    Appends a ``ClassificationHistoryEntry`` to the transaction's
+    ``classification_history`` chain whenever the incoming decision
+    differs (by state, percentage, ``classified_by``, or ``reason``)
+    from the transaction's current head. Byte-identical re-classifies
+    are skipped so rule engines can run idempotently without
+    inflating history.
 
     Args:
         catalogue: Source catalogue.
@@ -131,6 +141,8 @@ def set_classification(
         business_pct: Business-use percentage for ``MIXED`` classifications.
         classified_by: Classifier source string: ``auto``, ``manual``, or
             ``rule:<rule-id>``.
+        reason: Free-text override justification; embedded in the
+            history entry, not on the top-level transaction.
 
     Returns:
         A fresh immutable catalogue with updated classification metadata.
@@ -139,17 +151,60 @@ def set_classification(
         TransactionNotFoundError: If ``transaction_id`` is missing.
     """
     transaction = _require_transaction(catalogue, transaction_id)
+    now = datetime.now(UTC)
+    normalised_reason = reason.strip()
+    proposed_signature: _EntrySignature = (classification, business_pct, classified_by, normalised_reason)
+    current_signature: _EntrySignature = (
+        transaction.business_classification,
+        transaction.business_pct,
+        transaction.classified_by,
+        transaction.classification_reason,
+    )
+    if proposed_signature == current_signature:
+        history = transaction.classification_history
+    else:
+        prior_snapshot = snapshot_classification_state(transaction, fallback_at=now)
+        history = (*transaction.classification_history, prior_snapshot)
     updated_transaction = _validate_transaction_update(
         {
             **transaction.model_dump(mode="python"),
             "business_classification": classification,
             "business_pct": business_pct,
-            "classified_at": datetime.now(UTC),
+            "classified_at": now,
             "classified_by": classified_by,
+            "classification_reason": normalised_reason,
+            "classification_history": history,
         },
         context=f"invalid classification update for transaction: {transaction_id}",
     )
     return _replace_transaction(catalogue, updated_transaction)
+
+
+def snapshot_classification_state(
+    transaction: Transaction,
+    *,
+    fallback_at: datetime | None = None,
+) -> ClassificationHistoryEntry:
+    """Return a history entry capturing the transaction's current active state.
+
+    When no explicit ``classified_at`` is present (the pipeline has
+    never run against this transaction), fall back to the provenance
+    ``ingested_at`` timestamp so the synthesised entry reflects when
+    the transaction first entered the catalogue. This keeps the
+    chain in chronological order. ``fallback_at`` is an optional final
+    fallback for callers that want to cap the synthesised timestamp
+    (e.g. ``set_classification`` uses ``datetime.now(UTC)``).
+    """
+    snapshot_at = transaction.classified_at or transaction.raw.provenance.ingested_at or fallback_at
+    if snapshot_at is None:
+        raise TransactionCatalogueError("cannot synthesise a classification snapshot without a timestamp")
+    return ClassificationHistoryEntry(
+        business_classification=transaction.business_classification,
+        business_pct=transaction.business_pct,
+        classified_at=snapshot_at,
+        classified_by=transaction.classified_by,
+        reason=transaction.classification_reason,
+    )
 
 
 def _replace_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:

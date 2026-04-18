@@ -13,6 +13,7 @@ from .. import RawProvenance, SourceFormat
 from ..providers import RawTransaction
 from . import (
     BusinessClassification,
+    ClassificationHistoryEntry,
     Transaction,
     TransactionDirection,
 )
@@ -132,3 +133,23 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
         Transaction.model_validate(
             {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "bot"}
         )
+
+
+def test_business_classification_rejects_legacy_unclassified_literal() -> None:
+    """`BusinessClassification("UNCLASSIFIED")` must raise; the value only survives on load."""
+    with pytest.raises(ValueError):
+        BusinessClassification("UNCLASSIFIED")
+
+
+def test_classification_history_entry_round_trips_through_json() -> None:
+    """`ClassificationHistoryEntry` must survive JSON round-trip with reserved slots."""
+    entry = ClassificationHistoryEntry(
+        business_classification=BusinessClassification.BUSINESS,
+        classified_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+        classified_by="manual",
+        reason="client invoice",
+    )
+    restored = ClassificationHistoryEntry.model_validate_json(entry.model_dump_json())
+    assert restored == entry
+    assert restored.confidence is None
+    assert restored.provenance is None
