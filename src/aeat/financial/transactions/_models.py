@@ -8,7 +8,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Any, ClassVar, Self
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
 
@@ -18,6 +18,9 @@ from ._enums import LEGACY_UNCLASSIFIED_ALIAS, BusinessClassification, Transacti
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _LOGGER = get_logger(__name__)
+# Module-local flag so the legacy-alias INFO line fires at most once per process.
+# Wrapped in a list to permit mutation from helper functions without ``global``.
+_LEGACY_ALIAS_LOGGED: list[bool] = [False]
 
 
 def derive_transaction_id(raw: RawTransaction) -> str:
@@ -71,12 +74,12 @@ def _coerce_classification_state(raw: str) -> BusinessClassification:
     Kent knows to re-save his catalogue.
     """
     if raw == LEGACY_UNCLASSIFIED_ALIAS:
-        if not Transaction._legacy_alias_logged:
+        if not _LEGACY_ALIAS_LOGGED[0]:
             _LOGGER.info(
                 "legacy classification value 'UNCLASSIFIED' aliased to 'NOT_YET_PROCESSED' "
                 "(issue #237). Re-save the catalogue to migrate."
             )
-            Transaction._legacy_alias_logged = True
+            _LEGACY_ALIAS_LOGGED[0] = True
         return BusinessClassification.NOT_YET_PROCESSED
     return BusinessClassification(raw)
 
@@ -199,10 +202,6 @@ class Transaction(BaseModel):
     """Immutable transaction wrapper that preserves raw provenance verbatim."""
 
     model_config = _STRICT_FROZEN
-
-    # Process-local flag used to rate-limit the legacy-alias INFO log so a
-    # large catalogue load does not spam one line per transaction.
-    _legacy_alias_logged: ClassVar[bool] = False
 
     transaction_id: str = Field(min_length=64, max_length=64)
     raw: RawTransaction
