@@ -6,12 +6,15 @@ English (en), and Hungarian (hu).
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from enum import StrEnum
 from typing import Any, Protocol, TypedDict, cast, runtime_checkable
 
 from ..config import load_settings
 from ..errors import AeatError
+
+_LANGUAGE_CODE_PATTERN = re.compile(r"^[a-z]{2}$")
 
 
 class TranslationError(AeatError):
@@ -54,6 +57,16 @@ class TranslationFallback(StrEnum):
     FALLBACK_TO_EN = "fallback_to_en"
     FALLBACK_TO_ES = "fallback_to_es"
     CONFIG = "config"
+
+
+def normalize_language_code(language: str | Language) -> str:
+    """Normalize and validate a language code against the trilingual contract."""
+
+    value = language if isinstance(language, str) else language.value
+    normalized = value.strip().lower()
+    if not _LANGUAGE_CODE_PATTERN.fullmatch(normalized):
+        raise TranslationError(f"Language must be a two-letter ISO 639-1 code, got {value!r}")
+    return normalized
 
 
 def _normalize_text(text: str) -> str:

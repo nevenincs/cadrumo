@@ -1,9 +1,10 @@
 """Unit tests for BrowserSession factory."""
 
 from pathlib import Path
+from typing import cast
 
 import pytest
-from playwright.async_api import BrowserContext
+from playwright.async_api import BrowserContext, Playwright
 
 from ..config import PROJECT_ROOT, Settings
 from ..errors import SiteHealthError
@@ -11,7 +12,7 @@ from ..status import SiteHealthState
 from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy
 from .profile import Profile
-from .session import BrowserSession
+from .session import BrowserError, BrowserSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
@@ -35,22 +36,59 @@ class StubContext:
 
     def __init__(self, kwargs: dict) -> None:
         self.kwargs = kwargs
+        self.close_calls = 0
+
+    async def close(self) -> None:
+        """Record context close calls without touching browser ownership."""
+        self.close_calls += 1
 
 
 class StubBrowser:
     """Stub browser that yields a StubContext."""
 
+    def __init__(self, chromium: "StubChromium") -> None:
+        self._chromium = chromium
+        self.close_calls = 0
+        self.close_failures_remaining = 0
+        self._counted_closed = False
+
     async def new_context(self, **kwargs) -> StubContext:
         """Return a stub context."""
         return StubContext(kwargs)
+
+    async def close(self) -> None:
+        """Close the stub browser and decrement the live-process count."""
+        if self.close_failures_remaining > 0:
+            self.close_failures_remaining -= 1
+            self.close_calls += 1
+            raise RuntimeError("boom from close")
+        if not self._counted_closed:
+            self._chromium.live_browser_count -= 1
+            self._chromium.closed_browser_count += 1
+            self._counted_closed = True
+        self.close_calls += 1
 
 
 class StubChromium:
     """Stub chromium that yields a StubBrowser."""
 
+    def __init__(self) -> None:
+        self.live_browser_count = 0
+        self.launch_calls = 0
+        self.closed_browser_count = 0
+        self.launched_browsers: list[StubBrowser] = []
+        self.next_close_failures = 0
+
     async def launch(self, **kwargs) -> StubBrowser:
         """Return a stub browser."""
-        return StubBrowser()
+        del kwargs
+        self.launch_calls += 1
+        self.live_browser_count += 1
+        browser = StubBrowser(self)
+        browser.close_failures_remaining = self.next_close_failures
+        self.next_close_failures = 0
+        self.launched_browsers.append(browser)
+        return browser
 
 
 class StubPlaywright:
@@ -58,6 +96,41 @@ class StubPlaywright:
 
     def __init__(self) -> None:
         self.chromium = StubChromium()
+
+
+class FailingNewContextBrowser(StubBrowser):
+    """Stub browser whose ``new_context`` path fails after launch."""
+
+    async def new_context(self, **kwargs) -> StubContext:
+        del kwargs
+        raise RuntimeError("boom from new_context")
+
+
+class FailingNewContextChromium(StubChromium):
+    """Chromium double that returns a failing browser."""
+
+    async def launch(self, **kwargs) -> StubBrowser:
+        del kwargs
+        self.launch_calls += 1
+        self.live_browser_count += 1
+        browser = FailingNewContextBrowser(self)
+        self.launched_browsers.append(browser)
+        return browser
+
+
+class FailingNewContextPlaywright(StubPlaywright):
+    """Playwright double whose browser fails during context creation."""
+
+    def __init__(self) -> None:
+        self.chromium = FailingNewContextChromium()
+
+
+class FailingClosePlaywright(StubPlaywright):
+    """Playwright double whose first browser close attempt fails."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.chromium.next_close_failures = 1
 
 
 @pytest.mark.asyncio
@@ -69,7 +142,7 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     pw_stub = StubPlaywright()
 
     session = BrowserSession(
-        playwright=pw_stub,  # type: ignore
+        playwright=cast(Playwright, pw_stub),
         settings=settings,
         profile=profile,
         evasion_strategy=evasion,
@@ -79,9 +152,44 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert evasion.called
     assert context.kwargs["locale"] == "es-ES"  # type: ignore
     assert context.kwargs["timezone_id"] == "Europe/Madrid"  # type: ignore
-    assert str(tmp_path / "state.json") in context.kwargs["storage_state"]  # type: ignore
-    # No cert supplied → marker must NOT be stamped on the context.
+    assert "storage_state" not in context.kwargs  # type: ignore
     assert not hasattr(context, "_aeat_certificate_thumbprint")
+
+
+@pytest.mark.asyncio
+async def test_browser_session_uses_existing_storage_state_file(tmp_path: Path) -> None:
+    """Existing storage-state JSON is passed through to new_context."""
+    settings = Settings()
+    storage_state_path = tmp_path / "state.json"
+    storage_state_path.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
+    profile = Profile(name="test", storage_state_path=storage_state_path)
+    session = BrowserSession(
+        playwright=cast(Playwright, StubPlaywright()),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    context = await session.create_context()
+    assert context.kwargs["storage_state"] == str(storage_state_path)  # type: ignore
+
+
+@pytest.mark.asyncio
+async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Path) -> None:
+    """Explicit resume paths override the profile default when provided."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "profile.json")
+    override_path = tmp_path / "resume.json"
+    override_path.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
+    session = BrowserSession(
+        playwright=cast(Playwright, StubPlaywright()),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    context = await session.create_context(storage_state_path=override_path)
+    assert context.kwargs["storage_state"] == str(override_path)  # type: ignore
 
 
 @pytest.mark.asyncio
@@ -146,7 +254,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     settings = Settings()
     profile = Profile(name="cert-test", storage_state_path=tmp_path / "state.json")
     session = BrowserSession(
-        playwright=StubPlaywright(),  # type: ignore
+        playwright=cast(Playwright, StubPlaywright()),
         settings=settings,
         profile=profile,
         evasion_strategy=DummyEvasion(),
@@ -158,21 +266,139 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         )
     )
 
-    # StubContext (returned by our fake chromium) exposes .kwargs for
-    # assertions; Playwright's real BrowserContext does not.
-    from typing import cast
-
-    kwargs: dict[str, object] = cast("StubContext", context).kwargs
+    kwargs: dict[str, object] = cast(StubContext, context).kwargs
     assert "client_certificates" in kwargs
     cc = kwargs["client_certificates"]
     assert isinstance(cc, list) and len(cc) == 1
     assert cc[0]["pfxPath"] == str(bundle_path)
-    # passphrase is materialised here only; confirm it is present so
-    # Playwright can consume it, then the caller hands the list
-    # straight to new_context and does not persist the dict.
     assert cc[0]["passphrase"] == "pw"  # noqa: S105 — test fixture
     marker = getattr(context, CERTIFICATE_THUMBPRINT_MARKER, None)
     assert marker == loaded.sha256_thumbprint
+
+
+@pytest.mark.asyncio
+async def test_browser_session_close_is_idempotent(tmp_path: Path) -> None:
+    """Closing a session repeatedly must not resurrect browser processes."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
+    pw_stub = StubPlaywright()
+    session = BrowserSession(
+        playwright=cast(Playwright, pw_stub),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    context = await session.create_context()
+    await context.close()
+    await session.close()
+    await session.close()
+
+    assert pw_stub.chromium.launch_calls == 1
+    assert pw_stub.chromium.live_browser_count == 0
+    assert pw_stub.chromium.launched_browsers[0].close_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_browser_session_rejects_second_live_context_until_close(tmp_path: Path) -> None:
+    """A session owns one live browser at a time until ``close()`` runs."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
+    pw_stub = StubPlaywright()
+    session = BrowserSession(
+        playwright=cast(Playwright, pw_stub),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    context = await session.create_context()
+    await context.close()
+    with pytest.raises(BrowserError, match="call close\\(\\) before create_context\\(\\) again"):
+        await session.create_context()
+
+    await session.close()
+    context2 = await session.create_context()
+    await context2.close()
+    await session.close()
+
+    assert pw_stub.chromium.launch_calls == 2
+    assert pw_stub.chromium.live_browser_count == 0
+
+
+@pytest.mark.asyncio
+async def test_browser_session_closes_browser_when_new_context_fails(tmp_path: Path) -> None:
+    """Partial launch failures must not leak a retained browser."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
+    pw_stub = FailingNewContextPlaywright()
+    session = BrowserSession(
+        playwright=cast(Playwright, pw_stub),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    with pytest.raises(BrowserError, match="boom from new_context"):
+        await session.create_context()
+
+    assert pw_stub.chromium.launch_calls == 1
+    assert pw_stub.chromium.live_browser_count == 0
+    assert pw_stub.chromium.launched_browsers[0].close_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_browser_session_close_failure_surfaces_and_allows_retry(tmp_path: Path) -> None:
+    """Close failures must be explicit and leave cleanup retryable."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
+    pw_stub = FailingClosePlaywright()
+    session = BrowserSession(
+        playwright=cast(Playwright, pw_stub),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    context = await session.create_context()
+    await context.close()
+    with pytest.raises(BrowserError, match="Failed to close retained browser"):
+        await session.close()
+
+    assert pw_stub.chromium.live_browser_count == 1
+    assert pw_stub.chromium.launched_browsers[0].close_calls == 1
+
+    await session.close()
+    context2 = await session.create_context()
+    await context2.close()
+    await session.close()
+
+    assert pw_stub.chromium.live_browser_count == 0
+    assert pw_stub.chromium.closed_browser_count == 2
+
+
+@pytest.mark.asyncio
+async def test_browser_session_process_count_stays_flat_across_repeated_cycles(tmp_path: Path) -> None:
+    """Repeated construct/create/close cycles must not accumulate browsers."""
+    settings = Settings()
+    pw_stub = StubPlaywright()
+    live_counts: list[int] = []
+
+    for idx in range(5):
+        profile = Profile(name=f"test-{idx}", storage_state_path=tmp_path / f"state-{idx}.json")
+        session = BrowserSession(
+            playwright=cast(Playwright, pw_stub),
+            settings=settings,
+            profile=profile,
+            evasion_strategy=DummyEvasion(),
+        )
+        context = await session.create_context()
+        await context.close()
+        await session.close()
+        live_counts.append(pw_stub.chromium.live_browser_count)
+
+    assert live_counts == [0, 0, 0, 0, 0]
+    assert pw_stub.chromium.launch_calls == 5
 
 
 def _probe_or_raise(
@@ -230,5 +456,4 @@ def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
 
 def test_navigate_probe_passes_on_ok_fixture() -> None:
     body = (_FIXTURES_ROOT / "ok" / "sede_landing.html").read_text(encoding="utf-8")
-    # Must not raise.
     _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)

@@ -7,24 +7,27 @@ must not reach into the private underscore modules inside this package.
 
 from __future__ import annotations
 
-from ._enums import BusinessClassification, TransactionDirection
+from ._enums import CLASSIFIED_STATES, BusinessClassification, TransactionDirection, is_classified
 from ._errors import (
     TransactionCatalogueError,
     TransactionError,
     TransactionNotFoundError,
     TransactionPersistenceError,
 )
-from ._models import Transaction, TransactionCatalogue
+from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
 from ._service import (
     find_transaction,
     link_invoice,
     load_transactions,
     save_transactions,
     set_classification,
+    snapshot_classification_state,
 )
 
 __all__ = [
+    "CLASSIFIED_STATES",
     "BusinessClassification",
+    "ClassificationHistoryEntry",
     "Transaction",
     "TransactionCatalogue",
     "TransactionCatalogueError",
@@ -33,8 +36,10 @@ __all__ = [
     "TransactionNotFoundError",
     "TransactionPersistenceError",
     "find_transaction",
+    "is_classified",
     "link_invoice",
     "load_transactions",
     "save_transactions",
     "set_classification",
+    "snapshot_classification_state",
 ]

@@ -79,8 +79,8 @@ def _seed_iva(tmp_path: Path) -> Settings:
                     "cache_hit": False,
                     "extracted_at": "2026-04-12T10:00:00Z",
                 },
-                "reviewed_by": "gw",
-                "reviewed_at": "2026-04-12",
+                "definition_reviewed_by": "gw",
+                "definition_reviewed_at": "2026-04-12",
             }
         ],
         "references_sections": [],
@@ -89,8 +89,8 @@ def _seed_iva(tmp_path: Path) -> Settings:
             "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
             "page": 10,
         },
-        "reviewed_by": "gw",
-        "reviewed_at": "2026-04-12",
+        "definition_reviewed_by": "gw",
+        "definition_reviewed_at": "2026-04-12",
     }
     _write_json(structure / "sections" / "cap1" / "sec1.json", section_payload)
 
@@ -118,8 +118,8 @@ def _seed_iva(tmp_path: Path) -> Settings:
         "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
         "source_html_url": None,
         "fetched_at": "2026-04-12T00:00:00Z",
-        "reviewed_by": "gw",
-        "reviewed_at": "2026-04-12",
+        "definition_reviewed_by": "gw",
+        "definition_reviewed_at": "2026-04-12",
     }
     _write_json(structure / "manual.json", manual_payload)
     return _settings_with_root(root)
@@ -180,8 +180,8 @@ class TestLoader:
                 "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
                 "page": 10,
             },
-            "reviewed_by": "gw",
-            "reviewed_at": "2026-04-12",
+            "definition_reviewed_by": "gw",
+            "definition_reviewed_at": "2026-04-12",
         }
         _write_json(
             settings.aeat_manuals_root / "iva" / "2025" / "structure" / "sections" / "cap1" / "sec1.json",
