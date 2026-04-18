@@ -121,10 +121,10 @@ async def test_aeat_authenticator_full_live_flow() -> None:
             aeat_session = await auth.authenticate()
             assert isinstance(aeat_session, AeatSession)
             assert aeat_session.is_stale() is False
-            assert aeat_session.certificate_nif
+            assert aeat_session.identity_nif
             assertion = await auth.verify_login(aeat_session)
             assert isinstance(assertion, AeatLoginAssertion)
             assert assertion.is_valid is True, (
                 f"login assertion invalid: status={assertion.status_code} err={assertion.error_message}"
             )
-            assert assertion.parsed_nif == aeat_session.certificate_nif
+            assert assertion.identity_nif == aeat_session.identity_nif

@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
 from . import (
+    CERTIFICATE_CONTEXT_MARKER,
     CertificateBackend,
     CertificateBundle,
     CertificateExpiredError,
@@ -339,7 +340,7 @@ def test_playwright_preload_accepts_marked_context(
 
     class _MarkedContext:
         def __init__(self, thumbprint: str) -> None:
-            self._aeat_certificate_thumbprint = thumbprint
+            setattr(self, CERTIFICATE_CONTEXT_MARKER, thumbprint)
 
     ctx = _MarkedContext(loaded.sha256_thumbprint)
     preload_into_browser_context(loaded, ctx)  # must not raise

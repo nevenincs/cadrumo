@@ -16,7 +16,7 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
-from ..auth import CERTIFICATE_CONTEXT_MARKER, BrowserContextProvisioner
+from ..auth import BrowserContextProvisioner
 from ..config import Settings
 from ..errors import AeatError, SiteHealthError
 from ..logging import get_logger
@@ -31,9 +31,6 @@ from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
 
 logger = get_logger(__name__)
-
-CERTIFICATE_THUMBPRINT_MARKER = CERTIFICATE_CONTEXT_MARKER
-"""Backward-compatible alias for the certificate context marker name."""
 
 
 class BrowserError(AeatError):
