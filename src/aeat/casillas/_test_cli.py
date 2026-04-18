@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 runner = CliRunner()
 
 
-def _write_catalogue(root: Path, *, reviewed_by: str = "codex") -> None:
+def _write_catalogue(root: Path, *, definition_reviewed_by: str = "codex") -> None:
     """Write a minimal valid catalogue file for CLI tests."""
     path = root / "modelo_130" / "2025Q4.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -43,8 +43,8 @@ def _write_catalogue(root: Path, *, reviewed_by: str = "codex") -> None:
                         "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html",
                         "source_page": 1,
                         "source_section": "1",
-                        "reviewed_by": reviewed_by,
-                        "reviewed_at": "2026-04-12",
+                        "definition_reviewed_by": definition_reviewed_by,
+                        "definition_reviewed_at": "2026-04-12",
                         "llm_draft_provenance": None,
                     }
                 ],
@@ -56,9 +56,9 @@ def _write_catalogue(root: Path, *, reviewed_by: str = "codex") -> None:
 
 
 def test_verify_cli_rejects_records_lacking_reviewer_fields(tmp_path: Path) -> None:
-    """The verify command must fail when reviewed_by is blank."""
+    """The verify command must fail when definition_reviewed_by is blank."""
     root = tmp_path / "casillas"
-    _write_catalogue(root, reviewed_by="")
+    _write_catalogue(root, definition_reviewed_by="")
 
     result = runner.invoke(app, ["verify", "--modelo", "MODELO_130", "--period", "2025Q4", "--root", str(root)])
 

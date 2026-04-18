@@ -115,7 +115,7 @@ class SetupAnswers(BaseModel):
 
     # ── language ─────────────────────────────────────────────────────────
     default_language: Language = Language.EN
-    output_language: Language = Language.HU
+    output_language: Language = Language.ES
 
     # ── output directories ───────────────────────────────────────────────
     aeat_drafts_dir: Path
