@@ -141,7 +141,7 @@ class Settings(BaseSettings):
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
-        default="hu",
+        default="es",
         description="Target output language for user-facing content (es, en, hu)",
     )
     aeat_authoritative_language_aeat_terms: str = Field(
