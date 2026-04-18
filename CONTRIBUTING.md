@@ -77,6 +77,36 @@ The repository runs on up to six parallel agent slots across Claude, Codex, Gemi
 - `needs-design` means an ADR (`.vault/adr/`) must land before implementation.
 - Handover prompts follow the canonical template (see project memory).
 
+## fetching the AEAT certificate (live tests)
+
+The `live_read` test surface needs a real PKCS#12 client certificate
+issued by FNMT (or another AEAT-recognised CA). When the certificate
+lives in your Google Drive, fetch it through the project's just chain:
+
+```bash
+just env-setup                              # creates env/.env from .env.example
+# Edit env/.env and set GOOGLE_CLOUD_PROJECT to your GCP project id
+just gsuite-oauth-client                    # interactive: provisions env/oauth-client.json
+just gcloud-auth                            # interactive: refreshes ADC with Drive scope
+just aeat-cert-fetch <DRIVE_FILENAME.p12>   # fetches into credentials/
+```
+
+The recipe writes `credentials/<DRIVE_FILENAME.p12>` (gitignored) and
+prints the absolute path. Then complete `env/.env` with:
+
+```
+AEAT_LIVE_TESTS_ENABLED=1
+AEAT_CERTIFICATE_PATH=<absolute path printed by aeat-cert-fetch>
+AEAT_CERTIFICATE_PASSWORD_SECRET=<your cert passphrase>
+```
+
+The password is a secret — `env/.env` is gitignored; never commit it.
+Verify the live-read path with `just test-live-read`.
+
+`aeat-cert-fetch` is a thin wrapper over `aeat drive fetch <name>`,
+which fails fast if the Drive name has zero or multiple matches and
+refuses to overwrite an existing file without `--overwrite`.
+
 ## releases
 
 Releases run **locally**, never in CI. Run `just release` for a dry-run preview, `just release-apply` to bump + tag. Conventional commits drive the CHANGELOG. See `RELEASING.md` and [`.vault/adr/2026-04-12-release-please-adr.md`](.vault/adr/2026-04-12-release-please-adr.md).

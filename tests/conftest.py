@@ -16,6 +16,10 @@ This module enforces the following invariants at collection time:
    truthy; ``live_write`` items are dropped by the shared helper (see
    :mod:`tests._marker_hook`).
 
+The ``env/.env`` auto-load happens at module-load time in the repo-root
+``conftest.py`` so both ``tests/`` and ``src/aeat/`` collections share
+it.
+
 Banned-import hits are hard ``pytest.exit`` rather than warnings.
 """
 
