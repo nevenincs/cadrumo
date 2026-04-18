@@ -8,12 +8,21 @@ stubs.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from ..financial import RawProvenance, RawTransaction, SourceFormat
+from ..financial.transactions import (
+    BusinessClassification,
+    Transaction,
+    TransactionCatalogue,
+    TransactionDirection,
+)
 from . import (
+    FilingApprovalStaleReason,
     FilingComputationError,
     FilingDraft,
     FilingDraftStatus,
@@ -25,9 +34,13 @@ from . import (
     FilingValueKind,
     Modelo130Builder,
     apply_validation,
+    approval_stale_reasons,
+    approve_draft,
     build_draft,
     compute_draft_id,
     iter_findings,
+    refresh_review_status,
+    unapprove_draft,
     validate_draft,
 )
 from .testing import (
@@ -55,6 +68,37 @@ def _clean_inputs() -> dict[str, object]:
         "05": Decimal("400.00"),
         "06": Decimal("0.00"),
     }
+
+
+def _sample_raw_transaction(*, provider_id: str = "tx-1", description: str = "Software subscription") -> RawTransaction:
+    return RawTransaction(
+        transaction_id=provider_id,
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
+        amount=Decimal("-80.00"),
+        currency="EUR",
+        counterparty="Supplier SL",
+        description=description,
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="b" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
+            provider_name="pytest",
+        ),
+        raw_fields={"Concepto": description},
+    )
+
+
+def _sample_transaction(*, provider_id: str = "tx-1") -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": _sample_raw_transaction(provider_id=provider_id),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.UNCLASSIFIED,
+        }
+    )
 
 
 class TestModelo130Builder:
@@ -337,3 +381,117 @@ class TestPublicAPI:
         )
         promoted = apply_validation(draft, ())
         assert promoted.status is FilingDraftStatus.READY_TO_SUBMIT
+
+    def test_approve_round_trip_persists_review_metadata(self) -> None:
+        draft = build_draft(
+            modelo="130",
+            period="2026Q1",
+            profile=_profile(),
+            inputs=_clean_inputs(),
+            schema_provider=default_schema_provider(),
+        )
+        approved = approve_draft(
+            draft,
+            approved_by="kent",
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue(),
+        )
+        assert approved.status is FilingDraftStatus.APPROVED
+        assert approved.approved_at is not None
+        assert approved.approved_by == "kent"
+        assert approved.review_checksum is not None
+        assert approved.approval_basis is not None
+
+        restored = FilingDraft.model_validate_json(approved.model_dump_json())
+        refreshed = refresh_review_status(
+            restored,
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue(),
+        )
+        assert refreshed.status is FilingDraftStatus.APPROVED
+        assert refreshed.approval_basis == approved.approval_basis
+
+    def test_transaction_catalogue_change_marks_approved_draft_stale(self) -> None:
+        draft = build_draft(
+            modelo="130",
+            period="2026Q1",
+            profile=_profile(),
+            inputs=_clean_inputs(),
+            schema_provider=default_schema_provider(),
+        )
+        approved = approve_draft(
+            draft,
+            approved_by="kent",
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue(),
+        )
+        changed_catalogue = TransactionCatalogue.from_transactions([_sample_transaction()])
+
+        stale = refresh_review_status(
+            approved,
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=changed_catalogue,
+        )
+        reasons = approval_stale_reasons(
+            approved,
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=changed_catalogue,
+        )
+
+        assert stale.status is FilingDraftStatus.APPROVAL_STALE
+        assert FilingApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED in reasons
+        assert stale.approved_at == approved.approved_at
+        assert stale.approved_by == approved.approved_by
+        assert stale.review_checksum == approved.review_checksum
+
+    def test_transaction_audit_metadata_does_not_create_false_stale_positive(self) -> None:
+        draft = build_draft(
+            modelo="130",
+            period="2026Q1",
+            profile=_profile(),
+            inputs=_clean_inputs(),
+            schema_provider=default_schema_provider(),
+        )
+        transaction = _sample_transaction()
+        approved = approve_draft(
+            draft,
+            approved_by="kent",
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue.from_transactions([transaction]),
+        )
+        audit_only_variant = transaction.model_copy(
+            update={
+                "classified_at": datetime(2026, 4, 18, 8, 0, tzinfo=UTC),
+                "classified_by": "manual",
+                "notes": "operator note only",
+            }
+        )
+
+        refreshed = refresh_review_status(
+            approved,
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue.from_transactions([audit_only_variant]),
+        )
+        assert refreshed.status is FilingDraftStatus.APPROVED
+
+    def test_unapprove_restores_machine_ready_status(self) -> None:
+        draft = build_draft(
+            modelo="130",
+            period="2026Q1",
+            profile=_profile(),
+            inputs=_clean_inputs(),
+            schema_provider=default_schema_provider(),
+        )
+        approved = approve_draft(
+            draft,
+            approved_by="kent",
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue(),
+        )
+
+        unapproved = unapprove_draft(approved)
+        assert unapproved.status is FilingDraftStatus.READY_TO_SUBMIT
+        assert unapproved.approved_at is None
+        assert unapproved.approved_by is None
+        assert unapproved.review_checksum is None
+        assert unapproved.approval_basis is None
