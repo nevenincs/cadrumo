@@ -233,6 +233,9 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
             justificante_parser=Drafts(),
             submitters={"130": FailingSubmitter()},
             settings=settings,
+            # Explicit opt-in — this safety-helper test exercises the
+            # post-bypass live path. See 2026-04-18-live-submit-cli-excision-adr.
+            live_transport_supported=True,
             live_submit_audit_log_path=Path(sys.argv[3]),
         )
         try:

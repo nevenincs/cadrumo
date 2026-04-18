@@ -393,14 +393,7 @@ def apply_validation(
     - Any ``WARNING`` only → :attr:`FilingDraftStatus.VALIDATED`.
     - No findings → :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
     """
-    has_error = any(f.severity is FilingFindingSeverity.ERROR for f in findings)
-    has_warning = any(f.severity is FilingFindingSeverity.WARNING for f in findings)
-    if has_error:
-        new_status = FilingDraftStatus.DRAFT
-    elif has_warning:
-        new_status = FilingDraftStatus.VALIDATED
-    else:
-        new_status = FilingDraftStatus.READY_TO_SUBMIT
+    new_status = derive_validation_status(findings)
     return draft.model_copy(
         update={
             "findings": findings,
@@ -408,3 +401,17 @@ def apply_validation(
             "updated_at": datetime.now(tz=UTC),
         }
     )
+
+
+def derive_validation_status(
+    findings: tuple[FilingValidationFinding, ...],
+) -> FilingDraftStatus:
+    """Return the machine validation status implied by ``findings``."""
+
+    has_error = any(f.severity is FilingFindingSeverity.ERROR for f in findings)
+    has_warning = any(f.severity is FilingFindingSeverity.WARNING for f in findings)
+    if has_error:
+        return FilingDraftStatus.DRAFT
+    if has_warning:
+        return FilingDraftStatus.VALIDATED
+    return FilingDraftStatus.READY_TO_SUBMIT

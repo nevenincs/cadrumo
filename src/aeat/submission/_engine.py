@@ -66,7 +66,7 @@ class SubmissionEngine:
         justificante_parser: JustificanteParser,
         submitters: Mapping[str, Submitter],
         settings: Settings,
-        live_transport_supported: bool = True,
+        live_transport_supported: bool = False,
         live_submit_audit_log_path: Path | None = None,
     ) -> None:
         """Construct a :class:`SubmissionEngine`.
@@ -85,8 +85,13 @@ class SubmissionEngine:
             submitters: Mapping ``modelo -> Submitter`` dispatched by
                 :meth:`submit_draft`.
             settings: Application settings.
-            live_transport_supported: Whether this engine is wired to a
-                real transport that may perform a live AEAT write.
+            live_transport_supported: Whether this engine is wired
+                to a real transport that may perform a live AEAT write.
+                **Default is False — opt-in only.** With the default,
+                :meth:`submit_draft` with ``dry_run=False`` raises
+                :class:`AeatLiveTransportUnavailableError`. See
+                ``.vault/adr/2026-04-18-live-submit-cli-excision-adr.md``
+                for the rationale (charter #197 + #116).
             live_submit_audit_log_path: Optional override for the
                 append-only live submit audit log path.
         """
