@@ -70,7 +70,7 @@ def _sample_transaction() -> Transaction:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.UNCLASSIFIED,
+            "business_classification": BusinessClassification.NOT_YET_PROCESSED,
         }
     )
 
