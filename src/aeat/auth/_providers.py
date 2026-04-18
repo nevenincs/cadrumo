@@ -23,7 +23,14 @@ from .certificate import (
 )
 
 if TYPE_CHECKING:
-    from ._authenticator import AeatLoginAssertion, AeatSession, BrowserContextLike, BrowserSessionLike
+    from ..config import Settings
+    from ._authenticator import (
+        AeatLoginAssertion,
+        AeatSession,
+        BrowserContextLike,
+        BrowserSessionFactory,
+        BrowserSessionLike,
+    )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -220,6 +227,29 @@ def describe_certificate_provider(
     )
 
 
+def select_provider(
+    kind: AuthProviderKind,
+    *,
+    settings: Settings,
+    browser_session_factory: BrowserSessionFactory | None = None,
+) -> AuthProvider:
+    """Return the configured auth-provider implementation for ``kind``.
+
+    Today only the certificate-backed provider is concrete. The selector is
+    intentionally small: it gives downstream call sites a stable factory
+    boundary now, while future provider issues can plug their implementations
+    in without reworking the shared engines again.
+    """
+    if kind is AuthProviderKind.CERTIFICATE:
+        from ._authenticator import AeatAuthenticator
+
+        return AeatAuthenticator(
+            settings,
+            browser_session_factory=browser_session_factory,
+        )
+    raise NotImplementedError(f"auth provider {kind.value!r} is not implemented yet")
+
+
 __all__ = [
     "CERTIFICATE_CONTEXT_MARKER",
     "AuthLoginAssertionDetail",
@@ -238,4 +268,5 @@ __all__ = [
     "ClavePinLoginAssertionDetail",
     "ClavePinSessionDetail",
     "describe_certificate_provider",
+    "select_provider",
 ]

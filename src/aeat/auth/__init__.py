@@ -67,6 +67,7 @@ from ._providers import (
     ClavePermanenteSessionDetail,
     ClavePinLoginAssertionDetail,
     ClavePinSessionDetail,
+    select_provider,
 )
 from .certificate import (
     AeatLiveReadNotEnabledError,
@@ -144,6 +145,7 @@ __all__ = [
     "health",
     "load_certificate",
     "preload_into_browser_context",
+    "select_provider",
     "verify_handshake",
 ]
 

@@ -34,6 +34,7 @@ from typing import Any, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
+from ..auth import AuthProviderDescription, AuthProviderKind
 from ..i18n import Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -104,32 +105,6 @@ class PortalCatalogue(Protocol):
     def portal_for(self, modelo: str) -> Portal:
         """Return the :class:`Portal` that serves ``modelo``."""
         ...
-
-
-class AuthProviderKind(StrEnum):
-    """Local stub for the auth-provider kind enum."""
-
-    CERTIFICATE = "certificate"
-    CLAVE_PERMANENTE = "clave_permanente"
-    CLAVE_MOVIL = "clave_movil"
-    CLAVE_PIN = "clave_pin"
-
-
-class AuthProviderDescription(BaseModel):
-    """Safe description of one auth provider's current state."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: AuthProviderKind
-    label: str = Field(min_length=1)
-    configured: bool
-    available: bool
-    identity_nif: str | None = None
-    subject: str | None = None
-    expires_on: date | None = None
-    health_severity: str | None = None
-    days_until_expiry: int | None = None
-    health_summary: str | None = None
 
 
 @runtime_checkable
