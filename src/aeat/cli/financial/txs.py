@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 
 import typer
 
+from ...financial.categories import SpendingCategory
 from ...financial.transactions import (
     BusinessClassification,
     TransactionError,
@@ -108,6 +109,12 @@ def classify_cmd(
         "--pct",
         help="Business-use percentage in the inclusive 0..1 range for MIXED.",
     ),
+    category: SpendingCategory | None = typer.Option(
+        None,
+        "--category",
+        case_sensitive=False,
+        help="Specific spending category from the AEAT 39-category catalogue.",
+    ),
     reason: str = typer.Option(
         "",
         "--reason",
@@ -128,6 +135,8 @@ def classify_cmd(
             transaction_id,
             classification=classification,
             business_pct=business_pct,
+            category_id=category.value if category else None,
+            notes=reason,
             classified_by="manual",
             reason=reason,
         )
