@@ -16,3 +16,4 @@ CertificateAuthProvider.authenticate() and verify() raise NotImplementedError. T
 
 AUTH-002 | HIGH | AeatAuthenticator remains tightly coupled to certificates
 AeatAuthenticator was not refactored to use the generic AuthProvider protocol (Step 4 of the Plan). It still directly imports and hardcodes PKCS#12 logic, load_certificate(), and CertificateSessionDetail. This violates the ADR's goal to decouple certificate authentication from core session management.
+$content
