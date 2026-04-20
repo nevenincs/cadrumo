@@ -49,7 +49,7 @@ from . import (
     select_provider,
 )
 from . import _authenticator as authenticator_module
-from .certificate import CertificateBundle
+from ._providers._certificate.certificate import CertificateBundle
 
 if TYPE_CHECKING:
     from ..config import Settings

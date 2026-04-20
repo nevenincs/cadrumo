@@ -43,6 +43,14 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Get proactive alerts (inbox, deadlines, staleness) | ❌ | ❌ | ❌ | ❌ | 0.4.0 | part of [#239](https://github.com/wgergely/aeat/issues/239) |
 | Live-submit (opt-in) | ❌ | ❌ excised | inert | ❌ | 1.0.0 | [#197](https://github.com/wgergely/aeat/issues/197), [#198](https://github.com/wgergely/aeat/issues/198), [#116](https://github.com/wgergely/aeat/issues/116) — CLI removed 2026-04-18 per ADR; engine default is opt-in only |
 
+## auth protocol note
+
+Issue [#281](https://github.com/wgergely/aeat/issues/281) is internal
+groundwork. It generalises the auth/session boundary so future
+providers can be added cleanly, but it does not ship a new
+Kent-facing login method. Kent still logs in through the existing
+certificate-based path.
+
 ## provenance
 
-Last updated **2026-04-17**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
+Last updated **2026-04-18**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.

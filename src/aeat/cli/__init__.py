@@ -1,11 +1,9 @@
 """``aeat`` command-line surface.
 
 Sub-modules expose Typer sub-apps that are wired into the root
-``app`` exposed at the package root. The CLI is the primary developer
-entry point for interacting with Google Workspace and GCP APIs from a
-vanilla workstation; see ``aeat doctor`` for the single-command
-health check and ``aeat bootstrap`` for the post-gcloud provisioning
-step.
+``app`` exposed at the package root. The CLI is Kent's command-line
+route through the produce -> verify -> export workflow: setup, doctor,
+deadlines, filing drafts, guarded AEAT reads, and audit helpers.
 
 The package exposes ``app`` directly so the project entry point in
 ``pyproject.toml`` reads ``aeat = "aeat.cli:app"``, matching the
@@ -49,7 +47,7 @@ from . import workflow as workflow_module
 
 app = typer.Typer(
     name="aeat",
-    help="AEAT automation CLI: Google Workspace + GCP helpers and health checks.",
+    help="File your Spanish tax returns: produce, verify, and export AEAT-ready drafts and records.",
     no_args_is_help=True,
     add_completion=False,
 )
@@ -61,7 +59,10 @@ def hello() -> None:
     typer.echo("Hello from AEAT CLI")
 
 
-app.command(name="doctor", help="Report Google Workspace + GCP health for this workstation.")(doctor_module.doctor)
+app.command(
+    name="doctor",
+    help="Report whether this workstation is ready for Kent's filing workflow.",
+)(doctor_module.doctor)
 app.command(name="bootstrap", help="Provision scratch resources and persist their IDs to env/.env.")(
     bootstrap_module.bootstrap
 )
