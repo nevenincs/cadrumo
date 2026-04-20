@@ -71,12 +71,76 @@ class AeatSession(BaseModel):
         """The kind of provider that produced this session."""
         return self.provider_detail.kind
 
+    @property
+    def certificate_thumbprint(self) -> str | None:
+        if isinstance(self.provider_detail, CertificateSessionDetail):
+            return self.provider_detail.certificate_thumbprint
+        return None
+
+    @property
+    def certificate_subject(self) -> str | None:
+        if isinstance(self.provider_detail, CertificateSessionDetail):
+            return self.provider_detail.certificate_subject
+        return None
+
+    @property
+    def certificate_nif(self) -> str:
+        return self.identity_nif
+
+    @property
+    def handshake(self) -> HandshakeResult | None:
+        if isinstance(self.provider_detail, CertificateSessionDetail):
+            return self.provider_detail.handshake
+        return None
+
     def is_stale(self, now: datetime | None = None) -> bool:
         """Return True if the session's idle deadline has elapsed."""
         reference = now if now is not None else datetime.now(UTC)
         if reference.tzinfo is None:
             reference = reference.replace(tzinfo=UTC)
         return reference > self.idle_deadline
+
+
+class AssertionDetail(BaseModel):
+    """Base for provider-specific verification metadata."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class CertificateLoginAssertionDetail(AssertionDetail):
+    """Certificate-backed verification details."""
+
+    kind: Literal[AuthProviderKind.CERTIFICATE] = AuthProviderKind.CERTIFICATE
+    handshake_success: bool
+    certificate_recognised: bool
+    parsed_subject: str | None = None
+
+
+class ClavePermanenteLoginAssertionDetail(AssertionDetail):
+    """Placeholder verification detail shape for future Cl@ve Permanente."""
+
+    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
+
+
+class ClaveMovilLoginAssertionDetail(AssertionDetail):
+    """Placeholder verification detail shape for future Cl@ve Móvil."""
+
+    kind: Literal[AuthProviderKind.CLAVE_MOVIL] = AuthProviderKind.CLAVE_MOVIL
+
+
+class ClavePinLoginAssertionDetail(AssertionDetail):
+    """Placeholder verification detail shape for future Cl@ve PIN."""
+
+    kind: Literal[AuthProviderKind.CLAVE_PIN] = AuthProviderKind.CLAVE_PIN
+
+
+AeatAssertionDetail = Annotated[
+    CertificateLoginAssertionDetail
+    | ClavePermanenteLoginAssertionDetail
+    | ClaveMovilLoginAssertionDetail
+    | ClavePinLoginAssertionDetail,
+    Field(discriminator="kind"),
+]
 
 
 class AeatLoginAssertion(BaseModel):
@@ -86,11 +150,35 @@ class AeatLoginAssertion(BaseModel):
 
     target_url: str
     is_valid: bool
-    handshake_success: bool
-    certificate_recognised: bool
-    parsed_nif: str
-    parsed_subject: str
+    identity_nif: str | None
     status_code: int
     elapsed_ms: int
     attempted_at: datetime
     error_message: str | None = None
+    assertion_detail: AeatAssertionDetail
+
+    @property
+    def provider_kind(self) -> AuthProviderKind:
+        return self.assertion_detail.kind
+
+    @property
+    def handshake_success(self) -> bool | None:
+        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
+            return self.assertion_detail.handshake_success
+        return None
+
+    @property
+    def certificate_recognised(self) -> bool | None:
+        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
+            return self.assertion_detail.certificate_recognised
+        return None
+
+    @property
+    def parsed_nif(self) -> str | None:
+        return self.identity_nif
+
+    @property
+    def parsed_subject(self) -> str | None:
+        if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
+            return self.assertion_detail.parsed_subject
+        return None

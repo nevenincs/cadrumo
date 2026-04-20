@@ -33,10 +33,11 @@ from ..errors import SiteHealthError
 from ..status import SiteHealthState
 from ..status._site_health_parsers import evaluate_response
 from ..submission import (
+    AuthProviderDescription,
+    AuthProviderKind,
     DraftStatus,
     FilingFinding,
     FilingFindingSeverity,
-    LoadedCertificate,
     SubmissionPreflightError,
 )
 from . import (
@@ -194,16 +195,21 @@ class _FakeInbox:
 class _FakeCertificateBundle:
     raise_exc: BaseException | None = None
     subject: str = "CN=Test"
-    not_after: date = field(default_factory=lambda: date(2027, 1, 15))
-    fingerprint_sha256: str = "a" * 64
+    not_after: date | None = field(default_factory=lambda: date(2027, 1, 15))
+    kind: AuthProviderKind = AuthProviderKind.CERTIFICATE
 
-    def load(self) -> LoadedCertificate:
+    def describe(self) -> AuthProviderDescription:
         if self.raise_exc is not None:
             raise self.raise_exc
-        return LoadedCertificate(
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="Workflow test certificate",
+            configured=True,
+            available=True,
+            identity_nif="X1234567L",
             subject=self.subject,
-            not_after=self.not_after,
-            fingerprint_sha256=self.fingerprint_sha256,
+            expires_on=self.not_after,
+            health_severity="OK",
         )
 
 
@@ -466,7 +472,6 @@ class TestAbortReasons:
         fx.certificate_bundle = _FakeCertificateBundle(
             subject="CN=Expiring",
             not_after=date(2026, 4, 20),
-            fingerprint_sha256="b" * 64,
         )
         result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
@@ -482,7 +487,6 @@ class TestAbortReasons:
         fx.certificate_bundle = _FakeCertificateBundle(
             subject="CN=Expired",
             not_after=date(2026, 4, 1),
-            fingerprint_sha256="d" * 64,
         )
         result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
@@ -498,7 +502,6 @@ class TestAbortReasons:
         fx.certificate_bundle = _FakeCertificateBundle(
             subject="CN=Warning",
             not_after=date(2026, 5, 30),
-            fingerprint_sha256="c" * 64,
         )
         result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
         assert result.final_stage is WorkflowStage.DONE
@@ -506,6 +509,20 @@ class TestAbortReasons:
         assert preflight_step.details is not None
         assert preflight_step.details["cert_severity"] == "WARN"
         assert preflight_step.details["cert_days_until_expiry"] == "48"
+
+    def test_provider_without_expiry_metadata_does_not_abort(self) -> None:
+        """A non-certificate provider with no expiry metadata skips the cert window gate."""
+        fx = _fixtures()
+        fx.certificate_bundle = _FakeCertificateBundle(
+            subject="Cl@ve Permanente",
+            not_after=None,
+            kind=AuthProviderKind.CLAVE_PERMANENTE,
+        )
+        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        assert result.final_stage is WorkflowStage.DONE
+        preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
+        assert preflight_step.details is not None
+        assert preflight_step.details["provider_kind"] == AuthProviderKind.CLAVE_PERMANENTE.value
 
     def test_live_submit_forwards_explicit_live_mode(self) -> None:
         """Live mode reaches the submission engine when dry_run=False is explicit."""

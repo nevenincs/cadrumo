@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -11,15 +13,20 @@ from ..._models import (
     AEAT_SESSION_IDLE_TTL,
     AeatLoginAssertion,
     AeatSession,
-    AuthProviderKind,
+    CertificateLoginAssertionDetail,
     CertificateSessionDetail,
 )
-from ..._protocols import AEAT_CERTIFICATE_THUMBPRINT_MARKER, AuthProviderDescription
+from ..._protocols import (
+    AEAT_CERTIFICATE_THUMBPRINT_MARKER,
+    AuthProviderDescription,
+    AuthProviderKind,
+)
 from ._certificate_backends._playwright_context import build_client_certificates_kwarg
 from .certificate import (
     CertificateBundle,
     HandshakeResult,
     LoadedCertificate,
+    evaluate_loaded_certificate_health,
     extract_nif_from_subject,
     load_certificate,
     verify_handshake,
@@ -46,12 +53,59 @@ class CertificateAuthProvider:
     def kind(self) -> AuthProviderKind:
         return AuthProviderKind.CERTIFICATE
 
-    def describe(self) -> AuthProviderDescription:
-        return AuthProviderDescription(
-            name="Certificate",
-            kind=self.kind,
-            is_configured=True,
-        )
+    def describe(self, settings: Settings) -> AuthProviderDescription:
+        """Return a safe summary of the certificate provider state."""
+        if settings.aeat_certificate_path is None:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=False,
+                available=False,
+                health_summary="certificate path not configured",
+            )
+        if settings.aeat_certificate_password_secret is None:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=True,
+                available=False,
+                health_summary="AEAT_CERTIFICATE_PASSWORD_SECRET not set",
+            )
+
+        try:
+            bundle = self._require_bundle(settings)
+            cert = load_certificate(bundle)
+            health = evaluate_loaded_certificate_health(
+                cert,
+                warn_days=settings.aeat_cert_warn_days,
+                critical_days=settings.aeat_cert_critical_days,
+            )
+            identity_nif: str | None = None
+            try:
+                identity_nif = extract_nif_from_subject(cert)
+            except Exception:
+                identity_nif = None
+
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=True,
+                available=True,
+                identity_nif=identity_nif,
+                subject=cert.subject,
+                expires_on=cert.not_after.date(),
+                health_severity=health.severity.value,
+                days_until_expiry=health.days_until_expiry,
+                health_summary=f"{health.severity.value}:{health.days_until_expiry}",
+            )
+        except Exception as exc:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=True,
+                available=False,
+                health_summary=f"{type(exc).__name__}: {exc}",
+            )
 
     def _require_bundle(self, settings: Settings) -> CertificateBundle:
         path = settings.aeat_certificate_path
@@ -142,11 +196,12 @@ class CertificateAuthProvider:
         )
         setattr(context, AEAT_CERTIFICATE_THUMBPRINT_MARKER, cert.sha256_thumbprint)
 
-        handshake = metadata.get("handshake")
-        if isinstance(handshake, dict):
+        handshake_data = metadata.get("handshake")
+        handshake: HandshakeResult | None = None
+        if isinstance(handshake_data, dict):
             # Coerce dict (from JSON) into HandshakeResult-compatible form
             # since the model has strict=True.
-            h_dict = handshake.copy()
+            h_dict = handshake_data.copy()
             if isinstance(h_dict.get("server_cert_chain"), list):
                 h_dict["server_cert_chain"] = tuple(h_dict["server_cert_chain"])
             if isinstance(h_dict.get("attempted_at"), str):
@@ -193,15 +248,11 @@ class CertificateAuthProvider:
     ) -> AeatLoginAssertion:
         target = settings.aeat_certificate_verify_url
         attempted_at = datetime.now(UTC)
-        import time
-
         start = time.perf_counter()
 
         status_code = 0
         certificate_recognised = False
         error_message: str | None = None
-
-        import contextlib
 
         page: BrowserPageLike | None = None
         try:
@@ -228,12 +279,14 @@ class CertificateAuthProvider:
         return AeatLoginAssertion(
             target_url=target,
             is_valid=is_valid,
-            handshake_success=handshake_success,
-            certificate_recognised=certificate_recognised,
-            parsed_nif=session.identity_nif,
-            parsed_subject=detail.certificate_subject,
+            identity_nif=session.identity_nif,
             status_code=status_code,
             elapsed_ms=elapsed_ms,
             attempted_at=attempted_at,
             error_message=error_message,
+            assertion_detail=CertificateLoginAssertionDetail(
+                handshake_success=handshake_success,
+                certificate_recognised=certificate_recognised,
+                parsed_subject=detail.certificate_subject,
+            ),
         )
