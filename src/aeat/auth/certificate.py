@@ -155,17 +155,11 @@ class CertificateBackend(StrEnum):
     Attributes:
         PLAYWRIGHT_CONTEXT: Primary. Supply the PKCS#12 to
             ``browser.new_context(client_certificates=[...])``.
-        USER_DATA_DIR: Deferred. Install into the OS cert store and
-            launch Chrome with ``--user-data-dir``.
-        MTLS_PROXY: Deferred. Route the browser through a local
-            mTLS-injecting proxy.
         HTTPX_FALLBACK: Verify-only. Perform a direct mTLS handshake
             via ``httpx`` for CI smoke tests.
     """
 
     PLAYWRIGHT_CONTEXT = "PLAYWRIGHT_CONTEXT"
-    USER_DATA_DIR = "USER_DATA_DIR"
-    MTLS_PROXY = "MTLS_PROXY"
     HTTPX_FALLBACK = "HTTPX_FALLBACK"
 
 
@@ -738,21 +732,15 @@ def _select_backend(backend: CertificateBackend) -> _CertBackend:
     requested.
     """
     from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from ._certificate_backends._mtls_proxy import MtlsProxyBackend
     from ._certificate_backends._playwright_context import (
         PlaywrightContextBackend,
     )
-    from ._certificate_backends._user_data_dir import UserDataDirBackend
 
     match backend:
         case CertificateBackend.PLAYWRIGHT_CONTEXT:
             return PlaywrightContextBackend()
         case CertificateBackend.HTTPX_FALLBACK:
             return HttpxFallbackBackend()
-        case CertificateBackend.USER_DATA_DIR:
-            return UserDataDirBackend()
-        case CertificateBackend.MTLS_PROXY:
-            return MtlsProxyBackend()
 
 
 # ── Public backend-facing API ───────────────────────────────────────────────
