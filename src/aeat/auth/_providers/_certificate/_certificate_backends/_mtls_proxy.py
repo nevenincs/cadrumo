@@ -30,5 +30,5 @@ class MtlsProxyBackend(_CertBackend):
             "MTLS_PROXY backend is deferred; see .vault/adr/2026-04-12-cert-auth-adr.md for rationale."
         )
 
-    def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
+    def verify(self, cert: LoadedCertificate, url: str, *, timeout_s: float = 20.0) -> HandshakeResult:
         raise NotImplementedError("MTLS_PROXY backend is deferred; use HTTPX_FALLBACK for verify.")

@@ -1,55 +1,59 @@
 """Unified live-AEAT authenticator facade.
 
 This module is the single entry point every future remote-read
-module should depend on. It composes the certificate loader, the Playwright
-browser session, and the login-assertion flow into a narrow async surface.
+module should depend on. It coordinates authentication providers and
+Playwright browser sessions into a narrow async surface.
 """
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
-import getpass
 import hashlib
 import json
 import os
 import subprocess
 import tempfile
-import time
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, NoReturn, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..logging import get_logger
-from ._browser import BrowserContextLike, BrowserPageLike, BrowserSessionFactory, BrowserSessionLike
-from ._models import AeatLoginAssertion, AeatSession, CertificateSessionDetail
-from ._providers._certificate._certificate_backends._playwright_context import build_client_certificates_kwarg
+from ._browser import BrowserContextLike, BrowserSessionFactory, BrowserSessionLike
+from ._models import (
+    AeatLoginAssertion,
+    AeatSession,
+    CertificateSessionDetail,
+)
+from ._protocols import AuthProvider
 from ._providers._certificate.certificate import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
-    CertificateBundle,
+    CertificateExpiredError,
     CertificateHealth,
+    CertificateHealthSeverity,
     HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
-    extract_nif_from_subject,
     load_certificate,
     verify_handshake,
 )
+from ._providers._certificate.provider import CertificateAuthProvider
 
 if TYPE_CHECKING:
     from ..config import Settings
 
 log = get_logger(__name__)
 
-AEAT_SESSION_IDLE_TTL: Final[timedelta] = timedelta(minutes=18)
 AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = 30_000
 AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 1
 
-_MARKER_ATTR = "_aeat_certificate_thumbprint"
+
+class AeatSecurityError(AeatLoginAssertionError):
+    """Raised when file permission hardening fails in strict mode."""
 
 
 class _PersistedSessionMetadata(BaseModel):
@@ -78,14 +82,19 @@ class AeatAuthenticator:
         self,
         settings: Settings,
         *,
+        provider: AuthProvider | None = None,
         browser_session_factory: BrowserSessionFactory | None = None,
         handshake_verifier: Callable[[LoadedCertificate, str], HandshakeResult] | None = None,
-        navigation_timeout_ms: int = AEAT_LOGIN_NAVIGATION_TIMEOUT_MS,
+        navigation_timeout_ms: int | None = None,
     ) -> None:
         self._settings = settings
+        self._navigation_timeout_ms = navigation_timeout_ms or settings.aeat_auth_timeout_ms
+        self._provider = provider or CertificateAuthProvider(
+            handshake_verifier=handshake_verifier or verify_handshake,
+            navigation_timeout_ms=self._navigation_timeout_ms,
+        )
         self._browser_session_factory = browser_session_factory
         self._handshake_verifier = handshake_verifier or verify_handshake
-        self._navigation_timeout_ms = navigation_timeout_ms
         self._lock = asyncio.Lock()
         self._browser_session: BrowserSessionLike | None = None
         self._context: BrowserContextLike | None = None
@@ -101,8 +110,29 @@ class AeatAuthenticator:
     async def __aexit__(self, *_exc_info: object) -> None:
         await self.close()
 
+    @property
+    def provider(self) -> AuthProvider:
+        """The active authentication provider."""
+        return self._provider
+
+    # --- Legacy Certificate-specific methods (delegated if provider is CertificateAuthProvider) ---
+
     def load_certificate(self) -> LoadedCertificate:
-        bundle = self._require_bundle()
+        if isinstance(self._provider, CertificateAuthProvider):
+            bundle = self._provider._require_bundle(self._settings)
+            return load_certificate(bundle)
+        # Fallback for legacy tests
+        from ._providers._certificate.certificate import CertificateBundle
+
+        path = self._settings.aeat_certificate_path
+        if path is None:
+            raise ValueError("AEAT_CERTIFICATE_PATH is not set")
+        bundle = CertificateBundle(
+            path=path,
+            password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106
+            friendly_name=self._settings.aeat_certificate_friendly_name,
+            backend=self._settings.aeat_certificate_backend,
+        )
         return load_certificate(bundle)
 
     def health(self, *, now: datetime | None = None) -> CertificateHealth:
@@ -119,8 +149,7 @@ class AeatAuthenticator:
         cert = self.load_certificate()
         return self._handshake_verifier(cert, target)
 
-    def extract_nif_from_subject(self, cert: LoadedCertificate) -> str:
-        return extract_nif_from_subject(cert)
+    # --- Generic Provider-agnostic methods ---
 
     async def authenticate(
         self,
@@ -132,9 +161,9 @@ class AeatAuthenticator:
             if self._active_session is not None:
                 raise AeatLoginAssertionError(
                     "AeatAuthenticator already has an active session; "
-                    "call close() or reauthenticate() before "
-                    "authenticating again"
+                    "call close() or reauthenticate() before authenticating again"
                 )
+
             target = target_url or self._settings.aeat_certificate_verify_url
             resume_path = self._resolve_storage_state_path(browser_session)
             if resume_path.exists() or self._metadata_path_for(resume_path).exists():
@@ -151,69 +180,39 @@ class AeatAuthenticator:
                         exc,
                     )
 
-            cert = self.load_certificate()
-            handshake = await asyncio.to_thread(self._handshake_verifier, cert, target)
-            nif = extract_nif_from_subject(cert)
+            # 2. Proactive Health Gate (#270)
+            # Before fresh auth, check if the provider's identity (cert) is healthy.
+            # (Currently only implemented for CertificateAuthProvider)
+            if isinstance(self._provider, CertificateAuthProvider):
+                health = self.health()
+                if health.severity == CertificateHealthSeverity.EXPIRED:
+                    raise CertificateExpiredError(
+                        f"AEAT certificate has expired (not_after={health.not_after.isoformat()}). "
+                        "Please renew your FNMT certificate."
+                    )
+                if health.severity == CertificateHealthSeverity.CRITICAL:
+                    # In a real CLI, we might allow --force-expiring-cert,
+                    # but here we log a loud warning and let the probe decide.
+                    log.warning(
+                        "AEAT certificate is in CRITICAL expiry window (%d days remaining). "
+                        "Renew it soon at https://www.sede.fnmt.gob.es/",
+                        health.days_until_expiry,
+                    )
+
             session_like = browser_session or await self._resolve_browser_session()
-
-            def provisioner(kwargs: dict[str, Any]) -> None:
-                kwargs["client_certificates"] = build_client_certificates_kwarg(
-                    cert, self._settings.aeat_certificate_verify_url
-                )
-
-            context = await session_like.create_context(provisioner=provisioner)
-            setattr(context, _MARKER_ATTR, cert.sha256_thumbprint)
-
             try:
-                self._assert_context_marker(context, cert)
-            except Exception:
-                with contextlib.suppress(Exception):
-                    await context.close()
+                session, context = await self._provider.authenticate(session_like, self._settings)
+            except Exception as exc:
                 await self._close_browser_session(session_like)
-                raise
+                if isinstance(exc, AeatLoginAssertionError):
+                    raise
+                raise AeatLoginAssertionError(f"AEAT authentication failed: {exc}") from exc
 
-            storage_state_path = self._resolve_storage_state_path(session_like)
-            provisional_at = datetime.now(UTC)
-
-            detail = CertificateSessionDetail(
-                certificate_thumbprint=cert.sha256_thumbprint,
-                certificate_subject=cert.subject,
-                handshake=handshake,
-            )
-
-            provisional_session = AeatSession(
-                identity_nif=nif,
-                authenticated_at=provisional_at,
-                idle_deadline=provisional_at + AEAT_SESSION_IDLE_TTL,
-                storage_state_path=storage_state_path,
-                provider_detail=detail,
-            )
-            assertion = await self._run_login_probe(
-                context,
-                provisional_session,
-                target,
-            )
-            if not assertion.is_valid:
-                with contextlib.suppress(Exception):
-                    await context.close()
-                await self._close_browser_session(session_like)
-                raise AeatLoginAssertionError(
-                    "fresh AEAT authentication did not produce a valid login assertion; "
-                    f"status={assertion.status_code} error={assertion.error_message!r}"
-                )
-
-            authenticated_at = assertion.attempted_at
-            session = provisional_session.model_copy(
-                update={
-                    "authenticated_at": authenticated_at,
-                    "idle_deadline": authenticated_at + AEAT_SESSION_IDLE_TTL,
-                }
-            )
             self._browser_session = session_like
             self._context = context
-            self._active_session = session
             try:
-                await self._capture_storage_state_locked(session)
+                storage_state_path = await self._capture_storage_state_locked(session)
+                self._active_session = session.model_copy(update={"storage_state_path": storage_state_path})
             except Exception:
                 await self._drop_context()
                 await self._close_browser_session(session_like)
@@ -221,11 +220,11 @@ class AeatAuthenticator:
                 self._active_session = None
                 raise
             log.info(
-                "AeatAuthenticator: authenticated nif=%s thumbprint=%s",
-                session.identity_nif,
-                session.provider_detail.certificate_thumbprint,
+                "AeatAuthenticator: authenticated nif=%s kind=%s",
+                self._active_session.identity_nif,
+                self._active_session.provider_kind,
             )
-            return session
+            return self._active_session
 
     async def reauthenticate(self, session: AeatSession) -> AeatSession:
         log.info(
@@ -256,9 +255,8 @@ class AeatAuthenticator:
             self._inflight_pages += 1
             self._inflight_drained.clear()
 
-        target = target_url or self._settings.aeat_certificate_verify_url
         try:
-            return await self._run_login_probe(context, session, target)
+            return await self._provider.verify(context, session, self._settings)
         finally:
             async with self._lock:
                 self._inflight_pages -= 1
@@ -304,70 +302,40 @@ class AeatAuthenticator:
             self._active_session = None
             self._closing = False
 
-    async def _run_login_probe(
-        self,
-        context: BrowserContextLike,
-        session: AeatSession,
-        target: str,
-    ) -> AeatLoginAssertion:
-        attempted_at = datetime.now(UTC)
-        start = time.perf_counter()
-
-        status_code = 0
-        certificate_recognised = False
-        error_message: str | None = None
-        page: BrowserPageLike | None = None
-        try:
-            page = await context.new_page()
-            response = await page.goto(target, timeout=self._navigation_timeout_ms)
-            if response is not None:
-                status_code = int(response.status)
-                certificate_recognised = 200 <= status_code < 400
-        except Exception as exc:
-            error_message = f"{type(exc).__name__}: {exc}"
-        finally:
-            if page is not None:
-                with contextlib.suppress(Exception):
-                    await page.close()
-
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
-        detail = session.provider_detail
-        handshake_success = detail.handshake.success
-        is_valid = handshake_success and certificate_recognised and bool(session.identity_nif)
-        return AeatLoginAssertion(
-            target_url=target,
-            is_valid=is_valid,
-            handshake_success=handshake_success,
-            certificate_recognised=certificate_recognised,
-            parsed_nif=session.identity_nif,
-            parsed_subject=detail.certificate_subject,
-            status_code=status_code,
-            elapsed_ms=elapsed_ms,
-            attempted_at=attempted_at,
-            error_message=error_message,
-        )
-
     async def _capture_storage_state_locked(self, session: AeatSession) -> Path:
         context = self._context
         if context is None:
             raise AeatLoginAssertionError("no active browser context; cannot capture storage_state")
 
         storage_state_path = session.storage_state_path or self._resolve_storage_state_path(self._browser_session)
-        self._write_json_atomic(storage_state_path, await context.storage_state())
+
+        storage_data = await context.storage_state()
+        self._write_json_atomic(storage_state_path, storage_data)
         storage_state_sha256 = self._validate_storage_state_file(storage_state_path)
-        detail = session.provider_detail
-        metadata = _PersistedSessionMetadata(
-            certificate_thumbprint=detail.certificate_thumbprint,
-            certificate_subject=detail.certificate_subject,
-            certificate_nif=session.identity_nif,
-            authenticated_at=session.authenticated_at,
-            idle_deadline=session.idle_deadline,
-            storage_state_sha256=storage_state_sha256,
-            handshake=detail.handshake,
-        )
+
+        # Build metadata sidecar.
+        # We need to extract the detail fields into the flat metadata for now (legacy compatibility).
+        # In a real future, metadata would be a dump of AeatSession.
+
+        metadata_dict = {
+            "schema_version": AEAT_STORAGE_STATE_SCHEMA_VERSION,
+            "certificate_nif": session.identity_nif,
+            "authenticated_at": session.authenticated_at.isoformat(),
+            "idle_deadline": session.idle_deadline.isoformat(),
+            "storage_state_sha256": storage_state_sha256,
+        }
+        if isinstance(session.provider_detail, CertificateSessionDetail):
+            metadata_dict.update(
+                {
+                    "certificate_thumbprint": session.provider_detail.certificate_thumbprint,
+                    "certificate_subject": session.provider_detail.certificate_subject,
+                    "handshake": session.provider_detail.handshake.model_dump(mode="json"),
+                }
+            )
+
         self._write_json_atomic(
             self._metadata_path_for(storage_state_path),
-            metadata.model_dump(mode="json"),
+            metadata_dict,
         )
         return storage_state_path
 
@@ -379,94 +347,46 @@ class AeatAuthenticator:
         target_url: str,
     ) -> AeatSession:
         storage_state_path = path
-        cert = self.load_certificate()
         storage_state_sha256 = self._validate_storage_state_file(storage_state_path)
-        metadata = self._read_persisted_metadata(storage_state_path)
 
-        if metadata.storage_state_sha256 != storage_state_sha256:
+        metadata_path = self._metadata_path_for(storage_state_path)
+        if not metadata_path.exists():
+            self._raise_invalid_persisted_state(storage_state_path, "persisted metadata sidecar missing")
+
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            self._raise_invalid_persisted_state(
+                storage_state_path, f"persisted metadata sidecar is not valid JSON: {exc}"
+            )
+
+        if metadata.get("schema_version") != AEAT_STORAGE_STATE_SCHEMA_VERSION:
             self._raise_invalid_persisted_state(
                 storage_state_path,
-                "persisted storage_state hash does not match metadata sidecar",
+                f"unsupported metadata schema version: {metadata.get('schema_version')}",
             )
-        if metadata.idle_deadline <= datetime.now(UTC):
+        if metadata.get("storage_state_sha256") != storage_state_sha256:
             self._raise_invalid_persisted_state(
-                storage_state_path,
-                "persisted AEAT session is past its idle deadline",
+                storage_state_path, "persisted storage_state hash does not match metadata sidecar"
             )
-        if metadata.certificate_thumbprint != cert.sha256_thumbprint:
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                "persisted AEAT session was captured with a different certificate thumbprint",
-            )
-        if metadata.certificate_subject != cert.subject:
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                "persisted AEAT session was captured with a different certificate subject",
-            )
+
+        idle_deadline = datetime.fromisoformat(metadata["idle_deadline"])
+        if idle_deadline <= datetime.now(UTC):
+            self._raise_invalid_persisted_state(storage_state_path, "persisted AEAT session is past its idle deadline")
 
         session_like = browser_session or await self._resolve_browser_session()
         owns_session = browser_session is None
-        context: BrowserContextLike | None = None
-        session: AeatSession | None = None
+
         try:
-
-            def provisioner(kwargs: dict[str, Any]) -> None:
-                kwargs["client_certificates"] = build_client_certificates_kwarg(
-                    cert, self._settings.aeat_certificate_verify_url
-                )
-
-            context = await session_like.create_context(
-                provisioner=provisioner,
-                storage_state_path=storage_state_path,
-            )
-            setattr(context, _MARKER_ATTR, cert.sha256_thumbprint)
-            self._assert_context_marker(context, cert)
-
-            detail = CertificateSessionDetail(
-                certificate_thumbprint=metadata.certificate_thumbprint,
-                certificate_subject=metadata.certificate_subject,
-                handshake=metadata.handshake,
-            )
-            session = AeatSession(
-                identity_nif=metadata.certificate_nif,
-                authenticated_at=metadata.authenticated_at,
-                idle_deadline=metadata.idle_deadline,
-                storage_state_path=storage_state_path,
-                provider_detail=detail,
-            )
-            assertion = await self._run_login_probe(context, session, target_url)
-            if not assertion.is_valid:
-                raise _PersistedSessionInvalidError("persisted AEAT browser session failed live verification")
-            session = session.model_copy(
-                update={
-                    "authenticated_at": assertion.attempted_at,
-                    "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
-                }
-            )
-        except _PersistedSessionInvalidError:
-            if context is not None:
-                with contextlib.suppress(Exception):
-                    await context.close()
+            session, context = await self._provider.resume(session_like, storage_state_path, metadata, self._settings)
+        except Exception as exc:
             if owns_session:
                 await self._close_browser_session(session_like)
             self._invalidate_persisted_state(
-                storage_state_path,
-                "persisted AEAT browser session failed live verification",
+                storage_state_path, f"persisted AEAT browser session could not be resumed: {exc}"
             )
-            raise
-        except Exception as exc:
-            if context is not None:
-                with contextlib.suppress(Exception):
-                    await context.close()
-            if owns_session:
-                await self._close_browser_session(session_like)
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                f"persisted AEAT browser session could not be resumed: {exc}",
-            )
+            raise _PersistedSessionInvalidError(str(exc)) from exc
 
-        if context is None or session is None:
-            raise AeatLoginAssertionError("persisted AEAT session resume did not produce a usable context")
         self._browser_session = session_like
         self._context = context
         self._active_session = session
@@ -480,22 +400,11 @@ class AeatAuthenticator:
             self._active_session = None
             raise
         log.info(
-            "AeatAuthenticator: resumed persisted session nif=%s thumbprint=%s",
+            "AeatAuthenticator: resumed persisted session nif=%s kind=%s",
             session.identity_nif,
-            session.provider_detail.certificate_thumbprint,
+            session.provider_kind,
         )
         return session
-
-    def _assert_context_marker(
-        self,
-        context: BrowserContextLike,
-        cert: LoadedCertificate,
-    ) -> None:
-        marker = getattr(context, _MARKER_ATTR, None)
-        if marker != cert.sha256_thumbprint:
-            raise AeatLoginAssertionError(
-                f"browser context was not tagged with the expected {_MARKER_ATTR} marker; cannot continue"
-            )
 
     def _resolve_storage_state_path(
         self,
@@ -511,30 +420,6 @@ class AeatAuthenticator:
     @staticmethod
     def _metadata_path_for(storage_state_path: Path) -> Path:
         return storage_state_path.with_suffix(".meta.json")
-
-    def _read_persisted_metadata(self, storage_state_path: Path) -> _PersistedSessionMetadata:
-        metadata_path = self._metadata_path_for(storage_state_path)
-        if not metadata_path.exists():
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                f"persisted metadata sidecar missing: {metadata_path}",
-            )
-        metadata: _PersistedSessionMetadata | None = None
-        try:
-            metadata = _PersistedSessionMetadata.model_validate_json(metadata_path.read_text(encoding="utf-8"))
-        except Exception as exc:
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                f"persisted metadata sidecar is malformed: {exc}",
-            )
-        if metadata is None:
-            raise AeatLoginAssertionError("persisted metadata sidecar did not produce a parsed model")
-        if metadata.schema_version != AEAT_STORAGE_STATE_SCHEMA_VERSION:
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                f"unsupported persisted session schema version: {metadata.schema_version}",
-            )
-        return metadata
 
     def _validate_storage_state_file(self, storage_state_path: Path) -> str:
         if not storage_state_path.exists():
@@ -569,7 +454,7 @@ class AeatAuthenticator:
             )
         return hashlib.sha256(raw).hexdigest()
 
-    def _raise_invalid_persisted_state(self, storage_state_path: Path, reason: str) -> None:
+    def _raise_invalid_persisted_state(self, storage_state_path: Path, reason: str) -> NoReturn:
         self._invalidate_persisted_state(storage_state_path, reason)
         raise _PersistedSessionInvalidError(reason)
 
@@ -607,16 +492,18 @@ class AeatAuthenticator:
                 tmp_path = Path(handle.name)
                 handle.write(json_text)
                 handle.write("\n")
-            self._restrict_file_permissions(tmp_path)
+            self._restrict_file_permissions(tmp_path, strict=self._settings.aeat_strict_security)
             os.replace(tmp_path, path)
-            self._restrict_file_permissions(path)
+            self._restrict_file_permissions(path, strict=self._settings.aeat_strict_security)
         finally:
             if tmp_path is not None:
                 with contextlib.suppress(FileNotFoundError):
                     tmp_path.unlink()
 
     @staticmethod
-    def _restrict_file_permissions(path: Path) -> None:
+    def _restrict_file_permissions(path: Path, *, strict: bool = False) -> None:
+        import getpass
+
         if os.name == "nt":
             username = getpass.getuser()
             icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\Windows")) / "System32" / "icacls.exe"
@@ -640,27 +527,24 @@ class AeatAuthenticator:
                 )
                 if result.returncode == 0:
                     return
-            log.warning(
-                "AeatAuthenticator: failed to harden Windows ACLs on %s: %s",
-                path,
-                result.stderr.strip() if result is not None and result.stderr else "icacls returned non-zero",
-            )
+
+            error_msg = f"AeatAuthenticator: failed to harden Windows ACLs on {path}"
+            if result is not None and result.stderr:
+                error_msg += f": {result.stderr.strip()}"
+
+            if strict:
+                raise AeatSecurityError(error_msg)
+            log.warning(error_msg)
             return
         if os.name != "posix":
             return
-        with contextlib.suppress(OSError):
+        try:
             os.chmod(path, 0o600)
-
-    def _require_bundle(self) -> CertificateBundle:
-        path = self._settings.aeat_certificate_path
-        if path is None:
-            raise ValueError("AEAT_CERTIFICATE_PATH is not set; cannot build CertificateBundle")
-        return CertificateBundle(
-            path=path,
-            password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106
-            friendly_name=self._settings.aeat_certificate_friendly_name,
-            backend=self._settings.aeat_certificate_backend,
-        )
+        except OSError as exc:
+            error_msg = f"AeatAuthenticator: failed to chmod 0600 on {path}: {exc}"
+            if strict:
+                raise AeatSecurityError(error_msg) from exc
+            log.warning(error_msg)
 
     async def _resolve_browser_session(self) -> BrowserSessionLike:
         if self._browser_session_factory is not None:
@@ -668,8 +552,7 @@ class AeatAuthenticator:
         raise AeatLoginAssertionError(
             "AeatAuthenticator was constructed without a browser "
             "session factory; the default Playwright factory is not "
-            "yet wired. Pass a factory explicitly or use only the "
-            "synchronous helpers (health, verify_handshake)."
+            "yet wired."
         )
 
     async def _drop_context(self) -> None:

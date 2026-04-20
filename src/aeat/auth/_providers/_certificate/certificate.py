@@ -785,7 +785,12 @@ def preload_into_browser_context(
     backend.preload(cert, context)
 
 
-def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
+def verify_handshake(
+    cert: LoadedCertificate,
+    url: str,
+    *,
+    timeout_s: float = 20.0,
+) -> HandshakeResult:
     """Perform an opt-in TLS handshake smoke test.
 
     Dispatches to the backend selected by ``cert.backend``. TLS failures
@@ -797,6 +802,7 @@ def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
     Args:
         cert: The loaded certificate to present.
         url: Fully-qualified target URL (must include scheme + host).
+        timeout_s: Maximum duration in seconds for the handshake.
 
     Returns:
         A frozen :class:`HandshakeResult`.
@@ -807,7 +813,7 @@ def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
     if not url or "://" not in url:
         raise CertificateHandshakeError(f"verify_handshake: invalid url {url!r}")
     backend = _select_backend(cert.backend)
-    return backend.verify(cert, url)
+    return backend.verify(cert, url, timeout_s=timeout_s)
 
 
 __all__ = [

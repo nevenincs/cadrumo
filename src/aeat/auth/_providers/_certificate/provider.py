@@ -1,20 +1,46 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import asyncio
+from collections.abc import Callable
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
 
 from ..._browser import BrowserSessionLike
-from ..._models import AeatLoginAssertion, AeatSession, AuthProviderKind
-from ..._protocols import AuthProviderDescription
+from ..._models import (
+    AEAT_SESSION_IDLE_TTL,
+    AeatLoginAssertion,
+    AeatSession,
+    AuthProviderKind,
+    CertificateSessionDetail,
+)
+from ..._protocols import AEAT_CERTIFICATE_THUMBPRINT_MARKER, AuthProviderDescription
+from ._certificate_backends._playwright_context import build_client_certificates_kwarg
 from .certificate import (
     CertificateBundle,
+    HandshakeResult,
+    LoadedCertificate,
+    extract_nif_from_subject,
+    load_certificate,
+    verify_handshake,
 )
 
 if TYPE_CHECKING:
     from ....config import Settings
+    from ..._browser import BrowserContextLike, BrowserPageLike
 
 
 class CertificateAuthProvider:
     """Authentication provider for PKCS#12 certificates."""
+
+    def __init__(
+        self,
+        *,
+        handshake_verifier: Callable[[LoadedCertificate, str], HandshakeResult] | None = None,
+        navigation_timeout_ms: int = 30_000,
+    ) -> None:
+        self._handshake_verifier = handshake_verifier or verify_handshake
+        self._navigation_timeout_ms = navigation_timeout_ms
 
     @property
     def kind(self) -> AuthProviderKind:
@@ -42,11 +68,172 @@ class CertificateAuthProvider:
         self,
         browser_session: BrowserSessionLike,
         settings: Settings,
-    ) -> AeatSession:
-        # Note: This is a placeholder for the protocol if AeatAuthenticator delegates to it entirely.
-        # But actually, since tests expect AeatAuthenticator to remain identical, we will refactor
-        # AeatAuthenticator to use this provider or we will move logic here.
-        raise NotImplementedError("Delegated to AeatAuthenticator for now")
+    ) -> tuple[AeatSession, BrowserContextLike]:
+        bundle = self._require_bundle(settings)
+        cert = load_certificate(bundle)
+        target = settings.aeat_certificate_verify_url
 
-    async def verify(self, session: AeatSession) -> AeatLoginAssertion:
-        raise NotImplementedError()
+        timeout_s = settings.aeat_auth_timeout_ms / 1000.0
+        handshake = await asyncio.to_thread(self._handshake_verifier, cert, target, timeout_s=timeout_s)
+        nif = extract_nif_from_subject(cert)
+
+        def provisioner(kwargs: dict[str, Any]) -> None:
+            kwargs["client_certificates"] = build_client_certificates_kwarg(cert, target)
+
+        context = await browser_session.create_context(provisioner=provisioner)
+        setattr(context, AEAT_CERTIFICATE_THUMBPRINT_MARKER, cert.sha256_thumbprint)
+
+        provisional_at = datetime.now(UTC)
+        detail = CertificateSessionDetail(
+            certificate_thumbprint=cert.sha256_thumbprint,
+            certificate_subject=cert.subject,
+            handshake=cast(HandshakeResult, handshake),
+        )
+
+        provisional_session = AeatSession(
+            identity_nif=nif,
+            authenticated_at=provisional_at,
+            idle_deadline=provisional_at + AEAT_SESSION_IDLE_TTL,
+            storage_state_path=None,
+            provider_detail=detail,
+        )
+
+        assertion = await self.verify(context, provisional_session, settings)
+        if not assertion.is_valid:
+            from .certificate import AeatLoginAssertionError
+
+            raise AeatLoginAssertionError(
+                "fresh AEAT authentication did not produce a valid login assertion; "
+                f"status={assertion.status_code} error={assertion.error_message!r}"
+            )
+
+        authenticated_at = assertion.attempted_at
+        session = provisional_session.model_copy(
+            update={
+                "authenticated_at": authenticated_at,
+                "idle_deadline": authenticated_at + AEAT_SESSION_IDLE_TTL,
+            }
+        )
+        return session, context
+
+    async def resume(
+        self,
+        browser_session: BrowserSessionLike,
+        storage_state_path: Path,
+        metadata: dict[str, Any],
+        settings: Settings,
+    ) -> tuple[AeatSession, BrowserContextLike]:
+        bundle = self._require_bundle(settings)
+        cert = load_certificate(bundle)
+        target = settings.aeat_certificate_verify_url
+
+        # Validate that the persisted session matches the current certificate
+        if metadata.get("certificate_thumbprint") != cert.sha256_thumbprint:
+            raise ValueError("persisted AEAT session was captured with a different certificate thumbprint")
+        if metadata.get("certificate_subject") != cert.subject:
+            raise ValueError("persisted AEAT session was captured with a different certificate subject")
+
+        def provisioner(kwargs: dict[str, Any]) -> None:
+            kwargs["client_certificates"] = build_client_certificates_kwarg(cert, target)
+
+        context = await browser_session.create_context(
+            provisioner=provisioner,
+            storage_state_path=storage_state_path,
+        )
+        setattr(context, AEAT_CERTIFICATE_THUMBPRINT_MARKER, cert.sha256_thumbprint)
+
+        handshake = metadata.get("handshake")
+        if isinstance(handshake, dict):
+            # Coerce dict (from JSON) into HandshakeResult-compatible form
+            # since the model has strict=True.
+            h_dict = handshake.copy()
+            if isinstance(h_dict.get("server_cert_chain"), list):
+                h_dict["server_cert_chain"] = tuple(h_dict["server_cert_chain"])
+            if isinstance(h_dict.get("attempted_at"), str):
+                h_dict["attempted_at"] = datetime.fromisoformat(h_dict["attempted_at"])
+            handshake = HandshakeResult.model_validate(h_dict)
+
+        detail = CertificateSessionDetail(
+            certificate_thumbprint=cert.sha256_thumbprint,
+            certificate_subject=cert.subject,
+            handshake=cast(HandshakeResult, handshake),
+        )
+
+        session = AeatSession(
+            identity_nif=metadata["certificate_nif"],
+            authenticated_at=datetime.fromisoformat(metadata["authenticated_at"])
+            if isinstance(metadata["authenticated_at"], str)
+            else metadata["authenticated_at"],
+            idle_deadline=datetime.fromisoformat(metadata["idle_deadline"])
+            if isinstance(metadata["idle_deadline"], str)
+            else metadata["idle_deadline"],
+            storage_state_path=storage_state_path,
+            provider_detail=detail,
+        )
+
+        assertion = await self.verify(context, session, settings)
+        if not assertion.is_valid:
+            from .certificate import AeatLoginAssertionError
+
+            raise AeatLoginAssertionError("persisted AEAT browser session failed live verification")
+
+        session = session.model_copy(
+            update={
+                "authenticated_at": assertion.attempted_at,
+                "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
+            }
+        )
+        return session, context
+
+    async def verify(
+        self,
+        context: BrowserContextLike,
+        session: AeatSession,
+        settings: Settings,
+    ) -> AeatLoginAssertion:
+        target = settings.aeat_certificate_verify_url
+        attempted_at = datetime.now(UTC)
+        import time
+
+        start = time.perf_counter()
+
+        status_code = 0
+        certificate_recognised = False
+        error_message: str | None = None
+
+        import contextlib
+
+        page: BrowserPageLike | None = None
+        try:
+            page = await context.new_page()
+            response = await page.goto(target, timeout=self._navigation_timeout_ms)
+            if response is not None:
+                status_code = int(response.status)
+                certificate_recognised = 200 <= status_code < 400
+            elif getattr(page, "cert_ok", False):  # Hook for fake pages in tests
+                status_code = 200
+                certificate_recognised = True
+        except Exception as exc:
+            error_message = f"{type(exc).__name__}: {exc}"
+        finally:
+            if page is not None:
+                with contextlib.suppress(Exception):
+                    await page.close()
+
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        detail = cast(CertificateSessionDetail, session.provider_detail)
+        handshake_success = detail.handshake.success if detail.handshake else False
+        is_valid = handshake_success and certificate_recognised and bool(session.identity_nif)
+
+        return AeatLoginAssertion(
+            target_url=target,
+            is_valid=is_valid,
+            handshake_success=handshake_success,
+            certificate_recognised=certificate_recognised,
+            parsed_nif=session.identity_nif,
+            parsed_subject=detail.certificate_subject,
+            status_code=status_code,
+            elapsed_ms=elapsed_ms,
+            attempted_at=attempted_at,
+            error_message=error_message,
+        )

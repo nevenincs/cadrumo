@@ -33,6 +33,7 @@ from . import (
     BrowserContextLike,
     BrowserSessionLike,
     CertificateBackend,
+    CertificateExpiredError,
     CertificateNifParseError,
     CertificateSessionDetail,
     HandshakeResult,
@@ -54,6 +55,7 @@ def _build_bundle(
     tmp_path: Path,
     *,
     subject_attrs: list[x509.NameAttribute] | None = None,
+    not_valid_before: datetime | None = None,
     not_valid_after: datetime | None = None,
 ) -> Path:
     """Generate a real self-signed PKCS#12 bundle."""
@@ -71,7 +73,7 @@ def _build_bundle(
         .issuer_name(issuer)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(now - timedelta(days=1))
+        .not_valid_before(not_valid_before or (now - timedelta(days=1)))
         .not_valid_after(not_valid_after or (now + timedelta(days=365)))
         .sign(key, hashes.SHA256())
     )
@@ -195,9 +197,9 @@ def test_aeat_session_is_stale_predicate(tmp_path: Path) -> None:
             handshake=_fake_handshake(),
         ),
     )
-    assert session.is_stale(authenticated_at) is False
-    assert session.is_stale(authenticated_at + timedelta(minutes=1)) is False
-    assert session.is_stale(authenticated_at + timedelta(minutes=30)) is True
+    assert session.is_stale(now=authenticated_at) is False
+    assert session.is_stale(now=authenticated_at + timedelta(minutes=1)) is False
+    assert session.is_stale(now=authenticated_at + timedelta(minutes=30)) is True
 
 
 def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
@@ -333,7 +335,7 @@ class _HandshakeVerifier:
         self.calls = 0
         self.result = result or _fake_handshake()
 
-    def __call__(self, _cert: LoadedCertificate, _target: str) -> HandshakeResult:
+    def __call__(self, _cert: LoadedCertificate, _target: str, **_kwargs: Any) -> HandshakeResult:
         self.calls += 1
         return self.result
 
@@ -472,7 +474,7 @@ async def test_resume_from_storage_state_reuses_persisted_session_without_handsh
         browser_session=cast(BrowserSessionLike, browser_session),
     )
 
-    assert resumed.provider_detail.certificate_thumbprint == cert.sha256_thumbprint
+    assert cast(CertificateSessionDetail, resumed.provider_detail).certificate_thumbprint == cert.sha256_thumbprint
     assert resumed.storage_state_path == storage_state_path
     assert verifier.calls == 0
     assert browser_session.storage_state_paths == [storage_state_path]
@@ -727,8 +729,94 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, monkeypatch: py
     settings = _settings_for(bundle_path, monkeypatch)
     async with AeatAuthenticator(settings) as auth:
         cert = auth.load_certificate()
-        nif = auth.extract_nif_from_subject(cert)
+        nif = extract_nif_from_subject(cert)
         assert nif == "12345678Z"
+
+
+@pytest.mark.asyncio
+async def test_authenticate_raises_certificate_expired_proactively(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A cert that expired 10 months ago (2025-06-09 per issue #270)
+    # We must ensure not_valid_before is even earlier.
+    expired_at = datetime(2025, 6, 9, tzinfo=UTC)
+    not_valid_before = expired_at - timedelta(days=365)
+    bundle_path = _build_bundle(tmp_path, not_valid_before=not_valid_before, not_valid_after=expired_at)
+    settings = _settings_for(bundle_path, monkeypatch)
+
+    async with AeatAuthenticator(settings) as auth:
+        with pytest.raises(CertificateExpiredError) as exc:
+            await auth.authenticate()
+        assert "expired" in str(exc.value)
+        assert "2025-06-09" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_write_json_atomic_raises_on_icacls_failure_in_strict_mode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    monkeypatch.setattr(settings, "aeat_strict_security", True)
+
+    from ._authenticator import AeatSecurityError
+
+    async with AeatAuthenticator(settings) as auth:
+        # Mock icacls to fail
+        if os.name == "nt":
+            import subprocess
+
+            class FakeProcess:
+                returncode = 1
+                stderr = "Access Denied"
+
+            monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: FakeProcess())
+        else:
+            # Mock os.chmod to fail on POSIX
+            def fake_chmod(path, mode):
+                raise OSError("Operation not permitted")
+
+            monkeypatch.setattr(os, "chmod", fake_chmod)
+
+        # We need an active session to call capture_storage_state
+        # which calls _write_json_atomic
+        session = AeatSession(
+            identity_nif="12345678Z",
+            authenticated_at=datetime.now(UTC),
+            idle_deadline=datetime.now(UTC) + timedelta(minutes=10),
+            storage_state_path=None,
+            provider_detail=CertificateSessionDetail(
+                certificate_thumbprint="abc",
+                certificate_subject="CN=Me",
+                handshake=HandshakeResult(
+                    success=True,
+                    status_code=200,
+                    server_cert_chain=(),
+                    elapsed_ms=10,
+                    attempted_at=datetime.now(UTC),
+                ),
+            ),
+        )
+        auth._active_session = session
+
+        async def fake_storage_state(*args: Any, **kwargs: Any) -> dict[str, Any]:
+            return {}
+
+        auth._context = cast(
+            Any, type("FakeContext", (), {"storage_state": fake_storage_state, "close": lambda *a: asyncio.sleep(0)})()
+        )
+        auth._browser_session = cast(
+            Any,
+            type(
+                "FakeBrowser",
+                (),
+                {"profile": type("FakeProfile", (), {"storage_state_path": tmp_path / "storage.json"})()},
+            )(),
+        )
+
+        with pytest.raises(AeatSecurityError) as exc:
+            await auth.capture_storage_state(session)
+        assert "failed to harden" in str(exc.value)
 
 
 @pytest.mark.asyncio
@@ -826,8 +914,8 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
     )
     naive_past = datetime(2020, 1, 1)
     naive_future = datetime(2100, 1, 1)
-    assert session.is_stale(naive_past) is False
-    assert session.is_stale(naive_future) is True
+    assert session.is_stale(now=naive_past) is False
+    assert session.is_stale(now=naive_future) is True
 
 
 @pytest.mark.asyncio

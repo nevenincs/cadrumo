@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict
 
+AEAT_CERTIFICATE_THUMBPRINT_MARKER: str = "_aeat_certificate_thumbprint"
+
 if TYPE_CHECKING:
     from ..config import Settings
-    from ._browser import BrowserSessionLike
+    from ._browser import BrowserContextLike, BrowserSessionLike
     from ._models import AeatLoginAssertion, AeatSession
 
 
@@ -39,14 +42,29 @@ class AuthProvider(Protocol):
         self,
         browser_session: BrowserSessionLike,
         settings: Settings,
-    ) -> AeatSession:
-        """Produce an authenticated context + session record."""
+    ) -> tuple[AeatSession, BrowserContextLike]:
+        """Produce a fresh authenticated context + session record."""
+        ...
+
+    async def resume(
+        self,
+        browser_session: BrowserSessionLike,
+        storage_state_path: Path,
+        metadata: dict[str, Any],
+        settings: Settings,
+    ) -> tuple[AeatSession, BrowserContextLike]:
+        """Produce an authenticated context from persisted state."""
         ...
 
     def describe(self) -> AuthProviderDescription:
         """Name, kind, current configuration state, health."""
         ...
 
-    async def verify(self, session: AeatSession) -> AeatLoginAssertion:
+    async def verify(
+        self,
+        context: BrowserContextLike,
+        session: AeatSession,
+        settings: Settings,
+    ) -> AeatLoginAssertion:
         """Re-probe that the session is still valid for this provider."""
         ...
