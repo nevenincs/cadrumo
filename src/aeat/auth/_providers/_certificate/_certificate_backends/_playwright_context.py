@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from .....logging import get_logger
+from ...._protocols import AEAT_CERTIFICATE_THUMBPRINT_MARKER
 from ._base import _CertBackend
 from ._httpx_fallback import HttpxFallbackBackend
 
@@ -28,8 +29,6 @@ if TYPE_CHECKING:
     from ..certificate import HandshakeResult, LoadedCertificate
 
 log = get_logger(__name__)
-
-_MARKER_ATTR = "_aeat_certificate_thumbprint"
 
 
 def build_client_certificates_kwarg(
@@ -83,7 +82,7 @@ class PlaywrightContextBackend(_CertBackend):
         """
         from ..certificate import CertificateError
 
-        marker = getattr(context, _MARKER_ATTR, None)
+        marker = getattr(context, AEAT_CERTIFICATE_THUMBPRINT_MARKER, None)
         if marker != cert.sha256_thumbprint:
             raise CertificateError(
                 "BrowserContext was not constructed with the expected client "
@@ -92,7 +91,7 @@ class PlaywrightContextBackend(_CertBackend):
                 "use aeat.auth._certificate_backends._playwright_context."
                 "build_client_certificates_kwarg() from the browser session "
                 "factory and tag the resulting context with "
-                f"{_MARKER_ATTR}={cert.sha256_thumbprint!r}."
+                f"{AEAT_CERTIFICATE_THUMBPRINT_MARKER}={cert.sha256_thumbprint!r}."
             )
         log.info(
             "Verified PLAYWRIGHT_CONTEXT: thumbprint=%s friendly_name=%s",
@@ -100,7 +99,7 @@ class PlaywrightContextBackend(_CertBackend):
             cert.friendly_name,
         )
 
-    def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
+    def verify(self, cert: LoadedCertificate, url: str, *, timeout_s: float = 20.0) -> HandshakeResult:
         """Delegate to the httpx fallback for the handshake smoke test.
 
         The Playwright backend has no standalone handshake primitive —
@@ -108,4 +107,4 @@ class PlaywrightContextBackend(_CertBackend):
         We borrow :class:`HttpxFallbackBackend` for the verify leg.
         """
         _ = datetime.now(UTC)  # touch datetime so imports stay explicit
-        return HttpxFallbackBackend().verify(cert, url)
+        return HttpxFallbackBackend().verify(cert, url, timeout_s=timeout_s)
