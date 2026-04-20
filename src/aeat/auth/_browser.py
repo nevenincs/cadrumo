@@ -48,12 +48,23 @@ BrowserContextProvisioner = Callable[[dict[str, Any]], None]
 class BrowserSessionLike(Protocol):
     """Structural shape of :class:`aeat.browser.BrowserSession`."""
 
+    @property
+    def profile(self) -> Any:
+        """The profile associated with this session."""
+        ...
+
     async def create_context(
         self,
         *,
         provisioner: BrowserContextProvisioner | None = None,
         storage_state_path: Path | None = None,
-    ) -> BrowserContextLike: ...
+    ) -> BrowserContextLike:
+        """Create a new browser context."""
+        ...
+
+    async def close(self) -> None:
+        """Close the browser session."""
+        ...
 
 
 class BrowserSessionFactory(Protocol):

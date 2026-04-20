@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -19,7 +20,6 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
-from ..auth import LoadedCertificate, build_client_certificates_kwarg
 from ..config import Settings
 from ..errors import AeatError, SiteHealthError
 from ..logging import get_logger
@@ -33,16 +33,9 @@ from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
 
-CERTIFICATE_THUMBPRINT_MARKER = "_aeat_certificate_thumbprint"
-"""Attribute stamped on a ``BrowserContext`` that was constructed with a cert.
-
-The :class:`aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
-reads the same attribute to validate that callers actually wired
-the client certificate into ``browser.new_context()``. The value
-is the cert's SHA-256 thumbprint (hex).
-"""
-
 logger = get_logger(__name__)
+
+CERTIFICATE_THUMBPRINT_MARKER = "_aeat_certificate_thumbprint"
 
 
 class BrowserError(AeatError):
@@ -79,29 +72,21 @@ class BrowserSession:
     async def create_context(
         self,
         *,
-        cert: LoadedCertificate | None = None,
+        provisioner: Callable[[dict[str, Any]], None] | None = None,
         storage_state_path: Path | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
-        When ``cert`` is supplied, the certificate is wired into the
-        context via the ``client_certificates`` kwarg on
-        ``browser.new_context()`` (Playwright ≥1.46) and the
-        resulting context is tagged with the
-        :data:`CERTIFICATE_THUMBPRINT_MARKER` attribute so the
-        :class:`aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
-        validator accepts it.
+        When ``provisioner`` is supplied, it can mutate the
+        ``context_kwargs`` before ``browser.new_context()`` is called.
 
         Args:
-            cert: Optional loaded PKCS#12 certificate to present
-                when the authenticated context hits AEAT origins.
+            provisioner: Optional callable to inject provider-specific kwargs.
             storage_state_path: Optional override for the storage-state
                 JSON file to resume from.
 
         Returns:
-            A configured BrowserContext with evasion strategies
-            applied and — when ``cert`` is supplied — the cert wired
-            through at construction time.
+            A configured BrowserContext with evasion strategies applied.
 
         Raises:
             BrowserError: If the browser cannot be launched.
@@ -142,11 +127,8 @@ class BrowserSession:
                 if effective_storage_state_path.exists():
                     context_kwargs["storage_state"] = str(effective_storage_state_path)
 
-                if cert is not None:
-                    context_kwargs["client_certificates"] = build_client_certificates_kwarg(
-                        cert,
-                        self.settings.aeat_certificate_verify_url,
-                    )
+                if provisioner is not None:
+                    provisioner(context_kwargs)
 
                 try:
                     context = await browser.new_context(**context_kwargs)
@@ -156,9 +138,6 @@ class BrowserSession:
                     context_kwargs.pop("client_certificates", None)
 
                 await self.evasion_strategy.apply(context)
-
-                if cert is not None:
-                    setattr(context, CERTIFICATE_THUMBPRINT_MARKER, cert.sha256_thumbprint)
 
                 return context
             except BrowserError:

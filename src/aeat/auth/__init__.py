@@ -37,10 +37,7 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from ._authenticator import (
-    AEAT_SESSION_IDLE_TTL,
-    AeatAuthenticator,
-)
+from ._authenticator import AeatAuthenticator
 from ._browser import (
     BrowserContextLike,
     BrowserPageLike,
@@ -49,7 +46,12 @@ from ._browser import (
     BrowserSessionLike,
 )
 from ._gate import AeatAccessGate, AeatGateEnvSnapshot
-from ._models import AeatLoginAssertion, AeatSession, CertificateSessionDetail
+from ._models import (
+    AEAT_SESSION_IDLE_TTL,
+    AeatLoginAssertion,
+    AeatSession,
+    CertificateSessionDetail,
+)
 from ._protocols import AuthProviderKind
 from ._providers._certificate._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
