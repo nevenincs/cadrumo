@@ -206,16 +206,24 @@ def prompt_spec_with_every_spending_category(
 def _category_hint(value: SpendingCategory) -> str:
     """Return the best available hint string for a SpendingCategory.
 
-    Prefers the Spanish display label from the #253 category registry
-    (authoritative AEAT terminology); falls back to the humanised enum
-    value if a category lacks a registered profile.
+    Pulls the Spanish display label plus the proportionality kind and
+    (first 80 chars of) ``notes_es`` from :data:`CATEGORY_PROFILES_2025`
+    shipped by #253 — gives the LLM the authoritative AEAT terminology
+    AND the deductibility context (e.g. ``full_deductible``,
+    ``usage_ratio_home_area``) that disambiguates home-office from
+    premises rent or drives MIXED vs BUSINESS decisions. Falls back to
+    the humanised enum value when a category has no registered profile.
     """
     profile = CATEGORY_PROFILES_2025.get(value)
-    if profile is not None:
-        spanish_label = profile.display_label.get("es")
-        if spanish_label:
-            return spanish_label
-    return value.value.replace("_", " ")
+    if profile is None:
+        return value.value.replace("_", " ")
+    spanish_label = profile.display_label.get("es") or value.value.replace("_", " ")
+    rule = profile.proportionality
+    notes_preview = rule.notes_es.strip().splitlines()[0][:120] if rule.notes_es else ""
+    segments = [spanish_label, f"[{rule.kind.value}]"]
+    if notes_preview:
+        segments.append(notes_preview)
+    return " — ".join(segments)
 
 
 def _render_choices(lines: Iterable[tuple[str, str]]) -> str:
