@@ -31,7 +31,7 @@ from . import (
     preload_into_browser_context,
     verify_handshake,
 )
-from .certificate import _select_backend
+from ._providers._certificate.certificate import _select_backend
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
@@ -244,18 +244,14 @@ def test_loaded_certificate_does_not_leak_secrets(
 
 @pytest.mark.parametrize("backend", list(CertificateBackend))
 def test_select_backend_returns_matching_class(backend: CertificateBackend) -> None:
-    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from ._certificate_backends._mtls_proxy import MtlsProxyBackend
-    from ._certificate_backends._playwright_context import (
+    from ._providers._certificate._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from ._providers._certificate._certificate_backends._playwright_context import (
         PlaywrightContextBackend,
     )
-    from ._certificate_backends._user_data_dir import UserDataDirBackend
 
     expected = {
         CertificateBackend.PLAYWRIGHT_CONTEXT: PlaywrightContextBackend,
         CertificateBackend.HTTPX_FALLBACK: HttpxFallbackBackend,
-        CertificateBackend.USER_DATA_DIR: UserDataDirBackend,
-        CertificateBackend.MTLS_PROXY: MtlsProxyBackend,
     }[backend]
     assert isinstance(_select_backend(backend), expected)
 
@@ -306,7 +302,7 @@ def test_playwright_preload_rejects_unmarked_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from .certificate import CertificateError
+    from ._providers._certificate.certificate import CertificateError
 
     p12 = _build_pkcs12_bundle(tmp_path)
     monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
@@ -349,7 +345,7 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ._certificate_backends._playwright_context import (
+    from ._providers._certificate._certificate_backends._playwright_context import (
         build_client_certificates_kwarg,
     )
 
@@ -378,7 +374,7 @@ def test_httpx_fallback_preload_raises_not_implemented(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from ._providers._certificate._certificate_backends._httpx_fallback import HttpxFallbackBackend
 
     p12 = _build_pkcs12_bundle(tmp_path)
     monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
@@ -390,30 +386,6 @@ def test_httpx_fallback_preload_raises_not_implemented(
     loaded = load_certificate(bundle)
     with pytest.raises(NotImplementedError, match="HTTPX_FALLBACK has no browser path"):
         HttpxFallbackBackend().preload(loaded, object())
-
-
-@pytest.mark.parametrize(
-    "backend_enum",
-    [CertificateBackend.USER_DATA_DIR, CertificateBackend.MTLS_PROXY],
-)
-def test_deferred_backends_raise_not_implemented(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    backend_enum: CertificateBackend,
-) -> None:
-    p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
-    bundle = CertificateBundle(
-        path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
-        backend=backend_enum,
-    )
-    loaded = load_certificate(bundle)
-    backend = _select_backend(backend_enum)
-    with pytest.raises(NotImplementedError):
-        backend.preload(loaded, object())
-    with pytest.raises(NotImplementedError):
-        backend.verify(loaded, "https://example.invalid/")
 
 
 # ── Settings integration ────────────────────────────────────────────────────

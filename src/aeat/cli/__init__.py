@@ -2,7 +2,7 @@
 
 Sub-modules expose Typer sub-apps that are wired into the root
 ``app`` exposed at the package root. The CLI is Kent's command-line
-route through the produce → verify → export workflow: setup, doctor,
+route through the produce -> verify -> export workflow: setup, doctor,
 deadlines, filing drafts, guarded AEAT reads, and audit helpers.
 
 The package exposes ``app`` directly so the project entry point in
@@ -101,14 +101,22 @@ app.add_typer(
     help="Invoice catalogue helpers (#75) — alias for `aeat financial invoices`.",
 )
 app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#43).")
-app.add_typer(submission_module.app, name="submission", help="Filing submission engine (#42).")
+app.add_typer(
+    submission_module.app,
+    name="submission",
+    help="Preflight, dry-run, and inspect AEAT filing attempts; no default CLI live-submit command.",
+)
 app.add_typer(inbox_module.app, name="inbox", help="AEAT notifications inbox (#46).")
 app.add_typer(
     review_module.app,
     name="review",
     help="Review surfaces: queue (#232), history (#237), draft approve/unapprove/show/stale (#230).",
 )
-app.add_typer(workflow_module.app, name="workflow", help="End-user composite workflow engine (#59).")
+app.add_typer(
+    workflow_module.app,
+    name="workflow",
+    help="Drive Kent's produce -> verify -> export filing workflow.",
+)
 app.add_typer(
     justificante_module.app,
     name="justificante",
