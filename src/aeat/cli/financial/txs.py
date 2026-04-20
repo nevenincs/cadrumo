@@ -11,11 +11,11 @@ from ...financial.categories import SpendingCategory
 from ...financial.transactions import (
     BusinessClassification,
     LLMClassifierError,
+    ModelTier,
     Transaction,
     TransactionCatalogue,
     TransactionError,
     find_transaction,
-    is_classified,
     resolve_classifier,
     save_transactions,
     set_classification,
@@ -204,10 +204,28 @@ def classify_llm_cmd(
         case_sensitive=False,
         help="LLM provider: claude, gemini, or codex (must be on PATH).",
     ),
+    tier: str | None = typer.Option(
+        None,
+        "--tier",
+        case_sensitive=False,
+        help=(
+            "Minimum model-capability tier: low, medium, or high. "
+            "Defaults to medium (enforced floor for classification)."
+        ),
+    ),
+    model_alias: str | None = typer.Option(
+        None,
+        "--model-alias",
+        case_sensitive=False,
+        help=(
+            "Stable tier-catalogue alias (e.g. claude-sonnet, gemini-pro, codex-o3). "
+            "Decouples Kent from shifting provider model IDs."
+        ),
+    ),
     model: str | None = typer.Option(
         None,
         "--model",
-        help="Optional model override passed through to the CLI.",
+        help="Advanced: pin a raw provider-specific model ID (skips tier enforcement).",
     ),
     all_pending: bool = typer.Option(
         False,
@@ -247,7 +265,17 @@ def classify_llm_cmd(
         typer.echo("--max-total-seconds must be strictly positive.", err=True)
         raise typer.Exit(code=2)
     try:
-        classifier = resolve_classifier(provider, model=model)
+        resolved_tier = _parse_tier(tier)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    try:
+        classifier = resolve_classifier(
+            provider,
+            alias=model_alias,
+            model=model,
+            minimum_tier=resolved_tier,
+        )
     except LLMClassifierError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
@@ -293,6 +321,7 @@ def classify_llm_cmd(
                     classified_by=classifier.decided_by,
                     reason=response.reason,
                     confidence=response.confidence,
+                    category_id=response.category.value if response.category is not None else None,
                 )
             except TransactionError as exc:
                 failures += 1
@@ -314,20 +343,53 @@ def classify_llm_cmd(
         raise typer.Exit(code=2)
 
 
+def _parse_tier(raw: str | None) -> ModelTier:
+    """Parse a --tier string into a ModelTier; default is the enforced floor."""
+    from ...financial.transactions import MINIMUM_CLASSIFICATION_TIER
+
+    if raw is None:
+        return MINIMUM_CLASSIFICATION_TIER
+    normalised = raw.strip().upper()
+    try:
+        return ModelTier[normalised]
+    except KeyError as exc:
+        known = ", ".join(t.name.lower() for t in ModelTier)
+        raise ValueError(f"unknown --tier value {raw!r}; valid: {known}") from exc
+
+
+_LLM_RETRY_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.NOT_YET_PROCESSED,
+        BusinessClassification.PROCESSED_UNCLASSIFIED,
+    }
+)
+
+
 def _select_llm_targets(
     catalogue: TransactionCatalogue,
     *,
     transaction_id: str | None,
     all_pending: bool,
 ) -> list[Transaction]:
-    """Return the transactions the classify-llm command should process."""
+    """Return the transactions the classify-llm command should process.
+
+    When ``--all`` is set, the target set is restricted to the two
+    "please decide" states: ``NOT_YET_PROCESSED`` (fresh ingest,
+    never seen) and ``PROCESSED_UNCLASSIFIED`` (pipeline saw it and
+    could not commit). Already-classified rows (``BUSINESS`` /
+    ``PERSONAL`` / ``MIXED``) are skipped — Kent should `classify`
+    them manually to override. Rule-excluded (``SKIPPED_BY_RULE``)
+    and invalid (``FAILED_VALIDATION``) rows are also skipped: they
+    are deliberate negative signals from earlier pipeline stages
+    that the LLM should not second-guess.
+    """
     if transaction_id is not None:
         transaction = find_transaction(catalogue, transaction_id)
         if transaction is None:
             typer.echo(f"transaction not found: {transaction_id}", err=True)
             raise typer.Exit(code=2)
         return [transaction]
-    return [tx for tx in catalogue.values() if not is_classified(tx.business_classification)]
+    return [tx for tx in catalogue.values() if tx.business_classification in _LLM_RETRY_STATES]
 
 
 def _parse_confidence_threshold(value: str | None) -> Decimal | None:

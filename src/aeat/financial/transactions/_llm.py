@@ -42,8 +42,9 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ..categories import SpendingCategory
+from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ._enums import BusinessClassification
+from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
 from ._models import Transaction
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -187,17 +188,34 @@ def prompt_spec_with_every_spending_category(
 ) -> PromptSpec:
     """Return a prompt spec that also asks the LLM to suggest a SpendingCategory.
 
-    Attaches every member of :class:`SpendingCategory` as an allowed
-    category. Callers that want a smaller subset should build their
-    own :class:`PromptSpec` instance.
+    Pulls authoritative Spanish display labels from
+    :data:`aeat.financial.categories.CATEGORY_PROFILES_2025` (shipped by
+    #253) rather than inventing ad-hoc hints from the enum value —
+    the LLM picks categories far more accurately against the real AEAT
+    terminology than against mangled snake_case. Categories with no
+    registered profile (none today; every :class:`SpendingCategory`
+    member is covered) fall back to the humanised enum value.
     """
-    category_choices = tuple(
-        CategoryChoice(value=value, hint=value.value.replace("_", " ")) for value in SpendingCategory
-    )
+    category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
         categories=category_choices,
     )
+
+
+def _category_hint(value: SpendingCategory) -> str:
+    """Return the best available hint string for a SpendingCategory.
+
+    Prefers the Spanish display label from the #253 category registry
+    (authoritative AEAT terminology); falls back to the humanised enum
+    value if a category lacks a registered profile.
+    """
+    profile = CATEGORY_PROFILES_2025.get(value)
+    if profile is not None:
+        spanish_label = profile.display_label.get("es")
+        if spanish_label:
+            return spanish_label
+    return value.value.replace("_", " ")
 
 
 def _render_choices(lines: Iterable[tuple[str, str]]) -> str:
@@ -437,37 +455,76 @@ class SubprocessLLMClassifier:
 
 def build_claude_classifier(
     *,
+    alias: str | None = None,
     model: str | None = None,
     spec: PromptSpec | None = None,
+    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
 ) -> SubprocessLLMClassifier:
-    """Build a classifier that shells out to ``claude -p``."""
+    """Build a classifier that shells out to ``claude --bare -p``.
+
+    Args:
+        alias: Capability-tier alias (``claude-sonnet`` / ``claude-opus``
+            / ``claude-haiku``). Resolves to the current model ID via
+            :func:`aeat.financial.transactions._model_tier.resolve_profile`
+            and enforces ``minimum_tier``.
+        model: Explicit provider-specific model override. When set,
+            takes precedence over ``alias`` AND skips the tier check;
+            reserved for advanced operators pinning a specific model.
+        spec: Prompt spec override.
+        minimum_tier: Refuses aliases below this tier (default:
+            :data:`MINIMUM_CLASSIFICATION_TIER`).
+    """
+    resolved_model = _resolve_model_id(provider="claude", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
+    command: tuple[str, ...] = ("claude", "--bare", "-p")
+    if resolved_model:
+        command = ("claude", "--bare", "-p", "--model", resolved_model)
     return SubprocessLLMClassifier(
         name="claude",
-        command=("claude", "--bare", "-p"),
-        model=model,
+        command=command,
+        model=resolved_model or None,
         spec=spec or default_prompt_spec(),
     )
 
 
 def build_gemini_classifier(
     *,
+    alias: str | None = None,
     model: str | None = None,
     spec: PromptSpec | None = None,
+    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
 ) -> SubprocessLLMClassifier:
-    """Build a classifier that shells out to ``gemini -p``."""
-    command = ("gemini", "-p") if model is None else ("gemini", "-m", model, "-p")
+    """Build a classifier that shells out to ``gemini -p <prompt>``.
+
+    Gemini expects the prompt as the positional argument to ``-p``
+    (its ``--prompt`` flag); stdin piping alongside ``-p`` without a
+    value raises "Not enough arguments following: p". Gemini's stdout
+    is often polluted with MCP tool-registration warnings; the JSON
+    iterator in :func:`parse_response` tolerates the noise.
+
+    Args:
+        alias: Capability-tier alias (``gemini-flash`` / ``gemini-pro``).
+            Enforces ``minimum_tier``.
+        model: Explicit provider-specific model override.
+        spec: Prompt spec override.
+        minimum_tier: Refuses aliases below this tier.
+    """
+    resolved_model = _resolve_model_id(provider="gemini", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
+    command = ("gemini", "-p") if not resolved_model else ("gemini", "-m", resolved_model, "-p")
     return SubprocessLLMClassifier(
         name="gemini",
         command=command,
-        model=model,
+        model=resolved_model or None,
         spec=spec or default_prompt_spec(),
+        prompt_via_argument=True,
     )
 
 
 def build_codex_classifier(
     *,
+    alias: str | None = None,
     model: str | None = None,
     spec: PromptSpec | None = None,
+    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
 ) -> SubprocessLLMClassifier:
     """Build a classifier that shells out to ``codex exec``.
 
@@ -475,17 +532,48 @@ def build_codex_classifier(
     does not require a git repo and does not persist sessions. The
     final agent message is written via ``--output-last-message`` so
     stdout chatter (reasoning events, warnings) is ignored.
+
+    Args:
+        alias: Capability-tier alias (``codex-default`` / ``codex-o3``).
+            Enforces ``minimum_tier``.
+        model: Explicit provider-specific model override.
+        spec: Prompt spec override.
+        minimum_tier: Refuses aliases below this tier.
     """
+    resolved_model = _resolve_model_id(provider="codex", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
     command: tuple[str, ...] = ("codex", "exec", "--ephemeral", "--skip-git-repo-check")
-    if model is not None:
-        command = (*command, "-m", model)
+    if resolved_model:
+        command = (*command, "-m", resolved_model)
     return SubprocessLLMClassifier(
         name="codex",
         command=command,
-        model=model,
+        model=resolved_model or None,
         spec=spec or default_prompt_spec(),
         output_from_file_flag="--output-last-message",
     )
+
+
+def _resolve_model_id(
+    *,
+    provider: str,
+    alias: str | None,
+    explicit_model: str | None,
+    minimum_tier: ModelTier,
+) -> str:
+    """Resolve an alias or explicit model override to a provider-specific model ID.
+
+    Precedence:
+    1. ``explicit_model`` wins (advanced operator pinning a raw ID);
+       no tier check.
+    2. Otherwise ``alias`` resolves via the tier catalogue with
+       minimum-tier enforcement.
+    3. When both are None the catalogue's default for ``provider``
+       (the lowest-tier profile at or above ``minimum_tier``) wins.
+    """
+    if explicit_model is not None:
+        return explicit_model
+    profile: ModelProfile = resolve_profile(provider, alias=alias, minimum_tier=minimum_tier)
+    return profile.model_id
 
 
 _BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
@@ -498,29 +586,47 @@ _BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
 def resolve_classifier(
     provider: str,
     *,
+    alias: str | None = None,
     model: str | None = None,
     spec: PromptSpec | None = None,
+    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
 ) -> LLMClassifier:
     """Return a classifier for the given provider name.
 
     Args:
         provider: One of ``"claude"``, ``"gemini"``, ``"codex"``, or a
             name registered via :func:`register_classifier`.
-        model: Optional model override passed through to the builder.
+        alias: Optional capability-tier alias (see
+            :class:`aeat.financial.transactions._model_tier.ModelProfile`).
+            Resolves to a current model ID via the tier catalogue.
+        model: Optional raw model-ID override. Takes precedence over
+            alias and skips the tier check. Reserved for advanced
+            operators pinning a specific provider model.
         spec: Optional prompt spec override.
+        minimum_tier: Refuses aliases below this tier (default
+            :data:`MINIMUM_CLASSIFICATION_TIER`).
 
     Returns:
         A concrete implementation of :class:`LLMClassifier`.
 
     Raises:
-        LLMClassifierError: If ``provider`` is not a registered builder.
+        LLMClassifierError: If ``provider`` is not a registered builder,
+            or if tier resolution fails.
     """
     try:
         builder = _BUILDERS[provider.lower()]
     except KeyError as exc:
         valid = ", ".join(sorted(_BUILDERS))
         raise LLMClassifierError(f"unknown LLM provider: {provider!r}; valid: {valid}") from exc
-    return builder(model=model, spec=spec)
+    try:
+        return builder(alias=alias, model=model, spec=spec, minimum_tier=minimum_tier)
+    except ValueError as exc:
+        raise LLMClassifierError(str(exc)) from exc
+    except TypeError:
+        # Test-only builders registered via register_classifier may not take
+        # the alias/minimum_tier kwargs. Fall back to the simple form so the
+        # dependency-injected concrete classifiers keep working.
+        return builder(model=model, spec=spec)
 
 
 def register_classifier(name: str, builder: Callable[..., LLMClassifier]) -> None:
@@ -539,12 +645,15 @@ def unregister_classifier(name: str) -> None:
 
 
 __all__ = [
+    "MINIMUM_CLASSIFICATION_TIER",
     "PIPELINE_ONLY_CLASSIFICATIONS",
     "CategoryChoice",
     "ClassificationChoice",
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
+    "ModelProfile",
+    "ModelTier",
     "PromptSpec",
     "SubprocessLLMClassifier",
     "build_claude_classifier",

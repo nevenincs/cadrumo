@@ -296,11 +296,13 @@ def test_resolve_classifier_rejects_unknown_provider() -> None:
 
 
 def test_resolve_claude_returns_claude_builder() -> None:
-    assert resolve_classifier("claude").decided_by == "llm:claude"
+    """Resolving claude with default tier yields an llm:claude:<model-id> identity."""
+    decided_by = resolve_classifier("claude").decided_by
+    assert decided_by.startswith("llm:claude:")
 
 
 def test_resolve_is_case_insensitive() -> None:
-    assert resolve_classifier("CLAUDE").decided_by == "llm:claude"
+    assert resolve_classifier("CLAUDE").decided_by.startswith("llm:claude")
 
 
 # ── dependency-injected protocol implementation (no mocks) ─────────

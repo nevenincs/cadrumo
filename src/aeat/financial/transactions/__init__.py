@@ -15,12 +15,15 @@ from ._errors import (
     TransactionPersistenceError,
 )
 from ._llm import (
+    MINIMUM_CLASSIFICATION_TIER,
     PIPELINE_ONLY_CLASSIFICATIONS,
     CategoryChoice,
     ClassificationChoice,
     LLMClassificationResponse,
     LLMClassifier,
     LLMClassifierError,
+    ModelProfile,
+    ModelTier,
     PromptSpec,
     SubprocessLLMClassifier,
     build_claude_classifier,
@@ -33,6 +36,7 @@ from ._llm import (
     resolve_classifier,
     unregister_classifier,
 )
+from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
 from ._service import (
     find_transaction,
@@ -45,6 +49,7 @@ from ._service import (
 
 __all__ = [
     "CLASSIFIED_STATES",
+    "MINIMUM_CLASSIFICATION_TIER",
     "PIPELINE_ONLY_CLASSIFICATIONS",
     "BusinessClassification",
     "CategoryChoice",
@@ -53,6 +58,9 @@ __all__ = [
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
+    "ModelCapability",
+    "ModelProfile",
+    "ModelTier",
     "PromptSpec",
     "SubprocessLLMClassifier",
     "Transaction",
@@ -65,15 +73,18 @@ __all__ = [
     "build_claude_classifier",
     "build_codex_classifier",
     "build_gemini_classifier",
+    "catalogue",
     "default_classification_choices",
     "default_prompt_spec",
     "find_transaction",
     "is_classified",
     "link_invoice",
     "load_transactions",
+    "profiles_for_provider",
     "prompt_spec_with_every_spending_category",
     "register_classifier",
     "resolve_classifier",
+    "resolve_profile",
     "save_transactions",
     "set_classification",
     "snapshot_classification_state",
