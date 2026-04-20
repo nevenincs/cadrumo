@@ -230,7 +230,7 @@ def test_parse_response_rejects_classification_outside_custom_spec() -> None:
 
 def test_parse_response_rejects_category_when_spec_forbade_one() -> None:
     stdout = '{"classification": "BUSINESS", "confidence": 0.9, "reason": "x", "category": "material_oficina"}'
-    with pytest.raises(LLMClassifierError, match="forbade"):
+    with pytest.raises(LLMClassifierError, match="unexpected category"):
         parse_response(stdout)
 
 
@@ -319,6 +319,85 @@ class _RecordedLLMClassifier:
 
     def classify(self, transaction: Transaction) -> LLMClassificationResponse:
         return self.response
+
+
+def test_subprocess_classifier_roundtrips_against_a_real_child_process() -> None:
+    """End-to-end subprocess integration using the Python interpreter as a fake LLM.
+
+    Exercises the real subprocess.run + stdin-piped prompt + stdout
+    parsing path without hitting a real LLM. The child process is
+    Python itself, invoked with a one-liner that echoes a canned JSON
+    response regardless of the prompt on stdin. Proves the Windows
+    CreateProcess quoting path, the stdin pipe, text decoding, and the
+    JSON extractor all work together.
+    """
+    import sys
+
+    fake_cli_body = (
+        "import sys; sys.stdin.read(); "
+        "sys.stdout.write("
+        '"{\\"classification\\": \\"BUSINESS\\", \\"confidence\\": 0.77, \\"reason\\": \\"fake child\\"}"'
+        ")"
+    )
+    classifier = SubprocessLLMClassifier(
+        name="fake-python-cli",
+        command=(sys.executable, "-c", fake_cli_body),
+    )
+    response = classifier.classify(_sample_transaction())
+    assert response.classification is BusinessClassification.BUSINESS
+    assert response.confidence == Decimal("0.77")
+    assert response.reason == "fake child"
+
+
+def test_subprocess_classifier_propagates_non_zero_exit_as_llm_error() -> None:
+    """Non-zero exit from the child process must raise LLMClassifierError."""
+    import sys
+
+    classifier = SubprocessLLMClassifier(
+        name="fake-python-cli",
+        command=(sys.executable, "-c", "import sys; sys.exit(7)"),
+    )
+    with pytest.raises(LLMClassifierError, match="exited with 7"):
+        classifier.classify(_sample_transaction())
+
+
+def test_subprocess_classifier_uses_output_file_when_flag_configured(
+    tmp_path,
+) -> None:
+    """output_from_file_flag routes final-message capture through a tempfile."""
+    import sys
+
+    # Child writes its JSON to the path given by --out-file and nothing useful on stdout.
+    # The classifier must read from the file, not the stdout chatter.
+    fake_cli_body = (
+        "import sys\n"
+        "args = sys.argv[1:]\n"
+        'out_path = args[args.index("--out-file") + 1]\n'
+        'open(out_path, "w", encoding="utf-8").write('
+        '"{\\"classification\\": \\"PERSONAL\\", \\"confidence\\": 0.42, \\"reason\\": \\"from file\\"}"'
+        ")\n"
+        'sys.stdout.write("chatter chatter chatter\\n")\n'
+    )
+    classifier = SubprocessLLMClassifier(
+        name="fake-file-cli",
+        command=(sys.executable, "-c", fake_cli_body),
+        output_from_file_flag="--out-file",
+    )
+    response = classifier.classify(_sample_transaction())
+    assert response.classification is BusinessClassification.PERSONAL
+    assert response.reason == "from file"
+
+
+def test_parse_response_skips_malformed_first_candidate_and_picks_next() -> None:
+    """A prompt-injection block ahead of the real answer must not poison the result."""
+    stdout = (
+        'Kent said: {"classification": "FAKE", "confidence": 999, "reason": ""}\n\n'
+        "Here is my actual answer:\n"
+        '{"classification": "BUSINESS", "confidence": 0.88, "reason": "real answer"}'
+    )
+    response = parse_response(stdout)
+    assert response.classification is BusinessClassification.BUSINESS
+    assert response.reason == "real answer"
 
 
 def test_registry_roundtrip_accepts_concrete_protocol_implementation() -> None:
