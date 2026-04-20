@@ -280,7 +280,13 @@ def parse_response(
     *,
     spec: PromptSpec | None = None,
 ) -> LLMClassificationResponse:
-    """Extract the first JSON object from LLM stdout, validate, enforce spec.
+    """Extract a valid JSON object from LLM stdout, validate, enforce spec.
+
+    Iterates every JSON-object candidate in the output and returns the
+    first one that validates against the schema AND passes the spec's
+    allow-list. Guards against an LLM that echoes a prompt-injected
+    JSON block before emitting its real answer: a malformed or
+    disallowed first candidate no longer poisons the result.
 
     Args:
         stdout: Raw stdout captured from the LLM CLI.
@@ -291,33 +297,41 @@ def parse_response(
         A validated :class:`LLMClassificationResponse`.
 
     Raises:
-        LLMClassifierError: If no JSON object is found, if the payload
-            fails schema validation, or if the classification/category
-            escape the spec's allow-list.
+        LLMClassifierError: If no candidate JSON object exists, or if
+            none of the candidates passes both schema validation and
+            the spec's allow-list.
     """
-    match = _JSON_OBJECT_RE.search(stdout)
-    if not match:
-        raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:400]!r}")
-    payload = match.group(0)
-    try:
-        response = LLMClassificationResponse.model_validate_json(payload)
-    except ValueError as exc:
-        raise LLMClassifierError(f"invalid LLM response: {exc}; payload was {payload!r}") from exc
-
     resolved_spec = spec or default_prompt_spec()
     allowed_classifications = resolved_spec.allowed_classifications()
-    if response.classification not in allowed_classifications:
-        raise LLMClassifierError(
-            f"LLM picked a disallowed classification {response.classification.value!r}; "
-            f"spec allows: {sorted(v.value for v in allowed_classifications)}"
-        )
-    if response.category is not None:
-        allowed_categories = resolved_spec.allowed_categories()
-        if not allowed_categories:
-            raise LLMClassifierError("LLM returned a category but the prompt spec forbade one")
-        if response.category not in allowed_categories:
-            raise LLMClassifierError(f"LLM picked a disallowed category {response.category.value!r}")
-    return response
+    allowed_categories = resolved_spec.allowed_categories()
+    failures: list[str] = []
+    any_candidate_seen = False
+
+    for match in _JSON_OBJECT_RE.finditer(stdout):
+        any_candidate_seen = True
+        payload = match.group(0)
+        try:
+            response = LLMClassificationResponse.model_validate_json(payload)
+        except ValueError as exc:
+            failures.append(f"schema: {str(exc)[:160]} (payload {payload[:100]!r})")
+            continue
+        if response.classification not in allowed_classifications:
+            failures.append(f"disallowed classification {response.classification.value!r} (payload {payload[:100]!r})")
+            continue
+        if response.category is not None:
+            if not allowed_categories:
+                failures.append(f"unexpected category {response.category.value!r} (payload {payload[:100]!r})")
+                continue
+            if response.category not in allowed_categories:
+                failures.append(f"disallowed category {response.category.value!r} (payload {payload[:100]!r})")
+                continue
+        return response
+
+    if not any_candidate_seen:
+        raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:400]!r}")
+    raise LLMClassifierError(
+        f"no JSON candidate matched schema + spec; tried {len(failures)}: " + "; ".join(failures[:3])
+    )
 
 
 # ── subprocess-based classifier ───────────────────────────────────
@@ -398,12 +412,20 @@ class SubprocessLLMClassifier:
                 )
             except subprocess.TimeoutExpired as exc:
                 raise LLMClassifierError(f"{self.name} CLI timed out after {self.timeout_seconds}s") from exc
+            except OSError as exc:
+                # Spawn-time failures (PermissionError, ENOEXEC, ENOMEM, Windows
+                # CreateProcess errors). Translate so the --all CLI loop can
+                # skip this one transaction and continue on the next.
+                raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
             if completed.returncode != 0:
                 raise LLMClassifierError(
                     f"{self.name} CLI exited with {completed.returncode}: "
                     f"{(completed.stderr or completed.stdout)[:400]!r}"
                 )
-            output = output_file.read_text(encoding="utf-8") if output_file else completed.stdout
+            try:
+                output = output_file.read_text(encoding="utf-8") if output_file else completed.stdout
+            except OSError as exc:
+                raise LLMClassifierError(f"{self.name} CLI output file unreadable: {exc}") from exc
             return parse_response(output, spec=self.spec)
         finally:
             if output_file is not None:

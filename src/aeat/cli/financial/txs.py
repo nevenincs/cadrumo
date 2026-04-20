@@ -219,13 +219,32 @@ def classify_llm_cmd(
         "--dry-run",
         help="Run the classifier and print the results without saving.",
     ),
+    max_total_seconds: float | None = typer.Option(
+        None,
+        "--max-total-seconds",
+        help=(
+            "Stop the --all loop after this many wall-clock seconds elapsed. "
+            "Classifications already persisted before the budget is exhausted are kept. "
+            "Omit for no ceiling."
+        ),
+    ),
 ) -> None:
-    """Classify one or many transactions through an LLM CLI."""
+    """Classify one or many transactions through an LLM CLI.
+
+    Persists each successful classification immediately so a Ctrl+C or
+    a later subprocess failure does not lose the classifications Kent
+    has already paid API tokens for.
+    """
+    import time
+
     if all_pending and transaction_id is not None:
         typer.echo("--all is mutually exclusive with a transaction-id argument.", err=True)
         raise typer.Exit(code=2)
     if not all_pending and transaction_id is None:
         typer.echo("Pass a transaction-id argument or use --all.", err=True)
+        raise typer.Exit(code=2)
+    if max_total_seconds is not None and max_total_seconds <= 0:
+        typer.echo("--max-total-seconds must be strictly positive.", err=True)
         raise typer.Exit(code=2)
     try:
         classifier = resolve_classifier(provider, model=model)
@@ -240,19 +259,29 @@ def classify_llm_cmd(
         typer.echo("No transactions selected for LLM classification.")
         return
 
+    total = len(targets)
     updated_catalogue = catalogue
     successes = 0
     failures = 0
-    for target in targets:
+    stopped_early = False
+    started = time.monotonic()
+    for index, target in enumerate(targets, start=1):
+        if max_total_seconds is not None and time.monotonic() - started >= max_total_seconds:
+            stopped_early = True
+            typer.echo(
+                f"[{index - 1}/{total}] --max-total-seconds reached; keeping {successes} classified so far.",
+                err=True,
+            )
+            break
+        prefix = f"[{index}/{total} {target.transaction_id[:16]}]"
         try:
             response = classifier.classify(target)
         except LLMClassifierError as exc:
             failures += 1
-            typer.echo(f"[{target.transaction_id[:16]}] {provider} error: {exc}", err=True)
+            typer.echo(f"{prefix} {provider} error: {exc}", err=True)
             continue
         line = (
-            f"[{target.transaction_id[:16]}] {response.classification.value} "
-            f"@ {canonical_decimal(response.confidence)} — {response.reason}"
+            f"{prefix} {response.classification.value} @ {canonical_decimal(response.confidence)} — {response.reason}"
         )
         typer.echo(line)
         if not dry_run:
@@ -267,19 +296,20 @@ def classify_llm_cmd(
                 )
             except TransactionError as exc:
                 failures += 1
-                typer.echo(f"[{target.transaction_id[:16]}] persist error: {exc}", err=True)
+                typer.echo(f"{prefix} persist error: {exc}", err=True)
+                continue
+            try:
+                save_transactions(updated_catalogue, path)
+            except TransactionError as exc:
+                failures += 1
+                typer.echo(f"{prefix} save error: {exc}", err=True)
                 continue
         successes += 1
 
-    if not dry_run and successes:
-        try:
-            save_transactions(updated_catalogue, path)
-        except TransactionError as exc:
-            typer.echo(str(exc), err=True)
-            raise typer.Exit(code=2) from exc
-
-    summary = f"{successes} classified / {failures} failed / {'dry-run' if dry_run else 'persisted'}"
-    typer.echo(summary)
+    tail = "dry-run" if dry_run else "persisted"
+    if stopped_early:
+        tail += " (stopped at --max-total-seconds)"
+    typer.echo(f"{successes} classified / {failures} failed / {tail}")
     if failures and successes == 0:
         raise typer.Exit(code=2)
 
