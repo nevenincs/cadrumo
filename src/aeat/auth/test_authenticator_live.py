@@ -25,6 +25,7 @@ from . import (
     AeatSession,
     CertificateHealthSeverity,
     HandshakeResult,
+    extract_nif_from_subject,
 )
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
@@ -70,7 +71,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     assert 200 <= handshake.status_code < 500
 
     cert = authenticator.load_certificate()
-    nif = authenticator.extract_nif_from_subject(cert)
+    nif = extract_nif_from_subject(cert)
     assert nif, "could not extract NIF from FNMT certificate subject"
     # DNI: 7-8 digits + letter; NIE: X/Y/Z + 7 digits + letter.
     assert len(nif) in {8, 9}, f"unexpected NIF shape: {nif!r}"
@@ -121,10 +122,10 @@ async def test_aeat_authenticator_full_live_flow() -> None:
             aeat_session = await auth.authenticate()
             assert isinstance(aeat_session, AeatSession)
             assert aeat_session.is_stale() is False
-            assert aeat_session.certificate_nif
+            assert aeat_session.identity_nif
             assertion = await auth.verify_login(aeat_session)
             assert isinstance(assertion, AeatLoginAssertion)
             assert assertion.is_valid is True, (
                 f"login assertion invalid: status={assertion.status_code} err={assertion.error_message}"
             )
-            assert assertion.parsed_nif == aeat_session.certificate_nif
+            assert assertion.parsed_nif == aeat_session.identity_nif

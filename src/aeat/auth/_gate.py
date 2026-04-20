@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from .certificate import AeatLiveReadNotEnabledError
+from ._providers._certificate.certificate import AeatLiveReadNotEnabledError
 
 if TYPE_CHECKING:
     from ..config import Settings
