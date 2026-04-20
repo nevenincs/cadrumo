@@ -759,6 +759,176 @@ def test_classify_llm_rejects_missing_target(
     assert "transaction-id argument or use --all" in result.output
 
 
+def test_classify_llm_populates_notes_field_for_parity_with_manual_path(
+    tmp_path: Path,
+    scripted_provider: str,
+) -> None:
+    """LLM path must write the same reason into `notes` as the manual path does."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "classify-llm", transaction.transaction_id, "--provider", scripted_provider],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    updated = restored.get(transaction.transaction_id)
+    assert updated is not None
+    assert updated.notes == updated.classification_reason
+    assert updated.notes == "scripted test decision"
+
+
+def _register_mixed_home_office_provider() -> str:
+    """Register a classifier whose fixed response is a MIXED home-office row."""
+    from ..categories import SpendingCategory
+    from . import LLMClassificationResponse, register_classifier
+
+    name = "test-home-office-mixed"
+    fixed = LLMClassificationResponse(
+        classification=BusinessClassification.MIXED,
+        confidence=Decimal("0.6"),
+        reason="home office rental — partial business use",
+        category=SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
+    )
+    classifier = _ScriptedLLMClassifier(response=fixed, decided_by_value=f"llm:{name}")
+    register_classifier(name, lambda **_: classifier)
+    return name
+
+
+def test_classify_llm_applies_default_ratio_from_category_profile(tmp_path: Path) -> None:
+    """A MIXED classification with a home-office category must auto-apply default_ratio (0.30).
+
+    Closes the two-disjoint-systems gap with #253: manual `classify --as MIXED --pct 0.30`
+    already did the right thing; the LLM path was silently dropping the ratio and
+    storing `business_pct=None`, which then failed Transaction validation.
+    """
+    from . import unregister_classifier
+
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+    provider_name = _register_mixed_home_office_provider()
+    try:
+        result = _RUNNER.invoke(
+            root_app,
+            ["financial", "txs", "classify-llm", transaction.transaction_id, "--provider", provider_name],
+            env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+        )
+        assert result.exit_code == 0, result.output
+        restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+        updated = restored.get(transaction.transaction_id)
+        assert updated is not None
+        assert updated.business_classification is BusinessClassification.MIXED
+        assert updated.business_pct == Decimal("0.30")
+        assert updated.category_id == "arrendamiento_vivienda_afecto"
+    finally:
+        unregister_classifier(provider_name)
+
+
+def test_classify_llm_pct_override_beats_profile_default(tmp_path: Path) -> None:
+    """`--pct-override 0.5` must win over the profile's 0.30 default_ratio."""
+    from . import unregister_classifier
+
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+    provider_name = _register_mixed_home_office_provider()
+    try:
+        result = _RUNNER.invoke(
+            root_app,
+            [
+                "financial",
+                "txs",
+                "classify-llm",
+                transaction.transaction_id,
+                "--provider",
+                provider_name,
+                "--pct-override",
+                "0.5",
+            ],
+            env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+        )
+        assert result.exit_code == 0, result.output
+        restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+        updated = restored.get(transaction.transaction_id)
+        assert updated is not None
+        assert updated.business_pct == Decimal("0.5")
+    finally:
+        unregister_classifier(provider_name)
+
+
+def test_classify_llm_category_hint_forces_category(tmp_path: Path) -> None:
+    """`--category-hint` must force the persisted category even when the LLM picked a different one."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    from ..categories import SpendingCategory
+    from . import LLMClassificationResponse, register_classifier, unregister_classifier
+
+    fixed = LLMClassificationResponse(
+        classification=BusinessClassification.BUSINESS,
+        confidence=Decimal("0.8"),
+        reason="fixture",
+        category=SpendingCategory.MATERIAL_OFICINA,
+    )
+    classifier = _ScriptedLLMClassifier(response=fixed, decided_by_value="llm:test-hint-override")
+    register_classifier("test-hint-override", lambda **_: classifier)
+    try:
+        result = _RUNNER.invoke(
+            root_app,
+            [
+                "financial",
+                "txs",
+                "classify-llm",
+                transaction.transaction_id,
+                "--provider",
+                "test-hint-override",
+                "--category-hint",
+                "software_suscripcion",
+            ],
+            env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+        )
+        assert result.exit_code == 0, result.output
+        restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+        updated = restored.get(transaction.transaction_id)
+        assert updated is not None
+        assert updated.category_id == "software_suscripcion"
+    finally:
+        unregister_classifier("test-hint-override")
+
+
+def test_classify_llm_reason_prepends_kent_text_to_llm_rationale(
+    tmp_path: Path,
+    scripted_provider: str,
+) -> None:
+    """Kent's `--reason` must be preserved alongside the LLM's reason."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(catalogue.values())
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify-llm",
+            transaction.transaction_id,
+            "--provider",
+            scripted_provider,
+            "--reason",
+            "Kent checked the receipt",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    updated = restored.get(transaction.transaction_id)
+    assert updated is not None
+    assert "Kent checked the receipt" in updated.classification_reason
+    assert "scripted test decision" in updated.classification_reason
+
+
 def test_classify_llm_rejects_unknown_provider(tmp_path: Path) -> None:
     catalogue = _write_catalogue(tmp_path)
     transaction = next(catalogue.values())

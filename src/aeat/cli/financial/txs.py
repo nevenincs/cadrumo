@@ -7,7 +7,8 @@ from decimal import Decimal, InvalidOperation
 import typer
 
 from ...financial._decimal import canonical_decimal
-from ...financial.categories import SpendingCategory
+from ...financial.categories import CATEGORY_PROFILES_2025, SpendingCategory
+from ...financial.categories._proportionality import ProportionalityKind
 from ...financial.transactions import (
     BusinessClassification,
     LLMClassifierError,
@@ -246,6 +247,31 @@ def classify_llm_cmd(
             "Omit for no ceiling."
         ),
     ),
+    category_hint: SpendingCategory | None = typer.Option(
+        None,
+        "--category-hint",
+        case_sensitive=False,
+        help=(
+            "Optional category Kent expects. The LLM is told the category is pre-set and "
+            "must not pick a different one — mirrors the manual `--category` flag."
+        ),
+    ),
+    pct_override: str | None = typer.Option(
+        None,
+        "--pct-override",
+        help=(
+            "When classification is MIXED, override the business-use percentage regardless "
+            "of the LLM's answer. Takes the same 0..1 range as manual `--pct`."
+        ),
+    ),
+    reason: str | None = typer.Option(
+        None,
+        "--reason",
+        help=(
+            "Optional Kent-authored justification prepended to the LLM's reason. "
+            "Matches the shape of the manual `--reason` flag."
+        ),
+    ),
 ) -> None:
     """Classify one or many transactions through an LLM CLI.
 
@@ -264,6 +290,12 @@ def classify_llm_cmd(
     if max_total_seconds is not None and max_total_seconds <= 0:
         typer.echo("--max-total-seconds must be strictly positive.", err=True)
         raise typer.Exit(code=2)
+    resolved_pct_override: Decimal | None
+    try:
+        resolved_pct_override = _parse_pct_override(pct_override)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
     try:
         resolved_tier = _parse_tier(tier)
     except ValueError as exc:
@@ -308,8 +340,17 @@ def classify_llm_cmd(
             failures += 1
             typer.echo(f"{prefix} {provider} error: {exc}", err=True)
             continue
+        effective_category: SpendingCategory | None = response.category
+        if category_hint is not None and effective_category != category_hint:
+            effective_category = category_hint
+        effective_pct = _resolve_effective_pct(
+            classification=response.classification,
+            response_category=effective_category,
+            pct_override=resolved_pct_override,
+        )
+        combined_reason = _combine_reason(kent_reason=reason, llm_reason=response.reason)
         line = (
-            f"{prefix} {response.classification.value} @ {canonical_decimal(response.confidence)} — {response.reason}"
+            f"{prefix} {response.classification.value} @ {canonical_decimal(response.confidence)} — {combined_reason}"
         )
         typer.echo(line)
         if not dry_run:
@@ -318,10 +359,12 @@ def classify_llm_cmd(
                     updated_catalogue,
                     target.transaction_id,
                     classification=response.classification,
+                    business_pct=effective_pct,
                     classified_by=classifier.decided_by,
-                    reason=response.reason,
+                    reason=combined_reason,
                     confidence=response.confidence,
-                    category_id=response.category.value if response.category is not None else None,
+                    category_id=effective_category.value if effective_category is not None else None,
+                    notes=combined_reason,
                 )
             except TransactionError as exc:
                 failures += 1
@@ -341,6 +384,63 @@ def classify_llm_cmd(
     typer.echo(f"{successes} classified / {failures} failed / {tail}")
     if failures and successes == 0:
         raise typer.Exit(code=2)
+
+
+def _parse_pct_override(raw: str | None) -> Decimal | None:
+    """Parse a --pct-override value and range-check against [0, 1]."""
+    if raw is None:
+        return None
+    try:
+        value = Decimal(raw)
+    except InvalidOperation as exc:
+        raise ValueError(f"--pct-override {raw!r} is not a valid decimal") from exc
+    if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+        raise ValueError("--pct-override must be within the inclusive 0..1 range")
+    return value
+
+
+def _resolve_effective_pct(
+    *,
+    classification: BusinessClassification,
+    response_category: SpendingCategory | None,
+    pct_override: Decimal | None,
+) -> Decimal | None:
+    """Compute the business_pct that should be persisted for a classification.
+
+    Precedence (first non-None wins):
+    1. Kent's explicit ``--pct-override`` (same UX as manual ``--pct``).
+    2. The CategoryProfile's ``fixed_pct`` (FIXED_PERCENTAGE rules).
+    3. The CategoryProfile's ``default_ratio`` (USAGE_RATIO_* rules —
+       e.g. the 30% home-office default from #253).
+    4. ``None`` — let the ``Transaction`` validator enforce the
+       classification+business_pct coupling (None is required unless
+       the classification is ``MIXED``, and MIXED with None raises).
+
+    When classification is NOT ``MIXED``, we always return ``None`` so
+    the profile's ratio does not corrupt a non-mixed row.
+    """
+    if classification is not BusinessClassification.MIXED:
+        return None
+    if pct_override is not None:
+        return pct_override
+    if response_category is None:
+        return None
+    profile = CATEGORY_PROFILES_2025.get(response_category)
+    if profile is None:
+        return None
+    rule = profile.proportionality
+    if rule.kind is ProportionalityKind.FIXED_PERCENTAGE and rule.fixed_pct is not None:
+        return rule.fixed_pct
+    if rule.default_ratio is not None:
+        return rule.default_ratio
+    return None
+
+
+def _combine_reason(*, kent_reason: str | None, llm_reason: str) -> str:
+    """Combine Kent's optional authored reason with the LLM's rationale."""
+    if kent_reason is None or not kent_reason.strip():
+        return llm_reason
+    return f"{kent_reason.strip()} — LLM: {llm_reason}"
 
 
 def _parse_tier(raw: str | None) -> ModelTier:
