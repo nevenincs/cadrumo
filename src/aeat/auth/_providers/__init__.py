@@ -14,8 +14,10 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._certificate_backends._playwright_context import build_client_certificates_kwarg
-from .certificate import (
+from ._certificate._certificate_backends._playwright_context import (
+    build_client_certificates_kwarg,
+)
+from ._certificate.certificate import (
     HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
@@ -23,8 +25,8 @@ from .certificate import (
 )
 
 if TYPE_CHECKING:
-    from ..config import Settings
-    from ._authenticator import (
+    from ...config import Settings
+    from .._authenticator import (
         AeatLoginAssertion,
         AeatSession,
         BrowserContextLike,
@@ -115,7 +117,7 @@ class ClavePermanenteSessionDetail(BaseModel):
 
 
 class ClaveMovilSessionDetail(BaseModel):
-    """Placeholder detail shape for future Cl@ve Móvil sessions."""
+    """Placeholder detail shape for future Cl@ve Movil sessions."""
 
     model_config = _STRICT_FROZEN
 
@@ -150,7 +152,7 @@ class ClavePermanenteLoginAssertionDetail(BaseModel):
 
 
 class ClaveMovilLoginAssertionDetail(BaseModel):
-    """Placeholder verification detail shape for future Cl@ve Móvil."""
+    """Placeholder verification detail shape for future Cl@ve Movil."""
 
     model_config = _STRICT_FROZEN
 
@@ -252,7 +254,7 @@ def describe_certificate_provider(
         available=True,
         identity_nif=identity_nif,
         subject=cert.subject,
-        expires_on=cert.not_after,
+        expires_on=cert.not_after.date(),
         health_severity=health.severity.value,
         days_until_expiry=health.days_until_expiry,
         health_summary=f"{health.severity.value}:{health.days_until_expiry}",
@@ -265,15 +267,10 @@ def select_provider(
     settings: Settings,
     browser_session_factory: BrowserSessionFactory | None = None,
 ) -> AuthProvider:
-    """Return the configured auth-provider implementation for ``kind``.
+    """Return the configured auth-provider implementation for ``kind``."""
 
-    Today only the certificate-backed provider is concrete. The selector is
-    intentionally small: it gives downstream call sites a stable factory
-    boundary now, while future provider issues can plug their implementations
-    in without reworking the shared engines again.
-    """
     if kind is AuthProviderKind.CERTIFICATE:
-        from ._authenticator import AeatAuthenticator
+        from .._authenticator import AeatAuthenticator
 
         return AeatAuthenticator(
             settings,

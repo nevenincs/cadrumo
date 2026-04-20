@@ -48,9 +48,6 @@ from ._authenticator import (
     BrowserSessionFactory,
     BrowserSessionLike,
 )
-from ._certificate_backends._playwright_context import (
-    build_client_certificates_kwarg,
-)
 from ._gate import AeatAccessGate, AeatGateEnvSnapshot
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
@@ -70,7 +67,10 @@ from ._providers import (
     describe_provider_operator_impact,
     select_provider,
 )
-from .certificate import (
+from ._providers._certificate._certificate_backends._playwright_context import (
+    build_client_certificates_kwarg,
+)
+from ._providers._certificate.certificate import (
     AeatLiveReadNotEnabledError,
     AeatLoginAssertionError,
     AeatSessionExpiredError,

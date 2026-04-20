@@ -59,7 +59,7 @@ from ._providers import (
     CertificateLoginAssertionDetail,
     CertificateSessionDetail,
 )
-from .certificate import (
+from ._providers._certificate.certificate import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
     CertificateBundle,
@@ -71,7 +71,7 @@ from .certificate import (
     load_certificate,
     verify_handshake,
 )
-from .certificate import (
+from ._providers._certificate.certificate import (
     health as certificate_health,
 )
 

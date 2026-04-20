@@ -117,7 +117,7 @@ diff against the last successful filing for the same modelo.
 
 **Nothing is sent to AEAT.** The default mode is dry-run. The default
 CLI intentionally is not a one-shot live-submit path, so Kent's
-normal command-line flow remains produce → verify → export, then
+normal command-line flow remains produce -> verify -> export, then
 upload through AEAT's portal himself.
 
 If the engine encounters a captcha, an unexpected modal, or any AEAT
