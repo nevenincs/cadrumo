@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 import httpx
 from cryptography.hazmat.primitives import serialization
 
-from ...logging import get_logger
+from .....logging import get_logger
 from ._base import _CertBackend
 
 if TYPE_CHECKING:

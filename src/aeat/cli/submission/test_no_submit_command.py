@@ -50,6 +50,11 @@ def test_typer_app_does_not_register_submit() -> None:
     assert {"preflight", "dry-run", "show", "list"}.issubset(registered)
 
 
+def test_submission_help_states_live_submit_is_not_on_default_cli() -> None:
+    assert app.info.help is not None
+    assert "no default CLI live-submit command" in app.info.help
+
+
 def test_no_modelo_click_selector_in_cli_tree() -> None:
     """The literal AEAT submit-button selector must not appear in CLI code."""
     needle = re.compile(re.escape("button#firmar-y-enviar"))
