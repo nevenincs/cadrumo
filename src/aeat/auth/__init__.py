@@ -67,6 +67,7 @@ from ._providers import (
     ClavePermanenteSessionDetail,
     ClavePinLoginAssertionDetail,
     ClavePinSessionDetail,
+    describe_provider_operator_impact,
     select_provider,
 )
 from .certificate import (
@@ -140,6 +141,7 @@ __all__ = [
     "HandshakeResult",
     "LoadedCertificate",
     "build_client_certificates_kwarg",
+    "describe_provider_operator_impact",
     "evaluate_loaded_certificate_health",
     "extract_nif_from_subject",
     "health",
