@@ -69,7 +69,7 @@ repo = "local"
 id = "check-provider-artifacts"
 name = "check provider artifacts (guard against provider leaks)"
 language = "system"
-entry = "uv run --no-sync vaultspec-core check-providers"
+entry = "uv run --no-sync python scripts/check_provider_leaks.py"
 pass_filenames = false
 always_run = true
 
