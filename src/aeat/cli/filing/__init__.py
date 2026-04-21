@@ -419,22 +419,66 @@ def list_drafts(
 @app.command("import")
 def import_(
     from_justificante: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--from-justificante",
-            help="Path to an AEAT justificante PDF to reconstruct a draft from.",
+            help="Path to an AEAT justificante (receipt) PDF; produces a metadata scaffold draft (#271).",
         ),
-    ],
+    ] = None,
+    from_declaracion: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-declaracion",
+            help=(
+                "Path to an AEAT declaración (full filing copy) PDF; "
+                "produces a casilla-complete draft (#305 cluster D)."
+            ),
+        ),
+    ] = None,
+    modelo: Annotated[
+        str | None,
+        typer.Option(
+            "--modelo",
+            help="Override auto-detected modelo (e.g. '130'). Only used with --from-declaracion.",
+        ),
+    ] = None,
+    año: Annotated[
+        int | None,
+        typer.Option(
+            "--año",
+            help="Override auto-detected tax year. Only used with --from-declaracion.",
+        ),
+    ] = None,
 ) -> None:
-    """Reconstruct a draft from a justificante PDF (#271; cert-free).
+    """Import a past filing from an AEAT PDF.
 
-    The draft carries modelo, period, and profile_tax_id; every casilla
-    is emitted as ``EMPTY`` so Kent fills them in later via
-    ``aeat filing build`` or by editing the draft JSON. A companion
-    submission record is persisted under ``AEAT_SUBMISSIONS_DIR`` so
-    the import can serve as the baseline for amendment flows (#93,
-    #234, #235) without any AEAT network call.
+    Exactly one of ``--from-justificante`` or ``--from-declaracion``
+    must be supplied.
+
+    ``--from-justificante`` reconstructs a metadata scaffold draft +
+    companion submission record from the filing receipt (#271). Every
+    casilla lands EMPTY.
+
+    ``--from-declaracion`` parses the full filing copy PDF and extracts
+    every printed casilla value; produces a casilla-complete draft
+    ready for ``aeat filing verify`` (#305 cluster D / E).
     """
+    provided = sum(p is not None for p in (from_justificante, from_declaracion))
+    if provided == 0:
+        raise typer.BadParameter("exactly one of --from-justificante or --from-declaracion is required")
+    if provided > 1:
+        raise typer.BadParameter("only one --from-* flag at a time: --from-justificante or --from-declaracion")
+
+    if from_justificante is not None:
+        _handle_justificante_import(from_justificante)
+        return
+
+    assert from_declaracion is not None  # narrowed by the sum-check above
+    _handle_declaracion_import(from_declaracion, modelo=modelo, año=año)
+
+
+def _handle_justificante_import(from_justificante: Path) -> None:
+    """Dispatch the justificante (#271) import path."""
     settings = load_settings()
     try:
         result = import_filing_from_justificante(
@@ -458,6 +502,37 @@ def import_(
         rendered = get_translation(warning, Language.EN)
         typer.echo(f"[warning] {rendered}")
     _render_draft(result.draft)
+
+
+def _handle_declaracion_import(
+    from_declaracion: Path,
+    *,
+    modelo: str | None,
+    año: int | None,
+) -> None:
+    """Dispatch the declaración (#305 cluster D) import path."""
+    from ...declaracion import DeclaracionParseError, parse_declaracion
+
+    try:
+        filing = parse_declaracion(
+            from_declaracion,
+            modelo_override=modelo,
+            año_override=año,
+        )
+    except DeclaracionParseError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    typer.echo(
+        f"Parsed Modelo {filing.modelo} {filing.period} declaración "
+        f"(template {filing.template_revision.revision}). "
+        f"{len(filing.values)} of {len(filing.values) + len(filing.warnings)} casillas extracted."
+    )
+    typer.echo(f"Status: {filing.extraction_status.value}")
+    if filing.warnings:
+        typer.echo(f"[warnings] {len(filing.warnings)}:")
+        for warning in filing.warnings:
+            rendered = get_translation(warning.message, Language.EN)
+            typer.echo(f"  - casilla {warning.casilla_id or '-'}: {rendered}")
 
 
 @complementaria_app.command("build")

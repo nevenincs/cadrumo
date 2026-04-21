@@ -1,0 +1,126 @@
+"""Synthetic Modelo 130 declaración PDF generator (EPIC #305 cluster D).
+
+Mirrors AEAT's real Modelo 130 layout closely enough that the same
+label-anchored regex extractor designed for real AEAT PDFs succeeds
+against our synthetic output. Ground-truth casilla values are provided
+by the caller; the extractor's unit tests assert parse-output equals
+input.
+
+Usage:
+
+    from .modelo_130_generator import Modelo130GenParams, generate
+
+    params = Modelo130GenParams(
+        año=2025,
+        template_revision="2025.01",
+        tax_id="00000000T",
+        ejercicio="2025",
+        period_printed="1T",
+        casilla_values={"01": Decimal("12500.00"), ...},
+    )
+    pdf_bytes, ground_truth = generate(params)
+"""
+
+from __future__ import annotations
+
+import io
+from collections.abc import Mapping
+from decimal import Decimal
+
+from pydantic import BaseModel, ConfigDict, Field
+from reportlab.lib.units import mm
+from reportlab.pdfgen import canvas
+
+from ._generator_shared import (
+    CasillaBox,
+    draw_casilla_box,
+    draw_footer,
+    draw_header,
+)
+
+# Fixed Modelo 130 casilla ids + labels + positions on the synthetic
+# A4 page. Positions roughly mirror AEAT's real form but are not
+# pixel-identical — parity targets text content, not rendering.
+_MODELO_130_BOXES: tuple[CasillaBox, ...] = (
+    CasillaBox(casilla_id="01", label_es="Ingresos integros del periodo", x_mm=20, y_mm=60),
+    CasillaBox(casilla_id="02", label_es="Gastos deducibles del periodo", x_mm=20, y_mm=70),
+    CasillaBox(casilla_id="03", label_es="Rendimiento neto (01 - 02)", x_mm=20, y_mm=80),
+    CasillaBox(casilla_id="04", label_es="Pago fraccionado bruto (20% de 03)", x_mm=20, y_mm=90),
+    CasillaBox(casilla_id="05", label_es="Retenciones soportadas en el periodo", x_mm=20, y_mm=105),
+    CasillaBox(casilla_id="06", label_es="Pagos fraccionados de periodos anteriores", x_mm=20, y_mm=115),
+    CasillaBox(casilla_id="07", label_es="Resultado a ingresar (04 - 05 - 06)", x_mm=20, y_mm=125),
+)
+
+
+class Modelo130GenParams(BaseModel):
+    """Inputs to :func:`generate`."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    año: int = Field(ge=2000, le=2099)
+    template_revision: str = Field(min_length=1, max_length=32)
+    tax_id: str = Field(min_length=4, max_length=32)
+    ejercicio: str = Field(min_length=4, max_length=4)
+    period_printed: str = Field(min_length=1, max_length=4)
+    casilla_values: Mapping[str, Decimal]
+    csv: str | None = None
+    presented_at: str = "2025-04-20 10:00:00"
+
+
+class Modelo130GroundTruth(BaseModel):
+    """Ground truth paired with the generated PDF."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    params: Modelo130GenParams
+    expected_casillas: tuple[tuple[str, Decimal], ...]
+
+
+def generate(params: Modelo130GenParams) -> tuple[bytes, Modelo130GroundTruth]:
+    """Render a synthetic Modelo 130 declaración as PDF bytes.
+
+    Returns ``(pdf_bytes, ground_truth)``. Ground truth lists casillas
+    in declaration order so extractor tests can walk them sequentially.
+    """
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=(210 * mm, 297 * mm))
+    c.setTitle(f"Modelo 130 {params.ejercicio} {params.period_printed}")
+
+    draw_header(
+        c,
+        modelo="130",
+        ejercicio=params.ejercicio,
+        periodo=params.period_printed,
+        page_num=1,
+        page_count=1,
+    )
+
+    for box in _MODELO_130_BOXES:
+        value = params.casilla_values.get(box.casilla_id)
+        draw_casilla_box(c, box, value)
+
+    draw_footer(
+        c,
+        tax_id=params.tax_id,
+        presented_at=params.presented_at,
+        csv=params.csv,
+    )
+
+    c.showPage()
+    c.save()
+    pdf_bytes = buffer.getvalue()
+
+    expected = tuple(
+        (box.casilla_id, params.casilla_values[box.casilla_id])
+        for box in _MODELO_130_BOXES
+        if box.casilla_id in params.casilla_values
+    )
+    ground_truth = Modelo130GroundTruth(params=params, expected_casillas=expected)
+    return pdf_bytes, ground_truth
+
+
+__all__ = [
+    "Modelo130GenParams",
+    "Modelo130GroundTruth",
+    "generate",
+]
