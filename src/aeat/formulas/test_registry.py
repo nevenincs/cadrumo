@@ -139,6 +139,39 @@ def test_resolve_123_backfill_binds_2024() -> None:
 
 
 @pytest.mark.unit
+def test_resolve_modelo_100_summary_via_variant() -> None:
+    """Wave 47: Modelo 100 summary ruleset is reachable via variant="summary"."""
+    from ._rulesets.modelo_100_summary_2025 import (
+        RULESET as MODELO_100_SUMMARY_2025,
+    )
+
+    registry = get_registry()
+    ruleset = registry.resolve(
+        modelo=ModeloCode.MODELO_100,
+        period=FiscalPeriod(year=2025),
+        variant="summary",
+    )
+    assert ruleset is MODELO_100_SUMMARY_2025
+
+
+@pytest.mark.unit
+def test_resolve_default_variant_misses_summary() -> None:
+    """Wave 47: default variant does NOT resolve the summary-only ruleset.
+
+    Absent a canonical (default-variant) Modelo 100 ruleset, resolving
+    without specifying ``variant`` must raise. This proves the axis
+    actually partitions the registry — otherwise the summary ruleset
+    would leak through default-variant lookups.
+    """
+    registry = get_registry()
+    with pytest.raises(MissingRulesetError):
+        registry.resolve(
+            modelo=ModeloCode.MODELO_100,
+            period=FiscalPeriod(year=2025),
+        )
+
+
+@pytest.mark.unit
 def test_resolve_131_backfill_binds_2024() -> None:
     """Wave 44/45: Modelo 131 2024 backfill resolves for 2024-period módulos filings."""
     registry = get_registry()
