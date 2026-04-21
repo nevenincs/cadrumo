@@ -99,9 +99,11 @@ async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
     """Self-owned sessions must honor the new BrowserSession close contract."""
     session = _FakeBrowserSession("<html>documento desconocido</html>")
     playwright_owner = _FakePlaywrightOwner()
+    session_like = cast(verify_module.BrowserSessionLike, session)
+    playwright_like = cast(verify_module.PlaywrightOwnerLike, playwright_owner)
 
     async def _factory() -> tuple[verify_module.BrowserSessionLike, verify_module.PlaywrightOwnerLike]:
-        return session, playwright_owner
+        return session_like, playwright_like
 
     original_factory = verify_module.DEFAULT_BROWSER_SESSION_FACTORY
     verify_module.DEFAULT_BROWSER_SESSION_FACTORY = cast(verify_module.BrowserSessionFactory, _factory)
