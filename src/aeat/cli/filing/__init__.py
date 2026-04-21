@@ -628,6 +628,7 @@ def _handle_borrador_import(
 ) -> None:
     """Dispatch the Modelo 100 (Renta) import path (#305 cluster F MVP)."""
     from ...borrador import BorradorParseError, parse_borrador
+    from ...borrador._tarifa import validate_tarifa_estatal_2025
     from ...formulas._rulesets import MODELO_100_SUMMARY_2025
 
     try:
@@ -655,7 +656,8 @@ def _handle_borrador_import(
         provided=provided,
         tolerance=Decimal("0.01"),
     )
-    if report.is_clean():
+    ruleset_clean = report.is_clean()
+    if ruleset_clean:
         typer.echo(f"Verification status: VERIFIED (ruleset={MODELO_100_SUMMARY_2025.ruleset_id})")
     else:
         typer.echo(f"Verification status: NEEDS_REVIEW — {len(report.discrepancies)} discrepancies")
@@ -663,6 +665,26 @@ def _handle_borrador_import(
             typer.echo(
                 f"  - casilla {d.casilla_id}: expected {d.computed_value}, actual {d.user_value}, delta {d.delta}"
             )
+
+    # Tarifa progresiva estatal post-validator — checks that the extracted
+    # cuota íntegra estatal (0550, 0560) matches the tarifa-derived value
+    # when the corresponding base liquidable casilla (0545, 0555) is present.
+    tarifa_findings = validate_tarifa_estatal_2025(
+        base_liquidable_general=provided.get("0545"),
+        base_liquidable_ahorro=provided.get("0555"),
+        cuota_estatal_general=provided.get("0550"),
+        cuota_estatal_ahorro=provided.get("0560"),
+    )
+    if tarifa_findings:
+        typer.echo(f"Tarifa progresiva: {len(tarifa_findings)} discrepancies vs. IRPF estatal scale 2025")
+        for finding in tarifa_findings:
+            typer.echo(
+                f"  - casilla {finding.casilla_id} (from base {finding.base_casilla_id}): "
+                f"tarifa {finding.expected_cuota} vs. extracted {finding.actual_cuota}"
+                f" (delta {finding.delta})"
+            )
+    elif ruleset_clean:
+        typer.echo("Tarifa progresiva: cuota íntegra estatal consistent with IRPF 2025 scale")
 
 
 @complementaria_app.command("build")
