@@ -25,12 +25,14 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
     """The registry contains every shipped ruleset.
 
     Wave 1 (#173) added the Modelo 130 2024+2025 pair; wave 2
-    (#183) added the Modelo 303 2024+2025 pair.
+    (#183) added the Modelo 303 2024+2025 pair. EPIC #305 wave 28
+    extends the fleet with the Modelo 115 2025 ruleset.
     """
     registry = get_registry()
     ids = sorted(r.ruleset_id for r in registry.rulesets)
     assert ids == [
         "modelo_100.summary.2025",
+        "modelo_115.2025",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_303.2024",

@@ -30,6 +30,7 @@ def test_list_subcommand(runner: CliRunner) -> None:
     ids = sorted(row["ruleset_id"] for row in payload)
     assert ids == [
         "modelo_100.summary.2025",
+        "modelo_115.2025",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_303.2024",
