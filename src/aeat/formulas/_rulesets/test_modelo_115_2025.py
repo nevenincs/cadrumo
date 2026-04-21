@@ -64,6 +64,8 @@ class TestModelo115Ruleset:
         )
         assert report.is_clean()
 
-    def test_includes_ley_100_2_citation(self) -> None:
+    def test_includes_reglamento_and_ley_citations(self) -> None:
+        # Wave 29 HIGH-1: 19% lives in RD 439/2007 art. 100.3.a, not LIRPF 100.2.
         articles = {c.article for c in MODELO_115_2025.legal_citations}
-        assert "100.2" in articles
+        assert "100.3.a" in articles  # Reglamento: fija el 19%
+        assert "101.8" in articles  # LIRPF: delega el tipo al reglamento

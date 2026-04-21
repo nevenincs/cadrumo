@@ -581,6 +581,68 @@ class TestGenericExtractorInvariants:
 class TestModelo840TextCasillas:
     """Modelo 840 uses the text-value primitive (wave 24)."""
 
+    def test_truncation_warning_emitted_for_multi_word_value(self, tmp_path: Path) -> None:
+        """Wave 29 HIGH-3: multi-word values surface a truncation warning + confidence drop."""
+        from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
+            QuarterlyGenParams,
+            generate,
+        )
+
+        labels = {"38": "Municipio"}
+        # Simulate Kent filing for "Las Palmas" — the naive TEXT_VALUE_GROUP
+        # would capture "Palmas" and silently drop "Las"; wave 29 flags it.
+        values = {"38": "Las Palmas"}
+        params = QuarterlyGenParams(
+            modelo="840",
+            año=2025,
+            template_revision="2025.01",
+            tax_id="00000000T",
+            ejercicio="2025",
+            period_printed="0A",
+            labels=labels,
+            casilla_values=values,
+        )
+        pdf_bytes, _ = generate(params)
+        pdf = tmp_path / "modelo_840_truncated.pdf"
+        pdf.write_bytes(pdf_bytes)
+        filing = parse_declaracion(pdf)
+        by_id = {v.casilla_id: v for v in filing.values}
+        # Last-token capture still wins; but confidence drops to 0.5 and
+        # a truncation warning is emitted.
+        assert by_id["38"].printed_value == "Palmas"
+        assert by_id["38"].extraction_confidence == 0.5
+        assert any(w.casilla_id == "38" and w.code == "text-value-possibly-truncated" for w in filing.warnings)
+
+    def test_missing_text_casilla_emits_not_found_warning(self, tmp_path: Path) -> None:
+        """Wave 29 MEDIUM-1: a text casilla absent from the PDF surfaces as `casilla-not-found`."""
+        from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
+            QuarterlyGenParams,
+            generate,
+        )
+
+        # Render 840 with only casilla 14 present; the other 7 are missing.
+        labels = {"14": "Ejercicio"}
+        values: dict[str, str] = {"14": "2025"}
+        params = QuarterlyGenParams(
+            modelo="840",
+            año=2025,
+            template_revision="2025.01",
+            tax_id="00000000T",
+            ejercicio="2025",
+            period_printed="0A",
+            labels=labels,
+            casilla_values=values,
+        )
+        pdf_bytes, _ = generate(params)
+        pdf = tmp_path / "modelo_840_partial.pdf"
+        pdf.write_bytes(pdf_bytes)
+        filing = parse_declaracion(pdf)
+        missing = {w.casilla_id for w in filing.warnings if w.code == "casilla-not-found"}
+        # All text casillas except 14 should be missing.
+        assert "15" in missing and "33" in missing and "62" in missing
+        # Extraction status degrades (1 of 8 < 50% coverage).
+        assert filing.extraction_status is ExtractionStatus.FAILED
+
     def test_text_payload_roundtrip(self, tmp_path: Path) -> None:
         from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
             QuarterlyGenParams,
