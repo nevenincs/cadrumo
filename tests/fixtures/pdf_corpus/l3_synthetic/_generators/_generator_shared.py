@@ -81,11 +81,11 @@ def draw_header(
     canvas.drawString(MARGIN_LEFT, y, "AGENCIA TRIBUTARIA")
     y -= 6 * mm
     canvas.setFont(HEADER_FONT, HEADER_FONT_SIZE)
-    canvas.drawString(MARGIN_LEFT, y, f"Declaración — Modelo {modelo}")
-    canvas.drawRightString(A4_WIDTH - MARGIN_RIGHT, y, f"Página {page_num} de {page_count}")
+    canvas.drawString(MARGIN_LEFT, y, f"Declaracion - Modelo {modelo}")
+    canvas.drawRightString(A4_WIDTH - MARGIN_RIGHT, y, f"Pagina {page_num} de {page_count}")
     y -= 5 * mm
     canvas.setFont(LABEL_FONT, LABEL_FONT_SIZE)
-    canvas.drawString(MARGIN_LEFT, y, f"Ejercicio: {ejercicio}   Período: {periodo}")
+    canvas.drawString(MARGIN_LEFT, y, f"Ejercicio: {ejercicio}   Periodo: {periodo}")
 
 
 def draw_casilla_box(
@@ -93,23 +93,28 @@ def draw_casilla_box(
     box: CasillaBox,
     value: Decimal | str | int | None,
 ) -> None:
-    """Render one casilla: prefix label + boxed right-aligned value.
+    """Render one casilla as a single-line ``<id>  <label>    <value>`` row.
 
-    Blank values render an empty box (still with a ``casilla_id`` label),
-    letting extractor tests distinguish ``not-present`` from ``blank``.
+    Drawing label + value as one drawString call (rather than at two
+    x coordinates) dodges pdfplumber's reading-order heuristic which
+    interleaves columns unreliably on tight A4 layouts. Real AEAT
+    declaración PDFs render boxed values in their own column; the
+    extractor's bbox-anchored primitive (cluster D ADR §5 stack) is
+    the MVP's fallback against the visual layout.
+
+    Blank values still render the casilla label so extractors can
+    distinguish ``not-present`` (no label emitted) from ``blank``
+    (label emitted, no value).
     """
-    y = A4_HEIGHT - box.y_mm
-    canvas.setFont(LABEL_FONT, LABEL_FONT_SIZE)
-    canvas.drawString(box.x_mm, y, f"{box.casilla_id}  {box.label_es}")
-
-    value_x = box.x_mm + box.width_mm + 5 * mm
-    value_y = y - 1 * mm
-    canvas.rect(value_x, value_y - box.height_mm + 1 * mm, box.width_mm, box.height_mm, stroke=1, fill=0)
-
+    y = A4_HEIGHT - box.y_mm * mm
+    canvas.setFont(VALUE_FONT, VALUE_FONT_SIZE)
+    label_text = f"{box.casilla_id}  {box.label_es}"
     if value is not None and value != "":
-        canvas.setFont(VALUE_FONT, VALUE_FONT_SIZE)
         rendered = format_amount(Decimal(value)) if isinstance(value, Decimal | int) else str(value)
-        canvas.drawRightString(value_x + box.width_mm - 2 * mm, value_y - box.height_mm + 3 * mm, rendered)
+        line = f"{label_text}    {rendered}"
+    else:
+        line = label_text
+    canvas.drawString(box.x_mm * mm, y, line)
 
 
 def draw_footer(
