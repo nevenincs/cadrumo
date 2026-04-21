@@ -10,13 +10,15 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import date
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from ...deadlines import AutonomoProfile, IVARegime
+from ...deadlines import AutonomoProfile, IVARegime, next_deadline
 from .. import app as root_app
+from ..deadlines._helpers import build_engine as build_deadline_engine
 from ._helpers import clear_test_hooks
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -56,15 +58,25 @@ def runtime_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_workflow_run_uses_real_runtime_wiring(runtime_env: Path) -> None:
+    profile = AutonomoProfile.model_validate_json(runtime_env.read_text(encoding="utf-8"))
+    deadline_engine = build_deadline_engine()
+    today = date.today()
+    schedule = deadline_engine.compute(profile, today.year, today=today)
+    obligation = next_deadline(schedule, today=today)
+    if obligation is None:
+        schedule = deadline_engine.compute(profile, today.year + 1, today=today)
+        obligation = next_deadline(schedule, today=today)
+    assert obligation is not None
+
     result = runner.invoke(
         root_app,
         [
             "workflow",
             "run",
             "--modelo",
-            "130",
+            obligation.modelo,
             "--period",
-            "2026Q1",
+            obligation.period,
             "--json",
             "--no-sync",
         ],
