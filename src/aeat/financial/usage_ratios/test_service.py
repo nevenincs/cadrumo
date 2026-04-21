@@ -141,6 +141,66 @@ def test_save_replaces_previous_payload(tmp_path: Path) -> None:
     assert list(tmp_path.glob("*.tmp")) == []
 
 
+def test_save_preserves_prior_target_on_mid_write_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Atomicity: if ``os.replace`` fails, the existing target is unchanged.
+
+    Pins the safety property that a mid-save crash cannot truncate Kent's
+    existing ratios, and that the temp file is cleaned up.
+    """
+    target = tmp_path / "ratios.json"
+    initial = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+    save_usage_ratios(initial, target)
+    original_bytes = target.read_bytes()
+
+    def _boom(*_args: object, **_kwargs: object) -> None:
+        raise OSError("simulated mid-write failure")
+
+    monkeypatch.setattr("aeat.financial.usage_ratios._service.os.replace", _boom)
+
+    replacement = initial.with_ratio(SpendingCategory.TELEFONIA_MOVIL, Decimal("0.6"))
+    with pytest.raises(UsageRatioPersistenceError):
+        save_usage_ratios(replacement, target)
+
+    assert target.read_bytes() == original_bytes, "target was corrupted mid-save"
+    assert list(tmp_path.glob("*.tmp")) == [], "temp file leaked after failure"
+
+
+def test_save_payload_is_indented_for_git_diff_readability(tmp_path: Path) -> None:
+    """Pin the two-space-indented JSON shape Kent relies on for diffing."""
+    target = tmp_path / "ratios.json"
+    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+    save_usage_ratios(profile, target)
+    payload = target.read_text(encoding="utf-8")
+    # Indent=2 means the ratios dict opens on a new line with two-space prefix.
+    assert "\n  " in payload, f"payload is not indented: {payload!r}"
+
+
+def test_save_writes_pure_utf8_bytes(tmp_path: Path) -> None:
+    """The on-disk bytes must decode cleanly as UTF-8 for portable editing."""
+    target = tmp_path / "ratios.json"
+    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+    save_usage_ratios(profile, target)
+    # Round-trip via explicit utf-8 decode without the BOM-strip helper.
+    raw_bytes = target.read_bytes()
+    assert not raw_bytes.startswith(b"\xef\xbb\xbf"), "we must not write a BOM"
+    raw_bytes.decode("utf-8")  # raises on non-utf-8
+
+
+def test_load_value_error_prefix_is_stripped_from_summary(tmp_path: Path) -> None:
+    """Pydantic's ``Value error, `` prefix must not leak into Kent's output."""
+    target = tmp_path / "out-of-range.json"
+    target.write_text(
+        '{"ratios": {"suministros_home_office_luz": "1.5"}}',
+        encoding="utf-8",
+    )
+    with pytest.raises(UsageRatioPersistenceError) as excinfo:
+        load_usage_ratios(target)
+    message = str(excinfo.value)
+    assert "Value error, " not in message
+    # But the substantive reason is preserved.
+    assert "must be in [0, 1]" in message
+
+
 def test_save_to_unwritable_parent_surfaces_os_detail(tmp_path: Path) -> None:
     """Target whose parent is a file triggers :class:`UsageRatioPersistenceError`
     and includes the OSError class name so Kent can diagnose."""

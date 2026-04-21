@@ -145,6 +145,60 @@ def test_set_ratio_tolerates_trailing_whitespace() -> None:
     assert "set suministros_home_office_luz = 0.21" in result.output
 
 
+def test_corrupt_file_surfaces_error_not_silent_empty(
+    _isolate_usage_ratios_path: Path,
+) -> None:
+    """A hand-edited corrupt file must surface an error, not silently reset
+    Kent's profile to empty and accept a fresh ``set-ratio``.
+
+    This is a defense-in-depth pin: if ``_load_profile`` ever started
+    swallowing ``UsageRatioError``, Kent's prior ratios could be silently
+    wiped by a subsequent save. Both ``ratios list`` and ``set-ratio`` on a
+    corrupt file must exit non-zero.
+    """
+    _isolate_usage_ratios_path.write_text("{ not json", encoding="utf-8")
+    list_result = _invoke("ratios", "list")
+    assert list_result.exit_code == 2, list_result.output
+    assert "usage-ratio profile" in list_result.output
+
+    set_result = _invoke("set-ratio", "suministros_home_office_luz", "0.5")
+    assert set_result.exit_code == 2, set_result.output
+    # Kent's corrupt bytes must still be on disk — the CLI did not silently
+    # overwrite them with a fresh valid profile.
+    assert _isolate_usage_ratios_path.read_text(encoding="utf-8") == "{ not json"
+
+
+def test_format_decimal_zero_is_exact_not_substring_match(
+    _isolate_usage_ratios_path: Path,
+) -> None:
+    """Pin ``_format_decimal(Decimal("0")) == "0"`` via exact-line matching.
+
+    A loose substring assertion (``"= 0" in output``) would silently accept
+    a regression that rendered zero as ``"0.000000"`` or similar. This test
+    splits the output on whitespace and asserts the token is exactly ``"0"``.
+    """
+    result = _invoke("set-ratio", "suministros_home_office_luz", "0")
+    assert result.exit_code == 0, result.output
+    confirm_line = next(
+        (line for line in result.output.splitlines() if line.startswith("set ")),
+        None,
+    )
+    assert confirm_line is not None, result.output
+    tokens = confirm_line.split()
+    # Expected shape: ['set', 'suministros_home_office_luz', '=', '0']
+    assert tokens[-1] == "0", f"last token is not exactly '0': {tokens!r}"
+
+
+def test_unknown_key_no_near_match_for_unrelated_input(
+    _isolate_usage_ratios_path: Path,
+) -> None:
+    """The difflib cutoff must remain restrictive enough that a wildly
+    unrelated key produces no ``did you mean`` suggestion."""
+    result = _invoke("set-ratio", "zzzzzzzzzzzz", "0.5")
+    assert result.exit_code == 2
+    assert "did you mean" not in result.output
+
+
 def test_set_ratio_ineligible_hint_wraps_and_stays_consistent() -> None:
     """The ineligible-category branch must use the same wrapped
     ``eligible categories:`` layout as the unknown-key branch, so Kent

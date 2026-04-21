@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from ...logging import get_logger
 from ._errors import UsageRatioPersistenceError
-from ._model import UsageRatioProfile
+from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 
 __all__ = ["load_usage_ratios", "save_usage_ratios"]
 
@@ -75,9 +75,6 @@ def _summarise_validation_errors(exc: ValidationError) -> str:
     * The pydantic ``"Value error, "`` / ``"Input should be "`` prefixes
       are stripped where they add noise.
     """
-    # Avoid a circular import: the model module owns the eligibility set.
-    from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES
-
     lines: list[str] = []
     for error in exc.errors():
         loc = error.get("loc", ())
@@ -112,13 +109,16 @@ def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
         UsageRatioPersistenceError: If the write cannot be completed.
     """
     target = path.resolve()
-    payload = profile.model_dump_json(indent=2)
+    # Write with a trailing newline — POSIX convention plus cleaner ``git diff``
+    # when ``AEAT_USAGE_RATIOS_PATH`` is pointed outside the gitignored ``var/``.
+    payload = profile.model_dump_json(indent=2) + "\n"
     tmp_path: Path | None = None
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile(
             mode="w",
             encoding="utf-8",
+            newline="\n",
             dir=target.parent,
             prefix=f"{target.stem}.",
             suffix=".tmp",
