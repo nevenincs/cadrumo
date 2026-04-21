@@ -63,6 +63,22 @@ def test_load_out_of_range_surfaces_pydantic_detail(tmp_path: Path) -> None:
     assert "[0, 1]" in message
 
 
+def test_load_unknown_key_names_only_eligible_categories(tmp_path: Path) -> None:
+    """Hand-edited unknown key must surface the twelve eligible categories,
+    NOT pydantic's default 38-entry ``SpendingCategory`` dump."""
+    target = tmp_path / "unknown-key.json"
+    target.write_text('{"ratios": {"foo": "0.5"}}', encoding="utf-8")
+    with pytest.raises(UsageRatioPersistenceError) as excinfo:
+        load_usage_ratios(target)
+    message = str(excinfo.value)
+    assert "unknown ratio key" in message
+    assert "eligible categories are:" in message
+    # Eligible categories must be listed; ineligible ones must not.
+    assert "suministros_home_office_luz" in message
+    assert "material_oficina" not in message
+    assert "cuotas_colegiales" not in message
+
+
 def test_load_tolerates_utf8_bom(tmp_path: Path) -> None:
     """Files saved with a UTF-8 BOM (Windows Notepad default) must load cleanly."""
     target = tmp_path / "with-bom.json"

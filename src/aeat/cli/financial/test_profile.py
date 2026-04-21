@@ -137,6 +137,27 @@ def test_set_ratio_near_match_suggested_for_typo() -> None:
     assert "home_office_area" in result.output
 
 
+def test_set_ratio_tolerates_trailing_whitespace() -> None:
+    """A trailing space in the key must not derail the command — common
+    when Kent copy-pastes from a doc."""
+    result = _invoke("set-ratio", "suministros_home_office_luz ", "0.21")
+    assert result.exit_code == 0, result.output
+    assert "set suministros_home_office_luz = 0.21" in result.output
+
+
+def test_set_ratio_ineligible_hint_wraps_and_stays_consistent() -> None:
+    """The ineligible-category branch must use the same wrapped
+    ``eligible categories:`` layout as the unknown-key branch, so Kent
+    never faces a 350-char single line on an 80-col terminal."""
+    result = _invoke("set-ratio", "material_oficina", "0.5")
+    assert result.exit_code == 2
+    assert "does not accept a usage ratio" in result.output
+    assert "eligible categories:" in result.output
+    # No single output line exceeds 80 columns (terminal-friendliness).
+    for line in result.output.splitlines():
+        assert len(line) <= 80, f"line too long ({len(line)}): {line!r}"
+
+
 def test_unset_ratio_removes_persisted_entry() -> None:
     set_result = _invoke("set-ratio", "suministros_home_office_luz", "0.21")
     assert set_result.exit_code == 0

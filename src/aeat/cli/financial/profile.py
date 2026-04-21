@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import textwrap
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
@@ -105,19 +106,24 @@ def unset_ratio_cmd(
 
 
 def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
-    """Expand a family alias or validate a single category id."""
-    alias_members = FAMILY_ALIASES.get(raw)
+    """Expand a family alias or validate a single category id.
+
+    Trailing / leading whitespace is tolerated — Kent's typo of
+    ``"home_office_area "`` resolves cleanly. An empty string after
+    stripping falls through to the unknown-key error path.
+    """
+    stripped = raw.strip()
+    alias_members = FAMILY_ALIASES.get(stripped)
     if alias_members is not None:
         return alias_members
     try:
-        category = SpendingCategory(raw)
+        category = SpendingCategory(stripped)
     except ValueError as exc:
         typer.echo(_format_unknown_key_hint(raw), err=True)
         raise typer.Exit(code=2) from exc
     if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
-        eligible = ", ".join(sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES))
         typer.echo(
-            f"{category.value!r} does not accept a usage ratio; eligible categories: {eligible}",
+            f"{category.value!r} does not accept a usage ratio\n{_format_eligible_list()}",
             err=True,
         )
         raise typer.Exit(code=2)
@@ -128,20 +134,41 @@ def _format_unknown_key_hint(raw: str) -> str:
     """Build an actionable error for an unrecognised key.
 
     Surfaces:
-      * the offending input,
+      * the offending input (as typed, so trailing whitespace shows),
       * close-match suggestions drawn from aliases + eligible category ids,
-      * the full alias list and the 12 eligible category ids.
+      * the full alias list and the 12 eligible category ids, wrapped to
+        fit an 80-column terminal.
     """
     aliases = sorted(FAMILY_ALIASES)
     eligible = sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES)
     candidates = aliases + eligible
-    near_matches = difflib.get_close_matches(raw, candidates, n=3, cutoff=0.6)
+    near_matches = difflib.get_close_matches(raw.strip(), candidates, n=3, cutoff=0.6)
     lines = [f"unknown key: {raw!r}"]
     if near_matches:
         lines.append(f"  did you mean: {', '.join(near_matches)}?")
-    lines.append(f"  family aliases: {', '.join(aliases)}")
-    lines.append(f"  eligible categories: {', '.join(eligible)}")
+    lines.append(_indented_wrap("family aliases:", aliases))
+    lines.append(_indented_wrap("eligible categories:", eligible))
     return "\n".join(lines)
+
+
+def _format_eligible_list() -> str:
+    """Render the twelve eligible categories, indented and wrapped to 78 cols."""
+    eligible = sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES)
+    return _indented_wrap("eligible categories:", eligible)
+
+
+def _indented_wrap(header: str, items: list[str]) -> str:
+    """Indent a header + comma-separated list and wrap to 78 columns."""
+    body = ", ".join(items)
+    wrapped = textwrap.fill(
+        body,
+        width=78,
+        initial_indent="  " + header + " ",
+        subsequent_indent="    ",
+        break_on_hyphens=False,
+        break_long_words=False,
+    )
+    return wrapped
 
 
 def _parse_ratio(raw: str) -> Decimal:
