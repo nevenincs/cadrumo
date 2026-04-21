@@ -93,6 +93,16 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
                 )
             seen.update(group)
 
+        # Wave 46 LOW: pre-compile named_field regexes once at subclass
+        # definition rather than on every `extract()` call. The five
+        # named-field modelos (036/037/232/369/720) amortise this
+        # across every PDF ingested.
+        raw_patterns = getattr(cls, "named_field_patterns", {})
+        cls._named_field_compiled: dict[str, re.Pattern[str]] = {
+            field_id: re.compile(pattern_str, re.IGNORECASE | re.MULTILINE)
+            for field_id, pattern_str in raw_patterns.items()
+        }
+
     def _compiled_patterns(self) -> dict[str, re.Pattern[str]]:
         width = type(self).casilla_width
         return {
@@ -218,8 +228,9 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
 
         # Named-field path: arbitrary regex captures for summary blocks
         # that do NOT print numbered casilla IDs (036/037/232/369/720).
-        for field_id, pattern_str in type(self).named_field_patterns.items():
-            pattern = re.compile(pattern_str, re.IGNORECASE | re.MULTILINE)
+        # Patterns pre-compiled at subclass-definition time (wave 46 LOW).
+        compiled_named: dict[str, re.Pattern[str]] = type(self)._named_field_compiled
+        for field_id, pattern in compiled_named.items():
             matches = list(pattern.finditer(full_text))
             if not matches:
                 warnings.append(_not_found_warning(field_id))
