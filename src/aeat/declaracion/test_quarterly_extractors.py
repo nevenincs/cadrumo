@@ -148,6 +148,9 @@ class TestRegistryKnowsNewExtractors:
         assert ("115", 2025, "2025.01") in keys
         assert ("123", 2025, "2025.01") in keys
         assert ("130", 2025, "2025.01") in keys
+        assert ("131", 2025, "2025.01") in keys
+        assert ("200", 2025, "2025.01") in keys
+        assert ("202", 2025, "2025.01") in keys
         assert ("303", 2025, "2025.01") in keys
         # Modelo 303 post-HAC/819/2024 revision.
         assert ("303", 2024, "2024.orden-819") in keys
@@ -393,6 +396,115 @@ class TestModelo349V2025Extractor:
         )
         filing = parse_declaracion(pdf)
         assert filing.modelo == "349"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+
+_MODELO_131_LABELS = {
+    "01": "Suma rendimientos netos modulos",
+    "02": "Pago fraccionado del trimestre",
+    "03": "Volumen ventas sin datos-base",
+    "04": "2 por ciento s/casilla 03",
+    "05": "Volumen ingresos agricolas",
+    "06": "2 por ciento s/casilla 05",
+    "07": "Total 02+04+06",
+    "08": "Retenciones e ingresos a cuenta",
+    "09": "Minoracion rendimientos ano anterior",
+    "10": "Resultado 07-08-09",
+    "11": "Negativos trimestres anteriores",
+    "12": "Deduccion vivienda habitual",
+    "13": "Resultado 10-11-12",
+    "14": "Deducir declaracion complementaria",
+    "15": "Resultado a ingresar",
+}
+
+_MODELO_200_LABELS = {
+    "00550": "Base imponible previa",
+    "01032": "Reduccion reserva capitalizacion",
+    "00547": "Compensacion BINs",
+    "00552": "Base imponible",
+    "00558": "Tipo de gravamen",
+    "00560": "Cuota integra previa",
+    "00562": "Cuota integra",
+    "00582": "Cuota integra ajustada positiva",
+    "00592": "Cuota liquida positiva",
+    "00599": "Retenciones ingresos cuenta",
+    "00601": "Pago fraccionado 1P",
+    "00603": "Pago fraccionado 2P",
+    "00605": "Pago fraccionado 3P",
+    "00611": "Cuota diferencial",
+    "00621": "Liquido a ingresar o devolver",
+}
+
+_MODELO_202_LABELS = {
+    "16": "Base del pago fraccionado",
+    "17": "Tipo de gravamen",
+    "18": "Cuota integra",
+    "27": "Bonificaciones",
+    "28": "Retenciones e ingresos a cuenta",
+    "30": "Pagos fraccionados anteriores",
+    "32": "Resultado",
+    "33": "Minimo a ingresar",
+    "34": "Cantidad a ingresar",
+}
+
+
+class TestModelo131V2025Extractor:
+    def test_roundtrip_quarterly_modulos(self, tmp_path: Path) -> None:
+        values = {k: f"{100 * i}.00" for i, k in enumerate(_MODELO_131_LABELS, start=1)}
+        pdf = _make_pdf(
+            tmp_path,
+            modelo="131",
+            labels=_MODELO_131_LABELS,
+            values=values,
+            filename="modelo_131_2025Q1.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "131"
+        assert filing.period == "2025Q1"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+
+class TestModelo200V2025Extractor:
+    def test_roundtrip_liquidacion_page_14(self, tmp_path: Path) -> None:
+        values = {k: f"{100 * (i + 1)}.00" for i, k in enumerate(_MODELO_200_LABELS)}
+        pdf = _make_annual_pdf(
+            tmp_path,
+            modelo="200",
+            labels=_MODELO_200_LABELS,
+            values=values,
+            filename="modelo_200_2025.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "200"
+        assert filing.period == "2025A"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        # Spot-check one five-digit casilla survived the wider prefix.
+        assert by_id["00552"] == Decimal(values["00552"])
+
+
+class TestModelo202V2025Extractor:
+    def test_roundtrip_installment(self, tmp_path: Path) -> None:
+        values = {
+            "16": "100000.00",
+            "17": "25.00",
+            "18": "25000.00",
+            "27": "0.00",
+            "28": "2500.00",
+            "30": "0.00",
+            "32": "22500.00",
+            "33": "0.00",
+            "34": "22500.00",
+        }
+        pdf = _make_pdf(
+            tmp_path,
+            modelo="202",
+            labels=_MODELO_202_LABELS,
+            values=values,
+            filename="modelo_202_2025_1P.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "202"
         assert filing.extraction_status is ExtractionStatus.COMPLETE
 
 
