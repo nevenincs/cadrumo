@@ -83,11 +83,36 @@ class ClavePermanenteSessionDetail(BaseModel):
 
 
 class ClaveMovilSessionDetail(BaseModel):
-    """Placeholder detail shape for future Cl@ve Móvil sessions."""
+    """Detail shape for a Cl@ve Móvil-authenticated AEAT session.
+
+    Cl@ve Móvil hands AEAT a uniform set of session cookies after the
+    user approves the push notification on their phone. The session
+    does not carry any long-lived credential material — only the
+    identity used during login and a rendezvous timestamp. The real
+    authority is the cookie set persisted in the Playwright
+    storage-state file, which is round-tripped by
+    :class:`aeat.auth._authenticator.AeatAuthenticator` via the
+    provider-agnostic sidecar.
+    """
 
     model_config = _STRICT_FROZEN
 
     kind: Literal[AuthProviderKind.CLAVE_MOVIL] = AuthProviderKind.CLAVE_MOVIL
+    dni_nie: str = Field(
+        min_length=1,
+        description="DNI/NIE used for the login (authoritative identity).",
+    )
+    used_non_qr_fallback: bool = Field(
+        default=False,
+        description="True when the DNI/NIE + contraste fallback form was used rather than the QR code.",
+    )
+    verification_code: str | None = Field(
+        default=None,
+        description=(
+            "Three-letter confirmation code shown on the AEAT QR page at "
+            "login; recorded for audit only. Not reused on resume."
+        ),
+    )
 
 
 class ClavePinSessionDetail(BaseModel):
@@ -118,11 +143,28 @@ class ClavePermanenteLoginAssertionDetail(BaseModel):
 
 
 class ClaveMovilLoginAssertionDetail(BaseModel):
-    """Placeholder verification detail shape for future Cl@ve Móvil."""
+    """Verification detail for a Cl@ve Móvil-backed session probe.
+
+    After a successful Cl@ve Móvil login, the authenticator probes a
+    well-known AEAT Sede URL to confirm that the session cookies are
+    still live. This detail record carries the observed signals for
+    that probe.
+    """
 
     model_config = _STRICT_FROZEN
 
     kind: Literal[AuthProviderKind.CLAVE_MOVIL] = AuthProviderKind.CLAVE_MOVIL
+    session_cookie_present: bool = Field(
+        default=False,
+        description=(
+            "True when the probe response carried an AEAT session cookie; "
+            "primary signal that Cl@ve Móvil login is still live."
+        ),
+    )
+    landing_url: str | None = Field(
+        default=None,
+        description="Final URL Playwright landed on after following redirects.",
+    )
 
 
 class ClavePinLoginAssertionDetail(BaseModel):
@@ -262,10 +304,12 @@ def select_provider(
 ) -> AuthProvider:
     """Return the configured auth-provider implementation for ``kind``.
 
-    Today only the certificate-backed provider is concrete. The selector is
-    intentionally small: it gives downstream call sites a stable factory
-    boundary now, while future provider issues can plug their implementations
-    in without reworking the shared engines again.
+    Today the certificate-backed provider and Cl@ve Móvil are concrete.
+    Cl@ve Permanente and Cl@ve PIN are NOT offered by AEAT Sede
+    Electrónica today — see
+    ``.vault/reference/2026-04-21-clave-portal-reference.md`` for the
+    live portal capture that confirmed only Cl@ve Móvil + Certificate
+    are exposed on the ``SelectorAccesos.html`` chooser.
     """
     if kind is AuthProviderKind.CERTIFICATE:
         from ._authenticator import AeatAuthenticator
@@ -273,6 +317,18 @@ def select_provider(
         return AeatAuthenticator(
             settings,
             browser_session_factory=browser_session_factory,
+        )
+    if kind is AuthProviderKind.CLAVE_MOVIL:
+        from ._clave_movil import ClaveMovilAuthProvider
+
+        return ClaveMovilAuthProvider(
+            settings,
+            browser_session_factory=browser_session_factory,
+        )
+    if kind is AuthProviderKind.CLAVE_PERMANENTE:
+        raise NotImplementedError(
+            "auth provider 'clave_permanente' is not offered by AEAT Sede Electrónica today; "
+            "use clave_movil (push approval via the Cl@ve app) or certificate."
         )
     raise NotImplementedError(f"auth provider {kind.value!r} is not implemented yet")
 

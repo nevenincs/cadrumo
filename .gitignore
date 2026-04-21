@@ -289,3 +289,6 @@ scratch/*
 /issues_*.txt
 /open_issues.json
 /parsed_issues.txt
+
+# Playwright MCP session capture output
+.playwright-mcp/

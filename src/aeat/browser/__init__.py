@@ -25,6 +25,7 @@ Example:
 
 from __future__ import annotations
 
+from ._factory import DefaultBrowserSession, default_browser_session_factory
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .health import run_health_check
 from .profile import Profile
@@ -33,8 +34,10 @@ from .session import BrowserError, BrowserSession
 __all__ = [
     "BrowserError",
     "BrowserSession",
+    "DefaultBrowserSession",
     "EvasionStrategy",
     "PlaywrightStealthEvasion",
     "Profile",
+    "default_browser_session_factory",
     "run_health_check",
 ]
