@@ -121,7 +121,8 @@ def _classify_identity(raw: str) -> str:
     if _NIE_RE.match(value):
         return "NIE"
     raise ClaveMovilConfigurationError(
-        f"AEAT_CLAVE_MOVIL_DNI_NIE={raw!r} is not a valid DNI (8 digits + letter) or NIE (X/Y/Z + 7 digits + letter)"
+        f"{raw!r} is not a valid DNI (8 digits + letter) or NIE "
+        "(X/Y/Z + 7 digits + letter). Check the identity on your document and try again."
     )
 
 
@@ -294,7 +295,13 @@ class ClaveMovilAuthProvider:
                 self._browser_session = session_like
                 self._context = context
                 self._active_session = session
-                probe_target = target_url or sidecar.landing_url
+                # Prefer an explicit target, then the recorded landing URL
+                # from the successful login. If neither is available (legacy
+                # sidecar written before schema v2), fall back to the
+                # default target — a bare selector URL would always return
+                # 200 against static HTML and falsely report an invalid
+                # session.
+                probe_target = target_url or sidecar.landing_url or self._default_target_url()
                 assertion = await self.verify(session, target_url=probe_target)
                 return session, assertion
             except Exception:
@@ -568,8 +575,9 @@ class ClaveMovilAuthProvider:
                 await self._wait_for_post_auth_landing(page, target_path, timeout_ms)
             except TimeoutError as exc:
                 raise ClaveMovilApprovalTimeoutError(
-                    f"did not observe AEAT post-auth redirect within {timeout_ms // 1000}s; "
-                    "did you approve the push on your phone?"
+                    f"Cl@ve Móvil login timed out after {timeout_ms // 1000} seconds. "
+                    "Open the Cl@ve app on your phone and approve the login request, "
+                    "then run `aeat auth login` again."
                 ) from exc
 
             storage_state = await context.storage_state()
@@ -585,31 +593,25 @@ class ClaveMovilAuthProvider:
 
         authenticated_at = datetime.now(UTC)
         idle_deadline = authenticated_at + AEAT_SESSION_IDLE_TTL
-        self._write_json_atomic(storage_state_path, storage_state)
-        log.info(
-            "ClaveMovilAuthProvider: wrote storage_state to %s (exists=%s size=%s)",
-            storage_state_path,
-            storage_state_path.exists(),
-            storage_state_path.stat().st_size if storage_state_path.exists() else "n/a",
-        )
-        storage_state_sha256 = self._sha256_file(storage_state_path)
-
-        sidecar = _ClaveMovilSidecar(
-            identity_nif=dni_nie,
-            authenticated_at=authenticated_at,
-            idle_deadline=idle_deadline,
-            storage_state_sha256=storage_state_sha256,
-            used_non_qr_fallback=self._settings.aeat_clave_prefer_non_qr,
-            verification_code=verification_code,
-            landing_url=landing_url,
-        )
-        self._write_json_atomic(sidecar_path, sidecar.model_dump(mode="json"))
-        log.info(
-            "ClaveMovilAuthProvider: wrote sidecar to %s (exists=%s size=%s)",
-            sidecar_path,
-            sidecar_path.exists(),
-            sidecar_path.stat().st_size if sidecar_path.exists() else "n/a",
-        )
+        try:
+            self._write_json_atomic(storage_state_path, storage_state)
+            storage_state_sha256 = self._sha256_file(storage_state_path)
+            sidecar = _ClaveMovilSidecar(
+                identity_nif=dni_nie,
+                authenticated_at=authenticated_at,
+                idle_deadline=idle_deadline,
+                storage_state_sha256=storage_state_sha256,
+                used_non_qr_fallback=self._settings.aeat_clave_prefer_non_qr,
+                verification_code=verification_code,
+                landing_url=landing_url,
+            )
+            self._write_json_atomic(sidecar_path, sidecar.model_dump(mode="json"))
+        except Exception:
+            # If either write fails, remove any partial pair so the next
+            # authenticate() call sees a clean slate and runs a fresh login
+            # rather than silently ignoring an orphaned cookie file.
+            self._invalidate_persisted(storage_state_path, sidecar_path)
+            raise
 
         session = AeatSession(
             provider_kind=self.kind,

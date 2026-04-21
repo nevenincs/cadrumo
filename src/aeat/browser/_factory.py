@@ -25,6 +25,7 @@ injecting their own fakes.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -105,17 +106,30 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
 
     playwright_manager = async_playwright()
     playwright = await playwright_manager.start()
+    try:
+        profile_name = settings.aeat_default_profile_name
+        # Profile.storage_state_path is superseded by every auth-provider
+        # passing an explicit kind-namespaced storage_state_path to
+        # BrowserSession.create_context(). The value here is a fallback
+        # for hypothetical future callers that do not override it; no
+        # shipping provider currently relies on it.
+        storage_state_path = settings.aeat_token_dir / f"{profile_name}-storage.json"
+        profile = Profile(name=profile_name, storage_state_path=storage_state_path)
 
-    profile_name = settings.aeat_default_profile_name
-    storage_state_path = settings.aeat_token_dir / f"{profile_name}-storage.json"
-    profile = Profile(name=profile_name, storage_state_path=storage_state_path)
-
-    session = BrowserSession(
-        playwright=playwright,
-        settings=settings,
-        profile=profile,
-    )
-    return DefaultBrowserSession(playwright=playwright, session=session)
+        session = BrowserSession(
+            playwright=playwright,
+            settings=settings,
+            profile=profile,
+        )
+        return DefaultBrowserSession(playwright=playwright, session=session)
+    except BaseException:
+        # Playwright.start() spawned a subprocess and opened pipes; any
+        # exception between here and the successful return leaks those
+        # resources. Mirror the teardown DefaultBrowserSession.close()
+        # performs on the happy path.
+        with contextlib.suppress(Exception):
+            await playwright.stop()
+        raise
 
 
 __all__ = ["DefaultBrowserSession", "default_browser_session_factory"]

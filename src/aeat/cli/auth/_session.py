@@ -39,8 +39,13 @@ class PersistedAuthSession(BaseModel):
     model_config = ConfigDict(frozen=True, extra="ignore")
 
     provider_kind: AuthProviderKind = Field(
-        default=AuthProviderKind.CERTIFICATE,
-        description="Provider that produced the session.",
+        description=(
+            "Provider that produced the session. Required — callers must "
+            "supply it explicitly (via the path-derived `kind_hint` in "
+            "`_parse_single`) so a sidecar missing the key is treated as "
+            "corrupt rather than silently attributed to the certificate "
+            "provider."
+        ),
     )
     identity_nif: str = Field(min_length=1)
     authenticated_at: datetime
@@ -62,13 +67,14 @@ def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> Persisted
         raw = json.loads(metadata_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise CorruptAuthSessionError(
-            f"auth session metadata at {metadata_path} is not valid JSON: {exc}; "
-            "run `aeat auth login` to reauthenticate"
+            f"The saved auth session at {metadata_path} is damaged and cannot be read. "
+            "Run `aeat auth login` to sign in again."
         ) from exc
 
     if not isinstance(raw, dict):
         raise CorruptAuthSessionError(
-            f"auth session metadata at {metadata_path} must be a JSON object; run `aeat auth login` to reauthenticate"
+            f"The saved auth session at {metadata_path} is damaged and cannot be read. "
+            "Run `aeat auth login` to sign in again."
         )
 
     payload = dict(raw)
@@ -82,9 +88,12 @@ def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> Persisted
     try:
         return PersistedAuthSession.model_validate(payload)
     except ValidationError as exc:
+        # Keep the original Pydantic error on the __cause__ chain for
+        # debug tooling, but do not embed its multi-line field dump in
+        # the message Kent sees.
         raise CorruptAuthSessionError(
-            f"auth session metadata at {metadata_path} failed validation: {exc}; "
-            "run `aeat auth login` to reauthenticate"
+            f"The saved auth session at {metadata_path} is damaged and cannot be read. "
+            "Run `aeat auth login` to sign in again."
         ) from exc
 
 
@@ -135,7 +144,17 @@ def delete(settings: Settings, kind: AuthProviderKind | None = None) -> list[Pat
     for candidate_kind in kinds:
         paths = storage_state_paths(settings, candidate_kind)
         for candidate_path in (paths.storage_state, paths.metadata):
-            if candidate_path.exists():
+            # `unlink()` directly rather than `exists()`-then-`unlink()` to
+            # sidestep the TOCTOU window where another process removes the
+            # file between the two calls. OSError is swallowed so a
+            # permissions glitch on a single file does not abort the whole
+            # logout sweep; callers rely on the returned list, not the
+            # absolute completeness of the cleanup.
+            try:
                 candidate_path.unlink()
-                removed.append(candidate_path)
+            except FileNotFoundError:
+                continue
+            except OSError:
+                continue
+            removed.append(candidate_path)
     return removed

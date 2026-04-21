@@ -250,7 +250,10 @@ class TestStatus:
         )
         result = _runner.invoke(app, ["auth", "status"])
         assert result.exit_code == 0, result.output
-        assert "active provider: certificate" in result.output
+        # Status line now renders the registry label (e.g. "Certificate (FNMT)")
+        # rather than the raw enum value so Kent sees the same name the
+        # list-providers table used.
+        assert "Active provider: Certificate (FNMT)" in result.output
         assert "12345678Z" in result.output
 
     def test_expired_session_reports_expiry(self, isolated_token_dir: Path) -> None:
@@ -364,6 +367,28 @@ class TestLogout:
         assert paths.storage_state.exists()
         assert paths.metadata.exists()
 
+    def test_logout_rejects_provider_and_all_together(self, isolated_token_dir: Path) -> None:
+        del isolated_token_dir
+        result = _runner.invoke(app, ["auth", "logout", "--provider", "clave_movil", "--all"])
+        # Typer maps BadParameter to exit code 2.
+        assert result.exit_code != 0
+        assert "--all" in result.output or "both" in result.output
+
+    def test_logout_provider_with_corrupt_sidecar_still_clears_files(self, isolated_token_dir: Path) -> None:
+        # Write garbage directly at the cert sidecar path — any prior
+        # CorruptAuthSessionError during load() must not prevent the
+        # deletion; logout is an explicit cleanup command.
+        settings = _isolated_settings()
+        paths = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
+        paths.storage_state.parent.mkdir(parents=True, exist_ok=True)
+        paths.storage_state.write_text("{}", encoding="utf-8")
+        paths.metadata.write_text("{not valid json", encoding="utf-8")
+
+        result = _runner.invoke(app, ["auth", "logout", "--provider", "certificate"])
+        assert result.exit_code == 0, result.output
+        assert not paths.storage_state.exists()
+        assert not paths.metadata.exists()
+
 
 # ── render ────────────────────────────────────────────────────────────────────
 
@@ -381,7 +406,7 @@ class TestRender:
         )
         line = render_status_line(session, now=now)
         assert "authenticated 8m ago" in line
-        assert "10m remaining" in line
+        assert "expires in 10m" in line
         assert "11111111H" in line
 
 
