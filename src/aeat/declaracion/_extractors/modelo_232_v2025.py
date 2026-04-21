@@ -4,12 +4,11 @@ Declaración informativa anual (mes 11 post-cierre, noviembre para el
 ejercicio natural) que recoge operaciones con partes vinculadas por
 encima de umbrales y cualquier operación con paraísos fiscales.
 
-**MVP scope is header-only.** AEAT does NOT print numbered casilla IDs
-on the 232 resumen — the form is structured as three info blocks with
-named fields (nº registros por bloque). A field-name-anchored primitive
-lands in sub-EPIC #305-textual-casillas. This extractor recognizes the
-document, extracts NIF/ejercicio/período, and returns an empty
-``values`` tuple.
+AEAT does NOT print numbered casilla IDs on the 232 summary — the form
+is structured as three info blocks with named fields. Wave 27 adds
+the field-name primitive and migrates this extractor off the
+header-only MVP: we now capture the three "Nº registros" counters
+that every 232 filing prints at the end of the form.
 
 Legal base: Orden HFP/816/2017 (BOE-A-2017-10042).
 """
@@ -23,7 +22,7 @@ from .._schema import TemplateRevision
 
 
 class Modelo232V2025Extractor(GenericDeclaracionExtractor):
-    """Header-only extractor for Modelo 232."""
+    """Named-field extractor for Modelo 232."""
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="232",
@@ -31,6 +30,13 @@ class Modelo232V2025Extractor(GenericDeclaracionExtractor):
         revision="2025.01",
     )
     casilla_ids: ClassVar[tuple[str, ...]] = ()
+    # Three "Nº registros" counters — one per info block (operaciones
+    # vinculadas, intangibles art. 23 LIS, operaciones con paraísos).
+    named_field_patterns: ClassVar[dict[str, str]] = {
+        "num_registros_vinculadas": (r"N[º.]?\s*registros\s+(?:bloque\s+)?vinculadas[^\n]*?(\d+)"),
+        "num_registros_intangibles": (r"N[º.]?\s*registros\s+(?:bloque\s+)?intangibles[^\n]*?(\d+)"),
+        "num_registros_paraisos": (r"N[º.]?\s*registros\s+(?:bloque\s+)?para[ií]sos[^\n]*?(\d+)"),
+    }
 
 
 __all__ = ["Modelo232V2025Extractor"]

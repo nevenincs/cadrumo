@@ -64,17 +64,34 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
     the expected value-token count. Omitting a label means
     truncation-detection is skipped for that casilla (wave 29 HIGH-3)."""
     casilla_width: ClassVar[int] = 2
+    named_field_patterns: ClassVar[dict[str, str]] = {}
+    """Map ``field_id → raw regex pattern`` for modelos whose summary
+    blocks do NOT print numbered casilla IDs (e.g. 036/037/232/369/720).
+    The pattern must include exactly one capture group for the value.
+    Wave 27: third primitive path complementing the decimal casilla_ids
+    and the text_casilla_ids primitives."""
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         super().__init_subclass__(**kwargs)
         decimal_ids = getattr(cls, "casilla_ids", ())
         text_ids = getattr(cls, "text_casilla_ids", ())
-        overlap = set(decimal_ids) & set(text_ids)
-        if overlap:
-            raise ValueError(
-                f"{cls.__name__}: casilla_ids and text_casilla_ids must be disjoint; "
-                f"overlapping IDs: {sorted(overlap)!r}"
-            )
+        named_ids = tuple(getattr(cls, "named_field_patterns", {}).keys())
+        all_ids: tuple[tuple[str, ...], ...] = (
+            tuple(decimal_ids),
+            tuple(text_ids),
+            named_ids,
+        )
+        # Every pair must be disjoint: the required-set must be unique.
+        seen: set[str] = set()
+        for group in all_ids:
+            overlap = set(group) & seen
+            if overlap:
+                raise ValueError(
+                    f"{cls.__name__}: casilla_ids, text_casilla_ids, and "
+                    f"named_field_patterns must be pair-wise disjoint; "
+                    f"overlapping IDs: {sorted(overlap)!r}"
+                )
+            seen.update(group)
 
     def _compiled_patterns(self) -> dict[str, re.Pattern[str]]:
         width = type(self).casilla_width
@@ -199,7 +216,33 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
                 )
             )
 
-        required = tuple(type(self).casilla_ids) + tuple(type(self).text_casilla_ids)
+        # Named-field path: arbitrary regex captures for summary blocks
+        # that do NOT print numbered casilla IDs (036/037/232/369/720).
+        for field_id, pattern_str in type(self).named_field_patterns.items():
+            pattern = re.compile(pattern_str, re.IGNORECASE | re.MULTILINE)
+            matches = list(pattern.finditer(full_text))
+            if not matches:
+                warnings.append(_not_found_warning(field_id))
+                continue
+            confidence = 0.5 if len(matches) > 1 else 1.0
+            if len(matches) > 1:
+                warnings.append(_ambiguous_warning(field_id, len(matches)))
+            captured = matches[0].group(1).strip()
+            values.append(
+                ExtractedCasilla(
+                    casilla_id=field_id,
+                    printed_value=captured,
+                    source_page=1,
+                    source_bbox=None,
+                    extraction_confidence=confidence,
+                )
+            )
+
+        required = (
+            tuple(type(self).casilla_ids)
+            + tuple(type(self).text_casilla_ids)
+            + tuple(type(self).named_field_patterns.keys())
+        )
         status = _derive_status(values, required)
 
         return DeclaracionFiling(

@@ -19,7 +19,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | 193 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 200 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP p14) | ❌ | ❌ |
 | 202 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 232 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
+| 232 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
 | **303** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | partial | ⏳ #222 | ✅ | ✅ | ✅ (2024.09 + 2025 MVP) | ❌ | ❌ |
 | 347 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
