@@ -114,36 +114,65 @@ def save_events_append(
     return target
 
 
+def iter_events(
+    run_id: str,
+    *,
+    settings: Settings | None = None,
+) -> Iterator[RunEvent]:
+    """Yield one :class:`RunEvent` per line from the per-run events.jsonl.
+
+    Streams records so callers processing a long-running run's event
+    log can avoid holding the entire file in memory. The ``run_id``
+    is validated *eagerly* (before the generator starts) so a bad id
+    surfaces at the call site instead of on first iteration.
+
+    Read-only — does not create a run directory when absent. A
+    missing file yields no records.
+
+    Raises:
+        RunTraceValidationError: If the ``run_id`` shape is invalid
+            (raised at call time), or if any JSONL line fails strict
+            validation (raised during iteration).
+    """
+    _validate_run_id(run_id)
+    target = runs_dir(settings) / run_id / _EVENTS_FILENAME
+
+    def _stream() -> Iterator[RunEvent]:
+        if not target.exists():
+            return
+        with target.open("r", encoding="utf-8") as handle:
+            for lineno, raw in enumerate(handle, start=1):
+                stripped = raw.strip()
+                if not stripped:
+                    continue
+                try:
+                    yield RunEvent.model_validate_json(stripped)
+                except ValidationError as exc:
+                    raise RunTraceValidationError(
+                        f"events.jsonl line {lineno} for run {run_id!r} failed strict validation: {exc}",
+                    ) from exc
+
+    return _stream()
+
+
 def load_events(
     run_id: str,
     *,
     settings: Settings | None = None,
 ) -> tuple[RunEvent, ...]:
-    """Load and strictly validate every JSONL event for a run.
+    """Load and strictly validate every JSONL event for a run, materialised.
 
-    Read-only lookup — does not create a run directory when absent.
+    Thin wrapper over :func:`iter_events` that drains the iterator
+    into a tuple. Prefer :func:`iter_events` for long-running traces
+    where the whole log may exceed available memory.
+
+    Read-only — does not create a run directory when absent.
 
     Raises:
         RunTraceValidationError: If the ``run_id`` shape is invalid or
             any JSONL line fails strict validation.
     """
-    _validate_run_id(run_id)
-    target = runs_dir(settings) / run_id / _EVENTS_FILENAME
-    if not target.exists():
-        return ()
-    events: list[RunEvent] = []
-    with target.open("r", encoding="utf-8") as handle:
-        for lineno, raw in enumerate(handle, start=1):
-            stripped = raw.strip()
-            if not stripped:
-                continue
-            try:
-                events.append(RunEvent.model_validate_json(stripped))
-            except ValidationError as exc:
-                raise RunTraceValidationError(
-                    f"events.jsonl line {lineno} for run {run_id!r} failed strict validation: {exc}",
-                ) from exc
-    return tuple(events)
+    return tuple(iter_events(run_id, settings=settings))
 
 
 def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTrace]]:
@@ -176,6 +205,7 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
 
 
 __all__ = [
+    "iter_events",
     "iter_runs",
     "load_events",
     "load_trace",

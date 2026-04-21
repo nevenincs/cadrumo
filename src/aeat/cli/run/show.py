@@ -8,7 +8,7 @@ from rich.json import JSON
 
 from ...observability import (
     AeatObservabilityError,
-    load_events,
+    iter_events,
     load_trace,
 )
 
@@ -18,15 +18,26 @@ _CONSOLE = Console()
 def show_cmd(
     run_id: str = typer.Argument(..., help="The run identifier to load."),
 ) -> None:
-    """Pretty-print the :class:`RunTrace` and stream its event log."""
+    """Pretty-print the :class:`RunTrace` and stream its event log.
+
+    Streams events via :func:`iter_events` so a long-running run's log
+    is rendered incrementally and never materialised in memory.
+    """
     try:
         trace = load_trace(run_id)
-        events = load_events(run_id)
     except AeatObservabilityError as exc:
         _CONSOLE.print(f"[red]not found:[/red] {exc}")
         raise typer.Exit(code=1) from exc
 
     _CONSOLE.print(JSON(trace.model_dump_json(indent=2)))
-    _CONSOLE.print(f"[bold]events ({len(events)})[/bold]")
-    for event in events:
-        _CONSOLE.print(JSON(event.model_dump_json()))
+    count = 0
+    try:
+        for event in iter_events(run_id):
+            _CONSOLE.print(JSON(event.model_dump_json()))
+            count += 1
+    except AeatObservabilityError as exc:
+        # Mid-stream validation failure: surface it cleanly with the
+        # count of events rendered so far.
+        _CONSOLE.print(f"[red]events.jsonl corrupt after {count} record(s):[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    _CONSOLE.print(f"[bold]events ({count})[/bold]")

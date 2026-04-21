@@ -46,6 +46,7 @@ from ._models import (
 from ._recorder import record_event
 from ._replay import replay_run
 from ._store import (
+    iter_events,
     iter_runs,
     load_events,
     load_trace,
@@ -80,6 +81,7 @@ __all__ = [
     "compute_corpus_sha256",
     "compute_db_sha256",
     "current_run_context",
+    "iter_events",
     "iter_runs",
     "load_events",
     "load_trace",

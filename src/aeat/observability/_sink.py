@@ -72,16 +72,25 @@ class JsonlRunSink(logging.Handler):
         Drops the record when there is no ``run_event`` extra or when
         the event belongs to a different run — see the module docstring
         for the concurrency rationale.
+
+        JSON serialization runs outside the lock so concurrent threads
+        can encode in parallel; only the file-handle write and flush
+        are serialized.
         """
         event = getattr(record, "run_event", None)
         if not isinstance(event, RunEvent):
             return
         if event.run_id != self._run_id:
             return
+        # Encode outside the lock — pydantic serialization is
+        # CPU-bound and thread-safe on a frozen model, so holding
+        # the lock across the encode step would serialize work that
+        # does not need mutual exclusion.
+        line = event.model_dump_json() + "\n"
         try:
             with self._lock:
                 handle = self._open()
-                handle.write(event.model_dump_json() + "\n")
+                handle.write(line)
                 handle.flush()
         except Exception:
             self.handleError(record)
