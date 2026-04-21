@@ -9,7 +9,7 @@ date: 2026-04-12
 related:
   - "[[2026-04-12-docs-rewrite-plan]]"
   - "[[2026-04-12-docs-rewrite-adr]]"
-  - "[[2026-04-12-docs-rewrite-phase1-step1]]"
+  - "[[2026-04-12-docs-rewrite-phase1-step1-exec]]"
 issue: wgergely/aeat#67
 ---
 

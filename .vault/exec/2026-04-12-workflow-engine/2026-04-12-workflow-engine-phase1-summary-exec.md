@@ -9,7 +9,7 @@ related:
   - "[[2026-04-12-workflow-engine-plan]]"
   - "[[2026-04-12-workflow-engine-adr]]"
   - "[[2026-04-12-workflow-engine-research]]"
-  - "[[2026-04-12-workflow-engine-phase1-step1]]"
+  - "[[2026-04-12-workflow-engine-phase1-step1-exec]]"
 ---
 
 # workflow-engine phase-1 summary

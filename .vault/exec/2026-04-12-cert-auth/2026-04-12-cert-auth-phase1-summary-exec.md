@@ -8,12 +8,12 @@ related:
   - "[[2026-04-12-cert-auth-plan]]"
   - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-12-cert-auth-research]]"
-  - "[[2026-04-12-cert-auth-phase1-step1]]"
-  - "[[2026-04-12-cert-auth-phase1-step2]]"
-  - "[[2026-04-12-cert-auth-phase1-step3]]"
-  - "[[2026-04-12-cert-auth-phase1-step4]]"
-  - "[[2026-04-12-cert-auth-phase1-step5]]"
-  - "[[2026-04-12-cert-auth-code-review]]"
+  - "[[2026-04-12-cert-auth-phase1-step1-exec]]"
+  - "[[2026-04-12-cert-auth-phase1-step2-exec]]"
+  - "[[2026-04-12-cert-auth-phase1-step3-exec]]"
+  - "[[2026-04-12-cert-auth-phase1-step4-exec]]"
+  - "[[2026-04-12-cert-auth-phase1-step5-exec]]"
+  - "[[2026-04-12-cert-auth-code-review-exec]]"
 ---
 
 # cert-auth phase1 summary

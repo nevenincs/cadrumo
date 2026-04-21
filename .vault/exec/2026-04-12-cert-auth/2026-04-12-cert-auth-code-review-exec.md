@@ -7,7 +7,7 @@ title: "cert-auth code review"
 related:
   - "[[2026-04-12-cert-auth-plan]]"
   - "[[2026-04-12-cert-auth-adr]]"
-  - "[[2026-04-12-cert-auth-phase1-summary]]"
+  - "[[2026-04-12-cert-auth-phase1-summary-exec]]"
 ---
 
 # cert-auth code review

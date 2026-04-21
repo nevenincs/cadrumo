@@ -5,7 +5,7 @@ tags:
 date: "2026-04-14"
 related:
   - "[[2026-04-14-transaction-catalogue-plan]]"
-  - "[[2026-04-14-transaction-catalogue-review]]"
+  - "[[2026-04-14-transaction-catalogue-review-audit]]"
 ---
 
 # `transaction-catalogue` `phase-1` summary

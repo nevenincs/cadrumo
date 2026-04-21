@@ -5,8 +5,8 @@ tags:
 date: "2026-04-17"
 related:
   - "[[2026-04-17-browser-leak-plan]]"
-  - "[[2026-04-17-browser-leak-phase1-step1]]"
-  - "[[2026-04-17-browser-leak-review]]"
+  - "[[2026-04-17-browser-leak-phase1-step1-exec]]"
+  - "[[2026-04-17-browser-leak-review-audit]]"
 ---
 
 # `browser-leak` `phase1` summary

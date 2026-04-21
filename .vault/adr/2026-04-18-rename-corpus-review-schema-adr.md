@@ -4,7 +4,7 @@ tags:
   - '#rename-corpus-review'
 date: '2026-04-18'
 related:
-  - '[[2026-04-18-rename-corpus-review]]'
+  - '[[2026-04-18-rename-corpus-review-research]]'
   - '[[2026-04-17-kent-revise-review-audit]]'
 ---
 

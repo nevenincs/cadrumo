@@ -7,7 +7,7 @@ related:
   - '[[2026-04-12-manual-practico-plan]]'
   - '[[2026-04-12-manual-practico-adr]]'
   - '[[2026-04-12-manual-practico-research]]'
-  - '[[2026-04-12-manual-practico-phase-1-review]]'
+  - '[[2026-04-12-manual-practico-phase-1-review-exec]]'
 ---
 
 # `manual-practico` `phase-1` summary

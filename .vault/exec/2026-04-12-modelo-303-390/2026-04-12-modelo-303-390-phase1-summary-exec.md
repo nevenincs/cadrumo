@@ -10,8 +10,8 @@ related:
   - "[[2026-04-12-modelo-303-390-plan]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-12-modelo-303-390-research]]"
-  - "[[2026-04-12-modelo-303-390-phase1-task1]]"
-  - "[[2026-04-12-modelo-303-390-phase1-review]]"
+  - "[[2026-04-12-modelo-303-390-phase1-task1-exec]]"
+  - "[[2026-04-12-modelo-303-390-phase1-review-exec]]"
 ---
 
 # modelo-303-390 phase1 summary
@@ -42,8 +42,8 @@ Pipeline: research → ADR → plan → task execution → code review
 - Research: `[[2026-04-12-modelo-303-390-research]]`
 - ADR: `[[2026-04-12-modelo-303-390-adr]]`
 - Plan: `[[2026-04-12-modelo-303-390-plan]]`
-- Exec step: `[[2026-04-12-modelo-303-390-phase1-task1]]`
-- Code review: `[[2026-04-12-modelo-303-390-phase1-review]]`
+- Exec step: `[[2026-04-12-modelo-303-390-phase1-task1-exec]]`
+- Code review: `[[2026-04-12-modelo-303-390-phase1-review-exec]]`
 
 ## Gates (Windows, local)
 

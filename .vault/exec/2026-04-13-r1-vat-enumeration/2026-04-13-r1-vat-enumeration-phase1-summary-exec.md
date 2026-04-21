@@ -10,9 +10,9 @@ related:
   - "[[2026-04-13-r1-vat-enumeration-research]]"
   - "[[2026-04-13-r1-vat-enumeration-adr]]"
   - "[[2026-04-13-r1-vat-enumeration-plan]]"
-  - "[[2026-04-13-r1-vat-enumeration-phase1-schema]]"
-  - "[[2026-04-13-r1-vat-enumeration-phase1-catalogue]]"
-  - "[[2026-04-13-r1-vat-enumeration-phase1-cli]]"
+  - "[[2026-04-13-r1-vat-enumeration-phase1-schema-exec]]"
+  - "[[2026-04-13-r1-vat-enumeration-phase1-catalogue-exec]]"
+  - "[[2026-04-13-r1-vat-enumeration-phase1-cli-exec]]"
 ---
 
 # r1-vat-enumeration phase 1 — summary

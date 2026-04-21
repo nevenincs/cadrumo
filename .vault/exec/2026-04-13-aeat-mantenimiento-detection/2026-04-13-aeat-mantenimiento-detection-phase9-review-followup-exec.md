@@ -6,7 +6,7 @@ date: 2026-04-13
 related:
   - "[[2026-04-13-aeat-mantenimiento-detection-adr]]"
   - "[[2026-04-13-aeat-mantenimiento-detection-plan]]"
-  - "[[2026-04-13-aeat-mantenimiento-detection-phase8-summary]]"
+  - "[[2026-04-13-aeat-mantenimiento-detection-phase8-summary-exec]]"
 ---
 
 # aeat-mantenimiento-detection phase9 review-followup

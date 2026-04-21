@@ -6,8 +6,8 @@ date: '2026-04-12'
 title: Playwright Anti-Bot Evasion Phase 1 Summary
 related:
   - '[[2026-04-12-playwright-anti-bot-plan]]'
-  - '[[2026-04-12-playwright-anti-bot-phase1-step1]]'
-  - '[[2026-04-12-playwright-anti-bot-review]]'
+  - '[[2026-04-12-playwright-anti-bot-phase1-step1-exec]]'
+  - '[[2026-04-12-playwright-anti-bot-review-audit]]'
 ---
 
 # Phase 1 Summary: Playwright Anti-Bot Implementation Complete
