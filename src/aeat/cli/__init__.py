@@ -37,6 +37,7 @@ from . import normatives as normatives_module
 from . import oauth as oauth_module
 from . import portals as portals_module
 from . import review as review_module
+from . import run as run_module
 from . import schema as schema_module
 from . import setup as setup_wizard_module
 from . import sheets as sheets_module
@@ -122,6 +123,11 @@ app.add_typer(
     workflow_module.app,
     name="workflow",
     help="Drive Kent's produce -> verify -> export filing workflow.",
+)
+app.add_typer(
+    run_module.app,
+    name="run",
+    help="Run-trace inspection and deterministic dry-run replay (#99).",
 )
 app.add_typer(
     justificante_module.app,
