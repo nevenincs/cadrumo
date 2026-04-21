@@ -26,21 +26,33 @@ def _install_run_context_record_factory() -> None:
     if _FACTORY_INSTALLED:
         return
     previous_factory = logging.getLogRecordFactory()
+    # Cache the contextvars across record creations. The `import` statement
+    # is cheap after the first call (``sys.modules`` lookup), but hoisting
+    # it into the closure eliminates the repeated try/except on every
+    # single log record — the factory runs in the hottest path of the
+    # logging subsystem.
+    cached_vars: tuple[Any, Any] | None = None
 
     def _factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
+        nonlocal cached_vars
         record = previous_factory(*args, **kwargs)
-        try:
-            from .observability._context import (
-                RUN_CONTEXT_VAR,
-                STEP_CONTEXT_VAR,
-            )
-        except ImportError:
-            record.run_id = ""
-            record.step_id = ""
-            return record
-        ctx = RUN_CONTEXT_VAR.get(None)
+        if cached_vars is None:
+            try:
+                from .observability._context import (
+                    RUN_CONTEXT_VAR,
+                    STEP_CONTEXT_VAR,
+                )
+            except ImportError:
+                # Partial import during module bootstrap — degrade
+                # gracefully and retry next time.
+                record.run_id = ""
+                record.step_id = ""
+                return record
+            cached_vars = (RUN_CONTEXT_VAR, STEP_CONTEXT_VAR)
+        run_var, step_var = cached_vars
+        ctx = run_var.get(None)
         record.run_id = ctx.run_id if ctx is not None else ""
-        record.step_id = STEP_CONTEXT_VAR.get(None) or ""
+        record.step_id = step_var.get(None) or ""
         return record
 
     logging.setLogRecordFactory(_factory)

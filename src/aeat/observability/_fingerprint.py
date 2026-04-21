@@ -8,6 +8,7 @@ the precise hash inputs.
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 
 from ..config import Settings
@@ -29,9 +30,17 @@ def _hash_tree(
 ) -> str:
     """Hash a directory tree as a sorted list of ``(rel_path, sha256)`` pairs.
 
+    Uses :func:`os.walk` with top-down directory pruning so excluded
+    subtrees are never descended — on a workstation with tens of GB
+    of LLM / schema cache under ``var/`` this is orders of magnitude
+    faster than walking everything and filtering after the fact.
+
     Args:
         root: Directory to walk.
-        excluded_dirs: Absolute paths whose entire subtree must be skipped.
+        excluded_dirs: Resolved absolute paths whose entire subtree
+            must be skipped. Each entry is compared against the
+            resolved path of a visited directory; matching directories
+            are pruned from ``dirnames`` before descent.
 
     Returns:
         SHA-256 hex digest of the canonical ``rel_path|sha256\\n``
@@ -40,13 +49,19 @@ def _hash_tree(
     if not root.exists():
         return hashlib.sha256(b"").hexdigest()
     entries: list[tuple[str, str]] = []
-    for path in sorted(root.rglob("*")):
-        if not path.is_file():
-            continue
-        if any(excluded.exists() and excluded in path.parents for excluded in excluded_dirs):
-            continue
-        rel = path.relative_to(root).as_posix()
-        entries.append((rel, _file_sha256(path)))
+    for dirpath, dirnames, filenames in os.walk(root):
+        dir_path = Path(dirpath)
+        # Prune excluded subtrees in place — the mutation is documented
+        # behaviour of :func:`os.walk` when ``topdown=True`` (default).
+        dirnames[:] = [name for name in dirnames if (dir_path / name).resolve() not in excluded_dirs]
+        for fname in filenames:
+            file_path = dir_path / fname
+            try:
+                rel = file_path.relative_to(root).as_posix()
+            except ValueError:
+                continue
+            entries.append((rel, _file_sha256(file_path)))
+    entries.sort()
     digest = hashlib.sha256()
     for rel, sha in entries:
         digest.update(rel.encode("utf-8"))

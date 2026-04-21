@@ -183,3 +183,77 @@ class TestStoreRunIdValidation:
         with pytest.raises(RunTraceValidationError):
             load_trace("0" * 16)
         assert not any(tmp_path.iterdir()), "missing trace lookup must not create dirs"
+
+
+class TestIterEvents:
+    """Ensure ``iter_events`` streams correctly with eager arg validation."""
+
+    def _event(self, run_id: str, ordinal: int) -> RunEvent:
+        return RunEvent(
+            run_id=run_id,
+            step_id=f"s{ordinal}",
+            kind=RunEventKind.NAVIGATION,
+            payload=RunEventPayload(
+                navigation=NavigationPayload(url=f"https://example.test/{ordinal}"),
+            ),
+            timestamp=datetime(2026, 4, 14, 0, 0, ordinal, tzinfo=UTC),
+            module="aeat.observability.test_sink",
+        )
+
+    def test_bad_run_id_raises_at_call_site(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Validation must be eager — not deferred until iteration."""
+        from . import iter_events
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        # No .iter(), no .__next__() — the call itself must raise.
+        with pytest.raises(RunTraceValidationError):
+            iter_events("../escape")
+
+    def test_streams_without_materialising_all(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Consuming n events pulls exactly n lines off disk."""
+        from . import iter_events
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        run_id = "0123456789abcdef"
+        for i in range(5):
+            save_events_append(run_id, self._event(run_id, i))
+        it = iter_events(run_id)
+        first = next(it)
+        second = next(it)
+        assert first.step_id == "s0"
+        assert second.step_id == "s1"
+        # Three more remain; iteration is lazy.
+        remaining = list(it)
+        assert len(remaining) == 3
+        assert [e.step_id for e in remaining] == ["s2", "s3", "s4"]
+
+    def test_corrupt_line_raises_mid_stream(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A validation error fires during iteration, not at call time."""
+        from . import iter_events
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        run_id = "abcdef0123456789"
+        save_events_append(run_id, self._event(run_id, 0))
+        # Append a malformed line after the valid one.
+        target = runs_dir() / run_id / _EVENTS_FILENAME
+        with target.open("a", encoding="utf-8", newline="") as handle:
+            handle.write('{"invalid": "event"}\n')
+        save_events_append(run_id, self._event(run_id, 2))
+
+        # Call succeeds — validation for the bad line is deferred.
+        it = iter_events(run_id)
+        assert next(it).step_id == "s0"
+        with pytest.raises(RunTraceValidationError, match="line 2"):
+            next(it)
