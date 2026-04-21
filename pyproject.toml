@@ -201,6 +201,9 @@ markers = [
     "domain_mediation: exercises workflow orchestration, LLM, i18n, testing subpackages",
     "domain_infra: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
     "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only — #15 ADR",
+    "fixture_tier_l1: test uses committed or fetched public AEAT anchors (BOE / Manual práctico / Renta Web Open — EPIC #305 cluster C)",
+    "fixture_tier_l2: test uses scrubbed private anchors from the user archive (contributor-local only — EPIC #305 cluster C)",
+    "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk (EPIC #305 cluster C)",
 ]
 
 # ── Coverage (pytest-cov) — #15 ADR ──────────────────────────────────────────
