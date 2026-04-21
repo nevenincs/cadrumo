@@ -24,7 +24,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | 347 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
-| **390** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (SUSTITUTIVA) | N/A | partial | ⏳ #222 | ✅ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
+| **390** | ✅ | ✅ | ✅ (2025 resumen IVA anual) | ✅ | ⏳ #201 | ✅ (SUSTITUTIVA) | N/A | partial | ⏳ #222 | ✅ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 720 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
 | 840 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (text-value MVP) | ❌ | ❌ |
 
