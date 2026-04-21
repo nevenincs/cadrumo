@@ -29,6 +29,7 @@ def test_list_subcommand(runner: CliRunner) -> None:
     payload = json.loads(result.stdout)
     ids = sorted(row["ruleset_id"] for row in payload)
     assert ids == [
+        "modelo_100.summary.2025",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_303.2024",

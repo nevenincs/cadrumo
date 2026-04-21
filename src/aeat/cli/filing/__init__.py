@@ -435,6 +435,17 @@ def import_(
             ),
         ),
     ] = None,
+    from_borrador: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-borrador",
+            help=(
+                "Path to an AEAT Modelo 100 (Renta) borrador / "
+                "predeclaración / declaración PDF; extracts the summary "
+                "block (#305 cluster F MVP)."
+            ),
+        ),
+    ] = None,
     modelo: Annotated[
         str | None,
         typer.Option(
@@ -446,14 +457,14 @@ def import_(
         int | None,
         typer.Option(
             "--año",
-            help="Override auto-detected tax year. Only used with --from-declaracion.",
+            help="Override auto-detected tax year.",
         ),
     ] = None,
 ) -> None:
     """Import a past filing from an AEAT PDF.
 
-    Exactly one of ``--from-justificante`` or ``--from-declaracion``
-    must be supplied.
+    Exactly one of ``--from-justificante``, ``--from-declaracion``, or
+    ``--from-borrador`` must be supplied.
 
     ``--from-justificante`` reconstructs a metadata scaffold draft +
     companion submission record from the filing receipt (#271). Every
@@ -462,19 +473,27 @@ def import_(
     ``--from-declaracion`` parses the full filing copy PDF and extracts
     every printed casilla value; produces a casilla-complete draft
     ready for ``aeat filing verify`` (#305 cluster D / E).
+
+    ``--from-borrador`` parses a Modelo 100 (Renta) artefact (borrador,
+    predeclaración, or declaración); extracts the summary-block casillas
+    and chains verification against the partial Modelo 100 ruleset
+    (#305 cluster F MVP).
     """
-    provided = sum(p is not None for p in (from_justificante, from_declaracion))
+    provided = sum(p is not None for p in (from_justificante, from_declaracion, from_borrador))
     if provided == 0:
-        raise typer.BadParameter("exactly one of --from-justificante or --from-declaracion is required")
+        raise typer.BadParameter("exactly one of --from-justificante, --from-declaracion, --from-borrador is required")
     if provided > 1:
-        raise typer.BadParameter("only one --from-* flag at a time: --from-justificante or --from-declaracion")
+        raise typer.BadParameter("only one --from-* flag at a time")
 
     if from_justificante is not None:
         _handle_justificante_import(from_justificante)
         return
+    if from_declaracion is not None:
+        _handle_declaracion_import(from_declaracion, modelo=modelo, año=año)
+        return
 
-    assert from_declaracion is not None  # narrowed by the sum-check above
-    _handle_declaracion_import(from_declaracion, modelo=modelo, año=año)
+    assert from_borrador is not None
+    _handle_borrador_import(from_borrador, año=año)
 
 
 def _handle_justificante_import(from_justificante: Path) -> None:
@@ -600,6 +619,50 @@ def _resolve_ruleset_for_filing(
         return get_registry().resolve(modelo=modelo_code, period=period_obj)
     except Exception:
         return None
+
+
+def _handle_borrador_import(
+    from_borrador: Path,
+    *,
+    año: int | None,
+) -> None:
+    """Dispatch the Modelo 100 (Renta) import path (#305 cluster F MVP)."""
+    from ...borrador import BorradorParseError, parse_borrador
+    from ...formulas._rulesets import MODELO_100_SUMMARY_2025
+
+    try:
+        filing = parse_borrador(from_borrador, año_override=año)
+    except BorradorParseError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    typer.echo(
+        f"Parsed Modelo 100 Renta {filing.ejercicio} "
+        f"({filing.artefact_kind.value}). "
+        f"{len(filing.values)} summary-block casillas extracted."
+    )
+    if filing.csv is not None:
+        typer.echo(f"CSV: {filing.csv}")
+
+    # Verify against the partial summary ruleset.
+    from ...formulas import Engine
+
+    provided: dict[str, Decimal] = {
+        v.casilla_id: v.printed_value for v in filing.values if isinstance(v.printed_value, Decimal)
+    }
+    engine = Engine()
+    report = engine.audit_against(
+        ruleset=MODELO_100_SUMMARY_2025,
+        provided=provided,
+        tolerance=Decimal("0.01"),
+    )
+    if report.is_clean():
+        typer.echo(f"Verification status: VERIFIED (ruleset={MODELO_100_SUMMARY_2025.ruleset_id})")
+    else:
+        typer.echo(f"Verification status: NEEDS_REVIEW — {len(report.discrepancies)} discrepancies")
+        for d in report.discrepancies:
+            typer.echo(
+                f"  - casilla {d.casilla_id}: expected {d.computed_value}, actual {d.user_value}, delta {d.delta}"
+            )
 
 
 @complementaria_app.command("build")
