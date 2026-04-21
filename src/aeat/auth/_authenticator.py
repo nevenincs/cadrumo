@@ -28,7 +28,7 @@ from ._models import (
     AeatSession,
     CertificateSessionDetail,
 )
-from ._protocols import AuthProvider
+from ._protocols import AuthProvider, AuthProviderDescription
 from ._providers._certificate.certificate import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
@@ -114,6 +114,10 @@ class AeatAuthenticator:
     def provider(self) -> AuthProvider:
         """The active authentication provider."""
         return self._provider
+
+    def describe(self) -> AuthProviderDescription:
+        """Return the active provider's safe configuration summary."""
+        return self._provider.describe(self._settings)
 
     # --- Legacy Certificate-specific methods (delegated if provider is CertificateAuthProvider) ---
 
