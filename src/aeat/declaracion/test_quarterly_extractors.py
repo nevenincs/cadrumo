@@ -542,6 +542,42 @@ _MODELO_840_VALUES = {
 }
 
 
+class TestGenericExtractorInvariants:
+    def test_casilla_and_text_casilla_overlap_rejected(self) -> None:
+        from typing import ClassVar
+
+        from ._generic_extractor import GenericDeclaracionExtractor
+        from ._schema import TemplateRevision
+
+        with pytest.raises(ValueError, match="disjoint"):
+
+            class _Bad(GenericDeclaracionExtractor):
+                template_revision: ClassVar[TemplateRevision] = TemplateRevision(
+                    modelo="999", año=2025, revision="2025.01"
+                )
+                casilla_ids: ClassVar[tuple[str, ...]] = ("01",)
+                text_casilla_ids: ClassVar[tuple[str, ...]] = ("01",)
+
+    def test_ambiguous_text_label_primitive_match_count(self) -> None:
+        """Duplicate text-value lines surface match_count>1 from apply_label_regex."""
+        import re as _re
+
+        from .._pdf_import._label_regex import TEXT_VALUE_GROUP, apply_label_regex
+
+        text = (
+            "14 Ejercicio 2025\n"
+            "99 Otra cosa 1234\n"
+            "14 Ejercicio 2026\n"  # duplicate label → ambiguity
+        )
+        pattern = _re.compile(
+            rf"(?m)^\s*14\s+\S[^\n]{{0,80}}\s{TEXT_VALUE_GROUP}",
+            _re.IGNORECASE,
+        )
+        hits = apply_label_regex(text, {"14": pattern})
+        assert hits["14"].match_count == 2
+        assert hits["14"].raw_value == "2025"  # first-hit wins
+
+
 class TestModelo840TextCasillas:
     """Modelo 840 uses the text-value primitive (wave 24)."""
 
