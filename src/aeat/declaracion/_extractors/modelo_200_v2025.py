@@ -10,10 +10,15 @@ AEAT prints these casillas as five-digit zero-padded IDs (00550, 00592,
 etc.). The :class:`GenericDeclaracionExtractor` ``casilla_width`` ClassVar
 handles the wider prefix.
 
-Legal base: renewed annually; current form per Orden HAC/495/2024
-(ejercicio 2023, BOE) applied equivalently to ejercicio 2024/2025
-until superseded. Per-casilla detail beyond page 14 lands in sub-EPIC
-#305-Modelo-200-full.
+Legal base: Modelo 200 is renewed annually by its own BOE Orden; the
+2025 filing (ejercicio 2024 results) is governed by the Orden that
+will supersede HAC/495/2024. The 14-casilla MVP below is drawn from
+page 14 of the current template; Orden HAC/262/2025 (BOE-A-2025-5407)
+may shift neighbouring pages (pagos fraccionados, micropyme rates)
+but leaves the page-14 liquidación block intact as of 2026-04-21.
+Per-casilla detail beyond page 14 (in particular casilla 01032
+reducción reserva capitalización, which is printed on a separate
+deducciones page) lands in sub-EPIC #305-Modelo-200-full.
 """
 
 from __future__ import annotations
@@ -33,10 +38,14 @@ class Modelo200V2025Extractor(GenericDeclaracionExtractor):
         revision="2025.01",
     )
     casilla_width: ClassVar[int] = 5
+    # Page-14 liquidación block only. casilla 01032 (reducción reserva
+    # capitalización) is printed on a different page of the form; it joins
+    # the MVP set only when sub-EPIC #305-Modelo-200-full ships the
+    # multi-page coverage — leaving it out here avoids false-positive
+    # label matches against any other page that happens to print "01032".
     casilla_ids: ClassVar[tuple[str, ...]] = (
-        "00550",  # base imponible previa
-        "01032",  # reducción reserva capitalización
         "00547",  # compensación BINs
+        "00550",  # base imponible previa
         "00552",  # base imponible
         "00558",  # tipo de gravamen
         "00560",  # cuota íntegra previa

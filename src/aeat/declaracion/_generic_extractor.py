@@ -176,6 +176,10 @@ def _derive_status(
     values: list[ExtractedCasilla],
     required: tuple[str, ...],
 ) -> ExtractionStatus:
+    # Wave 23 HIGH-1/HIGH-2 closure: header-only extractors (`casilla_ids=()`)
+    # must NEVER report COMPLETE — they have no casilla-level data to verify.
+    if not required:
+        return ExtractionStatus.UNVERIFIABLE
     resolved_ids = {v.casilla_id for v in values}
     required_set = set(required)
     # M1 closure: multi-hit casillas with confidence < 1 count as unresolved
@@ -184,7 +188,7 @@ def _derive_status(
     reliable_ids = {v.casilla_id for v in values if v.extraction_confidence >= 1.0}
     if reliable_ids >= required_set:
         return ExtractionStatus.COMPLETE
-    coverage = len(resolved_ids) / max(len(required_set), 1)
+    coverage = len(resolved_ids) / len(required_set)
     if coverage >= 0.5:
         return ExtractionStatus.PARTIAL
     return ExtractionStatus.FAILED

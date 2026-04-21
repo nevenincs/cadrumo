@@ -13,8 +13,8 @@ fechas). The current :class:`GenericDeclaracionExtractor` primitive
 captures Spanish-formatted decimals only; a text-value-anchored
 primitive lands in sub-EPIC #305-textual-casillas. This extractor
 recognizes the document, extracts NIF/ejercicio/período, and returns
-an empty ``values`` tuple so the rest of the pipeline treats it as
-``EXTRACTION_UNRELIABLE`` (zero resolved casillas).
+an empty ``values`` tuple; :class:`ExtractionStatus.UNVERIFIABLE`
+is the resulting status (see wave 23 contract).
 
 Legal base: Orden HAC/2572/2003 (BOE 18/09/2003).
 """

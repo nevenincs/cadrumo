@@ -7,7 +7,11 @@ coefficients, trimestre payment, volumen ventas adjustment, retenciones,
 compensación de negativos anteriores, and final resultado a ingresar.
 
 Legal base: Orden EHA/672/2007 (BOE-A-2007-6032); yearly refresh per
-BOE Sede AEAT instructions.
+BOE Sede AEAT instructions. Caveat: the 15-casilla MVP below mirrors
+the current AEAT-published form layout; verify against the live 2025
+PDF before this extractor is promoted beyond MVP — the research that
+seeded this set cited secondary (supercontable) sources as well as
+the 2007 Orden.
 """
 
 from __future__ import annotations
