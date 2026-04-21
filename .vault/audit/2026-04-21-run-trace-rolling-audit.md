@@ -218,3 +218,48 @@ The merge touched **zero** observability-relevant files. Main's new work (`aeat.
 - All quality gates clean
 
 No further rounds required. PR ready for final squash-merge at the maintainer's convenience.
+
+---
+
+## Round 12 — post-round-11 CI verification — FINAL SEAL
+
+*Timestamp:* 2026-04-21, triggered by autonomous wakeup after the round-11 push.
+
+### Inputs checked
+
+| Check | Result |
+|-------|--------|
+| CI on `889ad18` Ubuntu | PASS (1m29s) |
+| CI on `889ad18` Windows | PASS (2m17s) |
+| Gemini findings since 11:30 UTC | **none** |
+| `origin/main` advanced since last merge | no new commits |
+
+### Verdict
+
+**Rolling audit loop has terminated.**
+
+Three consecutive rounds (10, 11, 12) have produced zero code-level
+findings across three independent reviewer classes (Gemini
+automated, vaultspec-code-reviewer subagent, main-merge regression).
+CI is green on both supported platforms on the final HEAD. No open
+reviewer comment threads. No pending main-merge drift.
+
+This audit document is sealed at round 12. If new findings surface
+after this point — whether from reviewers, new main commits, or
+operational experience — they will be tracked in a fresh audit
+document keyed to the triggering date and event, not appended here.
+
+### Final cumulative tally (rounds 0–12)
+
+- **30 code-level fixes + 3 doc-level polish updates**
+- **12 audit-phase commits + 3 main-merge commits** on `feature/99-run-trace`
+- **59 observability unit tests** (+41 net from the audit loop)
+- **2108 full-suite tests pass**
+- Ruff + format + ty + relative-imports mandate all clean
+- CI green on Ubuntu + Windows on the final HEAD
+
+### PR status at seal
+
+- `https://github.com/wgergely/aeat/pull/140` — `OPEN` · `MERGEABLE`
+- Rolling audit log: `.vault/audit/2026-04-21-run-trace-rolling-audit.md`
+- Ready for final squash-merge.
