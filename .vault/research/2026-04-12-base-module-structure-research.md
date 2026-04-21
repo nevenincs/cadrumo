@@ -1,3 +1,10 @@
+---
+tags:
+  - "#research"
+  - "#base-module-structure"
+date: 2026-04-12
+related: []
+---
 # Base Module Structure Research
 Date: 2026-04-12
 Issue: wgergely/aeat#12

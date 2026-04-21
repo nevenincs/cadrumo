@@ -523,6 +523,7 @@ class TestAbortReasons:
         preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
         assert preflight_step.details is not None
         assert preflight_step.details["provider_kind"] == AuthProviderKind.CLAVE_PERMANENTE.value
+        assert "same CLI filing flow" in preflight_step.details["provider_operator_impact"]
 
     def test_live_submit_forwards_explicit_live_mode(self) -> None:
         """Live mode reaches the submission engine when dry_run=False is explicit."""

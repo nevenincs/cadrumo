@@ -7,7 +7,7 @@ related:
   - "[[2026-04-12-gsuite-bootstrap-plan]]"
   - "[[2026-04-12-gsuite-bootstrap-adr]]"
   - "[[2026-04-12-gsuite-bootstrap-research]]"
-  - "[[2026-04-12-gsuite-bootstrap-phase1-summary]]"
+  - "[[2026-04-12-gsuite-bootstrap-phase1-summary-exec]]"
 ---
 
 # gsuite-bootstrap Code Review

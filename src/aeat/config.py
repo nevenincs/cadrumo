@@ -328,13 +328,12 @@ class Settings(BaseSettings):
     )
     aeat_auth_timeout_ms: int = Field(
         default=30_000,
-        ge=1_000,
-        le=300_000,
-        description="Maximum duration (ms) for authentication and verification navigations",
+        ge=1,
+        description="Playwright navigation timeout for AEAT authentication probes in milliseconds",
     )
     aeat_strict_security: bool = Field(
         default=False,
-        description="When True, fail hard if file permission hardening (icacls/chmod) cannot be applied",
+        description="Raise instead of warn when AEAT credential artifact permission hardening fails",
     )
     aeat_cert_warn_days: int = Field(
         default=60,

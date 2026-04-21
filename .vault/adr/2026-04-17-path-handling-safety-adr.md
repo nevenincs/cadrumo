@@ -5,7 +5,7 @@ tags:
 date: "2026-04-17"
 related:
   - "[[2026-04-17-path-handling-safety-research]]"
-  - "[[2026-04-17-path-handling-safety-review]]"
+  - "[[2026-04-17-path-handling-safety-review-audit]]"
 ---
 
 # `path-handling-safety` adr: `normalize repo-local paths and reject path-like identifiers` | (**status:** `accepted`)

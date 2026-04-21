@@ -38,7 +38,7 @@ The gap is the live driver that (a) filters expedientes by
 page. #227 binds these into one ergonomic entrypoint on
 `StatusReader`.
 
-See [[2026-04-18-aeat-filing-detail-fetch-research]] for the
+See `[[2026-04-18-aeat-filing-detail-fetch-research]]` for the
 architectural option analysis. This ADR pins the decisions.
 
 ## decisions

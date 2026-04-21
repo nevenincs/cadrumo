@@ -51,14 +51,14 @@ jobs:
           path: |
             ~/.cache/prek
             ~/AppData/Local/prek
-          key: prek-${{ runner.os }}-${{ hashFiles('prek.toml', '.pre-commit-config.yaml') }}
+          key: prek-${{ runner.os }}-${{ hashFiles('prek.toml') }}
           restore-keys: |
             prek-${{ runner.os }}-
 
       - name: CI Bootstrap
         run: |
           uv sync
-          uv run vaultspec-core install --upgrade
+          uv run vaultspec-core install --upgrade --force
           just env-setup
 
       - name: Lint
