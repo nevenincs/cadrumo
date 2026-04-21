@@ -22,6 +22,7 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, ConfigDict
 
 from ..config import PROJECT_ROOT, Settings
+from ..logging import get_logger
 from ._fingerprint import (
     compute_corpus_sha256,
     compute_db_sha256,
@@ -37,6 +38,8 @@ from ._models import (
 )
 from ._sink import JsonlRunSink
 from ._store import runs_dir, save_trace
+
+_log = get_logger(__name__)
 
 _DEFAULT_INITIAL_STEP = "step-0"
 _EVENTS_FILENAME = "events.jsonl"
@@ -154,11 +157,19 @@ def run_context(
             finally:
                 if not step_end_emitted:
                     step_end_emitted = True
-                    record_event(
-                        RunEventKind.STEP_END,
-                        payload=_step_payload(nested_step, label=entrypoint),
-                        module=__name__,
-                    )
+                    try:
+                        record_event(
+                            RunEventKind.STEP_END,
+                            payload=_step_payload(nested_step, label=entrypoint),
+                            module=__name__,
+                        )
+                    except Exception as exc:
+                        _log.warning(
+                            "failed to record nested STEP_END (run=%s step=%s): %r",
+                            outer.run_id,
+                            nested_step,
+                            exc,
+                        )
         finally:
             STEP_CONTEXT_VAR.reset(step_token)
         return
@@ -178,7 +189,10 @@ def run_context(
 
     run_token: Token[RunContextInfo | None] = RUN_CONTEXT_VAR.set(info)
     step_token: Token[str | None] = STEP_CONTEXT_VAR.set(info.initial_step_id)
-    outcome = RunOutcome.OK
+    # Pessimistic default: only flip to OK once the yielded body returns
+    # cleanly. If STEP_START itself raises, or the yield is never reached,
+    # outcome stays FAILED so the persisted trace does not lie.
+    outcome = RunOutcome.FAILED
     try:
         record_event(
             RunEventKind.STEP_START,
@@ -187,15 +201,18 @@ def run_context(
         )
         try:
             yield info
-        except BaseException:
-            outcome = RunOutcome.FAILED
-            raise
+            outcome = RunOutcome.OK
         finally:
-            record_event(
-                RunEventKind.STEP_END,
-                payload=_step_payload(info.initial_step_id, label=entrypoint),
-                module=__name__,
-            )
+            try:
+                record_event(
+                    RunEventKind.STEP_END,
+                    payload=_step_payload(info.initial_step_id, label=entrypoint),
+                    module=__name__,
+                )
+            except Exception as exc:
+                # A failed STEP_END emit must not mask the yielded
+                # exception (if any) nor the outcome we already set.
+                _log.warning("failed to record STEP_END for run %s: %r", info.run_id, exc)
     finally:
         try:
             trace = RunTrace(
@@ -210,11 +227,22 @@ def run_context(
                 outcome=outcome,
             )
             save_trace(trace)
+        except Exception as exc:
+            # Persisting the trace is best-effort — a disk-full at exit
+            # must never shadow the real exception the caller is
+            # propagating. Log and move on.
+            _log.warning("failed to persist RunTrace for run %s: %r", info.run_id, exc)
         finally:
             STEP_CONTEXT_VAR.reset(step_token)
             RUN_CONTEXT_VAR.reset(run_token)
-            root_logger.removeHandler(sink)
-            sink.close()
+            try:
+                root_logger.removeHandler(sink)
+            except Exception as exc:  # pragma: no cover - logging lock is infallible in practice
+                _log.warning("failed to detach sink for run %s: %r", info.run_id, exc)
+            try:
+                sink.close()
+            except Exception as exc:
+                _log.warning("failed to close sink for run %s: %r", info.run_id, exc)
 
 
 __all__ = [

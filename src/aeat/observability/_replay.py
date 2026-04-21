@@ -5,7 +5,12 @@ Replay loads a persisted trace, recomputes the current
 path with the captured argv. Live replay is explicitly out of scope —
 ``dry_run=False`` raises :class:`AeatObservabilityError`.
 
-See [[2026-04-14-run-trace-adr]] decision D5.
+Defence in depth: replay also refuses when the recorded arguments
+contain a live-mode opt-in flag (``--no-dry-run`` /
+``--i-understand-this-is-real``). ``dry_run=True`` at the replay
+layer must NOT be subverted by a recorded ``--no-dry-run`` flag
+bubbling into the reconstructed argv. See [[2026-04-14-run-trace-adr]]
+decision D5 and the live-write safety charter (#116).
 """
 
 from __future__ import annotations
@@ -17,6 +22,35 @@ from ._errors import AeatCorpusDriftError, AeatObservabilityError
 from ._fingerprint import compute_corpus_sha256
 from ._models import ArgumentRecord, ArgumentSource, RunTrace
 from ._store import load_trace
+
+# Flags that opt a recorded run into AEAT live-mode. Replay refuses to
+# re-enter these paths — even with ``dry_run=True`` at the replay layer
+# — because reconstructing the argv would still pass the live-mode
+# flag straight into the wrapped CLI. The canonical flag names match
+# the ones accepted by ``aeat workflow run`` / ``workflow next``.
+_LIVE_MODE_FLAG_NAMES: frozenset[str] = frozenset(
+    {
+        "no-dry-run",
+        "no_dry_run",
+        "i-understand-this-is-real",
+        "i_understand_this_is_real",
+    }
+)
+
+
+def _argument_activates_live_mode(arg: ArgumentRecord) -> bool:
+    """Return True if ``arg`` is a live-mode opt-in flag set to a truthy value.
+
+    The boolean flags captured by :func:`cli_run_context` arrive as the
+    stringified value ``"True"`` / ``"False"``. A ``False`` capture
+    means the caller did not opt in, and replay is safe. Any non-False
+    value pair is rejected as live-mode.
+    """
+    if arg.source is not ArgumentSource.FLAG:
+        return False
+    if arg.name not in _LIVE_MODE_FLAG_NAMES:
+        return False
+    return arg.value.strip().lower() != "false"
 
 
 def _argv_from_arguments(
@@ -72,6 +106,15 @@ def replay_run(run_id: str, *, dry_run: bool = True) -> RunTrace:
             "replay_run is dry-run only; live replay is out of scope (#99)",
         )
     original = load_trace(run_id)
+    for arg in original.arguments:
+        if _argument_activates_live_mode(arg):
+            raise AeatObservabilityError(
+                f"refusing to replay run {run_id!r}: recorded entrypoint "
+                f"{original.entrypoint!r} was executed with the live-mode "
+                f"flag {arg.name!r}={arg.value!r}. Replay would re-invoke "
+                f"AEAT live-write paths even with dry_run=True at the "
+                f"replay layer. See live-write safety charter (#116).",
+            )
     settings = Settings()
     observed = compute_corpus_sha256(PROJECT_ROOT / ".vault", settings)
     if observed != original.corpus_sha256:

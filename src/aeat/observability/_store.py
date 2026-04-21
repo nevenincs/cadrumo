@@ -100,10 +100,15 @@ def save_events_append(
     *,
     settings: Settings | None = None,
 ) -> Path:
-    """Append a single :class:`RunEvent` line to the per-run ``events.jsonl``."""
+    """Append a single :class:`RunEvent` line to the per-run ``events.jsonl``.
+
+    ``newline=""`` pins the on-disk line terminator to ``\\n`` on every
+    platform — mirroring :class:`JsonlRunSink` — so events.jsonl is
+    byte-stable across Windows and POSIX writers.
+    """
     target = _run_dir(run_id, settings=settings) / _EVENTS_FILENAME
     line = event.model_dump_json() + "\n"
-    with target.open("a", encoding="utf-8") as handle:
+    with target.open("a", encoding="utf-8", newline="") as handle:
         handle.write(line)
         handle.flush()
     return target
