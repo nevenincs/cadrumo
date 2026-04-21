@@ -33,7 +33,12 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Approve a draft (persisted) | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#230](https://github.com/wgergely/aeat/issues/230) |
 | Export an AEAT-importable fichero BOE file | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#201](https://github.com/wgergely/aeat/issues/201) |
 | Compute 303 + 390 via formula engine | ❌ | ❌ | partial | ❌ | 0.3.0 | [#221](https://github.com/wgergely/aeat/issues/221) |
-| Import a past filing made outside the tool | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#233](https://github.com/wgergely/aeat/issues/233) |
+| Import a past filing made outside the tool (umbrella) | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#233](https://github.com/wgergely/aeat/issues/233) |
+| Import past filing from justificante receipt PDF | ✅ | ✅ | ✅ | ✅ | 0.3.0 | [#271](https://github.com/wgergely/aeat/issues/271) |
+| Import past filing from full declaración PDF (calc-verified) | 🚧 | ❌ | ❌ | ❌ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster D |
+| Import Modelo 100 pre-filing borrador (summary block) | 🚧 | ❌ | ❌ | ❌ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster F |
+| Import Modelo 100 predeclaración / simulación (summary block) | 🚧 | ❌ | ❌ | ❌ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster F |
+| See import verdict (verified / needs-review / unverifiable) | 🚧 | ❌ | ❌ | ❌ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster E |
 | File autoliquidación rectificativa | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#234](https://github.com/wgergely/aeat/issues/234) |
 | Amend any supported modelo via wizard | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#235](https://github.com/wgergely/aeat/issues/235) |
 | Fetch previously-filed casilla values from AEAT (wall 23) | ❌ | 🚧 | ready | ❌ | 0.1.0-pre-alpha | [#227](https://github.com/wgergely/aeat/issues/227) |
