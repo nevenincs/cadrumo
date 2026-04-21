@@ -6,6 +6,7 @@ import typer
 
 from .ingest import ingest_cmd
 from .invoices import app as invoices_app
+from .profile import app as profile_app
 from .txs import app as txs_app
 
 app = typer.Typer(
@@ -28,6 +29,11 @@ app.add_typer(
     name="invoices",
     help="Invoice catalogue helpers (#75).",
 )
+app.add_typer(
+    profile_app,
+    name="profile",
+    help="Kent's financial profile: per-category usage ratios (#259).",
+)
 
 
-__all__ = ["app", "invoices_app"]
+__all__ = ["app", "invoices_app", "profile_app"]

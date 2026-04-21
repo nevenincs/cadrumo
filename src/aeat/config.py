@@ -142,6 +142,10 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "financial" / "attachments",
         description="Root directory for the attachment byte and manifest store",
     )
+    aeat_usage_ratios_path: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
+        description="User-configured per-category usage ratio overrides (#259)",
+    )
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
@@ -543,6 +547,15 @@ class Settings(BaseSettings):
         description="Maximum number of BOE PDFs fetched in parallel by `aeat schema refresh`.",
     )
 
+    # ── Observability (#99) ────────────────────────────────────────────────
+    aeat_runs_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "runs",
+        description=(
+            "Directory where run traces and JSONL event logs are persisted "
+            "(one subdirectory per run_id, containing trace.json + events.jsonl)"
+        ),
+    )
+
     # ── Justificante parser (#44) ───────────────────────────────────────────
     aeat_justificantes_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "justificantes",
@@ -611,6 +624,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "aeat_token_dir",
+        "aeat_usage_ratios_path",
         "aeat_financial_txs_dir",
         "aeat_storage_backup_dir",
         "aeat_casillas_root",

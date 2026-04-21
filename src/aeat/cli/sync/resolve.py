@@ -13,6 +13,7 @@ from ...sync import (
     JsonFileDivergenceRepository,
     ResolutionState,
 )
+from .._observability import cli_run_context
 
 _CONSOLE = Console()
 
@@ -44,15 +45,21 @@ def resolve_divergence(
     ),
 ) -> None:
     """Transition a divergence record to HUMAN_APPROVED or REJECTED."""
-    settings = load_settings()
-    repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
-    try:
-        updated = repo.update_resolution(
-            record_id,
-            resolution_state=_ACTION_TO_STATE[action],
-            notes=notes,
-        )
-    except DivergenceRepositoryError as exc:
-        _CONSOLE.print(f"[red]{exc}[/red]")
-        raise typer.Exit(code=1) from exc
-    _CONSOLE.print(f"[green]record {updated.record_id} -> {updated.resolution_state.value}[/green]")
+    arguments = {"record_id": record_id, "action": action, "notes": notes}
+    with cli_run_context(
+        entrypoint="aeat sync resolve-divergence",
+        arguments=arguments,
+        positional=("record_id",),
+    ):
+        settings = load_settings()
+        repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
+        try:
+            updated = repo.update_resolution(
+                record_id,
+                resolution_state=_ACTION_TO_STATE[action],
+                notes=notes,
+            )
+        except DivergenceRepositoryError as exc:
+            _CONSOLE.print(f"[red]{exc}[/red]")
+            raise typer.Exit(code=1) from exc
+        _CONSOLE.print(f"[green]record {updated.record_id} -> {updated.resolution_state.value}[/green]")
