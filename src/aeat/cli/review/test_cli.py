@@ -287,3 +287,114 @@ def test_queue_unknown_kind_returns_helpful_error(isolated_settings: Path) -> No
     runner = CliRunner()
     result = runner.invoke(root_app, ["review", "queue", "--kind", "not-a-kind"])
     assert result.exit_code == 2
+
+
+def _seed_transactions_with_varied_confidence(tmp_path: Path) -> tuple[str, str, str]:
+    """Seed three transactions with low, high, and None confidence. Return their IDs."""
+
+    def _raw(pid: str, description: str) -> RawTransaction:
+        return RawTransaction(
+            transaction_id=pid,
+            booked_date=date(2026, 4, 10),
+            value_date=date(2026, 4, 10),
+            amount=Decimal("-10.00"),
+            currency="EUR",
+            counterparty=None,
+            description=description,
+            provenance=RawProvenance(
+                source_path=Path(__file__),
+                source_sha256="c" * 64,
+                source_row_index=1,
+                source_format=SourceFormat.CSV,
+                ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+                provider_name="csv",
+            ),
+            raw_fields={"Concepto": description},
+        )
+
+    low = Transaction.model_validate(
+        {
+            "raw": _raw("tx-low", "Low confidence"),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": "PROCESSED_UNCLASSIFIED",
+            "classification_confidence": Decimal("0.4"),
+        }
+    )
+    high = Transaction.model_validate(
+        {
+            "raw": _raw("tx-high", "High confidence"),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": "PROCESSED_UNCLASSIFIED",
+            "classification_confidence": Decimal("0.9"),
+        }
+    )
+    bare = Transaction.model_validate(
+        {
+            "raw": _raw("tx-bare", "No confidence"),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": "NOT_YET_PROCESSED",
+        }
+    )
+    save_transactions(
+        TransactionCatalogue.from_transactions((low, high, bare)),
+        tmp_path / "transactions" / "transactions.json",
+    )
+    return low.transaction_id, high.transaction_id, bare.transaction_id
+
+
+def test_queue_filters_by_confidence_below(isolated_settings: Path) -> None:
+    """`aeat review queue --confidence-below 0.5` must surface only low-confidence transactions (#236)."""
+    low_id, high_id, bare_id = _seed_transactions_with_varied_confidence(isolated_settings)
+    runner = CliRunner()
+    result = runner.invoke(
+        root_app,
+        ["review", "queue", "--confidence-below", "0.5", "--format", "json"],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    item_ids = {item["item_id"] for item in payload}
+    assert low_id in item_ids
+    assert high_id not in item_ids
+    assert bare_id not in item_ids
+
+
+def test_queue_confidence_filter_excludes_non_transaction_kinds(isolated_settings: Path) -> None:
+    """Non-transaction review kinds must be dropped when `--confidence-below` is set (#236)."""
+    _seed_all(isolated_settings)
+    runner = CliRunner()
+    result = runner.invoke(
+        root_app,
+        ["review", "queue", "--confidence-below", "0.99", "--format", "json"],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    kinds = {item["kind"] for item in payload}
+    assert kinds <= {"transaction"}
+
+
+def test_queue_rejects_out_of_range_confidence_below(isolated_settings: Path) -> None:
+    """An out-of-range `--confidence-below` must exit with code 2."""
+    runner = CliRunner()
+    result = runner.invoke(
+        root_app,
+        ["review", "queue", "--confidence-below", "1.5"],
+    )
+
+    assert result.exit_code == 2
+    combined = result.stdout + (result.stderr or "")
+    assert "0..1 range" in combined
+
+
+def test_queue_rejects_non_numeric_confidence_below(isolated_settings: Path) -> None:
+    """A non-numeric `--confidence-below` must exit with code 2."""
+    runner = CliRunner()
+    result = runner.invoke(
+        root_app,
+        ["review", "queue", "--confidence-below", "abc"],
+    )
+
+    assert result.exit_code == 2
+    combined = result.stdout + (result.stderr or "")
+    assert "not a valid Decimal" in combined
