@@ -17,7 +17,7 @@ app = typer.Typer(
 
 app.command(
     name="ingest",
-    help="Validate and ingest a CSV/XLSX/OFX source into RawTransaction records.",
+    help="Validate and ingest a CSV/XLSX/OFX/PDF source into RawTransaction records.",
 )(ingest_cmd)
 app.add_typer(
     txs_app,

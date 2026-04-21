@@ -15,10 +15,8 @@ credentials actually working" is "I called the API and it returned a
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import subprocess
-import sys
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -35,6 +33,8 @@ from ..auth import (
     REQUIRED_ADC_SCOPES,
     SHEETS_SCOPE,
     AeatAuthenticator,
+    GoogleAuthPath,
+    adc_well_known_path,
     build_cloudfunctions_client,
     build_cloudrun_client,
     build_docs_service,
@@ -44,6 +44,7 @@ from ..auth import (
     build_storage_client,
     describe_provider_operator_impact,
     get_credentials_for_scopes,
+    inspect_google_auth,
 )
 from ..config import PROJECT_ROOT, Settings
 
@@ -55,6 +56,7 @@ class State(StrEnum):
 
     OK = "OK"
     MISSING = "MISSING"
+    PARTIAL = "PARTIAL"
     WARN = "WARN"
     SKIP = "SKIP"
 
@@ -100,23 +102,6 @@ OPTIONAL_API_SERVICES: list[str] = [
 
 
 # ── Pure helpers (unit tested) ──────────────────────────────────────────────
-
-
-def adc_well_known_path() -> Path:
-    """Return the well-known path where gcloud writes ADC JSON.
-
-    Honours ``CLOUDSDK_CONFIG`` if set, otherwise falls back to the
-    documented per-platform default. Used by both the doctor and any
-    future test that needs to inspect ADC state without performing an
-    auth flow.
-    """
-    override = os.environ.get("CLOUDSDK_CONFIG")
-    if override:
-        return Path(override) / "application_default_credentials.json"
-    if sys.platform == "win32":
-        appdata = os.environ.get("APPDATA", "")
-        return Path(appdata) / "gcloud" / "application_default_credentials.json"
-    return Path.home() / ".config" / "gcloud" / "application_default_credentials.json"
 
 
 def adc_scopes_from_file(path: Path) -> list[str]:
@@ -205,25 +190,206 @@ def check_google_cloud_project(settings: Settings) -> Row:
     )
 
 
+def check_active_google_auth_path(settings: Settings) -> Row:
+    """Explain which Google auth path is active, blocking on ambiguity."""
+
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    if inspection.active_path is None:
+        return Row(
+            section="active Google auth path",
+            required=True,
+            state=State.MISSING,
+            detail=inspection.blocking_reason or "no active Google auth path",
+        )
+    source = "explicit" if inspection.configured_path is not None else "inferred"
+    return Row(
+        section="active Google auth path",
+        required=True,
+        state=State.OK,
+        detail=f"{inspection.active_path.value} ({source})",
+    )
+
+
+def check_google_auth_readiness(settings: Settings) -> Row:
+    """Summarize CLI/bootstrap versus MCP readiness for the active path."""
+
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    if inspection.active_path is None:
+        return Row(
+            section="Google auth readiness",
+            required=True,
+            state=State.MISSING,
+            detail=inspection.blocking_reason or "select and prepare one Google auth path",
+        )
+    if inspection.cli_ready and inspection.mcp_ready:
+        return Row(
+            section="Google auth readiness",
+            required=True,
+            state=State.OK,
+            detail="CLI auth material and MCP launch readiness are both prepared",
+        )
+    if inspection.cli_ready and not inspection.mcp_ready:
+        return Row(
+            section="Google auth readiness",
+            required=True,
+            state=State.PARTIAL,
+            detail="CLI auth material ready; MCP credentials cache still needs preparation",
+        )
+    if inspection.mcp_ready and not inspection.cli_ready:
+        return Row(
+            section="Google auth readiness",
+            required=True,
+            state=State.PARTIAL,
+            detail="MCP cache prepared; CLI auth material is still incomplete",
+        )
+    return Row(
+        section="Google auth readiness",
+        required=True,
+        state=State.MISSING,
+        detail="active path selected but neither CLI/bootstrap nor MCP readiness is complete",
+    )
+
+
+def check_desktop_oauth_client_material(settings: Settings) -> Row:
+    """Report the Desktop OAuth client configuration state."""
+
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    required = inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
+    if inspection.desktop_oauth_complete:
+        json_detail = (
+            f"; oauth JSON at {inspection.desktop_oauth_json_path}"
+            if inspection.desktop_oauth_json_path is not None
+            else "; ADC sub-step JSON not configured"
+        )
+        return Row(
+            section="Desktop OAuth client material",
+            required=required,
+            state=State.OK if required else State.SKIP,
+            detail=(
+                f"GOOGLE_OAUTH_CLIENT_ID/SECRET present{json_detail}"
+                if required
+                else "not required for active path; see inactive-path drift"
+            ),
+        )
+    if inspection.desktop_oauth_partial:
+        return Row(
+            section="Desktop OAuth client material",
+            required=required,
+            state=State.MISSING if required else State.WARN,
+            detail="partial Desktop OAuth config; complete GOOGLE_OAUTH_CLIENT_ID/SECRET",
+        )
+    return Row(
+        section="Desktop OAuth client material",
+        required=required,
+        state=State.MISSING if required else State.SKIP,
+        detail="not required for active path" if not required else "Desktop OAuth client config missing",
+    )
+
+
+def check_cli_oauth_cache(settings: Settings) -> Row:
+    """Report the repo-local CLI OAuth token cache state."""
+
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    required = inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
+    if inspection.active_path != GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
+        return Row(
+            section="CLI OAuth cache",
+            required=False,
+            state=State.SKIP,
+            detail="not required for active path",
+        )
+    if inspection.oauth_token_issue is None:
+        return Row(
+            section="CLI OAuth cache",
+            required=required,
+            state=State.OK,
+            detail=str(inspection.oauth_token_path),
+        )
+    return Row(
+        section="CLI OAuth cache",
+        required=required,
+        state=State.MISSING,
+        detail=(
+            f"{inspection.oauth_token_issue}; rerun `aeat auth init --path desktop-oauth-local-dev --reset-cli-token`"
+        ),
+    )
+
+
+def check_mcp_credentials_cache(settings: Settings) -> Row:
+    """Report the repo-local Google Workspace MCP credentials directory state."""
+
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    if inspection.active_path is None:
+        return Row(
+            section="MCP credentials cache",
+            required=True,
+            state=State.MISSING,
+            detail=inspection.blocking_reason or "select a Google auth path first",
+        )
+    if inspection.mcp_credentials_exist:
+        return Row(
+            section="MCP credentials cache",
+            required=True,
+            state=State.OK,
+            detail=f"credentials present under {inspection.mcp_credentials_dir}",
+        )
+    if inspection.mcp_credentials_dir_exists:
+        return Row(
+            section="MCP credentials cache",
+            required=True,
+            state=State.PARTIAL,
+            detail=(
+                "directory prepared for first MCP launch but no cached MCP "
+                f"credentials exist yet: {inspection.mcp_credentials_dir}"
+            ),
+        )
+    return Row(
+        section="MCP credentials cache",
+        required=True,
+        state=State.MISSING,
+        detail="run `aeat auth init` to prepare the repo-local MCP credentials directory",
+    )
+
+
+def check_inactive_google_auth_drift(settings: Settings) -> Row:
+    """Surface ignored stale config from the inactive auth path."""
+
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    drift = inspection.inactive_path_drift
+    if drift is None:
+        return Row(
+            section="inactive-path drift",
+            required=False,
+            state=State.SKIP,
+            detail="no ignored stale auth artifacts detected",
+        )
+    return Row(
+        section="inactive-path drift",
+        required=False,
+        state=State.WARN,
+        detail=drift,
+    )
+
+
 def check_gcloud_binary() -> Row:
     """Verify the ``gcloud`` CLI is on PATH."""
     if not gcloud_binary_path():
         return Row(
             section="gcloud binary",
-            required=True,
+            required=False,
             state=State.MISSING,
-            detail="run `just gcloud-install` to install Google Cloud CLI",
+            detail="install gcloud only if you still need the ADC-backed wrapper path",
         )
     code, out, _err = _run_gcloud(["version"])
     if code != 0:
         return Row(
             section="gcloud binary",
-            required=True,
+            required=False,
             state=State.WARN,
             detail="gcloud on PATH but `gcloud version` failed",
         )
     first_line = out.splitlines()[0] if out else "gcloud installed"
-    return Row(section="gcloud binary", required=True, state=State.OK, detail=first_line)
+    return Row(section="gcloud binary", required=False, state=State.OK, detail=first_line)
 
 
 def check_gcloud_account() -> Row:
@@ -232,11 +398,11 @@ def check_gcloud_account() -> Row:
     if code != 0 or not out:
         return Row(
             section="gcloud auth",
-            required=True,
+            required=False,
             state=State.MISSING,
             detail="run `just gcloud-auth` to log in",
         )
-    return Row(section="gcloud auth", required=True, state=State.OK, detail=out.splitlines()[0])
+    return Row(section="gcloud auth", required=False, state=State.OK, detail=out.splitlines()[0])
 
 
 def check_gcloud_project_matches(settings: Settings) -> Row:
@@ -245,18 +411,18 @@ def check_gcloud_project_matches(settings: Settings) -> Row:
     if code != 0 or not out or out.lower() == "unset":
         return Row(
             section="gcloud project",
-            required=True,
+            required=False,
             state=State.MISSING,
             detail="run `gcloud config set project ${GOOGLE_CLOUD_PROJECT}`",
         )
     if settings.google_cloud_project and out != settings.google_cloud_project:
         return Row(
             section="gcloud project",
-            required=True,
+            required=False,
             state=State.WARN,
             detail=f"gcloud='{out}' but env='{settings.google_cloud_project}'",
         )
-    return Row(section="gcloud project", required=True, state=State.OK, detail=out)
+    return Row(section="gcloud project", required=False, state=State.OK, detail=out)
 
 
 def check_credentials_path(settings: Settings) -> Row:
@@ -290,28 +456,38 @@ def check_credentials_path(settings: Settings) -> Row:
     )
 
 
-def check_adc_file() -> Row:
+def check_adc_file(settings: Settings) -> Row:
     """Advisory: ADC JSON file at the well-known path."""
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
     path = adc_well_known_path()
     if not path.exists():
         return Row(
             section="ADC file",
             required=False,
             state=State.SKIP,
-            detail="not configured (using SA or OAuth instead)",
+            detail=(
+                "not configured; run `just gcloud-auth` only if you still need the ADC-backed wrapper path"
+                if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
+                else "not required for active path"
+            ),
         )
     return Row(section="ADC file", required=False, state=State.OK, detail=str(path))
 
 
-def check_adc_scopes() -> Row:
+def check_adc_scopes(settings: Settings) -> Row:
     """Advisory: ADC JSON contains the required scopes (only relevant when ADC is the path)."""
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
     path = adc_well_known_path()
     if not path.exists():
         return Row(
             section="ADC scopes",
             required=False,
             state=State.SKIP,
-            detail="ADC not in use",
+            detail=(
+                "ADC not configured; Desktop OAuth local-dev can still work without it"
+                if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
+                else "not required for active path"
+            ),
         )
     granted = adc_scopes_from_file(path)
     if not granted:
@@ -415,6 +591,9 @@ def check_drive_round_trip() -> Row:
     accounts return ``invalid_grant`` / quota errors here even though
     the credentials are otherwise valid for non-Drive APIs.
     """
+    settings = Settings()
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    required = inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
     try:
         creds = get_credentials_for_scopes([DRIVE_SCOPE])
         service = build_drive_service(creds)
@@ -423,11 +602,17 @@ def check_drive_round_trip() -> Row:
     except Exception as exc:
         return Row(
             section="Drive round-trip",
-            required=False,
-            state=State.WARN,
-            detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
+            required=required,
+            state=State.MISSING if required else State.WARN,
+            detail=(
+                "Drive scope check failed; rerun `aeat auth init --path "
+                "desktop-oauth-local-dev --reset-cli-token` if the Desktop "
+                "OAuth token is stale"
+                if required
+                else f"{exc.__class__.__name__}: {exc!s}"[:120]
+            ),
         )
-    return Row(section="Drive round-trip", required=False, state=State.OK, detail=email)
+    return Row(section="Drive round-trip", required=required, state=State.OK, detail=email)
 
 
 def check_sheets_round_trip(settings: Settings) -> Row:
@@ -556,48 +741,51 @@ def check_cloud_run(settings: Settings) -> Row:
 
 def check_service_account(settings: Settings) -> Row:
     """Advisory check for a configured service account JSON key."""
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    required = inspection.active_path == GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION
     sa_path = settings.google_application_credentials
     if not sa_path:
         return Row(
-            section="service account",
-            required=False,
-            state=State.SKIP,
-            detail="GOOGLE_APPLICATION_CREDENTIALS not set",
+            section="service-account key state",
+            required=required,
+            state=State.MISSING if required else State.SKIP,
+            detail="GOOGLE_APPLICATION_CREDENTIALS not set" if required else "not required for active path",
         )
     if not Path(sa_path).exists():
         return Row(
-            section="service account",
-            required=False,
-            state=State.WARN,
-            detail=f"path {sa_path} does not exist",
+            section="service-account key state",
+            required=required,
+            state=State.MISSING if required else State.SKIP,
+            detail=(
+                f"path {sa_path} does not exist"
+                if required
+                else "not required for active path; see inactive-path drift"
+            ),
         )
     try:
         json.loads(Path(sa_path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         return Row(
-            section="service account",
-            required=False,
-            state=State.WARN,
-            detail=f"unparseable: {exc.__class__.__name__}",
+            section="service-account key state",
+            required=required,
+            state=State.MISSING if required else State.SKIP,
+            detail=(
+                f"unparseable: {exc.__class__.__name__}"
+                if required
+                else "not required for active path; see inactive-path drift"
+            ),
         )
-    return Row(section="service account", required=False, state=State.OK, detail=sa_path)
+    return Row(
+        section="service-account key state",
+        required=required,
+        state=State.OK if required else State.SKIP,
+        detail=sa_path if required else "not required for active path; see inactive-path drift",
+    )
 
 
 def check_oauth_desktop(settings: Settings) -> Row:
     """Advisory check for an OAuth Desktop client configuration."""
-    if not (settings.google_oauth_client_id and settings.google_oauth_client_secret):
-        return Row(
-            section="oauth desktop",
-            required=False,
-            state=State.SKIP,
-            detail="GOOGLE_OAUTH_CLIENT_ID/SECRET not set",
-        )
-    return Row(
-        section="oauth desktop",
-        required=False,
-        state=State.OK,
-        detail="client_id and client_secret present",
-    )
+    return check_desktop_oauth_client_material(settings)
 
 
 def check_certificate_health(settings: Settings) -> Row:
@@ -718,17 +906,24 @@ def check_live_access_gate(settings: Settings) -> Row:
 def collect_rows(settings: Settings) -> list[Row]:
     """Run every check in order and return the full list of rows."""
     rows: list[Row] = []
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
     rows.append(check_env_file(settings))
     rows.append(check_google_cloud_project(settings))
-    rows.append(check_gcloud_binary())
-    if gcloud_binary_path():
-        rows.append(check_gcloud_account())
-        rows.append(check_gcloud_project_matches(settings))
-    auth_row = check_credentials_path(settings)
-    rows.append(auth_row)
-    rows.append(check_adc_file())
-    rows.append(check_adc_scopes())
-    if auth_row.state == State.OK:
+    rows.append(check_active_google_auth_path(settings))
+    rows.append(check_google_auth_readiness(settings))
+    rows.append(check_desktop_oauth_client_material(settings))
+    rows.append(check_cli_oauth_cache(settings))
+    rows.append(check_mcp_credentials_cache(settings))
+    rows.append(check_adc_file(settings))
+    rows.append(check_adc_scopes(settings))
+    rows.append(check_service_account(settings))
+    rows.append(check_inactive_google_auth_drift(settings))
+    if inspection.adc_exists or inspection.desktop_oauth_json_path is not None:
+        rows.append(check_gcloud_binary())
+        if gcloud_binary_path():
+            rows.append(check_gcloud_account())
+            rows.append(check_gcloud_project_matches(settings))
+    if inspection.cli_ready:
         rows.extend(check_api_enablement(settings))
         rows.append(check_drive_round_trip())
         rows.append(check_sheets_round_trip(settings))
@@ -736,8 +931,6 @@ def collect_rows(settings: Settings) -> list[Row]:
         rows.append(check_cloud_storage(settings))
         rows.append(check_cloud_functions(settings))
         rows.append(check_cloud_run(settings))
-    rows.append(check_service_account(settings))
-    rows.append(check_oauth_desktop(settings))
     rows.append(check_certificate_health(settings))
     rows.append(check_auth_provider_path(settings))
     rows.append(check_live_tests_flag(settings))
@@ -755,6 +948,7 @@ def render_table(rows: list[Row]) -> Table:
     state_styles = {
         State.OK: "green",
         State.MISSING: "red",
+        State.PARTIAL: "yellow",
         State.WARN: "yellow",
         State.SKIP: "dim",
     }
@@ -774,7 +968,7 @@ def doctor() -> None:
     rows = collect_rows(settings)
     console = Console()
     console.print(render_table(rows))
-    failing_required = [r for r in rows if r.required and r.state in (State.MISSING, State.WARN)]
+    failing_required = [r for r in rows if r.required and r.state in (State.MISSING, State.PARTIAL, State.WARN)]
     if failing_required:
         console.print(f"[red]doctor: {len(failing_required)} required check(s) failing[/]")
         raise typer.Exit(code=1)

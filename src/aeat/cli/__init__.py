@@ -69,14 +69,14 @@ app.command(name="bootstrap", help="Provision scratch resources and persist thei
     bootstrap_module.bootstrap
 )
 app.add_typer(
+    auth_module.app,
+    name="auth",
+    help="Kent-first auth setup and AEAT authentication provider management.",
+)
+app.add_typer(
     attachments_module.app,
     name="attachments",
     help="Content-addressed attachment service (#76).",
-)
-app.add_typer(
-    auth_module.app,
-    name="auth",
-    help="AEAT authentication provider management (#285).",
 )
 app.add_typer(browser_module.app, name="browser", help="Playwright browser session health probes (#95).")
 app.add_typer(casillas_module.app, name="casillas", help="Curated AEAT casilla catalogue helpers.")
