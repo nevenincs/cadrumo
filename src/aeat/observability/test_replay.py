@@ -85,7 +85,7 @@ class TestArgvReconstruction:
             ArgumentRecord(name="by", value="gw", source=ArgumentSource.FLAG),
         )
         argv = _argv_from_arguments("aeat inbox ack", args)
-        assert argv == ["inbox", "ack", "N-42", "--by", "gw"]
+        assert argv == ["inbox", "ack", "N-42", "--by=gw"]
 
     def test_multiple_positionals_preserve_declared_order(self) -> None:
         args = (
@@ -94,12 +94,22 @@ class TestArgvReconstruction:
             ArgumentRecord(name="force", value="True", source=ArgumentSource.FLAG),
         )
         argv = _argv_from_arguments("aeat filing submit", args)
-        assert argv == ["filing", "submit", "130", "2026Q1", "--force", "True"]
+        assert argv == ["filing", "submit", "130", "2026Q1", "--force=True"]
 
     def test_flag_name_underscore_converted_to_dash(self) -> None:
         args = (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),)
         argv = _argv_from_arguments("aeat workflow list", args)
-        assert argv == ["workflow", "list", "--as-json", "True"]
+        assert argv == ["workflow", "list", "--as-json=True"]
+
+    def test_flag_value_with_leading_dash_uses_equals_form(self) -> None:
+        args = (
+            ArgumentRecord(name="record_id", value="R-42", source=ArgumentSource.POSITIONAL),
+            ArgumentRecord(name="notes", value="--urgent", source=ArgumentSource.FLAG),
+        )
+        argv = _argv_from_arguments("aeat sync resolve-divergence", args)
+        # Without the ``=`` form Typer would see ``--urgent`` as an unknown flag.
+        assert "--notes=--urgent" in argv
+        assert "--urgent" not in argv  # never as a standalone token
 
     def test_env_and_default_sources_skipped(self) -> None:
         args = (

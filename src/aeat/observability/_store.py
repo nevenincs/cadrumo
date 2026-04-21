@@ -7,6 +7,7 @@ through the strict pydantic models in :mod:`aeat.observability._models`.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -18,6 +19,27 @@ from ._models import RunEvent, RunTrace
 
 _TRACE_FILENAME = "trace.json"
 _EVENTS_FILENAME = "events.jsonl"
+
+# Run ids are minted by :func:`aeat.observability._context._mint_run_id`
+# as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
+# layer against the same shape so a crafted id (e.g. ``..`` or
+# ``/etc/passwd``) cannot cause ``runs_dir / run_id`` to escape the
+# configured runs directory.
+_RUN_ID_PATTERN = re.compile(r"^[0-9a-f]{16}$")
+
+
+def _validate_run_id(run_id: str) -> str:
+    """Return ``run_id`` if it matches the canonical shape, else raise.
+
+    Raises:
+        RunTraceValidationError: If ``run_id`` is not a 16-char lowercase
+            hex string — the shape minted by ``_mint_run_id``.
+    """
+    if not _RUN_ID_PATTERN.fullmatch(run_id):
+        raise RunTraceValidationError(
+            f"invalid run_id {run_id!r}: expected 16 lowercase hex characters",
+        )
+    return run_id
 
 
 def runs_dir(settings: Settings | None = None) -> Path:
@@ -33,7 +55,13 @@ def runs_dir(settings: Settings | None = None) -> Path:
 
 
 def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
-    """Return the per-run directory, creating it if absent."""
+    """Return the per-run directory, creating it if absent.
+
+    Rejects ``run_id`` values that do not match the canonical minted
+    shape so ``runs_dir / run_id`` cannot traverse out of the
+    configured runs directory.
+    """
+    _validate_run_id(run_id)
     target = runs_dir(settings) / run_id
     target.mkdir(parents=True, exist_ok=True)
     return target
@@ -47,8 +75,14 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
 
 
 def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
-    """Load and strictly validate a persisted :class:`RunTrace`."""
-    target = _run_dir(run_id, settings=settings) / _TRACE_FILENAME
+    """Load and strictly validate a persisted :class:`RunTrace`.
+
+    Read-only lookups do not create the per-run directory — a missing
+    ``trace.json`` raises :class:`RunTraceValidationError` without
+    polluting the runs directory with an empty entry.
+    """
+    _validate_run_id(run_id)
+    target = runs_dir(settings) / run_id / _TRACE_FILENAME
     if not target.exists():
         raise RunTraceValidationError(f"trace.json not found for run {run_id!r} at {target}")
     raw = target.read_text(encoding="utf-8")
@@ -82,11 +116,14 @@ def load_events(
 ) -> tuple[RunEvent, ...]:
     """Load and strictly validate every JSONL event for a run.
 
+    Read-only lookup — does not create a run directory when absent.
+
     Raises:
-        RunTraceValidationError: If the file is missing or any line
-            fails strict validation.
+        RunTraceValidationError: If the ``run_id`` shape is invalid or
+            any JSONL line fails strict validation.
     """
-    target = _run_dir(run_id, settings=settings) / _EVENTS_FILENAME
+    _validate_run_id(run_id)
+    target = runs_dir(settings) / run_id / _EVENTS_FILENAME
     if not target.exists():
         return ()
     events: list[RunEvent] = []
@@ -107,14 +144,19 @@ def load_events(
 def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTrace]]:
     """Yield ``(run_id, RunTrace)`` pairs sorted by ``started_at`` descending.
 
-    Directories without a valid ``trace.json`` are skipped silently —
-    this lets crashed runs (no on-exit finalizer call) coexist with
-    healthy ones rather than poisoning ``aeat run list``.
+    Directories without a valid ``trace.json`` — or whose name does not
+    match the canonical ``run_id`` shape — are skipped silently. This
+    lets crashed runs (no on-exit finalizer call) coexist with healthy
+    ones rather than poisoning ``aeat run list``, and blocks any
+    non-run artefacts that may have been dropped into the runs
+    directory by hand.
     """
     base = runs_dir(settings)
     pairs: list[tuple[str, RunTrace]] = []
     for entry in base.iterdir():
         if not entry.is_dir():
+            continue
+        if not _RUN_ID_PATTERN.fullmatch(entry.name):
             continue
         trace_path = entry / _TRACE_FILENAME
         if not trace_path.exists():
