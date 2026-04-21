@@ -510,8 +510,9 @@ def _handle_declaracion_import(
     modelo: str | None,
     año: int | None,
 ) -> None:
-    """Dispatch the declaración (#305 cluster D) import path."""
+    """Dispatch the declaración (#305 cluster D + E) import path."""
     from ...declaracion import DeclaracionParseError, parse_declaracion
+    from ...verification import verify_declaracion
 
     try:
         filing = parse_declaracion(
@@ -527,12 +528,63 @@ def _handle_declaracion_import(
         f"(template {filing.template_revision.revision}). "
         f"{len(filing.values)} of {len(filing.values) + len(filing.warnings)} casillas extracted."
     )
-    typer.echo(f"Status: {filing.extraction_status.value}")
+    typer.echo(f"Extraction status: {filing.extraction_status.value}")
     if filing.warnings:
         typer.echo(f"[warnings] {len(filing.warnings)}:")
         for warning in filing.warnings:
             rendered = get_translation(warning.message, Language.EN)
             typer.echo(f"  - casilla {warning.casilla_id or '-'}: {rendered}")
+
+    ruleset = _resolve_ruleset_for_filing(
+        filing_modelo=filing.modelo,
+        filing_period=filing.period,
+        filing_ejercicio=filing.ejercicio,
+    )
+    verdict = verify_declaracion(filing, ruleset=ruleset)
+    typer.echo(f"Verification status: {verdict.status.value}")
+    typer.echo(f"  {get_translation(verdict.narrative, Language.EN)}")
+    for discrepancy in verdict.discrepancies:
+        rationale = get_translation(discrepancy.cause_rationale, Language.EN)
+        typer.echo(
+            f"  - casilla {discrepancy.casilla_id}: "
+            f"expected {discrepancy.expected}, actual {discrepancy.actual}, "
+            f"cause={discrepancy.cause.value} — {rationale}"
+        )
+
+
+def _resolve_ruleset_for_filing(
+    *,
+    filing_modelo: str,
+    filing_period: str,
+    filing_ejercicio: str,
+):
+    """Resolve the ruleset for the filing's (modelo, period). None when absent."""
+    from ...formulas._period import FiscalPeriod, Quarter
+    from ...formulas._registry import get_registry
+    from ...models import ModeloCode
+
+    try:
+        modelo_code = ModeloCode(filing_modelo)
+    except (KeyError, ValueError):
+        return None
+
+    quarter = None
+    quarter_token = filing_period[4:] if len(filing_period) >= 6 else ""
+    if quarter_token.startswith("Q") and len(quarter_token) == 2 and quarter_token[1].isdigit():
+        try:
+            quarter = Quarter(f"Q{int(quarter_token[1])}")
+        except (KeyError, ValueError):
+            quarter = None
+
+    try:
+        period_obj = FiscalPeriod(year=int(filing_ejercicio), quarter=quarter)
+    except Exception:
+        return None
+
+    try:
+        return get_registry().resolve(modelo=modelo_code, period=period_obj)
+    except Exception:
+        return None
 
 
 @complementaria_app.command("build")
