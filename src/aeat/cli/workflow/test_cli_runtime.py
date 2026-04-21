@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -17,11 +18,31 @@ from typer.testing import CliRunner
 
 from ...deadlines import AutonomoProfile, IVARegime
 from .. import app as root_app
+from ..deadlines._helpers import build_engine as build_deadline_engine
 from ._helpers import clear_test_hooks
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 runner = CliRunner()
+
+
+def _next_pending_modelo_130_period() -> str:
+    """Return a still-open Modelo 130 period for the current year."""
+
+    today = date.today()
+    profile = AutonomoProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+    )
+    schedule = build_deadline_engine().compute(profile, today.year, today=today)
+    for obligation in schedule.obligations:
+        if obligation.modelo == "130" and obligation.closes_on >= today:
+            return obligation.period
+    raise AssertionError("expected at least one pending Modelo 130 obligation in the current year")
 
 
 @pytest.fixture(autouse=True)
@@ -56,16 +77,7 @@ def runtime_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_workflow_run_uses_real_runtime_wiring(runtime_env: Path) -> None:
-    from datetime import date
-
-    today = date.today()
-    current_q = (today.month - 1) // 3 + 1
-    if current_q < 4:
-        period_year, period_q = today.year, current_q + 1
-    else:
-        period_year, period_q = today.year + 1, 1
-    period = f"{period_year}Q{period_q}"
-
+    period = _next_pending_modelo_130_period()
     result = runner.invoke(
         root_app,
         [
