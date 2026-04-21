@@ -498,10 +498,23 @@ def _handle_justificante_import(from_justificante: Path) -> None:
         f"Imported draft {result.draft.draft_id} from justificante {result.submission.justificante_csv} -> {draft_path}"
     )
     typer.echo(f"Saved submission {result.submission.submission_id} -> {submission_path}")
+    lang = _output_language()
     for warning in result.warnings:
-        rendered = get_translation(warning, Language.EN)
+        rendered = get_translation(warning, lang)
         typer.echo(f"[warning] {rendered}")
     _render_draft(result.draft)
+
+
+def _output_language() -> Language:
+    """Resolve the Kent-facing output language from settings.
+
+    Defaults to Spanish (Kent is a Spanish autónomo) per project mandate
+    ``AEAT_OUTPUT_LANGUAGE`` default = ``es``. Audit finding M5.
+    """
+    try:
+        return Language(load_settings().aeat_output_language)
+    except (KeyError, ValueError):
+        return Language.ES
 
 
 def _handle_declaracion_import(
@@ -523,6 +536,8 @@ def _handle_declaracion_import(
     except DeclaracionParseError as exc:
         raise typer.BadParameter(str(exc)) from exc
 
+    lang = _output_language()
+
     typer.echo(
         f"Parsed Modelo {filing.modelo} {filing.period} declaración "
         f"(template {filing.template_revision.revision}). "
@@ -532,7 +547,7 @@ def _handle_declaracion_import(
     if filing.warnings:
         typer.echo(f"[warnings] {len(filing.warnings)}:")
         for warning in filing.warnings:
-            rendered = get_translation(warning.message, Language.EN)
+            rendered = get_translation(warning.message, lang)
             typer.echo(f"  - casilla {warning.casilla_id or '-'}: {rendered}")
 
     ruleset = _resolve_ruleset_for_filing(
@@ -542,9 +557,9 @@ def _handle_declaracion_import(
     )
     verdict = verify_declaracion(filing, ruleset=ruleset)
     typer.echo(f"Verification status: {verdict.status.value}")
-    typer.echo(f"  {get_translation(verdict.narrative, Language.EN)}")
+    typer.echo(f"  {get_translation(verdict.narrative, lang)}")
     for discrepancy in verdict.discrepancies:
-        rationale = get_translation(discrepancy.cause_rationale, Language.EN)
+        rationale = get_translation(discrepancy.cause_rationale, lang)
         typer.echo(
             f"  - casilla {discrepancy.casilla_id}: "
             f"expected {discrepancy.expected}, actual {discrepancy.actual}, "

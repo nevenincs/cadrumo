@@ -110,15 +110,49 @@ class Modelo130V2025Extractor(DeclaracionExtractor):
                 )
                 continue
 
+            # Multi-match guard: if the label pattern hits > 1 time in
+            # the text, extraction is ambiguous — first hit wins but we
+            # drop confidence + emit a warning so the verification
+            # classifier flags EXTRACTION_UNRELIABLE (audit H1).
+            all_hits = _LABEL_REGEX_MAP[casilla_id].findall(full_text)
+            confidence = 1.0
+            if len(all_hits) > 1:
+                confidence = 0.5
+                warnings.append(
+                    ExtractionWarning(
+                        casilla_id=casilla_id,
+                        code="ambiguous-label",
+                        message={
+                            "es": (
+                                f"Casilla {casilla_id}: el patrón coincide {len(all_hits)} veces; se usa la primera."
+                            ),
+                            "en": (
+                                f"Casilla {casilla_id}: label pattern matched "
+                                f"{len(all_hits)} times; the first hit was used."
+                            ),
+                            "hu": (
+                                f"{casilla_id} casilla: a minta {len(all_hits)} "
+                                "helyen illeszkedik; az elsőt használjuk."
+                            ),
+                        },
+                        primitive_attempted="label_regex",
+                    )
+                )
+
             values.append(
                 ExtractedCasilla(
                     casilla_id=casilla_id,
                     printed_value=parsed,
                     source_page=1,
                     source_bbox=None,
-                    extraction_confidence=1.0,
+                    extraction_confidence=confidence,
                 )
             )
+
+        # Structural integrity: casilla 03 = 01 - 02 (by Modelo 130 law).
+        # Mismatch > 0.02 € → one of (01, 02, 03) was mis-extracted;
+        # downgrade 03's confidence + emit ambiguous-label (audit H1).
+        _structural_integrity_check_01_minus_02(values, warnings)
 
         status = _derive_status(values, warnings)
 
@@ -135,6 +169,51 @@ class Modelo130V2025Extractor(DeclaracionExtractor):
             parsed_at=datetime.now(tz=UTC),
             extraction_status=status,
         )
+
+
+def _structural_integrity_check_01_minus_02(
+    values: list[ExtractedCasilla],
+    warnings: list[ExtractionWarning],
+) -> None:
+    """Cross-check the 03 = 01 - 02 invariant; downgrade + warn on drift."""
+    from decimal import Decimal
+
+    by_id = {v.casilla_id: v for v in values}
+    needed = {"01", "02", "03"}
+    if not needed.issubset(by_id.keys()):
+        return
+    c01 = by_id["01"].printed_value
+    c02 = by_id["02"].printed_value
+    c03 = by_id["03"].printed_value
+    if not all(isinstance(v, Decimal) for v in (c01, c02, c03)):
+        return
+    assert isinstance(c01, Decimal) and isinstance(c02, Decimal) and isinstance(c03, Decimal)
+    if abs((c01 - c02) - c03) <= Decimal("0.02"):
+        return
+    # Structural drift — downgrade 03's confidence and warn.
+    replacement = ExtractedCasilla(
+        casilla_id="03",
+        printed_value=c03,
+        source_page=by_id["03"].source_page,
+        source_bbox=by_id["03"].source_bbox,
+        extraction_confidence=min(by_id["03"].extraction_confidence, 0.3),
+    )
+    for idx, existing in enumerate(values):
+        if existing.casilla_id == "03":
+            values[idx] = replacement
+            break
+    warnings.append(
+        ExtractionWarning(
+            casilla_id="03",
+            code="ambiguous-label",
+            message={
+                "es": (f"Casilla 03: ruptura de integridad (01 - 02 = {c01 - c02} ≠ {c03})."),
+                "en": (f"Casilla 03: structural integrity failed (01 - 02 = {c01 - c02} ≠ {c03})."),
+                "hu": (f"03 casilla: strukturális ellentmondás (01 - 02 = {c01 - c02} ≠ {c03})."),
+            },
+            primitive_attempted="label_regex",
+        )
+    )
 
 
 def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:

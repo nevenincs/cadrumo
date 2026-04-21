@@ -25,6 +25,7 @@ _UNRELIABLE_WARNING_CODES: frozenset[str] = frozenset(
         "bbox-fallback",
         "ambiguous-label",
         "value-unparseable",
+        "casilla-not-found",  # audit H1 — missing casillas also down-rank verdict
     }
 )
 
