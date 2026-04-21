@@ -138,6 +138,10 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "financial" / "attachments",
         description="Root directory for the attachment byte and manifest store",
     )
+    aeat_usage_ratios_path: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
+        description="User-configured per-category usage ratio overrides (#259)",
+    )
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
@@ -607,6 +611,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "aeat_token_dir",
+        "aeat_usage_ratios_path",
         "aeat_financial_txs_dir",
         "aeat_storage_backup_dir",
         "aeat_casillas_root",
