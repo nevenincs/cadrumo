@@ -29,6 +29,7 @@ def test_casillas_command_is_registered() -> None:
     result = runner.invoke(cli.app, ["--help"])
     assert result.exit_code == 0
     assert "casillas" in result.stdout
+    assert "produce, verify, and export" in result.stdout
 
 
 def test_financial_command_is_registered() -> None:

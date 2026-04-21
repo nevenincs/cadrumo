@@ -27,7 +27,7 @@ from .show import show_cmd
 app = typer.Typer(
     name="workflow",
     no_args_is_help=True,
-    help="End-user composite workflow engine (#59).",
+    help="Drive Kent's produce -> verify -> export filing workflow.",
 )
 
 app.command(

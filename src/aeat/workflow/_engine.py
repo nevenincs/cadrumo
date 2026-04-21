@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from typing import NoReturn, cast
 
-from ..auth import CertificateHealthSeverity
+from ..auth import CertificateHealthSeverity, describe_provider_operator_impact
 from ..config import Settings
 from ..deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
 from ..errors import SiteHealthError
@@ -854,11 +854,13 @@ class WorkflowEngine:
             cert_details = {
                 "cert_subject": certificate.subject or "",
                 "provider_kind": certificate.kind.value,
+                "provider_operator_impact": describe_provider_operator_impact(certificate),
             }
             if not certificate.configured or not certificate.available:
                 provider_summary = _t(
                     f"Auth provider unavailable: kind={certificate.kind.value} "
-                    f"configured={certificate.configured} available={certificate.available}"
+                    f"configured={certificate.configured} available={certificate.available}. "
+                    f"{describe_provider_operator_impact(certificate)}"
                 )
                 steps.append(
                     WorkflowStep(
