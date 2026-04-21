@@ -1,7 +1,7 @@
 """Unit tests for BrowserSession factory."""
 
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 import pytest
 from playwright.async_api import BrowserContext, Playwright
@@ -43,6 +43,16 @@ class StubContext:
         self.close_calls += 1
 
 
+class CertificateProvisioner:
+    """Test helper that wires Playwright client certificates."""
+
+    def __init__(self, client_certificates: list[dict[str, str]]) -> None:
+        self._client_certificates = client_certificates
+
+    def __call__(self, kwargs: dict[str, object]) -> None:
+        kwargs["client_certificates"] = self._client_certificates
+
+
 class StubBrowser:
     """Stub browser that yields a StubContext."""
 
@@ -75,13 +85,14 @@ class StubChromium:
     def __init__(self) -> None:
         self.live_browser_count = 0
         self.launch_calls = 0
+        self.last_launch_kwargs: dict[str, object] | None = None
         self.closed_browser_count = 0
         self.launched_browsers: list[StubBrowser] = []
         self.next_close_failures = 0
 
     async def launch(self, **kwargs) -> StubBrowser:
         """Return a stub browser."""
-        del kwargs
+        self.last_launch_kwargs = kwargs
         self.launch_calls += 1
         self.live_browser_count += 1
         browser = StubBrowser(self)
@@ -193,6 +204,37 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
 
 
 @pytest.mark.asyncio
+async def test_browser_session_passes_proxy_settings_to_launch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = Settings()
+    monkeypatch.setattr(settings, "aeat_proxy_url", "http://proxy.example:8080")
+    monkeypatch.setattr(settings, "aeat_proxy_username", "operator")
+    monkeypatch.setattr(settings, "aeat_proxy_password_secret", "topsecret")
+    monkeypatch.setattr(settings, "aeat_proxy_bypass", "localhost,127.0.0.1")
+    pw_stub = StubPlaywright()
+    session = BrowserSession(
+        playwright=cast(Playwright, pw_stub),
+        settings=settings,
+        profile=Profile(name="proxy-test", storage_state_path=tmp_path / "state.json"),
+        evasion_strategy=DummyEvasion(),
+    )
+
+    context = await session.create_context()
+    await context.close()
+    await session.close()
+
+    assert pw_stub.chromium.last_launch_kwargs is not None
+    assert pw_stub.chromium.last_launch_kwargs["proxy"] == {
+        "server": "http://proxy.example:8080",
+        "username": "operator",
+        "password": "topsecret",
+        "bypass": "localhost,127.0.0.1",
+    }
+
+
+@pytest.mark.asyncio
 @pytest.mark.unit
 async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     """Certificate propagates into new_context kwargs and thumbprint marker."""
@@ -260,9 +302,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         evasion_strategy=DummyEvasion(),
     )
 
-    def provisioner(kwargs: dict[str, Any]) -> None:
-        kwargs["client_certificates"] = build_client_certificates_kwarg(loaded, settings.aeat_certificate_verify_url)
-
+    provisioner = CertificateProvisioner(build_client_certificates_kwarg(loaded, settings.aeat_certificate_verify_url))
     context = await session.create_context(provisioner=provisioner)
     setattr(context, CERTIFICATE_THUMBPRINT_MARKER, loaded.sha256_thumbprint)
 

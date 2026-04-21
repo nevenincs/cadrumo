@@ -34,13 +34,14 @@ The revised research and ADR now:
 
 - `python C:\Users\hello\.codex\plugins\cache\openai-curated\github\b1986b3d3da5bb8a04d3cb1e69af5a29bb5c2c04\skills\gh-address-comments\scripts\fetch_comments.py` -> identified 4 unresolved actionable PR #136 review threads; all four are addressed in the updated research / ADR text
 - `uv run pytest tests/test_docs.py -q` -> passed (`4 passed`)
+- `uv run pytest src/aeat/auth/test_authenticator.py src/aeat/auth/test_certificate.py src/aeat/browser/test_session.py src/aeat/cli/browser/test_health.py tests/test_docs.py -q` -> passed (`84 passed`)
 - `uv run ruff check .` -> passed
+- `uv run ty check src tests` -> passed
 - `uv run vaultspec-core vault feature index -f n26-data-source` -> passed; regenerated the feature index from live tags
 - `uv run vaultspec-core vault list -f n26-data-source --json` -> passed; feature now resolves exactly 4 documents (`index`, `adr`, `audit`, `research`)
-- `git status --short` -> PR surface is limited to `.vault/research/2026-04-14-n26-data-source-research.md`, `.vault/adr/2026-04-14-n26-data-source-adr.md`, `.vault/n26-data-source.index.md`, and `.vault/audit/2026-04-21-n26-data-source-audit.md`, plus the unrelated local-only `.vaultspec/providers.json`
-- `uv run ty check src tests` -> fails in pre-existing auth files under `src/aeat/auth/`, `src/aeat/browser/`, `src/aeat/cli/doctor.py`, and `src/aeat/submission/_protocols.py`; none of those paths are in the PR #136 document diff
+- `vaultspec-code-reviewer` persona review -> approved; no findings remain on the recovered PR surface
 - `uv run vaultspec-core vault check all` -> fails on broad pre-existing vault filename/body-link/schema debt across historical documents; the new N26 audit naming issue was corrected during this recovery and the feature-specific index/list checks above pass
 
 ## Status
 
-- Accepted for the PR #136 document surface. Remaining `ty` and vault-wide check failures are repository baseline debt outside the N26 branch diff.
+- Accepted for the recovered PR #136 surface. Local lint, typecheck, focused tests, and reviewer approval are all green; only the unrelated vault-wide baseline debt remains outside this branch scope.

@@ -50,9 +50,10 @@ from ._models import (
     AEAT_SESSION_IDLE_TTL,
     AeatLoginAssertion,
     AeatSession,
+    CertificateLoginAssertionDetail,
     CertificateSessionDetail,
 )
-from ._protocols import AuthProviderKind
+from ._protocols import AuthProviderDescription, AuthProviderKind
 from ._providers._certificate._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
 )
@@ -94,6 +95,7 @@ __all__ = [
     "AeatLoginAssertionError",
     "AeatSession",
     "AeatSessionExpiredError",
+    "AuthProviderDescription",
     "AuthProviderKind",
     "BrowserContextLike",
     "BrowserPageLike",
@@ -108,6 +110,7 @@ __all__ = [
     "CertificateHealth",
     "CertificateHealthSeverity",
     "CertificateLoadError",
+    "CertificateLoginAssertionDetail",
     "CertificateNifParseError",
     "CertificatePasswordError",
     "CertificatePreExpiryError",

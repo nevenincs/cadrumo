@@ -115,6 +115,15 @@ class AeatAuthenticator:
         """The active authentication provider."""
         return self._provider
 
+    @property
+    def settings(self) -> Settings:
+        """The settings that configured this authenticator."""
+        return self._settings
+
+    def describe(self):
+        """Return a safe description of the active auth provider."""
+        return self._provider.describe(self._settings)
+
     # --- Legacy Certificate-specific methods (delegated if provider is CertificateAuthProvider) ---
 
     def load_certificate(self) -> LoadedCertificate:
@@ -201,7 +210,11 @@ class AeatAuthenticator:
 
             session_like = browser_session or await self._resolve_browser_session()
             try:
-                session, context = await self._provider.authenticate(session_like, self._settings)
+                session, context = await self._provider.authenticate(
+                    session_like,
+                    self._settings,
+                    target_url=target,
+                )
             except Exception as exc:
                 await self._close_browser_session(session_like)
                 if isinstance(exc, AeatLoginAssertionError):
@@ -256,7 +269,12 @@ class AeatAuthenticator:
             self._inflight_drained.clear()
 
         try:
-            return await self._provider.verify(context, session, self._settings)
+            return await self._provider.verify(
+                context,
+                session,
+                self._settings,
+                target_url=target_url,
+            )
         finally:
             async with self._lock:
                 self._inflight_pages -= 1
@@ -378,7 +396,13 @@ class AeatAuthenticator:
         owns_session = browser_session is None
 
         try:
-            session, context = await self._provider.resume(session_like, storage_state_path, metadata, self._settings)
+            session, context = await self._provider.resume(
+                session_like,
+                storage_state_path,
+                metadata,
+                self._settings,
+                target_url=target_url,
+            )
         except Exception as exc:
             if owns_session:
                 await self._close_browser_session(session_like)

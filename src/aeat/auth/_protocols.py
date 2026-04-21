@@ -54,6 +54,8 @@ class AuthProvider(Protocol):
         self,
         browser_session: BrowserSessionLike,
         settings: Settings,
+        *,
+        target_url: str | None = None,
     ) -> tuple[AeatSession, BrowserContextLike]: ...
 
     async def resume(
@@ -62,6 +64,8 @@ class AuthProvider(Protocol):
         storage_state_path: Path,
         metadata: dict[str, Any],
         settings: Settings,
+        *,
+        target_url: str | None = None,
     ) -> tuple[AeatSession, BrowserContextLike]: ...
 
     async def verify(
@@ -69,6 +73,8 @@ class AuthProvider(Protocol):
         context: BrowserContextLike,
         session: AeatSession,
         settings: Settings,
+        *,
+        target_url: str | None = None,
     ) -> AeatLoginAssertion: ...
 
     def describe(self, settings: Settings) -> AuthProviderDescription: ...
