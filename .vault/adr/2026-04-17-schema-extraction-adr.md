@@ -46,7 +46,7 @@ design:
   `Modelo` MUST reference it.
 
 The research doc
-[[2026-04-17-schema-extraction-research]] surveyed three extraction
+`[[2026-04-17-schema-extraction-research]]` surveyed three extraction
 strategies (BOE Orden annex, live portal HTML probe, Manual práctico
 + LLM) and three library paths (pdfplumber, pymupdf, LLM). It
 recommended anchoring extraction to the BOE-published Orden (the
@@ -497,11 +497,11 @@ Verdict post-amendment: PASS, mergeable.
 
 ## References
 
-- [[2026-04-17-schema-extraction-research]] — the source of
+- `[[2026-04-17-schema-extraction-research]]` — the source of
   strategy trade-offs and library survey.
-- [[2026-04-13-modelo-inventory-adr]] — `ModeloCode` enum
+- `[[2026-04-13-modelo-inventory-adr]]` — `ModeloCode` enum
   shape this ADR depends on.
-- [[2026-04-12-casilla-db-adr]] — the downstream curated
+- `[[2026-04-12-casilla-db-adr]]` — the downstream curated
   catalogue this extractor feeds.
 - `src/aeat/manuals/_fetch.py` — the sha256-verified fetch
   pattern this issue mirrors.

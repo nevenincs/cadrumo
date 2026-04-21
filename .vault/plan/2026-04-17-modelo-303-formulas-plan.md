@@ -25,7 +25,7 @@ ES 2024 baseline rate table; classification → casilla bridge), in a
 single PR per the user-expanded #183 scope.
 
 Adheres to the audited ADR
-[[2026-04-17-modelo-303-formulas-adr]].
+`[[2026-04-17-modelo-303-formulas-adr]]`.
 
 ## Phases
 

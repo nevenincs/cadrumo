@@ -1,3 +1,11 @@
+---
+tags:
+  - "#adr"
+  - "#base-module-structure"
+date: 2026-04-12
+related:
+  - "[[2026-04-12-base-module-structure-research]]"
+---
 # Base Module Structure ADR
 Date: 2026-04-12
 

@@ -44,8 +44,47 @@ id = "relative-imports-mandate"
 name = "enforce relative imports inside src/aeat/ (#162)"
 language = "system"
 entry = "uv run python scripts/check_relative_imports.py"
-# Per-file scan keeps pre-commit fast on big repos; the script silently
-# drops paths outside src/aeat/ (tests/, scripts/, etc.) by design.
+# Per-file scan keeps prek fast on big repos; the script silently drops
+# paths outside src/aeat/ (tests/, scripts/, etc.) by design.
 pass_filenames = true
 files = "^src/aeat/.*\\.py$"
 types = ["python"]
+
+# ── Vault hygiene (vaultspec-core) ──────────────────────────────────────────
+# Previously lived in a shadowed .pre-commit-config.yaml; prek only reads
+# prek.toml, so these guards had been silently disabled. Re-enabled here.
+#
+# Only `check-provider-artifacts` runs on every commit / in CI — it is the
+# guard that catches accidental provider-state commits (the same class of
+# bug that let .vaultspec/providers.json slip into main). `vault-fix` and
+# `spec-check` are parked on the manual stage: `vault-fix` rewrites files
+# in-place (unsafe mid-commit) and currently flags a large pre-existing
+# doc-naming backlog, while `spec-check` reports local-dev framework
+# health that is not meaningful inside CI. Run them explicitly with
+# `uv run prek run --hook-stage manual <hook-id>`.
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "check-provider-artifacts"
+name = "check provider artifacts (guard against provider leaks)"
+language = "system"
+entry = "uv run --no-sync vaultspec-core check-providers"
+pass_filenames = false
+always_run = true
+
+[[repos.hooks]]
+id = "vault-fix"
+name = "vault check (auto-fix, manual stage)"
+language = "system"
+entry = "uv run --no-sync vaultspec-core vault check all --fix"
+pass_filenames = false
+stages = ["manual"]
+
+[[repos.hooks]]
+id = "spec-check"
+name = "vaultspec doctor (manual stage)"
+language = "system"
+entry = "uv run --no-sync vaultspec-core spec doctor"
+pass_filenames = false
+stages = ["manual"]

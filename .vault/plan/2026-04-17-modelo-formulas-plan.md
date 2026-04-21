@@ -15,7 +15,7 @@ related:
 # modelo-formulas implementation plan
 
 Implements the `aeat.formulas` subpackage per the matching ADR
-[[2026-04-17-modelo-formulas-adr]]: a deterministic, sandboxed,
+`[[2026-04-17-modelo-formulas-adr]]`: a deterministic, sandboxed,
 period-aware tax-formula engine with a Modelo 130 (2024 and 2025)
 ruleset as the proof-of-concept. Wave 1 scope only — future waves
 (Modelo 303, 100, 390, …) are explicitly deferred.
