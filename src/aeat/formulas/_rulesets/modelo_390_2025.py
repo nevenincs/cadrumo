@@ -13,10 +13,22 @@ the per-régimen rollup:
 - casilla 190 = casilla 105 + casilla 108 + casilla 109 (suma
   resultado = régimen general + simplificado + otros regímenes).
 
-The 192/193 split (total a ingresar vs. total a devolver) and the 191
-cuota resultante anual depend on sign of 190 — algebraic modelling
-deferred to sub-EPIC #305-Modelo-390-full along with the remaining
-~665 casillas.
+**Scope limitations (wave 40 audit H2):**
+
+This MVP assumes:
+
+- NO regularización de bienes de inversión (casillas 107 / 662). A
+  Kent with bienes-inversion adjustments will see a 105 discrepancy
+  because the real AEAT formula subtracts those adjustments before
+  arriving at 105.
+- NO pro-rata adjustment (casillas 102 / 103). AEAT uses these to
+  flow into 104 in the full formula; the MVP treats 104 as just
+  ``100 + 101``.
+- Single-régimen-general autónomos are the target audience.
+
+Full-form support lands in sub-EPIC #305-Modelo-390-full along with
+the remaining ~665 casillas, plus the 191/192/193 branching on sign
+of 190 (total a ingresar vs. total a devolver).
 
 Legal base: Ley 37/1992 (LIVA), Reglamento IVA (RD 1624/1992), Orden
 EHA/3111/2009 (modelo 390 aprobación) modificada anualmente.

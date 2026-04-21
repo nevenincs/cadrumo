@@ -160,7 +160,10 @@ def percent_from_whole(rate_ref: Operand, base: Operand) -> PercentFormula:
     extracted casilla rather than stored in a :class:`ParameterTable`.
 
     Consistent quantisation ``Decimal("0.0001")`` keeps post-division
-    precision at four decimals (enough for any IS/IRPF rate).
+    precision at four decimals — exactly enough for any 2-decimal
+    whole-percent rate (``17,00`` ⇒ 0.1700, ``24,50`` ⇒ 0.2450).
+    AEAT never prints rates below 2 decimal places, so truncation
+    does not arise in practice.
     """
     return PercentFormula(operands=(div_op(rate_ref, Literal(value=Decimal("100")), quantize="0.0001"), base))
 
