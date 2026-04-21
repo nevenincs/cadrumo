@@ -7,12 +7,15 @@ from .._extractor import DeclaracionExtractor
 from .._schema import TemplateRevision
 from .modelo_111_v2025 import Modelo111V2025Extractor
 from .modelo_115_v2025 import Modelo115V2025Extractor
+from .modelo_123_v2025 import Modelo123V2025Extractor
 from .modelo_130_v2025 import Modelo130V2025Extractor
 from .modelo_180_v2025 import Modelo180V2025Extractor
 from .modelo_190_v2025 import Modelo190V2025Extractor
+from .modelo_193_v2025 import Modelo193V2025Extractor
 from .modelo_303_v2024_09 import Modelo303V2024Orden819Extractor
 from .modelo_303_v2025 import Modelo303V2025Extractor
 from .modelo_347_v2025 import Modelo347V2025Extractor
+from .modelo_349_v2025 import Modelo349V2025Extractor
 from .modelo_390_v2025 import Modelo390V2025Extractor
 
 
@@ -24,12 +27,15 @@ def _key_for(extractor_cls: type[DeclaracionExtractor]) -> tuple[str, int, str]:
 _REGISTERED_CLASSES: tuple[type[DeclaracionExtractor], ...] = (
     Modelo111V2025Extractor,
     Modelo115V2025Extractor,
+    Modelo123V2025Extractor,
     Modelo130V2025Extractor,
     Modelo180V2025Extractor,
     Modelo190V2025Extractor,
+    Modelo193V2025Extractor,
     Modelo303V2024Orden819Extractor,
     Modelo303V2025Extractor,
     Modelo347V2025Extractor,
+    Modelo349V2025Extractor,
     Modelo390V2025Extractor,
 )
 
