@@ -56,12 +56,16 @@ class UsageRatioProfile(BaseModel):
     @field_validator("ratios", mode="after")
     @classmethod
     def _validate_bounds(cls, value: dict[SpendingCategory, Decimal]) -> dict[SpendingCategory, Decimal]:
+        # Pydantic strict-mode Decimal handling rejects NaN / Infinity before this
+        # validator runs (both via JSON parse and via Python constructor); the
+        # bound check here covers the remaining domain.
         for category, ratio in value.items():
-            if not ratio.is_finite():
-                raise ValueError(f"usage ratio for {category.value!r} must be finite (got {ratio})")
             if not (Decimal("0") <= ratio <= Decimal("1")):
                 raise ValueError(f"usage ratio for {category.value!r} must be in [0, 1] (got {ratio})")
-        return value
+        # Canonicalise key order so two equal profiles serialise to identical bytes.
+        # Kent's ``var/financial/usage-ratios.json`` is a candidate for git-tracking;
+        # stable ordering prevents spurious diffs when ratios are toggled.
+        return {category: value[category] for category in sorted(value, key=lambda c: c.value)}
 
     @model_validator(mode="after")
     def _validate_eligibility(self) -> UsageRatioProfile:

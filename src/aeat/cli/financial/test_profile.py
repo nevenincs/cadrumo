@@ -177,3 +177,63 @@ def test_set_ratio_accepts_lower_bound_zero() -> None:
     result = _invoke("set-ratio", "suministros_home_office_luz", "0")
     assert result.exit_code == 0, result.output
     assert "set suministros_home_office_luz = 0" in result.output
+
+
+def test_set_ratio_rejects_spanish_locale_comma_decimal() -> None:
+    """Kent in Málaga may type ``0,21`` out of habit; the CLI must refuse
+    with a clear error rather than silently mis-parse."""
+    result = _invoke("set-ratio", "suministros_home_office_luz", "0,21")
+    assert result.exit_code == 2
+    assert "invalid ratio" in result.output
+
+
+def test_kent_success_moment_end_to_end(_isolate_usage_ratios_path: Path) -> None:
+    """Replay Kent's issue-body narrative: set home-office ratio to 0.21,
+    list, and confirm every home-office category now reports 0.21 beside
+    the statutory default 0.3."""
+    set_result = _invoke("set-ratio", "home_office_area", "0.21")
+    assert set_result.exit_code == 0, set_result.output
+    assert _isolate_usage_ratios_path.exists()
+
+    list_result = _invoke("ratios", "list")
+    assert list_result.exit_code == 0, list_result.output
+    lines = list_result.output.splitlines()
+    # One header + six data rows (the six USAGE_RATIO_HOME_AREA categories).
+    data_rows = [line for line in lines if "\t" in line and "usage_ratio_home_area" in line]
+    assert len(data_rows) == 6, list_result.output
+    for row in data_rows:
+        columns = row.split("\t")
+        # category, kind, user_ratio, statutory_default
+        assert len(columns) == 4
+        assert columns[1] == "usage_ratio_home_area"
+        assert columns[2] == "0.21"
+        assert columns[3] == "0.3"
+
+
+def test_successive_set_ratios_accumulate() -> None:
+    """Two ``set-ratio`` calls for different categories must both persist;
+    the second must not clobber the first."""
+    first = _invoke("set-ratio", "suministros_home_office_luz", "0.21")
+    assert first.exit_code == 0, first.output
+    second = _invoke("set-ratio", "telefonia_movil", "0.6")
+    assert second.exit_code == 0, second.output
+    listing = _invoke("ratios", "list")
+    assert "suministros_home_office_luz" in listing.output
+    assert "telefonia_movil" in listing.output
+    assert "0.21" in listing.output
+    assert "0.6" in listing.output
+
+
+def test_set_ratio_same_category_twice_replaces_value() -> None:
+    """Setting the same category twice replaces the value rather than
+    appending or erroring out."""
+    _invoke("set-ratio", "suministros_home_office_luz", "0.21")
+    second = _invoke("set-ratio", "suministros_home_office_luz", "0.5")
+    assert second.exit_code == 0, second.output
+    listing = _invoke("ratios", "list")
+    assert "0.5" in listing.output
+    # The replaced value must no longer appear as the user ratio for the
+    # category — scan the row explicitly to avoid false matches elsewhere.
+    data_rows = [line for line in listing.output.splitlines() if line.startswith("suministros_home_office_luz\t")]
+    assert len(data_rows) == 1
+    assert data_rows[0].split("\t")[2] == "0.5"

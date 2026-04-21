@@ -90,3 +90,18 @@ def test_save_to_unwritable_parent_raises(tmp_path: Path) -> None:
     with pytest.raises(UsageRatioPersistenceError):
         save_usage_ratios(profile, target)
     assert list(tmp_path.glob("*.tmp")) == []
+
+
+def test_save_target_is_existing_directory_raises(tmp_path: Path) -> None:
+    """Pointing ``target`` at an existing directory surfaces cleanly.
+
+    On POSIX ``os.replace`` raises ``IsADirectoryError`` and on Windows
+    ``PermissionError`` — both subclasses of ``OSError``, wrapped into
+    :class:`UsageRatioPersistenceError`.
+    """
+    target = tmp_path / "ratios-as-dir"
+    target.mkdir()
+    profile = UsageRatioProfile()
+    with pytest.raises(UsageRatioPersistenceError):
+        save_usage_ratios(profile, target)
+    assert list(tmp_path.glob("*.tmp")) == []
