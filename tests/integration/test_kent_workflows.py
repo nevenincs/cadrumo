@@ -12,6 +12,7 @@ own fixture-tier-specific files as anchors accrue.
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 from pathlib import Path
 
@@ -111,7 +112,12 @@ class TestKentImportsModelo130Declaracion:
             ["filing", "import", "--from-declaracion", str(pdf)],
         )
         assert result.exit_code == 0, result.output
-        assert "7 of 7 casillas extracted" in result.output
+        # Regex-match rather than a fixed count — the declaración extractor
+        # expands its casilla set in future waves (cluster D phase 2+);
+        # happy path should remain green as long as N-of-N = COMPLETE.
+        match = re.search(r"(\d+) of (\d+) casillas extracted", result.output)
+        assert match is not None, result.output
+        assert match.group(1) == match.group(2), result.output
         assert "Extraction status: COMPLETE" in result.output
         assert "Verification status: VERIFIED" in result.output
         assert "verified" in result.output.lower()
