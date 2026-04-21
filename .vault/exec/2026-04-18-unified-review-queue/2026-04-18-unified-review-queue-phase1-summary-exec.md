@@ -11,7 +11,7 @@ related:
 
 # unified-review-queue phase-1 summary
 
-Single-pass execution of the [[2026-04-18-unified-review-queue-plan]] for issue [#232](https://github.com/wgergely/aeat/issues/232).
+Single-pass execution of the `[[2026-04-18-unified-review-queue-plan]]` for issue [#232](https://github.com/wgergely/aeat/issues/232).
 
 ## what landed
 

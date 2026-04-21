@@ -1,3 +1,10 @@
+---
+tags:
+  - "#exec"
+  - "#filing-draft-engine"
+date: 2026-04-21
+related: []
+---
 # Execution notes — Filing draft generation engine (#39)
 
 Date: 2026-04-12

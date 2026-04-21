@@ -169,7 +169,7 @@ property of the runner.
 - Issue wgergely/aeat#11
 - Issue wgergely/aeat#6, #7, #8, #9, #10, #17, #21, #25 (cross-
   module stubs)
-- [[2026-04-12-playwright-anti-bot-adr]]
-- [[2026-04-12-base-module-structure-adr]]
+- `[[2026-04-12-playwright-anti-bot-adr]]`
+- `[[2026-04-12-base-module-structure-adr]]`
 - `CLAUDE.md` — pydantic mandate, public API discipline, testing
   rules

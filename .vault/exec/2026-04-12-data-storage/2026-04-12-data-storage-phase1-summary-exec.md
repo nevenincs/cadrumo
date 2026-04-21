@@ -15,7 +15,7 @@ related:
 
 ## scope delivered
 
-Single-pass execution of [[2026-04-12-data-storage-plan]]. All phases
+Single-pass execution of `[[2026-04-12-data-storage-plan]]`. All phases
 landed in one commit on branch `feature/10-data-storage`.
 
 ### dependencies + settings

@@ -12,7 +12,7 @@ related:
 
 # kent-revise-review-audit
 
-Companion audit to the [[2026-04-17-kent-ux-journey-audit|first-file journey audit]]. Kent has now filed at least once. Three scenarios in this round:
+Companion audit to the `[[2026-04-17-kent-ux-journey-audit|first-file journey audit]]`. Kent has now filed at least once. Three scenarios in this round:
 
 - **A:** Kent discovers a mistake in an *already-filed* return and must revise it.
 - **B:** Kent runs the semi-autonomous pipeline and needs to know *what the tool decided vs. what it skipped or guessed*.

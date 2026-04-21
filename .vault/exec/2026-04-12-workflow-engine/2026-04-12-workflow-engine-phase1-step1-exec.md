@@ -15,8 +15,8 @@ related:
 
 ## plan reference
 
-Executing [[2026-04-12-workflow-engine-plan]] in full. The ADR
-[[2026-04-12-workflow-engine-adr]] is the source of truth for the
+Executing `[[2026-04-12-workflow-engine-plan]]` in full. The ADR
+`[[2026-04-12-workflow-engine-adr]]` is the source of truth for the
 ten-stage ordering, the bailout matrix, the dry-run-by-default /
 double-gate contract, and the single sanctioned `dict[str, str]`
 exception on `WorkflowStep.details`.

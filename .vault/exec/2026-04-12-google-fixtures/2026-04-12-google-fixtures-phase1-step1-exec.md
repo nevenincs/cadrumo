@@ -13,7 +13,7 @@ related:
 
 ## Intent
 
-Execute every step of [[2026-04-12-google-fixtures-plan]] in a single
+Execute every step of `[[2026-04-12-google-fixtures-plan]]` in a single
 phase: errors + settings + env example → catalogue + provisioning +
 teardown scripts → justfile recipes → live smoke test → contributor
 README → verify (lint / typecheck / test / hooks).

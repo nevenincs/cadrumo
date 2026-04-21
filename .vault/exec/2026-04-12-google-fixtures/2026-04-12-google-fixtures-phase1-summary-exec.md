@@ -19,10 +19,10 @@ typecheck, pytest, and hooks are green on Windows. Ready for PR.
 
 ## Artefacts produced
 
-- **Research** — [[2026-04-12-google-fixtures-research]]
-- **ADR** — [[2026-04-12-google-fixtures-adr]]
-- **Plan** — [[2026-04-12-google-fixtures-plan]]
-- **Step record** — [[2026-04-12-google-fixtures-phase1-step1-exec]]
+- **Research** — `[[2026-04-12-google-fixtures-research]]`
+- **ADR** — `[[2026-04-12-google-fixtures-adr]]`
+- **Plan** — `[[2026-04-12-google-fixtures-plan]]`
+- **Step record** — `[[2026-04-12-google-fixtures-phase1-step1-exec]]`
 
 ## Code landed
 
@@ -58,7 +58,7 @@ typecheck, pytest, and hooks are green on Windows. Ready for PR.
 
 | Acceptance bullet | Evidence |
 | ----------------- | -------- |
-| Vault research + ADR capturing fixtures needed and rationale | [[2026-04-12-google-fixtures-research]] + [[2026-04-12-google-fixtures-adr]] |
+| Vault research + ADR capturing fixtures needed and rationale | `[[2026-04-12-google-fixtures-research]]` + `[[2026-04-12-google-fixtures-adr]]` |
 | Idempotent provisioning + teardown scripts | `scripts/provision_google_fixtures.py`, `scripts/teardown_google_fixtures.py` — find-or-create by title under parent, seeds freshly-created only |
 | Settings + env/.env.example updated + alignment test green | `src/aeat/config.py` + `env/.env.example` + `tests/test_config.py` passing |
 | At least one `@pytest.mark.live` smoke test skipped by default | `tests/live/test_google_fixtures_smoke.py` (dual opt-in) |

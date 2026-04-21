@@ -10,7 +10,7 @@ related:
 
 # relative-imports plan: enforce relative imports inside src/aeat/
 
-Implementation plan for [[2026-04-17-relative-imports-adr]]. Single-
+Implementation plan for `[[2026-04-17-relative-imports-adr]]`. Single-
 phase chore: lint config + mechanical codemod + docs update +
 verification. No persistence, no schema, no domain logic.
 

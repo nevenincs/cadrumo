@@ -1,4 +1,4 @@
-﻿---
+---
 tags:
   - "#adr"
   - "#trilingual-i18n"

@@ -261,11 +261,14 @@ GEMINI.md
 
 # vaultspec-core writes 0-byte `.lock` sentinels next to every file it
 # manages (.gitignore.lock, .mcp.json.lock, .pre-commit-config.yaml.lock,
-# .vaultspec/providers{.json,}.lock). Upstream install forgets to gitignore
-# them. Ignore here until fixed upstream. (uv.lock is unaffected — no
-# leading dot.)
+# .vaultspec/providers{.json,}.lock). It also regenerates
+# .pre-commit-config.yaml on every install even though the project uses
+# prek (which reads prek.toml exclusively). Upstream install forgets to
+# gitignore all of these. Ignore here until fixed upstream. uv.lock is
+# unaffected — no leading dot.
 /.*.lock
 /.vaultspec/*.lock
+/.pre-commit-config.yaml
 
 # Scratch / ad-hoc workspace
 #
