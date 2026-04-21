@@ -14,8 +14,12 @@ from ..models import ModeloCode
 from ._codes import Quarter
 from ._period import FiscalPeriod
 from ._registry import RulesetRegistry, get_registry
+from ._rulesets.modelo_115_2024 import RULESET as MODELO_115_2024
+from ._rulesets.modelo_115_2025 import RULESET as MODELO_115_2025
 from ._rulesets.modelo_130_2024 import RULESET as MODELO_130_2024
 from ._rulesets.modelo_130_2025 import RULESET as MODELO_130_2025
+from ._rulesets.modelo_180_2024 import RULESET as MODELO_180_2024
+from ._rulesets.modelo_180_2025 import RULESET as MODELO_180_2025
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -33,11 +37,13 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
     assert ids == [
         "modelo_100.summary.2025",
         "modelo_111.2025",
+        "modelo_115.2024",
         "modelo_115.2025",
         "modelo_123.2025",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_131.2025",
+        "modelo_180.2024",
         "modelo_180.2025",
         "modelo_200.2024",
         "modelo_202.2025",
@@ -56,6 +62,39 @@ def test_resolve_returns_2024_for_q2() -> None:
         period=FiscalPeriod(year=2024, quarter=Quarter.Q2),
     )
     assert ruleset is MODELO_130_2024
+
+
+@pytest.mark.unit
+def test_resolve_115_backfill_binds_2024() -> None:
+    """Wave 43: Modelo 115 2024 backfill resolves for 2024-Q4 complementarias."""
+    registry = get_registry()
+    ruleset_2024 = registry.resolve(
+        modelo=ModeloCode.MODELO_115,
+        period=FiscalPeriod(year=2024, quarter=Quarter.Q4),
+    )
+    ruleset_2025 = registry.resolve(
+        modelo=ModeloCode.MODELO_115,
+        period=FiscalPeriod(year=2025, quarter=Quarter.Q1),
+    )
+    assert ruleset_2024 is MODELO_115_2024
+    assert ruleset_2025 is MODELO_115_2025
+
+
+@pytest.mark.unit
+def test_resolve_180_backfill_binds_2024() -> None:
+    """Wave 43: Modelo 180 2024 backfill resolves for ejercicio-2024 annual filings."""
+    registry = get_registry()
+    # Annual filings use quarter=None (a FiscalPeriod with only a year).
+    ruleset_2024 = registry.resolve(
+        modelo=ModeloCode.MODELO_180,
+        period=FiscalPeriod(year=2024),
+    )
+    ruleset_2025 = registry.resolve(
+        modelo=ModeloCode.MODELO_180,
+        period=FiscalPeriod(year=2025),
+    )
+    assert ruleset_2024 is MODELO_180_2024
+    assert ruleset_2025 is MODELO_180_2025
 
 
 @pytest.mark.unit

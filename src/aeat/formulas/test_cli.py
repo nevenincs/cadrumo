@@ -31,11 +31,13 @@ def test_list_subcommand(runner: CliRunner) -> None:
     assert ids == [
         "modelo_100.summary.2025",
         "modelo_111.2025",
+        "modelo_115.2024",
         "modelo_115.2025",
         "modelo_123.2025",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_131.2025",
+        "modelo_180.2024",
         "modelo_180.2025",
         "modelo_200.2024",
         "modelo_202.2025",
