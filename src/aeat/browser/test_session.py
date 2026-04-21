@@ -206,12 +206,14 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     from cryptography.x509.oid import NameOID
 
     from ..auth import (
+        BrowserContextLike,
         CertificateBackend,
         CertificateBundle,
         build_client_certificates_kwarg,
         load_certificate,
     )
-    from .session import CERTIFICATE_THUMBPRINT_MARKER
+
+    _certificate_thumbprint_marker = "_aeat_certificate_thumbprint"
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     subject = issuer = x509.Name(
@@ -260,11 +262,16 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         evasion_strategy=DummyEvasion(),
     )
 
-    def provisioner(kwargs: dict[str, Any]) -> None:
-        kwargs["client_certificates"] = build_client_certificates_kwarg(loaded, settings.aeat_certificate_verify_url)
+    class _CertProvisioner:
+        def build_context_kwargs(self) -> dict[str, Any]:
+            return {
+                "client_certificates": build_client_certificates_kwarg(loaded, settings.aeat_certificate_verify_url)
+            }
 
-    context = await session.create_context(provisioner=provisioner)
-    setattr(context, CERTIFICATE_THUMBPRINT_MARKER, loaded.sha256_thumbprint)
+        def annotate_context(self, context: BrowserContextLike) -> None:
+            setattr(context, _certificate_thumbprint_marker, loaded.sha256_thumbprint)
+
+    context = await session.create_context(provisioner=_CertProvisioner())
 
     kwargs: dict[str, object] = cast(StubContext, context).kwargs
     assert "client_certificates" in kwargs
@@ -272,7 +279,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     assert isinstance(cc, list) and len(cc) == 1
     assert cc[0]["pfxPath"] == str(bundle_path)
     assert cc[0]["passphrase"] == "pw"  # noqa: S105 — test fixture
-    marker = getattr(context, CERTIFICATE_THUMBPRINT_MARKER, None)
+    marker = getattr(context, _certificate_thumbprint_marker, None)
     assert marker == loaded.sha256_thumbprint
 
 

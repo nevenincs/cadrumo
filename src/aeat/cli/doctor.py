@@ -614,7 +614,7 @@ def check_certificate_health(settings: Settings) -> Row:
     Load failures surface as :attr:`State.WARN` with the exception
     class name so the doctor never aborts mid-table.
     """
-    description = AeatAuthenticator(settings).describe()
+    description = AeatAuthenticator(settings).provider.describe(settings)
     if not description.configured:
         return Row(
             section="aeat certificate",

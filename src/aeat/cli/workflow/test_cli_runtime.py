@@ -64,7 +64,7 @@ def test_workflow_run_uses_real_runtime_wiring(runtime_env: Path) -> None:
             "--modelo",
             "130",
             "--period",
-            "2026Q1",
+            "2026Q2",
             "--json",
             "--no-sync",
         ],
