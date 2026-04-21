@@ -51,13 +51,13 @@ class PersistedAuthSession(BaseModel):
         return now >= self.idle_deadline
 
 
-def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedAuthSession | None:
-    """Load the persisted session metadata for ``kind`` (or the only slot today)."""
-    paths = storage_state_paths(settings, kind)
-    metadata_path = paths.metadata
-    if not metadata_path.exists():
-        return None
+def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> PersistedAuthSession:
+    """Parse ``metadata_path`` into a :class:`PersistedAuthSession`.
 
+    ``kind_hint`` is the provider kind implied by the path location
+    (cert sidecar vs Cl@ve sidecar) and is used as the provider_kind
+    fallback when the sidecar schema does not carry an explicit field.
+    """
     try:
         raw = json.loads(metadata_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -71,16 +71,13 @@ def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedA
             f"auth session metadata at {metadata_path} must be a JSON object; run `aeat auth login` to reauthenticate"
         )
 
-    # The authenticator writes `certificate_nif` today; map to the
-    # provider-agnostic `identity_nif` expected by ``PersistedAuthSession``.
     payload = dict(raw)
+    # Cert sidecar writes `certificate_nif`; provider-agnostic loaders
+    # expect `identity_nif`. Shim both keys so the CLI works against
+    # every provider sidecar we know about today.
     if "identity_nif" not in payload and "certificate_nif" in payload:
         payload["identity_nif"] = payload["certificate_nif"]
-
-    # The authenticator's current sidecar has no explicit `provider_kind`
-    # key; certificate is the only provider that writes metadata today,
-    # so default there. Future providers will add the field.
-    payload.setdefault("provider_kind", AuthProviderKind.CERTIFICATE.value)
+    payload.setdefault("provider_kind", kind_hint.value)
 
     try:
         return PersistedAuthSession.model_validate(payload)
@@ -91,16 +88,54 @@ def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedA
         ) from exc
 
 
+def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedAuthSession | None:
+    """Load the persisted session metadata for ``kind`` (or any if omitted).
+
+    When ``kind`` is given, the lookup targets that provider's sidecar
+    only. When ``kind`` is ``None`` the loader walks every known
+    provider kind and returns the first session it finds, preferring
+    the certificate layout for backward compatibility with older
+    on-disk files.
+    """
+    if kind is not None:
+        paths = storage_state_paths(settings, kind)
+        if not paths.metadata.exists():
+            return None
+        return _parse_single(paths.metadata, kind)
+
+    for candidate in (
+        AuthProviderKind.CERTIFICATE,
+        AuthProviderKind.CLAVE_MOVIL,
+        AuthProviderKind.CLAVE_PERMANENTE,
+        AuthProviderKind.CLAVE_PIN,
+    ):
+        paths = storage_state_paths(settings, candidate)
+        if paths.metadata.exists():
+            return _parse_single(paths.metadata, candidate)
+    return None
+
+
 def delete(settings: Settings, kind: AuthProviderKind | None = None) -> list[Path]:
-    """Remove the storage-state and metadata files for ``kind``.
+    """Remove storage-state + metadata files for ``kind`` (or all when omitted).
 
     Returns the paths that were actually deleted. Missing files are a
     silent no-op.
     """
-    paths = storage_state_paths(settings, kind)
     removed: list[Path] = []
-    for candidate in (paths.storage_state, paths.metadata):
-        if candidate.exists():
-            candidate.unlink()
-            removed.append(candidate)
+    kinds = (
+        [kind]
+        if kind is not None
+        else [
+            AuthProviderKind.CERTIFICATE,
+            AuthProviderKind.CLAVE_MOVIL,
+            AuthProviderKind.CLAVE_PERMANENTE,
+            AuthProviderKind.CLAVE_PIN,
+        ]
+    )
+    for candidate_kind in kinds:
+        paths = storage_state_paths(settings, candidate_kind)
+        for candidate_path in (paths.storage_state, paths.metadata):
+            if candidate_path.exists():
+                candidate_path.unlink()
+                removed.append(candidate_path)
     return removed

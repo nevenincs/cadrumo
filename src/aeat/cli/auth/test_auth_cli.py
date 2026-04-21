@@ -112,13 +112,14 @@ class TestListProviders:
         payload = json.loads(result.output)
         assert [row["kind"] for row in payload] == [
             AuthProviderKind.CERTIFICATE.value,
-            AuthProviderKind.CLAVE_PERMANENTE.value,
             AuthProviderKind.CLAVE_MOVIL.value,
+            AuthProviderKind.CLAVE_PERMANENTE.value,
             AuthProviderKind.CLAVE_PIN.value,
         ]
-        assert payload[1]["implemented"] is False
         assert payload[0]["implemented"] is True
-        assert payload[1]["health_summary"] == "not yet implemented"
+        assert payload[1]["implemented"] is True
+        assert payload[2]["implemented"] is False
+        assert payload[2]["health_summary"] == "not yet implemented"
 
 
 # ── registry / default resolution ────────────────────────────────────────────
@@ -152,7 +153,7 @@ class TestRegistry:
     def test_describe_returns_placeholder_for_unshipped_kinds(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         settings = Settings()
-        description = _registry.describe(AuthProviderKind.CLAVE_MOVIL, settings)
+        description = _registry.describe(AuthProviderKind.CLAVE_PIN, settings)
         assert description.configured is False
         assert description.available is False
         assert description.health_summary == "not yet implemented"
