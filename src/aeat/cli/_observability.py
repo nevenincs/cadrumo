@@ -50,16 +50,14 @@ _REDACTED_VALUE = "***"
 def _stringify(value: Any) -> str | None:
     """Convert a Typer-captured argument value to a string for replay capture.
 
-    Returns ``None`` for ``None`` so callers can skip unset optionals.
-    Bools / ints / floats / Paths / enums / strings round-trip via
-    ``str(...)``. Other types are coerced via ``repr`` so the
-    capture is never lossy from the perspective of audit (replay
-    reconstructs the argv, which only emits flag arguments).
+    ``None`` is returned unchanged so callers can skip unset optionals.
+    Every other type is coerced via :func:`str` — ``StrEnum`` values
+    (e.g. :class:`aeat.inbox.NotificacionPriority`) render as their
+    ``.value`` directly because ``StrEnum`` subclasses ``str``, Paths
+    render as their POSIX string, and primitives round-trip naturally.
     """
     if value is None:
         return None
-    if isinstance(value, bool | int | float | str):
-        return str(value)
     return str(value)
 
 
