@@ -7,6 +7,32 @@ union with an exactly-one-variant invariant enforced by a
 ``dict[str, Any]`` anywhere on the wire so every persisted JSONL line
 round-trips through the model.
 
+Audit data policy (#99, live-write safety charter #116)
+-------------------------------------------------------
+Run traces are audit artefacts; payloads will contain data that is
+sensitive in a tax / PII sense:
+
+- :class:`FormFillPayload.value` is the literal casilla value — i.e.
+  the tax figure the operator put into an AEAT draft. Treat this file
+  as containing tax-return data.
+- :class:`NavigationPayload.url` / ``description`` capture the user's
+  navigation path through AEAT sede. URLs may embed session
+  identifiers; callers must not record authentication tokens here.
+- :class:`ErrorPayload.message` is free-form and may contain
+  traceback fragments with file paths or captured user input.
+- :class:`ArgumentRecord` values are redacted for secret-named
+  parameters by :func:`aeat.cli._observability.build_arguments`
+  (``password`` / ``secret`` / ``token`` / etc. → ``"***"``). Other
+  argument values are recorded verbatim.
+- :class:`RunTrace.cert_fingerprint` is a SHA-256 of the configured
+  PKCS#12 on disk — a stable identity marker of the operator's cert,
+  not a secret, but identifying.
+
+Callers that sync ``var/runs/`` to cloud storage must understand
+that every one of these fields is in scope. The framework does not
+attempt DLP-style scanning — it trusts callers not to feed secrets
+into the payload fields they control.
+
 See [[2026-04-14-run-trace-adr]] decision D3 for the rationale.
 """
 

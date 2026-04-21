@@ -74,8 +74,65 @@ class TestReplayRun:
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         trace = _build_trace("abcdef0123456789", corpus_sha256="1" * 64)
         save_trace(trace)
-        with pytest.raises(AeatObservabilityError):
+        # Match the specific message so an accidental drift-error or
+        # other AeatObservabilityError subclass does not mark the test
+        # green for the wrong reason.
+        with pytest.raises(AeatObservabilityError, match="dry-run only"):
             replay_run(trace.run_id, dry_run=False)
+
+    def test_refuses_replay_of_live_mode_recording(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Replay must refuse traces captured with --no-dry-run.
+
+        Reconstructing argv would re-enter live-mode even though the
+        replay caller passed dry_run=True. The live-write safety
+        charter (#116) forbids this.
+        """
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
+        live_trace = RunTrace(
+            run_id="aaaabbbbccccdddd",
+            started_at=datetime(2026, 4, 14, tzinfo=UTC),
+            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+            entrypoint="aeat workflow run",
+            arguments=(
+                ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
+                ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.FLAG),
+                ArgumentRecord(
+                    name="i-understand-this-is-real",
+                    value="True",
+                    source=ArgumentSource.FLAG,
+                ),
+            ),
+            corpus_sha256=current_corpus,
+            db_sha256="b" * 64,
+            cert_fingerprint="",
+            outcome=RunOutcome.OK,
+        )
+        save_trace(live_trace)
+        with pytest.raises(AeatObservabilityError, match="live-mode"):
+            replay_run(live_trace.run_id, dry_run=True)
+
+    def test_false_value_not_detected_as_live_mode(self) -> None:
+        """A flag name in the denylist with value 'False' is not live-mode.
+
+        Exercises the predicate directly so we do not have to stand up a
+        full replay pipeline; replay-path coverage for the denylist-hit
+        case is provided by :meth:`test_refuses_replay_of_live_mode_recording`.
+        """
+        from ._replay import _argument_activates_live_mode
+
+        safe = ArgumentRecord(name="no-dry-run", value="False", source=ArgumentSource.FLAG)
+        assert _argument_activates_live_mode(safe) is False
+        active = ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.FLAG)
+        assert _argument_activates_live_mode(active) is True
+        non_flag = ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.POSITIONAL)
+        assert _argument_activates_live_mode(non_flag) is False
+        other = ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG)
+        assert _argument_activates_live_mode(other) is False
 
 
 class TestArgvReconstruction:

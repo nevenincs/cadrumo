@@ -19,7 +19,9 @@ from . import (
     GenericPayload,
     RunEventKind,
     RunEventPayload,
+    RunOutcome,
     load_events,
+    load_trace,
     record_event,
     run_context,
 )
@@ -69,6 +71,54 @@ class _SubmissionStep:
             payload=RunEventPayload(generic=GenericPayload(fields=(("submission", label),))),
         )
         self._downstream(label)
+
+
+class TestRunContextOutcome:
+    def test_outcome_ok_on_clean_exit(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        with run_context(entrypoint="aeat test ok", arguments=()) as info:
+            run_id = info.run_id
+        trace = load_trace(run_id)
+        assert trace.outcome is RunOutcome.OK
+
+    def test_outcome_failed_when_yield_raises(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        captured: dict[str, str] = {}
+        with (
+            pytest.raises(RuntimeError, match="boom"),
+            run_context(entrypoint="aeat test fail", arguments=()) as info,
+        ):
+            captured["run_id"] = info.run_id
+            raise RuntimeError("boom")
+        trace = load_trace(captured["run_id"])
+        # Pessimistic default: yield raised, so outcome must be FAILED
+        # even though the persisted trace was written from a finally.
+        assert trace.outcome is RunOutcome.FAILED
+
+    def test_keyboard_interrupt_recorded_as_failed(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        captured: dict[str, str] = {}
+        with (
+            pytest.raises(KeyboardInterrupt),
+            run_context(entrypoint="aeat test int", arguments=()) as info,
+        ):
+            captured["run_id"] = info.run_id
+            raise KeyboardInterrupt
+        trace = load_trace(captured["run_id"])
+        # BaseException path: Ctrl-C must still leave a FAILED trace.
+        assert trace.outcome is RunOutcome.FAILED
 
 
 class TestRunIdPropagation:

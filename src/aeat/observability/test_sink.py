@@ -118,7 +118,9 @@ class TestJsonlRunSinkRunIdFilter:
         finally:
             sink.close()
 
-        assert not target.exists() or target.read_text(encoding="utf-8") == ""
+        # The sink's early-return in emit() fires before _open(), so the
+        # file must never have been created at all.
+        assert not target.exists(), "plain log records must not trigger file creation"
 
     def test_sink_exposes_run_id(self, tmp_path: Path) -> None:
         target = tmp_path / "run" / "events.jsonl"

@@ -87,9 +87,14 @@ class JsonlRunSink(logging.Handler):
             self.handleError(record)
 
     def _open(self) -> TextIO:
-        """Lazily open the JSONL file in append mode."""
+        """Lazily open the JSONL file in append mode.
+
+        ``newline=""`` disables the Python text-mode newline translation
+        (CRLF on Windows) so events.jsonl is byte-stable across
+        platforms — we emit exactly one ``\\n`` per record on every OS.
+        """
         if self._handle is None:
-            self._handle = self._target.open("a", encoding="utf-8")
+            self._handle = self._target.open("a", encoding="utf-8", newline="")
         return self._handle
 
     def close(self) -> None:
