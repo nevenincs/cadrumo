@@ -64,14 +64,35 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
 def _summarise_validation_errors(exc: ValidationError) -> str:
     """Render a short, Kent-legible summary of a pydantic validation failure.
 
-    The default ``str(ValidationError)`` is verbose and includes pydantic doc URLs;
-    this helper extracts one human-readable line per error with the offending
-    path (e.g. ``ratios.suministros_home_office_luz``) and the message.
+    The default ``str(ValidationError)`` is verbose and includes pydantic doc
+    URLs; this helper extracts one human-readable line per error with the
+    offending path (e.g. ``ratios.suministros_home_office_luz``) and the
+    message. Two specific rewrites are applied for Kent's benefit:
+
+    * Unknown dict-key enum errors for ``ratios`` are replaced with a
+      tailored list of the twelve eligible categories (instead of pydantic's
+      default dump of all 38 ``SpendingCategory`` values).
+    * The pydantic ``"Value error, "`` / ``"Input should be "`` prefixes
+      are stripped where they add noise.
     """
+    # Avoid a circular import: the model module owns the eligibility set.
+    from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES
+
     lines: list[str] = []
     for error in exc.errors():
-        location = ".".join(str(part) for part in error.get("loc", ()))
+        loc = error.get("loc", ())
+        location = ".".join(str(part) for part in loc)
         message = error.get("msg", "validation error")
+        # Detect the pydantic "dict-key failed enum validation" shape.
+        # Example loc: ("ratios", "foo", "[key]"); type: "enum".
+        if error.get("type") == "enum" and len(loc) >= 3 and loc[0] == "ratios" and loc[-1] == "[key]":
+            offending_key = loc[1]
+            eligible = ", ".join(sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES))
+            lines.append(f"  - ratios.{offending_key}: unknown ratio key; eligible categories are: {eligible}")
+            continue
+        # Strip pydantic's leading "Value error, " on custom validator errors.
+        if message.startswith("Value error, "):
+            message = message[len("Value error, ") :]
         lines.append(f"  - {location}: {message}" if location else f"  - {message}")
     return "\n".join(lines) if lines else "  - validation error"
 
