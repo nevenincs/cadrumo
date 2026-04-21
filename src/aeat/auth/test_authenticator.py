@@ -781,7 +781,7 @@ async def test_authenticate_raises_certificate_expired_proactively(
 
 
 @pytest.mark.asyncio
-async def test_write_json_atomic_raises_on_icacls_failure_in_strict_mode(
+async def test_write_json_atomic_raises_on_permission_hardening_failure_in_strict_mode(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
@@ -791,7 +791,7 @@ async def test_write_json_atomic_raises_on_icacls_failure_in_strict_mode(
     from ._authenticator import AeatSecurityError
 
     async with AeatAuthenticator(settings) as auth:
-        # Mock icacls to fail
+        # Force the platform-specific permission hardening step to fail.
         if os.name == "nt":
             import subprocess
 
@@ -845,7 +845,10 @@ async def test_write_json_atomic_raises_on_icacls_failure_in_strict_mode(
 
         with pytest.raises(AeatSecurityError) as exc:
             await auth.capture_storage_state(session)
-        assert "failed to harden" in str(exc.value)
+        if os.name == "nt":
+            assert "failed to harden Windows ACLs" in str(exc.value)
+        else:
+            assert "failed to chmod 0600" in str(exc.value)
 
 
 @pytest.mark.asyncio
