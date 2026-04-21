@@ -7,11 +7,11 @@ coefficients, trimestre payment, volumen ventas adjustment, retenciones,
 compensación de negativos anteriores, and final resultado a ingresar.
 
 Legal base: Orden EHA/672/2007 (BOE-A-2007-6032); yearly refresh per
-BOE Sede AEAT instructions. Caveat: the 15-casilla MVP below mirrors
-the current AEAT-published form layout; verify against the live 2025
-PDF before this extractor is promoted beyond MVP — the research that
-seeded this set cited secondary (supercontable) sources as well as
-the 2007 Orden.
+BOE Sede AEAT instructions. Casilla set cross-checked against AEAT
+Instrucciones Modelo 131 (wave 26) — labels refreshed to match the
+printed form; no Orden change shifts the 01-15 set for ejercicio 2025
+(the only 2025 novelty is BIZUM as a payment channel, irrelevant to
+the casilla map).
 """
 
 from __future__ import annotations
@@ -30,21 +30,22 @@ class Modelo131V2025Extractor(GenericDeclaracionExtractor):
         año=2025,
         revision="2025.01",
     )
+    # Labels cross-checked against AEAT Instrucciones Modelo 131 (wave 26).
     casilla_ids: ClassVar[tuple[str, ...]] = (
         "01",  # suma rendimientos netos módulos
         "02",  # pago fraccionado del trimestre
-        "03",  # volumen ventas (actividades sin datos-base)
+        "03",  # volumen de ventas o ingresos del trimestre
         "04",  # 2% s/casilla 03
-        "05",  # volumen ingresos agrícolas/forestales
+        "05",  # volumen de ingresos del trimestre (agrícolas, ganaderas, forestales, pesqueras)
         "06",  # 2% s/casilla 05
         "07",  # total (02+04+06)
         "08",  # retenciones e ingresos a cuenta del trimestre
         "09",  # minoración por rendimientos netos año anterior
         "10",  # resultado (07-08-09)
-        "11",  # resultados negativos trimestres anteriores
+        "11",  # resultados negativos de autoliquidaciones anteriores
         "12",  # deducción por adquisición vivienda habitual
         "13",  # resultado (10-11-12)
-        "14",  # a deducir declaración complementaria
+        "14",  # a deducir de autoliquidaciones anteriores (mismo trimestre)
         "15",  # resultado a ingresar
     )
 

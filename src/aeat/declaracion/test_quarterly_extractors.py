@@ -425,18 +425,20 @@ _MODELO_131_LABELS = {
 }
 
 _MODELO_200_LABELS = {
-    "00547": "Compensacion BINs",
-    "00550": "Base imponible previa",
+    "00547": "Compensacion BINs periodos anteriores",
+    "00550": "Base imponible antes reserva capitalizacion",
     "00552": "Base imponible",
     "00558": "Tipo de gravamen",
     "00560": "Cuota integra previa",
     "00562": "Cuota integra",
     "00582": "Cuota integra ajustada positiva",
-    "00592": "Cuota liquida positiva",
+    "00592": "Cuota liquida",
     "00599": "Retenciones ingresos cuenta",
     "00601": "Pago fraccionado 1P",
     "00603": "Pago fraccionado 2P",
     "00605": "Pago fraccionado 3P",
+    "00615": "Abono de deducciones",
+    "00619": "Incremento perdida beneficios fiscales",
     "00611": "Cuota diferencial",
     "00621": "Liquido a ingresar o devolver",
 }
