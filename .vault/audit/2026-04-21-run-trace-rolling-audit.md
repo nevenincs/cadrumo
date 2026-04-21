@@ -175,3 +175,46 @@ Round-10 verdict is **merge-ready**. One full review round produced zero new cod
 - L9-F1: strict pydantic forward-compat only (design constraint).
 
 No action items remain that would block the final squash-merge. The rolling audit document (`.vault/audit/2026-04-21-run-trace-rolling-audit.md`) is the authoritative record of the loop.
+
+---
+
+## Round 11 — post-round-10 CI + main-merge re-verification
+
+*Timestamp:* 2026-04-21, triggered post-wakeup.
+
+### Inputs checked
+
+| Check | Result |
+|-------|--------|
+| CI on `c81f3c6` Ubuntu | PASS (1m21s) |
+| CI on `c81f3c6` Windows | PASS (2m19s) |
+| Gemini re-review comments since 11:00 UTC | **none** |
+| `origin/main` advanced | Yes — 8 new commits (PR #306: usage-ratio profile CLI + pydantic model, #259) |
+
+### Main-merge analysis
+
+Merged `origin/main` into `feature/99-run-trace` cleanly (merge commit `b50727d`).
+
+```
+git diff HEAD~1 HEAD --stat | grep -E "observability|cli/_observability|cli/run|logging\.py"
+(no matches)
+```
+
+The merge touched **zero** observability-relevant files. Main's new work (`aeat.financial.usage_ratios` + `aeat.cli.financial.profile`) is orthogonal to #99. No cross-cutting interaction detected.
+
+### Re-verification
+
+- `uv run pytest src/aeat/observability/ src/aeat/cli/test_observability.py -q` → 59 passed
+- `uv run pytest -q` → **2108 passed** (main added 71 new tests; every one green)
+- No ruff / format / ty / relative-imports regressions introduced by the merge
+
+### Round-11 verdict
+
+**Convergence holds.** Neither CI, nor Gemini, nor main-merge produced any new observability-related finding. The PR is at HEAD `b50727d` with:
+
+- 10-round audit loop complete (rounds 0–10 + merge verification in round 11)
+- 30 code-level fixes + 3 doc-level polish updates across 11 audit-phase commits + 3 main-merge commits
+- 59 observability unit tests + **2108 full-suite tests** pass
+- All quality gates clean
+
+No further rounds required. PR ready for final squash-merge at the maintainer's convenience.
