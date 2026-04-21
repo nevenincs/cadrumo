@@ -31,7 +31,7 @@ from . import (
     preload_into_browser_context,
     verify_handshake,
 )
-from ._providers._certificate.certificate import _select_backend
+from .certificate import _select_backend
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
@@ -244,8 +244,8 @@ def test_loaded_certificate_does_not_leak_secrets(
 
 @pytest.mark.parametrize("backend", list(CertificateBackend))
 def test_select_backend_returns_matching_class(backend: CertificateBackend) -> None:
-    from ._providers._certificate._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from ._providers._certificate._certificate_backends._playwright_context import (
+    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from ._certificate_backends._playwright_context import (
         PlaywrightContextBackend,
     )
 
@@ -302,7 +302,7 @@ def test_playwright_preload_rejects_unmarked_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ._providers._certificate.certificate import CertificateError
+    from .certificate import CertificateError
 
     p12 = _build_pkcs12_bundle(tmp_path)
     monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
@@ -345,7 +345,7 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ._providers._certificate._certificate_backends._playwright_context import (
+    from ._certificate_backends._playwright_context import (
         build_client_certificates_kwarg,
     )
 
@@ -374,7 +374,7 @@ def test_httpx_fallback_preload_raises_not_implemented(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ._providers._certificate._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
 
     p12 = _build_pkcs12_bundle(tmp_path)
     monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
@@ -420,3 +420,17 @@ def test_settings_loads_cert_env_vars(
 
     # SecretStr must not leak via repr()
     assert SECRET_PASSPHRASE not in repr(settings)
+
+
+def test_settings_rejects_removed_certificate_backends(monkeypatch: pytest.MonkeyPatch) -> None:
+    import pydantic
+    from pydantic_settings import SettingsConfigDict
+
+    from ..config import Settings
+
+    class IsolatedSettings(Settings):
+        model_config = SettingsConfigDict(env_file=None)
+
+    monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "MTLS_PROXY")
+    with pytest.raises(pydantic.ValidationError):
+        IsolatedSettings()

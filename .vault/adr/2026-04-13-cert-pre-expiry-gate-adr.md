@@ -18,7 +18,7 @@ Accepted — 2026-04-13. Implements GitHub issue #94.
 
 ## Context
 
-See [[2026-04-13-cert-pre-expiry-gate-research]]. The project loudly
+See `[[2026-04-13-cert-pre-expiry-gate-research]]`. The project loudly
 fails at `not_after` but does nothing to warn the operator before
 expiry, which is unacceptable for a single-workstation autónomo whose
 FNMT certificate lives on the same machine that runs the pipeline and
@@ -125,7 +125,7 @@ already covers "certificate unusable for this submission" and the
 `details` dict carries the finer-grained diagnostic
 (`cert_severity=CRITICAL`, `cert_days_until_expiry=-3`, etc.). Keeps
 the reason catalogue minimal per
-[[2026-04-12-workflow-engine-adr]].
+`[[2026-04-12-workflow-engine-adr]]`.
 
 Because the engine already loads the certificate via
 `CertificateBundleProtocol`, we compute health off the returned

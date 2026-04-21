@@ -37,26 +37,40 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from ._authenticator import AeatAuthenticator
-from ._browser import (
+from ._authenticator import (
+    AEAT_SESSION_IDLE_TTL,
+    AeatAuthenticator,
+    AeatLoginAssertion,
+    AeatSession,
     BrowserContextLike,
     BrowserPageLike,
     BrowserResponseLike,
     BrowserSessionFactory,
     BrowserSessionLike,
 )
-from ._gate import AeatAccessGate, AeatGateEnvSnapshot
-from ._models import (
-    AEAT_SESSION_IDLE_TTL,
-    AeatLoginAssertion,
-    AeatSession,
-    CertificateSessionDetail,
-)
-from ._protocols import AuthProviderDescription, AuthProviderKind
-from ._providers._certificate._certificate_backends._playwright_context import (
+from ._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
 )
-from ._providers._certificate.certificate import (
+from ._gate import AeatAccessGate, AeatGateEnvSnapshot
+from ._providers import (
+    CERTIFICATE_CONTEXT_MARKER,
+    AuthProvider,
+    AuthProviderDescription,
+    AuthProviderKind,
+    BrowserContextProvisioner,
+    CertificateContextProvisioner,
+    CertificateLoginAssertionDetail,
+    CertificateSessionDetail,
+    ClaveMovilLoginAssertionDetail,
+    ClaveMovilSessionDetail,
+    ClavePermanenteLoginAssertionDetail,
+    ClavePermanenteSessionDetail,
+    ClavePinLoginAssertionDetail,
+    ClavePinSessionDetail,
+    describe_provider_operator_impact,
+    select_provider,
+)
+from .certificate import (
     AeatLiveReadNotEnabledError,
     AeatLoginAssertionError,
     AeatSessionExpiredError,
@@ -86,6 +100,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "AEAT_SESSION_IDLE_TTL",
+    "CERTIFICATE_CONTEXT_MARKER",
     "AeatAccessGate",
     "AeatAuthenticator",
     "AeatGateEnvSnapshot",
@@ -94,33 +109,45 @@ __all__ = [
     "AeatLoginAssertionError",
     "AeatSession",
     "AeatSessionExpiredError",
+    "AuthProvider",
     "AuthProviderDescription",
     "AuthProviderKind",
     "BrowserContextLike",
+    "BrowserContextProvisioner",
     "BrowserPageLike",
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
     "CertificateBackend",
     "CertificateBundle",
+    "CertificateContextProvisioner",
     "CertificateError",
     "CertificateExpiredError",
     "CertificateHandshakeError",
     "CertificateHealth",
     "CertificateHealthSeverity",
     "CertificateLoadError",
+    "CertificateLoginAssertionDetail",
     "CertificateNifParseError",
     "CertificatePasswordError",
     "CertificatePreExpiryError",
     "CertificateSessionDetail",
+    "ClaveMovilLoginAssertionDetail",
+    "ClaveMovilSessionDetail",
+    "ClavePermanenteLoginAssertionDetail",
+    "ClavePermanenteSessionDetail",
+    "ClavePinLoginAssertionDetail",
+    "ClavePinSessionDetail",
     "HandshakeResult",
     "LoadedCertificate",
     "build_client_certificates_kwarg",
+    "describe_provider_operator_impact",
     "evaluate_loaded_certificate_health",
     "extract_nif_from_subject",
     "health",
     "load_certificate",
     "preload_into_browser_context",
+    "select_provider",
     "verify_handshake",
 ]
 

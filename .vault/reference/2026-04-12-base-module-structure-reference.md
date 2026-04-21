@@ -1,3 +1,10 @@
+---
+tags:
+  - "#reference"
+  - "#base-module-structure"
+date: 2026-04-12
+related: []
+---
 # AEAT Base Module Structure Conventions
 Date: 2026-04-12
 

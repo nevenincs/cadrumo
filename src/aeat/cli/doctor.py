@@ -42,6 +42,7 @@ from ..auth import (
     build_serviceusage_service,
     build_sheets_service,
     build_storage_client,
+    describe_provider_operator_impact,
     get_credentials_for_scopes,
 )
 from ..config import PROJECT_ROOT, Settings
@@ -614,7 +615,7 @@ def check_certificate_health(settings: Settings) -> Row:
     Load failures surface as :attr:`State.WARN` with the exception
     class name so the doctor never aborts mid-table.
     """
-    description = AeatAuthenticator(settings).provider.describe(settings)
+    description = AeatAuthenticator(settings).describe()
     if not description.configured:
         return Row(
             section="aeat certificate",
@@ -637,6 +638,24 @@ def check_certificate_health(settings: Settings) -> Row:
         return Row(section="aeat certificate", required=False, state=State.WARN, detail=detail)
     # CRITICAL or EXPIRED: block the doctor with a required failure.
     return Row(section="aeat certificate", required=True, state=State.MISSING, detail=detail)
+
+
+def check_auth_provider_path(settings: Settings) -> Row:
+    """Explain what the configured auth path means for Kent today."""
+
+    description = AeatAuthenticator(settings).describe()
+    if not description.configured:
+        state = State.SKIP
+    elif not description.available:
+        state = State.WARN
+    else:
+        state = State.OK
+    return Row(
+        section="aeat auth path",
+        required=False,
+        state=state,
+        detail=describe_provider_operator_impact(description),
+    )
 
 
 def check_live_tests_flag(settings: Settings) -> Row:
@@ -720,6 +739,7 @@ def collect_rows(settings: Settings) -> list[Row]:
     rows.append(check_service_account(settings))
     rows.append(check_oauth_desktop(settings))
     rows.append(check_certificate_health(settings))
+    rows.append(check_auth_provider_path(settings))
     rows.append(check_live_tests_flag(settings))
     rows.append(check_live_access_gate(settings))
     return rows

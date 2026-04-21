@@ -1,4 +1,4 @@
-﻿---
+---
 tags:
   - "#research"
   - "#trilingual-i18n"

@@ -1,0 +1,42 @@
+---
+generated: true
+tags:
+  - '#draft-approval-staleness'
+date: '2026-04-21'
+related:
+  - '[[2026-04-18-draft-approval-staleness-adr-audit]]'
+  - '[[2026-04-18-draft-approval-staleness-adr]]'
+  - '[[2026-04-18-draft-approval-staleness-implementation-summary-exec]]'
+  - '[[2026-04-18-draft-approval-staleness-plan-audit]]'
+  - '[[2026-04-18-draft-approval-staleness-plan]]'
+  - '[[2026-04-18-draft-approval-staleness-research]]'
+  - '[[2026-04-18-draft-approval-staleness-review-audit]]'
+---
+
+# `draft-approval-staleness` feature index
+
+Auto-generated index of all documents tagged with `#draft-approval-staleness`.
+
+## Documents
+
+### adr
+
+- `2026-04-18-draft-approval-staleness-adr` - `draft-approval-staleness` adr: `persist status-level draft approval and derive stale transitions from approval-basis fingerprints` | (**status:** `accepted`)
+
+### audit
+
+- `2026-04-18-draft-approval-staleness-adr-audit` - `draft-approval-staleness` Code Review
+- `2026-04-18-draft-approval-staleness-plan-audit` - `draft-approval-staleness` Code Review
+- `2026-04-18-draft-approval-staleness-review-audit` - `draft-approval-staleness` Code Review
+
+### exec
+
+- `2026-04-18-draft-approval-staleness-implementation-summary-exec` - `draft-approval-staleness` `implementation` summary
+
+### plan
+
+- `2026-04-18-draft-approval-staleness-plan` - `draft-approval-staleness` `implementation` plan
+
+### research
+
+- `2026-04-18-draft-approval-staleness-research` - draft-approval-staleness research: draft approval persistence + deterministic stale detection

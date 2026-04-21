@@ -17,7 +17,10 @@ from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalog
 
 _LOGGER = get_logger(__name__)
 
-_EntrySignature = tuple[BusinessClassification, Decimal | None, str, str]
+_MANUAL_CLASSIFIED_BY = "manual"
+_DEFAULT_MANUAL_CONFIDENCE = Decimal("1.0")
+
+_EntrySignature = tuple[BusinessClassification, Decimal | None, str, str, Decimal | None]
 
 
 def load_transactions(path: Path) -> TransactionCatalogue:
@@ -126,15 +129,16 @@ def set_classification(
     notes: str | None = None,
     classified_by: str,
     reason: str = "",
+    confidence: Decimal | None = None,
 ) -> TransactionCatalogue:
     """Return a new catalogue with updated classification metadata.
 
     Appends a ``ClassificationHistoryEntry`` to the transaction's
     ``classification_history`` chain whenever the incoming decision
-    differs (by state, percentage, ``classified_by``, or ``reason``)
-    from the transaction's current head. Byte-identical re-classifies
-    are skipped so rule engines can run idempotently without
-    inflating history.
+    differs (by state, percentage, ``classified_by``, ``reason``, or
+    ``confidence``) from the transaction's current head. Byte-identical
+    re-classifies are skipped so rule engines can run idempotently
+    without inflating history.
 
     Args:
         catalogue: Source catalogue.
@@ -147,22 +151,44 @@ def set_classification(
             ``rule:<rule-id>``.
         reason: Free-text override justification; embedded in the
             history entry, not on the top-level transaction.
+        confidence: Caller-supplied decision confidence in the inclusive
+            0..1 range (#236). When omitted, manual decisions default
+            to ``Decimal("1.0")`` and all other classifier paths default
+            to ``None``.
 
     Returns:
         A fresh immutable catalogue with updated classification metadata.
 
     Raises:
         TransactionNotFoundError: If ``transaction_id`` is missing.
+        TransactionCatalogueError: If the resulting transaction payload
+            fails validation (invalid percentage, invalid classified_by
+            shape, out-of-range confidence).
     """
     transaction = _require_transaction(catalogue, transaction_id)
     now = datetime.now(UTC)
     normalised_reason = reason.strip()
-    proposed_signature: _EntrySignature = (classification, business_pct, classified_by, normalised_reason)
+    # Strip classified_by here so the idempotence signature below matches the
+    # value the model will store (the field validator also strips, so a raw
+    # "  manual  " parameter would otherwise force a spurious history entry).
+    normalised_classified_by = classified_by.strip()
+    resolved_confidence = _resolve_confidence(
+        classified_by=normalised_classified_by,
+        confidence=confidence,
+    )
+    proposed_signature: _EntrySignature = (
+        classification,
+        business_pct,
+        normalised_classified_by,
+        normalised_reason,
+        resolved_confidence,
+    )
     current_signature: _EntrySignature = (
         transaction.business_classification,
         transaction.business_pct,
         transaction.classified_by,
         transaction.classification_reason,
+        transaction.classification_confidence,
     )
     if proposed_signature == current_signature:
         history = transaction.classification_history
@@ -175,8 +201,9 @@ def set_classification(
         "business_classification": classification,
         "business_pct": business_pct,
         "classified_at": now,
-        "classified_by": classified_by,
+        "classified_by": normalised_classified_by,
         "classification_reason": normalised_reason,
+        "classification_confidence": resolved_confidence,
         "classification_history": history,
     }
     if category_id is not None:
@@ -189,6 +216,25 @@ def set_classification(
         context=f"invalid classification update for transaction: {transaction_id}",
     )
     return _replace_transaction(catalogue, updated_transaction)
+
+
+def _resolve_confidence(*, classified_by: str, confidence: Decimal | None) -> Decimal | None:
+    """Return the confidence value to persist for one classification event.
+
+    Args:
+        classified_by: Classifier source string.
+        confidence: Caller-supplied confidence.
+
+    Returns:
+        The caller-supplied confidence when non-None; otherwise
+        ``Decimal("1.0")`` for manual decisions and ``None`` for every
+        other classifier source.
+    """
+    if confidence is not None:
+        return confidence
+    if classified_by == _MANUAL_CLASSIFIED_BY:
+        return _DEFAULT_MANUAL_CONFIDENCE
+    return None
 
 
 def snapshot_classification_state(
@@ -215,6 +261,7 @@ def snapshot_classification_state(
         classified_at=snapshot_at,
         classified_by=transaction.classified_by,
         reason=transaction.classification_reason,
+        confidence=transaction.classification_confidence,
     )
 
 

@@ -38,7 +38,7 @@ The submission engine must compile and ship before these siblings merge:
 
 Every one of these is stubbed as a `Protocol` inside
 `src/aeat/submission/_protocols.py`, mirroring the pattern from
-`aeat.deadlines._protocols` (see [[2026-04-12-deadline-engine-research]]).
+`aeat.deadlines._protocols` (see `[[2026-04-12-deadline-engine-research]]`).
 Rebase-swap is mechanical: delete stub, import from the real package.
 
 ## architecture overview
@@ -105,4 +105,4 @@ loop in v1 — retries are a human decision.
 - Where `SubmittedFiling` JSON lives (flat dir vs per-modelo tree).
 - Whether the CLI `submit` subcommand also archives to storage (#10).
 
-See [[2026-04-12-submission-engine-adr]].
+See `[[2026-04-12-submission-engine-adr]]`.

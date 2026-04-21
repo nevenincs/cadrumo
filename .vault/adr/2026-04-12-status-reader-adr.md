@@ -1,9 +1,14 @@
 ---
+tags:
+  - "#adr"
+  - "#status-reader"
 id: 2026-04-12-status-reader-adr
 title: ADR — AEAT status reader (#43)
 date: 2026-04-12
 status: accepted
 type: adr
+related:
+  - "[[2026-04-12-status-reader-research]]"
 ---
 
 # ADR: AEAT status reader (#43)

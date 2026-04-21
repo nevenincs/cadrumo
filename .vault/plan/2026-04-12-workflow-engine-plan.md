@@ -16,7 +16,7 @@ related:
 
 Deliver `aeat.workflow` — the project's first composite end-user
 command — per the accepted ADR
-[[2026-04-12-workflow-engine-adr]]. The engine orchestrates the
+`[[2026-04-12-workflow-engine-adr]]`. The engine orchestrates the
 already-merged deadline / sync / filing / submission components and
 Protocol-stubs the in-flight inbox / status / certificate surfaces so
 it compiles and tests standalone.

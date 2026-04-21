@@ -6,7 +6,7 @@ date: "2026-04-17"
 related:
   - "[[2026-04-17-path-handling-safety-adr]]"
   - "[[2026-04-17-path-handling-safety-research]]"
-  - "[[2026-04-17-path-handling-safety-review]]"
+  - "[[2026-04-17-path-handling-safety-review-audit]]"
 ---
 
 # `path-handling-safety` `phase1` plan
