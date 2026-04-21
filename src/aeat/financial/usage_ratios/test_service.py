@@ -33,12 +33,48 @@ def test_load_malformed_raises_persistence_error(tmp_path: Path) -> None:
         load_usage_ratios(target)
 
 
-def test_load_invalid_schema_raises_persistence_error(tmp_path: Path) -> None:
-    """JSON that fails pydantic validation surfaces as the same error type."""
+def test_load_invalid_schema_surfaces_pydantic_detail(tmp_path: Path) -> None:
+    """JSON that fails pydantic validation surfaces with the offending path.
+
+    Hand-edit errors (the primary cause of invalid profile files) must name
+    the field and reason, not just ``invalid usage-ratio profile JSON``.
+    """
     target = tmp_path / "invalid-schema.json"
     target.write_text('{"ratios": {"telefonia_turbo": "0.5"}}', encoding="utf-8")
-    with pytest.raises(UsageRatioPersistenceError):
+    with pytest.raises(UsageRatioPersistenceError) as excinfo:
         load_usage_ratios(target)
+    # The field path and at least a pydantic reason fragment must appear.
+    message = str(excinfo.value)
+    assert "ratios" in message
+    assert "telefonia_turbo" in message
+
+
+def test_load_out_of_range_surfaces_pydantic_detail(tmp_path: Path) -> None:
+    """Hand-edited out-of-range ratio surfaces the offending category."""
+    target = tmp_path / "out-of-range.json"
+    target.write_text(
+        '{"ratios": {"suministros_home_office_luz": "1.5"}}',
+        encoding="utf-8",
+    )
+    with pytest.raises(UsageRatioPersistenceError) as excinfo:
+        load_usage_ratios(target)
+    message = str(excinfo.value)
+    assert "suministros_home_office_luz" in message
+    assert "[0, 1]" in message
+
+
+def test_load_ineligible_category_surfaces_pydantic_detail(tmp_path: Path) -> None:
+    """Hand-smuggled ineligible category surfaces as a named error."""
+    target = tmp_path / "ineligible.json"
+    target.write_text(
+        '{"ratios": {"material_oficina": "0.3"}}',
+        encoding="utf-8",
+    )
+    with pytest.raises(UsageRatioPersistenceError) as excinfo:
+        load_usage_ratios(target)
+    message = str(excinfo.value)
+    assert "material_oficina" in message
+    assert "USAGE_RATIO" in message
 
 
 def test_load_directory_target_raises_persistence_error(tmp_path: Path) -> None:
@@ -81,14 +117,18 @@ def test_save_replaces_previous_payload(tmp_path: Path) -> None:
     assert list(tmp_path.glob("*.tmp")) == []
 
 
-def test_save_to_unwritable_parent_raises(tmp_path: Path) -> None:
-    """Target whose parent is a file triggers :class:`UsageRatioPersistenceError`."""
+def test_save_to_unwritable_parent_surfaces_os_detail(tmp_path: Path) -> None:
+    """Target whose parent is a file triggers :class:`UsageRatioPersistenceError`
+    and includes the OSError class name so Kent can diagnose."""
     parent_as_file = tmp_path / "not-a-dir"
     parent_as_file.write_text("", encoding="utf-8")
     target = parent_as_file / "ratios.json"
     profile = UsageRatioProfile()
-    with pytest.raises(UsageRatioPersistenceError):
+    with pytest.raises(UsageRatioPersistenceError) as excinfo:
         save_usage_ratios(profile, target)
+    # The wrapped OSError class name must appear in the message.
+    message = str(excinfo.value)
+    assert "Error" in message  # e.g. FileExistsError, NotADirectoryError
     assert list(tmp_path.glob("*.tmp")) == []
 
 

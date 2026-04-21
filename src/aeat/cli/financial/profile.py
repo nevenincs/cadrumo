@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import difflib
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
@@ -11,12 +12,12 @@ from ...config import load_settings
 from ...financial.categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ...financial.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
-    FAMILY_ALIASES,
     UsageRatioError,
     UsageRatioProfile,
     load_usage_ratios,
     save_usage_ratios,
 )
+from ._profile_aliases import FAMILY_ALIASES
 
 _MISSING = "(none)"
 
@@ -114,11 +115,7 @@ def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
     try:
         category = SpendingCategory(raw)
     except ValueError as exc:
-        aliases = ", ".join(sorted(FAMILY_ALIASES))
-        typer.echo(
-            f"unknown key: {raw!r}; accepted family aliases: {aliases}",
-            err=True,
-        )
+        typer.echo(_format_unknown_key_hint(raw), err=True)
         raise typer.Exit(code=2) from exc
     if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
         eligible = ", ".join(sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES))
@@ -128,6 +125,26 @@ def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
         )
         raise typer.Exit(code=2)
     return (category,)
+
+
+def _format_unknown_key_hint(raw: str) -> str:
+    """Build an actionable error for an unrecognised key.
+
+    Surfaces:
+      * the offending input,
+      * close-match suggestions drawn from aliases + eligible category ids,
+      * the full alias list and the 12 eligible category ids.
+    """
+    aliases = sorted(FAMILY_ALIASES)
+    eligible = sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES)
+    candidates = aliases + eligible
+    near_matches = difflib.get_close_matches(raw, candidates, n=3, cutoff=0.6)
+    lines = [f"unknown key: {raw!r}"]
+    if near_matches:
+        lines.append(f"  did you mean: {', '.join(near_matches)}?")
+    lines.append(f"  family aliases: {', '.join(aliases)}")
+    lines.append(f"  eligible categories: {', '.join(eligible)}")
+    return "\n".join(lines)
 
 
 def _parse_ratio(raw: str) -> Decimal:

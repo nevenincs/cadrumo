@@ -9,9 +9,11 @@ related:
   - "[[2026-04-18-kent-data-prep-journey-audit]]"
 ---
 
-# `usage-ratios` plan: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `accepted`)
+# `usage-ratios` plan: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `completed`)
 
 Executes `[[2026-04-21-usage-ratios-adr]]` against issue `#259`. Single phase; every step is mechanical with a colocated test. Kent-observable acceptance lives in `aeat financial profile …`.
+
+> **Post-approval amendments.** Two rolling audit rounds refined the implementation after this plan was approved. The step list below is preserved as the historical instruction to the executor; for the as-shipped contract see the ADR's `## Post-approval amendments` section and the shipped code. The key deltas are summarised in the `## Post-approval amendments` block at the bottom of this plan.
 
 ## Phase 1 — implementation
 
@@ -225,3 +227,17 @@ Fix every failure at its root cause — no skips, no `type: ignore`, no `ruff: n
 - **Pydantic v2 strict-mode `Decimal` parsing.** JSON `"NaN"` must be rejected by the JSON parser before our validators see it. Verified via research doc; keep `test_nan_rejected` as a guard-rail so a future pydantic update that loosens strict mode trips the test.
 - **`_normalize_repo_relative_paths` validator omission.** If the new Settings field is missed from the `mode="after"` validator list, `AEAT_USAGE_RATIOS_PATH=var/financial/usage-ratios.json` resolves relative to CWD instead of `PROJECT_ROOT`. Caught by `tests/test_config.py` if it covers this field; if not, add an explicit assertion.
 - **Windows tempfile visibility on `os.replace`.** The invoice service has shipped this pattern for months; no new risk. Verify pre-commit runs clean on Windows.
+
+## Post-approval amendments
+
+Two rolling audit rounds amended the implementation after this plan was approved. Step 2's original instruction to return `value` unchanged from `_validate_bounds` was superseded; Step 8's test list was expanded. The net delta:
+
+- **`_validate_bounds` now returns a dict sorted by `SpendingCategory.value`** so two equal profiles serialise to byte-identical JSON. Implements the canonical-ordering invariant flagged by the round-1 Pydantic audit.
+- **The `is_finite()` guard in `_validate_bounds` was dropped.** Pydantic strict mode rejects `NaN` / `Infinity` at the type layer before the field validator runs, so the guard was dead code. The CLI `_parse_ratio` keeps its own `is_finite()` check.
+- **`FAMILY_ALIASES` moved from `src/aeat/financial/usage_ratios/_aliases.py` to `src/aeat/cli/financial/_profile_aliases.py`** (round-2 architecture + downstream audits converged on this). The module-private location prevents the #214 wizard and #257 compute from depending on alias strings.
+- **The `phone_fixed_business` alias was removed.** `TELEFONIA_FIJA` already belonged to `home_office_area`, so the two aliases silently clobbered one another. Disjointness is now enforced by `test_profile_aliases.py::test_no_alias_overlap_across_the_mapping`.
+- **`UsageRatioPersistenceError` messages now surface the wrapped exception detail.** Hand-edit failures (out-of-range ratio, ineligible category, unknown key) name the offending field and reason via a `_summarise_validation_errors` helper; OS failures (locked file, disk full, directory target) carry the OSError class and message.
+- **The `set-ratio` unknown-key hint was extended** to include the twelve eligible category ids plus `difflib` near-match suggestions, so `home_office_are` produces `did you mean: home_office_area`.
+- **Test coverage expanded from 44 → 58 tests** with net **100 % coverage** on `src/aeat/financial/usage_ratios/` and ≥ 93 % on `src/aeat/cli/financial/profile.py`. New tests assert the behaviours above end-to-end through the CLI and through hand-edited JSON.
+
+Commits implementing the amendments (on `feature/259-usage-ratios`): `9b51c78` (round 1) and the subsequent round-2 hardening commit.

@@ -42,13 +42,32 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
         _LOGGER.info("usage-ratios file not found at %s; returning empty profile", target)
         return UsageRatioProfile()
     except OSError as exc:
-        raise UsageRatioPersistenceError(f"unable to read usage-ratio profile: {target}") from exc
+        raise UsageRatioPersistenceError(
+            f"unable to read usage-ratio profile: {target}: {exc.__class__.__name__}: {exc}"
+        ) from exc
     try:
         profile = UsageRatioProfile.model_validate_json(raw)
     except ValidationError as exc:
-        raise UsageRatioPersistenceError(f"invalid usage-ratio profile JSON: {target}") from exc
+        raise UsageRatioPersistenceError(
+            f"invalid usage-ratio profile JSON: {target}\n{_summarise_validation_errors(exc)}"
+        ) from exc
     _LOGGER.info("loaded %s usage ratios from %s", len(profile.ratios), target)
     return profile
+
+
+def _summarise_validation_errors(exc: ValidationError) -> str:
+    """Render a short, Kent-legible summary of a pydantic validation failure.
+
+    The default ``str(ValidationError)`` is verbose and includes pydantic doc URLs;
+    this helper extracts one human-readable line per error with the offending
+    path (e.g. ``ratios.suministros_home_office_luz``) and the message.
+    """
+    lines: list[str] = []
+    for error in exc.errors():
+        location = ".".join(str(part) for part in error.get("loc", ()))
+        message = error.get("msg", "validation error")
+        lines.append(f"  - {location}: {message}" if location else f"  - {message}")
+    return "\n".join(lines) if lines else "  - validation error"
 
 
 def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
@@ -84,5 +103,7 @@ def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
     except OSError as exc:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
-        raise UsageRatioPersistenceError(f"unable to write usage-ratio profile: {target}") from exc
+        raise UsageRatioPersistenceError(
+            f"unable to write usage-ratio profile: {target}: {exc.__class__.__name__}: {exc}"
+        ) from exc
     _LOGGER.info("saved %s usage ratios to %s", len(profile.ratios), target)
