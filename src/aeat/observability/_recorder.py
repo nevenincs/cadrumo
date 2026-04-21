@@ -40,6 +40,18 @@ def record_event(
 ) -> RunEvent:
     """Record a single :class:`RunEvent` against the active run context.
 
+    Context propagation note: the active ``run_id`` is carried via
+    :class:`contextvars.ContextVar`. These propagate across
+    ``asyncio.create_task`` and ``asyncio.run`` automatically (PEP
+    567), but NOT across plain ``threading.Thread`` targets nor
+    ``asyncio.to_thread`` / ``loop.run_in_executor`` workers unless
+    the caller wraps the target with :func:`contextvars.copy_context`.
+    A call to ``record_event`` from a detached thread will therefore
+    raise :class:`RunContextMissingError`. Callers that need the
+    event recorded in such a thread must either re-enter
+    :func:`run_context` inside the worker or copy the context
+    explicitly.
+
     Args:
         kind: The event kind.
         payload: A :class:`RunEventPayload` with exactly one variant set.
