@@ -5,6 +5,7 @@ tags:
 date: "2026-04-14"
 related:
   - "[[2026-04-14-n26-data-source-research]]"
+  - "[[2026-04-21-n26-data-source-audit]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"
   - "[[2026-04-13-p2a-financial-provider-research]]"
 ---
@@ -28,6 +29,10 @@ The paired research document is `2026-04-14-n26-data-source-research`
 - Any N26 provider must conform to the `FinancialProvider` ABC delivered
   by #73 (PR #134, on main). The decision chosen here must slot into
   that existing substrate with no architectural disruption.
+- This is a local Track-B ingest decision for roadmap milestone `0.1.0`
+  ("Kent can feed his bank data in and trust the classification"). It
+  does not alter the export-first product charter or any AEAT write/read
+  policy because the chosen path remains file-backed and off-AEAT.
 - The TDP T1 provenance invariant (#104) requires every `RawTransaction`
   to carry a byte-level pointer back to its origin so a tax inspector
   can be shown the exact source document. This invariant is the
@@ -89,6 +94,14 @@ the existing `CsvProvider` for the in-app CSV export channel.
   `src/aeat/financial/providers/_pdf_n26.py`:
   - Uses `pdfplumber` (MIT) as the sole new dependency; pinned in
     `pyproject.toml`.
+  - Derives table boundaries from detected header-word positions on
+    each page; the shipped parser must not rely on a fixed point list
+    baked into source.
+  - Detects statement locale from the page-1 header block and selects
+    the date parser accordingly (`DD.MM.YYYY` for ES, `DD Mon YYYY` /
+    `DD Month YYYY` for EN-class locales).
+  - Extracts the statement currency from the account summary / amount
+    header rather than hard-coding `"EUR"`.
   - Emits `RawTransaction` with `provenance.source_format =
     SourceFormat.PDF`, `source_sha256` = SHA-256 of the full PDF,
     `source_row_index` = 1-based ordinal of the transaction row across
@@ -118,7 +131,8 @@ the existing `CsvProvider` for the in-app CSV export channel.
   fixture PDFs the user supplies. No `@pytest.mark.live` tests for
   this provider. Live test gating continues to use
   `AEAT_LIVE_TESTS_ENABLED=1` as the canonical env var across the
-  project.
+  project. The acceptance set must include locale-aware dates,
+  statement-derived currency, and header-derived table geometry.
 
 ## Rationale
 
@@ -194,26 +208,9 @@ the existing `CsvProvider` for the in-app CSV export channel.
   supplying scrubbed PDF fixtures. The PM can open the issue with
   the fixture requirement stated in the acceptance criteria.
 
-## Self-review (doc-review pass against issue #106 acceptance criteria)
+## Review status
 
-This section is the mandatory DOC-ONLY review pass replacing the normal
-`vaultspec-code-review` gate for a research-only issue. The reviewer is
-the executing author; the review criteria are taken verbatim from the
-handover prompt and the issue body.
-
-| Criterion | Location | Status |
-|-----------|----------|--------|
-| R1 landscape covered — every N26 channel enumerated with auth / cadence / format / stability / T&C | research §R1 table + conclusions | ✔ 8 channels, conclusions explicit |
-| R2 PDF deep dive — layout documented, parser library survey + pick, prototype stub, provenance strategy | research §R2 (layout, library table, `pdfplumber` decision, prototype sketch, `RawProvenance` mapping) | ✔ |
-| R3 Android/ADB deep dive — legal/ToS hard blocker, anti-automation posture, threat model, extraction pipeline, provenance strategy | research §R3 (T&C hard blocker, framework table, probe checklist, threat model, pipeline diagram, T1 invariant honour/compromise) | ✔ |
-| R4 comparison matrix present and complete (9 dimensions) | research §R4 table + recommendation | ✔ 9 dimensions, A/B/C columns, recommendation stated |
-| R5 follow-up issue sketches ready for PM | research §R5 (4 sketches: PDF provider, CSV column-map, annual revisit, blocked-placeholder) | ✔ |
-| Both options connect explicitly to #73's `FinancialProvider` ABC | research §R2 effort section and §R5 sketch 1; ADR Implementation section | ✔ explicit ABC conformance noted for both paths |
-| TDP T1 provenance invariant treated seriously for each option | research §R2 provenance strategy; §R3 "honour vs compromise"; ADR Considerations + Rationale | ✔ decisive criterion |
-| No production code changes under `src/aeat/` | `git status` at commit time must show only `.vault/` additions | ✔ (verified pre-commit) |
-| Vault artefacts carry correct YAML frontmatter + tag taxonomy (`#research` + feature tag; `#adr` + feature tag) | frontmatter of both files | ✔ `#research` + `#n26-data-source`; `#adr` + `#n26-data-source` |
-| Wiki-links between research doc, ADR, and related artefacts (#73, #104, #71) populated | `related:` fields reference each other and the #73 P2-A ADR/research; #104 + #71 are referenced in-body as GitHub issue numbers (those EPICs are tracked as issues rather than vault docs, so they are not wiki-linked but are named explicitly in-body) | ✔ with the noted caveat that EPICs #104/#71 are issues, not vault files |
-
-**Review verdict: accepted.** All R1–R5 deliverables satisfied, both
-vaultspec-documentation rules honoured, and the ADR records a clear
-recommendation with enforceable follow-up work for the PM.
+Formal review now lives in the corresponding audit artifact rather than
+inside this ADR. That review covers the original issue acceptance
+criteria, the unresolved PR #136 threads, and current-main mandate
+alignment.
