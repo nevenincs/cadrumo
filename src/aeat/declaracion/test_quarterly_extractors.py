@@ -670,6 +670,117 @@ class TestModelo840TextCasillas:
             assert by_id[cid] == expected, f"Casilla {cid}: {by_id.get(cid)!r} != {expected!r}"
 
 
+def _draw_named_pdf(
+    tmp_path: Path,
+    *,
+    modelo: str,
+    period_printed: str,
+    lines: list[str],
+    filename: str,
+) -> Path:
+    """Render a bespoke named-field PDF via the generator's shared primitives."""
+    import io
+
+    from reportlab.lib.units import mm
+    from reportlab.pdfgen import canvas
+    from tests.fixtures.pdf_corpus.l3_synthetic._generators._generator_shared import (
+        A4_HEIGHT,
+        A4_WIDTH,
+        MARGIN_LEFT,
+        MARGIN_TOP,
+        VALUE_FONT,
+        VALUE_FONT_SIZE,
+        draw_footer,
+        draw_header,
+    )
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=(A4_WIDTH, A4_HEIGHT))
+    c.setTitle(f"Modelo {modelo} 2025")
+    draw_header(c, modelo=modelo, ejercicio="2025", periodo=period_printed, page_num=1, page_count=1)
+    c.setFont(VALUE_FONT, VALUE_FONT_SIZE)
+    y = A4_HEIGHT - MARGIN_TOP - 50 * mm
+    for i, line in enumerate(lines):
+        c.drawString(MARGIN_LEFT, y - i * 6 * mm, line)
+    draw_footer(c, tax_id="00000000T", presented_at="2025-11-20 10:00:00")
+    c.showPage()
+    c.save()
+    path = tmp_path / filename
+    path.write_bytes(buffer.getvalue())
+    return path
+
+
+class TestModelo369NamedFieldExtraction:
+    """Wave 27: Modelo 369 OSS/IOSS summary totals via named-field primitive."""
+
+    def test_roundtrip_summary_totals(self, tmp_path: Path) -> None:
+        pdf = _draw_named_pdf(
+            tmp_path,
+            modelo="369",
+            period_printed="1T",
+            lines=[
+                "Total bases imponibles    45.200,00",
+                "Total cuotas IVA    9.492,00",
+                "Total a ingresar    9.492,00",
+            ],
+            filename="modelo_369_named.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        assert by_id["total_base_imponible"] == "45.200,00"
+        assert by_id["total_cuota_iva"] == "9.492,00"
+        assert by_id["total_a_ingresar"] == "9.492,00"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+
+class TestModelo720NamedFieldExtraction:
+    """Wave 27: Modelo 720 per-clave counters via named-field primitive."""
+
+    def test_roundtrip_per_clave_counters(self, tmp_path: Path) -> None:
+        pdf = _draw_named_pdf(
+            tmp_path,
+            modelo="720",
+            period_printed="0A",
+            lines=[
+                "Clave C cuentas    3 registros",
+                "Clave V valores    2 registros",
+                "Clave I inmuebles    1 registros",
+            ],
+            filename="modelo_720_named.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        assert by_id["num_registros_cuentas"] == "3"
+        assert by_id["num_registros_valores"] == "2"
+        assert by_id["num_registros_inmuebles"] == "1"
+
+
+class TestModelo036NamedFieldExtraction:
+    """Wave 27: Modelo 036 censal fields via named-field primitive."""
+
+    def test_roundtrip_censal_fields(self, tmp_path: Path) -> None:
+        pdf = _draw_named_pdf(
+            tmp_path,
+            modelo="036",
+            period_printed="0A",
+            lines=[
+                "Causa de presentacion: Alta",
+                "Regimen especial IVA: General",
+                "Regimen estimacion IRPF: Directa",
+                "Epigrafe IAE: 722",
+                "Fecha de efectos: 2025-04-22",
+            ],
+            filename="modelo_036_named.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        assert by_id["causa_presentacion"] == "Alta"
+        assert by_id["regimen_iva"] == "General"
+        assert by_id["regimen_irpf"] == "Directa"
+        assert by_id["epigrafe_iae"] == "722"
+        assert by_id["fecha_efectos"] == "2025-04-22"
+
+
 class TestModelo232NamedFieldExtraction:
     """Wave 27: Modelo 232 uses the named-field primitive."""
 
@@ -714,34 +825,41 @@ class TestModelo232NamedFieldExtraction:
 
 
 class TestHeaderOnlyExtractors:
-    """232/369/720/840 recognise the document but expose no casillas.
+    """Identity / error-branch coverage for extractors with no content primitive.
 
-    The numeric-decimal primitive cannot parse their text-value payloads.
-    These extractors act as identity probes until a text-value primitive
-    lands in sub-EPIC #305-textual-casillas.
+    Wave 27 migrated all modelos with no numbered-casilla summary
+    (036/037/232/369/720/840) onto the text-value or named-field
+    primitive, so no modelo remains unconditionally UNVERIFIABLE. This
+    class now hosts the missing-NIF error-branch test; the sentinel
+    below lets a future regression surface if anyone reintroduces a
+    header-only-only extractor.
     """
 
-    @pytest.mark.parametrize(
-        "modelo",
-        ["036", "037", "369", "720"],
-        ids=["036", "037", "369", "720"],
-    )
-    def test_header_only_modelo_exposes_empty_casillas(self, tmp_path: Path, modelo: str) -> None:
-        pdf = _make_annual_pdf(
-            tmp_path,
-            modelo=modelo,
-            labels={},
-            values={},
-            filename=f"modelo_{modelo}_2025.pdf",
+    def test_no_modelo_remains_unconditionally_header_only(self) -> None:
+        """Sentinel: every GenericDeclaracionExtractor subclass has a content primitive.
+
+        Modelo 130 and Modelo 303 (v2025) extend ``DeclaracionExtractor``
+        directly with their own bespoke casilla sets — this sentinel
+        targets the generic base only, which is the MVP pattern for
+        every other modelo.
+        """
+        from ._extractors import _REGISTRY
+        from ._generic_extractor import GenericDeclaracionExtractor
+
+        header_only: list[str] = []
+        for (modelo, _a, _r), cls in _REGISTRY.items():
+            if not issubclass(cls, GenericDeclaracionExtractor):
+                continue
+            decimal = getattr(cls, "casilla_ids", ())
+            text = getattr(cls, "text_casilla_ids", ())
+            named = getattr(cls, "named_field_patterns", {})
+            if not decimal and not text and not named:
+                header_only.append(modelo)
+        assert not header_only, (
+            f"These GenericDeclaracionExtractor subclasses still expose no "
+            f"content primitive: {header_only}. "
+            f"Add casilla_ids, text_casilla_ids, or named_field_patterns."
         )
-        filing = parse_declaracion(pdf)
-        assert filing.modelo == modelo
-        assert filing.period == "2025A"
-        assert len(filing.values) == 0
-        # Wave 23 HIGH-1: empty casilla_ids ⇒ UNVERIFIABLE, never COMPLETE.
-        # Downstream consumers must not treat an UNVERIFIABLE filing as
-        # a successful extraction.
-        assert filing.extraction_status is ExtractionStatus.UNVERIFIABLE
 
     def test_header_only_missing_nif_raises(self, tmp_path: Path) -> None:
         """A PDF with no NIF surfaces DeclaracionParseError even for header-only modelos."""

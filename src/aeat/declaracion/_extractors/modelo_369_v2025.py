@@ -4,14 +4,11 @@ Autoliquidación de los regímenes especiales OSS (Régimen Unión +
 Régimen Exterior, trimestral) y IOSS (Régimen Importación, mensual)
 para ventas B2C transfronterizas en la UE.
 
-**MVP scope is header-only.** AEAT does not publish numbered casilla
-IDs for the 369 summary block in the Orden HAC/611/2021 diseño de
-registro — field names (total_base_imponible, total_cuota_iva,
-total_a_ingresar) are the access path, and the per-country detail
-block is autocompleted. A field-name-anchored primitive lands in
-sub-EPIC #305-textual-casillas. This extractor recognizes the
-document, extracts NIF/ejercicio/período, and returns an empty
-``values`` tuple.
+AEAT does not publish numbered casilla IDs for the 369 summary block
+per Orden HAC/611/2021. Wave 27 adds the named-field primitive and
+migrates this extractor off the header-only MVP: we capture three
+summary totals that every 369 filing prints (total base imponible,
+total cuota IVA, total a ingresar).
 
 Legal base: Orden HAC/611/2021 (BOE 18/06/2021).
 """
@@ -25,7 +22,7 @@ from .._schema import TemplateRevision
 
 
 class Modelo369V2025Extractor(GenericDeclaracionExtractor):
-    """Header-only extractor for Modelo 369."""
+    """Named-field extractor for Modelo 369."""
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="369",
@@ -33,6 +30,20 @@ class Modelo369V2025Extractor(GenericDeclaracionExtractor):
         revision="2025.01",
     )
     casilla_ids: ClassVar[tuple[str, ...]] = ()
+    named_field_patterns: ClassVar[dict[str, str]] = {
+        "total_base_imponible": (
+            r"Total\s+bases?\s+imponibles?[^\n]*?"
+            r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
+        ),
+        "total_cuota_iva": (
+            r"Total\s+cuotas?\s+(?:IVA|devengadas?)[^\n]*?"
+            r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
+        ),
+        "total_a_ingresar": (
+            r"Total\s+a\s+ingresar[^\n]*?"
+            r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
+        ),
+    }
 
 
 __all__ = ["Modelo369V2025Extractor"]
