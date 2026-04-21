@@ -146,6 +146,7 @@ class TestRegistryKnowsNewExtractors:
         # Core quarterly-cadence modelos.
         assert ("111", 2025, "2025.01") in keys
         assert ("115", 2025, "2025.01") in keys
+        assert ("123", 2025, "2025.01") in keys
         assert ("130", 2025, "2025.01") in keys
         assert ("303", 2025, "2025.01") in keys
         # Modelo 303 post-HAC/819/2024 revision.
@@ -153,7 +154,9 @@ class TestRegistryKnowsNewExtractors:
         # Annual informative filings.
         assert ("180", 2025, "2025.01") in keys
         assert ("190", 2025, "2025.01") in keys
+        assert ("193", 2025, "2025.01") in keys
         assert ("347", 2025, "2025.01") in keys
+        assert ("349", 2025, "2025.01") in keys
         assert ("390", 2025, "2025.01") in keys
 
 
@@ -295,6 +298,101 @@ class TestModelo390V2025Extractor:
         # 390 MVP covers 15 of the form's ~680 casillas; extraction ends as
         # COMPLETE because every "required" casilla (the 15 MVP targets) is
         # resolved by the synthetic.
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+
+_MODELO_123_LABELS = {
+    "01": "Perceptores dividendos",
+    "02": "Perceptores otras rentas",
+    "03": "Perceptores total",
+    "04": "Base dividendos",
+    "05": "Base otras rentas",
+    "06": "Base total",
+    "07": "Retenciones dividendos",
+    "08": "Retenciones otras rentas",
+    "09": "Retenciones total",
+    "10": "Resultado declaracion anterior",
+    "11": "Resultado a ingresar",
+}
+
+_MODELO_193_LABELS = {
+    "01": "Total perceptores",
+    "02": "Base total retenciones",
+    "03": "Retenciones totales",
+}
+
+_MODELO_349_LABELS = {
+    "01": "Total operadores",
+    "02": "Importe total operaciones",
+    "03": "Operadores con rectificaciones",
+    "04": "Importe rectificaciones",
+}
+
+
+class TestModelo123V2025Extractor:
+    def test_roundtrip_quarterly_summary(self, tmp_path: Path) -> None:
+        values = {
+            "01": "1.00",
+            "02": "4.00",
+            "03": "5.00",
+            "04": "1500.00",
+            "05": "8000.00",
+            "06": "9500.00",
+            "07": "285.00",
+            "08": "1520.00",
+            "09": "1805.00",
+            "10": "0.00",
+            "11": "1805.00",
+        }
+        pdf = _make_pdf(
+            tmp_path,
+            modelo="123",
+            labels=_MODELO_123_LABELS,
+            values=values,
+            filename="modelo_123_2025Q1.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "123"
+        assert filing.period == "2025Q1"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        for cid, raw in values.items():
+            assert by_id[cid] == Decimal(raw)
+
+
+class TestModelo193V2025Extractor:
+    def test_roundtrip_annual_summary(self, tmp_path: Path) -> None:
+        values = {"01": "12.00", "02": "45000.00", "03": "8550.00"}
+        pdf = _make_annual_pdf(
+            tmp_path,
+            modelo="193",
+            labels=_MODELO_193_LABELS,
+            values=values,
+            filename="modelo_193_2025.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "193"
+        assert filing.period == "2025A"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+
+class TestModelo349V2025Extractor:
+    def test_roundtrip_monthly_summary(self, tmp_path: Path) -> None:
+        values = {
+            "01": "7.00",
+            "02": "36000.00",
+            "03": "1.00",
+            "04": "-500.00",
+        }
+        pdf = _make_pdf(
+            tmp_path,
+            modelo="349",
+            labels=_MODELO_349_LABELS,
+            values=values,
+            filename="modelo_349_2025_01.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "349"
         assert filing.extraction_status is ExtractionStatus.COMPLETE
 
 
