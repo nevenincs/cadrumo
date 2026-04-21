@@ -298,4 +298,4 @@ catalogue.
 - `tests/conftest.py` — live-test banned imports.
 - `env/.env.example` — env documentation surface.
 - `.vault/adr/2026-04-12-cert-auth-adr.md`, `.vault/adr/2026-04-13-cert-pre-expiry-gate-adr.md`
-- [[live_write_safety]] memory.
+- `[[live_write_safety]]` memory.

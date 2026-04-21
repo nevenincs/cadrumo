@@ -120,5 +120,5 @@ the fallback at INFO.
 - Issue #85 (this feature)
 - Issue #87 (financial categorisation, consumer of this substrate)
 - EPIC #104 (Transaction Data Pipeline umbrella)
-- [[2026-04-13-r1-vat-enumeration-research]]
-- [[2026-04-13-r1-vat-enumeration-plan]]
+- `[[2026-04-13-r1-vat-enumeration-research]]`
+- `[[2026-04-13-r1-vat-enumeration-plan]]`

@@ -11,7 +11,7 @@ related:
 
 # unified-review-queue plan
 
-Implement the read-only `aeat.review` aggregator + `aeat review queue` CLI per [[2026-04-18-unified-review-queue-adr]]. Closes Kent's wall 32.
+Implement the read-only `aeat.review` aggregator + `aeat review queue` CLI per `[[2026-04-18-unified-review-queue-adr]]`. Closes Kent's wall 32.
 
 ## guiding constraints
 
@@ -20,7 +20,7 @@ Implement the read-only `aeat.review` aggregator + `aeat review queue` CLI per [
 - **Pydantic v2 boundary discipline.** `ReviewItem` is a `Annotated[..., Field(discriminator="kind")]` strict frozen union; per-kind models are `ConfigDict(strict=True, frozen=True, extra="forbid")`.
 - **Closed enums everywhere** for `--kind`, `--state`, `--format`, `severity`.
 - **Trilingual `Translatable`** for `summary` content. English authoritative for the dev-facing summaries we author here.
-- **Pytest-only.** Markers per [[2026-04-17-pytest-markers-adr]]: model / adapter / aggregator tests carry `[pytest.mark.unit, pytest.mark.domain_local_state]`; CLI tests carry `[pytest.mark.unit, pytest.mark.domain_infra]` (matches `cli/sync/test_cli.py` precedent and the marker description in `pyproject.toml`). Tests colocate with the module (Rust style).
+- **Pytest-only.** Markers per `[[2026-04-17-pytest-markers-adr]]`: model / adapter / aggregator tests carry `[pytest.mark.unit, pytest.mark.domain_local_state]`; CLI tests carry `[pytest.mark.unit, pytest.mark.domain_infra]` (matches `cli/sync/test_cli.py` precedent and the marker description in `pyproject.toml`). Tests colocate with the module (Rust style).
 - **Relative imports** inside `src/aeat/`. **Cross-subpackage imports use the subpackage root only** — never `._service` or other underscored modules. Concretely: `from ..financial.transactions import load_transactions, TransactionCatalogue, BusinessClassification`, `from ..financial.invoices import load_invoices, InvoiceCatalogue, PaymentStatus`, `from ..sync import JsonFileDivergenceRepository, DivergenceRecord, DivergenceClassification, ResolutionState`, `from ..inbox import Inbox, NotificacionPriority`, `from ..filing import FilingDraft, FilingDraftStatus, FilingFindingSeverity, FilingValidationFinding`.
 - **No `aeat.errors.AeatError` skipping** — all domain errors inherit from it.
 

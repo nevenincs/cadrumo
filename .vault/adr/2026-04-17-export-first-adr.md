@@ -7,6 +7,7 @@ related:
   - "[[2026-04-17-kent-ux-journey-audit]]"
   - "[[2026-04-12-gsuite-bootstrap-audit]]"
   - "[[2026-04-16-submission-safety-sweep-adr-audit]]"
+  - "[[2026-04-18-auth-provider-ecosystem-research]]"
 ---
 
 # export-first-adr

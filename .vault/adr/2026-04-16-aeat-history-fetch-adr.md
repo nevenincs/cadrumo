@@ -27,7 +27,7 @@ Issue #168 builds the missing read surface: a
 `src/aeat/history/` subpackage that, given the list of `Expediente`
 headers, fetches the per-filing detail page, parses the casilla→value
 mapping, and persists the result as strict pydantic v2 records.
-See [[2026-04-16-aeat-history-fetch-research]] for the portal
+See `[[2026-04-16-aeat-history-fetch-research]]` for the portal
 surfaces, parser choice, and wire-schema background.
 
 ## decisions

@@ -7,7 +7,7 @@ related:
   - "[[2026-04-13-p2a-financial-provider-research]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"
   - "[[2026-04-13-p2a-financial-provider-plan]]"
-  - "[[2026-04-13-cohesive-project-roadmap]]"
+  - "[[2026-04-13-cohesive-project-roadmap-reference]]"
 ---
 
 # `transaction-catalogue` research: `tdp-t1-t2-seam`

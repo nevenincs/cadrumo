@@ -1,3 +1,11 @@
+---
+tags:
+  - "#adr"
+  - "#ci-github-actions"
+date: 2026-04-12
+related:
+  - "[[2026-04-12-ci-github-actions-research]]"
+---
 # ADR: GitHub Actions CI Workflow
 
 ## Status
