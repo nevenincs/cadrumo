@@ -227,6 +227,7 @@ changed between "ADR approved" and "merge-ready":
    (never on `sede`). These two assumptions are fixed for Cl@ve Móvil
    in this PR; they are latent in other modules (status reader,
    submission engine, justificante verifier) and tracked as
-   follow-up issue **#311**. The live-verified reference doc is the
-   source of truth going forward; any future AEAT URL decision must
-   validate against it before landing in code.
+   follow-up GitHub issue #311 — see
+   [[2026-04-21-clave-portal-reference]] § "Assumptions vs live-verified
+   reality" for the canonical deltas. Any future AEAT URL decision
+   must validate against that reference before landing in code.

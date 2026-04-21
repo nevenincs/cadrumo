@@ -14,6 +14,8 @@ from rich.table import Table
 
 from ...auth import AEAT_SESSION_IDLE_TTL
 
+_CERT_RENEWAL_URL = "https://www.sede.fnmt.gob.es/certificados/persona-fisica/renovar"
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -30,7 +32,10 @@ def _format_status(description: AuthProviderDescription, entry: ProviderRegistry
         return "configured, healthy"
     if description.configured and not description.available:
         return "configured, unavailable"
-    return "available, not configured"
+    # The remaining case is "not configured" — there is no sensible
+    # "available but not configured" state because every provider's
+    # describe() only flags `available=True` when `configured=True`.
+    return "not configured"
 
 
 def _format_identity(description: AuthProviderDescription) -> str:
@@ -45,32 +50,40 @@ def _format_expires(description: AuthProviderDescription) -> str:
     return description.expires_on.isoformat()
 
 
-def _format_health(description: AuthProviderDescription) -> str:
+def _format_health(description: AuthProviderDescription, entry: ProviderRegistryEntry) -> str:
     """Render the HEALTH column as Kent-readable prose.
 
-    Prefers ``health_summary`` when it is already a sentence (Cl@ve
-    Móvil emits "ready — requires push approval on the Cl@ve app").
-    For the certificate provider, ``health_summary`` is the raw token
-    ``"{severity}:{days_until_expiry}"`` (e.g. ``"CRITICAL:3"``), which
-    is unreadable: translate it into an English phrase based on the
-    severity.
+    Unimplemented registry entries emit ``—`` here because the STATUS
+    column already says "not yet implemented" and repeating it is
+    noise.
+
+    Implemented providers either supply a prose ``health_summary``
+    (Cl@ve Móvil emits "ready — requires push approval on the Cl@ve
+    app") that is passed through, or the cert-provider's legacy
+    ``"{severity}:{days_until_expiry}"`` sentinel token (e.g.
+    ``"CRITICAL:3"``). The sentinel is translated into Kent-readable
+    copy here, with a renewal URL surfaced on every non-healthy
+    certificate severity so Kent always has a next step.
     """
+    if not entry.implemented:
+        return "—"
+
     severity = (description.health_severity or "").upper()
     days = description.days_until_expiry
     summary = description.health_summary or ""
 
-    # Cert provider encodes health as a "SEV:days" token in summary;
-    # replace with a prose form that Kent can act on. Cl@ve providers
-    # emit prose summaries directly — pass those through.
+    # Cert provider encodes health as a "SEV:days" sentinel token in
+    # health_summary; strip it so we never echo it at Kent. Cl@ve
+    # providers emit prose summaries that are passed through untouched.
     if summary and ":" in summary and summary.split(":", 1)[0].upper() == severity:
         summary = ""
 
     if severity == "EXPIRED" and days is not None:
-        return f"certificate expired {abs(days)}d ago — renew at sede.fnmt.gob.es"
+        return f"certificate expired {abs(days)}d ago — renew at {_CERT_RENEWAL_URL}"
     if severity == "CRITICAL" and days is not None and days >= 0:
-        return f"certificate expires in {days}d — renew soon at sede.fnmt.gob.es"
+        return f"certificate expires in {days}d — renew soon at {_CERT_RENEWAL_URL}"
     if severity == "WARN" and days is not None and days >= 0:
-        return f"certificate expires in {days}d"
+        return f"certificate expires in {days}d — renew at {_CERT_RENEWAL_URL}"
     if severity == "OK" and days is not None:
         return f"healthy — {days}d until expiry"
     if summary:
@@ -94,7 +107,7 @@ def render_list_providers_table(
             _format_status(description, entry),
             _format_identity(description),
             _format_expires(description),
-            _format_health(description),
+            _format_health(description, entry),
         )
     return table
 

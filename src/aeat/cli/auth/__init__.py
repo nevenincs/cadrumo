@@ -106,14 +106,47 @@ def _resolve_kind(
         raise typer.BadParameter(str(exc)) from exc
 
 
+async def _close_provider(provider: Any) -> None:
+    """Best-effort ``close()`` on an :class:`AuthProvider`-like object.
+
+    Some providers (Cl@ve Móvil) expose an async ``close()``; others
+    may grow a synchronous equivalent in the future. The helper
+    accepts either by inspecting the return value for a coroutine,
+    mirroring the dispatch pattern used inside
+    :mod:`aeat.auth._clave_movil` for browser-session teardown.
+    """
+    close = getattr(provider, "close", None)
+    if close is None:
+        return
+    try:
+        result = close()
+    except Exception as exc:
+        logger.warning("provider close() raised: %s", exc)
+        return
+    if asyncio.iscoroutine(result):
+        try:
+            await result
+        except Exception as exc:
+            logger.warning("provider async close() raised: %s", exc)
+
+
 async def _do_login(settings: Settings, kind: AuthProviderKind) -> AeatSession:
+    """Authenticate and return a frozen :class:`AeatSession` value.
+
+    The `finally` block closes the provider (teardown of the Playwright
+    context and browser subprocess) before the session is handed back
+    to the caller. This is safe because :class:`AeatSession` is a
+    strict frozen Pydantic model with no live resources — every field
+    (identity, timestamps, storage-state path, cookie-hash) is a plain
+    value already persisted to disk at this point. A future provider
+    whose ``AeatSession`` grows a live in-memory handle (e.g. an open
+    httpx client) MUST restructure this helper before that lands.
+    """
     provider = _registry.build_provider(kind, settings)
     try:
         return await provider.authenticate()
     finally:
-        close = getattr(provider, "close", None)
-        if close is not None:
-            await close()
+        await _close_provider(provider)
 
 
 def _resolve_env_file(settings: Settings) -> Path:
@@ -270,14 +303,28 @@ def configure(
         mapping["AEAT_AUTH_PROVIDER"] = kind.value
 
     write_env_vars(env_file, mapping)
-    # Confirm the write by listing the env-var NAMES we touched — never the
-    # values. Values include the operator's DNI/NIE and contraste, which
-    # is PII that should not land in terminal history, CI logs, or screen
-    # recordings.
-    _CONSOLE.print(f"[green]Saved {len(mapping)} settings to {env_file}.[/green]")
-    for key in mapping:
-        _CONSOLE.print(f"  • {key}")
-    _CONSOLE.print("\nRun `aeat auth login` to start the Cl@ve Móvil flow.")
+    # The CLI never echoes the written values (DNI/NIE + contraste are
+    # PII) and no longer surfaces the underlying env-var names either —
+    # Kent thinks in human terms ("my NIE", "my support number"), not in
+    # UPPER_SNAKE_CASE environment variables. A single prose sentence
+    # confirms what the CLI saved and where.
+    human_terms: list[str] = []
+    if mapping.get("AEAT_CLAVE_MOVIL_DNI_NIE"):
+        human_terms.append("your DNI/NIE")
+    if mapping.get("AEAT_CLAVE_MOVIL_DNI_FECHA"):
+        human_terms.append("the DNI validity date")
+    if mapping.get("AEAT_CLAVE_MOVIL_NIE_SOPORTE"):
+        human_terms.append("the NIE support number")
+    if mapping.get("AEAT_CLAVE_PREFER_NON_QR") == "true":
+        human_terms.append("the direct-push preference")
+    if mapping.get("AEAT_CLAVE_PREFER_NON_QR") == "false":
+        human_terms.append("the QR-code preference")
+    if mapping.get("AEAT_AUTH_PROVIDER"):
+        human_terms.append("Cl@ve Móvil as the default provider")
+    human_list = human_terms[0] if len(human_terms) == 1 else ", ".join(human_terms[:-1]) + ", and " + human_terms[-1]
+    _CONSOLE.print(
+        f"[green]Saved {human_list} to {env_file}.[/green]\nRun `aeat auth login` to sign in with Cl@ve Móvil."
+    )
 
 
 @app.command("login", help="Authenticate with the selected provider and cache the session.")
@@ -319,12 +366,17 @@ def login(
         raise typer.Exit(code=1) from exc
 
     if json_output:
+        # The storage_state_path is intentionally omitted from the JSON
+        # surface — it is an internal file location that Kent has no
+        # reason to consume from a login command. Downstream scripts
+        # that need the path should resolve it via
+        # ``aeat.cli.auth._paths.storage_state_paths(settings, kind)``
+        # rather than scraping login's output.
         payload = {
             "provider_kind": session.provider_kind.value,
             "identity_nif": session.identity_nif,
             "authenticated_at": session.authenticated_at.isoformat(),
             "idle_deadline": session.idle_deadline.isoformat(),
-            "storage_state_path": str(session.storage_state_path) if session.storage_state_path else None,
         }
         typer.echo(json.dumps(payload, indent=2))
         return
@@ -403,9 +455,7 @@ async def _do_whoami(settings: Settings, kind: AuthProviderKind) -> tuple[AeatSe
         assertion = await provider.verify(session)
         return session, assertion
     finally:
-        close = getattr(provider, "close", None)
-        if close is not None:
-            await close()
+        await _close_provider(provider)
 
 
 @app.command(
@@ -508,10 +558,14 @@ def logout(
     settings = _load_settings()
 
     removed: list[Path] = []
+    cleared_kinds: list[AuthProviderKind] = []
 
     if all_providers:
         for entry in _registry.iter_entries():
-            removed.extend(_session.delete(settings, entry.kind))
+            removed_for_kind = _session.delete(settings, entry.kind)
+            if removed_for_kind:
+                cleared_kinds.append(entry.kind)
+                removed.extend(removed_for_kind)
     elif provider is not None:
         target_kind = _parse_kind(provider)
         try:
@@ -522,7 +576,10 @@ def logout(
         # `--provider` only removes its own files. A mismatched persisted
         # session elsewhere on disk stays where it is.
         if persisted is not None or target_paths.metadata.exists() or target_paths.storage_state.exists():
-            removed.extend(_session.delete(settings, target_kind))
+            removed_for_kind = _session.delete(settings, target_kind)
+            if removed_for_kind:
+                cleared_kinds.append(target_kind)
+                removed.extend(removed_for_kind)
     else:
         # No --provider → clear whichever provider currently has a session
         # on disk. This matches Kent's intuition: `aeat auth logout`
@@ -532,18 +589,33 @@ def logout(
         except _session.CorruptAuthSessionError:
             persisted = None
         if persisted is not None:
-            removed.extend(_session.delete(settings, persisted.provider_kind))
+            removed_for_kind = _session.delete(settings, persisted.provider_kind)
+            if removed_for_kind:
+                cleared_kinds.append(persisted.provider_kind)
+                removed.extend(removed_for_kind)
 
     if json_output:
-        typer.echo(json.dumps({"removed_paths": [str(p) for p in removed]}, indent=2))
+        typer.echo(
+            json.dumps(
+                {
+                    "cleared_providers": [k.value for k in cleared_kinds],
+                    "removed_paths": [str(p) for p in removed],
+                },
+                indent=2,
+            )
+        )
         return
 
     if not removed:
-        _CONSOLE.print("no active session found; nothing to clear")
+        _CONSOLE.print("No active session found. Nothing to clear.")
         return
 
-    for path in removed:
-        _CONSOLE.print(f"cleared {path}")
+    labels = [_registry.get_entry(k).label for k in cleared_kinds]
+    if len(labels) == 1:
+        _CONSOLE.print(f"Signed out of {labels[0]}.")
+    else:
+        joined = ", ".join(labels)
+        _CONSOLE.print(f"Signed out of {joined}.")
 
 
 __all__ = ["app"]
