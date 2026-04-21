@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 
 import typer
 from rich.console import Console
@@ -20,6 +21,9 @@ from ...review import (
     ReviewState,
     reserved_kind_reason,
 )
+
+_CONFIDENCE_MIN = Decimal("0")
+_CONFIDENCE_MAX = Decimal("1")
 
 _CONSOLE = Console()
 
@@ -55,6 +59,15 @@ def queue_cmd(
         "--modelo",
         help="Filter to items bound to one modelo (excludes items with no modelo concept).",
     ),
+    confidence_below: str | None = typer.Option(
+        None,
+        "--confidence-below",
+        help=(
+            "Show only transaction review items whose classification confidence "
+            "is strictly below this threshold (0..1). Items of other kinds are "
+            "excluded when this filter is active."
+        ),
+    ),
     fmt: ReviewFormat = typer.Option(
         ReviewFormat.TABLE,
         "--format",
@@ -64,17 +77,32 @@ def queue_cmd(
 ) -> None:
     """List every pending review item across the pipeline in one table."""
     kinds = _parse_kinds(kind)
+    threshold = _parse_confidence_threshold(confidence_below)
     settings = load_settings()
     items = ReviewQueue.collect(
         settings,
         kinds=kinds,
         modelo=modelo,
         state=state,
+        confidence_below=threshold,
     )
     if fmt is ReviewFormat.JSON:
         _emit_json(items)
         return
     _emit_table(items)
+
+
+def _parse_confidence_threshold(value: str | None) -> Decimal | None:
+    """Parse and range-check the ``--confidence-below`` option value."""
+    if value is None:
+        return None
+    try:
+        threshold = Decimal(value)
+    except InvalidOperation as exc:
+        raise typer.BadParameter(f"--confidence-below {value!r} is not a valid Decimal") from exc
+    if not _CONFIDENCE_MIN <= threshold <= _CONFIDENCE_MAX:
+        raise typer.BadParameter("--confidence-below must be within the inclusive 0..1 range")
+    return threshold
 
 
 def _parse_kinds(tokens: list[str] | None) -> frozenset[ReviewItemKind] | None:

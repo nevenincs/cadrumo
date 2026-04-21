@@ -6,12 +6,15 @@ sorted tuple of review items.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 from ..config import Settings
 from ._adapters import (
     divergences_pending,
     drafts_pending,
     inbox_pending,
     invoices_pending,
+    transactions_low_confidence,
     transactions_pending,
 )
 from ._enums import ReviewItemKind, ReviewState, severity_rank
@@ -28,6 +31,7 @@ class ReviewQueue:
         kinds: frozenset[ReviewItemKind] | None = None,
         modelo: str | None = None,
         state: ReviewState = ReviewState.PENDING,
+        confidence_below: Decimal | None = None,
     ) -> tuple[ReviewItem, ...]:
         """Return every pending review item that matches the filters.
 
@@ -43,17 +47,29 @@ class ReviewQueue:
                 ``ALL`` is reserved for a future "show resolved too"
                 mode and currently returns the same set as ``PENDING``
                 because every adapter only emits pending items today.
+            confidence_below: Optional decision-confidence threshold
+                (#236). When set, the queue replaces the default
+                transactions-pending source with
+                :func:`transactions_low_confidence`: classified
+                transactions whose ``classification_confidence`` is
+                non-None and strictly less than the threshold. Other
+                review kinds (invoices, divergences, findings, inbox)
+                cannot satisfy a decision-confidence predicate and are
+                excluded while this filter is active.
 
         Returns:
             A tuple sorted by ``(severity desc, since asc, item_id asc)``.
         """
-        items: list[ReviewItem] = [
-            *transactions_pending(settings),
-            *invoices_pending(settings),
-            *divergences_pending(settings),
-            *drafts_pending(settings),
-            *inbox_pending(settings),
-        ]
+        if confidence_below is not None:
+            items: list[ReviewItem] = list(transactions_low_confidence(settings, threshold=confidence_below))
+        else:
+            items = [
+                *transactions_pending(settings),
+                *invoices_pending(settings),
+                *divergences_pending(settings),
+                *drafts_pending(settings),
+                *inbox_pending(settings),
+            ]
         if kinds is not None:
             items = [item for item in items if item.kind in kinds]
         if modelo is not None:

@@ -1,7 +1,7 @@
 """Unit tests for BrowserSession factory."""
 
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 import pytest
 from playwright.async_api import BrowserContext, Playwright
@@ -208,7 +208,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     from ..auth import (
         CertificateBackend,
         CertificateBundle,
-        build_client_certificates_kwarg,
+        CertificateContextProvisioner,
         load_certificate,
     )
     from .session import CERTIFICATE_THUMBPRINT_MARKER
@@ -259,12 +259,12 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         profile=profile,
         evasion_strategy=DummyEvasion(),
     )
-
-    def provisioner(kwargs: dict[str, Any]) -> None:
-        kwargs["client_certificates"] = build_client_certificates_kwarg(loaded, settings.aeat_certificate_verify_url)
-
-    context = await session.create_context(provisioner=provisioner)
-    setattr(context, CERTIFICATE_THUMBPRINT_MARKER, loaded.sha256_thumbprint)
+    context = await session.create_context(
+        provisioner=CertificateContextProvisioner(
+            loaded,
+            origin=settings.aeat_certificate_verify_url,
+        )
+    )
 
     kwargs: dict[str, object] = cast(StubContext, context).kwargs
     assert "client_certificates" in kwargs

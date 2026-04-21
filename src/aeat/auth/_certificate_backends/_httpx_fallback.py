@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 import httpx
 from cryptography.hazmat.primitives import serialization
 
-from .....logging import get_logger
+from ...logging import get_logger
 from ._base import _CertBackend
 
 if TYPE_CHECKING:
@@ -87,7 +87,7 @@ class HttpxFallbackBackend(_CertBackend):
             "for interactive sessions. HTTPX_FALLBACK is verify-only."
         )
 
-    def verify(self, cert: LoadedCertificate, url: str, *, timeout_s: float = 20.0) -> HandshakeResult:
+    def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
         """Perform a real mTLS GET against ``url``.
 
         TLS and network errors are captured and returned as
@@ -109,7 +109,7 @@ class HttpxFallbackBackend(_CertBackend):
             ssl_ctx = ssl.create_default_context()
             ssl_ctx.load_cert_chain(certfile=str(cert_path), keyfile=str(key_path))
 
-            with httpx.Client(verify=ssl_ctx, timeout=timeout_s, follow_redirects=False) as client:
+            with httpx.Client(verify=ssl_ctx, timeout=20.0, follow_redirects=False) as client:
                 response = client.get(url)
 
             elapsed_ms = int((time.perf_counter() - started) * 1000)

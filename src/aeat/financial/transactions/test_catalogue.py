@@ -303,3 +303,217 @@ def test_legacy_unclassified_payload_loads_as_not_yet_processed(tmp_path: Path) 
     legacy = find_transaction(restored, transaction.transaction_id)
     assert legacy is not None
     assert legacy.business_classification is BusinessClassification.NOT_YET_PROCESSED
+
+
+def _bare_transaction() -> Transaction:
+    """Return an unclassified transaction helper for the confidence tests."""
+    raw = RawTransaction(
+        transaction_id="provider-row-1",
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
+        amount=Decimal("-12.00"),
+        currency="EUR",
+        counterparty="Vendor SL",
+        description="Expense",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="f" * 64,
+            source_row_index=2,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": "Expense"},
+    )
+    return Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+        }
+    )
+
+
+def test_set_classification_manual_path_defaults_confidence_to_one() -> None:
+    """Manual classification without an explicit confidence must persist 1.0 (#236)."""
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+
+    updated = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+        reason="obvious client payment",
+    )
+
+    after = find_transaction(updated, transaction.transaction_id)
+    assert after is not None
+    assert after.classification_confidence == Decimal("1.0")
+
+
+def test_set_classification_rule_path_preserves_explicit_confidence() -> None:
+    """Rule-based classification must round-trip the caller-supplied confidence (#236)."""
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+
+    updated = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="rule:vendor-map",
+        reason="matched vendor catalogue",
+        confidence=Decimal("0.42"),
+    )
+
+    after = find_transaction(updated, transaction.transaction_id)
+    assert after is not None
+    assert after.classification_confidence == Decimal("0.42")
+
+
+def test_set_classification_rule_path_without_confidence_leaves_none() -> None:
+    """Non-manual classifiers must default confidence to None when the caller omits it (#236)."""
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+
+    updated = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="rule:vendor-map",
+        reason="matched vendor",
+    )
+
+    after = find_transaction(updated, transaction.transaction_id)
+    assert after is not None
+    assert after.classification_confidence is None
+
+
+def test_set_classification_rejects_confidence_above_one() -> None:
+    """Out-of-range confidence must raise TransactionCatalogueError (#236)."""
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+
+    with pytest.raises(TransactionCatalogueError):
+        set_classification(
+            catalogue,
+            transaction.transaction_id,
+            classification=BusinessClassification.BUSINESS,
+            classified_by="manual",
+            reason="out-of-range test",
+            confidence=Decimal("1.5"),
+        )
+
+
+def test_set_classification_propagates_confidence_into_history_on_reclassification() -> None:
+    """Prior confidence must land in the history entry when the decision changes (#236, #237)."""
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+
+    first = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="rule:vendor-map",
+        reason="first match",
+        confidence=Decimal("0.4"),
+    )
+    second = set_classification(
+        first,
+        transaction.transaction_id,
+        classification=BusinessClassification.PERSONAL,
+        classified_by="manual",
+        reason="human overrode the rule",
+    )
+
+    final = find_transaction(second, transaction.transaction_id)
+    assert final is not None
+    assert final.classification_confidence == Decimal("1.0")
+    assert len(final.classification_history) == 2
+    # Entry 0 snapshots the pre-first-classify bare state (NOT_YET_PROCESSED).
+    # Entry 1 snapshots the BUSINESS rule:vendor-map state with its confidence,
+    # which is the invariant #236 adds on top of #237.
+    mid = final.classification_history[1]
+    assert mid.business_classification is BusinessClassification.BUSINESS
+    assert mid.classified_by == "rule:vendor-map"
+    assert mid.confidence == Decimal("0.4")
+
+
+def test_set_classification_accepts_llm_classifier_identity_shape() -> None:
+    """`classified_by="llm:<model>"` must be accepted by the validator (#236 LLM path).
+
+    Discovered by a live Kent walkthrough: the pre-#236 validator only
+    permitted ``auto`` / ``manual`` / ``rule:<id>``, which rejected LLM
+    classifications outright. Without this shape, an LLM adapter could
+    never record its confidence against a transaction.
+    """
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+
+    updated = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="llm:gpt-4",
+        reason="LLM classified as business supplies",
+        confidence=Decimal("0.45"),
+    )
+
+    classified = find_transaction(updated, transaction.transaction_id)
+    assert classified is not None
+    assert classified.classified_by == "llm:gpt-4"
+    assert classified.classification_confidence == Decimal("0.45")
+
+
+def test_set_classification_normalises_classified_by_whitespace_for_idempotence() -> None:
+    """Reclassifying with whitespace-padded classified_by must not force a spurious history entry.
+
+    Pydantic's field validator strips `classified_by` so the stored
+    value is always trimmed. Without stripping in the service layer,
+    the idempotence signature would use the raw padded value and
+    never match the stored trimmed value — every no-op re-classify
+    would append to history. This test pins the fix.
+    """
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+
+    first = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+        reason="first",
+    )
+    second = set_classification(
+        first,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="  manual  ",
+        reason="first",
+    )
+
+    first_head = find_transaction(first, transaction.transaction_id)
+    second_head = find_transaction(second, transaction.transaction_id)
+    assert first_head is not None and second_head is not None
+    assert len(first_head.classification_history) == len(second_head.classification_history)
+
+
+def test_confidence_survives_json_round_trip(tmp_path: Path) -> None:
+    """Saving then loading must preserve both current and historical confidence (#236)."""
+    catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
+    transaction = next(iter(catalogue))
+    updated = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="rule:llm",
+        reason="reasoned rule match",
+        confidence=Decimal("0.73"),
+    )
+
+    target = tmp_path / "confidence-round-trip.json"
+    save_transactions(updated, target)
+    restored = load_transactions(target)
+
+    loaded = find_transaction(restored, transaction.transaction_id)
+    assert loaded is not None
+    assert loaded.classification_confidence == Decimal("0.73")

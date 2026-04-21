@@ -6,15 +6,25 @@ from decimal import Decimal, InvalidOperation
 
 import typer
 
-from ...financial.categories import SpendingCategory
+from ...financial._decimal import canonical_decimal
+from ...financial.categories import CATEGORY_PROFILES_2025, SpendingCategory
+from ...financial.categories._proportionality import ProportionalityKind
 from ...financial.transactions import (
     BusinessClassification,
+    LLMClassifierError,
+    ModelTier,
+    Transaction,
+    TransactionCatalogue,
     TransactionError,
     find_transaction,
+    resolve_classifier,
     save_transactions,
     set_classification,
 )
 from ._catalogue import catalogue_path, load_catalogue_or_empty, load_catalogue_required
+
+_CONFIDENCE_MIN = Decimal("0")
+_CONFIDENCE_MAX = Decimal("1")
 
 app = typer.Typer(
     name="txs",
@@ -23,7 +33,10 @@ app = typer.Typer(
 )
 
 
-@app.command(name="list", help="List stored transactions, optionally filtering by classification state.")
+@app.command(
+    name="list",
+    help="List stored transactions, optionally filtering by classification state or decision confidence.",
+)
 def list_cmd(
     state: BusinessClassification | None = typer.Option(
         None,
@@ -40,6 +53,11 @@ def list_cmd(
         help="Deprecated; alias for --state PROCESSED_UNCLASSIFIED.",
         hidden=True,
     ),
+    confidence_below: str | None = typer.Option(
+        None,
+        "--confidence-below",
+        help="Show only transactions whose classification confidence is strictly below this threshold (0..1).",
+    ),
 ) -> None:
     """List transactions from the configured catalogue file."""
     if state is not None and unclassified:
@@ -48,16 +66,25 @@ def list_cmd(
     effective_state: BusinessClassification | None = state
     if effective_state is None and unclassified:
         effective_state = BusinessClassification.PROCESSED_UNCLASSIFIED
+    threshold = _parse_confidence_threshold(confidence_below)
     catalogue = load_catalogue_or_empty()
     transactions = tuple(
         transaction
         for transaction in catalogue.values()
-        if effective_state is None or transaction.business_classification is effective_state
+        if _matches_filters(transaction, state=effective_state, threshold=threshold)
     )
     if not transactions:
-        typer.echo("No transactions found.")
+        if threshold is not None and len(catalogue) > 0:
+            typer.echo(
+                "No transactions found below that confidence threshold. "
+                "Note: manual classifications default to confidence 1.0, so --confidence-below "
+                "only surfaces results when a rule engine or LLM classifier has assigned a "
+                "lower score (not yet implemented for transactions)."
+            )
+        else:
+            typer.echo("No transactions found.")
         return
-    typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tnarrative")
+    typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tconfidence\tnarrative")
     for transaction in sorted(
         transactions,
         key=lambda item: ((item.raw.value_date or item.raw.booked_date), item.transaction_id),
@@ -67,9 +94,10 @@ def list_cmd(
                 [
                     transaction.transaction_id,
                     transaction.direction.value,
-                    _format_amount(transaction.raw.amount),
+                    canonical_decimal(transaction.raw.amount),
                     transaction.raw.currency,
                     transaction.business_classification.value,
+                    _format_optional_decimal(transaction.classification_confidence),
                     transaction.raw.description,
                 ]
             )
@@ -120,6 +148,15 @@ def classify_cmd(
         "--reason",
         help="Optional free-text override justification; recorded in the history chain.",
     ),
+    confidence: str | None = typer.Option(
+        None,
+        "--confidence",
+        help=(
+            "Advanced: record a non-default decision confidence (0..1). "
+            "Manual classifications default to 1.0; override only when recording the score "
+            "of a rule engine or LLM output rather than your own judgement."
+        ),
+    ),
 ) -> None:
     """Classify one transaction and write the updated catalogue to disk."""
     path = catalogue_path()
@@ -129,6 +166,7 @@ def classify_cmd(
     except InvalidOperation as exc:
         typer.echo(f"invalid --pct value: {pct}", err=True)
         raise typer.Exit(code=2) from exc
+    resolved_confidence = _parse_confidence_option(confidence)
     try:
         updated = set_classification(
             catalogue,
@@ -139,6 +177,7 @@ def classify_cmd(
             notes=reason,
             classified_by="manual",
             reason=reason,
+            confidence=resolved_confidence,
         )
         save_transactions(updated, path)
     except TransactionError as exc:
@@ -149,8 +188,358 @@ def classify_cmd(
     typer.echo(updated_transaction.model_dump_json(indent=2))
 
 
-def _format_amount(value: Decimal) -> str:
-    """Render a ``Decimal`` for CLI tables without exponent notation."""
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")
+@app.command(
+    name="classify-llm",
+    help=(
+        "Classify transactions via an LLM (claude / gemini / codex). "
+        "Pass a transaction ID for one record, or --all to process every "
+        "NOT_YET_PROCESSED transaction. Results feed the same history "
+        "chain as manual or rule-based decisions."
+    ),
+)
+def classify_llm_cmd(
+    transaction_id: str | None = typer.Argument(None, help="Stable transaction identifier (omit with --all)."),
+    provider: str = typer.Option(
+        ...,
+        "--provider",
+        case_sensitive=False,
+        help="LLM provider: claude, gemini, or codex (must be on PATH).",
+    ),
+    tier: str | None = typer.Option(
+        None,
+        "--tier",
+        case_sensitive=False,
+        help=(
+            "Minimum model-capability tier: low, medium, or high. "
+            "Defaults to medium (enforced floor for classification)."
+        ),
+    ),
+    model_alias: str | None = typer.Option(
+        None,
+        "--model-alias",
+        case_sensitive=False,
+        help=(
+            "Stable tier-catalogue alias (e.g. claude-sonnet, gemini-pro, codex-o3). "
+            "Decouples Kent from shifting provider model IDs."
+        ),
+    ),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="Advanced: pin a raw provider-specific model ID (skips tier enforcement).",
+    ),
+    all_pending: bool = typer.Option(
+        False,
+        "--all",
+        help="Classify every NOT_YET_PROCESSED transaction in the catalogue.",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Run the classifier and print the results without saving.",
+    ),
+    max_total_seconds: float | None = typer.Option(
+        None,
+        "--max-total-seconds",
+        help=(
+            "Stop the --all loop after this many wall-clock seconds elapsed. "
+            "Classifications already persisted before the budget is exhausted are kept. "
+            "Omit for no ceiling."
+        ),
+    ),
+    category_hint: SpendingCategory | None = typer.Option(
+        None,
+        "--category-hint",
+        case_sensitive=False,
+        help=(
+            "Optional category Kent expects. The LLM is told the category is pre-set and "
+            "must not pick a different one — mirrors the manual `--category` flag."
+        ),
+    ),
+    pct_override: str | None = typer.Option(
+        None,
+        "--pct-override",
+        help=(
+            "When classification is MIXED, override the business-use percentage regardless "
+            "of the LLM's answer. Takes the same 0..1 range as manual `--pct`."
+        ),
+    ),
+    reason: str | None = typer.Option(
+        None,
+        "--reason",
+        help=(
+            "Optional Kent-authored justification prepended to the LLM's reason. "
+            "Matches the shape of the manual `--reason` flag."
+        ),
+    ),
+) -> None:
+    """Classify one or many transactions through an LLM CLI.
+
+    Persists each successful classification immediately so a Ctrl+C or
+    a later subprocess failure does not lose the classifications Kent
+    has already paid API tokens for.
+    """
+    import time
+
+    if all_pending and transaction_id is not None:
+        typer.echo("--all is mutually exclusive with a transaction-id argument.", err=True)
+        raise typer.Exit(code=2)
+    if not all_pending and transaction_id is None:
+        typer.echo("Pass a transaction-id argument or use --all.", err=True)
+        raise typer.Exit(code=2)
+    if max_total_seconds is not None and max_total_seconds <= 0:
+        typer.echo("--max-total-seconds must be strictly positive.", err=True)
+        raise typer.Exit(code=2)
+    resolved_pct_override: Decimal | None
+    try:
+        resolved_pct_override = _parse_pct_override(pct_override)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    try:
+        resolved_tier = _parse_tier(tier)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    try:
+        classifier = resolve_classifier(
+            provider,
+            alias=model_alias,
+            model=model,
+            minimum_tier=resolved_tier,
+        )
+    except LLMClassifierError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+
+    path = catalogue_path()
+    catalogue = load_catalogue_required()
+    targets = _select_llm_targets(catalogue, transaction_id=transaction_id, all_pending=all_pending)
+    if not targets:
+        typer.echo("No transactions selected for LLM classification.")
+        return
+
+    total = len(targets)
+    updated_catalogue = catalogue
+    successes = 0
+    failures = 0
+    stopped_early = False
+    started = time.monotonic()
+    for index, target in enumerate(targets, start=1):
+        if max_total_seconds is not None and time.monotonic() - started >= max_total_seconds:
+            stopped_early = True
+            typer.echo(
+                f"[{index - 1}/{total}] --max-total-seconds reached; keeping {successes} classified so far.",
+                err=True,
+            )
+            break
+        prefix = f"[{index}/{total} {target.transaction_id[:16]}]"
+        try:
+            response = classifier.classify(target)
+        except LLMClassifierError as exc:
+            failures += 1
+            typer.echo(f"{prefix} {provider} error: {exc}", err=True)
+            continue
+        effective_category: SpendingCategory | None = response.category
+        if category_hint is not None and effective_category != category_hint:
+            effective_category = category_hint
+        effective_pct = _resolve_effective_pct(
+            classification=response.classification,
+            response_category=effective_category,
+            pct_override=resolved_pct_override,
+        )
+        combined_reason = _combine_reason(kent_reason=reason, llm_reason=response.reason)
+        line = (
+            f"{prefix} {response.classification.value} @ {canonical_decimal(response.confidence)} — {combined_reason}"
+        )
+        typer.echo(line)
+        if not dry_run:
+            try:
+                updated_catalogue = set_classification(
+                    updated_catalogue,
+                    target.transaction_id,
+                    classification=response.classification,
+                    business_pct=effective_pct,
+                    classified_by=classifier.decided_by,
+                    reason=combined_reason,
+                    confidence=response.confidence,
+                    category_id=effective_category.value if effective_category is not None else None,
+                    notes=combined_reason,
+                )
+            except TransactionError as exc:
+                failures += 1
+                typer.echo(f"{prefix} persist error: {exc}", err=True)
+                continue
+            try:
+                save_transactions(updated_catalogue, path)
+            except TransactionError as exc:
+                failures += 1
+                typer.echo(f"{prefix} save error: {exc}", err=True)
+                continue
+        successes += 1
+
+    tail = "dry-run" if dry_run else "persisted"
+    if stopped_early:
+        tail += " (stopped at --max-total-seconds)"
+    typer.echo(f"{successes} classified / {failures} failed / {tail}")
+    if failures and successes == 0:
+        raise typer.Exit(code=2)
+
+
+def _parse_pct_override(raw: str | None) -> Decimal | None:
+    """Parse a --pct-override value and range-check against [0, 1]."""
+    if raw is None:
+        return None
+    try:
+        value = Decimal(raw)
+    except InvalidOperation as exc:
+        raise ValueError(f"--pct-override {raw!r} is not a valid decimal") from exc
+    if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+        raise ValueError("--pct-override must be within the inclusive 0..1 range")
+    return value
+
+
+def _resolve_effective_pct(
+    *,
+    classification: BusinessClassification,
+    response_category: SpendingCategory | None,
+    pct_override: Decimal | None,
+) -> Decimal | None:
+    """Compute the business_pct that should be persisted for a classification.
+
+    Precedence (first non-None wins):
+    1. Kent's explicit ``--pct-override`` (same UX as manual ``--pct``).
+    2. The CategoryProfile's ``fixed_pct`` (FIXED_PERCENTAGE rules).
+    3. The CategoryProfile's ``default_ratio`` (USAGE_RATIO_* rules —
+       e.g. the 30% home-office default from #253).
+    4. ``None`` — let the ``Transaction`` validator enforce the
+       classification+business_pct coupling (None is required unless
+       the classification is ``MIXED``, and MIXED with None raises).
+
+    When classification is NOT ``MIXED``, we always return ``None`` so
+    the profile's ratio does not corrupt a non-mixed row.
+    """
+    if classification is not BusinessClassification.MIXED:
+        return None
+    if pct_override is not None:
+        return pct_override
+    if response_category is None:
+        return None
+    profile = CATEGORY_PROFILES_2025.get(response_category)
+    if profile is None:
+        return None
+    rule = profile.proportionality
+    if rule.kind is ProportionalityKind.FIXED_PERCENTAGE and rule.fixed_pct is not None:
+        return rule.fixed_pct
+    if rule.default_ratio is not None:
+        return rule.default_ratio
+    return None
+
+
+def _combine_reason(*, kent_reason: str | None, llm_reason: str) -> str:
+    """Combine Kent's optional authored reason with the LLM's rationale."""
+    if kent_reason is None or not kent_reason.strip():
+        return llm_reason
+    return f"{kent_reason.strip()} — LLM: {llm_reason}"
+
+
+def _parse_tier(raw: str | None) -> ModelTier:
+    """Parse a --tier string into a ModelTier; default is the enforced floor."""
+    from ...financial.transactions import MINIMUM_CLASSIFICATION_TIER
+
+    if raw is None:
+        return MINIMUM_CLASSIFICATION_TIER
+    normalised = raw.strip().upper()
+    try:
+        return ModelTier[normalised]
+    except KeyError as exc:
+        known = ", ".join(t.name.lower() for t in ModelTier)
+        raise ValueError(f"unknown --tier value {raw!r}; valid: {known}") from exc
+
+
+_LLM_RETRY_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.NOT_YET_PROCESSED,
+        BusinessClassification.PROCESSED_UNCLASSIFIED,
+    }
+)
+
+
+def _select_llm_targets(
+    catalogue: TransactionCatalogue,
+    *,
+    transaction_id: str | None,
+    all_pending: bool,
+) -> list[Transaction]:
+    """Return the transactions the classify-llm command should process.
+
+    When ``--all`` is set, the target set is restricted to the two
+    "please decide" states: ``NOT_YET_PROCESSED`` (fresh ingest,
+    never seen) and ``PROCESSED_UNCLASSIFIED`` (pipeline saw it and
+    could not commit). Already-classified rows (``BUSINESS`` /
+    ``PERSONAL`` / ``MIXED``) are skipped — Kent should `classify`
+    them manually to override. Rule-excluded (``SKIPPED_BY_RULE``)
+    and invalid (``FAILED_VALIDATION``) rows are also skipped: they
+    are deliberate negative signals from earlier pipeline stages
+    that the LLM should not second-guess.
+    """
+    if transaction_id is not None:
+        transaction = find_transaction(catalogue, transaction_id)
+        if transaction is None:
+            typer.echo(f"transaction not found: {transaction_id}", err=True)
+            raise typer.Exit(code=2)
+        return [transaction]
+    return [tx for tx in catalogue.values() if tx.business_classification in _LLM_RETRY_STATES]
+
+
+def _parse_confidence_threshold(value: str | None) -> Decimal | None:
+    """Parse and range-check the ``--confidence-below`` option value."""
+    if value is None:
+        return None
+    try:
+        threshold = Decimal(value)
+    except InvalidOperation as exc:
+        typer.echo(f"invalid --confidence-below value: {value}", err=True)
+        raise typer.Exit(code=2) from exc
+    if not _CONFIDENCE_MIN <= threshold <= _CONFIDENCE_MAX:
+        typer.echo("--confidence-below must be within the inclusive 0..1 range", err=True)
+        raise typer.Exit(code=2)
+    return threshold
+
+
+def _parse_confidence_option(value: str | None) -> Decimal | None:
+    """Parse and range-check the ``--confidence`` option value."""
+    if value is None:
+        return None
+    try:
+        resolved = Decimal(value)
+    except InvalidOperation as exc:
+        typer.echo(f"invalid --confidence value: {value}", err=True)
+        raise typer.Exit(code=2) from exc
+    if not _CONFIDENCE_MIN <= resolved <= _CONFIDENCE_MAX:
+        typer.echo("--confidence must be within the inclusive 0..1 range", err=True)
+        raise typer.Exit(code=2)
+    return resolved
+
+
+def _matches_filters(
+    transaction: Transaction,
+    *,
+    state: BusinessClassification | None,
+    threshold: Decimal | None,
+) -> bool:
+    """Return whether a transaction passes the current list filters (AND semantics)."""
+    if state is not None and transaction.business_classification is not state:
+        return False
+    if threshold is not None:
+        current = transaction.classification_confidence
+        if current is None or current >= threshold:
+            return False
+    return True
+
+
+def _format_optional_decimal(value: Decimal | None) -> str:
+    """Render an optional ``Decimal`` for CLI tables, empty string for None."""
+    if value is None:
+        return ""
+    return canonical_decimal(value)

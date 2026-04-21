@@ -72,6 +72,19 @@ class _FailingAuthProvider:
         raise RuntimeError("no smartcard")
 
 
+class _UnavailableAuthProvider:
+    kind = AuthProviderKind.CERTIFICATE
+
+    def describe(self) -> AuthProviderDescription:
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="Test certificate",
+            configured=True,
+            available=False,
+            health_summary="password missing",
+        )
+
+
 _TODAY = date(2026, 4, 10)
 
 
@@ -116,3 +129,11 @@ class TestPreflightGates:
     def test_gate_4_cert_load_fails(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="auth provider"):
             _preflight(cert=_FailingAuthProvider()).check(_Draft(), today=_TODAY)
+
+    def test_gate_4_unavailable_provider_explains_local_fallback(self) -> None:
+        with pytest.raises(SubmissionPreflightError) as exc_info:
+            _preflight(cert=_UnavailableAuthProvider()).check(_Draft(), today=_TODAY)
+
+        message = str(exc_info.value)
+        assert "auth provider certificate is not ready" in message
+        assert "produce, verify, and export" in message

@@ -32,5 +32,5 @@ class _CertBackend(ABC):
         """
 
     @abstractmethod
-    def verify(self, cert: LoadedCertificate, url: str, *, timeout_s: float = 20.0) -> HandshakeResult:
+    def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
         """Perform an mTLS handshake smoke test against ``url``."""

@@ -7,7 +7,7 @@ diagram below is the data-flow story that connects them.
 ## Data flow
 
 ```
-[setup wizard] → [config + cert]
+[setup wizard] → [config + auth provider]
      ↓
 [workflow engine] ← [deadline engine] ← [modelo catalogue]
      ↓
@@ -15,7 +15,7 @@ diagram below is the data-flow story that connects them.
      ↓
 [submission engine] → [browser session] → [AEAT]
                        ↑
-                  [cert auth]
+                 [auth provider]
      ↓
 [justificante parser] ← [submission receipt]
      ↓
@@ -55,10 +55,12 @@ AEAT. The submission engine never escalates from dry-run to a real
 submit; the operator has to re-invoke with an explicit confirm flag
 that the dry-run output prints.
 
-**`[cert auth] → [browser session]`** — every browser session is
-authenticated via `aeat.auth`, which loads the PKCS#12 certificate
-from the path configured in `env/.env` and registers it with the
-Playwright context. There is no fallback to Cl@ve or DNIe today.
+**`[auth provider] → [browser session]`** — architecturally,
+`aeat.auth` now hangs off a provider-generic seam so the browser,
+workflow, and submission layers no longer depend on one hard-coded
+authenticator shape. For Kent today, the only shipped login path is
+still the PKCS#12 certificate configured in `env/.env`. Other
+provider kinds are future work, not usable CLI login choices yet.
 
 **`[justificante parser] ← [submission receipt]`** — after a real
 submission AEAT returns a justificante PDF. The submission engine

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from ..auth import describe_provider_operator_impact
 from ..logging import get_logger
 from ._errors import SubmissionPreflightError
 from ._protocols import (
@@ -116,7 +117,8 @@ class Preflight:
             )
             raise SubmissionPreflightError(
                 f"auth provider {description.kind.value} is not ready "
-                f"(configured={description.configured} available={description.available})"
+                f"(configured={description.configured} available={description.available}). "
+                f"{describe_provider_operator_impact(description)}"
             )
         _logger.info(
             "preflight gate-4 OK: auth provider ready (kind=%s subject=%s expires_on=%s)",

@@ -21,6 +21,7 @@ from .doctor import (
     State,
     adc_scopes_from_file,
     adc_well_known_path,
+    check_auth_provider_path,
     check_live_access_gate,
     render_table,
     short_scope,
@@ -170,3 +171,22 @@ class TestLiveAccessGateRow:
         row = check_live_access_gate(Settings())
         assert row.state == State.WARN
         assert "charter #116" in row.detail
+
+
+class TestAuthProviderPathRow:
+    """Behaviour of ``check_auth_provider_path``."""
+
+    def test_skips_when_no_provider_is_configured(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AEAT_CERTIFICATE_PATH", raising=False)
+        monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
+        row = check_auth_provider_path(Settings())
+        assert row.section == "aeat auth path"
+        assert row.state == State.SKIP
+        assert "produce, verify, and export" in row.detail
+
+    def test_warns_when_provider_is_configured_but_unavailable(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AEAT_CERTIFICATE_PATH", "C:/missing/cert.p12")
+        monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
+        row = check_auth_provider_path(Settings())
+        assert row.state == State.WARN
+        assert "auth is fixed" in row.detail
