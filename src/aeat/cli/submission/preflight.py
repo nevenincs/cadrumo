@@ -22,7 +22,7 @@ def preflight_cmd(
     engine = build_engine()
     checker = Preflight(
         deadline_checker=engine.deadline_checker,
-        cert_backend=engine.cert_backend,
+        auth_provider=engine.auth_provider,
     )
     try:
         checker.check(draft, today=date.today())

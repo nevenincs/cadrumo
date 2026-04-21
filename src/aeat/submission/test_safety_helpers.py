@@ -136,12 +136,13 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
 
         from aeat.config import Settings
         from aeat.submission import (
+            AuthProviderDescription,
+            AuthProviderKind,
             CasillaInputKind,
             CasillaRecord,
             DraftStatus,
             FilingDraftLike,
             FilingFinding,
-            LoadedCertificate,
             Portal,
             SubmissionEngine,
             Submitter,
@@ -170,15 +171,20 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
             def is_window_open(self, modelo: str, period: str, today: date) -> bool:
                 return True
 
-        class Certs:
-            def load(self) -> LoadedCertificate:
-                return LoadedCertificate(
-                    subject="CN=Subprocess",
-                    not_after=date(2099, 12, 31),
-                    fingerprint_sha256="a" * 64,
-                )
+        class AuthProvider:
+            kind = AuthProviderKind.CERTIFICATE
 
-            async def preload_into_browser_context(self, context: Any) -> None: ...
+            def describe(self) -> AuthProviderDescription:
+                return AuthProviderDescription(
+                    kind=self.kind,
+                    label="Subprocess certificate",
+                    configured=True,
+                    available=True,
+                    identity_nif="X1234567L",
+                    subject="CN=Subprocess",
+                    expires_on=date(2099, 12, 31),
+                    health_summary="OK:26800",
+                )
 
         class Portals:
             def portal_for(self, modelo: str) -> Portal:
@@ -219,7 +225,7 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
         )
         engine = SubmissionEngine(
             browser_session_factory=Session,
-            cert_backend=Certs(),
+            auth_provider=AuthProvider(),
             portal_catalogue=Portals(),
             draft_loader=Drafts(),
             deadline_checker=Deadlines(),

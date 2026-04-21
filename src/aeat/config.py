@@ -326,6 +326,16 @@ class Settings(BaseSettings):
         default="https://sede.agenciatributaria.gob.es/",
         description="Target URL for aeat.auth.verify_handshake() mTLS smoke test",
     )
+    aeat_auth_timeout_ms: int = Field(
+        default=30_000,
+        ge=1_000,
+        le=300_000,
+        description="Maximum duration (ms) for authentication and verification navigations",
+    )
+    aeat_strict_security: bool = Field(
+        default=False,
+        description="When True, fail hard if file permission hardening (icacls/chmod) cannot be applied",
+    )
     aeat_cert_warn_days: int = Field(
         default=60,
         gt=0,
