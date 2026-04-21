@@ -4,8 +4,12 @@ Modelo 202 is the IS / IRNR-EP instalment filing — 1P / 2P / 3P
 (April, October, December). MVP covers the liquidación block that
 Kent's filing must satisfy on every period:
 
-- casilla 18 = casilla 16 x casilla 17 (cuota integra = base x tipo,
-  under modalidad art. 40.3 LIS — running current-year base).
+- casilla 18 = casilla 16 x (casilla 17 / 100) (cuota integra = base
+  x tipo, under modalidad art. 40.3 LIS — running current-year base).
+  AEAT prints casilla 17 as the whole-percent value (``17,00`` ⇒ 17%);
+  the ``/ 100`` normalisation happens in the formula so the ruleset
+  can be applied directly to raw PDF-extracted values without
+  pre-processing (wave 33 H1 fix).
 - casilla 32 = 18 - 27 - 28 - 30 (resultado — cuota integra menos
   bonificaciones, retenciones e ingresos a cuenta, pagos fraccionados
   anteriores).
@@ -29,7 +33,9 @@ from ...models import LegalCitationSource, ModeloCode
 from .._ruleset import ParameterTable, Ruleset
 from ._common import (
     casilla,
+    div_op,
     formula,
+    lit,
     make_citation,
     max_op,
     percent,
@@ -138,7 +144,8 @@ _FORMULAS = (
     formula(
         casilla_id="18",
         formula_id="modelo_202.2025.cuota_integra",
-        body=percent(ref("17"), ref("16")),
+        # Normalise casilla 17 from whole-percent to fraction (17,00 ⇒ 0,17).
+        body=percent(div_op(ref("17"), lit("100"), quantize="0.0001"), ref("16")),
     ),
     formula(
         casilla_id="32",

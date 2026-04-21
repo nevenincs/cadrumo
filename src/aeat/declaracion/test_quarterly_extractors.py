@@ -712,6 +712,52 @@ def _draw_named_pdf(
     return path
 
 
+class TestModelo036MultiWordValues:
+    """Wave 33 H2: 036 captures multi-word régimen values without truncation."""
+
+    def test_recargo_de_equivalencia_captured_fully(self, tmp_path: Path) -> None:
+        pdf = _draw_named_pdf(
+            tmp_path,
+            modelo="036",
+            period_printed="0A",
+            lines=[
+                "Causa de presentacion: Alta",
+                "Regimen especial IVA: Recargo de equivalencia",
+                "Regimen estimacion IRPF: Estimacion directa simplificada",
+                "Epigrafe IAE: 722",
+                "Fecha de efectos: 2025-04-22",
+            ],
+            filename="modelo_036_multiword.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        # Pre-fix these were "Recargo" / "Estimacion" (single token).
+        assert by_id["regimen_iva"] == "Recargo de equivalencia"
+        assert by_id["regimen_irpf"] == "Estimacion directa simplificada"
+
+
+class TestModelo369SoportadoExclusion:
+    """Wave 33 M2: IVA soportado line must NOT match total_cuota_iva (devengada)."""
+
+    def test_soportado_line_rejected(self, tmp_path: Path) -> None:
+        pdf = _draw_named_pdf(
+            tmp_path,
+            modelo="369",
+            period_printed="1T",
+            lines=[
+                "Total bases imponibles    45.200,00",
+                "Total cuotas IVA soportado    3.000,00",  # deducible — NOT devengada
+                "Total cuotas IVA devengadas    9.492,00",
+                "Total a ingresar    6.492,00",
+            ],
+            filename="modelo_369_soportado.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        # Must pick the devengada line (9.492), not the soportado line (3.000).
+        assert by_id["total_cuota_iva"] == "9.492,00"
+
+
 class TestModelo369NamedFieldExtraction:
     """Wave 27: Modelo 369 OSS/IOSS summary totals via named-field primitive."""
 

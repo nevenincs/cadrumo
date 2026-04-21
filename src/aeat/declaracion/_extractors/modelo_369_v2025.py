@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from ..._pdf_import._label_regex import SPANISH_AMOUNT_GROUP
 from .._generic_extractor import GenericDeclaracionExtractor
 from .._schema import TemplateRevision
 
@@ -30,19 +31,22 @@ class Modelo369V2025Extractor(GenericDeclaracionExtractor):
         revision="2025.01",
     )
     casilla_ids: ClassVar[tuple[str, ...]] = ()
+    # Line-anchored + soportado-exclusion (wave 33 M2 fix) to stop
+    # ``Total cuotas IVA soportado`` from matching ``total_cuota_iva``
+    # (soportado = IVA deducible, NOT IVA devengada).
+    # Each pattern uses a negative-lookahead to reject ``soportad`` (IVA
+    # deducible), so ``Total cuotas IVA soportado`` won't collide with
+    # the devengada/to-pay fields. Line-anchored (?m)^ keeps matches
+    # local to one row.
     named_field_patterns: ClassVar[dict[str, str]] = {
         "total_base_imponible": (
-            r"Total\s+bases?\s+imponibles?[^\n]*?"
-            r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
+            rf"(?m)^(?![^\n]*soportad)[^\n]*?Total\s+bases?\s+imponibles?[^\n]*?{SPANISH_AMOUNT_GROUP}"
         ),
         "total_cuota_iva": (
-            r"Total\s+cuotas?\s+(?:IVA|devengadas?)[^\n]*?"
-            r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
+            rf"(?m)^(?![^\n]*soportad)[^\n]*?Total\s+cuotas?\s+(?:IVA\s*(?:devengad\S*)?|devengadas?)[^\n]*?"
+            rf"{SPANISH_AMOUNT_GROUP}"
         ),
-        "total_a_ingresar": (
-            r"Total\s+a\s+ingresar[^\n]*?"
-            r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
-        ),
+        "total_a_ingresar": (rf"(?m)^[^\n]*?Total\s+a\s+ingresar[^\n]*?{SPANISH_AMOUNT_GROUP}"),
     }
 
 

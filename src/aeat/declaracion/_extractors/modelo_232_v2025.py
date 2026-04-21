@@ -32,10 +32,20 @@ class Modelo232V2025Extractor(GenericDeclaracionExtractor):
     casilla_ids: ClassVar[tuple[str, ...]] = ()
     # Three "Nº registros" counters — one per info block (operaciones
     # vinculadas, intangibles art. 23 LIS, operaciones con paraísos).
+    # Wave 33 M3: line-anchored (?m)^. Each pattern matches on a single
+    # line that mentions BOTH the block keyword AND an integer count,
+    # in either order. A single outer capture group preserves
+    # apply_label_regex's group(1) contract. Caveat: this regex was
+    # derived from the BOE Orden structure (Orden HFP/816/2017) without
+    # a real 232 PDF sample — tighten to AEAT's printed literals once
+    # an L2 fixture is sourced under sub-EPIC #305-Modelo-232-full.
+    # Label-first ordering only (AEAT 232 summary always prints "Block
+    # name ... count"). One capture group preserves the apply_label_regex
+    # group(1) contract.
     named_field_patterns: ClassVar[dict[str, str]] = {
-        "num_registros_vinculadas": (r"N[º.]?\s*registros\s+(?:bloque\s+)?vinculadas[^\n]*?(\d+)"),
-        "num_registros_intangibles": (r"N[º.]?\s*registros\s+(?:bloque\s+)?intangibles[^\n]*?(\d+)"),
-        "num_registros_paraisos": (r"N[º.]?\s*registros\s+(?:bloque\s+)?para[ií]sos[^\n]*?(\d+)"),
+        "num_registros_vinculadas": r"(?m)^[^\n]*?vinculadas[^\n]*?(\d+)",
+        "num_registros_intangibles": r"(?m)^[^\n]*?intangibles[^\n]*?(\d+)",
+        "num_registros_paraisos": r"(?m)^[^\n]*?para[ií]sos[^\n]*?(\d+)",
     }
 
 
