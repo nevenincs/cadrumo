@@ -819,7 +819,11 @@ async def test_write_json_atomic_raises_on_icacls_failure_in_strict_mode(
 
         with pytest.raises(AeatSecurityError) as exc:
             await auth.capture_storage_state(session)
-        assert "failed to harden" in str(exc.value)
+        message = str(exc.value)
+        if os.name == "nt":
+            assert "failed to harden" in message
+        else:
+            assert "failed to chmod 0600" in message
 
 
 @pytest.mark.asyncio
