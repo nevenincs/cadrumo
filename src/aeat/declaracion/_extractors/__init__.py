@@ -6,6 +6,7 @@ from .._errors import NoExtractorRegisteredError
 from .._extractor import DeclaracionExtractor
 from .._schema import TemplateRevision
 from .modelo_130_v2025 import Modelo130V2025Extractor
+from .modelo_303_v2025 import Modelo303V2025Extractor
 
 _REGISTRY: dict[tuple[str, int, str], type[DeclaracionExtractor]] = {
     (
@@ -13,6 +14,11 @@ _REGISTRY: dict[tuple[str, int, str], type[DeclaracionExtractor]] = {
         Modelo130V2025Extractor.template_revision.año,
         Modelo130V2025Extractor.template_revision.revision,
     ): Modelo130V2025Extractor,
+    (
+        Modelo303V2025Extractor.template_revision.modelo,
+        Modelo303V2025Extractor.template_revision.año,
+        Modelo303V2025Extractor.template_revision.revision,
+    ): Modelo303V2025Extractor,
 }
 
 
