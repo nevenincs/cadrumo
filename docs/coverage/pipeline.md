@@ -9,7 +9,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | T1 | Ingest (CSV/XLSX/OFX → RawTransaction) | ✅ | 🚧 (no persist) | ✅ | ❌ | N/A | partial | [#216](https://github.com/wgergely/aeat/issues/216) |
 | T2 | Normalise (RawTransaction → Transaction in catalogue) | ✅ | ✅ | ✅ | ❌ | N/A | partial | [#216](https://github.com/wgergely/aeat/issues/216) |
 | T3 | Enrich (metadata, invoice/attachments) | partial | partial | partial | ❌ | ✅ [#232](https://github.com/wgergely/aeat/issues/232) | ❌ | ⏳ TBD |
-| T4 | Classify (BusinessClassification + confidence + rules/LLM) | ✅ manual; ❌ bulk | partial | partial | ⏳ [#236](https://github.com/wgergely/aeat/issues/236) | ✅ [#232](https://github.com/wgergely/aeat/issues/232) | 🚧 | [#217](https://github.com/wgergely/aeat/issues/217) |
+| T4 | Classify (BusinessClassification + confidence + rules/LLM) | ✅ manual; 🚧 LLM (claude/gemini/codex) via [#236](https://github.com/wgergely/aeat/issues/236); ❌ deterministic bulk rules | ✅ manual + `classify-llm` | ✅ | ✅ confidence on every decision ([#236](https://github.com/wgergely/aeat/issues/236)) | ✅ [#232](https://github.com/wgergely/aeat/issues/232) | 🚧 | [#217](https://github.com/wgergely/aeat/issues/217) |
 | T5 | Persist (catalogue + one-way Sheets export) | ✅ | ✅ | ✅ | partial | N/A | good | existing |
 | T6 | Period close + casilla derivation | ❌ (load-bearing blocker) | ❌ | ❌ | ❌ | N/A | ❌ | [#218](https://github.com/wgergely/aeat/issues/218) |
 
@@ -17,8 +17,9 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 
 | Concern | State | Tracking |
 |---|---|---|
-| Confidence on every decision | ❌ | [#236](https://github.com/wgergely/aeat/issues/236) |
-| Decision provenance (`decided_by`, `reason`) | partial (classified_by only) | [#231](https://github.com/wgergely/aeat/issues/231) |
+| Confidence on every decision | ✅ via [#236](https://github.com/wgergely/aeat/issues/236): `classification_confidence` on Transaction + history; `aeat financial txs list --confidence-below N`; `aeat review queue --confidence-below N` | [#236](https://github.com/wgergely/aeat/issues/236) |
+| Decision provenance (`decided_by`, `reason`, LLM identity `llm:<name>[:model]`) | ✅ | [#231](https://github.com/wgergely/aeat/issues/231) / [#236](https://github.com/wgergely/aeat/issues/236) |
+| LLM-assisted classification (claude / gemini / codex) with tier enforcement | ✅ via [#236](https://github.com/wgergely/aeat/issues/236); reuses #253 CategoryProfile for proportionality defaults | [#236](https://github.com/wgergely/aeat/issues/236) |
 | Classification history (versioned) | ✅ | [#237](https://github.com/wgergely/aeat/issues/237) |
 | `PROCESSED_UNCLASSIFIED` state distinct from `NOT_YET_PROCESSED` | ✅ | [#237](https://github.com/wgergely/aeat/issues/237) |
 | Per-catalogue findings (not just per-draft) | ❌ | [#238](https://github.com/wgergely/aeat/issues/238) |
