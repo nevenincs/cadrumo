@@ -13,9 +13,8 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from aeat.errors import FilingFixtureError
-from aeat.logging import get_logger
-
+from ..errors import FilingFixtureError
+from ..logging import get_logger
 from ._schema import FilingRecord
 
 _logger = get_logger(__name__)

@@ -23,8 +23,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from .._builder import FilingBuilder
 from .._errors import FilingComputationError
 from .._protocols import (
@@ -68,18 +67,18 @@ class Modelo390Builder(FilingBuilder):
 
     Example:
         ```python
-        from aeat.filing import build_draft
-        from aeat.filing.testing import (
-            SyntheticProfile,
-            default_schema_provider,
+        from .. import build_draft
+        from ..runtime import (
+            FilingOperatorProfile,
+            build_runtime_schema_provider,
         )
 
-        profile = SyntheticProfile(
+        profile = FilingOperatorProfile(
             tax_id="12345678Z",
             display_name="Demo",
             applicable_modelos=("303", "390"),
         )
-        provider = default_schema_provider()
+        provider = build_runtime_schema_provider()
         q1 = build_draft(modelo="303", period="2025Q1", ...)
         q2 = build_draft(modelo="303", period="2025Q2", ...)
         q3 = build_draft(modelo="303", period="2025Q3", ...)

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.casillas import (
+from . import (
     CasillaCatalogue,
     CasillaDataType,
     CasillaParseError,
@@ -21,12 +21,14 @@ from aeat.casillas import (
     verify_casillas,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
 
 def _record(
     *,
     casilla_id: str = "01",
-    reviewed_by: str = "codex",
-    reviewed_at: date | None = date(2026, 4, 12),
+    definition_reviewed_by: str = "codex",
+    definition_reviewed_at: date | None = date(2026, 4, 12),
     references_casillas: tuple[str, ...] = (),
     llm_draft_provenance: LLMDraftProvenance | None = None,
 ) -> CasillaRecord:
@@ -48,13 +50,12 @@ def _record(
         source_manual_url=None,
         source_page=1,
         source_section="1",
-        reviewed_by=reviewed_by,
-        reviewed_at=reviewed_at,
+        definition_reviewed_by=definition_reviewed_by,
+        definition_reviewed_at=definition_reviewed_at,
         llm_draft_provenance=llm_draft_provenance,
     )
 
 
-@pytest.mark.unit
 def test_loader_rejects_malformed_records(tmp_path: Path) -> None:
     """The loader must reject records that violate the strict schema."""
     root = tmp_path / "casillas"
@@ -84,8 +85,8 @@ def test_loader_rejects_malformed_records(tmp_path: Path) -> None:
                         "source_manual_url": None,
                         "source_page": None,
                         "source_section": None,
-                        "reviewed_by": "codex",
-                        "reviewed_at": "2026-04-12",
+                        "definition_reviewed_by": "codex",
+                        "definition_reviewed_at": "2026-04-12",
                         "llm_draft_provenance": None,
                     }
                 ],
@@ -98,7 +99,6 @@ def test_loader_rejects_malformed_records(tmp_path: Path) -> None:
         load_casillas("MODELO_130", "2025Q4", root=root)
 
 
-@pytest.mark.unit
 def test_cross_reference_validator_catches_dangling_refs() -> None:
     """Verification must flag references to casillas that are not present."""
     catalogue = CasillaCatalogue(
@@ -115,19 +115,22 @@ def test_cross_reference_validator_catches_dangling_refs() -> None:
     assert errors[0].code == "cross_reference"
 
 
-@pytest.mark.unit
 def test_schema_upgrade_path_round_trips_optional_fields(tmp_path: Path) -> None:
     """Older payloads that omit optional fields must still round-trip cleanly."""
     root = tmp_path / "casillas"
     catalogue = CasillaCatalogue(modelo="MODELO_130", period="2025Q4", records=(_record(),))
     save_casillas(catalogue, root=root)
     reloaded = load_casillas("MODELO_130", "2025Q4", root=root)
+    payload = (root / "modelo_130" / "2025Q4.json").read_text(encoding="utf-8")
 
     assert reloaded == catalogue
     assert reloaded.records[0].llm_draft_provenance is None
+    assert '"definition_reviewed_by"' in payload
+    assert '"definition_reviewed_at"' in payload
+    assert '"reviewed_by"' not in payload
+    assert '"reviewed_at"' not in payload
 
 
-@pytest.mark.unit
 def test_llm_provenance_is_optional_but_strict() -> None:
     """Provenance can be omitted, but invalid typed values must be rejected."""
     ok = _record(
@@ -158,7 +161,6 @@ def test_llm_provenance_is_optional_but_strict() -> None:
         )
 
 
-@pytest.mark.unit
 def test_trilingual_authoritative_spanish_is_required() -> None:
     """Label and help must both carry the authoritative Spanish text."""
     with pytest.raises(ValidationError):
@@ -172,7 +174,6 @@ def test_trilingual_authoritative_spanish_is_required() -> None:
         )
 
 
-@pytest.mark.unit
 def test_select_options_require_select_data_type() -> None:
     """Select options are only valid for SELECT casillas."""
     options = (SelectOption(value="A", label={"es": "Alta", "en": "High", "hu": "Magas"}),)

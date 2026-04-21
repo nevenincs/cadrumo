@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from aeat.llm._errors import LLMProviderError, LLMRateLimitError
-from aeat.llm._models import LLMProvider
-from aeat.llm._providers.base import ProviderCompletion, ProviderRequest, _ProviderAdapter
+from .._errors import LLMProviderError, LLMRateLimitError
+from .._models import LLMProvider
+from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter
 
 
 class _FakeAdapter(_ProviderAdapter):

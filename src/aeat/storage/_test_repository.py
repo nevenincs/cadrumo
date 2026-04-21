@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.config import Settings
-from aeat.storage import (
+from ..config import Settings
+from . import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
     ModeloRecord,
@@ -20,7 +20,9 @@ from aeat.storage import (
     create_engine_from_settings,
     session_scope,
 )
-from aeat.storage._orm import Base
+from ._orm import Base
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def _engine(tmp_path: Path):
@@ -30,7 +32,6 @@ def _engine(tmp_path: Path):
     return engine
 
 
-@pytest.mark.unit
 def test_modelo_repository_crud_round_trip(tmp_path: Path) -> None:
     """Insert, read, update, delete cycle returns pydantic records throughout."""
     engine = _engine(tmp_path)
@@ -55,7 +56,6 @@ def test_modelo_repository_crud_round_trip(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_portal_repository_preserves_enum(tmp_path: Path) -> None:
     """PortalRepository must round-trip the auth_method enum."""
     engine = _engine(tmp_path)
@@ -80,7 +80,6 @@ def test_portal_repository_preserves_enum(tmp_path: Path) -> None:
         engine.dispose()
 
 
-@pytest.mark.unit
 def test_corpus_artifact_repository_round_trip(tmp_path: Path) -> None:
     """CorpusArtifactRepository persists and reads artifacts with FK integrity."""
     engine = _engine(tmp_path)

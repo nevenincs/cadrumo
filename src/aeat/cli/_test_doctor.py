@@ -14,18 +14,21 @@ from pathlib import Path
 
 import pytest
 
-from aeat.cli.doctor import (
+from ..config import Settings
+from .doctor import (
     REQUIRED_ADC_SCOPES,
     Row,
     State,
     adc_scopes_from_file,
     adc_well_known_path,
+    check_live_access_gate,
     render_table,
     short_scope,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
-@pytest.mark.unit
+
 class TestAdcWellKnownPath:
     """Behaviour of ``adc_well_known_path``."""
 
@@ -51,7 +54,6 @@ class TestAdcWellKnownPath:
         assert "gcloud" in result.parts
 
 
-@pytest.mark.unit
 class TestAdcScopesFromFile:
     """Behaviour of ``adc_scopes_from_file``."""
 
@@ -91,7 +93,6 @@ class TestAdcScopesFromFile:
         assert adc_scopes_from_file(path) == []
 
 
-@pytest.mark.unit
 class TestShortScope:
     """Behaviour of ``short_scope``."""
 
@@ -102,7 +103,6 @@ class TestShortScope:
         assert short_scope("openid") == "openid"
 
 
-@pytest.mark.unit
 class TestRequiredScopes:
     """The required ADC scope set must include every Workspace surface."""
 
@@ -119,7 +119,6 @@ class TestRequiredScopes:
         assert "https://www.googleapis.com/auth/cloud-platform" in REQUIRED_ADC_SCOPES
 
 
-@pytest.mark.unit
 class TestRenderTable:
     """``render_table`` must produce a non-empty table for at least one row."""
 
@@ -141,3 +140,33 @@ class TestRenderTable:
         ]
         table = render_table(rows)
         assert len(table.columns) == 4
+
+
+class TestLiveAccessGateRow:
+    """Behaviour of ``check_live_access_gate``."""
+
+    def test_reports_enabled_reads(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
+        monkeypatch.delenv("AEAT_LIVE_SUBMIT_ENABLED", raising=False)
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        row = check_live_access_gate(Settings())
+        assert row.section == "live access gate"
+        assert row.state == State.OK
+        assert "ENABLED" in row.detail
+        assert "unset" in row.detail
+
+    def test_reports_skipped_when_reads_not_one(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
+        monkeypatch.delenv("AEAT_LIVE_SUBMIT_ENABLED", raising=False)
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        row = check_live_access_gate(Settings())
+        assert row.state == State.SKIP
+        assert "skipped" in row.detail
+
+    def test_warns_when_submit_var_is_set(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
+        monkeypatch.setenv("AEAT_LIVE_SUBMIT_ENABLED", "true")
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        row = check_live_access_gate(Settings())
+        assert row.state == State.WARN
+        assert "charter #116" in row.detail

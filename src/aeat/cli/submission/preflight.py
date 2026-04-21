@@ -8,8 +8,8 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from aeat.cli.submission._helpers import build_engine, load_draft
-from aeat.submission import Preflight, SubmissionPreflightError
+from ...submission import Preflight, SubmissionPreflightError
+from ._helpers import build_engine, load_draft
 
 _CONSOLE = Console()
 
@@ -22,7 +22,7 @@ def preflight_cmd(
     engine = build_engine()
     checker = Preflight(
         deadline_checker=engine.deadline_checker,
-        cert_backend=engine.cert_backend,
+        auth_provider=engine.auth_provider,
     )
     try:
         checker.check(draft, today=date.today())

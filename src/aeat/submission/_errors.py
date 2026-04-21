@@ -6,8 +6,8 @@ a single root they can catch at integration boundaries.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
-from aeat.i18n import Translatable
+from ..errors import AeatError
+from ..i18n import Translatable
 
 
 class SubmissionError(AeatError):
@@ -32,6 +32,22 @@ class SubmissionError(AeatError):
 
 class SubmissionPreflightError(SubmissionError):
     """Raised when preflight gating rejects a draft before any browser work."""
+
+
+class AeatLiveSubmitNotEnabledError(SubmissionPreflightError):
+    """Raised when the live-submit env gate is not enabled."""
+
+
+class AeatPytestLiveWriteRefusedError(SubmissionPreflightError):
+    """Raised when pytest reaches a live-capable submission call."""
+
+
+class AeatLiveTransportUnavailableError(SubmissionPreflightError):
+    """Raised when a live write is requested on a stubbed transport."""
+
+
+class AeatLiveConfirmationDeclinedError(SubmissionPreflightError):
+    """Raised when the operator does not type the exact live-submit phrase."""
 
 
 class SubmissionFormFillError(SubmissionError):

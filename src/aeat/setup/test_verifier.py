@@ -6,17 +6,17 @@ from pathlib import Path
 
 import pytest
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.setup import (
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language
+from . import (
     SetupAnswers,
     SetupAnswersError,
     Verifier,
     VerifySeverity,
     load_answers_from_file,
 )
-from aeat.setup._verifier import (
+from ._verifier import (
     _check_answers_self_consistency,
     _check_certificate_path,
     _check_directory,
@@ -24,7 +24,7 @@ from aeat.setup._verifier import (
     _check_profile_file,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 def _answers(tmp_path: Path) -> SetupAnswers:
@@ -34,8 +34,11 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         tax_id="12345678Z",
         iva_regime=IVARegime.GENERAL,
         has_employees=False,
+        pays_professionals_with_retencion=False,
+        professional_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
+        third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
@@ -56,7 +59,7 @@ def test_verifier_happy_path(
     monkeypatch.setenv("AEAT_TEST_PW", "something")
     answers = _answers(tmp_path)
     # Pre-seed the profile JSON so the profile check reports OK.
-    from aeat.setup import write_profile_file
+    from . import write_profile_file
 
     write_profile_file(answers, answers.default_profile_path)
 

@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from datetime import date
 
-from aeat.logging import get_logger
-from aeat.submission._errors import SubmissionPreflightError
-from aeat.submission._protocols import (
-    CertificateBackend,
+from ..logging import get_logger
+from ._errors import SubmissionPreflightError
+from ._protocols import (
+    AuthProviderProbe,
     DeadlineWindowChecker,
     DraftStatus,
     FilingDraftLike,
@@ -31,30 +31,30 @@ class Preflight:
     2. No ``ERROR``-severity entries in ``draft.findings``.
     3. Deadline window is open via
        :meth:`DeadlineWindowChecker.is_window_open`.
-    4. Certificate loads cleanly via :meth:`CertificateBackend.load`.
+    4. Auth provider describes itself cleanly via :meth:`AuthProviderProbe.describe`.
 
     The validator is pure: no I/O beyond the injected Protocol calls,
     no state beyond its dependencies.
 
     Attributes:
         deadline_checker: Protocol implementation used for gate 3.
-        cert_backend: Protocol implementation used for gate 4.
+        auth_provider: Protocol implementation used for gate 4.
     """
 
     def __init__(
         self,
         *,
         deadline_checker: DeadlineWindowChecker,
-        cert_backend: CertificateBackend,
+        auth_provider: AuthProviderProbe,
     ) -> None:
         """Construct a preflight validator.
 
         Args:
             deadline_checker: Protocol used for the deadline-window gate.
-            cert_backend: Protocol used for the certificate gate.
+            auth_provider: Protocol used for the auth-provider gate.
         """
         self.deadline_checker = deadline_checker
-        self.cert_backend = cert_backend
+        self.auth_provider = auth_provider
 
     def check(self, draft: FilingDraftLike, *, today: date) -> None:
         """Run the four preflight gates against ``draft``.
@@ -103,14 +103,26 @@ class Preflight:
         _logger.info("preflight gate-3 OK: deadline window is open")
 
         try:
-            loaded = self.cert_backend.load()
+            description = self.auth_provider.describe()
         except Exception as exc:
-            _logger.info("preflight gate-4 FAIL: certificate load raised %r", exc)
-            raise SubmissionPreflightError(f"certificate backend failed to load: {exc}") from exc
+            _logger.info("preflight gate-4 FAIL: auth provider describe raised %r", exc)
+            raise SubmissionPreflightError(f"auth provider failed to describe itself: {exc}") from exc
+        if not description.configured or not description.available:
+            _logger.info(
+                "preflight gate-4 FAIL: auth provider unavailable kind=%s configured=%s available=%s",
+                description.kind,
+                description.configured,
+                description.available,
+            )
+            raise SubmissionPreflightError(
+                f"auth provider {description.kind.value} is not ready "
+                f"(configured={description.configured} available={description.available})"
+            )
         _logger.info(
-            "preflight gate-4 OK: certificate loaded (subject=%s not_after=%s)",
-            loaded.subject,
-            loaded.not_after,
+            "preflight gate-4 OK: auth provider ready (kind=%s subject=%s expires_on=%s)",
+            description.kind,
+            description.subject,
+            description.expires_on,
         )
 
 

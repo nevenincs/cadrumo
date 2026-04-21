@@ -21,28 +21,28 @@ from datetime import date
 from pathlib import Path
 from typing import cast
 
-from aeat.config import Settings, load_settings
-from aeat.deadlines import (
+from ..config import Settings, load_settings
+from ..deadlines import (
     AutonomoProfile,
     DeadlineEngine,
     Schedule,
 )
-from aeat.filing import (
+from ..filing import (
     CasillaSchemaProvider,
     FilingDraft,
     FilingProfile,
     build_draft,
 )
-from aeat.submission import (
+from ..submission import (
     FilingDraftLike,
     SubmissionEngine,
     SubmissionPreflightError,
 )
-from aeat.sync import LiveSyncRunner
-from aeat.sync import ModeloIdentifier as SyncModeloIdentifier
-from aeat.workflow._engine import WorkflowEngine
-from aeat.workflow._errors import WorkflowError
-from aeat.workflow._protocols import (
+from ..sync import LiveSyncRunner
+from ..sync import ModeloIdentifier as SyncModeloIdentifier
+from ._engine import WorkflowEngine
+from ._errors import WorkflowError
+from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
     FilingDraftBuilderProtocol,
@@ -136,15 +136,13 @@ class SubmissionEngineAdapter:
         self,
         draft: FilingDraftLike,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         today: date | None = None,
     ) -> SubmittedFilingLike:
         """Delegate to :meth:`SubmissionEngine.submit_draft` and project."""
         result = await self._engine.submit_draft(
             draft,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
             today=today,
         )
         return SubmittedFilingLike(

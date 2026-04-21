@@ -16,7 +16,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from aeat.sync import (
+from . import (
     AdditiveAllowlistStrategy,
     BenignRecordStrategy,
     CasillaAddedWithDefault,
@@ -39,7 +39,9 @@ from aeat.sync import (
     UnknownShape,
     VigenciaExtended,
 )
-from aeat.sync._divergence import classify_kind
+from ._divergence import classify_kind
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 # Starting operator allowlist from the ADR.
 DEFAULT_ALLOWLIST: frozenset[DivergenceKind] = frozenset(
@@ -137,7 +139,6 @@ def _dispatcher(allowlist: frozenset[DivergenceKind]) -> HealingDispatcher:
     )
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 @pytest.mark.parametrize("kind", list(DivergenceKind))
 async def test_non_allowlisted_kind_always_escalates_even_with_auto_heal(
@@ -162,7 +163,6 @@ async def test_non_allowlisted_kind_always_escalates_even_with_auto_heal(
         assert outcome.record.resolution_state == ResolutionState.PENDING
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 @pytest.mark.parametrize("kind", list(DivergenceKind))
 async def test_breaking_and_suspicious_kinds_always_escalate_with_full_allowlist(
@@ -188,7 +188,6 @@ async def test_breaking_and_suspicious_kinds_always_escalate_with_full_allowlist
         assert outcome.action == StrategyAction.RECORDED
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_default_allowlist_only_applies_to_additive_kinds() -> None:
     dispatcher = _dispatcher(DEFAULT_ALLOWLIST)

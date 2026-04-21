@@ -8,17 +8,17 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from aeat.storage import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
+from . import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
-@pytest.mark.unit
 def test_modelo_record_strict_rejects_coercion() -> None:
     """Strict mode must refuse silent int→str coercion."""
     with pytest.raises(ValidationError):
         ModeloRecord(id=1, identifier=cast(str, 130), name="Pagos fraccionados")
 
 
-@pytest.mark.unit
 def test_records_are_frozen() -> None:
     """Frozen records must reject mutation."""
     record = ModeloRecord(identifier="MODELO_130", name="Pagos fraccionados")
@@ -27,7 +27,6 @@ def test_records_are_frozen() -> None:
         mutable.identifier = "MODELO_303"
 
 
-@pytest.mark.unit
 def test_portal_record_requires_enum_auth_method() -> None:
     """PortalRecord.auth_method is a strict enum, not a bare string."""
     record = PortalRecord(
@@ -39,7 +38,6 @@ def test_portal_record_requires_enum_auth_method() -> None:
     assert record.auth_method is PortalAuthMethod.CERTIFICATE
 
 
-@pytest.mark.unit
 def test_corpus_artifact_record_requires_sha256_length() -> None:
     """CorpusArtifactRecord.sha256 must be exactly 64 hex characters."""
     ok_digest = "a" * 64
