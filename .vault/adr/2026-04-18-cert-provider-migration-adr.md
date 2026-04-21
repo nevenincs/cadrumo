@@ -5,6 +5,7 @@ tags:
 date: 2026-04-18
 related:
   - "[[2026-04-18-cert-provider-migration-research]]"
+  - "[[2026-04-18-auth-provider-ecosystem-research]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
 ---
 
