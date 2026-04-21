@@ -57,6 +57,7 @@ def test_provider_validation_defaults() -> None:
         ("synthetic-transactions.csv", "CSV provider"),
         ("synthetic-transactions.xlsx", "XLSX provider"),
         ("synthetic-transactions.ofx", "OFX provider"),
+        ("n26/n26-savings-2025-01.pdf", "n26-pdf"),
     ],
 )
 def test_detect_provider_uses_extension_and_validation(fixture_name: str, provider_name: str) -> None:

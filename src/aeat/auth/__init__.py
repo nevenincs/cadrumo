@@ -1,20 +1,20 @@
 """Google authentication and token management for AEAT automation.
 
-Supports three authentication methods (resolved in priority order):
+Supports two operator-facing Google auth paths:
 
-1. **Service Account** — headless/server use via GOOGLE_APPLICATION_CREDENTIALS.
-   Best for automated pipelines and Cloud Functions.
-2. **OAuth 2.0** — interactive desktop flow via client ID + secret.
-   Best for development and user-delegated access.
-3. **Application Default Credentials (ADC)** — fallback via
-   ``gcloud auth application-default login``. Useful for local development
-   without explicit credentials.
+1. **Desktop OAuth local-dev** — interactive Desktop OAuth client plus
+   a repo-local OAuth token cache for CLI/bootstrap work on a workstation.
+2. **Service-account automation** — headless use via
+   ``GOOGLE_APPLICATION_CREDENTIALS`` for automation and server contexts.
 
 Token lifecycle
 ---------------
 - OAuth tokens are cached in ``.tokens/google_oauth_token.json``.
 - Expired tokens are refreshed automatically using the stored refresh token.
-- Service account and ADC credentials manage their own token lifecycle.
+- Service-account credentials manage their own token lifecycle.
+
+ADC remains a subordinate compatibility surface for legacy ``gcloud``-
+managed wrapper flows, but it is not a peer auth path in the resolver.
 
 Required API scopes
 -------------------
@@ -26,11 +26,13 @@ Narrower scope constants are provided for least-privilege scenarios.
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import google.auth
 from google.auth.credentials import Credentials as BaseCredentials
+from google.auth.exceptions import DefaultCredentialsError
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials as OAuthCredentials
@@ -57,6 +59,14 @@ from ._clave_movil import (
     ClaveMovilConfigurationError,
 )
 from ._gate import AeatAccessGate, AeatGateEnvSnapshot
+from ._google_paths import (
+    GoogleAuthInspection,
+    GoogleAuthPath,
+    adc_well_known_path,
+    inspect_google_auth,
+    inspect_oauth_token_cache,
+    normalize_google_auth_path,
+)
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
     AuthProvider,
@@ -104,6 +114,8 @@ if TYPE_CHECKING:
     from ..config import Settings
 
 __all__ = [
+    "ADC_LOGIN_SCOPES",
+    "ADC_LOGIN_SCOPE_CSV",
     "AEAT_SESSION_IDLE_TTL",
     "CERTIFICATE_CONTEXT_MARKER",
     "AeatAccessGate",
@@ -146,14 +158,20 @@ __all__ = [
     "ClavePermanenteSessionDetail",
     "ClavePinLoginAssertionDetail",
     "ClavePinSessionDetail",
+    "GoogleAuthInspection",
+    "GoogleAuthPath",
     "HandshakeResult",
     "LoadedCertificate",
+    "adc_well_known_path",
     "build_client_certificates_kwarg",
     "describe_provider_operator_impact",
     "evaluate_loaded_certificate_health",
     "extract_nif_from_subject",
     "health",
+    "inspect_google_auth",
+    "inspect_oauth_token_cache",
     "load_certificate",
+    "normalize_google_auth_path",
     "preload_into_browser_context",
     "select_provider",
     "verify_handshake",
@@ -190,6 +208,9 @@ REQUIRED_ADC_SCOPES: list[str] = [
     USERINFO_EMAIL_SCOPE,
 ]
 
+# Scopes required when acquiring ADC via `gcloud auth application-default login`.
+ADC_LOGIN_SCOPES: list[str] = [OPENID_SCOPE, *REQUIRED_ADC_SCOPES]
+
 # Narrower scope sets for least-privilege usage.
 DRIVE_READONLY_SCOPES: list[str] = ["https://www.googleapis.com/auth/drive.readonly"]
 SHEETS_READONLY_SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
@@ -197,6 +218,15 @@ DOCS_READONLY_SCOPES: list[str] = ["https://www.googleapis.com/auth/documents.re
 DRIVE_FILE_SCOPES: list[str] = ["https://www.googleapis.com/auth/drive.file"]
 STORAGE_FULL_CONTROL_SCOPE = "https://www.googleapis.com/auth/devstorage.full_control"
 STORAGE_READ_ONLY_SCOPE = "https://www.googleapis.com/auth/devstorage.read_only"
+
+
+def format_scope_csv(scopes: Sequence[str]) -> str:
+    """Return a stable CSV string for CLI flags that accept OAuth scopes."""
+
+    return ",".join(dict.fromkeys(scopes))
+
+
+ADC_LOGIN_SCOPE_CSV = format_scope_csv(ADC_LOGIN_SCOPES)
 
 
 # ── OAuth 2.0 ───────────────────────────────────────────────────────────────
@@ -290,12 +320,7 @@ def get_service_account_credentials(
 
 
 def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> BaseCredentials:
-    """Resolve credentials using the first available method.
-
-    Resolution order:
-        1. Service account — if ``GOOGLE_APPLICATION_CREDENTIALS`` points to a valid file.
-        2. OAuth 2.0 — if ``GOOGLE_OAUTH_CLIENT_ID`` and ``GOOGLE_OAUTH_CLIENT_SECRET`` are set.
-        3. Application Default Credentials — via ``gcloud auth application-default login``.
+    """Resolve credentials using the active Google auth path.
 
     Args:
         settings: Application settings (from ``load_settings()``).
@@ -309,20 +334,23 @@ def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> B
             can be found via any method.
     """
     scopes = scopes or SCOPES
+    inspection = inspect_google_auth(settings, project_root=Path(__file__).resolve().parents[3])
 
-    # 1. Service account
-    sa_path = settings.google_application_credentials
-    if sa_path and Path(sa_path).exists():
-        log.info("Using service account credentials from %s", sa_path)
+    if inspection.active_path == GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION:
+        sa_path = inspection.service_account_existing_path
+        if sa_path is None:
+            raise DefaultCredentialsError(inspection.blocking_reason or "service-account key missing")
+        log.info("Using Service-account automation path from %s", sa_path)
         return get_service_account_credentials(
             sa_path,
             scopes=scopes,
             subject=settings.google_impersonate_email or None,
         )
 
-    # 2. OAuth 2.0
-    if settings.google_oauth_client_id and settings.google_oauth_client_secret:
-        log.info("Using OAuth 2.0 credentials")
+    if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
+        if not (settings.google_oauth_client_id and settings.google_oauth_client_secret):
+            raise DefaultCredentialsError(inspection.blocking_reason or "desktop OAuth client config missing")
+        log.info("Using Desktop OAuth local-dev path")
         token_path = settings.aeat_token_dir / "google_oauth_token.json"
         return get_oauth_credentials(
             settings.google_oauth_client_id,
@@ -331,10 +359,7 @@ def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> B
             token_path=token_path,
         )
 
-    # 3. Application Default Credentials
-    log.info("Falling back to Application Default Credentials")
-    creds, _project = google.auth.default(scopes=scopes)
-    return creds
+    raise DefaultCredentialsError(inspection.blocking_reason or "no Google auth path configured")
 
 
 # ── Service builders ────────────────────────────────────────────────────────
@@ -463,12 +488,10 @@ def get_credentials_for_scopes(scopes: list[str] | None = None) -> BaseCredentia
     2. OAuth 2.0 Desktop installed-app flow if both
        ``GOOGLE_OAUTH_CLIENT_ID`` and ``GOOGLE_OAUTH_CLIENT_SECRET`` are
        set in the environment.
-    3. Application Default Credentials via
-       ``gcloud auth application-default login``.
-
-    The unified resolver is the entry point every CLI command should
-    use, so the active auth path is decided in one place and Settings
-    edits propagate without per-call wiring.
+    The unified resolver is the entry point every CLI command should use,
+    so the active auth path is decided in one place and Settings edits
+    propagate without per-call wiring. ADC are not a third fallback path
+    here; they are only used by legacy wrapper flows outside the resolver.
 
     Args:
         scopes: Scopes to request. Defaults to the full :data:`SCOPES`
