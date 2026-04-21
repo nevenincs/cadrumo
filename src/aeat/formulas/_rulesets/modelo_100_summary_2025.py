@@ -221,6 +221,10 @@ _FORMULAS = (
 RULESET: Ruleset = Ruleset(
     ruleset_id="modelo_100.summary.2025",
     modelo=ModeloCode.MODELO_100,
+    # Wave 47: explicit variant="summary" reserves the default slot
+    # for the (eventual) full-form modelo_100 ruleset without a
+    # registry-overlap conflict.
+    variant="summary",
     effective_from=_EFFECTIVE_FROM,
     effective_to=_EFFECTIVE_TO,
     casillas=_CASILLAS,

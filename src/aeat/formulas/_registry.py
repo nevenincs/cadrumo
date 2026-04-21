@@ -1,4 +1,16 @@
-"""Ruleset registry — maps ``(modelo, period)`` to a :class:`Ruleset`."""
+"""Ruleset registry — maps ``(modelo, variant, period)`` to a :class:`Ruleset`.
+
+Wave 47 extends the registry key from ``(modelo, period)`` to
+``(modelo, variant, period)``. The ``variant`` axis disambiguates
+partial (``summary``), alternate (``full``), and regional
+(``canarias``) encodings of the same modelo+period. See
+``.vault/adr/2026-04-22-ruleset-architecture-adr.md``.
+
+Overlap checking runs **per-``(modelo, variant)`` slot**: two
+``variant="default"`` rulesets may not overlap, but a
+``variant="canarias"`` ruleset may share effective range with a
+``variant="default"`` one.
+"""
 
 from __future__ import annotations
 
@@ -13,26 +25,28 @@ __all__ = ["RulesetRegistry", "get_registry"]
 
 
 class RulesetRegistry(BaseModel):
-    """Immutable collection of rulesets with ``(modelo, period)`` lookup."""
+    """Immutable collection of rulesets with ``(modelo, variant, period)`` lookup."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     rulesets: tuple[Ruleset, ...] = Field(default_factory=tuple)
 
     def model_post_init(self, _context: object) -> None:
-        by_modelo: dict[ModeloCode, list[Ruleset]] = {}
+        # Overlap check runs per (modelo, variant) slot — wave 47 ADR §1.
+        by_slot: dict[tuple[ModeloCode, str], list[Ruleset]] = {}
         for ruleset in self.rulesets:
-            by_modelo.setdefault(ruleset.modelo, []).append(ruleset)
+            by_slot.setdefault((ruleset.modelo, ruleset.variant), []).append(ruleset)
 
-        for modelo, group in by_modelo.items():
+        for (modelo, variant), group in by_slot.items():
             for lhs_idx, lhs in enumerate(group):
                 for rhs_idx, rhs in enumerate(group):
                     if lhs_idx >= rhs_idx:
                         continue
                     if _spans_overlap(lhs, rhs):
                         raise RulesetValidationError(
-                            f"modelo {modelo.value}: rulesets {lhs.ruleset_id!r} and "
-                            f"{rhs.ruleset_id!r} have overlapping effective spans"
+                            f"modelo {modelo.value} variant {variant!r}: "
+                            f"rulesets {lhs.ruleset_id!r} and {rhs.ruleset_id!r} "
+                            f"have overlapping effective spans"
                         )
         seen_ids: set[str] = set()
         for ruleset in self.rulesets:
@@ -40,21 +54,34 @@ class RulesetRegistry(BaseModel):
                 raise RulesetValidationError(f"duplicate ruleset_id {ruleset.ruleset_id!r} in registry")
             seen_ids.add(ruleset.ruleset_id)
 
-    def resolve(self, *, modelo: ModeloCode, period: FiscalPeriod) -> Ruleset:
-        """Return the ruleset active for the supplied modelo and period."""
+    def resolve(
+        self,
+        *,
+        modelo: ModeloCode,
+        period: FiscalPeriod,
+        variant: str = "default",
+    ) -> Ruleset:
+        """Return the ruleset active for the supplied modelo / variant / period.
+
+        Defaults ``variant="default"`` so existing callers keep working
+        unchanged; future callers pass ``variant="canarias"`` or similar
+        to reach regional/alternate encodings.
+        """
         matches = [
             ruleset
             for ruleset in self.rulesets
-            if ruleset.modelo == modelo and ruleset.covers(period.start, period.end)
+            if ruleset.modelo == modelo and ruleset.variant == variant and ruleset.covers(period.start, period.end)
         ]
         if not matches:
             raise MissingRulesetError(
-                f"no ruleset for modelo={modelo.value} period={period.year}"
-                + (f" quarter={period.quarter.value}" if period.quarter is not None else "")
+                f"no ruleset for modelo={modelo.value} variant={variant!r} "
+                f"period={period.year}" + (f" quarter={period.quarter.value}" if period.quarter is not None else "")
             )
         if len(matches) > 1:
             ids = sorted(r.ruleset_id for r in matches)
-            raise AmbiguousPeriodError(f"period straddles multiple rulesets for modelo={modelo.value}: {ids!r}")
+            raise AmbiguousPeriodError(
+                f"period straddles multiple rulesets for modelo={modelo.value} variant={variant!r}: {ids!r}"
+            )
         return matches[0]
 
 
