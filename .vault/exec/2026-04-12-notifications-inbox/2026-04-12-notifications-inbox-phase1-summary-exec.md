@@ -13,7 +13,7 @@ issue: wgergely/aeat#46
 
 # exec summary: aeat notifications inbox — phase 1
 
-End-to-end execution of [[2026-04-12-notifications-inbox-plan]] on
+End-to-end execution of `[[2026-04-12-notifications-inbox-plan]]` on
 branch ``feature/46-notifications-inbox``.
 
 ## artifacts produced

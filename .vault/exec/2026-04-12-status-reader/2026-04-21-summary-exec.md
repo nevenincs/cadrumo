@@ -9,8 +9,8 @@ type: exec
 # Exec record — AEAT status reader (#43)
 
 Branch: `feature/43-status-reader`
-Vault refs: research [[2026-04-12-status-reader-research]],
-ADR [[2026-04-12-status-reader-adr]], plan [[2026-04-12-status-reader-plan]].
+Vault refs: research `[[2026-04-12-status-reader-research]]`,
+ADR `[[2026-04-12-status-reader-adr]]`, plan `[[2026-04-12-status-reader-plan]]`.
 
 ## Summary
 

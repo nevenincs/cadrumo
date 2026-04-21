@@ -2,7 +2,7 @@
 title: "AuthProvider Ecosystem: Pending Issue Domains"
 tags: ["#audit", "#cert-provider"]
 date: "2026-04-18"
-related: ["[[2026-04-18-auth-provider-ecosystem-audit]]"]
+related: []
 ---
 
 # auth-provider pending-items

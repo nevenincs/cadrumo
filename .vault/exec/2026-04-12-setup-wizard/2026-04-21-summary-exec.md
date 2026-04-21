@@ -15,8 +15,8 @@ status: done
 # exec record — first-run setup wizard (#61)
 
 Branch: `feature/61-setup-wizard`.
-Vault refs: research [[2026-04-12-setup-wizard-research]], ADR
-[[2026-04-12-setup-wizard-adr]], plan [[2026-04-12-setup-wizard-plan]].
+Vault refs: research `[[2026-04-12-setup-wizard-research]]`, ADR
+`[[2026-04-12-setup-wizard-adr]]`, plan `[[2026-04-12-setup-wizard-plan]]`.
 
 ## summary
 

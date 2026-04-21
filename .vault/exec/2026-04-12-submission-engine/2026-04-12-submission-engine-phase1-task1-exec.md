@@ -14,7 +14,7 @@ issue: wgergely/aeat#42
 ## plan reference
 
 Executes every phase of
-[[2026-04-12-submission-engine-plan]] in one combined record (the
+`[[2026-04-12-submission-engine-plan]]` in one combined record (the
 plan's phase-1 through phase-5 collapsed into a single step because
 every phase feeds strictly into the next and the whole feature ships
 together).

@@ -13,7 +13,7 @@ related:
 
 ## Overview
 
-Implement the fixture surface decided in [[2026-04-12-google-fixtures-adr]].
+Implement the fixture surface decided in `[[2026-04-12-google-fixtures-adr]]`.
 Ship the minimum viable fixture set (root folder + one Sheet + one Doc), a
 strict pydantic v2 catalogue, idempotent provisioning + teardown scripts
 reusing chore/4's Google client, cross-platform `just` recipes, additive

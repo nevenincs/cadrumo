@@ -11,7 +11,7 @@ related:
 
 # relative-imports phase1 summary: src/aeat/ migrated to relative imports
 
-Phase 1 of [[2026-04-17-relative-imports-plan]] completed
+Phase 1 of `[[2026-04-17-relative-imports-plan]]` completed
 2026-04-17. End-to-end autonomous run per the vaultspec-system mandate
 (zero human-in-the-loop). Issue: wgergely/aeat#162.
 

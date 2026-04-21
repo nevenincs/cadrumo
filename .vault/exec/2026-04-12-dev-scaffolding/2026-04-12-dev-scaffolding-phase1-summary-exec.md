@@ -10,7 +10,7 @@ related:
 
 # dev-scaffolding phase-1 summary
 
-Executed plan [[2026-04-12-dev-scaffolding-plan]] for issue wgergely/aeat#4
+Executed plan `[[2026-04-12-dev-scaffolding-plan]]` for issue wgergely/aeat#4
 on branch `chore/4-dev-scaffolding`.
 
 ## outcomes

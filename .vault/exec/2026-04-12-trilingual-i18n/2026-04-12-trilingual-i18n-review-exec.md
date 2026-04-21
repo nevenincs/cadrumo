@@ -1,11 +1,11 @@
-﻿---
+---
 tags:
   - "#exec"
   - "#trilingual-i18n"
 date: "2026-04-12"
 related:
-  - "[[2026-04-12-trilingual-i18n-plan]]"
-  - "[[2026-04-12-trilingual-i18n-adr]]"
+  - "`[[2026-04-12-trilingual-i18n-plan]]`"
+  - "`[[2026-04-12-trilingual-i18n-adr]]`"
 ---
 
 # 	rilingual-i18n Code Review
@@ -23,7 +23,8 @@ INTENT-003 | PASS | Trilingual Contract Documented
 The contract is accurately documented in CLAUDE.md.
 
 QUALITY-001 | PASS | Typed Signatures and Docstrings
-Every public symbol (Language, Translatable, TranslationFallback, get_translation, equire_authoritative, with_translation, TranslationError) has a typed signature and Google-style docstring.
+Every public symbol (Language, Translatable, TranslationFallback, get_translation,
+equire_authoritative, with_translation, TranslationError) has a typed signature and Google-style docstring.
 
 QUALITY-002 | PASS | Error Inheritance
 TranslationError properly inherits from eat.errors.AeatError.

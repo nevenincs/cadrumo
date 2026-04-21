@@ -10,6 +10,7 @@ related:
   - "[[2026-04-18-aeat-filing-detail-fetch-adr]]"
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-12-submission-engine-adr]]"
+  - "[[2026-04-16-live-write-test-audit-research]]"
 ---
 
 # adr — excise the live-submit CLI surface

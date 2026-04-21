@@ -2,7 +2,6 @@
 tags:
   - "#audit"
   - "#submission-safety-sweep"
-  - "#code-review"
 date: 2026-04-16
 related:
   - "[[2026-04-16-submission-safety-sweep-adr]]"

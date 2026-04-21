@@ -18,7 +18,7 @@ Branch: `feature/14-synthetic-filing-fixtures`
 
 ## Context
 
-See [[2026-04-12-synthetic-filing-fixtures-research]] for the full
+See `[[2026-04-12-synthetic-filing-fixtures-research]]` for the full
 landscape. Summary: upstream features need a hand-curated,
 synthetic, version-controlled corpus of past filings so tests
 and demos run offline. Real filing history is sensitive and live.
