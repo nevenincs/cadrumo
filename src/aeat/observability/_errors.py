@@ -49,7 +49,7 @@ class AeatCorpusDriftError(AeatObservabilityError):
         """
         super().__init__(
             f"corpus drift on replay of run {run_id!r}: "
-            f"recorded={recorded[:12]}… observed={observed[:12]}… "
+            f"recorded={recorded[:12]}... observed={observed[:12]}... "
             f"entrypoint={entrypoint!r}",
         )
         self.run_id: str = run_id

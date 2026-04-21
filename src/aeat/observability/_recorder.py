@@ -80,6 +80,15 @@ def record_event(
         timestamp=datetime.now(UTC),
         module=module or _caller_module(),
     )
+    # INFO level keeps the record flowing through both the JSONL sink
+    # AND any caller that has tightened their own handler levels. The
+    # stderr spam concern from audit finding S2 is addressed in
+    # :func:`aeat.logging.configure_logging`, where the default stderr
+    # handler carries a filter that excludes records which already
+    # went to the per-run sink (i.e. records with a ``run_event``
+    # extra). Keeping the emission at INFO here means other
+    # subpackages that attach their own INFO-level handlers still see
+    # the observability record.
     _logger.info("run.event %s", kind.value, extra={"run_event": event})
     return event
 

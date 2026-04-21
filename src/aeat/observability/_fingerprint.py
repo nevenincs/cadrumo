@@ -72,21 +72,45 @@ def _hash_tree(
 
 
 def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
-    """Compute a deterministic fingerprint of ``.vault/`` plus Settings.
+    """Compute a deterministic fingerprint of ``.vault/`` plus Settings plus the on-disk ``.env``.
+
+    The hash folds three inputs so replay's drift gate catches every
+    channel that can change the effective configuration between record
+    and replay:
+
+    1. The whole ``.vault/`` tree — architectural decisions, plans,
+       research, execution records.
+    2. ``settings.model_dump_json()`` — the currently-loaded Settings
+       snapshot (includes env-var-sourced overrides).
+    3. The raw bytes of ``env/.env`` if present — catches dotfile
+       edits the operator made after process start that won't be
+       reflected in the already-instantiated ``Settings()``.
+
+    Combining (2) + (3) is deliberate: (2) alone misses post-startup
+    ``.env`` edits; (3) alone misses shell-exported env vars and
+    test-fixture overrides. Together they close the drift hole per
+    audit B1 (vaultspec-code-reviewer, 2026-04-21).
 
     Args:
         vault_dir: Path to the ``.vault/`` directory.
         settings: Active :class:`Settings` instance to fold into the hash.
 
     Returns:
-        SHA-256 hex digest of the corpus + serialized settings tuple.
+        SHA-256 hex digest of the vault tree + Settings snapshot +
+        ``.env`` bytes tuple.
     """
+    from ..config import PROJECT_ROOT
+
     tree_digest = _hash_tree(vault_dir, excluded_dirs=frozenset())
     settings_blob = settings.model_dump_json().encode("utf-8")
+    env_path = PROJECT_ROOT / "env" / ".env"
+    env_digest = _file_sha256(env_path) if env_path.exists() else hashlib.sha256(b"").hexdigest()
     h = hashlib.sha256()
     h.update(tree_digest.encode("ascii"))
     h.update(b"|settings|")
     h.update(hashlib.sha256(settings_blob).hexdigest().encode("ascii"))
+    h.update(b"|env|")
+    h.update(env_digest.encode("ascii"))
     return h.hexdigest()
 
 

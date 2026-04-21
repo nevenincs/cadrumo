@@ -59,6 +59,22 @@ def _install_run_context_record_factory() -> None:
     _FACTORY_INSTALLED = True
 
 
+class _DropRunEventFilter(logging.Filter):
+    """Suppress observability ``run_event`` records on the stderr handler.
+
+    Records carrying a ``run_event`` extra are the per-run JSONL sink's
+    diet — they're already persisted to ``events.jsonl`` via
+    :class:`aeat.observability.JsonlRunSink`. Echoing them on stderr as
+    well would spam the console with one ``run.event NAVIGATION`` line
+    per step; suppressing them here removes the noise while leaving
+    the record intact for any other handler (including the JSONL
+    sink). See audit finding S2 (vaultspec-code-reviewer, 2026-04-21).
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return getattr(record, "run_event", None) is None
+
+
 def configure_logging() -> None:
     """Configures the project-wide logging defaults."""
     global _CONFIGURED
@@ -72,12 +88,16 @@ def configure_logging() -> None:
             "formatters": {
                 "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
             },
+            "filters": {
+                "drop_run_event": {"()": f"{__name__}._DropRunEventFilter"},
+            },
             "handlers": {
                 "default": {
                     "level": "INFO",
                     "formatter": "standard",
                     "class": "logging.StreamHandler",
                     "stream": "ext://sys.stderr",
+                    "filters": ["drop_run_event"],
                 },
             },
             "root": {

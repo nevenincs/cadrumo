@@ -13,6 +13,7 @@ See [[2026-04-14-run-trace-adr]] decision D2.
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
@@ -43,6 +44,11 @@ _log = get_logger(__name__)
 
 _DEFAULT_INITIAL_STEP = "step-0"
 _EVENTS_FILENAME = "events.jsonl"
+# Env var set by :func:`aeat.observability.replay_run` for the
+# duration of the re-entered CLI call. Kept in sync with
+# :data:`aeat.observability._replay.REPLAY_ACTIVE_ENV_VAR` — spelled
+# here to avoid a cycle with ``_replay`` at import time.
+_REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
 
 
 class RunContextInfo(BaseModel):
@@ -152,7 +158,6 @@ def run_context(
     if outer is not None:
         nested_step = step_id or f"{outer.initial_step_id}.{_mint_run_id()[:8]}"
         step_token = STEP_CONTEXT_VAR.set(nested_step)
-        step_end_emitted = False
         try:
             record_event(
                 RunEventKind.STEP_START,
@@ -162,21 +167,23 @@ def run_context(
             try:
                 yield outer
             finally:
-                if not step_end_emitted:
-                    step_end_emitted = True
-                    try:
-                        record_event(
-                            RunEventKind.STEP_END,
-                            payload=_step_payload(nested_step, label=entrypoint),
-                            module=__name__,
-                        )
-                    except Exception as exc:
-                        _log.warning(
-                            "failed to record nested STEP_END (run=%s step=%s): %r",
-                            outer.run_id,
-                            nested_step,
-                            exc,
-                        )
+                # STEP_END is always emitted exactly once here; the
+                # prior ``step_end_emitted`` flag was never read in a
+                # way that could differ from its write and has been
+                # removed (audit nit N5).
+                try:
+                    record_event(
+                        RunEventKind.STEP_END,
+                        payload=_step_payload(nested_step, label=entrypoint),
+                        module=__name__,
+                    )
+                except Exception as exc:
+                    _log.warning(
+                        "failed to record nested STEP_END (run=%s step=%s): %r",
+                        outer.run_id,
+                        nested_step,
+                        exc,
+                    )
         finally:
             STEP_CONTEXT_VAR.reset(step_token)
         return
@@ -192,10 +199,18 @@ def run_context(
     target.mkdir(parents=True, exist_ok=True)
     sink = JsonlRunSink(target / _EVENTS_FILENAME, run_id=info.run_id)
     root_logger = logging.getLogger()
-    root_logger.addHandler(sink)
 
+    # Set the contextvars BEFORE attaching the sink. Symmetric with
+    # detach-before-reset on unwind. Without this ordering, log records
+    # emitted by another thread on the root logger during the window
+    # between addHandler and set() would land on this sink but carry the
+    # previous context's run_id (or an empty one) — the sink's run_id
+    # filter drops them, but the semantics are cleaner when the var is
+    # bound first. See audit finding S1 (vaultspec-code-reviewer,
+    # 2026-04-21).
     run_token: Token[RunContextInfo | None] = RUN_CONTEXT_VAR.set(info)
     step_token: Token[str | None] = STEP_CONTEXT_VAR.set(info.initial_step_id)
+    root_logger.addHandler(sink)
     # Pessimistic default: only flip to OK once the yielded body returns
     # cleanly. If STEP_START itself raises, or the yield is never reached,
     # outcome stays FAILED so the persisted trace does not lie.
@@ -221,6 +236,20 @@ def run_context(
                 # exception (if any) nor the outcome we already set.
                 _log.warning("failed to record STEP_END for run %s: %r", info.run_id, exc)
     finally:
+        # If we were re-entered by ``replay_run``, label the persisted
+        # trace with the original run id so ``aeat run show`` can tell a
+        # replay trace apart from a fresh one. Any non-16-hex value
+        # (e.g. a legacy ``"1"`` sentinel from earlier code) is ignored
+        # — only a legitimately-shaped run id is propagated.
+        replay_of_env = os.environ.get(_REPLAY_ACTIVE_ENV_VAR)
+        replay_of: str | None = None
+        if replay_of_env and len(replay_of_env) == 16:
+            try:
+                int(replay_of_env, 16)
+            except ValueError:
+                replay_of = None
+            else:
+                replay_of = replay_of_env.lower()
         try:
             trace = RunTrace(
                 run_id=info.run_id,
@@ -232,6 +261,7 @@ def run_context(
                 db_sha256=info.db_sha256,
                 cert_fingerprint=info.cert_fingerprint,
                 outcome=outcome,
+                replay_of=replay_of,
             )
             save_trace(trace)
         except Exception as exc:
@@ -240,12 +270,16 @@ def run_context(
             # propagating. Log and move on.
             _log.warning("failed to persist RunTrace for run %s: %r", info.run_id, exc)
         finally:
-            STEP_CONTEXT_VAR.reset(step_token)
-            RUN_CONTEXT_VAR.reset(run_token)
+            # Detach the sink BEFORE resetting the contextvars so a
+            # trailing log record from another thread can't land on
+            # this sink with a stale run_id. Mirror of the attach
+            # ordering above; see audit finding S1.
             try:
                 root_logger.removeHandler(sink)
             except Exception as exc:  # pragma: no cover - logging lock is infallible in practice
                 _log.warning("failed to detach sink for run %s: %r", info.run_id, exc)
+            STEP_CONTEXT_VAR.reset(step_token)
+            RUN_CONTEXT_VAR.reset(run_token)
             try:
                 sink.close()
             except Exception as exc:

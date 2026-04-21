@@ -52,3 +52,61 @@ class TestRunContextLoggingFilter:
         for record in inside_records:
             assert getattr(record, "run_id", None) == inside_run_id
             assert getattr(record, "step_id", None) != ""
+
+
+class TestStderrRunEventFilter:
+    """The default stderr handler must drop records carrying run_event.
+
+    S2 concern: ``record_event`` logs at INFO through
+    ``aeat.observability`` which propagates to the root stderr
+    handler. Without the filter, every event would print on stderr —
+    spamming long workflows. The filter drops only records with a
+    ``run_event`` extra; plain log lines still reach stderr.
+    """
+
+    def test_filter_drops_run_event_records(self) -> None:
+        from ..logging import _DropRunEventFilter
+
+        filt = _DropRunEventFilter()
+        plain = logging.LogRecord(
+            name="aeat.test",
+            level=logging.INFO,
+            pathname=__file__,
+            lineno=0,
+            msg="plain",
+            args=None,
+            exc_info=None,
+        )
+        assert filt.filter(plain) is True, "plain records must pass"
+
+        event = logging.LogRecord(
+            name="aeat.test",
+            level=logging.INFO,
+            pathname=__file__,
+            lineno=0,
+            msg="run event",
+            args=None,
+            exc_info=None,
+        )
+        event.run_event = object()  # sentinel — any truthy value qualifies
+        assert filt.filter(event) is False, "run_event records must be dropped"
+
+    def test_events_still_reach_jsonl_sink_end_to_end(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """The filter must NOT accidentally drop events from the sink."""
+        from . import GenericPayload, RunEventKind, RunEventPayload, load_events, record_event
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        with run_context(entrypoint="aeat test stderr-filter", arguments=()) as info:
+            record_event(
+                RunEventKind.NAVIGATION,
+                payload=RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),
+            )
+        events = load_events(info.run_id)
+        # STEP_START + NAVIGATION + STEP_END = 3 events.
+        assert len(events) == 3
+        kinds = {e.kind for e in events}
+        assert RunEventKind.NAVIGATION in kinds

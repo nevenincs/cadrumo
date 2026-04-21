@@ -84,6 +84,83 @@ class TestRunEventPayload:
             )
 
 
+class TestTimezoneAwareness:
+    """Naive datetimes must be rejected at the pydantic boundary (S5)."""
+
+    def test_run_event_rejects_naive_timestamp(self) -> None:
+        with pytest.raises(ValidationError, match="timezone-aware"):
+            RunEvent(
+                run_id="0123456789abcdef",
+                step_id="step-0",
+                kind=RunEventKind.NAVIGATION,
+                payload=RunEventPayload(navigation=NavigationPayload(url="https://x")),
+                timestamp=datetime(2026, 4, 14),
+                module="aeat.observability.test_models",
+            )
+
+    def test_run_trace_rejects_naive_started_at(self) -> None:
+        with pytest.raises(ValidationError, match="timezone-aware"):
+            RunTrace(
+                run_id="0123456789abcdef",
+                started_at=datetime(2026, 4, 14),
+                finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+                entrypoint="aeat hello",
+                arguments=(),
+                corpus_sha256="a" * 64,
+                db_sha256="b" * 64,
+                cert_fingerprint="",
+                outcome=RunOutcome.OK,
+            )
+
+    def test_run_trace_rejects_naive_finished_at(self) -> None:
+        with pytest.raises(ValidationError, match="timezone-aware"):
+            RunTrace(
+                run_id="0123456789abcdef",
+                started_at=datetime(2026, 4, 14, tzinfo=UTC),
+                finished_at=datetime(2026, 4, 14, 0, 0, 1),
+                entrypoint="aeat hello",
+                arguments=(),
+                corpus_sha256="a" * 64,
+                db_sha256="b" * 64,
+                cert_fingerprint="",
+                outcome=RunOutcome.OK,
+            )
+
+
+class TestReplayOfField:
+    """``replay_of`` defaults to None and accepts valid run ids (S7)."""
+
+    def test_default_none(self) -> None:
+        trace = RunTrace(
+            run_id="0123456789abcdef",
+            started_at=datetime(2026, 4, 14, tzinfo=UTC),
+            finished_at=None,
+            entrypoint="aeat hello",
+            arguments=(),
+            corpus_sha256="a" * 64,
+            db_sha256="b" * 64,
+            cert_fingerprint="",
+            outcome=RunOutcome.OK,
+        )
+        assert trace.replay_of is None
+
+    def test_roundtrip_with_replay_of(self) -> None:
+        trace = RunTrace(
+            run_id="0123456789abcdef",
+            started_at=datetime(2026, 4, 14, tzinfo=UTC),
+            finished_at=None,
+            entrypoint="aeat hello",
+            arguments=(),
+            corpus_sha256="a" * 64,
+            db_sha256="b" * 64,
+            cert_fingerprint="",
+            outcome=RunOutcome.OK,
+            replay_of="fedcba9876543210",
+        )
+        rebuilt = RunTrace.model_validate_json(trace.model_dump_json())
+        assert rebuilt.replay_of == "fedcba9876543210"
+
+
 class TestRunEventAndTrace:
     def test_event_round_trip(self) -> None:
         evt = _make_event(

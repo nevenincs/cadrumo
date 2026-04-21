@@ -31,7 +31,9 @@ def replay_cmd(
     try:
         trace = replay_run(run_id, dry_run=dry_run)
     except AeatCorpusDriftError as exc:
-        _CONSOLE.print(f"[red]corpus drift:[/red] {exc} (recorded={exc.recorded[:12]}… observed={exc.observed[:12]}…)")
+        _CONSOLE.print(
+            f"[red]corpus drift:[/red] {exc} (recorded={exc.recorded[:12]}... observed={exc.observed[:12]}...)"
+        )
         raise typer.Exit(code=2) from exc
     except AeatObservabilityError as exc:
         _CONSOLE.print(f"[red]replay refused:[/red] {exc}")
