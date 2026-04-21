@@ -17,8 +17,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli._drive_helpers import (
+from ._drive_helpers import (
     build_listing_query,
+    build_name_query,
     escape_drive_query_literal,
     guess_mime_type,
 )
@@ -33,7 +34,7 @@ def _drive() -> Any:
     loading google-auth + googleapiclient when the user only wants to
     see the command tree.
     """
-    from aeat.auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes
+    from ..auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes
 
     creds = get_credentials_for_scopes([DRIVE_SCOPE])
     return build_drive_service(creds)
@@ -112,6 +113,69 @@ def cat(
     while not done:
         _status, done = downloader.next_chunk()
     sys.stdout.buffer.write(buffer.getvalue())
+
+
+@app.command(
+    name="fetch",
+    help="Fetch a single Drive file by exact name and write it to a local path.",
+)
+def fetch(
+    name: str = typer.Argument(..., help="Exact Drive file name to download."),
+    out: Path = typer.Option(
+        Path("credentials"),
+        "--out",
+        "-o",
+        help=(
+            "Output path. If a directory, the file is written as <out>/<name>; "
+            "if a file, the file is written there verbatim. Default: credentials/."
+        ),
+    ),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="Overwrite the output file if it already exists.",
+    ),
+) -> None:
+    """Locate a single file by exact name and download it.
+
+    Convenience wrapper around ``aeat drive find`` + ``aeat drive cat``
+    that fails fast on zero or multiple matches and writes to a local
+    path instead of stdout. Used by ``just aeat-cert-fetch`` to fetch
+    a PKCS#12 cert from Drive without copy-pasting file IDs.
+    """
+    from googleapiclient.http import MediaIoBaseDownload
+
+    console = Console()
+    service = _drive()
+    response = service.files().list(q=build_name_query(name), fields="files(id, name, mimeType)", pageSize=10).execute()
+    files = response.get("files", [])
+    if not files:
+        console.print(f"[red]drive fetch:[/red] no Drive file matched name {name!r}.")
+        raise typer.Exit(code=1)
+    if len(files) > 1:
+        console.print(
+            f"[red]drive fetch:[/red] {len(files)} Drive files matched name {name!r}; "
+            "narrow down by visiting the Drive UI and using a unique name. "
+            f"Matches: {[f.get('id') for f in files]!r}"
+        )
+        raise typer.Exit(code=1)
+    file_entry = files[0]
+    file_id = str(file_entry["id"])
+
+    target = out / name if out.exists() and out.is_dir() else out
+    if target.exists() and not overwrite:
+        console.print(f"[red]drive fetch:[/red] {target} already exists. Pass --overwrite to replace it.")
+        raise typer.Exit(code=1)
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    request = service.files().get_media(fileId=file_id)
+    buffer = io.BytesIO()
+    downloader = MediaIoBaseDownload(buffer, request)
+    done = False
+    while not done:
+        _status, done = downloader.next_chunk()
+    target.write_bytes(buffer.getvalue())
+    console.print(f"[green]drive fetch:[/green] wrote {target} ({len(buffer.getvalue())} bytes)")
 
 
 @app.command(name="put", help="Upload a local file to Drive.")

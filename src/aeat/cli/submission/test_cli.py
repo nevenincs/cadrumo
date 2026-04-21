@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.submission import app
+from . import app
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 @pytest.fixture()
@@ -23,7 +23,6 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Point the submission engine at tmp dirs via env vars."""
     monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(tmp_path / "submissions"))
     monkeypatch.setenv("AEAT_SUBMISSION_BROWSER_TRACE_DIR", str(tmp_path / "traces"))
-    monkeypatch.setenv("AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION", "true")
     return tmp_path
 
 
@@ -74,20 +73,35 @@ class TestDryRunCommand:
         assert "PENDING" in result.output
 
 
-class TestSubmitCommand:
-    def test_refuses_without_flag(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        result = runner.invoke(app, ["submit", str(draft_path)])
-        assert result.exit_code == 2
-        assert "refusing" in result.output.lower()
+class TestSubmitCommandRemoved:
+    """The ``submit`` subcommand was removed by the 2026-04-18 ADR.
 
-    def test_runs_live_with_flag(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        result = runner.invoke(
-            app,
-            ["submit", str(draft_path), "--i-understand-this-is-real"],
+    Replaced :class:`TestSubmitCommand`. The new tests assert that
+    invocation falls through to Typer's "no such command" path with
+    exit code 2 and that the help surface does not advertise it.
+    """
+
+    def test_invocation_fails_with_no_such_command(
+        self, runner: CliRunner, draft_path: Path, isolated_dirs: Path
+    ) -> None:
+        del isolated_dirs
+        result = runner.invoke(app, ["submit", str(draft_path)])
+        # Typer/click returns 2 for unknown commands.
+        assert result.exit_code == 2, result.output
+        assert (
+            "submit" not in (result.output or "").split("\nUsage")[0].lower()
+            or "no such command" in (result.output or "").lower()
         )
+
+    def test_help_does_not_list_submit(self, runner: CliRunner) -> None:
+        result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0, result.output
-        assert "LIVE submission OK" in result.output
-        assert "SUBMITTED" in result.output
+        # The four allowed commands are present; "submit" is not.
+        for cmd in ("preflight", "dry-run", "show", "list"):
+            assert cmd in result.output, f"expected `{cmd}` in --help, got: {result.output!r}"
+        assert " submit " not in result.output, (
+            "submission CLI must not advertise `submit` (see .vault/adr/2026-04-18-live-submit-cli-excision-adr.md)"
+        )
 
 
 class TestShowAndList:

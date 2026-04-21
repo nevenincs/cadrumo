@@ -11,16 +11,17 @@ import os
 
 import pytest
 
-from aeat.auth import (
+from ..config import Settings
+from . import (
     CertificateBundle,
     HandshakeResult,
     load_certificate,
     verify_handshake,
 )
-from aeat.config import Settings
+
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 
 
-@pytest.mark.live
 def test_verify_handshake_live_against_aeat() -> None:
     """Load the operator's cert and hit the configured AEAT verify URL."""
     if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":

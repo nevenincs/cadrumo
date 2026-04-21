@@ -8,15 +8,16 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import Settings
-from aeat.llm import LLMClient, LLMRequest
+from ..config import Settings
+from . import LLMClient, LLMRequest
+
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_mediation]
 
 
 class _LiveSettings(Settings):
     model_config = SettingsConfigDict(env_file=Settings.model_config.get("env_file"), env_file_encoding="utf-8")
 
 
-@pytest.mark.live
 def test_live_anthropic_round_trip(tmp_path: Path) -> None:
     """Run a tiny Anthropic round trip when live testing is explicitly enabled."""
 

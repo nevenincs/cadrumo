@@ -4,15 +4,20 @@ Every outermost public CLI command wraps its body in
 :func:`run_context` and emits one ``STEP_START`` / ``STEP_END`` pair
 via :func:`record_event`. This module factors the boilerplate so each
 CLI file stays minimal — see [[2026-04-14-run-trace-plan]] step 12.
+
+Callers pass the positional-argument names via the ``positional``
+parameter so replay can reconstruct a Typer-compatible argv with
+positional arguments emitted first (in the declared order, without
+a ``--`` prefix) followed by any captured flags.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Any
 
-from aeat.observability import (
+from ..observability import (
     ArgumentRecord,
     ArgumentSource,
     RunContextInfo,
@@ -36,20 +41,45 @@ def _stringify(value: Any) -> str | None:
     return str(value)
 
 
-def build_arguments(values: Mapping[str, Any]) -> tuple[ArgumentRecord, ...]:
+def build_arguments(
+    values: Mapping[str, Any],
+    *,
+    positional: Sequence[str] = (),
+) -> tuple[ArgumentRecord, ...]:
     """Build a tuple of :class:`ArgumentRecord` from a Typer locals mapping.
+
+    Positional arguments listed in ``positional`` are emitted first in
+    the given order (tagged :attr:`ArgumentSource.POSITIONAL`);
+    every remaining entry is emitted in ``values`` insertion order
+    tagged :attr:`ArgumentSource.FLAG`. Order is preserved verbatim —
+    replay must re-emit positionals in the same sequence the command
+    declared them.
 
     Args:
         values: Mapping of CLI argument name → captured value. ``None``
             values are skipped (they were never passed by the user).
+        positional: Ordered sequence of argument names that Typer
+            declared as :class:`typer.Argument` (positional). Each
+            listed name must appear in ``values``. Missing values
+            raise :class:`KeyError`.
 
     Returns:
-        A tuple of strict :class:`ArgumentRecord` records, every entry
-        marked with ``ArgumentSource.FLAG``.
+        A tuple of strict :class:`ArgumentRecord` records ordered
+        positionals-first, then flags in declaration order.
     """
+    positional_set = set(positional)
     records: list[ArgumentRecord] = []
-    for name in sorted(values):
+    for name in positional:
         rendered = _stringify(values[name])
+        if rendered is None:
+            continue
+        records.append(
+            ArgumentRecord(name=name, value=rendered, source=ArgumentSource.POSITIONAL),
+        )
+    for name, value in values.items():
+        if name in positional_set:
+            continue
+        rendered = _stringify(value)
         if rendered is None:
             continue
         records.append(
@@ -63,6 +93,7 @@ def cli_run_context(
     *,
     entrypoint: str,
     arguments: Mapping[str, Any],
+    positional: Sequence[str] = (),
 ) -> Iterator[RunContextInfo]:
     """Convenience wrapper that builds arguments and enters :func:`run_context`.
 
@@ -72,8 +103,11 @@ def cli_run_context(
         arguments: Mapping of CLI argument name → captured value
             (typically the function's ``locals()`` filtered to the
             argument names).
+        positional: Ordered sequence of argument names declared as
+            Typer positional :class:`typer.Argument` values.
     """
-    with run_context(entrypoint=entrypoint, arguments=build_arguments(arguments)) as info:
+    built = build_arguments(arguments, positional=positional)
+    with run_context(entrypoint=entrypoint, arguments=built) as info:
         yield info
 
 

@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from aeat.models._categories import (
+from ...portals import Portal
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._codes import ModeloCode
-from aeat.models._entries._common import (
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
+from ._common import (
     build_applicability,
     build_entry,
     make_citation,
 )
-from aeat.models._metadata import ModeloMetadata
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_111,
@@ -60,14 +61,14 @@ ENTRY: ModeloMetadata = build_entry(
         ),
         optional=(TaxpayerProfile.AUTONOMO_EO,),
         trigger_notes_es=(
-            "Obligatorio cuando el autónomo paga salarios o honorarios profesionales bajo "
-            "retención; mapea a AutonomoProfile.has_employees o al pago de profesionales con "
-            "retención."
+            "Obligatorio cuando el autónomo paga salarios u honorarios profesionales bajo "
+            "retención; mapea a AutonomoProfile.has_employees o "
+            "AutonomoProfile.pays_professionals_with_retencion."
         ),
     ),
     caps_into=ModeloCode.MODELO_190,
     related_modelos=(ModeloCode.MODELO_190,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 111",
+    submission_portal=Portal.PORTAL_M111_RETENCIONES_TRABAJO,
     known_gotchas=(
         "Períodos con cero actividad siguen exigiendo presentación; suspensión requiere "
         "modificación censal vía Modelo 036.",

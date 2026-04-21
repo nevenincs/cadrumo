@@ -1,6 +1,6 @@
 """Colocated unit tests for site-health models and parsers (#95).
 
-Every test is marked ``@pytest.mark.unit`` and drives the parser suite
+The module is marked ``unit`` / ``domain_aeat_remote`` and drives the parser suite
 from real HTML strings loaded off disk under
 ``tests/fixtures/site_health/``. No mocks, patches, fakes, or stubs.
 """
@@ -15,20 +15,22 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.config import PROJECT_ROOT
-from aeat.status import (
+from ..config import PROJECT_ROOT
+from ..workflow import WorkflowStage
+from . import (
     SiteHealthAlert,
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
     evaluate_response,
 )
-from aeat.status._site_health_parsers import (
+from ._site_health_parsers import (
     parse_mantenimiento_banner,
     parse_rate_limit_response,
     parse_waf_challenge,
 )
-from aeat.workflow import WorkflowStage
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
@@ -61,7 +63,6 @@ _RATE_LIMITED_FILES = _fixture_files("rate_limited")
 _OK_FILES = _fixture_files("ok")
 
 
-@pytest.mark.unit
 class TestFixtureCorpusShape:
     """Guardrails: ensure the fixture corpus meets the plan minimums."""
 
@@ -78,7 +79,6 @@ class TestFixtureCorpusShape:
         assert len(_OK_FILES) >= 5
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize("path", _MANTENIMIENTO_FILES, ids=lambda p: p.name)
 def test_mantenimiento_fixtures_classify(path: Path) -> None:
     http_status, headers, body = _load_case(path, default_status=200)
@@ -103,7 +103,6 @@ def test_mantenimiento_fixtures_classify(path: Path) -> None:
     assert single.state is SiteHealthState.MANTENIMIENTO
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize("path", _WAF_FILES, ids=lambda p: p.name)
 def test_waf_fixtures_classify(path: Path) -> None:
     http_status, headers, body = _load_case(path, default_status=403)
@@ -128,7 +127,6 @@ def test_waf_fixtures_classify(path: Path) -> None:
     assert single.state is SiteHealthState.WAF_CHALLENGE
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize("path", _RATE_LIMITED_FILES, ids=lambda p: p.name)
 def test_rate_limited_fixtures_classify(path: Path) -> None:
     http_status, headers, body = _load_case(path, default_status=429)
@@ -155,7 +153,6 @@ def test_rate_limited_fixtures_classify(path: Path) -> None:
     assert single.state is SiteHealthState.RATE_LIMITED
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize("path", _OK_FILES, ids=lambda p: p.name)
 def test_ok_fixtures_do_not_classify(path: Path) -> None:
     http_status, headers, body = _load_case(path, default_status=200)
@@ -169,7 +166,6 @@ def test_ok_fixtures_do_not_classify(path: Path) -> None:
     assert status is None, f"ok fixture {path.name} unexpectedly classified as {status}"
 
 
-@pytest.mark.unit
 class TestMantenimientoTitleOnlyGuard:
     """ADR Decision 2.1: title-only hits must never classify."""
 
@@ -185,7 +181,7 @@ class TestMantenimientoTitleOnlyGuard:
             "<body><p>Welcome to our tax portal. All services are up.</p>"
             "<p>Please log in to continue.</p></body></html>"
         )
-        from aeat.status._site_health_parsers import _extract_title, _matches_mantenimiento
+        from ._site_health_parsers import _extract_title, _matches_mantenimiento
 
         lowered = html.lower()
         title = _extract_title(html, lowered)
@@ -227,7 +223,6 @@ class TestMantenimientoTitleOnlyGuard:
         assert status.state is SiteHealthState.MANTENIMIENTO
 
 
-@pytest.mark.unit
 class TestRateLimitRetryAfter:
     def test_default_used_when_header_missing(self) -> None:
         path = _FIXTURES_ROOT / "rate_limited" / "429_no_header.html"
@@ -319,7 +314,7 @@ class TestRateLimitRetryAfter:
 
 
 def _evidence(**overrides: object) -> SiteHealthEvidence:
-    from aeat.status._site_health import _URL_ADAPTER
+    from ._site_health import _URL_ADAPTER
 
     base: dict[str, object] = {
         "url": _URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/"),
@@ -331,7 +326,6 @@ def _evidence(**overrides: object) -> SiteHealthEvidence:
     return SiteHealthEvidence(**base)  # type: ignore[arg-type]
 
 
-@pytest.mark.unit
 class TestSiteHealthModels:
     def test_evidence_accepts_valid_kwargs(self) -> None:
         ev = _evidence()
@@ -339,7 +333,7 @@ class TestSiteHealthModels:
         assert ev.detected_markers == ("marker",)
 
     def test_evidence_rejects_unknown_key(self) -> None:
-        from aeat.status._site_health import _URL_ADAPTER
+        from ._site_health import _URL_ADAPTER
 
         valid_url = _URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/")
         with pytest.raises(ValidationError):

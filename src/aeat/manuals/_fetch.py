@@ -23,9 +23,9 @@ from pathlib import Path
 import httpx
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict
 
-from aeat.config import Settings, load_settings
-from aeat.logging import get_logger
-
+from .._paths import resolve_relative_subpath
+from ..config import Settings, load_settings
+from ..logging import get_logger
 from ._loader import resolve_part_root
 from ._schema import FetchedManualPart, ManualId, ManualPart
 from .errors import ManifestError
@@ -233,7 +233,10 @@ def verify_fetched_pdf(manifest: FetchedManualPart, part_root: Path) -> None:
     Raises:
         ManifestError: If the PDF is missing or its sha256 diverges.
     """
-    pdf_path = part_root / manifest.relative_pdf_path
+    try:
+        pdf_path = resolve_relative_subpath(part_root, manifest.relative_pdf_path, context="manual PDF path")
+    except ValueError as exc:
+        raise ManifestError(str(exc)) from exc
     if not pdf_path.exists():
         raise ManifestError(f"raw PDF not found at {pdf_path}; run 'aeat manual fetch' to materialise it")
     sha = hashlib.sha256()

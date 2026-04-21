@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from aeat.config import Settings
+from ..config import Settings
 
 
 def _file_sha256(path: Path) -> str:

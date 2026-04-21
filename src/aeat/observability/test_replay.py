@@ -7,16 +7,21 @@ from pathlib import Path
 
 import pytest
 
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.observability import (
+from ..config import PROJECT_ROOT, Settings
+from . import (
     AeatCorpusDriftError,
     AeatObservabilityError,
+    ArgumentRecord,
+    ArgumentSource,
     RunOutcome,
     RunTrace,
     compute_corpus_sha256,
     replay_run,
     save_trace,
 )
+from ._replay import _argv_from_arguments
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 def _build_trace(run_id: str, *, corpus_sha256: str) -> RunTrace:
@@ -33,7 +38,6 @@ def _build_trace(run_id: str, *, corpus_sha256: str) -> RunTrace:
     )
 
 
-@pytest.mark.unit
 class TestReplayRun:
     def test_clean_dry_run_round_trip(
         self,
@@ -72,3 +76,36 @@ class TestReplayRun:
         save_trace(trace)
         with pytest.raises(AeatObservabilityError):
             replay_run(trace.run_id, dry_run=False)
+
+
+class TestArgvReconstruction:
+    def test_positional_emitted_without_prefix_and_first(self) -> None:
+        args = (
+            ArgumentRecord(name="notificacion_id", value="N-42", source=ArgumentSource.POSITIONAL),
+            ArgumentRecord(name="by", value="gw", source=ArgumentSource.FLAG),
+        )
+        argv = _argv_from_arguments("aeat inbox ack", args)
+        assert argv == ["inbox", "ack", "N-42", "--by", "gw"]
+
+    def test_multiple_positionals_preserve_declared_order(self) -> None:
+        args = (
+            ArgumentRecord(name="modelo", value="130", source=ArgumentSource.POSITIONAL),
+            ArgumentRecord(name="period", value="2026Q1", source=ArgumentSource.POSITIONAL),
+            ArgumentRecord(name="force", value="True", source=ArgumentSource.FLAG),
+        )
+        argv = _argv_from_arguments("aeat filing submit", args)
+        assert argv == ["filing", "submit", "130", "2026Q1", "--force", "True"]
+
+    def test_flag_name_underscore_converted_to_dash(self) -> None:
+        args = (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),)
+        argv = _argv_from_arguments("aeat workflow list", args)
+        assert argv == ["workflow", "list", "--as-json", "True"]
+
+    def test_env_and_default_sources_skipped(self) -> None:
+        args = (
+            ArgumentRecord(name="run_id", value="abc", source=ArgumentSource.POSITIONAL),
+            ArgumentRecord(name="aeat_runs_dir", value="var/runs", source=ArgumentSource.ENV),
+            ArgumentRecord(name="mode", value="quiet", source=ArgumentSource.DEFAULT),
+        )
+        argv = _argv_from_arguments("aeat run show", args)
+        assert argv == ["run", "show", "abc"]

@@ -17,7 +17,7 @@ class ModeloCode(StrEnum):
 
     Each member's value is the three-character numeric code AEAT uses
     on public forms and Sede Electrónica URLs. The closed membership
-    tracks the twenty modelos covered by the v1 inventory (see the
+    tracks the twenty-one modelos covered by the v1 inventory (see the
     modelo-inventory research document for the provenance of each
     code).
     """
@@ -32,6 +32,7 @@ class ModeloCode(StrEnum):
     MODELO_131 = "131"
     MODELO_180 = "180"
     MODELO_190 = "190"
+    MODELO_193 = "193"
     MODELO_200 = "200"
     MODELO_202 = "202"
     MODELO_232 = "232"

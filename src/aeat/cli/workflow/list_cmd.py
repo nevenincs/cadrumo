@@ -9,9 +9,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli._observability import cli_run_context
-from aeat.config import load_settings
-from aeat.workflow import list_runs
+from ...config import load_settings
+from ...workflow import list_runs
+from .._observability import cli_run_context
 
 _CONSOLE = Console()
 

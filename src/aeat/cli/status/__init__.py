@@ -20,8 +20,8 @@ from datetime import date
 import typer
 from rich.console import Console
 
-from aeat.cli._observability import cli_run_context
-from aeat.logging import get_logger
+from ...logging import get_logger
+from .._observability import cli_run_context
 
 logger = get_logger(__name__)
 

@@ -18,13 +18,12 @@ import asyncio
 from datetime import UTC, date, datetime
 from types import TracebackType
 from typing import TYPE_CHECKING, Self
-from urllib.parse import urljoin
+from urllib.parse import quote, urljoin
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from aeat.config import Settings
-from aeat.logging import get_logger
-
+from ..config import Settings
+from ..logging import get_logger
 from ._cache import StatusCache
 from ._cache_key import make_cache_key
 from ._errors import StatusAuthError, StatusReaderError
@@ -43,11 +42,18 @@ from ._protocols import BrowserSessionLike, CertificateBackend
 if TYPE_CHECKING:  # pragma: no cover - type-only imports
     from playwright.async_api import BrowserContext, Page
 
+    from ..history import FiledModelo
+
 logger = get_logger(__name__)
 
 _URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 
 _EXPEDIENTES_PATH = "/wlpl/TC-UTIL/Expediente?COPT=Y"
+
+# Default template when Settings.aeat_status_detail_url_template is
+# blank (defensive — Settings default populates a valid template but
+# explicit empty-string overrides should not crash the reader).
+_EXPEDIENTE_DETAIL_PATH_TEMPLATE_DEFAULT = "/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}"
 
 
 class StatusReader:
@@ -274,6 +280,164 @@ class StatusReader:
         if since is None:
             return records
         return tuple(r for r in records if r.presented_at.date() >= since)
+
+    async def list_expedientes(
+        self,
+        *,
+        modelo: str | None = None,
+        period: str | None = None,
+        use_cache: bool = True,
+    ) -> tuple[Expediente, ...]:
+        """Return every expediente matching ``modelo`` / ``period``.
+
+        Structurally conforms to the
+        :class:`aeat.history.ExpedienteSource` Protocol, so a
+        :class:`StatusReader` can be passed directly as the
+        ``expediente_source`` of :class:`aeat.history.HistoryFetcher`.
+        ``None`` on either filter means "do not filter on this field".
+
+        The ``use_cache`` keyword is a superset of the Protocol (which
+        does not declare it). Callers conforming to the Protocol need
+        not pass it; callers that want a fresh fetch can override.
+
+        Args:
+            modelo: Filter by modelo code (``"303"``, ``"130"``, …).
+                ``None`` disables the filter.
+            period: Filter by period string (``"2025-1T"``, ``"2025"``).
+                ``None`` disables the filter.
+            use_cache: When True (default), honour the short-lived
+                file cache.
+
+        Returns:
+            A tuple of matching :class:`Expediente` records, ordered
+            as AEAT returns them.
+
+        Raises:
+            StatusAuthError: If the authenticated context cannot be
+                prepared.
+            StatusParseError: If the listing page cannot be parsed.
+        """
+        records = await self.fetch_expedientes(use_cache=use_cache)
+        if modelo is None and period is None:
+            return records
+        return tuple(
+            r for r in records if (modelo is None or r.modelo == modelo) and (period is None or r.period == period)
+        )
+
+    def _build_detail_url(self, expediente: Expediente) -> AnyHttpUrl:
+        """Resolve the detail-page URL for ``expediente``.
+
+        Resolution order (ADR D6):
+
+        1. ``expediente.detail_url`` — parser-captured anchor, the
+           authoritative source when AEAT renders one.
+        2. Templated fallback — ``urljoin(aeat_base_url,
+           template.format(expediente_id=quote(id, safe="")))``.
+
+        ``justificante_url`` is never used as a detail-URL fallback:
+        it points at a signed PDF receipt that the history parsers
+        cannot consume.
+        """
+        if expediente.detail_url is not None:
+            return expediente.detail_url
+        template = self._settings.aeat_status_detail_url_template or _EXPEDIENTE_DETAIL_PATH_TEMPLATE_DEFAULT
+        # Settings.field_validator enforces the presence of
+        # ``{expediente_id}``; we quote so special characters in the
+        # expediente id cannot break the URL shape.
+        path = template.format(expediente_id=quote(expediente.expediente_id, safe=""))
+        absolute = urljoin(self._settings.aeat_base_url, path)
+        return _URL_ADAPTER.validate_python(absolute)
+
+    async def fetch_detail_html(
+        self,
+        expediente: Expediente,
+    ) -> tuple[str, AnyHttpUrl]:
+        """Return ``(raw_html, resolved_url)`` for an expediente's detail page.
+
+        Structurally conforms to the
+        :class:`aeat.history.FilingDetailFetcher` Protocol.
+        Read-only: exactly one ``page.goto(..., wait_until="domcontentloaded")``
+        followed by ``page.content()``. No form submission, no click.
+
+        Raises:
+            StatusReaderError: If the detail navigation fails, returns
+                HTTP ≥ 400, or responds with an empty body. Message
+                carries the ``expediente_id`` and the HTTP status when
+                applicable.
+            StatusParseError: If the resolved URL fails
+                :class:`pydantic.AnyHttpUrl` validation.
+        """
+        page = await self._ensure_ready()
+        url = self._build_detail_url(expediente)
+        try:
+            response = await page.goto(str(url), wait_until="domcontentloaded")
+        except Exception as exc:  # pragma: no cover - live path
+            raise StatusReaderError(
+                f"detail navigation failed for expediente {expediente.expediente_id!r}: {exc}"
+            ) from exc
+        if response is not None and response.status >= 400:
+            raise StatusReaderError(
+                f"AEAT returned HTTP {response.status} for detail page of expediente {expediente.expediente_id!r}"
+            )
+        html = await page.content()
+        if not html:
+            raise StatusReaderError(f"AEAT returned empty detail page for expediente {expediente.expediente_id!r}")
+        return html, url
+
+    async def fetch_filing_detail(
+        self,
+        modelo: str,
+        period: str,
+        *,
+        use_cache: bool = True,
+    ) -> tuple[FiledModelo, ...]:
+        """Fetch every filed modelo matching ``(modelo, period)``.
+
+        Lists expedientes filtered by ``(modelo, period)``, navigates
+        to each expediente's detail page, parses the casilla→value
+        mapping, and returns strict pydantic records. The method is
+        the composition facade over :class:`aeat.history.HistoryFetcher`
+        for the #227 amendment read surface (closes Kent audit
+        wall 23).
+
+        Args:
+            modelo: Required modelo code (``"303"``, ``"130"``, …).
+                Unsupported modelos raise
+                :class:`aeat.history.HistoryUnsupportedModeloError`
+                via the history parser registry.
+            period: Required period string (``"2025-1T"``, ``"2025"``).
+            use_cache: When True (default), honour the filing-history
+                TTL cache (``AEAT_FILING_HISTORY_CACHE_TTL_S``).
+
+        Returns:
+            A tuple of :class:`aeat.history.FiledModelo`, one per
+            matching expediente, ordered as AEAT returns them.
+
+        Raises:
+            StatusAuthError: If the authenticated context cannot be
+                prepared (propagated from ``list_expedientes``).
+            StatusParseError: If the listing page cannot be parsed or
+                the resolved detail URL fails validation.
+            StatusReaderError: If the detail navigation fails, returns
+                HTTP ≥ 400, or responds with an empty body.
+            aeat.history.HistoryFetchError: If either collaborator
+                raises unexpectedly.
+            aeat.history.HistoryParseError: If the modelo-specific
+                parser cannot interpret the detail page.
+            aeat.history.HistoryUnsupportedModeloError: If ``modelo``
+                has no registered parser.
+        """
+        # Function-scoped import: forward-design guard against a
+        # partial-init ImportError under future ``aeat.status.__init__``
+        # reordering. Do NOT hoist to module top. See ADR D5.
+        from ..history import HistoryFetcher
+
+        fetcher = HistoryFetcher(
+            expediente_source=self,
+            detail_fetcher=self,
+            settings=self._settings,
+        )
+        return await fetcher.fetch_for_modelo(modelo, period=period, use_cache=use_cache)
 
     async def fetch_notificaciones(
         self,

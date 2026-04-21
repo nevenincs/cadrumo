@@ -1,6 +1,6 @@
 """Unit tests for Modelo 303 + Modelo 390 builders and reconciliation.
 
-Every test is marked ``@pytest.mark.unit`` per the project rule.
+The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]`` per the project rule.
 No mocks, patches, fakes, or stubs — every test double is a
 hand-written strict pydantic model that conforms to the relevant
 Protocol via duck typing.
@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.filing import (
+from . import (
     QUARTERLY_303_INPUT_KEY,
     FilingComputationError,
     FilingDraft,
@@ -25,10 +25,12 @@ from aeat.filing import (
     build_draft,
     validate_draft,
 )
-from aeat.filing.testing import (
+from .testing import (
     SyntheticProfile,
     default_schema_provider,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _profile() -> SyntheticProfile:
@@ -60,7 +62,6 @@ def _build_303(quarter: int, inputs: dict[str, object] | None = None) -> FilingD
     )
 
 
-@pytest.mark.unit
 class TestModelo303Builder:
     """Hand-calculated arithmetic and validation for Modelo 303."""
 
@@ -181,7 +182,6 @@ class TestModelo303Builder:
         assert draft.modelo == "303"
 
 
-@pytest.mark.unit
 class TestModelo390Builder:
     """Hand-calculated arithmetic for Modelo 390."""
 
@@ -286,7 +286,6 @@ class TestModelo390Builder:
         assert restored.values == annual.values
 
 
-@pytest.mark.unit
 class TestModelo390CrossValidation:
     """Cross-validation rules between 390 and its four 303 drafts."""
 
@@ -329,7 +328,7 @@ class TestModelo390CrossValidation:
         # Re-run full validation via the low-level validator to thread the
         # quarterly drafts explicitly — validate_draft cannot because it
         # constructs its own validator without them.
-        from aeat.filing import FilingValidator, apply_validation
+        from . import FilingValidator, apply_validation
 
         validator = FilingValidator(
             schema_provider=default_schema_provider(),
@@ -368,7 +367,7 @@ class TestModelo390CrossValidation:
             inputs={"01": 2025, QUARTERLY_303_INPUT_KEY: quarterly},
             schema_provider=default_schema_provider(),
         )
-        from aeat.filing import FilingValidator
+        from . import FilingValidator
 
         validator = FilingValidator(
             schema_provider=default_schema_provider(),
@@ -402,7 +401,7 @@ class TestModelo390CrossValidation:
             for v in annual.values
         )
         tampered = annual.model_copy(update={"values": tampered_values})
-        from aeat.filing import FilingValidator
+        from . import FilingValidator
 
         validator = FilingValidator(
             schema_provider=default_schema_provider(),

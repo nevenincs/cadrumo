@@ -6,9 +6,9 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.cli._observability import cli_run_context
-from aeat.cli.submission._helpers import build_engine
-from aeat.submission import SubmissionError
+from ...submission import SubmissionError
+from .._observability import cli_run_context
+from ._helpers import build_engine
 
 _CONSOLE = Console()
 
@@ -18,7 +18,11 @@ def show_cmd(
 ) -> None:
     """Load and pretty-print a persisted :class:`SubmittedFiling`."""
     arguments = {"submission_id": submission_id}
-    with cli_run_context(entrypoint="aeat submission show", arguments=arguments):
+    with cli_run_context(
+        entrypoint="aeat submission show",
+        arguments=arguments,
+        positional=("submission_id",),
+    ):
         engine = build_engine()
         try:
             filing = engine.load_submission(submission_id)

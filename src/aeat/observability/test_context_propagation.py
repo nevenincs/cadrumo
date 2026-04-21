@@ -15,7 +15,7 @@ from typing import Protocol
 
 import pytest
 
-from aeat.observability import (
+from . import (
     GenericPayload,
     RunEventKind,
     RunEventPayload,
@@ -23,6 +23,8 @@ from aeat.observability import (
     record_event,
     run_context,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 class _Step(Protocol):
@@ -69,7 +71,6 @@ class _SubmissionStep:
         self._downstream(label)
 
 
-@pytest.mark.unit
 class TestRunIdPropagation:
     def test_run_id_is_identical_across_chain(
         self,

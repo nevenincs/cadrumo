@@ -12,9 +12,9 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from aeat.config import Settings, load_settings
-from aeat.observability._errors import RunTraceValidationError
-from aeat.observability._models import RunEvent, RunTrace
+from ..config import Settings, load_settings
+from ._errors import RunTraceValidationError
+from ._models import RunEvent, RunTrace
 
 _TRACE_FILENAME = "trace.json"
 _EVENTS_FILENAME = "events.jsonl"

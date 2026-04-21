@@ -7,8 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from aeat.logging import get_logger
-from aeat.observability import run_context
+from ..logging import get_logger
+from . import run_context
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 class _CaptureHandler(logging.Handler):
@@ -22,7 +24,6 @@ class _CaptureHandler(logging.Handler):
         self.records.append(record)
 
 
-@pytest.mark.unit
 class TestRunContextLoggingFilter:
     def test_attributes_present_inside_and_outside_run_context(
         self,

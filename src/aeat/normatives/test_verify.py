@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.normatives import (
+from . import (
     NormativeError,
     cite,
     load_catalogue,
     raise_on_errors,
     verify_catalogue,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 _EXPECTED_IDS = {
     "ley-35-2006",
@@ -23,7 +25,6 @@ _EXPECTED_IDS = {
 }
 
 
-@pytest.mark.unit
 class TestRealCorpus:
     def test_load_real_corpus(self) -> None:
         catalogue = load_catalogue()
@@ -49,10 +50,9 @@ class TestRealCorpus:
             assert "BOE-A-" in citation
 
 
-@pytest.mark.unit
 class TestRaiseOnErrors:
     def test_raises_on_dirty_report(self) -> None:
-        from aeat.normatives import VerificationIssue, VerificationReport
+        from . import VerificationIssue, VerificationReport
 
         report = VerificationReport(
             issues=(

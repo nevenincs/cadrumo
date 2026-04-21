@@ -12,13 +12,15 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from aeat.i18n import Translatable
-from aeat.inbox import (
+from ..i18n import Translatable
+from . import (
     Inbox,
     Notificacion,
     NotificacionKind,
     NotificacionPriority,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _SUBJECT: Translatable = {"es": "Requerimiento de información", "en": "Information request", "hu": "Tájékoztatáskérés"}
 _BODY: Translatable = {"es": "Solicitamos...", "en": "We request...", "hu": "Kérjük..."}
@@ -55,7 +57,6 @@ def _sample_notificacion(
     )
 
 
-@pytest.mark.unit
 class TestNotificacion:
     def test_round_trip(self) -> None:
         original = _sample_notificacion()
@@ -96,7 +97,6 @@ class TestNotificacion:
             record.notificacion_id = "AEAT-0002"  # type: ignore[misc]
 
 
-@pytest.mark.unit
 class TestInbox:
     def test_round_trip(self) -> None:
         record = _sample_notificacion()

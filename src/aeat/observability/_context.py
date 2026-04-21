@@ -21,13 +21,13 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.observability._fingerprint import (
+from ..config import PROJECT_ROOT, Settings
+from ._fingerprint import (
     compute_corpus_sha256,
     compute_db_sha256,
     read_cert_fingerprint,
 )
-from aeat.observability._models import (
+from ._models import (
     ArgumentRecord,
     RunEventKind,
     RunEventPayload,
@@ -35,8 +35,8 @@ from aeat.observability._models import (
     RunTrace,
     StepBoundaryPayload,
 )
-from aeat.observability._sink import JsonlRunSink
-from aeat.observability._store import runs_dir, save_trace
+from ._sink import JsonlRunSink
+from ._store import runs_dir, save_trace
 
 _DEFAULT_INITIAL_STEP = "step-0"
 _EVENTS_FILENAME = "events.jsonl"
@@ -136,7 +136,7 @@ def run_context(
         The active :class:`RunContextInfo` for the block.
     """
     # Local imports break the recorder ↔ context cycle.
-    from aeat.observability._recorder import record_event
+    from ._recorder import record_event
 
     outer = RUN_CONTEXT_VAR.get(None)
     if outer is not None:
@@ -175,7 +175,7 @@ def run_context(
     runs_root = runs_dir()
     target = runs_root / info.run_id
     target.mkdir(parents=True, exist_ok=True)
-    sink = JsonlRunSink(target / _EVENTS_FILENAME)
+    sink = JsonlRunSink(target / _EVENTS_FILENAME, run_id=info.run_id)
     root_logger = logging.getLogger()
     root_logger.addHandler(sink)
 

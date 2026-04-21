@@ -13,13 +13,15 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.inbox import (
+from . import (
     InboxAcknowledgeError,
     InboxFetcher,
     NotificacionKind,
     NotificacionPriority,
     RawNotificacion,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 class _InMemorySource:
@@ -69,7 +71,6 @@ def _fetcher(tmp_path: Path, payloads: tuple[RawNotificacion, ...]) -> InboxFetc
     )
 
 
-@pytest.mark.unit
 class TestInboxFetcher:
     @pytest.mark.asyncio
     async def test_fetch_classifies_and_persists(self, tmp_path: Path) -> None:

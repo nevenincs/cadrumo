@@ -13,9 +13,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app
-from aeat.filing import build_draft
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
+from ...deadlines import AutonomoProfile, IVARegime
+from ...filing import FilingOperatorProfile, build_draft
+from ...filing.runtime import build_runtime_schema_provider
+from .. import app
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 runner = CliRunner()
 
@@ -48,7 +51,22 @@ def submissions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target.mkdir()
     monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(target))
     monkeypatch.setenv("AEAT_SUBMISSION_BROWSER_TRACE_DIR", str(tmp_path / "traces"))
-    monkeypatch.setenv("AEAT_SUBMISSION_REQUIRE_HUMAN_CONFIRMATION", "true")
+    return target
+
+
+@pytest.fixture
+def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    profile = AutonomoProfile(
+        tax_id="00000000T",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+    )
+    target = tmp_path / "profile.json"
+    target.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+    monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", str(target))
     return target
 
 
@@ -56,13 +74,13 @@ def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
     draft = build_draft(
         modelo="130",
         period="2024Q1",
-        profile=SyntheticProfile(
+        profile=FilingOperatorProfile(
             tax_id="00000000T",
             display_name="CLI amendment subject",
             applicable_modelos=("130",),
         ),
         inputs={"01": 12500, "02": 3500, "05": 400, "06": 0},
-        schema_provider=default_schema_provider(),
+        schema_provider=build_runtime_schema_provider(),
     )
     draft_path = drafts_dir / f"130_2024Q1_{draft.draft_id}.json"
     draft_path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
@@ -94,8 +112,35 @@ def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
     return "sub-cli-1"
 
 
-@pytest.mark.unit
 class TestFilingCLI:
+    def test_build_uses_configured_profile_file(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        profile_path: Path,
+    ) -> None:
+        inputs = _write_inputs(tmp_path)
+        result = runner.invoke(
+            app,
+            [
+                "filing",
+                "build",
+                "--modelo",
+                "130",
+                "--period",
+                "2026Q1",
+                "--inputs",
+                str(inputs),
+                "--profile",
+                str(profile_path),
+                "--profile-name",
+                "Configured operator",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        produced = sorted(drafts_dir.glob("130_2026Q1_*.json"))
+        assert len(produced) == 1
+
     def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
         result = runner.invoke(
@@ -184,3 +229,35 @@ class TestFilingCLI:
         submit_result = runner.invoke(app, ["filing", "complementaria", "submit", amendment_id])
         assert submit_result.exit_code == 0, submit_result.output
         assert "dry-run amendment submission OK" in submit_result.output
+
+    def test_complementaria_live_refuses_stub_transport(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+    ) -> None:
+        submission_id = _write_original_submission(drafts_dir, submissions_dir)
+        payload = {
+            "original_submission_id": submission_id,
+            "updated_inputs": {"01": 13000, "02": 3500, "05": 400, "06": 0},
+        }
+        payload_path = tmp_path / "amendment-live.json"
+        payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+        build_result = runner.invoke(
+            app,
+            ["filing", "complementaria", "build", "130", "2024Q1", str(payload_path)],
+        )
+        assert build_result.exit_code == 0, build_result.output
+        amendment_id = next((submissions_dir / "amendments").glob("*.json")).stem
+
+        submit_result = runner.invoke(
+            app,
+            ["filing", "complementaria", "submit", amendment_id, "--live"],
+            env={
+                "AEAT_LIVE_SUBMIT_ENABLED": "true",
+            },
+        )
+        assert submit_result.exit_code == 1, submit_result.output
+        assert "refusing" in submit_result.output.lower()
+        assert "stubbed" in submit_result.output.lower()

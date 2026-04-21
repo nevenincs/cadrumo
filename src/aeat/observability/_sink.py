@@ -9,16 +9,24 @@ JSONL sink while a run context is active. Records that do not carry a
 The ``run_id`` / ``step_id`` attributes are stamped onto every
 :class:`logging.LogRecord` by the factory installed in
 :mod:`aeat.logging` (``_install_run_context_record_factory``).
+
+Each sink instance is bound to a single ``run_id`` and filters any
+event whose ``run_id`` does not match. This prevents cross-run
+contamination when several :func:`aeat.observability.run_context`
+blocks execute concurrently (e.g. tasks in an ``asyncio`` event
+loop) and therefore have competing sinks attached to the root
+logger at the same time.
 """
 
 from __future__ import annotations
 
 import logging
 import os
+import threading
 from pathlib import Path
 from typing import TextIO
 
-from aeat.observability._models import RunEvent
+from ._models import RunEvent
 
 
 class JsonlRunSink(logging.Handler):
@@ -29,24 +37,52 @@ class JsonlRunSink(logging.Handler):
     flushes the file handle; ``close()`` additionally calls
     :func:`os.fsync` so a process kill mid-run still leaves a
     durable JSONL trailer on disk.
+
+    Concurrency: the sink is bound to a single ``run_id`` and
+    rejects events carrying a different ``run_id``. File-handle
+    mutations are guarded by an internal :class:`threading.Lock`
+    so multiple worker threads may emit concurrently without
+    interleaving bytes on disk.
     """
 
-    def __init__(self, target: Path) -> None:
-        """Construct the sink for a specific JSONL file path."""
+    def __init__(self, target: Path, *, run_id: str) -> None:
+        """Construct the sink for a specific JSONL file path and run.
+
+        Args:
+            target: Path of the ``events.jsonl`` file this sink writes.
+            run_id: The owning run identifier. Events whose ``run_id``
+                does not match are dropped silently — this isolates
+                concurrent runs that share the same root logger.
+        """
         super().__init__(level=logging.DEBUG)
         self._target: Path = target
+        self._run_id: str = run_id
         self._handle: TextIO | None = None
+        self._lock: threading.Lock = threading.Lock()
         target.parent.mkdir(parents=True, exist_ok=True)
 
+    @property
+    def run_id(self) -> str:
+        """The run identifier this sink is bound to."""
+        return self._run_id
+
     def emit(self, record: logging.LogRecord) -> None:
-        """Write the JSON-encoded :class:`RunEvent` carried by ``record``."""
+        """Write the JSON-encoded :class:`RunEvent` carried by ``record``.
+
+        Drops the record when there is no ``run_event`` extra or when
+        the event belongs to a different run — see the module docstring
+        for the concurrency rationale.
+        """
         event = getattr(record, "run_event", None)
         if not isinstance(event, RunEvent):
             return
+        if event.run_id != self._run_id:
+            return
         try:
-            handle = self._open()
-            handle.write(event.model_dump_json() + "\n")
-            handle.flush()
+            with self._lock:
+                handle = self._open()
+                handle.write(event.model_dump_json() + "\n")
+                handle.flush()
         except Exception:
             self.handleError(record)
 
@@ -59,14 +95,15 @@ class JsonlRunSink(logging.Handler):
     def close(self) -> None:
         """Flush + fsync + close the underlying file handle."""
         try:
-            handle = self._handle
-            if handle is not None:
-                try:
-                    handle.flush()
-                    os.fsync(handle.fileno())
-                finally:
-                    handle.close()
-                    self._handle = None
+            with self._lock:
+                handle = self._handle
+                if handle is not None:
+                    try:
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                    finally:
+                        handle.close()
+                        self._handle = None
         finally:
             super().close()
 

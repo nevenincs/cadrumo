@@ -8,13 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.config import Settings
-from aeat.normatives import (
+from ..config import Settings
+from . import (
     NormativeCatalogue,
     NormativeNotFoundError,
     NormativeParseError,
     load_catalogue,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def _settings_with_root(root: Path) -> Settings:
@@ -44,7 +46,6 @@ def _valid_payload(ref_id: str = "ley-35-2006") -> dict[str, object]:
     }
 
 
-@pytest.mark.unit
 class TestLoadCatalogue:
     def test_happy_path(self, tmp_path: Path) -> None:
         (tmp_path / "ley-35-2006.json").write_text(json.dumps(_valid_payload()), encoding="utf-8")

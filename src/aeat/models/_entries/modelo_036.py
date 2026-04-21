@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from aeat.models._categories import (
+from ...portals import Portal
+from .._categories import (
     LegalCitationSource,
     ModeloCadence,
     ModeloCategory,
     TaxpayerProfile,
 )
-from aeat.models._codes import ModeloCode
-from aeat.models._entries._common import (
+from .._codes import ModeloCode
+from .._metadata import ModeloMetadata
+from ._common import (
     build_applicability,
     build_entry,
     make_citation,
 )
-from aeat.models._metadata import ModeloMetadata
 
 ENTRY: ModeloMetadata = build_entry(
     code=ModeloCode.MODELO_036,
@@ -58,14 +59,14 @@ ENTRY: ModeloMetadata = build_entry(
         trigger_notes_es=(
             "Obligatorio en alta inicial, modificación de epígrafes IAE, domicilio, régimen "
             "de IVA o IRPF, alta en ROI, baja. Autónomos con ROI están forzados al 036; el "
-            "resto puede usar 037."
+            "resto también utiliza 036 desde la supresión del 037 con efectos 2025-02-03."
         ),
     ),
     caps_into=None,
     related_modelos=(ModeloCode.MODELO_037,),
-    submission_portal_hint="Sede Electrónica AEAT — Modelo 036 (Censo G322)",
+    submission_portal=Portal.PORTAL_M036_CENSAL,
     known_gotchas=(
-        "Formulario completo; autónomo simple normalmente usa 037.",
+        "Desde 2025-02-03 absorbe el antiguo camino simplificado del 037.",
         "Necesario para dar de alta ROI antes de presentar 349.",
     ),
 )

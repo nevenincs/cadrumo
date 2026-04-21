@@ -15,8 +15,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli.inbox import app as inbox_app
-from aeat.config import Settings, load_settings
+from ...config import Settings, load_settings
+from . import app as inbox_app
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 _RUNNER = CliRunner()
 
@@ -67,7 +69,6 @@ def cli_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     yield inbox_dir
 
 
-@pytest.mark.unit
 class TestInboxCli:
     def test_settings_pick_up_env(self, cli_env: Path) -> None:
         cfg: Settings = load_settings()

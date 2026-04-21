@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from aeat.observability import (
+from . import (
     ArgumentRecord,
     ArgumentSource,
     AssertionPayload,
@@ -25,6 +25,8 @@ from aeat.observability import (
     WorkflowLinkPayload,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 
 def _make_event(payload: RunEventPayload) -> RunEvent:
     return RunEvent(
@@ -37,7 +39,6 @@ def _make_event(payload: RunEventPayload) -> RunEvent:
     )
 
 
-@pytest.mark.unit
 class TestArgumentRecord:
     def test_round_trip(self) -> None:
         record = ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG)
@@ -51,7 +52,6 @@ class TestArgumentRecord:
             )
 
 
-@pytest.mark.unit
 class TestRunEventPayload:
     def test_each_variant_round_trips(self) -> None:
         variants: list[RunEventPayload] = [
@@ -84,7 +84,6 @@ class TestRunEventPayload:
             )
 
 
-@pytest.mark.unit
 class TestRunEventAndTrace:
     def test_event_round_trip(self) -> None:
         evt = _make_event(

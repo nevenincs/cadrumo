@@ -8,7 +8,7 @@ declares the leaf error types raised inside the observability layer.
 
 from __future__ import annotations
 
-from aeat.errors import AeatObservabilityError
+from ..errors import AeatObservabilityError
 
 
 class RunContextMissingError(AeatObservabilityError):

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.cli._sheets_helpers import coerce_value_input_option, parse_values_json
+from ._sheets_helpers import coerce_value_input_option, parse_values_json
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
-@pytest.mark.unit
 class TestParseValuesJson:
     """Behaviour of ``parse_values_json``."""
 
@@ -35,7 +36,6 @@ class TestParseValuesJson:
             parse_values_json("not json")
 
 
-@pytest.mark.unit
 class TestCoerceValueInputOption:
     """Behaviour of ``coerce_value_input_option``."""
 

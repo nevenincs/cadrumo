@@ -6,9 +6,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli._observability import cli_run_context
-from aeat.cli.submission._helpers import build_engine
-from aeat.submission import SubmissionStatus
+from ...submission import SubmissionStatus
+from .._observability import cli_run_context
+from ._helpers import build_engine
 
 _CONSOLE = Console()
 

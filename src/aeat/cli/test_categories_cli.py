@@ -7,12 +7,13 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app
+from . import app
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 runner = CliRunner()
 
 
-@pytest.mark.unit
 def test_categories_list_prints_known_category() -> None:
     """The list subcommand must emit category metadata."""
 
@@ -24,7 +25,6 @@ def test_categories_list_prints_known_category() -> None:
     assert any(item["proportionality_kind"] == "full_deductible" for item in payload)
 
 
-@pytest.mark.unit
 def test_categories_show_prints_citations_and_mappings() -> None:
     """The show subcommand must render the explainable profile payload."""
 
@@ -37,7 +37,6 @@ def test_categories_show_prints_citations_and_mappings() -> None:
     assert payload["profile"]["proportionality"]["citations"]
 
 
-@pytest.mark.unit
 def test_categories_casillas_filters_by_modelo() -> None:
     """The casillas subcommand must only show mappings for the requested modelo."""
 

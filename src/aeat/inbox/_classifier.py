@@ -20,8 +20,8 @@ from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.inbox._models import NotificacionKind, NotificacionPriority
-from aeat.inbox._protocols import RawNotificacion
+from ._models import NotificacionKind, NotificacionPriority
+from ._protocols import RawNotificacion
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

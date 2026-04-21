@@ -31,8 +31,8 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.deadlines import AutonomoProfile, Schedule
-from aeat.submission import FilingDraftLike, LoadedCertificate
+from ..deadlines import AutonomoProfile, Schedule
+from ..submission import AuthProviderDescription, FilingDraftLike
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -100,11 +100,10 @@ class SubmissionEngineProtocol(Protocol):
         self,
         draft: FilingDraftLike,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         today: date | None = None,
     ) -> SubmittedFilingLike:
-        """Submit ``draft``. Dry-run by default."""
+        """Submit ``draft`` with an explicit dry-run choice."""
         ...
 
 
@@ -187,16 +186,17 @@ class InboxProtocol(Protocol):
 
 @runtime_checkable
 class CertificateBundleProtocol(Protocol):
-    """Narrow stub for the certificate auth backend (#8, in flight).
+    """Narrow stub for the auth-provider probe used by workflow preflight.
 
-    The workflow engine calls :meth:`load` once during the preflight
-    stage to prove the certificate is present and decodable. Any
-    exception raised here is translated into
-    :attr:`aeat.workflow.WorkflowAbortReason.CERT_INVALID`.
+    The workflow engine calls :meth:`describe` once during the
+    preflight stage to prove the configured auth provider is present
+    and healthy. Any exception raised here is translated into
+    :attr:`aeat.workflow.WorkflowAbortReason.CERT_INVALID` to preserve
+    the existing workflow abort taxonomy.
     """
 
-    def load(self) -> LoadedCertificate:
-        """Return the active loaded certificate; raise on failure."""
+    def describe(self) -> AuthProviderDescription:
+        """Return the current auth-provider description; raise on failure."""
         ...
 
 

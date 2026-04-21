@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.normatives import (
+from . import (
     Articulo,
     NormativeCatalogue,
     NormativeKind,
@@ -18,6 +18,8 @@ from aeat.normatives import (
     find_reference,
     short_title,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 def _catalogue() -> NormativeCatalogue:
@@ -43,7 +45,6 @@ def _catalogue() -> NormativeCatalogue:
     return NormativeCatalogue(references={reference.id: reference})
 
 
-@pytest.mark.unit
 class TestLookup:
     def test_find_reference_hit(self) -> None:
         catalogue = _catalogue()
@@ -70,7 +71,6 @@ class TestLookup:
             find_articulo(catalogue, "ley-35-2006", "999")
 
 
-@pytest.mark.unit
 class TestCite:
     def test_short_title_ley(self) -> None:
         reference = find_reference(_catalogue(), "ley-35-2006")

@@ -28,14 +28,13 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.auth import (
+from ..auth import (
     CLOUD_PLATFORM_SCOPE,
     DOCS_SCOPE,
     DRIVE_SCOPE,
     REQUIRED_ADC_SCOPES,
     SHEETS_SCOPE,
-    CertificateError,
-    CertificateHealthSeverity,
+    AeatAuthenticator,
     build_cloudfunctions_client,
     build_cloudrun_client,
     build_docs_service,
@@ -45,8 +44,7 @@ from aeat.auth import (
     build_storage_client,
     get_credentials_for_scopes,
 )
-from aeat.auth import health as certificate_health
-from aeat.config import PROJECT_ROOT, Settings
+from ..config import PROJECT_ROOT, Settings
 
 # ── Row primitives ──────────────────────────────────────────────────────────
 
@@ -616,48 +614,26 @@ def check_certificate_health(settings: Settings) -> Row:
     Load failures surface as :attr:`State.WARN` with the exception
     class name so the doctor never aborts mid-table.
     """
-    if settings.aeat_certificate_path is None:
+    description = AeatAuthenticator(settings).describe()
+    if not description.configured:
         return Row(
             section="aeat certificate",
             required=False,
             state=State.SKIP,
-            detail="AEAT_CERTIFICATE_PATH not set",
+            detail=description.health_summary or "provider not configured",
         )
-    if settings.aeat_certificate_password_secret is None:
+    if not description.available:
         return Row(
             section="aeat certificate",
             required=False,
             state=State.WARN,
-            detail="AEAT_CERTIFICATE_PASSWORD_SECRET not set",
+            detail=description.health_summary or "provider unavailable",
         )
-    # pydantic-settings loads the passphrase from env/.env into the
-    # Settings model but does NOT export it to os.environ, while the
-    # cert loader reads it via os.environ.get(). Bridge the gap the
-    # same way aeat.auth.test_certificate_live does: export the
-    # SecretStr into the process environment for the duration of
-    # the health call. Scope is the current CLI process only.
-    os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] = settings.aeat_certificate_password_secret.get_secret_value()
-    try:
-        result = certificate_health(
-            settings.aeat_certificate_path,
-            password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
-            warn_days=settings.aeat_cert_warn_days,
-            critical_days=settings.aeat_cert_critical_days,
-            friendly_name=settings.aeat_certificate_friendly_name,
-            backend=settings.aeat_certificate_backend,
-        )
-    except CertificateError as exc:
-        return Row(
-            section="aeat certificate",
-            required=False,
-            state=State.WARN,
-            detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
-        )
-    days = result.days_until_expiry
-    detail = f"severity={result.severity.value} days_until_expiry={days}"
-    if result.severity is CertificateHealthSeverity.OK:
+    days = description.days_until_expiry
+    detail = f"severity={description.health_severity} days_until_expiry={days}"
+    if description.health_severity == "OK":
         return Row(section="aeat certificate", required=False, state=State.OK, detail=detail)
-    if result.severity is CertificateHealthSeverity.WARN:
+    if description.health_severity == "WARN":
         return Row(section="aeat certificate", required=False, state=State.WARN, detail=detail)
     # CRITICAL or EXPIRED: block the doctor with a required failure.
     return Row(section="aeat certificate", required=True, state=State.MISSING, detail=detail)
@@ -670,6 +646,50 @@ def check_live_tests_flag(settings: Settings) -> Row:
         required=False,
         state=State.OK if settings.aeat_live_tests_enabled else State.SKIP,
         detail="enabled" if settings.aeat_live_tests_enabled else "AEAT_LIVE_TESTS_ENABLED=false",
+    )
+
+
+def check_live_access_gate(settings: Settings) -> Row:
+    """Report the :class:`aeat.auth.AeatAccessGate` env-var state (#167).
+
+    The doctor row surfaces the three env vars that gate live AEAT
+    operations without ever exposing a secret value. It states
+    whether live READS are currently enabled (the only operator-
+    settable dial for day-to-day live work). Live WRITES gate on
+    ``AEAT_LIVE_SUBMIT_ENABLED`` which is **never** expected to be
+    persisted, so the row treats the common "not set" case as the
+    desired state and only surfaces a diagnostic when the var is
+    present.
+    """
+    from ..auth import AeatAccessGate
+
+    snapshot = AeatAccessGate(settings).snapshot_env()
+    if snapshot.aeat_live_tests_enabled == "1":
+        live_reads = "reads: ENABLED"
+        state = State.OK
+    else:
+        live_reads = "reads: skipped (AEAT_LIVE_TESTS_ENABLED!=1)"
+        state = State.SKIP
+    if snapshot.aeat_live_submit_enabled:
+        live_writes = f"writes: {snapshot.aeat_live_submit_enabled!r} (charter #116 — unset after filing)"
+        state = State.WARN
+    else:
+        live_writes = "writes: unset (charter #116 default)"
+    # submit_env + pytest_current_test together is the most dangerous
+    # state: a live-write capability inside a test runtime. R5 of the
+    # charter refuses the actual call, but the doctor must shout.
+    if snapshot.pytest_current_test and snapshot.aeat_live_submit_enabled:
+        state = State.MISSING
+        live_writes += " [DANGER: PYTEST_CURRENT_TEST + submit both set]"
+    elif snapshot.pytest_current_test:
+        state = State.WARN
+        live_writes += " [PYTEST_CURRENT_TEST present]"
+    detail = f"{live_reads}; {live_writes}"
+    return Row(
+        section="live access gate",
+        required=False,
+        state=state,
+        detail=detail,
     )
 
 
@@ -701,6 +721,7 @@ def collect_rows(settings: Settings) -> list[Row]:
     rows.append(check_oauth_desktop(settings))
     rows.append(check_certificate_health(settings))
     rows.append(check_live_tests_flag(settings))
+    rows.append(check_live_access_gate(settings))
     return rows
 
 

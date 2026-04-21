@@ -5,14 +5,14 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from aeat.cli._observability import cli_run_context
-from aeat.cli.workflow._helpers import run_engine_for_period
-from aeat.observability import (
+from ...observability import (
     RunEventKind,
     RunEventPayload,
     WorkflowLinkPayload,
     record_event,
 )
+from .._observability import cli_run_context
+from ._helpers import run_engine_for_period
 
 _CONSOLE = Console()
 
@@ -69,7 +69,6 @@ def run_cmd(
             modelo=modelo,
             period=period,
             dry_run=not no_dry_run,
-            override_confirmation=i_understand_this_is_real,
             sync_first=sync_first,
             as_json=as_json,
         )

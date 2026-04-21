@@ -5,7 +5,7 @@ from __future__ import annotations
 from rich.console import Console
 from rich.table import Table
 
-from aeat.observability import iter_runs
+from ...observability import iter_runs
 
 _CONSOLE = Console()
 

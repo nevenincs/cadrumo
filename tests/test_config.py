@@ -11,6 +11,7 @@ environment variable the application reads.  These tests enforce that:
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 from pydantic_settings import SettingsConfigDict
@@ -18,6 +19,8 @@ from pydantic_settings import SettingsConfigDict
 from aeat.config import PROJECT_ROOT, Settings
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 def _parse_env_example_vars() -> set[str]:
@@ -73,3 +76,128 @@ class TestEnvExampleAlignment:
 
         settings = IsolatedSettings()
         assert settings.aeat_base_url == "https://sede.agenciatributaria.gob.es"
+        assert settings.aeat_output_language == "es"
+
+
+class TestStatusDetailUrlTemplate:
+    """#227 validator: template must contain ``{expediente_id}``."""
+
+    def test_default_contains_placeholder(self) -> None:
+        settings = Settings(aeat_status_detail_url_template="/x/{expediente_id}/y")
+        assert settings.aeat_status_detail_url_template == "/x/{expediente_id}/y"
+
+    def test_default_is_well_formed(self) -> None:
+        settings = Settings()
+        assert "{expediente_id}" in settings.aeat_status_detail_url_template
+
+    def test_rejects_template_without_placeholder(self) -> None:
+        import pydantic
+
+        with pytest.raises(pydantic.ValidationError):
+            Settings(aeat_status_detail_url_template="/x/no-placeholder/y")
+
+    def test_blank_env_values_are_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Blank values in env/.env must not coerce optional settings into live values."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            "\n".join(
+                (
+                    "AEAT_DEFAULT_PROFILE_PATH=",
+                    "AEAT_CERTIFICATE_PATH=",
+                    "AEAT_CERTIFICATE_PASSWORD_SECRET=",
+                    "GOOGLE_OAUTH_REDIRECT_URI=",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        class BlankEnvSettings(Settings):
+            """Settings variant bound to a temp env file that contains blank assignments."""
+
+            model_config = SettingsConfigDict(
+                env_file=env_path,
+                env_file_encoding="utf-8",
+                env_ignore_empty=True,
+            )
+
+        settings = BlankEnvSettings()
+        assert settings.aeat_default_profile_path is None
+        assert settings.aeat_certificate_path is None
+        assert settings.aeat_certificate_password_secret is None
+        assert settings.google_oauth_redirect_uri == "http://localhost:8080"
+
+    def test_relative_env_paths_resolve_from_project_root(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Relative env-backed paths must anchor to PROJECT_ROOT, not the process cwd."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            "\n".join(
+                (
+                    "AEAT_DEFAULT_PROFILE_PATH=env/profiles/dev.json",
+                    "AEAT_SYNC_DIVERGENCE_FILE_DIR=var/divergences",
+                    "GOOGLE_APPLICATION_CREDENTIALS=env/google-service-account.json",
+                    "GOOGLE_OAUTH_CLIENT_JSON=env/google-oauth-client.json",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        class RelativeEnvSettings(Settings):
+            """Settings variant bound to a temp env file with relative path assignments."""
+
+            model_config = SettingsConfigDict(
+                env_file=env_path,
+                env_file_encoding="utf-8",
+                env_ignore_empty=True,
+            )
+
+        settings = RelativeEnvSettings()
+        assert settings.aeat_default_profile_path == PROJECT_ROOT / "env" / "profiles" / "dev.json"
+        assert settings.aeat_sync_divergence_file_dir == PROJECT_ROOT / "var" / "divergences"
+        assert settings.google_application_credentials == str(PROJECT_ROOT / "env" / "google-service-account.json")
+        assert settings.google_oauth_client_json == str(PROJECT_ROOT / "env" / "google-oauth-client.json")
+
+    def test_blank_optional_path_env_vars_are_treated_as_unset(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Blank optional path env vars must normalize to ``None``."""
+        monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", "")
+        monkeypatch.setenv("AEAT_CERTIFICATE_PATH", "")
+
+        class IsolatedSettings(Settings):
+            """Settings variant that skips the on-disk env file for test isolation."""
+
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        settings = IsolatedSettings()
+        assert settings.aeat_default_profile_path is None
+        assert settings.aeat_certificate_path is None
+
+    def test_blank_optional_secret_env_vars_are_treated_as_unset(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Blank optional secret env vars must normalize to ``None``."""
+        monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", "")
+        monkeypatch.setenv("AEAT_LLM_OPENAI_API_KEY", "")
+
+        class IsolatedSettings(Settings):
+            """Settings variant that skips the on-disk env file for test isolation."""
+
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        settings = IsolatedSettings()
+        assert settings.aeat_certificate_password_secret is None
+        assert settings.aeat_llm_openai_api_key is None

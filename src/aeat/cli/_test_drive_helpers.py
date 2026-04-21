@@ -6,14 +6,16 @@ from pathlib import Path
 
 import pytest
 
-from aeat.cli._drive_helpers import (
+from ._drive_helpers import (
     build_listing_query,
+    build_name_query,
     escape_drive_query_literal,
     guess_mime_type,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
-@pytest.mark.unit
+
 class TestEscapeDriveQueryLiteral:
     """Behaviour of ``escape_drive_query_literal``."""
 
@@ -34,7 +36,6 @@ class TestEscapeDriveQueryLiteral:
         )
 
 
-@pytest.mark.unit
 class TestGuessMimeType:
     """Behaviour of ``guess_mime_type``."""
 
@@ -48,7 +49,6 @@ class TestGuessMimeType:
         assert guess_mime_type(Path("README")) == "application/octet-stream"
 
 
-@pytest.mark.unit
 class TestBuildListingQuery:
     """Behaviour of ``build_listing_query``."""
 
@@ -59,6 +59,29 @@ class TestBuildListingQuery:
         result = build_listing_query("abc123")
         assert "'abc123' in parents" in result
         assert "trashed=false" in result
+
+
+class TestBuildNameQuery:
+    """Behaviour of ``build_name_query``."""
+
+    def test_simple_name(self) -> None:
+        assert build_name_query("cert.p12") == "name = 'cert.p12' and trashed=false"
+
+    def test_name_with_underscores(self) -> None:
+        result = build_name_query("WOOTSCH_GERGELY_Y4113523X.p12")
+        assert "WOOTSCH_GERGELY_Y4113523X.p12" in result
+        assert "trashed=false" in result
+
+    def test_name_with_single_quote_is_escaped(self) -> None:
+        result = build_name_query("o'brien.p12")
+        # The embedded apostrophe is escaped as ``\'`` so the surrounding
+        # ``'...'`` literal stays syntactically intact.
+        assert "o\\'brien.p12" in result
+        # Three apostrophe characters total: the literal's opening quote,
+        # the embedded escaped one, and the literal's closing quote.
+        assert result.count("'") == 3
+        assert result.startswith("name = '")
+        assert result.endswith("' and trashed=false")
 
     def test_folder_scope_escapes_id(self) -> None:
         result = build_listing_query("a'b")

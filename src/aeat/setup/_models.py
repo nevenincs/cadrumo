@@ -13,9 +13,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language, Translatable
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language, Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -98,10 +98,13 @@ class SetupAnswers(BaseModel):
     # ── profile ──────────────────────────────────────────────────────────
     tax_id: str = Field(min_length=1)
     iva_regime: IVARegime
-    has_employees: bool
-    pays_rent_with_retencion: bool
-    does_intracomunitario: bool
-    bienes_extranjero_above_threshold: bool
+    has_employees: bool = False
+    pays_professionals_with_retencion: bool = False
+    professional_income_withholding_ge_70pct: bool = False
+    pays_rent_with_retencion: bool = False
+    does_intracomunitario: bool = False
+    third_party_transactions_above_347_threshold: bool = False
+    bienes_extranjero_above_threshold: bool = False
 
     # ── certificate (NEVER the password value) ───────────────────────────
     certificate_path: Path
@@ -112,7 +115,7 @@ class SetupAnswers(BaseModel):
 
     # ── language ─────────────────────────────────────────────────────────
     default_language: Language = Language.EN
-    output_language: Language = Language.HU
+    output_language: Language = Language.ES
 
     # ── output directories ───────────────────────────────────────────────
     aeat_drafts_dir: Path
