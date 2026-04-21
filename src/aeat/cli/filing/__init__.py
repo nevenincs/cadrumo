@@ -6,6 +6,8 @@ Subcommands:
 - ``aeat filing validate`` — re-validate a saved draft.
 - ``aeat filing show`` — pretty-print a draft.
 - ``aeat filing list`` — list drafts under the configured drafts dir.
+- ``aeat filing import`` — reconstruct a draft from a justificante PDF
+  (#271; cert-free, offline).
 """
 
 from __future__ import annotations
@@ -29,17 +31,21 @@ from ...filing import (
     FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
+    FilingImportError,
     FilingOperatorProfile,
     approval_stale_reasons,
     build_complementaria,
     build_draft,
     describe_stale_reason,
+    import_filing_from_justificante,
     iter_findings,
     load_amendment,
     refresh_review_status,
     validate_draft,
 )
 from ...filing.runtime import build_runtime_schema_provider, load_default_filing_profile
+from ...i18n import Language, get_translation
+from ...justificante import JustificanteError
 from ...logging import get_logger
 from ...submission import SubmissionEngine, SubmissionError
 from ..submission._helpers import build_engine as build_submission_engine
@@ -408,6 +414,50 @@ def list_drafts(
             str(path),
         )
     _console.print(table)
+
+
+@app.command("import")
+def import_(
+    from_justificante: Annotated[
+        Path,
+        typer.Option(
+            "--from-justificante",
+            help="Path to an AEAT justificante PDF to reconstruct a draft from.",
+        ),
+    ],
+) -> None:
+    """Reconstruct a draft from a justificante PDF (#271; cert-free).
+
+    The draft carries modelo, period, and profile_tax_id; every casilla
+    is emitted as ``EMPTY`` so Kent fills them in later via
+    ``aeat filing build`` or by editing the draft JSON. A companion
+    submission record is persisted under ``AEAT_SUBMISSIONS_DIR`` so
+    the import can serve as the baseline for amendment flows (#93,
+    #234, #235) without any AEAT network call.
+    """
+    settings = load_settings()
+    try:
+        result = import_filing_from_justificante(
+            from_justificante,
+            schema_provider=_schema_provider(),
+        )
+    except (FilingImportError, FilingDraftError, JustificanteError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    draft_path = _save_draft(result.draft)
+    submissions_dir = settings.aeat_submissions_dir
+    submissions_dir.mkdir(parents=True, exist_ok=True)
+    submission_path = submissions_dir / f"{result.submission.submission_id}.json"
+    submission_path.write_text(result.submission.model_dump_json(indent=2), encoding="utf-8")
+
+    typer.echo(
+        f"Imported draft {result.draft.draft_id} from justificante {result.submission.justificante_csv} -> {draft_path}"
+    )
+    typer.echo(f"Saved submission {result.submission.submission_id} -> {submission_path}")
+    for warning in result.warnings:
+        rendered = get_translation(warning, Language.EN)
+        typer.echo(f"[warning] {rendered}")
+    _render_draft(result.draft)
 
 
 @complementaria_app.command("build")

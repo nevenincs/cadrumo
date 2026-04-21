@@ -55,6 +55,7 @@ class TestParseJustificante:
         assert isinstance(record, Justificante)
         assert record.modelo == "130"
         assert record.period == "1T"
+        assert record.ejercicio == "2026"
         assert record.tax_id == "00000000T"
         assert record.csv == "ABCD1234EFGH5678"
         assert record.presentation_id == "13020260410ABCD1234EFGH5678"
@@ -68,6 +69,7 @@ class TestParseJustificante:
         record = parse_justificante(modelo_303_pdf)
         assert record.modelo == "303"
         assert record.period == "1T"
+        assert record.ejercicio == "2026"
         assert record.csv == "ZZZZ9999YYYY8888"
         assert record.total_a_ingresar is None
         assert record.total_a_devolver == Decimal("450.00")
@@ -77,6 +79,7 @@ class TestParseJustificante:
         record = parse_justificante(modelo_100_pdf)
         assert record.modelo == "100"
         assert record.period == "0A"
+        assert record.ejercicio == "2025"
         assert record.csv == "MNOP4321QRST8765"
         assert record.total_a_ingresar == Decimal("780.40")
         assert record.presented_at == datetime(2026, 6, 20, 17, 45, 12)

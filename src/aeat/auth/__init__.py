@@ -52,7 +52,7 @@ from ._models import (
     AeatSession,
     CertificateSessionDetail,
 )
-from ._protocols import AuthProviderKind
+from ._protocols import AuthProviderDescription, AuthProviderKind
 from ._providers._certificate._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
 )
@@ -94,6 +94,7 @@ __all__ = [
     "AeatLoginAssertionError",
     "AeatSession",
     "AeatSessionExpiredError",
+    "AuthProviderDescription",
     "AuthProviderKind",
     "BrowserContextLike",
     "BrowserPageLike",
