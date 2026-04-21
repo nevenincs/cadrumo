@@ -51,16 +51,25 @@ class TestModelo131Ruleset:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_two_percent_ventas(self) -> None:
-        """Casilla 04 must be exactly 2% of 03."""
+        """Casilla 04 must be exactly 2% of 03.
+
+        The engine derives computed casillas from NON-computed inputs
+        and uses the derived values downstream. When only 04 is
+        corrupted, 07 is recomputed from user_02 + derived_04 +
+        derived_06 = 500 + 200 + 100 = 800, matching the user's 800;
+        downstream checks stay clean. Only 04 itself flags
+        (user=150 vs. derived=200). Wave 37 L1.
+        """
         provided = _provided()
-        provided["04"] = Decimal("150.00")  # wrong: should be 200
+        provided["04"] = Decimal("150.00")  # wrong: engine derives 200 from 03=10000
         report = Engine().audit_against(
             ruleset=MODELO_131_2025,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
         assert not report.is_clean()
-        assert "04" in {d.casilla_id for d in report.discrepancies}
+        offenders = {d.casilla_id for d in report.discrepancies}
+        assert offenders == {"04"}
 
     def test_total_previo_sum_detection(self) -> None:
         """Casilla 07 = 02 + 04 + 06; an off-by-50 typo surfaces."""

@@ -33,12 +33,10 @@ from ...models import LegalCitationSource, ModeloCode
 from .._ruleset import ParameterTable, Ruleset
 from ._common import (
     casilla,
-    div_op,
     formula,
-    lit,
     make_citation,
     max_op,
-    percent,
+    percent_from_whole,
     ref,
     sub_op,
 )
@@ -144,8 +142,8 @@ _FORMULAS = (
     formula(
         casilla_id="18",
         formula_id="modelo_202.2025.cuota_integra",
-        # Normalise casilla 17 from whole-percent to fraction (17,00 ⇒ 0,17).
-        body=percent(div_op(ref("17"), lit("100"), quantize="0.0001"), ref("16")),
+        # Normalise casilla 17 from whole-percent (17,00) to fraction (0,17).
+        body=percent_from_whole(ref("17"), ref("16")),
     ),
     formula(
         casilla_id="32",
