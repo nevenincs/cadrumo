@@ -162,6 +162,11 @@ _FORMULAS = (
 )
 
 
+# Modelo 390 is a pure aggregator — every rate applied to the base
+# imponible lives in the quarterly 303 ruleset (where `iva.rate_general`,
+# `iva.rate_reducido`, etc. are stored). 390 sums pre-computed cuotas
+# rather than applying rates, so its ParameterTable is empty by design
+# (wave 42 M2 — documented rather than silent).
 _PARAMETERS = ParameterTable(entries={})
 
 
