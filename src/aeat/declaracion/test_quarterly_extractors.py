@@ -670,6 +670,49 @@ class TestModelo840TextCasillas:
             assert by_id[cid] == expected, f"Casilla {cid}: {by_id.get(cid)!r} != {expected!r}"
 
 
+class TestModelo232NamedFieldExtraction:
+    """Wave 27: Modelo 232 uses the named-field primitive."""
+
+    def test_roundtrip_named_fields(self, tmp_path: Path) -> None:
+        """Render a 232 PDF with the three bloque counters in the synthetic text layer."""
+        import io
+
+        from reportlab.lib.units import mm
+        from reportlab.pdfgen import canvas
+        from tests.fixtures.pdf_corpus.l3_synthetic._generators._generator_shared import (
+            A4_HEIGHT,
+            A4_WIDTH,
+            MARGIN_LEFT,
+            MARGIN_TOP,
+            VALUE_FONT,
+            VALUE_FONT_SIZE,
+            draw_footer,
+            draw_header,
+        )
+
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=(A4_WIDTH, A4_HEIGHT))
+        c.setTitle("Modelo 232 2025")
+        draw_header(c, modelo="232", ejercicio="2025", periodo="0A", page_num=1, page_count=1)
+        c.setFont(VALUE_FONT, VALUE_FONT_SIZE)
+        y = A4_HEIGHT - MARGIN_TOP - 50 * mm
+        c.drawString(MARGIN_LEFT, y, "Nº registros vinculadas    12")
+        c.drawString(MARGIN_LEFT, y - 6 * mm, "Nº registros intangibles    3")
+        c.drawString(MARGIN_LEFT, y - 12 * mm, "Nº registros paraísos    1")
+        draw_footer(c, tax_id="00000000T", presented_at="2025-11-20 10:00:00")
+        c.showPage()
+        c.save()
+        pdf = tmp_path / "modelo_232_named.pdf"
+        pdf.write_bytes(buffer.getvalue())
+
+        filing = parse_declaracion(pdf)
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        assert by_id["num_registros_vinculadas"] == "12"
+        assert by_id["num_registros_intangibles"] == "3"
+        assert by_id["num_registros_paraisos"] == "1"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+
 class TestHeaderOnlyExtractors:
     """232/369/720/840 recognise the document but expose no casillas.
 
@@ -680,8 +723,8 @@ class TestHeaderOnlyExtractors:
 
     @pytest.mark.parametrize(
         "modelo",
-        ["036", "037", "232", "369", "720"],
-        ids=["036", "037", "232", "369", "720"],
+        ["036", "037", "369", "720"],
+        ids=["036", "037", "369", "720"],
     )
     def test_header_only_modelo_exposes_empty_casillas(self, tmp_path: Path, modelo: str) -> None:
         pdf = _make_annual_pdf(
