@@ -12,8 +12,8 @@ issue: wgergely/aeat#46
 
 # plan: aeat notifications inbox
 
-Derived from [[2026-04-12-notifications-inbox-research]] and
-[[2026-04-12-notifications-inbox-adr]]. Target:
+Derived from `[[2026-04-12-notifications-inbox-research]]` and
+`[[2026-04-12-notifications-inbox-adr]]`. Target:
 `feature/46-notifications-inbox`.
 
 ## phase-1: schema, errors, protocol stubs

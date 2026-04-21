@@ -69,7 +69,7 @@ The engine takes every sibling dependency as a Protocol instance in
 its constructor. This is the same pattern from `aeat.deadlines` and it
 makes rebase against in-flight siblings a single-file diff
 (`_protocols.py` → `aeat.<sibling>`). See
-[[2026-04-12-submission-engine-research]] §in-flight-dependencies.
+`[[2026-04-12-submission-engine-research]]` §in-flight-dependencies.
 
 ### D6: BrowserSessionLike narrow protocol, real test doubles
 

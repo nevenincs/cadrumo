@@ -20,7 +20,7 @@ Proposed — 2026-04-18. Sub-EPIC of [#202](https://github.com/wgergely/aeat/iss
 
 ## context
 
-Kent's revise/review audit ([[2026-04-17-kent-revise-review-audit#scenario b — kent inspects what the semi-autonomous pipeline decided|scenario B]], wall 32) records that there is no unified surface answering "where do I start today?". To find every record across the produce → verify → export pipeline that wants his attention, Kent must run six unrelated commands and mentally join their output:
+Kent's revise/review audit (`[[2026-04-17-kent-revise-review-audit#scenario b — kent inspects what the semi-autonomous pipeline decided|scenario B]]`, wall 32) records that there is no unified surface answering "where do I start today?". To find every record across the produce → verify → export pipeline that wants his attention, Kent must run six unrelated commands and mentally join their output:
 
 1. `aeat financial txs list --unclassified`
 2. `aeat financial invoices unmatched` (planned)
@@ -29,7 +29,7 @@ Kent's revise/review audit ([[2026-04-17-kent-revise-review-audit#scenario b —
 5. `aeat filing show <draft> --findings-only`
 6. `aeat inbox next-deadline`
 
-The research document ([[2026-04-18-unified-review-queue-research]]) confirms five distinct decision-bearing record types live in five distinct subpackages. Each has:
+The research document (`[[2026-04-18-unified-review-queue-research]]`) confirms five distinct decision-bearing record types live in five distinct subpackages. Each has:
 
 - A strict frozen pydantic v2 record with a stable identifier.
 - A closed enum that distinguishes pending from resolved.
@@ -127,7 +127,7 @@ class ReviewState(StrEnum):
 
 The issue body's `--kind` token list contains two future-only members that this PR does **not** ship:
 
-- `classification` — the `ClassificationDecision` record type listed in [[2026-04-17-kent-revise-review-audit#scenario b — kent inspects what the semi-autonomous pipeline decided|kent-revise-review-audit walls 28-31]] does not exist in `src/aeat/` today. When it lands (umbrella #202 child issue C4h), a `CLASSIFICATION = "classification"` enum member and a matching adapter are added. Until then the token is reserved and the CLI rejects it with a clear message that names the blocking issue.
+- `classification` — the `ClassificationDecision` record type listed in `[[2026-04-17-kent-revise-review-audit#scenario b — kent inspects what the semi-autonomous pipeline decided|kent-revise-review-audit walls 28-31]]` does not exist in `src/aeat/` today. When it lands (umbrella #202 child issue C4h), a `CLASSIFICATION = "classification"` enum member and a matching adapter are added. Until then the token is reserved and the CLI rejects it with a clear message that names the blocking issue.
 - `approval-stale` — depends on the `FilingDraftStatus.APPROVED` lifecycle (sibling #230) and the staleness detector (sibling C4f). When both land, `APPROVAL_STALE = "approval-stale"` is added with a matching adapter. Reserved until then.
 
 The issue body also uses `aeat-inbox`. This ADR adopts the shorter `inbox` token because (a) it matches the subpackage name (`aeat.inbox`) and CLI sub-app (`aeat inbox …`), (b) it avoids a hyphen in a `--kind` value, and (c) the `aeat-` prefix is redundant inside the `aeat review` namespace. Documented here as an intentional rename from the issue body's token.

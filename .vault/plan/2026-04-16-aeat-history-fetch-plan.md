@@ -17,7 +17,7 @@ status: approved
 # aeat filing-history read surface — implementation plan
 
 Implements the `aeat.history` subpackage per
-[[2026-04-16-aeat-history-fetch-adr]]: a strictly-read-only
+`[[2026-04-16-aeat-history-fetch-adr]]`: a strictly-read-only
 filing-history fetcher that, given the list of submitted `Expediente`
 rows, retrieves the per-filing detail page, parses the casilla→value
 mapping, and persists the result as strict pydantic v2 records.

@@ -50,7 +50,7 @@ jobs:
           path: |
             ~/.cache/prek
             ~/AppData/Local/prek
-          key: prek-${{ runner.os }}-${{ hashFiles('prek.toml', '.pre-commit-config.yaml') }}
+          key: prek-${{ runner.os }}-${{ hashFiles('prek.toml') }}
           restore-keys: |
             prek-${{ runner.os }}-
 

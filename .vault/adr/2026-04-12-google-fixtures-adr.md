@@ -34,7 +34,7 @@ Docs read paths end-to-end in a single opt-in smoke test:
 Additional fixtures for #10 (storage export Sheet) and #11 (divergence sink
 Sheet) are **deferred** to those issues' own PRs — they append
 `FixtureSpec` entries to the catalogue additively when their live tests
-land. See [[2026-04-12-google-fixtures-research]] decision matrix.
+land. See `[[2026-04-12-google-fixtures-research]]` decision matrix.
 
 ### D2 — Fixture metadata is strict pydantic v2
 
@@ -140,4 +140,4 @@ change that introduces non-synthetic content to a fixture.
 
 ## Status
 
-`accepted` — proceed to [[2026-04-12-google-fixtures-plan]].
+`accepted` — proceed to `[[2026-04-12-google-fixtures-plan]]`.

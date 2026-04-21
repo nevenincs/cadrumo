@@ -10,7 +10,7 @@ related:
   - "[[2026-04-17-modelo-inventory-remediation-plan]]"
   - "[[2026-04-17-modelo-inventory-remediation-adr]]"
   - "[[2026-04-17-modelo-inventory-remediation-research]]"
-  - "[[2026-04-17-modelo-inventory-remediation-phase-all-summary]]"
+  - "[[2026-04-17-modelo-inventory-remediation-phase-all-summary-exec]]"
 ---
 
 # `modelo-inventory` Code Review
