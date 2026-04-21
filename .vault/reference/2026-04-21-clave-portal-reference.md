@@ -190,7 +190,75 @@ applies.
   under it anyway, so Cl@ve Móvil covers the same ground.
 - Registering a new Cl@ve identity — outside AEAT; user action only.
 
-## Glossary
+## Assumptions vs live-verified reality
+
+Three assumptions the pre-PR-#285 codebase inherited from ADR research
+were refuted on first live contact with AEAT Sede on 2026-04-21. All
+three bit us during the Cl@ve Móvil bring-up; similar assumptions
+almost certainly remain in downstream code (status reader,
+justificante verifier, submission engine) and must be audited before
+those surfaces are unlocked.
+
+### 1. "`SelectorAccesos.html` is auth-gated"
+**Wrong.** `https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/SelectorAccesos.html?rep=S&ref=<target>&aut=CP`
+is **static HTML**. It always serves HTTP 200 regardless of cookie
+state, and always renders the "Cl@ve Móvil" and "Certificado" buttons.
+The only way to tell whether a session is live is to click a button
+(or navigate to its `data-link`) and inspect where AEAT lands.
+
+Fix in PR #285: `ClaveMovilAuthProvider.verify()` now prefers the
+concrete post-auth URL (`landing_url` captured at login) as the probe
+target; it checks `status 2xx/3xx AND target_path in landing_url AND
+"SelectorAccesos" not in landing_url`.
+
+### 2. "`/wlpl/<app>/<handler>` paths live on `sede.agenciatributaria.gob.es`"
+**Wrong.** `sede.agenciatributaria.gob.es/wlpl/TEWV-CORE/ResumenVlt`
+returns HTTP 404. The `/wlpl/...` paths are served by the AEAT
+WebLogic application cluster at `www<N>.agenciatributaria.gob.es`
+(observed `www1`, `www2`, `www6`, `www12`). The `sede` host is the
+static / content front-end; the `www<N>` hosts are the app
+back-ends. AEAT's dispatcher
+(`/wlpl/OVCT-CXEW/DialogoRepresentacion?ref=…`) picks the subdomain
+during login.
+
+Fix: `_ClaveMovilSidecar` now persists the concrete
+`landing_url` observed after authentication so resume probes hit the
+exact host + path AEAT served last time.
+
+### 3. "The post-auth target URL is stable across sessions"
+**Partially wrong.** The path segment (`/wlpl/TEWV-CORE/ResumenVlt`)
+is stable, but the subdomain (`www<N>`) may rotate per session due
+to AEAT's load balancer. A probe that hard-codes `www6` may fail
+next week against the same session. Persisting the actual
+`landing_url` per session and using it as the resume probe target is
+the safe approach; if future probes 404, the resume path should
+fall back to the selector-dispatch flow (click through the button)
+rather than assume the subdomain.
+
+### Known-risk code sites (not yet audited)
+
+- `src/aeat/status/_reader.py:177` — `StatusReader._fetch_html` uses
+  `urljoin(self._settings.aeat_base_url, path)` where
+  `aeat_base_url = https://sede.agenciatributaria.gob.es`. Every
+  status surface (`expedientes`, `notificaciones`, `devoluciones`,
+  `borrador`, `datos-fiscales`, `calendario`) passes a `/wlpl/...`
+  path and will 404 exactly like our Cl@ve probe did.
+- `src/aeat/auth/_authenticator.py:431` — the certificate provider's
+  `verify_handshake()` and `verify()` probes target
+  `Settings.aeat_certificate_verify_url` (default
+  `https://sede.agenciatributaria.gob.es/`). The handshake test is
+  fine (mTLS is domain-level); the login-verification semantics
+  probably are not, but cert auth is on hold pending Kent's FNMT
+  renewal so no user is hitting this today.
+- `src/aeat/cli/submission/_helpers.py:108` — presentation URL
+  `f"https://sede.agenciatributaria.gob.es/modelo-{modelo}"` is a
+  placeholder and needs live verification before submission dry-run
+  output is trusted.
+- `Settings.aeat_status_detail_url_template` (default
+  `/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}`) — will
+  inherit the same host-assumption bug when plumbed into the reader.
+
+
 
 - **STORK**: pan-European auth federation. `storksp=EA0028512` is
   AEAT's service-provider code.
