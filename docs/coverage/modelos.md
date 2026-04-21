@@ -6,8 +6,8 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 
 | Modelo | In registry | Schema | Formula ruleset | Filing builder | Export (fichero BOE) | Amendment (complementaria) | Amendment (rectificativa) | Tests | Live-read detail | CLI coverage | `justificante` import | `declaración` import | `borrador` import | `predeclaración` import |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 036 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
-| 037 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 036 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
+| 037 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
 | 100 | ✅ | 🚧 (summary 27 casillas) | 🚧 (summary 12 casillas) | ❌ | ❌ | ❌ | N/A | partial | ❌ | ✅ (`--from-borrador`) | ✅ | ✅ (summary MVP) | ✅ (summary MVP) | ✅ (summary MVP) |
 | 111 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 115 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
