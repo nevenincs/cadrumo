@@ -143,5 +143,4 @@ This research **supersedes** those non-goals for Cl@ve Permanente and Cl@ve Móv
 2. **Can a single user combine providers within a run?** — cert for some operations + Cl@ve Permanente for others — probably not useful; pick one per session.
 3. **Storage state portability across providers** — if Kent authenticates via Cl@ve Permanente on Monday and cert on Tuesday, do we need separate storage_state files? Probably yes (different auth tokens).
 4. **Where does the Cl@ve Permanente password live?** — same treatment as the cert passphrase: env var, optionally backed by OS keyring. Must NOT end up in `env/.env` committed anywhere.
-5. **Audit trail** — the existing `LiveSubmitAuditRecord` captures the auth env state; it should record which provider was used. Minor schema additio
-n.
+5. **Audit trail** — the existing `LiveSubmitAuditRecord` captures the auth env state; it should record which provider was used. Minor schema addition.

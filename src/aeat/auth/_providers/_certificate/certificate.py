@@ -35,8 +35,8 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 
-from ..errors import AeatError
-from ..logging import get_logger
+from ....errors import AeatError
+from ....logging import get_logger
 
 if TYPE_CHECKING:
     from ._certificate_backends._base import _CertBackend
@@ -155,17 +155,11 @@ class CertificateBackend(StrEnum):
     Attributes:
         PLAYWRIGHT_CONTEXT: Primary. Supply the PKCS#12 to
             ``browser.new_context(client_certificates=[...])``.
-        USER_DATA_DIR: Deferred. Install into the OS cert store and
-            launch Chrome with ``--user-data-dir``.
-        MTLS_PROXY: Deferred. Route the browser through a local
-            mTLS-injecting proxy.
         HTTPX_FALLBACK: Verify-only. Perform a direct mTLS handshake
             via ``httpx`` for CI smoke tests.
     """
 
     PLAYWRIGHT_CONTEXT = "PLAYWRIGHT_CONTEXT"
-    USER_DATA_DIR = "USER_DATA_DIR"
-    MTLS_PROXY = "MTLS_PROXY"
     HTTPX_FALLBACK = "HTTPX_FALLBACK"
 
 
@@ -738,21 +732,15 @@ def _select_backend(backend: CertificateBackend) -> _CertBackend:
     requested.
     """
     from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from ._certificate_backends._mtls_proxy import MtlsProxyBackend
     from ._certificate_backends._playwright_context import (
         PlaywrightContextBackend,
     )
-    from ._certificate_backends._user_data_dir import UserDataDirBackend
 
     match backend:
         case CertificateBackend.PLAYWRIGHT_CONTEXT:
             return PlaywrightContextBackend()
         case CertificateBackend.HTTPX_FALLBACK:
             return HttpxFallbackBackend()
-        case CertificateBackend.USER_DATA_DIR:
-            return UserDataDirBackend()
-        case CertificateBackend.MTLS_PROXY:
-            return MtlsProxyBackend()
 
 
 # ── Public backend-facing API ───────────────────────────────────────────────
@@ -785,7 +773,12 @@ def preload_into_browser_context(
     backend.preload(cert, context)
 
 
-def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
+def verify_handshake(
+    cert: LoadedCertificate,
+    url: str,
+    *,
+    timeout_s: float = 20.0,
+) -> HandshakeResult:
     """Perform an opt-in TLS handshake smoke test.
 
     Dispatches to the backend selected by ``cert.backend``. TLS failures
@@ -797,6 +790,7 @@ def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
     Args:
         cert: The loaded certificate to present.
         url: Fully-qualified target URL (must include scheme + host).
+        timeout_s: Maximum duration in seconds for the handshake.
 
     Returns:
         A frozen :class:`HandshakeResult`.
@@ -807,7 +801,7 @@ def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
     if not url or "://" not in url:
         raise CertificateHandshakeError(f"verify_handshake: invalid url {url!r}")
     backend = _select_backend(cert.backend)
-    return backend.verify(cert, url)
+    return backend.verify(cert, url, timeout_s=timeout_s)
 
 
 __all__ = [

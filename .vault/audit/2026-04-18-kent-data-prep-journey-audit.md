@@ -199,21 +199,23 @@ Even the trivial case — a fully-deductible, fixed-amount recurring expense —
 
 | # | Wall | Tracked |
 |---|---|---|
-| DP1 | No "start here" data-prep entry-point | No |
-| DP2 | No per-period, per-modelo data-inventory checklist | No |
-| DP3 | `aeat financial ingest` doesn't persist | Yes ([#216](https://github.com/wgergely/aeat/issues/216)) |
-| DP4 | No path from PDF invoice to `Invoice` record | No |
-| DP5 | `GMAIL` / `GOOGLE_DRIVE` sources are enum-only; no fetcher | No |
-| DP6 | `classify` cannot assign a `SpendingCategory` (no `--category` flag) | **No — critical** |
-| DP7 | No place to configure user-specific usage ratios | No |
-| DP8 | Three proportionality concepts conflated in UX | No |
-| DP9 | VAT classification engine unwired to CLI | No |
-| DP10 | `classified_by = "rule:<id>"` has no producer | Partial ([#217](https://github.com/wgergely/aeat/issues/217) bulk-classify mentions rules) |
-| DP11 | No period scoping on catalogue CLI | No |
-| DP12 | No per-period readiness report | Partial ([#238](https://github.com/wgergely/aeat/issues/238)) |
-| DP13 | No deductibility computation service | No (implicit in [#218](https://github.com/wgergely/aeat/issues/218) scope) |
+| DP1 | No "start here" data-prep entry-point | [#260](https://github.com/wgergely/aeat/issues/260) — `aeat financial prepare` walkthrough |
+| DP2 | No per-period, per-modelo data-inventory checklist | [#261](https://github.com/wgergely/aeat/issues/261) — `aeat financial requires` |
+| DP3 | `aeat financial ingest` doesn't persist | [#216](https://github.com/wgergely/aeat/issues/216) |
+| DP4 | No path from PDF invoice to `Invoice` record | [#254](https://github.com/wgergely/aeat/issues/254) — EPIC: PDF invoice ingestion (LLM + wizard + bulk) |
+| DP5 | `GMAIL` / `GOOGLE_DRIVE` sources are enum-only; no fetcher | [#262](https://github.com/wgergely/aeat/issues/262) — Gmail + Drive invoice fetcher |
+| DP6 | `classify` cannot assign a `SpendingCategory` | [#266](https://github.com/wgergely/aeat/issues/266) **CLOSED** (PR #288) |
+| DP7 | No place to configure user-specific usage ratios | [#259](https://github.com/wgergely/aeat/issues/259) — profile usage ratios |
+| DP8 | Three proportionality concepts conflated in UX | Subsumed by [#257](https://github.com/wgergely/aeat/issues/257) — its `proportionality_applied` + `vat_treatment_applied` + `trace` fields on `aeat financial txs show` *are* the unified surface |
+| DP9 | VAT classification engine unwired to CLI | [#255](https://github.com/wgergely/aeat/issues/255) — wire `classify_vat` to CLI |
+| DP10 | `classified_by = "rule:<id>"` has no producer | [#256](https://github.com/wgergely/aeat/issues/256) — EPIC: rule-based auto-classify |
+| DP11 | No period scoping on catalogue CLI | [#263](https://github.com/wgergely/aeat/issues/263) — `aeat financial txs list --period` |
+| DP12 | No per-period readiness report | [#238](https://github.com/wgergely/aeat/issues/238) — pipeline health dashboard |
+| DP13 | No deductibility computation service | [#257](https://github.com/wgergely/aeat/issues/257) — `compute_deductible` service |
 
-**Ten of thirteen are untracked.** The three that are tracked are the coarsest-grained (ingest persist, bulk classify, pipeline dashboard). The fine-grained walls — category assignment on classify, usage-ratio configuration, VAT engine wiring, deductibility computation — are invisible in the current backlog.
+**All thirteen walls are tracked.** Nine new issues (#254–#263) were filed between this audit's original draft and its publication and close the "untracked" gaps the audit had flagged. DP8's "zero unified surface" concern is already answered by #257's `aeat financial txs show` design (explicit composition trace + rule + VAT treatment alongside the numeric answer). DP6 (#266) landed via PR #288 on the same day this audit was written — the "single largest hidden wall" is already closed.
+
+This audit therefore ships as a **journey narrative** and a **structural finding** (data-model excellence vs CLI reach) — not as a backlog-seeding exercise. The walls and Kent's experience of them remain the authoritative reference even though each numbered pointer now lands on a tracked issue rather than an unfiled gap.
 
 ---
 
@@ -242,25 +244,24 @@ The gap is systematic. Someone built the data layer with great care and then sto
 
 ## roadmap implications
 
-Four additions to the PM charter #197/#240 backlog, all targeting 0.1.0 (the "Kent can feed his bank data in and trust the classification" milestone):
+This section was drafted before the follow-up issues (#254–#263, #266) were filed. Retained here as the audit's historical proposals — every proposal has since been filed or closed:
 
-### proposed new issues
+- **DP6** — *Kent assigns a spending category.* Filed as [#266](https://github.com/wgergely/aeat/issues/266), closed by PR [#288](https://github.com/wgergely/aeat/pull/288).
+- **DP4** — *Kent ingests PDF invoices end-to-end.* Filed as EPIC [#254](https://github.com/wgergely/aeat/issues/254).
+- **DP9** — *Kent asks the tool to classify VAT.* Filed as [#255](https://github.com/wgergely/aeat/issues/255).
+- **DP10** — *Kent writes rules that auto-classify his transactions.* Filed as EPIC [#256](https://github.com/wgergely/aeat/issues/256).
+- **DP13** — *Kent sees how much of each expense is deductible.* Filed as [#257](https://github.com/wgergely/aeat/issues/257); also covers DP8's "unified surface" concern via `proportionality_applied + vat_treatment_applied + trace` on `aeat financial txs show`.
+- **DP7** — *Kent configures his own usage ratios.* Filed as [#259](https://github.com/wgergely/aeat/issues/259).
+- **DP1** — *`aeat financial prepare` walkthrough.* Filed as [#260](https://github.com/wgergely/aeat/issues/260).
+- **DP2** — *`aeat financial requires` checklist.* Filed as [#261](https://github.com/wgergely/aeat/issues/261).
+- **DP5** — *Gmail / Drive attachment fetcher.* Filed as [#262](https://github.com/wgergely/aeat/issues/262).
+- **DP11** — *Period scoping on catalogue CLI.* Filed as [#263](https://github.com/wgergely/aeat/issues/263).
 
-- **DP6-leaf: Kent assigns a spending category to a transaction.** Add `--category CATEGORY` to `aeat financial txs classify` and `aeat financial txs assign-category`. `category_id` validated against the `SpendingCategory` enum. Required before any downstream aggregation or deductibility computation.
-- **DP4-EPIC: Kent ingests PDF invoices end-to-end.** Three children — (a) LLM-based extraction (line items + counterparty + IVA) from PDF with a human-review step, (b) interactive `aeat financial invoices add` wizard for manual entry, (c) CSV/XLSX import for bulk cases. Any one of these ships the path; together they are resilient.
-- **DP9-leaf: Kent asks the tool to classify VAT.** Wire `classify_vat()` to the CLI as `aeat vat classify --from-invoice <id>` and auto-run during invoice ingestion. Surface the verdict on the invoice record.
-- **DP10-EPIC: Kent writes rules that auto-classify his transactions.** `aeat financial rules add/list/apply` producing `classified_by = "rule:<rule-id>"` records. Match on counterparty pattern, amount range, description regex. Low-confidence matches route to review queue (#232).
-- **DP13-leaf: Kent sees how much of each expense is deductible.** A `compute_deductible(transaction, category_profile, vat_regulation) -> DeductibleAmount` pure function surfaced as `aeat financial txs show` with expanded fields or `aeat financial deductibility --period 2026Q1`.
+### refinements to existing tracked issues
 
-### proposed refinements to existing issues
-
-- **[#217](https://github.com/wgergely/aeat/issues/217) bulk classify**: extend scope to include `--category` assignment, not just `business_classification`. Confirm rule format covers category + VAT category + proportionality override.
-- **[#218](https://github.com/wgergely/aeat/issues/218) T6 aggregation**: note explicit dependency on DP6 and DP13. T6 cannot sum until per-transaction category + deductible amounts exist.
-- **[#238](https://github.com/wgergely/aeat/issues/238) pipeline status**: acceptance should include reading categorisation coverage + deductibility-computation coverage, not only unclassified count.
-
-### proposed new sub-EPIC under #204 observability
-
-- **Kent configures his own usage ratios once, uses them forever** (DP7). A user-profile surface storing home-office ratio, mileage ratio, phone split, and any other `USAGE_RATIO_*` coefficients. Applied by default when a transaction lands in a matching category.
+- **[#217](https://github.com/wgergely/aeat/issues/217) bulk classify**: scope should include `--category` assignment (now covered by #266) and confirm rule format covers category + VAT category + proportionality override.
+- **[#218](https://github.com/wgergely/aeat/issues/218) T6 aggregation**: explicit dependency on DP6 (#266, closed) and DP13 (#257). T6 cannot sum until per-transaction category + deductible amounts exist.
+- **[#238](https://github.com/wgergely/aeat/issues/238) pipeline status**: acceptance should include categorisation coverage + deductibility-computation coverage, not only unclassified count.
 
 ---
 
