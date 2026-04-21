@@ -15,6 +15,20 @@ Only one algebraic formula holds at aggregation level:
 - casilla 03 = 19% x casilla 02 (same rate as the quarterly Modelo 115
   because 180 is the annual aggregation of 115 filings).
 
+**Scope limitations (wave 40 audit M1):**
+
+This MVP assumes a single-rate filing — every arrendamiento on the
+180 pays 19% IRPF. Real-world 180 filings may mix:
+
+- IRPF 19% on arrendamientos of urbanos used as domicilio.
+- IRNR 24% on arrendamientos made by no residentes (Ley 36/2006).
+- Special regional rates for Canarias (IGIC) or País Vasco / Navarra
+  foral norms.
+
+A mixed-rate filing will surface as a 03 discrepancy because the
+engine computes 03 at a single 19% rate. Multi-rate / IRNR support
+lands in sub-EPIC #305-Modelo-180-full.
+
 Legal base: Ley 35/2006 (LIRPF) art. 101.8, RD 439/2007 (Reglamento)
 art. 100.3.a.
 """
