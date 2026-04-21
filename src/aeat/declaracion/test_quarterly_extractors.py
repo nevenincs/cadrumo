@@ -519,6 +519,59 @@ class TestModelo202V2025Extractor:
         assert filing.extraction_status is ExtractionStatus.COMPLETE
 
 
+_MODELO_840_LABELS = {
+    "14": "Ejercicio",
+    "15": "Causa presentacion",
+    "33": "Clase de cuota",
+    "34": "Tipo actividad",
+    "37": "Grupo o epigrafe",
+    "38": "Municipio",
+    "40": "Provincia",
+    "62": "Fecha de efectos",
+}
+
+_MODELO_840_VALUES = {
+    "14": "2025",
+    "15": "Alta",
+    "33": "Municipal",
+    "34": "Profesional",
+    "37": "722",
+    "38": "Madrid",
+    "40": "Madrid",
+    "62": "2025-04-21",
+}
+
+
+class TestModelo840TextCasillas:
+    """Modelo 840 uses the text-value primitive (wave 24)."""
+
+    def test_text_payload_roundtrip(self, tmp_path: Path) -> None:
+        from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
+            QuarterlyGenParams,
+            generate,
+        )
+
+        params = QuarterlyGenParams(
+            modelo="840",
+            año=2025,
+            template_revision="2025.01",
+            tax_id="00000000T",
+            ejercicio="2025",
+            period_printed="0A",
+            labels=_MODELO_840_LABELS,
+            casilla_values=_MODELO_840_VALUES,
+        )
+        pdf_bytes, _ = generate(params)
+        pdf = tmp_path / "modelo_840_2025.pdf"
+        pdf.write_bytes(pdf_bytes)
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "840"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        for cid, expected in _MODELO_840_VALUES.items():
+            assert by_id[cid] == expected, f"Casilla {cid}: {by_id.get(cid)!r} != {expected!r}"
+
+
 class TestHeaderOnlyExtractors:
     """232/369/720/840 recognise the document but expose no casillas.
 
@@ -529,8 +582,8 @@ class TestHeaderOnlyExtractors:
 
     @pytest.mark.parametrize(
         "modelo",
-        ["036", "037", "232", "369", "720", "840"],
-        ids=["036", "037", "232", "369", "720", "840"],
+        ["036", "037", "232", "369", "720"],
+        ids=["036", "037", "232", "369", "720"],
     )
     def test_header_only_modelo_exposes_empty_casillas(self, tmp_path: Path, modelo: str) -> None:
         pdf = _make_annual_pdf(

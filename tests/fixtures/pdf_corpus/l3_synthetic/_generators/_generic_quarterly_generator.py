@@ -39,7 +39,7 @@ class QuarterlyGenParams(BaseModel):
     ejercicio: str = Field(min_length=4, max_length=4)
     period_printed: str = Field(min_length=1, max_length=4)
     labels: Mapping[str, str]
-    casilla_values: Mapping[str, Decimal]
+    casilla_values: Mapping[str, Decimal | str]
     csv: str | None = None
     presented_at: str = "2025-04-20 10:00:00"
 
@@ -47,7 +47,7 @@ class QuarterlyGenParams(BaseModel):
 class QuarterlyGroundTruth(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
     params: QuarterlyGenParams
-    expected_casillas: tuple[tuple[str, Decimal], ...]
+    expected_casillas: tuple[tuple[str, Decimal | str], ...]
 
 
 def generate(params: QuarterlyGenParams) -> tuple[bytes, QuarterlyGroundTruth]:

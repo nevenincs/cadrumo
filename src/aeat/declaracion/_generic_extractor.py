@@ -18,6 +18,7 @@ from typing import ClassVar
 
 from .._pdf_import._label_regex import (
     SPANISH_AMOUNT_GROUP,
+    TEXT_VALUE_GROUP,
     apply_label_regex,
     parse_spanish_decimal,
 )
@@ -43,13 +44,20 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
     Subclasses declare:
 
     - ``template_revision``: one :class:`TemplateRevision` ClassVar.
-    - ``casilla_ids``: ordered tuple of casilla IDs the modelo prints.
+    - ``casilla_ids``: ordered tuple of casilla IDs the modelo prints
+      with Spanish-decimal payloads.
+    - (optional) ``text_casilla_ids``: ordered tuple of casilla IDs
+      whose payloads are text (fechas, códigos, municipios, régimen,
+      S/N flags). Captured as ``str`` into
+      :class:`ExtractedCasilla.printed_value`.
     - (optional) ``casilla_width``: width of the casilla-ID prefix
-      ``{int(casilla_id):02d}`` by default (Modelo 100 overrides to 4).
+      ``{int(casilla_id):02d}`` by default (Modelo 100 overrides to 4,
+      Modelo 200 to 5).
     """
 
     template_revision: ClassVar[TemplateRevision]
     casilla_ids: ClassVar[tuple[str, ...]]
+    text_casilla_ids: ClassVar[tuple[str, ...]] = ()
     casilla_width: ClassVar[int] = 2
 
     def _compiled_patterns(self) -> dict[str, re.Pattern[str]]:
@@ -62,6 +70,23 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
             for casilla_id in type(self).casilla_ids
         }
 
+    def _compiled_text_patterns(self) -> dict[str, re.Pattern[str]]:
+        """Compile patterns that capture the last-token value on the casilla line.
+
+        pdfplumber collapses column-separator whitespace to single spaces,
+        so "value to the right of the label" reduces to "the final token
+        on the line". Single-token values only — multi-word payloads
+        (e.g. ``"La Rioja"``) need the richer bbox-anchored primitive.
+        """
+        width = type(self).casilla_width
+        return {
+            casilla_id: re.compile(
+                rf"(?m)^\s*{int(casilla_id):0{width}d}\s+\S[^\n]{{0,80}}\s{TEXT_VALUE_GROUP}",
+                re.IGNORECASE,
+            )
+            for casilla_id in type(self).text_casilla_ids
+        }
+
     def extract(self, pdf_path: Path) -> DeclaracionFiling:
         pages = extract_pages_text(pdf_path)
         full_text = "\n".join(pages)
@@ -72,6 +97,7 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
         period = _canonical_period(ejercicio, period_raw)
 
         hits = apply_label_regex(full_text, self._compiled_patterns())
+        text_hits = apply_label_regex(full_text, self._compiled_text_patterns())
 
         values: list[ExtractedCasilla] = []
         warnings: list[ExtractionWarning] = []
@@ -99,7 +125,27 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
                 )
             )
 
-        status = _derive_status(values, tuple(type(self).casilla_ids))
+        # Text-casilla path: capture free-form string payloads.
+        for casilla_id in type(self).text_casilla_ids:
+            hit = text_hits.get(casilla_id)
+            if hit is None:
+                warnings.append(_not_found_warning(casilla_id))
+                continue
+            confidence = 0.5 if hit.match_count > 1 else 1.0
+            if hit.match_count > 1:
+                warnings.append(_ambiguous_warning(casilla_id, hit.match_count))
+            values.append(
+                ExtractedCasilla(
+                    casilla_id=casilla_id,
+                    printed_value=hit.raw_value,
+                    source_page=1,
+                    source_bbox=None,
+                    extraction_confidence=confidence,
+                )
+            )
+
+        required = tuple(type(self).casilla_ids) + tuple(type(self).text_casilla_ids)
+        status = _derive_status(values, required)
 
         return DeclaracionFiling(
             modelo=type(self).template_revision.modelo,
