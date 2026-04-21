@@ -37,6 +37,7 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
         "modelo_123.2025",
         "modelo_130.2024",
         "modelo_130.2025",
+        "modelo_131.2025",
         "modelo_202.2025",
         "modelo_303.2024",
         "modelo_303.2025",
