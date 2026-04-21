@@ -11,14 +11,14 @@ etc.). The :class:`GenericDeclaracionExtractor` ``casilla_width`` ClassVar
 handles the wider prefix.
 
 Legal base: Modelo 200 is renewed annually by its own BOE Orden; the
-2025 filing (ejercicio 2024 results) is governed by the Orden that
-will supersede HAC/495/2024. The 14-casilla MVP below is drawn from
-page 14 of the current template; Orden HAC/262/2025 (BOE-A-2025-5407)
-may shift neighbouring pages (pagos fraccionados, micropyme rates)
-but leaves the page-14 liquidación block intact as of 2026-04-21.
-Per-casilla detail beyond page 14 (in particular casilla 01032
-reducción reserva capitalización, which is printed on a separate
-deducciones page) lands in sub-EPIC #305-Modelo-200-full.
+2024 filing (ejercicio 2024 results) is governed by **Orden
+HAC/657/2025** (BOE-A-2025-12818, 24-jun-2025), which introduced the
+**autoliquidación rectificativa** block on page 14. The MVP below is
+the liquidación subset that feeds into casilla 00621 (líquido a
+ingresar o devolver). Rectificativa casillas + per-deducción
+itemisation live under sub-EPIC #305-Modelo-200-full.
+
+Labels cross-checked against AEAT Manual Sociedades 2024 (wave 26).
 """
 
 from __future__ import annotations
@@ -44,18 +44,20 @@ class Modelo200V2025Extractor(GenericDeclaracionExtractor):
     # multi-page coverage — leaving it out here avoids false-positive
     # label matches against any other page that happens to print "01032".
     casilla_ids: ClassVar[tuple[str, ...]] = (
-        "00547",  # compensación BINs
-        "00550",  # base imponible previa
+        "00547",  # compensación bases imponibles negativas de períodos anteriores
+        "00550",  # base imponible antes de reserva capitalización + compensación BINs
         "00552",  # base imponible
         "00558",  # tipo de gravamen
         "00560",  # cuota íntegra previa
         "00562",  # cuota íntegra
         "00582",  # cuota íntegra ajustada positiva
-        "00592",  # cuota líquida positiva
+        "00592",  # cuota líquida (label fix, wave 26 — was "cuota líquida positiva")
         "00599",  # retenciones e ingresos a cuenta
         "00601",  # pago fraccionado 1P
         "00603",  # pago fraccionado 2P
         "00605",  # pago fraccionado 3P
+        "00615",  # abono de deducciones (feeds 00621, added in wave 26)
+        "00619",  # incremento por pérdida beneficios fiscales (feeds 00621, wave 26)
         "00611",  # cuota diferencial
         "00621",  # líquido a ingresar o devolver
     )
