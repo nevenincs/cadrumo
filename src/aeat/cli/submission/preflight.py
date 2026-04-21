@@ -8,9 +8,9 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from aeat.cli._observability import cli_run_context
-from aeat.cli.submission._helpers import build_engine, load_draft
-from aeat.submission import Preflight, SubmissionPreflightError
+from ...submission import Preflight, SubmissionPreflightError
+from .._observability import cli_run_context
+from ._helpers import build_engine, load_draft
 
 _CONSOLE = Console()
 
@@ -20,12 +20,16 @@ def preflight_cmd(
 ) -> None:
     """Run preflight on ``draft_path`` and print the outcome."""
     arguments = {"draft_path": str(draft_path)}
-    with cli_run_context(entrypoint="aeat submission preflight", arguments=arguments):
+    with cli_run_context(
+        entrypoint="aeat submission preflight",
+        arguments=arguments,
+        positional=("draft_path",),
+    ):
         draft = load_draft(draft_path)
         engine = build_engine()
         checker = Preflight(
             deadline_checker=engine.deadline_checker,
-            cert_backend=engine.cert_backend,
+            auth_provider=engine.auth_provider,
         )
         try:
             checker.check(draft, today=date.today())

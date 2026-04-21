@@ -13,12 +13,22 @@ multi-paragraph blocks from the BOE. Auditability relies on the
 combination of :attr:`Citation.source`, :attr:`Citation.article` and
 :attr:`Citation.quoted_text_es` — the quoted text is sufficient to
 re-locate the article on boe.es and confirm the rule.
+
+Per the Modelo 303 wave-2 ADR (#183) this module also exposes a
+period-keyed mapping :data:`VAT_CATALOGUES_BY_YEAR` and a
+:func:`resolve_catalogue` helper. Wave 2 ships the 2025 catalogue
+only; non-2025 years fall back to the 2025 entry with a debug log
+line. The mapping infrastructure is in place so future waves can
+slot in year-specific catalogues without touching call sites.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
+from types import MappingProxyType
 
+from ...logging import get_logger
 from ._schema import (
     Citation,
     CitationSource,
@@ -26,6 +36,8 @@ from ._schema import (
     VATCategory,
     VATRegulation,
 )
+
+_logger = get_logger(__name__)
 
 _RETRIEVAL = date(2026, 4, 13)
 _NORMATIVE_ID = "ley-37-1992"
@@ -379,6 +391,112 @@ _DOMESTIC_NOT_SUBJECT = VATRegulation(
             (
                 "No estarán sujetos los servicios prestados por personas físicas en régimen de dependencia derivada de "
                 "relaciones administrativas o laborales."
+            ),
+        ),
+    ),
+)
+
+
+_DOMESTIC_REVERSE_CHARGE = VATRegulation(
+    category=VATCategory.DOMESTIC_REVERSE_CHARGE,
+    label={
+        "es": "Operación interior con inversión del sujeto pasivo",
+        "en": "Domestic operation with reverse charge",
+        "hu": "Belföldi ügylet fordított adózással",
+    },
+    description={
+        "es": (
+            "Entregas de bienes o prestaciones de servicios interiores "
+            "en las que el adquirente o destinatario asume la condición "
+            "de sujeto pasivo y autoliquida la cuota (Art. 84.Uno.2º): "
+            "ejecuciones de obra de construcción, entregas de desechos "
+            "y materiales de recuperación, entregas de teléfonos móviles, "
+            "consolas, ordenadores portátiles y tabletas digitales entre "
+            "empresarios."
+        ),
+        "en": (
+            "Domestic supplies of goods or services where the recipient "
+            "becomes the taxable person and self-assesses VAT (Art. "
+            "84.Uno.2º): construction works, waste / recovery materials, "
+            "B2B supplies of mobile phones, video consoles, laptops and "
+            "tablets."
+        ),
+        "hu": (
+            "Olyan belföldi termékértékesítések vagy szolgáltatásnyújtások, "
+            "ahol az átvevő/megrendelő válik adóalannyá és önadózással "
+            "állapítja meg az ÁFA-t (Art. 84.Uno.2º): építési munkák, "
+            "hulladék-/újrahasznosítási anyagok, B2B mobiltelefonok, "
+            "játékkonzolok, laptopok és táblagépek értékesítései."
+        ),
+    },
+    triggers_when={
+        "es": (
+            "El supuesto encaja en alguno de los apartados del Art. "
+            "84.Uno.2º (construcción, residuos, electrónica de consumo "
+            "entre empresarios, etc.)."
+        ),
+        "en": (
+            "The transaction matches one of the Art. 84.Uno.2º "
+            "sub-paragraphs (construction, waste, B2B consumer "
+            "electronics, etc.)."
+        ),
+        "hu": (
+            "Az ügylet az Art. 84.Uno.2º valamely pontjának megfelel "
+            "(építés, hulladék, B2B fogyasztói elektronika stb.)."
+        ),
+    },
+    iva_treatment={
+        "es": (
+            "El emisor expide la factura sin IVA repercutido y hace "
+            "constar 'inversión del sujeto pasivo'. El destinatario "
+            "autoliquida la cuota devengada y, en su caso, la deduce "
+            "en el mismo modelo 303."
+        ),
+        "en": (
+            "The issuer raises the invoice without output VAT and "
+            "records 'reverse charge'. The recipient self-assesses "
+            "the output VAT and may simultaneously deduct it on the "
+            "same Modelo 303."
+        ),
+        "hu": (
+            "A kibocsátó ÁFA nélkül állítja ki a számlát, feltüntetve "
+            "a 'fordított adózást'. A vevő önbevallással megállapítja "
+            "a fizetendő ÁFA-t és — ha jogosult — egyidejűleg le is "
+            "vonja ugyanazon a Modelo 303-on."
+        ),
+    },
+    declares_in_modelos=("303",),
+    requires_reverse_charge=True,
+    requires_supplier_vat_id=True,
+    boe_references=(_NORMATIVE_ID,),
+    manual_references=(),
+    citations=(
+        _cite(
+            "Art. 84.Uno.2º.f",
+            (
+                "Serán sujetos pasivos los empresarios o profesionales para quienes se realicen las operaciones "
+                "consistentes en ejecuciones de obra, con o sin aportación de materiales, así como las cesiones "
+                "de personal para su realización, consecuencia de contratos directamente formalizados entre el "
+                "promotor y el contratista que tengan por objeto la urbanización de terrenos o la construcción "
+                "o rehabilitación de edificaciones."
+            ),
+        ),
+        _cite(
+            "Art. 84.Uno.2º.c",
+            (
+                "Serán sujetos pasivos los empresarios o profesionales para quienes se realicen las entregas de "
+                "los siguientes productos: desechos nuevos de la industria, desperdicios y desechos de fundición, "
+                "residuos y demás materiales de recuperación constituidos por metales férreos y no férreos, sus "
+                "aleaciones, escorias, cenizas y residuos de la industria que contengan metales o sus aleaciones."
+            ),
+        ),
+        _cite(
+            "Art. 84.Uno.2º.g",
+            (
+                "Serán sujetos pasivos los empresarios o profesionales para quienes se realicen las entregas de "
+                "plata, platino y paladio, en bruto, en polvo o semilabrados; entregas de teléfonos móviles, "
+                "consolas de videojuegos, ordenadores portátiles y tabletas digitales cuando el destinatario sea "
+                "un empresario o profesional revendedor o supere los límites cuantitativos establecidos."
             ),
         ),
     ),
@@ -1008,6 +1126,7 @@ _REGULATIONS: tuple[VATRegulation, ...] = (
     _DOMESTIC_ZERO,
     _DOMESTIC_EXEMPT,
     _DOMESTIC_NOT_SUBJECT,
+    _DOMESTIC_REVERSE_CHARGE,
     _INTRA_COMMUNITY_SUPPLY,
     _INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     _INTRA_COMMUNITY_TRIANGULATION,
@@ -1030,9 +1149,53 @@ VAT_CATALOGUE_2025: VATCatalogue = _build_catalogue()
 """Hand-curated 2025 VAT catalogue covering every :class:`VATCategory`."""
 
 
+VAT_CATALOGUES_BY_YEAR: Mapping[int, VATCatalogue] = MappingProxyType(
+    {
+        2025: VAT_CATALOGUE_2025,
+    }
+)
+"""Year-keyed view over the available :class:`VATCatalogue` instances.
+
+Wave 2 (#183) ships only the 2025 entry. Future waves slot in year-
+specific catalogues (e.g., a 2026 entry once Ley 7/2024-derived
+amendments require divergent regulation text) without touching
+call sites — :func:`resolve_catalogue` performs the lookup with a
+documented fallback.
+"""
+
+
+def resolve_catalogue(*, on: date) -> VATCatalogue:
+    """Return the :class:`VATCatalogue` effective on ``on``.
+
+    Looks up :data:`VAT_CATALOGUES_BY_YEAR` by ``on.year``. Falls
+    back to the closest available year (currently 2025) and emits
+    a ``debug`` log line when the exact year is not yet populated.
+
+    Args:
+        on: The transaction date for which the catalogue is needed.
+
+    Returns:
+        The :class:`VATCatalogue` covering ``on.year`` or the
+        fallback 2025 catalogue.
+    """
+    catalogue = VAT_CATALOGUES_BY_YEAR.get(on.year)
+    if catalogue is not None:
+        return catalogue
+    _logger.debug(
+        "resolve_catalogue: no catalogue for year %d; falling back to 2025",
+        on.year,
+    )
+    return VAT_CATALOGUE_2025
+
+
 def total_citation_count(catalogue: VATCatalogue = VAT_CATALOGUE_2025) -> int:
     """Return the total number of :class:`Citation` records in ``catalogue``."""
     return sum(len(regulation.citations) for regulation in catalogue)
 
 
-__all__ = ["VAT_CATALOGUE_2025", "total_citation_count"]
+__all__ = [
+    "VAT_CATALOGUES_BY_YEAR",
+    "VAT_CATALOGUE_2025",
+    "resolve_catalogue",
+    "total_citation_count",
+]

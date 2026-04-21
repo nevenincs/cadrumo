@@ -8,8 +8,8 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from aeat.cli._observability import cli_run_context
-from aeat.cli.submission._helpers import build_engine, load_draft
+from .._observability import cli_run_context
+from ._helpers import build_engine, load_draft
 
 _CONSOLE = Console()
 
@@ -19,7 +19,11 @@ def dry_run_cmd(
 ) -> None:
     """Dry-run the submission engine against ``draft_path``."""
     arguments = {"draft_path": str(draft_path)}
-    with cli_run_context(entrypoint="aeat submission dry-run", arguments=arguments):
+    with cli_run_context(
+        entrypoint="aeat submission dry-run",
+        arguments=arguments,
+        positional=("draft_path",),
+    ):
         draft = load_draft(draft_path)
         engine = build_engine()
         filing = asyncio.run(engine.submit_draft(draft, dry_run=True))

@@ -6,8 +6,8 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.cli._observability import cli_run_context
-from aeat.cli.inbox._helpers import build_fetcher
+from .._observability import cli_run_context
+from ._helpers import build_fetcher
 
 _CONSOLE = Console()
 
@@ -17,7 +17,11 @@ def show_cmd(
 ) -> None:
     """Load and pretty-print a persisted :class:`Notificacion`."""
     arguments = {"notificacion_id": notificacion_id}
-    with cli_run_context(entrypoint="aeat inbox show", arguments=arguments):
+    with cli_run_context(
+        entrypoint="aeat inbox show",
+        arguments=arguments,
+        positional=("notificacion_id",),
+    ):
         fetcher = build_fetcher()
         inbox = fetcher.load_inbox()
         record = inbox.get(notificacion_id)

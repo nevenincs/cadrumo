@@ -4,12 +4,20 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.financial.vat import EUMemberState, VATCategory, VATRateKind
+from . import EUMemberState, VATCategory, VATRateKind
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 
-@pytest.mark.unit
 def test_vat_category_has_every_named_member() -> None:
-    """VATCategory must carry all 16 members from the issue body."""
+    """VATCategory must carry all 17 members.
+
+    The 17th member ``DOMESTIC_REVERSE_CHARGE`` was added in
+    wave 2 (#183) to disambiguate inversión del sujeto pasivo on
+    domestic transactions (Art. 84.Uno.2º) from intra-community
+    acquisitions (which already use
+    ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE``).
+    """
     expected = {
         "DOMESTIC_GENERAL_21",
         "DOMESTIC_REDUCED_10",
@@ -17,6 +25,7 @@ def test_vat_category_has_every_named_member() -> None:
         "DOMESTIC_ZERO",
         "DOMESTIC_EXEMPT",
         "DOMESTIC_NOT_SUBJECT",
+        "DOMESTIC_REVERSE_CHARGE",
         "INTRA_COMMUNITY_SUPPLY",
         "INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE",
         "INTRA_COMMUNITY_TRIANGULATION",
@@ -31,14 +40,12 @@ def test_vat_category_has_every_named_member() -> None:
     assert {member.name for member in VATCategory} == expected
 
 
-@pytest.mark.unit
 def test_vat_category_values_roundtrip_through_strenum() -> None:
     """Every VATCategory value re-parses to the same member."""
     for member in VATCategory:
         assert VATCategory(member.value) is member
 
 
-@pytest.mark.unit
 def test_eu_member_state_has_27_members() -> None:
     """EUMemberState must cover the 27 current EU member states."""
     assert len(list(EUMemberState)) == 27
@@ -46,7 +53,6 @@ def test_eu_member_state_has_27_members() -> None:
     assert EUMemberState.DE.value == "de"
 
 
-@pytest.mark.unit
 def test_vat_rate_kind_has_five_tiers() -> None:
     """VATRateKind covers the five tiers used by the substrate."""
     assert {m.name for m in VATRateKind} == {

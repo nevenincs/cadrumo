@@ -5,9 +5,9 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from aeat.cli._observability import cli_run_context
-from aeat.config import load_settings
-from aeat.sync import DivergenceRepositoryError, JsonFileDivergenceRepository
+from ...config import load_settings
+from ...sync import DivergenceRepositoryError, JsonFileDivergenceRepository
+from .._observability import cli_run_context
 
 _CONSOLE = Console()
 
@@ -17,7 +17,11 @@ def show_divergence(
 ) -> None:
     """Print the full JSON payload of a divergence record."""
     arguments = {"record_id": record_id}
-    with cli_run_context(entrypoint="aeat sync show-divergence", arguments=arguments):
+    with cli_run_context(
+        entrypoint="aeat sync show-divergence",
+        arguments=arguments,
+        positional=("record_id",),
+    ):
         settings = load_settings()
         repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
         try:

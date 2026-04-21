@@ -31,10 +31,10 @@ from typing import Any
 
 from pydantic import TypeAdapter
 
-from aeat.config import Settings, load_settings
-from aeat.i18n import Language, TranslationError, get_translation
-from aeat.logging import get_logger
-
+from .._paths import resolve_relative_subpath
+from ..config import Settings, load_settings
+from ..i18n import Language, TranslationError, get_translation
+from ..logging import get_logger
 from ._schema import (
     Chapter,
     Manual,
@@ -188,7 +188,10 @@ def load_section(part_root: Path, section_ref: SectionRef) -> Section:
         ManualNotFoundError: If the referenced file does not exist.
         ManualParseError: If the file fails schema validation.
     """
-    section_path = part_root / section_ref.relative_path
+    try:
+        section_path = resolve_relative_subpath(part_root, section_ref.relative_path, context="manual section path")
+    except ValueError as exc:
+        raise ManualParseError(str(exc)) from exc
     raw = _read_text(section_path)
     try:
         section = Section.model_validate_json(raw)

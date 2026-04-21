@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import typer
 
-from aeat.cli.run.list_cmd import list_cmd
-from aeat.cli.run.replay import replay_cmd
-from aeat.cli.run.show import show_cmd
+from .list_cmd import list_cmd
+from .replay import replay_cmd
+from .show import show_cmd
 
 app = typer.Typer(
     name="run",

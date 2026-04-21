@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from aeat.observability import (
+from ...observability import (
     AeatCorpusDriftError,
     AeatObservabilityError,
     replay_run,

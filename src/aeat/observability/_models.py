@@ -21,9 +21,18 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class ArgumentSource(StrEnum):
-    """Where a CLI argument value originated from."""
+    """Where a CLI argument value originated from.
+
+    ``FLAG`` captures option-style flags (e.g. ``--since 2026-01-01``).
+    ``POSITIONAL`` captures positional arguments that must be
+    re-emitted in the original order with no ``--`` prefix during
+    replay (e.g. ``notificacion_id`` on ``aeat inbox show``). ``ENV``,
+    ``CONFIG`` and ``DEFAULT`` are captured for audit completeness but
+    are not re-emitted on argv.
+    """
 
     FLAG = "FLAG"
+    POSITIONAL = "POSITIONAL"
     ENV = "ENV"
     CONFIG = "CONFIG"
     DEFAULT = "DEFAULT"

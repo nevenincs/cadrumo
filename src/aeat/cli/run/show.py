@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.observability import (
+from ...observability import (
     AeatObservabilityError,
     load_events,
     load_trace,

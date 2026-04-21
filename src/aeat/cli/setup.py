@@ -17,8 +17,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.config import PROJECT_ROOT
-from aeat.setup import (
+from ..config import PROJECT_ROOT
+from ..setup import (
     SetupAnswers,
     SetupOutcome,
     SetupResult,

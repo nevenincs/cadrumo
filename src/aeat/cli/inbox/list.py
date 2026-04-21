@@ -6,9 +6,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli._observability import cli_run_context
-from aeat.cli.inbox._helpers import build_fetcher
-from aeat.inbox import NotificacionPriority
+from ...inbox import NotificacionPriority
+from .._observability import cli_run_context
+from ._helpers import build_fetcher
 
 _CONSOLE = Console()
 

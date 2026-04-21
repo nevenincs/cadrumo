@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from aeat.config import PROJECT_ROOT
-from aeat.justificante import (
+from ..config import PROJECT_ROOT
+from . import (
     Justificante,
     JustificanteCsvNotFoundError,
     JustificanteParseError,
@@ -24,8 +24,7 @@ from aeat.justificante import (
     parse_justificante,
 )
 
-pytestmark = pytest.mark.unit
-
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 FIXTURES_DIR = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 

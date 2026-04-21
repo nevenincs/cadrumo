@@ -8,25 +8,25 @@ implementation plan.
 
 from __future__ import annotations
 
-from aeat.observability._context import (
+from ._context import (
     RUN_CONTEXT_VAR,
     STEP_CONTEXT_VAR,
     RunContextInfo,
     current_run_context,
     run_context,
 )
-from aeat.observability._errors import (
+from ._errors import (
     AeatCorpusDriftError,
     AeatObservabilityError,
     RunContextMissingError,
     RunTraceValidationError,
 )
-from aeat.observability._fingerprint import (
+from ._fingerprint import (
     compute_corpus_sha256,
     compute_db_sha256,
     read_cert_fingerprint,
 )
-from aeat.observability._models import (
+from ._models import (
     ArgumentRecord,
     ArgumentSource,
     AssertionPayload,
@@ -43,9 +43,9 @@ from aeat.observability._models import (
     StepBoundaryPayload,
     WorkflowLinkPayload,
 )
-from aeat.observability._recorder import record_event
-from aeat.observability._replay import replay_run
-from aeat.observability._store import (
+from ._recorder import record_event
+from ._replay import replay_run
+from ._store import (
     iter_runs,
     load_events,
     load_trace,

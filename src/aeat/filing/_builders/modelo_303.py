@@ -16,8 +16,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from aeat.logging import get_logger
-
+from ...logging import get_logger
 from .._builder import FilingBuilder
 from .._errors import FilingComputationError
 from .._protocols import (
@@ -52,13 +51,13 @@ class Modelo303Builder(FilingBuilder):
         ```python
         from decimal import Decimal
 
-        from aeat.filing import build_draft
-        from aeat.filing.testing import (
-            SyntheticProfile,
-            default_schema_provider,
+        from .. import build_draft
+        from ..runtime import (
+            FilingOperatorProfile,
+            build_runtime_schema_provider,
         )
 
-        profile = SyntheticProfile(
+        profile = FilingOperatorProfile(
             tax_id="12345678Z",
             display_name="Demo S.L.",
             applicable_modelos=("303",),
@@ -71,7 +70,7 @@ class Modelo303Builder(FilingBuilder):
                 "07": Decimal("10000.00"),  # base gravada al 21%
                 "29": Decimal("200.00"),    # cuota deducible
             },
-            schema_provider=default_schema_provider(),
+            schema_provider=build_runtime_schema_provider(),
         )
         ```
     """

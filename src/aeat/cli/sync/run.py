@@ -12,8 +12,8 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from aeat.cli._observability import cli_run_context
-from aeat.config import load_settings
+from ...config import load_settings
+from .._observability import cli_run_context
 
 _CONSOLE = Console()
 

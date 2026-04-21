@@ -6,9 +6,9 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from aeat.cli._observability import cli_run_context
-from aeat.config import load_settings
-from aeat.workflow import WorkflowError, load_run
+from ...config import load_settings
+from ...workflow import WorkflowError, load_run
+from .._observability import cli_run_context
 
 _CONSOLE = Console()
 
@@ -29,7 +29,11 @@ def show_cmd(
         as_json: When ``True``, emit compact JSON to stdout.
     """
     arguments = {"run_id": run_id, "json": as_json}
-    with cli_run_context(entrypoint="aeat workflow show", arguments=arguments):
+    with cli_run_context(
+        entrypoint="aeat workflow show",
+        arguments=arguments,
+        positional=("run_id",),
+    ):
         settings = load_settings()
         try:
             result = load_run(run_id, runs_dir=settings.aeat_workflow_runs_dir)

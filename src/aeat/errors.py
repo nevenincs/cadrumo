@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from aeat.status import SiteHealthStatus
+    from .status import SiteHealthStatus
 
 
 class AeatError(Exception):
@@ -78,3 +78,67 @@ class SiteHealthError(AeatError):
         """
         super().__init__(status.state.value)
         self.status: SiteHealthStatus = status
+
+
+# -- aeat.formulas error hierarchy (#173) --------------------------------
+# The formula engine lives in :mod:`aeat.formulas`. Per the project-wide
+# mandate (CLAUDE.md §Errors: "All domain errors inherit from
+# aeat.errors.AeatError"), the entire formula-engine error hierarchy is
+# declared here rather than inside the subpackage.
+
+
+class FormulasError(AeatError):
+    """Base error for the :mod:`aeat.formulas` engine."""
+
+    pass
+
+
+class RulesetValidationError(FormulasError):
+    """Raised when a ruleset fails structural validation at load time."""
+
+    pass
+
+
+class FormulaCycleError(FormulasError):
+    """Raised when a ruleset DAG contains a cycle between computed casillas."""
+
+    def __init__(self, *, ruleset_id: str, cycle: tuple[str, ...]) -> None:
+        """Construct with the offending ruleset id and the cycle.
+
+        Args:
+            ruleset_id: Stable id of the ruleset whose DAG is cyclic.
+            cycle: Tuple of casilla ids forming the cycle.
+        """
+        super().__init__(f"ruleset {ruleset_id!r} has cycle: {' -> '.join(cycle)}")
+        self.ruleset_id: str = ruleset_id
+        self.cycle: tuple[str, ...] = cycle
+
+
+class CasillaNotDefinedError(FormulasError):
+    """Raised when a formula references a casilla that the ruleset does not declare."""
+
+    pass
+
+
+class AmbiguousPeriodError(FormulasError):
+    """Raised when a period matches more than one ruleset span."""
+
+    pass
+
+
+class MissingRulesetError(FormulasError):
+    """Raised when no ruleset covers the requested modelo/period pair."""
+
+    pass
+
+
+class EvaluationError(FormulasError):
+    """Raised when a formula evaluation produces an arithmetic domain error."""
+
+    pass
+
+
+class AuditDiscrepancyError(FormulasError):
+    """Raised by :meth:`AuditReport.assert_clean` when discrepancies are present."""
+
+    pass

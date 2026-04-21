@@ -12,9 +12,9 @@ import asyncio
 import typer
 from rich.console import Console
 
-from aeat.cli._observability import cli_run_context
-from aeat.cli.inbox._helpers import build_fetcher
-from aeat.inbox import InboxError
+from ...inbox import InboxError
+from .._observability import cli_run_context
+from ._helpers import build_fetcher
 
 _CONSOLE = Console()
 
@@ -28,7 +28,11 @@ def ack_cmd(
     This is bookkeeping only — it does not tell AEAT anything.
     """
     arguments = {"notificacion_id": notificacion_id, "by": by}
-    with cli_run_context(entrypoint="aeat inbox ack", arguments=arguments):
+    with cli_run_context(
+        entrypoint="aeat inbox ack",
+        arguments=arguments,
+        positional=("notificacion_id",),
+    ):
         fetcher = build_fetcher()
         try:
             record = asyncio.run(fetcher.acknowledge(notificacion_id, by=by))

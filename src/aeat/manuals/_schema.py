@@ -23,12 +23,12 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import StrEnum
+from pathlib import PurePosixPath
 from typing import Annotated
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-from aeat.i18n import Translatable
-
+from ..i18n import Translatable
 from ._stubs import MODELO_CASILLA_PATTERN
 
 
@@ -188,8 +188,8 @@ class Rule(_StrictFrozen):
     )
     source: RuleSource
     extracted_by: LLMProvenance
-    reviewed_by: _Reviewer
-    reviewed_at: date
+    definition_reviewed_by: _Reviewer
+    definition_reviewed_at: date
 
     @model_validator(mode="after")
     def _check_spanish_statement(self) -> Rule:
@@ -214,6 +214,14 @@ class SectionRef(_StrictFrozen):
         ),
     )
 
+    @field_validator("relative_path")
+    @classmethod
+    def _validate_relative_path(cls, value: str) -> str:
+        pure = PurePosixPath(value)
+        if "\\" in value or pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
+            raise ValueError("SectionRef.relative_path must be a contained POSIX relative path")
+        return pure.as_posix()
+
 
 class Section(_StrictFrozen):
     """A structured section of a handbook chapter."""
@@ -227,8 +235,8 @@ class Section(_StrictFrozen):
     references_sections: tuple[_StableId, ...] = Field(default_factory=tuple)
     references_legal_acts: tuple[_LegalActRef, ...] = Field(default_factory=tuple)
     source: SectionSource
-    reviewed_by: _Reviewer
-    reviewed_at: date
+    definition_reviewed_by: _Reviewer
+    definition_reviewed_at: date
 
     @model_validator(mode="after")
     def _check_spanish_translations(self) -> Section:
@@ -263,8 +271,8 @@ class Manual(_StrictFrozen):
     source_pdf_url: AnyHttpUrl
     source_html_url: AnyHttpUrl | None = None
     fetched_at: datetime
-    reviewed_by: _Reviewer
-    reviewed_at: date
+    definition_reviewed_by: _Reviewer
+    definition_reviewed_at: date
     chapters: tuple[Chapter, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
@@ -303,6 +311,14 @@ class FetchedManualPart(_StrictFrozen):
         default=False,
         description="Always False for fetched records; kept for diff-friendliness with synthetic fixtures.",
     )
+
+    @field_validator("relative_pdf_path")
+    @classmethod
+    def _validate_relative_pdf_path(cls, value: str) -> str:
+        pure = PurePosixPath(value)
+        if "\\" in value or pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
+            raise ValueError("FetchedManualPart.relative_pdf_path must be a contained POSIX relative path")
+        return pure.as_posix()
 
 
 class ManualCatalogue(_StrictLoose):

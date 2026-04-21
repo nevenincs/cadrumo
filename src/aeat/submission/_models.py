@@ -14,8 +14,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.filing import FilingAmendment
-from aeat.i18n import Translatable
+from ..filing import FilingAmendment
+from ..i18n import Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

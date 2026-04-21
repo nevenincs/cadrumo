@@ -10,7 +10,7 @@ from missing-category or corpus load failures.
 
 from __future__ import annotations
 
-from aeat.errors import AeatError
+from ...errors import AeatError
 
 
 class VatError(AeatError):
@@ -37,4 +37,27 @@ class VatCatalogueError(VatError):
 
     Used by :func:`aeat.financial.vat.load_vat_rules_from_manual`
     when an explicit year has no in-memory or on-disk catalogue.
+    """
+
+
+class VatRateOverlapError(VatError):
+    """Raised when two :class:`VATRate` records share an active window.
+
+    The substrate enforces that for every ``(member_state, kind)``
+    partition of :data:`VAT_RATE_TABLE` no two records have
+    overlapping ``effective_from`` / ``effective_until`` ranges.
+    Adding a new record that violates this invariant raises this
+    error at module import time so the regression surfaces in CI
+    rather than silently affecting :func:`lookup_rate` results.
+    """
+
+
+class VatClassificationError(VatError):
+    """Raised when :func:`classify_vat` cannot return a deterministic match.
+
+    The classifier exposes a closed first-match-wins table; the
+    only structural failure is when the input criteria cannot be
+    represented under the closed enum set, which is caught at
+    construction time by pydantic. This error is reserved for
+    future extensions (e.g., ambiguous rule rankings).
     """

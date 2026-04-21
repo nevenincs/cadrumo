@@ -30,6 +30,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "release-please-config.json"
 MANIFEST_PATH = PROJECT_ROOT / ".release-please-manifest.json"
@@ -97,7 +99,6 @@ def _read_init_version() -> str:
     return match.group(1)
 
 
-@pytest.mark.unit
 def test_release_please_config_is_well_formed() -> None:
     """``release-please-config.json`` parses as the strict pydantic model."""
     payload = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -131,7 +132,6 @@ def test_release_please_config_is_well_formed() -> None:
     assert not missing, f"changelog-sections missing types: {sorted(missing)}"
 
 
-@pytest.mark.unit
 def test_release_please_manifest_is_well_formed() -> None:
     """``.release-please-manifest.json`` parses as the strict model."""
     payload = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
@@ -141,7 +141,6 @@ def test_release_please_manifest_is_well_formed() -> None:
     assert manifest.root  # non-empty
 
 
-@pytest.mark.unit
 def test_changelog_exists_and_non_empty() -> None:
     """``CHANGELOG.md`` exists at the repo root and is non-empty."""
     assert CHANGELOG_PATH.is_file(), f"{CHANGELOG_PATH} is missing"
@@ -150,7 +149,6 @@ def test_changelog_exists_and_non_empty() -> None:
     assert "# Changelog" in text
 
 
-@pytest.mark.unit
 def test_version_surfaces_agree() -> None:
     """pyproject.toml, ``__init__.py``, and the manifest agree on one version."""
     pyproject_version = _read_pyproject_version()
@@ -163,7 +161,6 @@ def test_version_surfaces_agree() -> None:
     )
 
 
-@pytest.mark.unit
 def test_no_release_please_github_actions_workflow() -> None:
     """GitHub Actions is disabled on this repo — no release-please workflow may exist."""
     workflow = PROJECT_ROOT / ".github" / "workflows" / "release-please.yml"

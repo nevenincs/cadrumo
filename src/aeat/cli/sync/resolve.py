@@ -7,13 +7,13 @@ from enum import StrEnum
 import typer
 from rich.console import Console
 
-from aeat.cli._observability import cli_run_context
-from aeat.config import load_settings
-from aeat.sync import (
+from ...config import load_settings
+from ...sync import (
     DivergenceRepositoryError,
     JsonFileDivergenceRepository,
     ResolutionState,
 )
+from .._observability import cli_run_context
 
 _CONSOLE = Console()
 
@@ -46,7 +46,11 @@ def resolve_divergence(
 ) -> None:
     """Transition a divergence record to HUMAN_APPROVED or REJECTED."""
     arguments = {"record_id": record_id, "action": action, "notes": notes}
-    with cli_run_context(entrypoint="aeat sync resolve-divergence", arguments=arguments):
+    with cli_run_context(
+        entrypoint="aeat sync resolve-divergence",
+        arguments=arguments,
+        positional=("record_id",),
+    ):
         settings = load_settings()
         repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
         try:

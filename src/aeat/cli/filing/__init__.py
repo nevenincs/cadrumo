@@ -6,11 +6,6 @@ Subcommands:
 - ``aeat filing validate`` — re-validate a saved draft.
 - ``aeat filing show`` — pretty-print a draft.
 - ``aeat filing list`` — list drafts under the configured drafts dir.
-
-The CLI deliberately consumes the synthetic Modelo 130 schema
-provider exposed by :mod:`aeat.filing.testing`, because the real
-casilla DB (#23) and modelo catalogue (#6) are not on ``main``
-yet. Wiring the production providers is a follow-up rebase.
 """
 
 from __future__ import annotations
@@ -26,28 +21,28 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.cli._live import requires_live_enabled
-from aeat.cli.submission._helpers import build_engine as build_submission_engine
-from aeat.config import load_settings
-from aeat.filing import (
+from ...config import load_settings
+from ...filing import (
     FilingAmendment,
     FilingAmendmentError,
     FilingDraft,
     FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
+    FilingOperatorProfile,
+    approval_stale_reasons,
     build_complementaria,
     build_draft,
+    describe_stale_reason,
     iter_findings,
     load_amendment,
+    refresh_review_status,
     validate_draft,
 )
-from aeat.filing.testing import (
-    SyntheticProfile,
-    default_schema_provider,
-)
-from aeat.logging import get_logger
-from aeat.submission import SubmissionEngine
+from ...filing.runtime import build_runtime_schema_provider, load_default_filing_profile
+from ...logging import get_logger
+from ...submission import SubmissionEngine, SubmissionError
+from ..submission._helpers import build_engine as build_submission_engine
 
 app = typer.Typer(
     name="filing",
@@ -85,6 +80,11 @@ def _submission_engine() -> SubmissionEngine:
     return build_submission_engine()
 
 
+def _schema_provider():
+    """Return the production filing schema provider."""
+    return build_runtime_schema_provider()
+
+
 def _load_inputs(path: Path) -> dict[str, object]:
     """Load and parse a JSON inputs file from disk."""
     if not path.exists():
@@ -117,6 +117,19 @@ def _load_draft(path: Path) -> FilingDraft:
         return FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
     except FilingDraftError as exc:
         raise typer.BadParameter(f"invalid draft in {path}: {exc}") from exc
+
+
+def _refresh_persisted_draft(path: Path, draft: FilingDraft | None = None) -> FilingDraft:
+    """Refresh review status for a persisted draft and rewrite it when needed."""
+
+    loaded = draft or _load_draft(path)
+    refreshed = refresh_review_status(
+        loaded,
+        schema_provider=_schema_provider(),
+    )
+    if refreshed != loaded:
+        path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
+    return refreshed
 
 
 def _save_draft(draft: FilingDraft) -> Path:
@@ -196,6 +209,22 @@ def _render_draft(draft: FilingDraft, *, findings_only: bool = False) -> None:
         header.add_row("schema_version", draft.schema_version)
         header.add_row("created_at", draft.created_at.isoformat())
         header.add_row("updated_at", draft.updated_at.isoformat())
+        if draft.approved_at is not None:
+            header.add_row("approved_at", draft.approved_at.isoformat())
+        if draft.approved_by is not None:
+            header.add_row("approved_by", draft.approved_by)
+        if draft.review_checksum is not None:
+            header.add_row("review_checksum", draft.review_checksum)
+        if draft.status is FilingDraftStatus.APPROVAL_STALE:
+            reasons = approval_stale_reasons(
+                draft,
+                schema_provider=_schema_provider(),
+            )
+            if reasons:
+                header.add_row(
+                    "stale_reason",
+                    ", ".join(describe_stale_reason(reason) for reason in reasons),
+                )
         _console.print(header)
 
         values_table = Table(title="Casillas", show_lines=False)
@@ -236,6 +265,13 @@ def build(
         Path,
         typer.Option("--inputs", help="Path to a JSON file with casilla → value mapping"),
     ],
+    profile: Annotated[
+        Path | None,
+        typer.Option(
+            "--profile",
+            help="Optional path to an AutonomoProfile JSON file (defaults to AEAT_DEFAULT_PROFILE_PATH).",
+        ),
+    ] = None,
     profile_tax_id: Annotated[
         str,
         typer.Option(
@@ -251,18 +287,35 @@ def build(
     """Build a draft from a JSON inputs file and save it to disk."""
     settings = load_settings()
     parsed_inputs = _load_inputs(inputs)
-    profile = SyntheticProfile(
-        tax_id=profile_tax_id,
-        display_name=profile_name,
-        applicable_modelos=(modelo,),
-    )
+    resolved_display_name = None if profile_name == _DEFAULT_PROFILE_NAME else profile_name
+    operator_profile: FilingOperatorProfile
+    if profile is not None:
+        try:
+            operator_profile = load_default_filing_profile(profile, display_name=resolved_display_name)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    elif (
+        settings.aeat_default_profile_path is not None
+        and profile_tax_id == _DEFAULT_PROFILE_TAX_ID
+        and profile_name == _DEFAULT_PROFILE_NAME
+    ):
+        try:
+            operator_profile = load_default_filing_profile(display_name=resolved_display_name)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    else:
+        operator_profile = FilingOperatorProfile(
+            tax_id=profile_tax_id,
+            display_name=profile_name,
+            applicable_modelos=(modelo,),
+        )
     try:
         draft = build_draft(
             modelo=modelo,
             period=period,
-            profile=profile,
+            profile=operator_profile,
             inputs=parsed_inputs,
-            schema_provider=default_schema_provider(),
+            schema_provider=_schema_provider(),
             fail_on_warning=settings.aeat_draft_fail_on_warning,
         )
     except FilingDraftError as exc:
@@ -280,8 +333,9 @@ def validate(
     draft = _load_draft(draft_path)
     refreshed = validate_draft(
         draft,
-        schema_provider=default_schema_provider(),
+        schema_provider=_schema_provider(),
     )
+    refreshed = _refresh_persisted_draft(draft_path, refreshed)
     draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
     typer.echo(f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})")
     _render_draft(refreshed)
@@ -296,7 +350,7 @@ def show(
     ] = False,
 ) -> None:
     """Pretty-print a draft to the console."""
-    draft = _load_draft(draft_path)
+    draft = _refresh_persisted_draft(draft_path)
     _render_draft(draft, findings_only=findings_only)
     if findings_only:
         for finding in iter_findings(draft, severity_at_least="INFO"):
@@ -330,6 +384,7 @@ def list_drafts(
     table.add_column("modelo")
     table.add_column("period")
     table.add_column("status")
+    table.add_column("approved_by")
     table.add_column("path")
 
     drafts_dir = _drafts_dir()
@@ -339,6 +394,7 @@ def list_drafts(
         except FilingDraftError:
             _logger.warning("Skipping invalid draft file: %s", path)
             continue
+        draft = _refresh_persisted_draft(path, draft)
         if modelo is not None and draft.modelo != modelo:
             continue
         if target_status is not None and draft.status is not target_status:
@@ -348,6 +404,7 @@ def list_drafts(
             draft.modelo,
             draft.period,
             draft.status.value,
+            draft.approved_by or "-",
             str(path),
         )
     _console.print(table)
@@ -409,20 +466,16 @@ def submit_complementaria_cmd(
     engine = _submission_engine()
 
     dry_run = not live
-    override_confirmation = False
-    if live:
-        requires_live_enabled()
-        override_confirmation = typer.confirm(
-            "This will perform a real AEAT amendment submission. Continue?",
-            abort=True,
+    try:
+        submission_result = asyncio.run(
+            engine.submit_amendment(
+                amendment,
+                dry_run=dry_run,
+            )
         )
-    submission_result = asyncio.run(
-        engine.submit_amendment(
-            amendment,
-            dry_run=dry_run,
-            override_confirmation=override_confirmation,
-        )
-    )
+    except SubmissionError as exc:
+        _console.print(f"[red]refusing:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
     status_label = "dry-run" if submission_result.dry_run else "LIVE"
     typer.echo(
         f"{status_label} amendment submission OK amendment_id={submission_result.amendment_id} "

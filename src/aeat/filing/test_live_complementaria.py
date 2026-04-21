@@ -14,13 +14,13 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.cli._live import requires_live_enabled
-from aeat.cli.submission._helpers import build_engine
-from aeat.config import Settings
-from aeat.filing import AmendmentKind, CasillaChange, FilingAmendment, build_draft
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
+from ..cli._live import requires_live_enabled
+from ..cli.submission._helpers import build_engine
+from ..config import Settings
+from . import AmendmentKind, CasillaChange, FilingAmendment, build_draft
+from .testing import SyntheticProfile, default_schema_provider
 
-pytestmark = pytest.mark.live
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_submission]
 
 
 def test_live_complementaria_dry_run_only(tmp_path) -> None:
@@ -59,7 +59,6 @@ def test_live_complementaria_dry_run_only(tmp_path) -> None:
         Settings(
             aeat_submissions_dir=tmp_path / "submissions",
             aeat_submission_browser_trace_dir=tmp_path / "traces",
-            aeat_submission_require_human_confirmation=True,
         )
     )
     result = asyncio.run(engine.submit_amendment(amendment, dry_run=True))

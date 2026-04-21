@@ -30,7 +30,7 @@ def _install_run_context_record_factory() -> None:
     def _factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
         record = previous_factory(*args, **kwargs)
         try:
-            from aeat.observability._context import (
+            from .observability._context import (
                 RUN_CONTEXT_VAR,
                 STEP_CONTEXT_VAR,
             )

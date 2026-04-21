@@ -12,11 +12,11 @@ from __future__ import annotations
 
 import shlex
 
-from aeat.config import PROJECT_ROOT, Settings
-from aeat.observability._errors import AeatCorpusDriftError, AeatObservabilityError
-from aeat.observability._fingerprint import compute_corpus_sha256
-from aeat.observability._models import ArgumentRecord, ArgumentSource, RunTrace
-from aeat.observability._store import load_trace
+from ..config import PROJECT_ROOT, Settings
+from ._errors import AeatCorpusDriftError, AeatObservabilityError
+from ._fingerprint import compute_corpus_sha256
+from ._models import ArgumentRecord, ArgumentSource, RunTrace
+from ._store import load_trace
 
 
 def _argv_from_arguments(
@@ -26,15 +26,21 @@ def _argv_from_arguments(
     """Reconstruct a Typer-compatible argv from the captured arguments.
 
     Strips the leading program name from ``entrypoint`` (e.g.
-    ``"aeat workflow run"`` → ``["workflow", "run"]``) and appends one
-    ``--<name> <value>`` pair per :class:`ArgumentRecord` whose
-    ``source`` is :attr:`ArgumentSource.FLAG`. Non-flag sources are
-    not re-emitted on argv (they will be picked up from the
-    environment / config on the replayed call site).
+    ``"aeat workflow run"`` → ``["workflow", "run"]``). Positional
+    arguments (``source`` :attr:`ArgumentSource.POSITIONAL`) are
+    emitted first — in the captured order — as bare values with no
+    ``--`` prefix, matching how the original ``typer.Argument`` was
+    supplied. Flags (``source`` :attr:`ArgumentSource.FLAG`) follow
+    as ``--<name> <value>`` pairs. ``ENV`` / ``CONFIG`` / ``DEFAULT``
+    sources are not re-emitted — they are recovered from the
+    environment on the replayed call site.
     """
     parts = shlex.split(entrypoint)
     if parts and parts[0] == "aeat":
         parts = parts[1:]
+    for arg in arguments:
+        if arg.source is ArgumentSource.POSITIONAL:
+            parts.append(arg.value)
     for arg in arguments:
         if arg.source is not ArgumentSource.FLAG:
             continue
@@ -75,7 +81,7 @@ def replay_run(run_id: str, *, dry_run: bool = True) -> RunTrace:
             entrypoint=original.entrypoint,
         )
     argv = _argv_from_arguments(original.entrypoint, original.arguments)
-    from aeat.cli import app
+    from ..cli import app
 
     app(argv, standalone_mode=False)
     return original

@@ -6,7 +6,7 @@ from datetime import datetime
 
 import pytest
 
-from aeat.sync import (
+from . import (
     ModeloIdentifier,
     PortalIdentifier,
     WireCasilla,
@@ -18,6 +18,8 @@ from aeat.sync import (
     WireValidationError,
     WireValidator,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def _modelo_json() -> str:
@@ -32,7 +34,6 @@ def _modelo_json() -> str:
     )
 
 
-@pytest.mark.unit
 def test_modelo_roundtrip() -> None:
     payload = WireModeloDefinition.model_validate_json(_modelo_json())
     assert payload.modelo == "100"
@@ -41,21 +42,18 @@ def test_modelo_roundtrip() -> None:
     assert restored == payload
 
 
-@pytest.mark.unit
 def test_modelo_rejects_extra_keys() -> None:
     bad = '{"modelo": "100", "vigencia_start": "2024-01-01", "vigencia_end": "2024-12-31", "casillas": [], "extra": 1}'
     with pytest.raises(WireValidationError):
         WireValidator().validate(bad, WireModeloDefinition)
 
 
-@pytest.mark.unit
 def test_modelo_rejects_bad_identifier() -> None:
     bad = '{"modelo": "not-a-modelo", "vigencia_start": "2024-01-01", "vigencia_end": "2024-12-31", "casillas": []}'
     with pytest.raises(WireValidationError):
         WireValidator().validate(bad, WireModeloDefinition)
 
 
-@pytest.mark.unit
 def test_filing_history_roundtrip() -> None:
     entry = WireFilingEntry(
         modelo=ModeloIdentifier("303"),
@@ -68,7 +66,6 @@ def test_filing_history_roundtrip() -> None:
     assert restored == history
 
 
-@pytest.mark.unit
 def test_portal_manifest_roundtrip() -> None:
     link = WirePortalLink.model_validate(
         {
@@ -82,7 +79,6 @@ def test_portal_manifest_roundtrip() -> None:
     assert restored == manifest
 
 
-@pytest.mark.unit
 def test_casilla_requires_label_and_type() -> None:
     with pytest.raises(WireValidationError):
         WireValidator().validate('{"id": "C1"}', WireCasilla)

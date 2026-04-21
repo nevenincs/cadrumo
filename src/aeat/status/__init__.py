@@ -1,8 +1,16 @@
-"""AEAT live status reader (#43).
+"""AEAT live status reader (#43, extended in #227).
 
 Read-only driver that authenticates against AEAT *Sede Electrónica*,
 navigates to the user's status pages, and returns strict pydantic v2
 records for the rest of the project to consume.
+
+Since #227, :class:`StatusReader` also exposes
+``fetch_filing_detail(modelo, period)``, the load-bearing read
+surface for retroactive amendments (closes Kent audit wall 23). The
+reader structurally conforms to both :class:`ExpedienteSource` and
+:class:`FilingDetailFetcher` Protocols declared in
+:mod:`aeat.history._protocols`, so callers can plug the reader
+straight into :class:`aeat.history.HistoryFetcher` without adapters.
 
 Public API:
 

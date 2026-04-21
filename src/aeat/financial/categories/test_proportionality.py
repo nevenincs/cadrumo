@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.financial.categories import (
+from . import (
     Citation,
     CitationSource,
     ProportionalityKind,
@@ -15,6 +15,8 @@ from aeat.financial.categories import (
     StatutoryCapPeriod,
     parse_http_url,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 
 def _citation() -> Citation:
@@ -27,7 +29,6 @@ def _citation() -> Citation:
     )
 
 
-@pytest.mark.unit
 def test_fixed_percentage_requires_percentage() -> None:
     """Fixed-percentage rules must provide the percentage field."""
 
@@ -39,7 +40,6 @@ def test_fixed_percentage_requires_percentage() -> None:
         )
 
 
-@pytest.mark.unit
 def test_statutory_cap_requires_cap() -> None:
     """Statutory-cap rules must provide the cap field."""
 
@@ -51,7 +51,6 @@ def test_statutory_cap_requires_cap() -> None:
         )
 
 
-@pytest.mark.unit
 def test_full_deductible_rejects_default_ratio() -> None:
     """Default ratios are only valid for usage-ratio rules."""
 
@@ -64,7 +63,6 @@ def test_full_deductible_rejects_default_ratio() -> None:
         )
 
 
-@pytest.mark.unit
 def test_usage_ratio_rejects_statutory_cap_fields() -> None:
     """Usage-ratio rules must reject statutory-cap fields."""
 
@@ -78,7 +76,6 @@ def test_usage_ratio_rejects_statutory_cap_fields() -> None:
         )
 
 
-@pytest.mark.unit
 def test_statutory_cap_accepts_generic_annual_caps() -> None:
     """Generic cap fields support non-daily legal limits."""
 

@@ -5,10 +5,10 @@ from __future__ import annotations
 import inspect
 from datetime import UTC, datetime
 
-from aeat.logging import get_logger
-from aeat.observability._context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
-from aeat.observability._errors import RunContextMissingError
-from aeat.observability._models import RunEvent, RunEventKind, RunEventPayload
+from ..logging import get_logger
+from ._context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
+from ._errors import RunContextMissingError
+from ._models import RunEvent, RunEventKind, RunEventPayload
 
 _logger = get_logger("aeat.observability")
 

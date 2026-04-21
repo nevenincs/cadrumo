@@ -8,14 +8,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.submission import (
+from . import (
     SubmissionAttempt,
     SubmissionStatus,
     SubmittedFiling,
     make_submission_id,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _attempt(
