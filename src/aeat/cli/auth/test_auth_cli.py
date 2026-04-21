@@ -31,12 +31,23 @@ _runner = CliRunner()
 def isolated_token_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Return a temp token dir and make ``Settings()`` use it.
 
-    Clears every env var Settings reads so a dev's real ``env/.env``
-    cannot leak into the test.
+    Clears every env var Settings reads AND points the CLI's Settings
+    at a non-existent env file, so a developer who ran
+    ``aeat auth configure`` does not leak their real DNI/NIE into the
+    test suite.
     """
     for name in Settings.env_var_names():
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path))
+
+    class _IsolatedSettings(Settings):
+        model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
+            env_file=None,
+            env_file_encoding="utf-8",
+            env_ignore_empty=True,
+        )
+
+    monkeypatch.setattr("aeat.cli.auth.Settings", _IsolatedSettings)
     return tmp_path
 
 
@@ -126,6 +137,25 @@ class TestListProviders:
 # ── registry / default resolution ────────────────────────────────────────────
 
 
+def _isolated_settings() -> Settings:
+    """Return a ``Settings`` instance that ignores the developer's env/.env.
+
+    Direct calls to ``Settings()`` in tests would otherwise pick up a
+    real developer's Cl@ve / certificate config from env/.env. This
+    helper builds a subclass whose ``env_file=None`` so only the
+    monkeypatched environment is visible.
+    """
+
+    class _IsolatedSettings(Settings):
+        model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
+            env_file=None,
+            env_file_encoding="utf-8",
+            env_ignore_empty=True,
+        )
+
+    return _IsolatedSettings()
+
+
 class TestRegistry:
     """Direct tests for ``_registry`` helpers."""
 
@@ -136,24 +166,24 @@ class TestRegistry:
     ) -> None:
         del isolated_token_dir
         monkeypatch.setenv("AEAT_AUTH_PROVIDER", AuthProviderKind.CLAVE_PERMANENTE.value)
-        settings = Settings()
+        settings = _isolated_settings()
         assert _registry.default_kind(settings) == AuthProviderKind.CLAVE_PERMANENTE
 
     def test_default_kind_falls_back_to_configured(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        settings = Settings()
+        settings = _isolated_settings()
         with pytest.raises(_registry.NoConfiguredProviderError):
             _registry.default_kind(settings)
 
     def test_build_provider_rejects_unshipped_kinds(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        settings = Settings()
+        settings = _isolated_settings()
         with pytest.raises(_registry.ProviderNotImplementedError):
             _registry.build_provider(AuthProviderKind.CLAVE_PERMANENTE, settings)
 
     def test_describe_returns_placeholder_for_unshipped_kinds(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        settings = Settings()
+        settings = _isolated_settings()
         description = _registry.describe(AuthProviderKind.CLAVE_PIN, settings)
         assert description.configured is False
         assert description.available is False
@@ -280,7 +310,7 @@ class TestLogout:
             authenticated_at=now - timedelta(minutes=1),
             idle_deadline=now + timedelta(minutes=10),
         )
-        settings = Settings()
+        settings = _isolated_settings()
         paths = storage_state_paths(settings)
         assert paths.storage_state.exists()
         assert paths.metadata.exists()
@@ -298,7 +328,7 @@ class TestLogout:
             authenticated_at=now - timedelta(minutes=1),
             idle_deadline=now + timedelta(minutes=10),
         )
-        settings = Settings()
+        settings = _isolated_settings()
         paths = storage_state_paths(settings)
 
         result = _runner.invoke(app, ["auth", "logout", "--all"])
@@ -325,7 +355,7 @@ class TestLogout:
             authenticated_at=now - timedelta(minutes=1),
             idle_deadline=now + timedelta(minutes=10),
         )
-        settings = Settings()
+        settings = _isolated_settings()
         paths = storage_state_paths(settings)
 
         result = _runner.invoke(app, ["auth", "logout", "--provider", "clave_permanente"])
@@ -364,7 +394,7 @@ class TestSessionLoad:
     def test_corrupt_metadata_raises(self, isolated_token_dir: Path) -> None:
         (isolated_token_dir / "default-storage.json").write_text("{}", encoding="utf-8")
         (isolated_token_dir / "default-storage.meta.json").write_text("not json", encoding="utf-8")
-        settings = Settings()
+        settings = _isolated_settings()
         with pytest.raises(_session.CorruptAuthSessionError):
             _session.load(settings)
 
@@ -485,7 +515,7 @@ class TestConformance:
 
     def test_placeholder_description_model_dump_is_json_safe(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        settings = Settings()
+        settings = _isolated_settings()
         description = _registry.describe(AuthProviderKind.CLAVE_PIN, settings)
         payload = description.model_dump(mode="json")
         assert payload["kind"] == AuthProviderKind.CLAVE_PIN.value
