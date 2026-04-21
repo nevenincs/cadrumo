@@ -122,10 +122,12 @@ class CertificateAuthProvider:
         self,
         browser_session: BrowserSessionLike,
         settings: Settings,
+        *,
+        target_url: str | None = None,
     ) -> tuple[AeatSession, BrowserContextLike]:
         bundle = self._require_bundle(settings)
         cert = load_certificate(bundle)
-        target = settings.aeat_certificate_verify_url
+        target = target_url or settings.aeat_certificate_verify_url
 
         timeout_s = settings.aeat_auth_timeout_ms / 1000.0
         handshake = await asyncio.to_thread(self._handshake_verifier, cert, target, timeout_s=timeout_s)
@@ -152,7 +154,7 @@ class CertificateAuthProvider:
             provider_detail=detail,
         )
 
-        assertion = await self.verify(context, provisional_session, settings)
+        assertion = await self.verify(context, provisional_session, settings, target_url=target)
         if not assertion.is_valid:
             from .certificate import AeatLoginAssertionError
 
@@ -176,10 +178,12 @@ class CertificateAuthProvider:
         storage_state_path: Path,
         metadata: dict[str, Any],
         settings: Settings,
+        *,
+        target_url: str | None = None,
     ) -> tuple[AeatSession, BrowserContextLike]:
         bundle = self._require_bundle(settings)
         cert = load_certificate(bundle)
-        target = settings.aeat_certificate_verify_url
+        target = target_url or settings.aeat_certificate_verify_url
 
         # Validate that the persisted session matches the current certificate
         if metadata.get("certificate_thumbprint") != cert.sha256_thumbprint:
@@ -226,7 +230,7 @@ class CertificateAuthProvider:
             provider_detail=detail,
         )
 
-        assertion = await self.verify(context, session, settings)
+        assertion = await self.verify(context, session, settings, target_url=target)
         if not assertion.is_valid:
             from .certificate import AeatLoginAssertionError
 
@@ -245,8 +249,10 @@ class CertificateAuthProvider:
         context: BrowserContextLike,
         session: AeatSession,
         settings: Settings,
+        *,
+        target_url: str | None = None,
     ) -> AeatLoginAssertion:
-        target = settings.aeat_certificate_verify_url
+        target = target_url or settings.aeat_certificate_verify_url
         attempted_at = datetime.now(UTC)
         start = time.perf_counter()
 

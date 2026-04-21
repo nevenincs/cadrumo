@@ -34,6 +34,7 @@ from . import (
     BrowserSessionLike,
     CertificateBackend,
     CertificateExpiredError,
+    CertificateLoginAssertionDetail,
     CertificateNifParseError,
     CertificateSessionDetail,
     HandshakeResult,
@@ -227,14 +228,16 @@ def test_aeat_login_assertion_is_valid_composite() -> None:
     assertion = AeatLoginAssertion(
         target_url="https://sede/",
         is_valid=True,
-        handshake_success=True,
-        certificate_recognised=True,
-        parsed_nif="12345678Z",
-        parsed_subject="CN=NOMBRE",
+        identity_nif="12345678Z",
         status_code=200,
         elapsed_ms=123,
         attempted_at=datetime.now(UTC),
         error_message=None,
+        assertion_detail=CertificateLoginAssertionDetail(
+            handshake_success=True,
+            certificate_recognised=True,
+            parsed_subject="CN=NOMBRE",
+        ),
     )
     assert assertion.is_valid is True
     assert assertion.model_config["frozen"] is True
@@ -689,6 +692,32 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 
 
 @pytest.mark.unit
+@pytest.mark.asyncio
+async def test_authenticate_honours_target_url_override(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    browser_session = _FakeBrowserSession(cert_ok=True)
+    seen_targets: list[str] = []
+
+    def verifier(_cert: LoadedCertificate, target: str, **_kwargs: Any) -> HandshakeResult:
+        seen_targets.append(target)
+        return _fake_handshake()
+
+    auth = AeatAuthenticator(settings, handshake_verifier=verifier)
+
+    session = await auth.authenticate(
+        browser_session=cast(BrowserSessionLike, browser_session),
+        target_url="https://override.example.invalid/",
+    )
+
+    assert session.identity_nif == "12345678Z"
+    assert seen_targets == ["https://override.example.invalid/"]
+
+
+@pytest.mark.unit
 def test_restrict_file_permissions_best_effort(tmp_path: Path) -> None:
     import getpass
     import subprocess
@@ -859,6 +888,49 @@ async def test_verify_login_raises_without_context(tmp_path: Path, monkeypatch: 
         )
         with pytest.raises(AeatLoginAssertionError):
             await auth.verify_login(session)
+
+
+@pytest.mark.asyncio
+async def test_verify_login_honours_target_url_override(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    auth = AeatAuthenticator(settings)
+    visited_urls: list[str] = []
+
+    class _RecordingPage:
+        async def goto(self, url: str, *, timeout: float | None = None) -> _FakeResponse:
+            del timeout
+            visited_urls.append(url)
+            return _FakeResponse(200)
+
+        async def close(self) -> None:
+            return None
+
+    class _RecordingContext:
+        async def new_page(self) -> _RecordingPage:
+            return _RecordingPage()
+
+        async def close(self) -> None:
+            return None
+
+    now = datetime.now(UTC)
+    session = AeatSession(
+        identity_nif="12345678Z",
+        authenticated_at=now,
+        idle_deadline=now + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=None,
+        provider_detail=CertificateSessionDetail(
+            certificate_thumbprint="abc",
+            certificate_subject="CN=x",
+            handshake=_fake_handshake(),
+        ),
+    )
+    auth._context = cast(BrowserContextLike, _RecordingContext())
+
+    assertion = await auth.verify_login(session, target_url="https://override.example.invalid/")
+
+    assert assertion.target_url == "https://override.example.invalid/"
+    assert visited_urls == ["https://override.example.invalid/"]
 
 
 def test_extract_nif_handles_escaped_comma_in_cn(tmp_path: Path) -> None:
