@@ -373,14 +373,20 @@ def status(
 
 
 async def _do_whoami(settings: Settings, kind: AuthProviderKind) -> tuple[AeatSession, Any]:
-    """Resume the persisted session for ``kind`` and probe AEAT Sede.
+    """Probe the persisted session for ``kind`` without side effects.
 
-    Returns the refreshed :class:`AeatSession` and the
-    :class:`AeatLoginAssertion` from the probe so the CLI can render
-    both.
+    Uses ``probe_persisted_session()`` on providers that expose one
+    (currently Cl@ve Móvil). Falls back to the generic
+    ``authenticate() + verify()`` path on providers that do not —
+    intended for the certificate provider's resume-from-storage-state
+    flow, which is already idempotent. NEVER triggers a fresh login.
     """
     provider = _registry.build_provider(kind, settings)
     try:
+        probe = getattr(provider, "probe_persisted_session", None)
+        if probe is not None:
+            return await probe()
+        # Fallback for providers without a dedicated probe method.
         session = await provider.authenticate()
         assertion = await provider.verify(session)
         return session, assertion
@@ -430,6 +436,9 @@ def whoami(
         raise typer.Exit(code=1) from exc
 
     if json_output:
+        detail_payload = (
+            assertion.assertion_detail.model_dump(mode="json") if assertion.assertion_detail is not None else None
+        )
         payload = {
             "provider_kind": refreshed.provider_kind.value,
             "identity_nif": refreshed.identity_nif,
@@ -441,6 +450,7 @@ def whoami(
                 "is_valid": assertion.is_valid,
                 "elapsed_ms": assertion.elapsed_ms,
                 "error_message": assertion.error_message,
+                "detail": detail_payload,
             },
         }
         typer.echo(json.dumps(payload, indent=2))

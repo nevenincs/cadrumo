@@ -32,20 +32,38 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 class _FakePage:
-    def __init__(self, *, target_path: str, verification_code: str = "YLL") -> None:
+    def __init__(
+        self,
+        *,
+        target_path: str,
+        verification_code: str = "YLL",
+        authenticated: bool = False,
+    ) -> None:
         self._target_path = target_path
         self._verification_code = verification_code
+        self._authenticated = authenticated
         self.clicks: list[str] = []
         self.fills: list[tuple[str, str]] = []
         self.gotos: list[str] = []
         self.url: str = ""
         self.closed = False
 
-    async def goto(self, url: str, *, timeout: float | None = None) -> None:
+    async def goto(self, url: str, *, timeout: float | None = None) -> Any:
         del timeout
         self.gotos.append(url)
-        self.url = url
-        return None
+        # Simulate AEAT's selector dispatch. An authenticated resume
+        # navigation to SelectorAccesos.html bounces straight through to
+        # the protected target path. Fresh-login navigations land on the
+        # selector page itself (then our provider clicks through).
+        if self._authenticated and "SelectorAccesos.html" in url:
+            self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
+        else:
+            self.url = url
+
+        class _FakeResponse:
+            status = 200
+
+        return _FakeResponse()
 
     async def click(self, selector: str) -> None:
         self.clicks.append(selector)
@@ -81,9 +99,16 @@ class _FakePage:
 
 
 class _FakeContext:
-    def __init__(self, *, target_path: str, verification_code: str = "YLL") -> None:
+    def __init__(
+        self,
+        *,
+        target_path: str,
+        verification_code: str = "YLL",
+        authenticated: bool = False,
+    ) -> None:
         self._target_path = target_path
         self._verification_code = verification_code
+        self._authenticated = authenticated
         self.pages: list[_FakePage] = []
         self.closed = False
         self._storage_state: dict[str, object] = {
@@ -92,7 +117,11 @@ class _FakeContext:
         }
 
     async def new_page(self) -> _FakePage:
-        page = _FakePage(target_path=self._target_path, verification_code=self._verification_code)
+        page = _FakePage(
+            target_path=self._target_path,
+            verification_code=self._verification_code,
+            authenticated=self._authenticated,
+        )
         self.pages.append(page)
         return page
 
@@ -122,8 +151,15 @@ class _FakeBrowserSession:
         provisioner: Any | None = None,
         storage_state_path: Path | None = None,
     ) -> _FakeContext:
-        del provisioner, storage_state_path
-        context = _FakeContext(target_path=self._target_path, verification_code=self._verification_code)
+        del provisioner
+        # Resume paths construct contexts with a storage-state path; those
+        # get the authenticated simulation. Fresh-login contexts don't.
+        authenticated = storage_state_path is not None
+        context = _FakeContext(
+            target_path=self._target_path,
+            verification_code=self._verification_code,
+            authenticated=authenticated,
+        )
         self.contexts.append(context)
         return context
 
@@ -132,12 +168,21 @@ class _FakeBrowserSession:
 
 
 def _settings_for(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
+    from pydantic_settings import SettingsConfigDict
+
     for name in Settings.env_var_names():
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path))
     for key, value in env.items():
         monkeypatch.setenv(key, value)
-    return Settings()
+
+    # Pydantic-settings reads env/.env by default; a developer who ran
+    # `aeat auth configure` would then leak their real DNI/NIE into
+    # the test suite. Point the test Settings at a non-existent file.
+    class _IsolatedSettings(Settings):
+        model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", env_ignore_empty=True)
+
+    return _IsolatedSettings()
 
 
 # ── identity classification ──────────────────────────────────────────────────
@@ -302,6 +347,63 @@ class TestAuthenticateFresh:
 
 
 # ── authenticate() — resume path ─────────────────────────────────────────────
+
+
+class TestProbePersistedSession:
+    """`probe_persisted_session` never touches the fresh-login path."""
+
+    def test_probe_without_sidecar_raises(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        fake_session = _FakeBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+
+        async def run() -> None:
+            from ._authenticator import AeatLoginAssertionError
+
+            with pytest.raises(AeatLoginAssertionError, match="no persisted"):
+                await provider.probe_persisted_session(browser_session=fake_session)
+
+        asyncio.run(run())
+
+    def test_probe_uses_existing_sidecar_without_invalidating_on_failure(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        target_path = settings.aeat_sede_expedientes_path
+        # Seed a session via a fresh login.
+        fake_session_login = _FakeBrowserSession(target_path=target_path)
+
+        async def seed() -> None:
+            await provider.authenticate(browser_session=fake_session_login)
+            await provider.close()
+
+        asyncio.run(seed())
+
+        storage_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-clave-movil-storage.json"
+        sidecar_path = storage_path.with_suffix(".meta.json")
+        assert storage_path.exists() and sidecar_path.exists()
+
+        # Probe against a fresh provider instance; session files must survive.
+        probe_provider = ClaveMovilAuthProvider(settings)
+        fake_session_probe = _FakeBrowserSession(target_path=target_path)
+
+        async def probe() -> None:
+            session, assertion = await probe_provider.probe_persisted_session(browser_session=fake_session_probe)
+            assert session.identity_nif == "12345678Z"
+            assert assertion.target_url
+            await probe_provider.close()
+
+        asyncio.run(probe())
+        # Files must still exist after a successful probe.
+        assert storage_path.exists()
+        assert sidecar_path.exists()
 
 
 class TestResume:
