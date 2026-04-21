@@ -29,12 +29,15 @@ def test_registry_has_shipped_rulesets() -> None:
     registry = get_registry()
     ruleset_ids = {r.ruleset_id for r in registry.rulesets}
     assert ruleset_ids == {
+        "modelo_111.2024",
         "modelo_111.2025",
         "modelo_115.2024",
         "modelo_115.2025",
+        "modelo_123.2024",
         "modelo_123.2025",
         "modelo_130.2024",
         "modelo_130.2025",
+        "modelo_131.2024",
         "modelo_131.2025",
         "modelo_180.2024",
         "modelo_180.2025",
