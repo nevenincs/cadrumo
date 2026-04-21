@@ -44,8 +44,38 @@ id = "relative-imports-mandate"
 name = "enforce relative imports inside src/aeat/ (#162)"
 language = "system"
 entry = "uv run python scripts/check_relative_imports.py"
-# Per-file scan keeps pre-commit fast on big repos; the script silently
-# drops paths outside src/aeat/ (tests/, scripts/, etc.) by design.
+# Per-file scan keeps prek fast on big repos; the script silently drops
+# paths outside src/aeat/ (tests/, scripts/, etc.) by design.
 pass_filenames = true
 files = "^src/aeat/.*\\.py$"
 types = ["python"]
+
+# ── Vault hygiene (vaultspec-core) ──────────────────────────────────────────
+# Previously lived in a shadowed .pre-commit-config.yaml; prek only reads
+# prek.toml, so these guards had been silently disabled. Re-enabled here.
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "vault-fix"
+name = "vault check (auto-fix)"
+language = "system"
+entry = "uv run --no-sync vaultspec-core vault check all --fix"
+pass_filenames = false
+types = ["markdown"]
+
+[[repos.hooks]]
+id = "check-provider-artifacts"
+name = "check provider artifacts (guard against provider leaks)"
+language = "system"
+entry = "uv run --no-sync vaultspec-core check-providers"
+pass_filenames = false
+always_run = true
+
+[[repos.hooks]]
+id = "spec-check"
+name = "vaultspec doctor"
+language = "system"
+entry = "uv run --no-sync vaultspec-core spec doctor"
+pass_filenames = false
+types = ["markdown"]
