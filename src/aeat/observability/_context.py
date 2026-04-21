@@ -142,6 +142,7 @@ def run_context(
     if outer is not None:
         nested_step = step_id or f"{outer.initial_step_id}.{_mint_run_id()[:8]}"
         step_token = STEP_CONTEXT_VAR.set(nested_step)
+        step_end_emitted = False
         try:
             record_event(
                 RunEventKind.STEP_START,
@@ -150,18 +151,14 @@ def run_context(
             )
             try:
                 yield outer
-                record_event(
-                    RunEventKind.STEP_END,
-                    payload=_step_payload(nested_step, label=entrypoint),
-                    module=__name__,
-                )
-            except BaseException:
-                record_event(
-                    RunEventKind.STEP_END,
-                    payload=_step_payload(nested_step, label=entrypoint),
-                    module=__name__,
-                )
-                raise
+            finally:
+                if not step_end_emitted:
+                    step_end_emitted = True
+                    record_event(
+                        RunEventKind.STEP_END,
+                        payload=_step_payload(nested_step, label=entrypoint),
+                        module=__name__,
+                    )
         finally:
             STEP_CONTEXT_VAR.reset(step_token)
         return

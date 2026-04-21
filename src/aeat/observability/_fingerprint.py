@@ -78,8 +78,24 @@ def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
 def compute_db_sha256(var_dir: Path) -> str:
     """Compute a deterministic fingerprint of the local ``var/`` state.
 
-    Excludes ``var/runs/`` (self-reference) and ``var/browser-traces/``
-    (Playwright noise) so the hash is stable across observability writes.
+    Excludes caches and self-referencing artefacts so the hash is
+    stable across observability writes and LLM/schema/status lookups
+    that would otherwise flap on every read. The curated list covers
+    every ``var/`` subdirectory that :class:`aeat.config.Settings`
+    treats as a cache, log, or replay-internal artefact:
+
+    - ``var/runs/`` — observability's own output (self-reference).
+    - ``var/browser-traces/`` — Playwright session traces.
+    - ``var/llm-cache/``, ``var/llm-usage/`` — LLM prompt cache + usage
+      meters; drift on every model call.
+    - ``var/schema-cache/`` — derived Modelo schema cache.
+    - ``var/status-cache/`` — AEAT status-reader cache.
+    - ``var/backups/`` — storage layer backups (non-canonical copies).
+
+    Core state (``var/aeat.db``, ``var/workflow-runs/``, ``var/inbox/``,
+    ``var/drafts/``, ``var/filing-history/``, ``var/justificantes/``)
+    is included because changes there represent real state drift that
+    a replay must detect.
 
     Args:
         var_dir: Path to the local ``var/`` directory.
@@ -89,8 +105,16 @@ def compute_db_sha256(var_dir: Path) -> str:
     """
     excluded = frozenset(
         {
-            (var_dir / "runs").resolve(),
-            (var_dir / "browser-traces").resolve(),
+            (var_dir / name).resolve()
+            for name in (
+                "runs",
+                "browser-traces",
+                "llm-cache",
+                "llm-usage",
+                "schema-cache",
+                "status-cache",
+                "backups",
+            )
         },
     )
     return _hash_tree(var_dir, excluded_dirs=excluded)

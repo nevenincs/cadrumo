@@ -127,3 +127,57 @@ class TestJsonlRunSinkRunIdFilter:
             assert sink.run_id == "deadbeefdeadbeef"
         finally:
             sink.close()
+
+
+class TestStoreRunIdValidation:
+    def test_load_trace_rejects_path_traversal(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from . import load_events, load_trace
+        from ._store import _validate_run_id
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        for bad in (
+            "../escape",
+            "../../etc/passwd",
+            "/absolute/path",
+            "00000000000000001",  # 17 chars — one too many
+            "0123456789ABCDEF",  # uppercase rejected
+            "contains/slash",
+            "",
+            "..",
+        ):
+            with pytest.raises(RunTraceValidationError):
+                _validate_run_id(bad)
+            with pytest.raises(RunTraceValidationError):
+                load_trace(bad)
+            with pytest.raises(RunTraceValidationError):
+                load_events(bad)
+
+    def test_load_trace_rejects_run_id_shape_without_creating_dir(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from . import load_trace
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        with pytest.raises(RunTraceValidationError):
+            load_trace("not-a-valid-run")
+        # The crafted run_id must never have resulted in a new directory.
+        assert not any(tmp_path.iterdir()), "rejected run_id must not create dirs"
+
+    def test_load_trace_missing_does_not_pollute_runs_dir(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from . import load_trace
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        # 16 hex chars — passes validation, but nothing on disk.
+        with pytest.raises(RunTraceValidationError):
+            load_trace("0" * 16)
+        assert not any(tmp_path.iterdir()), "missing trace lookup must not create dirs"

@@ -9,6 +9,14 @@ Callers pass the positional-argument names via the ``positional``
 parameter so replay can reconstruct a Typer-compatible argv with
 positional arguments emitted first (in the declared order, without
 a ``--`` prefix) followed by any captured flags.
+
+Argument values whose name matches one of the secret-smelling
+substrings in :data:`_REDACT_NAME_SUBSTRINGS` are recorded as
+``"***"`` rather than their literal value. This is a defensive
+shield: no current wrapped CLI command accepts a secret on argv,
+but if one is added (e.g. ``--password``, ``--token``), the audit
+log must never capture the plaintext. Callers that need a value
+recorded verbatim must rename the parameter.
 """
 
 from __future__ import annotations
@@ -23,6 +31,20 @@ from ..observability import (
     RunContextInfo,
     run_context,
 )
+
+_REDACT_NAME_SUBSTRINGS: frozenset[str] = frozenset(
+    {
+        "password",
+        "passwd",
+        "secret",
+        "token",
+        "api_key",
+        "apikey",
+        "passphrase",
+        "credential",
+    }
+)
+_REDACTED_VALUE = "***"
 
 
 def _stringify(value: Any) -> str | None:
@@ -39,6 +61,17 @@ def _stringify(value: Any) -> str | None:
     if isinstance(value, bool | int | float | str):
         return str(value)
     return str(value)
+
+
+def _is_secret_name(name: str) -> bool:
+    """Return True if ``name`` contains any secret-smelling substring.
+
+    The comparison is case-insensitive and matches on substrings so
+    ``aeat_certificate_password``, ``client_secret``, ``api_key`` etc.
+    are all redacted.
+    """
+    lowered = name.lower()
+    return any(needle in lowered for needle in _REDACT_NAME_SUBSTRINGS)
 
 
 def build_arguments(
@@ -73,6 +106,8 @@ def build_arguments(
         rendered = _stringify(values[name])
         if rendered is None:
             continue
+        if _is_secret_name(name):
+            rendered = _REDACTED_VALUE
         records.append(
             ArgumentRecord(name=name, value=rendered, source=ArgumentSource.POSITIONAL),
         )
@@ -82,6 +117,8 @@ def build_arguments(
         rendered = _stringify(value)
         if rendered is None:
             continue
+        if _is_secret_name(name):
+            rendered = _REDACTED_VALUE
         records.append(
             ArgumentRecord(name=name, value=rendered, source=ArgumentSource.FLAG),
         )

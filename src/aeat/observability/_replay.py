@@ -31,9 +31,11 @@ def _argv_from_arguments(
     emitted first — in the captured order — as bare values with no
     ``--`` prefix, matching how the original ``typer.Argument`` was
     supplied. Flags (``source`` :attr:`ArgumentSource.FLAG`) follow
-    as ``--<name> <value>`` pairs. ``ENV`` / ``CONFIG`` / ``DEFAULT``
-    sources are not re-emitted — they are recovered from the
-    environment on the replayed call site.
+    as ``--<name>=<value>`` pairs; the ``=`` form is used so values
+    that themselves start with ``-`` (e.g. ``--notes "-urgent"``) are
+    not mis-parsed by Typer as another flag. ``ENV`` / ``CONFIG`` /
+    ``DEFAULT`` sources are not re-emitted — they are recovered from
+    the environment on the replayed call site.
     """
     parts = shlex.split(entrypoint)
     if parts and parts[0] == "aeat":
@@ -45,8 +47,7 @@ def _argv_from_arguments(
         if arg.source is not ArgumentSource.FLAG:
             continue
         flag_name = arg.name if arg.name.startswith("--") else f"--{arg.name.replace('_', '-')}"
-        parts.append(flag_name)
-        parts.append(arg.value)
+        parts.append(f"{flag_name}={arg.value}")
     return parts
 
 
