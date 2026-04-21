@@ -4,7 +4,7 @@ tags:
   - "#path-handling-safety"
 date: "2026-04-17"
 related:
-  - "[[2026-04-16-google-workspace-mcp-auth-review]]"
+  - "[[2026-04-16-google-workspace-mcp-auth-review-audit]]"
   - "[[2026-04-16-google-workspace-mcp-auth-reference]]"
 ---
 

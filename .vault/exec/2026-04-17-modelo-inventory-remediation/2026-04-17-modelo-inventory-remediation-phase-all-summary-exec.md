@@ -10,9 +10,9 @@ related:
   - "[[2026-04-17-modelo-inventory-remediation-plan]]"
   - "[[2026-04-17-modelo-inventory-remediation-adr]]"
   - "[[2026-04-17-modelo-inventory-remediation-research]]"
-  - "[[2026-04-17-modelo-inventory-remediation-phase1-runtime-parity]]"
-  - "[[2026-04-17-modelo-inventory-remediation-phase2-setup-parity]]"
-  - "[[2026-04-17-modelo-inventory-remediation-phase3-green-gates]]"
+  - "[[2026-04-17-modelo-inventory-remediation-phase1-runtime-parity-exec]]"
+  - "[[2026-04-17-modelo-inventory-remediation-phase2-setup-parity-exec]]"
+  - "[[2026-04-17-modelo-inventory-remediation-phase3-green-gates-exec]]"
 ---
 
 # `modelo-inventory` `phase-all` summary

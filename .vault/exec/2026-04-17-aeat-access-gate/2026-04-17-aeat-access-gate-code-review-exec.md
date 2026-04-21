@@ -7,7 +7,7 @@ title: "Code Review Record: Live AEAT Access Blocker & Verification Gate (#167)"
 related:
   - "[[2026-04-17-aeat-access-gate-plan]]"
   - "[[2026-04-17-aeat-access-gate-adr]]"
-  - "[[2026-04-17-aeat-access-gate-phase1-summary]]"
+  - "[[2026-04-17-aeat-access-gate-phase1-summary-exec]]"
 ---
 
 # Code Review Record: Live AEAT Access Blocker & Verification Gate (#167)

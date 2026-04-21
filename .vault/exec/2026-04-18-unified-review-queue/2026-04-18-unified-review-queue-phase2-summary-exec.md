@@ -6,7 +6,7 @@ date: 2026-04-18
 related:
   - "[[2026-04-18-unified-review-queue-plan]]"
   - "[[2026-04-18-unified-review-queue-adr]]"
-  - "[[2026-04-18-unified-review-queue-phase1-summary]]"
+  - "[[2026-04-18-unified-review-queue-phase1-summary-exec]]"
   - "[[2026-04-18-unclassified-state-adr]]"
 ---
 

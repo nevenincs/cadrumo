@@ -6,7 +6,7 @@ date: "2026-04-17"
 related:
   - "[[2026-04-17-attachment-service-plan]]"
   - "[[2026-04-17-attachment-service-adr]]"
-  - "[[2026-04-17-attachment-service-phase1-summary]]"
+  - "[[2026-04-17-attachment-service-phase1-summary-exec]]"
 ---
 
 # `attachment-service` `phase-1` review

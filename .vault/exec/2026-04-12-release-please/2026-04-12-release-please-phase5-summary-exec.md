@@ -8,10 +8,10 @@ related:
   - "[[2026-04-12-release-please-plan]]"
   - "[[2026-04-12-release-please-adr]]"
   - "[[2026-04-12-release-please-research]]"
-  - "[[2026-04-12-release-please-phase1-task1]]"
-  - "[[2026-04-12-release-please-phase2-task1]]"
-  - "[[2026-04-12-release-please-phase3-task1]]"
-  - "[[2026-04-12-release-please-phase4-task1]]"
+  - "[[2026-04-12-release-please-phase1-task1-exec]]"
+  - "[[2026-04-12-release-please-phase2-task1-exec]]"
+  - "[[2026-04-12-release-please-phase3-task1-exec]]"
+  - "[[2026-04-12-release-please-phase4-task1-exec]]"
 issue: wgergely/aeat#60
 ---
 

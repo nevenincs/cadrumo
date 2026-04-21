@@ -6,8 +6,8 @@ date: 2026-04-12
 title: Implementation Plan for Playwright Anti-Bot Evasion
 related:
   - "[[2026-04-12-playwright-anti-bot-adr]]"
+  - "[[2026-04-12-playwright-anti-bot-research]]"
 ---
-
 # Implementation Plan: Playwright Anti-Bot Evasion
 
 ## 1. Scaffolding Phase (src/aeat/browser/)

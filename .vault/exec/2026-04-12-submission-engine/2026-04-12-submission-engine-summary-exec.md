@@ -8,11 +8,11 @@ related:
   - "[[2026-04-12-submission-engine-research]]"
   - "[[2026-04-12-submission-engine-adr]]"
   - "[[2026-04-12-submission-engine-plan]]"
-  - "[[2026-04-12-submission-engine-phase1-schema]]"
-  - "[[2026-04-12-submission-engine-phase2-preflight-engine]]"
-  - "[[2026-04-12-submission-engine-phase3-modelo130]]"
-  - "[[2026-04-12-submission-engine-phase4-cli]]"
-  - "[[2026-04-12-submission-engine-phase5-verification]]"
+  - "[[2026-04-12-submission-engine-phase1-schema-exec]]"
+  - "[[2026-04-12-submission-engine-phase2-preflight-engine-exec]]"
+  - "[[2026-04-12-submission-engine-phase3-modelo130-exec]]"
+  - "[[2026-04-12-submission-engine-phase4-cli-exec]]"
+  - "[[2026-04-12-submission-engine-phase5-verification-exec]]"
 issue: wgergely/aeat#42
 ---
 
@@ -69,7 +69,7 @@ Settings fields (`AEAT_SUBMISSIONS_DIR`,
 ## verification
 
 All verification gates listed in
-`[[2026-04-12-submission-engine-phase5-verification]]` passed on the
+`[[2026-04-12-submission-engine-phase5-verification-exec]]` passed on the
 first clean run.
 
 ## follow-ups / rebase swaps

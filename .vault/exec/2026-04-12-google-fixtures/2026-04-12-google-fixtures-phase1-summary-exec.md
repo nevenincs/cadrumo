@@ -7,7 +7,7 @@ related:
   - "[[2026-04-12-google-fixtures-plan]]"
   - "[[2026-04-12-google-fixtures-adr]]"
   - "[[2026-04-12-google-fixtures-research]]"
-  - "[[2026-04-12-google-fixtures-phase1-step1]]"
+  - "[[2026-04-12-google-fixtures-phase1-step1-exec]]"
 ---
 
 # google-fixtures phase1 summary
@@ -22,7 +22,7 @@ typecheck, pytest, and hooks are green on Windows. Ready for PR.
 - **Research** — [[2026-04-12-google-fixtures-research]]
 - **ADR** — [[2026-04-12-google-fixtures-adr]]
 - **Plan** — [[2026-04-12-google-fixtures-plan]]
-- **Step record** — [[2026-04-12-google-fixtures-phase1-step1]]
+- **Step record** — [[2026-04-12-google-fixtures-phase1-step1-exec]]
 
 ## Code landed
 
