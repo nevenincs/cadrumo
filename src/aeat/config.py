@@ -10,6 +10,7 @@ and this module stay fully aligned.
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
@@ -20,7 +21,7 @@ from ._paths import (
     normalize_project_relative_path,
     normalize_project_relative_str,
 )
-from .auth import CertificateBackend
+from .auth import AuthProviderKind, CertificateBackend
 from .justificante import JustificanteParserBackend
 
 
@@ -357,6 +358,80 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ── AEAT auth provider default (#285) ───────────────────────────────────
+    aeat_auth_provider: AuthProviderKind | None = Field(
+        default=None,
+        description=(
+            "Default auth provider for `aeat auth login` / `status` when "
+            "--provider is omitted. When None, the CLI auto-selects the "
+            "first configured provider from the canonical registry order."
+        ),
+    )
+
+    # ── Cl@ve Móvil (#285 / #284) ───────────────────────────────────────────
+    aeat_clave_movil_dni_nie: str | None = Field(
+        default=None,
+        description=(
+            "Taxpayer DNI/NIE for `aeat auth login --provider clave_movil`. "
+            "Used to stamp the persisted session with the operator's "
+            "identity and to pre-fill the non-QR fallback form. Not a "
+            "secret on its own — the Cl@ve app on Kent's phone is the "
+            "actual second factor."
+        ),
+    )
+    aeat_clave_movil_dni_fecha: str | None = Field(
+        default=None,
+        description=(
+            "DNI validity / expiry date (YYYY-MM-DD) used by the "
+            "non-QR Cl@ve Móvil fallback form. Applies when the "
+            "configured identity is a DNI."
+        ),
+    )
+    aeat_clave_movil_nie_soporte: str | None = Field(
+        default=None,
+        description=(
+            "NIE support number (número de soporte) used by the "
+            "non-QR Cl@ve Móvil fallback form. Applies when the "
+            "configured identity is a NIE."
+        ),
+    )
+    aeat_clave_prefer_non_qr: bool = Field(
+        default=False,
+        description=(
+            "When true, the Cl@ve Móvil provider uses the non-QR fallback "
+            "(DNI/NIE + contraste) rather than the QR code. Still requires "
+            "Kent to approve the push notification on the Cl@ve app."
+        ),
+    )
+    aeat_clave_movil_timeout_ms: int = Field(
+        default=300_000,
+        ge=30_000,
+        le=600_000,
+        description=(
+            "Maximum time (milliseconds) the Cl@ve Móvil provider waits for "
+            "Kent to approve the push notification on his phone before "
+            "aborting. AEAT's own window is ~5 minutes; 300000 matches that."
+        ),
+    )
+    aeat_clave_sede_access_url_template: str = Field(
+        default=(
+            "https://sede.agenciatributaria.gob.es/static_files/common/html/"
+            "selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
+        ),
+        description=(
+            "URL template for AEAT's auth-method selector page. `{target}` "
+            "is replaced with the URL-encoded target path (e.g. "
+            "`/wlpl/TEWV-CORE/ResumenVlt` for Mis expedientes)."
+        ),
+    )
+    aeat_sede_expedientes_path: str = Field(
+        default="/wlpl/TEWV-CORE/ResumenVlt",
+        description=(
+            "AEAT Sede path for 'Mis expedientes' — the default post-auth "
+            "target used by Cl@ve Móvil login and the expedientes reader."
+        ),
+    )
+
     # ── LLM ─────────────────────────────────────────────────────────────────
     aeat_llm_provider: LLMProviderSetting = Field(
         default=LLMProviderSetting.ANTHROPIC,
@@ -611,6 +686,52 @@ class Settings(BaseSettings):
         """Reject templates that omit the ``{expediente_id}`` placeholder."""
         if "{expediente_id}" not in value:
             raise ValueError("aeat_status_detail_url_template must contain '{expediente_id}'")
+        return value
+
+    @field_validator(
+        "aeat_clave_movil_dni_nie",
+        "aeat_clave_movil_dni_fecha",
+        "aeat_clave_movil_nie_soporte",
+        mode="before",
+    )
+    @classmethod
+    def _empty_optional_clave_fields_are_none(cls, value: object) -> object:
+        """Treat blank env vars for optional Cl@ve Móvil identity fields as unset."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
+    @field_validator("aeat_clave_movil_dni_fecha")
+    @classmethod
+    def _clave_dni_fecha_is_iso_date(cls, value: str | None) -> str | None:
+        """Reject DNI validity dates that are not canonical ``YYYY-MM-DD``.
+
+        Python 3.11's ``date.fromisoformat`` also accepts the compact
+        ``YYYYMMDD`` form and ISO week dates, but AEAT's Cl@ve Móvil
+        ``FECHA`` input expects the hyphenated canonical form. The
+        regex rejects anything else before we delegate the semantic
+        check to the stdlib parser.
+        """
+        if value is None:
+            return None
+        import re as _re
+
+        if not _re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+            raise ValueError("AEAT_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)")
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("AEAT_CLAVE_MOVIL_DNI_FECHA must be a valid YYYY-MM-DD date") from exc
+        return value
+
+    @field_validator("aeat_clave_sede_access_url_template")
+    @classmethod
+    def _clave_sede_access_url_template_has_target(cls, value: str) -> str:
+        """Reject templates that omit the ``{target}`` placeholder."""
+        if "{target}" not in value:
+            raise ValueError(
+                "aeat_clave_sede_access_url_template must contain '{target}' for the URL-encoded post-auth path"
+            )
         return value
 
     @classmethod
