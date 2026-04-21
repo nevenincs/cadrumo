@@ -1,7 +1,7 @@
 """Unit tests for BrowserSession factory."""
 
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 import pytest
 from playwright.async_api import BrowserContext, Playwright
@@ -206,14 +206,12 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     from cryptography.x509.oid import NameOID
 
     from ..auth import (
-        BrowserContextLike,
         CertificateBackend,
         CertificateBundle,
-        build_client_certificates_kwarg,
+        CertificateContextProvisioner,
         load_certificate,
     )
-
-    _certificate_thumbprint_marker = "_aeat_certificate_thumbprint"
+    from .session import CERTIFICATE_THUMBPRINT_MARKER
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     subject = issuer = x509.Name(
@@ -261,17 +259,12 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         profile=profile,
         evasion_strategy=DummyEvasion(),
     )
-
-    class _CertProvisioner:
-        def build_context_kwargs(self) -> dict[str, Any]:
-            return {
-                "client_certificates": build_client_certificates_kwarg(loaded, settings.aeat_certificate_verify_url)
-            }
-
-        def annotate_context(self, context: BrowserContextLike) -> None:
-            setattr(context, _certificate_thumbprint_marker, loaded.sha256_thumbprint)
-
-    context = await session.create_context(provisioner=_CertProvisioner())
+    context = await session.create_context(
+        provisioner=CertificateContextProvisioner(
+            loaded,
+            origin=settings.aeat_certificate_verify_url,
+        )
+    )
 
     kwargs: dict[str, object] = cast(StubContext, context).kwargs
     assert "client_certificates" in kwargs
@@ -279,7 +272,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     assert isinstance(cc, list) and len(cc) == 1
     assert cc[0]["pfxPath"] == str(bundle_path)
     assert cc[0]["passphrase"] == "pw"  # noqa: S105 — test fixture
-    marker = getattr(context, _certificate_thumbprint_marker, None)
+    marker = getattr(context, CERTIFICATE_THUMBPRINT_MARKER, None)
     assert marker == loaded.sha256_thumbprint
 
 

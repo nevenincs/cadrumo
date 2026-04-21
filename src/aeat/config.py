@@ -138,6 +138,10 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "financial" / "attachments",
         description="Root directory for the attachment byte and manifest store",
     )
+    aeat_usage_ratios_path: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
+        description="User-configured per-category usage ratio overrides (#259)",
+    )
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
@@ -328,13 +332,12 @@ class Settings(BaseSettings):
     )
     aeat_auth_timeout_ms: int = Field(
         default=30_000,
-        ge=1_000,
-        le=300_000,
-        description="Maximum duration (ms) for authentication and verification navigations",
+        ge=1,
+        description="Playwright navigation timeout for AEAT authentication probes in milliseconds",
     )
     aeat_strict_security: bool = Field(
         default=False,
-        description="When True, fail hard if file permission hardening (icacls/chmod) cannot be applied",
+        description="Raise instead of warn when AEAT credential artifact permission hardening fails",
     )
     aeat_cert_warn_days: int = Field(
         default=60,
@@ -540,6 +543,15 @@ class Settings(BaseSettings):
         description="Maximum number of BOE PDFs fetched in parallel by `aeat schema refresh`.",
     )
 
+    # ── Observability (#99) ────────────────────────────────────────────────
+    aeat_runs_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "runs",
+        description=(
+            "Directory where run traces and JSONL event logs are persisted "
+            "(one subdirectory per run_id, containing trace.json + events.jsonl)"
+        ),
+    )
+
     # ── Justificante parser (#44) ───────────────────────────────────────────
     aeat_justificantes_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "justificantes",
@@ -608,6 +620,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "aeat_token_dir",
+        "aeat_usage_ratios_path",
         "aeat_financial_txs_dir",
         "aeat_storage_backup_dir",
         "aeat_casillas_root",

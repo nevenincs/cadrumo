@@ -1,4 +1,7 @@
 ---
+tags:
+  - "#research"
+  - "#status-reader"
 id: 2026-04-12-status-reader-research
 title: AEAT status reader research (#43)
 date: 2026-04-12

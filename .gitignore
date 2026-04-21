@@ -146,7 +146,6 @@ env/*
 # the upstream refresh-token cache into a repo-local secret directory.
 env/workspace-mcp-credentials/
 venv/
-ENV/
 env.bak/
 venv.bak/
 
@@ -259,6 +258,17 @@ GEMINI.md
 # custom mandate rule; it is force-added to git (`git add -f`) despite the
 # vaultspec-managed ignore above, so every workstation + agent reads the
 # same mandates after running `uv run vaultspec-core install`.
+
+# vaultspec-core writes 0-byte `.lock` sentinels next to every file it
+# manages (.gitignore.lock, .mcp.json.lock, .pre-commit-config.yaml.lock,
+# .vaultspec/providers{.json,}.lock). It also regenerates
+# .pre-commit-config.yaml on every install even though the project uses
+# prek (which reads prek.toml exclusively). Upstream install forgets to
+# gitignore all of these. Ignore here until fixed upstream. uv.lock is
+# unaffected — no leading dot.
+/.*.lock
+/.vaultspec/*.lock
+/.pre-commit-config.yaml
 
 # Scratch / ad-hoc workspace
 #

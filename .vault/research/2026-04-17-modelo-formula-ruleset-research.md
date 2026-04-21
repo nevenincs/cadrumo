@@ -35,8 +35,8 @@ Two research strands are captured here:
    (ROUND_HALF_UP tax rounding).
 
 Both strands feed the matching ADR
-[[2026-04-17-modelo-formulas-adr]] and plan
-[[2026-04-17-modelo-formulas-plan]].
+`[[2026-04-17-modelo-formulas-adr]]` and plan
+`[[2026-04-17-modelo-formulas-plan]]`.
 
 ## Methodology
 

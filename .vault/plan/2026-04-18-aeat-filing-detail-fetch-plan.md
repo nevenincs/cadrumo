@@ -46,7 +46,7 @@ suite.
 
 ## non-goals
 
-Inherited from [[2026-04-18-aeat-filing-detail-fetch-adr]] D10.
+Inherited from `[[2026-04-18-aeat-filing-detail-fetch-adr]]` D10.
 Explicitly excluded: CLI wiring; new modelo parsers; live-AEAT
 integration tests; PDF justificante fallback; new persistence layer.
 

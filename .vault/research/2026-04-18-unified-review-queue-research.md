@@ -15,7 +15,7 @@ related:
 
 ## context
 
-GitHub issue [#232](https://github.com/wgergely/aeat/issues/232) under EPIC umbrella [#202](https://github.com/wgergely/aeat/issues/202) (C4 review surface). Kent must run **one** command and see *everything* across the produce → verify → export pipeline that wants his attention. Today, six unrelated commands surface six unrelated review surfaces, and Kent has to mentally join them. See [[2026-04-17-kent-revise-review-audit#scenario b — kent inspects what the semi-autonomous pipeline decided|kent-revise-review-audit scenario B walls 28-33]] (esp. wall 32: *no unified pipeline review queue dashboard*).
+GitHub issue [#232](https://github.com/wgergely/aeat/issues/232) under EPIC umbrella [#202](https://github.com/wgergely/aeat/issues/202) (C4 review surface). Kent must run **one** command and see *everything* across the produce → verify → export pipeline that wants his attention. Today, six unrelated commands surface six unrelated review surfaces, and Kent has to mentally join them. See `[[2026-04-17-kent-revise-review-audit#scenario b — kent inspects what the semi-autonomous pipeline decided|kent-revise-review-audit scenario B walls 28-33]]` (esp. wall 32: *no unified pipeline review queue dashboard*).
 
 ## existing review surfaces (audit)
 
@@ -150,7 +150,7 @@ No new env vars required. The aggregator reads `load_settings()` once and dispat
 
 Existing patterns:
 
-- `pytestmark = [pytest.mark.unit, pytest.mark.domain_<x>]` per [[2026-04-17-pytest-markers-adr]].
+- `pytestmark = [pytest.mark.unit, pytest.mark.domain_<x>]` per `[[2026-04-17-pytest-markers-adr]]`.
 - Adapters can be exercised with synthetic catalogues built in-process (no fixtures dir).
 - Aggregator test: build five mini-fixtures (one transaction NOT_YET_PROCESSED, one invoice unmatched, one divergence PENDING, one draft with ERROR finding, one notificacion unacked), point the aggregator at a `tmp_path`, assert the unified queue lists exactly five rows with expected kinds.
 
