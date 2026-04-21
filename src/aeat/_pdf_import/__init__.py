@@ -18,9 +18,19 @@ Public symbols:
 from __future__ import annotations
 
 from ._errors import PdfFilingImportError
+from ._label_regex import (
+    SPANISH_AMOUNT_GROUP,
+    LabelHit,
+    apply_label_regex,
+    parse_spanish_decimal,
+)
 from ._shared import ExtractedCasilla
 
 __all__ = [
+    "SPANISH_AMOUNT_GROUP",
     "ExtractedCasilla",
+    "LabelHit",
     "PdfFilingImportError",
+    "apply_label_regex",
+    "parse_spanish_decimal",
 ]
