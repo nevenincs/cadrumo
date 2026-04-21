@@ -1,0 +1,149 @@
+"""Shared rendering primitives for every synthetic modelo generator.
+
+Mirrors AEAT's declaración layout conventions: A4 pages with Helvetica
+(Arial-compatible metrics), Spanish thousands formatting (``1.234,56``),
+label-prefixed casilla boxes, header + footer bands. Each per-modelo
+generator composes these primitives to produce a PDF the extractors
+can parse with the same primitive stack they'd use against a real AEAT
+declaración.
+
+The module is test-only — it lives under ``tests/fixtures/`` and is not
+importable from ``src/aeat/``. Reusing reportlab keeps the dependency
+surface identical to the existing ``tests/fixtures/justificantes/
+_generate.py`` helper.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from decimal import Decimal
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
+from reportlab.pdfgen import canvas as _canvas
+
+# A4 dimensions and standard AEAT-like margins.
+A4_WIDTH, A4_HEIGHT = A4
+MARGIN_LEFT = 20 * mm
+MARGIN_RIGHT = 20 * mm
+MARGIN_TOP = 20 * mm
+MARGIN_BOTTOM = 20 * mm
+
+# AEAT's actual forms render Arial; Helvetica is metrics-compatible and
+# ships with reportlab by default.
+HEADER_FONT = "Helvetica-Bold"
+HEADER_FONT_SIZE = 12
+LABEL_FONT = "Helvetica"
+LABEL_FONT_SIZE = 9
+VALUE_FONT = "Helvetica"
+VALUE_FONT_SIZE = 10
+
+
+@dataclass(frozen=True)
+class CasillaBox:
+    """One casilla's rendering footprint on the page."""
+
+    casilla_id: str  # e.g. "01"
+    label_es: str  # e.g. "Ingresos íntegros"
+    x_mm: float  # left edge in millimetres
+    y_mm: float  # top edge in millimetres (measured from page top)
+    width_mm: float = 50.0  # value-box width
+    height_mm: float = 6.0  # value-box height
+
+
+def format_amount(value: Decimal) -> str:
+    """Format ``value`` as an AEAT-style Spanish amount, e.g. ``1.234,56``.
+
+    Negative values carry a leading minus; zero prints as ``0,00``.
+    """
+    if value.is_zero():
+        return "0,00"
+    sign = "-" if value.is_signed() else ""
+    abs_value = abs(value)
+    quantised = abs_value.quantize(Decimal("0.01"))
+    whole, _, frac = f"{quantised:,.2f}".partition(".")
+    whole_es = whole.replace(",", ".")
+    return f"{sign}{whole_es},{frac}"
+
+
+def draw_header(
+    canvas: _canvas.Canvas,
+    *,
+    modelo: str,
+    ejercicio: str,
+    periodo: str,
+    page_num: int,
+    page_count: int,
+) -> None:
+    """Draw the AEAT-style header band at the top of the page."""
+    y = A4_HEIGHT - MARGIN_TOP
+    canvas.setFont(HEADER_FONT, HEADER_FONT_SIZE + 2)
+    canvas.drawString(MARGIN_LEFT, y, "AGENCIA TRIBUTARIA")
+    y -= 6 * mm
+    canvas.setFont(HEADER_FONT, HEADER_FONT_SIZE)
+    canvas.drawString(MARGIN_LEFT, y, f"Declaración — Modelo {modelo}")
+    canvas.drawRightString(A4_WIDTH - MARGIN_RIGHT, y, f"Página {page_num} de {page_count}")
+    y -= 5 * mm
+    canvas.setFont(LABEL_FONT, LABEL_FONT_SIZE)
+    canvas.drawString(MARGIN_LEFT, y, f"Ejercicio: {ejercicio}   Período: {periodo}")
+
+
+def draw_casilla_box(
+    canvas: _canvas.Canvas,
+    box: CasillaBox,
+    value: Decimal | str | int | None,
+) -> None:
+    """Render one casilla: prefix label + boxed right-aligned value.
+
+    Blank values render an empty box (still with a ``casilla_id`` label),
+    letting extractor tests distinguish ``not-present`` from ``blank``.
+    """
+    y = A4_HEIGHT - box.y_mm
+    canvas.setFont(LABEL_FONT, LABEL_FONT_SIZE)
+    canvas.drawString(box.x_mm, y, f"{box.casilla_id}  {box.label_es}")
+
+    value_x = box.x_mm + box.width_mm + 5 * mm
+    value_y = y - 1 * mm
+    canvas.rect(value_x, value_y - box.height_mm + 1 * mm, box.width_mm, box.height_mm, stroke=1, fill=0)
+
+    if value is not None and value != "":
+        canvas.setFont(VALUE_FONT, VALUE_FONT_SIZE)
+        rendered = format_amount(Decimal(value)) if isinstance(value, Decimal | int) else str(value)
+        canvas.drawRightString(value_x + box.width_mm - 2 * mm, value_y - box.height_mm + 3 * mm, rendered)
+
+
+def draw_footer(
+    canvas: _canvas.Canvas,
+    *,
+    tax_id: str,
+    presented_at: str,
+    csv: str | None = None,
+) -> None:
+    """Draw the AEAT-style footer (NIF, submission timestamp, optional CSV)."""
+    y = MARGIN_BOTTOM
+    canvas.setFont(LABEL_FONT, LABEL_FONT_SIZE)
+    canvas.drawString(MARGIN_LEFT, y, f"NIF: {tax_id}")
+    canvas.drawString(MARGIN_LEFT, y - 4 * mm, f"Fecha y hora: {presented_at}")
+    if csv is not None:
+        canvas.drawRightString(A4_WIDTH - MARGIN_RIGHT, y, f"CSV: {csv}")
+
+
+__all__ = [
+    "A4_HEIGHT",
+    "A4_WIDTH",
+    "HEADER_FONT",
+    "HEADER_FONT_SIZE",
+    "LABEL_FONT",
+    "LABEL_FONT_SIZE",
+    "MARGIN_BOTTOM",
+    "MARGIN_LEFT",
+    "MARGIN_RIGHT",
+    "MARGIN_TOP",
+    "VALUE_FONT",
+    "VALUE_FONT_SIZE",
+    "CasillaBox",
+    "draw_casilla_box",
+    "draw_footer",
+    "draw_header",
+    "format_amount",
+]
