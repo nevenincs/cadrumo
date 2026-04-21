@@ -66,15 +66,16 @@ def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> Persisted
     try:
         raw = json.loads(metadata_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
+        # Kent does not need the forensic filesystem path — it only helps
+        # a developer. The path remains on the __cause__ chain for
+        # debug tooling.
         raise CorruptAuthSessionError(
-            f"The saved auth session at {metadata_path} is damaged and cannot be read. "
-            "Run `aeat auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         ) from exc
 
     if not isinstance(raw, dict):
         raise CorruptAuthSessionError(
-            f"The saved auth session at {metadata_path} is damaged and cannot be read. "
-            "Run `aeat auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         )
 
     payload = dict(raw)
@@ -89,11 +90,10 @@ def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> Persisted
         return PersistedAuthSession.model_validate(payload)
     except ValidationError as exc:
         # Keep the original Pydantic error on the __cause__ chain for
-        # debug tooling, but do not embed its multi-line field dump in
-        # the message Kent sees.
+        # debug tooling, but do not embed its multi-line field dump or
+        # the internal filesystem path in the Kent-facing message.
         raise CorruptAuthSessionError(
-            f"The saved auth session at {metadata_path} is damaged and cannot be read. "
-            "Run `aeat auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         ) from exc
 
 

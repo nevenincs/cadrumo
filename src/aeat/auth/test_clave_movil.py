@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import json
 from pathlib import Path
 from typing import Any
 
@@ -260,7 +259,7 @@ class TestAuthenticateFresh:
             assert session.storage_state_path.exists()
             sidecar_path = session.storage_state_path.with_suffix(".meta.json")
             assert sidecar_path.exists()
-            sidecar = _ClaveMovilSidecar.model_validate(json.loads(sidecar_path.read_text(encoding="utf-8")))
+            sidecar = _ClaveMovilSidecar.model_validate_json(sidecar_path.read_text(encoding="utf-8"))
             assert sidecar.identity_nif == "12345678Z"
             assert sidecar.used_non_qr_fallback is False
             assert sidecar.verification_code == "YLL"

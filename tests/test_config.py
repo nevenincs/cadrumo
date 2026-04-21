@@ -79,6 +79,47 @@ class TestEnvExampleAlignment:
         assert settings.aeat_output_language == "es"
 
 
+class TestAuthProviderEnum:
+    """#285 — ``AEAT_AUTH_PROVIDER`` coerces to :class:`AuthProviderKind` strictly."""
+
+    def test_env_value_coerces_to_enum(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from aeat.auth import AuthProviderKind
+
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv("AEAT_AUTH_PROVIDER", "clave_movil")
+
+        class IsolatedSettings(Settings):
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        settings = IsolatedSettings()
+        assert settings.aeat_auth_provider is AuthProviderKind.CLAVE_MOVIL
+
+    def test_blank_env_value_treated_as_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv("AEAT_AUTH_PROVIDER", "")
+
+        class IsolatedSettings(Settings):
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", env_ignore_empty=True)
+
+        settings = IsolatedSettings()
+        assert settings.aeat_auth_provider is None
+
+    def test_invalid_value_rejected(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import pydantic
+
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv("AEAT_AUTH_PROVIDER", "not_a_provider_kind")
+
+        class IsolatedSettings(Settings):
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        with pytest.raises(pydantic.ValidationError):
+            IsolatedSettings()
+
+
 class TestStatusDetailUrlTemplate:
     """#227 validator: template must contain ``{expediente_id}``."""
 

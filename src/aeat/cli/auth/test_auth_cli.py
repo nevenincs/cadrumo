@@ -330,7 +330,7 @@ class TestLogout:
         del isolated_token_dir
         result = _runner.invoke(app, ["auth", "logout"])
         assert result.exit_code == 0, result.output
-        assert "no active session" in result.output
+        assert "No active session" in result.output
 
     def test_logout_removes_persisted_pair(self, isolated_token_dir: Path) -> None:
         now = datetime.now(UTC)
@@ -346,7 +346,7 @@ class TestLogout:
 
         result = _runner.invoke(app, ["auth", "logout"])
         assert result.exit_code == 0, result.output
-        assert "cleared" in result.output
+        assert "Signed out of" in result.output
         assert not paths.storage_state.exists()
         assert not paths.metadata.exists()
 

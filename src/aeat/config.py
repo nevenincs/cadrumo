@@ -691,13 +691,24 @@ class Settings(BaseSettings):
     @field_validator("aeat_clave_movil_dni_fecha")
     @classmethod
     def _clave_dni_fecha_is_iso_date(cls, value: str | None) -> str | None:
-        """Reject DNI validity dates that are not YYYY-MM-DD strings."""
+        """Reject DNI validity dates that are not canonical ``YYYY-MM-DD``.
+
+        Python 3.11's ``date.fromisoformat`` also accepts the compact
+        ``YYYYMMDD`` form and ISO week dates, but AEAT's Cl@ve Móvil
+        ``FECHA`` input expects the hyphenated canonical form. The
+        regex rejects anything else before we delegate the semantic
+        check to the stdlib parser.
+        """
         if value is None:
             return None
+        import re as _re
+
+        if not _re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+            raise ValueError("AEAT_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)")
         try:
             date.fromisoformat(value)
         except ValueError as exc:
-            raise ValueError("AEAT_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)") from exc
+            raise ValueError("AEAT_CLAVE_MOVIL_DNI_FECHA must be a valid YYYY-MM-DD date") from exc
         return value
 
     @field_validator("aeat_clave_sede_access_url_template")

@@ -86,12 +86,15 @@ class ClaveMovilApprovalTimeoutError(AeatError):
 class _ClaveMovilSidecar(BaseModel):
     """On-disk metadata pair beside the Cl@ve Móvil storage-state file.
 
-    ``strict=False`` so ``model_validate(json.loads(...))`` accepts the
-    same ISO strings that ``model_dump(mode="json")`` produces. All
-    other guarantees (frozen, extra=forbid) still hold.
+    Strict mode is ON so a malformed sidecar (e.g. ``"2"`` where the
+    integer ``2`` is expected, or an unknown enum value) fails at
+    validation rather than being silently coerced. Datetimes are
+    stored as ISO-8601 strings by ``model_dump(mode="json")`` and
+    parsed back by Pydantic's built-in datetime validator — the only
+    coercion permitted is that round-trip.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
 
     schema_version: int = Field(default=AEAT_CLAVE_MOVIL_SIDECAR_SCHEMA_VERSION, ge=2)
     provider_kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
@@ -114,15 +117,22 @@ class _ClaveMovilSidecar(BaseModel):
 
 
 def _classify_identity(raw: str) -> str:
-    """Return ``"DNI"`` or ``"NIE"`` for ``raw``; raise on invalid inputs."""
+    """Return ``"DNI"`` or ``"NIE"`` for ``raw``; raise on invalid inputs.
+
+    The error message deliberately does NOT echo the user's raw input —
+    DNI/NIE values are PII that would otherwise land in shell history,
+    CI logs, and Rich error panels. The length hint is safe to surface
+    and is usually enough for the user to spot a typo.
+    """
     value = (raw or "").strip().upper()
     if _DNI_RE.match(value):
         return "DNI"
     if _NIE_RE.match(value):
         return "NIE"
     raise ClaveMovilConfigurationError(
-        f"{raw!r} is not a valid DNI (8 digits + letter) or NIE "
-        "(X/Y/Z + 7 digits + letter). Check the identity on your document and try again."
+        f"The value you entered (length {len(value)}) is not a valid DNI "
+        "(8 digits + letter) or NIE (X/Y/Z + 7 digits + letter). "
+        "Check the identity on your document and try again."
     )
 
 
@@ -270,7 +280,7 @@ class ClaveMovilAuthProvider:
                 raise AeatLoginAssertionError("no persisted Cl@ve Móvil session on disk; run `aeat auth login` first")
 
             try:
-                sidecar = _ClaveMovilSidecar.model_validate(json.loads(sidecar_path.read_text(encoding="utf-8")))
+                sidecar = _ClaveMovilSidecar.model_validate_json(sidecar_path.read_text(encoding="utf-8"))
             except Exception as exc:
                 raise AeatLoginAssertionError(f"Cl@ve Móvil sidecar invalid: {exc}") from exc
             if sidecar.idle_deadline <= datetime.now(UTC):
@@ -645,7 +655,10 @@ class ClaveMovilAuthProvider:
         target_url: str | None,
     ) -> AeatSession:
         try:
-            sidecar = _ClaveMovilSidecar.model_validate(json.loads(sidecar_path.read_text(encoding="utf-8")))
+            # Read as raw text and use `model_validate_json` so Pydantic's
+            # strict-JSON mode coerces ISO-8601 strings into datetimes
+            # while still rejecting type drift on every other field.
+            sidecar = _ClaveMovilSidecar.model_validate_json(sidecar_path.read_text(encoding="utf-8"))
         except Exception as exc:
             raise AeatLoginAssertionError(f"Cl@ve Móvil sidecar invalid: {exc}") from exc
         if sidecar.idle_deadline <= datetime.now(UTC):
