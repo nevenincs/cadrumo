@@ -71,7 +71,7 @@ app.command(name="bootstrap", help="Provision scratch resources and persist thei
 app.add_typer(
     auth_module.app,
     name="auth",
-    help="Kent-first Google authentication flow for CLI, MCP, and bootstrap readiness.",
+    help="Kent-first auth setup and AEAT authentication provider management.",
 )
 app.add_typer(
     attachments_module.app,

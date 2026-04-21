@@ -53,6 +53,11 @@ from ._authenticator import (
 from ._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
 )
+from ._clave_movil import (
+    ClaveMovilApprovalTimeoutError,
+    ClaveMovilAuthProvider,
+    ClaveMovilConfigurationError,
+)
 from ._gate import AeatAccessGate, AeatGateEnvSnapshot
 from ._google_paths import (
     GoogleAuthInspection,
@@ -144,6 +149,9 @@ __all__ = [
     "CertificatePasswordError",
     "CertificatePreExpiryError",
     "CertificateSessionDetail",
+    "ClaveMovilApprovalTimeoutError",
+    "ClaveMovilAuthProvider",
+    "ClaveMovilConfigurationError",
     "ClaveMovilLoginAssertionDetail",
     "ClaveMovilSessionDetail",
     "ClavePermanenteLoginAssertionDetail",
