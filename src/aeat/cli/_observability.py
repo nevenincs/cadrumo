@@ -106,11 +106,16 @@ def build_arguments(
             raise :class:`KeyError`.
         flag_map: Optional mapping from Python parameter name to the
             actual Typer option string (e.g.
-            ``{"as_json": "--json"}``). Required when the Python
-            parameter name differs from the CLI flag, otherwise the
-            reconstructed argv on replay will use ``--as-json`` which
-            Typer does not recognise. See audit finding NEW-1
-            (vaultspec-code-reviewer round 9, 2026-04-21).
+            ``{"as_json": "--json"}``). This is an escape-hatch for
+            callers whose parameter name differs from the CLI flag.
+            Current wrapped commands prefer the simpler approach of
+            using the CLI-flag spelling directly as the dict key
+            (``arguments = {"json": as_json}``), which makes
+            ``flag_map`` unnecessary. Use ``flag_map`` only when the
+            caller *cannot* rename the dict key — e.g. when feeding
+            ``locals()`` verbatim. See audit finding NEW-1
+            (vaultspec-code-reviewer round 9, 2026-04-21) and the
+            round-10 polish note N1.
 
     Returns:
         A tuple of strict :class:`ArgumentRecord` records ordered

@@ -123,3 +123,55 @@ Existing `TestArgvReconstruction.test_positional_emitted_without_prefix_and_firs
 
 ### Next round
 Round 10 will re-dispatch `vaultspec-code-reviewer` to verify round-9's NEW-1 fix + check for any residual finding. Loop continues until a full round reports zero new code-level findings.
+
+---
+
+## Round 10 — vaultspec-code-reviewer against 6ef8f90 — CONVERGENCE
+
+*Reviewer:* `vaultspec-code-reviewer` subagent, dispatched 2026-04-21 after round-9 commit.
+*Regression verdict on NEW-1 (round 9):* **PASS**.
+*New code-level findings:* **0**.
+*Doc-level polish findings:* 4 (N1–N4, all LOW / informational).
+*Merge readiness verdict:* **READY**.
+
+### Regression pass on round 9
+- `_argv_from_arguments` boolean branches correct: `"True"` → bare flag, `"False"` → skip, else `=value`.
+- `ArgumentRecord.cli_flag` backward-compatible (Optional with None default).
+- `build_arguments` + `cli_run_context` `flag_map` flows correctly into the record.
+- `TestReplayEndToEndBooleanFlag` exercises the real Typer app — correct integration level.
+- False-bool + `cli_flag` override case covered.
+
+### Polish findings (all LOW, non-blocking)
+
+| ID | Severity | Finding | Resolution |
+|----|----------|---------|------------|
+| N1 | LOW (doc) | `flag_map` is zero-use in production today — all wrapped commands prefer to rename the dict key. Parameter docstring didn't explicitly flag itself as an escape hatch. | Docstring updated to say "escape-hatch when the caller cannot rename the dict key (e.g. feeding ``locals()`` verbatim)". |
+| N2 | LOW (doc) | Replay-of-a-replay chain semantics were implicit. A replay of a replay labels `replay_of` with the immediate parent, not the chain root. Would confuse operators walking chains. | `RunTrace.replay_of` docstring now explicitly documents chain semantics and the link-list walk pattern. |
+| N3 | LOW (doc) | Paired `--sync/--no-sync` flag loses `False`-capture fidelity on replay (skipped → default True). | Already documented in `_argv_from_arguments` docstring (the round-9 limitation note). No workflow command is dry-run-unsafe, so no safety impact. Consider a future ticket for paired-flag fidelity. |
+| N4 | LOW (defensive) | `replay_of` env-var validator doesn't verify the referenced trace exists on disk. Rare manual-misuse case; live-write gate still fires because env is truthy. | Not applied — too niche for the production surface. Documented in this audit row as a known corner. |
+
+### Totals after round 10
+- 59 observability unit tests (unchanged), 2037 full-suite pass.
+- 2 docstring polish updates (N1, N2).
+- Ruff + format + ty + relative-imports mandate all clean.
+
+### Convergence declaration
+
+**Rolling audit loop has converged on PR #140.**
+
+Round-10 verdict is **merge-ready**. One full review round produced zero new code-level findings beyond documentation polish. Ten consecutive rounds across three reviewer classes (Gemini automated, self-review 14-lens sweep, vaultspec-code-reviewer subagent) have been applied. The PR is at HEAD `<round-10 commit>` with CI previously green on both Ubuntu and Windows (confirmation will follow the round-10 push).
+
+**Cumulative tally across all 10 rounds:**
+- 30 code-level fixes (5 Gemini round 1 + 7 L2-L10 + 1 L11 + 5 G1-G5 + 2 G6-G7 + 8 round-8 + 1 round-9 + 0 round-10 + 1 code cleanup (N5))
+- 3 doc-level polish updates (L13 contextvar-thread note, N1 flag_map escape-hatch, N2 replay_of chain semantics)
+- 10 commits in the audit-loop phase (rounds 0-10) plus 2 main-merge commits
+- 59 observability unit tests + 2037 full-suite tests green
+
+**What was NOT fixed — known and accepted:**
+- N3: `--sync/--no-sync` paired-flag fidelity (no safety impact; documented).
+- N4: `replay_of` env doesn't check on-disk origin trace (niche manual misuse).
+- L2-F2: contextvar propagation to bare threads (documented on `record_event`).
+- L8-F6: no events.jsonl rotation (scale not a concern yet).
+- L9-F1: strict pydantic forward-compat only (design constraint).
+
+No action items remain that would block the final squash-merge. The rolling audit document (`.vault/audit/2026-04-21-run-trace-rolling-audit.md`) is the authoritative record of the loop.

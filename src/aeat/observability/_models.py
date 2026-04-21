@@ -282,11 +282,20 @@ class RunTrace(BaseModel):
     cert_fingerprint: str
     outcome: RunOutcome
     replay_of: str | None = None
-    """Run id of the original trace when this trace was produced by a
-    replay re-entry, otherwise ``None``. Default keeps strict
-    validation backward-compatible with pre-S7 traces on disk: old
-    files do not carry this field and load cleanly via the default.
-    See audit finding S7 (vaultspec-code-reviewer, 2026-04-21)."""
+    """Run id of the *immediate* original trace when this trace was
+    produced by a replay re-entry, otherwise ``None``. Default keeps
+    strict validation backward-compatible with pre-S7 traces on disk:
+    old files do not carry this field and load cleanly via the
+    default.
+
+    Chain semantics: replaying a replay produces a new trace whose
+    ``replay_of`` points at the second-level trace, NOT at the chain
+    root. To walk the chain, follow each trace's ``replay_of`` in
+    turn until you reach ``None``. Each link is a supervised replay
+    in its own right.
+
+    See audit finding S7 (vaultspec-code-reviewer round 8,
+    2026-04-21) and the round-10 polish note N2."""
 
     @model_validator(mode="after")
     def _require_tz_aware_timestamps(self) -> RunTrace:
