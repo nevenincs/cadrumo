@@ -19,6 +19,7 @@ from ..config import PROJECT_ROOT
 from . import (
     Justificante,
     JustificanteCsvNotFoundError,
+    JustificanteError,
     JustificanteParseError,
     JustificanteParserBackend,
     parse_justificante,
@@ -123,6 +124,20 @@ class TestParseJustificante:
     def test_missing_file_raises(self) -> None:
         with pytest.raises(JustificanteParseError, match="not found"):
             parse_justificante(FIXTURES_DIR / "does_not_exist.pdf")
+
+
+class TestJustificanteErrorRehome:
+    """#305 cluster A — JustificanteError inherits the shared PDF-import root."""
+
+    def test_justificante_error_is_pdf_filing_import_error(self) -> None:
+        from .._pdf_import import PdfFilingImportError
+
+        assert issubclass(JustificanteError, PdfFilingImportError)
+
+    def test_justificante_error_still_aeat_error(self) -> None:
+        from ..errors import AeatError
+
+        assert issubclass(JustificanteError, AeatError)
 
 
 class TestCsvDetection:

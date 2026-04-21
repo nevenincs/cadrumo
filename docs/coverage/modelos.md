@@ -4,29 +4,29 @@ Per-modelo implementation state. Refreshed every month via audit [#241](https://
 
 Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped · N/A
 
-| Modelo | In registry | Schema | Formula ruleset | Filing builder | Export (fichero BOE) | Amendment (complementaria) | Amendment (rectificativa) | Tests | Live-read detail | CLI coverage |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 036 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| 037 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| 100 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ |
-| 111 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial |
-| 115 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial |
-| 123 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ |
-| **130** | ✅ | ✅ | ✅ (2024 + 2025) | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | ✅ | ⏳ #222 | ✅ |
-| 131 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| 180 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| 190 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial |
-| 193 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| 200 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| 202 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| 232 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| **303** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | partial | ⏳ #222 | ✅ |
-| 347 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial |
-| 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial |
-| **390** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (SUSTITUTIVA) | N/A | partial | ⏳ #222 | ✅ |
-| 720 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ |
-| 840 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ |
+| Modelo | In registry | Schema | Formula ruleset | Filing builder | Export (fichero BOE) | Amendment (complementaria) | Amendment (rectificativa) | Tests | Live-read detail | CLI coverage | `justificante` import | `declaración` import | `borrador` import | `predeclaración` import |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 036 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 037 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 100 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | ✅ | ❌ #305/F | 🚧 #305/F | 🚧 #305/F |
+| 111 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 115 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 123 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ❌ #305/D | ❌ | ❌ |
+| **130** | ✅ | ✅ | ✅ (2024 + 2025) | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | ✅ | ⏳ #222 | ✅ | ✅ | 🚧 #305/D | ❌ | ❌ |
+| 131 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 180 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 190 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 193 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 200 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 202 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 232 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| **303** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | partial | ⏳ #222 | ✅ | ✅ | 🚧 #305/D | ❌ | ❌ |
+| 347 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| **390** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (SUSTITUTIVA) | N/A | partial | ⏳ #222 | ✅ | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 720 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 840 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ❌ #305/D | ❌ | ❌ |
 
 **Bold** = primary autónomo forms (130, 303, 390). These are the minimum-viable modelo set for Kent.
 

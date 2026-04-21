@@ -1,0 +1,44 @@
+"""Shared strict+frozen records consumed across PDF-import modules (#305).
+
+:class:`ExtractedCasilla` is the boundary-crossing record every per-modelo
+extractor produces. It pairs a stable casilla identifier with the printed
+value the extractor read from the PDF plus provenance (page, bounding box,
+confidence) so downstream consumers can classify discrepancies and attach
+warnings without re-parsing the PDF.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class ExtractedCasilla(BaseModel):
+    """One casilla ID + printed value extracted from a filing PDF.
+
+    Attributes:
+        casilla_id: Stable casilla identifier (e.g. ``"01"``, ``"071"``).
+        printed_value: Typed value as printed on the PDF. ``None`` when
+            the casilla was located but blank on the page.
+        source_page: 1-based page number the value was read from.
+        source_bbox: Optional ``(x0, y0, x1, y1)`` bounding box in
+            pdfplumber coordinates. Populated by the bbox-anchored
+            extraction primitive; ``None`` for label-regex / AcroForm
+            extractions where coordinates are not captured.
+        extraction_confidence: Float in ``[0.0, 1.0]``. ``1.0`` for
+            AcroForm + unambiguous label-regex hits; lower when the
+            extractor fell back to bbox-anchored recovery or had to
+            disambiguate competing label candidates.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    casilla_id: str = Field(min_length=1, max_length=8)
+    printed_value: Decimal | int | str | bool | date | None
+    source_page: int = Field(ge=1)
+    source_bbox: tuple[float, float, float, float] | None = None
+    extraction_confidence: float = Field(ge=0.0, le=1.0)

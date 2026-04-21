@@ -15,18 +15,41 @@ the casilla DB once that subpackage lands.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from .._schema import SCHEMA_VERSION_DEFAULT
 
 
+class CasillaSource(BaseModel):
+    """Provenance citation for one casilla (#305 cluster B).
+
+    Every casilla SHOULD carry at least one source citation so the
+    legal authority behind the schema is auditable. Phase-1 introduces
+    the field as optional (``tuple[CasillaSource, ...] = ()``) to
+    preserve backwards compatibility; cluster B phase-2 tightens the
+    invariant to ``≥1 entry`` per casilla.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    kind: Literal["boe", "manual", "interactive_form_xml", "printed_form_pdf"]
+    citation: str = Field(min_length=1)
+    url: str | None = None
+    retrieved_at: date | None = None
+    snapshot_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+
 class StaticCasillaSchema(BaseModel):
     """A frozen, strict pydantic record describing one casilla.
 
     Conforms structurally to
-    :class:`aeat.filing._protocols.CasillaSchema`.
+    :class:`aeat.filing._protocols.CasillaSchema`. Provenance fields
+    (``sources``, ``valid_from``, ``valid_to``) are optional today and
+    tighten in cluster-B phase-2 as the corpus completes.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -39,6 +62,9 @@ class StaticCasillaSchema(BaseModel):
     max_value: float | int | None = None
     default: Decimal | int | str | bool | None = None
     description: str = ""
+    sources: tuple[CasillaSource, ...] = Field(default_factory=tuple)
+    valid_from: date | None = None
+    valid_to: date | None = None
 
 
 class StaticCasillaCollection(BaseModel):
