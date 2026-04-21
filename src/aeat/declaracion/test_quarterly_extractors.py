@@ -143,6 +143,9 @@ class TestRegistryKnowsNewExtractors:
         from ._extractors import _REGISTRY
 
         keys = set(_REGISTRY.keys())
+        # Censo (header-only MVP).
+        assert ("036", 2025, "2025.01") in keys
+        assert ("037", 2025, "2025.01") in keys
         # Core quarterly-cadence modelos.
         assert ("111", 2025, "2025.01") in keys
         assert ("115", 2025, "2025.01") in keys
@@ -520,7 +523,11 @@ class TestHeaderOnlyExtractors:
     lands in sub-EPIC #305-textual-casillas.
     """
 
-    @pytest.mark.parametrize("modelo", ["232", "369", "720", "840"], ids=["232", "369", "720", "840"])
+    @pytest.mark.parametrize(
+        "modelo",
+        ["036", "037", "232", "369", "720", "840"],
+        ids=["036", "037", "232", "369", "720", "840"],
+    )
     def test_header_only_modelo_exposes_empty_casillas(self, tmp_path: Path, modelo: str) -> None:
         pdf = _make_annual_pdf(
             tmp_path,
