@@ -73,3 +73,27 @@ class TestSecretRedaction:
         values = {"password": "pw-value"}
         records = build_arguments(values, positional=("password",))
         assert records[0].value == "***"
+
+
+class TestFlagMap:
+    """NEW-1: flag_map propagates to ArgumentRecord.cli_flag."""
+
+    def test_flag_map_sets_cli_flag(self) -> None:
+        values = {"as_json": True, "modelo": "130"}
+        records = build_arguments(values, flag_map={"as_json": "--json"})
+        by_name = {r.name: r for r in records}
+        assert by_name["as_json"].cli_flag == "--json"
+        # Unmapped args have cli_flag=None and rely on name derivation.
+        assert by_name["modelo"].cli_flag is None
+
+    def test_missing_flag_map_leaves_cli_flag_none(self) -> None:
+        records = build_arguments({"modelo": "130"})
+        assert records[0].cli_flag is None
+
+    def test_flag_map_ignored_for_positional(self) -> None:
+        values = {"modelo": "130"}
+        # Even if the caller maps a positional, it must stay POSITIONAL
+        # with cli_flag=None (positional records never use cli_flag).
+        records = build_arguments(values, positional=("modelo",), flag_map={"modelo": "--modelo"})
+        assert records[0].source.value == "POSITIONAL"
+        assert records[0].cli_flag is None

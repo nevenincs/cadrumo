@@ -87,13 +87,25 @@ class RunOutcome(StrEnum):
 
 
 class ArgumentRecord(BaseModel):
-    """A single CLI argument captured for replay."""
+    """A single CLI argument captured for replay.
+
+    ``cli_flag`` is an optional override carrying the *actual* Typer
+    option name (e.g. ``"--json"``) when the Python parameter name
+    (``as_json``) differs from the user-facing flag. Without the
+    override, :func:`aeat.observability._replay._argv_from_arguments`
+    derives the flag name by replacing underscores with dashes, which
+    is wrong for renamed options like
+    ``typer.Option(False, "--json")`` bound to parameter ``as_json``.
+    See audit finding NEW-1 (vaultspec-code-reviewer round 9,
+    2026-04-21).
+    """
 
     model_config = _STRICT_FROZEN
 
     name: str
     value: str
     source: ArgumentSource
+    cli_flag: str | None = None
 
 
 class NavigationPayload(BaseModel):

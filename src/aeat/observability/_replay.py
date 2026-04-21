@@ -69,16 +69,33 @@ def _argv_from_arguments(
     """Reconstruct a Typer-compatible argv from the captured arguments.
 
     Strips the leading program name from ``entrypoint`` (e.g.
-    ``"aeat workflow run"`` → ``["workflow", "run"]``). Positional
-    arguments (``source`` :attr:`ArgumentSource.POSITIONAL`) are
-    emitted first — in the captured order — as bare values with no
-    ``--`` prefix, matching how the original ``typer.Argument`` was
-    supplied. Flags (``source`` :attr:`ArgumentSource.FLAG`) follow
-    as ``--<name>=<value>`` pairs; the ``=`` form is used so values
-    that themselves start with ``-`` (e.g. ``--notes "-urgent"``) are
-    not mis-parsed by Typer as another flag. ``ENV`` / ``CONFIG`` /
-    ``DEFAULT`` sources are not re-emitted — they are recovered from
-    the environment on the replayed call site.
+    ``"aeat workflow run"`` → ``["workflow", "run"]``).
+
+    Positional arguments (``source`` :attr:`ArgumentSource.POSITIONAL`)
+    are emitted first — in the captured order — as bare values with
+    no ``--`` prefix, matching how the original ``typer.Argument``
+    was supplied.
+
+    Flag arguments (``source`` :attr:`ArgumentSource.FLAG`) are then
+    emitted using one of two shapes depending on their stringified
+    value:
+
+    - ``"True"`` — emit the bare flag name (``--json``). Value-less
+      boolean options like ``typer.Option(False, "--json")`` reject
+      the ``=True`` form, so we normalise to the Typer convention.
+    - ``"False"`` — omit entirely. Most boolean flags default to
+      False, so replay simply not re-emitting them matches the
+      original user intent. The tradeoff is that toggled-off
+      flags like ``--no-sync`` on a ``typer.Option(True, "--sync/--no-sync")``
+      alias pair lose fidelity; this is documented as a known
+      limitation (audit finding NEW-1, 2026-04-21).
+    - Any other value — emit the ``--<name>=<value>`` form; the
+      ``=`` binding prevents values that start with ``-`` from being
+      mis-parsed as another flag.
+
+    ``ENV`` / ``CONFIG`` / ``DEFAULT`` sources are not re-emitted —
+    they are recovered from the environment on the replayed call
+    site.
     """
     parts = shlex.split(entrypoint)
     if parts and parts[0] == "aeat":
@@ -89,8 +106,25 @@ def _argv_from_arguments(
     for arg in arguments:
         if arg.source is not ArgumentSource.FLAG:
             continue
-        flag_name = arg.name if arg.name.startswith("--") else f"--{arg.name.replace('_', '-')}"
-        parts.append(f"{flag_name}={arg.value}")
+        if arg.cli_flag is not None:
+            # Explicit override from the caller — use the exact Typer
+            # flag string (``--json``) instead of deriving from the
+            # Python param name (``as_json`` → ``--as-json``).
+            flag_name = arg.cli_flag
+        elif arg.name.startswith("--"):
+            flag_name = arg.name
+        else:
+            flag_name = f"--{arg.name.replace('_', '-')}"
+        if arg.value == "True":
+            # Value-less boolean flag — emit the bare option name.
+            parts.append(flag_name)
+        elif arg.value == "False":
+            # Boolean flag that was not set (or was explicitly
+            # negated) — skip. See docstring for the fidelity
+            # tradeoff on ``--sync/--no-sync``-style paired flags.
+            continue
+        else:
+            parts.append(f"{flag_name}={arg.value}")
     return parts
 
 

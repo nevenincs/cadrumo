@@ -80,3 +80,46 @@ Rounds 8+ below are the autonomous rolling phase.
 
 ### Next round
 Round 9 will launch another `vaultspec-code-reviewer` pass against the new HEAD to verify round 8's fixes don't introduce regressions, plus re-check Gemini on the push.
+
+---
+
+## Round 9 — vaultspec-code-reviewer against 14f24a3
+
+*Reviewer:* `vaultspec-code-reviewer` subagent, dispatched 2026-04-21 after round-8 commit.
+*Regression review verdict:* **PASS on all round-8 items (B1, S1-S7)**.
+*New findings:* 1 SHOULD-FIX, 2 NITs.
+*Merge readiness verdict:* NEEDS ANOTHER ROUND.
+
+### Regression pass on round 8
+All eight round-8 fixes verified correct by inspection + existing tests:
+- B1 `corpus_sha256` folding `env/.env` — `TestEnvFileFingerprint` green, cross-platform-safe.
+- S1 sink ordering — set-then-attach / detach-then-reset confirmed symmetric.
+- S2 stderr filter — `_DropRunEventFilter` only drops records with `run_event` extra; JSONL sink untouched; end-to-end test confirms.
+- S3 `AEAT_REPLAY_ACTIVE` round-trip — non-leaking, restores prior value.
+- S5 naive-datetime validators — fire at `RunEvent.timestamp`, `RunTrace.started_at`, `RunTrace.finished_at` (with None allowance).
+- S7 `replay_of` — length + hex validation correctly refuses non-canonical env values.
+
+### New findings
+
+| ID | Severity | File:line | Finding | Resolution |
+|----|----------|-----------|---------|------------|
+| NEW-1 | SHOULD-FIX | `_replay.py:65-94` argv reconstruction | Boolean flags reconstructed as `--name=True` are rejected by Typer because value-less options (`typer.Option(False, "--json")`) don't take a value. Renamed flags (Python param `as_json` vs Typer flag `--json`) fail with "No such option: --as-json". | (a) Argv emission now handles booleans: `"True"` → bare flag, `"False"` → skip; (b) `ArgumentRecord` gained `cli_flag: str \| None = None` for explicit override; (c) `build_arguments` + `cli_run_context` accept `flag_map={"as_json": "--json"}` to set the override at capture time. Current wrapped commands already use CLI-flag naming as dict keys, so no caller changes are required — the escape-hatch is there for future commands that use `locals()` or have renamed flags. |
+| NEW-2 | NIT | `_context.py:246` | `replay_of` acceptance lowercases via `.lower()` for defensive normalization. | Documented via comment. |
+| NEW-3 | NIT | `_fingerprint.py` | `compute_corpus_sha256` walks `.vault/` on every invocation. | Documented as "follow-up optimisation"; not a regression. |
+
+### Additional tests landed in round 9
+- `TestArgvReconstruction.test_boolean_false_flag_is_skipped` — False bools omitted.
+- `TestArgvReconstruction.test_boolean_true_flag_uses_bare_form` — True emits bare flag.
+- `TestArgvReconstruction.test_cli_flag_override_wins_over_name_derivation` — override path.
+- `TestReplayEndToEndBooleanFlag.test_replay_of_workflow_list_json` — end-to-end replay of `aeat workflow list --json` through the real Typer app.
+- `TestFlagMap` (3 cases) — `build_arguments` forwards `flag_map` to `cli_flag`.
+
+Existing `TestArgvReconstruction.test_positional_emitted_without_prefix_and_first` + `test_multiple_positionals_preserve_declared_order` + `test_flag_name_underscore_converted_to_dash` updated to expect the new bare-flag emission for True bools.
+
+### Totals after round 9
+- 59 observability unit tests (+7 new, 3 updated), 2037 full-suite pass.
+- 1 code-level fix (NEW-1) covering argv-reconstruction correctness.
+- Ruff + format + ty + relative-imports mandate all clean.
+
+### Next round
+Round 10 will re-dispatch `vaultspec-code-reviewer` to verify round-9's NEW-1 fix + check for any residual finding. Loop continues until a full round reports zero new code-level findings.

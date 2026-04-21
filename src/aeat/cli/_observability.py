@@ -86,6 +86,7 @@ def build_arguments(
     values: Mapping[str, Any],
     *,
     positional: Sequence[str] = (),
+    flag_map: Mapping[str, str] | None = None,
 ) -> tuple[ArgumentRecord, ...]:
     """Build a tuple of :class:`ArgumentRecord` from a Typer locals mapping.
 
@@ -103,12 +104,20 @@ def build_arguments(
             declared as :class:`typer.Argument` (positional). Each
             listed name must appear in ``values``. Missing values
             raise :class:`KeyError`.
+        flag_map: Optional mapping from Python parameter name to the
+            actual Typer option string (e.g.
+            ``{"as_json": "--json"}``). Required when the Python
+            parameter name differs from the CLI flag, otherwise the
+            reconstructed argv on replay will use ``--as-json`` which
+            Typer does not recognise. See audit finding NEW-1
+            (vaultspec-code-reviewer round 9, 2026-04-21).
 
     Returns:
         A tuple of strict :class:`ArgumentRecord` records ordered
         positionals-first, then flags in declaration order.
     """
     positional_set = set(positional)
+    aliases: Mapping[str, str] = flag_map or {}
     records: list[ArgumentRecord] = []
     for name in positional:
         rendered = _stringify(values[name])
@@ -128,7 +137,12 @@ def build_arguments(
         if _is_secret_name(name):
             rendered = _REDACTED_VALUE
         records.append(
-            ArgumentRecord(name=name, value=rendered, source=ArgumentSource.FLAG),
+            ArgumentRecord(
+                name=name,
+                value=rendered,
+                source=ArgumentSource.FLAG,
+                cli_flag=aliases.get(name),
+            ),
         )
     return tuple(records)
 
@@ -139,6 +153,7 @@ def cli_run_context(
     entrypoint: str,
     arguments: Mapping[str, Any],
     positional: Sequence[str] = (),
+    flag_map: Mapping[str, str] | None = None,
 ) -> Iterator[RunContextInfo]:
     """Convenience wrapper that builds arguments and enters :func:`run_context`.
 
@@ -150,8 +165,13 @@ def cli_run_context(
             argument names).
         positional: Ordered sequence of argument names declared as
             Typer positional :class:`typer.Argument` values.
+        flag_map: Optional mapping from Python parameter name to the
+            actual Typer option string for renamed flags (e.g.
+            ``{"as_json": "--json"}``). Without this, the replay argv
+            reconstruction would derive ``--as-json`` which Typer
+            does not recognise.
     """
-    built = build_arguments(arguments, positional=positional)
+    built = build_arguments(arguments, positional=positional, flag_map=flag_map)
     with run_context(entrypoint=entrypoint, arguments=built) as info:
         yield info
 
