@@ -30,13 +30,18 @@ class Modelo720V2025Extractor(GenericDeclaracionExtractor):
         revision="2025.01",
     )
     casilla_ids: ClassVar[tuple[str, ...]] = ()
+    # Wave 33 H3: regex tightened — anchored to clave letter (C/V/I)
+    # and line-scoped. The original loose "cuentas/valores/inmuebles"
+    # alternation risked false-positives on any line mentioning those
+    # words elsewhere in the PDF. The anchored "clave X" form matches
+    # the Orden HAP/72/2013 registro tipo 1 field label. Still
+    # speculative pending an L2 Modelo 720 fixture — the exact printed
+    # literal may be "Clave C  N registros" OR "Clave C: N" OR similar;
+    # tighten further once a real filing is sourced.
     named_field_patterns: ClassVar[dict[str, str]] = {
-        # Three claves — counts (int) + valoraciones (decimal). Keeping
-        # the count regex loose (\d+) to accept any width; valoraciones
-        # use the Spanish-amount primitive.
-        "num_registros_cuentas": (r"(?:clave\s+C|cuentas)[^\n]*?(\d+)\s+registros?"),
-        "num_registros_valores": (r"(?:clave\s+V|valores)[^\n]*?(\d+)\s+registros?"),
-        "num_registros_inmuebles": (r"(?:clave\s+I|inmuebles)[^\n]*?(\d+)\s+registros?"),
+        "num_registros_cuentas": r"(?m)^[^\n]*?clave\s+C\b[^\n]*?(\d+)",
+        "num_registros_valores": r"(?m)^[^\n]*?clave\s+V\b[^\n]*?(\d+)",
+        "num_registros_inmuebles": r"(?m)^[^\n]*?clave\s+I\b[^\n]*?(\d+)",
     }
 
 

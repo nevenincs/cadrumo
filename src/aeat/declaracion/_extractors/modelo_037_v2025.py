@@ -30,13 +30,14 @@ class Modelo037V2025Extractor(GenericDeclaracionExtractor):
     )
     casilla_ids: ClassVar[tuple[str, ...]] = ()
     # Label-to-value separators on 037 PDFs use either ":" or whitespace
-    # columns; the regex skips both before capturing the value.
+    # columns; the regex skips both, then captures the rest of the line
+    # for multi-word régimen values (wave 33 H2 fix).
     named_field_patterns: ClassVar[dict[str, str]] = {
-        "causa_presentacion": r"Causa\s+(?:de\s+)?presentaci[oó]n\s*:?\s*([^\s:][^\s]*)",
-        "regimen_iva": r"R[eé]gimen\s+(?:especial\s+)?IVA\s*:?\s*([^\s:][^\s]*)",
-        "regimen_irpf": r"R[eé]gimen\s+(?:estimaci[oó]n\s+)?IRPF\s*:?\s*([^\s:][^\s]*)",
-        "epigrafe_iae": r"(?:Ep[ií]grafe\s+IAE|IAE)\s*:?\s*(\d{3,4}(?:\.\d+)?)",
-        "fecha_efectos": r"Fecha\s+(?:de\s+)?efectos\s*:?\s*(\d{4}-\d{2}-\d{2})",
+        "causa_presentacion": r"(?m)^[^\n]*?Causa\s+(?:de\s+)?presentaci[oó]n\s*:?\s*([^\s:][^\n]*?)\s*$",
+        "regimen_iva": r"(?m)^[^\n]*?R[eé]gimen\s+(?:especial\s+)?IVA\s*:?\s*([^\s:][^\n]*?)\s*$",
+        "regimen_irpf": r"(?m)^[^\n]*?R[eé]gimen\s+(?:estimaci[oó]n\s+)?IRPF\s*:?\s*([^\s:][^\n]*?)\s*$",
+        "epigrafe_iae": r"(?m)^[^\n]*?(?:Ep[ií]grafe\s+IAE|IAE)\s*:?\s*(\d{3,4}(?:\.\d+)?)",
+        "fecha_efectos": r"(?m)^[^\n]*?Fecha\s+(?:de\s+)?efectos\s*:?\s*(\d{4}-\d{2}-\d{2})",
     }
 
 
