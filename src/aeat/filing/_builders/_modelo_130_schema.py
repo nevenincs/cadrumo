@@ -147,6 +147,97 @@ MODELO_130_SCHEMA = StaticCasillaCollection(
             min_value=0,
             description="Resultado a ingresar = max(0, 04 - 05 - 06)",
         ),
+        # Apartado II — actividad agrícola / ganadera / forestal / pesquera.
+        # Added in #305 cluster B phase 2 to close the schema/ruleset gap
+        # that silently orphaned computed casillas 09 / 11 / 12 / 14 / 17 / 19.
+        StaticCasillaSchema(
+            id="08",
+            value_type="decimal",
+            required=True,
+            min_value=0,
+            default=Decimal("0"),
+            description="Volumen de ingresos del trimestre — actividades agrícolas/ganaderas/pesqueras",
+        ),
+        StaticCasillaSchema(
+            id="09",
+            value_type="decimal",
+            formula_inputs=("08",),
+            description="Pago fraccionado agraria = 2% de la casilla 08",
+        ),
+        StaticCasillaSchema(
+            id="10",
+            value_type="decimal",
+            required=True,
+            min_value=0,
+            default=Decimal("0"),
+            description="Retenciones e ingresos a cuenta en actividades agrarias",
+        ),
+        StaticCasillaSchema(
+            id="11",
+            value_type="decimal",
+            formula_inputs=("09", "10"),
+            description="Resultado apartado II = casilla 09 - casilla 10",
+        ),
+        # Apartado III — suma parcial + minoración de deducción art. 110.3.c LIRPF.
+        StaticCasillaSchema(
+            id="12",
+            value_type="decimal",
+            formula_inputs=("07", "11"),
+            min_value=0,
+            description="Suma parcial = max(0, casilla 07 + casilla 11)",
+        ),
+        StaticCasillaSchema(
+            id="13",
+            value_type="decimal",
+            required=True,
+            min_value=0,
+            default=Decimal("0"),
+            description="Minoración por deducción de la cuota (art. 110.3.c LIRPF)",
+        ),
+        StaticCasillaSchema(
+            id="14",
+            value_type="decimal",
+            formula_inputs=("12", "13"),
+            description="Resultado tras minoración = casilla 12 - casilla 13",
+        ),
+        # Apartado IV — deducciones por vivienda habitual / familia numerosa.
+        StaticCasillaSchema(
+            id="15",
+            value_type="decimal",
+            required=True,
+            min_value=0,
+            default=Decimal("0"),
+            description="Deducción por adquisición o rehabilitación de vivienda habitual",
+        ),
+        StaticCasillaSchema(
+            id="16",
+            value_type="decimal",
+            required=True,
+            min_value=0,
+            default=Decimal("0"),
+            description="Resultados negativos de trimestres anteriores del mismo ejercicio",
+        ),
+        StaticCasillaSchema(
+            id="17",
+            value_type="decimal",
+            formula_inputs=("14", "15", "16"),
+            description="Diferencia = casilla 14 - casilla 15 - casilla 16",
+        ),
+        # Apartado V — ingreso complementario / domiciliación.
+        StaticCasillaSchema(
+            id="18",
+            value_type="decimal",
+            required=True,
+            min_value=0,
+            default=Decimal("0"),
+            description="Ingreso efectuado en declaración anterior (complementaria)",
+        ),
+        StaticCasillaSchema(
+            id="19",
+            value_type="decimal",
+            formula_inputs=("17", "18"),
+            description="Resultado final a ingresar = casilla 17 - casilla 18",
+        ),
     ),
 )
 

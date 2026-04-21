@@ -40,26 +40,8 @@ def _schema_casilla_ids(modelo: str) -> set[str]:
 
 
 _RULESET_FIXTURES = (
-    pytest.param(
-        "130",
-        2024,
-        RULESET_130_2024,
-        marks=pytest.mark.xfail(
-            strict=True,
-            reason="Modelo 130 2024 schema misses casillas 09, 11, 12, 14, 17, 19 — phase-2 completion",
-        ),
-        id="modelo-130-2024",
-    ),
-    pytest.param(
-        "130",
-        2025,
-        RULESET_130_2025,
-        marks=pytest.mark.xfail(
-            strict=True,
-            reason="Modelo 130 2025 schema misses casillas 09, 11, 12, 14, 17, 19 — phase-2 completion",
-        ),
-        id="modelo-130-2025",
-    ),
+    pytest.param("130", 2024, RULESET_130_2024, id="modelo-130-2024"),
+    pytest.param("130", 2025, RULESET_130_2025, id="modelo-130-2025"),
     pytest.param("303", 2024, RULESET_303_2024, id="modelo-303-2024"),
     pytest.param("303", 2025, RULESET_303_2025, id="modelo-303-2025"),
 )
