@@ -5,9 +5,10 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import pytest
+from pydantic_settings import SettingsConfigDict
 from typer.testing import CliRunner
 
 from ...auth import AuthProviderKind
@@ -369,6 +370,75 @@ class TestSessionLoad:
 
 
 # ── conformance checks ───────────────────────────────────────────────────────
+
+
+class TestConfigure:
+    """`aeat auth configure` persists Cl@ve Móvil config to env/.env."""
+
+    def test_configure_clave_movil_writes_env_file(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+        # Point Settings at a temp env file so the test never touches the real one.
+        env_file = tmp_path / "env" / ".env"
+
+        _config_overrides = {**dict(Settings.model_config), "env_file": env_file}
+
+        class _ScopedSettings(Settings):
+            model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(**_config_overrides)
+
+        monkeypatch.setattr("aeat.cli.auth.Settings", _ScopedSettings)
+
+        result = _runner.invoke(
+            app,
+            [
+                "auth",
+                "configure",
+                "--provider",
+                "clave_movil",
+                "--dni-nie",
+                "12345678Z",
+                "--prefer-qr",
+                "--non-interactive",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        content = env_file.read_text(encoding="utf-8")
+        assert "AEAT_CLAVE_MOVIL_DNI_NIE=12345678Z" in content
+        assert "AEAT_CLAVE_PREFER_NON_QR=false" in content
+        assert "AEAT_AUTH_PROVIDER=clave_movil" in content
+
+    def test_configure_rejects_invalid_identity(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+        env_file = tmp_path / "env" / ".env"
+
+        _config_overrides = {**dict(Settings.model_config), "env_file": env_file}
+
+        class _ScopedSettings(Settings):
+            model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(**_config_overrides)
+
+        monkeypatch.setattr("aeat.cli.auth.Settings", _ScopedSettings)
+
+        result = _runner.invoke(
+            app,
+            [
+                "auth",
+                "configure",
+                "--dni-nie",
+                "NOT-A-REAL-ID",
+                "--non-interactive",
+            ],
+        )
+        assert result.exit_code != 0
+        assert not env_file.exists() or "AEAT_CLAVE_MOVIL_DNI_NIE" not in env_file.read_text(encoding="utf-8")
 
 
 class TestConformance:
