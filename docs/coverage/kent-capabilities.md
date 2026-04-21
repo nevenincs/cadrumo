@@ -18,7 +18,8 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Import bank statement persisted in one command | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#216](https://github.com/wgergely/aeat/issues/216) |
 | Bulk-classify via rules | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#217](https://github.com/wgergely/aeat/issues/217) |
 | See how much he owes for Modelo 130 (T6) | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#218](https://github.com/wgergely/aeat/issues/218) |
-| See confidence scores on every decision | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#236](https://github.com/wgergely/aeat/issues/236) |
+| See confidence scores on every decision | ✅ | ✅ (`--confidence-below` on `txs list` + `review queue`; LLM path at `txs classify-llm`) | ✅ | ✅ live-verified on synthetic catalogue | 0.1.0 | [#236](https://github.com/wgergely/aeat/issues/236) |
+| Classify transactions via an LLM (claude / gemini / codex) | 🚧 | ✅ (`aeat financial txs classify-llm`; tier-enforced model capability; reuses #253 CategoryProfile proportionality defaults) | ✅ | 🚧 live-tested with codex end-to-end | 0.1.0 | [#236](https://github.com/wgergely/aeat/issues/236) |
 | Distinguish pipeline-skipped from not-yet-seen | ✅ | ✅ | ✅ | ✅ | 0.1.0 | [#237](https://github.com/wgergely/aeat/issues/237) |
 | Run one command for pipeline health | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#238](https://github.com/wgergely/aeat/issues/238) |
 | Mark transaction reviewed-and-excluded | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#224](https://github.com/wgergely/aeat/issues/224) |
