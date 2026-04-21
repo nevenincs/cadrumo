@@ -20,6 +20,9 @@ from ...financial.usage_ratios import (
 from ._profile_aliases import FAMILY_ALIASES
 
 _MISSING = "(none)"
+_ALIAS_LIST = ", ".join(sorted(FAMILY_ALIASES))
+_SET_RATIO_KEY_HELP = f"Category id (e.g. suministros_home_office_luz) or family alias ({_ALIAS_LIST})."
+_UNSET_RATIO_KEY_HELP = f"Category id or family alias ({_ALIAS_LIST})."
 
 app = typer.Typer(
     name="profile",
@@ -61,13 +64,7 @@ def list_cmd() -> None:
 
 @app.command(name="set-ratio", help="Set Kent's usage ratio for one category or family alias.")
 def set_ratio_cmd(
-    key: str = typer.Argument(
-        ...,
-        help=(
-            "Category id (e.g. suministros_home_office_luz) or family alias "
-            "(home_office_area, mileage_business, phone_fixed_business)."
-        ),
-    ),
+    key: str = typer.Argument(..., help=_SET_RATIO_KEY_HELP),
     value: str = typer.Argument(..., help="Ratio in [0, 1] as a decimal, e.g. 0.21."),
 ) -> None:
     """Persist one or more usage ratios for the resolved key."""
@@ -88,7 +85,7 @@ def set_ratio_cmd(
 
 @app.command(name="unset-ratio", help="Remove Kent's usage ratio for one category or family alias.")
 def unset_ratio_cmd(
-    key: str = typer.Argument(..., help="Category id or family alias."),
+    key: str = typer.Argument(..., help=_UNSET_RATIO_KEY_HELP),
 ) -> None:
     """Remove persisted ratios for the resolved key."""
     categories = _resolve_key(key)

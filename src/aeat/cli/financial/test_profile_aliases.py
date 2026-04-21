@@ -59,14 +59,38 @@ def test_every_aliased_category_is_eligible() -> None:
 
 
 def test_aliases_reject_mutation_at_runtime() -> None:
-    """Attempting to add an alias at runtime raises, regardless of backing type."""
+    """Attempting to add an alias at runtime raises at the mapping level."""
+    # cast through Any so the static checker doesn't flag the attempted
+    # assignment — the POINT of the test is that the runtime rejects it.
+    import typing
+
+    mapping = typing.cast(typing.Any, FAMILY_ALIASES)
     with pytest.raises(TypeError):
-        operator_setitem = getattr(type(FAMILY_ALIASES), "__setitem__", None)
-        if operator_setitem is None:
-            raise TypeError("MappingProxyType has no __setitem__")
-        operator_setitem(FAMILY_ALIASES, "new_alias", (SpendingCategory.TELEFONIA_MOVIL,))
+        mapping["new_alias"] = (SpendingCategory.TELEFONIA_MOVIL,)
 
 
 def test_aliases_are_mapping_proxy() -> None:
     """``FAMILY_ALIASES`` is wrapped in ``MappingProxyType``."""
     assert isinstance(FAMILY_ALIASES, MappingProxyType)
+
+
+def test_set_ratio_help_lists_only_current_aliases() -> None:
+    """Regression guard: Typer argument help must not advertise removed aliases.
+
+    Round 2 dropped ``phone_fixed_business`` but initially left the help
+    string hard-coded; Kent following ``--help`` would then hit an
+    ``unknown key`` error. The help text now derives from ``FAMILY_ALIASES``
+    and this test pins the guarantee.
+    """
+    from typer.testing import CliRunner
+
+    from .. import app as root_app
+
+    runner = CliRunner()
+    result = runner.invoke(root_app, ["financial", "profile", "set-ratio", "--help"])
+    assert result.exit_code == 0
+    # Every advertised alias must still exist.
+    for alias in FAMILY_ALIASES:
+        assert alias in result.output
+    # No stale alias (guard against accidental reintroduction).
+    assert "phone_fixed_business" not in result.output
