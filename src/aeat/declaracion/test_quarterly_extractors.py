@@ -425,9 +425,8 @@ _MODELO_131_LABELS = {
 }
 
 _MODELO_200_LABELS = {
-    "00550": "Base imponible previa",
-    "01032": "Reduccion reserva capitalizacion",
     "00547": "Compensacion BINs",
+    "00550": "Base imponible previa",
     "00552": "Base imponible",
     "00558": "Tipo de gravamen",
     "00560": "Cuota integra previa",
@@ -469,6 +468,9 @@ class TestModelo131V2025Extractor:
         assert filing.modelo == "131"
         assert filing.period == "2025Q1"
         assert filing.extraction_status is ExtractionStatus.COMPLETE
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        for cid, raw in values.items():
+            assert by_id[cid] == Decimal(raw)
 
 
 class TestModelo200V2025Extractor:
@@ -485,9 +487,11 @@ class TestModelo200V2025Extractor:
         assert filing.modelo == "200"
         assert filing.period == "2025A"
         assert filing.extraction_status is ExtractionStatus.COMPLETE
+        # Wave 23 MEDIUM-2 + 4: assert the full five-digit casilla dict —
+        # one spot-check is not enough to prove the casilla_width=5 path.
         by_id = {v.casilla_id: v.printed_value for v in filing.values}
-        # Spot-check one five-digit casilla survived the wider prefix.
-        assert by_id["00552"] == Decimal(values["00552"])
+        for cid, raw in values.items():
+            assert by_id[cid] == Decimal(raw), f"Casilla {cid} did not round-trip"
 
 
 class TestModelo202V2025Extractor:
@@ -540,9 +544,37 @@ class TestHeaderOnlyExtractors:
         assert filing.modelo == modelo
         assert filing.period == "2025A"
         assert len(filing.values) == 0
-        # Empty required-set ⇒ reliable_ids ≥ required_set ⇒ COMPLETE.
-        # Upstream classifier still flags zero-casilla filings for review.
-        assert filing.extraction_status is ExtractionStatus.COMPLETE
+        # Wave 23 HIGH-1: empty casilla_ids ⇒ UNVERIFIABLE, never COMPLETE.
+        # Downstream consumers must not treat an UNVERIFIABLE filing as
+        # a successful extraction.
+        assert filing.extraction_status is ExtractionStatus.UNVERIFIABLE
+
+    def test_header_only_missing_nif_raises(self, tmp_path: Path) -> None:
+        """A PDF with no NIF surfaces DeclaracionParseError even for header-only modelos."""
+        # Render a Modelo 232 PDF with an empty tax_id — the _TAX_ID_RE regex
+        # requires 8+ chars, so an empty id produces no header match.
+        from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
+            QuarterlyGenParams,
+            generate,
+        )
+
+        from ._errors import DeclaracionParseError
+
+        params = QuarterlyGenParams(
+            modelo="232",
+            año=2025,
+            template_revision="2025.01",
+            tax_id="XYZ!",  # 4 chars: passes fixture ≥4 check, fails _TAX_ID_RE ≥8
+            ejercicio="2025",
+            period_printed="0A",
+            labels={},
+            casilla_values={},
+        )
+        pdf_bytes, _ = generate(params)
+        pdf = tmp_path / "modelo_232_no_nif.pdf"
+        pdf.write_bytes(pdf_bytes)
+        with pytest.raises(DeclaracionParseError, match="tax_id"):
+            parse_declaracion(pdf)
 
 
 class TestModelo303PostHAC819Extractor:

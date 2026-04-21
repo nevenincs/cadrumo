@@ -19,11 +19,20 @@ class ExtractionStatus(StrEnum):
     """Completion level of an extraction run."""
 
     COMPLETE = "COMPLETE"
-    """Every required casilla (per schema) was resolved."""
+    """Every required casilla (per schema) was resolved AND the extractor had
+    a non-empty required set. A COMPLETE filing with ``values=()`` is an
+    invariant violation and MUST NOT occur."""
     PARTIAL = "PARTIAL"
     """≥ 50% of required casillas resolved; remainder in warnings."""
     FAILED = "FAILED"
     """< 50% of required casillas resolved."""
+    UNVERIFIABLE = "UNVERIFIABLE"
+    """The extractor recognised the document (NIF/ejercicio/período captured)
+    but exposes no casilla-level data — either because the MVP scope is
+    header-only pending a text-value primitive (e.g. Modelos 036/037/232/
+    369/720/840), or because the required set was empty by construction.
+    Downstream consumers MUST NOT treat UNVERIFIABLE as a successful
+    verification; tax-law calculations based on zero values are meaningless."""
 
 
 class TemplateRevision(BaseModel):
