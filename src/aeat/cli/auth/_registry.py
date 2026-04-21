@@ -56,13 +56,13 @@ REGISTRY: Sequence[ProviderRegistryEntry] = (
         implemented=True,
     ),
     ProviderRegistryEntry(
-        kind=AuthProviderKind.CLAVE_PERMANENTE,
-        label="Cl@ve Permanente",
-        implemented=False,
-    ),
-    ProviderRegistryEntry(
         kind=AuthProviderKind.CLAVE_MOVIL,
         label="Cl@ve Móvil",
+        implemented=True,
+    ),
+    ProviderRegistryEntry(
+        kind=AuthProviderKind.CLAVE_PERMANENTE,
+        label="Cl@ve Permanente",
         implemented=False,
     ),
     ProviderRegistryEntry(
@@ -97,15 +97,24 @@ def get_entry(kind: AuthProviderKind) -> ProviderRegistryEntry:
 def build_provider(kind: AuthProviderKind, settings: Settings) -> AuthProvider:
     """Instantiate the concrete ``AuthProvider`` for a kind.
 
-    Raises :class:`ProviderNotImplementedError` for registry entries
-    that have a label but no shipped implementation. The CLI layer
-    catches this and maps it to an actionable exit-code-2 message.
+    Passes the shared production :func:`default_browser_session_factory`
+    so the returned provider can drive Playwright without the caller
+    having to wire one itself. Raises :class:`ProviderNotImplementedError`
+    for registry entries that have a label but no shipped
+    implementation — the CLI layer catches that and maps it to an
+    actionable exit-code-2 message.
     """
     entry = get_entry(kind)
     if not entry.implemented:
         raise ProviderNotImplementedError(f"provider {kind.value!r} is known but not yet implemented; see EPIC #279")
+    from ...browser import default_browser_session_factory
+
     try:
-        return select_provider(kind, settings=settings)
+        return select_provider(
+            kind,
+            settings=settings,
+            browser_session_factory=default_browser_session_factory,
+        )
     except NotImplementedError as exc:
         raise ProviderNotImplementedError(str(exc)) from exc
 

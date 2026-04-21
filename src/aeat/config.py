@@ -363,6 +363,70 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ── Cl@ve Móvil (#285 / #284) ───────────────────────────────────────────
+    aeat_clave_movil_dni_nie: str | None = Field(
+        default=None,
+        description=(
+            "Taxpayer DNI/NIE for `aeat auth login --provider clave_movil`. "
+            "Used to stamp the persisted session with the operator's "
+            "identity and to pre-fill the non-QR fallback form. Not a "
+            "secret on its own — the Cl@ve app on Kent's phone is the "
+            "actual second factor."
+        ),
+    )
+    aeat_clave_movil_dni_fecha: str | None = Field(
+        default=None,
+        description=(
+            "DNI validity / expiry date (YYYY-MM-DD) used by the "
+            "non-QR Cl@ve Móvil fallback form. Applies when the "
+            "configured identity is a DNI."
+        ),
+    )
+    aeat_clave_movil_nie_soporte: str | None = Field(
+        default=None,
+        description=(
+            "NIE support number (número de soporte) used by the "
+            "non-QR Cl@ve Móvil fallback form. Applies when the "
+            "configured identity is a NIE."
+        ),
+    )
+    aeat_clave_prefer_non_qr: bool = Field(
+        default=False,
+        description=(
+            "When true, the Cl@ve Móvil provider uses the non-QR fallback "
+            "(DNI/NIE + contraste) rather than the QR code. Still requires "
+            "Kent to approve the push notification on the Cl@ve app."
+        ),
+    )
+    aeat_clave_movil_timeout_ms: int = Field(
+        default=300_000,
+        ge=30_000,
+        le=600_000,
+        description=(
+            "Maximum time (milliseconds) the Cl@ve Móvil provider waits for "
+            "Kent to approve the push notification on his phone before "
+            "aborting. AEAT's own window is ~5 minutes; 300000 matches that."
+        ),
+    )
+    aeat_clave_sede_access_url_template: str = Field(
+        default=(
+            "https://sede.agenciatributaria.gob.es/static_files/common/html/"
+            "selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
+        ),
+        description=(
+            "URL template for AEAT's auth-method selector page. `{target}` "
+            "is replaced with the URL-encoded target path (e.g. "
+            "`/wlpl/TEWV-CORE/ResumenVlt` for Mis expedientes)."
+        ),
+    )
+    aeat_sede_expedientes_path: str = Field(
+        default="/wlpl/TEWV-CORE/ResumenVlt",
+        description=(
+            "AEAT Sede path for 'Mis expedientes' — the default post-auth "
+            "target used by Cl@ve Móvil login and the expedientes reader."
+        ),
+    )
+
     # ── LLM ─────────────────────────────────────────────────────────────────
     aeat_llm_provider: LLMProviderSetting = Field(
         default=LLMProviderSetting.ANTHROPIC,

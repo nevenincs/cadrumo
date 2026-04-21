@@ -13,7 +13,7 @@ import asyncio
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import typer
 from rich.console import Console
@@ -40,7 +40,7 @@ logger = get_logger(__name__)
 app = typer.Typer(
     name="auth",
     no_args_is_help=True,
-    help=("Authentication provider management (#285): list-providers, login, status, logout."),
+    help=("Authentication provider management (#285): list-providers, login, status, whoami, logout."),
 )
 
 _CONSOLE = Console()
@@ -211,6 +211,94 @@ def status(
     _CONSOLE.print(render_status_line(session))
 
 
+async def _do_whoami(settings: Settings, kind: AuthProviderKind) -> tuple[AeatSession, Any]:
+    """Resume the persisted session for ``kind`` and probe AEAT Sede.
+
+    Returns the refreshed :class:`AeatSession` and the
+    :class:`AeatLoginAssertion` from the probe so the CLI can render
+    both.
+    """
+    provider = _registry.build_provider(kind, settings)
+    try:
+        session = await provider.authenticate()
+        assertion = await provider.verify(session)
+        return session, assertion
+    finally:
+        close = getattr(provider, "close", None)
+        if close is not None:
+            await close()
+
+
+@app.command(
+    "whoami",
+    help="Probe AEAT with the cached session and confirm it unlocks a live surface.",
+)
+def whoami(
+    provider: str | None = typer.Option(
+        None,
+        "--provider",
+        "-p",
+        help="Use only the session for this provider kind.",
+    ),
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        help="Emit JSON with the probe result instead of the human line.",
+    ),
+) -> None:
+    """Re-open the cached session and hit AEAT Sede to confirm it still works."""
+    settings = _load_settings()
+    explicit = _parse_kind(provider) if provider else None
+    try:
+        persisted = _session.load(settings, explicit)
+    except _session.CorruptAuthSessionError as exc:
+        _CONSOLE.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2) from exc
+    if persisted is None:
+        _CONSOLE.print(render_no_session_line(settings))
+        raise typer.Exit(code=1)
+    kind = explicit or persisted.provider_kind
+
+    try:
+        refreshed, assertion = asyncio.run(_do_whoami(settings, kind))
+    except _registry.ProviderNotImplementedError as exc:
+        _CONSOLE.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2) from exc
+    except Exception as exc:
+        _CONSOLE.print(f"[red]AEAT probe failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    if json_output:
+        payload = {
+            "provider_kind": refreshed.provider_kind.value,
+            "identity_nif": refreshed.identity_nif,
+            "authenticated_at": refreshed.authenticated_at.isoformat(),
+            "idle_deadline": refreshed.idle_deadline.isoformat(),
+            "probe": {
+                "target_url": assertion.target_url,
+                "status_code": assertion.status_code,
+                "is_valid": assertion.is_valid,
+                "elapsed_ms": assertion.elapsed_ms,
+                "error_message": assertion.error_message,
+            },
+        }
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    if assertion.is_valid:
+        _CONSOLE.print(
+            f"[green]session valid: {refreshed.identity_nif} via "
+            f"{refreshed.provider_kind.value}; AEAT returned "
+            f"HTTP {assertion.status_code} in {assertion.elapsed_ms}ms[/green]"
+        )
+    else:
+        _CONSOLE.print(
+            f"[yellow]session stale or revoked: AEAT returned "
+            f"HTTP {assertion.status_code}; run `aeat auth login` to reauthenticate[/yellow]"
+        )
+        raise typer.Exit(code=1)
+
+
 @app.command("logout", help="Clear the cached storage_state for the active (or selected) provider.")
 def logout(
     provider: str | None = typer.Option(
@@ -238,24 +326,27 @@ def logout(
     if all_providers:
         for entry in _registry.iter_entries():
             removed.extend(_session.delete(settings, entry.kind))
-    else:
-        target_kind = _parse_kind(provider) if provider else None
+    elif provider is not None:
+        target_kind = _parse_kind(provider)
         try:
             persisted = _session.load(settings, target_kind)
         except _session.CorruptAuthSessionError:
             persisted = None
-
-        paths = storage_state_paths(settings)
-        if target_kind is not None and persisted is not None and persisted.provider_kind != target_kind:
-            # The persisted session belongs to a different provider; leave it alone.
-            should_delete = False
-        elif target_kind is not None:
-            should_delete = persisted is not None
-        else:
-            should_delete = paths.metadata.exists() or paths.storage_state.exists()
-
-        if should_delete:
+        target_paths = storage_state_paths(settings, target_kind)
+        # `--provider` only removes its own files. A mismatched persisted
+        # session elsewhere on disk stays where it is.
+        if persisted is not None or target_paths.metadata.exists() or target_paths.storage_state.exists():
             removed.extend(_session.delete(settings, target_kind))
+    else:
+        # No --provider → clear whichever provider currently has a session
+        # on disk. This matches Kent's intuition: `aeat auth logout`
+        # clears his active session regardless of which provider produced it.
+        try:
+            persisted = _session.load(settings)
+        except _session.CorruptAuthSessionError:
+            persisted = None
+        if persisted is not None:
+            removed.extend(_session.delete(settings, persisted.provider_kind))
 
     if json_output:
         typer.echo(json.dumps({"removed_paths": [str(p) for p in removed]}, indent=2))
