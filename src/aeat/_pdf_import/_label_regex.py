@@ -22,6 +22,14 @@ from decimal import Decimal, InvalidOperation
 
 SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
 
+# Text-value capture — the LAST whitespace-delimited token on the line.
+# pdfplumber collapses AEAT's column-separator whitespace to single
+# spaces, so the "value-to-the-right-of-the-label" invariant reduces to
+# "the final token on the line". Modelos whose values are multi-token
+# strings (e.g. "La Rioja" provincia) need a richer bbox-anchored
+# primitive tracked under sub-EPIC #305-textual-casillas.
+TEXT_VALUE_GROUP = r"(\S+?)\s*$"
+
 
 def parse_spanish_decimal(raw: str) -> Decimal | None:
     """Parse an AEAT-formatted decimal (``1.234,56`` or ``1234.56``).
@@ -84,6 +92,7 @@ def apply_label_regex(
 
 __all__ = [
     "SPANISH_AMOUNT_GROUP",
+    "TEXT_VALUE_GROUP",
     "LabelHit",
     "apply_label_regex",
     "parse_spanish_decimal",

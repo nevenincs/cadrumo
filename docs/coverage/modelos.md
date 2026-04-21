@@ -26,7 +26,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
 | **390** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (SUSTITUTIVA) | N/A | partial | ⏳ #222 | ✅ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 720 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | 🚧 (header-only) | ❌ | ❌ |
-| 840 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | 🚧 (header-only) | ❌ | ❌ |
+| 840 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (text-value MVP) | ❌ | ❌ |
 
 **Bold** = primary autónomo forms (130, 303, 390). These are the minimum-viable modelo set for Kent.
 
