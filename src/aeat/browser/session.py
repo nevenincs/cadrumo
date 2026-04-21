@@ -62,7 +62,9 @@ class BrowserSession:
         """Create and configure a new Playwright BrowserContext."""
         async with self._lifecycle_lock:
             if self._browser is not None:
-                raise BrowserError("BrowserSession already owns a live browser")
+                raise BrowserError(
+                    "BrowserSession already owns a live browser; call close() before create_context() again"
+                )
 
             logger.info("Launching browser")
             try:
@@ -71,9 +73,13 @@ class BrowserSession:
                     channel=self.settings.aeat_browser_channel,
                 )
 
-                context_kwargs: dict[str, Any] = {
-                    "user_agent": self.settings.aeat_browser_user_agent,
-                }
+                context_kwargs: dict[str, Any] = {}
+                if self.profile.locale is not None:
+                    context_kwargs["locale"] = self.profile.locale
+                if self.profile.timezone_id is not None:
+                    context_kwargs["timezone_id"] = self.profile.timezone_id
+                if self.profile.user_agent is not None:
+                    context_kwargs["user_agent"] = self.profile.user_agent
 
                 effective_storage_state_path = storage_state_path or self.profile.storage_state_path
                 if effective_storage_state_path and effective_storage_state_path.exists():
@@ -96,8 +102,18 @@ class BrowserSession:
                 raise BrowserError(f"Failed to create browser context: {exc}") from exc
 
     async def close(self) -> None:
-        """Close the browser instance."""
+        """Close the browser instance.
+
+        Wraps the underlying close failure in :class:`BrowserError` so
+        callers see a consistent error type. The retained browser is
+        *not* cleared on failure, letting a retrying caller drive
+        cleanup to completion.
+        """
         async with self._lifecycle_lock:
-            if self._browser is not None:
+            if self._browser is None:
+                return
+            try:
                 await self._browser.close()
-                self._browser = None
+            except Exception as exc:
+                raise BrowserError(f"Failed to close retained browser: {exc}") from exc
+            self._browser = None
