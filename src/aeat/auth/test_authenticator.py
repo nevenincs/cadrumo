@@ -823,7 +823,10 @@ async def test_write_json_atomic_raises_on_icacls_failure_in_strict_mode(
 
         with pytest.raises(AeatSecurityError) as exc:
             await auth.capture_storage_state(session)
-        assert "failed to harden" in str(exc.value)
+        message = str(exc.value)
+        # Windows path surfaces "failed to harden Windows ACLs"; POSIX surfaces
+        # "failed to chmod 0600 on ...". Both are the strict-security signal.
+        assert "failed to harden" in message or "failed to chmod" in message
 
 
 @pytest.mark.asyncio
