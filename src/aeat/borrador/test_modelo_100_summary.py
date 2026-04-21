@@ -127,6 +127,53 @@ class TestSummaryBlockExtraction:
         }.issubset(extracted.keys())
 
 
+class TestDetectionDisambiguation:
+    """Audit M3: make precedence of markers observable."""
+
+    def test_csv_plus_borrador_body_classifies_as_declaracion(self, tmp_path: Path) -> None:
+        """A DECLARACION carrying a CSV must stay a DECLARACION regardless of body text."""
+        pdf = _generate_pdf(
+            tmp_path,
+            artefact_kind="DECLARACION",
+            csv="MNOP4321QRST8765",
+        )
+        filing = parse_borrador(pdf)
+        assert filing.artefact_kind is ArtefactKind.DECLARACION
+
+    def test_vista_previa_banner_trumps_borrador_header(self, tmp_path: Path) -> None:
+        """PREDECLARACION precedence — VISTA PREVIA wins over a later BORRADOR line."""
+        pdf = _generate_pdf(tmp_path, artefact_kind="PREDECLARACION")
+        filing = parse_borrador(pdf)
+        assert filing.artefact_kind is ArtefactKind.PREDECLARACION
+
+
+class TestSparseExtraction:
+    """Audit M4: sparse PREDECLARACION yields a strictly smaller value tuple."""
+
+    def test_sparse_predeclaracion_yields_fewer_values(self, tmp_path: Path) -> None:
+        sparse = {
+            "0550": "100.00",
+            "0551": "100.00",
+            "0560": "10.00",
+            "0561": "10.00",
+            "0595": "220.00",
+        }
+        pdf = _generate_pdf(
+            tmp_path,
+            artefact_kind="PREDECLARACION",
+            casilla_values=sparse,
+        )
+        filing = parse_borrador(pdf)
+        assert filing.artefact_kind is ArtefactKind.PREDECLARACION
+        extracted_ids = {v.casilla_id for v in filing.values}
+        # Only the 5 provided casillas (all summary-scope) should extract.
+        assert extracted_ids == set(sparse.keys())
+        # Ruleset-required casillas 0620 / 0622 / 0630 / 0698 / 0720 must
+        # be absent from a sparse PDF that never rendered them.
+        for missing in ("0620", "0622", "0630", "0698", "0720"):
+            assert missing not in extracted_ids
+
+
 class TestOverrides:
     def test_artefact_kind_override_skips_detection(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path, artefact_kind="BORRADOR")

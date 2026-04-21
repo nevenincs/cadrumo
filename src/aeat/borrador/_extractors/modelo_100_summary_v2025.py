@@ -102,12 +102,16 @@ class Modelo100SummaryV2025Extractor:
         hits = apply_label_regex(text, _LABEL_REGEX_MAP)
 
         values: list[ExtractedCasilla] = []
+        warnings: list[str] = []
         for casilla_id in _SUMMARY_CASILLAS:
             hit = hits.get(casilla_id)
             if hit is None:
                 continue
-            _raw, parsed = hit
+            raw, parsed = hit
             if not isinstance(parsed, Decimal):
+                # Audit M2: surface unparseable values as warnings instead
+                # of silently dropping them, matching the Modelo 303 path.
+                warnings.append(f"casilla {casilla_id}: value {raw!r} is not a number")
                 continue
             values.append(
                 ExtractedCasilla(
@@ -129,6 +133,7 @@ class Modelo100SummaryV2025Extractor:
             source_pdf_sha256=_sha256_file(pdf_path),
             parsed_at=datetime.now(tz=UTC),
             csv=csv_value,
+            warnings=tuple(warnings),
         )
 
 
