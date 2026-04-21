@@ -63,6 +63,14 @@ def test_load_out_of_range_surfaces_pydantic_detail(tmp_path: Path) -> None:
     assert "[0, 1]" in message
 
 
+def test_load_tolerates_utf8_bom(tmp_path: Path) -> None:
+    """Files saved with a UTF-8 BOM (Windows Notepad default) must load cleanly."""
+    target = tmp_path / "with-bom.json"
+    target.write_bytes(b"\xef\xbb\xbf" + b'{"ratios": {"suministros_home_office_luz": "0.21"}}')
+    profile = load_usage_ratios(target)
+    assert profile.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.21")
+
+
 def test_load_ineligible_category_surfaces_pydantic_detail(tmp_path: Path) -> None:
     """Hand-smuggled ineligible category surfaces as a named error."""
     target = tmp_path / "ineligible.json"

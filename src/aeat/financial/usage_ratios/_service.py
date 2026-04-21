@@ -45,6 +45,12 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
         raise UsageRatioPersistenceError(
             f"unable to read usage-ratio profile: {target}: {exc.__class__.__name__}: {exc}"
         ) from exc
+    # Strip a leading UTF-8 BOM — Windows Notepad (pre-2019) and several
+    # Excel/CSV tools default to UTF-8-with-BOM when saving JSON by hand.
+    # Pydantic's Rust JSON parser rejects the BOM; Kent would otherwise
+    # get an unhelpful "expected value at line 1 column 1" error.
+    if raw.startswith("﻿"):
+        raw = raw[1:]
     try:
         profile = UsageRatioProfile.model_validate_json(raw)
     except ValidationError as exc:
