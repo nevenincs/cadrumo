@@ -24,6 +24,25 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 _runner = CliRunner()
 
 
+_ANSI_RE = __import__("re").compile(r"\x1b\[[0-9;]*m")
+_PANEL_CHARS = "│└┌┐┘├┤┬┴─━┃┏┓┗┛┣┫┳┻╭╮╰╯"
+
+
+def _strip_panel(output: str) -> str:
+    """Return ``output`` with ANSI escapes, panel borders, and whitespace collapsed.
+
+    Typer's Rich-powered error panels wrap the message across multiple
+    lines with box-drawing borders and ANSI colour codes; the layout
+    depends on ``$COLUMNS`` and ``isatty`` detection, which differ
+    between local runs and CI. Test assertions need to match the
+    underlying text regardless of rendering.
+    """
+    plain = _ANSI_RE.sub("", output)
+    for ch in _PANEL_CHARS:
+        plain = plain.replace(ch, " ")
+    return " ".join(plain.split())
+
+
 # ── Test fixtures ────────────────────────────────────────────────────────────
 
 
@@ -216,7 +235,14 @@ class TestLogin:
         del isolated_token_dir
         result = _runner.invoke(app, ["auth", "login"])
         assert result.exit_code != 0
-        assert "AEAT_AUTH_PROVIDER" in result.output or "--provider" in result.output
+        # Typer's Rich error panel wraps the message across multiple
+        # lines with `│` borders and inserts ANSI colour escapes. Strip
+        # both, collapse whitespace, and match on the plain-text copy
+        # the user sees. The test has to be robust to the $COLUMNS /
+        # isatty differences between local runs (wide) and CI (narrow).
+        normalised = _strip_panel(result.output)
+        assert "configure" in normalised
+        assert "certificate" in normalised or "Cl@ve" in normalised
 
     def test_login_non_interactive_rejects_interactive_kind(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
