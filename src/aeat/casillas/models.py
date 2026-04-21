@@ -8,7 +8,7 @@ from enum import StrEnum
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
-from aeat.i18n import Translatable, require_authoritative
+from ..i18n import Translatable, require_authoritative
 
 KNOWN_MODELO_IDS = frozenset({"MODELO_130", "MODELO_303", "MODELO_390"})
 _PERIOD_RE = re.compile(r"^\d{4}(Q[1-4]|-\d{2})?$")
@@ -108,8 +108,8 @@ class CasillaRecord(_StrictFrozenModel):
     source_manual_url: AnyHttpUrl | None = None
     source_page: int | None = Field(default=None, ge=1)
     source_section: str | None = Field(default=None, max_length=128)
-    reviewed_by: str = Field(default="", max_length=64)
-    reviewed_at: date | None = None
+    definition_reviewed_by: str = Field(default="", max_length=64)
+    definition_reviewed_at: date | None = None
     llm_draft_provenance: LLMDraftProvenance | None = None
 
     @model_validator(mode="after")

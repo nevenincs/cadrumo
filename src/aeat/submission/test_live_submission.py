@@ -1,13 +1,14 @@
 """Opt-in live test for the submission engine.
 
-This module holds a single ``@pytest.mark.live`` test that performs a
-DRY-RUN-ONLY engine invocation. It never enters live submission mode.
-The test is skipped by default via the ``live`` marker; opt in with
-``AEAT_LIVE_TESTS_ENABLED=1`` and run with the ``live`` marker selected.
+This module holds a single ``live_read`` test (historical - previously
+``@pytest.mark.live``) that performs a DRY-RUN-ONLY engine invocation.
+It never enters live submission mode. The test is skipped by default
+via the ``live_read`` marker; opt in with ``AEAT_LIVE_TESTS_ENABLED=1``
+and run with the ``live_read`` marker selected.
 
 Running::
 
-    AEAT_LIVE_TESTS_ENABLED=1 uv run pytest -m live src/aeat/submission/test_live_submission.py -q
+    AEAT_LIVE_TESTS_ENABLED=1 uv run pytest -m live_read src/aeat/submission/test_live_submission.py -q
 """
 
 from __future__ import annotations
@@ -20,14 +21,15 @@ from typing import Any
 
 import pytest
 
-from aeat.config import Settings
-from aeat.submission import (
+from ..config import Settings
+from . import (
+    AuthProviderDescription,
+    AuthProviderKind,
     CasillaRecord,
     DraftStatus,
     FilingDraftLike,
     FilingFinding,
     Justificante,
-    LoadedCertificate,
     Portal,
     SubmissionAttempt,
     SubmissionEngine,
@@ -35,7 +37,7 @@ from aeat.submission import (
     Submitter,
 )
 
-pytestmark = [pytest.mark.live]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_submission]
 
 
 @dataclass
@@ -64,15 +66,20 @@ class _Deadlines:
         return True
 
 
-class _Certs:
-    def load(self) -> LoadedCertificate:
-        return LoadedCertificate(
-            subject="CN=Live",
-            not_after=date(2099, 12, 31),
-            fingerprint_sha256="a" * 64,
-        )
+class _AuthProvider:
+    kind = AuthProviderKind.CERTIFICATE
 
-    async def preload_into_browser_context(self, context: Any) -> None: ...
+    def describe(self) -> AuthProviderDescription:
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="Live test certificate",
+            configured=True,
+            available=True,
+            identity_nif="X1234567L",
+            subject="CN=Live",
+            expires_on=date(2099, 12, 31),
+            health_summary="OK:26800",
+        )
 
 
 class _Portals:
@@ -123,7 +130,7 @@ def test_live_dry_run_only(tmp_path: Path) -> None:
     )
     engine = SubmissionEngine(
         browser_session_factory=_Session,
-        cert_backend=_Certs(),
+        auth_provider=_AuthProvider(),
         portal_catalogue=_Portals(),
         draft_loader=_Drafts(),
         deadline_checker=_Deadlines(),
@@ -132,5 +139,5 @@ def test_live_dry_run_only(tmp_path: Path) -> None:
         submitters={"130": _NoopSubmitter()},
         settings=settings,
     )
-    filing = asyncio.run(engine.submit_draft(_Draft()))
+    filing = asyncio.run(engine.submit_draft(_Draft(), dry_run=True))
     assert filing.status is SubmissionStatus.PENDING

@@ -7,12 +7,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.setup import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language
+from . import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 def _canonical_answers(tmp_path: Path) -> SetupAnswers:
@@ -22,8 +22,11 @@ def _canonical_answers(tmp_path: Path) -> SetupAnswers:
         tax_id="12345678Z",
         iva_regime=IVARegime.GENERAL,
         has_employees=False,
+        pays_professionals_with_retencion=False,
+        professional_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
+        third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
@@ -43,6 +46,14 @@ def test_setup_answers_roundtrip(tmp_path: Path) -> None:
     answers = _canonical_answers(tmp_path)
     reparsed = SetupAnswers.model_validate_json(answers.model_dump_json())
     assert reparsed == answers
+
+
+def test_setup_answers_default_output_language_is_spanish(tmp_path: Path) -> None:
+    """SetupAnswers defaults the user-facing output language to Spanish."""
+    payload = _canonical_answers(tmp_path).model_dump()
+    payload.pop("output_language")
+    reparsed = SetupAnswers.model_validate(payload)
+    assert reparsed.output_language is Language.ES
 
 
 def test_setup_answers_is_frozen(tmp_path: Path) -> None:

@@ -8,11 +8,7 @@ method to see exactly which abort reasons it can produce.
 
 Safety invariants enforced by this module:
 
-- Dry-run is the default at the API level.
-- Live submit requires **both** ``dry_run=False`` and
-  ``override_confirmation=True`` — missing either triggers
-  :attr:`aeat.workflow.WorkflowAbortReason.USER_CANCELLED` without
-  ever calling :meth:`SubmissionEngineProtocol.submit_draft`.
+- Callers must spell out ``dry_run=...`` at the API level.
 - The engine never touches AEAT-side state directly; every boundary
   call flows through an injected Protocol.
 """
@@ -23,28 +19,28 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from typing import NoReturn, cast
 
-from aeat.auth import CertificateHealthSeverity
-from aeat.config import Settings
-from aeat.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
-from aeat.errors import SiteHealthError
-from aeat.i18n import Translatable
-from aeat.logging import get_logger
-from aeat.status import SiteHealthAlert
-from aeat.submission import (
+from ..auth import CertificateHealthSeverity
+from ..config import Settings
+from ..deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
+from ..errors import SiteHealthError
+from ..i18n import Translatable
+from ..logging import get_logger
+from ..status import SiteHealthAlert
+from ..submission import (
     DraftStatus,
     FilingDraftLike,
     FilingFindingSeverity,
     SubmissionPreflightError,
 )
-from aeat.workflow._errors import WorkflowComponentError
-from aeat.workflow._models import (
+from ._errors import WorkflowComponentError
+from ._models import (
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
     compute_run_id,
 )
-from aeat.workflow._protocols import (
+from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
     FilingDraftBuilderProtocol,
@@ -73,11 +69,11 @@ def _classify_cert_expiry(
 ) -> tuple[CertificateHealthSeverity, int]:
     """Classify a certificate's expiry window against operator thresholds.
 
-    Operates on the narrow :class:`aeat.submission.LoadedCertificate`
-    stub surface (``not_after: date``) rather than the rich
-    :class:`aeat.auth.LoadedCertificate`, so it can be called from the
-    workflow engine without forcing a sibling-branch rebase. Boundary
-    semantics match :func:`aeat.auth.evaluate_loaded_certificate_health`:
+    Operates on the provider description's expiry date rather than the
+    rich :class:`aeat.auth.LoadedCertificate`, so it can be called from
+    the workflow engine without forcing certificate-only types into the
+    workflow boundary. Boundary semantics match
+    :func:`aeat.auth.evaluate_loaded_certificate_health`:
     exactly ``critical_days`` remaining is CRITICAL (inclusive), and
     exactly ``warn_days`` remaining is WARN (inclusive).
 
@@ -202,8 +198,7 @@ class WorkflowEngine:
         self,
         profile: AutonomoProfile,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         sync_first: bool | None = None,
         fail_on_warning: bool = False,
         today: date | None = None,
@@ -212,12 +207,8 @@ class WorkflowEngine:
 
         Args:
             profile: The :class:`AutonomoProfile` to run for.
-            dry_run: When ``True`` (default) the dry-run submit leg is
-                taken; no live AEAT submission is attempted. When
-                ``False``, live mode additionally requires
-                ``override_confirmation=True`` — otherwise the engine
-                aborts at ``DRY_RUN_SUBMIT`` with ``USER_CANCELLED``.
-            override_confirmation: Must be ``True`` in live mode.
+            dry_run: When ``True`` the dry-run submit leg is taken; no
+                live AEAT submission is attempted.
             sync_first: Whether to run the sync runner before the
                 deadline computation. ``None`` means "use the
                 ``AEAT_WORKFLOW_SYNC_FIRST_DEFAULT`` setting".
@@ -233,7 +224,6 @@ class WorkflowEngine:
             target_modelo=None,
             target_period=None,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
             sync_first=sync_first,
             fail_on_warning=fail_on_warning,
             today=today,
@@ -245,8 +235,7 @@ class WorkflowEngine:
         modelo: str,
         period: str,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         sync_first: bool | None = None,
         fail_on_warning: bool = False,
         today: date | None = None,
@@ -258,7 +247,6 @@ class WorkflowEngine:
             modelo: Target modelo identifier.
             period: Target period identifier.
             dry_run: See :meth:`run_next`.
-            override_confirmation: See :meth:`run_next`.
             sync_first: See :meth:`run_next`.
             fail_on_warning: See :meth:`run_next`.
             today: See :meth:`run_next`.
@@ -271,7 +259,6 @@ class WorkflowEngine:
             target_modelo=modelo,
             target_period=period,
             dry_run=dry_run,
-            override_confirmation=override_confirmation,
             sync_first=sync_first,
             fail_on_warning=fail_on_warning,
             today=today,
@@ -286,7 +273,6 @@ class WorkflowEngine:
         target_modelo: str | None,
         target_period: str | None,
         dry_run: bool,
-        override_confirmation: bool,
         sync_first: bool | None,
         fail_on_warning: bool,
         today: date | None,
@@ -349,7 +335,6 @@ class WorkflowEngine:
             submission = await self._stage_dry_run_submit(
                 draft=draft,
                 dry_run=dry_run,
-                override_confirmation=override_confirmation,
                 today=reference_today,
                 steps=steps,
             )
@@ -836,9 +821,9 @@ class WorkflowEngine:
         today: date,
         steps: list[WorkflowStep],
     ) -> None:
-        """Stage 7 — run preflight gates and verify the certificate.
+        """Stage 7 — run preflight gates and verify the auth provider.
 
-        Aborts with ``CERT_INVALID`` if the certificate bundle Protocol
+        Aborts with ``CERT_INVALID`` if the auth-provider Protocol
         raises, and with ``PREFLIGHT_FAILED`` on any
         :class:`aeat.submission.SubmissionPreflightError`.
         """
@@ -846,7 +831,7 @@ class WorkflowEngine:
         cert_details: dict[str, str]
         if self._certificate_bundle is not None:
             try:
-                certificate = self._certificate_bundle.load()
+                certificate = self._certificate_bundle.describe()
             except Exception as exc:
                 cert_summary = _t(f"Certificate load failed: {type(exc).__name__}")
                 steps.append(
@@ -866,18 +851,42 @@ class WorkflowEngine:
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=cert_summary,
                 ) from exc
-            cert_severity, days_until_expiry = _classify_cert_expiry(
-                not_after=certificate.not_after,
-                today=today,
-                warn_days=self._settings.aeat_cert_warn_days,
-                critical_days=self._settings.aeat_cert_critical_days,
-            )
             cert_details = {
-                "cert_subject": certificate.subject,
-                "cert_not_after": certificate.not_after.isoformat(),
-                "cert_severity": cert_severity.value,
-                "cert_days_until_expiry": str(days_until_expiry),
+                "cert_subject": certificate.subject or "",
+                "provider_kind": certificate.kind.value,
             }
+            if not certificate.configured or not certificate.available:
+                provider_summary = _t(
+                    f"Auth provider unavailable: kind={certificate.kind.value} "
+                    f"configured={certificate.configured} available={certificate.available}"
+                )
+                steps.append(
+                    WorkflowStep(
+                        stage=WorkflowStage.RUNNING_PREFLIGHT,
+                        started_at=started,
+                        ended_at=_utcnow(),
+                        success=False,
+                        summary=provider_summary,
+                        details=cert_details,
+                    )
+                )
+                raise _AbortError(
+                    reason=WorkflowAbortReason.CERT_INVALID,
+                    summary=provider_summary,
+                )
+            if certificate.expires_on is not None:
+                cert_severity, days_until_expiry = _classify_cert_expiry(
+                    not_after=certificate.expires_on,
+                    today=today,
+                    warn_days=self._settings.aeat_cert_warn_days,
+                    critical_days=self._settings.aeat_cert_critical_days,
+                )
+                cert_details["cert_not_after"] = certificate.expires_on.isoformat()
+                cert_details["cert_severity"] = cert_severity.value
+                cert_details["cert_days_until_expiry"] = str(days_until_expiry)
+            else:
+                cert_severity = None
+                days_until_expiry = None
             if cert_severity in (
                 CertificateHealthSeverity.EXPIRED,
                 CertificateHealthSeverity.CRITICAL,
@@ -959,40 +968,19 @@ class WorkflowEngine:
         *,
         draft: FilingDraftLike,
         dry_run: bool,
-        override_confirmation: bool,
         today: date,
         steps: list[WorkflowStep],
     ) -> SubmittedFilingLike:
         """Stage 8 — dispatch to the submission engine.
 
-        Enforces the double gate: live mode (``dry_run=False``)
-        **also** requires ``override_confirmation=True`` or the engine
-        aborts with ``USER_CANCELLED`` without ever calling
-        :meth:`SubmissionEngineProtocol.submit_draft`.
+        The submission engine owns the live-write refusal gates and
+        confirmation hook; workflow only forwards the explicit mode.
         """
         started = _utcnow()
-        if not dry_run and not override_confirmation:
-            cancelled_summary = _t("Live submission refused: override_confirmation=False")
-            steps.append(
-                WorkflowStep(
-                    stage=WorkflowStage.DRY_RUN_SUBMIT,
-                    started_at=started,
-                    ended_at=_utcnow(),
-                    success=False,
-                    summary=cancelled_summary,
-                    details={"dry_run": "False", "override_confirmation": "False"},
-                )
-            )
-            raise _AbortError(
-                reason=WorkflowAbortReason.USER_CANCELLED,
-                summary=cancelled_summary,
-            )
-
         try:
             submission = await self._submission_engine.submit_draft(
                 draft,
                 dry_run=dry_run,
-                override_confirmation=override_confirmation,
                 today=today,
             )
         except SiteHealthError as exc:
@@ -1002,6 +990,22 @@ class WorkflowEngine:
                 exc=exc,
                 steps=steps,
             )
+        except SubmissionPreflightError as exc:
+            preflight_summary = _t(f"Preflight failed: {exc}")
+            steps.append(
+                WorkflowStep(
+                    stage=WorkflowStage.DRY_RUN_SUBMIT,
+                    started_at=started,
+                    ended_at=_utcnow(),
+                    success=False,
+                    summary=preflight_summary,
+                    details={"dry_run": str(dry_run), "error_message": str(exc)},
+                )
+            )
+            raise _AbortError(
+                reason=WorkflowAbortReason.PREFLIGHT_FAILED,
+                summary=preflight_summary,
+            ) from exc
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.DRY_RUN_SUBMIT,

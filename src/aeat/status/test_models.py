@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from aeat.status import (
+from . import (
     AeatStatusKind,
     BorradorIrpf,
     CalendarioEntry,
@@ -28,7 +28,7 @@ from aeat.status import (
     PayorKind,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _URL = "https://sede.agenciatributaria.gob.es/wlpl/TC-UTIL/Expediente?COPT=Y"
 _NOW = datetime(2026, 4, 12, 10, 0, tzinfo=UTC)
@@ -101,6 +101,23 @@ class TestExpediente:
         )
         assert rec.csv is None
         assert rec.justificante_url is None
+
+    def test_detail_url_defaults_to_none(self) -> None:
+        rec = Expediente.model_validate(_expediente_payload())
+        assert rec.detail_url is None
+
+    def test_detail_url_accepts_valid_url(self) -> None:
+        rec = Expediente.model_validate(
+            _expediente_payload(
+                detail_url="https://sede.agenciatributaria.gob.es/wlpl/TC-UTIL/Expediente/Detalle?EXP=2025X1234567L0001",
+            ),
+        )
+        assert rec.detail_url is not None
+        assert str(rec.detail_url).endswith("EXP=2025X1234567L0001")
+
+    def test_detail_url_rejects_malformed_url(self) -> None:
+        with pytest.raises(ValidationError):
+            Expediente.model_validate(_expediente_payload(detail_url="not-a-url"))
 
 
 def _notificacion_payload(**overrides: Any) -> dict[str, Any]:

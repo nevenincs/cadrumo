@@ -6,12 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from aeat.financial import OfxProvider
+from .. import OfxProvider
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
 
 
-@pytest.mark.unit
 def test_ofx_provider_prefers_fitid_and_payee() -> None:
     """OfxProvider should preserve FITID and payee-derived description."""
     provider = OfxProvider()
@@ -25,7 +26,6 @@ def test_ofx_provider_prefers_fitid_and_payee() -> None:
     assert transactions[1].amount < 0
 
 
-@pytest.mark.unit
 def test_ofx_provider_ingests_every_account_statement(tmp_path: Path) -> None:
     """Multi-account OFX files should emit transactions from every statement block."""
     source = tmp_path / "multi-account.ofx"

@@ -7,13 +7,13 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.auth import CertificateBackend
-from aeat.cli import app
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.setup import SetupAnswers
+from ..auth import CertificateBackend
+from ..cli import app
+from ..deadlines import IVARegime
+from ..i18n import Language
+from . import SetupAnswers
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 _runner = CliRunner()
 
@@ -25,8 +25,11 @@ def _seed_answers_file(tmp_path: Path) -> tuple[Path, SetupAnswers]:
         tax_id="12345678Z",
         iva_regime=IVARegime.GENERAL,
         has_employees=False,
+        pays_professionals_with_retencion=False,
+        professional_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
+        third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",

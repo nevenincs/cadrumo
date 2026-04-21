@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.inbox import (
+from . import (
     NotificacionKind,
     NotificacionPriority,
     RawNotificacion,
@@ -20,6 +20,8 @@ from aeat.inbox import (
     classify,
     compute_appeal_deadline,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def _raw(subject_es: str, notificacion_id: str = "AEAT-X") -> RawNotificacion:
@@ -60,7 +62,6 @@ _POSITIVE_CASES = [
 ]
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(("subject_es", "expected_kind", "expected_priority"), _POSITIVE_CASES)
 def test_classifier_rules(
     subject_es: str,
@@ -83,7 +84,6 @@ _UNCLASSIFIED_CASES = [
 ]
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize("subject_es", _UNCLASSIFIED_CASES)
 def test_unclassified_defaults_to_otro_high(subject_es: str) -> None:
     """ADR D3: anything we do not recognise is (OTRO, HIGH)."""
@@ -92,7 +92,6 @@ def test_unclassified_defaults_to_otro_high(subject_es: str) -> None:
     assert priority is NotificacionPriority.HIGH
 
 
-@pytest.mark.unit
 def test_classifier_covers_every_kind() -> None:
     """Every NotificacionKind must appear as the result of at least one rule or the fallback."""
     seen_kinds = {classify(_raw(subject))[0] for subject, _, _ in _POSITIVE_CASES}
@@ -100,14 +99,12 @@ def test_classifier_covers_every_kind() -> None:
     assert seen_kinds == set(NotificacionKind)
 
 
-@pytest.mark.unit
 def test_classifier_is_accent_insensitive() -> None:
     """Accented and unaccented Spanish must match the same rule."""
     assert classify(_raw("Requerimiento de información"))[0] is NotificacionKind.REQUERIMIENTO
     assert classify(_raw("requerimiento de informacion"))[0] is NotificacionKind.REQUERIMIENTO
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     ("kind", "expected_days"),
     [
@@ -123,7 +120,6 @@ def test_appeal_window_days(kind: NotificacionKind, expected_days: int) -> None:
     assert window.days == expected_days
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     "kind",
     [NotificacionKind.ACUSE_RECIBO, NotificacionKind.COMUNICACION_GENERAL, NotificacionKind.OTRO],
@@ -132,7 +128,6 @@ def test_appeal_window_none(kind: NotificacionKind) -> None:
     assert appeal_window_for(kind) is None
 
 
-@pytest.mark.unit
 def test_compute_appeal_deadline_applies_window() -> None:
     effective_at = datetime(2026, 4, 1, 10, 0, tzinfo=UTC)
     deadline = compute_appeal_deadline(effective_at, NotificacionKind.REQUERIMIENTO)
@@ -140,7 +135,6 @@ def test_compute_appeal_deadline_applies_window() -> None:
     assert deadline.isoformat() == "2026-04-11"
 
 
-@pytest.mark.unit
 def test_compute_appeal_deadline_none_for_informational() -> None:
     effective_at = datetime(2026, 4, 1, tzinfo=UTC)
     assert compute_appeal_deadline(effective_at, NotificacionKind.ACUSE_RECIBO) is None

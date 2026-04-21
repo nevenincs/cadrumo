@@ -13,8 +13,9 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
 
-@pytest.mark.live
+
 @pytest.mark.asyncio
 async def test_live_fetch_and_ack(tmp_path: Path) -> None:
     """End-to-end fetch + ack round-trip against the real AEAT portal."""

@@ -17,23 +17,25 @@ from typing import cast
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app as root_app
-from aeat.cli.workflow._helpers import clear_test_hooks, set_test_hooks
-from aeat.config import Settings
-from aeat.deadlines import (
+from ...config import Settings
+from ...deadlines import (
     AutonomoProfile,
     FilingObligation,
     IVARegime,
     ObligationStatus,
     Schedule,
 )
-from aeat.submission import DraftStatus, FilingFinding
-from aeat.workflow import (
+from ...submission import DraftStatus, FilingFinding
+from ...workflow import (
     FilingDraftBuilderProtocol,
     SubmissionEngineProtocol,
     SubmittedFilingLike,
     WorkflowEngine,
 )
+from .. import app as root_app
+from ._helpers import clear_test_hooks, set_test_hooks
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 @dataclass
@@ -93,8 +95,7 @@ class _SubmissionEngine:
         self,
         draft: _Draft,
         *,
-        dry_run: bool = True,
-        override_confirmation: bool = False,
+        dry_run: bool,
         today: date | None = None,
     ) -> SubmittedFilingLike:
         return SubmittedFilingLike(
@@ -159,7 +160,6 @@ def _wire_hooks() -> Iterator[None]:
     clear_test_hooks()
 
 
-@pytest.mark.unit
 class TestWorkflowCli:
     def test_next_json_round_trips(self, _isolated_runs_dir: Path) -> None:
         runner = CliRunner()

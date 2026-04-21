@@ -58,9 +58,10 @@ env-setup:
 
 # ── Dev loop ─────────────────────────────────────────────────────────────────
 
-# Lint with ruff.
+# Lint with ruff and enforce the #162 relative-imports mandate.
 lint:
     uv run ruff check .
+    uv run python scripts/check_relative_imports.py
 
 # Format with ruff.
 fmt:
@@ -70,13 +71,71 @@ fmt:
 typecheck:
     uv run ty check src tests
 
-# Run the pytest suite (excludes @pytest.mark.live by default).
+# Run the pytest suite (unit-only by default via pyproject addopts).
 test:
     uv run pytest
 
-# Run only the live smoke tests against real Google APIs.
+# Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
 test-live:
-    uv run pytest -m live
+    uv run pytest -m "unit or live_read"
+
+# Run only live_read tests.
+test-live-read:
+    uv run pytest -m "live_read"
+
+# Run unit tests in a single domain, e.g. `just test-domain financial_input`.
+test-domain DOMAIN:
+    uv run pytest -m "unit and domain_{{DOMAIN}}"
+
+# Documentation surface for @pytest.mark.live_write tests. Charter #116 R1
+# categorically forbids any automated live write against AEAT Sede
+# Electronica - AEAT has no sandbox and every successful write is a
+# legally binding filing. The collection hook in conftest.py DROPS every
+# live_write item unless all three bypass factors are active:
+#   1. AEAT_LIVE_WRITE_UNSAFE_BYPASS=1
+#   2. AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM="I ACCEPT THE RISK OF FILING A LIVE TAX RETURN"
+#   3. stdin attached to an interactive TTY
+# This recipe does NOT enable a live submission; charter R3 (env gate) and
+# R5 (SubmissionEngine.__init__ runtime refusal) remain the last-line
+# defences. Under default operation the recipe collects zero items.
+[unix]
+test-live-write:
+    #!/usr/bin/env bash
+    echo "WARNING: @pytest.mark.live_write tests are collection-banned by default (charter #116 R1)."
+    echo "This recipe does NOT enable a live submission. See tests/README.md for the three-factor bypass."
+    uv run pytest -m live_write
+
+[windows]
+test-live-write:
+    #!pwsh
+    Write-Host "WARNING: @pytest.mark.live_write tests are collection-banned by default (charter #116 R1)."
+    Write-Host "This recipe does NOT enable a live submission. See tests/README.md for the three-factor bypass."
+    uv run pytest -m live_write
+
+# Run the unit suite with coverage and enforce the fail-under floor.
+# See .vault/adr/2026-04-17-pytest-only-testing-adr.md (#15).
+[unix]
+test-cov:
+    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+
+[windows]
+test-cov:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Run the unit suite in parallel via pytest-xdist. Opt-in; never on live tests.
+[unix]
+test-parallel:
+    uv run pytest -n auto
+
+[windows]
+test-parallel:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run pytest -n auto
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Run all pre-commit hooks via prek.
 hooks:
@@ -408,6 +467,51 @@ playwright-doctor:
 gsuite-oauth-client:
     uv run aeat oauth-client init
 
+# Fetch the AEAT PKCS#12 certificate from Google Drive into credentials/.
+# Requires `just gcloud-auth` to have been run (Drive scope on ADC).
+# Usage: `just aeat-cert-fetch WOOTSCH_GERGELY_DOMOKOS_Y4113523X.p12`.
+# After it succeeds, edit env/.env to set:
+#   AEAT_LIVE_TESTS_ENABLED=1
+#   AEAT_CERTIFICATE_PATH=<absolute path printed by this recipe>
+#   AEAT_CERTIFICATE_PASSWORD_SECRET=<your cert passphrase>
+[unix]
+aeat-cert-fetch NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f env/.env ]; then
+        echo "env/.env not found — run 'just env-setup' first." >&2
+        exit 1
+    fi
+    mkdir -p credentials
+    uv run aeat drive fetch "{{NAME}}" --out "credentials/{{NAME}}"
+    echo ""
+    echo "next steps:"
+    echo "  1. Edit env/.env and set AEAT_CERTIFICATE_PATH=$(pwd)/credentials/{{NAME}}"
+    echo "  2. Set AEAT_CERTIFICATE_PASSWORD_SECRET=<passphrase>"
+    echo "  3. Set AEAT_LIVE_TESTS_ENABLED=1"
+    echo "  4. Run 'just test-live-read' to verify the live AEAT read path."
+
+[windows]
+aeat-cert-fetch NAME:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (-not (Test-Path 'env/.env')) {
+        Write-Error "env/.env not found - run 'just env-setup' first."
+        exit 1
+    }
+    if (-not (Test-Path 'credentials')) {
+        New-Item -ItemType Directory -Path 'credentials' | Out-Null
+    }
+    uv run aeat drive fetch "{{NAME}}" --out "credentials/{{NAME}}"
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $abs = (Resolve-Path "credentials/{{NAME}}").Path
+    Write-Host ""
+    Write-Host "next steps:"
+    Write-Host "  1. Edit env/.env and set AEAT_CERTIFICATE_PATH=$abs"
+    Write-Host "  2. Set AEAT_CERTIFICATE_PASSWORD_SECRET=<passphrase>"
+    Write-Host "  3. Set AEAT_LIVE_TESTS_ENABLED=1"
+    Write-Host "  4. Run 'just test-live-read' to verify the live AEAT read path."
+
 # ── Release (local-only; see RELEASING.md + aeat#60) ────────────────────────
 #
 # release-please runs LOCALLY, never in GitHub Actions (Actions is
@@ -546,7 +650,7 @@ release-apply:
 # ── Google Workspace test fixtures ──────────────────────────────────────────
 #
 # Idempotent provisioning and teardown of the Drive/Sheets/Docs fixtures
-# consumed by `@pytest.mark.live` tests. See scripts/README.md and
+# consumed by `@pytest.mark.live_read` tests. See scripts/README.md and
 # .vault/adr/2026-04-12-google-fixtures-adr.md.
 
 # Provision (or discover) every fixture in scripts/_fixture_catalogue.py,

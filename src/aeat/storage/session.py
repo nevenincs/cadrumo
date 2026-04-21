@@ -12,8 +12,7 @@ from contextlib import contextmanager
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from aeat.logging import get_logger
-
+from ..logging import get_logger
 from .engine import get_engine
 
 _log = get_logger(__name__)

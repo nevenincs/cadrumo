@@ -14,9 +14,9 @@ from typing import cast
 
 import pytest
 
-from aeat.filing import build_draft
-from aeat.filing.testing import SyntheticProfile, default_schema_provider
-from aeat.submission import (
+from ...filing import build_draft
+from ...filing.testing import SyntheticProfile, default_schema_provider
+from .. import (
     BrowserSessionLike,
     CasillaInputKind,
     CasillaRecord,
@@ -29,7 +29,7 @@ from aeat.submission import (
     SubmissionStatus,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 @dataclass

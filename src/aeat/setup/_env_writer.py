@@ -15,10 +15,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.deadlines import AutonomoProfile
-from aeat.env_io import write_env_vars
-from aeat.logging import get_logger
-from aeat.setup._models import SetupAnswers
+from ..deadlines import AutonomoProfile
+from ..env_io import write_env_vars
+from ..logging import get_logger
+from ._models import SetupAnswers
 
 log = get_logger(__name__)
 
@@ -140,8 +140,11 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         tax_id=answers.tax_id,
         iva_regime=answers.iva_regime,
         has_employees=answers.has_employees,
+        pays_professionals_with_retencion=answers.pays_professionals_with_retencion,
+        professional_income_withholding_ge_70pct=answers.professional_income_withholding_ge_70pct,
         pays_rent_with_retencion=answers.pays_rent_with_retencion,
         does_intracomunitario=answers.does_intracomunitario,
+        third_party_transactions_above_347_threshold=answers.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=answers.bienes_extranjero_above_threshold,
         notes=answers.notes,
     )

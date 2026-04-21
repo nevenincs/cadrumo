@@ -5,8 +5,8 @@ upstream siblings land on ``main``:
 
 - ``ModeloIdentifier`` — rebase-swap stub for ``aeat.models`` (#6).
 - ``Portal`` / ``PortalCatalogue`` — stubs for ``aeat.portals`` (#7).
-- ``LoadedCertificate`` / ``CertificateBackend`` — stubs for
-  ``aeat.auth.certificate`` (#8).
+- ``AuthProviderDescription`` / ``AuthProviderProbe`` — stubs for
+  the provider-agnostic auth surface (#281).
 - ``CasillaRecord`` / ``CasillaCatalogue`` — stubs for
   ``aeat.casillas`` (#23).
 - ``DeadlineWindowChecker`` — narrow stub that mirrors the surface
@@ -34,7 +34,8 @@ from typing import Any, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from aeat.i18n import Translatable
+from ..auth import AuthProviderDescription, AuthProviderKind
+from ..i18n import Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -106,33 +107,14 @@ class PortalCatalogue(Protocol):
         ...
 
 
-class LoadedCertificate(BaseModel):
-    """Rebase-swap stub for ``aeat.auth.certificate.LoadedCertificate`` (#8).
-
-    Attributes:
-        subject: The certificate subject DN as a single string.
-        not_after: The certificate's ``notAfter`` date.
-        fingerprint_sha256: Hex-encoded SHA-256 fingerprint of the
-            full DER-encoded certificate.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    subject: str = Field(min_length=1)
-    not_after: date
-    fingerprint_sha256: str = Field(min_length=64, max_length=64)
-
-
 @runtime_checkable
-class CertificateBackend(Protocol):
-    """Rebase-swap stub for ``aeat.auth.certificate.CertificateBackend`` (#8)."""
+class AuthProviderProbe(Protocol):
+    """Narrow submission-facing auth-provider surface."""
 
-    def load(self) -> LoadedCertificate:
-        """Load and return the currently configured certificate."""
-        ...
+    kind: AuthProviderKind
 
-    async def preload_into_browser_context(self, context: Any) -> None:
-        """Inject the certificate into a browser context before navigation."""
+    def describe(self) -> AuthProviderDescription:
+        """Return a safe description of the active auth provider."""
         ...
 
 

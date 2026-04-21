@@ -2,10 +2,9 @@
 
 The command refuses to enter live mode unless the caller passes both
 ``--no-dry-run`` *and* ``--i-understand-this-is-real``, mirroring the
-submission engine's double-gate contract. Until the in-flight
-sibling branches (#43, #46, #8) land, invoking this command outside
-a test context raises a :class:`WorkflowError` because the
-certificate / inbox / status protocols cannot be wired without them.
+submission engine's double-gate contract. The production path now
+wires the on-main deadline engine, filing runtime schema provider,
+and dry-run-safe submission helper.
 """
 
 from __future__ import annotations
@@ -13,7 +12,7 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from aeat.cli.workflow._helpers import run_engine_next
+from ._helpers import run_engine_next
 
 _CONSOLE = Console()
 
@@ -56,7 +55,6 @@ def next_cmd(
         raise typer.Exit(code=2)
     run_engine_next(
         dry_run=not no_dry_run,
-        override_confirmation=i_understand_this_is_real,
         sync_first=sync_first,
         as_json=as_json,
     )

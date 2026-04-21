@@ -15,7 +15,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from aeat.manuals import (
+from ..manuals import (
     ManualError,
     ManualId,
     ManualNotFoundError,
@@ -234,8 +234,8 @@ def show(
     typer.echo(f"title (es): {record.title.get('es', '')}")
     typer.echo(f"summary (es): {record.summary.get('es', '')}")
     typer.echo(f"chapters: {len(record.chapters)}")
-    typer.echo(f"reviewed_by: {record.reviewed_by}")
-    typer.echo(f"reviewed_at: {record.reviewed_at.isoformat()}")
+    typer.echo(f"definition_reviewed_by: {record.definition_reviewed_by}")
+    typer.echo(f"definition_reviewed_at: {record.definition_reviewed_at.isoformat()}")
 
 
 __all__ = ["app"]

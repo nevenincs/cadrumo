@@ -37,7 +37,29 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from aeat.auth.certificate import (
+from ._authenticator import AeatAuthenticator
+from ._browser import (
+    BrowserContextLike,
+    BrowserPageLike,
+    BrowserResponseLike,
+    BrowserSessionFactory,
+    BrowserSessionLike,
+)
+from ._gate import AeatAccessGate, AeatGateEnvSnapshot
+from ._models import (
+    AEAT_SESSION_IDLE_TTL,
+    AeatLoginAssertion,
+    AeatSession,
+    CertificateSessionDetail,
+)
+from ._protocols import AuthProviderKind
+from ._providers._certificate._certificate_backends._playwright_context import (
+    build_client_certificates_kwarg,
+)
+from ._providers._certificate.certificate import (
+    AeatLiveReadNotEnabledError,
+    AeatLoginAssertionError,
+    AeatSessionExpiredError,
     CertificateBackend,
     CertificateBundle,
     CertificateError,
@@ -46,11 +68,13 @@ from aeat.auth.certificate import (
     CertificateHealth,
     CertificateHealthSeverity,
     CertificateLoadError,
+    CertificateNifParseError,
     CertificatePasswordError,
     CertificatePreExpiryError,
     HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
+    extract_nif_from_subject,
     health,
     load_certificate,
     preload_into_browser_context,
@@ -58,9 +82,24 @@ from aeat.auth.certificate import (
 )
 
 if TYPE_CHECKING:
-    from aeat.config import Settings
+    from ..config import Settings
 
 __all__ = [
+    "AEAT_SESSION_IDLE_TTL",
+    "AeatAccessGate",
+    "AeatAuthenticator",
+    "AeatGateEnvSnapshot",
+    "AeatLiveReadNotEnabledError",
+    "AeatLoginAssertion",
+    "AeatLoginAssertionError",
+    "AeatSession",
+    "AeatSessionExpiredError",
+    "AuthProviderKind",
+    "BrowserContextLike",
+    "BrowserPageLike",
+    "BrowserResponseLike",
+    "BrowserSessionFactory",
+    "BrowserSessionLike",
     "CertificateBackend",
     "CertificateBundle",
     "CertificateError",
@@ -69,11 +108,15 @@ __all__ = [
     "CertificateHealth",
     "CertificateHealthSeverity",
     "CertificateLoadError",
+    "CertificateNifParseError",
     "CertificatePasswordError",
     "CertificatePreExpiryError",
+    "CertificateSessionDetail",
     "HandshakeResult",
     "LoadedCertificate",
+    "build_client_certificates_kwarg",
     "evaluate_loaded_certificate_health",
+    "extract_nif_from_subject",
     "health",
     "load_certificate",
     "preload_into_browser_context",
@@ -398,7 +441,7 @@ def get_credentials_for_scopes(scopes: list[str] | None = None) -> BaseCredentia
     Returns:
         Authenticated credentials suitable for any Google API client.
     """
-    from aeat.config import Settings  # local import to avoid import cycle
+    from ..config import Settings  # local import to avoid import cycle
 
     scopes = scopes or SCOPES
     settings = Settings()

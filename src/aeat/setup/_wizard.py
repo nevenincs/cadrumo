@@ -13,21 +13,21 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from aeat.auth import CertificateBackend
-from aeat.deadlines import IVARegime
-from aeat.i18n import Language
-from aeat.logging import get_logger
-from aeat.setup._env_writer import write_env_file, write_profile_file
-from aeat.setup._errors import SetupError
-from aeat.setup._models import (
+from ..auth import CertificateBackend
+from ..deadlines import IVARegime
+from ..i18n import Language
+from ..logging import get_logger
+from ._env_writer import write_env_file, write_profile_file
+from ._errors import SetupError
+from ._models import (
     SetupAnswers,
     SetupOutcome,
     SetupResult,
     SetupStep,
     VerifyFinding,
 )
-from aeat.setup._protocols import FirstRunRunner, Prompter
-from aeat.setup._verifier import Verifier
+from ._protocols import FirstRunRunner, Prompter
+from ._verifier import Verifier
 
 log = get_logger(__name__)
 
@@ -198,8 +198,18 @@ class SetupWizard:
         )
         has_employees = prompter.prompt_bool(
             key="has_employees",
-            prompt="Do you pay salaries or professional fees with retención?",
+            prompt="Do you pay salaries with retención?",
             default=defaults.has_employees if defaults else False,
+        )
+        pays_professionals_with_retencion = prompter.prompt_bool(
+            key="pays_professionals_with_retencion",
+            prompt="Do you pay professional fees with retención?",
+            default=defaults.pays_professionals_with_retencion if defaults else False,
+        )
+        professional_income_withholding_ge_70pct = prompter.prompt_bool(
+            key="professional_income_withholding_ge_70pct",
+            prompt="Was at least 70% of your prior-year professional income already subject to withholding?",
+            default=defaults.professional_income_withholding_ge_70pct if defaults else False,
         )
         pays_rent_with_retencion = prompter.prompt_bool(
             key="pays_rent_with_retencion",
@@ -210,6 +220,11 @@ class SetupWizard:
             key="does_intracomunitario",
             prompt="Do you conduct operaciones intracomunitarias?",
             default=defaults.does_intracomunitario if defaults else False,
+        )
+        third_party_transactions_above_347_threshold = prompter.prompt_bool(
+            key="third_party_transactions_above_347_threshold",
+            prompt="Did you exceed the Modelo 347 threshold with any third party last year?",
+            default=defaults.third_party_transactions_above_347_threshold if defaults else False,
         )
         bienes_extranjero = prompter.prompt_bool(
             key="bienes_extranjero_above_threshold",
@@ -249,7 +264,7 @@ class SetupWizard:
             key="output_language",
             prompt="User-facing output language",
             choices=tuple(lang.value for lang in Language),
-            default=(defaults.output_language.value if defaults else Language.HU.value),
+            default=(defaults.output_language.value if defaults else Language.ES.value),
         )
 
         drafts_dir = prompter.prompt_path(
@@ -275,7 +290,7 @@ class SetupWizard:
 
         live_tests = prompter.prompt_bool(
             key="aeat_live_tests_enabled",
-            prompt="Opt in to @pytest.mark.live tests?",
+            prompt="Opt in to @pytest.mark.live_read tests?",
             default=defaults.aeat_live_tests_enabled if defaults else False,
         )
         live_tests_google = prompter.prompt_bool(
@@ -293,8 +308,11 @@ class SetupWizard:
             tax_id=tax_id,
             iva_regime=IVARegime(iva_regime_raw),
             has_employees=has_employees,
+            pays_professionals_with_retencion=pays_professionals_with_retencion,
+            professional_income_withholding_ge_70pct=professional_income_withholding_ge_70pct,
             pays_rent_with_retencion=pays_rent_with_retencion,
             does_intracomunitario=does_intracomunitario,
+            third_party_transactions_above_347_threshold=third_party_transactions_above_347_threshold,
             bienes_extranjero_above_threshold=bienes_extranjero,
             certificate_path=cert_path,
             certificate_password_secret_var_name=cert_password_var,

@@ -8,10 +8,12 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import Settings
-from aeat.manuals import ManualId, ManualPart, verify_manual_dir
-from aeat.manuals._verify import raise_on_errors
-from aeat.manuals.errors import ManualNotFoundError, ManualReviewRequiredError
+from ..config import Settings
+from . import ManualId, ManualPart, verify_manual_dir
+from ._verify import raise_on_errors
+from .errors import ManualNotFoundError, ManualReviewRequiredError
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 class _IsolatedSettings(Settings):
@@ -52,8 +54,8 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
                 "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
                 "page": 10,
             },
-            "reviewed_by": reviewer,
-            "reviewed_at": "2026-04-12",
+            "definition_reviewed_by": reviewer,
+            "definition_reviewed_at": "2026-04-12",
         },
     )
     _write_json(
@@ -83,8 +85,8 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
             "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
             "source_html_url": None,
             "fetched_at": "2026-04-12T00:00:00Z",
-            "reviewed_by": reviewer,
-            "reviewed_at": "2026-04-12",
+            "definition_reviewed_by": reviewer,
+            "definition_reviewed_at": "2026-04-12",
         },
     )
 
@@ -92,7 +94,6 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
 class TestVerify:
     """Verification walks every record and surfaces issues."""
 
-    @pytest.mark.unit
     def test_missing_part_root_raises(self, tmp_path: Path) -> None:
         """A non-existent part root is a hard error, not a report."""
         settings = _settings(tmp_path)
@@ -104,7 +105,6 @@ class TestVerify:
                 settings=settings,
             )
 
-    @pytest.mark.unit
     def test_empty_part_root_reports_missing_manifest(self, tmp_path: Path) -> None:
         """A part directory without a manifest produces a warning, not an error."""
         root = tmp_path / "corpus" / "manuals"
@@ -119,7 +119,6 @@ class TestVerify:
         assert report.ok
         assert any(issue.code == "missing-manifest" for issue in report.warnings)
 
-    @pytest.mark.unit
     def test_clean_structure_is_ok(self, tmp_path: Path) -> None:
         """A well-formed structure produces no error-level issues."""
         root = tmp_path / "corpus" / "manuals"
@@ -133,9 +132,8 @@ class TestVerify:
         )
         assert report.ok
 
-    @pytest.mark.unit
     def test_empty_reviewer_surfaces_as_load_error(self, tmp_path: Path) -> None:
-        """Empty reviewed_by on the manual root fails schema load → verify error.
+        """Empty definition_reviewed_by on the manual root fails schema load → verify error.
 
         The schema-level constraint (_Reviewer min_length=1 after
         stripping) is the absolute review gate. Attempting to land an
@@ -147,7 +145,7 @@ class TestVerify:
         _seed_structure(root)
         manual_path = root / "iva" / "2025" / "structure" / "manual.json"
         payload = json.loads(manual_path.read_text(encoding="utf-8"))
-        payload["reviewed_by"] = ""
+        payload["definition_reviewed_by"] = ""
         manual_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         settings = _settings(root, review_required=True)
         report = verify_manual_dir(
@@ -159,7 +157,6 @@ class TestVerify:
         assert not report.ok
         assert any(issue.code == "load-failed" for issue in report.errors)
 
-    @pytest.mark.unit
     def test_load_failure_is_error(self, tmp_path: Path) -> None:
         """A corrupt manual.json is reported as a load-failed error."""
         root = tmp_path / "corpus" / "manuals"
@@ -175,7 +172,6 @@ class TestVerify:
         assert not report.ok
         assert any(issue.code == "load-failed" for issue in report.errors)
 
-    @pytest.mark.unit
     def test_raise_on_errors_raises_for_non_ok(self, tmp_path: Path) -> None:
         """raise_on_errors turns a failing report into an exception."""
         root = tmp_path / "corpus" / "manuals"

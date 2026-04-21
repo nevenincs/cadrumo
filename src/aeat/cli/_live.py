@@ -1,4 +1,4 @@
-"""Shared fixtures and skip helpers for ``@pytest.mark.live`` tests.
+"""Shared fixtures and skip helpers for ``@pytest.mark.live_read`` tests.
 
 Live tests run against real Google APIs and must satisfy two
 preconditions:
@@ -22,7 +22,7 @@ from typing import Any
 
 import pytest
 
-from aeat.config import Settings
+from ..config import Settings
 
 
 def _settings() -> Settings:
@@ -80,42 +80,42 @@ def unique_prefix() -> str:
 
 def drive_service() -> Any:
     """Build a Drive v3 service from current ADC for use in live tests."""
-    from aeat.auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes
+    from ..auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes
 
     return build_drive_service(get_credentials_for_scopes([DRIVE_SCOPE]))
 
 
 def sheets_service() -> Any:
     """Build a Sheets v4 service from current ADC for use in live tests."""
-    from aeat.auth import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
+    from ..auth import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
 
     return build_sheets_service(get_credentials_for_scopes([SHEETS_SCOPE]))
 
 
 def docs_service() -> Any:
     """Build a Docs v1 service from current ADC for use in live tests."""
-    from aeat.auth import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
+    from ..auth import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
 
     return build_docs_service(get_credentials_for_scopes([DOCS_SCOPE]))
 
 
 def storage_client(project: str) -> Any:
     """Build a Cloud Storage client for use in live tests."""
-    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_storage_client, get_credentials_for_scopes
+    from ..auth import CLOUD_PLATFORM_SCOPE, build_storage_client, get_credentials_for_scopes
 
     return build_storage_client(get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE]), project)
 
 
 def cloudfunctions_client() -> Any:
     """Build a Cloud Functions v2 client for use in live tests."""
-    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_cloudfunctions_client, get_credentials_for_scopes
+    from ..auth import CLOUD_PLATFORM_SCOPE, build_cloudfunctions_client, get_credentials_for_scopes
 
     return build_cloudfunctions_client(get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE]))
 
 
 def cloudrun_client() -> Any:
     """Build a Cloud Run v2 services client for use in live tests."""
-    from aeat.auth import CLOUD_PLATFORM_SCOPE, build_cloudrun_client, get_credentials_for_scopes
+    from ..auth import CLOUD_PLATFORM_SCOPE, build_cloudrun_client, get_credentials_for_scopes
 
     return build_cloudrun_client(get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE]))
 

@@ -9,10 +9,10 @@ from zoneinfo import ZoneInfo
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from aeat.status import Expediente, StatusParseError
-from aeat.status._parsers import parse_expedientes
+from .. import Expediente, StatusParseError
+from . import parse_expedientes
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 _FIXTURE_DIR = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "aeat-pages" / "expedientes"
 _SOURCE_URL: AnyHttpUrl = TypeAdapter(AnyHttpUrl).validate_python(
@@ -100,6 +100,42 @@ class TestParseExpedientes:
         assert (second_local.year, second_local.month, second_local.day) == (2025, 7, 15)
         assert second.csv is None
         assert second.justificante_url is None
+
+    def test_detail_url_populated_when_anchor_present(self) -> None:
+        """The Detalle column is captured as ``Expediente.detail_url``.
+
+        Regression guard for #227: earlier versions of the parser
+        harvested the justificante anchor only.
+        """
+        records = parse_expedientes(
+            _load("sample_with_detail.html"),
+            source_url=_SOURCE_URL,  # type: ignore[arg-type]
+            fetched_at=_FETCHED_AT,
+        )
+        assert len(records) == 2
+        populated = records[0]
+        assert populated.expediente_id == "2025X1234567L0100"
+        assert populated.detail_url is not None
+        assert str(populated.detail_url).startswith(
+            "https://sede.agenciatributaria.gob.es/wlpl/TC-UTIL/Expediente/Detalle"
+        )
+        absent = records[1]
+        assert absent.expediente_id == "2025X1234567L0101"
+        assert absent.detail_url is None
+
+    def test_detail_url_none_when_column_missing(self) -> None:
+        """Fixtures without a Detalle column yield ``detail_url=None``.
+
+        Backwards-compatible: the original three-row ``sample.html``
+        still parses and every row has ``detail_url=None``.
+        """
+        records = parse_expedientes(
+            _load("sample.html"),
+            source_url=_SOURCE_URL,  # type: ignore[arg-type]
+            fetched_at=_FETCHED_AT,
+        )
+        assert len(records) == 3
+        assert all(r.detail_url is None for r in records)
 
     def test_unparseable_timestamp_raises_parse_error(self) -> None:
         html = """
