@@ -19,7 +19,7 @@ hooks = [
 repo = "https://github.com/astral-sh/ruff-pre-commit"
 rev = "v0.15.9"
 hooks = [
-  { id = "ruff", args = ["--fix", "--exit-non-zero-on-fix"] },
+  { id = "ruff-check", args = ["--fix", "--exit-non-zero-on-fix"] },
   { id = "ruff-format" },
 ]
 
@@ -50,28 +50,17 @@ pass_filenames = true
 files = "^src/aeat/.*\\.py$"
 types = ["python"]
 
-# ── Vault hygiene (vaultspec-core) ──────────────────────────────────────────
-# Previously lived in a shadowed .pre-commit-config.yaml; prek only reads
-# prek.toml, so these guards had been silently disabled. Re-enabled here.
-#
-# Only `check-provider-artifacts` runs on every commit / in CI — it is the
-# guard that catches accidental provider-state commits (the same class of
-# bug that let .vaultspec/providers.json slip into main). `vault-fix` and
-# `spec-check` are parked on the manual stage: `vault-fix` rewrites files
-# in-place (unsafe mid-commit) and currently flags a large pre-existing
-# doc-naming backlog, while `spec-check` reports local-dev framework
-# health that is not meaningful inside CI. Run them explicitly with
+# ── Vault hygiene (vaultspec-core, manual stage) ────────────────────────────
+# `vault-fix` rewrites files in place (unsafe mid-commit) and `spec-check`
+# reports local-dev framework health that is not meaningful inside CI.
+# Parked on the manual stage — run explicitly with
 # `uv run prek run --hook-stage manual <hook-id>`.
+#
+# Provider-artifact leaks are already prevented by the vaultspec-managed
+# .gitignore block (`.vaultspec/`, `providers.json`, `.mcp.json` etc.), so
+# no commit-stage hook is needed for that.
 [[repos]]
 repo = "local"
-
-[[repos.hooks]]
-id = "check-provider-artifacts"
-name = "check provider artifacts (guard against provider leaks)"
-language = "system"
-entry = "uv run --no-sync vaultspec-core check-providers"
-pass_filenames = false
-always_run = true
 
 [[repos.hooks]]
 id = "vault-fix"

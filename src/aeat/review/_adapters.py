@@ -10,6 +10,7 @@ predicate table (see ADR D5).
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, time, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -86,6 +87,36 @@ def transactions_pending(
         if severity is None:
             continue
         items.append(_to_transaction_item(transaction, severity=severity))
+    return tuple(items)
+
+
+def transactions_low_confidence(
+    settings: Settings,
+    *,
+    threshold: Decimal,
+    catalogue: TransactionCatalogue | None = None,
+) -> tuple[TransactionReviewItem, ...]:
+    """Return transactions whose decision confidence sits below a threshold (#236).
+
+    Surfaces every transaction whose ``classification_confidence`` is
+    non-None and strictly less than the threshold, regardless of
+    classification state. A rule engine that tagged a
+    ``PROCESSED_UNCLASSIFIED`` row with confidence 0.4 is just as
+    interesting to Kent as a ``BUSINESS`` classification accepted at
+    confidence 0.4 — both warrant his attention. Transactions with
+    ``None`` confidence are excluded because they have no claim to
+    filter against.
+    """
+    if catalogue is None:
+        catalogue = _load_transactions(settings)
+        if catalogue is None:
+            return ()
+    items: list[TransactionReviewItem] = []
+    for transaction in catalogue.values():
+        confidence = transaction.classification_confidence
+        if confidence is None or confidence >= threshold:
+            continue
+        items.append(_to_transaction_item(transaction, severity=ReviewSeverity.NORMAL))
     return tuple(items)
 
 
