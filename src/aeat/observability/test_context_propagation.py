@@ -121,6 +121,48 @@ class TestRunContextOutcome:
         assert trace.outcome is RunOutcome.FAILED
 
 
+class TestRunContextRunIdValidation:
+    def test_caller_supplied_bad_run_id_rejected_before_fs(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A malicious run_id must never touch the filesystem.
+
+        Before the fix, ``run_context(run_id="../etc")`` would create
+        ``<runs_dir>/../etc/`` and an events.jsonl inside it before the
+        save-time validator caught it. The validation now runs in
+        ``_build_initial_context`` so no directory is ever created for
+        a rejected run_id.
+        """
+        from . import RunTraceValidationError
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        for bad in ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789"):
+            with (
+                pytest.raises(RunTraceValidationError),
+                run_context(entrypoint="aeat test", arguments=(), run_id=bad),
+            ):
+                pass
+            # No directory must have been created by the rejected enter.
+            assert not any(tmp_path.iterdir()), f"rejected run_id {bad!r} left debris under {tmp_path}"
+
+    def test_caller_supplied_valid_run_id_accepted(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        with run_context(
+            entrypoint="aeat test",
+            arguments=(),
+            run_id="cafebabecafebabe",
+        ) as info:
+            assert info.run_id == "cafebabecafebabe"
+        trace = load_trace("cafebabecafebabe")
+        assert trace.run_id == "cafebabecafebabe"
+
+
 class TestRunIdPropagation:
     def test_run_id_is_identical_across_chain(
         self,

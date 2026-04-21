@@ -37,7 +37,7 @@ from ._models import (
     StepBoundaryPayload,
 )
 from ._sink import JsonlRunSink
-from ._store import runs_dir, save_trace
+from ._store import _validate_run_id, runs_dir, save_trace
 
 _log = get_logger(__name__)
 
@@ -87,11 +87,18 @@ def _build_initial_context(
     run_id: str | None,
     step_id: str | None,
 ) -> RunContextInfo:
-    """Construct the :class:`RunContextInfo` for an outermost enter."""
+    """Construct the :class:`RunContextInfo` for an outermost enter.
+
+    A caller-supplied ``run_id`` is validated against the canonical
+    shape (16 lowercase hex) before anything touches the filesystem —
+    this prevents a malicious or buggy caller from escaping the
+    configured runs directory through e.g. ``"../etc"``.
+    """
     settings = Settings()
     started_at = datetime.now(UTC)
+    effective_run_id = _validate_run_id(run_id) if run_id is not None else _mint_run_id()
     return RunContextInfo(
-        run_id=run_id or _mint_run_id(),
+        run_id=effective_run_id,
         entrypoint=entrypoint,
         started_at=started_at,
         arguments=tuple(arguments),
