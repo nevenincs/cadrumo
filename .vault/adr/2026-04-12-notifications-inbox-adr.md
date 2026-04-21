@@ -24,7 +24,7 @@ sanction, an undefended liquidación, or an enforced embargo. wgergely/aeat#46
 is the local, typed, read-only inbox that fetches these,
 classifies them, computes appeal deadlines, and surfaces them loudly
 through the `aeat inbox` CLI. See
-[[2026-04-12-notifications-inbox-research]] for the legal and
+`[[2026-04-12-notifications-inbox-research]]` for the legal and
 surface-level background.
 
 ## decisions

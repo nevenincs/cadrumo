@@ -4,10 +4,6 @@ tags:
   - "#category-assignment"
 date: 2026-04-18
 related:
-  - "[[src/aeat/cli/financial/txs.py]]"
-  - "[[src/aeat/financial/transactions/_models.py]]"
-  - "[[src/aeat/financial/transactions/_service.py]]"
-  - "[[src/aeat/financial/categories/_spending_category.py]]"
 ---
 
 # category-assignment cli research

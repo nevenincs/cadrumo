@@ -19,7 +19,7 @@ Accepted.
 
 ## context
 
-See [[2026-04-12-data-storage-research]]. Issue wgergely/aeat#10 requires a single,
+See `[[2026-04-12-data-storage-research]]`. Issue wgergely/aeat#10 requires a single,
 defensible decision on where structured state lives and how it is evolved. Five
 candidate backends were surveyed against migration story, query expressiveness, type
 safety, ops footprint, portability, cost, fit with a CLI-first future web phase, and
@@ -64,7 +64,7 @@ pre-empted.
 8. **First-cut tables** (exactly the scope of issue #10):
    - `modelos` — `id` (PK surrogate), `identifier` (natural key, e.g. `MODELO_130`),
      plus `name_stub` on a translatable field that is flagged with a
-     `TODO(#20)` marker referencing [[2026-04-12-data-storage-research]] §4. The
+     `TODO(#20)` marker referencing `[[2026-04-12-data-storage-research]]` §4. The
      real trilingual shape is owned by issue #20; storage stores strings today.
    - `portals` — `id`, `identifier`, `base_url`, `auth_method` (enum string),
      optional `modelo_id` FK.
