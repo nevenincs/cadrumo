@@ -617,10 +617,35 @@ The implementation was hardened in two rolling audit rounds after the initial `a
 - **Added canonical key ordering on persist.** `_validate_bounds` now returns a dict sorted by `SpendingCategory.value`, so two equal profiles serialise to byte-identical JSON — preventing spurious diffs when Kent's `usage-ratios.json` is git-tracked.
 - **Strengthened test quality.** Replaced tautological type-checks with behavioural assertions, dropped byte-exact round-trip assertions, added edge cases (locale comma decimal, target-is-directory save, Kent narrative replay, repeated-set replaces, successive-set accumulates, ineligible-category resolve returns `None`).
 
-### Round 2 (this amendment)
+### Round 2 (commit `437dab7`)
 
 - **Moved `FAMILY_ALIASES` from the library to the CLI layer.** Aliases are CLI-only parse-time sugar; keeping them in the library package invited the #214 wizard and #257 compute to cargo-cult alias names into persistence paths. Now at `src/aeat/cli/financial/_profile_aliases.py` with tests at `src/aeat/cli/financial/test_profile_aliases.py`.
 - **Removed the `phone_fixed_business` alias.** It expanded to `(TELEFONIA_FIJA,)` which is already a member of `home_office_area` (both are `USAGE_RATIO_HOME_AREA`). The overlap meant that `set-ratio home_office_area 0.3` followed by `set-ratio phone_fixed_business 0.9` silently clobbered the earlier value with no warning. A regression test at `test_profile_aliases.py::test_no_alias_overlap_across_the_mapping` pins the disjointness invariant.
 - **Surfaced pydantic `ValidationError` detail in `UsageRatioPersistenceError`.** When Kent hand-edits `usage-ratios.json` and introduces a semantic error (out-of-range ratio, ineligible category, unknown key), the CLI now names the offending field and reason instead of collapsing to a generic "invalid usage-ratio profile JSON". The helper `_summarise_validation_errors` walks `exc.errors()` and emits one line per finding.
 - **Surfaced `OSError` class and message on read/write failures.** `unable to read/write usage-ratio profile: <path>` now carries the wrapped exception class name and text (e.g. `PermissionError: [Errno 13] Permission denied`), giving Kent enough to diagnose locked files, ACL denials, and disk-full scenarios.
 - **Extended the unknown-key hint.** The CLI parser now emits the 12 eligible category ids alongside the two family aliases and includes `difflib.get_close_matches` near-match suggestions — so a typo like `home_office_are` surfaces `did you mean: home_office_area`.
+
+### Round 3 (commits `dce6eed` + `6354eea`)
+
+- **Fixed stale `phone_fixed_business` in `--help` text** (regression introduced by Round 2). Derived `_SET_RATIO_KEY_HELP` and `_UNSET_RATIO_KEY_HELP` from `FAMILY_ALIASES` at module load so the Typer help text can never again drift from the source of truth. Pinned by `test_set_ratio_help_lists_only_current_aliases`.
+- **Tolerated UTF-8 BOM on load.** `load_usage_ratios` strips a leading `﻿` before handing to pydantic. Windows Notepad (pre-2019) defaults to UTF-8-with-BOM when Kent hand-edits the JSON.
+- **Replaced pydantic's default 38-entry enum dump** with a focused 12-category list when a hand-edited file has an unknown ratio key. Detects the pydantic "dict-key enum failure" shape in `_summarise_validation_errors` and substitutes.
+- **Stripped pydantic's "Value error, " prefix** from custom-validator errors in the summary helper.
+- **Wrapped long category lists** with `textwrap.fill(width=78, subsequent_indent="    ")` via a new `_indented_wrap` helper. Both the unknown-key and does-not-accept-ratio branches now use the same layout — no more 350+ col single lines. Pinned by `test_set_ratio_ineligible_hint_wraps_and_stays_consistent` (asserts every output line ≤ 80 cols).
+- **Tolerated leading/trailing whitespace** in the CLI key argument (common when Kent copy-pastes).
+- **Rewrote the tautological `test_aliases_reject_mutation_at_runtime`** to exercise real runtime mutation rejection instead of taking a synthetic-raise branch.
+- **Filed follow-up issue #310** for the concurrent-writer data-loss scenario surfaced by the CLI stress audit. Kept as out-of-scope per this ADR's original stance, but the auditor confirmed the failure mode is stronger than last-writer-wins (whole keys vanish).
+
+### Round 4 (commit `231424f`)
+
+- **Persisted JSON now ends with a trailing LF newline** (`\n`, not `\r\n`). `save_usage_ratios` forces `newline="\n"` on the tempfile and appends `"\n"` to the payload. POSIX convention plus cleaner `git diff` when Kent relocates the file outside `var/`.
+- **Hoisted `ELIGIBLE_USAGE_RATIO_CATEGORIES` import** in `_service.py` to module top and deleted a misleading "avoid circular import" comment (the cycle does not exist).
+- **Guarded empty-items edge case in `_indented_wrap`** and documented the ~65-char per-item budget.
+- **Closed six test blindspots** identified by the Round-4 mutation audit:
+  - Atomicity pin: monkeypatch `os.replace` to raise; assert target bytes unchanged and no temp file leaks. This was the highest-severity gap — a refactor that dropped atomicity would previously have passed all tests.
+  - CLI silent-swallow pin: hand-edit file to corrupt JSON; assert `ratios list` and `set-ratio` both exit non-zero and leave bytes untouched.
+  - Exact-token zero-formatting pin (the prior substring assertion was loose).
+  - Pydantic "Value error, " prefix-stripping pin.
+  - `difflib` cutoff pin: wildly unrelated key produces no `did you mean` suggestion.
+  - Payload-indent pin and UTF-8-bytes pin.
+- **Softened the ADR's canonical-key-order rationale** to reflect that `var/` is gitignored by default; the diff-stability benefit applies to successive saves, cross-system comparison, and Kent-relocated paths outside `var/`.
