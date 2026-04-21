@@ -241,9 +241,13 @@ def _derive_status(
     values: list[ExtractedCasilla],
     warnings: list[ExtractionWarning],
 ) -> ExtractionStatus:
+    # Aligned with GenericDeclaracionExtractor (#305 wave 18 H2): multi-hit
+    # or structurally-downgraded casillas (confidence < 1.0) do NOT count
+    # toward COMPLETE; they stay resolved for PARTIAL-coverage math only.
     resolved_ids = {v.casilla_id for v in values}
+    reliable_ids = {v.casilla_id for v in values if v.extraction_confidence >= 1.0}
     required = _REQUIRED_FOR_COMPLETE
-    if resolved_ids >= required:
+    if reliable_ids >= required:
         return ExtractionStatus.COMPLETE
     coverage = len(resolved_ids) / max(len(required), 1)
     if coverage >= 0.5:

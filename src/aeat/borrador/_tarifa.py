@@ -43,6 +43,15 @@ _TARIFA_ESTATAL_AHORRO_2025: tuple[tuple[str | None, str], ...] = (
 _TWO_CENT_TOLERANCE = Decimal("0.02")
 _QUANTUM = Decimal("0.01")
 
+_SUPPORTED_EJERCICIOS: frozenset[str] = frozenset({"2024", "2025"})
+"""Ejercicios currently covered by the state-IRPF scale constants.
+
+2024 and 2025 share identical brackets under art. 63 / art. 66 Ley
+35/2006 (Ley de Presupuestos 2024/2025 did not shift estatal brackets).
+New ejercicios must register their own bracket tuple and extend this
+set.
+"""
+
 
 def apply_tarifa(
     base_liquidable: Decimal,
@@ -90,8 +99,9 @@ class TarifaFinding:
     delta: Decimal
 
 
-def validate_tarifa_estatal_2025(
+def validate_tarifa_estatal(
     *,
+    ejercicio: str,
     base_liquidable_general: Decimal | None,
     base_liquidable_ahorro: Decimal | None,
     cuota_estatal_general: Decimal | None,
@@ -104,7 +114,18 @@ def validate_tarifa_estatal_2025(
     cuota diverges from the tarifa-derived value by more than
     ``tolerance`` euros. Missing inputs (``None``) silently skip their
     check — a partial extraction is not a discrepancy.
+
+    Raises:
+        ValueError: If ``ejercicio`` is not in
+            :data:`_SUPPORTED_EJERCICIOS`. Unknown ejercicios are a
+            correctness risk — silently validating a 2027 filing
+            against the 2025 scale would mask real legislative drift.
     """
+    if ejercicio not in _SUPPORTED_EJERCICIOS:
+        raise ValueError(
+            f"tarifa progresiva estatal is only defined for {sorted(_SUPPORTED_EJERCICIOS)}; "
+            f"got ejercicio={ejercicio!r}"
+        )
     findings: list[TarifaFinding] = []
     if base_liquidable_general is not None and cuota_estatal_general is not None:
         expected = apply_tarifa(base_liquidable_general, _TARIFA_ESTATAL_GENERAL_2025)
@@ -138,5 +159,5 @@ def validate_tarifa_estatal_2025(
 __all__ = [
     "TarifaFinding",
     "apply_tarifa",
-    "validate_tarifa_estatal_2025",
+    "validate_tarifa_estatal",
 ]

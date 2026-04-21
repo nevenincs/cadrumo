@@ -10,7 +10,7 @@ from ._tarifa import (
     _TARIFA_ESTATAL_AHORRO_2025,
     _TARIFA_ESTATAL_GENERAL_2025,
     apply_tarifa,
-    validate_tarifa_estatal_2025,
+    validate_tarifa_estatal,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
@@ -46,7 +46,8 @@ class TestApplyTarifa:
 
 class TestValidateTarifaEstatal2025:
     def test_no_findings_when_cuota_matches_tarifa(self) -> None:
-        findings = validate_tarifa_estatal_2025(
+        findings = validate_tarifa_estatal(
+            ejercicio="2025",
             base_liquidable_general=Decimal("15000.00"),
             base_liquidable_ahorro=Decimal("1000.00"),
             cuota_estatal_general=Decimal("1488.75"),
@@ -55,7 +56,8 @@ class TestValidateTarifaEstatal2025:
         assert findings == ()
 
     def test_discrepancy_when_general_cuota_diverges(self) -> None:
-        findings = validate_tarifa_estatal_2025(
+        findings = validate_tarifa_estatal(
+            ejercicio="2025",
             base_liquidable_general=Decimal("15000.00"),
             base_liquidable_ahorro=None,
             cuota_estatal_general=Decimal("9999.99"),
@@ -68,7 +70,8 @@ class TestValidateTarifaEstatal2025:
         assert findings[0].actual_cuota == Decimal("9999.99")
 
     def test_missing_base_skips_check(self) -> None:
-        findings = validate_tarifa_estatal_2025(
+        findings = validate_tarifa_estatal(
+            ejercicio="2025",
             base_liquidable_general=None,
             base_liquidable_ahorro=None,
             cuota_estatal_general=Decimal("999.99"),
@@ -77,10 +80,32 @@ class TestValidateTarifaEstatal2025:
         assert findings == ()
 
     def test_tolerance_accepts_rounding_drift(self) -> None:
-        findings = validate_tarifa_estatal_2025(
+        findings = validate_tarifa_estatal(
+            ejercicio="2025",
             base_liquidable_general=Decimal("15000.00"),
             base_liquidable_ahorro=None,
             cuota_estatal_general=Decimal("1488.76"),  # +0.01 rounding
+            cuota_estatal_ahorro=None,
+        )
+        assert findings == ()
+
+    def test_unknown_ejercicio_raises(self) -> None:
+        with pytest.raises(ValueError, match="tarifa progresiva estatal"):
+            validate_tarifa_estatal(
+                ejercicio="2027",
+                base_liquidable_general=Decimal("15000.00"),
+                base_liquidable_ahorro=None,
+                cuota_estatal_general=Decimal("1488.75"),
+                cuota_estatal_ahorro=None,
+            )
+
+    def test_ejercicio_2024_uses_same_state_scale(self) -> None:
+        # Art. 63/66 brackets unchanged 2024 → 2025; 2024 validates identically.
+        findings = validate_tarifa_estatal(
+            ejercicio="2024",
+            base_liquidable_general=Decimal("15000.00"),
+            base_liquidable_ahorro=None,
+            cuota_estatal_general=Decimal("1488.75"),
             cuota_estatal_ahorro=None,
         )
         assert findings == ()
