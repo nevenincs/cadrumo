@@ -116,6 +116,145 @@ async def _do_login(settings: Settings, kind: AuthProviderKind) -> AeatSession:
             await close()
 
 
+def _resolve_env_file(settings: Settings) -> Path:
+    """Return the env file Settings is bound to (``env/.env`` by default)."""
+    env_file = settings.model_config.get("env_file")
+    if env_file is None:
+        raise typer.BadParameter("Settings has no `env_file` configured; cannot write provider configuration.")
+    if isinstance(env_file, Path):
+        return env_file
+    if isinstance(env_file, str):
+        return Path(env_file)
+    # pydantic-settings accepts lists / tuples of candidate env files;
+    # write to the first one that resolves to a concrete string.
+    if isinstance(env_file, (list, tuple)):
+        for candidate in env_file:
+            if isinstance(candidate, Path):
+                return candidate
+            if isinstance(candidate, str):
+                return Path(candidate)
+    raise typer.BadParameter(
+        f"Settings.env_file has an unsupported shape ({type(env_file).__name__}); "
+        "cannot determine where to persist provider configuration."
+    )
+
+
+def _classify_identity_for_cli(raw: str) -> str:
+    """Thin wrapper around the Cl@ve identity classifier used for CLI parameter validation."""
+    from ...auth._clave_movil import (
+        ClaveMovilConfigurationError,
+        _classify_identity,
+    )
+
+    try:
+        return _classify_identity(raw)
+    except ClaveMovilConfigurationError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+@app.command(
+    "configure",
+    help=("Persist auth-provider configuration to env/.env without a manual shell export."),
+)
+def configure(
+    provider: str = typer.Option(
+        AuthProviderKind.CLAVE_MOVIL.value,
+        "--provider",
+        "-p",
+        help="Provider to configure (currently only clave_movil is supported here).",
+    ),
+    dni_nie: str | None = typer.Option(
+        None,
+        "--dni-nie",
+        help="Your DNI or NIE. Prompted when omitted in interactive mode.",
+    ),
+    dni_fecha: str | None = typer.Option(
+        None,
+        "--dni-fecha",
+        help=("DNI validity / expiry date (YYYY-MM-DD). Required by the non-QR fallback when the identity is a DNI."),
+    ),
+    nie_soporte: str | None = typer.Option(
+        None,
+        "--nie-soporte",
+        help="NIE support number. Required by the non-QR fallback when the identity is a NIE.",
+    ),
+    prefer_non_qr: bool | None = typer.Option(
+        None,
+        "--prefer-non-qr/--prefer-qr",
+        help="Prefer the DNI/NIE + contraste form over the QR flow (still requires phone approval).",
+    ),
+    set_default: bool = typer.Option(
+        True,
+        "--set-default/--no-set-default",
+        help="Also set AEAT_AUTH_PROVIDER=<provider> so `aeat auth login` picks this provider by default.",
+    ),
+    non_interactive: bool = typer.Option(
+        False,
+        "--non-interactive",
+        help="Never prompt. Fail if a required value is missing.",
+    ),
+) -> None:
+    """Write Cl@ve Móvil configuration to ``env/.env`` idempotently.
+
+    Uses the same env-writer as ``aeat setup`` (:func:`aeat.env_io.write_env_vars`),
+    so existing comments and unrelated keys are preserved. ``env/.env`` is
+    created if missing.
+    """
+    kind = _parse_kind(provider)
+    if kind is not AuthProviderKind.CLAVE_MOVIL:
+        raise typer.BadParameter(
+            f"`aeat auth configure --provider {provider}` is not supported yet. "
+            "Run `aeat setup` for the certificate provider."
+        )
+
+    settings = _load_settings()
+    env_file = _resolve_env_file(settings)
+
+    if dni_nie is None:
+        if non_interactive:
+            raise typer.BadParameter("--dni-nie is required with --non-interactive")
+        dni_nie = typer.prompt("Your DNI or NIE (e.g. 12345678Z or X1234567L)").strip().upper()
+    else:
+        dni_nie = dni_nie.strip().upper()
+
+    identity_kind = _classify_identity_for_cli(dni_nie)
+
+    resolved_prefer_non_qr = prefer_non_qr
+    if resolved_prefer_non_qr is None and not non_interactive:
+        resolved_prefer_non_qr = typer.confirm(
+            "Use the DNI/NIE + contraste fallback (no QR in browser, push only)?",
+            default=False,
+        )
+    if resolved_prefer_non_qr is None:
+        resolved_prefer_non_qr = False
+
+    if resolved_prefer_non_qr:
+        if identity_kind == "DNI" and not dni_fecha and not non_interactive:
+            dni_fecha = typer.prompt("DNI validity / expiry date (YYYY-MM-DD)").strip()
+        if identity_kind == "NIE" and not nie_soporte and not non_interactive:
+            nie_soporte = typer.prompt("NIE support number").strip()
+
+    from ...env_io import write_env_vars
+
+    mapping: dict[str, str] = {
+        "AEAT_CLAVE_MOVIL_DNI_NIE": dni_nie,
+        "AEAT_CLAVE_PREFER_NON_QR": "true" if resolved_prefer_non_qr else "false",
+    }
+    if dni_fecha:
+        mapping["AEAT_CLAVE_MOVIL_DNI_FECHA"] = dni_fecha.strip()
+    if nie_soporte:
+        mapping["AEAT_CLAVE_MOVIL_NIE_SOPORTE"] = nie_soporte.strip()
+    if set_default:
+        mapping["AEAT_AUTH_PROVIDER"] = kind.value
+
+    write_env_vars(env_file, mapping)
+    _CONSOLE.print(
+        f"[green]wrote {len(mapping)} keys to {env_file} — run `aeat auth login` to start the Cl@ve Móvil flow.[/green]"
+    )
+    for key, value in mapping.items():
+        _CONSOLE.print(f"  {key}={value}")
+
+
 @app.command("login", help="Authenticate with the selected provider and cache the session.")
 def login(
     provider: str | None = typer.Option(
