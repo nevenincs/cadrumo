@@ -43,18 +43,24 @@ the CLI.
 ```sh
 git clone https://github.com/wgergely/aeat
 cd aeat
-just bootstrap            # uv sync, vaultspec install, env/.env, gsuite bootstrap
-aeat setup                # interactive setup wizard           (merging in #61)
+just env-setup            # writes env/.env from env/.env.example
+# edit env/.env and set GOOGLE_CLOUD_PROJECT
+uv run aeat auth init --path desktop-oauth-local-dev
+uv run aeat auth init --path desktop-oauth-local-dev --json <downloaded-json>
+just bootstrap            # wrapper: deps + gcloud auth + API enablement + aeat bootstrap + aeat doctor
 aeat workflow next        # next dry-run filing in the queue
 ```
 
-`aeat workflow next` is on `main`. `aeat setup` lands with #61; until
-it merges, configure the project by editing `env/.env` directly —
-every field is documented inline in `env/.env.example`. Every layer
-the workflow composes (cert auth, browser, status reader, filing
-draft engine, submission engine, deadline engine, sync, storage) is
-already on `main` and exercised by the live test suite. Live tests
-are gated behind `AEAT_LIVE_TESTS_ENABLED=1`.
+Google auth is required because the repo provisions scratch
+Drive/Sheets/Docs resources, fetches operator assets from Drive, and
+can launch the Google Workspace MCP server. `just bootstrap` is a
+wrapper around the local Desktop OAuth path; it does not create the
+OAuth Desktop client for you or skip the manual Cloud Console step.
+Every field is documented inline in `env/.env.example`. Every layer the
+workflow composes (cert auth, browser, status reader, filing draft
+engine, submission engine, deadline engine, sync, storage) is already
+on `main` and exercised by the live test suite. Live tests are gated
+behind `AEAT_LIVE_TESTS_ENABLED=1`.
 
 ## Architecture
 
@@ -122,8 +128,14 @@ Milestones:
   just hooks          # prek run --all-files
   ```
 
-aeat oauth-client init [--json PATH]    # walk through Cloud Console OAuth Desktop client setup
-```
+  Common Google auth helpers:
+
+  ```sh
+  uv run aeat auth init --path desktop-oauth-local-dev
+  uv run aeat auth init --path desktop-oauth-local-dev --json <path>
+  uv run aeat doctor                      # verifies Desktop OAuth CLI/bootstrap readiness
+  just gcloud-auth                        # optional ADC compatibility step for legacy wrappers
+  ```
 
 `uv run aeat --help` (and `--help` on any sub-command) prints the
 authoritative version.
@@ -154,43 +166,62 @@ actually set up". It produces a rich table covering:
 The command exits non-zero on any required `MISSING` / `WARN` row, so
 it is CI-usable as a gating step.
 
-## Authentication strategy
+`aeat doctor` is a CLI/bootstrap readiness check. It does not, by
+itself, prove the Google Workspace MCP launch contract; MCP readiness
+additionally requires either Desktop OAuth values in `env/.env` or a
+valid `GOOGLE_APPLICATION_CREDENTIALS` path.
 
-The CLI supports three credential paths and resolves them in priority
-order via `aeat.auth.get_credentials()`:
+## Google auth
 
-| Path                    | When to use                                | Provisioned by                        |
-| ----------------------- | ------------------------------------------ | ------------------------------------- |
-| Application Default Credentials (ADC)  | local development (default) | `just gcloud-auth`                    |
-| OAuth 2.0 Desktop client               | user-delegated scopes ADC cannot grant | `just gsuite-oauth-client`            |
-| Service account JSON key               | server-side / CI / Cloud Functions         | manual via Cloud Console + IAM        |
+Treat Google auth in this repo as exactly two supported operator-facing
+paths:
 
-### ADC (the default dev path)
+| Path | Default | Use when | What it unlocks |
+| ---- | ------- | -------- | --------------- |
+| Desktop OAuth local-dev | yes | normal workstation development and any consumer Gmail setup | sets `GOOGLE_AUTH_PATH`, writes Desktop OAuth values, prepares the repo-local CLI/MCP path, then optionally lets `just gcloud-auth` acquire ADC for wrapper compatibility |
+| Service-account automation | no | CI, cron, Cloud Functions, or other headless automation | headless Google API access via `GOOGLE_APPLICATION_CREDENTIALS`, optionally with Workspace impersonation |
 
-Set up by `just gcloud-auth`. One browser flow grants every Workspace
-scope the CLI needs. Lives at the documented well-known location
-(`%APPDATA%\gcloud\application_default_credentials.json` on Windows,
-`~/.config/gcloud/application_default_credentials.json` on Unix). Token
-refresh is handled by `google-auth` automatically.
+### Desktop OAuth local-dev (default)
 
-### OAuth 2.0 Desktop client (optional)
+This is the local default. The flow is deliberately two-step:
 
-Needed only when ADC cannot grant the scope you need (e.g. some
-Workspace admin scopes, Gmail send-as). Run:
+- `uv run aeat auth init --path desktop-oauth-local-dev` is the guided
+  entrypoint. It prints the Cloud Console URL, explains why the step
+  exists, and tells Kent what to do next. The legacy
+  `just gsuite-oauth-client` recipe is only a wrapper around this
+  command.
+- After you download the JSON, run
+  `uv run aeat auth init --path desktop-oauth-local-dev --json <path>`.
+  That copies the JSON to `env/oauth-client.json`, writes
+  `GOOGLE_AUTH_PATH`, `GOOGLE_OAUTH_CLIENT_ID`,
+  `GOOGLE_OAUTH_CLIENT_SECRET`, and `GOOGLE_OAUTH_CLIENT_JSON` into
+  `env/.env`, prepares the repo-local CLI token path, and prepares the
+  repo-local MCP credentials directory.
+- Then run `uv run aeat doctor` to verify the active path. Run
+  `just gcloud-auth` only if you still need the legacy ADC-backed
+  wrapper path.
+- `uv run aeat oauth-client init` still exists as the low-level
+  compatibility helper, but the normal Kent-facing path is
+  `uv run aeat auth init`.
+- If `aeat doctor` reports a required `Drive round-trip` failure with a
+  stale Desktop OAuth token, rerun
+  `uv run aeat auth init --path desktop-oauth-local-dev --reset-cli-token`
+  and complete the fresh browser consent flow.
 
-```sh
-just gsuite-oauth-client
-```
+Legacy wrappers stay wrappers:
 
-The helper prints the deep-link to the Cloud Console credentials page
-for your active project, lists the exact required fields, and (when you
-re-run it with `--json <path>`) parses the downloaded JSON and writes
-`GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` into `env/.env`.
+- `just bootstrap` wraps dependency sync, env setup, the local Google
+  auth chain, API enablement, `aeat bootstrap`, and `aeat doctor`.
+- `just gsuite-bootstrap` wraps `just gcloud-auth`,
+  `just gsuite-enable-apis`, `aeat bootstrap`, and `aeat doctor`.
 
-### Service account (server / CI)
+Neither wrapper creates the Desktop OAuth client on your behalf; the
+Cloud Console step is still manual.
 
-Create the service account, download a JSON key, and set
-`GOOGLE_APPLICATION_CREDENTIALS` in `env/.env` to its path:
+### Service-account automation
+
+Set `GOOGLE_APPLICATION_CREDENTIALS` in `env/.env` to a JSON key file
+for CI, cron, Cloud Functions, or other headless automation:
 
 ```sh
 gcloud iam service-accounts create aeat-automation \
@@ -209,27 +240,32 @@ gcloud iam service-accounts keys create credentials/service-account.json \
 > `GOOGLE_IMPERSONATE_EMAIL` to the target user's email. DWD requires a
 > Workspace tenant — it does not work on consumer Gmail.
 
+The legacy `just gsuite-bootstrap-sa` recipe is also a wrapper. It
+creates the service account, downloads `env/sa.json`, enables the
+required APIs, then runs `aeat bootstrap` and `aeat doctor`. It still
+assumes an operator already has `gcloud` access with permission to
+create IAM resources.
+
 ## Consumer Gmail vs Workspace tenancy
 
-The bootstrap pipeline is designed to work on both consumer Google
-accounts (`@gmail.com`) and Google Workspace tenants, but consumer
-accounts have one hard limitation worth knowing up front:
+The bootstrap pipeline works on both consumer Google accounts
+(`@gmail.com`) and Google Workspace tenants, but the service-account
+path has one hard limitation worth knowing up front:
 
 **Service accounts on consumer Gmail have zero Drive storage quota.**
 
-That means `just gsuite-bootstrap-sa` (the autonomous service-account
-path) succeeds for IAM, Service Usage, Cloud Storage / Functions /
-Run, but Drive/Sheets/Docs operations under the SA return
+That means the service-account automation path can succeed for IAM,
+Service Usage, Cloud Storage / Functions / Run, but
+Drive/Sheets/Docs operations under that identity return
 `storageQuotaExceeded`. The bootstrap exits with a clear message
-pointing at the workaround. To use Drive/Sheets/Docs on a consumer
-Gmail account you must instead run the OAuth Desktop client path:
+pointing at the workaround. For consumer Gmail, and for most local
+development, use the Desktop OAuth local-dev path:
 
 ```sh
-just gsuite-oauth-client          # prints Console URL + required fields
-# (operator clicks through, downloads JSON to ~/Downloads/client.json)
-uv run aeat oauth-client init --json ~/Downloads/client.json
-just gcloud-auth                  # uses --client-id-file=env/oauth-client.json
-just gsuite-enable-apis
+uv run aeat auth init --path desktop-oauth-local-dev
+uv run aeat auth init --path desktop-oauth-local-dev --json <downloaded-json>
+uv run aeat doctor                      # verify the Desktop OAuth path
+just gsuite-enable-apis                 # wrapper: Service Usage sub-step
 uv run aeat bootstrap
 uv run aeat doctor
 ```
