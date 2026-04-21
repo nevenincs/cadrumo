@@ -73,7 +73,9 @@ _CITATIONS = (
         "Orden HAC/657/2025 (BOE-A-2025-12818) — aprobación del modelo "
         "200 para ejercicio 2024 y casillas de autoliquidación "
         "rectificativa.",
-        url="https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818",
+        # Normalised to act.php (consolidated act URL scheme) to match
+        # every other citation across the ruleset fleet (wave 42 H1).
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-2025-12818",
     ),
 )
 
