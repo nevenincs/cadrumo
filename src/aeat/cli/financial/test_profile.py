@@ -116,13 +116,25 @@ def test_set_ratio_non_numeric_rejected() -> None:
     assert "invalid ratio" in result.output
 
 
-def test_set_ratio_unknown_key_rejected_with_aliases() -> None:
+def test_set_ratio_unknown_key_hint_lists_aliases_and_categories() -> None:
+    """Kent's typo error hint must name both the family aliases and the
+    twelve eligible category ids, plus any close-match suggestion."""
     result = _invoke("set-ratio", "foo", "0.5")
     assert result.exit_code == 2
     assert "unknown key" in result.output
     assert "home_office_area" in result.output
     assert "mileage_business" in result.output
-    assert "phone_fixed_business" in result.output
+    # Eligible category ids must appear in the hint:
+    assert "suministros_home_office_luz" in result.output
+    assert "telefonia_movil" in result.output
+
+
+def test_set_ratio_near_match_suggested_for_typo() -> None:
+    """Misspelling an alias produces a ``did you mean`` suggestion."""
+    result = _invoke("set-ratio", "home_office_are", "0.21")
+    assert result.exit_code == 2
+    assert "did you mean" in result.output
+    assert "home_office_area" in result.output
 
 
 def test_unset_ratio_removes_persisted_entry() -> None:

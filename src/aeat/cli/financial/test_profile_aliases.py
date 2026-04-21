@@ -1,4 +1,4 @@
-"""Unit tests for the usage-ratio family-alias mapping (#259)."""
+"""Unit tests for the CLI-private family-alias mapping (#259)."""
 
 from __future__ import annotations
 
@@ -6,8 +6,9 @@ from types import MappingProxyType
 
 import pytest
 
-from ..categories import SpendingCategory
-from . import ELIGIBLE_USAGE_RATIO_CATEGORIES, FAMILY_ALIASES
+from ...financial.categories import SpendingCategory
+from ...financial.usage_ratios import ELIGIBLE_USAGE_RATIO_CATEGORIES
+from ._profile_aliases import FAMILY_ALIASES
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
@@ -36,8 +37,18 @@ def test_mileage_business_covers_five_vehicle_categories() -> None:
     )
 
 
-def test_phone_fixed_business_is_singleton() -> None:
-    assert FAMILY_ALIASES["phone_fixed_business"] == (SpendingCategory.TELEFONIA_FIJA,)
+def test_no_alias_overlap_across_the_mapping() -> None:
+    """Alias expansions must be disjoint.
+
+    Overlapping aliases would silently clobber prior ``set-ratio`` values when
+    Kent sets two aliases in sequence. ``phone_fixed_business`` was removed
+    for this exact reason; this test guards against a future regression.
+    """
+    seen: set[SpendingCategory] = set()
+    for members in FAMILY_ALIASES.values():
+        overlap = seen.intersection(members)
+        assert not overlap, f"alias members overlap: {overlap}"
+        seen.update(members)
 
 
 def test_every_aliased_category_is_eligible() -> None:
@@ -48,14 +59,8 @@ def test_every_aliased_category_is_eligible() -> None:
 
 
 def test_aliases_reject_mutation_at_runtime() -> None:
-    """Attempting to add an alias at runtime raises, regardless of backing type.
-
-    The behavioural guarantee survives any refactor away from ``MappingProxyType``
-    (e.g. to ``frozendict``) as long as the new type is also immutable.
-    """
+    """Attempting to add an alias at runtime raises, regardless of backing type."""
     with pytest.raises(TypeError):
-        # Route through the runtime setitem path without tripping the static
-        # type checker — the point is that the runtime itself rejects mutation.
         operator_setitem = getattr(type(FAMILY_ALIASES), "__setitem__", None)
         if operator_setitem is None:
             raise TypeError("MappingProxyType has no __setitem__")
@@ -63,6 +68,5 @@ def test_aliases_reject_mutation_at_runtime() -> None:
 
 
 def test_aliases_are_mapping_proxy() -> None:
-    """``FAMILY_ALIASES`` is wrapped in a ``MappingProxyType`` so its
-    mutability is a language-level guarantee, not a type-hint-only promise."""
+    """``FAMILY_ALIASES`` is wrapped in ``MappingProxyType``."""
     assert isinstance(FAMILY_ALIASES, MappingProxyType)

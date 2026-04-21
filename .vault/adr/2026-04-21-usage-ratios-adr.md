@@ -10,7 +10,9 @@ related:
   - "[[2026-04-17-export-first-adr]]"
 ---
 
-# `usage-ratios` adr: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `accepted`)
+# `usage-ratios` adr: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `implemented`)
+
+> **Post-approval amendments** — the sections below were edited in-place after the initial `accepted` milestone to keep the record aligned with shipped code. See the `## Post-approval amendments` log at the bottom of this document for what changed and why.
 
 ## Problem Statement
 
@@ -25,7 +27,7 @@ This ADR commits the data model, persistence location, CLI verbs, and the pure-f
 - **Existing CLI convention already uses `SpendingCategory` values as string arguments** (`2026-04-18-category-assignment-cli-adr`, `aeat financial txs classify --category suministros_home_office_luz`). Introducing a parallel "concept key" taxonomy splits the user-facing identifier space for no data-model reason.
 - **Pydantic v2 `frozen=True` only blocks attribute reassignment.** It does *not* freeze mutable interiors. A `dict` stored on a frozen model can still be mutated with `profile.ratios[cat] = v`. Any "immutable" claim must be precisely scoped to attribute-level immutability, and the user-facing contract is "treat `profile.ratios` as read-only; use `with_ratio` / `without_ratio` to produce new profiles".
 - **`MappingProxyType` breaks pydantic v2 JSON serialization.** Returning `MappingProxyType(...)` from a validator causes `model_dump_json()` to raise `PydanticSerializationError`. Storage must remain a plain `dict`; read-only enforcement belongs in the contract, not the runtime shape.
-- **`Decimal("NaN") <= Decimal("0")` raises `decimal.InvalidOperation`.** Pydantic strict mode rejects `NaN` / `Infinity` at parse time on the JSON boundary, but the CLI accepts raw user input via `Decimal(raw)` which silently constructs `Decimal("NaN")`. Both layers must guard with `value.is_finite()` before the comparison.
+- **`Decimal("NaN") <= Decimal("0")` raises `decimal.InvalidOperation`.** Pydantic strict mode rejects `NaN` / `Infinity` at parse time on **both** the JSON boundary and the Python constructor path, so the model field validator does not need its own `is_finite()` guard (see post-approval amendments). The CLI, however, accepts raw user input via `Decimal(raw)` which silently constructs `Decimal("NaN")`, so the CLI parser retains an explicit `is_finite()` check before the range comparison.
 - **Persistence must match the invoice / transaction round-trip.** `src/aeat/financial/invoices/_service.py:71–126` is the canonical atomic JSON helper pair. The usage-ratio service mirrors it except for one *intentional* divergence: `load_usage_ratios` returns an empty profile when the file does not exist. Rationale: there is no scenario where a missing profile is an error — it is the virgin state. Moving the "empty fallback" into the service keeps the CLI thin and prevents every caller from repeating the same try/except.
 - **Issue `#257` is not in scope here** but will read this profile. The ADR must publish a stable pure function (`resolve_user_ratio`) so the compute service can compile against a fixed signature.
 - **Issue `#214` (setup wizard)** will call the same save helper during onboarding. No additional API surface required.
@@ -33,7 +35,7 @@ This ADR commits the data model, persistence location, CLI verbs, and the pure-f
 
 ## Constraints
 
-- All fields `Decimal`, never `float`. Bounds `[0, 1]` inclusive. Reject non-finite (`NaN`, `+Infinity`, `-Infinity`), `< 0`, `> 1`, and non-numeric input at both pydantic and CLI layers.
+- All fields `Decimal`, never `float`. Bounds `[0, 1]` inclusive. Non-finite values (`NaN`, `+Infinity`, `-Infinity`) are rejected by pydantic strict mode on both JSON and Python construction paths; the CLI parser layers its own `is_finite()` check for user-typed strings that bypass pydantic.
 - Persisted keys are `SpendingCategory` enum values — no parallel taxonomy. Unknown strings fail strict pydantic validation. Categories whose `ProportionalityRule.kind ∉ {USAGE_RATIO_HOME_AREA, USAGE_RATIO_PERSONAL}` are rejected by a `@model_validator(mode="after")` cross-field rule.
 - `UsageRatioProfile` is `model_config = ConfigDict(strict=True, frozen=True, extra="forbid")`. `frozen=True` only freezes attribute rebinding; callers treat `profile.ratios` as read-only and use `with_ratio` / `without_ratio` for edits. The ADR does **not** claim deep immutability.
 - The internal `ratios` storage is a plain `dict[SpendingCategory, Decimal]` (not `MappingProxyType`) so `model_dump_json()` round-trips cleanly.
@@ -72,33 +74,34 @@ Exposed at module load as `ELIGIBLE_USAGE_RATIO_CATEGORIES: frozenset[SpendingCa
 
 ### Family aliases (CLI-only sugar)
 
-Three aliases are accepted at the `KEY` position of `set-ratio` / `unset-ratio` / `list` filters. They expand at parse time to a tuple of `SpendingCategory` values and are **never** stored:
+Two disjoint aliases are accepted at the `KEY` position of `set-ratio` / `unset-ratio`. They expand at CLI parse time to a tuple of `SpendingCategory` values and are **never** stored; the library never sees alias names.
 
 | alias | expands to |
 |---|---|
-| `home_office_area` | all six `USAGE_RATIO_HOME_AREA` categories |
+| `home_office_area` | all six `USAGE_RATIO_HOME_AREA` categories (including `TELEFONIA_FIJA`) |
 | `mileage_business` | `VEHICULO_COMBUSTIBLE`, `VEHICULO_MANTENIMIENTO`, `VEHICULO_SEGURO`, `VEHICULO_PEAJE`, `VEHICULO_PARKING` |
-| `phone_fixed_business` | `TELEFONIA_FIJA` *(one category — alias preserved for symmetry with the issue body)* |
 
-`TELEFONIA_MOVIL` has no alias because `phone_mobile_business` cleanly maps to a single category and Kent can type the category name directly. The three alias names match the concept keys the issue body cites.
+**Disjointness invariant.** Alias expansions must not overlap — otherwise two consecutive `set-ratio` calls using different aliases would silently clobber prior values for the shared category. The original design included a `phone_fixed_business` → `(TELEFONIA_FIJA,)` alias, but `TELEFONIA_FIJA` is already a member of `home_office_area` (it is a `USAGE_RATIO_HOME_AREA` category). That alias was removed; for single-category edits on `TELEFONIA_FIJA`, Kent types the category name directly. `TELEFONIA_MOVIL` has no alias for the same reason. `src/aeat/cli/financial/test_profile_aliases.py::test_no_alias_overlap_across_the_mapping` enforces the invariant.
 
 ### package layout
 
-New module `src/aeat/financial/usage_ratios/`:
-
 ```
 src/aeat/financial/usage_ratios/
-├── __init__.py        # re-exports UsageRatioProfile, UsageRatioError, load, save, resolve, aliases
-├── _aliases.py        # FAMILY_ALIASES mapping str -> tuple[SpendingCategory, ...]
+├── __init__.py        # re-exports UsageRatioProfile, UsageRatioError, load, save, resolve
 ├── _errors.py         # UsageRatioError, UsageRatioPersistenceError
 ├── _model.py          # UsageRatioProfile + resolve_user_ratio + ELIGIBLE_USAGE_RATIO_CATEGORIES
 ├── _service.py        # load_usage_ratios, save_usage_ratios (atomic round-trip)
 ├── test_model.py
-├── test_service.py
-└── test_aliases.py
+└── test_service.py
+
+src/aeat/cli/financial/
+├── profile.py                 # Kent-facing CLI
+├── _profile_aliases.py        # FAMILY_ALIASES (CLI-private sugar; never persisted)
+├── test_profile.py
+└── test_profile_aliases.py
 ```
 
-`src/aeat/financial/__init__.py` re-exports the public names.
+`FAMILY_ALIASES` lives in the CLI layer deliberately — aliases are UI sugar that expand at parse time, never reach the persistence model, and must not be inherited by future non-CLI consumers (the #214 setup wizard, the #257 compute service). `src/aeat/financial/__init__.py` is left alone (matches the existing "import from subpackages directly" convention).
 
 ### data model — `_model.py`
 
@@ -143,16 +146,18 @@ class UsageRatioProfile(BaseModel):
     def _validate_bounds(
         cls, value: dict[SpendingCategory, Decimal]
     ) -> dict[SpendingCategory, Decimal]:
+        # Pydantic strict-mode Decimal handling rejects NaN / Infinity before
+        # this validator runs (both JSON and Python constructor paths), so no
+        # explicit is_finite() check is needed here.
         for category, ratio in value.items():
-            if not ratio.is_finite():
-                raise ValueError(
-                    f"usage ratio for {category.value!r} must be finite (got {ratio})"
-                )
             if not (Decimal("0") <= ratio <= Decimal("1")):
                 raise ValueError(
                     f"usage ratio for {category.value!r} must be in [0, 1] (got {ratio})"
                 )
-        return value
+        # Canonicalise key order so two equal profiles serialise to identical
+        # bytes — Kent's JSON file is a candidate for git-tracking and
+        # insertion-order noise produces spurious diffs.
+        return {category: value[category] for category in sorted(value, key=lambda c: c.value)}
 
     @model_validator(mode="after")
     def _validate_eligibility(self) -> "UsageRatioProfile":
@@ -195,7 +200,9 @@ def resolve_user_ratio(
 
 **Immutability semantics.** `frozen=True` blocks attribute reassignment (`profile.ratios = {}` raises). It does *not* freeze the inner dict. Callers must not mutate `profile.ratios` directly; the `with_ratio` / `without_ratio` helpers return fresh profiles for every edit. This is a contract, not a runtime guarantee — the same contract the repo uses for every `frozen` model that holds `dict` / `list` interiors.
 
-**Finite-value guard.** `Decimal.is_finite()` returns `False` for `NaN`, `+Infinity`, and `-Infinity`. Pydantic strict mode already rejects `NaN` / `Infinity` on the JSON parse boundary, but we enforce the guard inside the validator so programmatic callers (e.g. `UsageRatioProfile(ratios={cat: Decimal("NaN")})`) cannot smuggle them in.
+**Canonical key order.** `_validate_bounds` returns a new dict with keys sorted by `SpendingCategory.value`. This guarantees that two equal profiles produce byte-identical JSON payloads regardless of insertion order — important when the file is git-tracked or compared across systems. Cost on a 12-key profile is ~3 µs.
+
+**Non-finite rejection delegated to pydantic.** An earlier draft carried an explicit `is_finite()` guard inside the validator as defence-in-depth. Empirical testing showed pydantic strict mode already rejects `Decimal("NaN")`, `Decimal("Infinity")`, and their signs at the type-validation layer — on **both** JSON parse and Python constructor paths — before the field validator runs. The guard was therefore dead code and was removed. The CLI parser (`_parse_ratio`) retains its own `is_finite()` check because user-typed strings reach `Decimal(raw)` before pydantic sees them.
 
 ### aliases — `_aliases.py`
 
@@ -599,3 +606,21 @@ app.add_typer(profile_app, name="profile", help="Kent's financial profile (#259)
 - Multi-user / per-year profiles — single-user, single-profile scope. `ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived from `CATEGORY_PROFILES_2025` at import time; future multi-year support will need to re-derive per year.
 - Concurrent writers. Two parallel `set-ratio` invocations race at `os.replace`; last writer wins. Acceptable for a single-user CLI; revisit if Kent ever scripts parallel invocations.
 - No-op protection when a user's ratio equals the statutory default — Kent may deliberately pin a value to preserve intent under future statutory changes.
+
+## Post-approval amendments
+
+The implementation was hardened in two rolling audit rounds after the initial `accepted` milestone. Source-code snippets earlier in this ADR are **illustrative** — consult the shipped files for the current contract.
+
+### Round 1 (commit `9b51c78`)
+
+- **Dropped `is_finite()` guard from `_validate_bounds`.** Pydantic strict mode rejects `NaN` / `Infinity` at the type layer on both JSON and Python paths before the field validator runs, so the guard was unreachable dead code. CLI `_parse_ratio` keeps its own `is_finite()` check because user-typed strings reach `Decimal(raw)` first.
+- **Added canonical key ordering on persist.** `_validate_bounds` now returns a dict sorted by `SpendingCategory.value`, so two equal profiles serialise to byte-identical JSON — preventing spurious diffs when Kent's `usage-ratios.json` is git-tracked.
+- **Strengthened test quality.** Replaced tautological type-checks with behavioural assertions, dropped byte-exact round-trip assertions, added edge cases (locale comma decimal, target-is-directory save, Kent narrative replay, repeated-set replaces, successive-set accumulates, ineligible-category resolve returns `None`).
+
+### Round 2 (this amendment)
+
+- **Moved `FAMILY_ALIASES` from the library to the CLI layer.** Aliases are CLI-only parse-time sugar; keeping them in the library package invited the #214 wizard and #257 compute to cargo-cult alias names into persistence paths. Now at `src/aeat/cli/financial/_profile_aliases.py` with tests at `src/aeat/cli/financial/test_profile_aliases.py`.
+- **Removed the `phone_fixed_business` alias.** It expanded to `(TELEFONIA_FIJA,)` which is already a member of `home_office_area` (both are `USAGE_RATIO_HOME_AREA`). The overlap meant that `set-ratio home_office_area 0.3` followed by `set-ratio phone_fixed_business 0.9` silently clobbered the earlier value with no warning. A regression test at `test_profile_aliases.py::test_no_alias_overlap_across_the_mapping` pins the disjointness invariant.
+- **Surfaced pydantic `ValidationError` detail in `UsageRatioPersistenceError`.** When Kent hand-edits `usage-ratios.json` and introduces a semantic error (out-of-range ratio, ineligible category, unknown key), the CLI now names the offending field and reason instead of collapsing to a generic "invalid usage-ratio profile JSON". The helper `_summarise_validation_errors` walks `exc.errors()` and emits one line per finding.
+- **Surfaced `OSError` class and message on read/write failures.** `unable to read/write usage-ratio profile: <path>` now carries the wrapped exception class name and text (e.g. `PermissionError: [Errno 13] Permission denied`), giving Kent enough to diagnose locked files, ACL denials, and disk-full scenarios.
+- **Extended the unknown-key hint.** The CLI parser now emits the 12 eligible category ids alongside the two family aliases and includes `difflib.get_close_matches` near-match suggestions — so a typo like `home_office_are` surfaces `did you mean: home_office_area`.

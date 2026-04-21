@@ -10,14 +10,12 @@ Callers import from the package root, not the private submodules.
 
 from __future__ import annotations
 
-from ._aliases import FAMILY_ALIASES
 from ._errors import UsageRatioError, UsageRatioPersistenceError
 from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile, resolve_user_ratio
 from ._service import load_usage_ratios, save_usage_ratios
 
 __all__ = [
     "ELIGIBLE_USAGE_RATIO_CATEGORIES",
-    "FAMILY_ALIASES",
     "UsageRatioError",
     "UsageRatioPersistenceError",
     "UsageRatioProfile",
