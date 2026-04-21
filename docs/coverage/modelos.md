@@ -11,7 +11,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | 100 | ✅ | 🚧 (summary 27 casillas) | 🚧 (summary 12 casillas) | ❌ | ❌ | ❌ | N/A | partial | ❌ | ✅ (`--from-borrador`) | ✅ | ✅ (summary MVP) | ✅ (summary MVP) | ✅ (summary MVP) |
 | 111 | ✅ | ✅ (9 casillas) | ✅ (2025 sum/resultado) | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 115 | ✅ | ✅ (6 casillas) | ✅ (2025) | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 123 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
+| 123 | ✅ | ✅ (11 casillas) | ✅ (2025 aggregation) | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | **130** | ✅ | ✅ (19 casillas) | ✅ (2024 + 2025) | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | ✅ | ⏳ #222 | ✅ | ✅ | ✅ (2025 MVP) | ❌ | ❌ |
 | 131 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 180 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
