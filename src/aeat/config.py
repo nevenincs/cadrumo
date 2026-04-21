@@ -20,7 +20,7 @@ from ._paths import (
     normalize_project_relative_path,
     normalize_project_relative_str,
 )
-from .auth import CertificateBackend
+from .auth import AuthProviderKind, CertificateBackend
 from .justificante import JustificanteParserBackend
 
 
@@ -350,6 +350,16 @@ class Settings(BaseSettings):
             "Critical threshold (days) for the certificate pre-expiry gate: "
             "certificates with <= this many days remaining are CRITICAL and "
             "block live submission unless --force-expiring-cert is passed"
+        ),
+    )
+
+    # ── AEAT auth provider default (#285) ───────────────────────────────────
+    aeat_auth_provider: AuthProviderKind | None = Field(
+        default=None,
+        description=(
+            "Default auth provider for `aeat auth login` / `status` when "
+            "--provider is omitted. When None, the CLI auto-selects the "
+            "first configured provider from the canonical registry order."
         ),
     )
 

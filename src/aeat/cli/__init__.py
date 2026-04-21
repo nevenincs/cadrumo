@@ -17,6 +17,7 @@ from __future__ import annotations
 import typer
 
 from . import attachments as attachments_module
+from . import auth as auth_module
 from . import bootstrap as bootstrap_module
 from . import browser as browser_module
 from . import casillas as casillas_module
@@ -69,6 +70,11 @@ app.add_typer(
     attachments_module.app,
     name="attachments",
     help="Content-addressed attachment service (#76).",
+)
+app.add_typer(
+    auth_module.app,
+    name="auth",
+    help="AEAT authentication provider management (#285).",
 )
 app.add_typer(browser_module.app, name="browser", help="Playwright browser session health probes (#95).")
 app.add_typer(casillas_module.app, name="casillas", help="Curated AEAT casilla catalogue helpers.")
