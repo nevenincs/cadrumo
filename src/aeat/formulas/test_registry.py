@@ -30,6 +30,7 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
     registry = get_registry()
     ids = sorted(r.ruleset_id for r in registry.rulesets)
     assert ids == [
+        "modelo_100.summary.2025",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_303.2024",
