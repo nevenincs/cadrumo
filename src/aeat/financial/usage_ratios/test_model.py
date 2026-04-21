@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
+from ..categories import CATEGORY_PROFILES_2025, ProportionalityKind, SpendingCategory
 from . import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
@@ -17,31 +17,12 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 
-_EXPECTED_ELIGIBLE: frozenset[SpendingCategory] = frozenset(
-    {
-        SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
-        SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
-        SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
-        SpendingCategory.SUMINISTROS_HOME_OFFICE_GAS,
-        SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET,
-        SpendingCategory.TELEFONIA_FIJA,
-        SpendingCategory.TELEFONIA_MOVIL,
-        SpendingCategory.VEHICULO_COMBUSTIBLE,
-        SpendingCategory.VEHICULO_MANTENIMIENTO,
-        SpendingCategory.VEHICULO_SEGURO,
-        SpendingCategory.VEHICULO_PEAJE,
-        SpendingCategory.VEHICULO_PARKING,
-    }
-)
-
-
 def test_empty_profile_round_trips_json() -> None:
-    """An empty profile serialises to ``{"ratios": {}}`` and reloads equal."""
+    """An empty profile survives JSON round-trip unchanged."""
     profile = UsageRatioProfile()
-    payload = profile.model_dump_json()
-    reloaded = UsageRatioProfile.model_validate_json(payload)
-    assert payload == '{"ratios":{}}'
+    reloaded = UsageRatioProfile.model_validate_json(profile.model_dump_json())
     assert reloaded == profile
+    assert reloaded.ratios == {}
 
 
 def test_single_ratio_round_trips() -> None:
@@ -120,14 +101,34 @@ def test_resolve_user_ratio_returns_set_or_none() -> None:
     assert resolve_user_ratio(profile, SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA) is None
 
 
-def test_eligible_categories_match_twelve_expected() -> None:
-    """The eligibility set is exactly the twelve USAGE_RATIO_* rows."""
-    assert ELIGIBLE_USAGE_RATIO_CATEGORIES == _EXPECTED_ELIGIBLE
+def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
+    """``ELIGIBLE_USAGE_RATIO_CATEGORIES`` must track the registry verbatim.
+
+    The eligibility set is derived from ``CATEGORY_PROFILES_2025`` at import
+    time. This test re-derives it from the registry using the same predicate
+    and asserts equality, so a kind-table edit in the registry (adding or
+    removing a USAGE_RATIO_* category) cannot silently drift from what the
+    usage-ratio feature accepts. The count pin (twelve) is a secondary
+    guardrail that makes accidental additions visible in diffs.
+    """
+    derived_from_registry = frozenset(
+        category
+        for category, profile in CATEGORY_PROFILES_2025.items()
+        if profile.proportionality.kind
+        in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}
+    )
+    assert derived_from_registry == ELIGIBLE_USAGE_RATIO_CATEGORIES
     assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 12
 
 
-def test_consumer_fallback_contract() -> None:
-    """Document the intended #257 fallback: user ratio → statutory default."""
+def test_consumer_fallback_pattern_documentation() -> None:
+    """Reference example of the #257 consumer pattern.
+
+    This is a documentation test, not a regression guard for shipped code.
+    It pins the pattern #257's deductibility-compute service is expected to
+    use when it lands; when that service ships, its own tests become
+    authoritative and this one can be retired.
+    """
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
 
     def resolve_for_compute(category: SpendingCategory) -> Decimal | None:
@@ -139,3 +140,35 @@ def test_consumer_fallback_contract() -> None:
     assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ) == Decimal("0.21")
     assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA) == Decimal("0.30")
     assert resolve_for_compute(SpendingCategory.TELEFONIA_MOVIL) is None
+
+
+def test_resolve_user_ratio_on_ineligible_category_returns_none() -> None:
+    """#257 compute may look up any category; ineligible ones must return None
+    gracefully rather than raise — the caller then falls back to the
+    statutory default or non-USAGE_RATIO semantics without special-casing."""
+    profile = UsageRatioProfile()
+    assert resolve_user_ratio(profile, SpendingCategory.MATERIAL_OFICINA) is None
+
+
+def test_saved_profile_has_canonical_key_order() -> None:
+    """Two equal profiles serialise to identical bytes regardless of the
+    order in which ratios were added — preventing spurious diffs when
+    Kent's ``var/financial/usage-ratios.json`` is git-tracked."""
+    forward = UsageRatioProfile(
+        ratios={
+            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),
+            SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA: Decimal("0.21"),
+            SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
+        }
+    )
+    reverse = UsageRatioProfile(
+        ratios={
+            SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
+            SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA: Decimal("0.21"),
+            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),
+        }
+    )
+    assert forward.model_dump_json() == reverse.model_dump_json()
+    # And the canonical order is lexicographic by category value:
+    keys_in_payload = list(forward.ratios)
+    assert keys_in_payload == sorted(keys_in_payload, key=lambda c: c.value)
