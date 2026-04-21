@@ -22,6 +22,9 @@ compares the two (R4), and sketches follow-up implementation issues (R5).
 
 Scope is research only. No code changes under `src/aeat/`. The terminal
 artefact is the paired ADR `2026-04-14-n26-data-source-adr`.
+For Kent, this is the missing T1 decision for importing his primary bank into
+the local produce path without touching live AEAT surfaces; the roadmap home
+for that capability is milestone `0.1.0`.
 
 Parent: issue #106. Upstream contract: #73 (P2-A `FinancialProvider` ABC,
 merged on main via PR #134). TDP narrative: #104 (T1 ingest step, byte-level
@@ -100,9 +103,11 @@ IBANs, names, and amounts are acceptable under `tests/fixtures/financial/`.
    - Closing balance repeated, statement signature line, customer service
      footer
 
-**Column geometry** is consistent within a tier; the extractor does not need
-fuzzy clustering — x-coordinates of the column headers are stable to ±1pt
-across all fixtures we have so far.
+**Column geometry** is consistent within a tier, but the shipped parser should
+still derive its column bands from the statement's own header-word positions on
+each page rather than baking a fixed coordinate list into source. The stable
+layout is a reason dynamic header-derived detection is feasible, not a reason to
+hard-code probe-time x-coordinates.
 
 ### Library survey
 
@@ -126,58 +131,85 @@ that documents the extractor shape; it is not added under `src/aeat/`.
 ```python
 # research-only sketch — NOT committed to src/aeat/
 import pdfplumber
-from decimal import Decimal
-from datetime import date, datetime
 
-EUROPEAN_DATE = "%d.%m.%Y"  # N26 ES locale
-FX_MARKER = "Original amount:"
+DATE_FORMATS_BY_LOCALE = {
+    "es": ("%d.%m.%Y",),
+    "en": ("%d %b %Y", "%d %B %Y"),
+}
+FX_MARKER_BY_LOCALE = {
+    "es": "Importe original:",
+    "en": "Original amount:",
+}
 
 def parse_n26_statement(path):
     with pdfplumber.open(path) as pdf:
-        header_text = pdf.pages[0].extract_text().splitlines()
-        period = _extract_period(header_text)  # ("2026-01-01", "2026-01-31")
-        iban = _extract_iban(header_text)
+        header_lines = pdf.pages[0].extract_text().splitlines()
+        locale = _detect_statement_locale(header_lines)
+        date_formats = DATE_FORMATS_BY_LOCALE[locale]
+        fx_marker = FX_MARKER_BY_LOCALE[locale]
+        period = _extract_period(header_lines, date_formats)
+        iban = _extract_iban(header_lines)
+        currency = _extract_statement_currency(header_lines)
         rows = []
         carry = None  # multiline rows accumulate on `carry`
         for page in pdf.pages:
-            table = page.extract_table({
-                "vertical_strategy": "explicit",
-                "explicit_vertical_lines": [55, 110, 165, 400, 470, 540],
-                "horizontal_strategy": "text",
-            })
+            column_edges = _column_edges_from_headers(page, locale=locale)
+            table = page.extract_table(
+                {
+                    "vertical_strategy": "explicit",
+                    "explicit_vertical_lines": column_edges,
+                    "horizontal_strategy": "text",
+                }
+            )
             if not table:
                 continue
             for raw_row in table:
                 # Skip header row + footer / terminator lines by column fingerprint.
                 if _is_header(raw_row) or _is_footer(raw_row):
                     continue
-                if _looks_like_continuation(raw_row):
+                if _looks_like_continuation(raw_row, fx_marker=fx_marker):
                     carry = _merge_continuation(carry, raw_row)
                     continue
                 if carry is not None:
                     rows.append(carry)
-                carry = _row_to_record(raw_row, iban=iban, period=period)
+                carry = _row_to_record(
+                    raw_row,
+                    iban=iban,
+                    period=period,
+                    currency=currency,
+                    date_formats=date_formats,
+                )
         if carry is not None:
             rows.append(carry)
     return rows
 
-def _row_to_record(raw_row, *, iban, period):
-    booking_date = datetime.strptime(raw_row[0], EUROPEAN_DATE).date()
-    value_date = datetime.strptime(raw_row[1], EUROPEAN_DATE).date()
+def _row_to_record(raw_row, *, iban, period, currency, date_formats):
+    booking_date = _parse_statement_date(raw_row[0], date_formats)
+    value_date = _parse_statement_date(raw_row[1], date_formats)
     counterparty, description = _split_narrative(raw_row[2])
-    amount = _parse_european_decimal(raw_row[3])
+    amount = _parse_statement_amount(raw_row[3])
     return {
         "booking_date": booking_date,
         "value_date": value_date,
         "counterparty": counterparty,
         "description": description,
         "amount": amount,
-        "currency": "EUR",  # N26 PDFs are denominated in the account currency
-        "fx": None,  # populated from continuation lines if FX_MARKER is present
+        "currency": currency,
         "iban": iban,
         "statement_period": period,
+        "raw_fields": {
+            "booking_date": raw_row[0],
+            "value_date": raw_row[1],
+            "narrative": raw_row[2],
+            "amount": raw_row[3],
+            "balance": raw_row[4],
+        },
     }
 ```
+
+In the real implementation `_merge_continuation()` carries both parsed FX fields
+and the verbatim continuation text into `raw_fields` (for example `_fx_raw` or
+`_continuation`) before the `RawTransaction` is emitted.
 
 **Known parser edge cases** that must be covered in test fixtures:
 
@@ -190,6 +222,9 @@ def _row_to_record(raw_row, *, iban, period):
 - Locale shift — if the user's app locale changes from ES to EN, the header
   strings change and the date format shifts from `DD.MM.YYYY` to
   `DD Mon YYYY`. The parser must detect locale from the header block.
+- Statement currency must be extracted from the account-summary block or amount
+  header; the implementation must not assume `"EUR"` even if the initial Kent
+  fixture set is euro-denominated.
 
 ### Download / refresh path
 
@@ -237,8 +272,9 @@ free — `source_path`, `source_sha256`, `source_row_index`, `source_format`,
 - `provider_name` → `"n26-pdf"`.
 - `raw_fields` → the exact string tuple extracted for that row, keyed by
   column header, plus an `_fx_raw` entry holding the FX continuation-row
-  text verbatim where present. This lets a downstream T3 auditor replay
-  the extraction decision without reopening the PDF.
+  text verbatim where present. This aligns with today's
+  `RawTransaction.raw_fields: Mapping[str, str]` contract and lets a downstream
+  T3 auditor replay the extraction decision without reopening the PDF.
 
 Additional: the provider stores the full PDF under the provenance
 archive (`AEAT_FINANCIAL_RAW_DIR`) keyed by SHA-256, so the source bytes
@@ -248,7 +284,8 @@ the convention for CSV/XLSX/OFX in #73.
 ### Effort to ship as `PdfN26Provider`
 
 - New `src/aeat/financial/providers/_pdf_n26.py`: ~250 LoC (parser +
-  row-to-RawTransaction adaptor + validator).
+  row-to-RawTransaction adaptor + validator, including header-derived table
+  detection, locale-aware date parsing, and currency extraction).
 - One-line `SourceFormat.PDF` addition to `_raw_transaction.py`.
 - One-line registration in `providers/__init__.py` + `_detection.py`
   extension pair.
@@ -526,7 +563,9 @@ Rationale:
   live-gated tests are required.
 - **Acceptance:** extracted transactions round-trip to a golden JSON
   per fixture; hash changes on any fixture flip the golden and the
-  test fails loudly.
+  test fails loudly. The shipped parser must prove three robustness
+  properties explicitly: no fixed coordinate constants for the table
+  geometry, locale-aware date parsing, and statement-derived currency.
 - **Effort:** ~1 engineering day once fixtures are in hand.
 - **Blocks on:** user supplying the scrubbed PDF fixtures.
 
