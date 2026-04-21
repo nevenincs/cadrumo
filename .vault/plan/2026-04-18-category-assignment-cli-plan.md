@@ -5,8 +5,8 @@ tags:
 date: 2026-04-18
 related:
   - "[[2026-04-18-category-assignment-cli-adr]]"
+  - "[[2026-04-18-category-assignment-cli-research]]"
 ---
-
 # category-assignment-cli-plan
 
 ## Objective

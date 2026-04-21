@@ -20,7 +20,7 @@ Accepted — 2026-04-17. Implements GitHub issue #167.
 
 ## Context
 
-See [[2026-04-17-aeat-access-gate-research]]. The project has a
+See `[[2026-04-17-aeat-access-gate-research]]`. The project has a
 working PKCS#12 cert loader (#8), a pre-expiry gate (#94), and a
 nine-point live-write safety gate (#116 R1–R6 + #117). What it does
 **not** yet have is:
