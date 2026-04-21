@@ -4,7 +4,7 @@ tags:
   - "#trilingual-i18n"
 date: 2026-04-12
 related:
-  - "`[[2026-04-12-trilingual-i18n-adr]]`"
+  - "[[2026-04-12-trilingual-i18n-adr]]"
 ---
 
 # Trilingual i18n Research

@@ -4,9 +4,9 @@ tags:
   - "#cert-provider"
 date: "2026-04-18"
 related:
-  - "`[[2026-04-12-cert-auth-adr]]`"
-  - "`[[2026-04-18-auth-provider-abstraction-adr]]`"
-  - "`[[2026-04-18-cert-provider-migration-adr]]`"
+  - "[[2026-04-12-cert-auth-adr]]"
+  - "[[2026-04-18-auth-provider-abstraction-adr]]"
+  - "[[2026-04-18-cert-provider-migration-adr]]"
 ---
 
 # cert-provider research: auth-provider-ecosystem-audit
