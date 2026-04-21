@@ -60,6 +60,17 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
     text_casilla_ids: ClassVar[tuple[str, ...]] = ()
     casilla_width: ClassVar[int] = 2
 
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        super().__init_subclass__(**kwargs)
+        decimal_ids = getattr(cls, "casilla_ids", ())
+        text_ids = getattr(cls, "text_casilla_ids", ())
+        overlap = set(decimal_ids) & set(text_ids)
+        if overlap:
+            raise ValueError(
+                f"{cls.__name__}: casilla_ids and text_casilla_ids must be disjoint; "
+                f"overlapping IDs: {sorted(overlap)!r}"
+            )
+
     def _compiled_patterns(self) -> dict[str, re.Pattern[str]]:
         width = type(self).casilla_width
         return {
