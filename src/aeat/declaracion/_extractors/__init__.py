@@ -5,21 +5,25 @@ from __future__ import annotations
 from .._errors import NoExtractorRegisteredError
 from .._extractor import DeclaracionExtractor
 from .._schema import TemplateRevision
+from .modelo_111_v2025 import Modelo111V2025Extractor
+from .modelo_115_v2025 import Modelo115V2025Extractor
 from .modelo_130_v2025 import Modelo130V2025Extractor
 from .modelo_303_v2025 import Modelo303V2025Extractor
 
-_REGISTRY: dict[tuple[str, int, str], type[DeclaracionExtractor]] = {
-    (
-        Modelo130V2025Extractor.template_revision.modelo,
-        Modelo130V2025Extractor.template_revision.año,
-        Modelo130V2025Extractor.template_revision.revision,
-    ): Modelo130V2025Extractor,
-    (
-        Modelo303V2025Extractor.template_revision.modelo,
-        Modelo303V2025Extractor.template_revision.año,
-        Modelo303V2025Extractor.template_revision.revision,
-    ): Modelo303V2025Extractor,
-}
+
+def _key_for(extractor_cls: type[DeclaracionExtractor]) -> tuple[str, int, str]:
+    tr = extractor_cls.template_revision
+    return tr.modelo, tr.año, tr.revision
+
+
+_REGISTERED_CLASSES: tuple[type[DeclaracionExtractor], ...] = (
+    Modelo111V2025Extractor,
+    Modelo115V2025Extractor,
+    Modelo130V2025Extractor,
+    Modelo303V2025Extractor,
+)
+
+_REGISTRY: dict[tuple[str, int, str], type[DeclaracionExtractor]] = {_key_for(cls): cls for cls in _REGISTERED_CLASSES}
 
 
 def get_extractor(tr: TemplateRevision) -> DeclaracionExtractor:
