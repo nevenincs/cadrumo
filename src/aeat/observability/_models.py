@@ -219,6 +219,24 @@ class RunEventPayload(BaseModel):
         return self
 
 
+def _require_tz_aware(value: datetime) -> datetime:
+    """Reject naive datetimes at the pydantic boundary.
+
+    ``pairs.sort(key=lambda ...)`` in :func:`iter_runs` crashes with
+    ``TypeError: can't compare offset-naive and offset-aware datetimes``
+    if the runs directory mixes both shapes. Every writer inside the
+    observability layer constructs datetimes with ``tzinfo=UTC``, but a
+    hand-edited or externally-produced ``trace.json`` could slip a
+    naive timestamp past strict validation unless we enforce it here.
+    See audit finding S5 (vaultspec-code-reviewer, 2026-04-21).
+    """
+    if value.tzinfo is None:
+        raise ValueError(
+            "observability datetimes must be timezone-aware; got naive value",
+        )
+    return value
+
+
 class RunEvent(BaseModel):
     """A single observability event captured during a run."""
 
@@ -230,6 +248,11 @@ class RunEvent(BaseModel):
     payload: RunEventPayload
     timestamp: datetime
     module: str
+
+    @model_validator(mode="after")
+    def _require_tz_aware_timestamp(self) -> RunEvent:
+        _require_tz_aware(self.timestamp)
+        return self
 
 
 class RunTrace(BaseModel):
@@ -246,6 +269,19 @@ class RunTrace(BaseModel):
     db_sha256: str
     cert_fingerprint: str
     outcome: RunOutcome
+    replay_of: str | None = None
+    """Run id of the original trace when this trace was produced by a
+    replay re-entry, otherwise ``None``. Default keeps strict
+    validation backward-compatible with pre-S7 traces on disk: old
+    files do not carry this field and load cleanly via the default.
+    See audit finding S7 (vaultspec-code-reviewer, 2026-04-21)."""
+
+    @model_validator(mode="after")
+    def _require_tz_aware_timestamps(self) -> RunTrace:
+        _require_tz_aware(self.started_at)
+        if self.finished_at is not None:
+            _require_tz_aware(self.finished_at)
+        return self
 
 
 __all__ = [

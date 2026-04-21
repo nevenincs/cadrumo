@@ -44,7 +44,7 @@ from ._models import (
     WorkflowLinkPayload,
 )
 from ._recorder import record_event
-from ._replay import replay_run
+from ._replay import REPLAY_ACTIVE_ENV_VAR, replay_run
 from ._store import (
     iter_events,
     iter_runs,
@@ -56,6 +56,7 @@ from ._store import (
 )
 
 __all__ = [
+    "REPLAY_ACTIVE_ENV_VAR",
     "RUN_CONTEXT_VAR",
     "STEP_CONTEXT_VAR",
     "AeatCorpusDriftError",

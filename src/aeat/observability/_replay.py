@@ -15,6 +15,7 @@ decision D5 and the live-write safety charter (#116).
 
 from __future__ import annotations
 
+import os
 import shlex
 
 from ..config import PROJECT_ROOT, Settings
@@ -22,6 +23,14 @@ from ._errors import AeatCorpusDriftError, AeatObservabilityError
 from ._fingerprint import compute_corpus_sha256
 from ._models import ArgumentRecord, ArgumentSource, RunTrace
 from ._store import load_trace
+
+# Marker environment variable set for the duration of ``replay_run``'s
+# re-entered CLI call. The submission engine and any other AEAT-write
+# barrier can query this flag to machine-check that "we are inside a
+# replay" rather than relying on argv pattern matching. See audit
+# finding S3 (vaultspec-code-reviewer, 2026-04-21) and live-write
+# safety charter #116.
+REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
 
 # Flags that opt a recorded run into AEAT live-mode. Replay refuses to
 # re-enter these paths — even with ``dry_run=True`` at the replay layer
@@ -127,8 +136,26 @@ def replay_run(run_id: str, *, dry_run: bool = True) -> RunTrace:
     argv = _argv_from_arguments(original.entrypoint, original.arguments)
     from ..cli import app
 
-    app(argv, standalone_mode=False)
+    # Belt-and-braces live-write defense: set a marker env var that any
+    # AEAT-write barrier can query to refuse live writes during replay.
+    # Restore the prior value on exit so the process env is unchanged
+    # for any caller that imports ``replay_run`` programmatically.
+    previous = os.environ.get(REPLAY_ACTIVE_ENV_VAR)
+    # Store the *original* run_id, not just "1", so the re-entered
+    # run_context can label the new trace's ``replay_of`` field with
+    # the source run. This lets ``aeat run show`` distinguish replay
+    # traces from fresh runs and chain them back to their original.
+    # The value still reads truthy for any live-write barrier that
+    # just checks ``os.environ.get(REPLAY_ACTIVE_ENV_VAR)``.
+    os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id
+    try:
+        app(argv, standalone_mode=False)
+    finally:
+        if previous is None:
+            os.environ.pop(REPLAY_ACTIVE_ENV_VAR, None)
+        else:
+            os.environ[REPLAY_ACTIVE_ENV_VAR] = previous
     return original
 
 
-__all__ = ["replay_run"]
+__all__ = ["REPLAY_ACTIVE_ENV_VAR", "replay_run"]

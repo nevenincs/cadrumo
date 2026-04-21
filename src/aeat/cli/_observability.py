@@ -10,13 +10,23 @@ parameter so replay can reconstruct a Typer-compatible argv with
 positional arguments emitted first (in the declared order, without
 a ``--`` prefix) followed by any captured flags.
 
-Argument values whose name matches one of the secret-smelling
+Argument values whose *name* matches one of the secret-smelling
 substrings in :data:`_REDACT_NAME_SUBSTRINGS` are recorded as
 ``"***"`` rather than their literal value. This is a defensive
 shield: no current wrapped CLI command accepts a secret on argv,
 but if one is added (e.g. ``--password``, ``--token``), the audit
 log must never capture the plaintext. Callers that need a value
 recorded verbatim must rename the parameter.
+
+Caveat — name-side redaction only (audit finding S6, 2026-04-21):
+this shield does NOT inspect argument **values**. An operator who
+passes a token or a NIF in the value position of an otherwise
+innocent-looking flag (e.g. ``aeat inbox ack --by "tok-ABCXYZ"``)
+will have the literal value written into ``events.jsonl`` / the
+persisted ``RunTrace``. If you are wrapping a new CLI command whose
+argument can contain sensitive material, either rename the arg to
+something in the denylist or file a follow-up to introduce a
+per-command allowlist of redacted argument names.
 """
 
 from __future__ import annotations
