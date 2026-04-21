@@ -8,7 +8,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 036 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
 | 037 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
-| 100 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | ✅ | ❌ #305/F | 🚧 #305/F | 🚧 #305/F |
+| 100 | ✅ | 🚧 (summary 27 casillas) | 🚧 (summary 12 casillas) | ❌ | ❌ | ❌ | N/A | partial | ❌ | ✅ (`--from-borrador`) | ✅ | ✅ (summary MVP) | ✅ (summary MVP) | ✅ (summary MVP) |
 | 111 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
 | 115 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
 | 123 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ❌ #305/D | ❌ | ❌ |
@@ -20,7 +20,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | 200 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
 | 202 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
 | 232 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
-| **303** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | partial | ⏳ #222 | ✅ | ✅ | 🚧 #305/D | ❌ | ❌ |
+| **303** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | partial | ⏳ #222 | ✅ | ✅ | ✅ (2025 MVP) | ❌ | ❌ |
 | 347 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
 | 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
 | 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
