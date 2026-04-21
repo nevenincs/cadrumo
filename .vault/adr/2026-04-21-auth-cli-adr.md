@@ -193,3 +193,40 @@ protocol, `AeatAuthenticator`, and the `select_provider` factory.
   under EPIC #279.
 - No changes to submission, workflow, or status sub-apps; no drift
   against the live-write charter (#116) or export-first ADR.
+
+## Addendum — live-portal discoveries (2026-04-21, post-implementation)
+
+Three deltas emerged during the first driven browser session against
+the real AEAT Sede Electrónica while finalising this PR. The `status:
+accepted` decisions above remain valid; the addendum records what
+changed between "ADR approved" and "merge-ready":
+
+1. **Cl@ve Móvil ships in this PR.** The initial Considerations
+   section describes a CLI that lists Cl@ve providers as "known, not
+   configured". The live-portal capture made the Cl@ve Móvil flow
+   fully drivable in Playwright, so `ClaveMovilAuthProvider` landed in
+   the same PR instead of being deferred. The registry entry for
+   Cl@ve Móvil is now `implemented=True`; Cl@ve Permanente is
+   confirmed **not offered by AEAT Sede today** and remains a
+   placeholder (see `.vault/reference/2026-04-21-clave-portal-reference.md`
+   § "Executive finding"). Cl@ve PIN stays P3 per the EPIC.
+
+2. **Settings surface is larger than one field.** The "gains a new
+   `aeat_auth_provider` Settings field" line in Consequences
+   understates the actual change. The shipped Settings additions are:
+   `aeat_auth_provider`, `aeat_clave_movil_dni_nie`,
+   `aeat_clave_movil_dni_fecha`, `aeat_clave_movil_nie_soporte`,
+   `aeat_clave_prefer_non_qr`, `aeat_clave_movil_timeout_ms`,
+   `aeat_clave_sede_access_url_template`, `aeat_sede_expedientes_path`.
+   All are documented in `env/.env.example` and guarded by
+   `tests/test_config.py`.
+
+3. **URL assumptions carried over from earlier ADR research are wrong.**
+   `SelectorAccesos.html` is static HTML that always returns 200, and
+   `/wlpl/<app>/<handler>` paths serve only on `www<N>.agenciatributaria.gob.es`
+   (never on `sede`). These two assumptions are fixed for Cl@ve Móvil
+   in this PR; they are latent in other modules (status reader,
+   submission engine, justificante verifier) and tracked as
+   follow-up issue **#311**. The live-verified reference doc is the
+   source of truth going forward; any future AEAT URL decision must
+   validate against it before landing in code.

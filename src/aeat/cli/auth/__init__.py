@@ -270,11 +270,14 @@ def configure(
         mapping["AEAT_AUTH_PROVIDER"] = kind.value
 
     write_env_vars(env_file, mapping)
-    _CONSOLE.print(
-        f"[green]wrote {len(mapping)} keys to {env_file} — run `aeat auth login` to start the Cl@ve Móvil flow.[/green]"
-    )
-    for key, value in mapping.items():
-        _CONSOLE.print(f"  {key}={value}")
+    # Confirm the write by listing the env-var NAMES we touched — never the
+    # values. Values include the operator's DNI/NIE and contraste, which
+    # is PII that should not land in terminal history, CI logs, or screen
+    # recordings.
+    _CONSOLE.print(f"[green]Saved {len(mapping)} settings to {env_file}.[/green]")
+    for key in mapping:
+        _CONSOLE.print(f"  • {key}")
+    _CONSOLE.print("\nRun `aeat auth login` to start the Cl@ve Móvil flow.")
 
 
 @app.command("login", help="Authenticate with the selected provider and cache the session.")
@@ -327,11 +330,20 @@ def login(
         return
 
     now = datetime.now(UTC)
-    remaining = max(0, int((session.idle_deadline - now).total_seconds() // 60))
-    _CONSOLE.print(
-        f"[green]signed in as {session.identity_nif} via {session.provider_kind.value}; "
-        f"session idle TTL ~{remaining}m[/green]"
-    )
+    remaining_seconds = int((session.idle_deadline - now).total_seconds())
+    label = _registry.get_entry(session.provider_kind).label
+    if remaining_seconds <= 0:
+        _CONSOLE.print(
+            f"[yellow]Signed in as {session.identity_nif} via {label}, but the "
+            "session is already past its idle deadline. AEAT may refuse subsequent "
+            "requests; run `aeat auth login` again if reads fail.[/yellow]"
+        )
+    else:
+        remaining_minutes = max(1, remaining_seconds // 60)
+        _CONSOLE.print(
+            f"[green]Signed in as {session.identity_nif} via {label}. "
+            f"Session expires in about {remaining_minutes}m.[/green]"
+        )
 
 
 @app.command("status", help="Show whether a session is active and how much idle TTL remains.")
@@ -456,16 +468,14 @@ def whoami(
         typer.echo(json.dumps(payload, indent=2))
         return
 
+    label = _registry.get_entry(refreshed.provider_kind).label
     if assertion.is_valid:
         _CONSOLE.print(
-            f"[green]session valid: {refreshed.identity_nif} via "
-            f"{refreshed.provider_kind.value}; AEAT returned "
-            f"HTTP {assertion.status_code} in {assertion.elapsed_ms}ms[/green]"
+            f"[green]Signed in as {refreshed.identity_nif} via {label}. AEAT accepted the cached session.[/green]"
         )
     else:
         _CONSOLE.print(
-            f"[yellow]session stale or revoked: AEAT returned "
-            f"HTTP {assertion.status_code}; run `aeat auth login` to reauthenticate[/yellow]"
+            f"[yellow]The cached {label} session is stale or revoked. Run `aeat auth login` to sign in again.[/yellow]"
         )
         raise typer.Exit(code=1)
 
@@ -490,6 +500,11 @@ def logout(
     ),
 ) -> None:
     """Delete the storage-state + metadata pair for the selected provider(s)."""
+    if all_providers and provider is not None:
+        raise typer.BadParameter(
+            "Pass either --provider or --all, not both: --all clears every "
+            "provider's cached session, so --provider would be ignored."
+        )
     settings = _load_settings()
 
     removed: list[Path] = []

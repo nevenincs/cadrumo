@@ -125,11 +125,19 @@ def describe(kind: AuthProviderKind, settings: Settings) -> AuthProviderDescript
     Implemented providers delegate to the provider's own ``describe()``
     (which fails soft for missing configuration). Not-yet-shipped
     kinds return a fixed "not yet implemented" description so the CLI
-    can still list them.
+    can still list them. The browser-session factory is passed through
+    even for describe-only calls so providers that grow optional I/O
+    in their describe() do not silently see ``None`` and break.
     """
     entry = get_entry(kind)
     if entry.implemented:
-        provider = select_provider(kind, settings=settings)
+        from ...browser import default_browser_session_factory
+
+        provider = select_provider(
+            kind,
+            settings=settings,
+            browser_session_factory=default_browser_session_factory,
+        )
         return provider.describe()
     return AuthProviderDescription(
         kind=entry.kind,
@@ -155,6 +163,7 @@ def default_kind(settings: Settings) -> AuthProviderKind:
         if description.configured:
             return entry.kind
     raise NoConfiguredProviderError(
-        "no AEAT auth provider is configured; set AEAT_AUTH_PROVIDER or pass --provider, "
-        "then follow `aeat setup` to configure credentials for the chosen provider"
+        "No AEAT auth provider is configured yet. Run `aeat auth configure` "
+        "to set up Cl@ve Móvil, or pass `--provider certificate` once your "
+        "FNMT certificate is installed."
     )

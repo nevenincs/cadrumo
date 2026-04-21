@@ -143,7 +143,7 @@ Minimum flow:
 2. `authenticate()`:
    1. Open Playwright context.
    2. Navigate to the selector URL. Take the target from
-      `settings.aeat_sede_expedientes_url` (or a new default).
+      `settings.aeat_sede_expedientes_path` (joined to `https://sede.agenciatributaria.gob.es`).
    3. Click `button[name=autoriza-P]`.
    4. Wait for the QR page. Extract:
       - `document.querySelector('#imgQRAcceso').src` (data:image/png;base64,...)

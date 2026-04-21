@@ -10,6 +10,7 @@ and this module stay fully aligned.
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
@@ -672,6 +673,41 @@ class Settings(BaseSettings):
         """Reject templates that omit the ``{expediente_id}`` placeholder."""
         if "{expediente_id}" not in value:
             raise ValueError("aeat_status_detail_url_template must contain '{expediente_id}'")
+        return value
+
+    @field_validator(
+        "aeat_clave_movil_dni_nie",
+        "aeat_clave_movil_dni_fecha",
+        "aeat_clave_movil_nie_soporte",
+        mode="before",
+    )
+    @classmethod
+    def _empty_optional_clave_fields_are_none(cls, value: object) -> object:
+        """Treat blank env vars for optional Cl@ve Móvil identity fields as unset."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
+    @field_validator("aeat_clave_movil_dni_fecha")
+    @classmethod
+    def _clave_dni_fecha_is_iso_date(cls, value: str | None) -> str | None:
+        """Reject DNI validity dates that are not YYYY-MM-DD strings."""
+        if value is None:
+            return None
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("AEAT_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)") from exc
+        return value
+
+    @field_validator("aeat_clave_sede_access_url_template")
+    @classmethod
+    def _clave_sede_access_url_template_has_target(cls, value: str) -> str:
+        """Reject templates that omit the ``{target}`` placeholder."""
+        if "{target}" not in value:
+            raise ValueError(
+                "aeat_clave_sede_access_url_template must contain '{target}' for the URL-encoded post-auth path"
+            )
         return value
 
     @classmethod

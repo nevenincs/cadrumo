@@ -17,7 +17,7 @@ from ...auth import AEAT_SESSION_IDLE_TTL
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from ...auth import AuthProviderDescription
+    from ...auth import AuthProviderDescription, AuthProviderKind
     from ...config import Settings
     from ._registry import ProviderRegistryEntry
     from ._session import PersistedAuthSession
@@ -46,14 +46,36 @@ def _format_expires(description: AuthProviderDescription) -> str:
 
 
 def _format_health(description: AuthProviderDescription) -> str:
-    parts: list[str] = []
-    if description.health_severity:
-        parts.append(description.health_severity)
-    if description.days_until_expiry is not None:
-        parts.append(f"{description.days_until_expiry}d")
-    if description.health_summary and description.health_summary not in parts:
-        parts.append(description.health_summary)
-    return " · ".join(parts) if parts else "—"
+    """Render the HEALTH column as Kent-readable prose.
+
+    Prefers ``health_summary`` when it is already a sentence (Cl@ve
+    Móvil emits "ready — requires push approval on the Cl@ve app").
+    For the certificate provider, ``health_summary`` is the raw token
+    ``"{severity}:{days_until_expiry}"`` (e.g. ``"CRITICAL:3"``), which
+    is unreadable: translate it into an English phrase based on the
+    severity.
+    """
+    severity = (description.health_severity or "").upper()
+    days = description.days_until_expiry
+    summary = description.health_summary or ""
+
+    # Cert provider encodes health as a "SEV:days" token in summary;
+    # replace with a prose form that Kent can act on. Cl@ve providers
+    # emit prose summaries directly — pass those through.
+    if summary and ":" in summary and summary.split(":", 1)[0].upper() == severity:
+        summary = ""
+
+    if severity == "EXPIRED" and days is not None:
+        return f"certificate expired {abs(days)}d ago — renew at sede.fnmt.gob.es"
+    if severity == "CRITICAL" and days is not None and days >= 0:
+        return f"certificate expires in {days}d — renew soon at sede.fnmt.gob.es"
+    if severity == "WARN" and days is not None and days >= 0:
+        return f"certificate expires in {days}d"
+    if severity == "OK" and days is not None:
+        return f"healthy — {days}d until expiry"
+    if summary:
+        return summary
+    return "—"
 
 
 def render_list_providers_table(
@@ -95,20 +117,32 @@ def _relative_minutes(moment: datetime, now: datetime) -> int:
     return int(delta_s // 60)
 
 
+def _provider_label(kind: AuthProviderKind) -> str:
+    """Look up the registry label for ``kind`` so output shows e.g. ``Cl@ve Móvil``."""
+    # Local import avoids a circular dependency between _render and _registry.
+    from . import _registry
+
+    try:
+        return _registry.get_entry(kind).label
+    except Exception:
+        return kind.value
+
+
 def render_status_line(session: PersistedAuthSession, now: datetime | None = None) -> str:
     """Render Kent's one-line human status string."""
     current = now or datetime.now(UTC)
+    label = _provider_label(session.provider_kind)
     if session.is_expired(current):
         expired_ago = _relative_minutes(session.idle_deadline, current)
-        return f"session expired {expired_ago}m ago; run `aeat auth login`"
+        return f"Your {label} session expired {expired_ago}m ago. Run `aeat auth login` to sign in again."
 
     authenticated_ago = max(0, _relative_minutes(session.authenticated_at, current))
     remaining = max(timedelta(0), session.idle_deadline - current)
     remaining_minutes = int(remaining.total_seconds() // 60)
     return (
-        f"active provider: {session.provider_kind.value} · "
+        f"Active provider: {label} · "
         f"authenticated {authenticated_ago}m ago · "
-        f"{remaining_minutes}m remaining before idle timeout · "
+        f"expires in {remaining_minutes}m · "
         f"identity {session.identity_nif}"
     )
 
