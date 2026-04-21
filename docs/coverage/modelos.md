@@ -14,7 +14,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | 123 | ✅ | ✅ (11 casillas) | ✅ (2025 aggregation) | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | **130** | ✅ | ✅ (19 casillas) | ✅ (2024 + 2025) | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | ✅ | ⏳ #222 | ✅ | ✅ | ✅ (2025 MVP) | ❌ | ❌ |
 | 131 | ✅ | ✅ (15 casillas) | ✅ (2025 módulos) | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 180 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
+| 180 | ✅ | ✅ (4 casillas) | ✅ (2025 resumen arrendamientos) | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 190 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 193 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 200 | ✅ | ✅ (16 casillas p14) | ✅ (2024 liquidación) | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP p14) | ❌ | ❌ |
