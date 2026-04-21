@@ -33,17 +33,19 @@ from .._ruleset import ParameterTable, Ruleset
 from ._common import (
     add_op,
     casilla,
-    div_op,
     formula,
-    lit,
     make_citation,
-    percent,
+    percent_from_whole,
     ref,
     sub_op,
 )
 
 _EFFECTIVE_FROM = date(2024, 1, 1)
-_EFFECTIVE_TO = date(2025, 12, 31)
+# Ruleset covers the *fiscal year* 2024 (filed during 2025). A separate
+# ejercicio-2025 ruleset will land when Orden HAC/657/2025's successor
+# is published; narrowing to 2024-12-31 prevents span-overlap conflicts
+# in `_spans_overlap` when that ruleset registers (wave 37 H2 fix).
+_EFFECTIVE_TO = date(2024, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
@@ -119,7 +121,7 @@ _FORMULAS = (
         casilla_id="00562",
         formula_id="modelo_200.2024.cuota_integra",
         # 00562 = 00552 x (00558 / 100). AEAT prints 00558 as whole-percent.
-        body=percent(div_op(ref("00558"), lit("100"), quantize="0.0001"), ref("00552")),
+        body=percent_from_whole(ref("00558"), ref("00552")),
     ),
     formula(
         casilla_id="00611",

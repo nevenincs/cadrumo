@@ -10,7 +10,7 @@ from .modelo_123_2025 import RULESET as MODELO_123_2025
 from .modelo_130_2024 import RULESET as MODELO_130_2024
 from .modelo_130_2025 import RULESET as MODELO_130_2025
 from .modelo_131_2025 import RULESET as MODELO_131_2025
-from .modelo_200_2025 import RULESET as MODELO_200_2024
+from .modelo_200_2024 import RULESET as MODELO_200_2024
 from .modelo_202_2025 import RULESET as MODELO_202_2025
 from .modelo_303_2024 import RULESET as MODELO_303_2024
 from .modelo_303_2025 import RULESET as MODELO_303_2025

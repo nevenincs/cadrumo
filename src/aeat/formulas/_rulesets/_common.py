@@ -51,6 +51,7 @@ __all__ = [
     "mul_op",
     "param",
     "percent",
+    "percent_from_whole",
     "ref",
     "round2",
     "sub_op",
@@ -148,6 +149,20 @@ def clamp_pos(operand: Operand) -> ClampPositiveFormula:
 def percent(rate: Operand, base: Operand) -> PercentFormula:
     """Build a :class:`PercentFormula`."""
     return PercentFormula(operands=(rate, base))
+
+
+def percent_from_whole(rate_ref: Operand, base: Operand) -> PercentFormula:
+    """Apply a whole-percent rate (e.g. ``17,00`` for 17%) to a base.
+
+    AEAT forms print the rate as a whole-percent value (``Decimal("17.00")``
+    ⇒ 17%); this helper normalises it to a fraction via ``rate / 100`` and
+    applies ``rate * base``. Use this when the rate is read from an
+    extracted casilla rather than stored in a :class:`ParameterTable`.
+
+    Consistent quantisation ``Decimal("0.0001")`` keeps post-division
+    precision at four decimals (enough for any IS/IRPF rate).
+    """
+    return PercentFormula(operands=(div_op(rate_ref, Literal(value=Decimal("100")), quantize="0.0001"), base))
 
 
 def brackets(operand: Operand, *, steps: tuple[Bracket, ...]) -> BracketsFormula:
