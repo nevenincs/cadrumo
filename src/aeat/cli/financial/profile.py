@@ -158,7 +158,17 @@ def _format_eligible_list() -> str:
 
 
 def _indented_wrap(header: str, items: list[str]) -> str:
-    """Indent a header + comma-separated list and wrap to 78 columns."""
+    """Indent a header + comma-separated list and wrap to 78 columns.
+
+    ``break_long_words=False`` means an individual item longer than ~65
+    characters (78 minus the subsequent-indent) would overflow on its own
+    line. The current catalogue's longest identifier is
+    ``suministros_home_office_internet`` at 32 chars — comfortably within
+    budget. Revisit this helper if a future ``SpendingCategory`` id
+    approaches 65 characters.
+    """
+    if not items:
+        return f"  {header} (none)"
     body = ", ".join(items)
     wrapped = textwrap.fill(
         body,
