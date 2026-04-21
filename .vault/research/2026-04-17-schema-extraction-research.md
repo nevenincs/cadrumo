@@ -7,11 +7,11 @@ tags:
   - "#schema-extraction"
 date: 2026-04-17
 related:
-  - "[[2026-04-12-casilla-db-research.md]]"
-  - "[[2026-04-12-modelo-303-390-research.md]]"
-  - "[[2026-04-13-modelo-inventory-research.md]]"
-  - "[[2026-04-12-justificante-parser-research.md]]"
-  - "[[2026-04-12-manual-practico-research.md]]"
+  - "[[2026-04-12-casilla-db-research]]"
+  - "[[2026-04-12-modelo-303-390-research]]"
+  - "[[2026-04-13-modelo-inventory-research]]"
+  - "[[2026-04-12-justificante-parser-research]]"
+  - "[[2026-04-12-manual-practico-research]]"
 ---
 
 # schema-extraction research (#9)

@@ -1,3 +1,11 @@
+---
+tags:
+  - "#adr"
+  - "#filing-draft-engine"
+date: 2026-04-12
+related:
+  - "[[2026-04-12-filing-draft-engine-research]]"
+---
 # ADR — Filing draft generation engine (#39)
 
 Date: 2026-04-12

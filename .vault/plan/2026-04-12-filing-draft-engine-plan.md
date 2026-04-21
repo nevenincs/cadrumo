@@ -1,3 +1,12 @@
+---
+tags:
+  - "#plan"
+  - "#filing-draft-engine"
+date: 2026-04-12
+related:
+  - "[[2026-04-12-filing-draft-engine-adr]]"
+  - "[[2026-04-12-filing-draft-engine-research]]"
+---
 # Plan — Filing draft generation engine (#39)
 
 Date: 2026-04-12

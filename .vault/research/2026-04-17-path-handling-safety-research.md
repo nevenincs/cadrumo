@@ -4,7 +4,7 @@ tags:
   - "#path-handling-safety"
 date: "2026-04-17"
 related:
-  - "[[2026-04-17-path-handling-safety-review]]"
+  - "[[2026-04-17-path-handling-safety-review-audit]]"
 ---
 
 # `path-handling-safety` research

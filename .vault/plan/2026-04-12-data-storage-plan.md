@@ -12,7 +12,7 @@ related:
 
 # data-storage plan
 
-Implements [[2026-04-12-data-storage-adr]]. Scope is strictly issue wgergely/aeat#10.
+Implements `[[2026-04-12-data-storage-adr]]`. Scope is strictly issue wgergely/aeat#10.
 
 ## phase 1 — dependencies and settings
 
