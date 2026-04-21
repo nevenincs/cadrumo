@@ -34,6 +34,7 @@ from . import (
     BrowserSessionLike,
     CertificateBackend,
     CertificateExpiredError,
+    CertificateLoginAssertionDetail,
     CertificateNifParseError,
     CertificateSessionDetail,
     HandshakeResult,
@@ -227,14 +228,16 @@ def test_aeat_login_assertion_is_valid_composite() -> None:
     assertion = AeatLoginAssertion(
         target_url="https://sede/",
         is_valid=True,
-        handshake_success=True,
-        certificate_recognised=True,
-        parsed_nif="12345678Z",
-        parsed_subject="CN=NOMBRE",
+        identity_nif="12345678Z",
         status_code=200,
         elapsed_ms=123,
         attempted_at=datetime.now(UTC),
         error_message=None,
+        assertion_detail=CertificateLoginAssertionDetail(
+            handshake_success=True,
+            certificate_recognised=True,
+            parsed_subject="CN=NOMBRE",
+        ),
     )
     assert assertion.is_valid is True
     assert assertion.model_config["frozen"] is True
