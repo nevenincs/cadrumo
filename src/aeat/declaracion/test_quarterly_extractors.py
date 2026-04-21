@@ -151,6 +151,7 @@ class TestRegistryKnowsNewExtractors:
         assert ("131", 2025, "2025.01") in keys
         assert ("200", 2025, "2025.01") in keys
         assert ("202", 2025, "2025.01") in keys
+        assert ("232", 2025, "2025.01") in keys
         assert ("303", 2025, "2025.01") in keys
         # Modelo 303 post-HAC/819/2024 revision.
         assert ("303", 2024, "2024.orden-819") in keys
@@ -160,7 +161,10 @@ class TestRegistryKnowsNewExtractors:
         assert ("193", 2025, "2025.01") in keys
         assert ("347", 2025, "2025.01") in keys
         assert ("349", 2025, "2025.01") in keys
+        assert ("369", 2025, "2025.01") in keys
         assert ("390", 2025, "2025.01") in keys
+        assert ("720", 2025, "2025.01") in keys
+        assert ("840", 2025, "2025.01") in keys
 
 
 _MODELO_180_LABELS = {
@@ -505,6 +509,32 @@ class TestModelo202V2025Extractor:
         )
         filing = parse_declaracion(pdf)
         assert filing.modelo == "202"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+
+class TestHeaderOnlyExtractors:
+    """232/369/720/840 recognise the document but expose no casillas.
+
+    The numeric-decimal primitive cannot parse their text-value payloads.
+    These extractors act as identity probes until a text-value primitive
+    lands in sub-EPIC #305-textual-casillas.
+    """
+
+    @pytest.mark.parametrize("modelo", ["232", "369", "720", "840"], ids=["232", "369", "720", "840"])
+    def test_header_only_modelo_exposes_empty_casillas(self, tmp_path: Path, modelo: str) -> None:
+        pdf = _make_annual_pdf(
+            tmp_path,
+            modelo=modelo,
+            labels={},
+            values={},
+            filename=f"modelo_{modelo}_2025.pdf",
+        )
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == modelo
+        assert filing.period == "2025A"
+        assert len(filing.values) == 0
+        # Empty required-set ⇒ reliable_ids ≥ required_set ⇒ COMPLETE.
+        # Upstream classifier still flags zero-casilla filings for review.
         assert filing.extraction_status is ExtractionStatus.COMPLETE
 
 

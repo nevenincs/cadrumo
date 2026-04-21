@@ -15,11 +15,15 @@ from .modelo_190_v2025 import Modelo190V2025Extractor
 from .modelo_193_v2025 import Modelo193V2025Extractor
 from .modelo_200_v2025 import Modelo200V2025Extractor
 from .modelo_202_v2025 import Modelo202V2025Extractor
+from .modelo_232_v2025 import Modelo232V2025Extractor
 from .modelo_303_v2024_09 import Modelo303V2024Orden819Extractor
 from .modelo_303_v2025 import Modelo303V2025Extractor
 from .modelo_347_v2025 import Modelo347V2025Extractor
 from .modelo_349_v2025 import Modelo349V2025Extractor
+from .modelo_369_v2025 import Modelo369V2025Extractor
 from .modelo_390_v2025 import Modelo390V2025Extractor
+from .modelo_720_v2025 import Modelo720V2025Extractor
+from .modelo_840_v2025 import Modelo840V2025Extractor
 
 
 def _key_for(extractor_cls: type[DeclaracionExtractor]) -> tuple[str, int, str]:
@@ -38,11 +42,15 @@ _REGISTERED_CLASSES: tuple[type[DeclaracionExtractor], ...] = (
     Modelo193V2025Extractor,
     Modelo200V2025Extractor,
     Modelo202V2025Extractor,
+    Modelo232V2025Extractor,
     Modelo303V2024Orden819Extractor,
     Modelo303V2025Extractor,
     Modelo347V2025Extractor,
     Modelo349V2025Extractor,
+    Modelo369V2025Extractor,
     Modelo390V2025Extractor,
+    Modelo720V2025Extractor,
+    Modelo840V2025Extractor,
 )
 
 _REGISTRY: dict[tuple[str, int, str], type[DeclaracionExtractor]] = {_key_for(cls): cls for cls in _REGISTERED_CLASSES}

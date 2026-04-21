@@ -2,7 +2,7 @@
 
 Per-modelo implementation state. Refreshed every month via audit [#241](https://github.com/wgergely/aeat/issues/241).
 
-Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped · N/A
+Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped · N/A · *(header-only)* = document recognised + NIF/ejercicio/período captured; per-casilla values pending a text-value primitive in sub-EPIC #305-textual-casillas.
 
 | Modelo | In registry | Schema | Formula ruleset | Filing builder | Export (fichero BOE) | Amendment (complementaria) | Amendment (rectificativa) | Tests | Live-read detail | CLI coverage | `justificante` import | `declaración` import | `borrador` import | `predeclaración` import |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -11,22 +11,22 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | 100 | ✅ | 🚧 (summary 27 casillas) | 🚧 (summary 12 casillas) | ❌ | ❌ | ❌ | N/A | partial | ❌ | ✅ (`--from-borrador`) | ✅ | ✅ (summary MVP) | ✅ (summary MVP) | ✅ (summary MVP) |
 | 111 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 115 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 123 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 123 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | **130** | ✅ | ✅ (19 casillas) | ✅ (2024 + 2025) | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | ✅ | ⏳ #222 | ✅ | ✅ | ✅ (2025 MVP) | ❌ | ❌ |
-| 131 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 131 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 180 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 190 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 193 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
-| 200 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
-| 202 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
-| 232 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 193 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
+| 200 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP p14) | ❌ | ❌ |
+| 202 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
+| 232 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
 | **303** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | partial | ⏳ #222 | ✅ | ✅ | ✅ (2024.09 + 2025 MVP) | ❌ | ❌ |
 | 347 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
-| 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
+| 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
 | **390** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (SUSTITUTIVA) | N/A | partial | ⏳ #222 | ✅ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 720 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ❌ #305/D | ❌ | ❌ |
-| 840 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ❌ #305/D | ❌ | ❌ |
+| 720 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | 🚧 (header-only) | ❌ | ❌ |
+| 840 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | 🚧 (header-only) | ❌ | ❌ |
 
 **Bold** = primary autónomo forms (130, 303, 390). These are the minimum-viable modelo set for Kent.
 
