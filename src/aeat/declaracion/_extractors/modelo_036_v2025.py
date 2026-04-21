@@ -5,12 +5,15 @@ Empresarios, Profesionales y Retenedores. Completa (~8 pages, all
 obligados tributarios regardless of size/régimen). Event-triggered —
 filed within 1 month of the hecho censal (article 10 RD 1065/2007).
 
-**MVP scope is header-only.** Modelo 036's payload is overwhelmingly
-text (actividad, régimen IVA, régimen IRPF, domicilios, representantes,
-IAE epígrafes). No numeric-decimal primitive can parse it. Landing
-proper extraction requires the text-value primitive tracked under
-sub-EPIC #305-textual-casillas. This extractor recognises the document,
-captures NIF/ejercicio/período, and returns ``values=()``.
+Wave 27 migrates the extractor off the header-only MVP to the
+named-field primitive, capturing the most-used censal decisions:
+
+- causa de presentación (alta / modificación / baja).
+- régimen IVA (general, simplificado, agricultura, recargo de
+  equivalencia, exento).
+- régimen IRPF (directa, objetiva, atribución).
+- actividad económica (IAE epígrafe).
+- fecha de efectos.
 
 Legal base: Orden EHA/1274/2007, modified through HAC/1634/2022.
 """
@@ -24,7 +27,7 @@ from .._schema import TemplateRevision
 
 
 class Modelo036V2025Extractor(GenericDeclaracionExtractor):
-    """Header-only extractor for Modelo 036."""
+    """Named-field extractor for Modelo 036."""
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="036",
@@ -32,6 +35,16 @@ class Modelo036V2025Extractor(GenericDeclaracionExtractor):
         revision="2025.01",
     )
     casilla_ids: ClassVar[tuple[str, ...]] = ()
+    # Label-to-value separators on 036 PDFs use either ":" or whitespace
+    # columns; the regex skips both (``[:\s]+``) before capturing the
+    # first non-colon non-space token as the value.
+    named_field_patterns: ClassVar[dict[str, str]] = {
+        "causa_presentacion": r"Causa\s+(?:de\s+)?presentaci[oó]n\s*:?\s*([^\s:][^\s]*)",
+        "regimen_iva": r"R[eé]gimen\s+(?:especial\s+)?IVA\s*:?\s*([^\s:][^\s]*)",
+        "regimen_irpf": r"R[eé]gimen\s+(?:estimaci[oó]n\s+)?IRPF\s*:?\s*([^\s:][^\s]*)",
+        "epigrafe_iae": r"(?:Ep[ií]grafe\s+IAE|IAE)\s*:?\s*(\d{3,4}(?:\.\d+)?)",
+        "fecha_efectos": r"Fecha\s+(?:de\s+)?efectos\s*:?\s*(\d{4}-\d{2}-\d{2})",
+    }
 
 
 __all__ = ["Modelo036V2025Extractor"]

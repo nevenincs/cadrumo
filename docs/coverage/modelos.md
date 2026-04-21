@@ -2,12 +2,12 @@
 
 Per-modelo implementation state. Refreshed every month via audit [#241](https://github.com/wgergely/aeat/issues/241).
 
-Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped · N/A · *(header-only)* = document recognised + NIF/ejercicio/período captured; per-casilla values pending a text-value primitive in sub-EPIC #305-textual-casillas.
+Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped · N/A · *(named-field MVP)* = document recognised + header + a curated set of named-field values captured via regex (non-numbered summary blocks, see wave 27). *(text-value MVP)* = numbered casillas with text payloads (see wave 24).
 
 | Modelo | In registry | Schema | Formula ruleset | Filing builder | Export (fichero BOE) | Amendment (complementaria) | Amendment (rectificativa) | Tests | Live-read detail | CLI coverage | `justificante` import | `declaración` import | `borrador` import | `predeclaración` import |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 036 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
-| 037 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
+| 036 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
+| 037 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
 | 100 | ✅ | 🚧 (summary 27 casillas) | 🚧 (summary 12 casillas) | ❌ | ❌ | ❌ | N/A | partial | ❌ | ✅ (`--from-borrador`) | ✅ | ✅ (summary MVP) | ✅ (summary MVP) | ✅ (summary MVP) |
 | 111 | ✅ | ✅ (9 casillas) | ✅ (2025 sum/resultado) | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 115 | ✅ | ✅ (6 casillas) | ✅ (2025) | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
@@ -23,9 +23,9 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | **303** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (pre-Q3-2024) | ⏳ #234 | partial | ⏳ #222 | ✅ | ✅ | ✅ (2024.09 + 2025 MVP) | ❌ | ❌ |
 | 347 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | 🚧 (header-only) | ❌ | ❌ |
+| 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
 | **390** | ✅ | ✅ | ⏳ #221 | ✅ | ⏳ #201 | ✅ (SUSTITUTIVA) | N/A | partial | ⏳ #222 | ✅ | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
-| 720 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | 🚧 (header-only) | ❌ | ❌ |
+| 720 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
 | 840 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | ❌ | 🚧 | ✅ (text-value MVP) | ❌ | ❌ |
 
 **Bold** = primary autónomo forms (130, 303, 390). These are the minimum-viable modelo set for Kent.
