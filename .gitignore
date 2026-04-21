@@ -248,7 +248,10 @@ corpus/manuals/**/source.html/
 .vault/data/
 .vault/logs/
 .vaultspec/
+.vaultspec/*.lock
 .vaultspec/_snapshots/
+/.gitignore.lock
+/.mcp.json.lock
 AGENTS.md
 CLAUDE.md
 GEMINI.md
