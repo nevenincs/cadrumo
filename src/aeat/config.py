@@ -20,7 +20,7 @@ from ._paths import (
     normalize_project_relative_path,
     normalize_project_relative_str,
 )
-from .auth import CertificateBackend
+from .auth import CertificateBackend, GoogleAuthPath
 from .justificante import JustificanteParserBackend
 
 
@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     )
 
     # ── Google OAuth 2.0 (Desktop / Interactive) ────────────────────────────
+    google_auth_path: GoogleAuthPath | None = Field(
+        default=None,
+        description="Active Google auth path: desktop-oauth-local-dev or service-account-automation",
+    )
     google_oauth_client_id: str = Field(
         default="",
         description="OAuth 2.0 client ID from Google Cloud Console",

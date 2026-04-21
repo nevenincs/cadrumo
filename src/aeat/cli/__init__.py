@@ -15,6 +15,7 @@ from __future__ import annotations
 import typer
 
 from . import attachments as attachments_module
+from . import auth as auth_module
 from . import bootstrap as bootstrap_module
 from . import browser as browser_module
 from . import casillas as casillas_module
@@ -65,6 +66,11 @@ app.command(
 )(doctor_module.doctor)
 app.command(name="bootstrap", help="Provision scratch resources and persist their IDs to env/.env.")(
     bootstrap_module.bootstrap
+)
+app.add_typer(
+    auth_module.app,
+    name="auth",
+    help="Kent-first Google authentication flow for CLI, MCP, and bootstrap readiness.",
 )
 app.add_typer(
     attachments_module.app,
