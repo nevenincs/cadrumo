@@ -143,9 +143,6 @@ ignore = [
 "src/aeat/cli/**/*.py" = ["B008"]
 "src/aeat/models/_cli.py" = ["B008"]
 "src/aeat/portals/_cli.py" = ["B008"]
-# Utility scripts legitimately invoke `git`/`uv` by name (trusted PATH
-# lookup in pre-commit / CI contexts) and emit diagnostics to stdout.
-"scripts/**/*.py" = ["S607", "T20"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # #15 ADR: lock the project into pytest-only testing. See .vault/adr/2026-04-17-pytest-only-testing-adr.md.
