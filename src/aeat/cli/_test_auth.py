@@ -46,6 +46,7 @@ def test_desktop_auth_init_imports_client_and_prepares_mcp(tmp_path: Path, monke
     result = _RUNNER.invoke(
         auth_module.app,
         [
+            "init",
             "--path",
             "desktop-oauth-local-dev",
             "--json",
@@ -75,6 +76,7 @@ def test_service_account_auth_init_imports_key(tmp_path: Path, monkeypatch: pyte
     result = _RUNNER.invoke(
         auth_module.app,
         [
+            "init",
             "--path",
             "service-account-automation",
             "--service-account-json",
@@ -117,6 +119,7 @@ def test_failed_path_switch_does_not_persist_blocking_auth_path(
     result = _RUNNER.invoke(
         auth_module.app,
         [
+            "init",
             "--path",
             "service-account-automation",
             "--no-doctor",
