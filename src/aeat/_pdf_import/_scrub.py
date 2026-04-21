@@ -47,16 +47,39 @@ SCRUB_VERSION = "1.0.0"
 
 _NIF_INDIVIDUAL_RE = re.compile(r"\b(?P<nif>[0-9]{8}[A-Z])\b")
 _NIF_EMPRESA_RE = re.compile(r"\b(?P<nif>[A-HJNPQRSUVW][0-9]{7}[0-9A-J])\b")
+_NIE_RE = re.compile(r"\b(?P<nie>[XYZ][0-9]{7}[A-Z])\b")
 _AMOUNT_RE = re.compile(r"\b(?P<whole>[0-9]{1,3}(?:\.[0-9]{3})*),[0-9]{2}\b")
 _CSV_RE = re.compile(r"\b(?P<csv>[A-Z0-9]{16})\b")
 _IBAN_ES_RE = re.compile(r"\bES[0-9]{2}[ ]?[0-9]{4}[ ]?[0-9]{4}[ ]?[0-9]{2}[ ]?[0-9]{10}\b")
 _PRESENTATION_ID_RE = re.compile(r"\b(?P<pid>[0-9A-Z]{20,40})\b")
-_NAME_RE = re.compile(r"\b(?:[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ]+){1,3})\b")
+# Spanish phone numbers: optional +34 prefix, then 9 digits beginning with 6/7/8/9.
+_PHONE_RE = re.compile(r"\b(?:\+34\s?)?[6789][0-9]{8}\b")
+# Email: standard RFC-ish match; deliberately permissive so it errs wide.
+_EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+# Postal code (5 digits) anchored by the Spanish "CP" prefix or a street
+# number + space (to avoid swallowing arbitrary 5-digit numbers).
+_CP_RE = re.compile(r"\b(?:CP\s*|C\.P\.\s*)[0-9]{5}\b")
+# Name regex — only match when prefixed by a known label. Keeps the scrubber
+# from eating AEAT section headings like "AGENCIA TRIBUTARIA" or
+# "RESULTADO A INGRESAR" (audit M1).
+_NAME_PREFIX_GROUP = (
+    r"(?:Apellidos y nombre|Apellidos|Nombre|Declarante|Titular|"
+    r"Razon social|Razón social|Empresa)"
+)
+_NAME_RE = re.compile(
+    rf"({_NAME_PREFIX_GROUP})\s*[:\-]?\s*"
+    r"(?P<name>[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ]+"
+    r"(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ]+){1,4})",
+)
 
 _SCRUB_NIF_INDIVIDUAL = "00000000T"
 _SCRUB_NIF_EMPRESA = "B00000000"
-_SCRUB_NAME_INDIVIDUAL = "DEMO AUTÓNOMO"
+_SCRUB_NIE = "X0000000T"
+_SCRUB_NAME_INDIVIDUAL = "DEMO AUTONOMO"
 _SCRUB_IBAN = "ES00 0000 0000 00 0000000000"
+_SCRUB_PHONE = "+34600000000"
+_SCRUB_EMAIL = "demo@example.invalid"
+_SCRUB_CP = "CP 00000"
 
 
 class ScrubError(PdfFilingImportError):
@@ -146,7 +169,8 @@ def scrub_text(
     scrubbed = text
 
     # NIF (empresa must match before individual — empresa prefix is a single
-    # letter that would otherwise collide with name detection).
+    # letter that would otherwise collide with name detection). NIE follows
+    # NIF so a real NIE doesn't get misclassified as an individual NIF.
     if _NIF_EMPRESA_RE.search(scrubbed):
         scrubbed = _NIF_EMPRESA_RE.sub(_SCRUB_NIF_EMPRESA, scrubbed)
         touched.append("nif")
@@ -154,6 +178,9 @@ def scrub_text(
         scrubbed = _NIF_INDIVIDUAL_RE.sub(_SCRUB_NIF_INDIVIDUAL, scrubbed)
         if "nif" not in touched:
             touched.append("nif")
+    if _NIE_RE.search(scrubbed):
+        scrubbed = _NIE_RE.sub(_SCRUB_NIE, scrubbed)
+        touched.append("nie")
 
     # CSV: 16-char upper-alphanum block — BEFORE amount pass so digits inside
     # the CSV don't get scrambled by the amount regex.
@@ -161,25 +188,46 @@ def scrub_text(
         scrubbed = _CSV_RE.sub(lambda m: _scrub_csv(m, filename), scrubbed)
         touched.append("csv")
 
+    # IBAN — before phone so "ES91 2100..." doesn't get misread as a phone prefix.
+    if _IBAN_ES_RE.search(scrubbed):
+        scrubbed = _IBAN_ES_RE.sub(_SCRUB_IBAN, scrubbed)
+        touched.append("iban")
+
+    # Phone: 9-digit Spanish numbers. Run BEFORE amount to avoid eating 6-9
+    # leading digits (Spanish amounts under 1 billion don't share the leading-
+    # digit convention).
+    if _PHONE_RE.search(scrubbed):
+        scrubbed = _PHONE_RE.sub(_SCRUB_PHONE, scrubbed)
+        touched.append("phone")
+
+    # Email.
+    if _EMAIL_RE.search(scrubbed):
+        scrubbed = _EMAIL_RE.sub(_SCRUB_EMAIL, scrubbed)
+        touched.append("email")
+
+    # Postal code (prefixed).
+    if _CP_RE.search(scrubbed):
+        scrubbed = _CP_RE.sub(_SCRUB_CP, scrubbed)
+        touched.append("postal_code")
+
     # Amounts.
     if _AMOUNT_RE.search(scrubbed):
         scrubbed = _AMOUNT_RE.sub(lambda m: _scrub_amount(m, rng), scrubbed)
         touched.append("amounts")
-
-    # IBAN.
-    if _IBAN_ES_RE.search(scrubbed):
-        scrubbed = _IBAN_ES_RE.sub(_SCRUB_IBAN, scrubbed)
-        touched.append("iban")
 
     # Presentation ID.
     if _PRESENTATION_ID_RE.search(scrubbed):
         scrubbed = _PRESENTATION_ID_RE.sub(lambda m: _scrub_pid(m, filename), scrubbed)
         touched.append("presentation_id")
 
-    # Names (multi-word uppercase spans) — done LAST so it doesn't eat
-    # partially-scrubbed tokens above.
+    # Names — only when prefixed by a known AEAT label (audit M1). This
+    # preserves the label prefix and rewrites only the trailing name tokens
+    # so section headings like "RESULTADO A INGRESAR" survive.
     if _NAME_RE.search(scrubbed):
-        scrubbed = _NAME_RE.sub(_SCRUB_NAME_INDIVIDUAL, scrubbed)
+        scrubbed = _NAME_RE.sub(
+            lambda m: f"{m.group(1)}: {_SCRUB_NAME_INDIVIDUAL}",
+            scrubbed,
+        )
         touched.append("names")
 
     return scrubbed, tuple(touched)

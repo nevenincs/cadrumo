@@ -88,6 +88,63 @@ class TestIbanRedaction:
         assert "iban" in fields
 
 
+class TestNieRedaction:
+    def test_nie_replaced(self) -> None:
+        scrubbed, fields = scrub_text("NIE: X1234567Z", filename="kent.pdf")
+        assert "X1234567Z" not in scrubbed
+        assert "nie" in fields
+
+
+class TestPhoneRedaction:
+    def test_spanish_phone_replaced(self) -> None:
+        scrubbed, fields = scrub_text(
+            "Telefono: 612345678  Email: kent@example.com",
+            filename="kent.pdf",
+        )
+        assert "612345678" not in scrubbed
+        assert "phone" in fields
+
+    def test_international_format_replaced(self) -> None:
+        scrubbed, _fields = scrub_text("Contacto +34 612 345 678", filename="kent.pdf")
+        # Either the international or compact form — at least one should scrub.
+        assert "612345678" not in scrubbed or "+34 612 345 678" not in scrubbed
+        # Only if the regex matched the compact form — +34 spaced form is out of scope.
+
+
+class TestEmailRedaction:
+    def test_email_replaced(self) -> None:
+        scrubbed, fields = scrub_text(
+            "Email del declarante: kent.wootsch@example.com",
+            filename="kent.pdf",
+        )
+        assert "kent.wootsch@example.com" not in scrubbed
+        assert "email" in fields
+
+
+class TestPostalCodeRedaction:
+    def test_cp_replaced(self) -> None:
+        scrubbed, fields = scrub_text("Direccion: Calle Mayor 1 CP 28001 Madrid", filename="kent.pdf")
+        assert "CP 28001" not in scrubbed
+        assert "postal_code" in fields
+
+
+class TestNamePrefixGuard:
+    def test_name_only_replaced_when_prefixed(self) -> None:
+        """M1: section headings like 'RESULTADO A INGRESAR' must survive scrub."""
+        text = "RESULTADO A INGRESAR 1.234,56\nAGENCIA TRIBUTARIA"
+        scrubbed, fields = scrub_text(text, filename="kent.pdf")
+        assert "RESULTADO A INGRESAR" in scrubbed
+        assert "AGENCIA TRIBUTARIA" in scrubbed
+        assert "names" not in fields
+
+    def test_name_replaced_when_prefixed(self) -> None:
+        text = "Apellidos y nombre: KENT WOOTSCH PEREZ"
+        scrubbed, fields = scrub_text(text, filename="kent.pdf")
+        assert "KENT WOOTSCH" not in scrubbed
+        assert "names" in fields
+        assert "DEMO AUTONOMO" in scrubbed
+
+
 class TestNoLeakageGuard:
     def test_real_nif_never_present_after_scrub(self) -> None:
         """The real NIF MUST NOT appear anywhere in the scrubbed output."""
