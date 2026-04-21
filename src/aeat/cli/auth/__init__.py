@@ -166,22 +166,36 @@ def configure(
     dni_nie: str | None = typer.Option(
         None,
         "--dni-nie",
-        help="Your DNI or NIE. Prompted when omitted in interactive mode.",
+        help="Set your Spanish DNI or NIE. The CLI prompts for it when omitted.",
     ),
     dni_fecha: str | None = typer.Option(
         None,
         "--dni-fecha",
-        help=("DNI validity / expiry date (YYYY-MM-DD). Required by the non-QR fallback when the identity is a DNI."),
+        help=(
+            "Set the DNI validity date printed on your card (YYYY-MM-DD). "
+            "Required only when --prefer-non-qr is used with a DNI identity."
+        ),
     ),
     nie_soporte: str | None = typer.Option(
         None,
         "--nie-soporte",
-        help="NIE support number. Required by the non-QR fallback when the identity is a NIE.",
+        help=(
+            "Set the NIE support number printed on your document. "
+            "Required only when --prefer-non-qr is used with a NIE identity."
+        ),
     ),
     prefer_non_qr: bool | None = typer.Option(
         None,
         "--prefer-non-qr/--prefer-qr",
-        help="Prefer the DNI/NIE + contraste form over the QR flow (still requires phone approval).",
+        help=(
+            "Choose how AEAT triggers the Cl@ve app push. "
+            "--prefer-non-qr (default): type DNI/NIE + contraste in the "
+            "browser and get a direct push notification on your phone. "
+            "--prefer-qr: AEAT displays a QR you scan with the Cl@ve app's "
+            "'Scan QR' feature; slightly slower but works when you don't "
+            "have your DNI's expiry date handy. Both paths still require "
+            "you to approve every login on your phone."
+        ),
     ),
     set_default: bool = typer.Option(
         True,
@@ -210,29 +224,37 @@ def configure(
     settings = _load_settings()
     env_file = _resolve_env_file(settings)
 
+    if dni_nie is None and not non_interactive:
+        _CONSOLE.print(
+            "\nConfigure Cl@ve Móvil login for AEAT Sede Electrónica.\n"
+            "Every login sends a push notification to the Cl@ve app on your "
+            "phone; you tap 'Approve' to sign in. This step only records the "
+            "details AEAT needs to trigger that push."
+        )
+
     if dni_nie is None:
         if non_interactive:
             raise typer.BadParameter("--dni-nie is required with --non-interactive")
-        dni_nie = typer.prompt("Your DNI or NIE (e.g. 12345678Z or X1234567L)").strip().upper()
+        dni_nie = typer.prompt("Enter your DNI or NIE").strip().upper()
     else:
         dni_nie = dni_nie.strip().upper()
 
     identity_kind = _classify_identity_for_cli(dni_nie)
 
-    resolved_prefer_non_qr = prefer_non_qr
-    if resolved_prefer_non_qr is None and not non_interactive:
-        resolved_prefer_non_qr = typer.confirm(
-            "Use the DNI/NIE + contraste fallback (no QR in browser, push only)?",
-            default=False,
-        )
-    if resolved_prefer_non_qr is None:
-        resolved_prefer_non_qr = False
+    # Default to the direct-push flow (DNI/NIE + contraste → phone push);
+    # the QR flow is the opt-in for operators who don't have the DNI
+    # expiry date / NIE support number to hand.
+    resolved_prefer_non_qr = True if prefer_non_qr is None else bool(prefer_non_qr)
 
     if resolved_prefer_non_qr:
-        if identity_kind == "DNI" and not dni_fecha and not non_interactive:
-            dni_fecha = typer.prompt("DNI validity / expiry date (YYYY-MM-DD)").strip()
-        if identity_kind == "NIE" and not nie_soporte and not non_interactive:
-            nie_soporte = typer.prompt("NIE support number").strip()
+        if identity_kind == "DNI" and not dni_fecha:
+            if non_interactive:
+                raise typer.BadParameter("--dni-fecha is required with --prefer-non-qr for a DNI identity")
+            dni_fecha = typer.prompt("Enter the validity date printed on your DNI (YYYY-MM-DD)").strip()
+        if identity_kind == "NIE" and not nie_soporte:
+            if non_interactive:
+                raise typer.BadParameter("--nie-soporte is required with --prefer-non-qr for a NIE identity")
+            nie_soporte = typer.prompt("Enter the support number printed on your NIE document").strip()
 
     from ...env_io import write_env_vars
 

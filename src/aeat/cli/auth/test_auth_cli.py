@@ -411,6 +411,41 @@ class TestConfigure:
         assert "AEAT_CLAVE_PREFER_NON_QR=false" in content
         assert "AEAT_AUTH_PROVIDER=clave_movil" in content
 
+    def test_configure_defaults_to_non_qr_when_flag_omitted(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+        env_file = tmp_path / "env" / ".env"
+        _config_overrides = {**dict(Settings.model_config), "env_file": env_file}
+
+        class _ScopedSettings(Settings):
+            model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(**_config_overrides)
+
+        monkeypatch.setattr("aeat.cli.auth.Settings", _ScopedSettings)
+
+        # No --prefer-qr / --prefer-non-qr flag: CLI should default to the
+        # direct-push (non-QR) path because that's the flow most Spanish
+        # autónomos recognise.
+        result = _runner.invoke(
+            app,
+            [
+                "auth",
+                "configure",
+                "--dni-nie",
+                "12345678Z",
+                "--dni-fecha",
+                "2030-01-01",
+                "--non-interactive",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        content = env_file.read_text(encoding="utf-8")
+        assert "AEAT_CLAVE_PREFER_NON_QR=true" in content
+        assert "AEAT_CLAVE_MOVIL_DNI_FECHA=2030-01-01" in content
+
     def test_configure_rejects_invalid_identity(
         self,
         tmp_path: Path,
