@@ -56,6 +56,16 @@ def runtime_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_workflow_run_uses_real_runtime_wiring(runtime_env: Path) -> None:
+    from datetime import date
+
+    today = date.today()
+    current_q = (today.month - 1) // 3 + 1
+    if current_q < 4:
+        period_year, period_q = today.year, current_q + 1
+    else:
+        period_year, period_q = today.year + 1, 1
+    period = f"{period_year}Q{period_q}"
+
     result = runner.invoke(
         root_app,
         [
@@ -64,7 +74,7 @@ def test_workflow_run_uses_real_runtime_wiring(runtime_env: Path) -> None:
             "--modelo",
             "130",
             "--period",
-            "2026Q2",
+            period,
             "--json",
             "--no-sync",
         ],
