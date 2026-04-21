@@ -43,6 +43,19 @@ class Modelo840V2025Extractor(GenericDeclaracionExtractor):
         "40",  # provincia
         "62",  # fecha de efectos
     )
+    # Labels match the synthetic-generator fixture strings; the live
+    # AEAT form prints the same label tokens (with slight casing).
+    # Used only for truncation-detection (wave 29 HIGH-3).
+    text_labels: ClassVar[dict[str, str]] = {
+        "14": "Ejercicio",
+        "15": "Causa presentacion",
+        "33": "Clase de cuota",
+        "34": "Tipo actividad",
+        "37": "Grupo o epigrafe",
+        "38": "Municipio",
+        "40": "Provincia",
+        "62": "Fecha de efectos",
+    }
 
 
 __all__ = ["Modelo840V2025Extractor"]

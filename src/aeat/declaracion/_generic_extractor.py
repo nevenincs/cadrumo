@@ -58,6 +58,11 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
     template_revision: ClassVar[TemplateRevision]
     casilla_ids: ClassVar[tuple[str, ...]]
     text_casilla_ids: ClassVar[tuple[str, ...]] = ()
+    text_labels: ClassVar[dict[str, str]] = {}
+    """Map ``text_casilla_id → expected label text``. Required when the
+    label is multi-word so the truncation-detection pass can calculate
+    the expected value-token count. Omitting a label means
+    truncation-detection is skipped for that casilla (wave 29 HIGH-3)."""
     casilla_width: ClassVar[int] = 2
 
     def __init_subclass__(cls, **kwargs: object) -> None:
@@ -87,12 +92,31 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
         pdfplumber collapses column-separator whitespace to single spaces,
         so "value to the right of the label" reduces to "the final token
         on the line". Single-token values only — multi-word payloads
-        (e.g. ``"La Rioja"``) need the richer bbox-anchored primitive.
+        (e.g. ``"La Rioja"``) need the richer bbox-anchored primitive,
+        but the truncation-detection (wave 29 HIGH-3) warns when a
+        multi-token payload is silently collapsed to its last token.
         """
         width = type(self).casilla_width
         return {
             casilla_id: re.compile(
                 rf"(?m)^\s*{int(casilla_id):0{width}d}\s+\S[^\n]{{0,80}}\s{TEXT_VALUE_GROUP}",
+                re.IGNORECASE,
+            )
+            for casilla_id in type(self).text_casilla_ids
+        }
+
+    def _compiled_text_line_patterns(self) -> dict[str, re.Pattern[str]]:
+        """Patterns that capture the FULL line from the casilla prefix to EOL.
+
+        Used by :meth:`extract` to measure the total token count on the
+        casilla's line and compare it against the single-token value
+        captured by ``TEXT_VALUE_GROUP``. A significantly higher line
+        token count ⇒ the value was likely multi-token and truncated.
+        """
+        width = type(self).casilla_width
+        return {
+            casilla_id: re.compile(
+                rf"(?m)^\s*{int(casilla_id):0{width}d}\s+(.+?)\s*$",
                 re.IGNORECASE,
             )
             for casilla_id in type(self).text_casilla_ids
@@ -137,6 +161,7 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
             )
 
         # Text-casilla path: capture free-form string payloads.
+        text_line_patterns = self._compiled_text_line_patterns()
         for casilla_id in type(self).text_casilla_ids:
             hit = text_hits.get(casilla_id)
             if hit is None:
@@ -145,6 +170,25 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
             confidence = 0.5 if hit.match_count > 1 else 1.0
             if hit.match_count > 1:
                 warnings.append(_ambiguous_warning(casilla_id, hit.match_count))
+
+            # Wave 29 HIGH-3: detect likely-truncated multi-word values
+            # (e.g. "La Rioja" → captures only "Rioja"). The subclass
+            # declares the label text in ``text_labels``; we re-scan the
+            # full casilla line, subtract the label's token count, and
+            # expect the remaining tokens to equal 1 (the captured value).
+            # Extra tokens ⇒ the value was multi-word and got truncated.
+            expected_label = type(self).text_labels.get(casilla_id)
+            if expected_label is not None:
+                line_match = text_line_patterns[casilla_id].search(full_text)
+                if line_match is not None:
+                    payload = line_match.group(1).strip()
+                    label_tokens = len(expected_label.split())
+                    line_tokens = len(payload.split())
+                    value_tokens = max(line_tokens - label_tokens, 0)
+                    if value_tokens > 1:
+                        confidence = min(confidence, 0.5)
+                        warnings.append(_truncated_text_warning(casilla_id, payload, hit.raw_value))
+
             values.append(
                 ExtractedCasilla(
                     casilla_id=casilla_id,
@@ -194,6 +238,33 @@ def _unparseable_warning(casilla_id: str, raw: str) -> ExtractionWarning:
             "es": f"Casilla {casilla_id}: el valor {raw!r} no es numérico.",
             "en": f"Casilla {casilla_id}: value {raw!r} is not a number.",
             "hu": f"{casilla_id} casilla: {raw!r} érték nem szám.",
+        },
+        primitive_attempted="label_regex",
+    )
+
+
+def _truncated_text_warning(
+    casilla_id: str,
+    full_line_payload: str,
+    captured: str,
+) -> ExtractionWarning:
+    """Emit when the text primitive likely truncated a multi-word value."""
+    return ExtractionWarning(
+        casilla_id=casilla_id,
+        code="text-value-possibly-truncated",
+        message={
+            "es": (
+                f"Casilla {casilla_id}: se capturó {captured!r} pero la línea "
+                f"contiene {full_line_payload!r}; el valor real puede ser multi-palabra."
+            ),
+            "en": (
+                f"Casilla {casilla_id}: captured {captured!r} but the line holds "
+                f"{full_line_payload!r}; the real value may be multi-word."
+            ),
+            "hu": (
+                f"{casilla_id} casilla: rögzítve {captured!r}, a sor "
+                f"{full_line_payload!r}; a valódi érték több szóból állhat."
+            ),
         },
         primitive_attempted="label_regex",
     )

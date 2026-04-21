@@ -51,12 +51,20 @@ def _label(es: str, en: str, hu: str) -> Translatable:
 _CITATIONS = (
     make_citation(
         LegalCitationSource.LEY,
-        "100.2",
-        "Artículo 100.2 Ley 35/2006 (IRPF) — tipo de retención aplicable "
-        "a los rendimientos procedentes del arrendamiento o "
-        "subarrendamiento de bienes inmuebles urbanos. Tipo fijo del "
-        "19% desde 2016.",
+        "101.8",
+        "Artículo 101.8 Ley 35/2006 (IRPF) — enumera los supuestos en que "
+        "existe obligación de retener e ingresar a cuenta, y remite al "
+        "reglamento la fijación de los tipos aplicables.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+    ),
+    make_citation(
+        LegalCitationSource.REGLAMENTO,
+        "100.3.a",
+        "Artículo 100.3.a RD 439/2007 (Reglamento del IRPF) — fija el "
+        "tipo fijo del 19% de retención sobre los rendimientos "
+        "procedentes del arrendamiento o subarrendamiento de bienes "
+        "inmuebles urbanos (vigente desde 2016).",
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
     ),
 )
 

@@ -6,34 +6,41 @@ contraprestaciones en especie, and cesión del derecho de imagen
 retained by any employer / pagador.
 
 The form groups casillas in triples — ``(perceptores, percepciones,
-retenciones)`` — for each of the six rubros above. Only the total
-block (casillas 28-30) is constrained by AEAT formula:
+retenciones)`` — for each of the six rubros above. Formula coverage:
 
+- ``09 = 19% x 08`` — retención fija sobre premios (art. 105.1
+  Reglamento IRPF).
+- ``12 = 19% x 11`` — retención fija sobre ganancias patrimoniales
+  de arrendamientos no habitualizados (art. 101.6 LIRPF + art. 100.3.c
+  Reglamento).
 - ``28 = 03 + 06 + 09 + 12 + 15 + 18`` — total retenciones e ingresos a
   cuenta (sum of the six per-rubro retention casillas).
-- ``30 = 28 - 29`` — resultado a ingresar (total retenciones minus
+- ``30 = 28 - 29`` — resultado a ingresar (total retenciones menos los
   resultados negativos de declaraciones anteriores).
 
-The per-rubro retention rates vary (15% actividades profesionales,
-variable IRPF tabla trabajadores, 19% ganancias patrimoniales…) so
-this MVP ruleset verifies the sum-and-difference relationships only.
-A richer ruleset per rubro would require tabla-trabajadores input
-plus categoría-profesional mapping, tracked under sub-EPIC
-#305-Modelo-111-full.
+Per-rubro retention rates for rendimientos del trabajo (tabla
+trabajadores) and actividades económicas (tipo variable) depend on
+tabla inputs + categoría-profesional mapping and land in sub-EPIC
+#305-Modelo-111-full. The above fixed-rate + sum relationships are
+the minimum set that must hold on every 111 filing regardless of
+rubro mix.
 """
 
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from ...i18n import Translatable
 from ...models import LegalCitationSource, ModeloCode
-from .._ruleset import ParameterTable, Ruleset
+from .._ruleset import ParameterTable, ParameterValue, Ruleset
 from ._common import (
     add_op,
     casilla,
     formula,
     make_citation,
+    param,
+    percent,
     ref,
     sub_op,
 )
@@ -57,6 +64,20 @@ _CITATIONS = (
         "la suma de retenciones y el cálculo del resultado a ingresar.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
     ),
+    make_citation(
+        LegalCitationSource.REGLAMENTO,
+        "100.3.c",
+        "Artículo 100.3.c RD 439/2007 (Reglamento del IRPF) — tipo fijo "
+        "del 19% de retención sobre las ganancias patrimoniales derivadas "
+        "del arrendamiento o subarrendamiento de bienes inmuebles urbanos.",
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
+    ),
+    make_citation(
+        LegalCitationSource.REGLAMENTO,
+        "105.1",
+        "Artículo 105.1 RD 439/2007 (Reglamento del IRPF) — tipo fijo del 19% de retención sobre premios en metálico.",
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
+    ),
 )
 
 
@@ -72,14 +93,30 @@ _CASILLAS = (
         computed=False,
     ),
     casilla(
+        casilla_id="08",
+        label=_label("Percepciones premios", "Prize perceptions", "Nyeremény jövedelem"),
+        computed=False,
+    ),
+    casilla(
         casilla_id="09",
         label=_label("Retenciones premios", "Prize withholdings", "Nyeremény levonás"),
+        computed=True,
+        legal_basis=_CITATIONS,
+    ),
+    casilla(
+        casilla_id="11",
+        label=_label(
+            "Percepciones ganancias patrimoniales",
+            "Capital gains perceptions",
+            "Vagyonnyereség jövedelem",
+        ),
         computed=False,
     ),
     casilla(
         casilla_id="12",
         label=_label("Retenciones ganancias patrimoniales", "Capital gains withholdings", "Vagyonnyereség levonás"),
-        computed=False,
+        computed=True,
+        legal_basis=_CITATIONS,
     ),
     casilla(
         casilla_id="15",
@@ -117,6 +154,16 @@ _CASILLAS = (
 
 _FORMULAS = (
     formula(
+        casilla_id="09",
+        formula_id="modelo_111.2025.retenciones_premios",
+        body=percent(param("irpf.premios_rate"), ref("08")),
+    ),
+    formula(
+        casilla_id="12",
+        formula_id="modelo_111.2025.retenciones_ganancias_arrendamiento",
+        body=percent(param("irpf.ganancias_arrendamiento_rate"), ref("11")),
+    ),
+    formula(
         casilla_id="28",
         formula_id="modelo_111.2025.total_retenciones",
         body=add_op(
@@ -136,7 +183,24 @@ _FORMULAS = (
 )
 
 
-_PARAMETERS = ParameterTable(entries={})
+_PARAMETERS = ParameterTable(
+    entries={
+        "irpf.premios_rate": (
+            ParameterValue(
+                effective_from=_EFFECTIVE_FROM,
+                effective_to=_EFFECTIVE_TO,
+                value=Decimal("0.19"),
+            ),
+        ),
+        "irpf.ganancias_arrendamiento_rate": (
+            ParameterValue(
+                effective_from=_EFFECTIVE_FROM,
+                effective_to=_EFFECTIVE_TO,
+                value=Decimal("0.19"),
+            ),
+        ),
+    }
+)
 
 
 RULESET: Ruleset = Ruleset(
