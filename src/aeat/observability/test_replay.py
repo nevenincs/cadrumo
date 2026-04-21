@@ -207,6 +207,48 @@ class TestReplayRun:
         assert _argument_activates_live_mode(other) is False
 
 
+class TestReplayEndToEndBooleanFlag:
+    """NEW-1: end-to-end replay of a wrapped command with a bool flag.
+
+    A replay that reconstructs argv from a recorded trace must not
+    blow up when the trace contains a ``--json=True``-style boolean.
+    """
+
+    def test_replay_of_workflow_list_json(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from . import record_event  # noqa: F401 - ensure module import chain
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        # A fresh workflow-runs dir so list has nothing to render.
+        monkeypatch.setenv("AEAT_WORKFLOW_RUNS_DIR", str(tmp_path / "workflow-runs"))
+        current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
+        recorded = RunTrace(
+            run_id="deadbeefcafe0001",
+            started_at=datetime(2026, 4, 14, tzinfo=UTC),
+            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+            entrypoint="aeat workflow list",
+            # NOTE: ``name="json"`` here matches how the real
+            # wrapped command (cli/workflow/list_cmd.py) builds its
+            # arguments dict — using the CLI flag spelling as the
+            # dict key. This makes the replay argv derivation
+            # (``--json``) correct without needing a ``cli_flag``
+            # override. See ``TestArgvReconstruction`` for the
+            # coverage of the override path.
+            arguments=(ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
+            corpus_sha256=current_corpus,
+            db_sha256="b" * 64,
+            cert_fingerprint="",
+            outcome=RunOutcome.OK,
+        )
+        save_trace(recorded)
+        # Must not raise — replay round-trip through the real CLI.
+        result = replay_run(recorded.run_id, dry_run=True)
+        assert result.run_id == recorded.run_id
+
+
 class TestEnvFileFingerprint:
     """B1: corpus_sha256 must fold the on-disk ``env/.env`` bytes.
 
@@ -275,12 +317,67 @@ class TestArgvReconstruction:
             ArgumentRecord(name="force", value="True", source=ArgumentSource.FLAG),
         )
         argv = _argv_from_arguments("aeat filing submit", args)
-        assert argv == ["filing", "submit", "130", "2026Q1", "--force=True"]
+        # NEW-1: boolean True → bare flag (no =True), because value-less
+        # Typer Option flags reject the =value form.
+        assert argv == ["filing", "submit", "130", "2026Q1", "--force"]
 
     def test_flag_name_underscore_converted_to_dash(self) -> None:
         args = (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),)
         argv = _argv_from_arguments("aeat workflow list", args)
-        assert argv == ["workflow", "list", "--as-json=True"]
+        # Name-underscore → dash conversion + bare-flag emission for True.
+        assert argv == ["workflow", "list", "--as-json"]
+
+    def test_boolean_false_flag_is_skipped(self) -> None:
+        """NEW-1: boolean False flags must not be re-emitted.
+
+        Replaying ``--unread=False`` as a literal would both fail to
+        parse (Typer options don't take ``=False``) and contradict the
+        user intent — the user did not pass the flag.
+        """
+        args = (
+            ArgumentRecord(name="unread", value="False", source=ArgumentSource.FLAG),
+            ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
+        )
+        argv = _argv_from_arguments("aeat inbox list", args)
+        assert argv == ["inbox", "list", "--modelo=130"], f"False bool must be skipped; got {argv}"
+
+    def test_boolean_true_flag_uses_bare_form(self) -> None:
+        """NEW-1: bare flag form required for value-less boolean options."""
+        args = (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),)
+        argv = _argv_from_arguments("aeat workflow show", args)
+        assert argv == ["workflow", "show", "--json"]
+
+    def test_cli_flag_override_wins_over_name_derivation(self) -> None:
+        """NEW-1: ``cli_flag`` on ArgumentRecord overrides the name-derived flag.
+
+        When a wrapped command's Python parameter name differs from
+        the Typer flag (``as_json: bool = typer.Option(False, "--json")``)
+        the caller sets ``flag_map={"as_json": "--json"}`` at record
+        time; the replay must use the override, not the
+        ``--as-json`` that underscore→dash conversion would produce.
+        """
+        args = (
+            ArgumentRecord(
+                name="as_json",
+                value="True",
+                source=ArgumentSource.FLAG,
+                cli_flag="--json",
+            ),
+        )
+        argv = _argv_from_arguments("aeat workflow show", args)
+        assert argv == ["workflow", "show", "--json"]
+        # Also exercises the False path with override.
+        args_false = (
+            ArgumentRecord(
+                name="as_json",
+                value="False",
+                source=ArgumentSource.FLAG,
+                cli_flag="--json",
+            ),
+        )
+        argv_false = _argv_from_arguments("aeat workflow show", args_false)
+        # False-bool override still gets skipped, not re-emitted.
+        assert argv_false == ["workflow", "show"]
 
     def test_flag_value_with_leading_dash_uses_equals_form(self) -> None:
         args = (
