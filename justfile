@@ -8,7 +8,7 @@ default:
 # ── Bootstrap / install ──────────────────────────────────────────────────────
 
 # Full bootstrap for a fresh clone or worktree:
-# sync deps, install vaultspec, provision env/.env, then run gsuite-bootstrap.
+# sync deps, install vaultspec, provision env/.env, then run the Desktop OAuth wrapper chain.
 bootstrap:
     uv sync
     uv run vaultspec-core install --upgrade
@@ -229,10 +229,9 @@ gcloud-install:
 gcloud-setup: gcloud-install
 
 # Authenticate gcloud and acquire ADC with the full Workspace scope set.
-# Requires env/oauth-client.json (provisioned by `just gsuite-oauth-client`)
-# because Google blocks Workspace scopes when requested against gcloud's
-# built-in OAuth client. Reads GOOGLE_CLOUD_PROJECT from env/.env.
-# Browser flows fire here.
+# Uses the env-managed GOOGLE_OAUTH_CLIENT_JSON path written by
+# `aeat auth init` / `aeat oauth-client init`, because Google blocks Workspace scopes when
+# requested against gcloud's built-in OAuth client. Browser flows fire here.
 [unix]
 gcloud-auth:
     #!/usr/bin/env bash
@@ -245,24 +244,30 @@ gcloud-auth:
         echo "env/.env not found — run 'just env-setup' first." >&2
         exit 1
     fi
-    if [ ! -f env/oauth-client.json ]; then
-        echo "env/oauth-client.json not found — run 'just gsuite-oauth-client' first." >&2
+    CLIENT_JSON=$(uv run python -c "from aeat.config import Settings; print(Settings().google_oauth_client_json)")
+    if [ -z "$CLIENT_JSON" ]; then
+        echo "GOOGLE_OAUTH_CLIENT_JSON is empty in env/.env — run 'uv run aeat auth init --path desktop-oauth-local-dev' first." >&2
+        exit 1
+    fi
+    if [ ! -f "$CLIENT_JSON" ]; then
+        echo "OAuth client JSON not found at $CLIENT_JSON — run 'uv run aeat auth init --path desktop-oauth-local-dev' first." >&2
         echo "Drive/Sheets/Docs scopes cannot be requested against gcloud's built-in OAuth client." >&2
         exit 1
     fi
-    PROJECT=$(grep -E '^GOOGLE_CLOUD_PROJECT=' env/.env | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
+    PROJECT=$(uv run python -c "from aeat.config import Settings; print(Settings().google_cloud_project)")
     if [ -z "$PROJECT" ]; then
         echo "GOOGLE_CLOUD_PROJECT is empty in env/.env — set it before continuing." >&2
         exit 1
     fi
+    SCOPES=$(uv run python -c "from aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)")
     echo "▶ gcloud auth login (browser will open)…"
     gcloud auth login --quiet
     echo "▶ gcloud config set project $PROJECT"
     gcloud config set project "$PROJECT" --quiet
     echo "▶ gcloud auth application-default login (with Drive/Sheets/Docs scopes via your OAuth client)…"
     gcloud auth application-default login \
-        --client-id-file=env/oauth-client.json \
-        --scopes=openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/documents
+        --client-id-file="$CLIENT_JSON" \
+        --scopes="$SCOPES"
     echo "✔ gcloud + ADC ready for project $PROJECT"
 
 [windows]
@@ -278,8 +283,13 @@ gcloud-auth:
         Write-Error "env/.env not found - run 'just env-setup' first."
         exit 1
     }
-    if (-not (Test-Path 'env/oauth-client.json')) {
-        Write-Error "env/oauth-client.json not found - run 'just gsuite-oauth-client' first. Drive/Sheets/Docs scopes cannot be requested against gcloud's built-in OAuth client."
+    $clientJson = (& uv run python -c "from aeat.config import Settings; print(Settings().google_oauth_client_json)" | Select-Object -Last 1).Trim()
+    if (-not $clientJson) {
+        Write-Error "GOOGLE_OAUTH_CLIENT_JSON is empty in env/.env - run 'uv run aeat auth init --path desktop-oauth-local-dev' first."
+        exit 1
+    }
+    if (-not (Test-Path $clientJson)) {
+        Write-Error "OAuth client JSON not found at $clientJson - run 'uv run aeat auth init --path desktop-oauth-local-dev' first. Drive/Sheets/Docs scopes cannot be requested against gcloud's built-in OAuth client."
         exit 1
     }
     # Pre-set CLOUDSDK_PYTHON once so every gcloud subcommand uses the
@@ -290,16 +300,12 @@ gcloud-auth:
     } catch {
         Write-Host "copy-bundled-python failed - continuing without override."
     }
-    $line = (Get-Content env/.env | Where-Object { $_ -match '^GOOGLE_CLOUD_PROJECT=' })
-    if (-not $line) {
-        Write-Error "GOOGLE_CLOUD_PROJECT not present in env/.env"
-        exit 1
-    }
-    $project = ($line -replace '^GOOGLE_CLOUD_PROJECT=', '').Trim().Trim('"').Trim("'")
+    $project = (& uv run python -c "from aeat.config import Settings; print(Settings().google_cloud_project)" | Select-Object -Last 1).Trim()
     if (-not $project) {
         Write-Error "GOOGLE_CLOUD_PROJECT is empty in env/.env"
         exit 1
     }
+    $scopes = (& uv run python -c "from aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)" | Select-Object -Last 1).Trim()
     Write-Host "▶ gcloud auth login (browser will open)…"
     & $gcloud.Source auth login --quiet
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -308,8 +314,8 @@ gcloud-auth:
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "▶ gcloud auth application-default login (with Drive/Sheets/Docs scopes via your OAuth client)…"
     & $gcloud.Source auth application-default login `
-        --client-id-file=env/oauth-client.json `
-        --scopes='openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/documents'
+        --client-id-file=$clientJson `
+        --scopes=$scopes
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "✔ gcloud + ADC ready for project $project"
 
@@ -381,7 +387,7 @@ gsuite-enable-apis-billing:
 
 # Compose: install gcloud, authenticate, enable APIs, provision scratch, doctor.
 # This is the OAuth Desktop client / ADC path. Requires the operator to
-# create the OAuth client in Cloud Console first via `just gsuite-oauth-client`.
+# create the OAuth client in Cloud Console first via `aeat auth init`.
 gsuite-bootstrap:
     just gcloud-install
     just gcloud-auth
@@ -412,6 +418,7 @@ gsuite-bootstrap-sa:
     if [ ! -f env/sa.json ]; then
         gcloud iam service-accounts keys create env/sa.json --iam-account="$SA" --project="$PROJECT"
     fi
+    uv run python -c "from pathlib import Path; from aeat.env_io import write_env_vars; write_env_vars(Path('env/.env'), {'GOOGLE_AUTH_PATH': 'service-account-automation', 'GOOGLE_APPLICATION_CREDENTIALS': 'env/sa.json'})"
     just gsuite-enable-apis
     uv run aeat bootstrap
     uv run aeat doctor
@@ -442,6 +449,8 @@ gsuite-bootstrap-sa:
         & $gcloud.Source iam service-accounts keys create env/sa.json --iam-account=$sa --project=$project
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
+    & uv run python -c "from pathlib import Path; from aeat.env_io import write_env_vars; write_env_vars(Path('env/.env'), {'GOOGLE_AUTH_PATH': 'service-account-automation', 'GOOGLE_APPLICATION_CREDENTIALS': 'env/sa.json'})"
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     just gsuite-enable-apis
     uv run aeat bootstrap
     uv run aeat doctor
@@ -465,7 +474,7 @@ playwright-doctor:
 
 # Walk through OAuth Desktop client provisioning.
 gsuite-oauth-client:
-    uv run aeat oauth-client init
+    uv run aeat auth init --path desktop-oauth-local-dev --no-acquire-cli-token --no-prepare-mcp
 
 # Fetch the AEAT PKCS#12 certificate from Google Drive into credentials/.
 # Requires `just gcloud-auth` to have been run (Drive scope on ADC).

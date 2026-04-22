@@ -1,0 +1,56 @@
+[
+  {
+    "source_row_index": 1,
+    "booked_date": "2025-05-01",
+    "value_date": "2025-05-01",
+    "amount": "6.60",
+    "currency": "EUR",
+    "counterparty": null,
+    "description": "Zinsertrag"
+  },
+  {
+    "source_row_index": 2,
+    "booked_date": "2025-05-04",
+    "value_date": "2025-05-04",
+    "amount": "-500.00",
+    "currency": "EUR",
+    "counterparty": null,
+    "description": "An Hauptkonto"
+  },
+  {
+    "source_row_index": 3,
+    "booked_date": "2025-05-12",
+    "value_date": "2025-05-12",
+    "amount": "5000.00",
+    "currency": "EUR",
+    "counterparty": "HpgbxT VoPcx",
+    "description": "Gutschriften Uebertrag N26"
+  },
+  {
+    "source_row_index": 4,
+    "booked_date": "2025-05-26",
+    "value_date": "2025-05-26",
+    "amount": "-5000.00",
+    "currency": "EUR",
+    "counterparty": null,
+    "description": "An Hauptkonto"
+  },
+  {
+    "source_row_index": 5,
+    "booked_date": "2025-05-27",
+    "value_date": "2025-05-27",
+    "amount": "5000.00",
+    "currency": "EUR",
+    "counterparty": "izFlhI yLNYL",
+    "description": "Gutschriften Uebertrag N26"
+  },
+  {
+    "source_row_index": 6,
+    "booked_date": "2025-05-27",
+    "value_date": "2025-05-27",
+    "amount": "-200.00",
+    "currency": "EUR",
+    "counterparty": null,
+    "description": "An Hauptkonto"
+  }
+]
