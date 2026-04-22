@@ -32,7 +32,8 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Build Modelo 130 via wizard | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#219](https://github.com/wgergely/aeat/issues/219) |
 | See formula + operand values inline during review | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#220](https://github.com/wgergely/aeat/issues/220) |
 | Approve a draft (persisted) | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#230](https://github.com/wgergely/aeat/issues/230) |
-| Export an AEAT-importable fichero BOE file | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#201](https://github.com/wgergely/aeat/issues/201) |
+| Export an AEAT-importable fichero BOE file | 🚧 | ✅ (`aeat submission export`; 130 + 303 shipped; 390 pending) | ✅ (golden SHA256 pinned per modelo; verify round-trip) | 🚧 (CLI produces byte-exact output; live portal upload untested) | 0.2.0 | [#201](https://github.com/wgergely/aeat/issues/201) |
+| Verify an exported fichero BOE decodes back to the casilla values | ✅ | ✅ (`aeat submission verify <file> --modelo <m> --ejercicio <y>`) | ✅ (5 CLI tests + per-modelo round-trip) | ✅ | 0.2.0 | [#305](https://github.com/wgergely/aeat/issues/305) wave 95 |
 | Compute 303 + 390 via formula engine | ❌ | ❌ | partial | ❌ | 0.3.0 | [#221](https://github.com/wgergely/aeat/issues/221) |
 | Import a past filing made outside the tool (umbrella) | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#233](https://github.com/wgergely/aeat/issues/233) |
 | Import past filing from justificante receipt PDF | ✅ | ✅ | ✅ | ✅ | 0.3.0 | [#271](https://github.com/wgergely/aeat/issues/271) |
