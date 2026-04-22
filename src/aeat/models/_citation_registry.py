@@ -45,9 +45,25 @@ When a future audit surfaces a new citation error, add one row to
 
 from __future__ import annotations
 
+import unicodedata
 from typing import NamedTuple
 
 from ._categories import LegalCitationSource
+
+
+def _fold_diacritics(text: str) -> str:
+    """Normalise a string for accent-insensitive substring matching.
+
+    Wave 73b L2 closure (wave 70 stream 1 caution): pdfplumber and
+    hand-typed ``quoted_text_es`` routinely drop diacritics. Without
+    this fold, ``"cuota liquida"`` (no accent) would defeat the
+    blocklist entry keyed on ``"cuota líquida"``. ``unicodedata.
+    normalize("NFKD", ...)`` decomposes accented characters into a
+    base + combining-diacritic pair; ASCII-encoding drops the
+    diacritics. Monotonic on existing matches — no false-positives
+    added.
+    """
+    return unicodedata.normalize("NFKD", text.lower()).encode("ascii", "ignore").decode("ascii")
 
 
 class KnownBadCitation(NamedTuple):
@@ -190,9 +206,9 @@ def find_known_bad(source: LegalCitationSource, article: str, quoted_text_es: st
     ``"cuota íntegra estatal"`` substring won't match because the
     wrong role-phrase isn't present.
     """
-    lowered = quoted_text_es.lower()
+    folded = _fold_diacritics(quoted_text_es)
     for entry in _KNOWN_BAD_CITATIONS:
-        if entry.source == source and entry.article == article and entry.role_substring_es.lower() in lowered:
+        if entry.source == source and entry.article == article and _fold_diacritics(entry.role_substring_es) in folded:
             return entry
     return None
 
