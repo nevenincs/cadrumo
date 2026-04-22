@@ -31,6 +31,7 @@ from .dry_run import dry_run_cmd
 from .export import export_cmd
 from .list import list_cmd
 from .preflight import preflight_cmd
+from .schemas import schemas_cmd
 from .show import show_cmd
 from .verify import verify_cmd
 
@@ -50,6 +51,10 @@ app.command(
     name="diff",
     help="Diff two fichero-BOE files and report byte + per-casilla deltas.",
 )(diff_cmd)
+app.command(
+    name="schemas",
+    help="List every (modelo, ejercicio) the CLI can export + verify.",
+)(schemas_cmd)
 app.command(name="show", help="Pretty-print a persisted SubmittedFiling by submission_id.")(show_cmd)
 app.command(name="list", help="List persisted SubmittedFiling records.")(list_cmd)
 
