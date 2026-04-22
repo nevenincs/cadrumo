@@ -144,6 +144,30 @@ class TestExportCommand:
         assert payload[dp30301_start + 106 : dp30301_start + 108] == b"1T"  # PERIODO
         assert payload.endswith(b"\r\n")
 
+    def test_modelo_303_2025_routes_to_clone_schema(self, tmp_path: Path) -> None:
+        """Wave 94: 303 2025 re-exports the 2024 envelope verbatim."""
+        draft = _write_draft(tmp_path, modelo="303", period="2025Q3")
+        output_dir = tmp_path / "out"
+        result = _runner.invoke(
+            app,
+            [
+                "export",
+                str(draft),
+                "--output-dir",
+                str(output_dir),
+                "--nombre",
+                "KENT",
+                "--apellidos",
+                "DOE",
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
+        output_path = output_dir / "X1234567L20253T.303"
+        assert output_path.exists()
+        payload = output_path.read_bytes()
+        assert len(payload) == 7994 + 2
+        assert payload[6:10] == b"2025"  # ejercicio stamped through to envelope header
+
     def test_unsupported_modelo_exits_2(self, tmp_path: Path) -> None:
         """Modelo 390 is not yet registered; export must refuse with exit 2."""
         draft = _write_draft(tmp_path, modelo="390", period="2024Q4")
