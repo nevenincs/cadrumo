@@ -30,6 +30,7 @@ from ...formulas._rulesets.modelo_130_2024 import RULESET as RULESET_130_2024
 from ...formulas._rulesets.modelo_130_2025 import RULESET as RULESET_130_2025
 from ._deserialise import deserialise
 from ._serialise import serialise
+from ._test_fixtures import kent_130_headers
 from .modelo_130_2024 import (
     ENCODING,
     RECORD_LENGTH,
@@ -58,14 +59,7 @@ class TestKentE2EModelo130Q12024:
         "02": Decimal("5000.00"),  # gastos deducibles
     }
 
-    _HEADERS: ClassVar[dict[str, str]] = {
-        "EJERCICIO": "2024",
-        "PERIODO": "1T",
-        "NIF_DECLARANTE": "X1234567L",
-        "APELLIDOS": "DOE RODRIGUEZ",
-        "NOMBRE": "KENT",
-        "TIPO_DECLARACION": "I",
-    }
+    _HEADERS: ClassVar[dict[str, str]] = dict(kent_130_headers("2024"))
 
     def _derive_casillas(self) -> dict[str, Decimal]:
         """Run the Modelo 130 2024 ruleset over Kent's inputs."""
@@ -150,14 +144,7 @@ class TestKentE2EModelo130Q12025:
         "02": Decimal("5000.00"),
     }
 
-    _HEADERS: ClassVar[dict[str, str]] = {
-        "EJERCICIO": "2025",
-        "PERIODO": "1T",
-        "NIF_DECLARANTE": "X1234567L",
-        "APELLIDOS": "DOE RODRIGUEZ",
-        "NOMBRE": "KENT",
-        "TIPO_DECLARACION": "I",
-    }
+    _HEADERS: ClassVar[dict[str, str]] = dict(kent_130_headers("2025"))
 
     def _derive_casillas(self) -> dict[str, Decimal]:
         ledger = Engine().derive(ruleset=RULESET_130_2025, inputs=self._INPUTS)

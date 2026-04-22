@@ -14,11 +14,12 @@ bytes" invariant adds structural proof that the clone is pure.
 from __future__ import annotations
 
 import hashlib
-from decimal import Decimal
 
 import pytest
 
 from ._serialise import serialise
+from ._test_fixtures import KENT_130_CASILLAS as _KENT_CASILLAS
+from ._test_fixtures import kent_130_headers as _kent_headers
 from .modelo_130_2024 import ENCODING as ENCODING_2024
 from .modelo_130_2024 import RECORD_LENGTH as LEN_2024
 from .modelo_130_2024 import RECORD_SPECS as SPECS_2024
@@ -31,30 +32,6 @@ from .modelo_130_2025 import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
-
-
-_KENT_CASILLAS: dict[str, Decimal] = {
-    "01": Decimal("20000.00"),
-    "02": Decimal("5000.00"),
-    "03": Decimal("15000.00"),
-    "04": Decimal("3000.00"),
-    "07": Decimal("3000.00"),
-    "12": Decimal("3000.00"),
-    "14": Decimal("3000.00"),
-    "17": Decimal("3000.00"),
-    "19": Decimal("3000.00"),
-}
-
-
-def _kent_headers(ejercicio: str) -> dict[str, str]:
-    return {
-        "EJERCICIO": ejercicio,
-        "PERIODO": "1T",
-        "NIF_DECLARANTE": "X1234567L",
-        "APELLIDOS": "DOE RODRIGUEZ",
-        "NOMBRE": "KENT",
-        "TIPO_DECLARACION": "I",
-    }
 
 
 class TestModelo1302025GoldenKentQ1:

@@ -30,6 +30,7 @@ from ...formulas._rulesets.modelo_303_2025 import RULESET as RULESET_303_2025
 from ._deserialise import deserialise_envelope
 from ._record_spec import FieldKind
 from ._serialise import serialise_envelope
+from ._test_fixtures import kent_303_headers
 from .modelo_303_2024 import ENCODING, ENVELOPE, REQUIRED_HEADER_FIELDS
 from .modelo_303_2025 import ENCODING as ENCODING_2025
 from .modelo_303_2025 import ENVELOPE as ENVELOPE_2025
@@ -61,19 +62,7 @@ class TestKentE2EModelo303Q12024:
         "07": Decimal("20000.00"),  # base imponible al 21 %
     }
 
-    _HEADERS: ClassVar[dict[str, str]] = {
-        "DP30300_F004_EJERCICIO_DE_DEVENGO": "2024",
-        "DP30300_F008_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30300_F009_VERSI_N_DEL_PROGRAMA": " ",
-        "DP30300_F010_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30300_F011_NIF_EMPRESA_DESARROLLO": " ",
-        "DP30300_F012_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30301_F006_TIPO_DECLARACI_N": "I",
-        "DP30301_F007_IDENTIFICACI_N_NIF": "X1234567L",
-        "DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N": "DOE RODRIGUEZ KENT",
-        "DP30301_F009_DEVENGO_EJERCICIO": "2024",
-        "DP30301_F010_DEVENGO_PER_ODO": "1T",
-    }
+    _HEADERS: ClassVar[dict[str, str]] = dict(kent_303_headers("2024"))
 
     def _derive_casillas(self) -> dict[str, Decimal]:
         ledger = Engine().derive(ruleset=RULESET_303_2024, inputs=self._INPUTS)
@@ -152,19 +141,7 @@ class TestKentE2EModelo303Q12025:
         "07": Decimal("20000.00"),
     }
 
-    _HEADERS: ClassVar[dict[str, str]] = {
-        "DP30300_F004_EJERCICIO_DE_DEVENGO": "2025",
-        "DP30300_F008_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30300_F009_VERSI_N_DEL_PROGRAMA": " ",
-        "DP30300_F010_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30300_F011_NIF_EMPRESA_DESARROLLO": " ",
-        "DP30300_F012_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30301_F006_TIPO_DECLARACI_N": "I",
-        "DP30301_F007_IDENTIFICACI_N_NIF": "X1234567L",
-        "DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N": "DOE RODRIGUEZ KENT",
-        "DP30301_F009_DEVENGO_EJERCICIO": "2025",
-        "DP30301_F010_DEVENGO_PER_ODO": "1T",
-    }
+    _HEADERS: ClassVar[dict[str, str]] = dict(kent_303_headers("2025"))
 
     def _derive_casillas(self) -> dict[str, Decimal]:
         ledger = Engine().derive(ruleset=RULESET_303_2025, inputs=self._INPUTS)
