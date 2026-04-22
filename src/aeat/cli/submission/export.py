@@ -34,7 +34,7 @@ from ...financial.invoices._validators import validate_spanish_tax_id
 from ...submission import DraftStatus
 from ...submission._formats._serialise import serialise, serialise_envelope
 from ._helpers import load_draft
-from ._schema_registry import SCHEMA_REGISTRY, CliInputs
+from ._schema_registry import SCHEMA_REGISTRY, CliInputs, validate_iban_flag, validate_swift_flag
 
 _CONSOLE = Console()
 
@@ -84,11 +84,13 @@ def export_cmd(
             "IBAN for SEPA devolución (tipo=D). Stamped into DP303DID "
             "for envelope modelos that carry a direct-debit page."
         ),
+        callback=validate_iban_flag,
     ),
     swift: str | None = typer.Option(
         None,
         "--swift",
         help="SWIFT/BIC for SEPA devolución (tipo=D). Optional for Spanish IBANs.",
+        callback=validate_swift_flag,
     ),
 ) -> None:
     """Export the filing draft to an AEAT-importable fichero-BOE file.

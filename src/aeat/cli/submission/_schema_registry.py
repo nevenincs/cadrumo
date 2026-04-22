@@ -124,6 +124,13 @@ def build_303_headers(inputs: CliInputs) -> dict[str, str]:
 
 _MODELO_FLAG_RE = re.compile(r"^\d{3}$")
 _EJERCICIO_FLAG_RE = re.compile(r"^\d{4}$")
+#: IBAN: ISO-13616 basic shape — 2-letter country + 2 check digits + 11-30
+#: alphanumeric BBAN characters, total 15-34. We normalise by removing
+#: internal whitespace (Kent may paste "ES91 2100 0418 4502 0005 1332").
+_IBAN_FLAG_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$")
+#: SWIFT/BIC: ISO-9362 — 8 or 11 alphanumeric chars; 4-letter bank, 2-letter
+#: country, 2-alphanumeric location, optional 3-char branch.
+_SWIFT_FLAG_RE = re.compile(r"^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$")
 
 
 def validate_modelo_flag(value: str | None) -> str | None:
@@ -164,6 +171,46 @@ def validate_ejercicio_flag(value: str | None) -> str | None:
     return value
 
 
+def validate_iban_flag(value: str | None) -> str | None:
+    """Typer callback: check ``--iban`` follows ISO-13616 basic shape.
+
+    Kent often copy-pastes an IBAN with spaces between 4-char groups
+    (e.g. ``"ES91 2100 0418 4502 0005 1332"``); we normalise by removing
+    whitespace before validating, and return the normalised canonical
+    form (no spaces, upper-case) so the header-builder stamps the clean
+    value into DP303DID_F006.
+
+    Does NOT perform the mod-97 check-digit verification (that requires
+    the full letter→digit expansion; would add a dependency we don't
+    want on the flag boundary). Shape-only: 2 letters + 2 digits +
+    11-30 alphanumerics.
+    """
+    if value is None:
+        return None
+    normalised = value.replace(" ", "").replace("-", "").upper()
+    if not _IBAN_FLAG_RE.match(normalised):
+        raise typer.BadParameter(
+            f"--iban {value!r} does not match the ISO-13616 IBAN shape "
+            "(2-letter country, 2 check digits, 11-30 alphanumeric BBAN "
+            "chars). Example: ES9121000418450200051332."
+        )
+    return normalised
+
+
+def validate_swift_flag(value: str | None) -> str | None:
+    """Typer callback: check ``--swift`` follows ISO-9362 BIC shape (8 or 11 chars)."""
+    if value is None:
+        return None
+    normalised = value.replace(" ", "").upper()
+    if not _SWIFT_FLAG_RE.match(normalised):
+        raise typer.BadParameter(
+            f"--swift {value!r} does not match the ISO-9362 BIC shape "
+            "(8 or 11 alphanumeric characters: 4-letter bank + 2-letter country "
+            "+ 2-char location, optional 3-char branch). Example: CAIXESBBXXX."
+        )
+    return normalised
+
+
 SCHEMA_REGISTRY: dict[tuple[str, str], SchemaEntry] = {
     ("130", "2024"): SchemaEntry(modelo_130_2024, "record", build_130_headers),
     ("130", "2025"): SchemaEntry(modelo_130_2025, "record", build_130_headers),
@@ -179,5 +226,7 @@ __all__ = [
     "build_130_headers",
     "build_303_headers",
     "validate_ejercicio_flag",
+    "validate_iban_flag",
     "validate_modelo_flag",
+    "validate_swift_flag",
 ]
