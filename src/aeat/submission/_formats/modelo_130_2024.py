@@ -14,7 +14,7 @@ IVA-scoped (Modelo 303), not 130.
 - Encoding: Windows-1252 (CP1252). Filename: ``{NIF}{ejercicio}{periodo}.130``.
 - ``RECORD_LENGTH = 878`` below counts ONLY the field content
   (positions 1-878). The serialiser owns the 2-byte CRLF terminator
-  — it is not represented as a field in ``_RECORD_SPECS``.
+  — it is not represented as a field in ``RECORD_SPECS``.
 
 ## Sign convention
 
@@ -50,7 +50,7 @@ from ._record_spec import (
 
 #: Field-content byte length per the 2015+ Diseño de Registro
 #: (positions 1-878). On-wire stream adds 2-byte CRLF terminator
-#: at positions 879-880 (serialiser-owned; not in ``_RECORD_SPECS``).
+#: at positions 879-880 (serialiser-owned; not in ``RECORD_SPECS``).
 RECORD_LENGTH = 878
 
 #: Wire encoding for Modelo 130 fichero-BOE output.
@@ -74,7 +74,7 @@ REQUIRED_HEADER_FIELDS: frozenset[str] = frozenset(
     }
 )
 
-_RECORD_SPECS: tuple[RecordFieldSpec, ...] = (
+RECORD_SPECS: tuple[RecordFieldSpec, ...] = (
     # ---- Record header (positions 1-76) ----
     record_field(
         offset=1,
@@ -384,12 +384,12 @@ _RECORD_SPECS: tuple[RecordFieldSpec, ...] = (
 
 # Enforce monotonic contiguity at import time. Any off-by-one in the
 # hand-authored specs above will fail-fast at collection.
-validate_record_specs(_RECORD_SPECS, total_length=RECORD_LENGTH)
+validate_record_specs(RECORD_SPECS, total_length=RECORD_LENGTH)
 
 
 __all__ = [
     "ENCODING",
     "RECORD_LENGTH",
+    "RECORD_SPECS",
     "REQUIRED_HEADER_FIELDS",
-    "_RECORD_SPECS",
 ]

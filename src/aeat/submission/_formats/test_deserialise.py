@@ -9,9 +9,9 @@ import pytest
 from ._deserialise import deserialise
 from ._serialise import serialise
 from .modelo_130_2024 import (
-    _RECORD_SPECS,
     ENCODING,
     RECORD_LENGTH,
+    RECORD_SPECS,
     REQUIRED_HEADER_FIELDS,
 )
 
@@ -39,14 +39,14 @@ class TestDeserialiseModelo1302024:
         payload = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
         )
         result = deserialise(
             payload,
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
         )
@@ -57,12 +57,12 @@ class TestDeserialiseModelo1302024:
         payload = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
         )
-        result = deserialise(payload, specs=_RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
+        result = deserialise(payload, specs=RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
         assert result.field_values["NIF_DECLARANTE"] == "X1234567L"
         assert result.field_values["EJERCICIO"] == "2024"
         assert result.field_values["PERIODO"] == "1T"
@@ -74,12 +74,12 @@ class TestDeserialiseModelo1302024:
         payload = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
         )
-        result = deserialise(payload, specs=_RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
+        result = deserialise(payload, specs=RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
         # Casilla 01 input was Decimal("200.00") per _base_casillas ((i+1)*100 for i=1).
         assert result.casilla_values["01"] == Decimal("200.00")
         assert result.casilla_values["19"] == Decimal("2000.00")
@@ -89,12 +89,12 @@ class TestDeserialiseModelo1302024:
         payload = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
         )
-        result = deserialise(payload, specs=_RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
+        result = deserialise(payload, specs=RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
         assert result.raw_length == RECORD_LENGTH
 
     def test_payload_without_crlf_also_parses(self) -> None:
@@ -104,7 +104,7 @@ class TestDeserialiseModelo1302024:
         payload = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -112,7 +112,7 @@ class TestDeserialiseModelo1302024:
         content_only = payload[:-2]  # strip CRLF
         result = deserialise(
             content_only,
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
         )
@@ -122,7 +122,7 @@ class TestDeserialiseModelo1302024:
         with pytest.raises(ValueError, match="content is"):
             deserialise(
                 b"SHORT_PAYLOAD",
-                specs=_RECORD_SPECS,
+                specs=RECORD_SPECS,
                 encoding=ENCODING,
                 total_length=RECORD_LENGTH,
             )
@@ -139,14 +139,14 @@ class TestRoundTripFidelity:
         payload = serialise(
             casilla_values=casillas,
             headers=headers,
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
         )
         parsed = deserialise(
             payload,
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
         )
@@ -162,12 +162,12 @@ class TestRoundTripFidelity:
         payload = serialise(
             casilla_values=_base_casillas(),
             headers=headers,
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
         )
-        parsed = deserialise(payload, specs=_RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
+        parsed = deserialise(payload, specs=RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
         for field_id, expected in headers.items():
             assert parsed.field_values[field_id] == expected, (
                 f"header {field_id!r} drift: expected {expected!r}, got {parsed.field_values[field_id]!r}"
@@ -180,12 +180,12 @@ class TestRoundTripFidelity:
         payload = serialise(
             casilla_values=_base_casillas(),
             headers=headers,
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
         )
-        parsed = deserialise(payload, specs=_RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
+        parsed = deserialise(payload, specs=RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
         assert parsed.field_values["APELLIDOS"] == "MUÑOZ ÑAÑEZ"
 
     def test_round_trip_zero_padded_casillas(self) -> None:
@@ -194,12 +194,12 @@ class TestRoundTripFidelity:
         payload = serialise(
             casilla_values=zeros,
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
         )
-        parsed = deserialise(payload, specs=_RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
+        parsed = deserialise(payload, specs=RECORD_SPECS, encoding=ENCODING, total_length=RECORD_LENGTH)
         for cid in zeros:
             assert parsed.casilla_values[cid] == Decimal("0.00")
             assert isinstance(parsed.casilla_values[cid], Decimal)

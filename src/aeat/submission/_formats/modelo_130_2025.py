@@ -28,13 +28,13 @@ per-year-clone pattern (mirrors the formulas-ruleset
 from __future__ import annotations
 
 from .modelo_130_2024 import (
-    _RECORD_SPECS as _RECORD_SPECS,
-)
-from .modelo_130_2024 import (
     ENCODING as ENCODING,
 )
 from .modelo_130_2024 import (
     RECORD_LENGTH as RECORD_LENGTH,
+)
+from .modelo_130_2024 import (
+    RECORD_SPECS as RECORD_SPECS,
 )
 from .modelo_130_2024 import (
     REQUIRED_HEADER_FIELDS as REQUIRED_HEADER_FIELDS,
@@ -43,6 +43,6 @@ from .modelo_130_2024 import (
 __all__ = [
     "ENCODING",
     "RECORD_LENGTH",
+    "RECORD_SPECS",
     "REQUIRED_HEADER_FIELDS",
-    "_RECORD_SPECS",
 ]

@@ -8,9 +8,9 @@ import pytest
 
 from ._serialise import serialise
 from .modelo_130_2024 import (
-    _RECORD_SPECS,
     ENCODING,
     RECORD_LENGTH,
+    RECORD_SPECS,
     REQUIRED_HEADER_FIELDS,
 )
 
@@ -60,7 +60,7 @@ class TestSerialiseModelo1302024:
         result = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -72,7 +72,7 @@ class TestSerialiseModelo1302024:
         result = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -95,7 +95,7 @@ class TestSerialiseModelo1302024:
         result = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -108,7 +108,7 @@ class TestSerialiseModelo1302024:
         result = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -123,7 +123,7 @@ class TestSerialiseModelo1302024:
             serialise(
                 casilla_values=_base_casillas(),
                 headers=headers,
-                specs=_RECORD_SPECS,
+                specs=RECORD_SPECS,
                 encoding=ENCODING,
                 total_length=RECORD_LENGTH,
                 required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -136,7 +136,7 @@ class TestSerialiseModelo1302024:
             serialise(
                 casilla_values=_base_casillas(),
                 headers=headers,
-                specs=_RECORD_SPECS,
+                specs=RECORD_SPECS,
                 encoding=ENCODING,
                 total_length=RECORD_LENGTH,
                 required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -149,7 +149,7 @@ class TestSerialiseModelo1302024:
         result = serialise(
             casilla_values=sparse,
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -175,7 +175,7 @@ class TestSerialiseModelo1302024:
             serialise(
                 casilla_values=casillas,
                 headers=headers,
-                specs=_RECORD_SPECS,
+                specs=RECORD_SPECS,
                 encoding=ENCODING,
                 total_length=RECORD_LENGTH,
                 required_field_ids=REQUIRED_HEADER_FIELDS,
@@ -187,7 +187,7 @@ class TestSerialiseModelo1302024:
         result = serialise(
             casilla_values=zeros,
             headers=_base_headers(),
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,

@@ -105,7 +105,7 @@ class RecordFieldSpec(BaseModel):
 
     Strict/frozen/extra=forbid per the project's boundary-record
     mandate. Validated at module-import time when the concrete
-    ``_RECORD_SPECS`` tuple is constructed.
+    ``RECORD_SPECS`` tuple is constructed.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")

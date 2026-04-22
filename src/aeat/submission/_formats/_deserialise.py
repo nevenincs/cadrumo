@@ -1,7 +1,7 @@
 """Fichero-BOE deserialiser (EPIC #201 C3d, wave 80a).
 
 Round-trip inverse of :func:`aeat.submission._formats._serialise.serialise`.
-Takes a fichero-BOE byte payload + a `_RECORD_SPECS` tuple and yields
+Takes a fichero-BOE byte payload + a `RECORD_SPECS` tuple and yields
 a ``ParsedRecord`` carrying the per-field values (as strings or
 :class:`Decimal` for currency) plus metadata.
 

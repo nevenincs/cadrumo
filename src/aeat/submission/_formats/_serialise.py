@@ -1,10 +1,10 @@
-"""Fichero-BOE serialiser reading `_RECORD_SPECS` (EPIC #201 C3b, wave 79b).
+"""Fichero-BOE serialiser reading `RECORD_SPECS` (EPIC #201 C3b, wave 79b).
 
 Per the :doc:`fichero-BOE export ADR` the serialiser is format-generic:
-one function drives every modelo via its `_RECORD_SPECS` tuple. A
+one function drives every modelo via its `RECORD_SPECS` tuple. A
 concrete modelo module supplies:
 
-- ``_RECORD_SPECS``: the field layout (validated at import time).
+- ``RECORD_SPECS``: the field layout (validated at import time).
 - ``RECORD_LENGTH``: content bytes (excluding CRLF terminator).
 - ``ENCODING``: per-modelo wire encoding.
 - ``REQUIRED_HEADER_FIELDS``: field_ids the draft MUST provide.

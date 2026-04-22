@@ -172,7 +172,7 @@ def export_cmd(
         payload = serialise(
             casilla_values=casilla_values,
             headers=headers,
-            specs=entry.module._RECORD_SPECS,
+            specs=entry.module.RECORD_SPECS,
             encoding=entry.module.ENCODING,
             total_length=entry.module.RECORD_LENGTH,
             required_field_ids=entry.module.REQUIRED_HEADER_FIELDS,
