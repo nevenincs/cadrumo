@@ -21,7 +21,9 @@ respective Órdenes ministeriales; this wave ships only the shared
 from __future__ import annotations
 
 from ._record_spec import (
+    DEFAULT_ENCODING,
     DateFmt,
+    FicheroBoeEncoding,
     FieldKind,
     Justification,
     RecordFieldSpec,
@@ -29,10 +31,13 @@ from ._record_spec import (
     encode_date,
     encode_text,
     record_field,
+    validate_record_specs,
 )
 
 __all__ = [
+    "DEFAULT_ENCODING",
     "DateFmt",
+    "FicheroBoeEncoding",
     "FieldKind",
     "Justification",
     "RecordFieldSpec",
@@ -40,4 +45,5 @@ __all__ = [
     "encode_date",
     "encode_text",
     "record_field",
+    "validate_record_specs",
 ]

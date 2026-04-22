@@ -1,6 +1,6 @@
 """Fixed-width record-spec primitives for fichero-BOE export.
 
-EPIC #201 wave 75d. See ADR
+EPIC #201 wave 75d + wave 77 primitive-safety hardening. See ADR
 ``.vault/adr/2026-04-22-aeat-fichero-boe-export-adr.md`` §2-4 for
 the design rationale.
 
@@ -8,21 +8,41 @@ Every concrete modelo module authors a tuple of
 :class:`RecordFieldSpec` entries describing the BOE *Diseño de
 registros* field layout. The encoders defined here produce the
 byte-exact output the AEAT portal expects via "importar datos".
+
+Wave 77 primitive-safety contract:
+
+- ``encode_currency`` uses explicit ``ROUND_HALF_UP`` matching AEAT
+  *Instrucciones de cumplimentación* (NOT banker's rounding).
+- ``encode_text`` raises on overflow (no silent truncation) to
+  prevent NIF / razón-social corruption from mis-measured specs.
+- ``RecordFieldSpec`` enforces the RESERVED ⇔ literal_value
+  invariant at construction time.
+- :func:`validate_record_specs` enforces monotonic ``offset + length
+  == next.offset`` across a module's spec tuple. Wave 77c entry-
+  gate for modelo schemas.
+
+Per-modelo encoding: most modelos use **Windows-1252 / ISO-8859-1**
+(Modelo 130 per Orden EHA/672/2007; Modelo 303 post-HAC/819/2024;
+etc.). A handful of annual informativas (190 / 347) historically
+used ISO-8859-15 for Euro-symbol compatibility. Concrete modelo
+modules pin the encoding explicitly.
 """
 
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-# AEAT fichero-BOE canonical encoding — ISO-8859-15 since 2016 for
-# every autónomo-core modelo (130/303/390). A future modelo using a
-# different encoding would extend the ``encoding`` literal.
-_FICHERO_BOE_ENCODING = "ISO-8859-15"
+# Per-BOE encoding choices. Windows-1252 is a superset of ISO-8859-1
+# that adds characters in the 0x80-0x9F range; AEAT treats them as
+# equivalent for fichero-BOE purposes. ISO-8859-15 adds the Euro
+# symbol at 0xA4 and other minor deltas.
+FicheroBoeEncoding = Literal["cp1252", "iso-8859-1", "iso-8859-15"]
+DEFAULT_ENCODING: FicheroBoeEncoding = "cp1252"
 
 
 class FieldKind(StrEnum):
@@ -96,6 +116,24 @@ class RecordFieldSpec(BaseModel):
     date_fmt: DateFmt | None = None
     """Required when ``kind == DATE``; ignored otherwise."""
 
+    @model_validator(mode="after")
+    def _reserved_requires_literal(self) -> RecordFieldSpec:
+        """Wave 77a: enforce RESERVED ⇔ literal_value invariant.
+
+        A RESERVED field is a literal constant (modelo code, record
+        separator, filler "0000", etc.). Constructing a RESERVED spec
+        without a ``literal_value`` makes the serialiser undefined;
+        declaring a ``literal_value`` on a non-RESERVED field is a
+        modelling error.
+        """
+        if self.kind is FieldKind.RESERVED and self.literal_value is None:
+            raise ValueError(f"RESERVED fields must carry a literal_value; got None for {self.field_id!r}")
+        if self.kind is not FieldKind.RESERVED and self.literal_value is not None:
+            raise ValueError(f"literal_value is only valid when kind=RESERVED; got {self.kind!r} for {self.field_id!r}")
+        if self.kind is FieldKind.DATE and self.date_fmt is None:
+            raise ValueError(f"DATE fields must carry a date_fmt; got None for {self.field_id!r}")
+        return self
+
 
 def record_field(
     *,
@@ -137,26 +175,41 @@ def record_field(
     )
 
 
-def encode_currency(value: Decimal, *, length: int) -> bytes:
+def encode_currency(
+    value: Decimal,
+    *,
+    length: int,
+    signed: bool = False,
+    encoding: FicheroBoeEncoding = DEFAULT_ENCODING,
+) -> bytes:
     """Right-justified, zero-padded currency with 2 implicit decimals.
 
     AEAT fichero-BOE currency fields emit the ``value * 100`` integer
-    with no separators. A ``Decimal("1234.56")`` in a length-13
-    currency field produces ``b"0000000123456"``.
+    with no separators. ``Decimal("1234.56")`` in a length-13 field
+    produces ``b"0000000123456"``.
 
-    Negative values: two's-complement-style emission is NOT standard.
-    Most modelos carry a sign-adjacent field (e.g. ``SIGNO``) that
-    flips the magnitude. This encoder emits the ABSOLUTE magnitude
-    and relies on the spec to carry the sign in a separate field.
+    Wave 77a hardening:
+    - Explicit ``ROUND_HALF_UP`` matching AEAT *Instrucciones* (not
+      banker's rounding). ``Decimal("2.005")`` → ``b"000201"``.
+    - ``signed=False`` (default) rejects negative inputs so a caller
+      who forgot to wire the adjacent SIGNO field gets a clear error
+      instead of a byte-legal but semantically-wrong positive
+      magnitude. Set ``signed=True`` when you have explicitly
+      arranged the SIGNO flip elsewhere.
     """
-    # AEAT currency fields are always ``abs(value)`` with 2 implicit
-    # decimals. Use quantize to avoid float drift.
-    quantised = abs(value).quantize(Decimal("0.01"))
+    if value < 0 and not signed:
+        raise ValueError(
+            f"encode_currency received negative {value!r} without "
+            f"signed=True; most AEAT modelos carry a separate SIGNO "
+            f"field to flip magnitude. Pass signed=True only after "
+            f"wiring the SIGNO field in the record spec."
+        )
+    quantised = abs(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     cents = int(quantised * 100)
     s = str(cents).rjust(length, "0")
     if len(s) > length:
         raise ValueError(f"currency value {value} overflows length-{length} field (would need {len(s)} bytes)")
-    return s.encode(_FICHERO_BOE_ENCODING)
+    return s.encode(encoding)
 
 
 def encode_text(
@@ -165,25 +218,96 @@ def encode_text(
     length: int,
     justification: Justification = Justification.LEFT,
     pad_char: str = " ",
+    truncate: bool = False,
+    encoding: FicheroBoeEncoding = DEFAULT_ENCODING,
 ) -> bytes:
     """Alphanumeric encoder.
 
-    Accents preserved within ISO-8859-15. If the value contains a
-    character outside ISO-8859-15 (e.g. an emoji), this raises
-    :class:`UnicodeEncodeError` at encode time — no silent
-    substitution.
+    Wave 77a hardening:
+    - Raises ``ValueError`` when ``len(value) > length`` (no silent
+      truncation). A mis-measured spec that would clip a NIF or
+      razón-social is a legally-binding corruption; fail loud.
+    - Set ``truncate=True`` only when the caller has a concrete
+      reason to allow clipping (rare; prefer fixing the spec).
+    - Per-modelo ``encoding`` override. Default is Windows-1252
+      (CP1252) which is a superset of ISO-8859-1; ISO-8859-15 for
+      Euro-symbol modelos.
     """
     if len(pad_char) != 1:
         raise ValueError("pad_char must be a single character")
+    if len(value) > length and not truncate:
+        raise ValueError(
+            f"text value {value!r} overflows length-{length} field "
+            f"(would need {len(value)} bytes); set truncate=True to "
+            f"allow silent clipping."
+        )
     s = value[:length] if len(value) > length else value
     s = s.ljust(length, pad_char) if justification is Justification.LEFT else s.rjust(length, pad_char)
-    return s.encode(_FICHERO_BOE_ENCODING)
+    return s.encode(encoding)
 
 
-def encode_date(value: date, fmt: DateFmt) -> bytes:
+def encode_date(
+    value: date,
+    fmt: DateFmt,
+    *,
+    encoding: FicheroBoeEncoding = DEFAULT_ENCODING,
+) -> bytes:
     """Date encoder per BOE *Diseño de registros* shapes."""
     match fmt:
         case DateFmt.YYYYMMDD:
-            return value.strftime("%Y%m%d").encode(_FICHERO_BOE_ENCODING)
+            return value.strftime("%Y%m%d").encode(encoding)
         case DateFmt.DDMMYYYY:
-            return value.strftime("%d%m%Y").encode(_FICHERO_BOE_ENCODING)
+            return value.strftime("%d%m%Y").encode(encoding)
+
+
+def validate_record_specs(
+    specs: tuple[RecordFieldSpec, ...],
+    *,
+    total_length: int,
+) -> None:
+    """Wave 77a: enforce the monotonic offset/length invariant.
+
+    Each concrete modelo module calls this at import time to guard
+    against hand-authoring off-by-one errors that would cascade
+    through every subsequent field. Checks:
+
+    - First field starts at offset 1 (BOE 1-based convention).
+    - Fields are monotonically contiguous: no gaps, no overlaps.
+    - Terminal field fills exactly to ``total_length``.
+    - ``field_id`` values are unique.
+    - ``casilla_id`` values are unique where non-None.
+
+    Raises ``ValueError`` with a precise pointer on any violation.
+    """
+    if not specs:
+        raise ValueError("record specs must not be empty")
+    if specs[0].offset != 1:
+        raise ValueError(
+            f"first spec must start at offset=1 (BOE 1-based); "
+            f"got offset={specs[0].offset} for field_id={specs[0].field_id!r}"
+        )
+    seen_field_ids: set[str] = set()
+    seen_casilla_ids: set[str] = set()
+    expected = 1
+    for i, spec in enumerate(specs):
+        if spec.offset != expected:
+            prev = specs[i - 1] if i > 0 else None
+            prev_hint = f"(prev {prev.field_id!r} ends at {prev.offset + prev.length - 1})" if prev is not None else ""
+            raise ValueError(
+                f"spec #{i} {spec.field_id!r} offset={spec.offset} "
+                f"breaks monotonic contiguity; expected offset={expected} {prev_hint}"
+            )
+        if spec.field_id in seen_field_ids:
+            raise ValueError(f"duplicate field_id={spec.field_id!r} at spec #{i}")
+        seen_field_ids.add(spec.field_id)
+        if spec.casilla_id is not None:
+            if spec.casilla_id in seen_casilla_ids:
+                raise ValueError(f"duplicate casilla_id={spec.casilla_id!r} at spec #{i} (field_id={spec.field_id!r})")
+            seen_casilla_ids.add(spec.casilla_id)
+        expected = spec.offset + spec.length
+    terminal_end = expected - 1
+    if terminal_end != total_length:
+        raise ValueError(
+            f"record specs fill {terminal_end} bytes but total_length={total_length} "
+            f"was declared; adjust the final field or the declared length."
+        )
