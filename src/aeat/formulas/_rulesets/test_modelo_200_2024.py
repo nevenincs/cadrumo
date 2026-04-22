@@ -69,7 +69,7 @@ class TestModelo200Ruleset2024:
         assert "00611" in {d.casilla_id for d in report.discrepancies}
 
     def test_liquido_applies_incremento_and_abono(self) -> None:
-        """00621 = 00611 + 00619 - 00615 (art. 125 LIS)."""
+        """00621 = 00611 + 00619 - 00615 (LIS art. 30 cuota líquida)."""
         provided = _provided()
         provided["00615"] = Decimal("1000.00")  # abono
         provided["00619"] = Decimal("500.00")  # incremento
@@ -88,14 +88,25 @@ class TestModelo200Ruleset2024:
         assert len(MODELO_200_2024.formulas) == 3
 
     def test_external_worked_example_lis_art_29(self) -> None:
-        """External-anchored worked example (wave 59c H3 closure).
+        """External-anchored worked example (wave 59c H3 closure;
+        citation corrected wave 67a).
 
-        Provenance: Ley 27/2014 (LIS) art. 29.1 fixes the general tipo
-        de gravamen at 25%. Art. 125 defines liquido = cuota diferencial
-        + incremento - abono.
+        Provenance (BOE-A-2014-12328 Ley 27/2014 LIS, consolidated
+        retrieval 2026-04-22):
+          - art. 29.1 = general tipo de gravamen 25% ("tipo general
+            del Impuesto ... será el 25 por ciento")
+          - art. 30 = "Cuota íntegra" / cuota líquida definition
+            (the cuota líquida = cuota íntegra - deducciones +
+            incrementos - abonos arithmetic Modelo 200 casilla
+            00621 implements via 00611 + 00619 - 00615)
+
+        Prior-wave miscite: wave 59c cited "art. 125" for the
+        cuota-líquida arithmetic. LIS art. 125 is
+        "Autoliquidación e ingreso de la deuda tributaria"
+        (procedural, not definitional). Corrected wave 67a.
 
         Scenario: 2024 IS filing, base 1 000 000 at 25%.
-        Citation: BOE-A-2014-12328 arts. 29.1 + 125.
+        Citation: BOE-A-2014-12328 arts. 29.1 + 30.
         """
         provided = {
             "00547": Decimal("0.00"),

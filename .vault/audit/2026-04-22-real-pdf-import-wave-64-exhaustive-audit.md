@@ -35,6 +35,25 @@ Not a regression.
 
 **Total open: 7 HIGH, 2 MEDIUM, 5 LOW.**
 
+## Closure status (updated 2026-04-22, wave 66)
+
+| Finding | Status | Closing wave |
+|---|---|---|
+| H1 130_2025 RIRPF 110.1 subsections inverted | CLOSED | wave 65a (`ab808d2`) |
+| H2 130_2024 art. 110.2 → 110.1.c | CLOSED | wave 65a (`ab808d2`) |
+| H3 131_2025 art. 110.4/110.2 → 110.1.b/.c | CLOSED | wave 65a (`ab808d2`) |
+| H4 202_2025 LIS 24% → 25% + 23% narrative | CLOSED | wave 65a (`ab808d2`) |
+| H5 100_summary art. 77 → 73 | CLOSED | wave 65a (`ab808d2`) |
+| H6 modelos.md provenance overstated | CLOSED | wave 65b (`ab808d2`) |
+| H7 wave 62 H5 exec-record deferral soft | PARTIAL | wave 65d (`ab808d2`) named artefact path + gate-anchored deadline; structural deferral (no issue/date) re-surfaced as wave 66 H1 (tracked wave 67d) |
+| M1 harness "both non-zero" invariant inaccurate | CLOSED | wave 65b (`ab808d2`) |
+| M2 ADR missing citation-accuracy checklist | CLOSED | wave 65c (`ab808d2`) |
+| L1 commit-message count narrative | CLOSED | wave 66 audit acknowledges count is correct |
+| L2 9 uncovered sub_op chains | OPEN | re-cited as wave 66 M2; tracked wave 67f |
+| L3 wave 48 H3 "wave 63+" vague | OPEN | folds into wave 67d umbrella deferral tracking |
+| L4 wave 63 commit dropped 65e plan | CLOSED-by-rewording | wave 66 audit re-cites planning drift; wave 67 acknowledges via concrete issues |
+| L5 other citations clean reference | N/A | informational only |
+
 ## HIGH findings
 
 ### H1–H5 (stream 3) — FIVE citation errors across 5 test files

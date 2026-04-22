@@ -108,34 +108,50 @@ class TestModelo111Ruleset:
         )
         assert report.is_clean()
 
-    def test_external_worked_example_rirpf_105(self) -> None:
-        """External-anchored worked example (wave 57b H5/H6 closure).
+    def test_external_worked_example_rirpf_99(self) -> None:
+        """External-anchored worked example (wave 57b H5/H6 closure;
+        citations corrected wave 67a).
 
-        Provenance: RD 439/2007 (RIRPF) art. 105.1 fixes the 19%
-        retention rate on premios en metalico; art. 100.3.c fixes
-        the 19% rate on ganancias patrimoniales de arrendamientos.
-        This fixture derives expected retention values from those
-        rates directly (NOT from the ruleset's `irpf.premios_rate`
-        parameter).
+        Provenance (BOE-A-2007-6820 RD 439/2007 consolidated
+        retrieval 2026-04-22): RIRPF art. 99 ("Obligación de practicar
+        pagos a cuenta") carries the 19% pago-a-cuenta rate on both
+        premios en metálico (LIRPF art. 101.7 rate, implemented at
+        RIRPF art. 99 + threshold at art. 75.2.c/75.3.f) and
+        rendimientos del capital mobiliario / arrendamientos
+        (implemented at RIRPF art. 100). The fixture derives the
+        retention amounts from the 19% statutory rate directly
+        (NOT from the ruleset's ParameterTable).
 
-        Scenario: Q2 2025 Kent with a 2 500 lottery prize
-        (casilla 08) and 1 000 ganancias arrendamiento (casilla 11):
-        - casilla 09 = 2 500 x 19% = 475.00 per RIRPF art. 105.1
-        - casilla 12 = 1 000 x 19% = 190.00 per RIRPF art. 100.3.c
+        Prior-wave miscites (tracked): wave 57b cited RIRPF art.
+        105.1 for premios — WRONG (art. 105 is IIC transmisiones).
+        Wave 57b also cited RIRPF art. 100.3.c for arrendamientos —
+        WRONG (art. 100 has no subsections in the consolidated text;
+        the single-rate 19% rule lives in art. 100 para. 1 /
+        art. 75.2.c). Corrected in wave 67a.
+
+        Scenario: Q2 2025 Kent with a 2 500 premio en metálico
+        (casilla 08) and 1 000 in rendimientos capital mobiliario
+        reported here as casilla 11 (note: Modelo 111 casilla 12
+        captures ingresos a cuenta de retribuciones en especie per
+        Orden EHA/586/2011 — the test scenario simplifies):
+        - casilla 09 = 2 500 x 19% = 475.00 per LIRPF art. 101.7
+          via RIRPF art. 99.
+        - casilla 12 = 1 000 x 19% = 190.00 per RIRPF art. 100 +
+          LIRPF art. 101.2.
         - casilla 28 = 03 + 06 + 09 + 12 + 15 + 18 = 475 + 190 = 665.
         - casilla 30 = 28 - 29 = 665 - 0 = 665.
 
         Citations:
-        - BOE-A-2007-6820 RD 439/2007 art. 105.1
-        - BOE-A-2007-6820 RD 439/2007 art. 100.3.c
+        - BOE-A-2006-20764 Ley 35/2006 (LIRPF) arts. 99, 101.2, 101.7
+        - BOE-A-2007-6820 RD 439/2007 (RIRPF) arts. 99, 100
         """
         provided = {
             "03": Decimal("0.00"),
             "06": Decimal("0.00"),
             "08": Decimal("2500.00"),
-            "09": Decimal("475.00"),  # from RIRPF 105.1, NOT from ruleset
+            "09": Decimal("475.00"),  # 19% per LIRPF art. 101.7 + RIRPF art. 99
             "11": Decimal("1000.00"),
-            "12": Decimal("190.00"),  # from RIRPF 100.3.c, NOT from ruleset
+            "12": Decimal("190.00"),  # 19% per LIRPF art. 101.2 + RIRPF art. 100
             "15": Decimal("0.00"),
             "18": Decimal("0.00"),
             "28": Decimal("665.00"),
