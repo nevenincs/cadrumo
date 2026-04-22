@@ -27,6 +27,7 @@ import pytest
 
 from ...formulas._engine import Engine
 from ...formulas._rulesets.modelo_130_2024 import RULESET as RULESET_130_2024
+from ...formulas._rulesets.modelo_130_2025 import RULESET as RULESET_130_2025
 from ._deserialise import deserialise
 from ._serialise import serialise
 from .modelo_130_2024 import (
@@ -35,6 +36,10 @@ from .modelo_130_2024 import (
     RECORD_SPECS,
     REQUIRED_HEADER_FIELDS,
 )
+from .modelo_130_2025 import ENCODING as ENCODING_2025
+from .modelo_130_2025 import RECORD_LENGTH as RECORD_LENGTH_2025
+from .modelo_130_2025 import RECORD_SPECS as RECORD_SPECS_2025
+from .modelo_130_2025 import REQUIRED_HEADER_FIELDS as REQUIRED_HEADER_FIELDS_2025
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -128,3 +133,67 @@ class TestKentE2EModelo130Q12024:
         for cid, expected in casillas.items():
             got = parsed.casilla_values[cid]
             assert got == expected, f"round-trip drift on casilla {cid!r}: expected {expected}, got {got}"
+
+
+class TestKentE2EModelo130Q12025:
+    """Wave 110: 2025 ejercicio clone parity end-to-end.
+
+    The 2025 ruleset re-exports the 2024 formulas, and the 2025
+    schema re-exports the 2024 specs. Feeding the same Kent inputs
+    with ejercicio=2025 must produce the wave-105 golden SHA256
+    because the only byte-level difference is the 4-byte EJERCICIO
+    stamp at position 70-73.
+    """
+
+    _INPUTS: ClassVar[dict[str, Decimal]] = {
+        "01": Decimal("20000.00"),
+        "02": Decimal("5000.00"),
+    }
+
+    _HEADERS: ClassVar[dict[str, str]] = {
+        "EJERCICIO": "2025",
+        "PERIODO": "1T",
+        "NIF_DECLARANTE": "X1234567L",
+        "APELLIDOS": "DOE RODRIGUEZ",
+        "NOMBRE": "KENT",
+        "TIPO_DECLARACION": "I",
+    }
+
+    def _derive_casillas(self) -> dict[str, Decimal]:
+        ledger = Engine().derive(ruleset=RULESET_130_2025, inputs=self._INPUTS)
+        derived: dict[str, Decimal] = {**self._INPUTS}
+        for entry in ledger.entries:
+            derived[entry.casilla_id] = entry.value
+        return derived
+
+    def test_2025_ruleset_matches_2024_arithmetic(self) -> None:
+        """The clone contract says 2024 and 2025 rulesets compute
+        identical casilla values when fed identical inputs."""
+        ledger_2024 = Engine().derive(ruleset=RULESET_130_2024, inputs=self._INPUTS)
+        ledger_2025 = Engine().derive(ruleset=RULESET_130_2025, inputs=self._INPUTS)
+        derived_2024 = {e.casilla_id: e.value for e in ledger_2024.entries}
+        derived_2025 = {e.casilla_id: e.value for e in ledger_2025.entries}
+        assert derived_2024 == derived_2025, (
+            "2024 and 2025 rulesets diverged on casilla outputs. Expected "
+            "parity until AEAT publishes a 130-specific Orden — ship new "
+            "golden SHAs and update the clone-parity assertions when they do."
+        )
+
+    def test_2025_ruleset_to_serialised_hits_golden_sha(self) -> None:
+        casillas = self._derive_casillas()
+        payload = serialise(
+            casilla_values=casillas,
+            headers=self._HEADERS,
+            specs=RECORD_SPECS_2025,
+            encoding=ENCODING_2025,
+            total_length=RECORD_LENGTH_2025,
+            required_field_ids=REQUIRED_HEADER_FIELDS_2025,
+        )
+        expected = "fe5b3f7cad086ef4d4f9cefdeb8c54caa28087afc82ad40c8f854e884b2345c5"
+        actual = hashlib.sha256(payload).hexdigest()
+        assert actual == expected, (
+            f"E2E drift on Modelo 130 2025.\n"
+            f"  expected SHA256: {expected}\n  actual   SHA256: {actual}\n"
+            "Either the 2025 ruleset diverged, the schema clone broke, "
+            "or the test needs an intentional SHA update."
+        )

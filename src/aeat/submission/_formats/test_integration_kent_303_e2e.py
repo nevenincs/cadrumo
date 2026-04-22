@@ -26,10 +26,14 @@ import pytest
 
 from ...formulas._engine import Engine
 from ...formulas._rulesets.modelo_303_2024 import RULESET as RULESET_303_2024
+from ...formulas._rulesets.modelo_303_2025 import RULESET as RULESET_303_2025
 from ._deserialise import deserialise_envelope
 from ._record_spec import FieldKind
 from ._serialise import serialise_envelope
 from .modelo_303_2024 import ENCODING, ENVELOPE, REQUIRED_HEADER_FIELDS
+from .modelo_303_2025 import ENCODING as ENCODING_2025
+from .modelo_303_2025 import ENVELOPE as ENVELOPE_2025
+from .modelo_303_2025 import REQUIRED_HEADER_FIELDS as REQUIRED_HEADER_FIELDS_2025
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -136,3 +140,59 @@ class TestKentE2EModelo303Q12024:
             assert parsed.merged_casilla_values[cid] == expected, (
                 f"round-trip drift on 303 casilla {cid!r}: expected {expected}, got {parsed.merged_casilla_values[cid]}"
             )
+
+
+class TestKentE2EModelo303Q12025:
+    """Wave 110: 2025 ejercicio end-to-end. Orden HAC/819/2024 governs
+    both 2024 and 2025 Modelo 303 filings, so the 2025 ruleset + schema
+    clones must compute + serialise identically modulo the EJERCICIO stamps.
+    """
+
+    _INPUTS: ClassVar[dict[str, Decimal]] = {
+        "07": Decimal("20000.00"),
+    }
+
+    _HEADERS: ClassVar[dict[str, str]] = {
+        "DP30300_F004_EJERCICIO_DE_DEVENGO": "2025",
+        "DP30300_F008_RESERVADO_PARA_LA_ADMINISTRA": " ",
+        "DP30300_F009_VERSI_N_DEL_PROGRAMA": " ",
+        "DP30300_F010_RESERVADO_PARA_LA_ADMINISTRA": " ",
+        "DP30300_F011_NIF_EMPRESA_DESARROLLO": " ",
+        "DP30300_F012_RESERVADO_PARA_LA_ADMINISTRA": " ",
+        "DP30301_F006_TIPO_DECLARACI_N": "I",
+        "DP30301_F007_IDENTIFICACI_N_NIF": "X1234567L",
+        "DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N": "DOE RODRIGUEZ KENT",
+        "DP30301_F009_DEVENGO_EJERCICIO": "2025",
+        "DP30301_F010_DEVENGO_PER_ODO": "1T",
+    }
+
+    def _derive_casillas(self) -> dict[str, Decimal]:
+        ledger = Engine().derive(ruleset=RULESET_303_2025, inputs=self._INPUTS)
+        out: dict[str, Decimal] = {**self._INPUTS}
+        for entry in ledger.entries:
+            out[entry.casilla_id] = entry.value
+        return out
+
+    def test_2025_ruleset_matches_2024_arithmetic(self) -> None:
+        """Same-inputs clone invariant: 2024 and 2025 rulesets must derive
+        identical casilla values until AEAT publishes a 303-specific update."""
+        ledger_24 = Engine().derive(ruleset=RULESET_303_2024, inputs=self._INPUTS)
+        ledger_25 = Engine().derive(ruleset=RULESET_303_2025, inputs=self._INPUTS)
+        derived_24 = {e.casilla_id: e.value for e in ledger_24.entries}
+        derived_25 = {e.casilla_id: e.value for e in ledger_25.entries}
+        assert derived_24 == derived_25, "2024 vs 2025 ruleset divergence — clone contract broken."
+
+    def test_2025_envelope_hits_golden_sha(self) -> None:
+        casillas = self._derive_casillas()
+        payload = serialise_envelope(
+            casilla_values=casillas,
+            headers=self._HEADERS,
+            segments=ENVELOPE_2025,
+            encoding=ENCODING_2025,
+            required_field_ids=REQUIRED_HEADER_FIELDS_2025,
+        )
+        expected = "5fcacf5621278f28a8199cec8b8f22a5800e7953699a240e77b51e1cf97bde4d"
+        actual = hashlib.sha256(payload).hexdigest()
+        assert actual == expected, (
+            f"E2E drift on Modelo 303 2025.\n  expected SHA256: {expected}\n  actual   SHA256: {actual}"
+        )
