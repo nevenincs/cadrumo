@@ -198,6 +198,18 @@ class ParsedEnvelope(BaseModel):
     envelope segment the value lived in.
     """
 
+    merged_field_values: Mapping[str, str | Decimal | date]
+    """Flat view of every field_id across every segment (wave 103).
+
+    Envelope-level headers like ``DP30301_F007_IDENTIFICACI_N_NIF``
+    surface here so CLI consumers (verify, diff) can present them
+    without walking :attr:`segments`. Field IDs that collide across
+    segments (e.g., the ``DP30300_F005_PER_ODO`` envelope marker
+    repeated in header + trailer) must carry the same value;
+    divergent collisions raise at deserialisation time, mirroring
+    the casilla-level contract.
+    """
+
 
 def deserialise_envelope(
     payload: bytes,
@@ -228,6 +240,7 @@ def deserialise_envelope(
 
     parsed: dict[str, ParsedRecord] = {}
     merged: dict[str, Decimal] = {}
+    merged_fields: dict[str, str | Decimal | date] = {}
     cursor = 0
     for segment in segments:
         slice_end = cursor + segment.total_length
@@ -247,11 +260,21 @@ def deserialise_envelope(
                     f"must not duplicate casilla_id across pages."
                 )
             merged[cid] = value
+        for fid, fvalue in record.field_values.items():
+            if fid in merged_fields and merged_fields[fid] != fvalue:
+                raise ValueError(
+                    f"field {fid!r} appears with divergent values across "
+                    f"segments (got {merged_fields[fid]!r} then {fvalue!r}); "
+                    f"modelo spec must not duplicate field_id across pages "
+                    f"unless the fields carry identical values."
+                )
+            merged_fields[fid] = fvalue
         cursor = slice_end
 
     return ParsedEnvelope(
         segments=parsed,
         merged_casilla_values=merged,
+        merged_field_values=merged_fields,
     )
 
 

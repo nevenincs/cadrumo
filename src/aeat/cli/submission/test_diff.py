@@ -89,6 +89,18 @@ class TestDiffCommand:
         assert "10000" in result.stdout or "10 000" in result.stdout
         assert "99999" in result.stdout or "99 999" in result.stdout
 
+    def test_diff_modelo_303_envelope_field_delta(self, tmp_path: Path) -> None:
+        """Wave 103: envelope field_values diff (NIF / PERIODO etc.) surfaces."""
+        # Two 303 filings at different periods — DP30301_F010_DEVENGO_PER_ODO
+        # differs, and diff must name it.
+        a = _write_draft_and_export(tmp_path, modelo="303", period="2024Q1", values=_BASE_130_VALUES, out_name="a")
+        b = _write_draft_and_export(tmp_path, modelo="303", period="2024Q2", values=_BASE_130_VALUES, out_name="b")
+        result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "303", "--ejercicio", "2024", "--json"])
+        assert result.exit_code == 1, result.stdout
+        doc = json.loads(result.stdout)
+        field_ids = {d["field_id"] for d in doc["field_deltas"]}
+        assert "DP30301_F010_DEVENGO_PER_ODO" in field_ids
+
     def test_diff_modelo_303_envelope_casilla_delta(self, tmp_path: Path) -> None:
         base = {"01": "10000.00", "86": "500.00"}
         a = _write_draft_and_export(tmp_path, modelo="303", period="2024Q1", values=base, out_name="a")

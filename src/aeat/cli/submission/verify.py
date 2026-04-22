@@ -165,6 +165,20 @@ def _print_envelope(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file
     _CONSOLE.print(f"[green]verify OK[/green] modelo={modelo} ejercicio={ejercicio} file={file_path.name}")
     _CONSOLE.print(f"segments={len(parsed.segments)}")
 
+    # Wave 103: surface the envelope-level header fields (NIF, PERIODO,
+    # TIPO_DECLARACION, etc.) so Kent doesn't have to walk per-segment output.
+    header_table = Table(title="headers (merged across segments, non-empty)", show_lines=False)
+    header_table.add_column("field_id")
+    header_table.add_column("value")
+    for fid, value in sorted(parsed.merged_field_values.items(), key=lambda kv: kv[0]):
+        rendered = str(value)
+        # Skip empty-space placeholder filler so the table isn't overwhelmed
+        # by 600-byte RESERVADO_PARA_LA_AEAT blanks.
+        if rendered.strip() == "":
+            continue
+        header_table.add_row(fid, repr(value))
+    _CONSOLE.print(header_table)
+
     casilla_table = Table(title="casillas (non-zero, merged across segments)", show_lines=False)
     casilla_table.add_column("casilla")
     casilla_table.add_column("value")
@@ -198,6 +212,9 @@ def _emit_record_json(parsed: ParsedRecord, *, modelo: str, ejercicio: str, file
 
 def _emit_envelope_json(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file_path: Path) -> None:
     """Print the machine-readable shape for a multi-segment envelope parse."""
+    # Wave 103: drop empty-space filler so the JSON surface stays useful for
+    # downstream scripts (the DP303DID reserved block is 617 bytes of ' ').
+    fields = {fid: _jsonable(val) for fid, val in parsed.merged_field_values.items() if str(val).strip() != ""}
     payload = {
         "status": "ok",
         "kind": "envelope",
@@ -205,6 +222,7 @@ def _emit_envelope_json(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, 
         "ejercicio": ejercicio,
         "file": file_path.name,
         "segments": sorted(parsed.segments.keys()),
+        "fields": fields,
         "casillas": {cid: str(val) for cid, val in parsed.merged_casilla_values.items()},
     }
     typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
