@@ -21,7 +21,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ...config import load_settings
+from ...config import Settings, load_settings
 from ...filing import (
     FilingAmendment,
     FilingAmendmentError,
@@ -40,8 +40,10 @@ from ...filing import (
     validate_draft,
 )
 from ...filing.runtime import build_runtime_schema_provider, load_default_filing_profile
+from ...history import FiledModelo
 from ...logging import get_logger
 from ...submission import SubmissionEngine, SubmissionError
+from .._live_reader import LiveSessionUnavailableError, build_live_status_reader
 from ..submission._helpers import build_engine as build_submission_engine
 
 app = typer.Typer(
@@ -482,6 +484,122 @@ def submit_complementaria_cmd(
         f"submission_id={submission_result.filing.submission_id} "
         f"status={submission_result.filing.status.value}"
     )
+
+
+def _resolve_operator_profile(
+    modelo: str,
+    *,
+    settings: Settings,
+    profile_path: Path | None,
+    profile_tax_id: str,
+    profile_name: str,
+) -> FilingOperatorProfile:
+    """Resolve the operator profile for ``modelo`` using CLI conventions."""
+    resolved_display_name = None if profile_name == _DEFAULT_PROFILE_NAME else profile_name
+    if profile_path is not None:
+        try:
+            return load_default_filing_profile(profile_path, display_name=resolved_display_name)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    if (
+        settings.aeat_default_profile_path is not None
+        and profile_tax_id == _DEFAULT_PROFILE_TAX_ID
+        and profile_name == _DEFAULT_PROFILE_NAME
+    ):
+        try:
+            return load_default_filing_profile(display_name=resolved_display_name)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    return FilingOperatorProfile(
+        tax_id=profile_tax_id,
+        display_name=profile_name,
+        applicable_modelos=(modelo,),
+    )
+
+
+async def _fetch_filed_modelos(modelo: str, period: str) -> tuple[FiledModelo, ...]:
+    """Open a live status reader and fetch every filing for ``(modelo, period)``."""
+    settings = load_settings()
+    async with build_live_status_reader(settings) as reader:
+        return await reader.fetch_filing_detail(modelo, period)
+
+
+@app.command("import")
+def import_cmd(
+    modelo: Annotated[str, typer.Option("--modelo", help="Modelo string ID, e.g. 303")],
+    period: Annotated[str, typer.Option("--period", help="Period identifier, e.g. 2025Q4")],
+    from_aeat: Annotated[
+        bool,
+        typer.Option(
+            "--from-aeat",
+            help=(
+                "Reconstruct the draft live from the authenticated AEAT Sede. "
+                "Requires an active `aeat auth login` session."
+            ),
+        ),
+    ] = False,
+    profile: Annotated[
+        Path | None,
+        typer.Option(
+            "--profile",
+            help="Optional path to an AutonomoProfile JSON file (defaults to AEAT_DEFAULT_PROFILE_PATH).",
+        ),
+    ] = None,
+    profile_tax_id: Annotated[
+        str,
+        typer.Option("--profile-tax-id", help="Taxpayer tax ID to stamp on the draft"),
+    ] = _DEFAULT_PROFILE_TAX_ID,
+    profile_name: Annotated[
+        str,
+        typer.Option("--profile-name", help="Display name of the taxpayer profile"),
+    ] = _DEFAULT_PROFILE_NAME,
+) -> None:
+    """Reconstruct a :class:`FilingDraft` from an authoritative AEAT record (#272)."""
+    if not from_aeat:
+        raise typer.BadParameter(
+            "--from-aeat is required: live import reconstructs a draft from "
+            "AEAT's authoritative record and only supports that source in v1.",
+        )
+    settings = load_settings()
+    try:
+        filed_modelos = asyncio.run(_fetch_filed_modelos(modelo, period))
+    except LiveSessionUnavailableError as exc:
+        _console.print(f"[red]live import unavailable:[/red] {exc}")
+        raise typer.Exit(code=2) from exc
+    if not filed_modelos:
+        _console.print(f"[yellow]No filed modelo found on AEAT for modelo={modelo} period={period}.[/yellow]")
+        raise typer.Exit(code=1)
+
+    operator_profile = _resolve_operator_profile(
+        modelo,
+        settings=settings,
+        profile_path=profile,
+        profile_tax_id=profile_tax_id,
+        profile_name=profile_name,
+    )
+    schema_provider = _schema_provider()
+    saved_paths: list[Path] = []
+    for filed in filed_modelos:
+        inputs: dict[str, object] = dict(filed.calculations.casillas)
+        try:
+            draft = build_draft(
+                modelo=modelo,
+                period=period,
+                profile=operator_profile,
+                inputs=inputs,
+                schema_provider=schema_provider,
+                fail_on_warning=False,
+            )
+        except FilingDraftError as exc:
+            raise typer.BadParameter(
+                f"failed to build draft for expediente {filed.metadata.expediente_id!r}: {exc}",
+            ) from exc
+        target = _save_draft(draft)
+        saved_paths.append(target)
+        typer.echo(f"Imported draft {draft.draft_id} from expediente {filed.metadata.expediente_id} → {target}")
+        _render_draft(draft)
+
+    _console.print(f"[dim]{len(saved_paths)} draft(s) imported[/dim]")
 
 
 app.add_typer(complementaria_app, name="complementaria", help="Build and submit amendment filings (#93).")
