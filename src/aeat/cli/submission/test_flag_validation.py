@@ -19,7 +19,12 @@ import pytest
 from typer.testing import CliRunner
 
 from . import app
-from ._schema_registry import validate_ejercicio_flag, validate_modelo_flag
+from ._schema_registry import (
+    validate_ejercicio_flag,
+    validate_iban_flag,
+    validate_modelo_flag,
+    validate_swift_flag,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -73,6 +78,61 @@ class TestVerifyRejectsBadFlags:
         assert result.exit_code != 0
         combined = " ".join((result.stdout + (result.stderr or "")).split()).lower()
         assert "4-digit" in combined or "year" in combined
+
+
+class TestIbanValidator:
+    def test_none_passes_through(self) -> None:
+        assert validate_iban_flag(None) is None
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            "ES9121000418450200051332",
+            "ES91 2100 0418 4502 0005 1332",
+            "es91-2100-0418-4502-0005-1332",
+            "DE89370400440532013000",
+            "GB82 WEST 1234 5698 7654 32",
+        ],
+    )
+    def test_accepts_normalised_valid_iban(self, raw: str) -> None:
+        out = validate_iban_flag(raw)
+        assert out is not None
+        assert " " not in out and "-" not in out  # normalised
+        assert out.isupper()
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["123", "ESXX1234", "ES9Z21000418450200051332", "", "notaniban"],
+    )
+    def test_rejects_malformed_iban(self, raw: str) -> None:
+        import typer
+
+        with pytest.raises(typer.BadParameter):
+            validate_iban_flag(raw)
+
+
+class TestSwiftValidator:
+    def test_none_passes_through(self) -> None:
+        assert validate_swift_flag(None) is None
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["CAIXESBB", "CAIXESBBXXX", "DEUTDEFF", "DEUTDEFF500", "caixesbbxxx"],
+    )
+    def test_accepts_valid_bic(self, raw: str) -> None:
+        out = validate_swift_flag(raw)
+        assert out is not None
+        assert out.isupper()
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["SHORT", "CAIXESBBXXXTOOLONG", "1234ESBB", "CAIX99BB", ""],
+    )
+    def test_rejects_malformed_bic(self, raw: str) -> None:
+        import typer
+
+        with pytest.raises(typer.BadParameter):
+            validate_swift_flag(raw)
 
 
 class TestDiffRejectsBadFlags:
