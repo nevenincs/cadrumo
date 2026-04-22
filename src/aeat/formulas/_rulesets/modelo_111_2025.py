@@ -137,9 +137,9 @@ _CASILLAS = (
     casilla(
         casilla_id="29",
         label=_label(
-            "Resultados negativos declaraciones anteriores",
-            "Negative results from prior filings",
-            "Korábbi bevallások negatív eredményei",
+            "A deducir: exclusivamente en declaración complementaria",
+            "Prior-filing deduction (complementary filings only)",
+            "Korábbi bevallásból levonás (kiegészítő bevallás)",
         ),
         computed=False,
     ),

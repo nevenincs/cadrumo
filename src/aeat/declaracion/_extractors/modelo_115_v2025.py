@@ -23,12 +23,13 @@ class Modelo115V2025Extractor(GenericDeclaracionExtractor):
         año=2025,
         revision="2025.01",
     )
+    # Labels verified vs AEAT Instrucciones Modelo 115 (wave 48/49 H5).
     casilla_ids: ClassVar[tuple[str, ...]] = (
         "01",  # nº de arrendadores
         "02",  # base de retención
         "03",  # retenciones (19% de 02)
-        "04",  # ingresos a cuenta
-        "05",  # resultados negativos de declaraciones anteriores
+        "04",  # ingresos a cuenta (retribuciones en especie)
+        "05",  # a deducir: exclusivamente en caso de declaración complementaria
         "06",  # resultado a ingresar
     )
 

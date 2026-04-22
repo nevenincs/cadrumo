@@ -50,8 +50,11 @@ class Modelo200V2025Extractor(GenericDeclaracionExtractor):
         "00558",  # tipo de gravamen
         "00560",  # cuota íntegra previa
         "00562",  # cuota íntegra
-        "00582",  # cuota íntegra ajustada positiva
-        "00592",  # cuota líquida (label fix, wave 26 — was "cuota líquida positiva")
+        # wave 48/49 H7: 00582 is "bonificaciones y deducciones doble
+        # imposición internacional" per AEAT Manual Sociedades 2024. The
+        # "cuota íntegra ajustada positiva" label actually belongs to 00592.
+        "00582",  # bonificaciones y deducciones doble imposición internacional
+        "00592",  # cuota líquida (wave 26 + 48 label verification)
         "00599",  # retenciones e ingresos a cuenta
         "00601",  # pago fraccionado 1P
         "00603",  # pago fraccionado 2P

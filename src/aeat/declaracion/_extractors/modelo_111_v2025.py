@@ -48,9 +48,10 @@ class Modelo111V2025Extractor(GenericDeclaracionExtractor):
         "16",
         "17",
         "18",
-        # Resultado.
-        "28",  # Total ingresos a cuenta
-        "29",  # Resultados negativos de declaraciones anteriores
+        # Resultado. Labels verified vs AEAT Instrucciones Modelo 111 2025
+        # (wave 48/49 H5 audit fix).
+        "28",  # Total liquidación (suma retenciones + ingresos a cuenta)
+        "29",  # A deducir: exclusivamente en caso de declaración complementaria
         "30",  # Resultado a ingresar
     )
 
