@@ -31,6 +31,18 @@ Commit range audited: `987422b..HEAD` (waves 49-52, plus the Modelo
 
 **Total open findings: 7 HIGH, 6 MEDIUM, 5 LOW.**
 
+## Closure status (updated 2026-04-22, wave 61b per wave 60 stream 3 H2)
+
+| Finding | Status | Closing wave |
+|---|---|---|
+| H1 synthetic NBSP rendering | PARTIAL | wave 56 (`38cbe6c`) added format_amount opt-in; wave 61d completes end-to-end threading |
+| H2 coverage matrix 2024 backfills | CLOSED | wave 54 (`086b1dd`) |
+| H3 Modelo 130 colocated tests | CLOSED | wave 55 (`f441e2f`) |
+| H4 audit closure markers | PARTIAL | wave 54 added wave-48 closure table; wave 61b adds same to wave 53/58 |
+| H5 test tautology residual | PARTIAL | wave 57a/b + 59c anchored 11/14 rulesets; 130_2025 + 100_summary remain (wave 61c) |
+| H6 provenance citations | PARTIAL | 11 external-anchored tests cite BOE/LIRPF/LIS/LIVA; wave 61c completes |
+| H7 zero-boundary tests | CLOSED | wave 59b (`7f678a9`) — all 18 rulesets covered |
+
 ## HIGH findings
 
 ### H1 (stream 2) — Wave 51 NBSP fix not end-to-end tested
