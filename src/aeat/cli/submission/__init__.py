@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import typer
 
+from .check_nif import check_nif_cmd
 from .diff import diff_cmd
 from .dry_run import dry_run_cmd
 from .export import export_cmd
@@ -55,6 +56,10 @@ app.command(
     name="schemas",
     help="List every (modelo, ejercicio) the CLI can export + verify.",
 )(schemas_cmd)
+app.command(
+    name="check-nif",
+    help="Validate a Spanish NIF / NIE / CIF against AEAT's check-letter rules.",
+)(check_nif_cmd)
 app.command(name="show", help="Pretty-print a persisted SubmittedFiling by submission_id.")(show_cmd)
 app.command(name="list", help="List persisted SubmittedFiling records.")(list_cmd)
 
