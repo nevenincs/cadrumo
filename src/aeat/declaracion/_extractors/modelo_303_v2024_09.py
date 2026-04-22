@@ -4,10 +4,13 @@ Orden HAC/819/2024 (published 2024-08-05) renumbered several Modelo
 303 casillas and introduced new tipos impositivos (autoliquidación
 rectificativa). Filings from period 2024-09 onward use this layout.
 
-The casilla-ID set is a superset of the v2025 set plus the historical
-literals the HAC/819 order retained. This MVP covers the same 33
-casillas as v2025; drift between v2024.09 and v2025 (if any) is
-captured by the separate ``revision`` key.
+The MVP covers the same 33 casillas as v2025 — HAC/819 added tipos
+impositivos casillas but did not repackage the liquidación block, so
+the extractor set is IDENTICAL to v2025's. Wave 49 L8 corrects the
+earlier "superset" claim: the set is equal, not proper-superset.
+Drift between v2024.09 and v2025 (new rectificativa casillas, etc.)
+is captured by the separate ``revision`` key so a phase-3 widening
+lands without a template reshuffle.
 """
 
 from __future__ import annotations

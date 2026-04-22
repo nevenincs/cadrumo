@@ -3,6 +3,13 @@
 Annual aggregation of the quarterly Modelo 111 filings. The MVP
 targets the summary totals block across the six retenciones categories
 plus the overall resultado.
+
+**Scope limitations (wave 49 L7):** Per-perceptor detail rows (one
+line per NIF perceptor) are deferred to sub-EPIC
+#305-Modelo-190-full. Per-categoría rate verification (tabla
+trabajadores variable rates) also lands there — the MVP only
+verifies the 21-casilla summary aggregation, not the
+rate-times-base per-row relationship.
 """
 
 from __future__ import annotations

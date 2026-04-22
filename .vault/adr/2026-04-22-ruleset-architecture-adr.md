@@ -60,16 +60,17 @@ encodings of the same modelo+year:
 - (future) `modelo_100.full.2025` — complete tarifa + deducciones.
 - (future) `modelo_303.canarias.2025` — Canarias IGIC variant.
 
-The `RulesetRegistry` key today is `(ModeloCode, FiscalPeriod)` with
-period-overlap checking. **We commit to extending the key to
-`(ModeloCode, variant: str = "default", FiscalPeriod)` before the
-first non-default variant lands.** Implementation deferred until the
-first concrete variant need (expected Canarias IGIC Q1 2026); the
-decision is recorded here so the refactor is not re-litigated.
+The `RulesetRegistry` key was `(ModeloCode, FiscalPeriod)` with
+period-overlap checking. **Wave 47 (post-ADR) extended the key to
+`(ModeloCode, variant, FiscalPeriod)`** — the refactor landed
+immediately rather than being deferred because the `modelo_100.summary.2025`
+ruleset already relies on the variant slot to reserve the default
+slot for a future full-form `modelo_100.2025`.
 
-`resolve()` gains a `variant: str = "default"` kwarg. Callers that
+`resolve()` accepts `variant: str = "default"` kwarg. Callers that
 don't pass `variant` get the canonical ruleset for that (modelo,
-period). Non-overlap checking runs per-`variant` slot.
+period). Non-overlap checking runs per-(modelo, variant) slot.
+Wave 48 audit stream 3 confirmed the variant axis is fully live.
 
 ### 2. Percent-rate normalisation — helper, not a flag
 
@@ -99,14 +100,24 @@ semantics or a merge protocol.
 override semantics, merge resolution, and re-validation; complexity
 outweighs the <5 year-over-year deltas observed per modelo to date.
 
-### 4. Empty ParameterTable — acceptable for pure aggregators
+### 4. Empty ParameterTable — acceptable for pure aggregators AND whole-percent-casilla rulesets
 
-A ruleset with `ParameterTable(entries={})` is valid when the modelo
-is a pure aggregator (Modelo 390 sums pre-computed cuotas; Modelo 123
-aggregates per-row counters). No parameter store is needed because
-no formula applies a rate. Future contributors should NOT duplicate
-303's `iva.rate_*` table into 390 — 390 reads pre-rate-applied
-values from the quarterly 303 filings.
+A ruleset with `ParameterTable(entries={})` is valid under two
+distinct rationales (wave 48 audit stream 3 clarification):
+
+**Pure aggregators.** Modelo 390 sums pre-computed cuotas; Modelo 123
+and Modelo 100 (summary) aggregate per-row counters. No parameter
+store is needed because no formula applies a rate. Future contributors
+should NOT duplicate 303's `iva.rate_*` table into 390 — 390 reads
+pre-rate-applied values from the quarterly 303 filings.
+
+**Whole-percent casilla readers.** Modelos 200 and 202 read the tax
+rate from an extracted casilla (whole-percent value like `17,00` or
+`25,00`) via the `percent_from_whole` helper. The rate is carried by
+the PDF itself, not by a rule-stored parameter, so a ParameterTable
+entry would be redundant. This is the canonical pattern for any
+modelo whose tipo de gravamen varies per filing (pyme vs micropyme
+IS, etc.).
 
 ## implications
 

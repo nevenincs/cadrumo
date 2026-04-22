@@ -95,7 +95,16 @@ _CASILLAS = (
     *_input("00558", _label("Tipo de gravamen", "Tax rate", "Adókulcs")),
     *_input("00560", _label("Cuota integra previa", "Gross tax (pre)", "Bruttó adó (elő)")),
     *_computed("00562", _label("Cuota integra", "Gross tax amount", "Bruttó adóösszeg")),
-    *_input("00582", _label("Cuota integra ajustada positiva", "Adjusted gross tax", "Módosított bruttó adó")),
+    *_input(
+        "00582",
+        # Wave 48/49 H7: label fix — 00582 is bonificaciones + deducciones
+        # doble imposición internacional per AEAT Manual Sociedades 2024.
+        _label(
+            "Bonificaciones y deducciones doble imposición internacional",
+            "Bonuses and international double-taxation deductions",
+            "Bónuszok és nemzetközi kettős adóztatás levonások",
+        ),
+    ),
     *_input("00592", _label("Cuota liquida", "Net tax amount", "Nettó adóösszeg")),
     *_input("00599", _label("Retenciones e ingresos a cuenta", "Withholdings", "Levonások")),
     *_input("00601", _label("Pago fraccionado 1P", "Instalment 1P", "1P részlet")),
