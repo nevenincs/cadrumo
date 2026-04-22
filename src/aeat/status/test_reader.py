@@ -267,7 +267,6 @@ class TestStubSurfaces:
     @pytest.mark.parametrize(
         "coro_name, kwargs",
         [
-            ("fetch_notificaciones", {}),
             ("fetch_devoluciones", {}),
             ("fetch_calendario", {}),
         ],
@@ -291,6 +290,69 @@ class TestStubSurfaces:
         reader, _, _ = _build_reader(tmp_path)
         with pytest.raises(StatusReaderError):
             await reader.fetch_datos_fiscales(2025)
+
+
+_NOTIFICACIONES_FIXTURE = (
+    Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "aeat-pages" / "notificaciones" / "sample.html"
+)
+
+
+def _build_notificaciones_reader(
+    tmp_path: Path,
+) -> tuple[StatusReader, _FakeBrowserSession, _FakeCertBackend]:
+    html = _NOTIFICACIONES_FIXTURE.read_text(encoding="utf-8")
+    session = _FakeBrowserSession(html)
+    cert = _FakeCertBackend()
+    settings = load_settings()
+    cache = StatusCache(tmp_path / "cache", ttl_s=60)
+    reader = StatusReader(
+        browser_session=cast(BrowserSessionLike, session),
+        cert_backend=cert,
+        cache=cache,
+        settings=settings,
+        tax_id="X1234567L",
+    )
+    return reader, session, cert
+
+
+@pytest.mark.asyncio
+class TestFetchNotificaciones:
+    async def test_returns_parsed_records(self, tmp_path: Path) -> None:
+        reader, _, _ = _build_notificaciones_reader(tmp_path)
+        records = await reader.fetch_notificaciones()
+        assert len(records) == 3
+        assert records[0].notificacion_id == "NOT-2026-0001"
+        assert records[0].kind == "Requerimiento"
+
+    async def test_cache_roundtrip(self, tmp_path: Path) -> None:
+        reader, session, _ = _build_notificaciones_reader(tmp_path)
+        await reader.fetch_notificaciones()
+        assert len(session.page.visited) == 1
+        await reader.fetch_notificaciones()
+        assert len(session.page.visited) == 1
+
+    async def test_since_filter(self, tmp_path: Path) -> None:
+        reader, _, _ = _build_notificaciones_reader(tmp_path)
+        records = await reader.fetch_notificaciones(since=date(2026, 2, 18))
+        ids = {r.notificacion_id for r in records}
+        assert ids == {"NOT-2026-0003"}
+
+    async def test_since_does_not_invalidate_cache(self, tmp_path: Path) -> None:
+        reader, session, _ = _build_notificaciones_reader(tmp_path)
+        await reader.fetch_notificaciones()
+        assert len(session.page.visited) == 1
+        await reader.fetch_notificaciones(since=date(2026, 2, 18))
+        await reader.fetch_notificaciones(since=date(2026, 2, 10))
+        assert len(session.page.visited) == 1
+
+    async def test_navigation_uses_safe_goto_only(self, tmp_path: Path) -> None:
+        """Charter #116 defence-in-depth: the reader must only ``goto``."""
+        reader, session, _ = _build_notificaciones_reader(tmp_path)
+        await reader.fetch_notificaciones()
+        # The fake page would raise on anything other than ``goto``/
+        # ``content``; proving we only called those two is equivalent
+        # to proving no form submission or mutation happened.
+        assert session.page.visited  # exactly one safe GET
 
 
 def test_surface_enum_coverage() -> None:
