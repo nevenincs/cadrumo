@@ -38,7 +38,7 @@ from ...submission._formats._deserialise import (
     deserialise,
     deserialise_envelope,
 )
-from ._schema_registry import SCHEMA_REGISTRY
+from ._schema_registry import SCHEMA_REGISTRY, validate_ejercicio_flag, validate_modelo_flag
 
 _CONSOLE = Console()
 
@@ -66,10 +66,18 @@ def verify_cmd(
         ..., exists=True, readable=True, help="Path to a fichero-BOE file written by ``aeat submission export``."
     ),
     modelo: str | None = typer.Option(
-        None, "--modelo", "-m", help="Modelo code (e.g. ``130``, ``303``). Auto-detected from the filename if omitted."
+        None,
+        "--modelo",
+        "-m",
+        help="Modelo code (e.g. ``130``, ``303``). Auto-detected from the filename if omitted.",
+        callback=validate_modelo_flag,
     ),
     ejercicio: str | None = typer.Option(
-        None, "--ejercicio", "-e", help="Filing year (e.g. ``2024``). Auto-detected from the filename if omitted."
+        None,
+        "--ejercicio",
+        "-e",
+        help="Filing year (e.g. ``2024``). Auto-detected from the filename if omitted.",
+        callback=validate_ejercicio_flag,
     ),
     as_json: bool = typer.Option(
         False,

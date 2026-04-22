@@ -20,10 +20,13 @@ names.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from types import ModuleType
 from typing import Literal
+
+import typer
 
 from ...submission._formats import (
     modelo_130_2024,
@@ -119,6 +122,48 @@ def build_303_headers(inputs: CliInputs) -> dict[str, str]:
     return headers
 
 
+_MODELO_FLAG_RE = re.compile(r"^\d{3}$")
+_EJERCICIO_FLAG_RE = re.compile(r"^\d{4}$")
+
+
+def validate_modelo_flag(value: str | None) -> str | None:
+    """Typer callback: reject obviously-malformed ``--modelo`` values.
+
+    Accepts ``None`` unchanged so auto-detection remains possible when
+    the flag is omitted. Non-``None`` values must be a 3-digit numeric
+    string matching AEAT's canonical modelo numbering (100, 130, 303, 390,
+    etc.) — anything else produces a ``BadParameter`` with a clean
+    Kent-facing message BEFORE the registry lookup surfaces a generic
+    "UNSUPPORTED" error.
+    """
+    if value is None:
+        return None
+    if not _MODELO_FLAG_RE.match(value):
+        raise typer.BadParameter(
+            f"--modelo {value!r} must be a 3-digit numeric string "
+            "(e.g. 130, 303, 390). AEAT modelo numbers are always three digits."
+        )
+    return value
+
+
+def validate_ejercicio_flag(value: str | None) -> str | None:
+    """Typer callback: reject obviously-malformed ``--ejercicio`` values.
+
+    Accepts ``None`` unchanged so filename auto-detection can still fire.
+    Non-``None`` values must be a 4-digit numeric year (2024, 2025, ...)
+    — letters or short-year forms (e.g. 24, 2k24) fail with a clean
+    message instead of hitting the registry's UNSUPPORTED path.
+    """
+    if value is None:
+        return None
+    if not _EJERCICIO_FLAG_RE.match(value):
+        raise typer.BadParameter(
+            f"--ejercicio {value!r} must be a 4-digit year (e.g. 2024, 2025). "
+            "Short-year forms (24) or mixed alphanumeric values are not accepted."
+        )
+    return value
+
+
 SCHEMA_REGISTRY: dict[tuple[str, str], SchemaEntry] = {
     ("130", "2024"): SchemaEntry(modelo_130_2024, "record", build_130_headers),
     ("130", "2025"): SchemaEntry(modelo_130_2025, "record", build_130_headers),
@@ -133,4 +178,6 @@ __all__ = [
     "SchemaEntry",
     "build_130_headers",
     "build_303_headers",
+    "validate_ejercicio_flag",
+    "validate_modelo_flag",
 ]
