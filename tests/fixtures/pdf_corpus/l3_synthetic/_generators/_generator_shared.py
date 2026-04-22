@@ -99,6 +99,8 @@ def draw_casilla_box(
     canvas: _canvas.Canvas,
     box: CasillaBox,
     value: Decimal | str | int | None,
+    *,
+    thousands_sep: str = ".",
 ) -> None:
     """Render one casilla as a single-line ``<id>  <label>    <value>`` row.
 
@@ -112,12 +114,20 @@ def draw_casilla_box(
     Blank values still render the casilla label so extractors can
     distinguish ``not-present`` (no label emitted) from ``blank``
     (label emitted, no value).
+
+    Wave 61d: forwards ``thousands_sep`` to :func:`format_amount` so
+    synthetic fixtures can exercise the NBSP / narrow-NBSP label-regex
+    path (wave 51 H1) end-to-end, not just via string-level tests.
     """
     y = A4_HEIGHT - box.y_mm * mm
     canvas.setFont(VALUE_FONT, VALUE_FONT_SIZE)
     label_text = f"{box.casilla_id}  {box.label_es}"
     if value is not None and value != "":
-        rendered = format_amount(Decimal(value)) if isinstance(value, Decimal | int) else str(value)
+        rendered = (
+            format_amount(Decimal(value), thousands_sep=thousands_sep)
+            if isinstance(value, Decimal | int)
+            else str(value)
+        )
         line = f"{label_text}    {rendered}"
     else:
         line = label_text
