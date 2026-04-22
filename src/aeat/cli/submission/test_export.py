@@ -226,6 +226,92 @@ class TestExportCommand:
         assert result.exit_code == 3
         assert "REFUSED" in result.stdout
 
+    def test_modelo_303_devolucion_stamps_iban_into_dp303did(self, tmp_path: Path) -> None:
+        """Wave 101: tipo=D export stamps IBAN + SEPA marker into DP303DID."""
+        draft = _write_draft(tmp_path, modelo="303")
+        output_dir = tmp_path / "out"
+        result = _runner.invoke(
+            app,
+            [
+                "export",
+                str(draft),
+                "--output-dir",
+                str(output_dir),
+                "--nombre",
+                "KENT",
+                "--apellidos",
+                "DOE RODRIGUEZ",
+                "--tipo",
+                "D",
+                "--iban",
+                "ES9121000418450200051332",
+                "--swift",
+                "CAIXESBBXXX",
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
+        output_path = output_dir / "X1234567L20241T.303"
+        payload = output_path.read_bytes()
+        # DP303DID starts after DP30300(328) + DP30301(1581) + DP30302(1706) +
+        # DP30303(1017) + DP30304(998) + DP30305(1523) = 7153.
+        dp303did_start = 7153
+        # DP303DID_F005 SWIFT at segment offset 12 (length 11) → absolute 7153+11.
+        assert payload[dp303did_start + 11 : dp303did_start + 22] == b"CAIXESBBXXX"
+        # DP303DID_F006 IBAN at segment offset 23 (length 34) → absolute 7153+22.
+        assert payload[dp303did_start + 22 : dp303did_start + 22 + 24] == b"ES9121000418450200051332"
+        # DP303DID_F011 Marca SEPA at segment offset 194 (length 1) → absolute 7153+193.
+        assert payload[dp303did_start + 193 : dp303did_start + 194] == b"1"
+
+    def test_modelo_303_devolucion_without_iban_exits_3(self, tmp_path: Path) -> None:
+        """tipo=D must refuse absent IBAN — AEAT can't refund into /dev/null."""
+        draft = _write_draft(tmp_path, modelo="303")
+        output_dir = tmp_path / "out"
+        result = _runner.invoke(
+            app,
+            [
+                "export",
+                str(draft),
+                "--output-dir",
+                str(output_dir),
+                "--nombre",
+                "KENT",
+                "--apellidos",
+                "DOE",
+                "--tipo",
+                "D",
+            ],
+        )
+        assert result.exit_code == 3
+        assert "REFUSED" in result.stdout
+        assert "iban" in result.stdout.lower()
+
+    def test_modelo_303_ingreso_leaves_dp303did_space_padded(self, tmp_path: Path) -> None:
+        """tipo=I must not stamp any SEPA fields — DP303DID stays filler."""
+        draft = _write_draft(tmp_path, modelo="303")
+        output_dir = tmp_path / "out"
+        result = _runner.invoke(
+            app,
+            [
+                "export",
+                str(draft),
+                "--output-dir",
+                str(output_dir),
+                "--nombre",
+                "KENT",
+                "--apellidos",
+                "DOE",
+                "--tipo",
+                "I",
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
+        payload = (output_dir / "X1234567L20241T.303").read_bytes()
+        dp303did_start = 7153
+        # SWIFT slot (11 bytes) must be all spaces.
+        assert payload[dp303did_start + 11 : dp303did_start + 22] == b" " * 11
+        # Marca SEPA (1 byte numeric) must be "0".
+        assert payload[dp303did_start + 193 : dp303did_start + 194] == b"0"
+
     def test_missing_required_flag_fails(self, tmp_path: Path) -> None:
         """--nombre and --apellidos are required."""
         draft = _write_draft(tmp_path)

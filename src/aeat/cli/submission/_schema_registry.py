@@ -35,7 +35,14 @@ from ...submission._formats import (
 
 @dataclass(frozen=True, slots=True)
 class CliInputs:
-    """Canonical CLI-supplied filing-identification inputs."""
+    """Canonical CLI-supplied filing-identification inputs.
+
+    ``iban`` / ``swift`` are only consulted for modelos with a SEPA
+    devolución page (e.g., Modelo 303 DP303DID) and only when the
+    filing is a devolución (``tipo_declaracion='D'``). Both default
+    to ``None`` so the vast majority of ingreso / negativa filings
+    never have to populate them.
+    """
 
     ejercicio: str
     periodo: str
@@ -43,6 +50,8 @@ class CliInputs:
     apellidos: str
     nombre: str
     tipo_declaracion: str
+    iban: str | None = None
+    swift: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +93,7 @@ def build_303_headers(inputs: CliInputs) -> dict[str, str]:
     # so the serialiser space-pads to field length while the required-
     # field check (which rejects truly empty strings) still succeeds.
     admin = " "
-    return {
+    headers: dict[str, str] = {
         # Envelope header (DP30300).
         "DP30300_F004_EJERCICIO_DE_DEVENGO": inputs.ejercicio,
         "DP30300_F008_RESERVADO_PARA_LA_ADMINISTRA": admin,
@@ -99,6 +108,15 @@ def build_303_headers(inputs: CliInputs) -> dict[str, str]:
         "DP30301_F009_DEVENGO_EJERCICIO": inputs.ejercicio,
         "DP30301_F010_DEVENGO_PER_ODO": inputs.periodo,
     }
+    # SEPA devolución page (DP303DID) — only stamped when Kent supplies
+    # banking details. For ingreso / negativa filings these slots stay
+    # space-padded via the serialiser default.
+    if inputs.iban:
+        headers["DP303DID_F006_DOMICILIACI_N_DEVOLUCI_N_IBA"] = inputs.iban
+        headers["DP303DID_F011_DEVOLUCI_N_MARCA_SEPA"] = "1"
+    if inputs.swift:
+        headers["DP303DID_F005_DEVOLUCI_N_SWIFT_BIC"] = inputs.swift
+    return headers
 
 
 SCHEMA_REGISTRY: dict[tuple[str, str], SchemaEntry] = {
