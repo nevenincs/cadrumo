@@ -60,12 +60,16 @@ def _label(es: str, en: str, hu: str) -> Translatable:
 
 _CITATIONS = (
     make_citation(
-        LegalCitationSource.LEY,
-        "71",
-        "Artículo 71 Ley 37/1992 (IVA) — obligación de presentar la "
-        "declaración-resumen anual del IVA (modelo 390) cuando existe "
-        "obligación de autoliquidar periódicamente.",
-        url="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740",
+        LegalCitationSource.REGLAMENTO,
+        "71.7",
+        "Artículo 71.7 RD 1624/1992 (Reglamento IVA, RIVA) — obligación "
+        "de presentar la declaración-resumen anual del IVA (modelo 390) "
+        "junto con la autoliquidación del último período del ejercicio. "
+        "Wave 71d correction: prior citation of LIVA (Ley 37/1992) "
+        "art. 71 was wrong — LIVA art. 71 is 'Lugar de realización de "
+        "las prestaciones de servicios' (place-of-supply rules); the "
+        "resumen-anual obligation is in RIVA, not LIVA.",
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925",
     ),
     make_citation(
         LegalCitationSource.ORDEN_MINISTERIAL,

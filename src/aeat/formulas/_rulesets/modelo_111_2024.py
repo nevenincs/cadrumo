@@ -1,10 +1,11 @@
 """Modelo 111 ruleset covering the full 2024 fiscal year.
 
 Structural clone of :mod:`modelo_111_2025`. Ejercicio-2024 retention
-rates are identical to 2025 under art. 99-101 LIRPF and art. 100.3.c
-/ 105.1 RIRPF — 19% on premios and ganancias-arrendamientos
-unchanged since 2016. Kent uses this ruleset for 2024-period
-complementaria filings.
+rates are identical to 2025 under LIRPF arts. 99-101 (obligation +
+rates) and RIRPF arts. 99 (pago-a-cuenta obligation hook) + 100
+(retention-on-rendimientos rates — the 19% on arrendamientos is
+art. 100.1, not a sub-lettered subsection). Kent uses this ruleset
+for 2024-period complementaria filings.
 """
 
 from __future__ import annotations

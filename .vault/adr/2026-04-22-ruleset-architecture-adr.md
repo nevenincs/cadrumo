@@ -7,6 +7,7 @@ related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"
   - "[[2026-04-17-export-first-adr]]"
+  - "[[2026-04-22-citation-blocklist-adr]]"
 ---
 
 # ruleset-architecture-adr

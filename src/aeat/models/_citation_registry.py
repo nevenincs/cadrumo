@@ -104,6 +104,28 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         "LIS art. 30.",
     ),
     KnownBadCitation(
+        LegalCitationSource.LEY,
+        "125",
+        "líquido a ingresar",
+        "wave 70 stream 4 / corrected wave 71c",
+        "LIS art. 125 is procedural (declaración + ingreso + "
+        "payment-in-kind via Patrimonio Histórico); the 'líquido a "
+        "ingresar o devolver' arithmetic of Modelo 200 casilla 00611/"
+        "00621 maps to LIS arts. 30 (cuota íntegra/líquida), 39.2 "
+        "(abono deducciones I+D+i), and 125.3 narrowly for "
+        "'incremento por pérdida de beneficios fiscales' only.",
+    ),
+    KnownBadCitation(
+        LegalCitationSource.LEY,
+        "71",
+        "resumen anual",
+        "wave 70 stream 2 / corrected wave 71d",
+        "LIVA (Ley 37/1992) art. 71 is 'Lugar de realización de las "
+        "prestaciones de servicios' (place-of-supply rules). The "
+        "resumen-anual obligation (Modelo 390) lives in RIVA "
+        "(RD 1624/1992) art. 71.7 — different source type (REGLAMENTO).",
+    ),
+    KnownBadCitation(
         LegalCitationSource.REGLAMENTO,
         "100.3.a",
         "arrendamientos",
