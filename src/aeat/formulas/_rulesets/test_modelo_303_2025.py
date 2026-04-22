@@ -179,8 +179,13 @@ def test_constant_rates_emerge_from_engine() -> None:
     assert values["08"] == Decimal("21.00")
 
 
-def test_audit_against_clean() -> None:
-    """Feeding inputs + correct computed values yields zero discrepancies."""
+def test_engine_round_trip_is_deterministic() -> None:
+    """Wave 53 stream 4 M3 rename: this test proves engine determinism,
+    not formula correctness. Feeding derived values back in yields zero
+    discrepancies regardless of whether the formulas are right. See
+    ``test_external_worked_example_aeat_livA_rates`` below for the
+    correctness test anchored to AEAT-published rates.
+    """
     inputs = {
         "07": Decimal("10000.00"),
         "65": Decimal("100"),
@@ -192,6 +197,52 @@ def test_audit_against_clean() -> None:
         full_provided[entry.casilla_id] = entry.value
     report = engine.audit_against(ruleset=MODELO_303_2025, provided=full_provided)
     assert report.discrepancies == ()
+
+
+def test_external_worked_example_aeat_liva_rates() -> None:
+    """External-anchored worked example (wave 57a H5/H6 closure).
+
+    Provenance: Ley 37/1992 (LIVA) artículos 90 y 91 fix the IVA
+    rates at 21% general, 10% reducido, 4% superreducido. This
+    fixture derives expected values from those rates independently
+    of the ruleset's `iva.rate_*` parameters — a rate-swap bug in
+    the ruleset would surface as a Decimal mismatch.
+
+    Scenario: Kent's Q1 2025 autónomo filing with:
+    - Base general (casilla 07): 20 000 €
+    - Base reducido (casilla 04): 5 000 €
+    - Base superreducido (casilla 01): 1 000 €
+
+    Per LIVA art. 90/91 (AEAT legal baseline, NOT the ruleset):
+    - Cuota general: 20 000 x 21% = 4 200 € (casilla 09).
+    - Cuota reducido: 5 000 x 10% = 500 € (casilla 06).
+    - Cuota superreducido: 1 000 x 4% = 40 € (casilla 03).
+
+    Citations:
+    - BOE-A-1992-28740 Ley 37/1992 art. 90 (tipo general 21%)
+      https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a90
+    - BOE-A-1992-28740 Ley 37/1992 art. 91 (reducido 10%, superreducido 4%)
+      https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a91
+    """
+    engine = Engine()
+    # Inputs derived from LIVA, not from the ruleset:
+    inputs = {
+        "01": Decimal("1000.00"),  # base superreducido
+        "04": Decimal("5000.00"),  # base reducido
+        "07": Decimal("20000.00"),  # base general
+        "65": Decimal("100"),  # full attribution to Territorio Común
+    }
+    derived = {e.casilla_id: e.value for e in engine.derive(ruleset=MODELO_303_2025, inputs=inputs).entries}
+    # Independent arithmetic — these values come from AEAT rates, not the ruleset.
+    assert derived["03"] == Decimal("40.00"), "4% superreducido on 1000"
+    assert derived["06"] == Decimal("500.00"), "10% reducido on 5000"
+    assert derived["09"] == Decimal("4200.00"), "21% general on 20000"
+    # Sum of cuotas: 40 + 500 + 4200 = 4740.
+    # Casilla 45 is cuota a compensar (= sum cuotas + 44 - 44_deducible); since
+    # we omit 44 deducciones, 45 = 4200 + (from 12/27/41 deducciones) — but
+    # with a clean fixture 45 = 4200 (only 07 base provided for general
+    # attribution). The sum-of-cuotas assertion is captured by 03/06/09
+    # individually; attribution math (casilla 66) is verified separately.
 
 
 def test_audit_against_divergence_surfaces() -> None:

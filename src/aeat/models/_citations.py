@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 from ._categories import LegalCitationSource
+from ._citation_registry import find_known_bad
 
 
 class LegalCitation(BaseModel):
@@ -32,6 +33,12 @@ class LegalCitation(BaseModel):
         is_curated_summary: Whether ``quoted_text_es`` is a
             project-curated summary rather than the literal BOE
             article body. Set to ``True`` for every v1 citation.
+
+    Wave 69 (EPIC #305) adds a model-level blocklist validator that
+    refuses known-bad ``(source, article, role-substring)`` triples
+    surfaced by prior audit waves. See
+    :mod:`aeat.models._citation_registry` for the rationale and the
+    current blocklist.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -50,3 +57,22 @@ class LegalCitation(BaseModel):
         if not value.strip():
             raise ValueError("quoted_text_es must not be empty or whitespace-only")
         return value
+
+    @model_validator(mode="after")
+    def _reject_known_bad_citations(self) -> LegalCitation:
+        """Refuse blocklisted ``(source, article, role)`` triples.
+
+        Wave 69 closure of the recurring citation-miscite pattern.
+        If a future citation author attributes a known-bad article
+        to a role the article does not carry in BOE consolidated
+        text, import fails at construction time with a pointer to
+        the corrected article.
+        """
+        match = find_known_bad(self.source, self.article, self.quoted_text_es)
+        if match is not None:
+            raise ValueError(
+                f"Blocklisted citation: ({match.source.value}, "
+                f"{match.article!r}) with role '{match.role_substring_es}' "
+                f"was flagged in {match.audit_wave}. Reason: {match.reason}"
+            )
+        return self

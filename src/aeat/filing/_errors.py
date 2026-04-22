@@ -35,3 +35,7 @@ class FilingAmendmentError(FilingDraftError):
 
 class FilingAmendmentValidationError(FilingAmendmentError):
     """Raised when an amendment violates legal or shape invariants."""
+
+
+class FilingImportError(FilingDraftError):
+    """Raised when importing a filing from a justificante PDF fails."""

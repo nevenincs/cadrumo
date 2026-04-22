@@ -168,3 +168,34 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         for item in items:
             if "live_read" in _marker_names(item):
                 item.add_marker(skip_marker)
+
+    # #305 cluster H: fixture_tier_l1 / l2 / l3 marker-driven skips.
+    _apply_fixture_tier_gates(items)
+
+
+def _apply_fixture_tier_gates(items: list[pytest.Item]) -> None:
+    """Skip fixture_tier tests per environment toggles.
+
+    - ``AEAT_FIXTURE_L2_ENABLED=1`` to opt in to L2 (scrubbed real) tests.
+    - ``AEAT_FIXTURE_L3_ONLY=1`` to keep only L3 (synthetic) tests.
+    - ``AEAT_FIXTURE_OFFLINE=1`` deselects L1 tests unless the anchor is
+      already cached under ``.cache/l1_anchors/`` (the cached case is
+      handled by the anchor-loader fixtures themselves; in strict-offline
+      mode we simply skip every L1 test to keep CI deterministic).
+    """
+    l2_enabled = _truthy(os.environ.get("AEAT_FIXTURE_L2_ENABLED"))
+    l3_only = _truthy(os.environ.get("AEAT_FIXTURE_L3_ONLY"))
+    offline = _truthy(os.environ.get("AEAT_FIXTURE_OFFLINE"))
+
+    skip_l2 = pytest.mark.skip(reason="fixture_tier_l2 disabled; set AEAT_FIXTURE_L2_ENABLED=1")
+    skip_l3_only = pytest.mark.skip(reason="AEAT_FIXTURE_L3_ONLY=1: non-L3 tests deselected")
+    skip_l1_offline = pytest.mark.skip(reason="AEAT_FIXTURE_OFFLINE=1: L1 tests require network")
+
+    for item in items:
+        markers = _marker_names(item)
+        if "fixture_tier_l2" in markers and not l2_enabled:
+            item.add_marker(skip_l2)
+        if "fixture_tier_l1" in markers and offline:
+            item.add_marker(skip_l1_offline)
+        if l3_only and any(m in markers for m in ("fixture_tier_l1", "fixture_tier_l2")):
+            item.add_marker(skip_l3_only)

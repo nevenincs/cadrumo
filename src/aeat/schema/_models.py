@@ -53,7 +53,7 @@ from ._errors import (
 )
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
-_CASILLA_ID_RE = re.compile(r"^\d{2,4}$")
+_CASILLA_ID_RE = re.compile(r"^\d{2,5}$")
 _PERIOD_QUARTERLY_RE = re.compile(r"^\d{4}Q[1-4]$")
 _PERIOD_ANNUAL_RE = re.compile(r"^\d{4}$")
 _PERIOD_MONTHLY_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
@@ -137,7 +137,7 @@ class CasillaRef(_StrictFrozenModel):
     """Reference to another casilla's runtime value."""
 
     kind: Literal["ref"] = "ref"
-    casilla_id: str = Field(min_length=2, max_length=4)
+    casilla_id: str = Field(min_length=2, max_length=5)
 
     @field_validator("casilla_id")
     @classmethod
@@ -368,7 +368,7 @@ class Casilla(_StrictFrozenModel):
             provenance is ``BOE_ORDEN``.
     """
 
-    casilla_id: str = Field(min_length=2, max_length=4)
+    casilla_id: str = Field(min_length=2, max_length=5)
     block: Translatable | None = None
     label: Translatable
     data_type: CasillaDataType
