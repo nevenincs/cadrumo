@@ -27,11 +27,13 @@ from ._record_spec import (
     FieldKind,
     Justification,
     RecordFieldSpec,
+    SegmentSpec,
     encode_currency,
     encode_date,
     encode_text,
     record_field,
     validate_record_specs,
+    validate_segment_specs,
 )
 
 __all__ = [
@@ -41,9 +43,11 @@ __all__ = [
     "FieldKind",
     "Justification",
     "RecordFieldSpec",
+    "SegmentSpec",
     "encode_currency",
     "encode_date",
     "encode_text",
     "record_field",
     "validate_record_specs",
+    "validate_segment_specs",
 ]

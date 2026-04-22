@@ -24,6 +24,7 @@ from ._record_spec import (
     FicheroBoeEncoding,
     FieldKind,
     RecordFieldSpec,
+    SegmentSpec,
     encode_currency,
     encode_date,
     encode_text,
@@ -137,4 +138,64 @@ def serialise(
     return body + _CRLF
 
 
-__all__ = ["HeaderValue", "serialise"]
+def serialise_envelope(
+    *,
+    casilla_values: Mapping[str, Decimal],
+    headers: Mapping[str, HeaderValue],
+    segments: tuple[SegmentSpec, ...],
+    encoding: FicheroBoeEncoding,
+    required_field_ids: frozenset[str] = frozenset(),
+) -> bytes:
+    """Emit a multi-segment fichero-BOE envelope (EPIC #201, wave 82a).
+
+    Modelo 303+ use an XML-tagged envelope of ordered segments rather
+    than a flat record. This helper serialises each segment via
+    :func:`serialise` and concatenates the results. The CRLF terminator
+    is appended ONCE at the end (AEAT expects a single terminator per
+    file, not per segment).
+
+    Args:
+        casilla_values: per-casilla values shared across every segment.
+        headers: metadata header fields shared across every segment.
+            Individual segments reference whichever headers they
+            declare; unused headers are ignored per-segment.
+        segments: ordered tuple of :class:`SegmentSpec` to emit.
+            Callers supplying the envelope decide which optional
+            segments are present (e.g., Modelo 303 page 4 appears
+            only in exonerado-390 annual filings).
+        encoding: wire encoding shared across segments.
+        required_field_ids: fail-fast check applied ONCE at envelope
+            start; individual segments do not re-check.
+
+    Returns:
+        The full envelope byte payload with a single trailing CRLF.
+
+    Raises:
+        ValueError: same conditions as :func:`serialise`, plus any
+            per-segment width mismatch.
+    """
+    # Pre-flight required headers once (not per-segment).
+    for required in required_field_ids:
+        value = headers.get(required)
+        if value is None or (isinstance(value, str) and not value):
+            raise ValueError(f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope")
+
+    chunks: list[bytes] = []
+    for segment in segments:
+        # serialise() appends its own CRLF; strip it before concat
+        # and re-append exactly one terminator at the end.
+        part = serialise(
+            casilla_values=casilla_values,
+            headers=headers,
+            specs=segment.specs,
+            encoding=encoding,
+            total_length=segment.total_length,
+            required_field_ids=frozenset(),  # pre-checked above
+        )
+        if part.endswith(_CRLF):
+            part = part[: -len(_CRLF)]
+        chunks.append(part)
+    return b"".join(chunks) + _CRLF
+
+
+__all__ = ["HeaderValue", "serialise", "serialise_envelope"]
