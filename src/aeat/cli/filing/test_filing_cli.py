@@ -283,7 +283,12 @@ class TestFilingImport:
             ["filing", "import", "--modelo", "130", "--period", "2026Q1"],
         )
         assert result.exit_code != 0
-        assert "--from-aeat" in result.output
+        # Rich wraps the typer.BadParameter message into a styled box and
+        # injects ANSI codes between ``--from-aeat`` characters on some
+        # terminals (notably the Windows CI runner), so the raw flag is
+        # not guaranteed to appear as a contiguous substring. The plain-
+        # text tail of the message survives the styling intact.
+        assert "live import reconstructs a draft" in result.output
 
     def test_live_session_unavailable_reports_cleanly(
         self,
