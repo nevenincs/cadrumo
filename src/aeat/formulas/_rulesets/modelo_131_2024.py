@@ -1,9 +1,10 @@
 """Modelo 131 ruleset covering the full 2024 fiscal year.
 
 Structural clone of :mod:`modelo_131_2025`. 2% rate on volumen ventas
-and volumen ingresos agrícolas unchanged from 2024 to 2025 under art.
-110.2 / 110.4 RIRPF. Kent uses this for 2024-period complementaria
-filings under estimación objetiva (módulos).
+and volumen ingresos agrícolas unchanged from 2024 to 2025 under
+RIRPF art. 110.1.b (módulos, estimación objetiva) and art. 110.1.c
+(actividades agrícolas/ganaderas/forestales/pesqueras). Kent uses
+this for 2024-period complementaria filings under módulos.
 """
 
 from __future__ import annotations

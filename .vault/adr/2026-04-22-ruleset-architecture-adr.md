@@ -225,11 +225,16 @@ violated. Rationale for deferral:
   bearing pipeline artefact; they already cite commits by SHA
   and enumerate closure-status per finding.
 
-**Catch-up commitment**: before the EPIC #305 close-out PR, a
-consolidated `.vault/exec/2026-04-20-pdf-import/2026-04-22-pdf-import-audit-loop-summary.md`
-will back-fill a single exec record summarising every sub-wave
-with its commit SHA and the wave-N audit it closed against.
-Until then, the audit docs are the authoritative source.
+**Catch-up commitment**: tracked as
+[issue #313](https://github.com/wgergely/aeat/issues/313) (child of
+EPIC #305) per wave 68c. Acceptance criteria: a consolidated
+`.vault/exec/2026-04-20-pdf-import/2026-04-22-pdf-import-audit-loop-summary.md`
+back-fills a single exec record summarising every sub-wave with
+its commit SHA + closing-audit wave. PR closing #313 MUST merge
+before the EPIC #305 close-out PR. Until then, the audit docs are
+the authoritative source. The uncovered-sub_op-chains backlog from
+wave 64 stream 2 L2 is tracked separately as
+[issue #314](https://github.com/wgergely/aeat/issues/314).
 
 ### Non-goals
 

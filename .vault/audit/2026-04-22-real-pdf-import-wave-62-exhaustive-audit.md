@@ -34,6 +34,24 @@ imprecision, L3 missing exec records) that fell outside the wave
 
 **Total open: 5 HIGH, 1 MEDIUM, 7 LOW.**
 
+## Closure status (updated 2026-04-22, wave 68)
+
+| Finding | Status | Closing wave |
+|---|---|---|
+| H1 mutation harness ≤1 sub_op per modelo | CLOSED | wave 63b (`65e5643`) |
+| H2 Modelo 200 absent from harness | CLOSED | wave 63b (`65e5643`) |
+| H3 LIRPF art. 103 miscite for cuota diferencial | CLOSED | wave 63a (`65e5643`); further refined wave 67a (`29a537e`) — arts. 62/67/73/77/79/99 disambiguated |
+| H4 RIRPF art. 110.1.b subsection inverted | CLOSED | wave 63a (`65e5643`); wave 65a (`ab808d2`) clarified b/c assignment; wave 67g (`HEAD`) fixed ruleset _CITATIONS + 115/180 100.3.a cross-cutting |
+| H5 exec records missing | PARTIAL | re-cited as wave 64 H7 → wave 66 H1; ADR deferral section added wave 65d (`ab808d2`); GH issue tracked wave 68d |
+| M1 wave 48 audit-doc H3 row stale | CLOSED | wave 63c (`65e5643`); further refreshed wave 67a |
+| L1 390 docstring imprecision | CLOSED | wave 63d (`65e5643`) |
+| L2 202 operand-swap docstring | CLOSED | wave 63d (`65e5643`) |
+| L3 thousands_sep pattern too permissive | CLOSED | wave 63d (`65e5643`) |
+| L4 test_thousands_sep_reaches name misleading | CLOSED | wave 63d (`65e5643`) |
+| L5 y-ordering invariant undocumented | CLOSED | wave 63d (`65e5643`) |
+| L6 modelos.md row 15 drift | CLOSED | wave 63c (`65e5643`) |
+| L7 escalated to HIGH H5 | See H5 | — |
+
 ## HIGH findings
 
 ### H1 (stream 2) — Mutation harness covers ≤1 sub_op per target modelo

@@ -7,7 +7,7 @@ targets the 4-casilla summary block:
 - casilla 01 (total perceptores — arrendadores).
 - casilla 02 (total base retencion).
 - casilla 03 (total retenciones e ingresos a cuenta; 19% x 02 per
-  art. 100.3.a RIRPF).
+  art. 100.1 RIRPF).
 - casilla 04 (total ingresos a cuenta por retribuciones en especie).
 
 Only one algebraic formula holds at aggregation level:
@@ -30,7 +30,8 @@ engine computes 03 at a single 19% rate. Multi-rate / IRNR support
 lands in sub-EPIC #305-Modelo-180-full.
 
 Legal base: Ley 35/2006 (LIRPF) art. 101.8, RD 439/2007 (Reglamento)
-art. 100.3.a.
+art. 100.1 (the 19% fixed rate on rendimientos de arrendamientos
+urbanos; art. 100.2 applies the 60% reduction for Ceuta/Melilla).
 """
 
 from __future__ import annotations
@@ -61,8 +62,8 @@ def _label(es: str, en: str, hu: str) -> Translatable:
 _CITATIONS = (
     make_citation(
         LegalCitationSource.REGLAMENTO,
-        "100.3.a",
-        "Artículo 100.3.a RD 439/2007 — tipo fijo del 19% de retención "
+        "100.1",
+        "Artículo 100.1 RD 439/2007 — tipo fijo del 19% de retención "
         "sobre arrendamientos urbanos; aplica tanto al Modelo 115 "
         "trimestral como a su resumen anual Modelo 180.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
