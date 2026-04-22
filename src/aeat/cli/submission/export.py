@@ -34,7 +34,12 @@ import typer
 from rich.console import Console
 
 from ...submission import DraftStatus
-from ...submission._formats import modelo_130_2024, modelo_130_2025, modelo_303_2024
+from ...submission._formats import (
+    modelo_130_2024,
+    modelo_130_2025,
+    modelo_303_2024,
+    modelo_303_2025,
+)
 from ...submission._formats._serialise import serialise, serialise_envelope
 from ._helpers import load_draft
 
@@ -115,6 +120,7 @@ _SCHEMA_REGISTRY: dict[tuple[str, str], _SchemaEntry] = {
     ("130", "2024"): _SchemaEntry(modelo_130_2024, "record", _build_130_headers),
     ("130", "2025"): _SchemaEntry(modelo_130_2025, "record", _build_130_headers),
     ("303", "2024"): _SchemaEntry(modelo_303_2024, "envelope", _build_303_headers),
+    ("303", "2025"): _SchemaEntry(modelo_303_2025, "envelope", _build_303_headers),
 }
 
 
