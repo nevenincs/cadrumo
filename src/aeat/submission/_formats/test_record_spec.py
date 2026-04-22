@@ -117,6 +117,48 @@ class TestEncodeCurrency:
         assert len(encode_currency(Decimal("0.00"), length=5)) == 5
 
 
+class TestEncodeCurrencyInlineSign:
+    """Wave 83a: Modelo 303+ inline-sign convention ('N' prefix for negatives)."""
+
+    def test_positive_emits_space_prefix(self) -> None:
+        """A positive value in inline_sign mode emits a leading space."""
+        result = encode_currency(Decimal("1234.56"), length=17, inline_sign=True)
+        # 1 sign byte + 16 magnitude bytes = 17.
+        assert len(result) == 17
+        assert result == b" 0000000000123456"
+
+    def test_negative_emits_n_prefix(self) -> None:
+        """A negative value in inline_sign mode emits a leading 'N'."""
+        result = encode_currency(Decimal("-1234.56"), length=17, inline_sign=True)
+        assert len(result) == 17
+        assert result == b"N0000000000123456"
+
+    def test_zero_emits_space_prefix(self) -> None:
+        """Zero is non-negative; leading space."""
+        result = encode_currency(Decimal("0.00"), length=17, inline_sign=True)
+        assert result == b" 0000000000000000"
+
+    def test_negative_without_inline_sign_or_signed_raises(self) -> None:
+        with pytest.raises(ValueError, match="inline_sign=True"):
+            encode_currency(Decimal("-100.00"), length=17)
+
+    def test_inline_sign_requires_length_2(self) -> None:
+        with pytest.raises(ValueError, match="inline_sign=True requires length"):
+            encode_currency(Decimal("0.00"), length=1, inline_sign=True)
+
+    def test_inline_sign_magnitude_overflow_raises(self) -> None:
+        """Inline-sign carve-out means overflow floor is length-1."""
+        with pytest.raises(ValueError, match="overflows inline-sign"):
+            # 9 999 999 999.99 * 100 = 999 999 999 999 (12 digits).
+            # length=5 means magnitude_width=4; can't fit 12 digits.
+            encode_currency(Decimal("99999.99"), length=5, inline_sign=True)
+
+    def test_inline_sign_signed_true_still_works(self) -> None:
+        """signed=True + inline_sign=True is consistent; no contradiction."""
+        result = encode_currency(Decimal("-5.00"), length=10, inline_sign=True, signed=True)
+        assert result == b"N000000500"
+
+
 class TestEncodeText:
     """Text → ISO-8859-15 ljust/rjust with custom pad."""
 

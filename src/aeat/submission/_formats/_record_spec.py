@@ -180,6 +180,7 @@ def encode_currency(
     *,
     length: int,
     signed: bool = False,
+    inline_sign: bool = False,
     encoding: FicheroBoeEncoding = DEFAULT_ENCODING,
 ) -> bytes:
     """Right-justified, zero-padded currency with 2 implicit decimals.
@@ -196,16 +197,45 @@ def encode_currency(
       instead of a byte-legal but semantically-wrong positive
       magnitude. Set ``signed=True`` when you have explicitly
       arranged the SIGNO flip elsewhere.
+
+    Wave 83a (Modelo 303+ inline-sign convention):
+    - ``inline_sign=True`` switches from AEAT's "separate SIGNO/TIPO
+      field" convention (Modelo 130 ``TIPO_DECLARACION="N"``) to the
+      inline "N"-prefix convention used by Modelo 303 and other IVA
+      modelos. With ``inline_sign=True`` and a negative value, the
+      LEADING byte becomes ``"N"`` and the remaining ``length - 1``
+      bytes carry the zero-padded absolute magnitude. Positive
+      values emit a leading space instead of ``"N"``. ``signed=True``
+      is not required when ``inline_sign=True``.
     """
-    if value < 0 and not signed:
+    negative = value < 0
+    if negative and not (signed or inline_sign):
         raise ValueError(
             f"encode_currency received negative {value!r} without "
-            f"signed=True; most AEAT modelos carry a separate SIGNO "
-            f"field to flip magnitude. Pass signed=True only after "
-            f"wiring the SIGNO field in the record spec."
+            f"signed=True or inline_sign=True; most AEAT modelos carry "
+            f"a separate SIGNO/TIPO field. Pass signed=True after "
+            f"wiring that field, or inline_sign=True for Modelo 303+ "
+            f"'N'-prefix convention."
         )
     quantised = abs(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     cents = int(quantised * 100)
+
+    if inline_sign:
+        if length < 2:
+            raise ValueError(
+                f"inline_sign=True requires length >= 2 (1 sign byte + ≥1 magnitude byte); got length={length}"
+            )
+        magnitude_width = length - 1
+        s_magnitude = str(cents).rjust(magnitude_width, "0")
+        if len(s_magnitude) > magnitude_width:
+            raise ValueError(
+                f"currency value {value} overflows inline-sign length-"
+                f"{length} field (magnitude needs {len(s_magnitude)} "
+                f"bytes, {magnitude_width} available)"
+            )
+        prefix = "N" if negative else " "
+        return (prefix + s_magnitude).encode(encoding)
+
     s = str(cents).rjust(length, "0")
     if len(s) > length:
         raise ValueError(f"currency value {value} overflows length-{length} field (would need {len(s)} bytes)")
