@@ -100,3 +100,32 @@ class TestVerifyCommand:
             app, ["verify", str(tmp_path / "missing.130"), "--modelo", "130", "--ejercicio", "2024"]
         )
         assert result.exit_code != 0
+
+    def test_verify_auto_detects_modelo_and_ejercicio_from_filename(self, tmp_path: Path) -> None:
+        """Wave 97: {NIF}{YYYY}{PERIODO}.{modelo} filename parses without explicit flags."""
+        path = _export_then_path(tmp_path, modelo="303", period="2024Q1")
+        # No --modelo / --ejercicio passed.
+        result = _runner.invoke(app, ["verify", str(path)])
+        assert result.exit_code == 0, result.stdout
+        assert "verify OK" in result.stdout
+        assert "modelo=303" in result.stdout
+        assert "ejercicio=2024" in result.stdout
+
+    def test_verify_nonstandard_filename_requires_flags(self, tmp_path: Path) -> None:
+        """A renamed file can't be auto-parsed; verify must exit 2."""
+        path = _export_then_path(tmp_path, modelo="130", period="2024Q1")
+        renamed = path.with_name("kent-archive.bin")
+        path.rename(renamed)
+        result = _runner.invoke(app, ["verify", str(renamed)])
+        assert result.exit_code == 2
+        assert "cannot infer" in result.stdout
+
+    def test_verify_explicit_flags_override_filename_inference(self, tmp_path: Path) -> None:
+        """Explicit --modelo and --ejercicio win over filename auto-detect."""
+        # Export modelo 130, but rename to look like a 303 file; explicit
+        # flags must take precedence over the (wrong) filename extension.
+        path = _export_then_path(tmp_path, modelo="130", period="2024Q1")
+        fake_303 = path.with_suffix(".303")
+        path.rename(fake_303)
+        result = _runner.invoke(app, ["verify", str(fake_303), "--modelo", "130", "--ejercicio", "2024"])
+        assert result.exit_code == 0, result.stdout
