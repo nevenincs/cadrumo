@@ -98,3 +98,46 @@ class TestModelo131Ruleset:
         computed = {c.casilla_id for c in MODELO_131_2025.casillas if c.computed}
         assert computed == {"04", "06", "07", "10", "13", "15"}
         assert len(MODELO_131_2025.formulas) == 6
+
+    def test_external_worked_example_rirpf_110(self) -> None:
+        """External-anchored worked example (wave 57b H5/H6 closure).
+
+        Provenance: RD 439/2007 (RIRPF) art. 110.2 fixes the 2%
+        rate on volumen ingresos agricolas/ganaderas/forestales/
+        pesqueras; art. 110.4 fixes the 2% rate on volumen ventas
+        for other modulos activities.
+
+        Scenario: Q3 2025 autonomo on modulos with 25 000 volumen
+        ventas (03) and 10 000 volumen ingresos agricolas (05):
+        - casilla 04 = 25 000 x 2% = 500.00 per RIRPF art. 110.4
+        - casilla 06 = 10 000 x 2% = 200.00 per RIRPF art. 110.2
+        - casilla 07 = 02 + 04 + 06 = 150 + 500 + 200 = 850.
+        - casilla 10 = 07 - 08 - 09 = 850 - 20 - 0 = 830.
+        - casilla 13 = 10 - 11 - 12 = 830 - 0 - 0 = 830.
+        - casilla 15 = 13 - 14 = 830 - 0 = 830.
+
+        Citation: BOE-A-2007-6820 RD 439/2007 art. 110.
+        """
+        provided = {
+            "01": Decimal("1500.00"),
+            "02": Decimal("150.00"),
+            "03": Decimal("25000.00"),
+            "04": Decimal("500.00"),  # 2% per RIRPF art. 110.4
+            "05": Decimal("10000.00"),
+            "06": Decimal("200.00"),  # 2% per RIRPF art. 110.2
+            "07": Decimal("850.00"),
+            "08": Decimal("20.00"),
+            "09": Decimal("0.00"),
+            "10": Decimal("830.00"),
+            "11": Decimal("0.00"),
+            "12": Decimal("0.00"),
+            "13": Decimal("830.00"),
+            "14": Decimal("0.00"),
+            "15": Decimal("830.00"),
+        }
+        report = Engine().audit_against(
+            ruleset=MODELO_131_2025,
+            provided=provided,
+            tolerance=Decimal("0.01"),
+        )
+        assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]

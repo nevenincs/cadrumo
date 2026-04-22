@@ -149,3 +149,75 @@ class TestModelo130Ruleset2024:
         assert "04" in computed
         assert "19" in computed
         assert len(MODELO_130_2024.formulas) >= 8
+
+    def test_external_worked_example_rirpf_110(self) -> None:
+        """External-anchored worked example (wave 57b H5/H6 closure).
+
+        Provenance: RD 439/2007 (RIRPF) art. 110.1.a fixes the 20%
+        rate on IRPF pagos fraccionados (estimacion directa);
+        art. 110.2 fixes the 2% rate on agricola/ganadera/forestal/
+        pesquera. Fixture values derived from those rates, NOT from
+        the ruleset parameters.
+
+        Citation: BOE-A-2007-6820 RD 439/2007 art. 110.
+        """
+        provided = {
+            "01": Decimal("30000.00"),
+            "02": Decimal("10000.00"),
+            "03": Decimal("20000.00"),
+            "04": Decimal("4000.00"),  # 20% per RIRPF 110.1.a
+            "05": Decimal("0.00"),
+            "06": Decimal("0.00"),
+            "07": Decimal("4000.00"),
+            "08": Decimal("2000.00"),
+            "09": Decimal("40.00"),  # 2% per RIRPF 110.2
+            "10": Decimal("0.00"),
+            "11": Decimal("40.00"),
+            "12": Decimal("4040.00"),
+            "13": Decimal("0.00"),
+            "14": Decimal("4040.00"),
+            "15": Decimal("0.00"),
+            "16": Decimal("0.00"),
+            "17": Decimal("4040.00"),
+            "18": Decimal("0.00"),
+            "19": Decimal("4040.00"),
+        }
+        report = Engine().audit_against(
+            ruleset=MODELO_130_2024,
+            provided=provided,
+            tolerance=Decimal("0.01"),
+        )
+        assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
+
+    def test_zero_boundary_is_clean(self) -> None:
+        """Wave 57b M5: zero-quarter boundary — no ingresos, no pago."""
+        provided = {
+            k: Decimal("0.00")
+            for k in [
+                "01",
+                "02",
+                "03",
+                "04",
+                "05",
+                "06",
+                "07",
+                "08",
+                "09",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "17",
+                "18",
+                "19",
+            ]
+        }
+        report = Engine().audit_against(
+            ruleset=MODELO_130_2024,
+            provided=provided,
+            tolerance=Decimal("0.01"),
+        )
+        assert report.is_clean()
