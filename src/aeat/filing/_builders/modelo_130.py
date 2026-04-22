@@ -35,6 +35,9 @@ _logger = get_logger(__name__)
 
 #: 20% advance payment rate for the ordinary Modelo 130 flow.
 _PAGO_FRACCIONADO_RATE = Decimal("0.20")
+#: 2% advance payment rate for the agrícola / ganadera / pesquera apartado
+#: (ruleset ``modelo_130.2025`` parameter ``agraria.trimestral_rate``).
+_PAGO_AGRARIA_RATE = Decimal("0.02")
 
 
 class Modelo130Builder(FilingBuilder):
@@ -203,6 +206,7 @@ class Modelo130Builder(FilingBuilder):
         values: dict[str, FilingValue],
     ) -> FilingValue:
         """Compute one Modelo 130 formula casilla."""
+        # Apartado I — Actividades empresariales / profesionales.
         if casilla.id == "03":
             ingresos = _as_decimal(values["01"].value)
             gastos = _as_decimal(values["02"].value)
@@ -218,6 +222,48 @@ class Modelo130Builder(FilingBuilder):
             if resultado < 0:
                 resultado = Decimal("0")
             return _computed_value(casilla.id, resultado, ("04", "05", "06"))
+        # Apartado II — Actividades agrícolas / ganaderas / forestales / pesqueras.
+        # Added in #305 cluster B phase 2 to match the ruleset's 19-casilla set.
+        if casilla.id == "09":
+            ingresos_agraria = _as_decimal(values["08"].value)
+            return _computed_value(
+                casilla.id,
+                ingresos_agraria * _PAGO_AGRARIA_RATE,
+                ("08",),
+            )
+        if casilla.id == "11":
+            pago_agraria = _as_decimal(values["09"].value)
+            retenciones_agraria = _as_decimal(values["10"].value)
+            return _computed_value(
+                casilla.id,
+                pago_agraria - retenciones_agraria,
+                ("09", "10"),
+            )
+        # Apartado III — suma parcial + minoración.
+        if casilla.id == "12":
+            suma = _as_decimal(values["07"].value) + _as_decimal(values["11"].value)
+            if suma < 0:
+                suma = Decimal("0")
+            return _computed_value(casilla.id, suma, ("07", "11"))
+        if casilla.id == "14":
+            suma_parcial = _as_decimal(values["12"].value)
+            minoracion = _as_decimal(values["13"].value)
+            return _computed_value(casilla.id, suma_parcial - minoracion, ("12", "13"))
+        # Apartado IV — deducciones + arrastre de pérdidas.
+        if casilla.id == "17":
+            neto = _as_decimal(values["14"].value)
+            deduccion_vivienda = _as_decimal(values["15"].value)
+            arrastre_negativo = _as_decimal(values["16"].value)
+            return _computed_value(
+                casilla.id,
+                neto - deduccion_vivienda - arrastre_negativo,
+                ("14", "15", "16"),
+            )
+        # Apartado V — ingreso final (resultado neto del trimestre).
+        if casilla.id == "19":
+            diferencia = _as_decimal(values["17"].value)
+            ingreso_previo = _as_decimal(values["18"].value)
+            return _computed_value(casilla.id, diferencia - ingreso_previo, ("17", "18"))
         raise FilingComputationError(f"Unknown formula casilla {casilla.id!r} for Modelo 130")
 
 

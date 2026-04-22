@@ -13,12 +13,15 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ...config import PROJECT_ROOT
 from ...deadlines import AutonomoProfile, IVARegime
 from ...filing import FilingOperatorProfile, build_draft
 from ...filing.runtime import build_runtime_schema_provider
 from .. import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
+_JUSTIFICANTE_FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 
 runner = CliRunner()
 
@@ -201,6 +204,54 @@ class TestFilingCLI:
         )
         result = runner.invoke(app, ["filing", "list", "--modelo", "130"])
         assert result.exit_code == 0
+
+    def test_import_persists_draft_and_submission(
+        self,
+        drafts_dir: Path,
+        submissions_dir: Path,
+    ) -> None:
+        pdf = _JUSTIFICANTE_FIXTURES / "modelo_130_2026Q1.pdf"
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-justificante", str(pdf)],
+        )
+        assert result.exit_code == 0, result.output
+        drafts = sorted(drafts_dir.glob("130_2026Q1_*.json"))
+        submissions = sorted(submissions_dir.glob("*.json"))
+        assert len(drafts) == 1
+        assert len(submissions) == 1
+        assert "warning" in result.output.lower()
+        assert "Imported draft" in result.output
+
+    def test_import_rejects_missing_pdf(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+    ) -> None:
+        missing = tmp_path / "nowhere.pdf"
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-justificante", str(missing)],
+        )
+        assert result.exit_code != 0, result.output
+        assert not list(drafts_dir.glob("*.json"))
+        assert not list(submissions_dir.glob("*.json"))
+
+    def test_import_rejects_unsupported_modelo(
+        self,
+        drafts_dir: Path,
+        submissions_dir: Path,
+    ) -> None:
+        pdf = _JUSTIFICANTE_FIXTURES / "modelo_100_2025A.pdf"
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-justificante", str(pdf)],
+        )
+        assert result.exit_code != 0, result.output
+        assert "100" in result.output
+        assert not list(drafts_dir.glob("*.json"))
+        assert not list(submissions_dir.glob("*.json"))
 
     def test_complementaria_build_and_submit_dry_run(
         self,

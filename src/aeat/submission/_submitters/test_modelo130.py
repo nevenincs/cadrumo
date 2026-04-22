@@ -45,7 +45,9 @@ class _Draft(FilingDraftLike):
 
 class _Catalogue:
     def casillas_for_modelo(self, modelo: str) -> tuple[CasillaRecord, ...]:
-        casilla_ids = ("01", "02", "03", "04", "05", "06", "07")
+        # Modelo 130 has 19 casillas (01-19) across five apartados — see
+        # src/aeat/filing/_builders/_modelo_130_schema.py MODELO_130_SCHEMA.
+        casilla_ids = tuple(f"{n:02d}" for n in range(1, 20))
         return tuple(
             CasillaRecord(
                 id=casilla_id,

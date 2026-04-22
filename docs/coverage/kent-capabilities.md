@@ -32,9 +32,15 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Build Modelo 130 via wizard | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#219](https://github.com/wgergely/aeat/issues/219) |
 | See formula + operand values inline during review | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#220](https://github.com/wgergely/aeat/issues/220) |
 | Approve a draft (persisted) | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#230](https://github.com/wgergely/aeat/issues/230) |
-| Export an AEAT-importable fichero BOE file | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#201](https://github.com/wgergely/aeat/issues/201) |
+| Export an AEAT-importable fichero BOE file | 🚧 | ✅ (`aeat submission export`; 130 + 303 shipped; 390 pending) | ✅ (golden SHA256 pinned per modelo; verify round-trip) | 🚧 (CLI produces byte-exact output; live portal upload untested) | 0.2.0 | [#201](https://github.com/wgergely/aeat/issues/201) |
+| Verify an exported fichero BOE decodes back to the casilla values | ✅ | ✅ (`aeat submission verify <file> --modelo <m> --ejercicio <y>`) | ✅ (5 CLI tests + per-modelo round-trip) | ✅ | 0.2.0 | [#305](https://github.com/wgergely/aeat/issues/305) wave 95 |
 | Compute 303 + 390 via formula engine | ❌ | ❌ | partial | ❌ | 0.3.0 | [#221](https://github.com/wgergely/aeat/issues/221) |
-| Import a past filing made outside the tool | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#233](https://github.com/wgergely/aeat/issues/233) |
+| Import a past filing made outside the tool (umbrella) | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#233](https://github.com/wgergely/aeat/issues/233) |
+| Import past filing from justificante receipt PDF | ✅ | ✅ | ✅ | ✅ | 0.3.0 | [#271](https://github.com/wgergely/aeat/issues/271) |
+| Import past filing from full declaración PDF (calc-verified) | ✅ | ✅ (Modelo 130 + 303 MVPs) | ✅ (L3 synthetic) | ✅ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster D |
+| Import Modelo 100 pre-filing borrador (summary block) | ✅ | ✅ (`--from-borrador`) | ✅ (L3 synthetic) | ✅ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster F |
+| Import Modelo 100 predeclaración / simulación (summary block) | ✅ | ✅ (`--from-borrador`) | ✅ (L3 synthetic) | ✅ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster F |
+| See import verdict (verified / needs-review / unverifiable) | ✅ | ✅ | ✅ | ✅ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster E |
 | File autoliquidación rectificativa | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#234](https://github.com/wgergely/aeat/issues/234) |
 | Amend any supported modelo via wizard | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#235](https://github.com/wgergely/aeat/issues/235) |
 | Fetch previously-filed casilla values from AEAT (wall 23) | ❌ | 🚧 | ready | ❌ | 0.1.0-pre-alpha | [#227](https://github.com/wgergely/aeat/issues/227) |
@@ -54,4 +60,4 @@ certificate-based path.
 
 ## provenance
 
-Last updated **2026-04-18**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
+Last updated **2026-04-22** (EPIC #305 wave 54 — 2024 backfill rulesets land; 2024 complementaria self-audit now supported for Modelos 111/115/123/130/131/180). Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.

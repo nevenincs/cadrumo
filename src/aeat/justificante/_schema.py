@@ -42,6 +42,8 @@ class Justificante(BaseModel):
             ``"303"``, ``"100"``, ...). References the #6 model catalogue.
         period: Period identifier as printed on the receipt (``"1T"``,
             ``"0A"``, ``"2026Q1"`` depending on the modelo convention).
+        ejercicio: Four-digit tax year as printed on the receipt, when
+            present. ``None`` for legacy receipts that omit the label.
         presentation_id: AEAT's internal ``Número de justificante`` if
             present on the receipt; ``None`` when the modelo does not print
             a separate presentation ID.
@@ -65,6 +67,7 @@ class Justificante(BaseModel):
     csv: str = Field(..., min_length=4, max_length=64)
     modelo: str = Field(..., min_length=1, max_length=16)
     period: str = Field(..., min_length=1, max_length=16)
+    ejercicio: str | None = Field(default=None, max_length=8)
     presentation_id: str | None = Field(default=None, max_length=64)
     presented_at: datetime
     tax_id: str = Field(..., min_length=4, max_length=32)

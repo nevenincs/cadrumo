@@ -81,8 +81,10 @@ from ._errors import (
     FilingBuilderError,
     FilingComputationError,
     FilingDraftError,
+    FilingImportError,
     FilingValidationError,
 )
+from ._import import JustificanteImportResult, import_filing_from_justificante
 from ._protocols import (
     CasillaCollection,
     CasillaSchema,
@@ -315,6 +317,7 @@ __all__ = [
     "FilingDraftError",
     "FilingDraftStatus",
     "FilingFindingSeverity",
+    "FilingImportError",
     "FilingInputs",
     "FilingOperatorProfile",
     "FilingProfile",
@@ -324,6 +327,7 @@ __all__ = [
     "FilingValidator",
     "FilingValue",
     "FilingValueKind",
+    "JustificanteImportResult",
     "Modelo130Builder",
     "Modelo303Builder",
     "Modelo390Builder",
@@ -345,6 +349,7 @@ __all__ = [
     "describe_stale_reason",
     "filing_profile_from_autonomo",
     "get_builder",
+    "import_filing_from_justificante",
     "iter_findings",
     "list_amendments",
     "load_amendment",

@@ -17,7 +17,7 @@ from ..casillas import CasillaDataType
 from ..i18n import Translatable, require_authoritative
 from ..models import LegalCitation
 
-_CASILLA_ID_RE = re.compile(r"^\d{2,4}$")
+_CASILLA_ID_RE = re.compile(r"^\d{2,5}$")
 
 
 class CasillaDefinition(BaseModel):
@@ -36,7 +36,7 @@ class CasillaDefinition(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: Annotated[str, Field(min_length=2, max_length=4)]
+    casilla_id: Annotated[str, Field(min_length=2, max_length=5)]
     label: Translatable
     computed: bool
     data_type: CasillaDataType

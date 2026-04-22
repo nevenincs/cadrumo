@@ -1,15 +1,17 @@
-"""Error hierarchy for the justificante parser (#44).
+"""Error hierarchy for the justificante parser (#44, #305 cluster A).
 
-All errors inherit from :class:`aeat.errors.AeatError` so they compose with
-the project-wide exception handling discipline.
+All errors inherit from :class:`aeat._pdf_import.PdfFilingImportError` —
+the shared root for every PDF-import module — which in turn inherits
+:class:`aeat.errors.AeatError`. Callers catching either level continue
+to work unchanged.
 """
 
 from __future__ import annotations
 
-from ..errors import AeatError
+from .._pdf_import._errors import PdfFilingImportError
 
 
-class JustificanteError(AeatError):
+class JustificanteError(PdfFilingImportError):
     """Base class for every justificante-related failure."""
 
 

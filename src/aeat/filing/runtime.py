@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..deadlines import AutonomoProfile, applies_to
 from ._builders._modelo_130_schema import (
     MODELO_130_SCHEMA,
+    CasillaSource,
     StaticCasillaCollection,
     StaticCasillaSchema,
     StaticCasillaSchemaProvider,
@@ -103,6 +104,9 @@ def _clone_collection(collection: StaticCasillaCollection) -> RuntimeCasillaColl
                 max_value=casilla.max_value,
                 default=casilla.default,
                 description=casilla.description,
+                sources=casilla.sources,
+                valid_from=casilla.valid_from,
+                valid_to=casilla.valid_to,
             )
             for casilla in collection.casillas
         ),
@@ -110,6 +114,7 @@ def _clone_collection(collection: StaticCasillaCollection) -> RuntimeCasillaColl
 
 
 __all__ = [
+    "CasillaSource",
     "FilingOperatorProfile",
     "RuntimeCasillaCollection",
     "RuntimeCasillaSchema",

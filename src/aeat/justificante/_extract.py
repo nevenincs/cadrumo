@@ -165,6 +165,8 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
 
     modelo = _require(_MODELO_RE.search(normalised), "modelo")
     period = _require(_PERIOD_RE.search(normalised), "period")
+    ejercicio_match = _EJERCICIO_RE.search(normalised)
+    ejercicio = ejercicio_match.group(1).strip() if ejercicio_match else None
     nif = _require(_NIF_RE.search(normalised), "tax_id").upper()
 
     presented_match = _PRESENTED_AT_RE.search(normalised)
@@ -197,6 +199,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
             csv=csv_value,
             modelo=modelo,
             period=period,
+            ejercicio=ejercicio,
             presentation_id=presentation_id,
             presented_at=presented_at,
             tax_id=nif,

@@ -16,7 +16,7 @@ class LedgerEntry(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: Annotated[str, Field(min_length=2, max_length=4)]
+    casilla_id: Annotated[str, Field(min_length=2, max_length=5)]
     value: Decimal
     op: FormulaOp
     formula_id: str
@@ -47,7 +47,7 @@ class Discrepancy(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: Annotated[str, Field(min_length=2, max_length=4)]
+    casilla_id: Annotated[str, Field(min_length=2, max_length=5)]
     user_value: Decimal
     computed_value: Decimal
     delta: Decimal

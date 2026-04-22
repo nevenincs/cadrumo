@@ -65,7 +65,7 @@ class CasillaRef(_StrictFrozenModel):
     """Reference to another casilla's value inside the current evaluation."""
 
     op: TLiteral["casilla_ref"] = "casilla_ref"
-    casilla_id: Annotated[str, Field(min_length=2, max_length=4)]
+    casilla_id: Annotated[str, Field(min_length=2, max_length=5)]
 
 
 class ParamRef(_StrictFrozenModel):
@@ -291,7 +291,7 @@ def _contains_round(operand: object) -> bool:
 class FormulaDefinition(_StrictFrozenModel):
     """Binding of a computed casilla to the formula that derives it."""
 
-    casilla_id: Annotated[str, Field(min_length=2, max_length=4)]
+    casilla_id: Annotated[str, Field(min_length=2, max_length=5)]
     formula_id: Annotated[str, Field(min_length=1, max_length=128)]
     formula: Formula
 
