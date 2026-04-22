@@ -29,7 +29,7 @@ class Modelo115V2025Extractor(GenericDeclaracionExtractor):
         "02",  # base de retención
         "03",  # retenciones (19% de 02)
         "04",  # ingresos a cuenta (retribuciones en especie)
-        "05",  # a deducir: exclusivamente en caso de declaración complementaria
+        "05",  # A deducir: exclusivamente en declaración complementaria
         "06",  # resultado a ingresar
     )
 
