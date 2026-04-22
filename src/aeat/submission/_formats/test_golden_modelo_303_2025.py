@@ -15,12 +15,13 @@ no hidden offset drift.
 from __future__ import annotations
 
 import hashlib
-from decimal import Decimal
 
 import pytest
 
 from ._record_spec import SegmentSpec
 from ._serialise import serialise_envelope
+from ._test_fixtures import KENT_303_CASILLAS_HAND as _KENT_CASILLAS
+from ._test_fixtures import kent_303_headers as _kent_headers
 from .modelo_303_2024 import ENVELOPE as ENVELOPE_2024
 from .modelo_303_2024 import REQUIRED_HEADER_FIELDS as REQUIRED_2024
 from .modelo_303_2025 import (
@@ -30,46 +31,6 @@ from .modelo_303_2025 import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
-
-
-_KENT_CASILLAS: dict[str, Decimal] = {
-    "01": Decimal("20000.00"),
-    "03": Decimal("4200.00"),
-    "04": Decimal("4200.00"),
-    "06": Decimal("4200.00"),
-    "27": Decimal("4200.00"),
-    "28": Decimal("5000.00"),
-    "29": Decimal("1050.00"),
-    "30": Decimal("0.00"),
-    "33": Decimal("0.00"),
-    "36": Decimal("0.00"),
-    "38": Decimal("0.00"),
-    "39": Decimal("0.00"),
-    "40": Decimal("1050.00"),
-    "41": Decimal("0.00"),
-    "42": Decimal("0.00"),
-    "64": Decimal("3150.00"),
-    "65": Decimal("100.00"),
-    "66": Decimal("3150.00"),
-    "69": Decimal("3150.00"),
-    "71": Decimal("3150.00"),
-}
-
-
-def _kent_headers(ejercicio: str) -> dict[str, str]:
-    return {
-        "DP30300_F004_EJERCICIO_DE_DEVENGO": ejercicio,
-        "DP30300_F008_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30300_F009_VERSI_N_DEL_PROGRAMA": " ",
-        "DP30300_F010_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30300_F011_NIF_EMPRESA_DESARROLLO": " ",
-        "DP30300_F012_RESERVADO_PARA_LA_ADMINISTRA": " ",
-        "DP30301_F006_TIPO_DECLARACI_N": "I",
-        "DP30301_F007_IDENTIFICACI_N_NIF": "X1234567L",
-        "DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N": "DOE RODRIGUEZ KENT",
-        "DP30301_F009_DEVENGO_EJERCICIO": ejercicio,
-        "DP30301_F010_DEVENGO_PER_ODO": "1T",
-    }
 
 
 class TestModelo3032025GoldenKentQ1:

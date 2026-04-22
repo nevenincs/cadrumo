@@ -14,11 +14,11 @@ byte shift should NEVER pass silently.
 from __future__ import annotations
 
 import hashlib
-from decimal import Decimal
 
 import pytest
 
 from ._serialise import serialise
+from ._test_fixtures import KENT_130_CASILLAS, kent_130_headers
 from .modelo_130_2024 import (
     ENCODING,
     RECORD_LENGTH,
@@ -35,25 +35,8 @@ class TestModelo1302024GoldenKentQ1:
     @staticmethod
     def _serialise_kent_q1() -> bytes:
         return serialise(
-            casilla_values={
-                "01": Decimal("20000.00"),
-                "02": Decimal("5000.00"),
-                "03": Decimal("15000.00"),
-                "04": Decimal("3000.00"),
-                "07": Decimal("3000.00"),
-                "12": Decimal("3000.00"),
-                "14": Decimal("3000.00"),
-                "17": Decimal("3000.00"),
-                "19": Decimal("3000.00"),
-            },
-            headers={
-                "EJERCICIO": "2024",
-                "PERIODO": "1T",
-                "NIF_DECLARANTE": "X1234567L",
-                "APELLIDOS": "DOE RODRIGUEZ",
-                "NOMBRE": "KENT",
-                "TIPO_DECLARACION": "I",
-            },
+            casilla_values=KENT_130_CASILLAS,
+            headers=kent_130_headers("2024"),
             specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
