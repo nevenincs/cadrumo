@@ -544,6 +544,22 @@ _MODELO_840_VALUES = {
 }
 
 
+class TestSoftHyphenLineBreakNormalisation:
+    """Wave 51 H2: `_normalise_pdf_text` stitches hyphenated labels."""
+
+    def test_hyphen_newline_stitched_before_regex(self) -> None:
+        """A label broken across a line by `-\\n` re-stitches so the
+        label-anchored regex still matches."""
+        from ._generic_extractor import _normalise_pdf_text
+
+        # Input as pdfplumber would emit on a narrow AEAT column:
+        raw = "01 Reten-\nciones 1.234,56"
+        normalised = _normalise_pdf_text(raw)
+        # The hyphen-newline pair is gone; the label is one word.
+        assert "Retenciones" in normalised
+        assert "-\n" not in normalised
+
+
 class TestGenericExtractorInvariants:
     def test_casilla_and_text_casilla_overlap_rejected(self) -> None:
         from typing import ClassVar

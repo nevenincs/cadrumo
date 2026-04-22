@@ -151,7 +151,7 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
 
     def extract(self, pdf_path: Path) -> DeclaracionFiling:
         pages = extract_pages_text(pdf_path)
-        full_text = "\n".join(pages)
+        full_text = _normalise_pdf_text("\n".join(pages))
 
         tax_id = _require_match(_TAX_ID_RE, full_text, "tax_id (NIF)")
         ejercicio = _require_match(_EJERCICIO_RE, full_text, "ejercicio")
@@ -269,6 +269,21 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
             parsed_at=datetime.now(tz=UTC),
             extraction_status=status,
         )
+
+
+def _normalise_pdf_text(text: str) -> str:
+    """Pre-normalise pdfplumber text for the label-regex primitives.
+
+    Wave 51 H2: AEAT's multi-column PDFs hyphenate long labels across
+    line breaks (``Cuota reper-\\ncutida``). Stitching the hyphen-newline
+    pair back together keeps the label-anchored regex from silently
+    missing the casilla. The soft-hyphen character (U+00AD) is also
+    rendered as a regular ``-`` by pdfplumber in some PDFs, so strip
+    both variants.
+    """
+    # Stitch soft-hyphen line continuations.
+    text = text.replace("-\n", "").replace("­\n", "")  # ASCII hyphen + soft-hyphen
+    return text
 
 
 def _not_found_warning(casilla_id: str) -> ExtractionWarning:
