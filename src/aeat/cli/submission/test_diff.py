@@ -1,4 +1,4 @@
-"""Tests for ``aeat submission diff`` (EPIC #305 wave 98)."""
+"""Tests for ``aeat submission diff`` (EPIC #305 wave 98 + wave 100)."""
 
 from __future__ import annotations
 
@@ -116,6 +116,42 @@ class TestDiffCommand:
         result = _runner.invoke(app, ["diff", str(a), str(b)])
         assert result.exit_code == 2
         assert "cannot infer" in result.stdout
+
+    def test_diff_json_identical_files(self, tmp_path: Path) -> None:
+        """Wave 100: --json on identical files emits status=identical."""
+        a = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="a")
+        b = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="b")
+        result = _runner.invoke(app, ["diff", str(a), str(b), "--json"])
+        assert result.exit_code == 0, result.stdout
+        doc = json.loads(result.stdout)
+        assert doc["status"] == "identical"
+        assert doc["bytes"] == 880  # Modelo 130 content + CRLF
+        assert doc["casilla_deltas"] == []
+
+    def test_diff_json_casilla_mismatch(self, tmp_path: Path) -> None:
+        """Wave 100: --json on semantic diff returns casilla_deltas list."""
+        a = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="a")
+        tweaked = {**_BASE_130_VALUES, "01": "99999.00"}
+        b = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=tweaked, out_name="b")
+        result = _runner.invoke(app, ["diff", str(a), str(b), "--json"])
+        assert result.exit_code == 1
+        doc = json.loads(result.stdout)
+        assert doc["status"] == "mismatch"
+        deltas_by_casilla = {d["casilla"]: d for d in doc["casilla_deltas"]}
+        assert "01" in deltas_by_casilla
+        assert deltas_by_casilla["01"]["a"] == "10000.00"
+        assert deltas_by_casilla["01"]["b"] == "99999.00"
+
+    def test_diff_json_unsupported_modelo(self, tmp_path: Path) -> None:
+        a = tmp_path / "fake_a.390"
+        b = tmp_path / "fake_b.390"
+        a.write_bytes(b"  ")
+        b.write_bytes(b"  ")
+        result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "390", "--ejercicio", "2024", "--json"])
+        assert result.exit_code == 2
+        doc = json.loads(result.stdout)
+        assert doc["status"] == "unsupported"
+        assert doc["modelo"] == "390"
 
     def test_diff_auto_detects_modelo_and_ejercicio_from_filename(self, tmp_path: Path) -> None:
         a = _write_draft_and_export(tmp_path, modelo="303", period="2024Q1", values=_BASE_130_VALUES, out_name="a")

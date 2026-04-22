@@ -19,6 +19,7 @@ Exit codes:
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -47,6 +48,11 @@ def diff_cmd(
     ejercicio: str | None = typer.Option(
         None, "--ejercicio", "-e", help="Filing year; auto-detected from FILE_A's filename if omitted."
     ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Emit a machine-readable JSON document instead of the rich-formatted tables.",
+    ),
 ) -> None:
     """Diff two fichero-BOE files and report byte + semantic deltas.
 
@@ -59,45 +65,107 @@ def diff_cmd(
         modelo = modelo or inferred_modelo
         ejercicio = ejercicio or inferred_ejercicio
     if modelo is None or ejercicio is None:
-        _CONSOLE.print(
-            f"[red]diff FAILED:[/red] cannot infer modelo/ejercicio from filename "
-            f"{file_a.name!r}. Pass --modelo and --ejercicio explicitly."
-        )
+        if as_json:
+            typer.echo(
+                json.dumps(
+                    {"status": "error", "error_type": "InferenceFailure", "file_a": file_a.name},
+                    indent=2,
+                )
+            )
+        else:
+            _CONSOLE.print(
+                f"[red]diff FAILED:[/red] cannot infer modelo/ejercicio from filename "
+                f"{file_a.name!r}. Pass --modelo and --ejercicio explicitly."
+            )
         raise typer.Exit(code=2)
 
     entry = SCHEMA_REGISTRY.get((modelo, ejercicio))
     if entry is None:
-        _CONSOLE.print(
-            f"[red]diff UNSUPPORTED:[/red] modelo {modelo} ejercicio {ejercicio} "
-            f"has no fichero-BOE schema. Available: {sorted(SCHEMA_REGISTRY.keys())}"
-        )
+        if as_json:
+            typer.echo(
+                json.dumps(
+                    {
+                        "status": "unsupported",
+                        "modelo": modelo,
+                        "ejercicio": ejercicio,
+                        "available": sorted([[m, e] for m, e in SCHEMA_REGISTRY]),
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            _CONSOLE.print(
+                f"[red]diff UNSUPPORTED:[/red] modelo {modelo} ejercicio {ejercicio} "
+                f"has no fichero-BOE schema. Available: {sorted(SCHEMA_REGISTRY.keys())}"
+            )
         raise typer.Exit(code=2)
 
     payload_a = file_a.read_bytes()
     payload_b = file_b.read_bytes()
 
     if payload_a == payload_b:
-        _CONSOLE.print(
-            f"[green]diff OK[/green] files are byte-identical "
-            f"({len(payload_a)} bytes, modelo={modelo}, ejercicio={ejercicio})."
-        )
+        if as_json:
+            typer.echo(
+                json.dumps(
+                    {
+                        "status": "identical",
+                        "modelo": modelo,
+                        "ejercicio": ejercicio,
+                        "bytes": len(payload_a),
+                        "file_a": file_a.name,
+                        "file_b": file_b.name,
+                        "casilla_deltas": [],
+                        "field_deltas": [],
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            _CONSOLE.print(
+                f"[green]diff OK[/green] files are byte-identical "
+                f"({len(payload_a)} bytes, modelo={modelo}, ejercicio={ejercicio})."
+            )
         return
 
     try:
         parsed_a = _parse(payload_a, entry=entry)
         parsed_b = _parse(payload_b, entry=entry)
     except Exception as exc:
-        _CONSOLE.print(f"[red]diff FAILED:[/red] {type(exc).__name__}: {exc}")
+        if as_json:
+            typer.echo(
+                json.dumps(
+                    {
+                        "status": "error",
+                        "error_type": type(exc).__name__,
+                        "error_message": str(exc),
+                        "modelo": modelo,
+                        "ejercicio": ejercicio,
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            _CONSOLE.print(f"[red]diff FAILED:[/red] {type(exc).__name__}: {exc}")
         raise typer.Exit(code=2) from exc
 
-    diffs_found = _report_semantic_diff(
-        parsed_a,
-        parsed_b,
-        file_a=file_a,
-        file_b=file_b,
-        modelo=modelo,
-        ejercicio=ejercicio,
-    )
+    if as_json:
+        diffs_found = _emit_diff_json(
+            parsed_a,
+            parsed_b,
+            file_a=file_a,
+            file_b=file_b,
+            modelo=modelo,
+            ejercicio=ejercicio,
+        )
+    else:
+        diffs_found = _report_semantic_diff(
+            parsed_a,
+            parsed_b,
+            file_a=file_a,
+            file_b=file_b,
+            modelo=modelo,
+            ejercicio=ejercicio,
+        )
     if diffs_found:
         raise typer.Exit(code=1)
 
@@ -188,3 +256,36 @@ def _render(value: object) -> str:
     if value is None:
         return "<missing>"
     return str(value)
+
+
+def _emit_diff_json(
+    parsed_a: ParsedRecord | ParsedEnvelope,
+    parsed_b: ParsedRecord | ParsedEnvelope,
+    *,
+    file_a: Path,
+    file_b: Path,
+    modelo: str,
+    ejercicio: str,
+) -> bool:
+    """Emit the semantic-diff machine-readable shape. Returns True when at
+    least one delta was reported."""
+    casilla_deltas = _dict_diff(_casillas_of(parsed_a), _casillas_of(parsed_b))
+    field_deltas: list[tuple[str, object, object]] = []
+    if isinstance(parsed_a, ParsedRecord) and isinstance(parsed_b, ParsedRecord):
+        field_deltas = _dict_diff(parsed_a.field_values, parsed_b.field_values)
+
+    payload = {
+        "status": "mismatch" if (casilla_deltas or field_deltas) else "bytes-differ-no-semantic-delta",
+        "modelo": modelo,
+        "ejercicio": ejercicio,
+        "file_a": file_a.name,
+        "file_b": file_b.name,
+        "casilla_deltas": [
+            {"casilla": cid, "a": _render(a_val), "b": _render(b_val)} for cid, a_val, b_val in casilla_deltas
+        ],
+        "field_deltas": [
+            {"field_id": fid, "a": _render(a_val), "b": _render(b_val)} for fid, a_val, b_val in field_deltas
+        ],
+    }
+    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+    return bool(casilla_deltas or field_deltas)
