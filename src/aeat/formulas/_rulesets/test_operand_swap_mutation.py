@@ -99,9 +99,16 @@ def _mutate_outer_sub_op(ruleset: Ruleset, target_casilla_id: str) -> Ruleset:
 
 # -- Externally-anchored asymmetric fixtures ----------------------------
 #
-# Each fixture carries ``a > b > 0`` at the targeted sub_op, so swapping
-# ``sub_op(a, b)`` to ``sub_op(b, a)`` produces a sign-flipped value
-# that CANNOT match the original fixture within any reasonable tolerance.
+# Each fixture carries a detectable asymmetry at the targeted sub_op so
+# that swapping ``sub_op(a, b)`` to ``sub_op(b, a)`` produces a value
+# whose delta from the user-supplied expected value exceeds the 0.01
+# audit tolerance. The strongest shape is ``a > b > 0`` (sign-flip on
+# swap); two targets — ``modelo_303.2025:45`` and
+# ``modelo_202.2025:32`` — have ``b = 0`` on the OUTER sub_op, and
+# detection then relies on the large magnitude of ``a`` (sign flip
+# still occurs, delta = 2a >> tolerance). Harness authors extending
+# this file must verify the delta-after-swap is at least 0.02 for
+# every new case.
 
 
 def _modelo_130_rich_fixture() -> dict[str, Decimal]:

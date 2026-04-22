@@ -102,15 +102,18 @@ class TestModelo131Ruleset:
     def test_external_worked_example_rirpf_110(self) -> None:
         """External-anchored worked example (wave 57b H5/H6 closure).
 
-        Provenance: RD 439/2007 (RIRPF) art. 110.2 fixes the 2%
+        Provenance: RD 439/2007 (RIRPF) art. 110.1.c fixes the 2%
         rate on volumen ingresos agricolas/ganaderas/forestales/
-        pesqueras; art. 110.4 fixes the 2% rate on volumen ventas
-        for other modulos activities.
+        pesqueras; art. 110.1.b fixes the 4%/3%/2% rate (scaled by
+        employee count, 2% without employees) on the rendimiento
+        neto resultante for modulos activities — both rates apply
+        to the volumen-ventas proxy used in Modelo 131 per Orden
+        EHA/672/2007 instrucciones.
 
         Scenario: Q3 2025 autonomo on modulos with 25 000 volumen
         ventas (03) and 10 000 volumen ingresos agricolas (05):
-        - casilla 04 = 25 000 x 2% = 500.00 per RIRPF art. 110.4
-        - casilla 06 = 10 000 x 2% = 200.00 per RIRPF art. 110.2
+        - casilla 04 = 25 000 x 2% = 500.00 per RIRPF art. 110.1.b
+        - casilla 06 = 10 000 x 2% = 200.00 per RIRPF art. 110.1.c
         - casilla 07 = 02 + 04 + 06 = 150 + 500 + 200 = 850.
         - casilla 10 = 07 - 08 - 09 = 850 - 20 - 0 = 830.
         - casilla 13 = 10 - 11 - 12 = 830 - 0 - 0 = 830.
@@ -122,9 +125,9 @@ class TestModelo131Ruleset:
             "01": Decimal("1500.00"),
             "02": Decimal("150.00"),
             "03": Decimal("25000.00"),
-            "04": Decimal("500.00"),  # 2% per RIRPF art. 110.4
+            "04": Decimal("500.00"),  # 2% per RIRPF art. 110.1.b
             "05": Decimal("10000.00"),
-            "06": Decimal("200.00"),  # 2% per RIRPF art. 110.2
+            "06": Decimal("200.00"),  # 2% per RIRPF art. 110.1.c
             "07": Decimal("850.00"),
             "08": Decimal("20.00"),
             "09": Decimal("0.00"),

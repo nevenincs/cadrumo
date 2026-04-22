@@ -91,10 +91,12 @@ class TestModelo202Ruleset:
         Provenance: Ley 27/2014 (LIS) art. 40.3 párrafo 1 fixes the
         tipo de gravamen aplicable al pago fraccionado modalidad
         base-del-período-corriente at **5/7 del tipo general
-        redondeado**, which resolves to **17%** for the general 24%
-        tipo de gravamen. For micropymes (tipo 20%), 5/7 rounds to
-        14%; for microempresas transitional schedule 2025 (21% on
-        first tranche, 22% on excess) the rounded rates are 15%/16%.
+        redondeado por defecto**, which resolves to **17%** for the
+        general 25% tipo de gravamen (LIS art. 29.1: ``25 por ciento
+        con carácter general``). For micropymes with the Ley 31/2022
+        transitional 23% tipo, 5/7 x 23 rounds to 16%. The general-
+        tipo 17% applies to Modelo 202 filings by sociedades not
+        claiming the micropyme / new-entity régimen.
 
         This fixture uses the 17% general-tipo modalidad 40.3 rate
         — NOT the rate from the ruleset's param table (there is
@@ -102,16 +104,18 @@ class TestModelo202Ruleset:
         rate-swap bug in the ruleset would surface as a Decimal
         mismatch.
 
-        (Wave 60 stream 2 audit found my earlier claim that 23%
-        was "the micropyme rate per HAC/262/2025" was incorrect —
-        23% is not a valid rate in any reading of LIS art. 29.1 or
-        40.3. The corrected citation anchors directly on art. 40.3
-        which is the actual modality Modelo 202 implements.)
+        (Wave 60 stream 2 audit corrected an earlier 23%-as-tipo
+        miscitation: LIS art. 40.3 párrafo 2 does mention 23% as an
+        **importe mínimo** threshold — minimum of 23% of positive
+        P&L — for large entities > EUR 10M net turnover, but this
+        is a floor on the pago fraccionado, not a tipo de gravamen.
+        The 17% rate here is the derived modalidad-rate for
+        ordinary sociedades under LIS 29.1 + 40.3.)
 
         Scenario: Q2 2025 (2P) sociedad ordinaria with base 200 000
         at 17% modalidad 40.3 rate:
         - casilla 16 (base) = 200 000.
-        - casilla 17 (tipo) = 17.00 per LIS art. 40.3 (5/7 of 24%).
+        - casilla 17 (tipo) = 17.00 per LIS art. 40.3 (5/7 of 25%).
         - casilla 18 (cuota integra) = 200 000 x 17% = 34 000.
         - casilla 27 bonificaciones = 0.
         - casilla 28 retenciones = 2 000.
@@ -124,7 +128,7 @@ class TestModelo202Ruleset:
         """
         provided = {
             "16": Decimal("200000.00"),
-            "17": Decimal("17.00"),  # 17% per LIS art. 40.3 (5/7 of 24%)
+            "17": Decimal("17.00"),  # 17% per LIS art. 40.3 (5/7 of 25%)
             "18": Decimal("34000.00"),
             "27": Decimal("0.00"),
             "28": Decimal("2000.00"),
