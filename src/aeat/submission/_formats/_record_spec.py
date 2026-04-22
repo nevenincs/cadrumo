@@ -260,6 +260,61 @@ def encode_date(
             return value.strftime("%d%m%Y").encode(encoding)
 
 
+class SegmentSpec(BaseModel):
+    """A named, variable-length segment in a multi-segment fichero-BOE envelope.
+
+    Wave 82a (EPIC #201, Modelo 303+ support). Modelo 303 — and every
+    IVA modelo post-HAC/819/2024 — is not a single flat record. The
+    on-wire format is an envelope like::
+
+        <T3030AAAAPP0000> ... <AUX> ... </AUX> ... <T30301...>page1</T30301...> ...
+
+    Each ``<T303PPPPP...>`` segment is itself a fixed-width record with
+    its own field layout, opener + closer literal, and byte length.
+    Segment IDs also reset their internal offsets to 1 (per-segment
+    numbering — unlike Modelo 130's single flat 1..878 range).
+
+    A :class:`SegmentSpec` carries one segment's layout. The envelope
+    itself is a tuple of :class:`SegmentSpec` plus a per-draft selector
+    that decides which optional segments are emitted (e.g., Modelo 303
+    page 4 is emitted only on the last-period exonerado-390 filing).
+
+    Attributes:
+        segment_id: AEAT segment identifier (``"DP30300"``, ``"DP30301"``).
+        specs: the field layout for this segment. Offsets are
+            segment-local (1-based within this segment, NOT global).
+        total_length: byte content length of this segment (excluding
+            any CRLF terminator if present).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    segment_id: Annotated[str, Field(min_length=1, max_length=32)]
+    specs: tuple[RecordFieldSpec, ...]
+    total_length: Annotated[int, Field(ge=1)]
+
+
+def validate_segment_specs(segments: tuple[SegmentSpec, ...]) -> None:
+    """Enforce per-segment invariants at import time.
+
+    Runs :func:`validate_record_specs` on each segment and checks that
+    segment IDs are unique across the envelope. Does NOT enforce a
+    global offset (each segment resets to 1). Wave 82a companion to
+    :func:`validate_record_specs`.
+    """
+    if not segments:
+        raise ValueError("segments must not be empty")
+    seen: set[str] = set()
+    for i, seg in enumerate(segments):
+        if seg.segment_id in seen:
+            raise ValueError(f"duplicate segment_id={seg.segment_id!r} at index {i}")
+        seen.add(seg.segment_id)
+        try:
+            validate_record_specs(seg.specs, total_length=seg.total_length)
+        except ValueError as exc:
+            raise ValueError(f"segment {seg.segment_id!r} at index {i}: {exc}") from exc
+
+
 def validate_record_specs(
     specs: tuple[RecordFieldSpec, ...],
     *,

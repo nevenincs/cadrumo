@@ -26,6 +26,7 @@ from ._record_spec import (
     FicheroBoeEncoding,
     FieldKind,
     RecordFieldSpec,
+    SegmentSpec,
 )
 
 
@@ -162,4 +163,83 @@ def deserialise(
     )
 
 
-__all__ = ["ParsedRecord", "deserialise"]
+class ParsedEnvelope(BaseModel):
+    """Result of parsing a multi-segment fichero-BOE envelope.
+
+    Wave 82a companion to :class:`ParsedRecord`. Each segment's
+    :class:`ParsedRecord` is addressable by ``segment_id`` so callers
+    can diff a specific page (e.g., Modelo 303 page 3 rectificativa
+    block) without walking every segment.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    segments: Mapping[str, ParsedRecord]
+    """Per-segment parsed records keyed by ``segment_id``."""
+
+    merged_casilla_values: Mapping[str, Decimal]
+    """Flat view of every casilla across every segment.
+
+    Convenient for verification paths (#239) that compare a filing
+    against AEAT's record per casilla_id without caring which
+    envelope segment the value lived in.
+    """
+
+
+def deserialise_envelope(
+    payload: bytes,
+    *,
+    segments: tuple[SegmentSpec, ...],
+    encoding: FicheroBoeEncoding,
+) -> ParsedEnvelope:
+    """Parse a multi-segment fichero-BOE envelope.
+
+    Consumes the payload in segment order, slicing ``total_length``
+    bytes per segment. The final CRLF is optional (caller may have
+    stripped it before hashing).
+
+    Raises:
+        ValueError: if the payload length does not match the sum of
+            segment lengths, or any segment fails its shape check.
+    """
+    if not segments:
+        raise ValueError("segments must not be empty")
+
+    body = payload[: -len(_CRLF)] if payload.endswith(_CRLF) else payload
+    expected_total = sum(s.total_length for s in segments)
+    if len(body) != expected_total:
+        raise ValueError(
+            f"envelope payload is {len(body)} bytes but segments sum to "
+            f"{expected_total}; wrong envelope composition or corrupted stream."
+        )
+
+    parsed: dict[str, ParsedRecord] = {}
+    merged: dict[str, Decimal] = {}
+    cursor = 0
+    for segment in segments:
+        slice_end = cursor + segment.total_length
+        segment_bytes = body[cursor:slice_end]
+        record = deserialise(
+            segment_bytes,
+            specs=segment.specs,
+            encoding=encoding,
+            total_length=segment.total_length,
+        )
+        parsed[segment.segment_id] = record
+        for cid, value in record.casilla_values.items():
+            if cid in merged and merged[cid] != value:
+                raise ValueError(
+                    f"casilla {cid!r} appears with divergent values across "
+                    f"segments (got {merged[cid]} then {value}); modelo spec "
+                    f"must not duplicate casilla_id across pages."
+                )
+            merged[cid] = value
+        cursor = slice_end
+
+    return ParsedEnvelope(
+        segments=parsed,
+        merged_casilla_values=merged,
+    )
+
+
+__all__ = ["ParsedEnvelope", "ParsedRecord", "deserialise", "deserialise_envelope"]
