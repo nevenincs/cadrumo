@@ -214,9 +214,7 @@ def _report_semantic_diff(
             table.add_row(cid, _render(a_val), _render(b_val))
         _CONSOLE.print(table)
 
-    field_deltas: list[tuple[str, object, object]] = []
-    if isinstance(parsed_a, ParsedRecord) and isinstance(parsed_b, ParsedRecord):
-        field_deltas = _dict_diff(parsed_a.field_values, parsed_b.field_values)
+    field_deltas = _dict_diff(_fields_of(parsed_a), _fields_of(parsed_b))
     if field_deltas:
         table = Table(title="header / field deltas", show_lines=False)
         table.add_column("field_id")
@@ -239,6 +237,12 @@ def _casillas_of(parsed: ParsedRecord | ParsedEnvelope) -> Mapping[str, object]:
     if isinstance(parsed, ParsedEnvelope):
         return parsed.merged_casilla_values
     return parsed.casilla_values
+
+
+def _fields_of(parsed: ParsedRecord | ParsedEnvelope) -> Mapping[str, object]:
+    if isinstance(parsed, ParsedEnvelope):
+        return parsed.merged_field_values
+    return parsed.field_values
 
 
 def _dict_diff(a: Mapping[str, object], b: Mapping[str, object]) -> list[tuple[str, object, object]]:
@@ -270,9 +274,7 @@ def _emit_diff_json(
     """Emit the semantic-diff machine-readable shape. Returns True when at
     least one delta was reported."""
     casilla_deltas = _dict_diff(_casillas_of(parsed_a), _casillas_of(parsed_b))
-    field_deltas: list[tuple[str, object, object]] = []
-    if isinstance(parsed_a, ParsedRecord) and isinstance(parsed_b, ParsedRecord):
-        field_deltas = _dict_diff(parsed_a.field_values, parsed_b.field_values)
+    field_deltas = _dict_diff(_fields_of(parsed_a), _fields_of(parsed_b))
 
     payload = {
         "status": "mismatch" if (casilla_deltas or field_deltas) else "bytes-differ-no-semantic-delta",

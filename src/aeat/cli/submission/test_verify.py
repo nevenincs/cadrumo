@@ -149,6 +149,11 @@ class TestVerifyCommand:
         assert len(doc["segments"]) == 8
         assert "DP30300" in doc["segments"]
         assert "DP30301" in doc["segments"]
+        # Wave 103: envelope fields surface the merged NIF / periodo / tipo.
+        fields = doc["fields"]
+        assert fields["DP30301_F007_IDENTIFICACI_N_NIF"] == "X1234567L"
+        assert fields["DP30301_F010_DEVENGO_PER_ODO"] == "1T"
+        assert fields["DP30301_F006_TIPO_DECLARACI_N"] == "I"
 
     def test_verify_json_error_on_corrupt_payload(self, tmp_path: Path) -> None:
         """--json emits a status=error document even on decoder failure."""
