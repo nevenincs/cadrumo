@@ -109,6 +109,43 @@ def verify_cmd(
     # or ENVELOPE total_length bytes of content.
     content = payload[:-2] if payload.endswith(b"\r\n") else payload
 
+    # Wave 135 pre-flight: catch a wrong-length payload with a Kent-facing
+    # message naming the likely failure modes (wrong --modelo / --ejercicio
+    # flags, truncated file, or a file from a different schema) before the
+    # deserialiser surfaces a generic "content is N bytes but total_length
+    # is M" error.
+    if entry.kind == "record":
+        expected = int(entry.module.RECORD_LENGTH)
+    else:
+        expected = sum(int(s.total_length) for s in entry.module.ENVELOPE)
+    if len(content) != expected:
+        msg = (
+            f"verify FAILED: file is {len(content)} content byte(s) but "
+            f"modelo={modelo} ejercicio={ejercicio} expects exactly {expected}. "
+            "Likely causes: wrong --modelo / --ejercicio flag, a truncated file, "
+            "or a file produced by a different schema version."
+        )
+        if as_json:
+            typer.echo(
+                json.dumps(
+                    {
+                        "status": "error",
+                        "error_type": "PayloadLengthMismatch",
+                        "error_message": msg,
+                        "modelo": modelo,
+                        "ejercicio": ejercicio,
+                        "file": file_path.name,
+                        "expected_bytes": expected,
+                        "actual_bytes": len(content),
+                    },
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
+        else:
+            _CONSOLE.print(f"[red]{msg}[/red]")
+        raise typer.Exit(code=2)
+
     try:
         if entry.kind == "record":
             parsed_record = deserialise(
