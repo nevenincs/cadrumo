@@ -9,10 +9,14 @@ Feeds his régimen-general base imponible (casilla 07 = 20 000 € at
 serialising the result to the 7994-byte fichero-BOE envelope yields
 the wave-109 golden SHA256 + round-trips back byte-exactly.
 
-Ruleset + schema share a known mapping gap: casilla 71 is declared
-in the ruleset but has no field in the 303 DR fixture. The test
-filters comparisons to casillas that live in both layers so the
-gap is documented (see ``_SCHEMA_CASILLAS``) without masking a
+Ruleset + schema share a known mapping gap: casillas 45, 64, 67,
+71 are declared in the ruleset but have no fields in the 303 DR
+fixture (the wave-87 xlsx extraction missed the cuota-devengada-
+total / diferencia / a-ingresar rollup block — see
+``_EXPECTED_GAPS["303.2024"]`` in test_ruleset_schema_coverage.py
+and the matching note in tests/fixtures/dr_specs/dr303e24.json
+source.notes). The test filters comparisons to casillas that
+live in both layers so the gap is documented without masking a
 real regression.
 """
 
@@ -102,7 +106,8 @@ class TestKentE2EModelo303Q12024:
             "Either:\n"
             "  - the Modelo 303 2024 ruleset changed a formula (Track B), OR\n"
             "  - the schema/serialiser shifted a byte (Track A), OR\n"
-            "  - casilla 71 gained a schema field, closing the wave-109 gap.\n"
+            "  - casillas 45 / 64 / 67 / 71 gained schema fields,\n"
+            "    closing the wave-109/113 gap (update _EXPECTED_GAPS too).\n"
             "Pick one, update the `expected` literal, and explain in the commit."
         )
 
@@ -110,8 +115,10 @@ class TestKentE2EModelo303Q12024:
         """Every ruleset-derived casilla that the envelope schema also
         carries must round-trip byte-exactly through deserialise_envelope.
 
-        Casilla 71 is declared in the ruleset but has no schema field, so
-        it is excluded from the comparison — see :func:`_schema_casilla_ids`.
+        Casillas 45, 64, 67, 71 are declared in the ruleset but have no
+        schema field (see wave-113 _EXPECTED_GAPS and wave-114 fixture
+        source.notes), so they are excluded from the comparison via
+        :func:`_schema_casilla_ids`.
         """
         casillas = self._derive_casillas()
         payload = serialise_envelope(
