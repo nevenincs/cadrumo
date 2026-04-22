@@ -13,34 +13,108 @@ until the draft-status lifecycle lands. Until then, the command
 refuses any draft whose CLI ``status`` field is explicitly
 ``"rejected"`` or ``"superseded"``; otherwise it produces output
 with a prominent BORRADOR banner in the console.
+
+Wave 92 adds Modelo 303 2024 via the multi-segment envelope path;
+the schema registry now carries a per-modelo CLI header builder and
+a dispatch tag so single-record (130) and envelope (303) filings
+share the same driver.
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
+from types import ModuleType
+from typing import Literal
 
 import typer
 from rich.console import Console
 
 from ...submission import DraftStatus
-from ...submission._formats import modelo_130_2024, modelo_130_2025
-from ...submission._formats._serialise import serialise
+from ...submission._formats import modelo_130_2024, modelo_130_2025, modelo_303_2024
+from ...submission._formats._serialise import serialise, serialise_envelope
 from ._helpers import load_draft
 
 _CONSOLE = Console()
 
 _NIF_RE = re.compile(r"^[A-Z0-9]{9}$")
 
-#: Mapping from (modelo, ejercicio) to the schema module that owns
-#: the per-modelo fichero-BOE record spec. Wave 81 ships the two
-#: Modelo 130 variants only; 303/390 land after the multi-segment
-#: envelope architecture extension (wave 82+ per Modelo 303 research).
-_SCHEMA_REGISTRY = {
-    ("130", "2024"): modelo_130_2024,
-    ("130", "2025"): modelo_130_2025,
+
+@dataclass(frozen=True, slots=True)
+class _CliInputs:
+    """Canonical CLI-supplied filing-identification inputs."""
+
+    ejercicio: str
+    periodo: str
+    nif: str
+    apellidos: str
+    nombre: str
+    tipo_declaracion: str
+
+
+@dataclass(frozen=True, slots=True)
+class _SchemaEntry:
+    """Registry entry pairing a schema module with its CLI adapters.
+
+    ``kind`` dispatches the driver to either :func:`serialise` (single
+    fixed-width record, Modelo 130 style) or :func:`serialise_envelope`
+    (multi-segment XML-wrapped pages, Modelo 303 / 390 style).
+    """
+
+    module: ModuleType
+    kind: Literal["record", "envelope"]
+    build_headers: Callable[[_CliInputs], dict[str, str]]
+
+
+def _build_130_headers(inputs: _CliInputs) -> dict[str, str]:
+    """Modelo 130 uses the canonical CLI header names 1:1."""
+    return {
+        "EJERCICIO": inputs.ejercicio,
+        "PERIODO": inputs.periodo,
+        "NIF_DECLARANTE": inputs.nif,
+        "APELLIDOS": inputs.apellidos,
+        "NOMBRE": inputs.nombre,
+        "TIPO_DECLARACION": inputs.tipo_declaracion,
+    }
+
+
+def _build_303_headers(inputs: _CliInputs) -> dict[str, str]:
+    """Modelo 303 keys headers by the DR303 field IDs.
+
+    DP30301 carries the per-page identification fields; DP30300 is
+    the envelope wrapper with AEAT-reserved slots we leave blank.
+    APELLIDOS and NOMBRE share a single 80-byte field (``APELLIDOS
+    NOMBRE`` convention).
+    """
+    apellidos_y_nombre = (f"{inputs.apellidos} {inputs.nombre}").strip()
+    # AEAT-reserved and developer-identifier slots pass a single space
+    # so the serialiser space-pads to field length while the required-
+    # field check (which rejects truly empty strings) still succeeds.
+    _admin = " "
+    return {
+        # Envelope header (DP30300).
+        "DP30300_F004_EJERCICIO_DE_DEVENGO": inputs.ejercicio,
+        "DP30300_F008_RESERVADO_PARA_LA_adminISTRA": _admin,
+        "DP30300_F009_VERSI_N_DEL_PROGRAMA": _admin,
+        "DP30300_F010_RESERVADO_PARA_LA_adminISTRA": _admin,
+        "DP30300_F011_NIF_EMPRESA_DESARROLLO": _admin,
+        "DP30300_F012_RESERVADO_PARA_LA_adminISTRA": _admin,
+        # Per-page identification (DP30301).
+        "DP30301_F006_TIPO_DECLARACI_N": inputs.tipo_declaracion,
+        "DP30301_F007_IDENTIFICACI_N_NIF": inputs.nif,
+        "DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N": apellidos_y_nombre,
+        "DP30301_F009_DEVENGO_EJERCICIO": inputs.ejercicio,
+        "DP30301_F010_DEVENGO_PER_ODO": inputs.periodo,
+    }
+
+
+_SCHEMA_REGISTRY: dict[tuple[str, str], _SchemaEntry] = {
+    ("130", "2024"): _SchemaEntry(modelo_130_2024, "record", _build_130_headers),
+    ("130", "2025"): _SchemaEntry(modelo_130_2025, "record", _build_130_headers),
+    ("303", "2024"): _SchemaEntry(modelo_303_2024, "envelope", _build_303_headers),
 }
 
 
@@ -107,8 +181,8 @@ def export_cmd(
     ejercicio = _ejercicio_token(draft.period)
     periodo = _period_token(draft.period)
     key = (draft.modelo, ejercicio)
-    schema = _SCHEMA_REGISTRY.get(key)
-    if schema is None:
+    entry = _SCHEMA_REGISTRY.get(key)
+    if entry is None:
         _CONSOLE.print(
             f"[red]export UNSUPPORTED:[/red] modelo {draft.modelo} "
             f"ejercicio {ejercicio} has no fichero-BOE schema yet. "
@@ -139,23 +213,33 @@ def export_cmd(
         except Exception as exc:
             raise typer.BadParameter(f"casilla {cid!r} value {raw!r} is not a valid Decimal") from exc
 
-    headers: dict[str, str] = {
-        "EJERCICIO": ejercicio,
-        "PERIODO": periodo,
-        "NIF_DECLARANTE": nif,
-        "APELLIDOS": apellidos,
-        "NOMBRE": nombre,
-        "TIPO_DECLARACION": tipo_declaracion.upper(),
-    }
-
-    payload = serialise(
-        casilla_values=casilla_values,
-        headers=headers,
-        specs=schema._RECORD_SPECS,
-        encoding=schema.ENCODING,
-        total_length=schema.RECORD_LENGTH,
-        required_field_ids=schema.REQUIRED_HEADER_FIELDS,
+    inputs = _CliInputs(
+        ejercicio=ejercicio,
+        periodo=periodo,
+        nif=nif,
+        apellidos=apellidos,
+        nombre=nombre,
+        tipo_declaracion=tipo_declaracion.upper(),
     )
+    headers = entry.build_headers(inputs)
+
+    if entry.kind == "record":
+        payload = serialise(
+            casilla_values=casilla_values,
+            headers=headers,
+            specs=entry.module._RECORD_SPECS,
+            encoding=entry.module.ENCODING,
+            total_length=entry.module.RECORD_LENGTH,
+            required_field_ids=entry.module.REQUIRED_HEADER_FIELDS,
+        )
+    else:
+        payload = serialise_envelope(
+            casilla_values=casilla_values,
+            headers=headers,
+            segments=entry.module.ENVELOPE,
+            encoding=entry.module.ENCODING,
+            required_field_ids=entry.module.REQUIRED_HEADER_FIELDS,
+        )
 
     # AEAT filename convention per dr130.09.pdf: {NIF}{EJERCICIO}{PERIODO}.{modelo}
     output_dir.mkdir(parents=True, exist_ok=True)

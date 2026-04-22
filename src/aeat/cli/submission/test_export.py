@@ -106,8 +106,47 @@ class TestExportCommand:
         output_path = output_dir / "X1234567L20253T.130"
         assert output_path.exists()
 
-    def test_unsupported_modelo_exits_2(self, tmp_path: Path) -> None:
+    def test_modelo_303_2024_q1_writes_envelope_file(self, tmp_path: Path) -> None:
+        """Wave 92: 303 dispatches through the multi-segment envelope path."""
         draft = _write_draft(tmp_path, modelo="303")
+        output_dir = tmp_path / "out"
+        result = _runner.invoke(
+            app,
+            [
+                "export",
+                str(draft),
+                "--output-dir",
+                str(output_dir),
+                "--nombre",
+                "KENT",
+                "--apellidos",
+                "DOE RODRIGUEZ",
+                "--tipo",
+                "I",
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
+        assert "export OK" in result.stdout
+        output_path = output_dir / "X1234567L20241T.303"
+        assert output_path.exists()
+        payload = output_path.read_bytes()
+        # 7994 envelope content + CRLF trailer.
+        assert len(payload) == 7994 + 2
+        assert payload[0:2] == b"<T"
+        assert payload[2:5] == b"303"
+        assert payload[6:10] == b"2024"  # ejercicio in envelope header
+        # Per-page identification in DP30301 starts at byte 328.
+        # DP30301 offsets (1-based in spec): F006 TIPO=13, F007 NIF=14, F010 PERIODO=107.
+        # 0-indexed within payload: 328 + (offset - 1).
+        dp30301_start = 328
+        assert payload[dp30301_start + 12 : dp30301_start + 13] == b"I"  # TIPO_DECLARACION
+        assert payload[dp30301_start + 13 : dp30301_start + 22] == b"X1234567L"  # NIF
+        assert payload[dp30301_start + 106 : dp30301_start + 108] == b"1T"  # PERIODO
+        assert payload.endswith(b"\r\n")
+
+    def test_unsupported_modelo_exits_2(self, tmp_path: Path) -> None:
+        """Modelo 390 is not yet registered; export must refuse with exit 2."""
+        draft = _write_draft(tmp_path, modelo="390", period="2024Q4")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
             app,
