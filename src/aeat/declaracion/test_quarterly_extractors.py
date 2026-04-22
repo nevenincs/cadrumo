@@ -585,6 +585,33 @@ class TestSoftHyphenLineBreakNormalisation:
         # Should remain intact.
         assert "-\n" in normalised
 
+    def test_digit_boundary_not_stitched(self) -> None:
+        """Wave 59a H1: digit-boundary hyphen-newline pairs MUST NOT stitch.
+
+        An adversarial wrap like ``9-\\n10`` would collapse to
+        ``910`` under the pre-59a `\\w`-based lookaround. The tightened
+        letters-only lookaround preserves the original boundary.
+        """
+        from ._generic_extractor import _normalise_pdf_text
+
+        # Digit-boundary cases — MUST remain intact.
+        assert _normalise_pdf_text("9-\n10") == "9-\n10"
+        assert _normalise_pdf_text("03-\ntotal") == "03-\ntotal"
+        assert _normalise_pdf_text("importe 9-\n10 euros") == "importe 9-\n10 euros"
+
+        # Underscore boundary (part of \w in pre-59a regex) — MUST remain intact.
+        assert _normalise_pdf_text("foo_-\n_bar") == "foo_-\n_bar"
+
+    def test_letter_boundary_still_stitches(self) -> None:
+        """Wave 59a H1: letter-on-letter hyphen stitching still works."""
+        from ._generic_extractor import _normalise_pdf_text
+
+        # ASCII letter boundary — still stitches.
+        assert _normalise_pdf_text("Reten-\nciones") == "Retenciones"
+        # Unicode letter boundary (á, ñ) — still stitches.
+        assert _normalise_pdf_text("actá-\nreo") == "actáreo"
+        assert _normalise_pdf_text("españ-\nola") == "española"
+
 
 class TestGenericExtractorInvariants:
     def test_casilla_and_text_casilla_overlap_rejected(self) -> None:
