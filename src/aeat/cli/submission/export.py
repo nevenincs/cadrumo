@@ -97,11 +97,11 @@ def _build_303_headers(inputs: _CliInputs) -> dict[str, str]:
     return {
         # Envelope header (DP30300).
         "DP30300_F004_EJERCICIO_DE_DEVENGO": inputs.ejercicio,
-        "DP30300_F008_RESERVADO_PARA_LA_adminISTRA": _admin,
+        "DP30300_F008_RESERVADO_PARA_LA_ADMINISTRA": _admin,
         "DP30300_F009_VERSI_N_DEL_PROGRAMA": _admin,
-        "DP30300_F010_RESERVADO_PARA_LA_adminISTRA": _admin,
+        "DP30300_F010_RESERVADO_PARA_LA_ADMINISTRA": _admin,
         "DP30300_F011_NIF_EMPRESA_DESARROLLO": _admin,
-        "DP30300_F012_RESERVADO_PARA_LA_adminISTRA": _admin,
+        "DP30300_F012_RESERVADO_PARA_LA_ADMINISTRA": _admin,
         # Per-page identification (DP30301).
         "DP30301_F006_TIPO_DECLARACI_N": inputs.tipo_declaracion,
         "DP30301_F007_IDENTIFICACI_N_NIF": inputs.nif,
