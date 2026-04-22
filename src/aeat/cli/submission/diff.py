@@ -33,7 +33,7 @@ from ...submission._formats._deserialise import (
     deserialise,
     deserialise_envelope,
 )
-from ._schema_registry import SCHEMA_REGISTRY, SchemaEntry
+from ._schema_registry import SCHEMA_REGISTRY, SchemaEntry, validate_ejercicio_flag, validate_modelo_flag
 from .verify import _infer_modelo_ejercicio
 
 _CONSOLE = Console()
@@ -43,10 +43,18 @@ def diff_cmd(
     file_a: Path = typer.Argument(..., exists=True, readable=True, help="First fichero-BOE file."),
     file_b: Path = typer.Argument(..., exists=True, readable=True, help="Second fichero-BOE file."),
     modelo: str | None = typer.Option(
-        None, "--modelo", "-m", help="Modelo code; auto-detected from FILE_A's filename if omitted."
+        None,
+        "--modelo",
+        "-m",
+        help="Modelo code; auto-detected from FILE_A's filename if omitted.",
+        callback=validate_modelo_flag,
     ),
     ejercicio: str | None = typer.Option(
-        None, "--ejercicio", "-e", help="Filing year; auto-detected from FILE_A's filename if omitted."
+        None,
+        "--ejercicio",
+        "-e",
+        help="Filing year; auto-detected from FILE_A's filename if omitted.",
+        callback=validate_ejercicio_flag,
     ),
     as_json: bool = typer.Option(
         False,
