@@ -1,6 +1,6 @@
 ---
 name: submission-pipeline-hardening
-description: Reference catalogue for the wave 89-139 autonomous hardening cycle on the fichero-BOE submission pipeline — perpetual regression guards, E2E coverage, CLI surface, input validation, and schema-module contracts.
+description: Reference catalogue for the wave 89-148 autonomous hardening cycle on the fichero-BOE submission pipeline — perpetual regression guards, E2E coverage, CLI surface, input validation, structural layout locks, and schema-module contracts.
 type: reference
 tags:
   - "#reference"
@@ -14,7 +14,7 @@ related:
 
 # submission-pipeline-hardening
 
-Capstone reference for the autonomous-loop cycle spanning **waves 89–139** on `src/aeat/submission/_formats/` and `src/aeat/cli/submission/`. First written at wave 130; extended at wave 140 (this revision) to cover the 50-wave milestone (waves 131–139 additions).
+Capstone reference for the autonomous-loop cycle spanning **waves 89–148** on `src/aeat/submission/_formats/` and `src/aeat/cli/submission/`. First written at wave 130; extended at wave 140 (50-wave milestone) and wave 149 (this revision) to cover the waves 141–148 structural-layout locks.
 
 ## scope
 
@@ -82,15 +82,24 @@ All five share the factored `_schema_registry.py` dispatch (wave 97) with filena
 - ED2 CURRENCY unsigned + INLINE_SIGN, zero / 1-cent / typical / max / overflow / ROUND_HALF_UP — wave 128.
 - ED3 DATE YYYYMMDD + DDMMYYYY calendar-boundary + garbage-rejection — wave 129.
 
-Total: **25 perpetual-guard surfaces**.
+**Structural-layout locks (byte-shape lattice):**
+- SL1 CLI export determinism: 2 runs + 5 runs produce byte-identical files per schema — wave 141.
+- SL2 303 envelope inter-segment cumulative layout (8 segments × start × length) — wave 142.
+- SL3 DP30301 intra-segment header block (10 fields, TIPO/NIF/APELLIDOS_Y_NOMBRE/EJERCICIO/PERIODO) — wave 143.
+- SL4 DP303DID SEPA page layout (SWIFT/IBAN/BANK/COUNTRY/MARCA_SEPA) — wave 144.
+- SL5 Modelo 130 record header block (11 fields per dr130.09.pdf) with wave-77c miscite guards — wave 145.
+- SL6 DP30301 régimen-general rate rows (4% / 5% / 10% / 21% triples) — wave 146.
+- SL7 DP30301 recargo-equivalencia rate rows (1.75% / 1.40% / 5.20%) + casilla-17 observed-state — wave 147.
+
+Total: **32 perpetual-guard surfaces**.
 
 ## numeric summary
 
-- **50 waves landed** across `src/aeat/submission/` and `src/aeat/cli/submission/` since cycle start (wave 89)
-- **496 tests passing** (4 intentional kind-filtered skips)
-- **22 test files authored** with perpetual-guard invariants
+- **59 waves landed** across `src/aeat/submission/` and `src/aeat/cli/submission/` since cycle start (wave 89)
+- **543 tests passing** (4 intentional kind-filtered skips)
+- **29 test files authored** with perpetual-guard invariants
 - **4 schema modules** pinned per ejercicio
-- **25 regression surfaces** in the invariant lattice
+- **32 regression surfaces** in the invariant lattice
 
 ## input-handling philosophy
 
@@ -116,11 +125,29 @@ Every path above has both a rich-formatted and `--json` output variant for downs
 - **Live AEAT submission** — explicitly disabled. Deferred to 1.0.0 per the 2026-04-18 live-submit excision ADR. Wave 133/134 documentation locks + the wave-80c `test_no_submit_command` guards keep the excision in place.
 - **Rectificativa rulesets** — wave-120's cross-year guard will relax when #234 lands.
 
+## byte-shape lattice for Modelo 303
+
+Any fixture shift affecting Kent's bytes now fails at the most localized layer with a targeted message:
+
+| Layer | Wave | What fails first |
+|---|---|---|
+| Total envelope length = 7994 | 89 | sum of `segment.total_length` |
+| `_SEGMENT_*` ↔ ENVELOPE parity | 116 | generator-convention mismatch |
+| Inter-segment cumulative offsets | 142 | segment reorder / insert |
+| DP30301 intra-segment header | 143 | Kent-ID field shift |
+| DP303DID SEPA fields | 144 | IBAN / SWIFT shift |
+| DP30301 rate rows (régimen general) | 146 | rate-row insert / reorder |
+| DP30301 recargo-equivalencia | 147 | recargo-row shift |
+| Golden SHA | 93 / 99 | any byte change |
+| CLI determinism (2+5 runs) | 141 | non-pure dependency leak |
+
+The analogous structure for Modelo 130 is locked by wave 145 (11-field header + wave-77c miscite guards).
+
 ## handoff notes
 
 A future contributor should:
 
-1. Run `uv run pytest src/aeat/submission/ src/aeat/cli/submission/` — 496 tests is the baseline.
+1. Run `uv run pytest src/aeat/submission/ src/aeat/cli/submission/` — 543 tests is the baseline.
 2. Read `.claude/rules/aeat-project-mandates.md` and `.vault/adr/2026-04-17-export-first-adr.md`.
 3. For a new modelo, follow the 303 pattern: JSON fixture in `tests/fixtures/dr_specs/`, run the generator, register in `_schema_registry.py`, add golden SHA, add the ruleset metadata lock entry. The wave-124 registry-parametrised smoke test picks up the new entry automatically.
 4. When closing the 303 casilla gap, update `_EXPECTED_GAPS`, the fixture's `source.notes`, and regenerate — the wave-121/122 consistency tests will guide the edits.
