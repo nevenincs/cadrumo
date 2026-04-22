@@ -47,7 +47,7 @@ line.
 |---|---|---|
 | H1 decimal whitespace | CLOSED | wave 51 (`3df1097`) |
 | H2 soft-hyphen line-break | CLOSED | wave 51 (`3df1097`) |
-| H3 tautological ruleset tests | DEFERRED | wave 57+ (partial mitigation attempted in wave 52; tautology re-surfaced by wave 53 stream 4 H5) |
+| H3 tautological ruleset tests | PARTIAL | wave 57a/b (`a69623e`, `d8675ee`) + wave 59c (`c36f9b0`) anchored 11/14 rulesets; wave 61c (`d30c530`) closed 130_2025 + 100_summary_2025; 303_2024 thin-anchor surface remains (wave 63+) |
 | H4 7 rulesets with zero tests | PARTIAL | wave 52 (`07232d6`) — closed 5/7; Modelo 130 2024/2025 gap tracked as wave 53 H3, wave 55 |
 | H5 111/115 label drift | CLOSED | wave 49 (`6f9763b`) + wave 53 stream 1 LOW `78b4687` |
 | H6 Modelo 202 casilla 34 | CLOSED | wave 50 (`d50b7a6`) — verified real |

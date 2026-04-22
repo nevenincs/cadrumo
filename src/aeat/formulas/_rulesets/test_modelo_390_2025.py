@@ -93,7 +93,8 @@ class TestModelo390Ruleset:
         Instrucciones Modelo 390.
 
         Scenario: Kent's 2025 annual resumen:
-        - 96 cuotas repercutidas = 42 000 (sum of quarterly 03+06+09).
+        - 96 cuotas repercutidas = 42 000 (Modelo 390's own annual
+          sub-totals, not a direct sum of quarterly 303 casillas).
         - 100 IVA soportado interior = 8 500.
         - 101 IVA soportado importaciones = 1 500.
         - 104 total IVA soportado = 100 + 101 = 10 000 per AEAT instr.

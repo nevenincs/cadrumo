@@ -38,7 +38,13 @@ import pytest
 from .._engine import Engine
 from .._formula import FormulaDefinition, RoundFormula, SubFormula
 from .._ruleset import Ruleset
-from . import MODELO_130_2025, MODELO_131_2025, MODELO_202_2025, MODELO_303_2025
+from . import (
+    MODELO_130_2025,
+    MODELO_131_2025,
+    MODELO_200_2024,
+    MODELO_202_2025,
+    MODELO_303_2025,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -98,57 +104,111 @@ def _mutate_outer_sub_op(ruleset: Ruleset, target_casilla_id: str) -> Ruleset:
 # that CANNOT match the original fixture within any reasonable tolerance.
 
 
-def _modelo_130_rirpf_fixture() -> dict[str, Decimal]:
-    """Same scenario as ``test_modelo_130_2025::test_external_worked_example_rirpf_art_110``.
+def _modelo_130_rich_fixture() -> dict[str, Decimal]:
+    """Wave 63b: asymmetric fixture exercising EVERY sub_op in Modelo 130.
 
-    Target: casilla 03 = sub_op(01, 02). ``01=48000``, ``02=12500``;
-    correct 03 = 35500, swapped 03 = -35500.
+    Modelo 130 has six sub_op-bearing computed casillas — 03, 07, 11,
+    14, 17, 19. Each needs its sub_op operands to be distinct + non-zero
+    for an outer-operand swap to produce a detectable discrepancy.
+
+    Formula chain (RIRPF art. 110) with the asymmetric values below:
+      - 03 = 01 - 02 = 48000 - 12500 = 35500
+      - 04 = 20% * 03 = 7100
+      - 07 = sub_op(sub_op(04, 05), 06) = (7100 - 1000) - 500 = 5600
+      - 08 = 5000 (agraria ingresos, input)
+      - 09 = 2% * 08 = 100
+      - 11 = 09 - 10 = 100 - 50 = 50
+      - 12 = max(0, 07 + 11) = max(0, 5650) = 5650
+      - 14 = 12 - 13 = 5650 - 150 = 5500
+      - 17 = sub_op(sub_op(14, 15), 16) = (5500 - 200) - 300 = 5000
+      - 19 = 17 - 18 = 5000 - 400 = 4600
+
+    No pair of operands is equal, and every operand in a sub_op is
+    non-zero so any outer-operand swap flips the result.
     """
     return {
         "01": Decimal("48000.00"),
         "02": Decimal("12500.00"),
         "03": Decimal("35500.00"),
         "04": Decimal("7100.00"),
-        "05": Decimal("0.00"),
-        "06": Decimal("0.00"),
-        "07": Decimal("7100.00"),
-        "08": Decimal("0.00"),
-        "09": Decimal("0.00"),
-        "10": Decimal("0.00"),
-        "11": Decimal("0.00"),
-        "12": Decimal("7100.00"),
-        "13": Decimal("0.00"),
-        "14": Decimal("7100.00"),
-        "15": Decimal("2500.00"),
-        "16": Decimal("450.00"),
-        "17": Decimal("4150.00"),
-        "18": Decimal("0.00"),
-        "19": Decimal("4150.00"),
+        "05": Decimal("1000.00"),
+        "06": Decimal("500.00"),
+        "07": Decimal("5600.00"),
+        "08": Decimal("5000.00"),
+        "09": Decimal("100.00"),
+        "10": Decimal("50.00"),
+        "11": Decimal("50.00"),
+        "12": Decimal("5650.00"),
+        "13": Decimal("150.00"),
+        "14": Decimal("5500.00"),
+        "15": Decimal("200.00"),
+        "16": Decimal("300.00"),
+        "17": Decimal("5000.00"),
+        "18": Decimal("400.00"),
+        "19": Decimal("4600.00"),
     }
 
 
-def _modelo_131_fixture() -> dict[str, Decimal]:
-    """Asymmetric autónomo módulos fixture for Modelo 131.
+def _modelo_131_rich_fixture() -> dict[str, Decimal]:
+    """Wave 63b: asymmetric fixture exercising EVERY sub_op in Modelo 131.
 
-    Target: casilla 15 = sub_op(13, 14) (resultado_a_ingresar).
-    13 = 3 000,00; 14 = 800,00; correct 15 = 2 200,00; swapped 15 = -2 200,00.
+    Modelo 131 has three sub_op-bearing computed casillas — 10, 13, 15.
+    Each needs its sub_op operands to be asymmetric + non-zero.
+
+    Formula chain (Orden EHA/672/2007 módulos) with the values below:
+      - 04 = 2% * 03 = 2% * 50000 = 1000
+      - 06 = 2% * 05 = 2% * 20000 = 400
+      - 07 = 02 + 04 + 06 = 2000 + 1000 + 400 = 3400
+      - 10 = sub_op(sub_op(07, 08), 09) = (3400 - 500) - 200 = 2700
+      - 13 = sub_op(sub_op(10, 11), 12) = (2700 - 300) - 150 = 2250
+      - 15 = sub_op(13, 14) = 2250 - 600 = 1650
     """
     return {
         "01": Decimal("0.00"),
         "02": Decimal("2000.00"),
         "03": Decimal("50000.00"),
         "04": Decimal("1000.00"),
-        "05": Decimal("0.00"),
-        "06": Decimal("0.00"),
-        "07": Decimal("3000.00"),
-        "08": Decimal("0.00"),
-        "09": Decimal("0.00"),
-        "10": Decimal("3000.00"),
-        "11": Decimal("0.00"),
-        "12": Decimal("0.00"),
-        "13": Decimal("3000.00"),
-        "14": Decimal("800.00"),
-        "15": Decimal("2200.00"),
+        "05": Decimal("20000.00"),
+        "06": Decimal("400.00"),
+        "07": Decimal("3400.00"),
+        "08": Decimal("500.00"),
+        "09": Decimal("200.00"),
+        "10": Decimal("2700.00"),
+        "11": Decimal("300.00"),
+        "12": Decimal("150.00"),
+        "13": Decimal("2250.00"),
+        "14": Decimal("600.00"),
+        "15": Decimal("1650.00"),
+    }
+
+
+def _modelo_200_fixture() -> dict[str, Decimal]:
+    """Wave 63b H2: Modelo 200 coverage (4-deep sub_op nest in casilla 00611).
+
+    00611 = sub_op(sub_op(sub_op(sub_op(00592, 00599), 00601), 00603), 00605).
+    With the asymmetric values below:
+      00611 = 125000 - 5000 - 30000 - 25000 - 20000 = 45000.
+    A swap of the OUTER sub_op (sub_op(A, 00605) → sub_op(00605, A))
+    where A = 65000 yields 00605 - A = 20000 - 65000 = -45000 — a clean
+    sign flip that the 0.01 tolerance cannot absorb.
+    """
+    return {
+        "00547": Decimal("0.00"),
+        "00550": Decimal("500000.00"),
+        "00552": Decimal("500000.00"),
+        "00558": Decimal("25.00"),
+        "00560": Decimal("125000.00"),
+        "00562": Decimal("125000.00"),
+        "00582": Decimal("125000.00"),
+        "00592": Decimal("125000.00"),
+        "00599": Decimal("5000.00"),
+        "00601": Decimal("30000.00"),
+        "00603": Decimal("25000.00"),
+        "00605": Decimal("20000.00"),
+        "00615": Decimal("0.00"),
+        "00619": Decimal("0.00"),
+        "00611": Decimal("45000.00"),
+        "00621": Decimal("45000.00"),
     }
 
 
@@ -156,10 +216,10 @@ def _modelo_202_fixture() -> dict[str, Decimal]:
     """Same scenario as ``test_modelo_202_2025::test_external_worked_example_lis_art_40_3_modalidad``.
 
     Target: casilla 32 = sub_op(sub_op(sub_op(18, 27), 28), 30).
-    The outer sub_op swap is ``sub_op(30, sub_op(...))`` - a sign flip of
-    the innermost chain. With the fixture values, the correct 32 is
-    34000 - 12000 - 0 - 0 = 22000; a swap of the outermost sub_op
-    yields 0 - (34000 - 12000 - 0) = -22000.
+    The outer-operand swap negates ONLY the outermost subtraction
+    (inner structure preserved): correct 32 = 34000 - 12000 - 0 - 0 = 22000;
+    after swapping outer operands, 32 = 0 - (34000 - 12000 - 0) = -22000.
+    Delta 44000 clears the 0.01 tolerance with margin.
     """
     return {
         "16": Decimal("200000.00"),
@@ -205,23 +265,81 @@ def _modelo_303_fixture() -> dict[str, Decimal]:
 @pytest.mark.parametrize(
     ("ruleset_factory", "target_casilla", "fixture_factory"),
     [
+        # Modelo 130 — every sub_op-bearing casilla (6 chains).
         pytest.param(
             lambda: MODELO_130_2025,
             "03",
-            _modelo_130_rirpf_fixture,
+            _modelo_130_rich_fixture,
             id="modelo_130.2025:casilla_03_rendimiento_neto",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2025,
+            "07",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2025:casilla_07_resultado_apartado_i",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2025,
+            "11",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2025:casilla_11_resultado_apartado_ii",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2025,
+            "14",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2025:casilla_14_neto_tras_minoracion",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2025,
+            "17",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2025:casilla_17_diferencia",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2025,
+            "19",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2025:casilla_19_resultado_final",
+        ),
+        # Modelo 131 — every sub_op-bearing casilla (3 chains).
+        pytest.param(
+            lambda: MODELO_131_2025,
+            "10",
+            _modelo_131_rich_fixture,
+            id="modelo_131.2025:casilla_10_resultado_tras_credits",
+        ),
+        pytest.param(
+            lambda: MODELO_131_2025,
+            "13",
+            _modelo_131_rich_fixture,
+            id="modelo_131.2025:casilla_13_resultado_intermedio",
         ),
         pytest.param(
             lambda: MODELO_131_2025,
             "15",
-            _modelo_131_fixture,
+            _modelo_131_rich_fixture,
             id="modelo_131.2025:casilla_15_resultado_a_ingresar",
+        ),
+        # Modelo 303 — every sub_op-bearing casilla (2 chains).
+        pytest.param(
+            lambda: MODELO_303_2025,
+            "45",
+            _modelo_303_fixture,
+            id="modelo_303.2025:casilla_45_resultado_regimen_general",
         ),
         pytest.param(
             lambda: MODELO_303_2025,
             "69",
             _modelo_303_fixture,
             id="modelo_303.2025:casilla_69_resultado",
+        ),
+        # Modelo 200 — 4-deep sub_op nest (wave 62 H2 closure).
+        pytest.param(
+            lambda: MODELO_200_2024,
+            "00611",
+            _modelo_200_fixture,
+            id="modelo_200.2024:casilla_00611_cuota_diferencial_deep_nest",
         ),
     ],
 )
