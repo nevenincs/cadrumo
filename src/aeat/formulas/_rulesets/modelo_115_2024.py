@@ -1,6 +1,6 @@
 """Modelo 115 ruleset covering the full 2024 fiscal year.
 
-Structurally identical to :mod:`modelo_115_2025` — art. 100.3.a RIRPF
+Structurally identical to :mod:`modelo_115_2025` — art. 100.1 RIRPF
 has fixed the 19% retention on arrendamientos urbanos since 2016 and
 did not change for 2024. This ruleset exists so Kent can self-audit
 a 2024 Q1-Q4 complementaria filing without resolving against a 2025

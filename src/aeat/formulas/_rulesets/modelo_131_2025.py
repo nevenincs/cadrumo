@@ -9,10 +9,10 @@ from a rendimiento neto.
 
 Formula coverage:
 
-- casilla 04 = 2% x casilla 03 (2% sobre volumen ventas sin datos-base,
-  Orden EHA/672/2007 + art. 110.4 Reglamento IRPF).
+- casilla 04 = 2% x casilla 03 (2% sobre volumen ventas en módulos sin
+  datos-base — RIRPF art. 110.1.b, Orden EHA/672/2007 instrucciones).
 - casilla 06 = 2% x casilla 05 (2% sobre volumen ingresos agrícolas,
-  ganaderas, forestales, pesqueras, art. 110.2 Reglamento).
+  ganaderas, forestales, pesqueras — RIRPF art. 110.1.c).
 - casilla 07 = casilla 02 + casilla 04 + casilla 06 (total previo a
   minoraciones).
 - casilla 10 = casilla 07 - casilla 08 - casilla 09 (resultado tras
@@ -60,10 +60,11 @@ _CITATIONS = (
         LegalCitationSource.REGLAMENTO,
         "110",
         "Artículo 110 RD 439/2007 (Reglamento del IRPF) — pagos "
-        "fraccionados por actividades económicas; art. 110.2 fija el "
-        "2% de los ingresos del trimestre para agrícolas/ganaderas/"
-        "forestales/pesqueras; art. 110.4 fija el 2% de los ingresos "
-        "del trimestre para actividades sin datos-base.",
+        "fraccionados por actividades económicas; art. 110.1.b fija "
+        "los tipos 4%/3%/2% (escalados por número de asalariados) para "
+        "actividades en estimación objetiva (módulos); art. 110.1.c fija "
+        "el 2% de los ingresos del trimestre para actividades "
+        "agrícolas/ganaderas/forestales/pesqueras.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
     ),
     make_citation(

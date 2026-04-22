@@ -59,11 +59,12 @@ _CITATIONS = (
     ),
     make_citation(
         LegalCitationSource.REGLAMENTO,
-        "100.3.a",
-        "Artículo 100.3.a RD 439/2007 (Reglamento del IRPF) — fija el "
-        "tipo fijo del 19% de retención sobre los rendimientos "
-        "procedentes del arrendamiento o subarrendamiento de bienes "
-        "inmuebles urbanos (vigente desde 2016).",
+        "100.1",
+        "Artículo 100.1 RD 439/2007 (Reglamento del IRPF) — fija el "
+        "porcentaje del 19% sobre todos los conceptos satisfechos al "
+        "arrendador (excluido el IVA) por arrendamiento o "
+        "subarrendamiento de bienes inmuebles urbanos. Art. 100.2 "
+        "añade la reducción del 60% para inmuebles en Ceuta/Melilla.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
     ),
 )

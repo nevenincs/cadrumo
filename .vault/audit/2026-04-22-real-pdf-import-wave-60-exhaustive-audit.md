@@ -28,6 +28,22 @@ Commit range: `c36f9b0..HEAD` plus in-flight wave-61a fix.
 
 **Total open: 5 HIGH, 3 MEDIUM, 3 LOW.**
 
+## Closure status (updated 2026-04-22, wave 68)
+
+| Finding | Status | Closing wave |
+|---|---|---|
+| H1 Modelo 202 23% rate miscite | CLOSED | wave 61a (`d30c530`); further refined wave 65a (`ab808d2`) with 25% general tipo |
+| H2 wave 48/53/58 closure markers missing | CLOSED | wave 61b (`d30c530`) + wave 67 (`29a537e`) |
+| H3 NBSP round-trip not threaded | PARTIAL | wave 61d (`c08ad18`) threaded thousands_sep; end-to-end PDF round-trip infeasible via reportlab/pdfplumber (documented scope-clarification) |
+| H4 hyphenation not asserted end-to-end | CLOSED | wave 61e (`40c45df`) |
+| H5 operand-swap mutation tests missing | CLOSED | wave 61f (`a12342c`) — extended wave 63b (`65e5643`) to 15 cases; wave 67e (`29a537e`) added mechanical delta ≥ 0.02 assertion |
+| M1 130_2025 + 100_summary_2025 lack external anchors | CLOSED | wave 61c (`d30c530`) — further citation-accuracy refinements in waves 63a/65a/67a |
+| M2 wave 48 H3 row stale | CLOSED | wave 67a (`29a537e`) — refreshed per wave-64 audit-trail refresh |
+| M3 ADR variant-axis drift | CLOSED | wave 61b (`d30c530`) |
+| L1 Modelo 390 docstring imprecision | CLOSED | wave 63d (`65e5643`) |
+| L2 coverage matrix provenance behind | CLOSED | wave 63c (`65e5643`); wave 65b (`ab808d2`) reconciled counts |
+| L3 no exec records for 59a/b/c | PARTIAL | re-cited as wave 62 H5 → wave 64 H7 → wave 66 H1; ADR deferral section (wave 65d); formal GH issue tracked wave 68d |
+
 ## HIGH findings
 
 ### H1 (stream 2) — Modelo 202 external anchor used WRONG rate
