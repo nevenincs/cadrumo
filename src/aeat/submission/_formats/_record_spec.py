@@ -164,6 +164,11 @@ class RecordFieldSpec(BaseModel):
             raise ValueError(f"literal_value is only valid when kind=RESERVED; got {self.kind!r} for {self.field_id!r}")
         if self.kind is FieldKind.DATE and self.date_fmt is None:
             raise ValueError(f"DATE fields must carry a date_fmt; got None for {self.field_id!r}")
+        if self.signed_mode is SignedMode.INLINE_SIGN and self.kind is not FieldKind.CURRENCY:
+            raise ValueError(
+                f"signed_mode=INLINE_SIGN is only valid on CURRENCY fields; "
+                f"got {self.kind!r} for {self.field_id!r} (wave 86 audit hardening)"
+            )
         return self
 
 
