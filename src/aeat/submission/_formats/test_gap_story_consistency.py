@@ -78,6 +78,35 @@ class TestGapStoryConsistency:
                 f"docstring is now stale."
             )
 
+    def test_generated_module_docstring_mirrors_fixture_notes(self) -> None:
+        """Wave 122: the generator embeds ``source.notes`` into the module
+        docstring. If someone updates the fixture without regenerating, the
+        module's docstring goes stale. Lock every gap casilla to also appear
+        in the generated module's docstring.
+        """
+        from . import modelo_303_2024
+
+        doc = modelo_303_2024.__doc__ or ""
+        for cid in sorted(_EXPECTED_GAPS["303.2024"]):
+            assert cid in doc, (
+                f"modelo_303_2024 docstring does not mention casilla {cid}; "
+                f"the fixture was updated without regenerating the module. "
+                f"Run ``python -m aeat.submission._formats._generate "
+                f"tests/fixtures/dr_specs/dr303e24.json src/aeat/submission/"
+                f"_formats/modelo_303_2024.py``."
+            )
+
+    def test_generated_module_docstring_cites_authoritative_lock(self) -> None:
+        """The generator output must carry the pointer to the authoritative
+        test_ruleset_schema_coverage lock. A regeneration that forgets this
+        leaves readers of the .py file without a trace back."""
+        from . import modelo_303_2024
+
+        doc = modelo_303_2024.__doc__ or ""
+        assert "test_ruleset_schema_coverage" in doc, (
+            "modelo_303_2024 docstring lost its reference to test_ruleset_schema_coverage; regenerate from the fixture."
+        )
+
     def test_fixture_notes_include_suspect_slot_pointers(self) -> None:
         """The fixture note's mislabeled-slot theory (wave 114) names three
         _2-suffix CURRENCY slots as the suspected carriers of the missing
