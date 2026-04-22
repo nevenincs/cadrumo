@@ -6,6 +6,8 @@ Subcommands:
 - ``aeat filing validate`` — re-validate a saved draft.
 - ``aeat filing show`` — pretty-print a draft.
 - ``aeat filing list`` — list drafts under the configured drafts dir.
+- ``aeat filing import`` — reconstruct a draft from a justificante PDF
+  (#271; cert-free, offline).
 """
 
 from __future__ import annotations
@@ -29,17 +31,21 @@ from ...filing import (
     FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
+    FilingImportError,
     FilingOperatorProfile,
     approval_stale_reasons,
     build_complementaria,
     build_draft,
     describe_stale_reason,
+    import_filing_from_justificante,
     iter_findings,
     load_amendment,
     refresh_review_status,
     validate_draft,
 )
 from ...filing.runtime import build_runtime_schema_provider, load_default_filing_profile
+from ...i18n import Language, get_translation
+from ...justificante import JustificanteError
 from ...logging import get_logger
 from ...submission import SubmissionEngine, SubmissionError
 from ..submission._helpers import build_engine as build_submission_engine
@@ -408,6 +414,284 @@ def list_drafts(
             str(path),
         )
     _console.print(table)
+
+
+@app.command("import")
+def import_(
+    from_justificante: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-justificante",
+            help="Path to an AEAT justificante (receipt) PDF; produces a metadata scaffold draft (#271).",
+        ),
+    ] = None,
+    from_declaracion: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-declaracion",
+            help=(
+                "Path to an AEAT declaración (full filing copy) PDF; "
+                "produces a casilla-complete draft (#305 cluster D)."
+            ),
+        ),
+    ] = None,
+    from_borrador: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-borrador",
+            help=(
+                "Path to an AEAT Modelo 100 (Renta) borrador / "
+                "predeclaración / declaración PDF; extracts the summary "
+                "block (#305 cluster F MVP)."
+            ),
+        ),
+    ] = None,
+    modelo: Annotated[
+        str | None,
+        typer.Option(
+            "--modelo",
+            help="Override auto-detected modelo (e.g. '130'). Only used with --from-declaracion.",
+        ),
+    ] = None,
+    año: Annotated[
+        int | None,
+        typer.Option(
+            "--año",
+            help="Override auto-detected tax year.",
+        ),
+    ] = None,
+) -> None:
+    """Import a past filing from an AEAT PDF.
+
+    Exactly one of ``--from-justificante``, ``--from-declaracion``, or
+    ``--from-borrador`` must be supplied.
+
+    ``--from-justificante`` reconstructs a metadata scaffold draft +
+    companion submission record from the filing receipt (#271). Every
+    casilla lands EMPTY.
+
+    ``--from-declaracion`` parses the full filing copy PDF and extracts
+    every printed casilla value; produces a casilla-complete draft
+    ready for ``aeat filing verify`` (#305 cluster D / E).
+
+    ``--from-borrador`` parses a Modelo 100 (Renta) artefact (borrador,
+    predeclaración, or declaración); extracts the summary-block casillas
+    and chains verification against the partial Modelo 100 ruleset
+    (#305 cluster F MVP).
+    """
+    provided = sum(p is not None for p in (from_justificante, from_declaracion, from_borrador))
+    if provided == 0:
+        raise typer.BadParameter("exactly one of --from-justificante, --from-declaracion, --from-borrador is required")
+    if provided > 1:
+        raise typer.BadParameter("only one --from-* flag at a time")
+
+    if from_justificante is not None:
+        _handle_justificante_import(from_justificante)
+        return
+    if from_declaracion is not None:
+        _handle_declaracion_import(from_declaracion, modelo=modelo, año=año)
+        return
+
+    assert from_borrador is not None
+    _handle_borrador_import(from_borrador, año=año)
+
+
+def _handle_justificante_import(from_justificante: Path) -> None:
+    """Dispatch the justificante (#271) import path."""
+    settings = load_settings()
+    try:
+        result = import_filing_from_justificante(
+            from_justificante,
+            schema_provider=_schema_provider(),
+        )
+    except (FilingImportError, FilingDraftError, JustificanteError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    draft_path = _save_draft(result.draft)
+    submissions_dir = settings.aeat_submissions_dir
+    submissions_dir.mkdir(parents=True, exist_ok=True)
+    submission_path = submissions_dir / f"{result.submission.submission_id}.json"
+    submission_path.write_text(result.submission.model_dump_json(indent=2), encoding="utf-8")
+
+    typer.echo(
+        f"Imported draft {result.draft.draft_id} from justificante {result.submission.justificante_csv} -> {draft_path}"
+    )
+    typer.echo(f"Saved submission {result.submission.submission_id} -> {submission_path}")
+    lang = _output_language()
+    for warning in result.warnings:
+        rendered = get_translation(warning, lang)
+        typer.echo(f"[warning] {rendered}")
+    _render_draft(result.draft)
+
+
+def _output_language() -> Language:
+    """Resolve the Kent-facing output language from settings.
+
+    Defaults to Spanish (Kent is a Spanish autónomo) per project mandate
+    ``AEAT_OUTPUT_LANGUAGE`` default = ``es``. Audit finding M5.
+    """
+    try:
+        return Language(load_settings().aeat_output_language)
+    except (KeyError, ValueError):
+        return Language.ES
+
+
+def _handle_declaracion_import(
+    from_declaracion: Path,
+    *,
+    modelo: str | None,
+    año: int | None,
+) -> None:
+    """Dispatch the declaración (#305 cluster D + E) import path."""
+    from ...declaracion import DeclaracionParseError, parse_declaracion
+    from ...verification import verify_declaracion
+
+    try:
+        filing = parse_declaracion(
+            from_declaracion,
+            modelo_override=modelo,
+            año_override=año,
+        )
+    except DeclaracionParseError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    lang = _output_language()
+
+    typer.echo(
+        f"Parsed Modelo {filing.modelo} {filing.period} declaración "
+        f"(template {filing.template_revision.revision}). "
+        f"{len(filing.values)} of {len(filing.values) + len(filing.warnings)} casillas extracted."
+    )
+    typer.echo(f"Extraction status: {filing.extraction_status.value}")
+    if filing.warnings:
+        typer.echo(f"[warnings] {len(filing.warnings)}:")
+        for warning in filing.warnings:
+            rendered = get_translation(warning.message, lang)
+            typer.echo(f"  - casilla {warning.casilla_id or '-'}: {rendered}")
+
+    ruleset = _resolve_ruleset_for_filing(
+        filing_modelo=filing.modelo,
+        filing_period=filing.period,
+        filing_ejercicio=filing.ejercicio,
+    )
+    verdict = verify_declaracion(filing, ruleset=ruleset)
+    typer.echo(f"Verification status: {verdict.status.value}")
+    typer.echo(f"  {get_translation(verdict.narrative, lang)}")
+    for discrepancy in verdict.discrepancies:
+        rationale = get_translation(discrepancy.cause_rationale, lang)
+        typer.echo(
+            f"  - casilla {discrepancy.casilla_id}: "
+            f"expected {discrepancy.expected}, actual {discrepancy.actual}, "
+            f"cause={discrepancy.cause.value} — {rationale}"
+        )
+
+
+def _resolve_ruleset_for_filing(
+    *,
+    filing_modelo: str,
+    filing_period: str,
+    filing_ejercicio: str,
+):
+    """Resolve the ruleset for the filing's (modelo, period). None when absent."""
+    from ...formulas._period import FiscalPeriod, Quarter
+    from ...formulas._registry import get_registry
+    from ...models import ModeloCode
+
+    try:
+        modelo_code = ModeloCode(filing_modelo)
+    except (KeyError, ValueError):
+        return None
+
+    quarter = None
+    quarter_token = filing_period[4:] if len(filing_period) >= 6 else ""
+    if quarter_token.startswith("Q") and len(quarter_token) == 2 and quarter_token[1].isdigit():
+        try:
+            quarter = Quarter(f"Q{int(quarter_token[1])}")
+        except (KeyError, ValueError):
+            quarter = None
+
+    try:
+        period_obj = FiscalPeriod(year=int(filing_ejercicio), quarter=quarter)
+    except Exception:
+        return None
+
+    try:
+        return get_registry().resolve(modelo=modelo_code, period=period_obj)
+    except Exception:
+        return None
+
+
+def _handle_borrador_import(
+    from_borrador: Path,
+    *,
+    año: int | None,
+) -> None:
+    """Dispatch the Modelo 100 (Renta) import path (#305 cluster F MVP)."""
+    from ...borrador import BorradorParseError, parse_borrador
+    from ...borrador._tarifa import validate_tarifa_estatal
+    from ...formulas._rulesets import MODELO_100_SUMMARY_2025
+
+    try:
+        filing = parse_borrador(from_borrador, año_override=año)
+    except BorradorParseError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    typer.echo(
+        f"Parsed Modelo 100 Renta {filing.ejercicio} "
+        f"({filing.artefact_kind.value}). "
+        f"{len(filing.values)} summary-block casillas extracted."
+    )
+    if filing.csv is not None:
+        typer.echo(f"CSV: {filing.csv}")
+
+    # Verify against the partial summary ruleset.
+    from ...formulas import Engine
+
+    provided: dict[str, Decimal] = {
+        v.casilla_id: v.printed_value for v in filing.values if isinstance(v.printed_value, Decimal)
+    }
+    engine = Engine()
+    report = engine.audit_against(
+        ruleset=MODELO_100_SUMMARY_2025,
+        provided=provided,
+        tolerance=Decimal("0.01"),
+    )
+    ruleset_clean = report.is_clean()
+    if ruleset_clean:
+        typer.echo(f"Verification status: VERIFIED (ruleset={MODELO_100_SUMMARY_2025.ruleset_id})")
+    else:
+        typer.echo(f"Verification status: NEEDS_REVIEW — {len(report.discrepancies)} discrepancies")
+        for d in report.discrepancies:
+            typer.echo(
+                f"  - casilla {d.casilla_id}: expected {d.computed_value}, actual {d.user_value}, delta {d.delta}"
+            )
+
+    # Tarifa progresiva estatal post-validator — checks that the extracted
+    # cuota íntegra estatal (0550, 0560) matches the tarifa-derived value
+    # when the corresponding base liquidable casilla (0545, 0555) is present.
+    tarifa_ejercicio = filing.ejercicio
+    try:
+        tarifa_findings = validate_tarifa_estatal(
+            ejercicio=tarifa_ejercicio,
+            base_liquidable_general=provided.get("0545"),
+            base_liquidable_ahorro=provided.get("0555"),
+            cuota_estatal_general=provided.get("0550"),
+            cuota_estatal_ahorro=provided.get("0560"),
+        )
+    except ValueError as exc:
+        typer.echo(f"Tarifa progresiva: skipped ({exc})")
+        tarifa_findings = ()
+
+    if tarifa_findings:
+        typer.echo(f"Tarifa progresiva: {len(tarifa_findings)} discrepancies vs. IRPF estatal scale {tarifa_ejercicio}")
+        for finding in tarifa_findings:
+            typer.echo(
+                f"  - casilla {finding.casilla_id} (from base {finding.base_casilla_id}): "
+                f"tarifa {finding.expected_cuota} vs. extracted {finding.actual_cuota}"
+                f" (delta {finding.delta})"
+            )
+    elif ruleset_clean:
+        typer.echo(f"Tarifa progresiva: cuota íntegra estatal consistent with IRPF {tarifa_ejercicio} scale")
 
 
 @complementaria_app.command("build")

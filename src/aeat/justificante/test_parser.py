@@ -19,6 +19,7 @@ from ..config import PROJECT_ROOT
 from . import (
     Justificante,
     JustificanteCsvNotFoundError,
+    JustificanteError,
     JustificanteParseError,
     JustificanteParserBackend,
     parse_justificante,
@@ -55,6 +56,7 @@ class TestParseJustificante:
         assert isinstance(record, Justificante)
         assert record.modelo == "130"
         assert record.period == "1T"
+        assert record.ejercicio == "2026"
         assert record.tax_id == "00000000T"
         assert record.csv == "ABCD1234EFGH5678"
         assert record.presentation_id == "13020260410ABCD1234EFGH5678"
@@ -68,6 +70,7 @@ class TestParseJustificante:
         record = parse_justificante(modelo_303_pdf)
         assert record.modelo == "303"
         assert record.period == "1T"
+        assert record.ejercicio == "2026"
         assert record.csv == "ZZZZ9999YYYY8888"
         assert record.total_a_ingresar is None
         assert record.total_a_devolver == Decimal("450.00")
@@ -77,6 +80,7 @@ class TestParseJustificante:
         record = parse_justificante(modelo_100_pdf)
         assert record.modelo == "100"
         assert record.period == "0A"
+        assert record.ejercicio == "2025"
         assert record.csv == "MNOP4321QRST8765"
         assert record.total_a_ingresar == Decimal("780.40")
         assert record.presented_at == datetime(2026, 6, 20, 17, 45, 12)
@@ -120,6 +124,20 @@ class TestParseJustificante:
     def test_missing_file_raises(self) -> None:
         with pytest.raises(JustificanteParseError, match="not found"):
             parse_justificante(FIXTURES_DIR / "does_not_exist.pdf")
+
+
+class TestJustificanteErrorRehome:
+    """#305 cluster A — JustificanteError inherits the shared PDF-import root."""
+
+    def test_justificante_error_is_pdf_filing_import_error(self) -> None:
+        from .._pdf_import import PdfFilingImportError
+
+        assert issubclass(JustificanteError, PdfFilingImportError)
+
+    def test_justificante_error_still_aeat_error(self) -> None:
+        from ..errors import AeatError
+
+        assert issubclass(JustificanteError, AeatError)
 
 
 class TestCsvDetection:

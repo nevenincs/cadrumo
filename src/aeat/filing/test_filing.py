@@ -113,6 +113,7 @@ class TestModelo130Builder:
             schema_provider=default_schema_provider(),
         )
         by_id = {v.casilla_id: v for v in draft.values}
+        # Apartado I — ordinary activity.
         assert by_id["03"].value == Decimal("9000.00")
         assert by_id["03"].kind is FilingValueKind.COMPUTED
         assert by_id["03"].formula_trace == ("01", "02")
@@ -120,6 +121,51 @@ class TestModelo130Builder:
         assert by_id["04"].formula_trace == ("03",)
         assert by_id["07"].value == Decimal("1400.0000")
         assert by_id["07"].formula_trace == ("04", "05", "06")
+
+    def test_apartado_ii_to_v_casillas_match_hand_calculations(self) -> None:
+        """Hand-calculations for the 12 new apartado-II/III/IV/V casillas (#305 cluster B phase 2)."""
+        builder = Modelo130Builder()
+        inputs = {
+            "01": Decimal("12500"),
+            "02": Decimal("3500"),
+            "05": Decimal("400"),
+            "06": Decimal("0"),
+            # Apartado II — agrícola.
+            "08": Decimal("5000"),  # volumen ingresos agraria
+            "10": Decimal("30"),  # retenciones agraria
+            # Apartado III.
+            "13": Decimal("0"),  # minoración
+            # Apartado IV.
+            "15": Decimal("100"),  # deducción vivienda
+            "16": Decimal("0"),  # arrastre
+            # Apartado V.
+            "18": Decimal("0"),  # ingreso previo
+        }
+        draft = builder.build(
+            period="2026Q1",
+            profile=_profile(),
+            inputs=inputs,
+            schema_provider=default_schema_provider(),
+        )
+        by_id = {v.casilla_id: v for v in draft.values}
+        # 09 = 0.02 * 08 = 100.00
+        assert by_id["09"].value == Decimal("100.00")
+        assert by_id["09"].formula_trace == ("08",)
+        # 11 = 09 - 10 = 100 - 30 = 70
+        assert by_id["11"].value == Decimal("70")
+        assert by_id["11"].formula_trace == ("09", "10")
+        # 12 = max(0, 07 + 11) = max(0, 1400 + 70) = 1470
+        assert by_id["12"].value == Decimal("1470")
+        assert by_id["12"].formula_trace == ("07", "11")
+        # 14 = 12 - 13 = 1470 - 0 = 1470
+        assert by_id["14"].value == Decimal("1470")
+        assert by_id["14"].formula_trace == ("12", "13")
+        # 17 = 14 - 15 - 16 = 1470 - 100 - 0 = 1370
+        assert by_id["17"].value == Decimal("1370")
+        assert by_id["17"].formula_trace == ("14", "15", "16")
+        # 19 = 17 - 18 = 1370 - 0 = 1370
+        assert by_id["19"].value == Decimal("1370")
+        assert by_id["19"].formula_trace == ("17", "18")
 
     def test_default_value_kind_when_input_missing(self) -> None:
         builder = Modelo130Builder()
