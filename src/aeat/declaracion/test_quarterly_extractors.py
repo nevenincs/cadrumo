@@ -559,6 +559,32 @@ class TestSoftHyphenLineBreakNormalisation:
         assert "Retenciones" in normalised
         assert "-\n" not in normalised
 
+    def test_bullet_leading_dash_not_stitched(self) -> None:
+        """Wave 56 M1: a line that starts with `-\\n` (bullet-style) must
+        NOT collapse into the following word.
+
+        Pre-wave-56 `_normalise_pdf_text` used a blind
+        `.replace("-\\n", "")` which would eat the bullet dash and
+        merge it into whatever followed. The narrowed regex now
+        requires alphanumeric context on BOTH sides.
+        """
+        from ._generic_extractor import _normalise_pdf_text
+
+        # Bullet at start of line, nothing to the left of the dash.
+        raw = "Lista:\n-\nelemento uno"
+        normalised = _normalise_pdf_text(raw)
+        # The bullet must survive — no merge into "elemento".
+        assert "-\nelemento" in normalised or "-\n" in normalised
+
+    def test_word_boundary_required_on_both_sides(self) -> None:
+        """A `-\\n` with whitespace on either side is not a continuation."""
+        from ._generic_extractor import _normalise_pdf_text
+
+        raw = "A -\n B"  # space + dash + newline + space: not a word break
+        normalised = _normalise_pdf_text(raw)
+        # Should remain intact.
+        assert "-\n" in normalised
+
 
 class TestGenericExtractorInvariants:
     def test_casilla_and_text_casilla_overlap_rejected(self) -> None:

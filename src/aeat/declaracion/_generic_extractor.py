@@ -271,6 +271,9 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
         )
 
 
+_SOFT_HYPHEN_BREAK_RE = re.compile(r"(?<=\w)[-­]\n(?=\w)")
+
+
 def _normalise_pdf_text(text: str) -> str:
     """Pre-normalise pdfplumber text for the label-regex primitives.
 
@@ -280,10 +283,14 @@ def _normalise_pdf_text(text: str) -> str:
     missing the casilla. The soft-hyphen character (U+00AD) is also
     rendered as a regular ``-`` by pdfplumber in some PDFs, so strip
     both variants.
+
+    Wave 56 M1: narrowed to require alphanumeric context on BOTH sides
+    of the hyphen-newline pair. A leading bullet-style ``-\\nitem``
+    (where the hyphen starts a line) no longer collapses into the
+    following word — the lookbehind guarantees we only stitch real
+    word-continuations.
     """
-    # Stitch soft-hyphen line continuations.
-    text = text.replace("-\n", "").replace("­\n", "")  # ASCII hyphen + soft-hyphen
-    return text
+    return _SOFT_HYPHEN_BREAK_RE.sub("", text)
 
 
 def _not_found_warning(casilla_id: str) -> ExtractionWarning:
