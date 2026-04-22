@@ -6,7 +6,14 @@
     "boe_id": "BOE-A-2024-16129",
     "xlsx": "DR303e24.xlsx",
     "retrieval_date": "2026-04-22",
-    "notes": "Full 7-segment envelope: DP30300 header (328B fixed) + DP30301-DP303DID fixed pages + DP30300_TRAILER (18B close). Total envelope: 7994 bytes + CRLF. Auto-extracted from DR303e24.xlsx; casilla_id/field_id duplicates within a segment disambiguated via _N suffix."
+    "notes": "Full 7-segment envelope: DP30300 header (328B fixed) + DP30301-DP303DID fixed pages + DP30300_TRAILER (18B close). Total envelope: 7994 bytes + CRLF. Auto-extracted from DR303e24.xlsx; casilla_id/field_id duplicates within a segment disambiguated via _N suffix.",
+    "extra_required_fields": [
+      "DP30301_F006_TIPO_DECLARACI_N",
+      "DP30301_F007_IDENTIFICACI_N_NIF",
+      "DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N",
+      "DP30301_F009_DEVENGO_EJERCICIO",
+      "DP30301_F010_DEVENGO_PER_ODO"
+    ]
   },
   "encoding": "iso-8859-1",
   "segments": {
@@ -221,8 +228,7 @@
           "length": 2,
           "field_id": "DP30301_F010_DEVENGO_PER_ODO",
           "casilla_id": null,
-          "kind": "RESERVED",
-          "literal": "01",
+          "kind": "ALPHANUMERIC",
           "signed_mode": "UNSIGNED"
         },
         {

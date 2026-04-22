@@ -190,8 +190,10 @@ def _collect_required_field_ids(ingested: IngestedSpec) -> frozenset[str]:
     """Heuristic: treat header-level ALPHANUMERIC/NUMERIC fields that
     are neither RESERVED nor DATE as required header inputs.
 
-    Callers should override the generated ``REQUIRED_HEADER_FIELDS``
-    set when the heuristic misses a modelo-specific required field.
+    The spec's ``source.extra_required_fields`` list is unioned in
+    to capture per-modelo header fields that live outside segment 0
+    (e.g., Modelo 303's DP30301 page-identification fields like
+    TIPO_DECLARACION, NIF, APELLIDOS_Y_NOMBRE, DEVENGO_PERIODO).
     """
     required: set[str] = set()
     # Interpret the first segment as the envelope header + mark its
@@ -206,6 +208,11 @@ def _collect_required_field_ids(ingested: IngestedSpec) -> frozenset[str]:
                 and field.casilla_id is None
             ):
                 required.add(field.field_id)
+    # Explicit overrides declared in the fixture's source block.
+    extras = ingested["source"].get("extra_required_fields") if "extra_required_fields" in ingested["source"] else None  # type: ignore[misc]
+    if extras:
+        for fid in extras:
+            required.add(str(fid))
     return frozenset(required)
 
 
