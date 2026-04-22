@@ -155,7 +155,7 @@ class TestModelo130Ruleset2024:
 
         Provenance: RD 439/2007 (RIRPF) art. 110.1.a fixes the 20%
         rate on IRPF pagos fraccionados (estimacion directa);
-        art. 110.2 fixes the 2% rate on agricola/ganadera/forestal/
+        art. 110.1.c fixes the 2% rate on agricola/ganadera/forestal/
         pesquera. Fixture values derived from those rates, NOT from
         the ruleset parameters.
 
@@ -170,7 +170,7 @@ class TestModelo130Ruleset2024:
             "06": Decimal("0.00"),
             "07": Decimal("4000.00"),
             "08": Decimal("2000.00"),
-            "09": Decimal("40.00"),  # 2% per RIRPF 110.2
+            "09": Decimal("40.00"),  # 2% per RIRPF 110.1.c
             "10": Decimal("0.00"),
             "11": Decimal("40.00"),
             "12": Decimal("4040.00"),

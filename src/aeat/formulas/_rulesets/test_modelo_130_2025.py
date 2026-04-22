@@ -111,11 +111,13 @@ class TestModelo130Ruleset2025:
 
         RIRPF art. 110.1.a fixes the pago fraccionado general at 20% of the
         rendimiento neto acumulado for actividades económicas en estimación
-        directa (art. 110.1.b is the 2% agraria rate, art. 110.1.c covers
-        módulos). The statute (BOE-A-2007-6820) — not the ruleset's
-        ParameterTable — is the external source. This test asserts the
-        arithmetic mandated by the statute using a scenario distinct from
-        `_provided()` to avoid mirroring the 2024 drift-check fixture.
+        directa. Sister subsections: art. 110.1.b covers estimación objetiva
+        (módulos) at 4%/3%/2% depending on employee count; art. 110.1.c is
+        the 2% rate on actividades agrícolas/ganaderas/forestales/pesqueras.
+        The statute (BOE-A-2007-6820) — not the ruleset's ParameterTable —
+        is the external source. This test asserts the arithmetic mandated
+        by the statute using a scenario distinct from `_provided()` to
+        avoid mirroring the 2024 drift-check fixture.
 
         Scenario: Kent (autónomo actividad económica no-agraria) Q3 2025.
           - Casilla 01 (ingresos acumulados): 48 000,00 EUR

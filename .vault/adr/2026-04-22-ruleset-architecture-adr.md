@@ -165,6 +165,27 @@ As of wave 59c + 60-consolidation, 11 of 14 in-scope rulesets
 have external anchors. The residual (130_2025, 100_summary_2025
 plus 303_2024's thin anchor surface) is tracked for wave 61c.
 
+**Citation-accuracy author checklist** (added wave 65c after three
+miscites surfaced in waves 59c / 61a / 63a / 65a):
+
+1. Quote the cited article's plain-text title verbatim in the
+   docstring. If you cannot find the title on a BOE / iberley /
+   supercontable reference, the article number is wrong.
+2. Confirm the subsection letter matches the rate / role you
+   attribute to it. E.g. RIRPF art. 110.1 has three letters:
+   `.a` = 20% estimación directa; `.b` = 4/3/2% módulos;
+   `.c` = 2% agrícolas/ganaderas/forestales/pesqueras. Inverting
+   `.b` and `.c` was the wave 64 H1 miscite.
+3. Prefer primary-source articles over secondary. E.g. for the
+   cuota diferencial formula, cite the LIRPF article that defines
+   the subtraction (art. 79 cuota líquida + art. 99 pagos a
+   cuenta), NOT an administrative-power article (art. 103
+   "Liquidaciones provisionales" was the wave 64 H5 miscite).
+4. Verify the rate arithmetic uses the current general tipo.
+   LIS art. 29.1 general tipo is 25% (not 24%) — wave 64 H4 miscite.
+5. Run a WebSearch for the article + role string before landing.
+   This is cheaper than a wave-later citation-accuracy remediation.
+
 ### Future milestones (1.0.0+)
 
 - First regional / full-form ruleset lands (Canarias IGIC, full
@@ -173,6 +194,27 @@ plus 303_2024's thin anchor surface) is tracked for wave 61c.
 - Sub-EPIC #305-Modelo-100-full activates the canonical
   `variant="default"` slot for Modelo 100 (summary ruleset already
   lives under `variant="summary"`).
+
+### Vaultspec exec-record deferral (wave 64 H7)
+
+Waves 59a/b/c + 61a–f + 63a–d + 65a–d shipped without per-step
+records under `.vault/exec/2026-04-20-pdf-import/`. The vaultspec
+pipeline contract `.vault/exec/{feature}/{step}.md` is formally
+violated. Rationale for deferral:
+
+- Each sub-wave is ~1 file of test/doc changes + an audit-loop;
+  a full step-record per wave would triple the vault surface
+  without adding reviewable signal the audit docs don't already
+  carry.
+- The audit docs (wave 48/53/58/60/62/64/66+) are the load-
+  bearing pipeline artefact; they already cite commits by SHA
+  and enumerate closure-status per finding.
+
+**Catch-up commitment**: before the EPIC #305 close-out PR, a
+consolidated `.vault/exec/2026-04-20-pdf-import/2026-04-22-pdf-import-audit-loop-summary.md`
+will back-fill a single exec record summarising every sub-wave
+with its commit SHA and the wave-N audit it closed against.
+Until then, the audit docs are the authoritative source.
 
 ### Non-goals
 
