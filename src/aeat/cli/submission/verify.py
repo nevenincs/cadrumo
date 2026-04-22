@@ -22,8 +22,11 @@ see what went wrong.
 
 from __future__ import annotations
 
+import json
 import re
+from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -68,6 +71,11 @@ def verify_cmd(
     ejercicio: str | None = typer.Option(
         None, "--ejercicio", "-e", help="Filing year (e.g. ``2024``). Auto-detected from the filename if omitted."
     ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Emit a machine-readable JSON document instead of the rich-formatted tables.",
+    ),
 ) -> None:
     """Re-parse an exported fichero-BOE file and pretty-print its contents.
 
@@ -109,16 +117,25 @@ def verify_cmd(
                 encoding=entry.module.ENCODING,
                 total_length=entry.module.RECORD_LENGTH,
             )
-            _print_record(parsed_record, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
+            if as_json:
+                _emit_record_json(parsed_record, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
+            else:
+                _print_record(parsed_record, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
         else:
             parsed_envelope = deserialise_envelope(
                 content,
                 segments=entry.module.ENVELOPE,
                 encoding=entry.module.ENCODING,
             )
-            _print_envelope(parsed_envelope, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
+            if as_json:
+                _emit_envelope_json(parsed_envelope, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
+            else:
+                _print_envelope(parsed_envelope, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
     except Exception as exc:
-        _CONSOLE.print(f"[red]verify FAILED:[/red] {type(exc).__name__}: {exc}")
+        if as_json:
+            _emit_error_json(exc, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
+        else:
+            _CONSOLE.print(f"[red]verify FAILED:[/red] {type(exc).__name__}: {exc}")
         raise typer.Exit(code=2) from exc
 
 
@@ -155,3 +172,51 @@ def _print_envelope(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file
         if value != 0:
             casilla_table.add_row(cid, str(value))
     _CONSOLE.print(casilla_table)
+
+
+def _jsonable(value: Any) -> Any:
+    """Coerce Decimal / date / other non-JSON types to strings."""
+    if isinstance(value, Decimal):
+        return str(value)
+    return str(value)
+
+
+def _emit_record_json(parsed: ParsedRecord, *, modelo: str, ejercicio: str, file_path: Path) -> None:
+    """Print the machine-readable shape for a single-record parse."""
+    payload = {
+        "status": "ok",
+        "kind": "record",
+        "modelo": modelo,
+        "ejercicio": ejercicio,
+        "file": file_path.name,
+        "raw_length": parsed.raw_length,
+        "fields": {fid: _jsonable(val) for fid, val in parsed.field_values.items()},
+        "casillas": {cid: str(val) for cid, val in parsed.casilla_values.items()},
+    }
+    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+
+
+def _emit_envelope_json(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file_path: Path) -> None:
+    """Print the machine-readable shape for a multi-segment envelope parse."""
+    payload = {
+        "status": "ok",
+        "kind": "envelope",
+        "modelo": modelo,
+        "ejercicio": ejercicio,
+        "file": file_path.name,
+        "segments": sorted(parsed.segments.keys()),
+        "casillas": {cid: str(val) for cid, val in parsed.merged_casilla_values.items()},
+    }
+    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+
+
+def _emit_error_json(exc: BaseException, *, modelo: str, ejercicio: str, file_path: Path) -> None:
+    payload = {
+        "status": "error",
+        "modelo": modelo,
+        "ejercicio": ejercicio,
+        "file": file_path.name,
+        "error_type": type(exc).__name__,
+        "error_message": str(exc),
+    }
+    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))

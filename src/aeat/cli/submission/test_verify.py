@@ -1,4 +1,4 @@
-"""Tests for ``aeat submission verify`` (EPIC #305 wave 95)."""
+"""Tests for ``aeat submission verify`` (EPIC #305 wave 95 + wave 100)."""
 
 from __future__ import annotations
 
@@ -11,6 +11,9 @@ from typer.testing import CliRunner
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
+# Disable colour codes so the JSON output is parseable by json.loads in tests.
+_runner_plain = CliRunner()
 
 _runner = CliRunner()
 
@@ -119,6 +122,43 @@ class TestVerifyCommand:
         result = _runner.invoke(app, ["verify", str(renamed)])
         assert result.exit_code == 2
         assert "cannot infer" in result.stdout
+
+    def test_verify_json_modelo_130(self, tmp_path: Path) -> None:
+        """Wave 100: --json emits a JSON document with the decoded casillas."""
+        path = _export_then_path(tmp_path, modelo="130", period="2024Q1")
+        result = _runner.invoke(app, ["verify", str(path), "--json"])
+        assert result.exit_code == 0, result.stdout
+        doc = json.loads(result.stdout)
+        assert doc["status"] == "ok"
+        assert doc["kind"] == "record"
+        assert doc["modelo"] == "130"
+        assert doc["ejercicio"] == "2024"
+        assert doc["raw_length"] == 878
+        # Casilla 01 = 10 000.00 round-trips as Decimal-string.
+        assert doc["casillas"]["01"] == "10000.00"
+
+    def test_verify_json_modelo_303(self, tmp_path: Path) -> None:
+        """Wave 100: --json works on envelope schemas, listing segment IDs."""
+        path = _export_then_path(tmp_path, modelo="303", period="2024Q1")
+        result = _runner.invoke(app, ["verify", str(path), "--json"])
+        assert result.exit_code == 0, result.stdout
+        doc = json.loads(result.stdout)
+        assert doc["status"] == "ok"
+        assert doc["kind"] == "envelope"
+        assert doc["modelo"] == "303"
+        assert len(doc["segments"]) == 8
+        assert "DP30300" in doc["segments"]
+        assert "DP30301" in doc["segments"]
+
+    def test_verify_json_error_on_corrupt_payload(self, tmp_path: Path) -> None:
+        """--json emits a status=error document even on decoder failure."""
+        bad = tmp_path / "bad.130"
+        bad.write_bytes(b"NOT-A-VALID-MODELO-130-PAYLOAD\r\n")
+        result = _runner.invoke(app, ["verify", str(bad), "--modelo", "130", "--ejercicio", "2024", "--json"])
+        assert result.exit_code == 2
+        doc = json.loads(result.stdout)
+        assert doc["status"] == "error"
+        assert doc["modelo"] == "130"
 
     def test_verify_explicit_flags_override_filename_inference(self, tmp_path: Path) -> None:
         """Explicit --modelo and --ejercicio win over filename auto-detect."""
