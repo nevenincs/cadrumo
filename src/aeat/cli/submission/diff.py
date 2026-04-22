@@ -103,6 +103,41 @@ def diff_cmd(
     payload_a = file_a.read_bytes()
     payload_b = file_b.read_bytes()
 
+    # Wave 135: per-file payload-length pre-flight with Kent-facing message.
+    expected = (
+        int(entry.module.RECORD_LENGTH)
+        if entry.kind == "record"
+        else sum(int(s.total_length) for s in entry.module.ENVELOPE)
+    )
+    for label, file_path, payload in (("a", file_a, payload_a), ("b", file_b, payload_b)):
+        content = payload[:-2] if payload.endswith(b"\r\n") else payload
+        if len(content) != expected:
+            msg = (
+                f"diff FAILED: file_{label} ({file_path.name}) is {len(content)} content "
+                f"byte(s) but modelo={modelo} ejercicio={ejercicio} expects exactly "
+                f"{expected}. Wrong --modelo/--ejercicio flag or corrupt file?"
+            )
+            if as_json:
+                typer.echo(
+                    json.dumps(
+                        {
+                            "status": "error",
+                            "error_type": "PayloadLengthMismatch",
+                            "error_message": msg,
+                            "modelo": modelo,
+                            "ejercicio": ejercicio,
+                            "which_file": f"file_{label}",
+                            "expected_bytes": expected,
+                            "actual_bytes": len(content),
+                        },
+                        indent=2,
+                        ensure_ascii=False,
+                    )
+                )
+            else:
+                _CONSOLE.print(f"[red]{msg}[/red]")
+            raise typer.Exit(code=2)
+
     if payload_a == payload_b:
         if as_json:
             typer.echo(
