@@ -7,7 +7,7 @@ architecture.
 
 Each ``modelo_{N}_{year}.py`` module exports:
 
-- ``_RECORD_SPECS: tuple[RecordFieldSpec, ...]`` — field layout pinned
+- ``RECORD_SPECS: tuple[RecordFieldSpec, ...]`` — field layout pinned
   to the BOE *Diseño de registros* version.
 - ``serialise(draft: FilingDraft) -> bytes`` — produces the
   ISO-8859-15 byte string Kent uploads to the AEAT portal.

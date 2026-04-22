@@ -175,7 +175,7 @@ def _parse(payload: bytes, *, entry: SchemaEntry) -> ParsedRecord | ParsedEnvelo
     if entry.kind == "record":
         return deserialise(
             content,
-            specs=entry.module._RECORD_SPECS,
+            specs=entry.module.RECORD_SPECS,
             encoding=entry.module.ENCODING,
             total_length=entry.module.RECORD_LENGTH,
         )

@@ -25,4 +25,4 @@ class TestModelo1302025ClonesParity:
 
     def test_specs_are_identity_clone(self) -> None:
         """No BOE change for 2025 — spec tuple is the SAME object."""
-        assert m130_2025._RECORD_SPECS is m130_2024._RECORD_SPECS
+        assert m130_2025.RECORD_SPECS is m130_2024.RECORD_SPECS

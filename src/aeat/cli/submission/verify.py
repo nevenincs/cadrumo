@@ -113,7 +113,7 @@ def verify_cmd(
         if entry.kind == "record":
             parsed_record = deserialise(
                 content,
-                specs=entry.module._RECORD_SPECS,
+                specs=entry.module.RECORD_SPECS,
                 encoding=entry.module.ENCODING,
                 total_length=entry.module.RECORD_LENGTH,
             )

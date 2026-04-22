@@ -20,9 +20,9 @@ import pytest
 
 from ._serialise import serialise
 from .modelo_130_2024 import (
-    _RECORD_SPECS,
     ENCODING,
     RECORD_LENGTH,
+    RECORD_SPECS,
     REQUIRED_HEADER_FIELDS,
 )
 
@@ -54,7 +54,7 @@ class TestModelo1302024GoldenKentQ1:
                 "NOMBRE": "KENT",
                 "TIPO_DECLARACION": "I",
             },
-            specs=_RECORD_SPECS,
+            specs=RECORD_SPECS,
             encoding=ENCODING,
             total_length=RECORD_LENGTH,
             required_field_ids=REQUIRED_HEADER_FIELDS,
