@@ -356,7 +356,7 @@
           "length": 17,
           "field_id": "DP30301_CAS150",
           "casilla_id": "150",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -374,7 +374,7 @@
           "length": 17,
           "field_id": "DP30301_CAS152",
           "casilla_id": "152",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -383,7 +383,7 @@
           "length": 17,
           "field_id": "DP30301_CAS01",
           "casilla_id": "01",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -401,7 +401,7 @@
           "length": 17,
           "field_id": "DP30301_CAS03",
           "casilla_id": "03",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -410,7 +410,7 @@
           "length": 17,
           "field_id": "DP30301_CAS153",
           "casilla_id": "153",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -428,7 +428,7 @@
           "length": 17,
           "field_id": "DP30301_CAS155",
           "casilla_id": "155",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -437,7 +437,7 @@
           "length": 17,
           "field_id": "DP30301_CAS04",
           "casilla_id": "04",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -455,7 +455,7 @@
           "length": 17,
           "field_id": "DP30301_CAS06",
           "casilla_id": "06",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -464,7 +464,7 @@
           "length": 17,
           "field_id": "DP30301_CAS07",
           "casilla_id": "07",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -482,7 +482,7 @@
           "length": 17,
           "field_id": "DP30301_CAS09",
           "casilla_id": "09",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -491,7 +491,7 @@
           "length": 17,
           "field_id": "DP30301_CAS10",
           "casilla_id": "10",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -500,7 +500,7 @@
           "length": 17,
           "field_id": "DP30301_CAS11",
           "casilla_id": "11",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -509,7 +509,7 @@
           "length": 17,
           "field_id": "DP30301_CAS12",
           "casilla_id": "12",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -518,7 +518,7 @@
           "length": 17,
           "field_id": "DP30301_CAS13",
           "casilla_id": "13",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -545,7 +545,7 @@
           "length": 17,
           "field_id": "DP30301_CAS156",
           "casilla_id": "156",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -563,7 +563,7 @@
           "length": 17,
           "field_id": "DP30301_CAS158",
           "casilla_id": "158",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -572,7 +572,7 @@
           "length": 17,
           "field_id": "DP30301_CAS16",
           "casilla_id": "16",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -590,7 +590,7 @@
           "length": 17,
           "field_id": "DP30301_CAS18",
           "casilla_id": "18",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -599,7 +599,7 @@
           "length": 17,
           "field_id": "DP30301_CAS19",
           "casilla_id": "19",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -617,7 +617,7 @@
           "length": 17,
           "field_id": "DP30301_CAS21",
           "casilla_id": "21",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -626,7 +626,7 @@
           "length": 17,
           "field_id": "DP30301_CAS22",
           "casilla_id": "22",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -644,7 +644,7 @@
           "length": 17,
           "field_id": "DP30301_CAS24",
           "casilla_id": "24",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -680,7 +680,7 @@
           "length": 17,
           "field_id": "DP30301_CAS28",
           "casilla_id": "28",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -689,7 +689,7 @@
           "length": 17,
           "field_id": "DP30301_CAS29",
           "casilla_id": "29",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -698,7 +698,7 @@
           "length": 17,
           "field_id": "DP30301_CAS30",
           "casilla_id": "30",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -707,7 +707,7 @@
           "length": 17,
           "field_id": "DP30301_CAS31",
           "casilla_id": "31",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -716,7 +716,7 @@
           "length": 17,
           "field_id": "DP30301_CAS32",
           "casilla_id": "32",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -725,7 +725,7 @@
           "length": 17,
           "field_id": "DP30301_CAS33",
           "casilla_id": "33",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -734,7 +734,7 @@
           "length": 17,
           "field_id": "DP30301_CAS34",
           "casilla_id": "34",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -743,7 +743,7 @@
           "length": 17,
           "field_id": "DP30301_CAS35",
           "casilla_id": "35",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -752,7 +752,7 @@
           "length": 17,
           "field_id": "DP30301_CAS36",
           "casilla_id": "36",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -761,7 +761,7 @@
           "length": 17,
           "field_id": "DP30301_CAS37",
           "casilla_id": "37",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -770,7 +770,7 @@
           "length": 17,
           "field_id": "DP30301_CAS38",
           "casilla_id": "38",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -779,7 +779,7 @@
           "length": 17,
           "field_id": "DP30301_CAS39",
           "casilla_id": "39",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -2427,7 +2427,7 @@
           "length": 17,
           "field_id": "DP30303_CAS77",
           "casilla_id": "77",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -2436,7 +2436,7 @@
           "length": 17,
           "field_id": "DP30303_CAS110",
           "casilla_id": "110",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -2445,7 +2445,7 @@
           "length": 17,
           "field_id": "DP30303_CAS78",
           "casilla_id": "78",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -2454,7 +2454,7 @@
           "length": 17,
           "field_id": "DP30303_CAS110_2",
           "casilla_id": "110_2",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -2481,7 +2481,7 @@
           "length": 17,
           "field_id": "DP30303_CAS70",
           "casilla_id": "70",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },
@@ -2490,7 +2490,7 @@
           "length": 17,
           "field_id": "DP30303_CAS109",
           "casilla_id": "109",
-          "kind": "NUMERIC",
+          "kind": "CURRENCY",
           "literal": null,
           "signed_mode": "UNSIGNED"
         },

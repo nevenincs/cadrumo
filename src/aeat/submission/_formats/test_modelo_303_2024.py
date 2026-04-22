@@ -1,4 +1,4 @@
-"""Smoke tests for the auto-generated Modelo 303 2024 schema (wave 88+89)."""
+"""Smoke tests for the auto-generated Modelo 303 2024 schema (wave 88+89+90)."""
 
 from __future__ import annotations
 
@@ -57,21 +57,11 @@ class TestModelo3032024Envelope:
         # So trailer occupies 0-indexed bytes 7976-7993 (positions 7977-7994).
         assert payload[7976:7982] == b"</T303"
 
-    def test_round_trip_envelope(self) -> None:
-        """Serialise with a known CURRENCY casilla value, deserialise back,
-        confirm it survives.
-
-        Note: the xlsx→JSON classifier maps 'Num'→NUMERIC and only 'N'→CURRENCY.
-        This means most unsigned currency casillas (e.g., 01 base imponible)
-        are currently classified NUMERIC in the generated schema. Only
-        resultado-type signed fields (e.g., casilla 86 incremento) end up
-        as CURRENCY + INLINE_SIGN. Wave 90+ will refine the classifier to
-        treat any 17-byte casilla-bearing NUMERIC field as CURRENCY.
-        """
+    def test_round_trip_signed_currency(self) -> None:
+        """Casilla 86 is a CURRENCY + INLINE_SIGN field in DP30304."""
         headers: dict[str, str] = {hdr: "A" for hdr in REQUIRED_HEADER_FIELDS}
         headers["DP30300_F004_EJERCICIO_DE_DEVENGO"] = "2024"
 
-        # Casilla 86 is a real CURRENCY + INLINE_SIGN field in DP30304.
         payload = serialise_envelope(
             casilla_values={"86": Decimal("2500.50")},
             headers=headers,
@@ -80,3 +70,21 @@ class TestModelo3032024Envelope:
         )
         parsed = deserialise_envelope(payload, segments=ENVELOPE, encoding=ENCODING)
         assert parsed.merged_casilla_values["86"] == Decimal("2500.50")
+
+    def test_round_trip_unsigned_currency(self) -> None:
+        """Casilla 01 (base imponible al 4 %) is an unsigned CURRENCY field.
+
+        Wave 90 reclassified every 17-byte casilla-bearing NUMERIC field
+        as CURRENCY so ordinary base-imponible values round-trip.
+        """
+        headers: dict[str, str] = {hdr: "A" for hdr in REQUIRED_HEADER_FIELDS}
+        headers["DP30300_F004_EJERCICIO_DE_DEVENGO"] = "2024"
+
+        payload = serialise_envelope(
+            casilla_values={"01": Decimal("1234.56")},
+            headers=headers,
+            segments=ENVELOPE,
+            encoding=ENCODING,
+        )
+        parsed = deserialise_envelope(payload, segments=ENVELOPE, encoding=ENCODING)
+        assert parsed.merged_casilla_values["01"] == Decimal("1234.56")
