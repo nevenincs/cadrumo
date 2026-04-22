@@ -271,7 +271,14 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
         )
 
 
-_SOFT_HYPHEN_BREAK_RE = re.compile(r"(?<=\w)[-­]\n(?=\w)")
+# Wave 59a H1: restrict the lookarounds to LETTERS (not \w, which also
+# matches digits and underscore). AEAT's amount / casilla-ID tokens are
+# digits, and an adversarial wrap like ``9-\n10`` would be collapsed
+# to ``910`` under a looser regex. Keeping this to Unicode letters
+# (A-Z, a-z, accented Latin) and the soft-hyphen / ASCII hyphen pair
+# preserves the wave 51 H2 label-stitching use-case without touching
+# digit boundaries.
+_SOFT_HYPHEN_BREAK_RE = re.compile(r"(?<=[A-Za-zÀ-ÿ])[-­]\n(?=[A-Za-zÀ-ÿ])")
 
 
 def _normalise_pdf_text(text: str) -> str:
@@ -289,6 +296,10 @@ def _normalise_pdf_text(text: str) -> str:
     (where the hyphen starts a line) no longer collapses into the
     following word — the lookbehind guarantees we only stitch real
     word-continuations.
+
+    Wave 59a H1: lookarounds further tightened to Unicode LETTERS only
+    (not digits / underscore). Prevents an adversarial digit wrap
+    ``9-\\n10`` from collapsing to ``910``.
     """
     return _SOFT_HYPHEN_BREAK_RE.sub("", text)
 
