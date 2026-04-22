@@ -36,6 +36,28 @@ _REGISTRY_IDS = [f"{m}-{e}" for (m, e) in sorted(SCHEMA_REGISTRY.keys())]
 _REGISTRY_KEYS = sorted(SCHEMA_REGISTRY.keys())
 
 
+def _ingreso_and_negativa_cases() -> list[tuple[str, str, str]]:
+    """(modelo, ejercicio, tipo) tuples for the tipo=I and tipo=N smoke tests
+    — every registered schema is exercised in both modes."""
+    out: list[tuple[str, str, str]] = []
+    for modelo, ejercicio in _REGISTRY_KEYS:
+        out.append((modelo, ejercicio, "I"))
+        out.append((modelo, ejercicio, "N"))
+    return out
+
+
+def _devolucion_cases() -> list[tuple[str, str, str]]:
+    """tipo=D cases — only envelope schemas carry a SEPA page (DP303DID)
+    where the IBAN gets stamped. Record-style schemas (130) have no
+    SEPA slot, so tipo=D smoke there would only exercise the IBAN
+    CLI-level guard without a payload-level assertion."""
+    return [
+        (modelo, ejercicio, "D")
+        for (modelo, ejercicio), entry in sorted(SCHEMA_REGISTRY.items())
+        if entry.kind == "envelope"
+    ]
+
+
 def _ejercicio_to_period(ejercicio: str) -> str:
     """Q1 of the target ejercicio as a canonical ``YYYYQ1`` token."""
     return f"{ejercicio}Q1"
@@ -111,3 +133,117 @@ def test_registered_schema_round_trips_through_cli(tmp_path: Path, modelo: str, 
     assert diff_doc["bytes"] == len(payload)
     assert diff_doc["casilla_deltas"] == []
     assert diff_doc["field_deltas"] == []
+
+
+_INGRESO_AND_NEGATIVA = _ingreso_and_negativa_cases()
+_DEVOLUCION = _devolucion_cases()
+
+
+@pytest.mark.parametrize(
+    ("modelo", "ejercicio", "tipo"),
+    _INGRESO_AND_NEGATIVA,
+    ids=[f"{m}-{e}-tipo_{t}" for m, e, t in _INGRESO_AND_NEGATIVA],
+)
+def test_tipo_i_and_n_round_trip(tmp_path: Path, modelo: str, ejercicio: str, tipo: str) -> None:
+    """Wave 125: every (modelo, ejercicio, tipo ∈ {I, N}) combo must
+    export + verify + self-diff clean. Catches a regression where a
+    tipo mode breaks end-to-end even if tipo=I works."""
+    period = _ejercicio_to_period(ejercicio)
+    draft_path = _write_draft(tmp_path, modelo=modelo, period=period)
+    output_dir = tmp_path / "out"
+    export = _runner.invoke(
+        app,
+        [
+            "export",
+            str(draft_path),
+            "--output-dir",
+            str(output_dir),
+            "--nombre",
+            "KENT",
+            "--apellidos",
+            "DOE",
+            "--tipo",
+            tipo,
+        ],
+    )
+    assert export.exit_code == 0, f"tipo={tipo} export failed: {export.stdout}"
+    output_file = output_dir / f"X1234567L{ejercicio}1T.{modelo}"
+    assert output_file.exists()
+
+    verify = _runner.invoke(app, ["verify", str(output_file), "--json"])
+    assert verify.exit_code == 0
+    verify_doc = json.loads(verify.stdout)
+    # Locate the tipo_declaracion field regardless of modelo shape (130 =
+    # "TIPO_DECLARACION", 303 = "DP30301_F006_TIPO_DECLARACI_N").
+    fields = verify_doc.get("fields", {})
+    tipo_values = {v for k, v in fields.items() if "TIPO" in k and "DECLARACI" in k}
+    # rich output surfaces the string with quotes around it for record schemas
+    # (repr) whereas JSON serialises the raw value; accept either shape.
+    assert any(tipo in str(v) for v in tipo_values), f"tipo={tipo} not visible in verify output fields: {tipo_values!r}"
+
+
+@pytest.mark.parametrize(
+    ("modelo", "ejercicio", "tipo"),
+    _DEVOLUCION,
+    ids=[f"{m}-{e}-tipo_{t}" for m, e, t in _DEVOLUCION],
+)
+def test_tipo_d_with_iban_round_trip(tmp_path: Path, modelo: str, ejercicio: str, tipo: str) -> None:
+    """Wave 125: tipo=D (devolución) must export cleanly when --iban is
+    supplied, and verify should surface the IBAN through DP303DID."""
+    period = _ejercicio_to_period(ejercicio)
+    draft_path = _write_draft(tmp_path, modelo=modelo, period=period)
+    output_dir = tmp_path / "out"
+    iban = "ES9121000418450200051332"
+    export = _runner.invoke(
+        app,
+        [
+            "export",
+            str(draft_path),
+            "--output-dir",
+            str(output_dir),
+            "--nombre",
+            "KENT",
+            "--apellidos",
+            "DOE",
+            "--tipo",
+            tipo,
+            "--iban",
+            iban,
+        ],
+    )
+    assert export.exit_code == 0, f"tipo={tipo} --iban export failed: {export.stdout}"
+    output_file = output_dir / f"X1234567L{ejercicio}1T.{modelo}"
+    assert output_file.exists()
+
+    verify = _runner.invoke(app, ["verify", str(output_file), "--json"])
+    assert verify.exit_code == 0
+    verify_doc = json.loads(verify.stdout)
+    fields = verify_doc.get("fields", {})
+    # IBAN should be visible at DP303DID_F006_DOMICILIACI_N_DEVOLUCI_N_IBA.
+    assert any(iban in str(v) for v in fields.values()), (
+        f"IBAN {iban!r} not surfaced in verify output fields — devolución builder may have silently dropped it."
+    )
+
+
+def test_tipo_d_without_iban_exits_3(tmp_path: Path) -> None:
+    """tipo=D must be refused when --iban is absent (wave-101 guard)."""
+    period = _ejercicio_to_period("2024")
+    draft_path = _write_draft(tmp_path, modelo="303", period=period)
+    output_dir = tmp_path / "out"
+    result = _runner.invoke(
+        app,
+        [
+            "export",
+            str(draft_path),
+            "--output-dir",
+            str(output_dir),
+            "--nombre",
+            "KENT",
+            "--apellidos",
+            "DOE",
+            "--tipo",
+            "D",
+        ],
+    )
+    assert result.exit_code == 3, f"expected exit 3 without IBAN, got {result.exit_code}"
+    assert "REFUSED" in result.stdout
