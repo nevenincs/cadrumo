@@ -1,0 +1,95 @@
+"""Cross-artifact consistency: the 303 casilla-gap story (wave 121).
+
+The "Modelo 303 2024 ruleset declares casillas that have no
+schema field" gap is recorded in three places:
+
+1. ``_EXPECTED_GAPS["303.2024"]`` in
+   :mod:`.test_ruleset_schema_coverage` — the authoritative set.
+2. Provenance notes at
+   ``tests/fixtures/dr_specs/dr303e24.json`` ``source.notes`` —
+   the fixture-level explanation a reader reaches from the
+   generator output.
+3. The docstring + assertion-error messages of
+   :mod:`.test_integration_kent_303_e2e` — the developer-facing
+   description surfaced whenever the E2E test fails.
+
+When any one drifts (the authoritative set shrinks because a
+fixture regeneration closed a gap, or expands because a new
+ruleset casilla was added without schema backing), the other two
+can fall out of sync silently. Wave 121 locks all three as a
+single invariant so any consistent update has to touch the whole
+story.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from pathlib import Path
+
+import pytest
+
+from .test_ruleset_schema_coverage import _EXPECTED_GAPS
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+
+
+_FIXTURE_PATH = (
+    Path(__file__).resolve().parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs" / "dr303e24.json"
+)
+
+
+class TestGapStoryConsistency:
+    def test_fixture_notes_mention_every_missing_casilla(self) -> None:
+        """Every casilla in ``_EXPECTED_GAPS["303.2024"]`` must be named in
+        the dr303e24.json source.notes field — the fixture is the surface
+        a reader hits when tracing the generator output, so the note must
+        not drift behind the test source."""
+        doc = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+        notes = doc["source"].get("notes", "")
+        for cid in sorted(_EXPECTED_GAPS["303.2024"]):
+            assert cid in notes, (
+                f"fixture source.notes does not mention casilla {cid}; wave-113 "
+                f"_EXPECTED_GAPS was updated without a matching fixture-note update."
+            )
+
+    def test_fixture_notes_cite_sibling_tests(self) -> None:
+        """The fixture notes must mention wave 113 / 114 and the coverage
+        test filename so a reader lands on the authoritative lock."""
+        doc = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+        notes = doc["source"].get("notes", "")
+        # Must cite the coverage test by filename (or close match).
+        assert "test_ruleset_schema_coverage" in notes, (
+            "fixture source.notes should cite test_ruleset_schema_coverage.py so "
+            "readers can trace the gap story to its authoritative lock."
+        )
+
+    def test_e2e_docstring_mentions_every_missing_casilla(self) -> None:
+        """The wave-109 E2E test's module docstring must also name every
+        casilla in the gap — stale docstrings mislead developers reading
+        a failing test stack."""
+        from . import test_integration_kent_303_e2e
+
+        doc = test_integration_kent_303_e2e.__doc__ or ""
+        for cid in sorted(_EXPECTED_GAPS["303.2024"]):
+            assert cid in doc, (
+                f"test_integration_kent_303_e2e.__doc__ does not mention casilla "
+                f"{cid}; the wave-113 _EXPECTED_GAPS shrank/grew and the E2E "
+                f"docstring is now stale."
+            )
+
+    def test_fixture_notes_include_suspect_slot_pointers(self) -> None:
+        """The fixture note's mislabeled-slot theory (wave 114) names three
+        _2-suffix CURRENCY slots as the suspected carriers of the missing
+        casillas. Lock those pointers so a future regeneration can't erase
+        the closure path without replacing the theory."""
+        doc = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+        notes = doc["source"].get("notes", "")
+        expected_pointers = re.findall(r"DP\d+_CAS\d+_2", notes)
+        assert expected_pointers, (
+            "fixture source.notes should name the _2-suffix slot pointers "
+            "documented in wave 114 so the closure path survives rewrites."
+        )
+        # At least one pointer per 303 segment that carries mislabeled slots.
+        assert any("DP30303_CAS" in p for p in expected_pointers)
+        assert any("DP30304_CAS" in p for p in expected_pointers)
