@@ -39,11 +39,18 @@ from .._engine import Engine
 from .._formula import FormulaDefinition, RoundFormula, SubFormula
 from .._ruleset import Ruleset
 from . import (
+    MODELO_100_SUMMARY_2025,
+    MODELO_111_2025,
+    MODELO_115_2025,
+    MODELO_123_2025,
+    MODELO_130_2024,
     MODELO_130_2025,
     MODELO_131_2025,
     MODELO_200_2024,
     MODELO_202_2025,
+    MODELO_303_2024,
     MODELO_303_2025,
+    MODELO_390_2025,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
@@ -269,6 +276,103 @@ def _modelo_303_fixture() -> dict[str, Decimal]:
     }
 
 
+def _modelo_111_fixture() -> dict[str, Decimal]:
+    """Wave 75a (issue #314): fixture for Modelo 111 casilla 30.
+
+    Chain: 09=19% * 08; 12=19% * 11; 28=03+06+09+12+15+18;
+    30=sub_op(28, 29). Outer swap of 30 yields 29-28=-1652 vs
+    correct 1652, delta 3304 >> 0.02.
+    """
+    return {
+        "03": Decimal("1000.00"),
+        "06": Decimal("200.00"),
+        "08": Decimal("500.00"),
+        "09": Decimal("95.00"),
+        "11": Decimal("300.00"),
+        "12": Decimal("57.00"),
+        "15": Decimal("400.00"),
+        "18": Decimal("150.00"),
+        "28": Decimal("1902.00"),
+        "29": Decimal("250.00"),
+        "30": Decimal("1652.00"),
+    }
+
+
+def _modelo_115_fixture() -> dict[str, Decimal]:
+    """Wave 75a (issue #314): fixture for Modelo 115 casilla 06.
+
+    Chain: 03 = 19% * 02; 06 = sub_op(add_op(03, 04), 05).
+    Outer swap of 06 yields 05 - (03+04) = -1830 vs correct 1830,
+    delta 3660 >> 0.02.
+    """
+    return {
+        "02": Decimal("10000.00"),
+        "03": Decimal("1900.00"),
+        "04": Decimal("50.00"),
+        "05": Decimal("120.00"),
+        "06": Decimal("1830.00"),
+    }
+
+
+def _modelo_123_fixture() -> dict[str, Decimal]:
+    """Wave 75a (issue #314): fixture for Modelo 123 casilla 11.
+
+    Chain: 09 = 07 + 08; 11 = sub_op(09, 10). Outer swap of 11
+    yields 10-09 = -750 vs correct 750, delta 1500 >> 0.02.
+    """
+    return {
+        "07": Decimal("800.00"),
+        "08": Decimal("150.00"),
+        "09": Decimal("950.00"),
+        "10": Decimal("200.00"),
+        "11": Decimal("750.00"),
+    }
+
+
+def _modelo_100_summary_fixture() -> dict[str, Decimal]:
+    """Wave 75a (issue #314): fixture for Modelo 100 summary casilla 0720.
+
+    Chain: 0595 = 0550+0551+0560+0561; 0630 = 0620+0622;
+    0698 = clamp_pos(0595-0630); 0720 = sub_op(sub_op(0698, 0699), 0700).
+    Outer swap of 0720 yields 0700 - (0698-0699) = -9000 vs correct
+    9000, delta 18000 >> 0.02.
+    """
+    return {
+        "0550": Decimal("10000.00"),
+        "0551": Decimal("2000.00"),
+        "0560": Decimal("5000.00"),
+        "0561": Decimal("1000.00"),
+        "0595": Decimal("18000.00"),
+        "0620": Decimal("1500.00"),
+        "0622": Decimal("500.00"),
+        "0630": Decimal("2000.00"),
+        "0698": Decimal("16000.00"),
+        "0699": Decimal("4000.00"),
+        "0700": Decimal("3000.00"),
+        "0720": Decimal("9000.00"),
+    }
+
+
+def _modelo_390_fixture() -> dict[str, Decimal]:
+    """Wave 75a (issue #314): fixture for Modelo 390 casilla 105.
+
+    Note: issue #314 body says "casilla 97" but that's an input; the
+    only sub_op-bearing computed casilla in Modelo 390 is 105 =
+    sub_op(96, 104). Outer swap yields 104-96 = -10000 vs correct
+    10000, delta 20000 >> 0.02.
+    """
+    return {
+        "96": Decimal("30000.00"),
+        "100": Decimal("18000.00"),
+        "101": Decimal("2000.00"),
+        "104": Decimal("20000.00"),
+        "105": Decimal("10000.00"),
+        "108": Decimal("500.00"),
+        "109": Decimal("300.00"),
+        "190": Decimal("10800.00"),
+    }
+
+
 @pytest.mark.parametrize(
     ("ruleset_factory", "target_casilla", "fixture_factory"),
     [
@@ -347,6 +451,87 @@ def _modelo_303_fixture() -> dict[str, Decimal]:
             "00611",
             _modelo_200_fixture,
             id="modelo_200.2024:casilla_00611_cuota_diferencial_deep_nest",
+        ),
+        # Wave 75a (issue #314) — Modelo 130 2024 clones every sub_op chain.
+        pytest.param(
+            lambda: MODELO_130_2024,
+            "03",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2024:casilla_03_rendimiento_neto",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2024,
+            "07",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2024:casilla_07_resultado_apartado_i",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2024,
+            "11",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2024:casilla_11_resultado_apartado_ii",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2024,
+            "14",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2024:casilla_14_neto_tras_minoracion",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2024,
+            "17",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2024:casilla_17_diferencia",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2024,
+            "19",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2024:casilla_19_resultado_final",
+        ),
+        # Wave 75a (issue #314) — Modelo 303 2024 clones.
+        pytest.param(
+            lambda: MODELO_303_2024,
+            "45",
+            _modelo_303_fixture,
+            id="modelo_303.2024:casilla_45_resultado_regimen_general",
+        ),
+        pytest.param(
+            lambda: MODELO_303_2024,
+            "69",
+            _modelo_303_fixture,
+            id="modelo_303.2024:casilla_69_resultado",
+        ),
+        # Wave 75a (issue #314) — 111 / 115 / 123 / 100_summary / 390.
+        pytest.param(
+            lambda: MODELO_111_2025,
+            "30",
+            _modelo_111_fixture,
+            id="modelo_111.2025:casilla_30_resultado_a_ingresar",
+        ),
+        pytest.param(
+            lambda: MODELO_115_2025,
+            "06",
+            _modelo_115_fixture,
+            id="modelo_115.2025:casilla_06_resultado_a_ingresar",
+        ),
+        pytest.param(
+            lambda: MODELO_123_2025,
+            "11",
+            _modelo_123_fixture,
+            id="modelo_123.2025:casilla_11_resultado_a_ingresar",
+        ),
+        pytest.param(
+            lambda: MODELO_100_SUMMARY_2025,
+            "0720",
+            _modelo_100_summary_fixture,
+            id="modelo_100_summary.2025:casilla_0720_cuota_resultante",
+        ),
+        pytest.param(
+            lambda: MODELO_390_2025,
+            "105",
+            _modelo_390_fixture,
+            id="modelo_390.2025:casilla_105_resultado_regimen_general",
         ),
     ],
 )

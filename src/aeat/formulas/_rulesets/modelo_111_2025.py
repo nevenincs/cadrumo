@@ -68,13 +68,12 @@ _CITATIONS = (
     make_citation(
         LegalCitationSource.REGLAMENTO,
         "100",
-        "Artículo 100 RD 439/2007 (Reglamento del IRPF) — tipos de "
-        "retención aplicables a los rendimientos del capital mobiliario "
-        "y a los rendimientos por arrendamiento o subarrendamiento de "
-        "bienes inmuebles urbanos (19% para urbanos en art. 100.1; "
-        "reducción 60% Ceuta/Melilla en art. 100.2). Wave 69a "
-        "correction: the article has no sub-letter structure in BOE "
-        "consolidated text.",
+        "Artículo 100 RD 439/2007 (Reglamento del IRPF) — importe de "
+        "las retenciones sobre rendimientos del arrendamiento o "
+        "subarrendamiento de bienes inmuebles urbanos (19% en art. "
+        "100.1; reducción 60% Ceuta/Melilla en art. 100.2). Modelo 111 "
+        "casillas 11-12 map to rendimientos-gravados por LIRPF art. "
+        "101.2 implementados vía este artículo.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
     ),
     make_citation(

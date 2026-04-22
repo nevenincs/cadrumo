@@ -157,6 +157,34 @@ class TestAccentFolding:
         )
         assert match is not None
 
+    def test_rirpf_100_capital_mobiliario_is_blocklisted(self) -> None:
+        """Wave 74 miscite: RIRPF art. 100 for capital mobiliario (wrong).
+
+        RIRPF art. 100 is arrendamientos inmuebles urbanos only.
+        Capital mobiliario retención lives in RIRPF art. 90.
+        """
+        match = find_known_bad(
+            LegalCitationSource.REGLAMENTO,
+            "100",
+            "tipos de retención sobre rendimientos del capital mobiliario",
+        )
+        assert match is not None
+        assert "wave 75b" in match.audit_wave
+
+    def test_lirpf_66_cuota_integra_general_is_blocklisted(self) -> None:
+        """Wave 74 miscite: LIRPF art. 66 for general cuota íntegra.
+
+        Art. 66 is 'Tipos de gravamen del ahorro' (narrow). General
+        cuota íntegra is art. 62 (estatal) + art. 73 (autonómica).
+        """
+        match = find_known_bad(
+            LegalCitationSource.LEY,
+            "66",
+            "Cuota íntegra general - liquidación en art. 66",
+        )
+        assert match is not None
+        assert "wave 75b" in match.audit_wave
+
 
 class TestBlocklistPrecision:
     """Blocklist does not false-positive on correct article reuse."""

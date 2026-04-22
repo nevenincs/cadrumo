@@ -51,9 +51,12 @@ _CITATIONS = (
     ),
     make_citation(
         LegalCitationSource.REGLAMENTO,
-        "100",
-        "Artículo 100 RD 439/2007 (Reglamento del IRPF) — tipos de "
-        "retención aplicables a los rendimientos del capital mobiliario.",
+        "90",
+        "Artículo 90 RD 439/2007 (Reglamento del IRPF) — importe de "
+        "las retenciones sobre rendimientos del capital mobiliario. "
+        "Wave 75b correction: prior citation of RIRPF art. 100 was "
+        "wrong — art. 100 covers arrendamientos inmuebles urbanos only "
+        "(see BOE-A-2007-6820 consolidated text).",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
     ),
 )

@@ -53,7 +53,12 @@ _CITATIONS = (
         LegalCitationSource.LEY,
         "35/2006",
         "Ley 35/2006 IRPF — base normativa del Impuesto sobre la Renta "
-        "de las Personas Físicas. Liquidación en los artículos 66-80.",
+        "de las Personas Físicas. Liquidación en los artículos 62-80 "
+        "(art. 62 Cuota íntegra estatal; art. 66 tipos del ahorro; "
+        "art. 67 Cuota líquida estatal; art. 73 Cuota íntegra "
+        "autonómica; art. 77 Cuota líquida autonómica; art. 79 "
+        "Cuota diferencial; art. 80 Deducción por doble imposición "
+        "internacional).",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
     ),
     make_citation(
