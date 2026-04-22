@@ -22,6 +22,12 @@ and lands in sub-EPIC #305-Modelo-202-full.
 Legal base: Orden HFP/227/2017 (BOE-A-2017-2778); refreshed by
 HFP/312/2023 and HAC/262/2025 (BOE-A-2025-5407) — the 2025 Orden
 introduced the micropyme / pyme rate boxes relevant to casilla 17.
+
+Wave 50 research: casilla 34 "Cantidad a ingresar (mayor de claves
+[32] y [33])" is VERIFIED against BOE-A-2025-5407 Anexo I pág. 36465
+liquidación block 4. The same page's Ingreso (8) block references
+``Importe (casilla [34] ó [03])`` — confirming 34 is the terminal
+payable field on the 2025 form, not a fabrication.
 """
 
 from __future__ import annotations

@@ -90,18 +90,25 @@ complementaria". Similar drift on `modelo_115_v2025.py` casilla 05.
 
 **Fix**: update comments to match the AEAT-printed label verbatim.
 
-### H6 (stream 2) — Modelo 202 casilla "34" existence
+### H6 (stream 2) — Modelo 202 casilla "34" existence — RESOLVED (wave 50)
 
-Stream 2 claims Modelo 202's liquidación block terminates at casilla
-33 and "34 = max(32,33)" is the definition of 33 itself, not a
-separate casilla. Stream 1's formula audit verified `34 = max(32, 33)`
-is legally correct per art. 40.3 LIS but did not verify the CASILLA
-NUMBER exists on the printed form.
+**Resolution**: Stream 2 was WRONG. Casilla 34 EXISTS on the 2025
+Modelo 202 form. Verified against primary source:
 
-**Decision**: research the Modelo 202 2025 printed layout before
-patching. If 34 truly doesn't exist, migrate the `max(32, 33)`
-semantic into casilla 33's own formula and drop 34 from both
-extractor + ruleset.
+- **BOE-A-2025-5407** Orden HAC/262/2025, Anexo I pág. 36465
+  (liquidación block 4) prints:
+  - `32` — Resultado
+  - `33` — Mínimo a ingresar (para empresas CN ≥ 10M €)
+  - `34` — **Cantidad a ingresar (mayor de claves [32] y [33])**
+- The `Ingreso (8)` block on the same page references ``Importe
+  (casilla [34] ó [03])``, confirming 34 is the terminal payable.
+
+Current ruleset formula `34 = max(32, 33)` matches the printed form.
+**No code changes; citation anchors added to Modelo 202 extractor +
+ruleset docstrings** (wave 50) so the question cannot be re-litigated
+without consulting the verdict.
+
+Closed via wave 50.
 
 ### H7 (stream 2) — Modelo 200 casilla 00582 comment wrong
 
