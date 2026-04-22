@@ -188,6 +188,30 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         "autónomos. The 4/3/2% rate on actividades en estimación "
         "objetiva (módulos) lives in art. 110.1.b.",
     ),
+    KnownBadCitation(
+        LegalCitationSource.REGLAMENTO,
+        "100",
+        "capital mobiliario",
+        "wave 74 stream 1 / corrected wave 75b",
+        "RIRPF art. 100 is 'Importe de las retenciones sobre "
+        "rendimientos del arrendamiento o subarrendamiento de bienes "
+        "inmuebles urbanos' — arrendamientos ONLY (art. 100.1 rate "
+        "19%, art. 100.2 Ceuta/Melilla reduction). Capital mobiliario "
+        "retención lives in RIRPF art. 90.",
+    ),
+    KnownBadCitation(
+        LegalCitationSource.LEY,
+        "66",
+        "cuota íntegra general",
+        "wave 74 stream 1 / corrected wave 75b",
+        "LIRPF art. 66 is 'Tipos de gravamen del ahorro' (base del "
+        "ahorro tarifa) — narrow scope. The entry point for the "
+        "general cuota íntegra chapter is LIRPF art. 62 (Cuota "
+        "íntegra estatal) + art. 73 (Cuota íntegra autonómica). "
+        "Citations describing art. 66 as the start of liquidación or "
+        "the general-base cuota íntegra confuse savings-tarifa with "
+        "general-base tarifa.",
+    ),
 )
 
 
