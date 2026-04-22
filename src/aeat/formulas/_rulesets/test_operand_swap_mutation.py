@@ -379,6 +379,20 @@ def test_sub_op_operand_swap_is_detected(
         f"was NOT detected — audit returned discrepancies on {affected}"
     )
 
+    # Wave 67e enforcement of the delta-after-swap >= 0.02 invariant
+    # documented at the top of this module. A case with delta below
+    # the tolerance would still "detect" under audit_against because
+    # tolerance=0.01 is strictly less-than, but a future tolerance
+    # loosening (or rounding drift) could silently hide it. The
+    # explicit threshold here makes the invariant enforceable.
+    target_discrepancy = next(d for d in report.discrepancies if d.casilla_id == target_casilla)
+    delta_abs = abs(target_discrepancy.delta)
+    assert delta_abs >= Decimal("0.02"), (
+        f"operand-swap on {ruleset.ruleset_id} casilla {target_casilla} "
+        f"produced delta={delta_abs} which is below the 0.02 detection "
+        f"floor — the fixture's operand pair is too close to symmetric."
+    )
+
 
 def test_modelo_202_nested_sub_op_swap_is_detected() -> None:
     """Modelo 202 casilla 32's formula has a 4-deep sub_op chain.

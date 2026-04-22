@@ -107,32 +107,40 @@ class TestModelo100SummaryRuleset:
         assert computed == {"0595", "0630", "0698", "0720"}
         assert len(MODELO_100_SUMMARY_2025.formulas) == 4
 
-    def test_external_worked_example_lirpf_art_67_and_73(self) -> None:
-        """External anchor per Ley IRPF (Ley 35/2006) arts. 67, 73, 79, 99.
+    def test_external_worked_example_lirpf_art_62_and_73(self) -> None:
+        """External anchor per Ley IRPF (Ley 35/2006) arts. 62, 73, 67, 77, 79, 99.
 
-        LIRPF art. 67 ("Cuota íntegra estatal") defines the estatal half
-        of the cuota íntegra as the sum of the tarifa-general and tarifa-
-        ahorro components. LIRPF art. 73 ("Cuota íntegra autonómica" —
-        general rule; art. 74 covers the autonomous tarifa) mirrors the
-        estatal structure for the autonómica half. Together the two halves
-        define Modelo 100 casilla 0595 (cuota íntegra total). LIRPF art. 79
-        ("Cuota líquida total") subtracts deducciones. LIRPF art. 99
-        ("Obligación de practicar pagos a cuenta") is the statutory basis
-        for subtracting retenciones + pagos a cuenta from the cuota líquida
-        to obtain the cuota diferencial.
+        Plain-text titles (BOE-A-2006-20764 consolidated text, retrieval
+        2026-04-22):
+          - art. 62 = "Cuota íntegra estatal" (tarifa general + tarifa
+            ahorro, estatal half)
+          - art. 73 = "Cuota íntegra autonómica" (mirror on the
+            autonomous half; art. 74 carries the autonomous tarifa)
+          - art. 67 = "Cuota líquida estatal"
+          - art. 77 = "Cuota líquida autonómica total"
+          - art. 79 = "Cuota diferencial"
+          - art. 99 = "Obligación de practicar pagos a cuenta"
+
+        Modelo 100 summary-block mapping:
+          - 0595 (cuota íntegra total) = art. 62 + art. 73
+          - 0698 (cuota líquida) = art. 67 + art. 77
+          - 0720 (cuota diferencial) = art. 79, with the art. 99
+            pagos-a-cuenta subtraction
 
         Citation-accuracy history (tracked for auditability):
-         - Wave 61c originally cited art. 103 for the cuota diferencial —
-           WRONG (art. 103 is "Liquidaciones provisionales", an AEAT
-           administrative power). Corrected in wave 63a to 79 + 99.
+         - Wave 61c originally cited art. 103 for the cuota diferencial
+           — WRONG (art. 103 is "Liquidaciones provisionales"). Corrected
+           in wave 63a to 79 + 99.
          - Wave 63a cited art. 77 for cuota íntegra autonómica — WRONG
            (art. 77 is "Cuota líquida autonómica total", post-deduction).
-           Corrected in wave 65a to art. 73 (the cuota íntegra autonómica
-           general rule). The fixture arithmetic is unchanged; only the
-           statutory pointers are updated.
-
-        The statute (BOE-A-2006-20764) — not this ruleset's formulas — is
-        the authoritative source.
+           Corrected in wave 65a to art. 73.
+         - Wave 65a cited art. 67 for cuota íntegra estatal — WRONG
+           (art. 67 is "Cuota líquida estatal"). Corrected in wave 67a
+           to art. 62. Wave 65a also cited art. 79 for "cuota líquida
+           total" — WRONG (art. 79 is "Cuota diferencial"; cuota líquida
+           total splits across arts. 67 + 77). Wave 67a untangles this.
+           Fixture arithmetic unchanged throughout; only statutory
+           pointers update.
 
         The summary ruleset is a pure aggregator (no rate-bearing formulas,
         empty ParameterTable per the ADR §4 canonical pattern) so the
@@ -141,16 +149,15 @@ class TestModelo100SummaryRuleset:
 
         Scenario: Kent 2025 renta — distinct numeric profile from ``_provided()``:
           - Base general: 0550 estatal 3 150, 0551 autonómica 3 150
-            (cuota estatal + autonómica por base general).
+            (cuota íntegra estatal + autonómica por base general).
           - Base del ahorro: 0560 estatal 190, 0561 autonómica 190
-            (cuota por base del ahorro al primer tramo 19%).
-          - 0595 (LIRPF art. 67 + 73): 3 150 + 3 150 + 190 + 190 = 6 680,00.
+            (cuota íntegra por base del ahorro al primer tramo 19%).
+          - 0595 (LIRPF art. 62 + 73): 3 150 + 3 150 + 190 + 190 = 6 680,00.
           - Deducciones: 0620 vivienda habitual 1 200, 0622 donaciones 80.
-          - 0630 (LIRPF art. 68 estatal + art. 78 autonómica deducciones):
-            1 200 + 80 = 1 280,00.
-          - 0698 (LIRPF art. 79): max(0, 6 680 - 1 280) = 5 400,00.
-          - 0699 retenciones 800, 0700 pagos a cuenta 125.
-          - 0720 (LIRPF art. 79 + 99): 5 400 - 800 - 125 = 4 475,00.
+          - 0630 (general deducciones estatal + autonómicas): 1 200 + 80 = 1 280,00.
+          - 0698 (LIRPF art. 67 + 77 cuota líquida): max(0, 6 680 - 1 280) = 5 400,00.
+          - 0699 retenciones 800, 0700 pagos a cuenta 125 (LIRPF art. 99).
+          - 0720 (LIRPF art. 79 cuota diferencial): 5 400 - 800 - 125 = 4 475,00.
         """
         provided = {
             "0550": Decimal("3150.00"),

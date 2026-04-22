@@ -161,9 +161,12 @@ sibling (e.g. `modelo_115_2024.py`) may rely on the sibling's
 external anchor plus a backfill-parity assertion. The
 `test_backfill_2024_rulesets.py` pattern captures this.
 
-As of wave 59c + 60-consolidation, 11 of 14 in-scope rulesets
-have external anchors. The residual (130_2025, 100_summary_2025
-plus 303_2024's thin anchor surface) is tracked for wave 61c.
+As of wave 65a (post-citation-accuracy fixes), 12 of 14 in-scope
+rulesets have external anchors. The residual 303_2024 thin-anchor
+surface is tracked for wave 67+. Waves 59c → 61c → 63a → 65a
+surfaced four citation-accuracy miscites across the fleet that
+were each corrected by the next wave; the checklist below codifies
+the patterns to prevent a fifth.
 
 **Citation-accuracy author checklist** (added wave 65c after three
 miscites surfaced in waves 59c / 61a / 63a / 65a):
@@ -183,8 +186,20 @@ miscites surfaced in waves 59c / 61a / 63a / 65a):
    "Liquidaciones provisionales" was the wave 64 H5 miscite).
 4. Verify the rate arithmetic uses the current general tipo.
    LIS art. 29.1 general tipo is 25% (not 24%) — wave 64 H4 miscite.
-5. Run a WebSearch for the article + role string before landing.
-   This is cheaper than a wave-later citation-accuracy remediation.
+5. **Grep-checkable provenance**: the exact plain-text title quoted
+   in bullet 1 MUST appear as a literal string in the test
+   docstring. `grep -Fq "Cuota íntegra estatal" <file>` is a
+   trivial CI gate; a process rule like "run WebSearch before
+   landing" is non-falsifiable (all four prior miscites presumably
+   received some verification and still shipped).
+6. **Statute-drift anchor**: cite the BOE consolidated-text
+   retrieval date or the amending-Orden identifier (e.g.
+   `retrieval_date=2026-04-22` or
+   `per Orden HAC/657/2025 (BOE-A-2025-xxxxx)`). A rate that was
+   correct when the test was written can silently drift via a
+   BOE amendment; naming the consolidated-text version pins the
+   authoring context so future audits can re-verify against the
+   same baseline.
 
 ### Future milestones (1.0.0+)
 
