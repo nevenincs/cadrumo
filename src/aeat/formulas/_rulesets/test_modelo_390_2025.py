@@ -83,3 +83,35 @@ class TestModelo390Ruleset:
         computed = {c.casilla_id for c in MODELO_390_2025.casillas if c.computed}
         assert computed == {"104", "105", "190"}
         assert len(MODELO_390_2025.formulas) == 3
+
+    def test_external_worked_example_liva_resumen_anual(self) -> None:
+        """External-anchored worked example (wave 59c H3 closure).
+
+        Provenance: Ley 37/1992 (LIVA) arts. 92-99 establish the IVA
+        soportado deducible framework. Modelo 390 is the annual
+        resumen that rolls up the quarterly 303 filings per AEAT
+        Instrucciones Modelo 390.
+
+        Scenario: Kent's 2025 annual resumen:
+        - 96 cuotas repercutidas = 42 000 (sum of quarterly 03+06+09).
+        - 100 IVA soportado interior = 8 500.
+        - 101 IVA soportado importaciones = 1 500.
+        - 104 total IVA soportado = 100 + 101 = 10 000 per AEAT instr.
+        - 105 resultado régimen general = 96 - 104 = 32 000.
+        - 108/109 otros regímenes = 0.
+        - 190 suma resultado = 105 + 108 + 109 = 32 000.
+
+        Citation: BOE-A-1992-28740 arts. 92-99 (LIVA deducciones).
+        """
+        provided = {
+            "96": Decimal("42000.00"),
+            "100": Decimal("8500.00"),
+            "101": Decimal("1500.00"),
+            "104": Decimal("10000.00"),  # 100 + 101 per AEAT instr.
+            "105": Decimal("32000.00"),
+            "108": Decimal("0.00"),
+            "109": Decimal("0.00"),
+            "190": Decimal("32000.00"),
+        }
+        report = Engine().audit_against(ruleset=MODELO_390_2025, provided=provided, tolerance=Decimal("0.01"))
+        assert report.is_clean()

@@ -69,3 +69,31 @@ class TestModelo115Ruleset:
         articles = {c.article for c in MODELO_115_2025.legal_citations}
         assert "100.3.a" in articles  # Reglamento: fija el 19%
         assert "101.8" in articles  # LIRPF: delega el tipo al reglamento
+
+    def test_external_worked_example_rirpf_100_3a(self) -> None:
+        """External-anchored worked example (wave 59c H3 closure).
+
+        Provenance: RD 439/2007 (RIRPF) art. 100.3.a fixes the 19%
+        retencion rate on arrendamientos urbanos. This fixture derives
+        expected retencion + resultado values from that rate
+        independently of the ruleset's `irpf.arrendamientos_rate`
+        parameter. BOE: BOE-A-2007-6820.
+
+        Scenario: Q3 2025 Kent leasing a commercial premise:
+        - 01 perceptores = 1 (single landlord).
+        - 02 base = 15 000.
+        - 03 retencion = 15 000 x 19% = 2 850 per RIRPF 100.3.a.
+        - 04 ingresos especie = 0.
+        - 05 complementaria = 0.
+        - 06 resultado = 03 + 04 - 05 = 2 850.
+        """
+        provided = {
+            "01": Decimal("1"),
+            "02": Decimal("15000.00"),
+            "03": Decimal("2850.00"),  # 19% per RIRPF 100.3.a, NOT from ruleset
+            "04": Decimal("0.00"),
+            "05": Decimal("0.00"),
+            "06": Decimal("2850.00"),
+        }
+        report = Engine().audit_against(ruleset=MODELO_115_2025, provided=provided, tolerance=Decimal("0.01"))
+        assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]

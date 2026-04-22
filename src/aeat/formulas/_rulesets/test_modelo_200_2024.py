@@ -86,3 +86,34 @@ class TestModelo200Ruleset2024:
         computed = {c.casilla_id for c in MODELO_200_2024.casillas if c.computed}
         assert computed == {"00562", "00611", "00621"}
         assert len(MODELO_200_2024.formulas) == 3
+
+    def test_external_worked_example_lis_art_29(self) -> None:
+        """External-anchored worked example (wave 59c H3 closure).
+
+        Provenance: Ley 27/2014 (LIS) art. 29.1 fixes the general tipo
+        de gravamen at 25%. Art. 125 defines liquido = cuota diferencial
+        + incremento - abono.
+
+        Scenario: 2024 IS filing, base 1 000 000 at 25%.
+        Citation: BOE-A-2014-12328 arts. 29.1 + 125.
+        """
+        provided = {
+            "00547": Decimal("0.00"),
+            "00550": Decimal("1000000.00"),
+            "00552": Decimal("1000000.00"),
+            "00558": Decimal("25.00"),  # 25% per LIS art. 29.1
+            "00560": Decimal("250000.00"),
+            "00562": Decimal("250000.00"),
+            "00582": Decimal("0.00"),
+            "00592": Decimal("250000.00"),
+            "00599": Decimal("5000.00"),
+            "00601": Decimal("60000.00"),
+            "00603": Decimal("60000.00"),
+            "00605": Decimal("60000.00"),
+            "00615": Decimal("0.00"),
+            "00619": Decimal("0.00"),
+            "00611": Decimal("65000.00"),
+            "00621": Decimal("65000.00"),
+        }
+        report = Engine().audit_against(ruleset=MODELO_200_2024, provided=provided, tolerance=Decimal("0.01"))
+        assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]

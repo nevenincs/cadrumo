@@ -73,3 +73,26 @@ class TestModelo180Ruleset:
         }
         report = Engine().audit_against(ruleset=MODELO_180_2025, provided=provided, tolerance=Decimal("0.01"))
         assert report.is_clean()
+
+    def test_external_worked_example_rirpf_100_3a(self) -> None:
+        """External-anchored worked example (wave 59c H3 closure).
+
+        Modelo 180 is the annual rollup of Modelo 115 quarterly filings;
+        RIRPF art. 100.3.a fixes the 19% rate on arrendamientos urbanos.
+        Fixture values derived from that rate, NOT from the ruleset's
+        `irpf.arrendamientos_rate` parameter. BOE: BOE-A-2007-6820.
+
+        Scenario: Kent's 2025 annual summary with 3 landlords, total
+        base 90 000:
+        - 01 perceptores = 3.
+        - 02 base = 90 000.
+        - 03 retencion = 90 000 x 19% = 17 100 per RIRPF 100.3.a.
+        """
+        provided = {
+            "01": Decimal("3"),
+            "02": Decimal("90000.00"),
+            "03": Decimal("17100.00"),  # 19% per RIRPF 100.3.a
+            "04": Decimal("0.00"),
+        }
+        report = Engine().audit_against(ruleset=MODELO_180_2025, provided=provided, tolerance=Decimal("0.01"))
+        assert report.is_clean()
