@@ -1146,6 +1146,11 @@ class TestThousandsSeparatorThreading:
         # label-regex would fail without the letter-hyphen-newline-
         # letter stitching performed by _normalise_pdf_text.
         c.setFont(VALUE_FONT, VALUE_FONT_SIZE)
+        # Reportlab y grows upward from the page bottom: y-30mm is ABOVE
+        # y-35mm. pdfplumber sorts top-to-bottom, so the resulting text
+        # stream is ``"03 Reten-\nciones 2.280,00"`` — exactly the
+        # letter-hyphen-newline-letter shape that _SOFT_HYPHEN_BREAK_RE
+        # stitches. DO NOT invert these two y offsets.
         c.drawString(15 * _mm, y_header - 30 * _mm, "03 Reten-")
         c.drawString(15 * _mm, y_header - 35 * _mm, "ciones 2.280,00")
         # Footer the extractor needs for NIF / timestamp parsing.
@@ -1166,11 +1171,16 @@ class TestThousandsSeparatorThreading:
             f"Hyphenated label ``Reten-\\nciones`` did not stitch: casilla 03 extracted as {by_id.get('03')!r}"
         )
 
-    def test_thousands_sep_reaches_draw_casilla_box(self) -> None:
-        """The generator MUST forward ``params.thousands_sep`` to the
-        shared renderer. Asserts via the pure-Python string pipeline:
-        :func:`format_amount` with a NBSP argument produces a NBSP-
-        separated output that ``SPANISH_AMOUNT_GROUP`` accepts.
+    def test_format_amount_nbsp_matches_spanish_amount_regex(self) -> None:
+        """String-layer threading: ``format_amount(thousands_sep="\\xa0")``
+        MUST produce NBSP-separated output that ``SPANISH_AMOUNT_GROUP``
+        accepts, so the wave-51 regex fix remains exercised at the
+        primitive level even though the full PDF round-trip is
+        infeasible through reportlab+pdfplumber.
+
+        Wave 63d L4 rename: previously named
+        ``test_thousands_sep_reaches_draw_casilla_box`` which implied
+        generator-level coverage it did not deliver.
         """
         import re
 

@@ -42,13 +42,22 @@ class QuarterlyGenParams(BaseModel):
     casilla_values: Mapping[str, Decimal | str]
     csv: str | None = None
     presented_at: str = "2025-04-20 10:00:00"
-    thousands_sep: str = Field(default=".", min_length=1, max_length=1)
+    thousands_sep: str = Field(
+        default=".",
+        min_length=1,
+        max_length=1,
+        pattern=r"^[.\xa0\u202f]$",
+    )
     """Wave 61d: thousands-group separator used by rendered amounts.
 
     Defaults to ``"."`` (the canonical AEAT print separator). Set to
     ``"\\xa0"`` (NBSP) or ``"\\u202f"`` (narrow NBSP) to exercise the
     wave-51 H1 label-regex NBSP path end-to-end through a real PDF
     round-trip, rather than only via synthetic text tests.
+
+    Wave 63d L3: pattern-constrained to the three valid AEAT separators
+    per UNE 82100. A digit / comma / letter would ambiguate the amount
+    regex, so those inputs are rejected at construction time.
     """
 
 

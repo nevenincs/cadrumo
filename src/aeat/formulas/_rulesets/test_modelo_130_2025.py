@@ -107,12 +107,14 @@ class TestModelo130Ruleset2025:
         assert MODELO_130_2025.effective_to == date(2025, 12, 31)
 
     def test_external_worked_example_rirpf_art_110(self) -> None:
-        """External anchor per Reglamento del IRPF (RD 439/2007) art. 110.1.b.
+        """External anchor per Reglamento del IRPF (RD 439/2007) art. 110.1.a.
 
-        RIRPF art. 110.1.b fixes the pago fraccionado general at 20% of the
-        rendimiento neto acumulado. The statute (BOE-A-2007-6820) — not the
-        ruleset's ParameterTable — is the external source. This test asserts
-        the arithmetic mandated by the statute using a scenario distinct from
+        RIRPF art. 110.1.a fixes the pago fraccionado general at 20% of the
+        rendimiento neto acumulado for actividades económicas en estimación
+        directa (art. 110.1.b is the 2% agraria rate, art. 110.1.c covers
+        módulos). The statute (BOE-A-2007-6820) — not the ruleset's
+        ParameterTable — is the external source. This test asserts the
+        arithmetic mandated by the statute using a scenario distinct from
         `_provided()` to avoid mirroring the 2024 drift-check fixture.
 
         Scenario: Kent (autónomo actividad económica no-agraria) Q3 2025.
