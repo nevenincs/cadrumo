@@ -26,7 +26,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | See WHY each classification was made | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#231](https://github.com/wgergely/aeat/issues/231) |
 | See pending reviews in one dashboard | ❌ | ✅ | ✅ | ❌ | 0.1.0 | [#232](https://github.com/wgergely/aeat/issues/232) |
 | Authenticate against AEAT Sede Electrónica | 🚧 | 🚧 | partial | ❌ | 0.1.1 | [#141](https://github.com/wgergely/aeat/issues/141) |
-| Retrieve previously-filed casilla values | ❌ | ❌ | ❌ | ❌ | 0.1.1 | [#222](https://github.com/wgergely/aeat/issues/222) |
+| Retrieve previously-filed casilla values | ❌ | ❌ | ❌ | ❌ | 0.1.1 | [#272](https://github.com/wgergely/aeat/issues/272), [#305](https://github.com/wgergely/aeat/issues/305) |
 | Ask "what filings did I miss?" | ❌ | ❌ | ❌ | ❌ | 0.1.1 | [#215](https://github.com/wgergely/aeat/issues/215) |
 | See live AEAT inbox notifications | ❌ | 🚧 | partial | ❌ | 0.1.1 | [#170](https://github.com/wgergely/aeat/issues/170) |
 | Build Modelo 130 via wizard | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#219](https://github.com/wgergely/aeat/issues/219) |

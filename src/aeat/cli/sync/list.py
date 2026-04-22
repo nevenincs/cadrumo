@@ -8,6 +8,7 @@ from rich.table import Table
 
 from ...config import load_settings
 from ...sync import JsonFileDivergenceRepository, ResolutionState
+from .._observability import cli_run_context
 
 _CONSOLE = Console()
 
@@ -20,25 +21,27 @@ def list_divergences(
     ),
 ) -> None:
     """List every persisted divergence record, optionally filtered by state."""
-    settings = load_settings()
-    repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
-    records = repo.list()
-    if state is not None:
-        records = tuple(r for r in records if r.resolution_state == state)
+    arguments = {"state": state}
+    with cli_run_context(entrypoint="aeat sync list-divergences", arguments=arguments):
+        settings = load_settings()
+        repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
+        records = repo.list()
+        if state is not None:
+            records = tuple(r for r in records if r.resolution_state == state)
 
-    table = Table(title="divergence records", header_style="bold")
-    table.add_column("id", style="cyan")
-    table.add_column("modelo")
-    table.add_column("classification")
-    table.add_column("kind")
-    table.add_column("state")
-    for record in records:
-        table.add_row(
-            record.record_id,
-            str(record.modelo) if record.modelo is not None else "-",
-            record.classification.value,
-            record.payload.kind.value,
-            record.resolution_state.value,
-        )
-    _CONSOLE.print(table)
-    _CONSOLE.print(f"[dim]{len(records)} record(s)[/dim]")
+        table = Table(title="divergence records", header_style="bold")
+        table.add_column("id", style="cyan")
+        table.add_column("modelo")
+        table.add_column("classification")
+        table.add_column("kind")
+        table.add_column("state")
+        for record in records:
+            table.add_row(
+                record.record_id,
+                str(record.modelo) if record.modelo is not None else "-",
+                record.classification.value,
+                record.payload.kind.value,
+                record.resolution_state.value,
+            )
+        _CONSOLE.print(table)
+        _CONSOLE.print(f"[dim]{len(records)} record(s)[/dim]")

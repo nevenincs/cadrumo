@@ -18,6 +18,18 @@ class AeatError(Exception):
     pass
 
 
+class AeatObservabilityError(AeatError):
+    """Base class for observability-layer errors (#99).
+
+    Lives in :mod:`aeat.errors` (rather than the leaf
+    :mod:`aeat.observability` subpackage) so other subpackages can
+    catch it without importing observability internals. Concrete
+    subclasses are declared in :mod:`aeat.observability._errors`.
+    """
+
+    pass
+
+
 class FixtureProvisioningError(AeatError):
     """Raised when Google Workspace test-fixture provisioning fails.
 

@@ -83,12 +83,37 @@ The `live_read` test surface needs a real PKCS#12 client certificate
 issued by FNMT (or another AEAT-recognised CA). When the certificate
 lives in your Google Drive, fetch it through the project's just chain:
 
+Supported Google auth paths in this repo are:
+
+- Desktop OAuth local-dev (default)
+- Service-account automation
+
+This contributor flow uses the Desktop OAuth local-dev path because the
+certificate fetch reads from Drive. `aeat auth init --path
+desktop-oauth-local-dev --json <path>` is what writes
+`GOOGLE_AUTH_PATH`, completes the Google Workspace MCP contract, and
+prepares the repo-local MCP cache directory. `just gcloud-auth` is now
+only the optional ADC-backed compatibility step for legacy wrapper
+flows. The legacy
+`just gsuite-oauth-client` recipe remains a wrapper around
+`uv run aeat auth init`.
+
 ```bash
 just env-setup                              # creates env/.env from .env.example
 # Edit env/.env and set GOOGLE_CLOUD_PROJECT to your GCP project id
-just gsuite-oauth-client                    # interactive: provisions env/oauth-client.json
-just gcloud-auth                            # interactive: refreshes ADC with Drive scope
+uv run aeat auth init --path desktop-oauth-local-dev
+uv run aeat auth init --path desktop-oauth-local-dev --json <path>
+uv run aeat doctor                          # verifies the Desktop OAuth path
+just gcloud-auth                            # optional ADC compatibility step for legacy wrappers
 just aeat-cert-fetch <DRIVE_FILENAME.p12>   # fetches into credentials/
+```
+
+If `aeat doctor` later reports a required `Drive round-trip` failure,
+the Desktop OAuth token on disk is stale for Drive-backed work. Repair
+it with:
+
+```bash
+uv run aeat auth init --path desktop-oauth-local-dev --reset-cli-token
 ```
 
 The recipe writes `credentials/<DRIVE_FILENAME.p12>` (gitignored) and

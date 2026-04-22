@@ -10,15 +10,19 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
+from ..auth import GoogleAuthPath
 from ..config import PROJECT_ROOT, Settings
 from ..env_io import write_env_vars
 from ..errors import AeatError
 from .launch_google_workspace import (
+    PROJECT_ENV_EXAMPLE_PATH,
+    PROJECT_ENV_PATH,
     PROJECT_WORKSPACE_MCP_CREDENTIALS_DIR,
     WORKSPACE_MCP_CREDENTIALS_DIR_ENV,
     WORKSPACE_MCP_USER_EMAIL_ENV,
     build_launch_spec,
     ensure_credentials_dir,
+    ensure_project_env_file,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -53,13 +57,13 @@ class TestBuildLaunchSpec:
     def test_missing_both_auth_paths_raises(self) -> None:
         settings = IsolatedSettings()
 
-        with pytest.raises(AeatError, match="requires local Google credentials"):
+        with pytest.raises(AeatError, match="No Google auth path is configured"):
             build_launch_spec(settings, base_env={})
 
     def test_partial_oauth_without_service_account_raises(self) -> None:
         settings = IsolatedSettings(google_oauth_client_id="oauth-client-id")
 
-        with pytest.raises(AeatError, match="complete OAuth desktop client"):
+        with pytest.raises(AeatError, match="partially configured"):
             build_launch_spec(settings, base_env={})
 
     def test_service_account_path_maps_to_upstream_env(self, tmp_path: Path) -> None:
@@ -133,6 +137,33 @@ class TestBuildLaunchSpec:
         assert "GOOGLE_SERVICE_ACCOUNT_KEY_FILE" not in spec.env
         assert "GOOGLE_APPLICATION_CREDENTIALS" not in spec.env
 
+    def test_both_valid_paths_require_explicit_selection(self, tmp_path: Path) -> None:
+        service_account_key = tmp_path / "service-account.json"
+        service_account_key.write_text("{}", encoding="utf-8")
+        settings = IsolatedSettings(
+            google_application_credentials=str(service_account_key),
+            google_oauth_client_id="oauth-client-id",
+            google_oauth_client_secret="oauth-client-secret",  # noqa: S106 - test-only placeholder
+        )
+
+        with pytest.raises(AeatError, match="Set GOOGLE_AUTH_PATH"):
+            build_launch_spec(settings, base_env={})
+
+    def test_explicit_service_account_path_wins_when_both_are_present(self, tmp_path: Path) -> None:
+        service_account_key = tmp_path / "service-account.json"
+        service_account_key.write_text("{}", encoding="utf-8")
+        settings = IsolatedSettings(
+            google_auth_path=GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION,
+            google_application_credentials=str(service_account_key),
+            google_oauth_client_id="oauth-client-id",
+            google_oauth_client_secret="oauth-client-secret",  # noqa: S106 - test-only placeholder
+        )
+
+        spec = build_launch_spec(settings, base_env={"PATH": "test-path"})
+
+        assert spec.env["GOOGLE_SERVICE_ACCOUNT_KEY_FILE"] == str(service_account_key.resolve())
+        assert "GOOGLE_OAUTH_CLIENT_ID" not in spec.env
+
 
 class TestEnsureCredentialsDir:
     """The credential-cache hardening path is explicit and creatable."""
@@ -149,6 +180,27 @@ class TestEnsureCredentialsDir:
 
     def test_project_credentials_dir_is_repo_local(self) -> None:
         assert PROJECT_WORKSPACE_MCP_CREDENTIALS_DIR == PROJECT_ROOT / "env" / "workspace-mcp-credentials"
+
+
+class TestEnsureProjectEnvFile:
+    """Fresh worktrees should self-provision ``env/.env`` from the tracked example."""
+
+    def test_creates_env_file_from_example(self, tmp_path: Path) -> None:
+        example_path = tmp_path / "env" / ".env.example"
+        example_path.parent.mkdir(parents=True, exist_ok=True)
+        example_path.write_text("GOOGLE_CLOUD_PROJECT=example-project\n", encoding="utf-8")
+        env_path = tmp_path / "env" / ".env"
+
+        created = ensure_project_env_file(env_path, example_path)
+
+        assert created == env_path
+        assert env_path.read_text(encoding="utf-8") == "GOOGLE_CLOUD_PROJECT=example-project\n"
+
+    def test_missing_example_raises(self, tmp_path: Path) -> None:
+        env_path = tmp_path / "env" / ".env"
+
+        with pytest.raises(AeatError, match="example is missing"):
+            ensure_project_env_file(env_path, tmp_path / "env" / ".env.example")
 
 
 class TestLauncherBoundary:
@@ -217,3 +269,37 @@ class TestLauncherBoundary:
         assert payload["env"]["GOOGLE_OAUTH_REDIRECT_URI"] == "http://localhost:8787/oauth2callback"
         assert payload["env"][WORKSPACE_MCP_CREDENTIALS_DIR_ENV] == str(PROJECT_WORKSPACE_MCP_CREDENTIALS_DIR)
         assert payload["credentials_dir"] == str(PROJECT_WORKSPACE_MCP_CREDENTIALS_DIR)
+
+    def test_dump_launch_spec_provisions_env_file_before_failing_without_credentials(self) -> None:
+        env_path = PROJECT_ENV_PATH
+        previous_env = env_path.read_text(encoding="utf-8") if env_path.exists() else None
+        uv_executable = shutil.which("uv")
+        assert uv_executable is not None
+        provisioned_env = ""
+
+        try:
+            env_path.unlink(missing_ok=True)
+
+            result = subprocess.run(  # noqa: S603 - trusted repo-local test command
+                [
+                    uv_executable,
+                    "run",
+                    "python",
+                    "-m",
+                    "aeat.mcp.launch_google_workspace",
+                    "--dump-launch-spec",
+                ],
+                cwd=PROJECT_ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            provisioned_env = env_path.read_text(encoding="utf-8")
+        finally:
+            if previous_env is None:
+                env_path.unlink(missing_ok=True)
+            else:
+                env_path.write_text(previous_env, encoding="utf-8")
+
+        assert result.returncode != 0
+        assert provisioned_env == PROJECT_ENV_EXAMPLE_PATH.read_text(encoding="utf-8")

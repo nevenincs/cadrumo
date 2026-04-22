@@ -35,6 +35,25 @@ def test_financial_ingest_json_stream() -> None:
     assert payloads[0]["provenance"]["source_format"] == "csv"
 
 
+def test_financial_ingest_json_stream_for_n26_pdf() -> None:
+    """`aeat financial ingest --output-json` should auto-detect N26 PDFs."""
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "ingest",
+            str(_FIXTURES / "n26" / "n26-savings-2025-01.pdf"),
+            "--provider",
+            "auto",
+            "--output-json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payloads = [json.loads(line) for line in result.stdout.splitlines() if line.strip().startswith("{")]
+    assert len(payloads) == 4
+    assert payloads[0]["provenance"]["source_format"] == "pdf"
+
+
 def test_financial_ingest_rejects_invalid_source(tmp_path: Path) -> None:
     """The CLI should abort before ingest when validation fails."""
     source = tmp_path / "invalid.csv"

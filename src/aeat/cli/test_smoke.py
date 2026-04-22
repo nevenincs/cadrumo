@@ -37,3 +37,12 @@ def test_financial_command_is_registered() -> None:
     result = runner.invoke(cli.app, ["--help"])
     assert result.exit_code == 0
     assert "financial" in result.stdout
+
+
+def test_auth_help_has_no_unrelated_registry_logs() -> None:
+    """`aeat auth --help` must not leak unrelated import-time registry logs."""
+    result = runner.invoke(cli.app, ["auth", "--help"])
+    assert result.exit_code == 0
+    assert "Kent-first auth setup" in result.stdout
+    assert "loaded 42 portal entries" not in result.stdout
+    assert "loaded 21 modelo entries" not in result.stdout

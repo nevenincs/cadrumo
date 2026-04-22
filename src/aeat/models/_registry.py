@@ -170,7 +170,7 @@ def _finalise_registry(
             raise RegistryIntegrityError(f"entry for {key.value} has mismatched code {metadata.code.value}")
     _check_caps_into(materialised)
     _check_submission_portal(materialised)
-    _LOG.info("loaded %d modelo entries", len(materialised))
+    _LOG.debug("loaded %d modelo entries", len(materialised))
     return MappingProxyType(materialised)
 
 

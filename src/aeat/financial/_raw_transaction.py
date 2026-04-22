@@ -20,6 +20,7 @@ class SourceFormat(StrEnum):
     CSV = "csv"
     XLSX = "xlsx"
     OFX = "ofx"
+    PDF = "pdf"
     MANUAL = "manual"
 
 

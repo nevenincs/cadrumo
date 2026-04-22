@@ -5,6 +5,13 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
+from ...observability import (
+    RunEventKind,
+    RunEventPayload,
+    WorkflowLinkPayload,
+    record_event,
+)
+from .._observability import cli_run_context
 from ._helpers import run_engine_for_period
 
 _CONSOLE = Console()
@@ -49,10 +56,27 @@ def run_cmd(
             "[red]refusing:[/red] --no-dry-run requires --i-understand-this-is-real.",
         )
         raise typer.Exit(code=2)
-    run_engine_for_period(
-        modelo=modelo,
-        period=period,
-        dry_run=not no_dry_run,
-        sync_first=sync_first,
-        as_json=as_json,
-    )
+    arguments = {
+        "modelo": modelo,
+        "period": period,
+        "no-dry-run": no_dry_run,
+        "i-understand-this-is-real": i_understand_this_is_real,
+        "sync": sync_first,
+        "json": as_json,
+    }
+    with cli_run_context(entrypoint="aeat workflow run", arguments=arguments):
+        result = run_engine_for_period(
+            modelo=modelo,
+            period=period,
+            dry_run=not no_dry_run,
+            sync_first=sync_first,
+            as_json=as_json,
+        )
+        record_event(
+            RunEventKind.WORKFLOW_STARTED,
+            payload=RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id=result.run_id)),
+        )
+        record_event(
+            RunEventKind.WORKFLOW_COMPLETED,
+            payload=RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id=result.run_id)),
+        )

@@ -235,7 +235,7 @@ def _finalise_registry(
     _check_replaced_by(materialised)
     _check_related_modelo_roundtrip(materialised)
     _check_modelo_closure(materialised)
-    _LOG.info("loaded %d portal entries", len(materialised))
+    _LOG.debug("loaded %d portal entries", len(materialised))
     return MappingProxyType(materialised)
 
 

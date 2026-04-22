@@ -15,6 +15,7 @@ from __future__ import annotations
 import typer
 
 from . import attachments as attachments_module
+from . import auth as auth_module
 from . import bootstrap as bootstrap_module
 from . import browser as browser_module
 from . import casillas as casillas_module
@@ -36,6 +37,7 @@ from . import normatives as normatives_module
 from . import oauth as oauth_module
 from . import portals as portals_module
 from . import review as review_module
+from . import run as run_module
 from . import schema as schema_module
 from . import setup as setup_wizard_module
 from . import sheets as sheets_module
@@ -65,6 +67,11 @@ app.command(
 )(doctor_module.doctor)
 app.command(name="bootstrap", help="Provision scratch resources and persist their IDs to env/.env.")(
     bootstrap_module.bootstrap
+)
+app.add_typer(
+    auth_module.app,
+    name="auth",
+    help="Kent-first auth setup and AEAT authentication provider management.",
 )
 app.add_typer(
     attachments_module.app,
@@ -116,6 +123,11 @@ app.add_typer(
     workflow_module.app,
     name="workflow",
     help="Drive Kent's produce -> verify -> export filing workflow.",
+)
+app.add_typer(
+    run_module.app,
+    name="run",
+    help="Run-trace inspection and deterministic dry-run replay (#99).",
 )
 app.add_typer(
     justificante_module.app,

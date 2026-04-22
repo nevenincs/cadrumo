@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
 
+from ..auth import GoogleAuthPath, inspect_google_auth
 from ..config import PROJECT_ROOT, Settings, load_settings
 from ..errors import AeatError
 
@@ -26,6 +27,8 @@ WORKSPACE_MCP_CREDENTIALS_DIR_ENV = "WORKSPACE_MCP_CREDENTIALS_DIR"
 WORKSPACE_MCP_SERVICE_ACCOUNT_FILE_ENV = "GOOGLE_SERVICE_ACCOUNT_KEY_FILE"
 WORKSPACE_MCP_USER_EMAIL_ENV = "USER_GOOGLE_EMAIL"
 WORKSPACE_MCP_COMMAND: tuple[str, ...] = ("uvx", "workspace-mcp", "--tool-tier", "core")
+PROJECT_ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
+PROJECT_ENV_PATH = PROJECT_ROOT / "env" / ".env"
 PROJECT_WORKSPACE_MCP_CREDENTIALS_DIR = PROJECT_ROOT / "env" / "workspace-mcp-credentials"
 
 
@@ -53,6 +56,21 @@ def _resolve_project_path(raw_path: str) -> Path:
     return (PROJECT_ROOT / candidate).resolve()
 
 
+def ensure_project_env_file(
+    env_path: Path = PROJECT_ENV_PATH,
+    example_path: Path = PROJECT_ENV_EXAMPLE_PATH,
+) -> Path:
+    """Provision ``env/.env`` from the tracked example when it is missing."""
+
+    if env_path.exists():
+        return env_path
+    if not example_path.exists():
+        raise AeatError(f"Cannot provision env file because the example is missing: {example_path}")
+    env_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(example_path, env_path)
+    return env_path
+
+
 def _format_spec_for_dump(spec: LaunchSpec) -> str:
     """Serialize the launch contract for subprocess-backed boundary tests."""
 
@@ -78,32 +96,25 @@ def _format_spec_for_dump(spec: LaunchSpec) -> str:
     return json.dumps(payload, sort_keys=True)
 
 
-def _require_supported_credentials(settings: Settings) -> tuple[bool, Path | None]:
+def _require_supported_credentials(settings: Settings) -> tuple[GoogleAuthPath, Path | None]:
     """Validate the supported auth paths for the upstream MCP server."""
 
-    has_oauth = bool(settings.google_oauth_client_id and settings.google_oauth_client_secret)
-    has_partial_oauth = bool(settings.google_oauth_client_id or settings.google_oauth_client_secret)
-    service_account_path: Path | None = None
-
-    if settings.google_application_credentials:
-        service_account_path = _resolve_project_path(settings.google_application_credentials)
-
-    if has_partial_oauth and not has_oauth and service_account_path is None:
-        raise AeatError(
-            "google-workspace MCP launch requires either a complete OAuth desktop client "
-            "configuration via `aeat oauth-client init` or a configured service-account key path "
-            "in `env/.env`."
-        )
-    if not has_oauth and service_account_path is None:
-        raise AeatError(
-            "google-workspace MCP launch requires local Google credentials in `env/.env`. "
-            "Run `aeat oauth-client init` for the OAuth desktop path or set the service-account key path."
-        )
-    if service_account_path is not None and not service_account_path.exists():
-        if not has_oauth:
-            raise AeatError(f"Configured service-account key file does not exist: {service_account_path}")
-        service_account_path = None
-    return has_oauth, service_account_path
+    inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
+    if inspection.active_path is None:
+        raise AeatError(inspection.blocking_reason or "google-workspace MCP launch requires local Google credentials")
+    if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
+        if not inspection.desktop_oauth_complete:
+            raise AeatError(
+                "google-workspace MCP launch requires a complete Desktop OAuth local-dev configuration in env/.env."
+            )
+        return (inspection.active_path, None)
+    service_account_path = inspection.service_account_existing_path
+    if service_account_path is None:
+        configured = inspection.service_account_configured_path
+        if configured is not None:
+            raise AeatError(f"Configured service-account key file does not exist: {configured}")
+        raise AeatError("google-workspace MCP launch requires a configured service-account key path in env/.env.")
+    return (inspection.active_path, _resolve_project_path(str(service_account_path)))
 
 
 def build_launch_spec(
@@ -114,15 +125,15 @@ def build_launch_spec(
 ) -> LaunchSpec:
     """Build the upstream argv/env contract from repo-local settings."""
 
-    has_oauth, service_account_path = _require_supported_credentials(settings)
+    active_path, service_account_path = _require_supported_credentials(settings)
     env = dict(base_env) if base_env is not None else dict(os.environ)
 
-    if has_oauth:
+    if active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
         env[_settings_env_key("google_oauth_client_id")] = settings.google_oauth_client_id
         env[_settings_env_key("google_oauth_client_secret")] = settings.google_oauth_client_secret
         env[_settings_env_key("google_oauth_redirect_uri")] = settings.google_oauth_redirect_uri
 
-    if service_account_path is not None:
+    if active_path == GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION and service_account_path is not None:
         resolved_service_account_path = str(service_account_path)
         env[WORKSPACE_MCP_SERVICE_ACCOUNT_FILE_ENV] = resolved_service_account_path
         env[_settings_env_key("google_application_credentials")] = resolved_service_account_path
@@ -163,6 +174,7 @@ def exec_launch_spec(spec: LaunchSpec) -> NoReturn:
 def launch_google_workspace(extra_args: Sequence[str] = ()) -> NoReturn:
     """Load settings, derive the upstream launch contract, and exec."""
 
+    ensure_project_env_file()
     settings = load_settings()
     spec = build_launch_spec(settings, extra_args=extra_args)
     ensure_credentials_dir(spec.credentials_dir)
@@ -175,6 +187,7 @@ def main(argv: Sequence[str] | None = None) -> NoReturn:
     args = tuple(argv) if argv is not None else tuple(sys.argv[1:])
     if "--dump-launch-spec" in args:
         filtered_args = tuple(arg for arg in args if arg != "--dump-launch-spec")
+        ensure_project_env_file()
         settings = load_settings()
         spec = build_launch_spec(settings, extra_args=filtered_args)
         ensure_credentials_dir(spec.credentials_dir)

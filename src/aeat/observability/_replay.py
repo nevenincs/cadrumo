@@ -1,0 +1,195 @@
+"""Deterministic dry-run replay of a recorded :class:`RunTrace`.
+
+Replay loads a persisted trace, recomputes the current
+``corpus_sha256``, refuses on drift, and re-enters the same Typer CLI
+path with the captured argv. Live replay is explicitly out of scope —
+``dry_run=False`` raises :class:`AeatObservabilityError`.
+
+Defence in depth: replay also refuses when the recorded arguments
+contain a live-mode opt-in flag (``--no-dry-run`` /
+``--i-understand-this-is-real``). ``dry_run=True`` at the replay
+layer must NOT be subverted by a recorded ``--no-dry-run`` flag
+bubbling into the reconstructed argv. See [[2026-04-14-run-trace-adr]]
+decision D5 and the live-write safety charter (#116).
+"""
+
+from __future__ import annotations
+
+import os
+import shlex
+
+from ..config import PROJECT_ROOT, Settings
+from ._errors import AeatCorpusDriftError, AeatObservabilityError
+from ._fingerprint import compute_corpus_sha256
+from ._models import ArgumentRecord, ArgumentSource, RunTrace
+from ._store import load_trace
+
+# Marker environment variable set for the duration of ``replay_run``'s
+# re-entered CLI call. The submission engine and any other AEAT-write
+# barrier can query this flag to machine-check that "we are inside a
+# replay" rather than relying on argv pattern matching. See audit
+# finding S3 (vaultspec-code-reviewer, 2026-04-21) and live-write
+# safety charter #116.
+REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
+
+# Flags that opt a recorded run into AEAT live-mode. Replay refuses to
+# re-enter these paths — even with ``dry_run=True`` at the replay layer
+# — because reconstructing the argv would still pass the live-mode
+# flag straight into the wrapped CLI. The canonical flag names match
+# the ones accepted by ``aeat workflow run`` / ``workflow next``.
+_LIVE_MODE_FLAG_NAMES: frozenset[str] = frozenset(
+    {
+        "no-dry-run",
+        "no_dry_run",
+        "i-understand-this-is-real",
+        "i_understand_this_is_real",
+    }
+)
+
+
+def _argument_activates_live_mode(arg: ArgumentRecord) -> bool:
+    """Return True if ``arg`` is a live-mode opt-in flag set to a truthy value.
+
+    The boolean flags captured by :func:`cli_run_context` arrive as the
+    stringified value ``"True"`` / ``"False"``. A ``False`` capture
+    means the caller did not opt in, and replay is safe. Any non-False
+    value pair is rejected as live-mode.
+    """
+    if arg.source is not ArgumentSource.FLAG:
+        return False
+    if arg.name not in _LIVE_MODE_FLAG_NAMES:
+        return False
+    return arg.value.strip().lower() != "false"
+
+
+def _argv_from_arguments(
+    entrypoint: str,
+    arguments: tuple[ArgumentRecord, ...],
+) -> list[str]:
+    """Reconstruct a Typer-compatible argv from the captured arguments.
+
+    Strips the leading program name from ``entrypoint`` (e.g.
+    ``"aeat workflow run"`` → ``["workflow", "run"]``).
+
+    Positional arguments (``source`` :attr:`ArgumentSource.POSITIONAL`)
+    are emitted first — in the captured order — as bare values with
+    no ``--`` prefix, matching how the original ``typer.Argument``
+    was supplied.
+
+    Flag arguments (``source`` :attr:`ArgumentSource.FLAG`) are then
+    emitted using one of two shapes depending on their stringified
+    value:
+
+    - ``"True"`` — emit the bare flag name (``--json``). Value-less
+      boolean options like ``typer.Option(False, "--json")`` reject
+      the ``=True`` form, so we normalise to the Typer convention.
+    - ``"False"`` — omit entirely. Most boolean flags default to
+      False, so replay simply not re-emitting them matches the
+      original user intent. The tradeoff is that toggled-off
+      flags like ``--no-sync`` on a ``typer.Option(True, "--sync/--no-sync")``
+      alias pair lose fidelity; this is documented as a known
+      limitation (audit finding NEW-1, 2026-04-21).
+    - Any other value — emit the ``--<name>=<value>`` form; the
+      ``=`` binding prevents values that start with ``-`` from being
+      mis-parsed as another flag.
+
+    ``ENV`` / ``CONFIG`` / ``DEFAULT`` sources are not re-emitted —
+    they are recovered from the environment on the replayed call
+    site.
+    """
+    parts = shlex.split(entrypoint)
+    if parts and parts[0] == "aeat":
+        parts = parts[1:]
+    for arg in arguments:
+        if arg.source is ArgumentSource.POSITIONAL:
+            parts.append(arg.value)
+    for arg in arguments:
+        if arg.source is not ArgumentSource.FLAG:
+            continue
+        if arg.cli_flag is not None:
+            # Explicit override from the caller — use the exact Typer
+            # flag string (``--json``) instead of deriving from the
+            # Python param name (``as_json`` → ``--as-json``).
+            flag_name = arg.cli_flag
+        elif arg.name.startswith("--"):
+            flag_name = arg.name
+        else:
+            flag_name = f"--{arg.name.replace('_', '-')}"
+        if arg.value == "True":
+            # Value-less boolean flag — emit the bare option name.
+            parts.append(flag_name)
+        elif arg.value == "False":
+            # Boolean flag that was not set (or was explicitly
+            # negated) — skip. See docstring for the fidelity
+            # tradeoff on ``--sync/--no-sync``-style paired flags.
+            continue
+        else:
+            parts.append(f"{flag_name}={arg.value}")
+    return parts
+
+
+def replay_run(run_id: str, *, dry_run: bool = True) -> RunTrace:
+    """Replay a recorded run after gating on corpus drift.
+
+    Args:
+        run_id: Identifier of the recorded run to replay.
+        dry_run: Must be ``True``. ``False`` raises explicitly because
+            live replay is out of scope (#99).
+
+    Returns:
+        The loaded :class:`RunTrace` of the original run.
+
+    Raises:
+        AeatObservabilityError: When ``dry_run=False``.
+        AeatCorpusDriftError: When the current corpus hash differs
+            from the recorded one.
+    """
+    if not dry_run:
+        raise AeatObservabilityError(
+            "replay_run is dry-run only; live replay is out of scope (#99)",
+        )
+    original = load_trace(run_id)
+    for arg in original.arguments:
+        if _argument_activates_live_mode(arg):
+            raise AeatObservabilityError(
+                f"refusing to replay run {run_id!r}: recorded entrypoint "
+                f"{original.entrypoint!r} was executed with the live-mode "
+                f"flag {arg.name!r}={arg.value!r}. Replay would re-invoke "
+                f"AEAT live-write paths even with dry_run=True at the "
+                f"replay layer. See live-write safety charter (#116).",
+            )
+    settings = Settings()
+    observed = compute_corpus_sha256(PROJECT_ROOT / ".vault", settings)
+    if observed != original.corpus_sha256:
+        raise AeatCorpusDriftError(
+            run_id=run_id,
+            recorded=original.corpus_sha256,
+            observed=observed,
+            entrypoint=original.entrypoint,
+        )
+    argv = _argv_from_arguments(original.entrypoint, original.arguments)
+    from ..cli import app
+
+    # Belt-and-braces live-write defense: set a marker env var that any
+    # AEAT-write barrier can query to refuse live writes during replay.
+    # Restore the prior value on exit so the process env is unchanged
+    # for any caller that imports ``replay_run`` programmatically.
+    previous = os.environ.get(REPLAY_ACTIVE_ENV_VAR)
+    # Store the *original* run_id, not just "1", so the re-entered
+    # run_context can label the new trace's ``replay_of`` field with
+    # the source run. This lets ``aeat run show`` distinguish replay
+    # traces from fresh runs and chain them back to their original.
+    # The value still reads truthy for any live-write barrier that
+    # just checks ``os.environ.get(REPLAY_ACTIVE_ENV_VAR)``.
+    os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id
+    try:
+        app(argv, standalone_mode=False)
+    finally:
+        if previous is None:
+            os.environ.pop(REPLAY_ACTIVE_ENV_VAR, None)
+        else:
+            os.environ[REPLAY_ACTIVE_ENV_VAR] = previous
+    return original
+
+
+__all__ = ["REPLAY_ACTIVE_ENV_VAR", "replay_run"]
