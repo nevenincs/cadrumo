@@ -6,10 +6,132 @@
     "boe_id": "BOE-A-2024-16129",
     "xlsx": "DR303e24.xlsx",
     "retrieval_date": "2026-04-22",
-    "notes": "DP30300 envelope wrapper (variable-length) omitted pending wave-89 architecture extension for variable-length segments. Fields auto-disambiguated via _N suffix on duplicate field_id / casilla_id. Six fixed-length segments (DP30301-DP30305 + DP303DID) cover the autoliquidacion body."
+    "notes": "Full 7-segment envelope: DP30300 header (328B fixed) + DP30301-DP303DID fixed pages + DP30300_TRAILER (18B close). Total envelope: 7994 bytes + CRLF. Auto-extracted from DR303e24.xlsx; casilla_id/field_id duplicates within a segment disambiguated via _N suffix."
   },
   "encoding": "iso-8859-1",
   "segments": {
+    "DP30300": {
+      "total_length": 328,
+      "fields": [
+        {
+          "offset": 1,
+          "length": 2,
+          "field_id": "DP30300_F001_CONSTANTE",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "<T",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 3,
+          "length": 3,
+          "field_id": "DP30300_F002_MODELO",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "303",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 6,
+          "length": 1,
+          "field_id": "DP30300_F003_DISCRIMINANTE",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "0",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 7,
+          "length": 4,
+          "field_id": "DP30300_F004_EJERCICIO_DE_DEVENGO",
+          "casilla_id": null,
+          "kind": "ALPHANUMERIC",
+          "literal": null,
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 11,
+          "length": 2,
+          "field_id": "DP30300_F005_PER_ODO",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "01",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 13,
+          "length": 5,
+          "field_id": "DP30300_F006_TIPO_Y_CIERRE",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "0000>",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 18,
+          "length": 5,
+          "field_id": "DP30300_F007_CONSTANTE",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "<AUX>",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 23,
+          "length": 70,
+          "field_id": "DP30300_F008_RESERVADO_PARA_LA_ADMINISTRA",
+          "casilla_id": null,
+          "kind": "ALPHANUMERIC",
+          "literal": null,
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 93,
+          "length": 4,
+          "field_id": "DP30300_F009_VERSI_N_DEL_PROGRAMA",
+          "casilla_id": null,
+          "kind": "ALPHANUMERIC",
+          "literal": null,
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 97,
+          "length": 4,
+          "field_id": "DP30300_F010_RESERVADO_PARA_LA_ADMINISTRA",
+          "casilla_id": null,
+          "kind": "ALPHANUMERIC",
+          "literal": null,
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 101,
+          "length": 9,
+          "field_id": "DP30300_F011_NIF_EMPRESA_DESARROLLO",
+          "casilla_id": null,
+          "kind": "ALPHANUMERIC",
+          "literal": null,
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 110,
+          "length": 213,
+          "field_id": "DP30300_F012_RESERVADO_PARA_LA_ADMINISTRA",
+          "casilla_id": null,
+          "kind": "ALPHANUMERIC",
+          "literal": null,
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 323,
+          "length": 6,
+          "field_id": "DP30300_F013_CONSTANTE",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "</AUX>",
+          "signed_mode": "UNSIGNED"
+        }
+      ]
+    },
     "DP30301": {
       "total_length": 1581,
       "fields": [
@@ -3573,6 +3695,65 @@
           "casilla_id": null,
           "kind": "RESERVED",
           "literal": "</T303DID00>",
+          "signed_mode": "UNSIGNED"
+        }
+      ]
+    },
+    "DP30300_TRAILER": {
+      "total_length": 18,
+      "fields": [
+        {
+          "offset": 1,
+          "length": 6,
+          "field_id": "DP30300_TRAILER_OPEN",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "</T303",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 7,
+          "length": 1,
+          "field_id": "DP30300_TRAILER_DISCRIMINANTE",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "0",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 8,
+          "length": 4,
+          "field_id": "DP30300_F004_EJERCICIO_DE_DEVENGO",
+          "casilla_id": null,
+          "kind": "ALPHANUMERIC",
+          "literal": null,
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 12,
+          "length": 2,
+          "field_id": "DP30300_F005_PER_ODO",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "01",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 14,
+          "length": 4,
+          "field_id": "DP30300_TRAILER_FILLER",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": "0000",
+          "signed_mode": "UNSIGNED"
+        },
+        {
+          "offset": 18,
+          "length": 1,
+          "field_id": "DP30300_TRAILER_CLOSE",
+          "casilla_id": null,
+          "kind": "RESERVED",
+          "literal": ">",
           "signed_mode": "UNSIGNED"
         }
       ]
