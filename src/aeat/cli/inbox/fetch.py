@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from ...config import load_settings
-from ...inbox import InboxError
+from ...inbox import InboxError, Notificacion
 from .._live_reader import LiveSessionUnavailableError, build_live_status_reader
 from .._observability import cli_run_context
 from ._helpers import build_fetcher, build_live_source
@@ -72,7 +72,7 @@ def fetch_cmd(
         _CONSOLE.print(f"[dim]{len(added)} new notification(s)[/dim]")
 
 
-async def _run(since_dt: datetime | None, *, from_aeat: bool) -> tuple:
+async def _run(since_dt: datetime | None, *, from_aeat: bool) -> tuple[Notificacion, ...]:
     """Resolve the source and run an inbox fetch.
 
     Keeping the async plumbing here lets the sync click/typer shell

@@ -517,9 +517,8 @@ def _resolve_operator_profile(
     )
 
 
-async def _fetch_filed_modelos(modelo: str, period: str) -> tuple[FiledModelo, ...]:
+async def _fetch_filed_modelos(modelo: str, period: str, settings: Settings) -> tuple[FiledModelo, ...]:
     """Open a live status reader and fetch every filing for ``(modelo, period)``."""
-    settings = load_settings()
     async with build_live_status_reader(settings) as reader:
         return await reader.fetch_filing_detail(modelo, period)
 
@@ -562,7 +561,7 @@ def import_cmd(
         )
     settings = load_settings()
     try:
-        filed_modelos = asyncio.run(_fetch_filed_modelos(modelo, period))
+        filed_modelos = asyncio.run(_fetch_filed_modelos(modelo, period, settings))
     except LiveSessionUnavailableError as exc:
         _console.print(f"[red]live import unavailable:[/red] {exc}")
         raise typer.Exit(code=2) from exc
@@ -588,7 +587,7 @@ def import_cmd(
                 profile=operator_profile,
                 inputs=inputs,
                 schema_provider=schema_provider,
-                fail_on_warning=False,
+                fail_on_warning=settings.aeat_draft_fail_on_warning,
             )
         except FilingDraftError as exc:
             raise typer.BadParameter(
