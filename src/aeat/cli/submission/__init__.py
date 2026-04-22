@@ -31,6 +31,7 @@ from .export import export_cmd
 from .list import list_cmd
 from .preflight import preflight_cmd
 from .show import show_cmd
+from .verify import verify_cmd
 
 app = typer.Typer(
     name="submission",
@@ -41,6 +42,9 @@ app = typer.Typer(
 app.command(name="preflight", help="Run preflight gates against a draft (no browser action).")(preflight_cmd)
 app.command(name="dry-run", help="Run the full portal walk, aborting before the final submit.")(dry_run_cmd)
 app.command(name="export", help="Export an approved draft to an AEAT-importable fichero-BOE file.")(export_cmd)
+app.command(name="verify", help="Re-parse an exported fichero-BOE file and print its decoded headers + casillas.")(
+    verify_cmd
+)
 app.command(name="show", help="Pretty-print a persisted SubmittedFiling by submission_id.")(show_cmd)
 app.command(name="list", help="List persisted SubmittedFiling records.")(list_cmd)
 
