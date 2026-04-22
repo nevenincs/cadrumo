@@ -41,6 +41,21 @@ line.
 
 **Total: 7 HIGH, 7 MEDIUM, 13 LOW across 30 findings.**
 
+## Closure status (updated 2026-04-22, wave 54)
+
+| Finding | Status | Closing wave |
+|---|---|---|
+| H1 decimal whitespace | CLOSED | wave 51 (`3df1097`) |
+| H2 soft-hyphen line-break | CLOSED | wave 51 (`3df1097`) |
+| H3 tautological ruleset tests | DEFERRED | wave 57+ (partial mitigation attempted in wave 52; tautology re-surfaced by wave 53 stream 4 H5) |
+| H4 7 rulesets with zero tests | PARTIAL | wave 52 (`07232d6`) — closed 5/7; Modelo 130 2024/2025 gap tracked as wave 53 H3, wave 55 |
+| H5 111/115 label drift | CLOSED | wave 49 (`6f9763b`) + wave 53 stream 1 LOW `78b4687` |
+| H6 Modelo 202 casilla 34 | CLOSED | wave 50 (`d50b7a6`) — verified real |
+| H7 Modelo 200 00582 label | CLOSED | wave 49 (`6f9763b`) |
+
+See `.vault/audit/2026-04-22-real-pdf-import-wave-53-exhaustive-audit.md`
+for the follow-up audit findings that remain open.
+
 ## HIGH findings (must-fix)
 
 ### H1 (stream 4) — Decimal primitive silently loses intra-number whitespace

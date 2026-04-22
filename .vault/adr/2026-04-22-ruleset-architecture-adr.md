@@ -130,16 +130,28 @@ IS, etc.).
   whole-percent rate from an extracted casilla; use plain `percent`
   for ParameterTable rates (already a fraction).
 
-### Milestone-scale (1.0.0+)
+### Already implemented (wave 47)
 
-- Extend `RulesetRegistry` to `(ModeloCode, variant, FiscalPeriod)`
-  before the first regional ruleset. Migration:
-  - Add `variant: str = "default"` to `Ruleset`.
-  - Key the registry dict on `(modelo, variant)`.
-  - `_spans_overlap` runs per-variant slot.
-  - `resolve()` signature: `resolve(*, modelo, period, variant="default")`.
-- No action required on existing 18 rulesets — they all become
-  `variant="default"` at the data layer.
+Variant-axis extension — `(ModeloCode, variant, FiscalPeriod)` key.
+The below migration was executed in wave 47 (`987422b`); this block
+is preserved as the historical record and renamed from
+"Milestone-scale (1.0.0+)" per wave 54 M2 audit-closure:
+
+- `variant: str = "default"` on `Ruleset` ✅
+- Registry keyed on `(modelo, variant)` ✅
+- `_spans_overlap` runs per-variant slot ✅
+- `resolve(*, modelo, period, variant="default")` signature ✅
+- 17 of 18 rulesets remain `variant="default"`; Modelo 100 summary
+  uses `variant="summary"` to reserve the default slot for the
+  future full-form ruleset ✅
+
+### Future milestones (1.0.0+)
+
+- First regional / full-form ruleset lands (Canarias IGIC, full
+  Modelo 100, Navarra, etc.) — no registry changes needed; the
+  variant axis is already live.
+- Sub-EPIC #305-Modelo-100-full activates the canonical
+  `variant="default"` slot for Modelo 100.
 
 ### Non-goals
 
