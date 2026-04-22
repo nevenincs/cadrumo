@@ -259,6 +259,19 @@ class TestReservedInvariant:
                 kind=FieldKind.DATE,
             )
 
+    def test_inline_sign_on_non_currency_raises(self) -> None:
+        """Wave 86 hardening: signed_mode=INLINE_SIGN only valid on CURRENCY."""
+        from ._record_spec import SignedMode
+
+        with pytest.raises(ValidationError, match="INLINE_SIGN is only valid"):
+            record_field(
+                offset=1,
+                length=10,
+                field_id="NAME",
+                kind=FieldKind.ALPHANUMERIC,
+                signed_mode=SignedMode.INLINE_SIGN,
+            )
+
 
 class TestValidateRecordSpecs:
     """Wave 77a: monotonic offset/length invariant across a spec tuple."""
