@@ -76,7 +76,20 @@ def export_cmd(
     nombre: str = typer.Option(..., "--nombre", help="Declarant first name (Kent's NOMBRE field)."),
     apellidos: str = typer.Option(..., "--apellidos", help="Declarant surnames (Kent's APELLIDOS field)."),
     tipo_declaracion: str = typer.Option(
-        "I", "--tipo", help="Declaration type: I (ingreso), N (negativa), U (domiciliación única), etc."
+        "I", "--tipo", help="Declaration type: I (ingreso), N (negativa), D (devolución), U (domiciliación única), etc."
+    ),
+    iban: str | None = typer.Option(
+        None,
+        "--iban",
+        help=(
+            "IBAN for SEPA devolución (tipo=D). Stamped into DP303DID "
+            "for envelope modelos that carry a direct-debit page."
+        ),
+    ),
+    swift: str | None = typer.Option(
+        None,
+        "--swift",
+        help="SWIFT/BIC for SEPA devolución (tipo=D). Optional for Spanish IBANs.",
     ),
 ) -> None:
     """Export the filing draft to an AEAT-importable fichero-BOE file.
@@ -135,13 +148,23 @@ def export_cmd(
         except Exception as exc:
             raise typer.BadParameter(f"casilla {cid!r} value {raw!r} is not a valid Decimal") from exc
 
+    tipo_upper = tipo_declaracion.upper()
+    if tipo_upper == "D" and not iban:
+        _CONSOLE.print(
+            "[red]export REFUSED:[/red] tipo=D (devolución) requires --iban so AEAT "
+            "can refund the cuota into Kent's account. Add --iban (and optionally --swift) "
+            "or use tipo=I / tipo=N for filings without a refund."
+        )
+        raise typer.Exit(code=3)
     inputs = CliInputs(
         ejercicio=ejercicio,
         periodo=periodo,
         nif=nif,
         apellidos=apellidos,
         nombre=nombre,
-        tipo_declaracion=tipo_declaracion.upper(),
+        tipo_declaracion=tipo_upper,
+        iban=iban,
+        swift=swift,
     )
     headers = entry.build_headers(inputs)
 
