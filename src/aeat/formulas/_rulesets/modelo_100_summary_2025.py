@@ -22,8 +22,10 @@ Parameters: no tax-rate parameters in MVP — the cuota íntegra is taken
 as input from the PDF (AEAT's tarifa progresiva applies at the
 base-liquidable level, out of summary-block scope).
 
-Citations: Ley 35/2006 (IRPF) — base norma; RIRPF art. 67-77
-(liquidación). Cluster-F-full will back every derivation with a
+Citations: Ley 35/2006 (IRPF) — base norma (liquidación is in
+LIRPF arts. 62-80); RD 439/2007 (RIRPF) covers retenciones
+(arts. 74-101) and pagos fraccionados (arts. 109-112) — NOT
+liquidación. Cluster-F-full will back every derivation with a
 specific article.
 """
 
@@ -57,8 +59,11 @@ _CITATIONS = (
     make_citation(
         LegalCitationSource.REAL_DECRETO,
         "439/2007",
-        "RD 439/2007 Reglamento del IRPF — liquidación (art. 67-77), "
-        "retenciones (art. 74-101), pagos fraccionados (art. 109-112).",
+        "RD 439/2007 Reglamento del IRPF — retenciones "
+        "(art. 74-101), pagos fraccionados (art. 109-112). "
+        "Wave 73a correction: prior narrative claimed RIRPF "
+        "art. 67-77 covered liquidación — wrong; those are "
+        "formal/registral obligations. Liquidación is a LIRPF topic.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
     ),
 )

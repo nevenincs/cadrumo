@@ -121,6 +121,43 @@ class TestKnownBadBlocklist:
         assert "wave 71d" in match.audit_wave
 
 
+class TestAccentFolding:
+    """Wave 73b: blocklist matching is diacritic-insensitive.
+
+    Real-world risk: pdfplumber drops diacritics on some PDF fonts,
+    and hand-typed quoted_text_es may lose accents. Without folding,
+    ``cuota liquida`` (no accent) would defeat a ``cuota líquida``
+    (with accent) blocklist entry.
+    """
+
+    def test_lis_125_without_accent_still_blocklisted(self) -> None:
+        """'cuota liquida' (no diacritic) still matches 'cuota líquida'."""
+        match = find_known_bad(
+            LegalCitationSource.LEY,
+            "125",
+            "LIS art. 125 define la cuota liquida del ejercicio",
+        )
+        assert match is not None
+
+    def test_rirpf_110_2_no_accent_still_blocklisted(self) -> None:
+        """'agricolas' (no diacritic) still matches 'agrícolas'."""
+        match = find_known_bad(
+            LegalCitationSource.REGLAMENTO,
+            "110.2",
+            "2% sobre actividades agricolas y ganaderas",
+        )
+        assert match is not None
+
+    def test_lirpf_67_integra_without_accent_still_blocklisted(self) -> None:
+        """'cuota integra estatal' (no diacritic) still matches."""
+        match = find_known_bad(
+            LegalCitationSource.LEY,
+            "67",
+            "Cuota integra estatal - art. 67",
+        )
+        assert match is not None
+
+
 class TestBlocklistPrecision:
     """Blocklist does not false-positive on correct article reuse."""
 
