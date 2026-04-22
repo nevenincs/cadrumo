@@ -66,16 +66,25 @@ _CITATIONS = (
     ),
     make_citation(
         LegalCitationSource.REGLAMENTO,
-        "100.3.c",
-        "Artículo 100.3.c RD 439/2007 (Reglamento del IRPF) — tipo fijo "
-        "del 19% de retención sobre las ganancias patrimoniales derivadas "
-        "del arrendamiento o subarrendamiento de bienes inmuebles urbanos.",
+        "100",
+        "Artículo 100 RD 439/2007 (Reglamento del IRPF) — tipos de "
+        "retención aplicables a los rendimientos del capital mobiliario "
+        "y a los rendimientos por arrendamiento o subarrendamiento de "
+        "bienes inmuebles urbanos (19% para urbanos en art. 100.1; "
+        "reducción 60% Ceuta/Melilla en art. 100.2). Wave 69a "
+        "correction: the article has no sub-letter structure in BOE "
+        "consolidated text.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
     ),
     make_citation(
         LegalCitationSource.REGLAMENTO,
-        "105.1",
-        "Artículo 105.1 RD 439/2007 (Reglamento del IRPF) — tipo fijo del 19% de retención sobre premios en metálico.",
+        "99",
+        "Artículo 99 RD 439/2007 (Reglamento del IRPF) — obligación "
+        "general de practicar pagos a cuenta; implementa el 19% de "
+        "retención sobre premios en metálico (LIRPF art. 101.7) y los "
+        "tipos fijos sobre el resto de rendimientos gravados. Wave 69a "
+        "correction: prior citation of art. 105.1 for premios was wrong "
+        "(art. 105 covers IIC transmisiones, not premios).",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
     ),
 )
