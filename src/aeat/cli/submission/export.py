@@ -72,8 +72,22 @@ def export_cmd(
         "-o",
         help="Directory where the exported fichero-BOE file is written.",
     ),
-    nombre: str = typer.Option(..., "--nombre", help="Declarant first name (Kent's NOMBRE field)."),
-    apellidos: str = typer.Option(..., "--apellidos", help="Declarant surnames (Kent's APELLIDOS field)."),
+    nombre: str = typer.Option(
+        ...,
+        "--nombre",
+        help=(
+            "Declarant first name (NOMBRE field). AEAT convention is upper-case "
+            "but the CLI preserves your casing — type as it should appear on the filing."
+        ),
+    ),
+    apellidos: str = typer.Option(
+        ...,
+        "--apellidos",
+        help=(
+            "Declarant surnames (APELLIDOS field). AEAT convention is upper-case "
+            "but the CLI preserves your casing — type as it should appear on the filing."
+        ),
+    ),
     tipo_declaracion: str = typer.Option(
         "I", "--tipo", help="Declaration type: I (ingreso), N (negativa), D (devolución), U (domiciliación única), etc."
     ),
