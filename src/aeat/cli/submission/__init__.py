@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import typer
 
+from .diff import diff_cmd
 from .dry_run import dry_run_cmd
 from .export import export_cmd
 from .list import list_cmd
@@ -45,6 +46,10 @@ app.command(name="export", help="Export an approved draft to an AEAT-importable 
 app.command(name="verify", help="Re-parse an exported fichero-BOE file and print its decoded headers + casillas.")(
     verify_cmd
 )
+app.command(
+    name="diff",
+    help="Diff two fichero-BOE files and report byte + per-casilla deltas.",
+)(diff_cmd)
 app.command(name="show", help="Pretty-print a persisted SubmittedFiling by submission_id.")(show_cmd)
 app.command(name="list", help="List persisted SubmittedFiling records.")(list_cmd)
 
