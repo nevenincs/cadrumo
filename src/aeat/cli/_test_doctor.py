@@ -13,21 +13,39 @@ import sys
 from pathlib import Path
 
 import pytest
+from pydantic_settings import SettingsConfigDict
 
+from ..auth import GoogleAuthPath
 from ..config import Settings
+from . import doctor as doctor_module
 from .doctor import (
     REQUIRED_ADC_SCOPES,
     Row,
     State,
     adc_scopes_from_file,
     adc_well_known_path,
+    check_active_google_auth_path,
     check_auth_provider_path,
+    check_cli_oauth_cache,
+    check_desktop_oauth_client_material,
+    check_google_auth_readiness,
+    check_inactive_google_auth_drift,
     check_live_access_gate,
+    check_mcp_credentials_cache,
+    check_service_account,
     render_table,
     short_scope,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
+_OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
+
+
+class IsolatedSettings(Settings):
+    """Settings variant that does not read the on-disk env file."""
+
+    model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
 
 class TestAdcWellKnownPath:
@@ -136,11 +154,179 @@ class TestRenderTable:
         rows = [
             Row(section="a", required=True, state=State.OK, detail="ok"),
             Row(section="b", required=True, state=State.MISSING, detail="bad"),
+            Row(section="bp", required=True, state=State.PARTIAL, detail="partial"),
             Row(section="c", required=False, state=State.SKIP, detail="skip"),
             Row(section="d", required=False, state=State.WARN, detail="warn"),
         ]
         table = render_table(rows)
         assert len(table.columns) == 4
+
+
+class TestGoogleAuthDoctorRows:
+    """Doctor rows for the new auth contract must stay deterministic."""
+
+    def test_active_path_row_blocks_on_ambiguous_configuration(self, tmp_path: Path) -> None:
+        service_account = tmp_path / "service-account.json"
+        service_account.write_text("{}", encoding="utf-8")
+        settings = IsolatedSettings(
+            google_oauth_client_id="client-id",
+            google_oauth_client_secret=_OAUTH_CLIENT_SECRET,
+            google_application_credentials=str(service_account),
+        )
+
+        row = check_active_google_auth_path(settings)
+
+        assert row.state == State.MISSING
+        assert "Set GOOGLE_AUTH_PATH" in row.detail
+
+    def test_desktop_rows_show_partial_readiness_when_cli_token_missing(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(doctor_module, "PROJECT_ROOT", tmp_path)
+        settings = IsolatedSettings(
+            google_auth_path=GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV,
+            google_oauth_client_id="client-id",
+            google_oauth_client_secret=_OAUTH_CLIENT_SECRET,
+            aeat_token_dir=tmp_path / ".tokens",
+        )
+
+        path_row = check_active_google_auth_path(settings)
+        readiness_row = check_google_auth_readiness(settings)
+        client_row = check_desktop_oauth_client_material(settings)
+        token_row = check_cli_oauth_cache(settings)
+        mcp_row = check_mcp_credentials_cache(settings)
+
+        assert path_row.state == State.OK
+        assert readiness_row.state == State.MISSING
+        assert client_row.state == State.OK
+        assert token_row.state == State.MISSING
+        assert mcp_row.state == State.MISSING
+
+    def test_readiness_is_partial_when_only_mcp_directory_exists(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(doctor_module, "PROJECT_ROOT", tmp_path)
+        (tmp_path / "env" / "workspace-mcp-credentials").mkdir(parents=True, exist_ok=True)
+        token_dir = tmp_path / ".tokens"
+        token_dir.mkdir(parents=True, exist_ok=True)
+        (token_dir / "google_oauth_token.json").write_text(
+            (
+                '{"refresh_token": "refresh", "scopes": ['
+                '"https://www.googleapis.com/auth/drive",'
+                '"https://www.googleapis.com/auth/spreadsheets",'
+                '"https://www.googleapis.com/auth/documents",'
+                '"https://www.googleapis.com/auth/cloud-platform",'
+                '"https://www.googleapis.com/auth/userinfo.email",'
+                '"openid"'
+                "]}"
+            ),
+            encoding="utf-8",
+        )
+        settings = IsolatedSettings(
+            google_auth_path=GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV,
+            google_oauth_client_id="client-id",
+            google_oauth_client_secret=_OAUTH_CLIENT_SECRET,
+            aeat_token_dir=token_dir,
+        )
+
+        row = check_google_auth_readiness(settings)
+
+        assert row.state == State.PARTIAL
+        assert "MCP credentials cache still needs preparation" in row.detail
+
+    def test_mcp_cache_row_stays_partial_until_credentials_exist(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(doctor_module, "PROJECT_ROOT", tmp_path)
+        (tmp_path / "env" / "workspace-mcp-credentials").mkdir(parents=True, exist_ok=True)
+        token_dir = tmp_path / ".tokens"
+        token_dir.mkdir(parents=True, exist_ok=True)
+        (token_dir / "google_oauth_token.json").write_text(
+            (
+                '{"refresh_token": "refresh", "scopes": ['
+                '"https://www.googleapis.com/auth/drive",'
+                '"https://www.googleapis.com/auth/spreadsheets",'
+                '"https://www.googleapis.com/auth/documents",'
+                '"https://www.googleapis.com/auth/cloud-platform",'
+                '"https://www.googleapis.com/auth/userinfo.email",'
+                '"openid"'
+                "]}"
+            ),
+            encoding="utf-8",
+        )
+        settings = IsolatedSettings(
+            google_auth_path=GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV,
+            google_oauth_client_id="client-id",
+            google_oauth_client_secret=_OAUTH_CLIENT_SECRET,
+            aeat_token_dir=token_dir,
+        )
+
+        row = check_mcp_credentials_cache(settings)
+
+        assert row.state == State.PARTIAL
+        assert "no cached MCP credentials exist yet" in row.detail
+
+    def test_desktop_material_row_is_skipped_when_service_account_path_is_active(self, tmp_path: Path) -> None:
+        service_account = tmp_path / "service-account.json"
+        service_account.write_text("{}", encoding="utf-8")
+        settings = IsolatedSettings(
+            google_auth_path=GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION,
+            google_application_credentials=str(service_account),
+            google_oauth_client_id="client-id",
+            google_oauth_client_secret=_OAUTH_CLIENT_SECRET,
+        )
+
+        row = check_desktop_oauth_client_material(settings)
+
+        assert row.state == State.SKIP
+        assert "inactive-path drift" in row.detail
+
+    def test_service_account_row_is_required_for_service_account_path(self, tmp_path: Path) -> None:
+        service_account = tmp_path / "service-account.json"
+        service_account.write_text("{}", encoding="utf-8")
+        settings = IsolatedSettings(
+            google_auth_path=GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION,
+            google_application_credentials=str(service_account),
+        )
+
+        row = check_service_account(settings)
+
+        assert row.required is True
+        assert row.state == State.OK
+
+    def test_service_account_row_is_skipped_when_desktop_path_is_active(self, tmp_path: Path) -> None:
+        service_account = tmp_path / "service-account.json"
+        service_account.write_text("{}", encoding="utf-8")
+        settings = IsolatedSettings(
+            google_auth_path=GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV,
+            google_application_credentials=str(service_account),
+            google_oauth_client_id="client-id",
+            google_oauth_client_secret=_OAUTH_CLIENT_SECRET,
+        )
+
+        row = check_service_account(settings)
+
+        assert row.state == State.SKIP
+        assert "inactive-path drift" in row.detail
+
+    def test_inactive_path_drift_reports_ignored_missing_service_account(self, tmp_path: Path) -> None:
+        settings = IsolatedSettings(
+            google_auth_path=GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV,
+            google_oauth_client_id="client-id",
+            google_oauth_client_secret=_OAUTH_CLIENT_SECRET,
+            google_application_credentials=str(tmp_path / "missing.json"),
+        )
+
+        row = check_inactive_google_auth_drift(settings)
+
+        assert row.state == State.WARN
+        assert "ignored stale service-account path" in row.detail
 
 
 class TestLiveAccessGateRow:

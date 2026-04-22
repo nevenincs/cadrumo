@@ -9,7 +9,7 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from ...financial import CsvProvider, OfxProvider, XlsxProvider, detect_provider
+from ...financial import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider, detect_provider
 from ...financial.providers import FinancialProviderError
 
 _CONSOLE = Console()
@@ -22,6 +22,7 @@ class ProviderChoice(StrEnum):
     CSV = "csv"
     XLSX = "xlsx"
     OFX = "ofx"
+    N26_PDF = "n26-pdf"
 
 
 def ingest_cmd(
@@ -30,7 +31,7 @@ def ingest_cmd(
         ProviderChoice.AUTO,
         "--provider",
         case_sensitive=False,
-        help="Provider selection: csv, xlsx, ofx, or auto.",
+        help="Provider selection: csv, xlsx, ofx, n26-pdf, or auto.",
     ),
     output_json: bool = typer.Option(
         False,
@@ -94,4 +95,6 @@ def _resolve_provider(provider: ProviderChoice, path: Path):
         return CsvProvider()
     if provider is ProviderChoice.XLSX:
         return XlsxProvider()
+    if provider is ProviderChoice.N26_PDF:
+        return PdfN26Provider()
     return OfxProvider()

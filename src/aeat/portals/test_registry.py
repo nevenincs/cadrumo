@@ -156,14 +156,14 @@ def test_portals_by_category_counts_match_adr() -> None:
 def test_finalise_registry_logs_info_on_success(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """``_finalise_registry`` emits one info log line on success."""
+    """``_finalise_registry`` keeps successful import-time logs at debug level."""
     caplog.clear()
-    with caplog.at_level(logging.INFO, logger="aeat.portals._registry"):
+    with caplog.at_level(logging.DEBUG, logger="aeat.portals._registry"):
         mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
     assert len(mapping) == 42
-    info_records = [r for r in caplog.records if r.name == "aeat.portals._registry"]
-    assert len(info_records) == 1
-    assert "loaded 42 portal entries" in info_records[0].getMessage()
+    debug_records = [r for r in caplog.records if r.name == "aeat.portals._registry" and r.levelno == logging.DEBUG]
+    assert len(debug_records) == 1
+    assert "loaded 42 portal entries" in debug_records[0].getMessage()
 
 
 def test_registry_module_has_no_print_calls() -> None:
