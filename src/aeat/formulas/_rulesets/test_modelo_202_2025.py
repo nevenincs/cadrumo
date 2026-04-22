@@ -84,6 +84,41 @@ class TestModelo202Ruleset:
         assert computed == {"18", "32", "34"}
         assert len(MODELO_202_2025.formulas) == 3
 
+    def test_external_worked_example_lis_art_29_micropyme(self) -> None:
+        """External-anchored worked example (wave 59c H3 closure).
+
+        Provenance: Ley 27/2014 (LIS) art. 29.1 fixes the tipo de
+        gravamen for micropymes at 23% (since Orden HAC/262/2025).
+        The ruleset reads the rate from casilla 17 (whole-percent),
+        so this fixture sets 17=23.00 per LIS art. 29.1.
+
+        Scenario: Q2 2025 (2P) micropyme with base 200 000 at 23%:
+        - casilla 16 (base) = 200 000.
+        - casilla 17 (tipo) = 23.00 per LIS art. 29.1.
+        - casilla 18 (cuota integra) = 200 000 x 23% = 46 000.
+        - casilla 27 bonificaciones = 0.
+        - casilla 28 retenciones = 2 000.
+        - casilla 30 pago fraccionado anterior = 10 000 (1P).
+        - casilla 32 resultado = 46 000 - 0 - 2 000 - 10 000 = 34 000.
+        - casilla 33 minimo = 20 000.
+        - casilla 34 cantidad = max(32, 33) = 34 000.
+
+        Citation: BOE-A-2014-12328 art. 29.1.
+        """
+        provided = {
+            "16": Decimal("200000.00"),
+            "17": Decimal("23.00"),  # 23% per LIS art. 29.1, NOT from ruleset
+            "18": Decimal("46000.00"),
+            "27": Decimal("0.00"),
+            "28": Decimal("2000.00"),
+            "30": Decimal("10000.00"),
+            "32": Decimal("34000.00"),
+            "33": Decimal("20000.00"),
+            "34": Decimal("34000.00"),
+        }
+        report = Engine().audit_against(ruleset=MODELO_202_2025, provided=provided, tolerance=Decimal("0.01"))
+        assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
+
     def test_whole_percent_casilla_17_not_treated_as_fraction(self) -> None:
         """Wave 33 H1 regression: casilla 17 = 17.00 (whole percent) must NOT yield 1.7M.
 
