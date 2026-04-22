@@ -68,7 +68,13 @@ from ._record_spec import (
 
 
 class IngestSourceMeta(TypedDict, total=False):
-    """Provenance metadata written into the generated module docstring."""
+    """Provenance metadata written into the generated module docstring.
+
+    ``extra_required_fields`` is an optional list of field IDs to
+    force-merge into ``REQUIRED_HEADER_FIELDS`` so the heuristic
+    can be extended for modelos whose header spans multiple segments
+    (e.g., Modelo 303's per-page identification fields in DP30301).
+    """
 
     modelo: str
     ejercicio: str
@@ -77,6 +83,7 @@ class IngestSourceMeta(TypedDict, total=False):
     xlsx: str
     retrieval_date: str
     notes: str
+    extra_required_fields: list[str]
 
 
 class IngestedSpec(TypedDict):

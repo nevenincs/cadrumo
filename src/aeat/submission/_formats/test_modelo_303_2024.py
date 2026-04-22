@@ -25,6 +25,20 @@ class TestModelo3032024Envelope:
     def test_encoding_is_iso_8859_1(self) -> None:
         assert ENCODING == "iso-8859-1"
 
+    def test_required_fields_include_dp30301_page_identification(self) -> None:
+        """Wave 91 adds DP30301 page-identification fields to the required
+        set via the fixture's ``extra_required_fields`` override so filings
+        without TIPO_DECLARACION / NIF / APELLIDOS+NOMBRE / DEVENGO_EJERCICIO
+        / DEVENGO_PERIODO are rejected at serialisation."""
+        expected = {
+            "DP30301_F006_TIPO_DECLARACI_N",
+            "DP30301_F007_IDENTIFICACI_N_NIF",
+            "DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N",
+            "DP30301_F009_DEVENGO_EJERCICIO",
+            "DP30301_F010_DEVENGO_PER_ODO",
+        }
+        assert expected.issubset(REQUIRED_HEADER_FIELDS)
+
     def test_serialise_empty_filing_well_formed(self) -> None:
         """A zero-casilla filing must still produce a valid 7996-byte envelope
         (7994 content + CRLF)."""
