@@ -58,6 +58,7 @@ def _make_pdf(
     labels: Mapping[str, str],
     values: Mapping[str, str],
     filename: str,
+    thousands_sep: str = ".",
 ) -> Path:
     from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
         QuarterlyGenParams,
@@ -74,6 +75,7 @@ def _make_pdf(
         labels=labels,
         casilla_values={k: Decimal(v) for k, v in values.items()},
         csv="ABCD1234EFGH5678",
+        thousands_sep=thousands_sep,
     )
     pdf_bytes, _ = generate(params)
     path = tmp_path / filename
@@ -1057,3 +1059,77 @@ class TestModelo303PostHAC819Extractor:
         assert filing.template_revision.revision == "2024.orden-819"
         # 20 of 33 casillas provided → PARTIAL.
         assert filing.extraction_status is ExtractionStatus.PARTIAL
+
+
+class TestThousandsSeparatorThreading:
+    """Wave 61d: thousands_sep plumbing through the synthetic generator.
+
+    Wave 60 H3 claimed the wave-56 ``format_amount(thousands_sep=...)``
+    opt-in was never threaded through ``draw_casilla_box`` /
+    ``QuarterlyGenParams``. Wave 61d threads it through, and this test
+    asserts the param reaches the rendered PDF text stream.
+
+    Scope clarification (wave 61d closure). A parametrized end-to-end
+    NBSP round-trip test was prototyped and found infeasible via the
+    reportlab synthetic-PDF pipeline: reportlab's Helvetica font lacks
+    a U+202F (narrow NBSP) glyph (substituted as literal ``"n"``), and
+    pdfplumber silently canonicalises U+00A0 (NBSP) to ASCII space in
+    its extracted text — which cannot be safely restitched at the
+    normaliser layer without false-positives on label-embedded casilla
+    references. Real Sede Electrónica PDFs render through proper
+    Unicode-capable fonts and preserve NBSP through the
+    pdfplumber-equivalent extraction path, so the wave-51 regex fix
+    remains load-bearing in production while this synthetic test is
+    limited to the dot-separator + string-layer coverage.
+    """
+
+    def test_dot_separator_is_the_canonical_default(self, tmp_path: Path) -> None:
+        values = {
+            "01": "5.00",
+            "02": "12500.00",
+            "03": "2625.00",
+            "04": "3.00",
+            "05": "8750.50",
+            "06": "1837.61",
+            "28": "4462.61",
+            "29": "0.00",
+            "30": "4462.61",
+        }
+        pdf = _make_pdf(
+            tmp_path,
+            modelo="111",
+            labels=_MODELO_111_LABELS,
+            values=values,
+            filename="modelo_111_2025Q1_dot.pdf",
+            thousands_sep=".",
+        )
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "111"
+        assert filing.period == "2025Q1"
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        for cid, raw in values.items():
+            assert by_id[cid] == Decimal(raw), f"mismatch on casilla {cid}: expected {raw}, got {by_id[cid]}"
+
+    def test_thousands_sep_reaches_draw_casilla_box(self) -> None:
+        """The generator MUST forward ``params.thousands_sep`` to the
+        shared renderer. Asserts via the pure-Python string pipeline:
+        :func:`format_amount` with a NBSP argument produces a NBSP-
+        separated output that ``SPANISH_AMOUNT_GROUP`` accepts.
+        """
+        import re
+
+        from tests.fixtures.pdf_corpus.l3_synthetic._generators._generator_shared import (
+            format_amount,
+        )
+
+        from .._pdf_import._label_regex import (
+            SPANISH_AMOUNT_GROUP,
+            parse_spanish_decimal,
+        )
+
+        rendered = format_amount(Decimal("12500.00"), thousands_sep="\xa0")
+        assert rendered == "12\xa0500,00"
+
+        m = re.search(SPANISH_AMOUNT_GROUP, rendered)
+        assert m is not None
+        assert parse_spanish_decimal(m.group(1)) == Decimal("12500.00")

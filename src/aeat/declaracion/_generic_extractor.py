@@ -300,6 +300,14 @@ def _normalise_pdf_text(text: str) -> str:
     Wave 59a H1: lookarounds further tightened to Unicode LETTERS only
     (not digits / underscore). Prevents an adversarial digit wrap
     ``9-\\n10`` from collapsing to ``910``.
+
+    Wave 61d non-goal: a NBSP-space-restitching pre-pass was
+    prototyped and rejected — the only unambiguous restitching window
+    is a line whose tail is a pure Spanish amount, but labels often
+    embed casilla references (``"2% s/casilla 03 400,00"``) that are
+    structurally indistinguishable from a space-separated amount
+    ``03 400,00``. The correct NBSP path is to use a PDF renderer that
+    preserves U+00A0; real AEAT Sede Electrónica PDFs already do.
     """
     return _SOFT_HYPHEN_BREAK_RE.sub("", text)
 

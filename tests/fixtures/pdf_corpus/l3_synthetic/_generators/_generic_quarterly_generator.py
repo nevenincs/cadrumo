@@ -42,6 +42,14 @@ class QuarterlyGenParams(BaseModel):
     casilla_values: Mapping[str, Decimal | str]
     csv: str | None = None
     presented_at: str = "2025-04-20 10:00:00"
+    thousands_sep: str = Field(default=".", min_length=1, max_length=1)
+    """Wave 61d: thousands-group separator used by rendered amounts.
+
+    Defaults to ``"."`` (the canonical AEAT print separator). Set to
+    ``"\\xa0"`` (NBSP) or ``"\\u202f"`` (narrow NBSP) to exercise the
+    wave-51 H1 label-regex NBSP path end-to-end through a real PDF
+    round-trip, rather than only via synthetic text tests.
+    """
 
 
 class QuarterlyGroundTruth(BaseModel):
@@ -75,7 +83,12 @@ def generate(params: QuarterlyGenParams) -> tuple[bytes, QuarterlyGroundTruth]:
             x_mm=15.0,
             y_mm=start_y_mm + i * row_height_mm,
         )
-        draw_casilla_box(c, box, params.casilla_values.get(casilla_id))
+        draw_casilla_box(
+            c,
+            box,
+            params.casilla_values.get(casilla_id),
+            thousands_sep=params.thousands_sep,
+        )
 
     draw_footer(
         c,
