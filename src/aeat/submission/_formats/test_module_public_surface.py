@@ -116,3 +116,38 @@ class TestEnvelopeModulePublicSurface:
     )
     def test_envelope_all_matches_canonical(self, module: ModuleType) -> None:
         assert frozenset(module.__all__) == _ENVELOPE_PUBLIC
+
+    @pytest.mark.parametrize(
+        "module",
+        # Only generator-emitted modules own _SEGMENT_* constants. Clone
+        # modules (e.g. modelo_303_2025) re-export ENVELOPE from their
+        # source sibling without re-declaring the internals, per the
+        # wave-94 clone design — they are covered by the clone-parity
+        # tests in test_modelo_303_2025.py instead.
+        [modelo_303_2024],
+        ids=lambda m: m.__name__.rsplit(".", 1)[-1],
+    )
+    def test_envelope_segment_constants_match_tuple(self, module: ModuleType) -> None:
+        """Wave 116: every ENVELOPE entry must correspond to a ``_SEGMENT_{i}_
+        {segment_id}`` module-level constant, and there must be no orphan
+        constants not referenced in ENVELOPE. This catches generator drift
+        where the segment tuple and the internal constants fall out of sync
+        (e.g. an accidental manual edit to ENVELOPE without regenerating)."""
+        segment_constants = {n for n in dir(module) if n.startswith("_SEGMENT_")}
+        envelope = module.ENVELOPE
+        # Count parity: one constant per envelope entry, no orphans.
+        assert len(segment_constants) == len(envelope), (
+            f"{module.__name__} has {len(segment_constants)} _SEGMENT_* constants "
+            f"but {len(envelope)} entries in ENVELOPE. Either the generator "
+            f"emitted orphan helpers or the tuple lost a slot."
+        )
+        # Identity parity: ENVELOPE[i] is the identical object stored at
+        # ``_SEGMENT_{i}_{segment_id}`` — not a copy.
+        for i, segment in enumerate(envelope):
+            name = f"_SEGMENT_{i}_{segment.segment_id}"
+            const = getattr(module, name, None)
+            assert const is segment, (
+                f"{module.__name__}.{name} is {const!r}, "
+                f"but ENVELOPE[{i}] is {segment!r}. "
+                "Generator convention broken — regenerate the module."
+            )
