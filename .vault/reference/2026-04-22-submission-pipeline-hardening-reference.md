@@ -1,6 +1,6 @@
 ---
 name: submission-pipeline-hardening
-description: Reference catalogue for the wave 89-129 autonomous hardening cycle on the fichero-BOE submission pipeline — perpetual regression guards, E2E coverage, CLI surface, and schema-module contracts.
+description: Reference catalogue for the wave 89-139 autonomous hardening cycle on the fichero-BOE submission pipeline — perpetual regression guards, E2E coverage, CLI surface, input validation, and schema-module contracts.
 type: reference
 tags:
   - "#reference"
@@ -14,7 +14,7 @@ related:
 
 # submission-pipeline-hardening
 
-Capstone reference for the autonomous-loop cycle spanning **waves 89–129** on `src/aeat/submission/_formats/` and `src/aeat/cli/submission/`. Written at wave 130 as the full-repo milestone.
+Capstone reference for the autonomous-loop cycle spanning **waves 89–139** on `src/aeat/submission/_formats/` and `src/aeat/cli/submission/`. First written at wave 130; extended at wave 140 (this revision) to cover the 50-wave milestone (waves 131–139 additions).
 
 ## scope
 
@@ -29,7 +29,7 @@ Across every `(modelo, ejercicio, tipo)` combination plus devolución (SEPA IBAN
 
 | Command | Wave | Purpose |
 |---|---|---|
-| `aeat submission export <draft>` | 81 (pre-cycle) + 92/94/101 | Byte-exact fichero-BOE writer, env elope + record dispatch, devolución IBAN |
+| `aeat submission export <draft>` | 81 (pre-cycle) + 92/94/101 | Byte-exact fichero-BOE writer, envelope + record dispatch, devolución IBAN |
 | `aeat submission verify <file>` | 95 | Re-parse + pretty-print (+ `--json`) |
 | `aeat submission diff <a> <b>` | 98 | Byte + semantic comparison (+ `--json`) |
 | `aeat submission schemas` | 104 | Registry discovery (+ `--json`) |
@@ -37,7 +37,7 @@ Across every `(modelo, ejercicio, tipo)` combination plus devolución (SEPA IBAN
 
 All five share the factored `_schema_registry.py` dispatch (wave 97) with filename auto-detection on `verify`/`diff`.
 
-## perpetual regression surfaces (the 15-invariant lattice)
+## perpetual regression surfaces
 
 **Stream A — citation accuracy:**
 - A1 Schema-module docstring provenance (Orden + BOE-ID + DR xlsx) across all 4 shipped modules — waves 117/118.
@@ -57,6 +57,19 @@ All five share the factored `_schema_registry.py` dispatch (wave 97) with filena
 - C1 SCHEMA_REGISTRY entry shape (kind × module × build_headers coverage) — wave 123.
 - C2 Parametrised smoke: every `(modelo, ejercicio, tipo)` round-trips export → verify → diff-self — waves 124/125.
 - C3 `--json` output shape pinned for every emitter (verify, diff, schemas, check-nif) — wave 126.
+- C4 Exit-code contract (0=ok, 1=diff, 2=unsupported/corrupt, 3=draft-refused) — wave 131.
+- C5 `--help` shape per subcommand (verb + key flags discoverable) — wave 132.
+- C6 Live-submit deferral surfaced at `aeat --help` + engine default `live_transport_supported=False` — wave 133.
+- C7 Safety 4-factor-gate documentation lock (ADR + ROADMAP) — wave 134.
+
+**Input validation:**
+- V1 NIF check-letter (AEAT algorithm) at export boundary — wave 106.
+- V2 Standalone `check-nif` command — wave 107.
+- V3 Payload-length pre-flight on verify/diff (Kent-facing message naming expected vs actual bytes) — wave 135.
+- V4 `--modelo` / `--ejercicio` flag-shape validators (3-digit / 4-digit enforcement) — wave 136.
+- V5 IBAN / SWIFT flag-shape validators with normalisation — wave 137.
+- V6 IBAN normalisation E2E byte-identity (six paste-format variants → identical bytes) — wave 138.
+- V7 `--nombre` / `--apellidos` preserve-case contract (intentional; typos must surface) — wave 139.
 
 **Cross-track E2E:**
 - E1 Ruleset → serialise → golden-SHA for 130 2024 — wave 108.
@@ -64,41 +77,51 @@ All five share the factored `_schema_registry.py` dispatch (wave 97) with filena
 - E3 2024 vs 2025 clone-parity via same-input invariant (both modelos) — wave 110.
 - E4 Registry-parametrised produce/verify/diff smoke — waves 124/125.
 
-**Encoder edge cases (wave-127–129 matrix):**
-- ALPHANUMERIC non-ASCII round-trip per encoding (cp1252 vs iso-8859-1) — wave 127.
-- CURRENCY unsigned + INLINE_SIGN, zero / 1-cent / typical / max / overflow / ROUND_HALF_UP — wave 128.
-- DATE YYYYMMDD + DDMMYYYY calendar-boundary + garbage-rejection — wave 129.
+**Encoder edge cases:**
+- ED1 ALPHANUMERIC non-ASCII round-trip per encoding (cp1252 vs iso-8859-1) — wave 127.
+- ED2 CURRENCY unsigned + INLINE_SIGN, zero / 1-cent / typical / max / overflow / ROUND_HALF_UP — wave 128.
+- ED3 DATE YYYYMMDD + DDMMYYYY calendar-boundary + garbage-rejection — wave 129.
+
+Total: **25 perpetual-guard surfaces**.
 
 ## numeric summary
 
-- **41 waves landed** across `src/aeat/submission/` and `src/aeat/cli/submission/`
-- **402 tests passing** (4 intentional kind-filtered skips)
-- **13 test files authored** with perpetual-guard invariants
+- **50 waves landed** across `src/aeat/submission/` and `src/aeat/cli/submission/` since cycle start (wave 89)
+- **496 tests passing** (4 intentional kind-filtered skips)
+- **22 test files authored** with perpetual-guard invariants
 - **4 schema modules** pinned per ejercicio
-- **15 regression surfaces** in the lattice above
+- **25 regression surfaces** in the invariant lattice
+
+## input-handling philosophy
+
+The CLI splits inputs into two categories with opposite normalisation contracts:
+
+- **Canonical inputs** (IBAN, NIF, modelo, ejercicio) — normalised at the typer-callback boundary. Kent's paste-format variations (spaces, hyphens, case) produce byte-identical exports. Wave 106/136/137/138 implementations.
+- **Identity inputs** (NOMBRE, APELLIDOS) — preserve-case byte-identically. A silent `.upper()` would hide typos Kent wants to catch at verify time; AEAT convention is upper-case but we nudge via `--help` rather than enforce. Wave 139 implementation.
 
 ## kent-visible outcomes
 
 1. `aeat submission schemas --json` lists what can be exported.
-2. `aeat submission export <draft>` writes a byte-exact fichero-BOE file with a canonical filename.
-3. `aeat submission verify <file>` decodes the file back and pretty-prints the casillas.
-4. `aeat submission diff <a> <b>` compares two files at byte and semantic level.
-5. `aeat submission check-nif <id>` validates an identifier before a filing attempt.
+2. `aeat submission check-nif <id>` validates an identifier before a filing attempt.
+3. `aeat submission export <draft>` writes a byte-exact fichero-BOE file with a canonical filename.
+4. `aeat submission verify <file>` decodes the file back and pretty-prints the casillas.
+5. `aeat submission diff <a> <b>` compares two files at byte and semantic level.
 
-Every path above has both a rich-formatted and `--json` output variant for downstream pipeline integration.
+Every path above has both a rich-formatted and `--json` output variant for downstream pipeline integration. Exit codes follow the wave-131 contract (0/1/2/3) so shell pipelines can script around them.
 
 ## known gaps deferred to follow-up waves
 
 - **Modelo 390 bootstrap** — requires DR390e24.xlsx extraction, external-tooling blocked.
 - **Modelo 303 casilla 45 / 64 / 67 / 71 schema fields** — ruleset declares, schema doesn't (wave 113/114 documented; `_2`-suffixed CURRENCY slots in DP30303/DP30304 are the likely carriers pending DR303 PDF cross-reference).
-- **Live AEAT submission** — deliberately deferred to 1.0.0 per the 2026-04-18 live-submit excision ADR.
+- **Live AEAT submission** — explicitly disabled. Deferred to 1.0.0 per the 2026-04-18 live-submit excision ADR. Wave 133/134 documentation locks + the wave-80c `test_no_submit_command` guards keep the excision in place.
 - **Rectificativa rulesets** — wave-120's cross-year guard will relax when #234 lands.
 
 ## handoff notes
 
 A future contributor should:
 
-1. Run `uv run pytest src/aeat/submission/ src/aeat/cli/submission/` — 402 tests is the baseline.
+1. Run `uv run pytest src/aeat/submission/ src/aeat/cli/submission/` — 496 tests is the baseline.
 2. Read `.claude/rules/aeat-project-mandates.md` and `.vault/adr/2026-04-17-export-first-adr.md`.
-3. For a new modelo, follow the 303 pattern: JSON fixture in `tests/fixtures/dr_specs/`, run the generator, register in `_schema_registry.py`, add golden SHA, add the ruleset metadata lock entry.
+3. For a new modelo, follow the 303 pattern: JSON fixture in `tests/fixtures/dr_specs/`, run the generator, register in `_schema_registry.py`, add golden SHA, add the ruleset metadata lock entry. The wave-124 registry-parametrised smoke test picks up the new entry automatically.
 4. When closing the 303 casilla gap, update `_EXPECTED_GAPS`, the fixture's `source.notes`, and regenerate — the wave-121/122 consistency tests will guide the edits.
+5. When adding a new CLI flag, lock its shape + help-text presence in `test_help_text_contract.py` (wave 132) and, if it takes user-pasted canonical data, add a typer callback with normalisation + a flag-validation test mirroring wave 136/137.
