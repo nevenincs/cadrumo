@@ -77,6 +77,29 @@ class DateFmt(StrEnum):
     DDMMYYYY = "ddmmyyyy"
 
 
+class SignedMode(StrEnum):
+    """Sign-convention for a CURRENCY field (wave 85b).
+
+    Different AEAT modelos use different conventions for negative
+    amounts in the fichero-BOE wire format:
+
+    - ``UNSIGNED``: field is always non-negative. Callers must
+      either pass abs(value) or rely on an adjacent SIGNO/TIPO
+      flag elsewhere in the record. Modelo 130 default.
+    - ``INLINE_SIGN``: byte 0 is ``"N"`` for negatives or ``" "``
+      for non-negatives; remaining bytes carry |value|. Modelo 303
+      type-N fields (casillas 69, 71, and many others).
+
+    Concrete modelo modules declare the correct mode per field;
+    the serialiser routes to ``encode_currency(inline_sign=...)``
+    accordingly. Modelo 130 keeps ``UNSIGNED`` via default; Modelo
+    303+ explicit ``INLINE_SIGN`` on signed casillas.
+    """
+
+    UNSIGNED = "unsigned"
+    INLINE_SIGN = "inline_sign"
+
+
 class RecordFieldSpec(BaseModel):
     """One fixed-width field in a fichero-BOE record.
 
@@ -116,6 +139,15 @@ class RecordFieldSpec(BaseModel):
     date_fmt: DateFmt | None = None
     """Required when ``kind == DATE``; ignored otherwise."""
 
+    signed_mode: SignedMode = SignedMode.UNSIGNED
+    """Wave 85b: how CURRENCY fields encode negative amounts.
+
+    Defaults to ``UNSIGNED`` (Modelo 130 convention: magnitude +
+    separate SIGNO flag). Set to ``INLINE_SIGN`` for Modelo 303
+    type-N fields that carry the sign in the leading byte.
+    Ignored for non-CURRENCY kinds.
+    """
+
     @model_validator(mode="after")
     def _reserved_requires_literal(self) -> RecordFieldSpec:
         """Wave 77a: enforce RESERVED ⇔ literal_value invariant.
@@ -146,6 +178,7 @@ def record_field(
     pad_char: str | None = None,
     literal_value: str | None = None,
     date_fmt: DateFmt | None = None,
+    signed_mode: SignedMode = SignedMode.UNSIGNED,
 ) -> RecordFieldSpec:
     """Concise constructor for :class:`RecordFieldSpec`.
 
@@ -172,6 +205,7 @@ def record_field(
         pad_char=pad_char,
         literal_value=literal_value,
         date_fmt=date_fmt,
+        signed_mode=signed_mode,
     )
 
 

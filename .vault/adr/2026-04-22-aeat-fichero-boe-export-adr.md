@@ -107,8 +107,14 @@ the wave 76+ audit loop.
 
 ### 4. Encoding + byte-exactness
 
-Fichero BOE files are emitted as **ISO-8859-15** (not UTF-8).
-This is the AEAT standard. Serialiser helpers:
+Fichero BOE files are per-modelo encoded. **Modelo 130** uses
+**Windows-1252 / ISO-8859-1** (Orden EHA/672/2007; wave 77b
+correction). **Modelo 303 + Modelo 390** use **ISO-8859-1** (Latin-1;
+confirmed via AEAT FRECH error docs + DR303e25.xlsx header rows +
+DR390e2024.xlsx Nota 3; wave 85b correction — this section
+previously claimed ISO-8859-15 as universal, which is wrong). No
+currently-shipped autónomo-core modelo uses ISO-8859-15 in the
+wire format. Serialiser helpers:
 
 - `encode_currency(value: Decimal, *, length: int) -> bytes`:
   right-justified, zero-padded, no separators, 2 implicit

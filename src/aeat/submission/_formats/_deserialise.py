@@ -27,6 +27,7 @@ from ._record_spec import (
     FieldKind,
     RecordFieldSpec,
     SegmentSpec,
+    SignedMode,
 )
 
 
@@ -53,19 +54,30 @@ class ParsedRecord(BaseModel):
 _CRLF = b"\r\n"
 
 
-def _decode_currency(raw: bytes) -> Decimal:
+def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     """Decode a zero-padded cents string into a 2-decimal Decimal.
 
-    Inverse of :func:`encode_currency` for unsigned magnitudes. Sign
-    must be reconstructed by the caller from an adjacent SIGNO/TIPO
-    field (see the Modelo 130 ``TIPO_DECLARACION`` pattern).
+    Inverse of :func:`encode_currency`.
+
+    Wave 85b: when ``inline_sign=True``, byte 0 is the sign marker
+    (``"N"`` for negatives / ``" "`` for non-negatives) and the
+    remaining bytes carry the zero-padded absolute magnitude.
     """
+    if inline_sign:
+        if not raw:
+            return Decimal("0.00")
+        sign_byte = raw[:1]
+        magnitude_bytes = raw[1:]
+        is_negative = sign_byte == b"N"
+        text = magnitude_bytes.decode("ascii").strip()
+        cents = int(text) if text else 0
+        result = (Decimal(cents) / Decimal(100)).quantize(Decimal("0.01"))
+        return -result if is_negative else result
+
     text = raw.decode("ascii").strip()
     if not text:
         return Decimal("0.00")
     cents = int(text)
-    # ``cents / 100`` would introduce float drift; build the Decimal
-    # directly to preserve arbitrary precision.
     return (Decimal(cents) / Decimal(100)).quantize(Decimal("0.01"))
 
 
@@ -131,7 +143,8 @@ def deserialise(
                 field_values[spec.field_id] = spec.literal_value
 
             case FieldKind.CURRENCY:
-                value = _decode_currency(raw)
+                inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
+                value = _decode_currency(raw, inline_sign=inline_sign)
                 field_values[spec.field_id] = value
                 if spec.casilla_id is not None:
                     casilla_values[spec.casilla_id] = value
