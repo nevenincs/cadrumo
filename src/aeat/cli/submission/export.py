@@ -30,14 +30,13 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from ...financial.invoices._validators import validate_spanish_tax_id
 from ...submission import DraftStatus
 from ...submission._formats._serialise import serialise, serialise_envelope
 from ._helpers import load_draft
 from ._schema_registry import SCHEMA_REGISTRY, CliInputs
 
 _CONSOLE = Console()
-
-_NIF_RE = re.compile(r"^[A-Z0-9]{9}$")
 
 
 def _period_token(period: str) -> str:
@@ -125,10 +124,19 @@ def export_cmd(
         )
         raise typer.Exit(code=2)
 
-    # Validate NIF format early.
-    nif = draft.profile_tax_id.upper()
-    if not _NIF_RE.match(nif):
-        raise typer.BadParameter(f"NIF {nif!r} does not match the 9-character AEAT pattern")
+    # Validate NIF format and checksum early. validate_spanish_tax_id
+    # covers DNI (8 digits + TRWAGMYFPDXBNJZSQVHLCKE letter), NIE
+    # (X/Y/Z prefix → 0/1/2 before NIF rule), and CIF (entity id);
+    # malformed strings or bad check-letters surface here before any
+    # bytes hit disk.
+    try:
+        nif = validate_spanish_tax_id(draft.profile_tax_id)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"draft NIF {draft.profile_tax_id!r} failed the AEAT check-letter "
+            f"algorithm: {exc}. Kent cannot upload a filing whose NIF fails "
+            f"AEAT's validation — fix the draft and re-export."
+        ) from exc
 
     # Translate draft values to Decimal casilla_values. The protocol
     # type permits either a Mapping or an Iterable; CLI drafts always

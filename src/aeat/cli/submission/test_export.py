@@ -312,6 +312,37 @@ class TestExportCommand:
         # Marca SEPA (1 byte numeric) must be "0".
         assert payload[dp303did_start + 193 : dp303did_start + 194] == b"0"
 
+    def _rewrite_nif(self, draft_path: Path, nif: str) -> None:
+        raw = json.loads(draft_path.read_text(encoding="utf-8"))
+        raw["profile_tax_id"] = nif
+        draft_path.write_text(json.dumps(raw), encoding="utf-8")
+
+    def test_invalid_nif_check_letter_rejected(self, tmp_path: Path) -> None:
+        """Wave 106: X1234567Z fails the AEAT check-letter algorithm
+        (correct letter is L); export must refuse before any bytes land."""
+        draft = _write_draft(tmp_path)
+        self._rewrite_nif(draft, "X1234567Z")
+        output_dir = tmp_path / "out"
+        result = _runner.invoke(
+            app,
+            ["export", str(draft), "--output-dir", str(output_dir), "--nombre", "KENT", "--apellidos", "DOE"],
+        )
+        assert result.exit_code != 0
+        out = result.stdout.lower() + (result.stderr or "").lower()
+        assert "check-letter" in out or "checksum" in out or "algorithm" in out
+
+    def test_valid_alternate_nie_passes(self, tmp_path: Path) -> None:
+        """A known-valid NIE (Y0000000Z) exports cleanly."""
+        draft = _write_draft(tmp_path)
+        self._rewrite_nif(draft, "Y0000000Z")
+        output_dir = tmp_path / "out"
+        result = _runner.invoke(
+            app,
+            ["export", str(draft), "--output-dir", str(output_dir), "--nombre", "KENT", "--apellidos", "DOE"],
+        )
+        assert result.exit_code == 0, result.stdout
+        assert (output_dir / "Y0000000Z20241T.130").exists()
+
     def test_missing_required_flag_fails(self, tmp_path: Path) -> None:
         """--nombre and --apellidos are required."""
         draft = _write_draft(tmp_path)
