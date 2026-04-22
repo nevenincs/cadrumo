@@ -51,8 +51,15 @@ class CasillaBox:
     height_mm: float = 6.0  # value-box height
 
 
-def format_amount(value: Decimal) -> str:
-    """Format ``value`` as an AEAT-style Spanish amount, e.g. ``1.234,56``.
+def format_amount(value: Decimal, *, thousands_sep: str = ".") -> str:
+    """Format ``value`` as an AEAT-style Spanish amount.
+
+    Wave 56 H1: accepts a ``thousands_sep`` opt-in parameter so the
+    synthetic generator can exercise the wave-51 NBSP fix end-to-end.
+    AEAT per UNE 82100 may use ``"."`` (canonical), ``"\\xa0"``
+    (U+00A0 NBSP) or ``"\\u202f"`` (U+202F narrow NBSP) between
+    thousand groups. Default stays ``"."`` — existing fixtures and
+    tests continue to match the pre-wave-56 behaviour.
 
     Negative values carry a leading minus; zero prints as ``0,00``.
     """
@@ -62,7 +69,7 @@ def format_amount(value: Decimal) -> str:
     abs_value = abs(value)
     quantised = abs_value.quantize(Decimal("0.01"))
     whole, _, frac = f"{quantised:,.2f}".partition(".")
-    whole_es = whole.replace(",", ".")
+    whole_es = whole.replace(",", thousands_sep)
     return f"{sign}{whole_es},{frac}"
 
 
