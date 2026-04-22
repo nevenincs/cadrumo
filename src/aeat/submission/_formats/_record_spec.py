@@ -116,8 +116,14 @@ class RecordFieldSpec(BaseModel):
     length: Annotated[int, Field(ge=1)]
     """Field byte length."""
 
-    field_id: Annotated[str, Field(min_length=1, max_length=32)]
-    """AEAT field identifier (e.g. ``F01001``, ``NIF``, ``EJERCICIO``)."""
+    field_id: Annotated[str, Field(min_length=1, max_length=96)]
+    """AEAT field identifier (e.g. ``F01001``, ``NIF``, ``EJERCICIO``).
+
+    Wave 88 raised the cap from 32 to 96 chars to accommodate the
+    auto-extracted descriptive names from DR*.xlsx where AEAT uses
+    long Spanish-language field names (e.g.,
+    ``DP30301_F001_INICIO_DEL_IDENTIFICADOR_DE_REGISTRO``).
+    """
 
     casilla_id: Annotated[str, Field(max_length=5)] | None = None
     """Optional mapping to a ruleset casilla. ``None`` for header /

@@ -141,6 +141,7 @@ def generate_module_source(
 
     body = dedent(
         """\
+        # ruff: noqa: E501
         \"\"\"{identifier}.
 
         {docstring}
