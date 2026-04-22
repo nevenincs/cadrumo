@@ -1110,6 +1110,62 @@ class TestThousandsSeparatorThreading:
         for cid, raw in values.items():
             assert by_id[cid] == Decimal(raw), f"mismatch on casilla {cid}: expected {raw}, got {by_id[cid]}"
 
+    def test_hyphenated_label_stitched_by_normaliser(self, tmp_path: Path) -> None:
+        """Wave 61e H4 closure: end-to-end hyphenation at extractor layer.
+
+        AEAT multi-column templates wrap long labels as
+        ``Reten-\\nciones``. The wave-51 / wave-56 / wave-59a
+        ``_normalise_pdf_text`` regex stitches letter-hyphen-newline-
+        letter boundaries back together. Prior coverage was string-
+        transform only; this test renders a synthetic PDF with a real
+        wrapped label, streams it through pdfplumber and the
+        extractor, and asserts the casilla value is captured.
+        """
+        import io as _io
+
+        from reportlab.lib.units import mm as _mm
+        from reportlab.pdfgen import canvas as _canvas_module
+        from tests.fixtures.pdf_corpus.l3_synthetic._generators._generator_shared import (
+            A4_HEIGHT,
+            LABEL_FONT,
+            LABEL_FONT_SIZE,
+            MARGIN_LEFT,
+            VALUE_FONT,
+            VALUE_FONT_SIZE,
+        )
+
+        buffer = _io.BytesIO()
+        c = _canvas_module.Canvas(buffer, pagesize=(210 * _mm, 297 * _mm))
+        # AEAT-style header the extractor expects.
+        y_header = A4_HEIGHT - 20 * _mm
+        c.setFont(LABEL_FONT, LABEL_FONT_SIZE)
+        c.drawString(MARGIN_LEFT, y_header, "AGENCIA TRIBUTARIA")
+        c.drawString(MARGIN_LEFT, y_header - 5 * _mm, "Declaracion - Modelo 115 Pagina 1 de 1")
+        c.drawString(MARGIN_LEFT, y_header - 10 * _mm, "Ejercicio: 2025   Periodo: 1T")
+        # Casilla 03 with a wrapped label: ``Reten-\nciones`` — the
+        # label-regex would fail without the letter-hyphen-newline-
+        # letter stitching performed by _normalise_pdf_text.
+        c.setFont(VALUE_FONT, VALUE_FONT_SIZE)
+        c.drawString(15 * _mm, y_header - 30 * _mm, "03 Reten-")
+        c.drawString(15 * _mm, y_header - 35 * _mm, "ciones 2.280,00")
+        # Footer the extractor needs for NIF / timestamp parsing.
+        y_footer = 15 * _mm
+        c.setFont(LABEL_FONT, LABEL_FONT_SIZE)
+        c.drawString(MARGIN_LEFT, y_footer, "NIF: 00000000T")
+        c.drawString(MARGIN_LEFT, y_footer - 4 * _mm, "Fecha y hora: 2025-04-20 10:00:00")
+        c.showPage()
+        c.save()
+        pdf_path = tmp_path / "modelo_115_hyphenated_label.pdf"
+        pdf_path.write_bytes(buffer.getvalue())
+
+        filing = parse_declaracion(pdf_path)
+        assert filing.modelo == "115"
+        assert filing.period == "2025Q1"
+        by_id = {v.casilla_id: v.printed_value for v in filing.values}
+        assert by_id.get("03") == Decimal("2280.00"), (
+            f"Hyphenated label ``Reten-\\nciones`` did not stitch: casilla 03 extracted as {by_id.get('03')!r}"
+        )
+
     def test_thousands_sep_reaches_draw_casilla_box(self) -> None:
         """The generator MUST forward ``params.thousands_sep`` to the
         shared renderer. Asserts via the pure-Python string pipeline:
