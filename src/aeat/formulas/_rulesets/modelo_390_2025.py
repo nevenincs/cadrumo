@@ -74,10 +74,13 @@ _CITATIONS = (
     make_citation(
         LegalCitationSource.ORDEN_MINISTERIAL,
         "EHA/3111/2009",
-        "Orden EHA/3111/2009 — aprobación del modelo 390 y sus diseños "
-        "lógicos; modificada anualmente por la correspondiente Orden "
-        "del ejercicio.",
-        url="https://www.boe.es/buscar/act.php?id=BOE-A-2009-18554",
+        "Orden EHA/3111/2009, de 5 de noviembre — aprobación del "
+        "modelo 390 y sus diseños lógicos; modificada anualmente "
+        "(Orden HAC/1167/2024, HAC/27/2026 para ejercicio 2026, etc.). "
+        "Wave 85b correction: prior citation used BOE-A-2009-18554 "
+        "which is a different announcement; correct BOE ID is "
+        "BOE-A-2009-18472.",
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-2009-18472",
     ),
 )
 

@@ -25,6 +25,7 @@ from ._record_spec import (
     FieldKind,
     RecordFieldSpec,
     SegmentSpec,
+    SignedMode,
     encode_currency,
     encode_date,
     encode_text,
@@ -104,7 +105,16 @@ def serialise(
                             f"Decimal in headers; got {type(header_val).__name__}"
                         )
                     value = header_val
-                parts.append(encode_currency(value, length=spec.length, encoding=encoding))
+                # Wave 85b: route inline-sign per-field via spec metadata.
+                inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
+                parts.append(
+                    encode_currency(
+                        value,
+                        length=spec.length,
+                        inline_sign=inline_sign,
+                        encoding=encoding,
+                    )
+                )
 
             case FieldKind.DATE:
                 assert spec.date_fmt is not None  # invariant from model_validator
