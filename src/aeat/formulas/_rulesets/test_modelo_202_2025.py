@@ -84,37 +84,54 @@ class TestModelo202Ruleset:
         assert computed == {"18", "32", "34"}
         assert len(MODELO_202_2025.formulas) == 3
 
-    def test_external_worked_example_lis_art_29_micropyme(self) -> None:
-        """External-anchored worked example (wave 59c H3 closure).
+    def test_external_worked_example_lis_art_40_3_modalidad(self) -> None:
+        """External-anchored worked example (wave 59c H3 closure,
+        wave 60 stream 2 correction).
 
-        Provenance: Ley 27/2014 (LIS) art. 29.1 fixes the tipo de
-        gravamen for micropymes at 23% (since Orden HAC/262/2025).
-        The ruleset reads the rate from casilla 17 (whole-percent),
-        so this fixture sets 17=23.00 per LIS art. 29.1.
+        Provenance: Ley 27/2014 (LIS) art. 40.3 párrafo 1 fixes the
+        tipo de gravamen aplicable al pago fraccionado modalidad
+        base-del-período-corriente at **5/7 del tipo general
+        redondeado**, which resolves to **17%** for the general 24%
+        tipo de gravamen. For micropymes (tipo 20%), 5/7 rounds to
+        14%; for microempresas transitional schedule 2025 (21% on
+        first tranche, 22% on excess) the rounded rates are 15%/16%.
 
-        Scenario: Q2 2025 (2P) micropyme with base 200 000 at 23%:
+        This fixture uses the 17% general-tipo modalidad 40.3 rate
+        — NOT the rate from the ruleset's param table (there is
+        none: casilla 17 is a user-supplied PDF extraction). A
+        rate-swap bug in the ruleset would surface as a Decimal
+        mismatch.
+
+        (Wave 60 stream 2 audit found my earlier claim that 23%
+        was "the micropyme rate per HAC/262/2025" was incorrect —
+        23% is not a valid rate in any reading of LIS art. 29.1 or
+        40.3. The corrected citation anchors directly on art. 40.3
+        which is the actual modality Modelo 202 implements.)
+
+        Scenario: Q2 2025 (2P) sociedad ordinaria with base 200 000
+        at 17% modalidad 40.3 rate:
         - casilla 16 (base) = 200 000.
-        - casilla 17 (tipo) = 23.00 per LIS art. 29.1.
-        - casilla 18 (cuota integra) = 200 000 x 23% = 46 000.
+        - casilla 17 (tipo) = 17.00 per LIS art. 40.3 (5/7 of 24%).
+        - casilla 18 (cuota integra) = 200 000 x 17% = 34 000.
         - casilla 27 bonificaciones = 0.
         - casilla 28 retenciones = 2 000.
         - casilla 30 pago fraccionado anterior = 10 000 (1P).
-        - casilla 32 resultado = 46 000 - 0 - 2 000 - 10 000 = 34 000.
+        - casilla 32 resultado = 34 000 - 0 - 2 000 - 10 000 = 22 000.
         - casilla 33 minimo = 20 000.
-        - casilla 34 cantidad = max(32, 33) = 34 000.
+        - casilla 34 cantidad = max(32, 33) = max(22 000, 20 000) = 22 000.
 
-        Citation: BOE-A-2014-12328 art. 29.1.
+        Citation: BOE-A-2014-12328 art. 40.3 párr. 1.
         """
         provided = {
             "16": Decimal("200000.00"),
-            "17": Decimal("23.00"),  # 23% per LIS art. 29.1, NOT from ruleset
-            "18": Decimal("46000.00"),
+            "17": Decimal("17.00"),  # 17% per LIS art. 40.3 (5/7 of 24%)
+            "18": Decimal("34000.00"),
             "27": Decimal("0.00"),
             "28": Decimal("2000.00"),
             "30": Decimal("10000.00"),
-            "32": Decimal("34000.00"),
+            "32": Decimal("22000.00"),
             "33": Decimal("20000.00"),
-            "34": Decimal("34000.00"),
+            "34": Decimal("22000.00"),
         }
         report = Engine().audit_against(ruleset=MODELO_202_2025, provided=provided, tolerance=Decimal("0.01"))
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]

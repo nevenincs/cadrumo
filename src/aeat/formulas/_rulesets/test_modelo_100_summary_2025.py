@@ -106,3 +106,51 @@ class TestModelo100SummaryRuleset:
         computed = {c.casilla_id for c in MODELO_100_SUMMARY_2025.casillas if c.computed}
         assert computed == {"0595", "0630", "0698", "0720"}
         assert len(MODELO_100_SUMMARY_2025.formulas) == 4
+
+    def test_external_worked_example_lirpf_art_67_and_77(self) -> None:
+        """External anchor per Ley IRPF (Ley 35/2006) arts. 67 and 77.
+
+        LIRPF art. 67 ("Cuota íntegra estatal") and art. 77 ("Cuota íntegra
+        autonómica") together define the full cuota íntegra as the sum of the
+        estatal + autonómica halves of both the base general and the base del
+        ahorro. LIRPF art. 79 ("Cuota líquida total") then subtracts
+        deducciones. The statute (BOE-A-2006-20764) — not this ruleset's
+        formulas — is the authoritative source for the summation rule.
+
+        The summary ruleset is a pure aggregator (no rate-bearing formulas,
+        empty ParameterTable per the ADR §4 canonical pattern) so the
+        external anchor asserts the summation arithmetic mandated by LIRPF
+        is correctly reproduced.
+
+        Scenario: Kent 2025 renta — distinct numeric profile from ``_provided()``:
+          - Base general: 0550 estatal 3 150, 0551 autonómica 3 150
+            (cuota estatal + autonómica por base general).
+          - Base del ahorro: 0560 estatal 190, 0561 autonómica 190
+            (cuota por base del ahorro al primer tramo 19%).
+          - 0595 (LIRPF art. 67 + 77): 3 150 + 3 150 + 190 + 190 = 6 680,00.
+          - Deducciones: 0620 vivienda habitual 1 200, 0622 donaciones 80.
+          - 0630 (LIRPF art. 68/78): 1 200 + 80 = 1 280,00.
+          - 0698 (LIRPF art. 79): max(0, 6 680 - 1 280) = 5 400,00.
+          - 0699 retenciones 800, 0700 pagos a cuenta 125.
+          - 0720 (LIRPF art. 103): 5 400 - 800 - 125 = 4 475,00.
+        """
+        provided = {
+            "0550": Decimal("3150.00"),
+            "0551": Decimal("3150.00"),
+            "0560": Decimal("190.00"),
+            "0561": Decimal("190.00"),
+            "0595": Decimal("6680.00"),
+            "0620": Decimal("1200.00"),
+            "0622": Decimal("80.00"),
+            "0630": Decimal("1280.00"),
+            "0698": Decimal("5400.00"),
+            "0699": Decimal("800.00"),
+            "0700": Decimal("125.00"),
+            "0720": Decimal("4475.00"),
+        }
+        report = Engine().audit_against(
+            ruleset=MODELO_100_SUMMARY_2025,
+            provided=provided,
+            tolerance=Decimal("0.01"),
+        )
+        assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]

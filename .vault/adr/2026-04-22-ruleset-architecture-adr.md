@@ -145,13 +145,34 @@ is preserved as the historical record and renamed from
   uses `variant="summary"` to reserve the default slot for the
   future full-form ruleset ✅
 
+### External-anchoring convention (waves 57a–59c)
+
+Post-wave-57a, every new ruleset MUST ship at least one
+`test_external_worked_example_*` unit test whose fixture values
+derive directly from the cited BOE / Manual Práctico / LIS / LIVA
+/ LIRPF / RIRPF article — NOT from the ruleset's own parameters
+or formulas. This mitigates the tautology risk flagged in wave 48
+stream 4 H3: without external anchors, a rate-swap or
+operand-order regression in the ruleset would be silently mirrored
+into the test fixture and pass.
+
+Exemption: 2024 backfills that structurally clone their 2025
+sibling (e.g. `modelo_115_2024.py`) may rely on the sibling's
+external anchor plus a backfill-parity assertion. The
+`test_backfill_2024_rulesets.py` pattern captures this.
+
+As of wave 59c + 60-consolidation, 11 of 14 in-scope rulesets
+have external anchors. The residual (130_2025, 100_summary_2025
+plus 303_2024's thin anchor surface) is tracked for wave 61c.
+
 ### Future milestones (1.0.0+)
 
 - First regional / full-form ruleset lands (Canarias IGIC, full
   Modelo 100, Navarra, etc.) — no registry changes needed; the
-  variant axis is already live.
+  variant axis has been live since wave 47.
 - Sub-EPIC #305-Modelo-100-full activates the canonical
-  `variant="default"` slot for Modelo 100.
+  `variant="default"` slot for Modelo 100 (summary ruleset already
+  lives under `variant="summary"`).
 
 ### Non-goals
 

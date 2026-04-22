@@ -29,6 +29,18 @@ remediations cleanly closed their declared wave-53 findings
 (streams 1+2 PASS). New findings surface coverage + regression
 gaps that waves 54-57b did not fully close.
 
+## Closure status (updated 2026-04-22, wave 61b per wave 60 stream 3 H2)
+
+| Finding | Status | Closing wave |
+|---|---|---|
+| H1 digit-boundary regex | CLOSED | wave 59a (`7f678a9`) |
+| H2 NBSP round-trip | OPEN | tracked as wave 61d (partially addressed in wave 56) |
+| H3 10 tautological rulesets | PARTIAL | wave 59c (`c36f9b0`) anchored 6/10; 130_2025 + 100_summary remain (wave 61c) |
+| H4 zero-boundary 13/18 missing | CLOSED | wave 59b (`7f678a9`) — all 18 rulesets covered |
+| M1 soft-hyphen blind `.replace` | CLOSED | wave 56 (`38cbe6c`) + wave 59a refinement |
+| M2 130_2025 drift-check anchoring | OPEN | tracked as wave 61c |
+| M3 end-to-end hyphenation test | OPEN | tracked as wave 61e |
+
 ## HIGH findings
 
 ### H1 (stream 4) — `_normalise_pdf_text` stitches digit-boundary `-\n` pairs
