@@ -8,11 +8,12 @@ retained by any employer / pagador.
 The form groups casillas in triples — ``(perceptores, percepciones,
 retenciones)`` — for each of the six rubros above. Formula coverage:
 
-- ``09 = 19% x 08`` — retención fija sobre premios (art. 105.1
-  Reglamento IRPF).
+- ``09 = 19% x 08`` — retención fija sobre premios en metálico
+  (LIRPF art. 101.7 implementado vía RIRPF art. 99; el Reglamento
+  art. 105 cubre transmisiones de IIC — NO premios).
 - ``12 = 19% x 11`` — retención fija sobre ganancias patrimoniales
-  de arrendamientos no habitualizados (art. 101.6 LIRPF + art. 100.3.c
-  Reglamento).
+  gravadas (LIRPF art. 101.2 + RIRPF art. 100 — el artículo tiene
+  solo dos apartados, sin sub-letras).
 - ``28 = 03 + 06 + 09 + 12 + 15 + 18`` — total retenciones e ingresos a
   cuenta (sum of the six per-rubro retention casillas).
 - ``30 = 28 - 29`` — resultado a ingresar (total retenciones menos los

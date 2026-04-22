@@ -61,10 +61,11 @@ _CITATIONS = (
     ),
     make_citation(
         LegalCitationSource.LEY,
-        "125",
-        "Artículo 125 Ley 27/2014 (LIS) — líquido a ingresar o devolver; "
-        "incremento por pérdida de beneficios fiscales de ejercicios "
-        "anteriores y abono de deducciones.",
+        "30+39+125.3",
+        "Artículos 30, 39.2 y 125.3 Ley 27/2014 (LIS) — cuota íntegra "
+        "y líquida (art. 30); abono de deducciones por I+D+i "
+        "monetizables (art. 39.2); incremento por pérdida de "
+        "beneficios fiscales de ejercicios anteriores (art. 125.3).",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328",
     ),
     make_citation(

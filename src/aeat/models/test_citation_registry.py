@@ -100,6 +100,26 @@ class TestKnownBadBlocklist:
         )
         assert match is not None
 
+    def test_lis_125_liquido_a_ingresar_is_blocklisted(self) -> None:
+        """Wave 70 miscite: LIS art. 125 for Modelo 200 'líquido a ingresar'."""
+        match = find_known_bad(
+            LegalCitationSource.LEY,
+            "125",
+            "Artículo 125 LIS — líquido a ingresar o devolver; incremento por pérdida de beneficios fiscales.",
+        )
+        assert match is not None
+        assert "wave 71c" in match.audit_wave
+
+    def test_liva_71_resumen_anual_is_blocklisted(self) -> None:
+        """Wave 70 miscite: LIVA art. 71 for Modelo 390 resumen anual."""
+        match = find_known_bad(
+            LegalCitationSource.LEY,
+            "71",
+            "Artículo 71 Ley 37/1992 IVA — obligación de presentar la declaración-resumen anual del IVA.",
+        )
+        assert match is not None
+        assert "wave 71d" in match.audit_wave
+
 
 class TestBlocklistPrecision:
     """Blocklist does not false-positive on correct article reuse."""

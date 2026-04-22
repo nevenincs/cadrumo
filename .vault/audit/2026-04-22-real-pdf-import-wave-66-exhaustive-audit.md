@@ -37,6 +37,24 @@ modelo_115/180 production code).
 
 **Total open: 7 HIGH, 2 MEDIUM, 4 LOW.**
 
+## Closure status (updated 2026-04-22, wave 70)
+
+| Finding | Status | Closing wave |
+|---|---|---|
+| H1 exec-record deferral structurally soft | CLOSED | wave 68c (`fe8fa85`) filed issue #313 |
+| H2 wave 64 audit doc missing closure table | CLOSED | wave 67a (`29a537e`) |
+| H3 checklist bullet 5 not falsifiable | CLOSED | wave 67c (`29a537e`) rewrote grep-checkable |
+| H_S2_1 100_summary cuota íntegra/líquida miscite | CLOSED | wave 67a (`29a537e`) arts. 62/67/73/77/79/99 |
+| H_S2_2 111 RIRPF 105.1 + 100.3.c miscite | CLOSED | wave 67a (test) + wave 69a (`4fa75da`) production |
+| H_S2_3 200 LIS art. 125 miscite | PARTIAL | wave 67a (test) + wave 71c production |
+| H_S2_4 RIRPF 100.3.a cross-cutting | CLOSED | wave 67g (`fe8fa85`) |
+| M1 checklist silent on statute-drift | CLOSED | wave 67c (`29a537e`) added bullet 6 |
+| M2 wave 64 L2 untracked | CLOSED | wave 68c (`fe8fa85`) filed issue #314 |
+| L1 390 docstring imprecision | CLOSED | wave 63d (prior) |
+| L2 202 operand-swap docstring | CLOSED | wave 63d (prior) |
+| L3 wave 48 H3 vague | CLOSED | wave 63c + 67a |
+| L4 wave 63 commit dropped 65e plan | CLOSED-by-rewording | wave 66 + 70 retrospectives |
+
 ## HIGH findings
 
 ### H1 (stream 3) — Exec-record deferral still structurally soft

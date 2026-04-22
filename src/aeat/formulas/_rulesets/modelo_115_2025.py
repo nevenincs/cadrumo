@@ -13,7 +13,8 @@ casillas:
 
 Two algebraic formulas:
 
-- ``03 = 19% x 02`` (art. 100.2 LIRPF, tipo fijo desde 2016).
+- ``03 = 19% x 02`` (RIRPF art. 100.1 / RD 439/2007, tipo fijo
+  desde 2016; the obligation hook is LIRPF art. 101.8).
 - ``06 = 03 + 04 - 05`` (resultado a ingresar — instrucciones AEAT).
 
 Parameter ``irpf.arrendamientos_rate`` lets us widen to historical
