@@ -142,3 +142,24 @@ class CalendarioEntry(_StatusRecord):
     closes_on: date
     source_page_url: AnyHttpUrl
     fetched_at: AwareDatetime
+
+
+class ObligacionPendiente(_StatusRecord):
+    """An explicitly flagged missing filing (obligacion pendiente)."""
+
+    modelo: str = Field(min_length=1, max_length=16)
+    period: str = Field(min_length=1, max_length=16)
+    status: str = Field(min_length=1, max_length=128)
+    deadline: date | None = None
+    source_page_url: AnyHttpUrl
+    fetched_at: AwareDatetime
+
+
+class SaldoIva(_StatusRecord):
+    """Carried-over VAT balance (saldo a compensar) from previous periods."""
+
+    modelo: str = Field(min_length=1, max_length=16)
+    period: str = Field(min_length=1, max_length=16)
+    balance: Decimal
+    source_page_url: AnyHttpUrl
+    fetched_at: AwareDatetime
