@@ -46,8 +46,10 @@ from ._models import (
     Devolucion,
     Expediente,
     Notificacion,
+    ObligacionPendiente,
     Payor,
     PayorKind,
+    SaldoIva,
 )
 from ._protocols import BrowserSessionLike, CertificateBackend
 from ._reader import StatusReader
@@ -82,8 +84,10 @@ __all__ = [
     "Devolucion",
     "Expediente",
     "Notificacion",
+    "ObligacionPendiente",
     "Payor",
     "PayorKind",
+    "SaldoIva",
     "SiteHealthAlert",
     "SiteHealthEvidence",
     "SiteHealthState",
