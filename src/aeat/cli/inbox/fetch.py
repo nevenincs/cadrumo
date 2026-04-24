@@ -11,7 +11,7 @@ from rich.table import Table
 
 from ...config import load_settings
 from ...inbox import InboxError, Notificacion
-from .._live_reader import LiveSessionUnavailableError, build_live_status_reader
+from .._live_reader import LiveSessionUnavailableError
 from .._observability import cli_run_context
 from ._helpers import build_fetcher, build_live_source
 
@@ -83,6 +83,8 @@ async def _run(since_dt: datetime | None, *, from_aeat: bool) -> tuple[Notificac
     if not from_aeat:
         fetcher = build_fetcher(settings)
         return await fetcher.fetch_new(since=since_dt)
-    async with build_live_status_reader(settings) as reader:
-        fetcher = build_fetcher(settings, source=build_live_source(reader))
-        return await fetcher.fetch_new(since=since_dt)
+    # --from-aeat lived on the cert-only StatusReader path that was
+    # deleted in the #239 rewrite; the Clave-capable replacement
+    # under aeat.sede.notifications is the next wave.
+    build_live_source()  # always raises with the right remediation.
+    raise RuntimeError("unreachable")  # pragma: no cover

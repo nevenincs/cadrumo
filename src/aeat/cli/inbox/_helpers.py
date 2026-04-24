@@ -21,8 +21,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...config import Settings, load_settings
-from ...inbox import InboxFetcher, LiveAeatNotificacionSource, NotificacionSource, RawNotificacion
-from ...status import StatusReader
+from ...inbox import InboxFetcher, NotificacionSource, RawNotificacion
 
 
 class _FileBackedNotificacionSource:
@@ -94,11 +93,18 @@ def build_fetcher(
     )
 
 
-def build_live_source(reader: StatusReader) -> LiveAeatNotificacionSource:
-    """Wrap an authenticated :class:`StatusReader` into a live source.
+def build_live_source() -> NotificacionSource:
+    """Live source entry point — wired to :mod:`aeat.sede.notifications`.
 
-    Thin convenience — the adapter is a single-line expression on its
-    own, but exposing it here keeps the CLI call sites symmetrical
-    with :func:`build_fetcher` and gives tests a single patchpoint.
+    The pre-discovery cert-only :class:`LiveAeatNotificacionSource` was
+    deleted in the #239 rewrite because its integration path (the
+    cert-only :class:`aeat.status.StatusReader.fetch_notificaciones`)
+    never reached live AEAT. The replacement lives under
+    :mod:`aeat.sede.notifications` and is selected there when it
+    lands. Until then, the ``--live`` mode raises with an actionable
+    message rather than silently falling back.
     """
-    return LiveAeatNotificacionSource(reader)
+    raise NotImplementedError(
+        "Live inbox source is being rewired through aeat.sede.notifications (#239). "
+        "Run `aeat sede list-expedientes` today; a Clave-capable live inbox fetch lands next."
+    )

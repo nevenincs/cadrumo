@@ -51,6 +51,14 @@ from ._errors import (
     SedeNavigationError,
     SedeParseError,
 )
+from ._notifications import (
+    NotificationsSnapshot,
+    RemoteNotification,
+    fetch_notifications_query,
+    fetch_notifications_summary,
+    parse_notifications_query,
+    parse_notifications_summary,
+)
 from ._parse import parse_expediente_detail, parse_resumen_tree
 from ._schema import Expediente, JustificanteRef, SedeCapture
 from ._walker import (
@@ -65,13 +73,19 @@ __all__ = [
     "ExpedienteNotFoundError",
     "JustificanteFetchError",
     "JustificanteRef",
+    "NotificationsSnapshot",
+    "RemoteNotification",
     "SedeCapture",
     "SedeError",
     "SedeNavigationError",
     "SedeParseError",
     "capture_justificante",
+    "fetch_notifications_query",
+    "fetch_notifications_summary",
     "find_expediente",
     "parse_expediente_detail",
+    "parse_notifications_query",
+    "parse_notifications_summary",
     "parse_resumen_tree",
     "resolve_justificante_ref",
     "walk_expedientes_tree",
