@@ -151,6 +151,32 @@ def _save_draft(draft: FilingDraft) -> Path:
     return target
 
 
+def _load_persisted_draft_by_id(draft_id: str) -> FilingDraft | None:
+    matches = sorted(path for path in _drafts_dir().glob(f"*_{draft_id}.json") if path.is_file())
+    if not matches:
+        return None
+    if len(matches) > 1:
+        joined = ", ".join(str(path) for path in matches)
+        raise typer.BadParameter(f"draft_id={draft_id!r} matched multiple draft files: {joined}")
+    return _refresh_persisted_draft(matches[0])
+
+
+def _render_draft_next_steps(draft: FilingDraft, *, draft_path: Path) -> None:
+    """Print the most likely next operator commands for ``draft``."""
+
+    if draft.status is FilingDraftStatus.APPROVED:
+        _console.print(f"Next: aeat submission preflight {draft_path}")
+        _console.print(f"Next: aeat submission dry-run {draft_path}")
+        return
+    if draft.status is FilingDraftStatus.APPROVAL_STALE:
+        _console.print(f"Next: aeat review show {draft.draft_id}")
+        _console.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
+        return
+    _console.print(f"Next: aeat review show {draft.draft_id}")
+    if draft.status is FilingDraftStatus.READY_TO_SUBMIT:
+        _console.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
+
+
 def _parse_json_argument(raw: str) -> dict[str, object]:
     """Parse ``raw`` as either an inline JSON object or a JSON file path."""
     candidate = Path(raw)
@@ -330,8 +356,9 @@ def build(
     except FilingDraftError as exc:
         raise typer.BadParameter(str(exc)) from exc
     saved = _save_draft(draft)
-    typer.echo(f"Saved draft {draft.draft_id} → {saved}")
+    typer.echo(f"Saved draft {draft.draft_id} -> {saved}")
     _render_draft(draft)
+    _render_draft_next_steps(draft, draft_path=saved)
 
 
 @app.command("validate")
@@ -348,6 +375,7 @@ def validate(
     draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
     typer.echo(f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})")
     _render_draft(refreshed)
+    _render_draft_next_steps(refreshed, draft_path=draft_path)
 
 
 @app.command("show")
@@ -845,6 +873,10 @@ def build_complementaria_cmd(
         amendment = build_complementaria(original, parsed_inputs)
     except FilingAmendmentError as exc:
         raise typer.BadParameter(str(exc)) from exc
+    saved_amended_draft = _save_draft(amendment.amended_draft)
+    typer.echo(f"Saved amended draft {amendment.amended_draft.draft_id} -> {saved_amended_draft}")
+    _console.print(f"Next: aeat review show {amendment.amended_draft.draft_id}")
+    _console.print(f"Next: aeat review approve {amendment.amended_draft.draft_id} --approved-by <you>")
     _render_amendment(amendment)
 
 
@@ -858,6 +890,9 @@ def submit_complementaria_cmd(
 ) -> None:
     """Submit a persisted amendment, dry-run by default."""
     amendment = load_amendment(amendment_id)
+    amended_draft = _load_persisted_draft_by_id(amendment.amended_draft.draft_id)
+    if amended_draft is not None:
+        amendment = amendment.model_copy(update={"amended_draft": amended_draft})
     engine = _submission_engine()
 
     dry_run = not live
