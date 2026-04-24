@@ -601,6 +601,13 @@ class Settings(BaseSettings):
             "Must contain '{expediente_id}'. Overrideable per campaign."
         ),
     )
+    aeat_status_notificaciones_path: str = Field(
+        default="/wlpl/TC-UTIL/NOT-L/Notificacion",
+        description=(
+            "URL path for the 'Mis notificaciones' listing page. "
+            "Joined against aeat_base_url. Overrideable for campaign drift."
+        ),
+    )
 
     # ── Schema extraction (aeat.schema, #9) ────────────────────────────────
     aeat_schema_cache_dir: Path = Field(
