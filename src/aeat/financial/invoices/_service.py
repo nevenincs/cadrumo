@@ -89,7 +89,7 @@ def load_invoices(path: Path) -> InvoiceCatalogue:
         catalogue = InvoiceCatalogue.model_validate_json(raw)
     except ValidationError as exc:
         raise InvoicePersistenceError(f"invalid invoice catalogue JSON: {target}") from exc
-    _LOGGER.info("loaded %s invoices from %s", len(catalogue), target)
+    _LOGGER.debug("loaded %s invoices from %s", len(catalogue), target)
     return catalogue
 
 
@@ -123,7 +123,7 @@ def save_invoices(catalogue: InvoiceCatalogue, path: Path) -> None:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
         raise InvoicePersistenceError(f"unable to write invoice catalogue: {target}") from exc
-    _LOGGER.info("saved %s invoices to %s", len(catalogue), target)
+    _LOGGER.debug("saved %s invoices to %s", len(catalogue), target)
 
 
 def find_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice | None:
