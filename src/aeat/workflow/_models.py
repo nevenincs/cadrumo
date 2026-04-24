@@ -72,10 +72,10 @@ class WorkflowStep(BaseModel):
         stage: The :class:`WorkflowStage` this step represents.
         started_at: UTC timestamp when the step began.
         ended_at: UTC timestamp when the step ended. ``None`` while the
-            step is in flight (never persisted as ``None``).
+            step is still running (never persisted as ``None``).
         success: Whether the step completed without triggering a
-            workflow abort. ``None`` only during in-flight construction;
-            always set on completed steps.
+            workflow abort. ``None`` only during construction of a
+            still-running step; always set on completed steps.
         summary: Trilingual human-readable summary of what happened in
             this step.
         details: Optional human-readable diagnostics dictionary. This

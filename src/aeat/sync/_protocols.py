@@ -1,21 +1,28 @@
-"""Protocol stubs for cross-subpackage dependencies that are still in flight.
+"""Narrow Protocol surfaces for the sync runner.
 
-Each Protocol declared in this module is a rebase-swap placeholder for a
-subpackage that is being implemented on a sibling branch. Replacing a stub
-with its real surface is intentionally a single, focused commit per issue:
+The runner is composed of read-only sub-systems that the test suite
+exercises with concrete, hand-rolled Protocol-conforming classes (no
+mocks, no patches). Each Protocol declares only the surface the runner
+actually consumes:
 
-- :class:`CertificateBackend` — #8 (``aeat.auth.certificate``)
-- :class:`CorpusLoader` — #17 (``aeat.corpus``)
-- :class:`SchemaLoader` / :class:`ModeloSchema` — #9 (``aeat.schema``)
-- :class:`ManualRulesLoader` / :class:`Rule` — #25 (``aeat.manuals``)
-- :class:`LLMClient` / :class:`LLMRequest` — #21 (``aeat.llm``)
-- :class:`StorageBackendStub` — #10 (``aeat.storage``)
-- :class:`ModeloIdentifier` — #6 (``aeat.models``)
-- :class:`PortalIdentifier` — #7 (``aeat.portals``)
-
-``aeat.browser.BrowserSession`` and ``aeat.i18n`` are NOT stubbed here:
-both branches have merged to ``main`` and the runner imports them
-directly.
+- :class:`ModeloIdentifier` / :class:`PortalIdentifier` — typed,
+  regex-validated string identifiers used at the live wire boundary.
+  They intentionally accept any well-formed AEAT modelo / portal slug
+  rather than the closed :class:`aeat.models.ModeloCode` /
+  :class:`aeat.portals.Portal` enums; live AEAT data is the source of
+  truth here, not our internal catalogue.
+- :class:`CertificateBackend` — preloads the operator certificate into
+  the browser context.
+- :class:`LocalCatalogueLoader` — loads the local authoritative
+  modelo / portal manifest / filing history snapshots that the diffing
+  classifier compares the live fetch against.
+- :class:`SchemaLoader` / :class:`ModeloSchema` — schema lookup
+  surface the runner forwards to per-strategy adapters.
+- :class:`ManualRulesLoader` / :class:`Rule` — manual rule lookup
+  surface used by escalation strategies.
+- :class:`LLMClient` / :class:`LLMRequest` — an LLM probe the runner
+  carries on its signature for forward compatibility, even though the
+  happy path never invokes it.
 """
 
 from __future__ import annotations
@@ -37,10 +44,11 @@ _PORTAL_RE = re.compile(r"^[a-z][a-z0-9_\-]{1,63}$")
 class ModeloIdentifier(str):
     """Typed string identifier for an AEAT modelo (e.g. ``"100"``, ``"303"``).
 
-    This type will be replaced by the real enum from ``aeat.models``
-    (issue #6) on rebase. The format is intentionally permissive to let
-    the runner compile standalone: three digits, optional trailing
-    letter.
+    Format: three digits with an optional trailing uppercase letter.
+    The shape mirrors :class:`aeat.deadlines.ModeloIdentifier` and is
+    intentionally wider than :class:`aeat.models.ModeloCode` so live
+    AEAT payloads referencing modelos outside the v1 closed catalogue
+    can flow through the wire boundary without the runner crashing.
     """
 
     __slots__ = ()
@@ -65,8 +73,10 @@ class ModeloIdentifier(str):
 class PortalIdentifier(str):
     """Typed string identifier for an AEAT portal slug.
 
-    This type will be replaced by the real enum from ``aeat.portals``
-    (issue #7) on rebase.
+    The wire-level slug shape (``"sede"``, ``"area-personal"``, ...) is
+    distinct from the canonical :class:`aeat.portals.Portal` enum
+    values (``"portal_sede_root"``); this type captures whichever
+    identifier AEAT publishes in its live portal manifest.
     """
 
     __slots__ = ()
@@ -90,11 +100,11 @@ class PortalIdentifier(str):
 
 @runtime_checkable
 class CertificateBackend(Protocol):
-    """Rebase-swap stub for ``aeat.auth.certificate`` (issue #8).
+    """Narrow surface over :mod:`aeat.auth.certificate` for the runner.
 
-    The real surface will expose a ``LoadedCertificate`` type plus a
-    ``preload_into_browser_context`` coroutine that injects the client
-    certificate into a Playwright context before navigation.
+    Production wires this to
+    :func:`aeat.auth.preload_into_browser_context`; tests substitute a
+    concrete Protocol-conforming class that records calls.
     """
 
     async def preload_into_browser_context(self, session: BrowserSession) -> None:
@@ -103,11 +113,11 @@ class CertificateBackend(Protocol):
 
 
 @runtime_checkable
-class CorpusLoader(Protocol):
-    """Rebase-swap stub for ``aeat.corpus`` (issue #17).
+class LocalCatalogueLoader(Protocol):
+    """Loads local authoritative snapshots the runner diffs the live fetch against.
 
-    Supplies the local-authoritative modelo / portal / history shapes
-    the runner diffs against.
+    The implementation owns where snapshots live on disk; the runner
+    only consumes the typed shapes returned here.
     """
 
     def load_modelo(self, modelo: ModeloIdentifier) -> Any:
@@ -125,14 +135,14 @@ class CorpusLoader(Protocol):
 
 @runtime_checkable
 class ModeloSchema(Protocol):
-    """Rebase-swap stub for the schema shape returned by ``aeat.schema`` (#9)."""
+    """Narrow shape returned by :class:`SchemaLoader`."""
 
     modelo: ModeloIdentifier
 
 
 @runtime_checkable
 class SchemaLoader(Protocol):
-    """Rebase-swap stub for ``aeat.schema`` (issue #9)."""
+    """Narrow surface over :mod:`aeat.schema` for the runner."""
 
     def load(self, modelo: ModeloIdentifier) -> ModeloSchema:
         """Return the extracted schema for a modelo."""
@@ -141,14 +151,14 @@ class SchemaLoader(Protocol):
 
 @runtime_checkable
 class Rule(Protocol):
-    """Rebase-swap stub for a single manual rule from ``aeat.manuals`` (#25)."""
+    """Narrow shape for a single manual rule from :mod:`aeat.manuals`."""
 
     rule_id: str
 
 
 @runtime_checkable
 class ManualRulesLoader(Protocol):
-    """Rebase-swap stub for ``aeat.manuals`` (issue #25)."""
+    """Narrow surface over :mod:`aeat.manuals` for the runner."""
 
     def load(self, modelo: ModeloIdentifier) -> tuple[Rule, ...]:
         """Return the manual rules for a modelo."""
@@ -157,33 +167,21 @@ class ManualRulesLoader(Protocol):
 
 @runtime_checkable
 class LLMRequest(Protocol):
-    """Rebase-swap stub for a request to ``aeat.llm`` (#21)."""
+    """Narrow shape for a request to :mod:`aeat.llm`."""
 
     prompt: str
 
 
 @runtime_checkable
 class LLMClient(Protocol):
-    """Rebase-swap stub for ``aeat.llm`` (issue #21).
+    """Narrow surface over :mod:`aeat.llm` for the runner.
 
-    The sync runner does not invoke the LLM on its happy path, but we
-    carry the Protocol so the runner signature is stable across the
-    rebase of #21.
+    The runner does not invoke the LLM on its happy path, but it
+    carries the Protocol on its signature so escalation strategies
+    that consult the LLM can be wired in without changing the runner
+    constructor.
     """
 
     async def complete(self, request: LLMRequest) -> str:
         """Return the completion for the given request."""
         ...
-
-
-@runtime_checkable
-class StorageBackendStub(Protocol):
-    """Rebase-swap stub for ``aeat.storage`` (issue #10).
-
-    Only used by :class:`aeat.sync.StorageDivergenceRepository` which
-    raises :class:`NotImplementedError` until #10 merges.
-    """
-
-    def put(self, key: str, value: bytes) -> None: ...
-
-    def get(self, key: str) -> bytes: ...

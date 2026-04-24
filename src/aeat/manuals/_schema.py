@@ -7,10 +7,10 @@ permits it, per the project-wide pydantic v2 mandate reinforced by
 issue ``#25``.
 
 Closed catalogues are ``enum.StrEnum``. Trilingual fields use
-``aeat.i18n.Translatable``. Modelo cross-references are accepted as
-validated strings while ``aeat.models`` (``#6``) is still in flight;
-once that subpackage lands, a follow-up PR replaces the string
-constraint with a real ``ModeloId`` cross-reference.
+``aeat.i18n.Translatable``. Modelo casilla cross-references are stored
+as validated strings (``MODELO_130:01`` shape) so the manuals corpus
+stays loadable even when a citation references a casilla outside the
+:class:`aeat.casillas.CasillaRecord` catalogue at load time.
 
 Spanish is the authoritative language for AEAT-domain terminology per
 the trilingual i18n ADR. Spanish-authoritative translatable fields on
@@ -77,8 +77,9 @@ _StableId = Annotated[
 # Reviewer tag: any non-empty trimmed string (e.g. GitHub handle, email, or name).
 _Reviewer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 
-# Modelo + casilla cross-reference, e.g. ``MODELO_130:01``. Structurally validated
-# here until ``#6`` lands the real ``ModeloId`` enum.
+# Modelo + casilla cross-reference, e.g. ``MODELO_130:01``. Validated as a
+# constrained string so manuals can cite casillas that may not yet exist in
+# the casilla catalogue at load time.
 _CasillaRef = Annotated[str, StringConstraints(strip_whitespace=True, pattern=MODELO_CASILLA_PATTERN)]
 
 # Legal-act reference: free-form but trimmed + non-empty, e.g. "Ley 35/2006, art. 32".
