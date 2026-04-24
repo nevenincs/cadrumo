@@ -1,0 +1,55 @@
+# Forbidden identifier fragments and substrings for the reconciliation
+# write-guard test. One entry per line; blank lines and lines starting
+# with "#" are ignored. Mirrors the Phase 1 fixture under
+# src/aeat/remote/_no_write_surface_fixture.txt.
+#
+# Forbidden public-API prefixes (English + Spanish write verbs).
+# Matched as ^<prefix> (case-insensitive) against every entry of the
+# sealed aeat.filing.reconciliation.__all__ tuple.
+prefix:submit
+prefix:send
+prefix:ack
+prefix:acknowledge
+prefix:mark_
+prefix:confirm
+prefix:file_
+prefix:post_
+prefix:enviar
+prefix:presentar
+prefix:firmar
+prefix:radicar
+prefix:remitir
+#
+# Forbidden call-context verbs - matched as \b<verb>\s*\( (case-insensitive).
+call_verb:submit
+call_verb:send
+call_verb:commit
+call_verb:finalize
+call_verb:enviar
+call_verb:presentar
+call_verb:firmar
+call_verb:radicar
+call_verb:remitir
+#
+# Forbidden Playwright-mutating primitives - matched literally.
+playwright_fragment:page.fi
+playwright_fragment:page.cl
+playwright_fragment:page.ty
+playwright_fragment:page.se
+playwright_fragment:page.ch
+playwright_fragment:page.pr
+playwright_fragment:page.in
+playwright_fragment:form.su
+playwright_fragment:.click(
+#
+# Forbidden HTTP verbs - matched in a mutating context
+# (requests.X, session.X, or urllib.request.Request(..., method=X)).
+http_verb:POST
+http_verb:PUT
+http_verb:PATCH
+http_verb:DELETE
+#
+# Forbidden write-mode literal parts - the test composes the full
+# literal from these pieces at runtime so the full string is never
+# materialised in any Python source under aeat.filing.reconciliation.
+literal_mode_write_parts:mode, =, write
