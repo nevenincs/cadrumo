@@ -312,3 +312,156 @@ class TestFilingCLI:
         assert submit_result.exit_code == 1, submit_result.output
         assert "refusing" in submit_result.output.lower()
         assert "stubbed" in submit_result.output.lower()
+
+
+class TestFilingImport:
+    """Exercise ``aeat filing import --from-aeat`` (#272) wiring.
+
+    Defence-in-depth: the live path is reached via a monkeypatched
+    :func:`build_live_status_reader` that yields a stub reader. Real
+    live coverage lands under ``AEAT_LIVE_TESTS_ENABLED`` gated tests.
+    """
+
+    def test_missing_source_flag_is_rejected(
+        self,
+        drafts_dir: Path,
+        profile_path: Path,
+    ) -> None:
+        del profile_path
+        del drafts_dir
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--modelo", "130", "--period", "2026Q1"],
+        )
+        assert result.exit_code != 0
+        # Rich wraps the typer.BadParameter message into a styled box and
+        # injects ANSI codes between the flag characters on some
+        # terminals (notably the Windows CI runner), so the raw flag is
+        # not guaranteed to appear as a contiguous substring. Assert on
+        # plain text that survives the styling intact.
+        assert "exactly one of" in result.output
+        assert "is required" in result.output
+
+    def test_from_aeat_without_modelo_or_period_is_rejected(
+        self,
+        drafts_dir: Path,
+        profile_path: Path,
+    ) -> None:
+        del profile_path
+        del drafts_dir
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-aeat"],
+        )
+        assert result.exit_code != 0
+        assert "requires both" in result.output
+
+    def test_live_session_unavailable_reports_cleanly(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        drafts_dir: Path,
+        profile_path: Path,
+    ) -> None:
+        del drafts_dir
+        del profile_path
+        monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
+        result = runner.invoke(
+            app,
+            [
+                "filing",
+                "import",
+                "--from-aeat",
+                "--modelo",
+                "130",
+                "--period",
+                "2026Q1",
+            ],
+        )
+        assert result.exit_code == 2, result.output
+        assert "live import unavailable" in result.output
+
+    def test_import_builds_drafts_from_stubbed_reader(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        drafts_dir: Path,
+        profile_path: Path,
+    ) -> None:
+        del profile_path
+        import contextlib
+        from datetime import UTC, datetime
+
+        from pydantic import AnyHttpUrl, TypeAdapter
+
+        from ...history import (
+            FiledModelo,
+            FiledModeloMetadata,
+            RawCalculationPayload,
+        )
+
+        url = TypeAdapter(AnyHttpUrl).validate_python(
+            "https://sede.agenciatributaria.gob.es/wlpl/TC-UTIL/Expediente/Detalle?EXP=T1"
+        )
+        fetched_at = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
+        metadata = FiledModeloMetadata(
+            expediente_id="2024X00000000T0001",
+            modelo="130",
+            period="2024Q1",
+            status="Presentada",
+            presented_at=datetime(2024, 4, 15, tzinfo=UTC),
+            tax_id="00000000T",
+            csv="CSVIMPORT001",
+            justificante_url=None,
+            complementaria_of=None,
+            source_page_url=url,
+            fetched_at=fetched_at,
+        )
+        calculations = RawCalculationPayload(
+            casillas={"01": "12500", "02": "3500", "05": "400", "06": "0"},
+            total_a_ingresar=None,
+            total_a_devolver=None,
+            resultado_a_compensar=None,
+            source_page_url=url,
+            fetched_at=fetched_at,
+        )
+        filed = FiledModelo(metadata=metadata, calculations=calculations)
+
+        class _StubReader:
+            async def fetch_filing_detail(
+                self,
+                modelo: str,
+                period: str,
+                *,
+                use_cache: bool = True,
+            ) -> tuple[FiledModelo, ...]:
+                del modelo, period, use_cache
+                return (filed,)
+
+            async def close(self) -> None:
+                pass
+
+        @contextlib.asynccontextmanager
+        async def _fake_builder(settings, **_kwargs):
+            del settings
+            yield _StubReader()
+
+        monkeypatch.setattr("aeat.cli.filing.build_live_status_reader", _fake_builder)
+
+        result = runner.invoke(
+            app,
+            [
+                "filing",
+                "import",
+                "--from-aeat",
+                "--modelo",
+                "130",
+                "--period",
+                "2024Q1",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert "Imported draft" in result.output
+        assert "2024X00000000T0001" in result.output
+        saved = sorted(drafts_dir.glob("130_2024Q1_*.json"))
+        assert len(saved) == 1

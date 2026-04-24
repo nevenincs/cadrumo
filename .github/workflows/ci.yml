@@ -58,7 +58,7 @@ jobs:
       - name: CI Bootstrap
         run: |
           uv sync
-          uv run vaultspec-core install --upgrade --force
+          uv run vaultspec-core install --force
           just env-setup
 
       - name: Lint
