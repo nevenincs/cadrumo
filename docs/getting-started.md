@@ -64,7 +64,7 @@ just bootstrap
 ## 3. Configure
 
 ```sh
-aeat setup            # merging in #61
+aeat setup            # shipped via #61 / PR #66
 ```
 
 The setup wizard is a guided pass through the same fields you would
@@ -83,8 +83,8 @@ At the end the wizard writes the resolved values to `env/.env` and
 prints a summary. Re-run `aeat setup` at any time to reconfigure;
 existing values are pre-filled.
 
-Until #61 merges you can configure the project by editing `env/.env`
-directly — every field is documented inline in `env/.env.example`.
+If you prefer editing `env/.env` by hand instead of running the
+wizard, every field is documented inline in `env/.env.example`.
 
 ## 4. Verify
 

@@ -94,7 +94,7 @@ The on-main subpackages under `src/aeat/`:
 | `aeat.testing`         | Shared fixtures and synthetic filing factories for the test suite.        |
 | `aeat.cli`             | Typer-based CLI surface (`aeat ...`).                                     |
 | `aeat.workflow`        | Orchestration engine that drives a filing through the pipeline.           |
-| `aeat.setup`           | Interactive first-run setup wizard. *(merging in #61)*                    |
+| `aeat.setup`           | Interactive first-run setup wizard (shipped via #61 / PR #66).            |
 
 A data-flow diagram with one paragraph per arrow lives in
 [`docs/architecture.md`](docs/architecture.md). The contributor
