@@ -11,6 +11,9 @@ Subcommands:
   emits a per-modelo :class:`DiscoveryReport` to stdout and writes
   every captured PDF under ``scratch/sede-discovery/<ts>/``. This is
   the continuous-growth entry point.
+- ``aeat sede notifications [--summary | --query]`` — read-only walk
+  of the AEAT notifications/messages surface (formal *Notificaciones*
+  + lighter-weight *Comunicaciones*).
 
 Every subcommand is strictly read-only. The session keep-alive flow
 (``aeat auth whoami``) is the caller's responsibility when a run
@@ -45,6 +48,8 @@ from ...sede import (
     Expediente,
     SedeError,
     capture_justificante,
+    fetch_notifications_query,
+    fetch_notifications_summary,
     walk_expedientes_tree,
 )
 from ..auth import _session
@@ -238,3 +243,52 @@ def discover(
                     f"  [yellow]{r['expediente_id']}: {r.get('status')} — "
                     f"{r.get('error') or r.get('parse_error')}[/yellow]"
                 )
+
+
+@app.command(
+    "notifications",
+    help="Walk AEAT's notifications/messages surface (read-only).",
+)
+def notifications(
+    summary_only: Annotated[
+        bool,
+        typer.Option(
+            "--summary",
+            help="Use the unread-summary endpoint (cheaper, smaller column set).",
+        ),
+    ] = False,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON instead of a human table."),
+    ] = False,
+) -> None:
+    """Print every notification + communication AEAT has on file."""
+    session = _require_active_session()
+    fetch = fetch_notifications_summary if summary_only else fetch_notifications_query
+    try:
+        snapshot = asyncio.run(fetch(session))
+    except SedeError as exc:
+        _CONSOLE.print(f"[red]notifications fetch failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    if json_output:
+        typer.echo(json.dumps(snapshot.model_dump(mode="json"), indent=2, default=str, ensure_ascii=False))
+        return
+
+    title = "AEAT notifications (summary)" if summary_only else "AEAT notifications (query)"
+    table = Table(title=f"{title} — {len(snapshot.rows)} row(s)")
+    table.add_column("certificado")
+    table.add_column("tipo")
+    table.add_column("concepto")
+    table.add_column("fecha emision")
+    table.add_column("leida")
+    for row in snapshot.rows:
+        leida_text = "—" if row.leida is None else ("✓" if row.leida else "✗")
+        table.add_row(
+            row.certificado_id,
+            row.tipo,
+            row.concepto[:60],
+            row.fecha_emision.isoformat(),
+            leida_text,
+        )
+    _CONSOLE.print(table)
