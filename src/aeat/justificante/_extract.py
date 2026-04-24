@@ -61,7 +61,11 @@ _CSV_AUTHENTICITY_FOOTER_RE = re.compile(
 _CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9]{8,24})\b", re.IGNORECASE)
 
 _MODELO_RE = re.compile(r"Modelo\s*[:\-]?\s*([0-9]{3}[A-Z]?)", re.IGNORECASE)
-_PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]{1,8})", re.IGNORECASE)
+# Spanish period tokens always contain at least one digit (``1T``,
+# ``0A``, ``4T``, ``2023``). Requiring a digit in the captured group
+# stops the regex from picking up nearby words like "impositivo" out
+# of "Período impositivo".
+_PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]*\d[0-9A-Z]*)", re.IGNORECASE)
 _EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*([0-9]{4})", re.IGNORECASE)
 _NIF_RE = re.compile(r"NIF\s*[:\-]?\s*([0-9A-Z]{8,12})", re.IGNORECASE)
 _PRESENTATION_ID_RE = re.compile(
