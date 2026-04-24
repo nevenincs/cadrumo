@@ -19,7 +19,7 @@ import typer
 
 from .list import list_divergences
 from .resolve import resolve_divergence
-from .run import register as register_run
+from .run import run
 from .show import show_divergence
 
 app = typer.Typer(
@@ -28,7 +28,7 @@ app = typer.Typer(
     help="Self-healing live-to-local sync runner (#11).",
 )
 
-register_run(app)
+app.command(name="run", help="Execute a single live-to-local sync run.")(run)
 app.command(
     name="list-divergences",
     help="List persisted divergence records.",
