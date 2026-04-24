@@ -49,6 +49,7 @@ from ...justificante import JustificanteError
 from ...logging import get_logger
 from ...submission import SubmissionEngine, SubmissionError
 from ..submission._helpers import build_engine as build_submission_engine
+from ._reconcile import register as _register_reconcile
 
 app = typer.Typer(
     name="filing",
@@ -804,6 +805,7 @@ def submit_complementaria_cmd(
 
 
 app.add_typer(complementaria_app, name="complementaria", help="Build and submit amendment filings (#93).")
+_register_reconcile(app)
 
 
 __all__ = ["app"]
