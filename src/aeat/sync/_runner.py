@@ -1,9 +1,10 @@
 """Live sync runner: fetch → validate → classify → dispatch → persist.
 
-The runner composes Protocol stubs for every in-flight cross-module
-dependency and two concrete sub-systems (the validator and the
-dispatcher). It orchestrates a single run and returns a
-:class:`SyncRunResult` describing what happened.
+The runner composes a small set of Protocol surfaces (certificate
+backend, local catalogue loader, schema/manual/LLM clients) plus two
+concrete sub-systems (the validator and the dispatcher). It
+orchestrates a single run and returns a :class:`SyncRunResult`
+describing what happened.
 
 The runner is **read-only** against AEAT. No form submissions, no
 server-side mutation, no retries beyond transient navigation errors.
@@ -12,8 +13,7 @@ Healing always targets local state.
 The "live payload fetch" contract is intentionally abstracted behind a
 ``LivePayloadFetcher`` Protocol so the runner can be driven by a
 concrete in-test fetcher or by a production fetcher that drives a
-Playwright session. This keeps the runner standalone-compilable while
-#8 (cert), #17 (corpus), #9 (schema) and friends are in flight.
+Playwright session.
 """
 
 from __future__ import annotations
@@ -33,8 +33,8 @@ from ._divergence import DivergenceRecord
 from ._errors import SyncError, WireValidationError
 from ._protocols import (
     CertificateBackend,
-    CorpusLoader,
     LLMClient,
+    LocalCatalogueLoader,
     ManualRulesLoader,
     ModeloIdentifier,
     SchemaLoader,
@@ -101,7 +101,7 @@ class LiveSyncRunner:
         *,
         browser_session: BrowserSession,
         certificate_backend: CertificateBackend,
-        corpus_loader: CorpusLoader,
+        local_loader: LocalCatalogueLoader,
         schema_loader: SchemaLoader,
         manual_rules_loader: ManualRulesLoader,
         llm_client: LLMClient,
@@ -116,7 +116,7 @@ class LiveSyncRunner:
     ) -> None:
         self._session = browser_session
         self._cert = certificate_backend
-        self._corpus = corpus_loader
+        self._local = local_loader
         self._schema = schema_loader
         self._manuals = manual_rules_loader
         self._llm = llm_client
@@ -210,7 +210,7 @@ class LiveSyncRunner:
     ) -> tuple[DivergenceRecord, ...]:
         raw = await self._fetch_with_retry(lambda: self._fetcher.fetch_modelo_raw(session=self._session, modelo=modelo))
         live = self._validator.validate(raw, WireModeloDefinition)
-        local_obj = self._corpus.load_modelo(modelo)
+        local_obj = self._local.load_modelo(modelo)
         if not isinstance(local_obj, WireModeloDefinition):
             raise WireValidationError(f"Local modelo snapshot for {modelo} is not a WireModeloDefinition")
         return self._classifier.diff_modelo(local=local_obj, live=live)
@@ -218,7 +218,7 @@ class LiveSyncRunner:
     async def _run_portal_manifest(self) -> tuple[DivergenceRecord, ...]:
         raw = await self._fetch_with_retry(lambda: self._fetcher.fetch_portal_manifest_raw(session=self._session))
         live = self._validator.validate(raw, WirePortalManifest)
-        local_obj = self._corpus.load_portal_manifest()
+        local_obj = self._local.load_portal_manifest()
         if not isinstance(local_obj, WirePortalManifest):
             raise WireValidationError("Local portal manifest is not a WirePortalManifest")
         return self._classifier.diff_portal_manifest(local=local_obj, live=live)
@@ -232,7 +232,7 @@ class LiveSyncRunner:
             lambda: self._fetcher.fetch_filing_history_raw(session=self._session, modelo=modelo)
         )
         live = self._validator.validate(raw, WireFilingHistory)
-        local_obj = self._corpus.load_filing_history(modelo)
+        local_obj = self._local.load_filing_history(modelo)
         if not isinstance(local_obj, WireFilingHistory):
             raise WireValidationError(f"Local filing history for {modelo} is not a WireFilingHistory")
         return self._classifier.diff_filing_history(local=local_obj, live=live)

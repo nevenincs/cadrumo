@@ -36,9 +36,9 @@ from ._errors import (
 )
 from ._protocols import (
     CertificateBackend,
-    CorpusLoader,
     LLMClient,
     LLMRequest,
+    LocalCatalogueLoader,
     ManualRulesLoader,
     ModeloIdentifier,
     ModeloSchema,
@@ -49,7 +49,6 @@ from ._protocols import (
 from ._repository import (
     DivergenceRecordRepository,
     JsonFileDivergenceRepository,
-    StorageDivergenceRepository,
 )
 from ._runner import LivePayloadFetcher, LiveSyncRunner, SyncRunResult
 from ._strategies import (
@@ -78,7 +77,6 @@ __all__ = [
     "CasillaRemoved",
     "CasillaTypeChanged",
     "CertificateBackend",
-    "CorpusLoader",
     "DivergenceClassification",
     "DivergenceClassificationError",
     "DivergenceClassifier",
@@ -101,6 +99,7 @@ __all__ = [
     "LabelTranslationAdded",
     "LivePayloadFetcher",
     "LiveSyncRunner",
+    "LocalCatalogueLoader",
     "ManualRulesLoader",
     "ModeloIdentifier",
     "ModeloSchema",
@@ -109,7 +108,6 @@ __all__ = [
     "ResolutionState",
     "Rule",
     "SchemaLoader",
-    "StorageDivergenceRepository",
     "StrategyAction",
     "StrategyOutcome",
     "SyncError",
