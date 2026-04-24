@@ -100,7 +100,7 @@ app.add_typer(formulas_module.app, name="formulas", help="Per-modelo calculation
 app.add_typer(
     financial_module.app,
     name="financial",
-    help="Financial ingest providers and raw transaction tooling (#73).",
+    help="Financial ingest, transaction catalogue, and invoice tooling (#73, #74, #75).",
 )
 app.add_typer(
     financial_module.invoices_app,
