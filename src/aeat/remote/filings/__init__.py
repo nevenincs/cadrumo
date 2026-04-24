@@ -19,6 +19,12 @@ corresponding history parser.
 
 from __future__ import annotations
 
+from ._fetch_modelo_130 import fetch as fetch_modelo_130
+from ._fetch_modelo_130 import project_filing_detail_130
+from ._fetch_modelo_303 import fetch as fetch_modelo_303
+from ._fetch_modelo_303 import project_filing_detail_303
+from ._fetch_modelo_390 import fetch as fetch_modelo_390
+from ._fetch_modelo_390 import project_filing_detail_390
 from ._filing_detail_130 import FilingDetail130
 from ._filing_detail_303 import FilingDetail303
 from ._filing_detail_390 import FilingDetail390
@@ -27,4 +33,10 @@ __all__ = [
     "FilingDetail130",
     "FilingDetail303",
     "FilingDetail390",
+    "fetch_modelo_130",
+    "fetch_modelo_303",
+    "fetch_modelo_390",
+    "project_filing_detail_130",
+    "project_filing_detail_303",
+    "project_filing_detail_390",
 ]

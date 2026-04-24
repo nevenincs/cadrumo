@@ -26,6 +26,14 @@ comparator that consumes these records. See the accepted
 from __future__ import annotations
 
 from ._errors import RemoteFetchError, RemoteNavigationError, RemoteParseError
+from ._navigation import (
+    EXPEDIENTE_DETAIL,
+    MIS_EXPEDIENTES,
+    MIS_NOTIFICACIONES,
+    NAVIGATION_CATALOGUE,
+    NavigationNode,
+    find_node,
+)
 from ._protocols import NotificationReader, RemoteFilingFetcher
 from ._schema import (
     RemoteCasilla,
@@ -37,12 +45,27 @@ from ._schema import (
     RemoteReceipt,
 )
 from ._status import RemoteFilingStatus
-from .filings import FilingDetail130, FilingDetail303, FilingDetail390
+from .filings import (
+    FilingDetail130,
+    FilingDetail303,
+    FilingDetail390,
+    fetch_modelo_130,
+    fetch_modelo_303,
+    fetch_modelo_390,
+    project_filing_detail_130,
+    project_filing_detail_303,
+    project_filing_detail_390,
+)
 
 __all__ = [
+    "EXPEDIENTE_DETAIL",
+    "MIS_EXPEDIENTES",
+    "MIS_NOTIFICACIONES",
+    "NAVIGATION_CATALOGUE",
     "FilingDetail130",
     "FilingDetail303",
     "FilingDetail390",
+    "NavigationNode",
     "NotificationReader",
     "RemoteCasilla",
     "RemoteExpediente",
@@ -56,4 +79,11 @@ __all__ = [
     "RemoteNotification",
     "RemoteParseError",
     "RemoteReceipt",
+    "fetch_modelo_130",
+    "fetch_modelo_303",
+    "fetch_modelo_390",
+    "find_node",
+    "project_filing_detail_130",
+    "project_filing_detail_303",
+    "project_filing_detail_390",
 ]
