@@ -77,6 +77,14 @@ build-backend = "hatchling.build"
 packages = ["src/aeat"]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
+[tool.uv]
+# tree-sitter-language-pack 1.6.3 (2026-04-23) shipped wheels only for cp312 and
+# cp314; cp313 (our interpreter) has no wheel and no sdist. Pin below 1.6.3 until
+# upstream restores cp313 support.
+override-dependencies = [
+    "tree-sitter-language-pack<1.6.3",
+]
+
 [dependency-groups]
 dev = [
     "ruff>=0.15.9",

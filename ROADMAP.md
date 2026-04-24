@@ -68,7 +68,7 @@ After pluggable auth lands (P12 certificate or Cl@ve), Kent runs `aeat status ex
 ### What Kent can do at the end of this milestone
 
 - Authenticate against AEAT Sede Electrónica via a pluggable Auth Provider (P12 cert or Cl@ve 2FA) ([#141](https://github.com/wgergely/aeat/issues/141), [#270](https://github.com/wgergely/aeat/issues/270))
-- Retrieve previously-filed casilla values from AEAT ([#222](https://github.com/wgergely/aeat/issues/222)) — **load-bearing for revise**
+- Retrieve previously-filed casilla values from AEAT ([#272](https://github.com/wgergely/aeat/issues/272)) — **load-bearing for revise** (originally #222; closed 2026-04-18 and rescoped under #272 for the cert-dependent live path and #305 for the PDF-verified import path)
 - Ask "what filings did I miss?" and get a correct answer ([#215](https://github.com/wgergely/aeat/issues/215))
 - See live AEAT inbox notifications ([#170](https://github.com/wgergely/aeat/issues/170))
 
