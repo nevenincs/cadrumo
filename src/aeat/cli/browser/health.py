@@ -3,15 +3,15 @@
 Runs a single navigation probe against
 :attr:`aeat.config.Settings.site_health_probe_url` and prints either a
 human-readable summary or the JSON-serialised
-:class:`aeat.status.SiteHealthStatus`. Exit codes follow the table
-locked into [[2026-04-13-aeat-mantenimiento-detection-adr]]:
+:class:`aeat.browser._site_health.SiteHealthStatus`. Exit codes follow
+the table locked into [[2026-04-13-aeat-mantenimiento-detection-adr]]:
 
-- ``0`` — :attr:`aeat.status.SiteHealthState.OK`
-- ``2`` — :attr:`aeat.status.SiteHealthState.MANTENIMIENTO`
-- ``3`` — :attr:`aeat.status.SiteHealthState.WAF_CHALLENGE`
-- ``4`` — :attr:`aeat.status.SiteHealthState.RATE_LIMITED`
-- ``5`` — :attr:`aeat.status.SiteHealthState.UNREACHABLE`
-- ``6`` — :attr:`aeat.status.SiteHealthState.UNKNOWN_ERROR`
+- ``0`` — :attr:`aeat.browser._site_health.SiteHealthState.OK`
+- ``2`` — :attr:`aeat.browser._site_health.SiteHealthState.MANTENIMIENTO`
+- ``3`` — :attr:`aeat.browser._site_health.SiteHealthState.WAF_CHALLENGE`
+- ``4`` — :attr:`aeat.browser._site_health.SiteHealthState.RATE_LIMITED`
+- ``5`` — :attr:`aeat.browser._site_health.SiteHealthState.UNREACHABLE`
+- ``6`` — :attr:`aeat.browser._site_health.SiteHealthState.UNKNOWN_ERROR`
 
 Typer reserves exit code ``1`` for usage errors (unchanged).
 """
@@ -27,15 +27,15 @@ from typing import Any, Protocol
 
 import typer
 
-from ...config import Settings
-from ...errors import SiteHealthError
-from ...logging import get_logger
-from ...status import (
+from ...browser._site_health import (
+    _URL_ADAPTER,
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
 )
-from ...status._site_health import _URL_ADAPTER
+from ...config import Settings
+from ...errors import SiteHealthError
+from ...logging import get_logger
 
 logger = get_logger(__name__)
 

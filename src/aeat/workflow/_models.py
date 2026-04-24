@@ -20,7 +20,7 @@ from ..deadlines import FilingObligation
 from ..i18n import Translatable
 
 if TYPE_CHECKING:
-    from ..status import SiteHealthAlert
+    from ..browser._site_health import SiteHealthAlert
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
