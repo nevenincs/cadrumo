@@ -19,7 +19,9 @@ Typer reserves exit code ``1`` for usage errors (unchanged).
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
+from collections.abc import Awaitable, Callable, Iterator
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
@@ -128,6 +130,33 @@ Replacing the factory is the project-sanctioned dependency-injection
 seam for the CLI; no ``unittest.mock`` is required.
 """
 
+ProbeFactory = Callable[[Settings], Awaitable[HealthProbeLike]]
+_OVERRIDE_PROBE_FACTORY: ProbeFactory | None = None
+
+
+def install_probe_factory(factory: ProbeFactory | None) -> None:
+    """Install an explicit probe factory override for the CLI."""
+
+    global _OVERRIDE_PROBE_FACTORY
+    _OVERRIDE_PROBE_FACTORY = factory
+
+
+@contextlib.contextmanager
+def override_probe_factory(factory: ProbeFactory) -> Iterator[None]:
+    """Temporarily override the CLI probe factory."""
+
+    install_probe_factory(factory)
+    try:
+        yield
+    finally:
+        install_probe_factory(None)
+
+
+def _resolve_probe_factory() -> ProbeFactory:
+    if _OVERRIDE_PROBE_FACTORY is not None:
+        return _OVERRIDE_PROBE_FACTORY
+    return PROBE_FACTORY
+
 
 def _render_human(status: SiteHealthStatus) -> str:
     """Render a one-paragraph human summary for console output."""
@@ -174,7 +203,7 @@ def health_cmd(
     url = settings.site_health_probe_url
 
     async def _run() -> SiteHealthStatus:
-        probe = await PROBE_FACTORY(settings)
+        probe = await _resolve_probe_factory()(settings)
         try:
             await probe.probe(url)
         except SiteHealthError as exc:
