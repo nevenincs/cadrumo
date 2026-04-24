@@ -29,7 +29,17 @@ from typing import Annotated
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ..i18n import Translatable
-from ._stubs import MODELO_CASILLA_PATTERN
+from ..models import ModeloCode
+
+# Modelo + casilla cross-reference syntax used inside extracted rules.
+# The MODELO_NNN prefix is anchored to the closed `aeat.models.ModeloCode`
+# enum (each member's value is the three-character AEAT code string), so a
+# new modelo cannot be cited from the manuals corpus without first being
+# registered in `aeat.models`. The optional ``:<casilla>`` suffix is a
+# validated string only — the casilla itself need not exist in the casilla
+# catalogue at load time.
+_MODELO_CODE_ALTERNATION = "|".join(member.value for member in ModeloCode)
+_MODELO_CASILLA_PATTERN = rf"^MODELO_(?:{_MODELO_CODE_ALTERNATION})(?::[0-9A-Z_]+)?$"
 
 
 class ManualId(StrEnum):
@@ -80,7 +90,7 @@ _Reviewer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1
 # Modelo + casilla cross-reference, e.g. ``MODELO_130:01``. Validated as a
 # constrained string so manuals can cite casillas that may not yet exist in
 # the casilla catalogue at load time.
-_CasillaRef = Annotated[str, StringConstraints(strip_whitespace=True, pattern=MODELO_CASILLA_PATTERN)]
+_CasillaRef = Annotated[str, StringConstraints(strip_whitespace=True, pattern=_MODELO_CASILLA_PATTERN)]
 
 # Legal-act reference: free-form but trimmed + non-empty, e.g. "Ley 35/2006, art. 32".
 _LegalActRef = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
