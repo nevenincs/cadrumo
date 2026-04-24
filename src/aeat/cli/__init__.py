@@ -39,6 +39,7 @@ from . import portals as portals_module
 from . import review as review_module
 from . import run as run_module
 from . import schema as schema_module
+from . import sede as sede_module
 from . import setup as setup_wizard_module
 from . import sheets as sheets_module
 from . import status as status_module
@@ -108,6 +109,7 @@ app.add_typer(
     help="Invoice catalogue helpers (#75) — alias for `aeat financial invoices`.",
 )
 app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#43).")
+app.add_typer(sede_module.app, name="sede", help="Post-auth AEAT sede discovery (read-only, #239).")
 app.add_typer(
     submission_module.app,
     name="submission",
