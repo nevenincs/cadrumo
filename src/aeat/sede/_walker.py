@@ -100,8 +100,7 @@ async def walk_expedientes_tree(
                 raise SedeNavigationError(f"goto {_RESUMEN_URL!r} failed: {exc}") from exc
 
             await _expand_matching_branches(page, modelo=modelo)
-
-            html = await page.content()
+            html = await _snapshot_html(page)
             expedientes = parse_resumen_tree(html, base_url=_SEDE_BASE)
             if modelo is not None:
                 expedientes = tuple(e for e in expedientes if e.modelo == modelo)
@@ -302,54 +301,92 @@ async def find_expediente(
     raise ExpedienteNotFoundError(f"no expediente found for modelo={modelo!r} ejercicio={ejercicio}")
 
 
-async def _expand_matching_branches(page: object, *, modelo: str | None) -> None:
-    """Click ``mostrarListado`` anchors until no new branches appear.
+async def _snapshot_html(page: object) -> str:
+    """Capture ``page.content()`` with retries across in-flight navigations.
 
-    When ``modelo`` is set, only expand anchors whose text contains
-    ``Modelo <N>``. Otherwise expand every collapsed branch. The loop
-    terminates when a pass produces zero new clicks.
+    The sede's expansion clicks kick off AJAX that occasionally races
+    ``page.content()`` ("page is navigating" error). A short retry
+    loop with a brief sleep is robust without introducing an
+    unbounded wait.
     """
-    evaluate = getattr(page, "evaluate", None)
+    import asyncio as _asyncio
+
+    content = getattr(page, "content", None)
     wait_for_load_state = getattr(page, "wait_for_load_state", None)
+    if content is None:
+        raise SedeNavigationError("page does not expose content(); cannot snapshot HTML")
+    last_exc: BaseException | None = None
+    for _ in range(8):
+        if wait_for_load_state is not None:
+            with contextlib.suppress(Exception):
+                await wait_for_load_state("domcontentloaded", timeout=2_000)
+        try:
+            return await content()
+        except Exception as exc:
+            last_exc = exc
+            await _asyncio.sleep(0.5)
+    raise SedeNavigationError(f"failed to snapshot page HTML after 8 attempts: {last_exc!r}")
+
+
+async def _expand_matching_branches(page: object, *, modelo: str | None) -> None:
+    """Click tree anchors until the relevant subtree is fully expanded.
+
+    Two strategies, selected by ``modelo``:
+
+    * When ``modelo`` is set (e.g. ``"100"``), target the leaf
+      ``mostrarListado`` anchor whose visible text contains
+      ``Modelo <N>``. Captured live on 2026-04-24: clicking that
+      anchor lazy-loads the full expediente subtree beneath it in one
+      AJAX round-trip.
+    * When ``modelo`` is None, click every ``mostrarListado`` anchor
+      in document order — this expands the whole corpus. The JS dedup
+      guards against clicking a category header twice.
+    """
+    import asyncio as _asyncio
+
+    evaluate = getattr(page, "evaluate", None)
     if evaluate is None:
         return
-    seen_ids: set[str] = set()
-    for _ in range(6):  # hard cap prevents runaway AJAX loops
+
+    if modelo is not None:
         clicked = await evaluate(
             """
             (modelo) => {
-                const already = new Set();
-                const anchors = Array.from(document.querySelectorAll('a'))
-                    .filter(a => {
-                        const onc = a.getAttribute('onclick') || '';
-                        if (!onc.includes('mostrarListado')) return false;
-                        const text = (a.textContent || '').trim();
-                        if (modelo && !text.includes('Modelo ' + modelo) &&
-                            !(a.id || '').startsWith('linkATOD')) {
-                            // Only click leafward anchors; skip label
-                            // duplicates on the same tree row.
-                        }
-                        return true;
-                    });
-                let fired = [];
-                for (const a of anchors) {
-                    const id = a.id || a.getAttribute('onclick');
-                    if (already.has(id)) continue;
-                    already.add(id);
-                    try { a.click(); fired.push(id); } catch (e) {}
-                }
-                return fired;
+                const wanted = 'Modelo ' + modelo;
+                const anchor = Array.from(document.querySelectorAll('a'))
+                    .find(a =>
+                        (a.textContent || '').includes(wanted) &&
+                        ((a.getAttribute('onclick') || '').includes('mostrarListado'))
+                    );
+                if (!anchor) return false;
+                anchor.click();
+                return true;
             }
             """,
             modelo,
         )
-        new_ids = set(clicked) - seen_ids
-        if not new_ids:
-            break
-        seen_ids |= new_ids
-        if wait_for_load_state is not None:
-            with contextlib.suppress(Exception):
-                await wait_for_load_state("networkidle", timeout=_EXPAND_TIMEOUT_MS)
+        if not clicked:
+            return
+    else:
+        await evaluate(
+            """
+            () => {
+                const seen = new Set();
+                Array.from(document.querySelectorAll('a')).forEach(a => {
+                    const onc = a.getAttribute('onclick') || '';
+                    if (!onc.includes('mostrarListado')) return;
+                    const key = a.id || onc;
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    try { a.click(); } catch (e) {}
+                });
+            }
+            """
+        )
+    # Give AEAT's AJAX a beat to populate the DOM before the caller
+    # snapshots it. networkidle is too strict (GA pings keep it busy);
+    # a short fixed sleep is both faster and more reliable.
+    await _asyncio.sleep(2.0)
 
 
 __all__ = [
