@@ -8,7 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ..filing import FilingFindingSeverity, FilingValidationFinding
 from ..financial import RawProvenance, RawTransaction, SourceFormat
@@ -21,7 +21,6 @@ from ..financial.invoices import (
 )
 from ..financial.transactions import BusinessClassification, Transaction, TransactionDirection
 from ..i18n import Translatable
-from ..inbox import Notificacion, NotificacionKind, NotificacionPriority
 from ..sync import (
     CasillaAddedWithDefault,
     DivergenceClassification,
@@ -31,7 +30,6 @@ from ..sync import (
 from . import (
     DivergenceReviewItem,
     FindingReviewItem,
-    InboxReviewItem,
     InvoiceReviewItem,
     ReviewItem,
     ReviewItemKind,
@@ -138,21 +136,6 @@ def _finding() -> FilingValidationFinding:
     )
 
 
-def _notificacion() -> Notificacion:
-    received = datetime(2026, 4, 1, 10, 0, tzinfo=UTC)
-    return Notificacion(
-        notificacion_id="AEAT-0001",
-        kind=NotificacionKind.REQUERIMIENTO,
-        priority=NotificacionPriority.CRITICAL,
-        subject=_summary("subject"),
-        body_excerpt=_summary("body"),
-        received_at=received,
-        effective_at=received,
-        appeal_deadline=date(2026, 4, 20),
-        source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/notif/x"),
-    )
-
-
 def test_transaction_review_item_round_trips_through_json() -> None:
     item = TransactionReviewItem(
         item_id="t-1",
@@ -207,15 +190,6 @@ def test_review_item_discriminator_resolves_each_kind() -> None:
             source=_finding(),
             draft_id="draft-1",
             draft_path="draft.json",
-        ),
-        InboxReviewItem(
-            item_id="n-1",
-            modelo=None,
-            severity=ReviewSeverity.CRITICAL,
-            summary=_summary("inbox"),
-            drill_command="aeat inbox show n-1",
-            since=datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
-            source=_notificacion(),
         ),
     ]
     for original in payloads:

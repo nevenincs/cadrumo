@@ -8,7 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl
 
 from ..config import Settings
 from ..filing import (
@@ -36,12 +35,6 @@ from ..financial.transactions import (
     save_transactions,
 )
 from ..i18n import Translatable
-from ..inbox import (
-    Inbox,
-    Notificacion,
-    NotificacionKind,
-    NotificacionPriority,
-)
 from ..sync import (
     CasillaRemoved,
     DivergenceClassification,
@@ -171,28 +164,6 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         encoding="utf-8",
     )
 
-    settings.aeat_inbox_dir.mkdir(parents=True, exist_ok=True)
-    received = datetime(2026, 4, 1, 10, 0, tzinfo=UTC)
-    inbox = Inbox(
-        entries={
-            "AEAT-0001": Notificacion(
-                notificacion_id="AEAT-0001",
-                kind=NotificacionKind.REQUERIMIENTO,
-                priority=NotificacionPriority.CRITICAL,
-                subject=_summary("Información"),
-                body_excerpt=_summary("Solicitud"),
-                received_at=received,
-                effective_at=received,
-                appeal_deadline=date(2026, 4, 20),
-                source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/notif/x"),
-            )
-        }
-    )
-    (settings.aeat_inbox_dir / "inbox.json").write_text(
-        inbox.model_dump_json(indent=2),
-        encoding="utf-8",
-    )
-
     return settings
 
 
@@ -205,16 +176,15 @@ def test_collect_returns_one_item_per_source(tmp_path: Path) -> None:
         ReviewItemKind.INVOICE,
         ReviewItemKind.DIVERGENCE,
         ReviewItemKind.FINDING,
-        ReviewItemKind.INBOX,
     }
-    assert len(items) == 5
+    assert len(items) == 4
 
 
 def test_collect_sorts_critical_before_normal(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
     items = ReviewQueue.collect(settings)
     severities = [item.severity for item in items]
-    # CRITICAL comes first; INFO last; the seeded items are CRITICAL x3, HIGH x1, NORMAL x1.
+    # CRITICAL comes first; NORMAL last; the seeded items are CRITICAL x2, HIGH x1, NORMAL x1.
     assert severities[0] is ReviewSeverity.CRITICAL
     assert severities[-1] is ReviewSeverity.NORMAL
 
@@ -223,18 +193,17 @@ def test_collect_filters_by_kind(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
     items = ReviewQueue.collect(
         settings,
-        kinds=frozenset({ReviewItemKind.DIVERGENCE, ReviewItemKind.INBOX}),
+        kinds=frozenset({ReviewItemKind.DIVERGENCE, ReviewItemKind.FINDING}),
     )
     kinds = {item.kind for item in items}
-    assert kinds == {ReviewItemKind.DIVERGENCE, ReviewItemKind.INBOX}
+    assert kinds == {ReviewItemKind.DIVERGENCE, ReviewItemKind.FINDING}
     assert len(items) == 2
 
 
 def test_collect_filters_by_modelo(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
     items = ReviewQueue.collect(settings, modelo="130")
-    # Transaction and invoice carry no modelo so they are excluded;
-    # inbox notification has no references_modelo so also excluded.
+    # Transaction and invoice carry no modelo so they are excluded.
     # Only divergence + draft finding (both modelo=130) survive.
     assert {item.kind for item in items} == {ReviewItemKind.DIVERGENCE, ReviewItemKind.FINDING}
 

@@ -21,6 +21,8 @@ from typing import cast
 
 import pytest
 
+from ..browser._site_health import SiteHealthState
+from ..browser._site_health_parsers import evaluate_response
 from ..config import PROJECT_ROOT, Settings
 from ..deadlines import (
     AutonomoProfile,
@@ -30,8 +32,6 @@ from ..deadlines import (
     Schedule,
 )
 from ..errors import SiteHealthError
-from ..status import SiteHealthState
-from ..status._site_health_parsers import evaluate_response
 from ..submission import (
     AuthProviderDescription,
     AuthProviderKind,

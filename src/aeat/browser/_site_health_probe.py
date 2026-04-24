@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ..status import SiteHealthStatus
-from ..status._site_health_parsers import evaluate_response
+from ._site_health import SiteHealthStatus
+from ._site_health_parsers import evaluate_response
 
 
 def probe_response(

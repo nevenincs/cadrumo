@@ -23,12 +23,12 @@ from ..auth import CERTIFICATE_CONTEXT_MARKER, BrowserContextProvisioner
 from ..config import Settings
 from ..errors import AeatError, SiteHealthError
 from ..logging import get_logger
-from ..status import (
+from ._site_health import (
+    _URL_ADAPTER,
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
 )
-from ..status._site_health import _URL_ADAPTER
 from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile

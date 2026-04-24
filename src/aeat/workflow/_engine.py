@@ -20,12 +20,12 @@ from datetime import UTC, date, datetime
 from typing import NoReturn, cast
 
 from ..auth import CertificateHealthSeverity, describe_provider_operator_impact
+from ..browser._site_health import SiteHealthAlert
 from ..config import Settings
 from ..deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
 from ..errors import SiteHealthError
 from ..i18n import Translatable
 from ..logging import get_logger
-from ..status import SiteHealthAlert
 from ..submission import (
     DraftStatus,
     FilingDraftLike,
@@ -1107,9 +1107,9 @@ class WorkflowEngine:
         Invoked from the ``except SiteHealthError`` arm inserted
         strictly *before* the generic ``except Exception`` catch in
         every stage method that wraps a component call. The helper
-        composes a :class:`aeat.status.SiteHealthAlert` around the
-        caught error, appends a failed :class:`WorkflowStep` carrying
-        the alert, and raises
+        composes a :class:`aeat.browser._site_health.SiteHealthAlert`
+        around the caught error, appends a failed :class:`WorkflowStep`
+        carrying the alert, and raises
         ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``
         so the collapse to ``UNHANDLED_EXCEPTION`` never fires.
         """
