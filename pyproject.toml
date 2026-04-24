@@ -77,6 +77,16 @@ build-backend = "hatchling.build"
 packages = ["src/aeat"]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
+[tool.uv]
+# Upstream `tree-sitter-language-pack` 1.6.3 (released 2026-04-23) currently only
+# publishes a single cp314 macOS arm64 wheel, so resolution fails on cp313 /
+# Windows / Linux. Pin below 1.6.3 (which ships cp310-abi3 wheels for all
+# platforms) until upstream republishes the full wheel matrix. This is a
+# transitive dependency via `vaultspec-rag`.
+constraint-dependencies = [
+    "tree-sitter-language-pack<1.6.3",
+]
+
 [dependency-groups]
 dev = [
     "ruff>=0.15.9",
