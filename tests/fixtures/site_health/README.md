@@ -1,6 +1,6 @@
 # site_health fixture corpus
 
-Synthetic HTML fixtures for the `aeat.status._site_health_parsers`
+Synthetic HTML fixtures for the `aeat.browser._site_health_parsers`
 parser suite (#95). Every file under this tree is hand-authored to
 mirror the real AEAT Sede Electrónica response shapes documented in
 `.vault/research/2026-04-13-aeat-mantenimiento-detection-research.md`
