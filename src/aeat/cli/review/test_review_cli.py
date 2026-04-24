@@ -93,17 +93,20 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 def test_review_approve_and_show_persist_metadata(drafts_dir: Path, transactions_dir: Path) -> None:
     draft_path = _write_draft(drafts_dir)
+    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
 
     approve = _RUNNER.invoke(
         app,
-        ["review", "approve", str(draft_path), "--approved-by", "kent", "--yes"],
+        ["review", "approve", draft_id, "--approved-by", "kent", "--yes"],
     )
     assert approve.exit_code == 0, approve.output
 
-    show = _RUNNER.invoke(app, ["review", "show", str(draft_path)])
+    show = _RUNNER.invoke(app, ["review", "show", draft_id])
     assert show.exit_code == 0, show.output
     assert "APPROVED" in show.output
     assert "kent" in show.output
+    assert "aeat submission preflight" in show.output
+    assert "aeat submission dry-run" in show.output
 
     stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
     assert stored.status is FilingDraftStatus.APPROVED
@@ -116,23 +119,26 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
     transactions_dir: Path,
 ) -> None:
     draft_path = _write_draft(drafts_dir)
+    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
     approve = _RUNNER.invoke(
         app,
-        ["review", "approve", str(draft_path), "--approved-by", "kent", "--yes"],
+        ["review", "approve", draft_id, "--approved-by", "kent", "--yes"],
     )
     assert approve.exit_code == 0, approve.output
 
     catalogue = TransactionCatalogue.from_transactions([_sample_transaction()])
     save_transactions(catalogue, transactions_dir / "transactions.json")
 
-    show = _RUNNER.invoke(app, ["review", "show", str(draft_path)])
+    show = _RUNNER.invoke(app, ["review", "show", draft_id])
     assert show.exit_code == 0, show.output
     assert "APPROVAL_STALE" in show.output
     assert "transaction catalogue changed" in show.output
+    assert "aeat review approve" in show.output
 
     stale = _RUNNER.invoke(app, ["review", "stale"])
     assert stale.exit_code == 0, stale.output
     assert "transaction catalogue changed" in stale.output
+    assert "aeat review show <draft_id>" in stale.output
 
     stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
     assert stored.status is FilingDraftStatus.APPROVAL_STALE
@@ -140,14 +146,16 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
 
 def test_review_unapprove_clears_approval_record(drafts_dir: Path, transactions_dir: Path) -> None:
     draft_path = _write_draft(drafts_dir)
+    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
     approve = _RUNNER.invoke(
         app,
-        ["review", "approve", str(draft_path), "--approved-by", "kent", "--yes"],
+        ["review", "approve", draft_id, "--approved-by", "kent", "--yes"],
     )
     assert approve.exit_code == 0, approve.output
 
-    unapprove = _RUNNER.invoke(app, ["review", "unapprove", str(draft_path), "--yes"])
+    unapprove = _RUNNER.invoke(app, ["review", "unapprove", draft_id, "--yes"])
     assert unapprove.exit_code == 0, unapprove.output
+    assert "aeat review approve" in unapprove.output
 
     stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
     assert stored.status is FilingDraftStatus.READY_TO_SUBMIT
@@ -155,3 +163,9 @@ def test_review_unapprove_clears_approval_record(drafts_dir: Path, transactions_
     assert stored.approved_by is None
     assert stored.review_checksum is None
     assert stored.approval_basis is None
+
+
+def test_review_show_rejects_unknown_draft_id(drafts_dir: Path, transactions_dir: Path) -> None:
+    result = _RUNNER.invoke(app, ["review", "show", "missing-draft-id"])
+    assert result.exit_code == 2
+    assert "no persisted draft found" in result.output

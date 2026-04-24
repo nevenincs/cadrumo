@@ -747,7 +747,11 @@ class WorkflowEngine:
                 exc=exc,
                 steps=steps,
             )
-        if _enum_value(draft.status) != DraftStatus.READY_TO_SUBMIT.value:
+        ready_statuses = {
+            DraftStatus.READY_TO_SUBMIT.value,
+            DraftStatus.APPROVED.value,
+        }
+        if _enum_value(draft.status) not in ready_statuses:
             status_value = _enum_value(draft.status)
             status_summary = _t(f"Draft {draft.draft_id} not ready: status={status_value}")
             steps.append(
