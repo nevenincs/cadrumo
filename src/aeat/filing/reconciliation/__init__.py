@@ -47,6 +47,11 @@ from __future__ import annotations
 
 from ._errors import ReconciliationError
 from ._kind import FilingDivergenceKind
+from ._persist import (
+    FilingReconciliationDivergenceRecord,
+    FilingReconciliationPayload,
+    reconciliation_records,
+)
 from ._reconcile import reconcile
 from ._schema import (
     CasillaDelta,
@@ -61,8 +66,11 @@ __all__ = [
     "CasillaDelta",
     "FilingDivergenceKind",
     "FilingDraftRef",
+    "FilingReconciliationDivergenceRecord",
+    "FilingReconciliationPayload",
     "ReconciliationError",
     "ReconciliationReport",
     "ReconciliationStatus",
     "reconcile",
+    "reconciliation_records",
 ]
