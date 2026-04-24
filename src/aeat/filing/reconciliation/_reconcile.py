@@ -142,9 +142,6 @@ def _classify_pair(
             delta = local_decimal - remote_decimal
             if abs(delta) <= tolerance and delta != 0:
                 kind = FilingDivergenceKind.ROUNDING_ONLY
-            elif delta == 0:
-                # Equality: no delta to surface. Caller filters this out.
-                kind = FilingDivergenceKind.ROUNDING_ONLY
             else:
                 kind = FilingDivergenceKind.CASILLA_VALUE_MISMATCH
         else:

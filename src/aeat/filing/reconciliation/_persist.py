@@ -47,6 +47,9 @@ from ._schema import (
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+_MODE_READ: Literal["read"] = "read"
+"""Shared default for every ``mode`` field in this module."""
+
 
 class _ReconciliationPayloadBase(BaseModel):
     """Shared config for every concrete reconciliation payload variant."""
@@ -63,6 +66,7 @@ class CasillaValueMismatchPayload(_ReconciliationPayloadBase):
     remote_value: str | None
     delta: str | None
     """Signed monetary delta as a stable decimal-string projection."""
+    mode: Literal["read"] = _MODE_READ
 
 
 class CasillaMissingLocalPayload(_ReconciliationPayloadBase):
@@ -71,6 +75,7 @@ class CasillaMissingLocalPayload(_ReconciliationPayloadBase):
     kind: Literal[FilingDivergenceKind.CASILLA_MISSING_LOCAL] = FilingDivergenceKind.CASILLA_MISSING_LOCAL
     casilla_id: str = Field(min_length=1, max_length=16)
     remote_value: str | None
+    mode: Literal["read"] = _MODE_READ
 
 
 class CasillaExtraLocalPayload(_ReconciliationPayloadBase):
@@ -79,6 +84,7 @@ class CasillaExtraLocalPayload(_ReconciliationPayloadBase):
     kind: Literal[FilingDivergenceKind.CASILLA_EXTRA_LOCAL] = FilingDivergenceKind.CASILLA_EXTRA_LOCAL
     casilla_id: str = Field(min_length=1, max_length=16)
     local_value: str | None
+    mode: Literal["read"] = _MODE_READ
 
 
 class FilingStatusDivergencePayload(_ReconciliationPayloadBase):
@@ -87,6 +93,7 @@ class FilingStatusDivergencePayload(_ReconciliationPayloadBase):
     kind: Literal[FilingDivergenceKind.FILING_STATUS_DIVERGENCE] = FilingDivergenceKind.FILING_STATUS_DIVERGENCE
     local_status: str = Field(min_length=1, max_length=64)
     remote_status: str = Field(min_length=1, max_length=64)
+    mode: Literal["read"] = _MODE_READ
 
 
 class RoundingOnlyPayload(_ReconciliationPayloadBase):
@@ -105,6 +112,7 @@ class RoundingOnlyPayload(_ReconciliationPayloadBase):
     local_value: str | None
     remote_value: str | None
     delta: str | None
+    mode: Literal["read"] = _MODE_READ
 
 
 class FilingNotYetFoundPayload(_ReconciliationPayloadBase):
@@ -113,6 +121,7 @@ class FilingNotYetFoundPayload(_ReconciliationPayloadBase):
     kind: Literal[FilingDivergenceKind.FILING_NOT_YET_FOUND] = FilingDivergenceKind.FILING_NOT_YET_FOUND
     expected_modelo: str = Field(min_length=1, max_length=8)
     expected_period: str = Field(min_length=1, max_length=16)
+    mode: Literal["read"] = _MODE_READ
 
 
 FilingReconciliationPayload = Annotated[
@@ -165,6 +174,7 @@ class FilingReconciliationDivergenceRecord(BaseModel):
         resolution_state: Operator-facing resolution state. Defaults
             to :attr:`aeat.sync.ResolutionState.PENDING`.
         notes: Optional free-text annotation for the operator.
+        mode: Structural write-guard literal; always ``"read"``.
     """
 
     model_config = _STRICT_FROZEN
@@ -178,6 +188,7 @@ class FilingReconciliationDivergenceRecord(BaseModel):
     payload: FilingReconciliationPayload
     resolution_state: ResolutionState = ResolutionState.PENDING
     notes: str | None = Field(default=None, max_length=2048)
+    mode: Literal["read"] = _MODE_READ
 
 
 def _decimal_text(delta: object | None) -> str | None:

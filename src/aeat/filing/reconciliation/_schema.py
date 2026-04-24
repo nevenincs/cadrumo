@@ -1,10 +1,14 @@
 """Strict pydantic v2 records for the reconciliation comparator.
 
 Every record in this module is ``strict=True``, ``frozen=True``,
-``extra="forbid"``. Reports cross subpackage boundaries (the CLI
-consumes them, the sync-run summary surfaces them, the persistence
-adapter serialises them) so the strict-frozen invariant is the same
-load-bearing one the rest of the project pins against.
+``extra="forbid"`` and carries the Layer 1 write-guard marker
+``mode: Literal["read"] = "read"``. Reports cross subpackage
+boundaries (the CLI consumes them, the sync-run summary surfaces
+them, the persistence adapter serialises them) so the strict-frozen
+invariant is the same load-bearing one the rest of the project pins
+against. No ``"write"`` literal is defined anywhere in this
+subpackage; widening the marker requires a loud, explicit change
+that surfaces in code review.
 
 Two consumer-facing collaborators are referenced by type:
 
@@ -30,6 +34,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
+from typing import Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
@@ -39,6 +44,9 @@ from .._schema import FilingDraftStatus
 from ._kind import FilingDivergenceKind
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+_MODE_READ: Literal["read"] = "read"
+"""Shared default for every ``mode`` field in this module."""
 
 
 class ReconciliationStatus(StrEnum):
@@ -76,6 +84,7 @@ class CasillaDelta(BaseModel):
             not carry the casilla.
         delta: The signed monetary delta (``local - remote``) when both
             sides report a coercible decimal value; ``None`` otherwise.
+        mode: Structural write-guard literal; always ``"read"``.
         narrative: Trilingual Kent-readable rationale for this delta.
     """
 
@@ -86,6 +95,7 @@ class CasillaDelta(BaseModel):
     local_value: str | None = Field(default=None, max_length=256)
     remote_value: str | None = Field(default=None, max_length=256)
     delta: Decimal | None = None
+    mode: Literal["read"] = _MODE_READ
     narrative: Translatable
 
 
@@ -103,6 +113,7 @@ class FilingDraftRef(BaseModel):
         profile_tax_id: Taxpayer identifier the draft was built for.
         status: Lifecycle status of the draft at the moment the
             report was emitted.
+        mode: Structural write-guard literal; always ``"read"``.
     """
 
     model_config = _STRICT_FROZEN
@@ -112,6 +123,7 @@ class FilingDraftRef(BaseModel):
     period: str = Field(min_length=1, max_length=16)
     profile_tax_id: str = Field(min_length=1, max_length=64)
     status: FilingDraftStatus
+    mode: Literal["read"] = _MODE_READ
 
 
 class ReconciliationReport(BaseModel):
@@ -129,6 +141,7 @@ class ReconciliationReport(BaseModel):
             :attr:`ReconciliationStatus.NOT_YET_FOUND`.
         draft_ref: Reference to the local draft side of the
             comparison.
+        mode: Structural write-guard literal; always ``"read"``.
         reconciled_at: UTC timestamp at which the comparator emitted
             the report.
         narrative: Trilingual report-level summary that Kent reads at
@@ -141,6 +154,7 @@ class ReconciliationReport(BaseModel):
     casilla_deltas: tuple[CasillaDelta, ...]
     remote_ref: RemoteFilingRef | None
     draft_ref: FilingDraftRef
+    mode: Literal["read"] = _MODE_READ
     reconciled_at: AwareDatetime
     narrative: Translatable
 

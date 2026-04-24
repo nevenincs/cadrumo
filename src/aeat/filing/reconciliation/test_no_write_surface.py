@@ -29,12 +29,33 @@ Coverage:
 from __future__ import annotations
 
 import re
+from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
 import pytest
+from pydantic import BaseModel, ValidationError
 
+from ...sync import DivergenceClassification
+from .._schema import FilingDraftStatus
 from . import __all__ as reconciliation_public_api
+from ._kind import FilingDivergenceKind
+from ._persist import (
+    CasillaExtraLocalPayload,
+    CasillaMissingLocalPayload,
+    CasillaValueMismatchPayload,
+    FilingNotYetFoundPayload,
+    FilingReconciliationDivergenceRecord,
+    FilingStatusDivergencePayload,
+    RoundingOnlyPayload,
+)
+from ._schema import (
+    CasillaDelta,
+    FilingDraftRef,
+    ReconciliationReport,
+    ReconciliationStatus,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
@@ -144,6 +165,107 @@ def test_public_api_rejects_write_verb_prefixes() -> None:
     prefix_re = re.compile(rf"^({'|'.join(re.escape(p) for p in prefixes)})", re.IGNORECASE)
     offenders = [name for name in reconciliation_public_api if prefix_re.match(name)]
     assert offenders == [], f"public API exposes forbidden names: {offenders!r}"
+
+
+def test_every_boundary_record_reports_read_mode() -> None:
+    """Every exported pydantic record reports the Layer 1 read marker at runtime.
+
+    Constructs a minimal instance of every :class:`pydantic.BaseModel`
+    exported by :mod:`aeat.filing.reconciliation` and asserts each
+    carries ``mode == "read"``. Also verifies the ``mode`` field rejects
+    any non-``"read"`` literal — the forbidden value is composed at
+    runtime from the fixture's ``literal_mode_write_parts`` so the full
+    string never materialises in any source file under this package.
+    """
+    now = datetime(2026, 4, 24, 12, 0, tzinfo=UTC)
+
+    draft_ref = FilingDraftRef(
+        draft_id="draft-001",
+        modelo="303",
+        period="2026-1T",
+        profile_tax_id="00000000T",
+        status=FilingDraftStatus.APPROVED,
+    )
+    casilla_delta = CasillaDelta(
+        casilla_id="46",
+        kind=FilingDivergenceKind.CASILLA_VALUE_MISMATCH,
+        local_value="1.00",
+        remote_value="2.00",
+        delta=Decimal("-1.00"),
+        narrative={"es": "x", "en": "x", "hu": "x"},
+    )
+    report = ReconciliationReport(
+        status=ReconciliationStatus.DIVERGENT,
+        casilla_deltas=(casilla_delta,),
+        remote_ref=None,
+        draft_ref=draft_ref,
+        reconciled_at=now,
+        narrative={"es": "x", "en": "x", "hu": "x"},
+    )
+    value_mismatch = CasillaValueMismatchPayload(
+        casilla_id="46",
+        local_value="1.00",
+        remote_value="2.00",
+        delta="-1.00",
+    )
+    missing_local = CasillaMissingLocalPayload(
+        casilla_id="07",
+        remote_value="500.00",
+    )
+    extra_local = CasillaExtraLocalPayload(
+        casilla_id="07",
+        local_value="500.00",
+    )
+    status_divergence = FilingStatusDivergencePayload(
+        local_status="APPROVED",
+        remote_status="rechazada",
+    )
+    rounding_only = RoundingOnlyPayload(
+        casilla_id="46",
+        local_value="1.00",
+        remote_value="1.01",
+        delta="-0.01",
+    )
+    not_yet_found = FilingNotYetFoundPayload(
+        expected_modelo="303",
+        expected_period="2026-1T",
+    )
+    wrapping_record = FilingReconciliationDivergenceRecord(
+        record_id="rec-001",
+        detected_at=now,
+        modelo="303",
+        period="2026-1T",
+        draft_ref=draft_ref,
+        classification=DivergenceClassification.BREAKING,
+        payload=value_mismatch,
+    )
+
+    records: list[BaseModel] = [
+        draft_ref,
+        casilla_delta,
+        report,
+        value_mismatch,
+        missing_local,
+        extra_local,
+        status_divergence,
+        rounding_only,
+        not_yet_found,
+        wrapping_record,
+    ]
+    for record in records:
+        mode = getattr(record, "mode", None)
+        assert mode == "read", f"record {type(record).__name__} reported mode={mode!r}"
+
+    parts = _FIXTURE["literal_mode_write_parts"]
+    if len(parts) < 3:
+        pytest.fail("fixture missing literal_mode_write_parts entries")
+    forbidden_value = parts[2]  # composed at runtime; never materialised in source
+
+    for record in records:
+        payload = record.model_dump()
+        payload["mode"] = forbidden_value
+        with pytest.raises(ValidationError):
+            type(record).model_validate(payload)
 
 
 def test_fixture_file_exists_as_sidecar() -> None:
