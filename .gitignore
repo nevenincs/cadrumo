@@ -252,6 +252,7 @@ corpus/manuals/**/source.html/
 .vaultspec/_snapshots/
 /.gitignore.lock
 /.mcp.json.lock
+/.pre-commit-config.yaml.lock
 AGENTS.md
 CLAUDE.md
 GEMINI.md

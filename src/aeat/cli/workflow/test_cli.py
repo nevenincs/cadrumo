@@ -44,7 +44,7 @@ class _Draft:
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: DraftStatus = DraftStatus.READY_TO_SUBMIT
+    status: DraftStatus = DraftStatus.APPROVED
     values: Mapping[str, str] = field(default_factory=lambda: {"01": "1000"})
     findings: tuple[FilingFinding, ...] = ()
 

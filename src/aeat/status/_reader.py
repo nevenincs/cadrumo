@@ -36,7 +36,7 @@ from ._models import (
     Expediente,
     Notificacion,
 )
-from ._parsers import parse_expedientes
+from ._parsers import parse_expedientes, parse_notificaciones
 from ._protocols import BrowserSessionLike, CertificateBackend
 
 if TYPE_CHECKING:  # pragma: no cover - type-only imports
@@ -445,13 +445,58 @@ class StatusReader:
         since: date | None = None,
         use_cache: bool = True,
     ) -> tuple[Notificacion, ...]:
-        """Fetch *Mis notificaciones*. Not yet implemented (#43 follow-up).
+        """Fetch the user's notifications from *Mis notificaciones* (#170).
+
+        Mirrors the shape of :meth:`fetch_expedientes`: a single safe
+        ``page.goto(..., wait_until="domcontentloaded")`` feeds
+        :func:`aeat.status._parsers.parse_notificaciones`, with results
+        cached under :attr:`Settings.aeat_status_cache_ttl_s`. The
+        ``since`` filter is applied post-parse on
+        :attr:`Notificacion.received_at` and deliberately omitted from
+        the cache key so back-to-back invocations with different
+        ``--since`` values still hit the cached page.
+
+        Args:
+            since: If given, drop every row with ``received_at.date()``
+                strictly earlier than this date. Applied post-parse.
+            use_cache: When True (default), honour the short-lived
+                file cache. Pass False to force a fresh fetch.
+
+        Returns:
+            A tuple of :class:`Notificacion` records, ordered as AEAT
+            returns them.
 
         Raises:
-            StatusReaderError: Always — this surface is a v1 stub.
+            StatusAuthError: If the authenticated context cannot be
+                prepared.
+            StatusParseError: If the AEAT page cannot be parsed.
         """
-        del since, use_cache
-        raise StatusReaderError("notificaciones surface not yet implemented (#43 follow-up)")
+        surface = AeatStatusKind.NOTIFICACION
+        key = make_cache_key(
+            tax_id=self._tax_id,
+            surface=surface,
+            base_url=self._settings.aeat_base_url,
+        )
+        if use_cache:
+            cached = self._cache.get_tuple(surface=surface, key=key, model=Notificacion)
+            if cached is not None:
+                logger.debug("status cache hit: notificaciones (%d row(s))", len(cached))
+                return self._filter_notificaciones_since(cached, since)
+
+        html, url = await self._fetch_html(self._settings.aeat_status_notificaciones_path)
+        fetched_at = datetime.now(UTC)
+        records = parse_notificaciones(html, source_url=url, fetched_at=fetched_at)
+        self._cache.put_tuple(surface=surface, key=key, records=records)
+        return self._filter_notificaciones_since(records, since)
+
+    @staticmethod
+    def _filter_notificaciones_since(
+        records: tuple[Notificacion, ...],
+        since: date | None,
+    ) -> tuple[Notificacion, ...]:
+        if since is None:
+            return records
+        return tuple(r for r in records if r.received_at.date() >= since)
 
     async def fetch_devoluciones(
         self,

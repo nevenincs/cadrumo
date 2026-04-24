@@ -86,7 +86,7 @@ class TestExportExitCodes:
         assert result.exit_code == 2
 
     def test_incomplete_draft_exits_3(self, tmp_path: Path) -> None:
-        draft = _minimal_draft(tmp_path, status="INCOMPLETE")
+        draft = _minimal_draft(tmp_path, status="VALIDATED")
         result = _runner.invoke(
             app,
             [

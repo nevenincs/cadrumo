@@ -375,6 +375,58 @@ class TestPublicAPI:
         refreshed = validate_draft(draft, schema_provider=default_schema_provider())
         assert refreshed.draft_id == draft.draft_id
 
+    def test_validate_draft_preserves_approval_when_review_surface_is_unchanged(self) -> None:
+        draft = build_draft(
+            modelo="130",
+            period="2026Q1",
+            profile=_profile(),
+            inputs=_clean_inputs(),
+            schema_provider=default_schema_provider(),
+        )
+        approved = approve_draft(
+            draft,
+            approved_by="kent",
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue(),
+        )
+
+        refreshed = validate_draft(approved, schema_provider=default_schema_provider())
+        assert refreshed.status is FilingDraftStatus.APPROVED
+        assert refreshed.approved_at == approved.approved_at
+        assert refreshed.approved_by == approved.approved_by
+        assert refreshed.review_checksum == approved.review_checksum
+        assert refreshed.approval_basis == approved.approval_basis
+
+    def test_validate_draft_marks_reviewed_draft_stale_when_validation_surface_changes(self) -> None:
+        clean = build_draft(
+            modelo="130",
+            period="2026Q1",
+            profile=_profile(),
+            inputs=_clean_inputs(),
+            schema_provider=default_schema_provider(),
+        )
+        approved = approve_draft(
+            clean,
+            approved_by="kent",
+            schema_provider=default_schema_provider(),
+            transaction_catalogue=TransactionCatalogue(),
+        )
+        tampered_values = tuple(
+            FilingValue(
+                casilla_id=value.casilla_id,
+                value=Decimal("999"),
+                kind=FilingValueKind.LITERAL,
+                source="tampered",
+                formula_trace=None,
+            )
+            if value.casilla_id == "03"
+            else value
+            for value in approved.values
+        )
+        tampered = approved.model_copy(update={"values": tampered_values})
+        re_validated = validate_draft(tampered, schema_provider=default_schema_provider())
+        assert re_validated.status is FilingDraftStatus.APPROVAL_STALE
+
     def test_iter_findings_threshold(self) -> None:
         finding_error = FilingValidationFinding(
             casilla_id=None,

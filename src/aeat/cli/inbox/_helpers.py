@@ -1,13 +1,16 @@
 """Shared helpers for the ``aeat inbox`` CLI sub-app.
 
-Pure CLI glue: builds an :class:`InboxFetcher` with a concrete
-file-backed :class:`NotificacionSource`. Production call sites will
-rebase this onto a real adapter over :mod:`aeat.status` (#43) when
-the status reader lands; until then, the CLI reads raw notification
-payloads from a user-maintained JSON file pointed at by
-``AEAT_INBOX_DIR / source.json``. The file-backed source is **not a
-mock** — it is a real Python class that structurally satisfies the
-:class:`NotificacionSource` Protocol.
+Pure CLI glue: builds an :class:`InboxFetcher` with either a
+file-backed :class:`NotificacionSource` (the default, keeps offline
+dev fast) or a :class:`LiveAeatNotificacionSource` that pulls from the
+live AEAT Sede via the authenticated status reader (#170). The file-
+backed source is **not a mock** — it is a real Python class that
+structurally satisfies the :class:`NotificacionSource` Protocol.
+
+Charter #116 (no-write mandate): both sources are strictly read-only.
+The live source delegates to :class:`aeat.status.StatusReader`, which
+performs only safe ``page.goto(..., wait_until="domcontentloaded")``
+navigations.
 """
 
 from __future__ import annotations
@@ -18,7 +21,8 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...config import Settings, load_settings
-from ...inbox import InboxFetcher, RawNotificacion
+from ...inbox import InboxFetcher, LiveAeatNotificacionSource, NotificacionSource, RawNotificacion
+from ...status import StatusReader
 
 
 class _FileBackedNotificacionSource:
@@ -61,11 +65,20 @@ class _RawEnvelope(BaseModel):
     notifications: tuple[RawNotificacion, ...] = Field(default_factory=tuple)
 
 
-def build_fetcher(settings: Settings | None = None) -> InboxFetcher:
-    """Construct an :class:`InboxFetcher` wired to the CLI file source.
+def build_fetcher(
+    settings: Settings | None = None,
+    *,
+    source: NotificacionSource | None = None,
+) -> InboxFetcher:
+    """Construct an :class:`InboxFetcher` wired to a notificacion source.
 
     Args:
         settings: Optional :class:`Settings` override (used by tests).
+        source: Optional :class:`NotificacionSource` override. When
+            omitted, the file-backed source is used — that is the
+            safe default for offline dev. The live path injects a
+            :class:`LiveAeatNotificacionSource` constructed around an
+            authenticated :class:`StatusReader`.
 
     Returns:
         A fully wired :class:`InboxFetcher`.
@@ -73,8 +86,19 @@ def build_fetcher(settings: Settings | None = None) -> InboxFetcher:
     cfg = settings or load_settings()
     inbox_file = cfg.aeat_inbox_dir / "inbox.json"
     source_file = cfg.aeat_inbox_dir / "source.json"
+    resolved = source if source is not None else _FileBackedNotificacionSource(source_file)
     return InboxFetcher(
-        source=_FileBackedNotificacionSource(source_file),
+        source=resolved,
         inbox_file=inbox_file,
         pdf_dir=cfg.aeat_inbox_pdf_dir,
     )
+
+
+def build_live_source(reader: StatusReader) -> LiveAeatNotificacionSource:
+    """Wrap an authenticated :class:`StatusReader` into a live source.
+
+    Thin convenience — the adapter is a single-line expression on its
+    own, but exposing it here keeps the CLI call sites symmetrical
+    with :func:`build_fetcher` and gives tests a single patchpoint.
+    """
+    return LiveAeatNotificacionSource(reader)

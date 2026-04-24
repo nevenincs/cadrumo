@@ -18,7 +18,7 @@ from ..transactions import (
     save_transactions,
 )
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
-from ._errors import InvoiceLinkInconsistencyError
+from ._errors import InvoiceLinkError, InvoiceLinkInconsistencyError
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
 from ._service import (
     link_transaction_bidirectional,
@@ -286,9 +286,7 @@ def test_link_bidirectional_updates_both_files(tmp_path: Path) -> None:
     assert load_transactions(transactions_path).get(transaction.transaction_id) == updated_transaction
 
 
-def test_link_bidirectional_restores_invoice_on_transaction_write_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_link_bidirectional_restores_invoice_on_transaction_write_failure(tmp_path: Path) -> None:
     """If the transaction write fails, the invoice file must be restored."""
     invoice = _invoice()
     transaction = _transaction(
@@ -302,35 +300,25 @@ def test_link_bidirectional_restores_invoice_on_transaction_write_failure(
     save_transactions(TransactionCatalogue.from_transactions([transaction]), transactions_path)
     prior_invoice_bytes = invoices_path.read_bytes()
 
-    # Make the transactions directory unwritable by deleting it and blocking
-    # the recreate with an existing file of the same name.
-    # Cross-platform approach: patch the transactions module's save helper to
-    # raise a TransactionPersistenceError on second invocation, which is what
-    # link_transaction_bidirectional catches.
     from ..transactions import TransactionPersistenceError
-    from . import _service as service_module
-
-    original_save = service_module._save_transactions
 
     def _fail_save(*args: object, **kwargs: object) -> None:
         raise TransactionPersistenceError("simulated failure")
 
-    monkeypatch.setattr(service_module, "_save_transactions", _fail_save)
-    try:
-        with pytest.raises(service_module.InvoiceLinkError):
-            link_transaction_bidirectional(
-                invoices_path, transactions_path, invoice.invoice_id, transaction.transaction_id
-            )
-    finally:
-        monkeypatch.setattr(service_module, "_save_transactions", original_save)
+    with pytest.raises(InvoiceLinkError):
+        link_transaction_bidirectional(
+            invoices_path,
+            transactions_path,
+            invoice.invoice_id,
+            transaction.transaction_id,
+            save_transactions_fn=_fail_save,
+        )
 
     # The invoice file must be restored to its pre-update bytes.
     assert invoices_path.read_bytes() == prior_invoice_bytes
 
 
-def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(tmp_path: Path) -> None:
     """When both the tx write and the invoice rollback fail, an inconsistency is raised."""
     invoice = _invoice()
     transaction = _transaction(
@@ -344,19 +332,23 @@ def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(
     save_transactions(TransactionCatalogue.from_transactions([transaction]), transactions_path)
 
     from ..transactions import TransactionPersistenceError
-    from . import _service as service_module
 
     def _fail_save(*args: object, **kwargs: object) -> None:
         raise TransactionPersistenceError("simulated failure")
 
-    def _fail_write_bytes(self: Path, *args: object, **kwargs: object) -> int:
+    def _fail_write_bytes(path: Path, payload: bytes) -> None:
+        del path, payload
         raise OSError("simulated rollback failure")
 
-    monkeypatch.setattr(service_module, "_save_transactions", _fail_save)
-    monkeypatch.setattr(Path, "write_bytes", _fail_write_bytes)
-
     with pytest.raises(InvoiceLinkInconsistencyError) as excinfo:
-        link_transaction_bidirectional(invoices_path, transactions_path, invoice.invoice_id, transaction.transaction_id)
+        link_transaction_bidirectional(
+            invoices_path,
+            transactions_path,
+            invoice.invoice_id,
+            transaction.transaction_id,
+            save_transactions_fn=_fail_save,
+            rollback_temp_writer=_fail_write_bytes,
+        )
 
     error = excinfo.value
     assert error.invoice_path == invoices_path.resolve()

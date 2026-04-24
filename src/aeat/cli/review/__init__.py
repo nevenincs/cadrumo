@@ -60,6 +60,21 @@ def _drafts_dir() -> Path:
     return path
 
 
+def _resolve_draft_path(draft_ref: str) -> Path:
+    candidate = Path(draft_ref)
+    if candidate.exists():
+        return candidate
+    if candidate.suffix == ".json" or candidate.parent != Path("."):
+        raise typer.BadParameter(f"draft file not found: {candidate}")
+    matches = sorted(path for path in _drafts_dir().glob(f"*_{draft_ref}.json") if path.is_file())
+    if not matches:
+        raise typer.BadParameter(f"no persisted draft found for draft_id={draft_ref!r}")
+    if len(matches) > 1:
+        joined = ", ".join(str(path) for path in matches)
+        raise typer.BadParameter(f"draft_id={draft_ref!r} matched multiple draft files: {joined}")
+    return matches[0]
+
+
 def _load_review_draft(path: Path) -> FilingDraft:
     if not path.exists():
         raise typer.BadParameter(f"draft file not found: {path}")
@@ -95,14 +110,37 @@ def _status_label(draft: FilingDraft) -> str:
     return draft.status.value
 
 
+def _render_review_next_steps(
+    draft: FilingDraft,
+    *,
+    draft_path: Path,
+    reasons: tuple[object, ...] = (),
+) -> None:
+    """Print the likely next operator commands for the current review state."""
+
+    if draft.status is FilingDraftStatus.APPROVAL_STALE or reasons:
+        _CONSOLE.print(f"Next: aeat filing show {draft_path}")
+        _CONSOLE.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
+        return
+    if draft.approved_at is None:
+        _CONSOLE.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
+        return
+    _CONSOLE.print(f"Next: aeat submission preflight {draft_path}")
+    _CONSOLE.print(f"Next: aeat submission dry-run {draft_path}")
+
+
 @app.command("approve")
 def approve_cmd(
-    draft_path: Path = typer.Argument(..., help="Path to a persisted draft JSON file."),
+    draft_ref: str = typer.Argument(
+        ...,
+        help="Draft id from `aeat filing build/list`, or a persisted draft JSON path.",
+    ),
     approved_by: str | None = typer.Option(None, "--approved-by", help="Signer recorded on the approval."),
     yes: bool = typer.Option(False, "--yes", help="Skip the interactive confirmation prompt."),
 ) -> None:
     """Approve one persisted draft."""
 
+    draft_path = _resolve_draft_path(draft_ref)
     draft = _load_review_draft(draft_path)
     if not yes and not typer.confirm(f"Approve draft {draft.draft_id}?"):
         raise typer.Exit(code=1)
@@ -121,15 +159,20 @@ def approve_cmd(
         f"[green]approved[/green] draft {approved.draft_id} "
         f"by {approved.approved_by} at {approved.approved_at.isoformat()}"
     )
+    _render_review_next_steps(approved, draft_path=draft_path)
 
 
 @app.command("unapprove")
 def unapprove_cmd(
-    draft_path: Path = typer.Argument(..., help="Path to a persisted draft JSON file."),
+    draft_ref: str = typer.Argument(
+        ...,
+        help="Draft id from `aeat filing build/list`, or a persisted draft JSON path.",
+    ),
     yes: bool = typer.Option(False, "--yes", help="Skip the interactive confirmation prompt."),
 ) -> None:
     """Remove the stored approval record from one draft."""
 
+    draft_path = _resolve_draft_path(draft_ref)
     draft = _load_review_draft(draft_path)
     if draft.approved_at is None:
         _CONSOLE.print(f"[yellow]not approved[/yellow] draft {draft.draft_id}")
@@ -139,14 +182,19 @@ def unapprove_cmd(
     unapproved = unapprove_draft(draft)
     _save_draft(draft_path, unapproved)
     _CONSOLE.print(f"[green]unapproved[/green] draft {unapproved.draft_id}")
+    _render_review_next_steps(unapproved, draft_path=draft_path)
 
 
 @app.command("show")
 def show_cmd(
-    draft_path: Path = typer.Argument(..., help="Path to a persisted draft JSON file."),
+    draft_ref: str = typer.Argument(
+        ...,
+        help="Draft id from `aeat filing build/list`, or a persisted draft JSON path.",
+    ),
 ) -> None:
     """Show the current review state for one draft."""
 
+    draft_path = _resolve_draft_path(draft_ref)
     draft = _load_review_draft(draft_path)
     reasons = approval_stale_reasons(
         draft,
@@ -167,6 +215,7 @@ def show_cmd(
     if reasons:
         table.add_row("stale_reason", ", ".join(describe_stale_reason(reason) for reason in reasons))
     _CONSOLE.print(table)
+    _render_review_next_steps(draft, draft_path=draft_path, reasons=reasons)
 
 
 @app.command("stale")
@@ -205,6 +254,8 @@ def stale_cmd() -> None:
         _CONSOLE.print("No stale draft approvals found.")
         return
     _CONSOLE.print(table)
+    _CONSOLE.print("Next: aeat review show <draft_id>")
+    _CONSOLE.print("Next: aeat review approve <draft_id> --approved-by <you>")
 
 
 app.command(

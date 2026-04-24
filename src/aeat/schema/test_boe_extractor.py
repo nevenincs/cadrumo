@@ -63,7 +63,7 @@ def _build_source(pdf_path: Path) -> FetchedSchemaSource:
 
 
 @pytest.fixture
-def fake_boe_pdf(tmp_path: Path) -> Path:
+def boe_pdf_fixture(tmp_path: Path) -> Path:
     """Write a synthetic BOE-shaped PDF under ``tmp_path`` and return its path."""
     path = tmp_path / "boe.pdf"
     build_fake_boe_pdf(
@@ -74,8 +74,8 @@ def fake_boe_pdf(tmp_path: Path) -> Path:
     return path
 
 
-def test_extractor_rejects_source_with_mismatched_modelo(fake_boe_pdf: Path) -> None:
-    source = _build_source(fake_boe_pdf)
+def test_extractor_rejects_source_with_mismatched_modelo(boe_pdf_fixture: Path) -> None:
+    source = _build_source(boe_pdf_fixture)
     with pytest.raises(SchemaExtractionError):
         BoeOrdenExtractor(
             source=source,
@@ -84,8 +84,8 @@ def test_extractor_rejects_source_with_mismatched_modelo(fake_boe_pdf: Path) -> 
         )
 
 
-def test_extractor_happy_path(fake_boe_pdf: Path) -> None:
-    source = _build_source(fake_boe_pdf)
+def test_extractor_happy_path(boe_pdf_fixture: Path) -> None:
+    source = _build_source(boe_pdf_fixture)
     extractor = BoeOrdenExtractor(
         source=source,
         modelo_code=ModeloCode.MODELO_130,

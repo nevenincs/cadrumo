@@ -165,6 +165,8 @@ class ClassificationHistoryEntry(BaseModel):
     classified_at: datetime
     classified_by: str = Field(min_length=1)
     reason: str = ""
+    category_id: str | None = None
+    notes: str = ""
     confidence: Decimal | None = None
     # Placeholder for the future ``DecisionProvenance`` pydantic record added
     # by issue #236. Because this model declares ``extra="forbid"``, the next
@@ -209,6 +211,23 @@ class ClassificationHistoryEntry(BaseModel):
     @classmethod
     def _normalize_reason(cls, value: str) -> str:
         """Trim free-text reasons while allowing the empty string."""
+        return value.strip()
+
+    @field_validator("category_id")
+    @classmethod
+    def _validate_category_id(cls, value: str | None) -> str | None:
+        """Trim optional foreign key while rejecting blank strings."""
+        if value is None:
+            return None
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("foreign-key identifiers must not be blank")
+        return trimmed
+
+    @field_validator("notes")
+    @classmethod
+    def _normalize_notes(cls, value: str) -> str:
+        """Trim free-text notes while allowing the empty string."""
         return value.strip()
 
     @field_validator("confidence")

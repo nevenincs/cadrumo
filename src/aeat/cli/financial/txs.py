@@ -3,18 +3,22 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 
 import typer
 
+from ...financial import CsvProvider, OfxProvider, XlsxProvider, detect_provider
 from ...financial._decimal import canonical_decimal
 from ...financial.categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ...financial.categories._proportionality import ProportionalityKind
+from ...financial.providers import RawTransaction
 from ...financial.transactions import (
     BusinessClassification,
     LLMClassifierError,
     ModelTier,
     Transaction,
     TransactionCatalogue,
+    TransactionDirection,
     TransactionError,
     find_transaction,
     resolve_classifier,
@@ -84,7 +88,7 @@ def list_cmd(
         else:
             typer.echo("No transactions found.")
         return
-    typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tconfidence\tnarrative")
+    typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tcategory\tconfidence\tnarrative")
     for transaction in sorted(
         transactions,
         key=lambda item: ((item.raw.value_date or item.raw.booked_date), item.transaction_id),
@@ -97,11 +101,46 @@ def list_cmd(
                     canonical_decimal(transaction.raw.amount),
                     transaction.raw.currency,
                     transaction.business_classification.value,
+                    transaction.category_id or "",
                     _format_optional_decimal(transaction.classification_confidence),
                     transaction.raw.description,
                 ]
             )
         )
+
+
+@app.command(
+    name="build",
+    help="Build the configured transaction catalogue from NDJSON or a source CSV/XLSX/OFX statement.",
+)
+def build_cmd(
+    source: Path = typer.Argument(
+        ...,
+        exists=True,
+        dir_okay=False,
+        help="Path to ingest NDJSON or a source CSV/XLSX/OFX statement export.",
+    ),
+    replace: bool = typer.Option(
+        False,
+        "--replace",
+        help="Overwrite an existing transaction catalogue instead of refusing.",
+    ),
+) -> None:
+    """Persist a transaction catalogue from ingest output."""
+    target = catalogue_path()
+    if target.exists() and not replace:
+        typer.echo(
+            f"transaction catalogue already exists at {target}; rerun with --replace to overwrite it",
+            err=True,
+        )
+        raise typer.Exit(code=2)
+    try:
+        catalogue = _build_catalogue(source)
+        save_transactions(catalogue, target)
+    except TransactionError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(f"built {len(catalogue)} transaction(s) into {target}")
 
 
 @app.command(name="show", help="Show one stored transaction as JSON.")
@@ -123,13 +162,14 @@ def show_cmd(
 )
 def classify_cmd(
     transaction_id: str = typer.Argument(..., help="Stable transaction identifier."),
-    classification: BusinessClassification = typer.Option(
-        ...,
+    classification: BusinessClassification | None = typer.Option(
+        None,
         "--as",
         case_sensitive=False,
         help=(
-            "Classification target: BUSINESS, PERSONAL, MIXED, "
-            "NOT_YET_PROCESSED, PROCESSED_UNCLASSIFIED, SKIPPED_BY_RULE, or FAILED_VALIDATION."
+            "Optional classification target: BUSINESS, PERSONAL, MIXED, "
+            "NOT_YET_PROCESSED, PROCESSED_UNCLASSIFIED, SKIPPED_BY_RULE, or FAILED_VALIDATION. "
+            "Omit --as to update only category/reason metadata on an existing classification."
         ),
     ),
     pct: str | None = typer.Option(
@@ -161,20 +201,59 @@ def classify_cmd(
     """Classify one transaction and write the updated catalogue to disk."""
     path = catalogue_path()
     catalogue = load_catalogue_required()
+    current = find_transaction(catalogue, transaction_id)
+    if current is None:
+        typer.echo(f"transaction not found: {transaction_id}", err=True)
+        raise typer.Exit(code=2)
+    if classification is None and category is None and not reason and pct is None and confidence is None:
+        typer.echo("no changes requested; pass --as, --category, --reason, --pct, or --confidence", err=True)
+        raise typer.Exit(code=2)
     try:
         business_pct = Decimal(pct) if pct is not None else None
     except InvalidOperation as exc:
         typer.echo(f"invalid --pct value: {pct}", err=True)
         raise typer.Exit(code=2) from exc
     resolved_confidence = _parse_confidence_option(confidence)
+    effective_classification = classification if classification is not None else current.business_classification
+    if classification is not None and classification is not BusinessClassification.MIXED and business_pct is not None:
+        typer.echo(
+            "--pct can only be used together with --as MIXED; omit --pct for non-MIXED classifications",
+            err=True,
+        )
+        raise typer.Exit(code=2)
+    effective_category = category.value if category is not None else None
+    if effective_category is not None:
+        if current.direction is not TransactionDirection.OUTGOING:
+            typer.echo(
+                "spending categories apply only to outgoing expense transactions; "
+                "incoming payments should not be assigned an expense category",
+                err=True,
+            )
+            raise typer.Exit(code=2)
+        if effective_classification not in {
+            BusinessClassification.BUSINESS,
+            BusinessClassification.PERSONAL,
+            BusinessClassification.MIXED,
+        }:
+            typer.echo(
+                "--category requires a business/private classification first; "
+                "pass --as BUSINESS, PERSONAL, or MIXED before assigning a category",
+                err=True,
+            )
+            raise typer.Exit(code=2)
+    effective_pct = _resolve_classify_pct(
+        current=current,
+        requested_classification=classification,
+        requested_pct=business_pct,
+    )
     try:
         updated = set_classification(
             catalogue,
             transaction_id,
-            classification=classification,
-            business_pct=business_pct,
-            category_id=category.value if category else None,
-            notes=reason,
+            classification=effective_classification,
+            business_pct=effective_pct,
+            category_id=effective_category,
+            notes=reason if reason else None,
             classified_by="manual",
             reason=reason,
             confidence=resolved_confidence,
@@ -543,3 +622,116 @@ def _format_optional_decimal(value: Decimal | None) -> str:
     if value is None:
         return ""
     return canonical_decimal(value)
+
+
+def _resolve_classify_pct(
+    *,
+    current: Transaction,
+    requested_classification: BusinessClassification | None,
+    requested_pct: Decimal | None,
+) -> Decimal | None:
+    """Resolve the effective business percentage for one classify operation."""
+    if requested_classification is None:
+        if requested_pct is not None:
+            return requested_pct
+        return current.business_pct
+    if requested_classification is BusinessClassification.MIXED:
+        if requested_pct is not None:
+            return requested_pct
+        if current.business_classification is BusinessClassification.MIXED and current.business_pct is not None:
+            return current.business_pct
+        return None
+    return None
+
+
+def _build_catalogue(source: Path) -> TransactionCatalogue:
+    """Build a transaction catalogue from NDJSON or a provider-native source file."""
+    suffix = source.suffix.lower()
+    if suffix in {".ndjson", ".jsonl"}:
+        return _build_catalogue_from_ndjson(source)
+    provider = detect_provider(source) or _fallback_provider_for_build(source)
+    if provider is None:
+        raise TransactionError(
+            f"unable to determine how to build a catalogue from {source.resolve()}; "
+            "pass ingest NDJSON or a CSV/XLSX/OFX statement export"
+        )
+    try:
+        rows = tuple(provider.ingest(source))
+    except Exception as exc:
+        raise TransactionError(f"unable to ingest transaction source: {source.resolve()}") from exc
+    return _catalogue_from_raw_transactions(rows)
+
+
+def _build_catalogue_from_ndjson(source: Path) -> TransactionCatalogue:
+    """Load RawTransaction NDJSON and return the derived transaction catalogue."""
+    try:
+        lines = _read_ndjson_text(source).splitlines()
+    except OSError as exc:
+        raise TransactionError(f"unable to read NDJSON source: {source.resolve()}") from exc
+    except UnicodeDecodeError as exc:
+        raise TransactionError(
+            f"unable to decode NDJSON source: {source.resolve()}; "
+            "prefer 'aeat financial ingest ... --output-json > file.ndjson' from this CLI, "
+            "which now emits ASCII-safe JSON"
+        ) from exc
+    rows: list[RawTransaction] = []
+    for index, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        try:
+            rows.append(RawTransaction.model_validate_json(line))
+        except Exception as exc:
+            raise TransactionError(f"invalid RawTransaction JSON at line {index} in {source.resolve()}") from exc
+    if not rows:
+        raise TransactionError(
+            f"no RawTransaction rows were found in {source.resolve()}; "
+            "re-run 'aeat financial ingest ... --output-json > file.ndjson' and verify the file is not empty"
+        )
+    return _catalogue_from_raw_transactions(rows)
+
+
+def _read_ndjson_text(source: Path) -> str:
+    """Read NDJSON text using the common encodings Kent may produce on Windows.
+
+    UTF-16 is only attempted when the file carries a BOM (``\\xFF\\xFE`` or
+    ``\\xFE\\xFF``) because UTF-16 decoding never raises ``UnicodeDecodeError``
+    and would silently mis-interpret CP1252 bytes as paired UTF-16 code units.
+    """
+    raw = source.read_bytes()
+    has_utf16_bom = raw[:2] in (b"\xff\xfe", b"\xfe\xff")
+    candidates = ["utf-16", "utf-8-sig", "utf-8", "cp1252"] if has_utf16_bom else ["utf-8-sig", "utf-8", "cp1252"]
+    for encoding in candidates:
+        try:
+            return raw.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    raise UnicodeDecodeError("ndjson", raw, 0, len(raw), "unsupported NDJSON encoding")
+
+
+def _catalogue_from_raw_transactions(rows: list[RawTransaction] | tuple[RawTransaction, ...]) -> TransactionCatalogue:
+    """Convert raw provider rows into the stored transaction catalogue."""
+    try:
+        transactions = [
+            Transaction.model_validate(
+                {
+                    "raw": raw,
+                    "direction": TransactionDirection.OUTGOING if raw.amount < 0 else TransactionDirection.INCOMING,
+                }
+            )
+            for raw in rows
+        ]
+        return TransactionCatalogue.from_transactions(transactions)
+    except Exception as exc:
+        raise TransactionError(f"unable to build transaction catalogue from the supplied rows: {exc}") from exc
+
+
+def _fallback_provider_for_build(source: Path):
+    """Mirror the ingest command's extension fallback for build-from-source."""
+    suffix = source.suffix.lower()
+    if suffix in {".csv", ".txt"}:
+        return CsvProvider()
+    if suffix == ".xlsx":
+        return XlsxProvider()
+    if suffix in {".ofx", ".qfx"}:
+        return OfxProvider()
+    return None

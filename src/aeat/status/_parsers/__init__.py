@@ -10,5 +10,6 @@ tests against trimmed fixture HTML under
 from __future__ import annotations
 
 from .expedientes import parse_expedientes
+from .notificaciones import parse_notificaciones
 
-__all__ = ["parse_expedientes"]
+__all__ = ["parse_expedientes", "parse_notificaciones"]

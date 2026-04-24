@@ -122,3 +122,84 @@ class TestInboxCli:
         # Either surfaces AEAT-1 (it has a CRITICAL deadline) or the
         # "no upcoming" message if the calendar-day window rolled past.
         assert ("AEAT-1" in result.output) or ("no upcoming" in result.output)
+
+
+class TestInboxFetchFromAeat:
+    """Exercise ``aeat inbox fetch --from-aeat`` via monkeypatch injection.
+
+    Charter #116 defence-in-depth: the test proves the CLI can *reach*
+    the live code path without hitting AEAT. Real live coverage lives
+    in an opt-in live test gated by ``AEAT_LIVE_TESTS_ENABLED``.
+    """
+
+    def test_live_session_unavailable_exits_with_clear_error(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AEAT_INBOX_DIR", str(tmp_path / "inbox"))
+        monkeypatch.setenv("AEAT_INBOX_PDF_DIR", str(tmp_path / "inbox" / "pdfs"))
+        monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
+        result = _RUNNER.invoke(inbox_app, ["fetch", "--from-aeat"])
+        assert result.exit_code == 2, result.output
+        assert "live fetch unavailable" in result.output
+
+    def test_live_path_with_injected_reader(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        import contextlib
+        from datetime import UTC, datetime
+
+        from pydantic import AnyHttpUrl, TypeAdapter
+
+        from ...status import Notificacion as StatusNotificacion
+
+        inbox_dir = tmp_path / "inbox"
+        monkeypatch.setenv("AEAT_INBOX_DIR", str(inbox_dir))
+        monkeypatch.setenv("AEAT_INBOX_PDF_DIR", str(inbox_dir / "pdfs"))
+        monkeypatch.setenv("AEAT_INBOX_ALERT_LEAD_DAYS", "3650")
+
+        url = TypeAdapter(AnyHttpUrl).validate_python(
+            "https://sede.agenciatributaria.gob.es/wlpl/TC-UTIL/NOT-L/Notificacion"
+        )
+        received = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+
+        from datetime import date as _date
+
+        class _StubReader:
+            async def fetch_notificaciones(
+                self,
+                *,
+                since: _date | None = None,
+                use_cache: bool = True,
+            ) -> tuple[StatusNotificacion, ...]:
+                del since, use_cache
+                return (
+                    StatusNotificacion(
+                        notificacion_id="LIVE-1",
+                        kind="Requerimiento",
+                        title={"es": "Requerimiento de subsanacion"},
+                        body_excerpt={"es": "Requerimiento de subsanacion"},
+                        received_at=received,
+                        due_at=None,
+                        source_page_url=url,
+                        fetched_at=received,
+                    ),
+                )
+
+            async def close(self) -> None:
+                pass
+
+        @contextlib.asynccontextmanager
+        async def _fake_builder(settings, **_kwargs):
+            del settings
+            yield _StubReader()
+
+        monkeypatch.setattr("aeat.cli.inbox.fetch.build_live_status_reader", _fake_builder)
+
+        result = _RUNNER.invoke(inbox_app, ["fetch", "--from-aeat"])
+        assert result.exit_code == 0, result.output
+        assert "LIVE-1" in result.output
+        assert "REQUERIMIENTO" in result.output

@@ -245,6 +245,10 @@ def validate_draft(
     )
     findings = validator.validate(draft)
     refreshed = apply_validation(draft, findings)
+    refreshed = refresh_review_status(
+        refreshed,
+        schema_provider=schema_provider,
+    )
     # Defensive sanity check: re-validation must never change identity.
     assert refreshed.draft_id == draft.draft_id, "validate_draft must preserve draft_id"
     return refreshed

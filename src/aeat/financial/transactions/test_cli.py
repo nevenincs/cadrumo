@@ -11,7 +11,7 @@ import pytest
 from typer.testing import CliRunner
 
 from ...cli import app as root_app
-from .. import RawProvenance, SourceFormat
+from .. import CsvProvider, OfxProvider, RawProvenance, SourceFormat
 from ..providers import RawTransaction
 from . import (
     BusinessClassification,
@@ -22,6 +22,7 @@ from . import (
     load_transactions,
     register_classifier,
     save_transactions,
+    set_classification,
     unregister_classifier,
 )
 
@@ -232,6 +233,8 @@ def test_financial_txs_classify_embeds_reason_into_history(tmp_path: Path) -> No
     assert len(updated.classification_history) == 1
     appended_head = updated.classification_history[0]
     assert appended_head.business_classification is BusinessClassification.NOT_YET_PROCESSED
+    assert appended_head.category_id is None
+    assert appended_head.notes == ""
 
 
 def test_financial_txs_show_emits_json_payload(tmp_path: Path) -> None:
@@ -302,7 +305,7 @@ def test_financial_txs_classify_rejects_invalid_business_pct_combo(tmp_path: Pat
     )
 
     assert result.exit_code == 2
-    assert "invalid classification update for transaction" in result.output
+    assert "--pct can only be used together with --as MIXED" in result.output
 
 
 def test_financial_txs_classify_accepts_category_and_reason(tmp_path: Path) -> None:
@@ -338,6 +341,280 @@ def test_financial_txs_classify_accepts_category_and_reason(tmp_path: Path) -> N
     assert updated is not None
     assert updated.category_id == "cuotas_autonomos_ss"
     assert updated.notes == "Payment for social security"
+
+
+def test_financial_txs_classify_allows_metadata_only_update(tmp_path: Path) -> None:
+    """Kent can add a category and notes without repeating the classification target."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(item for item in catalogue.values() if item.direction is TransactionDirection.OUTGOING)
+    updated = set_classification(
+        catalogue,
+        transaction.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        classified_by="manual",
+        reason="Initial manual classification",
+    )
+    save_transactions(updated, tmp_path / _CATALOGUE_FILENAME)
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--category",
+            "asesoria_fiscal",
+            "--reason",
+            "Accountant subscription",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["business_classification"] == "BUSINESS"
+    assert payload["category_id"] == "asesoria_fiscal"
+    assert payload["notes"] == "Accountant subscription"
+
+
+def test_financial_txs_classify_rejects_category_for_unprocessed_transaction(tmp_path: Path) -> None:
+    """Kent should classify the transaction first before assigning a spending category."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(
+        item for item in catalogue.values() if item.business_classification is BusinessClassification.NOT_YET_PROCESSED
+    )
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--category",
+            "software_suscripcion",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "--category requires a business/private classification first" in result.output
+
+
+def test_financial_txs_classify_rejects_category_for_incoming_payment(tmp_path: Path) -> None:
+    """Expense categories must not be assignable to incoming payments."""
+    catalogue = _write_catalogue(tmp_path)
+    transaction = next(item for item in catalogue.values() if item.direction is TransactionDirection.INCOMING)
+
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "txs",
+            "classify",
+            transaction.transaction_id,
+            "--as",
+            "BUSINESS",
+            "--category",
+            "software_suscripcion",
+        ],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "incoming payments should not be assigned an expense category" in result.output
+
+
+def _write_ndjson_from_provider(tmp_path: Path, fixture_name: str, *, ofx: bool = False) -> tuple[Path, list[Decimal]]:
+    provider = OfxProvider() if ofx else CsvProvider()
+    fixture = Path("tests/fixtures/financial") / fixture_name
+    rows = tuple(provider.ingest(fixture))
+    target = tmp_path / ("raw.ofx.ndjson" if ofx else "raw.csv.ndjson")
+    target.write_text("\n".join(row.model_dump_json() for row in rows) + "\n", encoding="utf-8")
+    return target, sorted(row.amount for row in rows)
+
+
+def test_financial_txs_build_creates_catalogue_from_csv_ingest_ndjson(tmp_path: Path) -> None:
+    """`financial txs build` should preserve both rows from CSV ingest output."""
+    source, expected_amounts = _write_ndjson_from_provider(tmp_path, "synthetic-transactions.csv")
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "build", str(source)],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    amounts = sorted(transaction.raw.amount for transaction in restored.values())
+    assert len(restored) == 2
+    assert amounts == expected_amounts
+
+
+def test_financial_txs_build_creates_catalogue_from_ofx_ingest_ndjson(tmp_path: Path) -> None:
+    """`financial txs build` should preserve both rows from OFX ingest output."""
+    source, expected_amounts = _write_ndjson_from_provider(tmp_path, "synthetic-transactions.ofx", ofx=True)
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "build", str(source)],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    amounts = sorted(transaction.raw.amount for transaction in restored.values())
+    assert len(restored) == 2
+    assert amounts == expected_amounts
+
+
+def test_financial_txs_build_refuses_to_overwrite_existing_catalogue_without_replace(tmp_path: Path) -> None:
+    """Kent should hear a clear refusal instead of silently overwriting existing work."""
+    _write_catalogue(tmp_path)
+    source, _ = _write_ndjson_from_provider(tmp_path, "synthetic-transactions.csv")
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "build", str(source)],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "--replace" in result.output
+
+
+def test_financial_txs_build_rejects_empty_ndjson(tmp_path: Path) -> None:
+    """An empty NDJSON file should be treated as operator error, not a successful empty build."""
+    source = tmp_path / "empty.ndjson"
+    source.write_text("", encoding="utf-8")
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "build", str(source)],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "no RawTransaction rows were found" in result.output
+
+
+def test_financial_txs_build_rejects_duplicate_raw_rows_cleanly(tmp_path: Path) -> None:
+    """Duplicate raw rows should fail with a CLI error, not a traceback."""
+    raw = RawTransaction(
+        transaction_id="dup-row",
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
+        amount=Decimal("-18.50"),
+        currency="EUR",
+        counterparty="Proveedor SL",
+        description="Cuota repetida",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="f" * 64,
+            source_row_index=8,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(2026, 4, 14, 12, 0, tzinfo=UTC),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": "Cuota repetida"},
+    )
+    source = tmp_path / "duplicate.ndjson"
+    line = raw.model_dump_json()
+    source.write_text(f"{line}\n{line}\n", encoding="utf-8")
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "build", str(source)],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 2
+    assert "unable to build transaction catalogue" in result.output
+    assert "duplicate transaction_id" in result.output
+
+
+def test_financial_txs_build_accepts_cp1252_encoded_ndjson(tmp_path: Path) -> None:
+    """Kent's redirected Windows files should still build when the NDJSON lands in cp1252."""
+    raw = RawTransaction(
+        transaction_id="accented-row",
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
+        amount=Decimal("-18.50"),
+        currency="EUR",
+        counterparty="Cafetería Sol",
+        description="Suscripción gestión",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="e" * 64,
+            source_row_index=7,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(2026, 4, 14, 11, 0, tzinfo=UTC),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": "Suscripción gestión"},
+    )
+    source = tmp_path / "cp1252.ndjson"
+    source.write_bytes((raw.model_dump_json() + "\n").encode("cp1252"))
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "build", str(source)],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    assert len(restored) == 1
+
+
+def test_financial_txs_build_accepts_utf8_bom_ndjson(tmp_path: Path) -> None:
+    """A UTF-8 BOM should not poison the first JSON line."""
+    raw = RawTransaction(
+        transaction_id="bom-row",
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
+        amount=Decimal("-22.00"),
+        currency="EUR",
+        counterparty="Proveedor SL",
+        description="Licencia anual",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="a" * 64,
+            source_row_index=9,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(2026, 4, 14, 13, 0, tzinfo=UTC),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": "Licencia anual"},
+    )
+    source = tmp_path / "bom.ndjson"
+    source.write_bytes(("﻿" + raw.model_dump_json() + "\n").encode("utf-8"))
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "build", str(source)],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    assert len(restored) == 1
+
+
+def test_financial_txs_build_accepts_direct_csv_source(tmp_path: Path) -> None:
+    """Kent should be able to build directly from a CSV export without an intermediate NDJSON file."""
+    fixture = Path("tests/fixtures/financial/synthetic-transactions.csv")
+
+    result = _RUNNER.invoke(
+        root_app,
+        ["financial", "txs", "build", str(fixture)],
+        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
+    )
+
+    assert result.exit_code == 0, result.output
+    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    assert len(restored) == 2
 
 
 def _write_confidence_catalogue(tmp_path: Path) -> TransactionCatalogue:

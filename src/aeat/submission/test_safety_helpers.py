@@ -69,7 +69,7 @@ def test_confirm_live_submission_requires_exact_phrase() -> None:
         modelo="130",
         period="2026Q1",
         profile_tax_id="X1234567L",
-        status=DraftStatus.READY_TO_SUBMIT,
+        status=DraftStatus.APPROVED,
         values={"07": "2150.00"},
     )
     portal = Portal(modelo="130", presentation_url="https://sede.example.test/130")
@@ -117,7 +117,7 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
         modelo="130",
         period="2026Q1",
         profile_tax_id="X1234567L",
-        status=DraftStatus.READY_TO_SUBMIT,
+        status=DraftStatus.APPROVED,
         values={"07": "2150.00"},
     )
     checksum = compute_draft_checksum(draft)
@@ -154,7 +154,7 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
             modelo: str = "130"
             period: str = "2026Q1"
             profile_tax_id: str = "X1234567L"
-            status: DraftStatus = DraftStatus.READY_TO_SUBMIT
+            status: DraftStatus = DraftStatus.APPROVED
             values: dict[str, str] = field(default_factory=lambda: {"07": "2150.00"})
             findings: tuple[FilingFinding, ...] = ()
 

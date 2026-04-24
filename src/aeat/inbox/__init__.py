@@ -38,6 +38,7 @@ from ._errors import (
     InboxFetchError,
 )
 from ._fetcher import InboxFetcher
+from ._live_source import LiveAeatNotificacionSource
 from ._models import (
     Inbox,
     Notificacion,
@@ -52,6 +53,7 @@ __all__ = [
     "InboxError",
     "InboxFetchError",
     "InboxFetcher",
+    "LiveAeatNotificacionSource",
     "Notificacion",
     "NotificacionKind",
     "NotificacionPriority",

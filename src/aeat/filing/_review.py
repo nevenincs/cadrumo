@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
+from functools import lru_cache
 from pathlib import Path
 
 from ..financial.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
@@ -30,6 +31,15 @@ _REVIEW_STATUSES = frozenset(
     {
         FilingDraftStatus.APPROVED,
         FilingDraftStatus.APPROVAL_STALE,
+    }
+)
+_DOWNSTREAM_STATUSES = frozenset(
+    {
+        FilingDraftStatus.SUBMITTED,
+        FilingDraftStatus.ACKNOWLEDGED,
+        FilingDraftStatus.REJECTED,
+        FilingDraftStatus.AMENDED,
+        FilingDraftStatus.CANCELLED,
     }
 )
 
@@ -187,11 +197,14 @@ def refresh_review_status(
     """Return ``draft`` with its approval status synchronized to current state."""
 
     timestamp = refreshed_at or datetime.now(tz=UTC)
-    if draft.status not in _REVIEW_STATUSES:
+    has_review_metadata = _has_review_metadata(draft)
+    if draft.status in _DOWNSTREAM_STATUSES:
         cleared = _review_metadata_reset()
         if any(getattr(draft, key) != value for key, value in cleared.items()):
             cleared["updated_at"] = timestamp
             return draft.model_copy(update=cleared)
+        return draft
+    if draft.status not in _REVIEW_STATUSES and not has_review_metadata:
         return draft
 
     if (
@@ -253,11 +266,49 @@ def _review_metadata_reset() -> dict[str, object]:
     }
 
 
+def _has_review_metadata(draft: FilingDraft) -> bool:
+    return any(
+        value is not None
+        for value in (
+            draft.approved_at,
+            draft.approved_by,
+            draft.approval_basis,
+            draft.review_checksum,
+        )
+    )
+
+
 def _load_transaction_catalogue(path: Path | None) -> TransactionCatalogue:
     if path is None:
-        from ..config import load_settings
+        path = _default_transaction_catalogue_path()
+        return _load_transaction_catalogue_cached(*_catalogue_cache_key(path))
+    return _read_transaction_catalogue(path)
 
-        path = load_settings().aeat_financial_txs_dir.resolve() / _DEFAULT_TRANSACTION_CATALOGUE_FILENAME
+
+def _default_transaction_catalogue_path() -> Path:
+    from ..config import load_settings
+
+    return load_settings().aeat_financial_txs_dir.resolve() / _DEFAULT_TRANSACTION_CATALOGUE_FILENAME
+
+
+def _catalogue_cache_key(path: Path) -> tuple[Path, int | None, int | None]:
+    if not path.exists():
+        return (path, None, None)
+    stat = path.stat()
+    return (path, stat.st_mtime_ns, stat.st_size)
+
+
+@lru_cache(maxsize=8)
+def _load_transaction_catalogue_cached(
+    path: Path,
+    mtime_ns: int | None,
+    size: int | None,
+) -> TransactionCatalogue:
+    del mtime_ns, size
+    return _read_transaction_catalogue(path)
+
+
+def _read_transaction_catalogue(path: Path) -> TransactionCatalogue:
     if not path.exists():
         return TransactionCatalogue()
     return load_transactions(path)
@@ -288,11 +339,14 @@ def _draft_review_fingerprint(draft: FilingDraft) -> str:
 
 
 def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
-    payload = [
-        _normalize_transaction(transaction)
-        for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id)
-    ]
-    return _sha256_payload(payload)
+    hasher = hashlib.sha256()
+    hasher.update(b"[")
+    for index, transaction in enumerate(sorted(catalogue.values(), key=lambda item: item.transaction_id)):
+        if index > 0:
+            hasher.update(b",")
+        hasher.update(_canonical_json_bytes(_normalize_transaction(transaction)))
+    hasher.update(b"]")
+    return hasher.hexdigest()
 
 
 def _normalize_transaction(transaction: Transaction) -> dict[str, str | None]:
@@ -358,13 +412,16 @@ def _parse_fiscal_period(period: str) -> FiscalPeriod | None:
 
 
 def _sha256_payload(payload: object) -> str:
-    encoded = json.dumps(
+    return hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()
+
+
+def _canonical_json_bytes(payload: object) -> bytes:
+    return json.dumps(
         payload,
         ensure_ascii=True,
         separators=(",", ":"),
         sort_keys=True,
     ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
 
 
 def _canonical_decimal(value: Decimal | None) -> str | None:

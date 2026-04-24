@@ -25,7 +25,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Per-catalogue findings (not just per-draft) | ❌ | [#238](https://github.com/wgergely/aeat/issues/238) |
 | Unified review queue | ✅ | [#232](https://github.com/wgergely/aeat/issues/232) |
 | `aeat pipeline status` dashboard | ❌ | [#238](https://github.com/wgergely/aeat/issues/238) |
-| Staleness detection on approved drafts | ❌ | [#230](https://github.com/wgergely/aeat/issues/230) |
+| Staleness detection on approved drafts | ✅ via PR #269: `FilingApprovalBasis`, `compute_current_approval_basis`, `aeat review stale` | [#230](https://github.com/wgergely/aeat/issues/230) |
 | Verification against AEAT post-upload | ❌ | [#239](https://github.com/wgergely/aeat/issues/239) |
 
 ## provenance

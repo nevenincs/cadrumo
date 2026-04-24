@@ -35,7 +35,7 @@ def runner() -> CliRunner:
 
 
 @pytest.fixture
-def fake_pdf(tmp_path: Path) -> Path:
+def sample_pdf(tmp_path: Path) -> Path:
     pdf_path = tmp_path / "boe.pdf"
     build_fake_boe_pdf(pdf_path, annex_lines=_ANNEX_LINES)
     return pdf_path
@@ -44,7 +44,7 @@ def fake_pdf(tmp_path: Path) -> Path:
 def test_refresh_with_override_writes_cache(
     runner: CliRunner,
     tmp_path: Path,
-    fake_pdf: Path,
+    sample_pdf: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     cache_dir = tmp_path / "schema-cache"
@@ -60,7 +60,7 @@ def test_refresh_with_override_writes_cache(
             "--period",
             "2025Q4",
             "--_pdf-path-override",
-            str(fake_pdf),
+            str(sample_pdf),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -71,7 +71,7 @@ def test_refresh_with_override_writes_cache(
 def test_refresh_by_value_also_accepted(
     runner: CliRunner,
     tmp_path: Path,
-    fake_pdf: Path,
+    sample_pdf: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     cache_dir = tmp_path / "schema-cache"
@@ -87,7 +87,7 @@ def test_refresh_by_value_also_accepted(
             "--period",
             "2025Q4",
             "--_pdf-path-override",
-            str(fake_pdf),
+            str(sample_pdf),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -96,7 +96,7 @@ def test_refresh_by_value_also_accepted(
 def test_show_prints_cached_json(
     runner: CliRunner,
     tmp_path: Path,
-    fake_pdf: Path,
+    sample_pdf: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     cache_dir = tmp_path / "schema-cache"
@@ -112,7 +112,7 @@ def test_show_prints_cached_json(
             "--period",
             "2025Q4",
             "--_pdf-path-override",
-            str(fake_pdf),
+            str(sample_pdf),
         ],
     )
     result = runner.invoke(
@@ -150,12 +150,12 @@ def test_refresh_unknown_modelo_is_rejected(runner: CliRunner) -> None:
 def test_refresh_via_file_url_override(
     runner: CliRunner,
     tmp_path: Path,
-    fake_pdf: Path,
+    sample_pdf: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     cache_dir = tmp_path / "schema-cache"
     monkeypatch.setenv("AEAT_SCHEMA_CACHE_DIR", str(cache_dir))
-    file_url = fake_pdf.resolve().as_uri()
+    file_url = sample_pdf.resolve().as_uri()
     override = json.dumps({"130": {"BOE-A-2023-15412": file_url}})
     monkeypatch.setenv("AEAT_SCHEMA_SOURCE_URLS_OVERRIDE", override)
     result = runner.invoke(
