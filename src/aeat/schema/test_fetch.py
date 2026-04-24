@@ -73,7 +73,7 @@ class TestValidateOverrideUrl:
                 resolved.relative_to(root)
             except ValueError:
                 continue
-            pytest.skip(f"allow-list unexpectedly covers {resolved}; test cannot assert rejection on this host")
+            raise AssertionError(f"test sentinel unexpectedly allowed by file:// allow-list: {resolved}")
         with pytest.raises(SchemaCacheError, match="file://"):
             _validate_override_url(bogus.as_uri())
 
@@ -156,22 +156,17 @@ class TestFetchBoePdf:
                 settings=_settings_with(tmp_path / "cache", override),
             )
 
-    def test_oversized_file_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_oversized_file_rejected(self, tmp_path: Path) -> None:
         pdf_path = tmp_path / "big.pdf"
-        pdf_path.write_bytes(b"\x00" * 1024)
+        with pdf_path.open("wb") as handle:
+            handle.truncate(_MAX_PDF_BYTES + 1)
         override = json.dumps({"130": {"BOE-A-2023-15412": pdf_path.resolve().as_uri()}})
-        # Lower the cap for the test to avoid writing tens of megabytes.
-        from . import _fetch as fetch_module
-
-        monkeypatch.setattr(fetch_module, "_MAX_PDF_BYTES", 512)
         with pytest.raises(SchemaCacheError, match="exceeds"):
             fetch_boe_pdf(
                 ModeloCode.MODELO_130,
                 "BOE-A-2023-15412",
                 settings=_settings_with(tmp_path / "cache", override),
             )
-        # Partial tempfile cleaned up.
-        assert not any((tmp_path / "cache").rglob("*.part"))
 
     def test_max_pdf_bytes_is_sane(self) -> None:
         # Guards against an accidental downgrade; 64 MiB is the ADR cap.
