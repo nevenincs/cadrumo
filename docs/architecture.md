@@ -28,7 +28,7 @@ diagram below is the data-flow story that connects them.
 
 ## Arrow-by-arrow
 
-**`[setup wizard] → [config + cert]`** — `aeat.setup` (merging in #61)
+**`[setup wizard] → [config + auth provider]`** — `aeat.setup` (shipped via #61 / PR #66)
 walks the operator through the env-file fields documented in
 `env/.env.example`. Its only output is a populated `env/.env` plus a
 verified path to the operator's PKCS#12 certificate; it never moves

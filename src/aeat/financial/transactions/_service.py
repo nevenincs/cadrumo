@@ -20,7 +20,7 @@ _LOGGER = get_logger(__name__)
 _MANUAL_CLASSIFIED_BY = "manual"
 _DEFAULT_MANUAL_CONFIDENCE = Decimal("1.0")
 
-_EntrySignature = tuple[BusinessClassification, Decimal | None, str, str, Decimal | None]
+_EntrySignature = tuple[BusinessClassification, Decimal | None, str, str, str | None, str, Decimal | None]
 
 
 def load_transactions(path: Path) -> TransactionCatalogue:
@@ -44,7 +44,7 @@ def load_transactions(path: Path) -> TransactionCatalogue:
         catalogue = TransactionCatalogue.model_validate_json(raw)
     except ValidationError as exc:
         raise TransactionPersistenceError(f"invalid transaction catalogue JSON: {target}") from exc
-    _LOGGER.info("loaded %s transactions from %s", len(catalogue), target)
+    _LOGGER.debug("loaded %s transactions from %s", len(catalogue), target)
     return catalogue
 
 
@@ -78,7 +78,7 @@ def save_transactions(catalogue: TransactionCatalogue, path: Path) -> None:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
         raise TransactionPersistenceError(f"unable to write transaction catalogue: {target}") from exc
-    _LOGGER.info("saved %s transactions to %s", len(catalogue), target)
+    _LOGGER.debug("saved %s transactions to %s", len(catalogue), target)
 
 
 def find_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction | None:
@@ -135,10 +135,10 @@ def set_classification(
 
     Appends a ``ClassificationHistoryEntry`` to the transaction's
     ``classification_history`` chain whenever the incoming decision
-    differs (by state, percentage, ``classified_by``, ``reason``, or
-    ``confidence``) from the transaction's current head. Byte-identical
-    re-classifies are skipped so rule engines can run idempotently
-    without inflating history.
+    differs (by state, percentage, ``classified_by``, ``reason``,
+    ``category_id``, ``notes``, or ``confidence``) from the transaction's
+    current head. Byte-identical re-classifies are skipped so rule engines
+    can run idempotently without inflating history.
 
     Args:
         catalogue: Source catalogue.
@@ -181,6 +181,8 @@ def set_classification(
         business_pct,
         normalised_classified_by,
         normalised_reason,
+        category_id if category_id is not None else transaction.category_id,
+        notes if notes is not None else transaction.notes,
         resolved_confidence,
     )
     current_signature: _EntrySignature = (
@@ -188,6 +190,8 @@ def set_classification(
         transaction.business_pct,
         transaction.classified_by,
         transaction.classification_reason,
+        transaction.category_id,
+        transaction.notes,
         transaction.classification_confidence,
     )
     if proposed_signature == current_signature:
@@ -261,6 +265,8 @@ def snapshot_classification_state(
         classified_at=snapshot_at,
         classified_by=transaction.classified_by,
         reason=transaction.classification_reason,
+        category_id=transaction.category_id,
+        notes=transaction.notes,
         confidence=transaction.classification_confidence,
     )
 

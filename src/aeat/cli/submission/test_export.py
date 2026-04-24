@@ -207,8 +207,8 @@ class TestExportCommand:
         assert result.exit_code != 0
 
     def test_incomplete_draft_refused(self, tmp_path: Path) -> None:
-        """INCOMPLETE drafts fail validation; export refuses."""
-        draft = _write_draft(tmp_path, status="INCOMPLETE")
+        """VALIDATED drafts have not been approved; export refuses."""
+        draft = _write_draft(tmp_path, status="VALIDATED")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
             app,

@@ -16,9 +16,11 @@ from ..filing import (
     AmendmentKind,
     CasillaChange,
     FilingAmendment,
+    approve_draft,
     build_draft,
 )
 from ..filing.testing import SyntheticProfile, default_schema_provider
+from ..financial.transactions import TransactionCatalogue
 from . import (
     AeatLiveSubmitNotEnabledError,
     AeatLiveTransportUnavailableError,
@@ -51,7 +53,7 @@ class _Draft(FilingDraftLike):
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: DraftStatus = DraftStatus.READY_TO_SUBMIT
+    status: DraftStatus = DraftStatus.APPROVED
     values: dict[str, str] = field(default_factory=dict)
     findings: tuple[FilingFinding, ...] = ()
 
@@ -209,6 +211,12 @@ def _build_amendment() -> FilingAmendment:
         },
         schema_provider=default_schema_provider(),
     )
+    approved_amended_draft = approve_draft(
+        amended_draft,
+        approved_by="kent",
+        schema_provider=default_schema_provider(),
+        transaction_catalogue=TransactionCatalogue(),
+    )
     return FilingAmendment(
         amendment_id="amd-1",
         submission_id="sub-1",
@@ -224,7 +232,7 @@ def _build_amendment() -> FilingAmendment:
                 reason="Test amendment",
             ),
         ),
-        amended_draft=amended_draft,
+        amended_draft=approved_amended_draft,
         created_at=datetime.now(UTC),
     )
 

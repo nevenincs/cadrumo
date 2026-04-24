@@ -3,28 +3,28 @@
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 
 import typer
 from rich.console import Console
 
 from ...submission import Preflight, SubmissionPreflightError
 from .._observability import cli_run_context
-from ._helpers import build_engine, load_draft
+from ._helpers import build_engine, load_draft, resolve_draft_path
 
 _CONSOLE = Console()
 
 
 def preflight_cmd(
-    draft_path: Path = typer.Argument(..., help="Path to a CLI-format draft JSON."),
+    draft_ref: str = typer.Argument(..., help="Draft id or path to a persisted filing draft JSON."),
 ) -> None:
-    """Run preflight on ``draft_path`` and print the outcome."""
-    arguments = {"draft_path": str(draft_path)}
+    """Run preflight on ``draft_ref`` and print the outcome."""
+    arguments = {"draft_ref": draft_ref}
     with cli_run_context(
         entrypoint="aeat submission preflight",
         arguments=arguments,
-        positional=("draft_path",),
+        positional=("draft_ref",),
     ):
+        draft_path = resolve_draft_path(draft_ref)
         draft = load_draft(draft_path)
         engine = build_engine()
         checker = Preflight(

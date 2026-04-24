@@ -198,8 +198,15 @@ class DraftStatus(StrEnum):
     """Rebase-swap stub for ``aeat.filing.DraftStatus`` (#39)."""
 
     DRAFT = "DRAFT"
-    INCOMPLETE = "INCOMPLETE"
+    VALIDATED = "VALIDATED"
     READY_TO_SUBMIT = "READY_TO_SUBMIT"
+    APPROVED = "APPROVED"
+    APPROVAL_STALE = "APPROVAL_STALE"
+    SUBMITTED = "SUBMITTED"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    REJECTED = "REJECTED"
+    AMENDED = "AMENDED"
+    CANCELLED = "CANCELLED"
 
 
 @runtime_checkable

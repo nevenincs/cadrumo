@@ -6,8 +6,8 @@ date: '2026-04-21'
 related:
   - '[[2026-04-21-live-sync-backend-adr]]'
   - '[[2026-04-21-live-sync-backend-adr-audit]]'
+  - "[[2026-04-21-live-sync-backend-research]]"
 ---
-
 # `live-sync-backend` `phase-1` plan
 
 Implementation of the Live AEAT Read & Sync Engine (Issues #170 and #272) based on the approved ADR.
