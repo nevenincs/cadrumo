@@ -1,12 +1,10 @@
 """Unit tests for ``aeat browser health`` (#95).
 
-Every test replaces the module-level :data:`PROBE_FACTORY` attribute
-on :mod:`aeat.cli.browser.health` with a concrete async factory that
-returns a real test-double class implementing the
-:class:`HealthProbeLike` protocol. The double raises a real
-:class:`aeat.errors.SiteHealthError` constructed from real HTML
-fixtures under ``tests/fixtures/site_health/``. No ``unittest.mock``
-usage.
+Every test uses the explicit probe-factory override seam exposed by
+:mod:`aeat.cli.browser.health`. The doubles raise real
+:class:`aeat.errors.SiteHealthError` instances constructed from real
+HTML fixtures under ``tests/fixtures/site_health/``. No monkeypatching
+or ``unittest.mock`` usage.
 """
 
 from __future__ import annotations
@@ -24,8 +22,7 @@ from ...errors import SiteHealthError
 from ...status import SiteHealthState
 from ...status._site_health_parsers import evaluate_response
 from . import app
-from . import health as health_module
-from .health import _RealProbe
+from .health import HealthProbeLike, ProbeFactory, _RealProbe, override_probe_factory
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
@@ -65,27 +62,24 @@ def _status_from_fixture(fixture_path: Path, *, http_status: int) -> SiteHealthE
     return SiteHealthError(status=status)
 
 
-def _install_factory(
-    monkeypatch: pytest.MonkeyPatch,
-    probe_builder: Callable[[], object],
-) -> None:
-    async def _factory(settings: Settings) -> object:
+def _probe_factory(probe_builder: Callable[[], HealthProbeLike]) -> ProbeFactory:
+    async def _factory(settings: Settings) -> HealthProbeLike:
         del settings
         return probe_builder()
 
-    monkeypatch.setattr(health_module, "PROBE_FACTORY", _factory)
+    return _factory
 
 
-def test_health_ok_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
-    _install_factory(monkeypatch, _HealthyProbe)
-    result = _RUNNER.invoke(app, ["health"])
+def test_health_ok_exits_zero() -> None:
+    with override_probe_factory(_probe_factory(_HealthyProbe)):
+        result = _RUNNER.invoke(app, ["health"])
     assert result.exit_code == 0
     assert "state=ok" in result.stdout
 
 
-def test_health_ok_json_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
-    _install_factory(monkeypatch, _HealthyProbe)
-    result = _RUNNER.invoke(app, ["health", "--json"])
+def test_health_ok_json_exits_zero() -> None:
+    with override_probe_factory(_probe_factory(_HealthyProbe)):
+        result = _RUNNER.invoke(app, ["health", "--json"])
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
     assert payload["state"] == "ok"
@@ -100,7 +94,6 @@ def test_health_ok_json_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
     ],
 )
 def test_health_exit_code_table(
-    monkeypatch: pytest.MonkeyPatch,
     fixture_rel: str,
     http_status: int,
     expected_state: SiteHealthState,
@@ -123,8 +116,8 @@ def test_health_exit_code_table(
     def _builder() -> _RaisingProbe:
         return _RaisingProbe(error)
 
-    _install_factory(monkeypatch, _builder)
-    result = _RUNNER.invoke(app, ["health"])
+    with override_probe_factory(_probe_factory(_builder)):
+        result = _RUNNER.invoke(app, ["health"])
     assert result.exit_code == expected_exit
     assert f"state={expected_state.value}" in result.stdout
 
@@ -222,13 +215,13 @@ class TestRealProbeCleanup:
         assert playwright.stop_calls == 1
 
 
-def test_health_json_emits_parseable_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_json_emits_parseable_payload() -> None:
     error = _status_from_fixture(
         _FIXTURES_ROOT / "mantenimiento" / "interstitial.html",
         http_status=200,
     )
-    _install_factory(monkeypatch, lambda: _RaisingProbe(error))
-    result = _RUNNER.invoke(app, ["health", "--json"])
+    with override_probe_factory(_probe_factory(lambda: _RaisingProbe(error))):
+        result = _RUNNER.invoke(app, ["health", "--json"])
     assert result.exit_code == 2
     payload = json.loads(result.stdout)
     assert payload["state"] == "mantenimiento"

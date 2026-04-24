@@ -6,8 +6,9 @@ Subcommands:
 - ``aeat filing validate`` — re-validate a saved draft.
 - ``aeat filing show`` — pretty-print a draft.
 - ``aeat filing list`` — list drafts under the configured drafts dir.
-- ``aeat filing import`` — reconstruct a draft from a justificante PDF
-  (#271; cert-free, offline).
+- ``aeat filing import`` — reconstruct a draft from a justificante /
+  declaración / borrador PDF (#271, #305) or live from the AEAT Sede
+  (#272, via ``--from-aeat``).
 - ``aeat filing reconcile`` — read-only compare a local draft against
   AEAT's authoritative record (#239).
 """
@@ -25,7 +26,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ...config import load_settings
+from ...config import Settings, load_settings
 from ...filing import (
     FilingAmendment,
     FilingAmendmentError,
@@ -46,10 +47,12 @@ from ...filing import (
     validate_draft,
 )
 from ...filing.runtime import build_runtime_schema_provider, load_default_filing_profile
+from ...history import FiledModelo
 from ...i18n import Language, get_translation
 from ...justificante import JustificanteError
 from ...logging import get_logger
 from ...submission import SubmissionEngine, SubmissionError
+from .._live_reader import LiveSessionUnavailableError, build_live_status_reader
 from ..submission._helpers import build_engine as build_submission_engine
 from ._reconcile import register as _register_reconcile
 
@@ -149,6 +152,32 @@ def _save_draft(draft: FilingDraft) -> Path:
         encoding="utf-8",
     )
     return target
+
+
+def _load_persisted_draft_by_id(draft_id: str) -> FilingDraft | None:
+    matches = sorted(path for path in _drafts_dir().glob(f"*_{draft_id}.json") if path.is_file())
+    if not matches:
+        return None
+    if len(matches) > 1:
+        joined = ", ".join(str(path) for path in matches)
+        raise typer.BadParameter(f"draft_id={draft_id!r} matched multiple draft files: {joined}")
+    return _refresh_persisted_draft(matches[0])
+
+
+def _render_draft_next_steps(draft: FilingDraft, *, draft_path: Path) -> None:
+    """Print the most likely next operator commands for ``draft``."""
+
+    if draft.status is FilingDraftStatus.APPROVED:
+        _console.print(f"Next: aeat submission preflight {draft_path}")
+        _console.print(f"Next: aeat submission dry-run {draft_path}")
+        return
+    if draft.status is FilingDraftStatus.APPROVAL_STALE:
+        _console.print(f"Next: aeat review show {draft.draft_id}")
+        _console.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
+        return
+    _console.print(f"Next: aeat review show {draft.draft_id}")
+    if draft.status is FilingDraftStatus.READY_TO_SUBMIT:
+        _console.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
 
 
 def _parse_json_argument(raw: str) -> dict[str, object]:
@@ -330,8 +359,9 @@ def build(
     except FilingDraftError as exc:
         raise typer.BadParameter(str(exc)) from exc
     saved = _save_draft(draft)
-    typer.echo(f"Saved draft {draft.draft_id} → {saved}")
+    typer.echo(f"Saved draft {draft.draft_id} -> {saved}")
     _render_draft(draft)
+    _render_draft_next_steps(draft, draft_path=saved)
 
 
 @app.command("validate")
@@ -348,6 +378,7 @@ def validate(
     draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
     typer.echo(f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})")
     _render_draft(refreshed)
+    _render_draft_next_steps(refreshed, draft_path=draft_path)
 
 
 @app.command("show")
@@ -449,11 +480,32 @@ def import_(
             ),
         ),
     ] = None,
+    from_aeat: Annotated[
+        bool,
+        typer.Option(
+            "--from-aeat",
+            help=(
+                "Reconstruct the draft live from the authenticated AEAT Sede "
+                "(#272). Requires an active `aeat auth login` session and "
+                "the ``--modelo`` / ``--period`` selectors."
+            ),
+        ),
+    ] = False,
     modelo: Annotated[
         str | None,
         typer.Option(
             "--modelo",
-            help="Override auto-detected modelo (e.g. '130'). Only used with --from-declaracion.",
+            help=(
+                "Modelo string ID (e.g. '303'). Required with --from-aeat; "
+                "overrides auto-detection with --from-declaracion."
+            ),
+        ),
+    ] = None,
+    period: Annotated[
+        str | None,
+        typer.Option(
+            "--period",
+            help="Period identifier (e.g. '2025Q4'). Required with --from-aeat.",
         ),
     ] = None,
     año: Annotated[
@@ -463,11 +515,29 @@ def import_(
             help="Override auto-detected tax year.",
         ),
     ] = None,
+    profile: Annotated[
+        Path | None,
+        typer.Option(
+            "--profile",
+            help=(
+                "Optional path to an AutonomoProfile JSON file (defaults to "
+                "AEAT_DEFAULT_PROFILE_PATH). Used by --from-aeat."
+            ),
+        ),
+    ] = None,
+    profile_tax_id: Annotated[
+        str,
+        typer.Option("--profile-tax-id", help="Taxpayer tax ID stamped on the draft. Used by --from-aeat."),
+    ] = _DEFAULT_PROFILE_TAX_ID,
+    profile_name: Annotated[
+        str,
+        typer.Option("--profile-name", help="Display name of the taxpayer profile. Used by --from-aeat."),
+    ] = _DEFAULT_PROFILE_NAME,
 ) -> None:
-    """Import a past filing from an AEAT PDF.
+    """Import a past filing from an AEAT PDF or live Sede record.
 
-    Exactly one of ``--from-justificante``, ``--from-declaracion``, or
-    ``--from-borrador`` must be supplied.
+    Exactly one of ``--from-justificante``, ``--from-declaracion``,
+    ``--from-borrador``, or ``--from-aeat`` must be supplied.
 
     ``--from-justificante`` reconstructs a metadata scaffold draft +
     companion submission record from the filing receipt (#271). Every
@@ -481,10 +551,17 @@ def import_(
     predeclaración, or declaración); extracts the summary-block casillas
     and chains verification against the partial Modelo 100 ruleset
     (#305 cluster F MVP).
+
+    ``--from-aeat`` fetches the authoritative filing record from the
+    authenticated AEAT Sede Electrónica and reconstructs a draft via the
+    StatusReader + HistoryFetcher read path (#272). Read-only — no
+    mutation of AEAT state.
     """
-    provided = sum(p is not None for p in (from_justificante, from_declaracion, from_borrador))
+    provided = sum(bool(flag) for flag in (from_justificante, from_declaracion, from_borrador, from_aeat))
     if provided == 0:
-        raise typer.BadParameter("exactly one of --from-justificante, --from-declaracion, --from-borrador is required")
+        raise typer.BadParameter(
+            "exactly one of --from-justificante, --from-declaracion, --from-borrador, --from-aeat is required"
+        )
     if provided > 1:
         raise typer.BadParameter("only one --from-* flag at a time")
 
@@ -494,9 +571,71 @@ def import_(
     if from_declaracion is not None:
         _handle_declaracion_import(from_declaracion, modelo=modelo, año=año)
         return
+    if from_aeat:
+        if not modelo or not period:
+            raise typer.BadParameter("--from-aeat requires both --modelo and --period")
+        _handle_aeat_import(
+            modelo=modelo,
+            period=period,
+            profile_path=profile,
+            profile_tax_id=profile_tax_id,
+            profile_name=profile_name,
+        )
+        return
 
     assert from_borrador is not None
     _handle_borrador_import(from_borrador, año=año)
+
+
+def _handle_aeat_import(
+    *,
+    modelo: str,
+    period: str,
+    profile_path: Path | None,
+    profile_tax_id: str,
+    profile_name: str,
+) -> None:
+    """Dispatch the live-AEAT (#272) import path."""
+    settings = load_settings()
+    try:
+        filed_modelos = asyncio.run(_fetch_filed_modelos(modelo, period, settings))
+    except LiveSessionUnavailableError as exc:
+        _console.print(f"[red]live import unavailable:[/red] {exc}")
+        raise typer.Exit(code=2) from exc
+    if not filed_modelos:
+        _console.print(f"[yellow]No filed modelo found on AEAT for modelo={modelo} period={period}.[/yellow]")
+        raise typer.Exit(code=1)
+
+    operator_profile = _resolve_operator_profile(
+        modelo,
+        settings=settings,
+        profile_path=profile_path,
+        profile_tax_id=profile_tax_id,
+        profile_name=profile_name,
+    )
+    schema_provider = _schema_provider()
+    saved_paths: list[Path] = []
+    for filed in filed_modelos:
+        inputs: dict[str, object] = dict(filed.calculations.casillas)
+        try:
+            draft = build_draft(
+                modelo=modelo,
+                period=period,
+                profile=operator_profile,
+                inputs=inputs,
+                schema_provider=schema_provider,
+                fail_on_warning=settings.aeat_draft_fail_on_warning,
+            )
+        except FilingDraftError as exc:
+            raise typer.BadParameter(
+                f"failed to build draft for expediente {filed.metadata.expediente_id!r}: {exc}",
+            ) from exc
+        target = _save_draft(draft)
+        saved_paths.append(target)
+        typer.echo(f"Imported draft {draft.draft_id} from expediente {filed.metadata.expediente_id} → {target}")
+        _render_draft(draft)
+
+    _console.print(f"[dim]{len(saved_paths)} draft(s) imported[/dim]")
 
 
 def _handle_justificante_import(from_justificante: Path) -> None:
@@ -737,6 +876,10 @@ def build_complementaria_cmd(
         amendment = build_complementaria(original, parsed_inputs)
     except FilingAmendmentError as exc:
         raise typer.BadParameter(str(exc)) from exc
+    saved_amended_draft = _save_draft(amendment.amended_draft)
+    typer.echo(f"Saved amended draft {amendment.amended_draft.draft_id} -> {saved_amended_draft}")
+    _console.print(f"Next: aeat review show {amendment.amended_draft.draft_id}")
+    _console.print(f"Next: aeat review approve {amendment.amended_draft.draft_id} --approved-by <you>")
     _render_amendment(amendment)
 
 
@@ -750,6 +893,9 @@ def submit_complementaria_cmd(
 ) -> None:
     """Submit a persisted amendment, dry-run by default."""
     amendment = load_amendment(amendment_id)
+    amended_draft = _load_persisted_draft_by_id(amendment.amended_draft.draft_id)
+    if amended_draft is not None:
+        amendment = amendment.model_copy(update={"amended_draft": amended_draft})
     engine = _submission_engine()
 
     dry_run = not live
@@ -769,6 +915,43 @@ def submit_complementaria_cmd(
         f"submission_id={submission_result.filing.submission_id} "
         f"status={submission_result.filing.status.value}"
     )
+
+
+def _resolve_operator_profile(
+    modelo: str,
+    *,
+    settings: Settings,
+    profile_path: Path | None,
+    profile_tax_id: str,
+    profile_name: str,
+) -> FilingOperatorProfile:
+    """Resolve the operator profile for ``modelo`` using CLI conventions."""
+    resolved_display_name = None if profile_name == _DEFAULT_PROFILE_NAME else profile_name
+    if profile_path is not None:
+        try:
+            return load_default_filing_profile(profile_path, display_name=resolved_display_name)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    if (
+        settings.aeat_default_profile_path is not None
+        and profile_tax_id == _DEFAULT_PROFILE_TAX_ID
+        and profile_name == _DEFAULT_PROFILE_NAME
+    ):
+        try:
+            return load_default_filing_profile(display_name=resolved_display_name)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    return FilingOperatorProfile(
+        tax_id=profile_tax_id,
+        display_name=profile_name,
+        applicable_modelos=(modelo,),
+    )
+
+
+async def _fetch_filed_modelos(modelo: str, period: str, settings: Settings) -> tuple[FiledModelo, ...]:
+    """Open a live status reader and fetch every filing for ``(modelo, period)``."""
+    async with build_live_status_reader(settings) as reader:
+        return await reader.fetch_filing_detail(modelo, period)
 
 
 app.add_typer(complementaria_app, name="complementaria", help="Build and submit amendment filings (#93).")

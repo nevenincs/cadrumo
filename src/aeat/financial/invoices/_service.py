@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 from typing import Literal
@@ -89,7 +90,7 @@ def load_invoices(path: Path) -> InvoiceCatalogue:
         catalogue = InvoiceCatalogue.model_validate_json(raw)
     except ValidationError as exc:
         raise InvoicePersistenceError(f"invalid invoice catalogue JSON: {target}") from exc
-    _LOGGER.info("loaded %s invoices from %s", len(catalogue), target)
+    _LOGGER.debug("loaded %s invoices from %s", len(catalogue), target)
     return catalogue
 
 
@@ -123,7 +124,7 @@ def save_invoices(catalogue: InvoiceCatalogue, path: Path) -> None:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
         raise InvoicePersistenceError(f"unable to write invoice catalogue: {target}") from exc
-    _LOGGER.info("saved %s invoices to %s", len(catalogue), target)
+    _LOGGER.debug("saved %s invoices to %s", len(catalogue), target)
 
 
 def find_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice | None:
@@ -303,11 +304,18 @@ def verify_link_consistency(
     return tuple(inconsistencies)
 
 
+def _write_bytes(path: Path, payload: bytes) -> None:
+    path.write_bytes(payload)
+
+
 def link_transaction_bidirectional(
     invoices_path: Path,
     transactions_path: Path,
     invoice_id: str,
     transaction_id: str,
+    *,
+    save_transactions_fn: Callable[[TransactionCatalogue, Path], None] = _save_transactions,
+    rollback_temp_writer: Callable[[Path, bytes], object] | None = None,
 ) -> tuple[InvoiceCatalogue, TransactionCatalogue]:
     """Update both catalogues so they cite each other.
 
@@ -349,7 +357,7 @@ def link_transaction_bidirectional(
 
     save_invoices(updated_invoices, invoices_path)
     try:
-        _save_transactions(updated_transactions, transactions_path)
+        save_transactions_fn(updated_transactions, transactions_path)
     except TransactionError as exc:
         _rollback_invoice_file(
             invoices_path=invoices_path,
@@ -358,6 +366,7 @@ def link_transaction_bidirectional(
             transaction_id=transaction_id,
             prior_bytes=prior_invoice_bytes,
             cause=exc,
+            rollback_temp_writer=rollback_temp_writer,
         )
         raise InvoiceLinkError(f"transaction save failed for {transaction_id}; invoice file restored") from exc
     return updated_invoices, updated_transactions
@@ -371,11 +380,13 @@ def _rollback_invoice_file(
     transaction_id: str,
     prior_bytes: bytes,
     cause: BaseException,
+    rollback_temp_writer: Callable[[Path, bytes], object] | None = None,
 ) -> None:
     """Best-effort restore the invoice catalogue after a transaction-write failure."""
     try:
         tmp = invoices_path.with_suffix(invoices_path.suffix + ".rollback.tmp")
-        tmp.write_bytes(prior_bytes)
+        writer = rollback_temp_writer or _write_bytes
+        writer(tmp, prior_bytes)
         os.replace(tmp, invoices_path)
     except OSError as restore_exc:
         raise InvoiceLinkInconsistencyError(

@@ -28,7 +28,7 @@ class Preflight:
 
     Gates run in order:
 
-    1. Draft status is :attr:`DraftStatus.READY_TO_SUBMIT`.
+    1. Draft status is :attr:`DraftStatus.APPROVED`.
     2. No ``ERROR``-severity entries in ``draft.findings``.
     3. Deadline window is open via
        :meth:`DeadlineWindowChecker.is_window_open`.
@@ -75,10 +75,13 @@ class Preflight:
             draft.period,
         )
 
-        if _enum_value(draft.status) != DraftStatus.READY_TO_SUBMIT.value:
+        status_value = _enum_value(draft.status)
+        if status_value != DraftStatus.APPROVED.value:
             _logger.info("preflight gate-1 FAIL: draft status=%s", draft.status)
-            raise SubmissionPreflightError(f"draft not ready to submit (status={_enum_value(draft.status)})")
-        _logger.info("preflight gate-1 OK: draft is READY_TO_SUBMIT")
+            if status_value == DraftStatus.APPROVAL_STALE.value:
+                raise SubmissionPreflightError("draft approval is stale; review and approve the draft again")
+            raise SubmissionPreflightError(f"draft not approved for submission (status={status_value})")
+        _logger.info("preflight gate-1 OK: draft is APPROVED")
 
         error_findings = tuple(f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == "ERROR")
         if error_findings:

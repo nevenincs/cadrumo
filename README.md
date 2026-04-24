@@ -43,24 +43,31 @@ the CLI.
 ```sh
 git clone https://github.com/wgergely/aeat
 cd aeat
-just env-setup            # writes env/.env from env/.env.example
-# edit env/.env and set GOOGLE_CLOUD_PROJECT
-uv run aeat auth init --path desktop-oauth-local-dev
-uv run aeat auth init --path desktop-oauth-local-dev --json <downloaded-json>
-just bootstrap            # wrapper: deps + gcloud auth + API enablement + aeat bootstrap + aeat doctor
-aeat workflow next        # next dry-run filing in the queue
+just bootstrap
+aeat setup
+
+# Build the local transaction catalogue from a bank export or NDJSON.
+uv run aeat financial txs build path/to/statement.csv
+# or: uv run aeat financial txs build path/to/statement.xlsx
+# or: uv run aeat financial txs build path/to/statement.ofx
+# or: uv run aeat financial txs build path/to/transactions.ndjson
+# add --replace to overwrite an existing catalogue
+
+# Inspect what is stored and discover categories.
+uv run aeat financial txs list
+uv run aeat categories list
+uv run aeat categories show <category-slug>
+
+# Classify one transaction and record the reason.
+uv run aeat financial txs classify <transaction_id> --as BUSINESS --category <category-slug> --reason "..."
+
+# Review the full classification history for that transaction.
+uv run aeat review history <transaction_id>
 ```
 
-Google auth is required because the repo provisions scratch
-Drive/Sheets/Docs resources, fetches operator assets from Drive, and
-can launch the Google Workspace MCP server. `just bootstrap` is a
-wrapper around the local Desktop OAuth path; it does not create the
-OAuth Desktop client for you or skip the manual Cloud Console step.
-Every field is documented inline in `env/.env.example`. Every layer the
-workflow composes (cert auth, browser, status reader, filing draft
-engine, submission engine, deadline engine, sync, storage) is already
-on `main` and exercised by the live test suite. Live tests are gated
-behind `AEAT_LIVE_TESTS_ENABLED=1`.
+Use `aeat categories list` to discover valid category slugs before classifying.
+`aeat review history` prints the chain oldest-first with the current
+classification appended at the end.
 
 ## Architecture
 
@@ -87,7 +94,7 @@ The on-main subpackages under `src/aeat/`:
 | `aeat.testing`         | Shared fixtures and synthetic filing factories for the test suite.        |
 | `aeat.cli`             | Typer-based CLI surface (`aeat ...`).                                     |
 | `aeat.workflow`        | Orchestration engine that drives a filing through the pipeline.           |
-| `aeat.setup`           | Interactive first-run setup wizard. *(merging in #61)*                    |
+| `aeat.setup`           | Interactive first-run setup wizard (shipped via #61 / PR #66).            |
 
 A data-flow diagram with one paragraph per arrow lives in
 [`docs/architecture.md`](docs/architecture.md). The contributor

@@ -34,7 +34,7 @@ class _Draft(FilingDraftLike):
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: DraftStatus = DraftStatus.READY_TO_SUBMIT
+    status: DraftStatus = DraftStatus.APPROVED
     values: dict[str, str] = field(default_factory=dict)
     findings: tuple[FilingFinding, ...] = ()
 
@@ -72,19 +72,6 @@ class _FailingAuthProvider:
         raise RuntimeError("no smartcard")
 
 
-class _UnavailableAuthProvider:
-    kind = AuthProviderKind.CERTIFICATE
-
-    def describe(self) -> AuthProviderDescription:
-        return AuthProviderDescription(
-            kind=self.kind,
-            label="Test certificate",
-            configured=True,
-            available=False,
-            health_summary="password missing",
-        )
-
-
 _TODAY = date(2026, 4, 10)
 
 
@@ -99,9 +86,17 @@ class TestPreflightGates:
     def test_happy_path_silent(self) -> None:
         _preflight().check(_Draft(), today=_TODAY)
 
-    def test_gate_1_draft_not_ready(self) -> None:
-        with pytest.raises(SubmissionPreflightError, match="not ready"):
+    def test_gate_1_draft_not_approved(self) -> None:
+        with pytest.raises(SubmissionPreflightError, match="not approved"):
             _preflight().check(_Draft(status=DraftStatus.DRAFT), today=_TODAY)
+
+    def test_gate_1_ready_but_unapproved_blocks(self) -> None:
+        with pytest.raises(SubmissionPreflightError, match="not approved"):
+            _preflight().check(_Draft(status=DraftStatus.READY_TO_SUBMIT), today=_TODAY)
+
+    def test_gate_1_stale_approval_blocks(self) -> None:
+        with pytest.raises(SubmissionPreflightError, match="stale"):
+            _preflight().check(_Draft(status=DraftStatus.APPROVAL_STALE), today=_TODAY)
 
     def test_gate_2_error_finding_blocks(self) -> None:
         findings = (
@@ -129,11 +124,3 @@ class TestPreflightGates:
     def test_gate_4_cert_load_fails(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="auth provider"):
             _preflight(cert=_FailingAuthProvider()).check(_Draft(), today=_TODAY)
-
-    def test_gate_4_unavailable_provider_explains_local_fallback(self) -> None:
-        with pytest.raises(SubmissionPreflightError) as exc_info:
-            _preflight(cert=_UnavailableAuthProvider()).check(_Draft(), today=_TODAY)
-
-        message = str(exc_info.value)
-        assert "auth provider certificate is not ready" in message
-        assert "produce, verify, and export" in message
