@@ -37,7 +37,10 @@ Thread that review state through the relevant CLI and submission surfaces:
   bypass review gating
 
 Add focused tests around JSON draft round-trip, approval persistence, stale
-transitions after transaction mutations, and submit-gate behaviour.
+transitions after transaction mutations, and submit-gate behaviour. The branch
+now also needs a hardening track for the repo-wide no-shortcuts test mandate so
+the review/export workflow is protected by real behaviour instead of hidden
+test harness escape hatches.
 
 ## Tasks
 
@@ -73,12 +76,27 @@ transitions after transaction mutations, and submit-gate behaviour.
   3. Add submit/preflight tests proving unapproved and stale drafts are blocked
      while freshly approved drafts still pass the review gate.
 
+- `Phase 5: Branch-wide no-shortcuts test hardening`
+  1. Remove remaining non-env behaviour patching from the repo test surface and
+     replace it with explicit production seams or real behaviour.
+  2. Eliminate stub- and fake-based browser tests by moving lifecycle and
+     evasion coverage onto real Playwright/browser behaviour where the product
+     actually depends on it.
+  3. Replace skip-gated unit coverage with deterministic assertions and define
+     a compliant execution strategy for live/deferred tests so the suite no
+     longer hides missing capability behind `pytest.skip(...)`.
+  4. Keep the rolling audit documents current as each shortcut class is
+     removed, so PR review sees exactly what is closed and what still blocks a
+     strict production-quality claim.
+
 ## Parallelization
 
 Phase 1 is the critical path because the CLI and submit gate both depend on the
 shared approval-basis helpers. Once the review-state helpers are in place, CLI
 surface work and submit-gate work can proceed mostly independently before the
-verification pass.
+verification pass. Phase 5 is a follow-on hardening track that can run after
+the functional review flow works, but it must close before the branch can
+honestly claim production-grade confidence under the project's test policy.
 
 ## Verification
 
@@ -91,9 +109,14 @@ Mission success requires:
   review result without rebuilding approval provenance
 - submit preflight rejects unapproved or stale drafts
 - existing non-review build and validate flows continue to work
+- the branch contains no non-env `monkeypatch`, `patch`, `unittest.mock`,
+  stub, fake, or skip-based shortcut on the shipped test surface that claims to
+  protect Kent's filing journey
 
 Primary verification will be through targeted unit tests in the filing and
 submission domains plus at least one CLI-level approval test that exercises the
 real JSON draft storage path. If the current branch lacks a dedicated export
 surface, submit and draft-inspection paths remain the enforced review boundary
-for this issue.
+for this issue. The hardening phase additionally requires repo-wide policy
+audits and real-behaviour validation on the browser and live-test surfaces that
+currently rely on stubs or skip-gated execution.

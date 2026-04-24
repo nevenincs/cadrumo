@@ -38,7 +38,7 @@ class _Draft(FilingDraftLike):
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: DraftStatus = DraftStatus.READY_TO_SUBMIT
+    status: DraftStatus = DraftStatus.APPROVED
     values: dict[str, str] = field(default_factory=lambda: {"01": "1500.00", "03": "200.00"})
     findings: tuple[FilingFinding, ...] = ()
 

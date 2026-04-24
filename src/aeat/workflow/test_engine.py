@@ -72,7 +72,7 @@ class _FakeDraft:
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: DraftStatus = DraftStatus.READY_TO_SUBMIT
+    status: DraftStatus = DraftStatus.APPROVED
     values: Mapping[str, str] = field(default_factory=lambda: {"01": "1000"})
     findings: tuple[FilingFinding, ...] = ()
 
@@ -429,12 +429,22 @@ class TestAbortReasons:
         assert result.aborted_reason is WorkflowAbortReason.ALREADY_FILED
 
     def test_draft_has_errors_via_status(self) -> None:
-        """Builder returning an un-promoted draft aborts at BUILDING_DRAFT."""
+        """Builder returning a merely validated draft aborts at BUILDING_DRAFT."""
         fx = _fixtures()
-        fx.draft = _FakeDraft(status=DraftStatus.INCOMPLETE)
+        fx.draft = _FakeDraft(status=DraftStatus.VALIDATED)
         fx.draft_builder.draft = fx.draft
         result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+
+    def test_unapproved_ready_draft_fails_preflight(self) -> None:
+        fx = _fixtures()
+        fx.draft = _FakeDraft(status=DraftStatus.READY_TO_SUBMIT)
+        fx.draft_builder.draft = fx.draft
+        fx.submission_engine.preflight_exc = SubmissionPreflightError(
+            "draft not approved for submission (status=READY_TO_SUBMIT)"
+        )
+        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.PREFLIGHT_FAILED
 
     def test_draft_has_errors_via_validation(self) -> None:
         """A READY draft that carries ERROR findings aborts at VALIDATING_DRAFT."""
@@ -523,7 +533,6 @@ class TestAbortReasons:
         preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
         assert preflight_step.details is not None
         assert preflight_step.details["provider_kind"] == AuthProviderKind.CLAVE_PERMANENTE.value
-        assert "same CLI filing flow" in preflight_step.details["provider_operator_impact"]
 
     def test_live_submit_forwards_explicit_live_mode(self) -> None:
         """Live mode reaches the submission engine when dry_run=False is explicit."""

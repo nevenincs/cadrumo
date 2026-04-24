@@ -121,10 +121,10 @@ def export_cmd(
     # a BORRADOR banner; READY_TO_SUBMIT is the approved-enough state
     # until C3i (FilingDraftStatus.APPROVED) lands.
     status = draft.status if isinstance(draft.status, DraftStatus) else None
-    if status is DraftStatus.INCOMPLETE:
+    if status is DraftStatus.VALIDATED:
         _CONSOLE.print(
             f"[red]export REFUSED:[/red] draft {draft.draft_id} status is "
-            f"INCOMPLETE; finish validation before exporting."
+            f"VALIDATED; approve the draft before exporting."
         )
         raise typer.Exit(code=3)
 
