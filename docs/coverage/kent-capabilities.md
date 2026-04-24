@@ -19,11 +19,12 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Bulk-classify via rules | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#217](https://github.com/wgergely/aeat/issues/217) |
 | See how much he owes for Modelo 130 (T6) | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#218](https://github.com/wgergely/aeat/issues/218) |
 | See confidence scores on every decision | ✅ | ✅ (`--confidence-below` on `txs list` + `review queue`; LLM path at `txs classify-llm`) | ✅ | ✅ live-verified on synthetic catalogue | 0.1.0 | [#236](https://github.com/wgergely/aeat/issues/236) |
-| Classify transactions via an LLM (claude / gemini / codex) | 🚧 | ✅ (`aeat financial txs classify-llm`; tier-enforced model capability; reuses #253 CategoryProfile proportionality defaults) | ✅ | 🚧 live-tested with codex end-to-end | 0.1.0 | [#236](https://github.com/wgergely/aeat/issues/236) |
+| Classify transactions via an LLM (claude / gemini / codex) | 🚧 | ✅ (`aeat financial txs classify-llm`; tier-enforced model capability; reuses #253 CategoryProfile proportionality defaults) | ✅ | ✅ live-tested with codex end-to-end | 0.1.0 | [#236](https://github.com/wgergely/aeat/issues/236) (structured `DecisionProvenance` payload still missing — tracked by [#352](https://github.com/wgergely/aeat/issues/352)) |
 | Distinguish pipeline-skipped from not-yet-seen | ✅ | ✅ | ✅ | ✅ | 0.1.0 | [#237](https://github.com/wgergely/aeat/issues/237) |
 | Run one command for pipeline health | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#238](https://github.com/wgergely/aeat/issues/238) |
 | Mark transaction reviewed-and-excluded | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#224](https://github.com/wgergely/aeat/issues/224) |
 | See WHY each classification was made | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#231](https://github.com/wgergely/aeat/issues/231) |
+| Configure personal usage-ratio coefficients once | ✅ | ✅ (`aeat financial usage-ratios`; default proportionality applied at classify time) | ✅ | ✅ | 0.1.0 | [#259](https://github.com/wgergely/aeat/issues/259) (shipped via PR #306) |
 | See pending reviews in one dashboard | ❌ | ✅ | ✅ | ❌ | 0.1.0 | [#232](https://github.com/wgergely/aeat/issues/232) |
 | Authenticate against AEAT Sede Electrónica | 🚧 | 🚧 | partial | ❌ | 0.1.1 | [#141](https://github.com/wgergely/aeat/issues/141) |
 | Retrieve previously-filed casilla values | ❌ | ❌ | ❌ | ❌ | 0.1.1 | [#272](https://github.com/wgergely/aeat/issues/272), [#305](https://github.com/wgergely/aeat/issues/305) |
@@ -31,7 +32,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | See live AEAT inbox notifications | ❌ | 🚧 | partial | ❌ | 0.1.1 | [#170](https://github.com/wgergely/aeat/issues/170) |
 | Build Modelo 130 via wizard | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#219](https://github.com/wgergely/aeat/issues/219) |
 | See formula + operand values inline during review | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#220](https://github.com/wgergely/aeat/issues/220) |
-| Approve a draft (persisted) | ❌ | ❌ | ❌ | ❌ | 0.2.0 | [#230](https://github.com/wgergely/aeat/issues/230) |
+| Approve a draft (persisted) | ✅ | ✅ (`aeat review approve`; staleness detection) | ✅ | ✅ | 0.2.0 | [#230](https://github.com/wgergely/aeat/issues/230) (shipped via PR #269) |
 | Export an AEAT-importable fichero BOE file | 🚧 | ✅ (`aeat submission export`; 130 + 303 shipped; 390 pending) | ✅ (golden SHA256 pinned per modelo; verify round-trip) | 🚧 (CLI produces byte-exact output; live portal upload untested) | 0.2.0 | [#201](https://github.com/wgergely/aeat/issues/201) |
 | Verify an exported fichero BOE decodes back to the casilla values | ✅ | ✅ (`aeat submission verify <file> --modelo <m> --ejercicio <y>`) | ✅ (5 CLI tests + per-modelo round-trip) | ✅ | 0.2.0 | [#305](https://github.com/wgergely/aeat/issues/305) wave 95 |
 | Compute 303 + 390 via formula engine | ❌ | ❌ | partial | ❌ | 0.3.0 | [#221](https://github.com/wgergely/aeat/issues/221) |
@@ -43,7 +44,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | See import verdict (verified / needs-review / unverifiable) | ✅ | ✅ | ✅ | ✅ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster E |
 | File autoliquidación rectificativa | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#234](https://github.com/wgergely/aeat/issues/234) |
 | Amend any supported modelo via wizard | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#235](https://github.com/wgergely/aeat/issues/235) |
-| Fetch previously-filed casilla values from AEAT (wall 23) | ❌ | 🚧 | ready | ❌ | 0.1.0-pre-alpha | [#227](https://github.com/wgergely/aeat/issues/227) |
+| Fetch previously-filed casilla values from AEAT (wall 23) | ✅ | ✅ (`StatusReader.fetch_filing_detail`) | ✅ | ✅ | 0.1.0-pre-alpha | [#227](https://github.com/wgergely/aeat/issues/227) (read surface shipped via PR #248; Kent-facing import still blocked on [#272](https://github.com/wgergely/aeat/issues/272)) |
 | Multi-currency income + expenses end-to-end | ❌ | ❌ | ❌ | ❌ | 0.3.1 | [#103](https://github.com/wgergely/aeat/issues/103) |
 | Compute + export 111, 115, 190, 347 | ❌ | ❌ | ❌ | ❌ | 0.3.1 | TBD |
 | Prove exported numbers match AEAT's record | ❌ | ❌ | ❌ | ❌ | 0.4.0 | [#239](https://github.com/wgergely/aeat/issues/239) |
