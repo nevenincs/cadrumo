@@ -9,8 +9,6 @@ Subcommands:
 - ``aeat filing import`` — reconstruct a draft from a justificante /
   declaración / borrador PDF (#271, #305) or live from the AEAT Sede
   (#272, via ``--from-aeat``).
-- ``aeat filing reconcile`` — read-only compare a local draft against
-  AEAT's authoritative record (#239).
 """
 
 from __future__ import annotations
@@ -54,7 +52,6 @@ from ...logging import get_logger
 from ...submission import SubmissionEngine, SubmissionError
 from .._live_reader import LiveSessionUnavailableError, build_live_status_reader
 from ..submission._helpers import build_engine as build_submission_engine
-from ._reconcile import register as _register_reconcile
 
 app = typer.Typer(
     name="filing",
@@ -955,7 +952,6 @@ async def _fetch_filed_modelos(modelo: str, period: str, settings: Settings) -> 
 
 
 app.add_typer(complementaria_app, name="complementaria", help="Build and submit amendment filings (#93).")
-_register_reconcile(app)
 
 
 __all__ = ["app"]
