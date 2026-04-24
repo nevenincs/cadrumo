@@ -6,6 +6,9 @@ Subcommands:
 - ``aeat filing validate`` — re-validate a saved draft.
 - ``aeat filing show`` — pretty-print a draft.
 - ``aeat filing list`` — list drafts under the configured drafts dir.
+- ``aeat filing import`` — reconstruct a draft from a justificante /
+  declaración / borrador PDF (#271, #305) or live from the AEAT Sede
+  (#272, via ``--from-aeat``).
 """
 
 from __future__ import annotations
@@ -29,11 +32,13 @@ from ...filing import (
     FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
+    FilingImportError,
     FilingOperatorProfile,
     approval_stale_reasons,
     build_complementaria,
     build_draft,
     describe_stale_reason,
+    import_filing_from_justificante,
     iter_findings,
     load_amendment,
     refresh_review_status,
@@ -41,6 +46,8 @@ from ...filing import (
 )
 from ...filing.runtime import build_runtime_schema_provider, load_default_filing_profile
 from ...history import FiledModelo
+from ...i18n import Language, get_translation
+from ...justificante import JustificanteError
 from ...logging import get_logger
 from ...submission import SubmissionEngine, SubmissionError
 from .._live_reader import LiveSessionUnavailableError, build_live_status_reader
@@ -412,6 +419,392 @@ def list_drafts(
     _console.print(table)
 
 
+@app.command("import")
+def import_(
+    from_justificante: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-justificante",
+            help="Path to an AEAT justificante (receipt) PDF; produces a metadata scaffold draft (#271).",
+        ),
+    ] = None,
+    from_declaracion: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-declaracion",
+            help=(
+                "Path to an AEAT declaración (full filing copy) PDF; "
+                "produces a casilla-complete draft (#305 cluster D)."
+            ),
+        ),
+    ] = None,
+    from_borrador: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-borrador",
+            help=(
+                "Path to an AEAT Modelo 100 (Renta) borrador / "
+                "predeclaración / declaración PDF; extracts the summary "
+                "block (#305 cluster F MVP)."
+            ),
+        ),
+    ] = None,
+    from_aeat: Annotated[
+        bool,
+        typer.Option(
+            "--from-aeat",
+            help=(
+                "Reconstruct the draft live from the authenticated AEAT Sede "
+                "(#272). Requires an active `aeat auth login` session and "
+                "the ``--modelo`` / ``--period`` selectors."
+            ),
+        ),
+    ] = False,
+    modelo: Annotated[
+        str | None,
+        typer.Option(
+            "--modelo",
+            help=(
+                "Modelo string ID (e.g. '303'). Required with --from-aeat; "
+                "overrides auto-detection with --from-declaracion."
+            ),
+        ),
+    ] = None,
+    period: Annotated[
+        str | None,
+        typer.Option(
+            "--period",
+            help="Period identifier (e.g. '2025Q4'). Required with --from-aeat.",
+        ),
+    ] = None,
+    año: Annotated[
+        int | None,
+        typer.Option(
+            "--año",
+            help="Override auto-detected tax year.",
+        ),
+    ] = None,
+    profile: Annotated[
+        Path | None,
+        typer.Option(
+            "--profile",
+            help=(
+                "Optional path to an AutonomoProfile JSON file (defaults to "
+                "AEAT_DEFAULT_PROFILE_PATH). Used by --from-aeat."
+            ),
+        ),
+    ] = None,
+    profile_tax_id: Annotated[
+        str,
+        typer.Option("--profile-tax-id", help="Taxpayer tax ID stamped on the draft. Used by --from-aeat."),
+    ] = _DEFAULT_PROFILE_TAX_ID,
+    profile_name: Annotated[
+        str,
+        typer.Option("--profile-name", help="Display name of the taxpayer profile. Used by --from-aeat."),
+    ] = _DEFAULT_PROFILE_NAME,
+) -> None:
+    """Import a past filing from an AEAT PDF or live Sede record.
+
+    Exactly one of ``--from-justificante``, ``--from-declaracion``,
+    ``--from-borrador``, or ``--from-aeat`` must be supplied.
+
+    ``--from-justificante`` reconstructs a metadata scaffold draft +
+    companion submission record from the filing receipt (#271). Every
+    casilla lands EMPTY.
+
+    ``--from-declaracion`` parses the full filing copy PDF and extracts
+    every printed casilla value; produces a casilla-complete draft
+    ready for ``aeat filing verify`` (#305 cluster D / E).
+
+    ``--from-borrador`` parses a Modelo 100 (Renta) artefact (borrador,
+    predeclaración, or declaración); extracts the summary-block casillas
+    and chains verification against the partial Modelo 100 ruleset
+    (#305 cluster F MVP).
+
+    ``--from-aeat`` fetches the authoritative filing record from the
+    authenticated AEAT Sede Electrónica and reconstructs a draft via the
+    StatusReader + HistoryFetcher read path (#272). Read-only — no
+    mutation of AEAT state.
+    """
+    provided = sum(bool(flag) for flag in (from_justificante, from_declaracion, from_borrador, from_aeat))
+    if provided == 0:
+        raise typer.BadParameter(
+            "exactly one of --from-justificante, --from-declaracion, --from-borrador, --from-aeat is required"
+        )
+    if provided > 1:
+        raise typer.BadParameter("only one --from-* flag at a time")
+
+    if from_justificante is not None:
+        _handle_justificante_import(from_justificante)
+        return
+    if from_declaracion is not None:
+        _handle_declaracion_import(from_declaracion, modelo=modelo, año=año)
+        return
+    if from_aeat:
+        if not modelo or not period:
+            raise typer.BadParameter("--from-aeat requires both --modelo and --period")
+        _handle_aeat_import(
+            modelo=modelo,
+            period=period,
+            profile_path=profile,
+            profile_tax_id=profile_tax_id,
+            profile_name=profile_name,
+        )
+        return
+
+    assert from_borrador is not None
+    _handle_borrador_import(from_borrador, año=año)
+
+
+def _handle_aeat_import(
+    *,
+    modelo: str,
+    period: str,
+    profile_path: Path | None,
+    profile_tax_id: str,
+    profile_name: str,
+) -> None:
+    """Dispatch the live-AEAT (#272) import path."""
+    settings = load_settings()
+    try:
+        filed_modelos = asyncio.run(_fetch_filed_modelos(modelo, period, settings))
+    except LiveSessionUnavailableError as exc:
+        _console.print(f"[red]live import unavailable:[/red] {exc}")
+        raise typer.Exit(code=2) from exc
+    if not filed_modelos:
+        _console.print(f"[yellow]No filed modelo found on AEAT for modelo={modelo} period={period}.[/yellow]")
+        raise typer.Exit(code=1)
+
+    operator_profile = _resolve_operator_profile(
+        modelo,
+        settings=settings,
+        profile_path=profile_path,
+        profile_tax_id=profile_tax_id,
+        profile_name=profile_name,
+    )
+    schema_provider = _schema_provider()
+    saved_paths: list[Path] = []
+    for filed in filed_modelos:
+        inputs: dict[str, object] = dict(filed.calculations.casillas)
+        try:
+            draft = build_draft(
+                modelo=modelo,
+                period=period,
+                profile=operator_profile,
+                inputs=inputs,
+                schema_provider=schema_provider,
+                fail_on_warning=settings.aeat_draft_fail_on_warning,
+            )
+        except FilingDraftError as exc:
+            raise typer.BadParameter(
+                f"failed to build draft for expediente {filed.metadata.expediente_id!r}: {exc}",
+            ) from exc
+        target = _save_draft(draft)
+        saved_paths.append(target)
+        typer.echo(f"Imported draft {draft.draft_id} from expediente {filed.metadata.expediente_id} → {target}")
+        _render_draft(draft)
+
+    _console.print(f"[dim]{len(saved_paths)} draft(s) imported[/dim]")
+
+
+def _handle_justificante_import(from_justificante: Path) -> None:
+    """Dispatch the justificante (#271) import path."""
+    settings = load_settings()
+    try:
+        result = import_filing_from_justificante(
+            from_justificante,
+            schema_provider=_schema_provider(),
+        )
+    except (FilingImportError, FilingDraftError, JustificanteError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    draft_path = _save_draft(result.draft)
+    submissions_dir = settings.aeat_submissions_dir
+    submissions_dir.mkdir(parents=True, exist_ok=True)
+    submission_path = submissions_dir / f"{result.submission.submission_id}.json"
+    submission_path.write_text(result.submission.model_dump_json(indent=2), encoding="utf-8")
+
+    typer.echo(
+        f"Imported draft {result.draft.draft_id} from justificante {result.submission.justificante_csv} -> {draft_path}"
+    )
+    typer.echo(f"Saved submission {result.submission.submission_id} -> {submission_path}")
+    lang = _output_language()
+    for warning in result.warnings:
+        rendered = get_translation(warning, lang)
+        typer.echo(f"[warning] {rendered}")
+    _render_draft(result.draft)
+
+
+def _output_language() -> Language:
+    """Resolve the Kent-facing output language from settings.
+
+    Defaults to Spanish (Kent is a Spanish autónomo) per project mandate
+    ``AEAT_OUTPUT_LANGUAGE`` default = ``es``. Audit finding M5.
+    """
+    try:
+        return Language(load_settings().aeat_output_language)
+    except (KeyError, ValueError):
+        return Language.ES
+
+
+def _handle_declaracion_import(
+    from_declaracion: Path,
+    *,
+    modelo: str | None,
+    año: int | None,
+) -> None:
+    """Dispatch the declaración (#305 cluster D + E) import path."""
+    from ...declaracion import DeclaracionParseError, parse_declaracion
+    from ...verification import verify_declaracion
+
+    try:
+        filing = parse_declaracion(
+            from_declaracion,
+            modelo_override=modelo,
+            año_override=año,
+        )
+    except DeclaracionParseError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    lang = _output_language()
+
+    typer.echo(
+        f"Parsed Modelo {filing.modelo} {filing.period} declaración "
+        f"(template {filing.template_revision.revision}). "
+        f"{len(filing.values)} of {len(filing.values) + len(filing.warnings)} casillas extracted."
+    )
+    typer.echo(f"Extraction status: {filing.extraction_status.value}")
+    if filing.warnings:
+        typer.echo(f"[warnings] {len(filing.warnings)}:")
+        for warning in filing.warnings:
+            rendered = get_translation(warning.message, lang)
+            typer.echo(f"  - casilla {warning.casilla_id or '-'}: {rendered}")
+
+    ruleset = _resolve_ruleset_for_filing(
+        filing_modelo=filing.modelo,
+        filing_period=filing.period,
+        filing_ejercicio=filing.ejercicio,
+    )
+    verdict = verify_declaracion(filing, ruleset=ruleset)
+    typer.echo(f"Verification status: {verdict.status.value}")
+    typer.echo(f"  {get_translation(verdict.narrative, lang)}")
+    for discrepancy in verdict.discrepancies:
+        rationale = get_translation(discrepancy.cause_rationale, lang)
+        typer.echo(
+            f"  - casilla {discrepancy.casilla_id}: "
+            f"expected {discrepancy.expected}, actual {discrepancy.actual}, "
+            f"cause={discrepancy.cause.value} — {rationale}"
+        )
+
+
+def _resolve_ruleset_for_filing(
+    *,
+    filing_modelo: str,
+    filing_period: str,
+    filing_ejercicio: str,
+):
+    """Resolve the ruleset for the filing's (modelo, period). None when absent."""
+    from ...formulas._period import FiscalPeriod, Quarter
+    from ...formulas._registry import get_registry
+    from ...models import ModeloCode
+
+    try:
+        modelo_code = ModeloCode(filing_modelo)
+    except (KeyError, ValueError):
+        return None
+
+    quarter = None
+    quarter_token = filing_period[4:] if len(filing_period) >= 6 else ""
+    if quarter_token.startswith("Q") and len(quarter_token) == 2 and quarter_token[1].isdigit():
+        try:
+            quarter = Quarter(f"Q{int(quarter_token[1])}")
+        except (KeyError, ValueError):
+            quarter = None
+
+    try:
+        period_obj = FiscalPeriod(year=int(filing_ejercicio), quarter=quarter)
+    except Exception:
+        return None
+
+    try:
+        return get_registry().resolve(modelo=modelo_code, period=period_obj)
+    except Exception:
+        return None
+
+
+def _handle_borrador_import(
+    from_borrador: Path,
+    *,
+    año: int | None,
+) -> None:
+    """Dispatch the Modelo 100 (Renta) import path (#305 cluster F MVP)."""
+    from ...borrador import BorradorParseError, parse_borrador
+    from ...borrador._tarifa import validate_tarifa_estatal
+    from ...formulas._rulesets import MODELO_100_SUMMARY_2025
+
+    try:
+        filing = parse_borrador(from_borrador, año_override=año)
+    except BorradorParseError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    typer.echo(
+        f"Parsed Modelo 100 Renta {filing.ejercicio} "
+        f"({filing.artefact_kind.value}). "
+        f"{len(filing.values)} summary-block casillas extracted."
+    )
+    if filing.csv is not None:
+        typer.echo(f"CSV: {filing.csv}")
+
+    # Verify against the partial summary ruleset.
+    from ...formulas import Engine
+
+    provided: dict[str, Decimal] = {
+        v.casilla_id: v.printed_value for v in filing.values if isinstance(v.printed_value, Decimal)
+    }
+    engine = Engine()
+    report = engine.audit_against(
+        ruleset=MODELO_100_SUMMARY_2025,
+        provided=provided,
+        tolerance=Decimal("0.01"),
+    )
+    ruleset_clean = report.is_clean()
+    if ruleset_clean:
+        typer.echo(f"Verification status: VERIFIED (ruleset={MODELO_100_SUMMARY_2025.ruleset_id})")
+    else:
+        typer.echo(f"Verification status: NEEDS_REVIEW — {len(report.discrepancies)} discrepancies")
+        for d in report.discrepancies:
+            typer.echo(
+                f"  - casilla {d.casilla_id}: expected {d.computed_value}, actual {d.user_value}, delta {d.delta}"
+            )
+
+    # Tarifa progresiva estatal post-validator — checks that the extracted
+    # cuota íntegra estatal (0550, 0560) matches the tarifa-derived value
+    # when the corresponding base liquidable casilla (0545, 0555) is present.
+    tarifa_ejercicio = filing.ejercicio
+    try:
+        tarifa_findings = validate_tarifa_estatal(
+            ejercicio=tarifa_ejercicio,
+            base_liquidable_general=provided.get("0545"),
+            base_liquidable_ahorro=provided.get("0555"),
+            cuota_estatal_general=provided.get("0550"),
+            cuota_estatal_ahorro=provided.get("0560"),
+        )
+    except ValueError as exc:
+        typer.echo(f"Tarifa progresiva: skipped ({exc})")
+        tarifa_findings = ()
+
+    if tarifa_findings:
+        typer.echo(f"Tarifa progresiva: {len(tarifa_findings)} discrepancies vs. IRPF estatal scale {tarifa_ejercicio}")
+        for finding in tarifa_findings:
+            typer.echo(
+                f"  - casilla {finding.casilla_id} (from base {finding.base_casilla_id}): "
+                f"tarifa {finding.expected_cuota} vs. extracted {finding.actual_cuota}"
+                f" (delta {finding.delta})"
+            )
+    elif ruleset_clean:
+        typer.echo(f"Tarifa progresiva: cuota íntegra estatal consistent with IRPF {tarifa_ejercicio} scale")
+
+
 @complementaria_app.command("build")
 def build_complementaria_cmd(
     modelo: Annotated[str, typer.Argument(help="Modelo string ID, e.g. 130")],
@@ -521,84 +914,6 @@ async def _fetch_filed_modelos(modelo: str, period: str, settings: Settings) -> 
     """Open a live status reader and fetch every filing for ``(modelo, period)``."""
     async with build_live_status_reader(settings) as reader:
         return await reader.fetch_filing_detail(modelo, period)
-
-
-@app.command("import")
-def import_cmd(
-    modelo: Annotated[str, typer.Option("--modelo", help="Modelo string ID, e.g. 303")],
-    period: Annotated[str, typer.Option("--period", help="Period identifier, e.g. 2025Q4")],
-    from_aeat: Annotated[
-        bool,
-        typer.Option(
-            "--from-aeat",
-            help=(
-                "Reconstruct the draft live from the authenticated AEAT Sede. "
-                "Requires an active `aeat auth login` session."
-            ),
-        ),
-    ] = False,
-    profile: Annotated[
-        Path | None,
-        typer.Option(
-            "--profile",
-            help="Optional path to an AutonomoProfile JSON file (defaults to AEAT_DEFAULT_PROFILE_PATH).",
-        ),
-    ] = None,
-    profile_tax_id: Annotated[
-        str,
-        typer.Option("--profile-tax-id", help="Taxpayer tax ID to stamp on the draft"),
-    ] = _DEFAULT_PROFILE_TAX_ID,
-    profile_name: Annotated[
-        str,
-        typer.Option("--profile-name", help="Display name of the taxpayer profile"),
-    ] = _DEFAULT_PROFILE_NAME,
-) -> None:
-    """Reconstruct a :class:`FilingDraft` from an authoritative AEAT record (#272)."""
-    if not from_aeat:
-        raise typer.BadParameter(
-            "--from-aeat is required: live import reconstructs a draft from "
-            "AEAT's authoritative record and only supports that source in v1.",
-        )
-    settings = load_settings()
-    try:
-        filed_modelos = asyncio.run(_fetch_filed_modelos(modelo, period, settings))
-    except LiveSessionUnavailableError as exc:
-        _console.print(f"[red]live import unavailable:[/red] {exc}")
-        raise typer.Exit(code=2) from exc
-    if not filed_modelos:
-        _console.print(f"[yellow]No filed modelo found on AEAT for modelo={modelo} period={period}.[/yellow]")
-        raise typer.Exit(code=1)
-
-    operator_profile = _resolve_operator_profile(
-        modelo,
-        settings=settings,
-        profile_path=profile,
-        profile_tax_id=profile_tax_id,
-        profile_name=profile_name,
-    )
-    schema_provider = _schema_provider()
-    saved_paths: list[Path] = []
-    for filed in filed_modelos:
-        inputs: dict[str, object] = dict(filed.calculations.casillas)
-        try:
-            draft = build_draft(
-                modelo=modelo,
-                period=period,
-                profile=operator_profile,
-                inputs=inputs,
-                schema_provider=schema_provider,
-                fail_on_warning=settings.aeat_draft_fail_on_warning,
-            )
-        except FilingDraftError as exc:
-            raise typer.BadParameter(
-                f"failed to build draft for expediente {filed.metadata.expediente_id!r}: {exc}",
-            ) from exc
-        target = _save_draft(draft)
-        saved_paths.append(target)
-        typer.echo(f"Imported draft {draft.draft_id} from expediente {filed.metadata.expediente_id} → {target}")
-        _render_draft(draft)
-
-    _console.print(f"[dim]{len(saved_paths)} draft(s) imported[/dim]")
 
 
 app.add_typer(complementaria_app, name="complementaria", help="Build and submit amendment filings (#93).")
