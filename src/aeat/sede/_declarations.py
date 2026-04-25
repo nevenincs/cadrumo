@@ -26,12 +26,14 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import re
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, Literal
 from urllib.parse import parse_qs, urlsplit
 
 from bs4 import BeautifulSoup
-from playwright.async_api import Page, async_playwright
+from playwright.async_api import BrowserContext, Page, async_playwright
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 from ..browser import Profile
@@ -110,6 +112,58 @@ class Declaration(BaseModel):
     mode: Literal["read"] = "read"
 
 
+@asynccontextmanager
+async def _open_register_page(
+    session: AeatSession,
+    *,
+    settings: Settings | None = None,
+) -> AsyncIterator[tuple[Page, BrowserContext]]:
+    """Yield a Playwright ``(page, context)`` bound to the AEAT session.
+
+    Both :func:`walk_declarations_register` and :func:`capture_declaration`
+    need the same bringup: validate ``session.storage_state_path``,
+    build a :class:`Profile`, spin up Playwright, and create a
+    context preloaded with the session cookies. Centralising the
+    scaffolding keeps the two callers structurally identical and
+    fixes a latent leak where the walker did not close the
+    underlying :class:`BrowserSession` after use.
+
+    Args:
+        session: Authenticated AEAT session.
+        settings: Optional :class:`Settings` override.
+
+    Yields:
+        A ``(page, context)`` pair. The page is a fresh
+        :class:`Page` inside the storage-state-loaded context.
+
+    Raises:
+        SedeNavigationError: When ``session.storage_state_path`` is
+            ``None``.
+    """
+    settings = settings or Settings()
+    if session.storage_state_path is None:
+        raise SedeNavigationError(
+            "AeatSession.storage_state_path is None; run `aeat auth login` first",
+        )
+    profile = Profile(
+        name=settings.aeat_default_profile_name,
+        storage_state_path=session.storage_state_path,
+    )
+    async with async_playwright() as pw:
+        browser_session = BrowserSession(pw, settings, profile)
+        context = await browser_session.create_context(
+            storage_state_path=session.storage_state_path,
+        )
+        try:
+            page = await context.new_page()
+            yield page, context
+        finally:
+            with contextlib.suppress(Exception):
+                await context.close()
+            with contextlib.suppress(Exception):
+                await browser_session.close()
+
+
 async def walk_declarations_register(
     session: AeatSession,
     *,
@@ -138,25 +192,9 @@ async def walk_declarations_register(
             settle within the timeout.
         SedeParseError: When the result table cannot be parsed.
     """
-    settings = settings or Settings()
-    if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession.storage_state_path is None; run `aeat auth login` first")
-
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=session.storage_state_path,
-    )
-    async with async_playwright() as pw:
-        browser_session = BrowserSession(pw, settings, profile)
-        context = await browser_session.create_context(
-            storage_state_path=session.storage_state_path,
-        )
-        try:
-            page = await context.new_page()
-            await _drive_search(page, modelo=modelo, ejercicio=ejercicio)
-            return _parse_listbox(await page.content(), modelo=modelo, ejercicio=ejercicio)
-        finally:
-            await context.close()
+    async with _open_register_page(session, settings=settings) as (page, _context):
+        await _drive_search(page, modelo=modelo, ejercicio=ejercicio)
+        return _parse_listbox(await page.content(), modelo=modelo, ejercicio=ejercicio)
 
 
 async def _drive_search(
@@ -389,111 +427,91 @@ async def capture_declaration(
         JustificanteFetchError: When the PDF GET returns non-2xx,
             an empty body, or a non-PDF content type.
     """
-    settings = settings or Settings()
-    if session.storage_state_path is None:
-        raise SedeNavigationError(
-            "AeatSession.storage_state_path is None; run `aeat auth login` first",
+    async with _open_register_page(session, settings=settings) as (page, context):
+        await _drive_search(
+            page,
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
         )
 
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=session.storage_state_path,
-    )
-    async with async_playwright() as pw:
-        browser_session = BrowserSession(pw, settings, profile)
-        context = await browser_session.create_context(
-            storage_state_path=session.storage_state_path,
+        row_locator = _row_locator_for_expediente(
+            page,
+            expediente_id=declaration.expediente_id,
         )
+        ver_button = row_locator.locator(
+            '.z-listcell:has-text("Ver") .z-button',
+        ).first
+
         try:
-            page = await context.new_page()
-            await _drive_search(
-                page,
+            async with context.expect_page(
+                timeout=_VER_CLICK_TIMEOUT_MS,
+            ) as new_page_info:
+                await ver_button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+            cotejo_page = await new_page_info.value
+        except Exception as exc:
+            raise SedeNavigationError(
+                f"clicking Ver for {declaration.expediente_id!r} failed: {exc}",
+            ) from exc
+
+        try:
+            await cotejo_page.wait_for_load_state(
+                "domcontentloaded",
+                timeout=_NAVIGATION_TIMEOUT_MS,
+            )
+        except Exception as exc:
+            raise SedeNavigationError(
+                f"cotejo page did not settle for {declaration.expediente_id!r}: {exc}",
+            ) from exc
+
+        cotejo_url = cotejo_page.url
+        if _COTEJO_PATH_PREFIX not in cotejo_url:
+            raise SedeNavigationError(
+                f"Ver button for {declaration.expediente_id!r} did not land on a "
+                f"cotejo URL (final URL: {cotejo_url!r}); "
+                "session likely expired mid-walk — run `aeat auth login` and retry",
+            )
+
+        csv = _extract_csv_from_url(cotejo_url)
+
+        ref = JustificanteRef(
+            csv=csv,
+            expediente_id=declaration.expediente_id,
+            cotejo_url=AnyHttpUrl(f"{_COTEJO_VIEW}?CSV={csv}"),
+            pdf_url=AnyHttpUrl(f"{_COTEJO_DOC}?CSV={csv}"),
+        )
+
+        pdf_response = await context.request.get(str(ref.pdf_url))
+        if not (200 <= pdf_response.status < 300):
+            raise JustificanteFetchError(
+                f"pdf fetch for CSV={csv!r} returned HTTP {pdf_response.status}",
+            )
+        content_type = pdf_response.headers.get("content-type", "")
+        body = await pdf_response.body()
+        if not body:
+            raise JustificanteFetchError(f"empty PDF body for CSV={csv!r}")
+        if "pdf" not in content_type.lower():
+            raise JustificanteFetchError(
+                f"unexpected content-type {content_type!r} for CSV={csv!r}",
+            )
+
+        from ._schema import Expediente
+
+        sha256 = hashlib.sha256(body).hexdigest()
+        return SedeCapture(
+            expediente=Expediente(
+                expediente_id=declaration.expediente_id,
                 modelo=declaration.modelo,
                 ejercicio=declaration.ejercicio,
-            )
-
-            row_locator = _row_locator_for_expediente(
-                page,
-                expediente_id=declaration.expediente_id,
-            )
-            ver_button = row_locator.locator(
-                '.z-listcell:has-text("Ver") .z-button',
-            ).first
-
-            try:
-                async with context.expect_page(
-                    timeout=_VER_CLICK_TIMEOUT_MS,
-                ) as new_page_info:
-                    await ver_button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
-                cotejo_page = await new_page_info.value
-            except Exception as exc:
-                raise SedeNavigationError(
-                    f"clicking Ver for {declaration.expediente_id!r} failed: {exc}",
-                ) from exc
-
-            try:
-                await cotejo_page.wait_for_load_state(
-                    "domcontentloaded",
-                    timeout=_NAVIGATION_TIMEOUT_MS,
-                )
-            except Exception as exc:
-                raise SedeNavigationError(
-                    f"cotejo page did not settle for {declaration.expediente_id!r}: {exc}",
-                ) from exc
-
-            cotejo_url = cotejo_page.url
-            if _COTEJO_PATH_PREFIX not in cotejo_url:
-                raise SedeNavigationError(
-                    f"Ver button for {declaration.expediente_id!r} did not land on a "
-                    f"cotejo URL (final URL: {cotejo_url!r}); "
-                    "session likely expired mid-walk — run `aeat auth login` and retry",
-                )
-
-            csv = _extract_csv_from_url(cotejo_url)
-
-            ref = JustificanteRef(
-                csv=csv,
-                expediente_id=declaration.expediente_id,
-                cotejo_url=AnyHttpUrl(f"{_COTEJO_VIEW}?CSV={csv}"),
-                pdf_url=AnyHttpUrl(f"{_COTEJO_DOC}?CSV={csv}"),
-            )
-
-            pdf_response = await context.request.get(str(ref.pdf_url))
-            if not (200 <= pdf_response.status < 300):
-                raise JustificanteFetchError(
-                    f"pdf fetch for CSV={csv!r} returned HTTP {pdf_response.status}",
-                )
-            content_type = pdf_response.headers.get("content-type", "")
-            body = await pdf_response.body()
-            if not body:
-                raise JustificanteFetchError(f"empty PDF body for CSV={csv!r}")
-            if "pdf" not in content_type.lower():
-                raise JustificanteFetchError(
-                    f"unexpected content-type {content_type!r} for CSV={csv!r}",
-                )
-
-            from ._schema import Expediente
-
-            sha256 = hashlib.sha256(body).hexdigest()
-            return SedeCapture(
-                expediente=Expediente(
-                    expediente_id=declaration.expediente_id,
-                    modelo=declaration.modelo,
-                    ejercicio=declaration.ejercicio,
-                    category_path=("Declaraciones presentadas",),
-                    detail_url=AnyHttpUrl(
-                        f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}",
-                    ),
+                category_path=("Declaraciones presentadas",),
+                detail_url=AnyHttpUrl(
+                    f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}",
                 ),
-                ref=ref,
-                pdf_bytes=body,
-                pdf_sha256=sha256,
-                captured_at=datetime.now(UTC),
-            )
-        finally:
-            with contextlib.suppress(Exception):
-                await context.close()
-            await browser_session.close()
+            ),
+            ref=ref,
+            pdf_bytes=body,
+            pdf_sha256=sha256,
+            captured_at=datetime.now(UTC),
+        )
 
 
 def _row_locator_for_expediente(page: Page, *, expediente_id: str):
