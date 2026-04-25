@@ -33,6 +33,7 @@ from ._errors import (
     SignaturePresentError,
     UnknownSurfaceError,
 )
+from ._pipeline import SANITIZER_VERSION, sanitize_pdf
 from ._records import (
     AddressReplacement,
     ArbitraryReplacement,
@@ -52,6 +53,7 @@ from ._records import (
 )
 
 __all__ = [
+    "SANITIZER_VERSION",
     "AddressReplacement",
     "AlreadySanitizedError",
     "ArbitraryReplacement",
@@ -72,4 +74,5 @@ __all__ = [
     "SignaturePresentError",
     "TokenMap",
     "UnknownSurfaceError",
+    "sanitize_pdf",
 ]

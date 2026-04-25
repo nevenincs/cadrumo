@@ -124,7 +124,7 @@ _XMP_XMP_PII_LOCALS = ("CreatorTool", "CreateDate", "ModifyDate", "MetadataDate"
 def _packet_declares_pdfa(pdf: Pdf) -> bool:
     """Returns True when the XMP packet carries a ``pdfaid:*`` claim."""
     try:
-        with pdf.open_metadata(set_pikepdf_as_editor=False) as metadata:
+        with pdf.open_metadata(set_pikepdf_as_editor=False, update_docinfo=False) as metadata:
             for key in metadata:
                 if key.startswith(_XMP_PDFAID_NS):
                     return True
@@ -159,7 +159,7 @@ def _rewrite_xmp_in_place(pdf: Pdf) -> int:
         The number of XMP entries that were cleared.
     """
     cleared = 0
-    with pdf.open_metadata(set_pikepdf_as_editor=False) as metadata:
+    with pdf.open_metadata(set_pikepdf_as_editor=False, update_docinfo=False) as metadata:
         keys = list(metadata)
         for key in keys:
             if _is_pii_xmp_key(key):
