@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ._declarations import _parse_listbox, _parse_presented_at
+from ._declarations import _extract_csv_from_url, _parse_listbox, _parse_presented_at
 from ._errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
@@ -96,3 +96,34 @@ class TestParsePresentedAt:
     def test_partial_match_rejected(self) -> None:
         with pytest.raises(ValueError):
             _parse_presented_at("01/02/2024")
+
+
+class TestExtractCsvFromUrl:
+    """Cotejo-URL CSV extraction validates the AEAT shape."""
+
+    _COTEJO = "https://www6.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV="
+
+    def test_canonical_csv(self) -> None:
+        assert _extract_csv_from_url(f"{self._COTEJO}S3RASL6U73H49Y83") == "S3RASL6U73H49Y83"
+
+    def test_missing_csv_param_raises(self) -> None:
+        with pytest.raises(SedeParseError, match="missing CSV"):
+            _extract_csv_from_url("https://www6.agenciatributaria.gob.es/wlpl/foo")
+
+    def test_lowercase_csv_rejected(self) -> None:
+        # AEAT only emits uppercase CSV; lowercase indicates a
+        # malformed response or attacker-crafted URL.
+        with pytest.raises(SedeParseError, match="does not match AEAT shape"):
+            _extract_csv_from_url(f"{self._COTEJO}lowercaseinvalid")
+
+    def test_too_short_csv_rejected(self) -> None:
+        with pytest.raises(SedeParseError, match="does not match AEAT shape"):
+            _extract_csv_from_url(f"{self._COTEJO}AB12")
+
+    def test_too_long_csv_rejected(self) -> None:
+        with pytest.raises(SedeParseError, match="does not match AEAT shape"):
+            _extract_csv_from_url(f"{self._COTEJO}{'A' * 32}")
+
+    def test_csv_with_special_chars_rejected(self) -> None:
+        with pytest.raises(SedeParseError, match="does not match AEAT shape"):
+            _extract_csv_from_url(f"{self._COTEJO}AAAA1234../../etc")

@@ -165,6 +165,50 @@ class TestPeriodPositionalQuarterly:
         assert record.period == "1T"
 
 
+class TestPeriodPositionalRejectsMonthlyNoise:
+    """The positional-period regex must not over-match casilla numbers.
+
+    Captured edge case (M190 *Resumen anual* receipts): pdfplumber
+    emits ``Ejercicio (con 4 cifras) ....... 2024 01 enero`` where
+    the trailing ``01`` is a casilla number, not a monthly period.
+    The earlier ``0[1-9]|1[0-2]`` alternation incorrectly bound
+    ``period="01"`` to that line, mislabelling the annual filing.
+    The regex now accepts only ``0A`` or ``[1-4]T``; monthly
+    modelos can be added back when one enters the corpus and a
+    real layout is available to validate against.
+    """
+
+    def test_resumen_anual_does_not_match_casilla_number(self, tmp_path: Path) -> None:
+        text = (
+            "INFORMACION DE LA PRESENTACION DE LA DECLARACION\n"
+            "Modelo 190\n"
+            "Presentacion realizada el: 27-03-2025 a las 20:31:00\n"
+            "Codigo Seguro de Verificacion: SANITIZED1902024\n"
+            "NIF Presentador: Y0000001S\n"
+            "Resumen anual\n"
+            "Ejercicio (con 4 cifras) ....... 2024 01 enero\n"
+            "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1902024\n"
+        )
+        record = extract_justificante(text, _stub_path(tmp_path, "190"))
+        # The positional regex must not bind period="01" here. The
+        # annual fallback to ejercicio is the right answer.
+        assert record.period == "2024"
+        assert record.ejercicio == "2024"
+
+    def test_quarterly_modelos_still_match(self, tmp_path: Path) -> None:
+        text = (
+            "INFORMACION DE LA PRESENTACION DE LA DECLARACION\n"
+            "Modelo 130\n"
+            "Codigo Seguro de Verificacion: SANITIZED1302024\n"
+            "Presentacion realizada el: 05-07-2024 a las 16:28:37\n"
+            "NIF Presentador: Y0000001S\n"
+            "Y0000001S 2024 1T\n"
+            "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1302024\n"
+        )
+        record = extract_justificante(text, _stub_path(tmp_path, "130"))
+        assert record.period == "1T"
+
+
 class TestEjercicioLooseShape:
     """Resumen anuales (M190) print ejercicio with parenthetical leader."""
 

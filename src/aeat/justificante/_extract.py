@@ -83,13 +83,20 @@ _PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]*\d[0-9A-Z]*)", re.IGN
 # Quarterly modelos (130, 303, 111, 115, 123) often print the period
 # in a positional layout that pdfplumber merges as
 # ``[<NIF>] <YYYY> <period>`` on a single line, with no "Período"
-# label. The period token is one of ``1T``, ``2T``, ``3T``, ``4T``,
-# ``0A``, or a 1-2 digit month (``01``-``12``). Captured live across
-# Modelos 130/303/111 (2026-04-25).
+# label. Captured live across Modelos 130/303/111 (2026-04-25).
+#
+# The period token must be either ``0A`` (annual) or ``[1-4]T``
+# (quarterly). The earlier ``0[1-9]|1[0-2]`` monthly alternation
+# was over-broad — pdfplumber emits ``Ejercicio (con 4 cifras)
+# ....... 2024 01`` on M190 *Resumen anual* receipts, where the
+# trailing ``01`` is a casilla number, not a monthly period. The
+# annual fallback to ``ejercicio`` then mislabelled the row.
+# Drop monthly until a real monthly modelo enters the corpus and
+# we have a layout to validate against.
 _PERIOD_POSITIONAL_RE = re.compile(
-    r"(?:[A-Z][0-9A-Z]{7,9}\s+)?"  # optional NIF/NIE
+    r"(?:[A-Z][0-9A-Z]{7,9}\s+)?"  # optional NIF/NIE prefix
     r"\b(?P<year>\d{4})\s+"
-    r"(?P<period>0A|[1-4]T|0[1-9]|1[0-2])\b",
+    r"(?P<period>0A|[1-4]T)\b",
 )
 _EJERCICIO_RE = re.compile(
     # Spanish "Ejercicio <year>" or English "Financial year <year>"

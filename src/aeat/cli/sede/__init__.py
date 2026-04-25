@@ -314,8 +314,22 @@ def capture_corpus_cmd(
             help="Skip PDFs already present on disk (default) or re-fetch.",
         ),
     ] = True,
+    delay_seconds: Annotated[
+        float,
+        typer.Option(
+            "--delay-seconds",
+            help="Sleep between iterations (anti-throttle pacing). Default 1.0s; pass 0 to disable.",
+            min=0.0,
+        ),
+    ] = 1.0,
 ) -> None:
-    """Walk every (modelo, ejercicio) tuple and capture every declaration."""
+    """Walk every (modelo, ejercicio) tuple and capture every declaration.
+
+    Each iteration is wrapped in a broad ``Exception`` catch so a
+    transient Playwright timeout on one query doesn't abort the
+    entire corpus. ``--delay-seconds`` paces the loop to reduce
+    the chance of AEAT's anti-bot heuristics flagging the run.
+    """
     session = _require_active_session()
     output_root.mkdir(parents=True, exist_ok=True)
     modelo_list = [m.strip() for m in modelos.split(",") if m.strip()]
@@ -323,25 +337,31 @@ def capture_corpus_cmd(
 
     async def _run() -> list[dict[str, object]]:
         rows: list[dict[str, object]] = []
+        first_iter = True
         for modelo in modelo_list:
             for ejercicio in ejercicio_list:
+                if not first_iter and delay_seconds > 0:
+                    await asyncio.sleep(delay_seconds)
+                first_iter = False
                 try:
                     declarations = await walk_declarations_register(
                         session,
                         modelo=modelo,
                         ejercicio=ejercicio,
                     )
-                except SedeError as exc:
+                except Exception as exc:
                     rows.append(
                         {
                             "modelo": modelo,
                             "ejercicio": ejercicio,
                             "status": "walk_failed",
-                            "error": str(exc),
+                            "error": f"{type(exc).__name__}: {exc}",
                         },
                     )
                     continue
                 for idx, declaration in enumerate(declarations):
+                    if delay_seconds > 0:
+                        await asyncio.sleep(delay_seconds)
                     target = output_root / f"m{modelo}-{ejercicio}-{declaration.period}-{idx}.pdf"
                     if skip_existing and target.is_file():
                         rows.append(
@@ -357,7 +377,7 @@ def capture_corpus_cmd(
                         continue
                     try:
                         capture = await capture_declaration(session, declaration)
-                    except SedeError as exc:
+                    except Exception as exc:
                         rows.append(
                             {
                                 "modelo": modelo,
@@ -365,7 +385,7 @@ def capture_corpus_cmd(
                                 "period": declaration.period,
                                 "expediente_id": declaration.expediente_id,
                                 "status": "capture_failed",
-                                "error": str(exc),
+                                "error": f"{type(exc).__name__}: {exc}",
                             },
                         )
                         continue
