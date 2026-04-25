@@ -29,7 +29,7 @@ class CasillaParseError(CasillaError):
 class VerifyError(CasillaError):
     """Base class for structured verification failures."""
 
-    code = "verify_error"
+    issue_code = "verify_error"
 
     def __init__(
         self,
@@ -51,6 +51,7 @@ class VerifyError(CasillaError):
         self.period = period
         self.casilla_id = casilla_id
         self.message = message
+        self.__dict__["code"] = self.issue_code
         super().__init__(message)
 
     def __str__(self) -> str:
@@ -62,16 +63,16 @@ class VerifyError(CasillaError):
 class UnreviewedRecordError(VerifyError):
     """Raised when a canonical record lacks required review metadata."""
 
-    code = "unreviewed_record"
+    issue_code = "unreviewed_record"
 
 
 class CrossReferenceError(VerifyError):
     """Raised when a record references another casilla that does not exist."""
 
-    code = "cross_reference"
+    issue_code = "cross_reference"
 
 
 class MissingFieldError(VerifyError):
     """Raised when a record is missing a required logical field."""
 
-    code = "missing_field"
+    issue_code = "missing_field"
