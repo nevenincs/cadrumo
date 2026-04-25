@@ -156,7 +156,13 @@ async def _drive_search(
     modelo: str,
     ejercicio: int,
 ) -> None:
-    """Fill the form and click Buscar. No-op return on success."""
+    """Fill the form and click Buscar. No-op return on success.
+
+    Raises :class:`SedeNavigationError` early when AEAT redirects to
+    the login wall instead of the form (session expired) so callers
+    get an actionable error rather than an opaque combobox click
+    timeout.
+    """
     try:
         await page.goto(
             _LISTING_URL,
@@ -166,6 +172,26 @@ async def _drive_search(
     except Exception as exc:
         raise SedeNavigationError(f"goto {_LISTING_URL!r} failed: {exc}") from exc
     await page.wait_for_timeout(1500)
+
+    final_url = page.url
+    if "/wlpl/SCEJ-MANT/CONSUL" not in final_url:
+        raise SedeNavigationError(
+            f"declaraciones register did not load (final URL: {final_url!r}); "
+            "session likely expired — run `aeat auth login` and retry",
+        )
+    # Defensive: even when the URL matches, AEAT sometimes serves a
+    # blank shell with no Modelo label until the JS finishes booting.
+    try:
+        await page.get_by_text("Modelo (*)", exact=True).first.wait_for(
+            state="visible",
+            timeout=_FORM_INTERACTION_TIMEOUT_MS,
+        )
+    except Exception as exc:
+        raise SedeNavigationError(
+            "declaraciones register form did not render the 'Modelo (*)' "
+            f"label within {_FORM_INTERACTION_TIMEOUT_MS}ms; "
+            "session likely expired or AEAT served a maintenance page",
+        ) from exc
 
     await _select_combobox_value(
         page,
