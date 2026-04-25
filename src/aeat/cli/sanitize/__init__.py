@@ -595,7 +595,10 @@ def _scaffold_from_justificante(justificante: object) -> dict[str, list[dict[str
         empty real fields the operator must fill in.
     """
     nif_synthetic = "Y0000001S"
-    csv_synthetic = _synthesise_csv_for(getattr(justificante, "modelo", "000"))
+    csv_synthetic = _synthesise_csv_for(
+        getattr(justificante, "modelo", "000"),
+        ejercicio=str(getattr(justificante, "ejercicio", "") or ""),
+    )
     name_synthetic = "APELLIDO APELLIDO NOMBRE"
     return {
         "nif": [
@@ -628,14 +631,34 @@ def _scaffold_from_justificante(justificante: object) -> dict[str, list[dict[str
     }
 
 
-def _synthesise_csv_for(modelo: str) -> str:
+def _synthesise_csv_for(modelo: str, *, ejercicio: str = "") -> str:
     """Returns a 16-character synthetic CSV deterministically derived from ``modelo``.
 
     The synthetic conforms to the 16-char base32-like shape AEAT
-    publishes. It is intentionally *not* random: the same modelo
-    always yields the same synthetic so a fixture's CSV is
-    auditable across runs.
+    publishes. It is intentionally *not* random: the same
+    ``(modelo, ejercicio)`` pair always yields the same synthetic
+    so a fixture's CSV is auditable across runs.
+
+    When ``ejercicio`` is supplied, the embed shape is
+    ``SANITIZED{modelo}{ejercicio}`` (matches the existing
+    fixture corpus, e.g. ``SANITIZED1302024`` for M130 / 2024).
+    Otherwise the helper falls back to ``SANITIZED{modelo}XXXX``
+    padding so the result still hits the 16-char target.
+
+    Args:
+        modelo: AEAT modelo code (typically 3 digits).
+        ejercicio: Optional tax year (4 digits). When provided
+            and ``len("SANITIZED" + modelo + ejercicio) <= 16``,
+            the year is embedded directly. Out-of-bounds inputs
+            silently fall back to padding to keep the helper
+            shape-conforming.
+
+    Returns:
+        A 16-character uppercase synthetic CSV.
     """
+    embed = f"SANITIZED{modelo}{ejercicio}"
+    if 1 <= len(embed) <= 16:
+        return (embed + "X" * 16)[:16].upper()
     base = f"SANITIZED{modelo:>3}"[:16]
     return (base + "X" * 16)[:16].upper()
 
