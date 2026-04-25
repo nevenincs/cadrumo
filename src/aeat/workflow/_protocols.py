@@ -3,24 +3,19 @@
 The composite workflow engine is defined against ``typing.Protocol``
 surfaces — not concrete classes — for two reasons:
 
-1. **In-flight-branch rebase safety.** The status reader (#43), the
-   notifications inbox (#46), and the certificate auth backend (#8)
-   are still in flight on sibling branches. Hard-importing them would
-   either break the build or require speculative scaffolding in their
-   territory. Protocols let this subpackage compile and test standalone
-   today and pick up the real implementations via constructor injection
-   when they land.
+1. **Cross-subpackage decoupling.** Each Protocol lets the workflow
+   engine integrate with an in-house subpackage without forcing a
+   hard import dependency at the engine layer; adapters in
+   :mod:`aeat.workflow._adapters` translate the richer real surfaces
+   onto these narrow Protocols.
 2. **No-mocks testing.** The project forbids mocks/patches/fakes/stubs
    in its test suite. Protocols let us substitute hand-rolled
    Protocol-conforming classes in tests instead, one per scenario.
 
 Every Protocol here describes **only** the attributes the workflow
-engine actually reads. The adapter wrappers in
-:mod:`aeat.workflow._adapters` translate the richer real surfaces onto
-these narrow Protocols. Small companion pydantic v2 stubs model
-in-flight types (``ExpedienteLike``, ``RequerimientoLike``,
-``SubmittedFilingLike``) so the schema-strict workflow can round-trip
-them.
+engine actually reads. A small companion pydantic v2 stub
+(:class:`SubmittedFilingLike`) models the submission projection so
+the schema-strict workflow can round-trip the result.
 """
 
 from __future__ import annotations
@@ -138,52 +133,6 @@ class SyncRunnerProtocol(Protocol):
         ...
 
 
-class ExpedienteLike(BaseModel):
-    """Narrow stub for the status-reader's expediente record (#43)."""
-
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1)
-    period: str = Field(min_length=1)
-    tax_id: str = Field(min_length=1)
-    filed_at: datetime | None = None
-
-
-@runtime_checkable
-class StatusReaderProtocol(Protocol):
-    """Narrow stub for the live status reader (#43, in flight)."""
-
-    async def fetch_expedientes(self, *, tax_id: str) -> tuple[ExpedienteLike, ...]:
-        """Return every expediente currently attached to ``tax_id``."""
-        ...
-
-
-class RequerimientoLike(BaseModel):
-    """Narrow stub for an inbox requerimiento (#46, in flight)."""
-
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1)
-    notificacion_id: str = Field(min_length=1)
-    received_at: datetime
-    blocks_submission: bool = True
-    subject: str = ""
-
-
-@runtime_checkable
-class InboxProtocol(Protocol):
-    """Narrow stub for the notifications inbox (#46, in flight)."""
-
-    async def fetch_blocking_requerimientos(
-        self,
-        *,
-        tax_id: str,
-        modelo: str,
-    ) -> tuple[RequerimientoLike, ...]:
-        """Return any blocking requerimientos for ``(tax_id, modelo)``."""
-        ...
-
-
 @runtime_checkable
 class CertificateBundleProtocol(Protocol):
     """Narrow stub for the auth-provider probe used by workflow preflight.
@@ -225,12 +174,8 @@ class FilingInputsProviderProtocol(Protocol):
 __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineProtocol",
-    "ExpedienteLike",
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
-    "InboxProtocol",
-    "RequerimientoLike",
-    "StatusReaderProtocol",
     "SubmissionEngineProtocol",
     "SubmittedFilingLike",
     "SyncRunSummary",

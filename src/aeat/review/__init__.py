@@ -17,7 +17,6 @@ from __future__ import annotations
 from ._adapters import (
     divergences_pending,
     drafts_pending,
-    inbox_pending,
     invoices_pending,
     transactions_pending,
 )
@@ -34,7 +33,6 @@ from ._errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
 from ._models import (
     DivergenceReviewItem,
     FindingReviewItem,
-    InboxReviewItem,
     InvoiceReviewItem,
     ReviewItem,
     TransactionReviewItem,
@@ -43,7 +41,6 @@ from ._models import (
 __all__ = [
     "DivergenceReviewItem",
     "FindingReviewItem",
-    "InboxReviewItem",
     "InvoiceReviewItem",
     "ReviewError",
     "ReviewFormat",
@@ -57,7 +54,6 @@ __all__ = [
     "TransactionReviewItem",
     "divergences_pending",
     "drafts_pending",
-    "inbox_pending",
     "invoices_pending",
     "reserved_kind_reason",
     "severity_rank",

@@ -21,7 +21,7 @@ recorded verbatim must rename the parameter.
 Caveat — name-side redaction only (audit finding S6, 2026-04-21):
 this shield does NOT inspect argument **values**. An operator who
 passes a token or a NIF in the value position of an otherwise
-innocent-looking flag (e.g. ``aeat inbox ack --by "tok-ABCXYZ"``)
+innocent-looking flag (e.g. ``aeat filing reconcile --by "tok-ABCXYZ"``)
 will have the literal value written into ``events.jsonl`` / the
 persisted ``RunTrace``. If you are wrapping a new CLI command whose
 argument can contain sensitive material, either rename the arg to
@@ -62,9 +62,10 @@ def _stringify(value: Any) -> str | None:
 
     ``None`` is returned unchanged so callers can skip unset optionals.
     Every other type is coerced via :func:`str` — ``StrEnum`` values
-    (e.g. :class:`aeat.inbox.NotificacionPriority`) render as their
-    ``.value`` directly because ``StrEnum`` subclasses ``str``, Paths
-    render as their POSIX string, and primitives round-trip naturally.
+    (e.g. :class:`aeat.filing.reconciliation.ReconciliationStatus`)
+    render as their ``.value`` directly because ``StrEnum`` subclasses
+    ``str``, Paths render as their POSIX string, and primitives
+    round-trip naturally.
     """
     if value is None:
         return None

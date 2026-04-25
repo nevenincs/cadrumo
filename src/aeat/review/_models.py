@@ -18,7 +18,6 @@ from ..filing import FilingValidationFinding
 from ..financial.invoices import Invoice
 from ..financial.transactions import Transaction
 from ..i18n import Translatable
-from ..inbox import Notificacion
 from ..sync import DivergenceRecord
 from ._enums import ReviewItemKind, ReviewSeverity
 
@@ -87,14 +86,7 @@ class FindingReviewItem(_ReviewItemBase):
     draft_path: str = Field(min_length=1)
 
 
-class InboxReviewItem(_ReviewItemBase):
-    """One unacknowledged AEAT inbox notification."""
-
-    kind: Literal[ReviewItemKind.INBOX] = ReviewItemKind.INBOX
-    source: Notificacion
-
-
 ReviewItem = Annotated[
-    TransactionReviewItem | InvoiceReviewItem | DivergenceReviewItem | FindingReviewItem | InboxReviewItem,
+    TransactionReviewItem | InvoiceReviewItem | DivergenceReviewItem | FindingReviewItem,
     Field(discriminator="kind"),
 ]

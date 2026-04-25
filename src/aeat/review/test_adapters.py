@@ -13,7 +13,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl
 
 from ..config import Settings
 from ..filing import (
@@ -42,12 +41,6 @@ from ..financial.transactions import (
     save_transactions,
 )
 from ..i18n import Translatable
-from ..inbox import (
-    Inbox,
-    Notificacion,
-    NotificacionKind,
-    NotificacionPriority,
-)
 from ..sync import (
     CasillaAddedWithDefault,
     CasillaRemoved,
@@ -59,13 +52,11 @@ from ..sync import (
 from . import (
     DivergenceReviewItem,
     FindingReviewItem,
-    InboxReviewItem,
     InvoiceReviewItem,
     ReviewSeverity,
     TransactionReviewItem,
     divergences_pending,
     drafts_pending,
-    inbox_pending,
     invoices_pending,
     transactions_pending,
 )
@@ -507,93 +498,3 @@ def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None
     )
     items = drafts_pending(settings)
     assert len(items) == 1
-
-
-# ── inbox adapter ─────────────────────────────────────────────────
-
-
-def _notificacion(
-    *,
-    notificacion_id: str = "AEAT-0001",
-    priority: NotificacionPriority = NotificacionPriority.CRITICAL,
-    acknowledged: bool = False,
-    appeal_deadline: date | None = None,
-) -> Notificacion:
-    received = datetime(2026, 4, 1, 10, 0, tzinfo=UTC)
-    return Notificacion(
-        notificacion_id=notificacion_id,
-        kind=NotificacionKind.REQUERIMIENTO,
-        priority=priority,
-        subject=_summary("subject"),
-        body_excerpt=_summary("body"),
-        received_at=received,
-        effective_at=received,
-        appeal_deadline=appeal_deadline,
-        source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/notif/x"),
-        acknowledged_at=datetime(2026, 4, 5, 9, 0, tzinfo=UTC) if acknowledged else None,
-        acknowledged_by="gw" if acknowledged else None,
-    )
-
-
-def _write_inbox(settings: Settings, notificaciones: tuple[Notificacion, ...]) -> Path:
-    settings.aeat_inbox_dir.mkdir(parents=True, exist_ok=True)
-    inbox = Inbox(entries={n.notificacion_id: n for n in notificaciones})
-    path = settings.aeat_inbox_dir / "inbox.json"
-    path.write_text(inbox.model_dump_json(indent=2), encoding="utf-8")
-    return path
-
-
-def test_inbox_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
-    assert inbox_pending(settings) == ()
-
-
-def test_inbox_pending_filters_acknowledged(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
-    _write_inbox(
-        settings,
-        (
-            _notificacion(notificacion_id="AEAT-A"),
-            _notificacion(notificacion_id="AEAT-B", acknowledged=True),
-        ),
-    )
-    items = inbox_pending(settings)
-    assert len(items) == 1
-    assert isinstance(items[0], InboxReviewItem)
-    assert items[0].source.notificacion_id == "AEAT-A"
-
-
-@pytest.mark.parametrize(
-    ("priority", "deadline_offset_days", "expected_severity"),
-    [
-        (NotificacionPriority.CRITICAL, None, ReviewSeverity.CRITICAL),
-        (NotificacionPriority.HIGH, None, ReviewSeverity.HIGH),
-        (NotificacionPriority.NORMAL, None, ReviewSeverity.NORMAL),
-        (NotificacionPriority.INFO, None, ReviewSeverity.INFO),
-        (NotificacionPriority.NORMAL, 3, ReviewSeverity.HIGH),  # inside lead window → upgraded
-        (NotificacionPriority.NORMAL, 60, ReviewSeverity.NORMAL),  # outside lead window
-    ],
-)
-def test_inbox_pending_severity_mapping(
-    tmp_path: Path,
-    priority: NotificacionPriority,
-    deadline_offset_days: int | None,
-    expected_severity: ReviewSeverity,
-) -> None:
-    from datetime import timedelta
-
-    settings = _build_settings(tmp_path)
-    today = date(2026, 4, 10)
-    deadline = today + timedelta(days=deadline_offset_days) if deadline_offset_days is not None else None
-    _write_inbox(
-        settings,
-        (
-            _notificacion(
-                priority=priority,
-                appeal_deadline=deadline,
-            ),
-        ),
-    )
-    items = inbox_pending(settings, today=today)
-    assert len(items) == 1
-    assert items[0].severity is expected_severity

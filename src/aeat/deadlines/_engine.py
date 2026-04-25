@@ -25,11 +25,6 @@ from ._models import (
     ObligationStatus,
     Schedule,
 )
-from ._protocols import (
-    CorpusReader,
-    ModeloCatalogueLoader,
-    ModeloIdentifier,
-)
 
 _logger = get_logger(__name__)
 
@@ -66,33 +61,25 @@ def _windows_for_year(year: int) -> tuple[CanonicalWindow, ...]:
 class DeadlineEngine:
     """Pure-function engine that computes typed filing schedules.
 
-    The engine is stateless after construction. It accepts a
-    Protocol-stubbed catalogue loader and an optional Protocol-stubbed
-    corpus reader so it can compile and ship before its upstream
-    subpackages (#6 ``aeat.models``, #17 ``aeat.corpus``) land on
-    ``main``.
+    The engine is stateless after construction. Modelo applicability
+    is closed over the in-code :data:`KNOWN_AUTONOMO_MODELOS` set
+    rather than a Protocol-injected catalogue: every modelo the v1
+    engine reasons about lives in that closed tuple, so an external
+    catalogue would only mirror the same data.
 
     Attributes:
-        catalogue: The :class:`ModeloCatalogueLoader` used to validate
-            that emitted obligations reference known modelos.
-        corpus: Optional :class:`CorpusReader` for year-specific window
-            overrides. ``None`` falls back to the in-code calendar.
         due_soon_days: Window before ``closes_on`` that flags
             ``DUE_SOON`` (default 14).
     """
 
     def __init__(
         self,
-        catalogue: ModeloCatalogueLoader,
         *,
-        corpus: CorpusReader | None = None,
         due_soon_days: int = _DEFAULT_DUE_SOON_DAYS,
     ) -> None:
         """Construct an engine.
 
         Args:
-            catalogue: The catalogue loader Protocol implementation.
-            corpus: Optional corpus reader Protocol implementation.
             due_soon_days: Days before ``closes_on`` that flag
                 ``DUE_SOON``. Must be ``>= 0``.
 
@@ -101,8 +88,6 @@ class DeadlineEngine:
         """
         if due_soon_days < 0:
             raise ValueError(f"due_soon_days must be >= 0, got {due_soon_days}")
-        self.catalogue = catalogue
-        self.corpus = corpus
         self.due_soon_days = due_soon_days
 
     def compute(
@@ -140,23 +125,8 @@ class DeadlineEngine:
                 "supported years are derived from aeat.deadlines._calendar.SUPPORTED_YEARS"
             )
 
-        # Optional corpus consultation. The Protocol's return type is
-        # opaque (Any) until #17 lands; v1 logs that overrides were
-        # observed but does not yet apply them.
-        if self.corpus is not None:
-            overrides = self.corpus.load_year_overrides(year)
-            if overrides:
-                _logger.debug(
-                    "corpus reader returned %d overrides for %d; v1 engine ignores them",
-                    len(overrides),
-                    year,
-                )
-
         obligations: list[FilingObligation] = []
         for modelo in KNOWN_AUTONOMO_MODELOS:
-            if not self.catalogue.is_known(ModeloIdentifier(modelo)):
-                _logger.debug("modelo %s not in catalogue; skipping in compute()", modelo)
-                continue
             if not applies_to(profile, modelo):
                 continue
             applies_because = explain(profile, modelo)

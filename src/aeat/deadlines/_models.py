@@ -93,8 +93,9 @@ class FilingObligation(BaseModel):
     """A single filing obligation in a :class:`Schedule`.
 
     Attributes:
-        modelo: The modelo string identifier (referencing #6 via the
-            :class:`aeat.deadlines._protocols.ModeloIdentifier` stub).
+        modelo: The modelo string identifier; carried as a plain
+            ``str`` on this record so JSON round-tripping is loss-free
+            for downstream consumers.
         period: The period covered, e.g. ``"2026Q1"``, ``"2026"``,
             ``"2026-03"``.
         opens_on: The first day the AEAT filing window accepts the

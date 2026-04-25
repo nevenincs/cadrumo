@@ -10,22 +10,28 @@ Safety invariants enforced by this module:
 
 - Callers must spell out ``dry_run=...`` at the API level.
 - The engine never touches AEAT-side state directly; every boundary
-  call flows through an injected Protocol.
+  call flows through an injected Protocol or callable seam.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, date, datetime
 from typing import NoReturn, cast
 
-from ..auth import CertificateHealthSeverity, describe_provider_operator_impact
+from .. import sede as _sede
+from ..auth import (
+    AeatSession,
+    CertificateHealthSeverity,
+    describe_provider_operator_impact,
+)
+from ..browser._site_health import SiteHealthAlert
 from ..config import Settings
 from ..deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
 from ..errors import SiteHealthError
 from ..i18n import Translatable
 from ..logging import get_logger
-from ..status import SiteHealthAlert
+from ..sede import Expediente, NotificationsSnapshot
 from ..submission import (
     DraftStatus,
     FilingDraftLike,
@@ -45,12 +51,45 @@ from ._protocols import (
     DeadlineEngineProtocol,
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
-    InboxProtocol,
-    StatusReaderProtocol,
     SubmissionEngineProtocol,
     SubmittedFilingLike,
     SyncRunnerProtocol,
 )
+
+ExpedientesSource = Callable[[AeatSession, str | None], Awaitable[tuple[Expediente, ...]]]
+"""Async callable that returns expedientes for a session, optionally filtered by ``modelo``."""
+
+NotificationsSource = Callable[[AeatSession], Awaitable[NotificationsSnapshot]]
+"""Async callable that returns the full notifications snapshot for a session."""
+
+
+async def _default_expedientes_source(
+    session: AeatSession,
+    modelo: str | None,
+) -> tuple[Expediente, ...]:
+    """Default seam: forward to the live :func:`aeat.sede.walk_expedientes_tree`."""
+    return await _sede.walk_expedientes_tree(session, modelo=modelo)
+
+
+async def _default_notifications_source(session: AeatSession) -> NotificationsSnapshot:
+    """Default seam: forward to the live :func:`aeat.sede.fetch_notifications_query`."""
+    return await _sede.fetch_notifications_query(session)
+
+
+def _period_to_year(period: str) -> int | None:
+    """Extract the leading 4-digit calendar year from a period string.
+
+    Period strings used in the deadline engine carry the year as the
+    first four digits — ``"2026"`` (annual), ``"2026Q1"`` (quarterly),
+    ``"2026M3"`` (monthly). The expediente record carries
+    :attr:`aeat.sede.Expediente.ejercicio` as a separate integer year,
+    so the workflow's "already filed" gate matches modelo + year.
+    """
+    head = period[:4]
+    if not head.isdigit():
+        return None
+    return int(head)
+
 
 _logger = get_logger(__name__)
 
@@ -130,11 +169,11 @@ class _AbortError(Exception):
 class WorkflowEngine:
     """Ordered orchestrator across every AEAT building block.
 
-    Construction takes one Protocol handle per component. The status
-    reader, inbox, and certificate bundle are optional: when ``None``,
-    their stages run in skip mode and surface a diagnostic instead of
-    failing. See [[2026-04-12-workflow-engine-plan]] for the
-    degradation rules.
+    Construction takes one Protocol handle per component. The
+    authenticated AEAT session and the certificate bundle are
+    optional: when ``None``, the stages that consume them run in skip
+    mode and surface a diagnostic instead of failing. See
+    [[2026-04-12-workflow-engine-plan]] for the degradation rules.
     """
 
     def __init__(
@@ -144,11 +183,12 @@ class WorkflowEngine:
         filing_draft_builder: FilingDraftBuilderProtocol,
         submission_engine: SubmissionEngineProtocol,
         sync_runner: SyncRunnerProtocol | None,
-        status_reader: StatusReaderProtocol | None,
-        inbox: InboxProtocol | None,
+        session: AeatSession | None,
         certificate_bundle: CertificateBundleProtocol | None,
         inputs_provider: FilingInputsProviderProtocol,
         settings: Settings,
+        expedientes_source: ExpedientesSource | None = None,
+        notifications_source: NotificationsSource | None = None,
     ) -> None:
         """Construct a :class:`WorkflowEngine`.
 
@@ -158,25 +198,31 @@ class WorkflowEngine:
             submission_engine: Protocol over :class:`aeat.submission.SubmissionEngine`.
             sync_runner: Optional Protocol over the sync runner. ``None``
                 causes the ``SYNCING_CATALOGUES`` stage to skip.
-            status_reader: Optional Protocol over the status reader
-                (#43, in flight). ``None`` skips the already-filed probe.
-            inbox: Optional Protocol over the notifications inbox
-                (#46, in flight). ``None`` skips the requerimiento probe.
+            session: Optional authenticated :class:`aeat.auth.AeatSession`
+                used to drive the live :mod:`aeat.sede` reader. ``None``
+                skips both the inbox probe and the already-filed probe.
             certificate_bundle: Optional Protocol over the certificate
-                backend (#8, in flight). ``None`` skips the cert load probe.
+                backend. ``None`` skips the cert load probe.
             inputs_provider: Protocol that supplies casilla inputs for
                 the draft stage.
             settings: Application :class:`Settings` instance.
+            expedientes_source: Test seam over
+                :func:`aeat.sede.walk_expedientes_tree`. Defaults to the
+                live walker.
+            notifications_source: Test seam over
+                :func:`aeat.sede.fetch_notifications_query`. Defaults to
+                the live fetcher.
         """
         self._deadline_engine = deadline_engine
         self._filing_draft_builder = filing_draft_builder
         self._submission_engine = submission_engine
         self._sync_runner = sync_runner
-        self._status_reader = status_reader
-        self._inbox = inbox
+        self._session = session
         self._certificate_bundle = certificate_bundle
         self._inputs_provider = inputs_provider
         self._settings = settings
+        self._expedientes_source: ExpedientesSource = expedientes_source or _default_expedientes_source
+        self._notifications_source: NotificationsSource = notifications_source or _default_notifications_source
         # Lazy run-id recomputation state. These are set at the start
         # of every ``_drive`` call and consumed by
         # ``_record_site_unavailable`` so an alert raised *after* the
@@ -585,9 +631,17 @@ class WorkflowEngine:
         obligation: FilingObligation,
         steps: list[WorkflowStep],
     ) -> None:
-        """Stage 4 — probe the notifications inbox for blocking requerimientos."""
+        """Stage 4 — probe the notifications inbox for blocking requerimientos.
+
+        A row blocks submission when AEAT marks it as a formal
+        ``Notificación`` (``tipo == "notificacion"``) AND the row has
+        not been read (``leida`` is ``False`` or ``None``). The
+        ``concepto`` substitutes for the legacy ``RequerimientoLike.subject``
+        field — both carry the free-text subject line of the row.
+        """
+        del profile  # session identity is implicit; tax_id no longer crosses the boundary.
         started = _utcnow()
-        if self._inbox is None:
+        if self._session is None:
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.CHECKING_INBOX,
@@ -600,10 +654,7 @@ class WorkflowEngine:
             )
             return
         try:
-            requerimientos = await self._inbox.fetch_blocking_requerimientos(
-                tax_id=profile.tax_id,
-                modelo=obligation.modelo,
-            )
+            snapshot = await self._notifications_source(self._session)
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.CHECKING_INBOX,
@@ -618,7 +669,7 @@ class WorkflowEngine:
                 exc=exc,
                 steps=steps,
             )
-        blockers = tuple(r for r in requerimientos if r.blocks_submission)
+        blockers = tuple(n for n in snapshot.rows if n.tipo == "notificacion" and n.leida is not True)
         if blockers:
             blocked_summary = _t(f"Inbox has {len(blockers)} blocking requerimiento(s) for modelo={obligation.modelo}")
             steps.append(
@@ -630,7 +681,8 @@ class WorkflowEngine:
                     summary=blocked_summary,
                     details={
                         "blocker_count": str(len(blockers)),
-                        "first_notificacion_id": blockers[0].notificacion_id,
+                        "first_notificacion_id": blockers[0].certificado_id,
+                        "first_concepto": blockers[0].concepto,
                     },
                 )
             )
@@ -666,9 +718,9 @@ class WorkflowEngine:
         """
         started = _utcnow()
 
-        if self._status_reader is not None:
+        if self._session is not None:
             try:
-                expedientes = await self._status_reader.fetch_expedientes(tax_id=profile.tax_id)
+                expedientes = await self._expedientes_source(self._session, obligation.modelo)
             except SiteHealthError as exc:
                 self._record_site_unavailable(
                     stage=WorkflowStage.BUILDING_DRAFT,
@@ -683,7 +735,12 @@ class WorkflowEngine:
                     exc=exc,
                     steps=steps,
                 )
-            already = tuple(e for e in expedientes if e.modelo == obligation.modelo and e.period == obligation.period)
+            target_year = _period_to_year(obligation.period)
+            already = tuple(
+                e
+                for e in expedientes
+                if e.modelo == obligation.modelo and (target_year is None or e.ejercicio == target_year)
+            )
             if already:
                 already_summary = _t(f"Already filed: modelo={obligation.modelo} period={obligation.period}")
                 steps.append(
@@ -1107,9 +1164,9 @@ class WorkflowEngine:
         Invoked from the ``except SiteHealthError`` arm inserted
         strictly *before* the generic ``except Exception`` catch in
         every stage method that wraps a component call. The helper
-        composes a :class:`aeat.status.SiteHealthAlert` around the
-        caught error, appends a failed :class:`WorkflowStep` carrying
-        the alert, and raises
+        composes a :class:`aeat.browser._site_health.SiteHealthAlert`
+        around the caught error, appends a failed :class:`WorkflowStep`
+        carrying the alert, and raises
         ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``
         so the collapse to ``UNHANDLED_EXCEPTION`` never fires.
         """
