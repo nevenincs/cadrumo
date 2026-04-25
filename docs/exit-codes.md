@@ -1,9 +1,8 @@
 # Exit Codes
 
-Issue [#399](https://github.com/wgergely/aeat/issues/399) Phase 1 ships a
-stable CLI exit-code table in `src/aeat/cli/_exit_codes.py`. This is the
-current machine-facing authority for process termination. Older wireframe
-category drafts are not the shipped contract.
+The CLI ships this stable process exit-code table. In JSON mode, failures are
+already structured as single-line JSON on `stderr`; the numeric exit code is
+still the machine-facing termination signal.
 
 | Name | Code | Current meaning |
 |---|---:|---|
@@ -15,27 +14,27 @@ category drafts are not the shipped contract.
 | `FAIL` | `5` | Operation failed after a valid attempt. |
 | `INTERNAL` | `6` | Internal AEAT CLI failure. |
 | `LOCKED_BY_DESIGN` | `7` | The action is intentionally locked by product design. |
-| `LOCKED_BY_CONCURRENCY` | `8` | The action is blocked by concurrent work or a held lock. |
+| `LOCKED_BY_CONCURRENCY` | `8` | Reserved for concurrency-lock failures. |
 | `NO_NETWORK` | `10` | Required network access is unavailable. |
 | `USAGE` | `20` | Invalid CLI usage. |
 
+## Runtime notes
+
+- JSON-mode failures write JSON to `stderr`, not `stdout`.
+- Success keeps `stderr` empty.
+- The table still reserves `8` for concurrency locking, but the current error
+  boundary does not emit it yet.
+- Runtime category mapping for `LOCKED` still yields `7`, not `8`.
+
 ## Representative uses
 
-- `SUCCESS (0)`: a future shared success emitter completed and returned a
-  valid `SchemaEnvelope`.
-- `REFUSED (2)`: `refuse_if_stdin_non_tty()` blocked an interactive-only
-  command on piped stdin.
-- `LOCKED_BY_CONCURRENCY (8)`: reserved now for the later `#400`
-  concurrency-lock contract.
-- `USAGE (20)`: CLI invocation was structurally invalid.
+- `SUCCESS (0)`: a registered `--json` command completed and emitted the shared
+  success envelope on `stdout`.
+- `REFUSED (2)`: the CLI declined a requested action.
+- `LOCKED_BY_DESIGN (7)`: the command is blocked by product policy or a current
+  locked category mapping.
+- `LOCKED_BY_CONCURRENCY (8)`: reserved in the contract table for future
+  concurrency-lock emission.
+- `USAGE (20)`: the invocation is structurally invalid.
 
-## Phase 1 behavior
-
-- `exit_with()` optionally writes one plain stderr line, then exits with the
-  selected numeric code.
-- Phase 1 does not emit a structured JSON error envelope.
-- Machine-readable stderr error envelopes are deferred until issue
-  [#398](https://github.com/wgergely/aeat/issues/398).
-
-For the success-envelope foundations behind future `--json` rollout, see
-[`json-contract.md`](json-contract.md).
+For the bounded shared `--json` contract, see [`json-contract.md`](json-contract.md).

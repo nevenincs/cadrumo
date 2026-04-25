@@ -6,6 +6,7 @@ import os
 import sys
 
 from ..errors import AeatError
+from ._context import current_cli_flag
 
 _TRUTHY_ENV_VALUES = frozenset({"1", "true", "yes", "on"})
 
@@ -61,7 +62,7 @@ def is_stdin_tty() -> bool:
     return _isatty(sys.stdin)
 
 
-def should_use_color(*, no_color: bool = False) -> bool:
+def should_use_color(*, no_color: bool | None = None) -> bool:
     """Resolve whether ANSI colour should be enabled for this invocation.
 
     Args:
@@ -70,7 +71,8 @@ def should_use_color(*, no_color: bool = False) -> bool:
             can adopt the helper before the global flag lands.
     """
 
-    if no_color or bool(os.getenv("NO_COLOR", "").strip()):
+    resolved_no_color = current_cli_flag("no_color") if no_color is None else no_color
+    if resolved_no_color or bool(os.getenv("NO_COLOR", "").strip()):
         return False
     if _env_truthy("AEAT_FORCE_COLOR"):
         return True
@@ -79,9 +81,9 @@ def should_use_color(*, no_color: bool = False) -> bool:
 
 def should_show_rich_progress(
     *,
-    quiet: bool = False,
-    json_mode: bool = False,
-    no_progress: bool = False,
+    quiet: bool | None = None,
+    json_mode: bool | None = None,
+    no_progress: bool | None = None,
 ) -> bool:
     """Return whether interactive rich progress can render safely.
 
@@ -90,7 +92,10 @@ def should_show_rich_progress(
     progress instead of a live spinner/progress bar.
     """
 
-    if quiet or json_mode or no_progress:
+    resolved_quiet = current_cli_flag("quiet") if quiet is None else quiet
+    resolved_json_mode = current_cli_flag("json") if json_mode is None else json_mode
+    resolved_no_progress = current_cli_flag("no_progress") if no_progress is None else no_progress
+    if resolved_quiet or resolved_json_mode or resolved_no_progress:
         return False
     return is_stdout_tty() and is_stderr_tty()
 

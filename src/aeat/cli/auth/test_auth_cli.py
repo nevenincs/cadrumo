@@ -28,6 +28,10 @@ _ANSI_RE = __import__("re").compile(r"\x1b\[[0-9;]*m")
 _PANEL_CHARS = "│└┌┐┘├┤┬┴─━┃┏┓┗┛┣┫┳┻╭╮╰╯"
 
 
+def _unwrap_result(output: str):
+    return json.loads(output)["result"]
+
+
 def _strip_panel(output: str) -> str:
     """Return ``output`` with ANSI escapes, panel borders, and whitespace collapsed.
 
@@ -140,7 +144,7 @@ class TestListProviders:
         del isolated_token_dir
         result = _runner.invoke(app, ["auth", "list-providers", "--json"])
         assert result.exit_code == 0, result.output
-        payload = json.loads(result.output)
+        payload = _unwrap_result(result.output)
         assert [row["kind"] for row in payload] == [
             AuthProviderKind.CERTIFICATE.value,
             AuthProviderKind.CLAVE_MOVIL.value,
@@ -303,7 +307,7 @@ class TestStatus:
         )
         result = _runner.invoke(app, ["auth", "status", "--json"])
         assert result.exit_code == 0, result.output
-        payload = json.loads(result.output)
+        payload = _unwrap_result(result.output)
         assert payload["identity_nif"] == "12345678Z"
         assert payload["is_expired"] is False
         assert 0 < payload["seconds_remaining"] <= payload["idle_ttl_seconds"]
@@ -374,7 +378,7 @@ class TestLogout:
         )
         result = _runner.invoke(app, ["auth", "logout", "--json"])
         assert result.exit_code == 0, result.output
-        payload = json.loads(result.output)
+        payload = _unwrap_result(result.output)
         assert len(payload["removed_paths"]) == 2
 
     def test_logout_with_wrong_provider_preserves_session(self, isolated_token_dir: Path) -> None:

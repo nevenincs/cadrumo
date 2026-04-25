@@ -1,105 +1,88 @@
 # JSON Output Contract
 
-Issue [#399](https://github.com/wgergely/aeat/issues/399) currently ships
-Phase 1 foundations for a shared `--json` contract. The root CLI does not
-yet expose a global `--json` flag, and the shared contract is not yet wired
-across the CLI.
+Branch `feature/399-json-output-contract` ships a root `--json` flag. The
+root callback enables JSON mode once and persists that state in the Click
+context for participating commands.
 
-## Shipped In Phase 1
+This is a bounded shared contract, not a claim of CLI-wide adoption. The
+shared registry currently covers these command paths:
 
-Phase 1 ships reusable transport primitives through `aeat.cli`:
+- `auth list-providers`
+- `auth login`
+- `auth logout`
+- `auth status`
+- `auth whoami`
+- `browser health`
+- `filing reconcile`
+- `modelos applicable-to`
+- `modelos list`
+- `modelos show`
+- `modelos year-plan`
+- `portals for-modelo`
+- `portals list`
+- `portals show`
+- `sede list-expedientes`
+- `sede notifications`
+- `submission check-nif`
+- `submission diff`
+- `submission schemas`
+- `submission verify`
+- `workflow list`
+- `workflow next`
+- `workflow run`
+- `workflow show`
 
-- `OutputSchema` is the strict base model for command-specific JSON payloads.
-- `SchemaEnvelope` is the shipped success envelope for future shared emitters.
-- `register_schema()` and `SCHEMA_REGISTRY` provide the shared schema
-  registry.
-- `ExitCode` and `exit_with()` provide the stable process-exit surface.
-- TTY and log-level helpers provide the shared transport rules that later
-  root-callback wiring will use.
+The registry is validated against real CLI output. Documentation should not
+imply broader `--json` adoption beyond this registered set.
 
-### Shipped Success Envelope
+## Success envelope
 
-The current `SchemaEnvelope` shape is:
+JSON-mode success output uses one shared top-level envelope:
 
-| Field | Type | Notes |
+| Field | Type | Meaning |
 |---|---|---|
-| `schema_version` | `str` | Defaults to `"1"`. |
-| `command` | `str` | Stable space-delimited command path. |
-| `result` | `OutputSchema` | Command-specific success payload. |
-| `warnings` | `list[str]` | Defaults to `[]`. |
+| `schema_version` | `string` | Shared contract version. |
+| `command` | `string` | Stable space-delimited command path. |
+| `result` | `object` | Command-specific success payload. |
+| `warnings` | `array[string]` | Non-fatal warnings. |
 
-Example shape:
+Example:
 
 ```json
 {
   "schema_version": "1",
-  "command": "some command",
+  "command": "submission schemas",
   "result": {},
   "warnings": []
 }
 ```
 
-`status` and `metadata` are not part of the shipped Phase 1 envelope.
+`submission schemas --json` now emits this shared envelope. It no longer
+returns a bare JSON array.
 
-### Registry Status In Phase 1
+## Error contract
 
-The registry API is shipped, duplicate-safe, and rejects blank command
-paths. No production command is registered against it yet in the current
-tree.
+In JSON mode, failures write a single-line JSON document to `stderr` only. The
+top level contains an `error` object. Successful JSON-mode commands keep
+`stderr` empty.
 
-### Shared Transport Helpers In Phase 1
+## Pipe safety
 
-- `AEAT_LOG_LEVEL` is the shipped log-level environment variable.
-- Allowed `AEAT_LOG_LEVEL` values are `quiet`, `default`, `verbose`, and
-  `debug`.
-- Log-level resolution is flags first, then `AEAT_LOG_LEVEL`, then
-  `default`.
-- Invalid `AEAT_LOG_LEVEL` values raise a typed resolution error.
-- `NO_COLOR` disables ANSI colour output.
-- `NO_COLOR` wins over `AEAT_FORCE_COLOR`.
-- `AEAT_FORCE_COLOR` forces ANSI colour output.
-- Rich progress is only safe when both stdout and stderr are TTYs and the
-  caller is not in quiet, JSON, or no-progress mode.
-- Interactive commands can refuse non-TTY stdin through a typed
-  `NonTtyRefusedError`.
-- Logging scrubbing is active at the logging layer before formatting.
+Representative root-flag commands are tested for pipe-safe behavior:
 
-For the current stable process-exit table, see
-[`exit-codes.md`](exit-codes.md).
+- success `stdout` is valid `jq` input
+- success leaves `stderr` empty
+- UTF-8 output survives a `cp1252` console path
+- failures write JSON only to `stderr`
 
-## Existing Command-Local JSON Today
+The shipped guarantee is therefore: registered commands using the shared root
+flag obey the shared stdout/stderr contract under the tested representative
+paths. It is not yet a blanket statement about every CLI command.
 
-Some commands already expose their own `--json` flags. Those outputs are
-existing command-local behavior, not the shared `#399` contract rollout.
+## Boundaries
 
-For example, `aeat submission schemas --json` currently writes a bare JSON
-array to stdout. It does not emit `SchemaEnvelope`, and it is not routed
-through `SCHEMA_REGISTRY`.
-
-## Deferred Pipe-Safety Goal
-
-The Kent-facing end state for `#399` is still:
-
-```text
-aeat X --json | jq ...
-```
-
-Phase 1 does not claim that this works across every command yet. The shared
-primitives that make that rollout possible are shipped; the CLI-wide command
-adoption remains deferred.
-
-## Deferred Until #398
-
-The following work is intentionally not shipped in Phase 1 and depends on
-issue [#398](https://github.com/wgergely/aeat/issues/398):
-
-- shared `ErrorEnvelope` integration
-- machine-readable JSON errors on stderr
-- root-level `--json` wiring across non-workflow commands
-- per-command schema registration and shared envelope adoption
-- CLI-wide enforcement of the wireframe stdout/stderr discipline
-
-## Deferred Until #393
-
-Workflow `run` and `next` adoption stay deferred until issue
-[#393](https://github.com/wgergely/aeat/issues/393).
+- The contract is shared through the root callback and Click context state.
+- The command set is explicitly bounded by the populated registry above.
+- Failure output is already structured in JSON mode.
+- Coverage claims should stay conservative until more commands are registered
+  and verified.

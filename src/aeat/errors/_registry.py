@@ -440,6 +440,58 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.cli._errors.CliRefusedBoundaryError",
+        ErrorCode(
+            code="REFUSED_CLI_BOUNDARY",
+            category=ErrorCategory.REFUSED,
+            default_message_es="El comando rechazo la solicitud actual.",
+            default_message_en="The command refused the current request.",
+            default_message_hu="A parancs elutasitotta az aktualis kerest.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.cli._log_levels.LogLevelResolutionError",
+        ErrorCode(
+            code="REFUSED_CLI_LOG_LEVEL_RESOLUTION",
+            category=ErrorCategory.REFUSED,
+            default_message_es="La configuracion del nivel de log no es valida.",
+            default_message_en="The requested CLI log-level configuration is invalid.",
+            default_message_hu="A kert naplozasi szint beallitas ervenytelen.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat._json_contract.OutputSchemaError",
+        ErrorCode(
+            code="INTEGRITY_CLI_OUTPUT_SCHEMA",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="El registro de esquemas JSON del CLI no es valido.",
+            default_message_en="The CLI JSON schema registry is invalid.",
+            default_message_hu="A CLI JSON sema regisztere ervenytelen.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.cli._tty.NonTtyRefusedError",
+        ErrorCode(
+            code="REFUSED_CLI_TTY_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            default_message_es="El comando requiere una terminal interactiva.",
+            default_message_en="The command requires an interactive terminal.",
+            default_message_hu="A parancs interaktiv terminalt igenyel.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.cli.auth._registry.NoConfiguredProviderError",
         ErrorCode(
             code="AUTH_CLI_AUTH_REGISTRY_NO_CONFIGURED_PROVIDER",

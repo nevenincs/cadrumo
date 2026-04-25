@@ -275,4 +275,7 @@ def get_logger(name: str) -> logging.Logger:
         A configured logging.Logger instance.
     """
     configure_logging()
-    return logging.getLogger(name)
+    logger = logging.getLogger(name)
+    if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in logger.filters):
+        logger.addFilter(SecretScrubbingFilter())
+    return logger
