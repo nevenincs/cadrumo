@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 from pathlib import Path
 from typing import Annotated
 
@@ -185,12 +186,30 @@ def prepare_map_command(
         typer.Option("--output", "-o", help="Where to write the scaffold YAML."),
     ],
 ) -> None:
-    """Run the justificante parser and emit a YAML scaffold with synthetic values pre-filled."""
+    """Run the justificante parser and emit a YAML scaffold with synthetic values pre-filled.
+
+    The scaffold pre-fills:
+
+    * ``nif`` from the parsed ``tax_id``.
+    * ``csv`` from the parsed ``csv``.
+    * ``name`` placeholder (operator must fill the real value).
+    * ``importe`` from every Spanish-shape decimal token detected
+      in the PDF's text — covers the ~80 monetary casillas of a
+      Modelo 100 declaration without operator enumeration.
+    * ``arbitrary`` from every catastral reference, NRC, and date
+      token detected.
+
+    The operator only needs to fill in the real taxpayer name and
+    review the auto-detected entries before running ``aeat
+    sanitize pdf``.
+    """
     reject_forbidden_flags(tuple(ctx.args or ()))
 
     if not input_path.is_file():
         _ERR_CONSOLE.print(f"[red]Input PDF not found: {input_path}[/red]")
         raise typer.Exit(code=2)
+
+    pdf_text = _extract_pdf_text(input_path)
 
     try:
         justificante = parse_justificante(input_path)
@@ -203,15 +222,135 @@ def prepare_map_command(
     else:
         scaffold = _scaffold_from_justificante(justificante)
 
+    auto_detected = _detect_pii_surfaces(pdf_text)
+    for category, entries in auto_detected.items():
+        existing_reals = {e.get("real") for e in scaffold.get(category, [])}
+        scaffold.setdefault(category, [])
+        for entry in entries:
+            if entry["real"] in existing_reals:
+                continue
+            scaffold[category].append(entry)
+            existing_reals.add(entry["real"])
+
     output_path.write_text(
         yaml.safe_dump(scaffold, sort_keys=False, allow_unicode=True),
         encoding="utf-8",
     )
+
+    counts = ", ".join(f"{cat}={len(entries)}" for cat, entries in scaffold.items() if entries)
     _CONSOLE.print(
         f"[green]Wrote mapping scaffold:[/green] {output_path}\n"
-        "[yellow]Edit the file to fill in `real:` cleartext values before running "
+        f"  detected: {counts}\n"
+        "[yellow]Edit the file to fill in any blank `real:` cleartext values "
+        "(taxpayer name, anything the auto-detector missed) before running "
         "`aeat sanitize pdf`.[/yellow]"
     )
+
+
+def _extract_pdf_text(path: Path) -> str:
+    """Return the concatenated text of every page in ``path``.
+
+    Uses pdfplumber (already a project dependency); silently
+    returns an empty string when the PDF cannot be opened so the
+    scaffold falls back to the structural fields only.
+    """
+    try:
+        import pdfplumber
+    except ImportError:
+        return ""
+    try:
+        with pdfplumber.open(path) as pdf:
+            return "\n".join((p.extract_text() or "") for p in pdf.pages)
+    except Exception:
+        return ""
+
+
+_IMPORTE_RE = re.compile(
+    # Spanish decimal: optional thousands dotted, comma decimal,
+    # 2 decimal digits. Examples: "1.234,56", "549,52", "8.422,62".
+    # Reject standalone integers (would catch noise like page
+    # numbers).
+    r"(?<![A-Za-z0-9])-?\d{1,3}(?:\.\d{3})*,\d{2}(?![A-Za-z0-9])",
+)
+# DD-MM-YYYY or DD/MM/YYYY date tokens — common across receipts.
+_DATE_RE = re.compile(r"(?<![A-Za-z0-9])\d{2}[-/]\d{2}[-/](?:19|20)\d{2}(?![A-Za-z0-9])")
+# Catastral references: 20 alphanumeric chars, mix of upper letters
+# and digits, no hyphens.
+_CATASTRAL_RE = re.compile(r"(?<![A-Z0-9])[0-9]{4,5}[A-Z]{2}[0-9]{4}[A-Z][0-9]{4}[A-Z]{2}(?![A-Z0-9])")
+# NRC: 22 alphanumeric chars; AEAT prints these next to "NRC:"
+# but the shape alone is distinctive enough to detect inline.
+_NRC_RE = re.compile(r"(?<![A-Z0-9])[0-9]{13,14}[A-Z][A-Z0-9]{6,8}(?![A-Z0-9])")
+
+
+def _detect_pii_surfaces(text: str) -> dict[str, list[dict[str, str]]]:
+    """Return per-category entries auto-detected in ``text``.
+
+    The detection is conservative: it returns categories the
+    operator should review, never categories where false positives
+    would corrupt the sanitiser's output. The synthetic values are
+    deterministic placeholders the operator can override before
+    sanitising.
+    """
+    importes: list[str] = sorted({m.group(0) for m in _IMPORTE_RE.finditer(text)})
+    dates: list[str] = sorted({m.group(0) for m in _DATE_RE.finditer(text)})
+    catastrales: list[str] = sorted({m.group(0) for m in _CATASTRAL_RE.finditer(text)})
+    nrcs: list[str] = sorted({m.group(0) for m in _NRC_RE.finditer(text)})
+
+    return {
+        "importe": [
+            {
+                "real": value,
+                "synthetic": "1.000,00",
+                "surface_label": f"importe {idx}",
+            }
+            for idx, value in enumerate(importes)
+        ],
+        "nrc": [
+            {
+                "real": value,
+                "synthetic": _synthesise_nrc(idx),
+                "surface_label": f"nrc {idx}",
+            }
+            for idx, value in enumerate(nrcs)
+        ],
+        "arbitrary": [
+            *(
+                {
+                    "real": value,
+                    "synthetic": _synthesise_catastral(idx),
+                    "surface_label": f"catastral reference {idx}",
+                }
+                for idx, value in enumerate(catastrales)
+            ),
+            *(
+                {
+                    "real": value,
+                    # Preserve the dash-or-slash separator the
+                    # source uses so downstream parsers (which
+                    # bind on ``DD-MM-YYYY`` vs ``DD/MM/YYYY``)
+                    # don't lose their match. "01-01-1900" maps
+                    # to a placeholder year + January 1st.
+                    "synthetic": ("01/01/1900" if "/" in value else "01-01-1900"),
+                    "surface_label": f"date token {idx}",
+                }
+                for idx, value in enumerate(dates)
+            ),
+        ],
+    }
+
+
+def _synthesise_nrc(index: int) -> str:
+    """Return a deterministic synthetic NRC of canonical 22-char shape."""
+    base = f"0000000000000{index:09d}"
+    # Replace the leading 14th char with a letter so the shape
+    # matches AEAT's "<13 digits><letter><8 chars>" pattern.
+    return f"{base[:13]}X{base[14:21]}"[:22].ljust(22, "X")
+
+
+def _synthesise_catastral(index: int) -> str:
+    """Return a deterministic synthetic 20-char catastral reference."""
+    base = f"00000XX0000X{index:04d}XX"
+    return base[:20].ljust(20, "X")
 
 
 @app.command(
@@ -240,12 +379,34 @@ def verify_command(
     raw_bytes = output_pdf.read_bytes()
     decompressed = _decompressed_content_bytes(raw_bytes)
 
+    # Mask every synthetic value from the byte streams BEFORE
+    # searching for real values. Without this, a real like ``0,00``
+    # would falsely match the synthetic ``1.000,00`` that contains
+    # it as a substring. Mask longest-first so nested overlaps
+    # collapse cleanly: ``1.000,00`` is replaced with NULs before
+    # the inner ``0,00`` is matched against the residual bytes.
+    synthetic_values: list[str] = [
+        str(entry.synthetic) for _, entries in _iter_token_map_entries(mapping) for entry in entries
+    ]
+    masked_raw = raw_bytes
+    masked_decompressed = decompressed
+    # Mask longest-first so nested overlaps collapse cleanly.
+    # ``sorted(..., key=len, ...)`` widens the element type to
+    # ``Sized`` for ty; the explicit ``str(...)`` cast forces the
+    # narrow type back so ``encode`` resolves cleanly.
+    for raw_synthetic in sorted(set(synthetic_values), key=len, reverse=True):
+        synthetic = str(raw_synthetic)
+        encoded = synthetic.encode("utf-8")
+        marker = b"\x00" * len(synthetic)
+        masked_raw = masked_raw.replace(encoded, marker)
+        masked_decompressed = masked_decompressed.replace(encoded, marker)
+
     leaks: list[tuple[str, str]] = []
     for category, entries in _iter_token_map_entries(mapping):
         for entry in entries:
             real = entry.real.get_secret_value()
             real_bytes = real.encode("utf-8")
-            if real_bytes in raw_bytes or real_bytes in decompressed:
+            if real_bytes in masked_raw or real_bytes in masked_decompressed:
                 leaks.append((category, entry.surface_label))
 
     if leaks:
