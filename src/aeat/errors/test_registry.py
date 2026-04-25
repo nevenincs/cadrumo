@@ -64,6 +64,15 @@ def test_duplicate_registration_raises_clear_error() -> None:
         register(duplicate)
 
 
+def test_default_messages_do_not_leak_sphinx_role_markup() -> None:
+    for code in ERROR_REGISTRY.values():
+        assert ":mod:" not in code.default_message_en
+        assert ":meth:" not in code.default_message_en
+        assert ":func:" not in code.default_message_en
+        assert ":class:" not in code.default_message_en
+        assert ":data:" not in code.default_message_en
+
+
 def test_suggestions_parse_as_valid_cli_commands() -> None:
     command = get_command(app)
     top_level = {registered.name for registered in app.registered_commands if registered.name is not None}
