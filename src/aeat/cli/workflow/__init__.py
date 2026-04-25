@@ -10,9 +10,11 @@ Exposes four subcommands tied to the workflow engine
 - ``aeat workflow list [--since <iso-date>]`` — enumerate persisted
   runs.
 
-All live-submit subcommands require ``--no-dry-run`` *and*
-``--i-understand-this-is-real`` to match the safety contract of the
-submission engine. The default remains dry-run.
+The ``next`` and ``run`` subcommands are dry-run-only on the default
+CLI surface (issue ``#393`` / Kent-first CLI wireframe ADR iteration 5).
+The submission engine retains its own four-factor live-write contract,
+but it is not reachable from these subcommands; the 1.0.0 reintroduction
+path is the planned ``aeat advanced workflow ...`` quarantine.
 """
 
 from __future__ import annotations
