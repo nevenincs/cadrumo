@@ -50,6 +50,7 @@ from ...sede import (
     capture_justificante,
     fetch_notifications_query,
     fetch_notifications_summary,
+    walk_declarations_register,
     walk_expedientes_tree,
 )
 from ..auth import _session
@@ -151,6 +152,64 @@ def list_expedientes(
             expediente.modelo or "?",
             str(expediente.ejercicio) if expediente.ejercicio is not None else "?",
             leaf[:70],
+        )
+    _CONSOLE.print(table)
+
+
+@app.command(
+    "list-declarations",
+    help="Drive the 'Consultar declaraciones presentadas' form for one (modelo, ejercicio).",
+)
+def list_declarations(
+    modelo: Annotated[
+        str,
+        typer.Option(
+            "--modelo",
+            "-m",
+            help="Modelo code to query (e.g. 100, 130, 303, 390, 111, 190).",
+        ),
+    ],
+    ejercicio: Annotated[
+        int,
+        typer.Option(
+            "--ejercicio",
+            "-e",
+            help="Tax year to query (e.g. 2024).",
+        ),
+    ],
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON instead of a human table."),
+    ] = False,
+) -> None:
+    """Walk the declaraciones register for a single (modelo, ejercicio)."""
+    session = _require_active_session()
+    try:
+        declarations = asyncio.run(
+            walk_declarations_register(session, modelo=modelo, ejercicio=ejercicio),
+        )
+    except SedeError as exc:
+        _CONSOLE.print(f"[red]declarations walk failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    if json_output:
+        payload = [d.model_dump(mode="json") for d in declarations]
+        typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, default=str))
+        return
+
+    table = Table(title=f"Declaraciones presentadas — Modelo {modelo} / {ejercicio} ({len(declarations)})")
+    table.add_column("expediente_id")
+    table.add_column("period")
+    table.add_column("estado")
+    table.add_column("presented_at")
+    table.add_column("just")
+    for d in declarations:
+        table.add_row(
+            d.expediente_id,
+            d.period,
+            d.estado,
+            d.presented_at.strftime("%Y-%m-%d %H:%M:%S"),
+            d.justificante_link_text or "",
         )
     _CONSOLE.print(table)
 
