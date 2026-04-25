@@ -173,3 +173,31 @@ are applied in a follow-up commit:
 The change touches `src/aeat/cli/workflow/test_run_refuses_live_flags.py`
 and `src/aeat/cli/workflow/test_next_refuses_live_flags.py` only;
 six lines total. The six tests still pass after the tightening.
+
+COVERAGE-001 | LOW | scoped coverage well above floor
+`uv run pytest src/aeat/cli/workflow/ src/aeat/submission/test_access_gate_workflow_untouched.py`
+with `--cov=src/aeat/cli/workflow` reports total coverage 81.40%:
+`run.py` 100%, `next.py` 100%, `__init__.py` 100%, `_helpers.py` 87%,
+`show.py` 78%, `list_cmd.py` 58%. The 60% project floor is comfortably
+preserved; the surface modified by `#393` (run.py, next.py,
+__init__.py) is fully covered.
+
+SMOKE-001 | LOW | manual cli smoke confirms dry-run-only contract end-to-end
+- `uv run aeat workflow run --help` lists no live-write flag
+  literals; only the new descriptive sentence "(dry-run by default)"
+  and the unrelated `--sync/--no-sync` pair appear.
+- `uv run aeat workflow next --help` mirrors.
+- `uv run aeat workflow run --modelo 130 --period 2026Q1 --no-dry-run
+  --i-understand-this-is-real` exits with typer's `No such option:
+  --no-dry-run Did you mean --no-sync?` error.
+- `uv run aeat workflow next --no-dry-run --i-understand-this-is-real`
+  mirrors.
+
+REVIEW-CHANNELS-001 | LOW | exhausted external review pool
+- Gemini bot review: received and addressed (`GEMINI-001`).
+- Codex bot review: requested via `@codex review` mention on PR #427.
+- Claude bot review: requested via `@claude review` mention on PR #427.
+- Fresh Gemini pass on the post-fix commit: requested via
+  `@gemini review` mention on PR #427.
+- `/ultrareview` is user-triggered + billed; not invoked by the
+  executing agent.
