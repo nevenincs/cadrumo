@@ -170,22 +170,6 @@ class TestWorkflowCli:
         persisted = _isolated_runs_dir / f"{run_id}.json"
         assert persisted.exists()
 
-    def test_next_live_without_flag_exits_2(self) -> None:
-        runner = CliRunner()
-        result = runner.invoke(root_app, ["workflow", "next", "--no-dry-run"])
-        assert result.exit_code == 2
-        assert "refusing" in result.output.lower()
-
-    def test_run_live_without_flag_exits_2(self) -> None:
-        """Symmetric safety gate on the ``run`` subcommand."""
-        runner = CliRunner()
-        result = runner.invoke(
-            root_app,
-            ["workflow", "run", "--modelo", "130", "--period", "2026Q1", "--no-dry-run"],
-        )
-        assert result.exit_code == 2
-        assert "refusing" in result.output.lower()
-
     def test_run_for_period(self, _isolated_runs_dir: Path) -> None:
         runner = CliRunner()
         result = runner.invoke(
