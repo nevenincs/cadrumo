@@ -433,3 +433,35 @@ runs pure-construction helpers. Zero AEAT requests in any path.
 The five-layer write guard (mode marker, no-write verbs,
 no-write-surface tests, AeatAccessGate, AEAT_LIVE_TESTS_ENABLED)
 remains intact.
+
+### Round-5 independent review verdict (post-corpus extension)
+
+`vaultspec-code-reviewer` round-5 verified all five corpus-wave
+commits (`c69a570`, `6bbf76c`, `c309602`, `dd8e8c4`, `c9093c4`).
+Verdict: **PASS**. No CRITICAL / HIGH findings. Two LOW
+informational items addressed in commit `b208793` (decimal
+boundary comment polish + late-import hoisting in reconcile
+dry-run tests). Independent verification confirmed:
+
+- 1,459 PII replacement records across 44 sidecars; zero
+  cleartext `real:` keys (privacy-preserving `real_sha256`
+  only).
+- Parser fix is a single-line minimal change at
+  `src/aeat/justificante/_extract.py:367-368`.
+- All 11 M130 SHAs genuinely re-sanitised (differ from
+  `c69a570` baseline).
+- `synthesize_filing_draft` has zero HTTP imports and zero
+  forbidden verbs.
+- 28/28 no-write-surface guards remain green on
+  `aeat.sede` and `aeat.filing.reconciliation`.
+
+### Full unit suite (round-5)
+
+`uv run --no-sync pytest -m unit --ignore=src/aeat/auth/test_clave_movil.py
+-q --tb=no` → **3505 passed, 9 skipped, 0 failed**, 135.5s wall.
+
+That's +319 over the round-4 baseline (3186 → 3505): 41 corpus
+regression tests + 15 synthesize_filing_draft tests + 10
+reconcile dry-run tests + 4 _synthesise_csv_for tests + 1
+live capture_declaration test + miscellaneous from the
+focused-scope additions.
