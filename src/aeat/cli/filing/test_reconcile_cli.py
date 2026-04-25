@@ -101,6 +101,62 @@ class TestCliSmoke:
         assert result.exit_code != 0
 
 
+class TestLoadDraftFromDisk:
+    """The _load_draft helper resolves synthesised drafts from disk.
+
+    Pins the persistence contract: if synthesize_filing_draft writes
+    a draft under the conventional ``{modelo}_{period}_{draft_id}.json``
+    layout, the CLI's ``--last`` and ``draft_id`` lookups both find it.
+    """
+
+    def _persist(self, draft, drafts_dir):
+        path = drafts_dir / f"{draft.modelo}_{draft.period}_{draft.draft_id}.json"
+        path.write_text(draft.model_dump_json(), encoding="utf-8")
+        return path
+
+    def test_last_resolves_synthesised_draft(self, tmp_path) -> None:
+        from decimal import Decimal
+
+        from ...config import Settings
+        from ...testing import synthesize_filing_draft
+        from ._reconcile import _load_draft
+
+        drafts_dir = tmp_path / "drafts"
+        drafts_dir.mkdir()
+        draft = synthesize_filing_draft(
+            modelo="100",
+            period="0A",
+            casilla_values={"0511": Decimal("5550.00")},
+        )
+        self._persist(draft, drafts_dir)
+        settings = Settings(aeat_drafts_dir=drafts_dir)
+        loaded = _load_draft(settings, draft_id=None, last=True, modelo="100", period="0A")
+        assert loaded.draft_id == draft.draft_id
+        assert loaded.modelo == "100"
+        assert loaded.period == "0A"
+        assert loaded.status.name == "APPROVED"
+
+    def test_explicit_draft_id_resolves(self, tmp_path) -> None:
+        from decimal import Decimal
+
+        from ...config import Settings
+        from ...testing import synthesize_filing_draft
+        from ._reconcile import _load_draft
+
+        drafts_dir = tmp_path / "drafts"
+        drafts_dir.mkdir()
+        draft = synthesize_filing_draft(
+            modelo="130",
+            period="1T",
+            casilla_values={"03": Decimal("100.00")},
+        )
+        self._persist(draft, drafts_dir)
+        settings = Settings(aeat_drafts_dir=drafts_dir)
+        loaded = _load_draft(settings, draft_id=draft.draft_id, last=False, modelo=None, period=None)
+        assert loaded.draft_id == draft.draft_id
+        assert loaded.modelo == "130"
+
+
 # ── Helpers ────────────────────────────────────────────────────────────────
 #
 # Pytest fixtures below are light — the CliRunner-based tests don't touch
