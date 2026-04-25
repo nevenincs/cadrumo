@@ -282,6 +282,41 @@ Regression tests cover every fix where the round-2 review
 demanded them. The explicitly out-of-scope DISAGREE items
 remain open as documented.
 
+### Round-4 verification (post-D-item follow-ups)
+
+vaultspec-code-reviewer round-4 reviewed the five follow-up
+commits that landed after the round-3 PASS:
+- `daba8d3` (multi-CSV rejection)
+- `1e5f496` (single-context-manager refactor)
+- `45b9188` (audit refresh)
+- `2eb0f1e` (sede docstring refresh)
+- `f79f0c6` (cli/sede docstring refresh)
+
+Verdict: **PASS**. No CRITICAL / HIGH findings. Independent
+verification confirmed:
+
+- Multi-CSV check correctly fires before the shape regex.
+- The leak-fix claim for `BrowserSession.close()` is real:
+  `BrowserSession._close_browser_locked()` is the load-bearing
+  step that releases the retained Chromium handle.
+- Cleanup ordering (`context.close()` → `browser_session.close()`)
+  is correct per Playwright lifecycle requirements.
+- Public signatures of `walk_declarations_register` /
+  `capture_declaration` unchanged.
+- Sede docstring lists exactly the 24 names in `__all__`;
+  cli/sede docstring lists exactly the 6 names in the
+  `@app.command(...)` registry.
+- Multi-CSV edge cases (empty trailing value, percent-encoded
+  ampersand) are correctly rejected by the existing chain
+  without further regression tests.
+
+The reviewer DISAGREED on adding a direct unit test for
+`_open_register_page` — would require mock/patch of
+`async_playwright` (forbidden) or live Playwright, and the
+helper is already exhaustively exercised through live and
+unit tests on `walk_declarations_register` / `capture_declaration`.
+A direct unit test would be tautological.
+
 ### Full unit suite (2026-04-27)
 
 `uv run --no-sync pytest -m unit -q --tb=no
