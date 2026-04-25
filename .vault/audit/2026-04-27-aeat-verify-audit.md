@@ -465,3 +465,61 @@ regression tests + 15 synthesize_filing_draft tests + 10
 reconcile dry-run tests + 4 _synthesise_csv_for tests + 1
 live capture_declaration test + miscellaneous from the
 focused-scope additions.
+
+### Live AEAT verification (round-5, with operator-approved Cl@ve)
+
+Operator approved a Cl@ve Móvil 2FA push (third attempt — first
+two timed out at the post-auth-landing step). With the fresh
+session, every Kent-observable triad branch was driven against
+the live AEAT sede. **All read-only**: every request was a GET
+or a ZK form drive that fetches state, never POSTs / submits.
+
+- **Live walker tests** — `pytest src/aeat/sede/test_declarations_live.py
+  -m live_read` with `AEAT_LIVE_TESTS_ENABLED=1`:
+  - `test_walk_modelo_100_returns_at_least_one_declaration` PASSED
+  - `test_capture_declaration_returns_pdf_bytes` PASSED — fetched
+    a real `%PDF-` body via APIRequestContext (read-only GET to
+    `/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=...`)
+
+- **Live reconcile, MATCH path** — synthesised an APPROVED
+  `FilingDraft` for M100/2022/0A via `synthesize_filing_draft`,
+  persisted to `var/drafts/`, ran
+  `aeat filing reconcile --last --modelo 100 --period 0A --ejercicio 2022 --json`.
+  Verdict: `status: match`, zero mismatches.
+  Live justificante: `csv=MZRSYDRL5JMPJPRT`,
+  `presentation_id=1004231535072`, `total_a_ingresar=549.52`,
+  `presented_at=2024-02-01T19:15:34`. Hungarian narrative rendered
+  cleanly after the cp1252 fix below.
+
+- **Live reconcile, NOT_YET_FOUND path** — synthesised an
+  M100/2025/0A draft (current year, not yet filed), reconciled
+  against AEAT. Verdict: `status: not_yet_found`, one
+  `filing_not_yet_found` mismatch surfaced. Spanish narrative:
+  "AEAT no tiene constancia del modelo 100 del período 0A."
+
+- **Live reconcile, DIVERGENT path** — synthesised an
+  M100/2022/0A draft with `profile_tax_id="X9999999Z"` (wrong
+  NIE), reconciled against AEAT's real record. Verdict:
+  `status: divergent`, `tax_id_mismatch` surfaces:
+  draft=X9999999Z vs AEAT=Y4113523X.
+
+This closes the Kent-observable acceptance criteria for #239:
+> "`aeat filing reconcile <draft-id>` returns MATCH 30 minutes
+> post-upload."
+> "`aeat filing reconcile` returns NOT_YET_FOUND with prominent
+> warning when AEAT has no record."
+
+### Live-driven CLI fix: cp1252 JSON encoding (commit `431bb5c`)
+
+`aeat filing reconcile ... --json` initially crashed with
+`UnicodeEncodeError` on the Hungarian "ő" (U+0151) in the
+trilingual narrative. Root cause: `typer.echo` →
+`click.echo` re-encodes through `sys.stdout`'s locale codec,
+which on Windows defaults to cp1252 (no Latin Extended-A
+coverage). Fix: write the rendered JSON byte stream directly
+to `sys.stdout.buffer` in UTF-8, bypassing the codec. The CLI
+output is now a valid UTF-8 stream regardless of shell.
+
+This is a real bug surfaced ONLY by the live run — the offline
+test suite uses `typer.testing.CliRunner` which bypasses the
+real stdout codec.
