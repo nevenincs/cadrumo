@@ -128,7 +128,9 @@ def json_output_requested() -> bool:
     ctx = click.get_current_context(silent=True)
     if ctx is None:
         return False
-    return bool(ctx.params.get("json", False))
+    if bool(ctx.params.get("json", False)):
+        return True
+    return _has_enabled_json_option(ctx)
 
 
 def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
@@ -207,6 +209,20 @@ def _is_wrap_candidate(callback: object) -> TypeGuard[Callable[..., object]]:
 
 def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
     return hasattr(stream, "reconfigure")
+
+
+def _has_enabled_json_option(ctx: click.Context) -> bool:
+    for parameter in ctx.command.params:
+        if not isinstance(parameter, click.Option):
+            continue
+        if "--json" not in parameter.opts:
+            continue
+        if parameter.name is None:
+            continue
+        value = ctx.params.get(parameter.name)
+        if isinstance(value, bool) and value:
+            return True
+    return False
 
 
 def _is_click_control_flow(error: Exception) -> bool:

@@ -135,13 +135,7 @@ app.add_typer(
 )
 app.add_typer(setup_wizard_module.app, name="setup", help="First-run interactive setup wizard (#61).")
 
-decorate_typer_app(
-    app,
-    skip_paths=(
-        ("workflow", "run"),
-        ("workflow", "next"),
-    ),
-)
+decorate_typer_app(app)
 
 
 __all__ = ["app"]
