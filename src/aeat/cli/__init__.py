@@ -12,6 +12,8 @@ single-file convention introduced by the base module structure.
 
 from __future__ import annotations
 
+import logging
+
 import typer
 
 from . import attachments as attachments_module
@@ -65,6 +67,42 @@ app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+
+
+@app.callback()
+def main(
+    ctx: typer.Context,
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        help="Enable machine-readable JSON mode for commands that support the shared contract.",
+    ),
+    quiet: bool = typer.Option(False, "--quiet", help="Only emit errors on stderr."),
+    verbose: bool = typer.Option(False, "--verbose", help="Emit info-level operation summaries."),
+    debug: bool = typer.Option(False, "--debug", help="Emit debug-level diagnostics on stderr."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable ANSI colour output."),
+    no_progress: bool = typer.Option(False, "--no-progress", help="Disable progress reporting on stderr."),
+) -> None:
+    """Apply root-level CLI transport defaults for the current invocation."""
+
+    state = ctx.ensure_object(dict)
+    state["json"] = json_output
+    state["quiet"] = quiet
+    state["verbose"] = verbose
+    state["debug"] = debug
+    state["no_color"] = no_color
+    state["no_progress"] = no_progress
+    root_logger = logging.getLogger()
+    previous_root_level = root_logger.level
+    previous_handler_levels = [handler.level for handler in root_logger.handlers]
+
+    def _restore_root_logger_levels() -> None:
+        root_logger.setLevel(previous_root_level)
+        for handler, previous_level in zip(root_logger.handlers, previous_handler_levels, strict=False):
+            handler.setLevel(previous_level)
+
+    ctx.call_on_close(_restore_root_logger_levels)
+    apply_to_root_logger(resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
 
 
 @app.command(name="hello", help="Smoke test command - prints a greeting and exits 0.")
@@ -147,13 +185,7 @@ app.add_typer(
 )
 app.add_typer(setup_wizard_module.app, name="setup", help="First-run interactive setup wizard (#61).")
 
-decorate_typer_app(
-    app,
-    skip_paths=(
-        ("workflow", "run"),
-        ("workflow", "next"),
-    ),
-)
+decorate_typer_app(app)
 
 
 __all__ = [

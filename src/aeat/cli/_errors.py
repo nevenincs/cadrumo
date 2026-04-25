@@ -24,6 +24,7 @@ from ..errors import (
     render_error_json,
     render_error_text,
 )
+from ._context import json_output_requested
 
 _UNDER_TEST: ContextVar[bool] = ContextVar("aeat_cli_error_boundary_under_test", default=False)
 _WRAPPED_CALLBACKS: dict[int, Callable[..., object]] = {}
@@ -66,6 +67,10 @@ class CliUnexpectedBoundaryError(AeatError):
             },
         )
         self.original_exception: Exception = error
+
+
+class CliRefusedBoundaryError(AeatError):
+    """Raised when CLI JSON mode must refuse a request with stderr-only output."""
 
 
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
@@ -120,15 +125,6 @@ def decorate_typer_app(
 
     skip_set = set(skip_paths)
     _decorate_typer_node(app, prefix=(), skip_paths=skip_set)
-
-
-def json_output_requested() -> bool:
-    """Return ``True`` when the current Click context carries ``--json``."""
-
-    ctx = click.get_current_context(silent=True)
-    if ctx is None:
-        return False
-    return bool(ctx.params.get("json", False))
 
 
 def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
@@ -216,6 +212,7 @@ def _is_click_control_flow(error: Exception) -> bool:
 
 
 __all__ = [
+    "CliRefusedBoundaryError",
     "build_error_envelope",
     "command_error_boundary",
     "decorate_typer_app",
