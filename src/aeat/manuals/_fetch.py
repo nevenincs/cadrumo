@@ -1,16 +1,11 @@
 """Raw manual-part downloader and manifest writer.
 
-The v1 fetcher speaks ``httpx`` directly because the ``#17`` corpus
-fetcher ABC has not landed on this branch yet. The :class:`PartSpec`
-table below hard-codes the verified canonical AEAT URLs for every
-``(manual_id, year, part)`` triple this PR supports; the ``fetch``
-CLI looks up a triple in the table, streams the PDF to disk,
-computes its sha256 on the fly, and writes a
+The fetcher speaks ``httpx`` directly: the :class:`PartSpec` table
+below hard-codes the verified canonical AEAT URLs for every
+``(manual_id, year, part)`` triple the subpackage supports; the
+``fetch`` CLI looks up a triple in the table, streams the PDF to
+disk, computes its sha256 on the fly, and writes a
 :class:`FetchedManualPart` manifest next to the raw binary.
-
-A follow-up PR rewires this module to delegate through
-``aeat.corpus.Fetcher`` once ``#17`` merges; the ``FetcherProtocol``
-stub in ``_stubs.py`` is the forcing function for that refactor.
 """
 
 from __future__ import annotations

@@ -26,6 +26,13 @@ Example:
 from __future__ import annotations
 
 from ._factory import DefaultBrowserSession, default_browser_session_factory
+from ._site_health import (
+    SiteHealthAlert,
+    SiteHealthEvidence,
+    SiteHealthState,
+    SiteHealthStatus,
+)
+from ._site_health_parsers import evaluate_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .health import run_health_check
 from .profile import Profile
@@ -38,6 +45,11 @@ __all__ = [
     "EvasionStrategy",
     "PlaywrightStealthEvasion",
     "Profile",
+    "SiteHealthAlert",
+    "SiteHealthEvidence",
+    "SiteHealthState",
+    "SiteHealthStatus",
     "default_browser_session_factory",
+    "evaluate_response",
     "run_health_check",
 ]

@@ -34,13 +34,38 @@ _logger = get_logger(__name__)
 # format, but historical receipts sometimes stretch to 20. We therefore
 # accept 8..24 [A-Z0-9] to stay robust while still rejecting obvious noise.
 _CSV_LABEL_RE = re.compile(
-    r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n\s*[:\-]?\s*([A-Z0-9]{8,24})",
+    r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n\s*[:\-]?\s*([A-Z0-9]{8,24})\b",
     re.IGNORECASE,
 )
-_CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[:\-]?\s*([A-Z0-9]{8,24})", re.IGNORECASE)
+# Older AEAT layouts (Modelo 100 pre-2022) render labels on the right
+# column and values on the left, so pdfplumber's top-down / left-right
+# traversal emits VALUE then LABEL. Captured live on IRPF 2021.
+_CSV_LABEL_INVERTED_RE = re.compile(
+    r"\b([A-Z0-9]{8,24})\s+C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n",
+    re.IGNORECASE,
+)
+# Every AEAT justificante ends with a stable authenticity footer:
+#   "La autenticidad de este documento puede ser comprobada mediante
+#    el Código Seguro [N] de Verificación XXXX en
+#    https://sede.agenciatributaria.gob.es".
+# The optional "[N]" is a page-number interstitial pdfplumber sometimes
+# lifts into the text. This footer is the most reliable fallback.
+_CSV_AUTHENTICITY_FOOTER_RE = re.compile(
+    r"mediante\s+el\s+C[óo]digo\s+Seguro\s*(?:\d+\s+)?"
+    r"de\s+Verificaci[óo]n\s+([A-Z0-9]{8,24})\b",
+    re.IGNORECASE,
+)
+# Used only as a last resort: the 'CSV' token is noisy in normalised
+# text ("Presentador" includes the letter sequence), so we require a
+# colon/dash separator and the 'CSV=' equality form.
+_CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9]{8,24})\b", re.IGNORECASE)
 
 _MODELO_RE = re.compile(r"Modelo\s*[:\-]?\s*([0-9]{3}[A-Z]?)", re.IGNORECASE)
-_PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]{1,8})", re.IGNORECASE)
+# Spanish period tokens always contain at least one digit (``1T``,
+# ``0A``, ``4T``, ``2023``). Requiring a digit in the captured group
+# stops the regex from picking up nearby words like "impositivo" out
+# of "Período impositivo".
+_PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]*\d[0-9A-Z]*)", re.IGNORECASE)
 _EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*([0-9]{4})", re.IGNORECASE)
 _NIF_RE = re.compile(r"NIF\s*[:\-]?\s*([0-9A-Z]{8,12})", re.IGNORECASE)
 _PRESENTATION_ID_RE = re.compile(
@@ -52,12 +77,41 @@ _PRESENTED_AT_RE = re.compile(
     r"(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2})?)",
     re.IGNORECASE,
 )
+# Annual modelos (100, 190, ...) print the timestamp as
+# "Presentación realizada el: DD-MM-YYYY a las HH:MM:SS"
+# on 2022+ layouts. 2021-era Modelo 100 PDFs are column-split so
+# pdfplumber reads the value FIRST and the label AFTER; we accept
+# both orderings. Captured live on Modelo 100 IRPF 2021-2023.
+_PRESENTED_AT_ANNUAL_RE = re.compile(
+    r"Presentaci[óo]n\s+realizada\s+el\s*[:\-]?\s*"
+    r"(\d{2}-\d{2}-\d{4})\s+a\s+las\s+(\d{2}:\d{2}(?::\d{2})?)",
+    re.IGNORECASE,
+)
+_PRESENTED_AT_ANNUAL_INVERTED_RE = re.compile(
+    r"(\d{2}-\d{2}-\d{4})\s+a\s+las\s+(\d{2}:\d{2}(?::\d{2})?)\s+"
+    r"Presentaci[óo]n\s+realizada\s+el",
+    re.IGNORECASE,
+)
 _TOTAL_INGRESAR_RE = re.compile(
     r"Total\s+a\s+ingresar\s*[:\-]?\s*([0-9][0-9\.,]*)",
     re.IGNORECASE,
 )
 _TOTAL_DEVOLVER_RE = re.compile(
     r"Total\s+a\s+devolver\s*[:\-]?\s*([0-9][0-9\.,]*)",
+    re.IGNORECASE,
+)
+# Modelo 100 annual receipts label the paid amount as
+# "NRC: <code> IMPORTE: <decimal>" under an "INGRESAR" header (no
+# "Total a ingresar" wording). Captured live 2026-04-24.
+_NRC_IMPORTE_RE = re.compile(
+    r"NRC\s*[:\-]?\s*[A-Z0-9]+\s+IMPORTE\s*[:\-]?\s*([0-9][0-9\.,]*)",
+    re.IGNORECASE,
+)
+# Modelo 100 annual receipts sometimes label the payment id as
+# "Número de justificante: 1004263812614" (13 digits) and then
+# concatenate the NRC code ("1004263812614JFEDMJLLW") elsewhere.
+_PRESENTATION_ID_ANNUAL_RE = re.compile(
+    r"N[úu]mero\s+de\s+justificante\s*[:\-]?\s*([0-9]{10,40})",
     re.IGNORECASE,
 )
 _URL_RE = re.compile(
@@ -104,14 +158,30 @@ def _parse_decimal(raw: str) -> Decimal:
 
 
 def _parse_datetime(raw: str) -> datetime:
-    """Parse the ``YYYY-MM-DD HH:MM[:SS]`` timestamps AEAT stamps on receipts.
+    """Parse the receipt timestamps AEAT stamps on justificantes.
 
-    The timestamp is returned as a *naive* datetime because AEAT does not
-    print a timezone; callers that need UTC must apply the known Europe/Madrid
-    offset themselves.
+    AEAT uses two shapes across the modelo corpus:
+
+    * Quarterly / periodic modelos:
+      ``YYYY-MM-DD HH:MM[:SS]`` (ISO-like, as printed in "Fecha y hora
+      de presentación").
+    * Annual modelos (100, 190, etc.):
+      ``DD-MM-YYYY HH:MM[:SS]`` (as printed in "Presentación realizada
+      el: DD-MM-YYYY a las HH:MM:SS" — this function accepts either
+      a single whitespace-joined string or a 2-tuple produced by the
+      extractor's regex groups).
+
+    The timestamp is returned as a *naive* datetime because AEAT does
+    not print a timezone; callers that need UTC must apply the known
+    Europe/Madrid offset themselves.
     """
     normalised = raw.replace("T", " ").strip()
-    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+    for fmt in (
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y %H:%M",
+    ):
         try:
             return datetime.strptime(normalised, fmt)
         except ValueError:
@@ -156,27 +226,52 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
 
     normalised = _strip_accents(text)
 
-    csv_match = _CSV_LABEL_RE.search(text) or _CSV_LABEL_RE.search(normalised)
-    if csv_match is None:
-        csv_match = _CSV_FALLBACK_RE.search(normalised)
+    csv_match = (
+        _CSV_AUTHENTICITY_FOOTER_RE.search(text)
+        or _CSV_AUTHENTICITY_FOOTER_RE.search(normalised)
+        or _CSV_LABEL_RE.search(text)
+        or _CSV_LABEL_RE.search(normalised)
+        or _CSV_LABEL_INVERTED_RE.search(text)
+        or _CSV_LABEL_INVERTED_RE.search(normalised)
+        or _CSV_FALLBACK_RE.search(normalised)
+    )
     if csv_match is None:
         raise JustificanteCsvNotFoundError(f"no Código Seguro de Verificación found in {pdf_path}")
     csv_value = csv_match.group(1).upper()
 
     modelo = _require(_MODELO_RE.search(normalised), "modelo")
-    period = _require(_PERIOD_RE.search(normalised), "period")
     ejercicio_match = _EJERCICIO_RE.search(normalised)
     ejercicio = ejercicio_match.group(1).strip() if ejercicio_match else None
+
+    # Period label is missing on annual receipts (Modelo 100 etc.); fall
+    # back to the ejercicio so the schema's non-empty constraint holds.
+    period_match = _PERIOD_RE.search(normalised)
+    if period_match is not None:
+        period = period_match.group(1).strip()
+    elif ejercicio is not None:
+        period = ejercicio
+    else:
+        raise JustificanteParseError("could not locate required field: period")
+
     nif = _require(_NIF_RE.search(normalised), "tax_id").upper()
 
+    # Three timestamp shapes in the wild (see _parse_datetime docstring).
+    presented_at: datetime
     presented_match = _PRESENTED_AT_RE.search(normalised)
-    presented_raw = _require(presented_match, "presented_at")
-    presented_at = _parse_datetime(presented_raw)
+    if presented_match is not None:
+        presented_at = _parse_datetime(presented_match.group(1))
+    else:
+        annual_match = _PRESENTED_AT_ANNUAL_RE.search(normalised) or _PRESENTED_AT_ANNUAL_INVERTED_RE.search(normalised)
+        if annual_match is None:
+            raise JustificanteParseError("could not locate required field: presented_at")
+        presented_at = _parse_datetime(f"{annual_match.group(1)} {annual_match.group(2)}")
 
     presentation_match = _PRESENTATION_ID_RE.search(normalised)
+    if presentation_match is None:
+        presentation_match = _PRESENTATION_ID_ANNUAL_RE.search(normalised)
     presentation_id = presentation_match.group(1).strip() if presentation_match else None
 
-    ingresar_match = _TOTAL_INGRESAR_RE.search(normalised)
+    ingresar_match = _TOTAL_INGRESAR_RE.search(normalised) or _NRC_IMPORTE_RE.search(normalised)
     total_ingresar: Decimal | None = _parse_decimal(ingresar_match.group(1)) if ingresar_match else None
 
     devolver_match = _TOTAL_DEVOLVER_RE.search(normalised)

@@ -8,7 +8,7 @@ from playwright.async_api import BrowserContext, Playwright
 
 from ..config import PROJECT_ROOT, Settings
 from ..errors import SiteHealthError
-from ..status import SiteHealthState
+from ._site_health import SiteHealthState
 from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy
 from .profile import Profile

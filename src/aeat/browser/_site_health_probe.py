@@ -1,6 +1,6 @@
 """Private health-probe helper for :class:`aeat.browser.BrowserSession`.
 
-Thin shim around :func:`aeat.status.evaluate_response` that the
+Thin shim around :func:`aeat.browser._site_health_parsers.evaluate_response` that the
 session navigation hook calls after every ``page.goto``. Keeping this
 helper isolated in its own module makes the forbidden-import guard
 trivial: this module MUST NOT import anything from :mod:`aeat.auth`,
@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ..status import SiteHealthStatus
-from ..status._site_health_parsers import evaluate_response
+from ._site_health import SiteHealthStatus
+from ._site_health_parsers import evaluate_response
 
 
 def probe_response(

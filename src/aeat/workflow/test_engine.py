@@ -8,6 +8,13 @@ the place where composition correctness is validated.
 The shared :class:`_Fixtures` helper builds a healthy set of doubles
 and lets individual tests override exactly the knob that should
 provoke a bailout.
+
+The :mod:`aeat.sede` boundary is exercised through the
+:class:`WorkflowEngine` constructor's ``expedientes_source`` and
+``notifications_source`` seams. Tests inject async callables that
+return real :class:`aeat.sede.Expediente` and
+:class:`aeat.sede.RemoteNotification` records, bypassing the live
+Playwright walkers without falsifying their record shape.
 """
 
 from __future__ import annotations
@@ -20,7 +27,11 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from pydantic import AnyHttpUrl
 
+from ..auth import AeatSession
+from ..browser._site_health import SiteHealthState
+from ..browser._site_health_parsers import evaluate_response
 from ..config import PROJECT_ROOT, Settings
 from ..deadlines import (
     AutonomoProfile,
@@ -30,8 +41,7 @@ from ..deadlines import (
     Schedule,
 )
 from ..errors import SiteHealthError
-from ..status import SiteHealthState
-from ..status._site_health_parsers import evaluate_response
+from ..sede import Expediente, NotificationsSnapshot, RemoteNotification
 from ..submission import (
     AuthProviderDescription,
     AuthProviderKind,
@@ -43,12 +53,8 @@ from ..submission import (
 from . import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
-    ExpedienteLike,
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
-    InboxProtocol,
-    RequerimientoLike,
-    StatusReaderProtocol,
     SubmissionEngineProtocol,
     SubmittedFilingLike,
     SyncRunnerProtocol,
@@ -171,24 +177,39 @@ class _FakeSyncRunner:
 
 
 @dataclass
-class _FakeStatusReader:
-    expedientes: tuple[ExpedienteLike, ...] = ()
+class _FakeExpedientesSource:
+    """Seam over :func:`aeat.sede.walk_expedientes_tree` for tests.
 
-    async def fetch_expedientes(self, *, tax_id: str) -> tuple[ExpedienteLike, ...]:
+    Returns whatever expedientes the test put on ``self.expedientes``;
+    the engine filters by modelo + ejercicio internally.
+    """
+
+    expedientes: tuple[Expediente, ...] = ()
+
+    async def __call__(
+        self,
+        session: AeatSession,
+        modelo: str | None,
+    ) -> tuple[Expediente, ...]:
+        del session, modelo
         return self.expedientes
 
 
 @dataclass
-class _FakeInbox:
-    requerimientos: tuple[RequerimientoLike, ...] = ()
+class _FakeNotificationsSource:
+    """Seam over :func:`aeat.sede.fetch_notifications_query` for tests."""
 
-    async def fetch_blocking_requerimientos(
-        self,
-        *,
-        tax_id: str,
-        modelo: str,
-    ) -> tuple[RequerimientoLike, ...]:
-        return self.requerimientos
+    rows: tuple[RemoteNotification, ...] = ()
+
+    async def __call__(self, session: AeatSession) -> NotificationsSnapshot:
+        del session
+        return NotificationsSnapshot(
+            rows=self.rows,
+            captured_at=datetime(2026, 4, 12, tzinfo=UTC),
+            source_url=AnyHttpUrl(
+                "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
+            ),
+        )
 
 
 @dataclass
@@ -274,12 +295,13 @@ class _Fixtures:
     draft_builder: _FakeDraftBuilder
     submission_engine: _FakeSubmissionEngine
     sync_runner: _FakeSyncRunner
-    status_reader: _FakeStatusReader
-    inbox: _FakeInbox
+    expedientes_source: _FakeExpedientesSource
+    notifications_source: _FakeNotificationsSource
     certificate_bundle: _FakeCertificateBundle
     inputs_provider: _FakeInputsProvider
     settings: Settings
     today: date
+    session: AeatSession
 
     def engine(self) -> WorkflowEngine:
         return WorkflowEngine(
@@ -287,12 +309,21 @@ class _Fixtures:
             filing_draft_builder=cast(FilingDraftBuilderProtocol, self.draft_builder),
             submission_engine=cast(SubmissionEngineProtocol, self.submission_engine),
             sync_runner=cast(SyncRunnerProtocol, self.sync_runner),
-            status_reader=cast(StatusReaderProtocol, self.status_reader),
-            inbox=cast(InboxProtocol, self.inbox),
+            session=self.session,
             certificate_bundle=cast(CertificateBundleProtocol, self.certificate_bundle),
             inputs_provider=cast(FilingInputsProviderProtocol, self.inputs_provider),
             settings=self.settings,
+            expedientes_source=self.expedientes_source,
+            notifications_source=self.notifications_source,
         )
+
+
+# An :class:`aeat.auth.AeatSession` is strict-frozen pydantic with a
+# heavy provider_detail discriminator; constructing one fully would
+# pull in unrelated machinery. The engine never inspects the session
+# itself — it only forwards it to the injected source seams — so a
+# typed sentinel is sufficient and keeps the test surface tight.
+_SENTINEL_SESSION = cast(AeatSession, object())
 
 
 def _fixtures() -> _Fixtures:
@@ -307,12 +338,13 @@ def _fixtures() -> _Fixtures:
         draft_builder=_FakeDraftBuilder(draft=draft),
         submission_engine=_FakeSubmissionEngine(),
         sync_runner=_FakeSyncRunner(),
-        status_reader=_FakeStatusReader(),
-        inbox=_FakeInbox(),
+        expedientes_source=_FakeExpedientesSource(),
+        notifications_source=_FakeNotificationsSource(),
         certificate_bundle=_FakeCertificateBundle(),
         inputs_provider=_FakeInputsProvider(),
         settings=Settings(),
         today=date(2026, 4, 12),
+        session=_SENTINEL_SESSION,
     )
 
 
@@ -403,13 +435,22 @@ class TestAbortReasons:
 
     def test_inbox_blocking_requerimiento(self) -> None:
         fx = _fixtures()
-        fx.inbox.requerimientos = (
-            RequerimientoLike(
-                modelo="130",
-                notificacion_id="nf-1",
-                received_at=datetime(2026, 4, 10, tzinfo=UTC),
-                blocks_submission=True,
-                subject="requerimiento pendiente",
+        fx.notifications_source.rows = (
+            RemoteNotification(
+                certificado_id="2699101808461",
+                tipo="notificacion",
+                concepto="requerimiento pendiente",
+                titular_nif="X1234567L",
+                titular_nombre="WOOTSCH GERGELY DOMOKOS",
+                destinatario_nif="X1234567L",
+                destinatario_nombre="WOOTSCH GERGELY DOMOKOS",
+                fecha_emision=date(2026, 4, 10),
+                fecha_notificacion=None,
+                modo_notificacion=None,
+                leida=False,
+                source_url=AnyHttpUrl(
+                    "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
+                ),
             ),
         )
         result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
@@ -417,12 +458,15 @@ class TestAbortReasons:
 
     def test_already_filed(self) -> None:
         fx = _fixtures()
-        fx.status_reader.expedientes = (
-            ExpedienteLike(
+        fx.expedientes_source.expedientes = (
+            Expediente(
+                expediente_id="202610013522456T",
                 modelo="130",
-                period="2026Q1",
-                tax_id=fx.profile.tax_id,
-                filed_at=datetime(2026, 4, 11, tzinfo=UTC),
+                ejercicio=2026,
+                category_path=("Agencia Tributaria", "IRPF", "Modelo 130"),
+                detail_url=AnyHttpUrl(
+                    "https://www6.agenciatributaria.gob.es/wlpl/DASR-CORE/AccesoDR2026RVlt?exp=202610013522456T"
+                ),
             ),
         )
         result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))

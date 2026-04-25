@@ -21,13 +21,6 @@ Usage::
         next_deadline,
     )
 
-    class _InProcessCatalogue:
-        def known_modelos(self):
-            return ("100", "111", "115", "130", "180", "190", "303", "349", "390", "720")
-
-        def is_known(self, modelo):
-            return modelo in self.known_modelos()
-
     profile = AutonomoProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -36,7 +29,7 @@ Usage::
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
     )
-    engine = DeadlineEngine(_InProcessCatalogue())
+    engine = DeadlineEngine()
     schedule = engine.compute(profile, year=2026, today=date(2026, 4, 1))
     print(next_deadline(schedule, today=date(2026, 4, 1)))
 """
@@ -64,11 +57,7 @@ from ._models import (
     ObligationStatus,
     Schedule,
 )
-from ._protocols import (
-    CorpusReader,
-    ModeloCatalogueLoader,
-    ModeloIdentifier,
-)
+from ._protocols import ModeloIdentifier
 
 __all__ = [
     "CALENDAR",
@@ -76,12 +65,10 @@ __all__ = [
     "SUPPORTED_YEARS",
     "AutonomoProfile",
     "CanonicalWindow",
-    "CorpusReader",
     "DeadlineEngine",
     "DeadlineError",
     "FilingObligation",
     "IVARegime",
-    "ModeloCatalogueLoader",
     "ModeloIdentifier",
     "ObligationStatus",
     "PeriodKind",
