@@ -172,9 +172,10 @@ def synthesize_filing_draft_from_decimals(
         if isinstance(raw, Decimal):
             coerced[casilla_id] = raw
         else:
-            # Reject Spanish thousand-separators here — callers must
-            # canonicalise upstream so the contract surface stays
-            # narrow. ValueError on Decimal init is the right error.
+            # Spanish thousand-separators ("5.550,00") are implicitly
+            # rejected here by Decimal() raising InvalidOperation —
+            # callers must canonicalise upstream so the contract
+            # surface stays narrow.
             coerced[casilla_id] = Decimal(raw)
     return synthesize_filing_draft(
         modelo=modelo,
