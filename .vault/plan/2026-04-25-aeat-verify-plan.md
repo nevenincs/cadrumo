@@ -90,6 +90,29 @@ across-the-board P1 to learn which modelos exist on the account.
 Cost: one Cl@ve session (~17 min budget); the sweep is fast — under
 a minute end-to-end against Kent's account.
 
+### Result (2026-04-25, NIE `Y4113523X`)
+
+Done. 36 expedientes enumerated. Captured to
+`scratch/sanitizer-validation/cross-wave-enumeration.json`.
+Distribution:
+
+- 3 Modelo 100 (IRPF anual): `202110013520233F` (2021),
+  `202210013522538B` (2022), `202310013522456T` (2023). Already
+  captured under `scratch/recon-corpus/20260424T184450Z/`.
+- 1 candidate Modelo 390 (IVA anual): `202239013520267Q` (2022).
+  Detail URL is a `TEWV-CORE/DetalleVlt` page, not the IRPF-shape
+  `DASR-CORE/AccesoDR…RVlt`; capture flow needs verification.
+- 1 candidate Modelo 190 (resumen anual retenciones):
+  `2024190000000000494658` (2024). Detail URL evt prefix `GIPE`
+  does not map to any modelo shape observed; low confidence.
+- 28 RSC (rectificación / sancionador) procedures — AEAT-side
+  proceedings, not Kent-filed declarations. Out of W2-W11 scope.
+- 3 GRC (gestión recaudación) procedures — same, out of scope.
+
+Net effect on wave statuses: W1 stays `running`; W2/W3/W5/W7/W8/
+W9/W10/W11 all flip to `na`; W4 and W6 are *candidate* `running`
+pending further investigation of the unknown expediente shapes.
+
 ## Wave list
 
 Each row is a wave. Per-phase status updates land here as commits
@@ -128,55 +151,64 @@ record (created when the wave starts, even if it ends `na`).
 
 ### W2 — Modelo 130 (IRPF fraccionado, quarterly)
 
-- Status: `ready`
-- Audit doc: TBD on wave start.
-- All phases new. Foundational input to W1's eventual P6 if Kent
-  has filed quarterly pagos fraccionados.
+- Status: `na`. Cross-wave P1 enumeration (2026-04-25,
+  authenticated as `Y4113523X`) returned zero Modelo 130
+  expedientes. Kent does not file pagos fraccionados — IRPF flows
+  directly through Modelo 100 anual + retentions only.
 
 ### W3 — Modelo 303 (IVA quarterly)
 
-- Status: `ready`
-- Audit doc: TBD on wave start.
-- All phases new. Highest-volume autónomo modelo.
+- Status: `na`. P1 returned zero Modelo 303 expedientes. Kent's
+  IVA position appears to flow through Modelo 390 anual rather
+  than quarterly 303 filings, OR Kent is exempt from IVA (autónomo
+  profesional under régimen especial). Confirmation requires
+  reading Modelo 036 (census), out of this plan's scope.
 
 ### W4 — Modelo 390 (IVA anual)
 
-- Status: `blocked` on W3 P5.
-- Audit doc: TBD on wave start.
-- First aggregator wave to exercise P6 cumulation (sum of 4× 303
-  trimestral figures).
+- Status: `running` (single expediente). P1 surfaced
+  `202239013520267Q` (2022 ejercicio) which matches the
+  `<year>-390-1-<seq>` Modelo 390 expediente shape. Detail URL is
+  a `TEWV-CORE/DetalleVlt` page rather than the per-year
+  `DASR-CORE/AccesoDR<YYYY>RVlt?exp=...` shape that IRPF uses, so
+  the capture flow needs verification. P6 cumulation is moot —
+  W3 (303) returned `na`, so no quarterly inputs to sum against.
 
 ### W5 — Modelo 111 (retenciones trabajo, quarterly)
 
-- Status: `ready`
-- Audit doc: TBD on wave start.
+- Status: `na`. P1 returned zero Modelo 111 expedientes. Kent
+  is solo autónomo with no employees / contractors withholding.
 
 ### W6 — Modelo 190 (resumen anual retenciones, anual aggregator)
 
-- Status: `blocked` on W5 P5.
-- P6 invariant: sum of 4× 111 retentions == 190 anual cuotas.
+- Status: candidate `running`. P1 surfaced
+  `2024190000000000494658` (22-char id, 2024 ejercicio) which may
+  be a Modelo 190 informativa. Detail URL is `TEWV-CORE/DetalleVlt
+  ?evt=2025EVTGIPE...`; the `GIPE` event type does not match any
+  modelo we've observed before. Low confidence on the modelo
+  binding; further investigation deferred. P6 cumulation is moot —
+  W5 (111) returned `na`.
 
 ### W7 — Modelo 115 + 180
 
-- Status: `ready` for 115 (quarterly); 180 `blocked` on 115 P5.
+- Status: `na`. P1 returned zero entries.
 
 ### W8 — Modelo 123 + 193
 
-- Status: `ready` for 123 (quarterly); 193 `blocked` on 123 P5.
+- Status: `na`. P1 returned zero entries.
 
 ### W9 — Modelo 131, 202, 200 (sociedades)
 
-- Status: `ready` (P1 will likely return `na` for solo autónomo
-  profiles; included for completeness).
+- Status: `na`. P1 returned zero entries (as expected for a solo
+  autónomo, not a sociedad).
 
 ### W10 — Modelo 347 + 349 (informativas)
 
-- Status: `ready`. P6 for both is invoice-catalogue cross-reference,
-  not aggregator-of-modelos.
+- Status: `na`. P1 returned zero entries.
 
 ### W11 — Modelo 369 (IVA OSS), 720 (extranjero), 232 (vinculadas), 840 (IAE)
 
-- Status: `ready` (likely all `na` for Kent).
+- Status: `na`. P1 returned zero entries.
 
 ### W12 — Modelo 036 / 037 (censal)
 
