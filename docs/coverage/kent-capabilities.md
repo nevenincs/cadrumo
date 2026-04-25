@@ -13,7 +13,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | See which modelos apply and when | ✅ | ✅ | ✅ | ✅ | 0.0.2 | existing deadline engine |
 | Get Spanish CLI output by default | ❌ | ❌ | ❌ | ❌ | 0.0.2 | [#207](https://github.com/wgergely/aeat/issues/207) |
 | Understand what the tool does from `aeat --help` | ❌ | ❌ | ❌ | ❌ | 0.0.2 | [#208](https://github.com/wgergely/aeat/issues/208) |
-| See humane message from `aeat status` | ❌ | ❌ | ❌ | ❌ | 0.0.2 | [#213](https://github.com/wgergely/aeat/issues/213) |
+| See consistent error messages with copy-paste recovery commands | ✅ | ✅ | ✅ | ✅ | 0.0.2 | [#398](https://github.com/wgergely/aeat/issues/398) |
 | Record WHY when manually classifying | ❌ | ❌ | ❌ | ❌ | 0.0.2 | [#223](https://github.com/wgergely/aeat/issues/223) |
 | Import bank statement persisted in one command | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#216](https://github.com/wgergely/aeat/issues/216) |
 | Bulk-classify via rules | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#217](https://github.com/wgergely/aeat/issues/217) |

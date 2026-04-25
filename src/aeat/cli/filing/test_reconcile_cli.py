@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 
 import pytest
@@ -79,10 +80,11 @@ class TestCliSmoke:
 
         runner = CliRunner()
         result = runner.invoke(filing_app, ["reconcile", "--help"])
+        clean_stdout = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
         assert result.exit_code == 0
-        assert "reconcile" in result.stdout.lower()
-        assert "--last" in result.stdout
-        assert "--json" in result.stdout
+        assert "reconcile" in clean_stdout.lower()
+        assert "--last" in clean_stdout
+        assert "--json" in clean_stdout
 
     def test_write_flag_refused(self) -> None:
         from . import app as filing_app
