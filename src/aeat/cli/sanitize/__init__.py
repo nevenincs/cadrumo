@@ -281,6 +281,20 @@ _CATASTRAL_RE = re.compile(r"(?<![A-Z0-9])[0-9]{7}[A-Z]{2}[0-9]{4}[A-Z][0-9]{4}[
 # NRC: 22 alphanumeric chars; AEAT prints these next to "NRC:"
 # but the shape alone is distinctive enough to detect inline.
 _NRC_RE = re.compile(r"(?<![A-Z0-9])[0-9]{13,14}[A-Z][A-Z0-9]{6,8}(?![A-Z0-9])")
+# Spanish IBAN shape: ES + 2 check digits + 20 alphanumeric. AEAT
+# prints these in space-separated 4-char groups (``ES76 2100 0418
+# 4012 3456 7891``) — strip whitespace before matching so the
+# bare 24-char form is what we record.
+_IBAN_ES_RE = re.compile(
+    r"(?<![A-Z0-9])ES\d{2}(?:\s?[A-Z0-9]{4}){5}(?![A-Z0-9])",
+)
+# Spanish phone numbers: optional +34 / 0034 prefix, then 9 digits
+# starting 6/7/8/9 (mobile + landline + premium). AEAT-printed
+# helpline numbers (``901 33 55 33`` / ``915 548 770``) match this
+# shape and would otherwise pollute fixtures.
+_PHONE_ES_RE = re.compile(
+    r"(?<![0-9])(?:(?:\+34|0034)\s?)?[6789]\d{2}[\s-]?\d{2}[\s-]?\d{2}[\s-]?\d{2}(?![0-9])",
+)
 
 
 def _detect_pii_surfaces(text: str) -> dict[str, list[dict[str, str]]]:
@@ -296,6 +310,21 @@ def _detect_pii_surfaces(text: str) -> dict[str, list[dict[str, str]]]:
     dates: list[str] = sorted({m.group(0) for m in _DATE_RE.finditer(text)})
     catastrales: list[str] = sorted({m.group(0) for m in _CATASTRAL_RE.finditer(text)})
     nrcs: list[str] = sorted({m.group(0) for m in _NRC_RE.finditer(text)})
+    ibans_raw: list[str] = sorted({m.group(0) for m in _IBAN_ES_RE.finditer(text)})
+    phones: list[str] = sorted({m.group(0) for m in _PHONE_ES_RE.finditer(text)})
+    # AEAT helpline numbers are public + universally hardcoded; do
+    # not redact them. Strip from the phone candidates before
+    # building the scaffold so the operator's mapping stays focused
+    # on actually-private numbers.
+    _aeat_helplines_normalised = {
+        "901335533",
+        "915548770",
+    }
+
+    def _normalise(phone: str) -> str:
+        return phone.replace(" ", "").replace("-", "").replace("+34", "").replace("0034", "")
+
+    phones = [p for p in phones if _normalise(p) not in _aeat_helplines_normalised]
 
     return {
         "importe": [
@@ -313,6 +342,18 @@ def _detect_pii_surfaces(text: str) -> dict[str, list[dict[str, str]]]:
                 "surface_label": f"nrc {idx}",
             }
             for idx, value in enumerate(nrcs)
+        ],
+        "iban": [
+            {
+                "real": value,
+                # ES80 2310 0001 1800 0001 2345 — known-valid
+                # mod-97 sample. Reused across all detected IBANs;
+                # the operator can override per-fixture if a
+                # collision is undesirable.
+                "synthetic": "ES8023100001180000012345",
+                "surface_label": f"iban {idx}",
+            }
+            for idx, value in enumerate(ibans_raw)
         ],
         "arbitrary": [
             *(
@@ -335,6 +376,16 @@ def _detect_pii_surfaces(text: str) -> dict[str, list[dict[str, str]]]:
                     "surface_label": f"date token {idx}",
                 }
                 for idx, value in enumerate(dates)
+            ),
+            *(
+                {
+                    "real": value,
+                    # 600 000 000 — Spanish mobile shape,
+                    # universally non-allocated.
+                    "synthetic": "600000000",
+                    "surface_label": f"phone {idx}",
+                }
+                for idx, value in enumerate(phones)
             ),
         ],
     }
