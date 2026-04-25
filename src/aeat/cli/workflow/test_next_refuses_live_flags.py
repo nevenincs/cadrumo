@@ -18,8 +18,8 @@ def test_next_rejects_no_dry_run_flag() -> None:
     """Passing ``--no-dry-run`` must produce a typer "no such option" exit."""
     runner = CliRunner()
     result = runner.invoke(root_app, ["workflow", "next", "--no-dry-run"])
-    assert result.exit_code != 0
-    assert "No such option" in result.output
+    assert result.exit_code == 2
+    assert "no such option" in result.output.lower()
 
 
 def test_next_rejects_i_understand_flag() -> None:
@@ -29,8 +29,8 @@ def test_next_rejects_i_understand_flag() -> None:
         root_app,
         ["workflow", "next", "--i-understand-this-is-real"],
     )
-    assert result.exit_code != 0
-    assert "No such option" in result.output
+    assert result.exit_code == 2
+    assert "no such option" in result.output.lower()
 
 
 def test_next_rejects_both_live_flags() -> None:
@@ -40,5 +40,5 @@ def test_next_rejects_both_live_flags() -> None:
         root_app,
         ["workflow", "next", "--no-dry-run", "--i-understand-this-is-real"],
     )
-    assert result.exit_code != 0
-    assert "No such option" in result.output
+    assert result.exit_code == 2
+    assert "no such option" in result.output.lower()
