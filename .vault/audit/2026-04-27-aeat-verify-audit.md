@@ -206,9 +206,81 @@ Every new module honours the parent ADR's 5-layer write guard:
   current corpus but possible for very wide tables. Operator
   reviews the YAML before sanitising.
 - **Pre-existing `aeat.auth` test failures** (5 tests in
-  `test_clave_movil.py`) are out of pdf-sanitizer scope.
-  Tracked separately. The marker-integrity regression PR #427
-  introduced was fixed in commit `6b494d7`.
+  `test_clave_movil.py`) are out of pdf-sanitizer scope. The
+  failures were re-confirmed in this session: the tests are
+  marked `@pytest.mark.unit` but `fake_session_login` fixture
+  triggers a real Cl@ve flow that times out after 5 min on the
+  2FA push. Fix requires substantive auth-subsystem rework;
+  tracked separately. Full-unit runs need
+  `--ignore=src/aeat/auth/test_clave_movil.py` until then. The
+  marker-integrity regression PR #427 introduced was fixed in
+  commit `6b494d7`.
 - **49-PDF corpus contains real PII** under `scratch/`
   (gitignored). Operator should treat the directory as
   non-shareable.
+
+## Round-2 code review (2026-04-27)
+
+The vaultspec-code-reviewer ran round-2 against the
+declaraciones-register backend + parser hardening + sanitizer
+prepare-map auto-detect + verify masking. Verdict: REVISION
+REQUIRED with 1 HIGH, 5 MEDIUM, 3 LOW. All HIGH/MEDIUM/L1
+resolved in commit `e319d38`:
+
+- **H1**: `_PERIOD_POSITIONAL_RE` over-matched M190 casilla
+  numbers (the `0[1-9]|1[0-2]` monthly alternation matched
+  `Ejercicio (con 4 cifras) ....... 2024 01 enero`,
+  mislabelling annual filings as monthly period `01`).
+  Tightened to `0A|[1-4]T` only.
+- **M3**: `capture_declaration` now explicitly checks the
+  cotejo-redirect URL against the canonical
+  `/wlpl/KATA-APLI/cotejo/CotejoIdSv` prefix and raises a clear
+  session-expired error.
+- **M4**: `_extract_csv_from_url` validates the CSV against
+  `^[A-Z0-9]{8,24}$` (mirror of `_CSV_LABEL_RE`).
+- **M2**: `aeat sede capture-corpus` gained `--delay-seconds`
+  pacing (default 1.0s) and broadened per-iter exception
+  handling so a single Playwright timeout doesn't kill the
+  loop.
+- **M1**: `test_no_write_surface.py` docstring no longer
+  claims `.click(`/`.submit(` coverage; it explicitly notes
+  Playwright primitives are out-of-scope (legitimate read-
+  event dispatch).
+- **L1**: `bs4.BeautifulSoup` lifted from function scope to
+  module top.
+
+Three D-flagged items (D1 per-query browser context, D2
+multi-CSV suspicion, D3 `0A` annual fallback) are documented
+follow-ups; defensible as-is per the reviewer.
+
+## Aggregator cumulation testing — design challenge
+
+The 15-fixture corpus has a complete year of M130 / M303 /
+M111 quarterly inputs and matching anuales (M390/M190). Naive
+cumulation tests of the form
+`assert sum(M303_quarterly_cuotas) == M390_anual` would,
+however, be **structurally trivial** because every sanitised
+fixture carries `1.000,00` for every IMPORTE. The sum
+`1.000,00 × 4 = 4.000,00` would never equal `1.000,00`, so the
+test would always fail; or if both sides used the same
+synthetic, the test would always pass regardless of correctness.
+
+For meaningful aggregator cumulation testing, one of:
+
+- **Per-fixture synthetic mapping that preserves the
+  cumulation invariant.** Each casilla in M303/Q1 gets a
+  unique synthetic; the M390 anual fixture's casillas use
+  pre-computed sums of those synthetics. The mapping
+  generator becomes load-bearing on the test's mathematical
+  validity.
+- **Live-test cumulation** against `scratch/declarations-corpus/`
+  unsanitised PDFs, gated by `AEAT_LIVE_TESTS_ENABLED=1` and
+  contributor-local. Runs on the operator's box, not in CI.
+- **Synthetic test fixtures with hand-crafted casilla maps**
+  whose values cumulate by construction. Uses
+  `aeat.filing.testing` patterns rather than real captures.
+
+This is the gating design decision before per-modelo deep
+extractors are worth building in scope; recorded here so the
+follow-up PR can pick a path explicitly rather than discovering
+the constraint mid-implementation.
