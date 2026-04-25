@@ -44,12 +44,11 @@ dependencies = [
     # IANA tz database (bundled on Linux/macOS, missing on Windows
     # CPython — required by aeat.status._parsers.expedientes to
     # localise AEAT timestamps to Europe/Madrid).
-    "tzdata>=2024.1 ; sys_platform == 'win32'",
+    "tzdata>=2026.2 ; sys_platform == 'win32'",
     # PKCS#12 parsing for client-certificate auth (#8)
-    "cryptography>=46.0.7",
+    "cryptography>=47.0.0",
     # Configuration
     "python-dotenv>=1.2.2",
-    "vaultspec-core>=0.1.8",
     # Persistence
     "sqlalchemy>=2.0.36",
     "alembic>=1.14.0",
@@ -58,7 +57,7 @@ dependencies = [
     # Financial ingest (#73)
     "ofxparse>=0.21",
     "openpyxl>=3.1.5",
-    "vaultspec-rag>=0.2.1",
+    # PDF sanitiser (#239) — content-stream rewriter for PII redaction.
     "pikepdf>=10.0.0",
 ]
 
@@ -88,7 +87,10 @@ override-dependencies = [
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.9",
+    # Vault tooling — contributor-only; not imported by src/aeat/.
+    "vaultspec-core>=0.1.14",
+    "vaultspec-rag>=0.2.3",
+    "ruff>=0.15.12",
     "ty>=0.0.1a1",
     "prek>=0.2.0",
     "pytest>=9.0.3",
