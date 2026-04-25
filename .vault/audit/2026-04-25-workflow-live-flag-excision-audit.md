@@ -190,6 +190,22 @@ Final coverage on `src/aeat/cli/workflow/`: `__init__.py` 100%,
 `_helpers.py` 100%, `list_cmd.py` 100%, `next.py` 100%, `run.py`
 100%, `show.py` 100%; total 100.00%.
 
+DEDUP-001 | LOW | shared test stand-ins extracted to `_test_doubles.py`
+The first cut of `test_cli_coverage_completion.py` duplicated the
+`Draft`, `DeadlineEngine`, `DraftBuilder`, `SubmissionEngine`,
+`InputsProvider`, `profile()`, and `engine()` stand-ins already
+defined in `test_cli.py`. Per project mandate against duplication,
+fakes, and shadow code, those stubs were extracted to
+`src/aeat/cli/workflow/_test_doubles.py` and both test modules now
+import from the shared source. The new module is a real
+deterministic-stand-in module - no mocks, no patches, no fakes -
+matching the existing test-double pattern in the repo.
+
+The shared module exposes: `Draft`, `DeadlineEngine`, `DraftBuilder`,
+`SubmissionEngine`, `InputsProvider`, `make_profile`, `make_engine`,
+`make_failing_engine`. Both test files reference these by import; no
+class or factory is defined twice.
+
 SMOKE-001 | LOW | manual cli smoke confirms dry-run-only contract end-to-end
 - `uv run aeat workflow run --help` lists no live-write flag
   literals; only the new descriptive sentence "(dry-run by default)"
