@@ -15,6 +15,7 @@ from __future__ import annotations
 import typer
 
 from . import attachments as attachments_module
+from . import audit as audit_module
 from . import auth as auth_module
 from . import bootstrap as bootstrap_module
 from . import browser as browser_module
@@ -134,6 +135,12 @@ app.add_typer(
     help="AEAT justificante (PDF receipt) parser and live CSV verifier (#44).",
 )
 app.add_typer(setup_wizard_module.app, name="setup", help="First-run interactive setup wizard (#61).")
+app.add_typer(
+    audit_module.audit_app,
+    name="audit",
+    help="Audit helpers (dev-only, #339).",
+    hidden=True,
+)
 
 decorate_typer_app(app)
 
