@@ -50,6 +50,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Prove exported numbers match AEAT's record | ❌ | ❌ | ❌ | ❌ | 0.4.0 | [#239](https://github.com/wgergely/aeat/issues/239) |
 | Get proactive alerts (inbox, deadlines, staleness) | ❌ | ❌ | ❌ | ❌ | 0.4.0 | part of [#239](https://github.com/wgergely/aeat/issues/239) |
 | Live-submit (opt-in) | ❌ | ❌ excised | inert | ❌ | 1.0.0 | [#197](https://github.com/wgergely/aeat/issues/197), [#198](https://github.com/wgergely/aeat/issues/198), [#116](https://github.com/wgergely/aeat/issues/116) — CLI removed 2026-04-18 per ADR; engine default is opt-in only |
+| Kent can pipe `aeat X --json \| jq` across every command | ✅ | 🚧 shared foundations shipped; command-local JSON exists today, but no CLI-wide root contract yet | 🚧 Phase 1 foundation tests are green; CLI-wide automation remains deferred | 🚧 existing command-local JSON is observable today; shared envelope rollout is not yet CLI-wide | TBD | [#399](https://github.com/wgergely/aeat/issues/399) |
 
 ## auth protocol note
 
@@ -61,4 +62,4 @@ certificate-based path.
 
 ## provenance
 
-Last updated **2026-04-22** (EPIC #305 wave 54 — 2024 backfill rulesets land; 2024 complementaria self-audit now supported for Modelos 111/115/123/130/131/180). Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
+Last updated **2026-04-25** (`#399` Phase 1 docs pass; JSON contract capability row added). Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
