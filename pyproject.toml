@@ -49,7 +49,6 @@ dependencies = [
     "cryptography>=47.0.0",
     # Configuration
     "python-dotenv>=1.2.2",
-    "vaultspec-core>=0.1.14",
     # Persistence
     "sqlalchemy>=2.0.36",
     "alembic>=1.14.0",
@@ -58,7 +57,6 @@ dependencies = [
     # Financial ingest (#73)
     "ofxparse>=0.21",
     "openpyxl>=3.1.5",
-    "vaultspec-rag>=0.2.3",
 ]
 
 [project.scripts]
@@ -87,6 +85,9 @@ override-dependencies = [
 
 [dependency-groups]
 dev = [
+    # Vault tooling — contributor-only; not imported by src/aeat/.
+    "vaultspec-core>=0.1.14",
+    "vaultspec-rag>=0.2.3",
     "ruff>=0.15.12",
     "ty>=0.0.1a1",
     "prek>=0.2.0",
