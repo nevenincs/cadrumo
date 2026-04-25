@@ -30,6 +30,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, Literal
 from urllib.parse import parse_qs, urlsplit
 
+from bs4 import BeautifulSoup
 from playwright.async_api import Page, async_playwright
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
@@ -51,10 +52,18 @@ _SEDE_BASE = "https://www6.agenciatributaria.gob.es"
 _LISTING_URL = f"{_SEDE_BASE}/wlpl/SCEJ-MANT/CONSUL/index.zul"
 _COTEJO_VIEW = f"{_SEDE_BASE}/wlpl/KATA-APLI/cotejo/CotejoIdSv"
 _COTEJO_DOC = f"{_SEDE_BASE}/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
+_COTEJO_PATH_PREFIX = "/wlpl/KATA-APLI/cotejo/CotejoIdSv"
 _NAVIGATION_TIMEOUT_MS = 30_000
 _FORM_INTERACTION_TIMEOUT_MS = 10_000
 _BUSCAR_SETTLE_MS = 3_000
 _VER_CLICK_TIMEOUT_MS = 15_000
+
+# AEAT CSV shape: 8-24 uppercase alphanumeric characters. Mirror
+# of ``_CSV_LABEL_RE`` in :mod:`aeat.justificante._extract`. Used
+# to shape-validate the CSV extracted from a cotejo URL so a
+# malformed AEAT response cannot land arbitrary text in the
+# downstream :class:`JustificanteRef.pdf_url`.
+_CSV_SHAPE_RE = re.compile(r"^[A-Z0-9]{8,24}$")
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
     strict=True,
@@ -263,8 +272,6 @@ def _parse_listbox(
     7. Obtención de Justificante (anchor / "Ver")
     8. Descarga fichero presentado (anchor / "Ver")
     """
-    from bs4 import BeautifulSoup
-
     try:
         soup = BeautifulSoup(html, "html.parser")
     except Exception as exc:
@@ -434,7 +441,15 @@ async def capture_declaration(
                     f"cotejo page did not settle for {declaration.expediente_id!r}: {exc}",
                 ) from exc
 
-            csv = _extract_csv_from_url(cotejo_page.url)
+            cotejo_url = cotejo_page.url
+            if _COTEJO_PATH_PREFIX not in cotejo_url:
+                raise SedeNavigationError(
+                    f"Ver button for {declaration.expediente_id!r} did not land on a "
+                    f"cotejo URL (final URL: {cotejo_url!r}); "
+                    "session likely expired mid-walk — run `aeat auth login` and retry",
+                )
+
+            csv = _extract_csv_from_url(cotejo_url)
 
             ref = JustificanteRef(
                 csv=csv,
@@ -498,18 +513,25 @@ def _extract_csv_from_url(url: str) -> str:
             ``/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=<csv>``.
 
     Returns:
-        The CSV identifier.
+        The CSV identifier, validated against the canonical AEAT
+        8-24 uppercase-alphanumeric shape.
 
     Raises:
         SedeParseError: When the URL does not carry a ``CSV``
-            query parameter.
+            query parameter, or when the value does not match
+            the canonical AEAT CSV shape.
     """
     parsed = urlsplit(url)
     qs = parse_qs(parsed.query)
     csv_values = qs.get("CSV", [])
     if not csv_values:
         raise SedeParseError(f"cotejo URL missing CSV query: {url!r}")
-    return csv_values[0]
+    csv = csv_values[0]
+    if not _CSV_SHAPE_RE.match(csv):
+        raise SedeParseError(
+            f"cotejo URL CSV {csv!r} does not match AEAT shape (expected 8-24 uppercase alphanumeric chars)",
+        )
+    return csv
 
 
 __all__ = [
