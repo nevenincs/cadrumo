@@ -1,21 +1,58 @@
-"""Domain exception hierarchy for the AEAT package.
+"""Domain exception hierarchy and public error-registry surface.
 
-Every subpackage should raise subclasses of AeatError to ensure
+Every subpackage should raise subclasses of :class:`AeatError` to ensure
 predictable error handling throughout the application.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
-    from .browser._site_health import SiteHealthStatus
+    from ..browser._site_health import SiteHealthStatus
+    from ..i18n import Translatable
+    from ._registry import ErrorCode
 
 
 class AeatError(Exception):
     """Base exception for all AEAT domain errors."""
 
-    pass
+    code: ClassVar[ErrorCode]
+
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        """Bind a registered :class:`ErrorCode` to each declared subclass."""
+
+        super().__init_subclass__(**kwargs)
+        from ._registry import bind_error_code
+
+        bind_error_code(cls)
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        suggestion: str | None = None,
+        translated_message: Translatable | None = None,
+    ) -> None:
+        """Construct a domain error with optional structured metadata.
+
+        Args:
+            message: Optional human-readable message override.
+            context: Optional structured context that can be redacted and
+                emitted in the JSON envelope.
+            suggestion: Optional copy-paste recovery command override.
+            translated_message: Optional trilingual message override.
+        """
+
+        if message is None:
+            super().__init__()
+        else:
+            super().__init__(message)
+        self.context: dict[str, object] | None = dict(context) if context is not None else None
+        self.suggestion: str | None = suggestion
+        self.translated_message: Translatable | None = translated_message
 
 
 class AeatObservabilityError(AeatError):
@@ -27,8 +64,6 @@ class AeatObservabilityError(AeatError):
     subclasses are declared in :mod:`aeat.observability._errors`.
     """
 
-    pass
-
 
 class FixtureProvisioningError(AeatError):
     """Raised when Google Workspace test-fixture provisioning fails.
@@ -37,8 +72,6 @@ class FixtureProvisioningError(AeatError):
     whenever a Drive / Sheets / Docs call cannot satisfy the catalogued
     intent (missing parent, quota exhausted, unexpected dedup result, etc).
     """
-
-    pass
 
 
 class FilingFixtureError(AeatError):
@@ -49,8 +82,6 @@ class FilingFixtureError(AeatError):
     payload fails strict pydantic validation (including the synthetic-
     only invariant checks on the ``synthetic`` and ``_comment`` fields).
     """
-
-    pass
 
 
 class SiteHealthError(AeatError):
@@ -77,8 +108,25 @@ class SiteHealthError(AeatError):
                 :class:`aeat.browser._site_health.SiteHealthStatus`
                 instance describing the detected non-OK state.
         """
-        super().__init__(status.state.value)
+
+        super().__init__(status.state.value, context={"state": status.state.value})
         self.status: SiteHealthStatus = status
+
+
+class WorkspaceLockedError(AeatError):
+    """Raised when a concurrent process already owns a workspace lock."""
+
+
+class DeprecatedAliasError(AeatError):
+    """Raised when a deprecated CLI alias needs to emit a stable notice."""
+
+
+class MovedAliasError(AeatError):
+    """Raised when a moved CLI alias needs to emit a stable notice."""
+
+
+class McpLaunchError(AeatError):
+    """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
 # -- aeat.formulas error hierarchy (#173) --------------------------------
@@ -91,13 +139,9 @@ class SiteHealthError(AeatError):
 class FormulasError(AeatError):
     """Base error for the :mod:`aeat.formulas` engine."""
 
-    pass
-
 
 class RulesetValidationError(FormulasError):
     """Raised when a ruleset fails structural validation at load time."""
-
-    pass
 
 
 class FormulaCycleError(FormulasError):
@@ -110,7 +154,11 @@ class FormulaCycleError(FormulasError):
             ruleset_id: Stable id of the ruleset whose DAG is cyclic.
             cycle: Tuple of casilla ids forming the cycle.
         """
-        super().__init__(f"ruleset {ruleset_id!r} has cycle: {' -> '.join(cycle)}")
+
+        super().__init__(
+            f"ruleset {ruleset_id!r} has cycle: {' -> '.join(cycle)}",
+            context={"ruleset_id": ruleset_id, "cycle": " -> ".join(cycle)},
+        )
         self.ruleset_id: str = ruleset_id
         self.cycle: tuple[str, ...] = cycle
 
@@ -118,28 +166,68 @@ class FormulaCycleError(FormulasError):
 class CasillaNotDefinedError(FormulasError):
     """Raised when a formula references a casilla that the ruleset does not declare."""
 
-    pass
-
 
 class AmbiguousPeriodError(FormulasError):
     """Raised when a period matches more than one ruleset span."""
-
-    pass
 
 
 class MissingRulesetError(FormulasError):
     """Raised when no ruleset covers the requested modelo/period pair."""
 
-    pass
-
 
 class EvaluationError(FormulasError):
     """Raised when a formula evaluation produces an arithmetic domain error."""
-
-    pass
 
 
 class AuditDiscrepancyError(FormulasError):
     """Raised by :meth:`AuditReport.assert_clean` when discrepancies are present."""
 
-    pass
+
+from ._registry import (  # noqa: E402
+    ERROR_REGISTRY,
+    ErrorCategory,
+    ErrorCode,
+    ErrorEnvelope,
+    build_error_envelope,
+    get_error_exit_code,
+    get_registered_error_code,
+    register,
+    render_error_json,
+    render_error_text,
+    resolve_error_message,
+    resolve_output_language,
+    scrub_error_context,
+)
+
+__all__ = [
+    "ERROR_REGISTRY",
+    "AeatError",
+    "AeatObservabilityError",
+    "AmbiguousPeriodError",
+    "AuditDiscrepancyError",
+    "CasillaNotDefinedError",
+    "DeprecatedAliasError",
+    "ErrorCategory",
+    "ErrorCode",
+    "ErrorEnvelope",
+    "EvaluationError",
+    "FilingFixtureError",
+    "FixtureProvisioningError",
+    "FormulaCycleError",
+    "FormulasError",
+    "McpLaunchError",
+    "MissingRulesetError",
+    "MovedAliasError",
+    "RulesetValidationError",
+    "SiteHealthError",
+    "WorkspaceLockedError",
+    "build_error_envelope",
+    "get_error_exit_code",
+    "get_registered_error_code",
+    "register",
+    "render_error_json",
+    "render_error_text",
+    "resolve_error_message",
+    "resolve_output_language",
+    "scrub_error_context",
+]

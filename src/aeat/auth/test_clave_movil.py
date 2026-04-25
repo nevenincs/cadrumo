@@ -73,7 +73,7 @@ class _FakePage:
         elif selector == 'a[href*="ObtenerClaveMovil?qAA=2"]':
             self.url = "https://www2.agenciatributaria.gob.es/wlpl/BUCV-JDIT/AutenticaDniNieContrasteh"
         elif selector == "#botonContinuar":
-            self.url = "https://www2.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovil?qAA=2"
+            self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
 
     async def fill(self, selector: str, value: str) -> None:
         self.fills.append((selector, value))
@@ -83,8 +83,12 @@ class _FakePage:
 
     async def text_content(self, selector: str) -> str | None:
         if selector == "#spanCodigoVerificacion":
+            self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
             return self._verification_code
         return None
+
+    async def content(self) -> str:
+        return "<html></html>"
 
     async def wait_for_url(self, matcher: Any, *, timeout: float | None = None) -> None:
         del timeout

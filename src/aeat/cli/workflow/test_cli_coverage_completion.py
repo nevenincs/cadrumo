@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ...errors import ErrorCategory, get_error_exit_code
 from ...workflow import WorkflowError
 from .. import app as root_app
 from . import _helpers
@@ -71,13 +72,14 @@ def test_run_engine_next_exits_1_when_engine_factory_raises_workflow_error(
     isolated_runs_dir: Path,
 ) -> None:
     """A `WorkflowError` from `_build_engine` must be caught by `run_engine_next`
-    and surface as exit code 1 with a refusing line."""
+    and surface through the shared structured stderr boundary."""
     set_test_hooks(engine_factory=make_failing_engine, profile_factory=make_profile)
     runner = CliRunner()
     result = runner.invoke(root_app, ["workflow", "next", "--no-sync"])
-    assert result.exit_code == 1, result.output
-    assert "refusing" in result.output.lower()
-    assert "simulated wiring failure" in result.output
+    assert result.exit_code == get_error_exit_code(ErrorCategory.ERROR), result.output
+    assert result.stdout == ""
+    assert "ERROR:" in result.stderr
+    assert "simulated wiring failure" in result.stderr
 
 
 # ---------- _helpers.py: WorkflowError catch in run_engine_for_period ----------
@@ -86,16 +88,32 @@ def test_run_engine_next_exits_1_when_engine_factory_raises_workflow_error(
 def test_run_engine_for_period_exits_1_when_engine_factory_raises_workflow_error(
     isolated_runs_dir: Path,
 ) -> None:
-    """Symmetric: `run_engine_for_period` must also catch `WorkflowError`."""
+    """Symmetric: `run_engine_for_period` must also emit structured stderr."""
     set_test_hooks(engine_factory=make_failing_engine, profile_factory=make_profile)
     runner = CliRunner()
     result = runner.invoke(
         root_app,
         ["workflow", "run", "--modelo", "130", "--period", "2026Q1", "--no-sync"],
     )
-    assert result.exit_code == 1, result.output
-    assert "refusing" in result.output.lower()
-    assert "simulated wiring failure" in result.output
+    assert result.exit_code == get_error_exit_code(ErrorCategory.ERROR), result.output
+    assert result.stdout == ""
+    assert "ERROR:" in result.stderr
+    assert "simulated wiring failure" in result.stderr
+
+
+def test_workflow_next_json_error_envelope_stays_on_stderr(
+    isolated_runs_dir: Path,
+) -> None:
+    """`workflow next --json` must keep failure payloads off stdout."""
+    set_test_hooks(engine_factory=make_failing_engine, profile_factory=make_profile)
+    runner = CliRunner()
+    result = runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync"])
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.ERROR), result.output
+    assert result.stdout == ""
+    payload = json.loads(result.stderr)
+    assert payload["error"]["category"] == ErrorCategory.ERROR.value
+    assert payload["error"]["message"] == "simulated wiring failure"
 
 
 # ---------- _helpers.py: rich JSON render branch in _emit ----------

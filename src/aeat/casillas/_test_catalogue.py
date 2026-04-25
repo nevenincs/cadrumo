@@ -112,7 +112,7 @@ def test_cross_reference_validator_catches_dangling_refs() -> None:
 
     errors = verify_casillas(catalogue)
     assert len(errors) == 1
-    assert errors[0].code == "cross_reference"
+    assert errors[0].casilla_code == "cross_reference"
 
 
 def test_schema_upgrade_path_round_trips_optional_fields(tmp_path: Path) -> None:

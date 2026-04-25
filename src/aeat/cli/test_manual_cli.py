@@ -7,6 +7,7 @@ from typer.testing import CliRunner
 
 from ..manuals.errors import RuleExtractionError
 from . import app
+from ._errors import error_boundary_under_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
@@ -25,47 +26,50 @@ class TestManualCli:
 
     def test_structure_command_raises_pending_21(self) -> None:
         """`aeat manual structure` raises RuleExtractionError referencing #21."""
-        result = _runner.invoke(
-            app,
-            ["manual", "structure", "--manual", "iva", "--year", "2025"],
-        )
+        with error_boundary_under_test():
+            result = _runner.invoke(
+                app,
+                ["manual", "structure", "--manual", "iva", "--year", "2025"],
+            )
         assert result.exit_code != 0
         assert isinstance(result.exception, RuleExtractionError)
         assert "#21" in str(result.exception)
 
     def test_extract_rules_command_raises_pending_21(self) -> None:
         """`aeat manual extract-rules` raises RuleExtractionError referencing #21."""
-        result = _runner.invoke(
-            app,
-            [
-                "manual",
-                "extract-rules",
-                "--manual",
-                "iva",
-                "--year",
-                "2025",
-                "--section",
-                "sec1",
-            ],
-        )
+        with error_boundary_under_test():
+            result = _runner.invoke(
+                app,
+                [
+                    "manual",
+                    "extract-rules",
+                    "--manual",
+                    "iva",
+                    "--year",
+                    "2025",
+                    "--section",
+                    "sec1",
+                ],
+            )
         assert result.exit_code != 0
         assert isinstance(result.exception, RuleExtractionError)
 
     def test_translate_command_raises_pending_21(self) -> None:
         """`aeat manual translate` raises RuleExtractionError referencing #21."""
-        result = _runner.invoke(
-            app,
-            [
-                "manual",
-                "translate",
-                "--manual",
-                "iva",
-                "--year",
-                "2025",
-                "--section",
-                "sec1",
-            ],
-        )
+        with error_boundary_under_test():
+            result = _runner.invoke(
+                app,
+                [
+                    "manual",
+                    "translate",
+                    "--manual",
+                    "iva",
+                    "--year",
+                    "2025",
+                    "--section",
+                    "sec1",
+                ],
+            )
         assert result.exit_code != 0
         assert isinstance(result.exception, RuleExtractionError)
 

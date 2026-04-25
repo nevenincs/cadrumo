@@ -13,7 +13,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | See which modelos apply and when | ✅ | ✅ | ✅ | ✅ | 0.0.2 | existing deadline engine |
 | Get Spanish CLI output by default | ❌ | ❌ | ❌ | ❌ | 0.0.2 | [#207](https://github.com/wgergely/aeat/issues/207) |
 | Understand what the tool does from `aeat --help` | ❌ | ❌ | ❌ | ❌ | 0.0.2 | [#208](https://github.com/wgergely/aeat/issues/208) |
-| See humane message from `aeat status` | ❌ | ❌ | ❌ | ❌ | 0.0.2 | [#213](https://github.com/wgergely/aeat/issues/213) |
+| See consistent error messages with copy-paste recovery commands | ✅ | ✅ | ✅ | ✅ | 0.0.2 | [#398](https://github.com/wgergely/aeat/issues/398) |
 | Record WHY when manually classifying | ❌ | ❌ | ❌ | ❌ | 0.0.2 | [#223](https://github.com/wgergely/aeat/issues/223) |
 | Import bank statement persisted in one command | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#216](https://github.com/wgergely/aeat/issues/216) |
 | Bulk-classify via rules | ❌ | ❌ | ❌ | ❌ | 0.1.0 | [#217](https://github.com/wgergely/aeat/issues/217) |
@@ -49,7 +49,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Compute + export 111, 115, 190, 347 | ❌ | ❌ | ❌ | ❌ | 0.3.1 | TBD |
 | Prove exported numbers match AEAT's record | ❌ | ❌ | ❌ | ❌ | 0.4.0 | [#239](https://github.com/wgergely/aeat/issues/239) |
 | Get proactive alerts (inbox, deadlines, staleness) | ❌ | ❌ | ❌ | ❌ | 0.4.0 | part of [#239](https://github.com/wgergely/aeat/issues/239) |
-| Live-submit (opt-in) | ❌ | ❌ excised | inert | ❌ | 1.0.0 | [#197](https://github.com/wgergely/aeat/issues/197), [#198](https://github.com/wgergely/aeat/issues/198), [#116](https://github.com/wgergely/aeat/issues/116) — CLI removed 2026-04-18 per ADR; engine default is opt-in only |
+| Live-submit (opt-in) | ❌ | ❌ excised | inert | ❌ | 1.0.0 | [#197](https://github.com/wgergely/aeat/issues/197), [#198](https://github.com/wgergely/aeat/issues/198), [#116](https://github.com/wgergely/aeat/issues/116), [#393](https://github.com/wgergely/aeat/issues/393) — CLI removed 2026-04-18 per ADR; residual `aeat workflow run/next` live flags excised 2026-04-25 (#393 / PR #427); engine default is opt-in only |
 
 ## auth protocol note
 
