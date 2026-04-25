@@ -39,9 +39,12 @@ from ...justificante import parse_justificante
 from ...logging import get_logger
 from ...sede import (
     ExpedienteNotFoundError,
+    SedeCapture,
     SedeError,
+    capture_declaration,
     capture_justificante,
     find_expediente,
+    walk_declarations_register,
 )
 from ..auth import _session
 from ..auth._paths import storage_state_paths
@@ -235,18 +238,72 @@ async def _run_reconcile(
     ejercicio: int,
 ) -> ReconciliationReport:
     session = _resolve_session(settings)
-    expediente = await find_expediente(
+    capture = await _capture_for_filing(
         session,
+        draft=draft,
         modelo=modelo,
         ejercicio=ejercicio,
         settings=settings,
     )
-    capture = await capture_justificante(session, expediente, settings=settings)
     with tempfile.TemporaryDirectory(prefix="aeat-reconcile-") as tmp:
-        pdf_path = Path(tmp) / f"{expediente.expediente_id}.pdf"
+        pdf_path = Path(tmp) / f"{capture.expediente.expediente_id}.pdf"
         pdf_path.write_bytes(capture.pdf_bytes)
         justificante = parse_justificante(pdf_path)
     return reconcile(draft, justificante, now=datetime.now(tz=UTC))
+
+
+async def _capture_for_filing(
+    session: AeatSession,
+    *,
+    draft: FilingDraft,
+    modelo: str,
+    ejercicio: int,
+    settings: Settings,
+) -> SedeCapture:
+    """Try the procedure tree first, fall back to the declarations register.
+
+    `aeat.sede.find_expediente` walks Mis Expedientes which exposes
+    procedure-related filings (some IRPF anuales, sanciones, recursos).
+    Quarterly modelos (M130, M303, M111, ...) are typically NOT in
+    that tree — their authoritative record lives in
+    *Consultar declaraciones presentadas*. This helper tries the
+    procedure tree first (cheaper / older code path) and falls back
+    to ``walk_declarations_register`` + ``capture_declaration`` when
+    no procedure-tree expediente exists. Both code paths are
+    strictly read-only.
+
+    Raises:
+        ExpedienteNotFoundError: When neither path locates a filing
+            for the (modelo, ejercicio, draft.period) tuple. The
+            caller catches this and emits NOT_YET_FOUND.
+    """
+    try:
+        expediente = await find_expediente(
+            session,
+            modelo=modelo,
+            ejercicio=ejercicio,
+            settings=settings,
+        )
+        return await capture_justificante(session, expediente, settings=settings)
+    except ExpedienteNotFoundError:
+        # Fall back to the declarations-presentadas register —
+        # this is where quarterly modelos live.
+        declarations = await walk_declarations_register(
+            session,
+            modelo=modelo,
+            ejercicio=ejercicio,
+            settings=settings,
+        )
+        target_period = _normalise_period_for_register(draft.period)
+        for declaration in declarations:
+            if _normalise_period_for_register(declaration.period) == target_period:
+                return await capture_declaration(session, declaration, settings=settings)
+        raise
+
+
+def _normalise_period_for_register(period: str) -> str:
+    """Strip whitespace and uppercase for tolerant register matching."""
+    return period.strip().upper()
 
 
 def _resolve_session(settings: Settings) -> AeatSession:
