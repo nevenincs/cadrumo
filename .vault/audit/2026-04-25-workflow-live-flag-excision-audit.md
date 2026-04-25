@@ -174,13 +174,21 @@ The change touches `src/aeat/cli/workflow/test_run_refuses_live_flags.py`
 and `src/aeat/cli/workflow/test_next_refuses_live_flags.py` only;
 six lines total. The six tests still pass after the tightening.
 
-COVERAGE-001 | LOW | scoped coverage well above floor
-`uv run pytest src/aeat/cli/workflow/ src/aeat/submission/test_access_gate_workflow_untouched.py`
-with `--cov=src/aeat/cli/workflow` reports total coverage 81.40%:
-`run.py` 100%, `next.py` 100%, `__init__.py` 100%, `_helpers.py` 87%,
-`show.py` 78%, `list_cmd.py` 58%. The 60% project floor is comfortably
-preserved; the surface modified by `#393` (run.py, next.py,
-__init__.py) is fully covered.
+COVERAGE-001 | LOW | scoped coverage at 100% across the workflow cli package
+After the user accepted scope creep ("well-rounded terminated code
+that is healthy rather than leaving feature fragments"), pre-existing
+gaps in `_helpers.py`, `list_cmd.py`, and `show.py` were closed in
+this same PR via `src/aeat/cli/workflow/test_cli_coverage_completion.py`
+(eight new tests targeting the exact uncovered lines: the
+`_build_profile` `WorkflowError` wrap, the `WorkflowError` catch in
+both `run_engine_*` helpers, the rich-render branch in `_emit`, the
+invalid-since exit-2 branch in `list_cmd`, the rich-table branch in
+`list_cmd`, the missing-run exit-1 branch in `show`, and the
+rich-render branch in `show`).
+
+Final coverage on `src/aeat/cli/workflow/`: `__init__.py` 100%,
+`_helpers.py` 100%, `list_cmd.py` 100%, `next.py` 100%, `run.py`
+100%, `show.py` 100%; total 100.00%.
 
 SMOKE-001 | LOW | manual cli smoke confirms dry-run-only contract end-to-end
 - `uv run aeat workflow run --help` lists no live-write flag
