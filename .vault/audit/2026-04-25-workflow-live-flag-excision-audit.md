@@ -193,6 +193,33 @@ SMOKE-001 | LOW | manual cli smoke confirms dry-run-only contract end-to-end
 - `uv run aeat workflow next --no-dry-run --i-understand-this-is-real`
   mirrors.
 
+GEMINI-002 | LOW | docstring ADR refs allegedly leak into --help; premise verified false
+Gemini's second pass added two medium-priority comments
+(`run.py:41` and `next.py:42`) suggesting the function docstrings'
+references to the controlling CLI wireframe ADR and to the planned
+1.0.0 reintroduction path might confuse end users via `--help`
+output. Verified false: `aeat workflow run --help` and
+`aeat workflow next --help` render the `help="..."` strings declared
+on the `app.command(...)` registrations in `__init__.py` (currently
+"Run the workflow for a specific (modelo, period) target." and
+"Run the workflow for the next pending obligation (dry-run by
+default)." respectively). Function docstrings are not surfaced.
+
+The docstring ADR pointer is the highest-value piece of context for
+a future contributor: per CLAUDE.md, code comments should explain
+*why* something is done, and the dry-run-only contract exists
+specifically because of the controlling ADR. Stripping the pointer
+would lose the "why" without making any user-visible difference.
+
+Decision: decline the change. The docstrings stay; the
+user-facing help is unchanged and clean.
+
+CODEX-001 | LOW | independent codex pass found no issues
+The chatgpt-codex-connector bot ran an independent review on the
+post-fix state and confirmed the GEMINI-001 hardening (exit code 2
++ `.lower()`) landed correctly across all six pin sites. Verdict:
+"Didn't find any major issues. Breezy!" No follow-up needed.
+
 REVIEW-CHANNELS-001 | LOW | exhausted external review pool
 - Gemini bot review: received and addressed (`GEMINI-001`).
 - Codex bot review: requested via `@codex review` mention on PR #427.
