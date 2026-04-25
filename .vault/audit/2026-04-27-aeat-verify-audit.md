@@ -253,6 +253,29 @@ Three D-flagged items (D1 per-query browser context, D2
 multi-CSV suspicion, D3 `0A` annual fallback) are documented
 follow-ups; defensible as-is per the reviewer.
 
+### Round-3 verification (2026-04-27)
+
+vaultspec-code-reviewer round-3 verified the round-2 fixes
+resolve every flagged finding at the precise file/line
+locations claimed in the commit message. Verdict: **PASS**.
+Regression tests cover every fix where the round-2 review
+demanded them. The explicitly out-of-scope DISAGREE items
+remain open as documented.
+
+### Full unit suite (2026-04-27)
+
+`uv run --no-sync pytest -m unit -q --tb=no
+--ignore=src/aeat/auth/test_clave_movil.py` →
+**3186 passed, 9 skipped, 0 failed**, 90.5s wall.
+
+The `--ignore` clause excludes the pre-existing auth tests
+documented above; without it, those 5 tests would each spend
+~5 minutes timing out on a real Cl@ve push and dominate the
+wall time. With the auth tests, the suite is `3186 passed,
+9 skipped, 5 failed` and runs ~22 min — the failing 5 are
+unrelated to this feature's surface and have been confirmed
+out of scope twice in this session.
+
 ## Aggregator cumulation testing — design challenge
 
 The 15-fixture corpus has a complete year of M130 / M303 /
