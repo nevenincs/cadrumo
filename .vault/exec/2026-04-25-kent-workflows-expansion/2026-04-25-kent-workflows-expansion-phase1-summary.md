@@ -43,15 +43,21 @@ Modelo 200's 2025 PDF parses cleanly but cannot ruleset-verify (only
 2024 ruleset on main); the test class locks in the
 `Verification status: UNVERIFIABLE` Kent-observable behaviour.
 
-## 4th case status
+## Discrepancy-case status
 
-Discrepancy classification (`cause=CORRECTNESS_DIVERGENCE`) tested for
-9 of the 10 modelos. Skipped for:
-- Modelo 200 — no 2025 ruleset → no formula can diverge.
-- Modelo 100-summary — borrador audit path is exercised by
-  `aeat.borrador.test_modelo_100_summary` at the module level;
-  reproducing it at the CLI integration layer would not exercise new
-  plumbing.
+Discrepancy verdict (`Verification status: NEEDS_REVIEW`) tested for
+9 of the 10 modelos:
+- Eight declaracion classes (111 / 115 / 123 / 131 / 180 / 202 / 303 /
+  390) include `test_discrepancy_classified_correctly`, asserting
+  `cause=CORRECTNESS_DIVERGENCE` plus the affected casilla id.
+- Modelo 100-summary's third method `test_discrepancy_triggers_needs_review`
+  exercises the borrador-equivalent path (drifted computed casilla
+  flagged through `Engine.audit_against`). The borrador CLI emits no
+  `Extraction status:` line so the canonical partial-extraction case
+  is not meaningful — the discrepancy case substitutes for it.
+
+Skipped for Modelo 200: no 2025 ruleset → verdict is UNVERIFIABLE
+regardless of formula coherence; no formula can diverge.
 
 ## Local gates
 

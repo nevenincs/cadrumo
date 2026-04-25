@@ -84,11 +84,18 @@ Optional fourth:
 
 The 4th case is INCLUDED for every modelo with at least one computed
 casilla in its 2025 ruleset. It is SKIPPED for Modelo 200 (no 2025
-ruleset -> UNVERIFIABLE -> no formula can diverge) and SKIPPED for
-Modelo 100-summary (the borrador audit path is `Engine.audit_against`,
-which is exercised by existing borrador unit tests; adding it at the
-CLI integration layer would duplicate coverage without exercising new
-plumbing).
+ruleset -> UNVERIFIABLE -> no formula can diverge).
+
+For Modelo 100-summary the borrador CLI emits no `Extraction status:`
+line, so the canonical `test_partial_extraction_needs_review` case is
+not meaningful. The third method on that class is therefore renamed
+`test_discrepancy_triggers_needs_review` and exercises the same Kent-
+observable target as the discrepancy 4th case on the declaracion
+classes — a drifted computed casilla that the borrador's
+`Engine.audit_against` lights up as a NEEDS_REVIEW verdict. Net
+coverage: Modelo 100-summary still has three CLI-integration cases,
+all with stable-marker assertions, and the discrepancy classifier IS
+locked in.
 
 ### D4. Modelo 200 locks in the UNVERIFIABLE verdict
 

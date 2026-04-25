@@ -1583,10 +1583,14 @@ class TestKentImportsModelo100SummaryBorrador:
     (ruleset=modelo_100.summary.2025)``. Year 2025 is the only landed
     ruleset.
 
-    The 4th discrepancy case is intentionally omitted: the borrador
-    audit path is exercised by `aeat.borrador.test_modelo_100_summary`
-    at the module level; reproducing it at the CLI layer would not
-    exercise additional plumbing.
+    Borrador-specific scope:
+    - There is no `Extraction status:` line on this CLI path, so the
+      conventional "partial extraction" case is meaningless here.
+    - In its place, the third method exercises the borrador-equivalent
+      Kent-observable failure mode: a drifted computed casilla causes
+      `Engine.audit_against` to surface a discrepancy and the verdict
+      to drop to `NEEDS_REVIEW`. This is the exact regression target
+      the audit (EPIC #316) cares about for the Renta path.
     """
 
     def test_happy_path_english(
@@ -1630,7 +1634,7 @@ class TestKentImportsModelo100SummaryBorrador:
         # the stable contract regardless of locale.
         assert "ruleset=modelo_100.summary.2025" in result.output
 
-    def test_partial_extraction_needs_review(
+    def test_discrepancy_triggers_needs_review(
         self,
         tmp_path: Path,
         drafts_dir: Path,
