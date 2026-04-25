@@ -24,13 +24,13 @@ class UnknownModeloError(ModeloRegistryError):
     """Raised by :func:`aeat.models.get_modelo` on unknown codes.
 
     Attributes:
-        code: The offending code as supplied by the caller.
+        modelo_code: The offending code as supplied by the caller.
     """
 
     def __init__(self, code: str) -> None:
         """Initialise with the offending modelo code string."""
         super().__init__(f"unknown modelo code: {code!r}")
-        self.code = code
+        self.modelo_code = code
 
 
 class RegistryIntegrityError(ModeloRegistryError):
