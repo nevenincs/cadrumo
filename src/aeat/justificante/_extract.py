@@ -55,12 +55,26 @@ _CSV_AUTHENTICITY_FOOTER_RE = re.compile(
     r"de\s+Verificaci[óo]n\s+([A-Z0-9]{8,24})\b",
     re.IGNORECASE,
 )
+# AEAT also serves the receipt in English when the user files via
+# the English-language sede UI. Captured live on Modelo 130 / 390
+# IRPF 2021 — pdfplumber sees "Secure Verification Code: <csv>" in
+# place of the Spanish label.
+_CSV_LABEL_EN_RE = re.compile(
+    r"Secure\s+Verification\s+Code\s*[:\-]?\s*([A-Z0-9]{8,24})\b",
+    re.IGNORECASE,
+)
 # Used only as a last resort: the 'CSV' token is noisy in normalised
 # text ("Presentador" includes the letter sequence), so we require a
 # colon/dash separator and the 'CSV=' equality form.
 _CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9]{8,24})\b", re.IGNORECASE)
 
-_MODELO_RE = re.compile(r"Modelo\s*[:\-]?\s*([0-9]{3}[A-Z]?)", re.IGNORECASE)
+_MODELO_RE = re.compile(
+    # Spanish "Modelo <N>" or English "Form <N>" (English-language
+    # AEAT receipts captured live 2026-04-25). Both layouts also
+    # use uppercase ("MODELO 130" / "FORM 130").
+    r"(?:Modelo|Form)\s*[:\-]?\s*([0-9]{3}[A-Z]?)",
+    re.IGNORECASE,
+)
 # Spanish period tokens always contain at least one digit (``1T``,
 # ``0A``, ``4T``, ``2023``). Requiring a digit in the captured group
 # stops the regex from picking up nearby words like "impositivo" out
@@ -77,7 +91,12 @@ _PERIOD_POSITIONAL_RE = re.compile(
     r"\b(?P<year>\d{4})\s+"
     r"(?P<period>0A|[1-4]T|0[1-9]|1[0-2])\b",
 )
-_EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*([0-9]{4})", re.IGNORECASE)
+_EJERCICIO_RE = re.compile(
+    # Spanish "Ejercicio <year>" or English "Financial year <year>"
+    # (English-language M390/2021 captured live).
+    r"(?:Ejercicio|Financial\s+year)\s*[:\-]?\s*([0-9]{4})",
+    re.IGNORECASE,
+)
 # Some annual informativas (M190 "Resumen anual") print the ejercicio
 # label with a parenthetical and a dotted leader before the value:
 # ``Ejercicio (con 4 cifras) ....... 2024``. The parenthetical may
@@ -99,6 +118,18 @@ _NIF_RE = re.compile(
     # ``NIF Presentador: <value>`` register-printed shape.
     r"NIF\s*(?:Presentador)?\s*[:\-]?\s*"
     r"([XYZ\d]\d{7}[A-Z])",
+    re.IGNORECASE,
+)
+# Legacy 2021 modelos (iText 2.1.4 producer) print value-then-label
+# in column-split layout, so the NIF value precedes the
+# ``NIF Presentador:`` label after pdfplumber's left-right
+# traversal. Captured live on Modelo 100 / 130 / 303 IRPF 2021.
+# English-language receipts use "Tax identification number(NIF)of
+# filer:" as the label; the inverted form catches both.
+_NIF_INVERTED_RE = re.compile(
+    r"\b([XYZ\d]\d{7}[A-Z])\s+"
+    r"(?:NIF(?:\s+Presentador)?|Tax\s+identification\s+number\s*\(NIF\))"
+    r"\s*[:\-]?",
     re.IGNORECASE,
 )
 _PRESENTATION_ID_RE = re.compile(
@@ -123,6 +154,13 @@ _PRESENTED_AT_ANNUAL_RE = re.compile(
 _PRESENTED_AT_ANNUAL_INVERTED_RE = re.compile(
     r"(\d{2}-\d{2}-\d{4})\s+a\s+las\s+(\d{2}:\d{2}(?::\d{2})?)\s+"
     r"Presentaci[óo]n\s+realizada\s+el",
+    re.IGNORECASE,
+)
+# English-language receipts: "Filed on DD-MM-YYYY at HH:MM:SS".
+# Captured live on Modelo 130 / 390 IRPF 2021.
+_PRESENTED_AT_EN_RE = re.compile(
+    r"Filed\s+on\s*[:\-]?\s*"
+    r"(\d{2}-\d{2}-\d{4})\s+at\s+(\d{2}:\d{2}(?::\d{2})?)",
     re.IGNORECASE,
 )
 _TOTAL_INGRESAR_RE = re.compile(
@@ -266,6 +304,8 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
         or _CSV_LABEL_RE.search(normalised)
         or _CSV_LABEL_INVERTED_RE.search(text)
         or _CSV_LABEL_INVERTED_RE.search(normalised)
+        or _CSV_LABEL_EN_RE.search(text)
+        or _CSV_LABEL_EN_RE.search(normalised)
         or _CSV_FALLBACK_RE.search(normalised)
     )
     if csv_match is None:
@@ -294,7 +334,8 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
         else:
             raise JustificanteParseError("could not locate required field: period")
 
-    nif = _require(_NIF_RE.search(normalised), "tax_id").upper()
+    nif_match = _NIF_RE.search(normalised) or _NIF_INVERTED_RE.search(normalised)
+    nif = _require(nif_match, "tax_id").upper()
 
     # Three timestamp shapes in the wild (see _parse_datetime docstring).
     presented_at: datetime
@@ -302,7 +343,11 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     if presented_match is not None:
         presented_at = _parse_datetime(presented_match.group(1))
     else:
-        annual_match = _PRESENTED_AT_ANNUAL_RE.search(normalised) or _PRESENTED_AT_ANNUAL_INVERTED_RE.search(normalised)
+        annual_match = (
+            _PRESENTED_AT_ANNUAL_RE.search(normalised)
+            or _PRESENTED_AT_ANNUAL_INVERTED_RE.search(normalised)
+            or _PRESENTED_AT_EN_RE.search(normalised)
+        )
         if annual_match is None:
             raise JustificanteParseError("could not locate required field: presented_at")
         presented_at = _parse_datetime(f"{annual_match.group(1)} {annual_match.group(2)}")

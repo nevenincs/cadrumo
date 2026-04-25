@@ -94,6 +94,47 @@ _SHAPE_M390_ANUAL = (
     "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED3902023\n"
 )
 
+# English-language layout — AEAT serves these when the user files
+# via the English sede UI. Captured live on Modelo 130 / 390 IRPF
+# 2021 (Y4113523X). Distinct labels:
+#   * "FORM <N>" / "Form <N>" instead of "MODELO <N>"
+#   * "Secure Verification Code: <csv>" instead of "Codigo Seguro"
+#   * "Filed on DD-MM-YYYY at HH:MM:SS" instead of "Presentacion"
+#   * "Tax identification number(NIF)of filer:" — value before label
+#   * "Financial year <YYYY>" instead of "Ejercicio"
+_SHAPE_M130_2021_ENGLISH = (
+    "INFORMATION ON FILING THE TAX RETURN\n"
+    "FORM 130\n"
+    "Register\n"
+    "Filed on 31-01-2022 at 22:00:40\n"
+    "202113013520603N\n"
+    "File/Reference (assigned registration no.):\n"
+    "Secure Verification Code: SANITIZED1302021\n"
+    "Filer\n"
+    "Y0000001S\n"
+    "Tax identification number(NIF)of filer:\n"
+    "APELLIDO APELLIDO NOMBRE\n"
+    "Surname(s) and first name/Company name:\n"
+    "Y0000001S 2021 4T\n"  # positional NIF + year + period block
+    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1302021\n"
+)
+
+_SHAPE_M390_2021_ENGLISH = (
+    "INFORMATION ON FILING THE TAX RETURN\n"
+    "FORM 390\n"
+    "Register\n"
+    "Filed on 31-01-2022 at 20:46:29\n"
+    "202139013520268G\n"
+    "File/Reference (assigned registration no.):\n"
+    "Secure Verification Code: SANITIZED3902021\n"
+    "Filer\n"
+    "Y0000001S\n"
+    "Tax identification number(NIF)of filer:\n"
+    "Liability\n"
+    "Financial year 2021 Replacement tax return\n"
+    "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED3902021\n"
+)
+
 
 def _stub_path(tmp_path: Path, modelo: str) -> Path:
     """Return a writable path standing in for a real PDF source."""
@@ -141,3 +182,33 @@ class TestEjercicioLooseShape:
         assert record.modelo == "390"
         assert record.ejercicio == "2023"
         assert record.period == "2023"
+
+
+class TestEnglishLayout:
+    """English-language receipts use distinct labels for every field."""
+
+    def test_modelo_130_english_layout(self, tmp_path: Path) -> None:
+        record = extract_justificante(
+            _SHAPE_M130_2021_ENGLISH,
+            _stub_path(tmp_path, "130"),
+        )
+        assert record.modelo == "130"
+        assert record.tax_id == "Y0000001S"
+        assert record.csv == "SANITIZED1302021"
+        # presented_at parses from "Filed on 31-01-2022 at 22:00:40"
+        assert record.presented_at.year == 2022
+        assert record.presented_at.month == 1
+        assert record.presented_at.day == 31
+
+    def test_modelo_390_english_layout(self, tmp_path: Path) -> None:
+        record = extract_justificante(
+            _SHAPE_M390_2021_ENGLISH,
+            _stub_path(tmp_path, "390"),
+        )
+        assert record.modelo == "390"
+        assert record.tax_id == "Y0000001S"
+        assert record.csv == "SANITIZED3902021"
+        # ejercicio captured from "Financial year 2021"
+        assert record.ejercicio == "2021"
+        # No quarterly token; falls back to the ejercicio.
+        assert record.period == "2021"
