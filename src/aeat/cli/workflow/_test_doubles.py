@@ -17,6 +17,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from typing import cast
 
+import pytest
+
 from ...config import Settings
 from ...deadlines import (
     AutonomoProfile,
@@ -33,6 +35,13 @@ from ...workflow import (
     WorkflowEngine,
     WorkflowError,
 )
+
+# This module is a shared test-helper file — no test functions live
+# here, but its filename matches the project's `_test_*.py` glob
+# which the marker-integrity walker enforces. Carry the same
+# pytestmark every sibling test module declares so the contract
+# stays uniform across the package.
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 @dataclass
