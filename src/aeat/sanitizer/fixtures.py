@@ -17,7 +17,17 @@ PII surface against an existing capture).
 
 from __future__ import annotations
 
-# Empty until the first fixture lands under
-# ``tests/fixtures/justificantes/`` (phase 9 of the plan). Each
-# entry is the lowercase hex SHA-256 of a committed sanitised PDF.
-SANITIZED_SHAS: frozenset[str] = frozenset()
+# Lowercase hex SHA-256 of every committed sanitised PDF under
+# ``tests/fixtures/justificantes/``. Updated whenever a new
+# fixture lands.
+SANITIZED_SHAS: frozenset[str] = frozenset(
+    {
+        # tests/fixtures/justificantes/100/2022-0A.pdf
+        # Modelo 100 IRPF anual, ejercicio 2022, derived from a
+        # live capture sanitised via aeat.sanitizer with 35
+        # mapping entries (NIF, name, CSV, NRC, 28 importes,
+        # 3 arbitrary). 149 replacement edits applied; verify-
+        # clean, round-trips through parse_justificante.
+        "55db81f29ac0947ff1d9e7442ffbb84c17798313bf83bd8a61801779e260e70d",
+    },
+)
