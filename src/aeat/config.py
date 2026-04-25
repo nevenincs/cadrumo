@@ -29,7 +29,6 @@ class DivergenceSink(StrEnum):
     """Supported sinks for :class:`aeat.sync.DivergenceRecord` persistence."""
 
     FILE = "FILE"
-    STORAGE = "STORAGE"
 
 
 # Project root: three levels up from src/aeat/config.py
@@ -520,7 +519,7 @@ class Settings(BaseSettings):
     )
     aeat_sync_divergence_sink: DivergenceSink = Field(
         default=DivergenceSink.FILE,
-        description="Divergence record sink: FILE (default) or STORAGE (pending #10)",
+        description="Divergence record sink (currently only FILE is implemented)",
     )
     aeat_sync_divergence_file_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "divergences",

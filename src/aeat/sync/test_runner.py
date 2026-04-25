@@ -61,7 +61,7 @@ class _FakeLLM:
         return ""
 
 
-class _FakeCorpus:
+class _FakeLocalCatalogue:
     def __init__(
         self,
         *,
@@ -179,14 +179,14 @@ def _dispatcher() -> HealingDispatcher:
 
 def _build_runner(
     *,
-    corpus: _FakeCorpus,
+    local: _FakeLocalCatalogue,
     fetcher: Any,
     repository_root: Path,
 ) -> LiveSyncRunner:
     return LiveSyncRunner(
         browser_session=cast(BrowserSession, object()),
         certificate_backend=_FakeCert(),
-        corpus_loader=corpus,
+        local_loader=local,
         schema_loader=_FakeSchemaLoader(),
         manual_rules_loader=_FakeManualRulesLoader(),
         llm_client=_FakeLLM(),
@@ -210,8 +210,8 @@ async def test_runner_happy_path_emits_additive_healing(tmp_path: Path) -> None:
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    corpus = _FakeCorpus(modelo=local_modelo, manifest=_manifest(), history=_history())
-    runner = _build_runner(corpus=corpus, fetcher=fetcher, repository_root=tmp_path)
+    local = _FakeLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
+    runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     result = await runner.run(modelo=ModeloIdentifier("100"), auto_heal=True)
 
@@ -232,8 +232,8 @@ async def test_runner_bounded_policy_blocks_breaking_even_with_auto_heal(
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    corpus = _FakeCorpus(modelo=local_modelo, manifest=_manifest(), history=_history())
-    runner = _build_runner(corpus=corpus, fetcher=fetcher, repository_root=tmp_path)
+    local = _FakeLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
+    runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     result = await runner.run(modelo=ModeloIdentifier("100"), auto_heal=True)
 
@@ -249,8 +249,8 @@ async def test_runner_wire_validation_failure_raises(tmp_path: Path) -> None:
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    corpus = _FakeCorpus(modelo=_modelo(), manifest=_manifest(), history=_history())
-    runner = _build_runner(corpus=corpus, fetcher=fetcher, repository_root=tmp_path)
+    local = _FakeLocalCatalogue(modelo=_modelo(), manifest=_manifest(), history=_history())
+    runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     with pytest.raises(WireValidationError):
         await runner.run(modelo=ModeloIdentifier("100"), auto_heal=False)
@@ -258,7 +258,7 @@ async def test_runner_wire_validation_failure_raises(tmp_path: Path) -> None:
 
 @pytest.mark.asyncio
 async def test_runner_retries_transient_fetch_failures(tmp_path: Path) -> None:
-    local = _modelo()
+    local_modelo = _modelo()
     live = _modelo(vigencia_end=date(2025, 6, 30))
     fetcher = _FlakyFetcher(
         fail_times=2,
@@ -266,8 +266,8 @@ async def test_runner_retries_transient_fetch_failures(tmp_path: Path) -> None:
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    corpus = _FakeCorpus(modelo=local, manifest=_manifest(), history=_history())
-    runner = _build_runner(corpus=corpus, fetcher=fetcher, repository_root=tmp_path)
+    local = _FakeLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
+    runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     result = await runner.run(modelo=ModeloIdentifier("100"), auto_heal=True)
     assert len(result.plan.auto_heal) == 1
@@ -281,8 +281,8 @@ async def test_runner_gives_up_after_retry_max(tmp_path: Path) -> None:
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    corpus = _FakeCorpus(modelo=_modelo(), manifest=_manifest(), history=_history())
-    runner = _build_runner(corpus=corpus, fetcher=fetcher, repository_root=tmp_path)
+    local = _FakeLocalCatalogue(modelo=_modelo(), manifest=_manifest(), history=_history())
+    runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     with pytest.raises(SyncError):
         await runner.run(modelo=ModeloIdentifier("100"), auto_heal=False)

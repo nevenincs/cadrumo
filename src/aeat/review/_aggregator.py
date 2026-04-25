@@ -12,7 +12,6 @@ from ..config import Settings
 from ._adapters import (
     divergences_pending,
     drafts_pending,
-    inbox_pending,
     invoices_pending,
     transactions_low_confidence,
     transactions_pending,
@@ -41,8 +40,7 @@ class ReviewQueue:
                 ``None`` (default) means every kind. The argument is a
                 ``frozenset`` so callers cannot mutate it after passing.
             modelo: Optional modelo filter. When set, items whose
-                wrapped record has no modelo concept (inbox notifications
-                without ``references_modelo``) are excluded.
+                wrapped record has no modelo concept are excluded.
             state: ``ReviewState.PENDING`` (default) or ``ReviewState.ALL``.
                 ``ALL`` is reserved for a future "show resolved too"
                 mode and currently returns the same set as ``PENDING``
@@ -53,7 +51,7 @@ class ReviewQueue:
                 :func:`transactions_low_confidence`: classified
                 transactions whose ``classification_confidence`` is
                 non-None and strictly less than the threshold. Other
-                review kinds (invoices, divergences, findings, inbox)
+                review kinds (invoices, divergences, findings)
                 cannot satisfy a decision-confidence predicate and are
                 excluded while this filter is active.
 
@@ -68,7 +66,6 @@ class ReviewQueue:
                 *invoices_pending(settings),
                 *divergences_pending(settings),
                 *drafts_pending(settings),
-                *inbox_pending(settings),
             ]
         if kinds is not None:
             items = [item for item in items if item.kind in kinds]

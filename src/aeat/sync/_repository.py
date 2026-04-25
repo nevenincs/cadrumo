@@ -1,12 +1,9 @@
-"""Divergence record repository: Protocol + two implementations.
+"""Divergence record repository: Protocol + JSON-file implementation.
 
-:class:`JsonFileDivergenceRepository` is the default sink until #10
-(the storage subpackage) merges; it writes one JSON file per record
-under ``AEAT_SYNC_DIVERGENCE_FILE_DIR``.
-
-:class:`StorageDivergenceRepository` is a rebase-swap stub that refuses
-to construct until #10 lands. Selecting ``AEAT_SYNC_DIVERGENCE_SINK=STORAGE``
-before then will raise :class:`NotImplementedError`.
+:class:`JsonFileDivergenceRepository` writes one JSON file per record
+under ``AEAT_SYNC_DIVERGENCE_FILE_DIR``. Future storage backends can
+plug in by implementing :class:`DivergenceRecordRepository`; the runner
+treats the repository contract as opaque.
 """
 
 from __future__ import annotations
@@ -26,11 +23,7 @@ _LOGGER = get_logger(__name__)
 
 @runtime_checkable
 class DivergenceRecordRepository(Protocol):
-    """Persistence contract for divergence records.
-
-    The real storage-backed implementation will land with issue #10;
-    until then :class:`JsonFileDivergenceRepository` is the default.
-    """
+    """Persistence contract for divergence records."""
 
     def save(self, record: DivergenceRecord) -> None:
         """Persist a single divergence record."""
@@ -125,33 +118,3 @@ class JsonFileDivergenceRepository:
         updated = current.model_copy(update=updated_fields)
         self.save(updated)
         return updated
-
-
-class StorageDivergenceRepository:
-    """Rebase-swap stub for the #10 storage-backed repository.
-
-    Selecting ``AEAT_SYNC_DIVERGENCE_SINK=STORAGE`` before #10 merges
-    will raise :class:`NotImplementedError` on construction, which
-    :class:`SyncError` wraps via :class:`DivergenceRepositoryError`.
-    """
-
-    def __init__(self) -> None:
-        raise NotImplementedError("StorageDivergenceRepository is pending the aeat.storage subpackage from #10")
-
-    def save(self, record: DivergenceRecord) -> None:  # pragma: no cover - unreachable
-        raise NotImplementedError
-
-    def load(self, record_id: str) -> DivergenceRecord:  # pragma: no cover - unreachable
-        raise NotImplementedError
-
-    def list(self) -> tuple[DivergenceRecord, ...]:  # pragma: no cover - unreachable
-        raise NotImplementedError
-
-    def update_resolution(  # pragma: no cover - unreachable
-        self,
-        record_id: str,
-        *,
-        resolution_state: ResolutionState,
-        notes: str | None = None,
-    ) -> DivergenceRecord:
-        raise NotImplementedError

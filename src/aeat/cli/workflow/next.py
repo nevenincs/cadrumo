@@ -1,16 +1,17 @@
-"""``aeat workflow next`` — run the engine for the caller's next obligation.
+"""``aeat workflow next`` -- run the engine for the caller's next obligation.
 
-The command refuses to enter live mode unless the caller passes both
-``--no-dry-run`` *and* ``--i-understand-this-is-real``, mirroring the
-submission engine's double-gate contract. The production path now
-wires the on-main deadline engine, filing runtime schema provider,
-and dry-run-safe submission helper.
+The command is dry-run-only. The submission engine retains its own
+four-factor live-write gate (engine default ``live_transport_supported=False``,
+inline ``AeatLiveTransportUnavailableError`` raise, ``AeatAccessGate``
+env-var checks, interactive typed-phrase confirmation) but that contract
+is not exposed from this default-CLI surface. The 1.0.0 reintroduction
+path is the planned ``aeat advanced workflow next --live`` leaf documented
+in the controlling Kent-first CLI wireframe ADR.
 """
 
 from __future__ import annotations
 
 import typer
-from rich.console import Console
 
 from ...observability import (
     RunEventKind,
@@ -21,20 +22,8 @@ from ...observability import (
 from .._observability import cli_run_context
 from ._helpers import run_engine_next
 
-_CONSOLE = Console()
-
 
 def next_cmd(
-    no_dry_run: bool = typer.Option(
-        False,
-        "--no-dry-run",
-        help="Attempt a live submission instead of a dry-run walk.",
-    ),
-    i_understand_this_is_real: bool = typer.Option(
-        False,
-        "--i-understand-this-is-real",
-        help="Explicit confirmation flag required alongside --no-dry-run.",
-    ),
     sync_first: bool = typer.Option(
         True,
         "--sync/--no-sync",
@@ -48,27 +37,21 @@ def next_cmd(
 ) -> None:
     """Drive the workflow for the next pending obligation.
 
+    The command always runs the workflow in dry-run mode. Live execution
+    is not available from this surface; see the 1.0.0 reintroduction
+    path documented in the controlling CLI wireframe ADR.
+
     Args:
-        no_dry_run: When ``True``, enter live-submission mode.
-        i_understand_this_is_real: Additional gate required alongside
-            ``--no-dry-run``.
         sync_first: Whether the sync stage should run.
         as_json: When ``True``, print the :class:`WorkflowResult` as JSON.
     """
-    if no_dry_run and not i_understand_this_is_real:
-        _CONSOLE.print(
-            "[red]refusing:[/red] --no-dry-run requires --i-understand-this-is-real.",
-        )
-        raise typer.Exit(code=2)
     arguments = {
-        "no-dry-run": no_dry_run,
-        "i-understand-this-is-real": i_understand_this_is_real,
         "sync": sync_first,
         "json": as_json,
     }
     with cli_run_context(entrypoint="aeat workflow next", arguments=arguments):
         result = run_engine_next(
-            dry_run=not no_dry_run,
+            dry_run=True,
             sync_first=sync_first,
             as_json=as_json,
         )

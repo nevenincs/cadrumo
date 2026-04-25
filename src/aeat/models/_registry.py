@@ -16,7 +16,6 @@ from types import MappingProxyType
 from ..deadlines import (
     AutonomoProfile,
     DeadlineEngine,
-    ModeloIdentifier,
     Schedule,
 )
 from ..logging import get_logger
@@ -227,23 +226,6 @@ def modelos_for_profile(profile: TaxpayerProfile) -> tuple[ModeloMetadata, ...]:
     return tuple(matches)
 
 
-class _InProcessCatalogue:
-    """Minimal :class:`aeat.deadlines.ModeloCatalogueLoader` implementation.
-
-    Built from :class:`ModeloCode.__members__` so the deadline engine
-    can treat every registry modelo as a known identifier without a
-    hard import cycle.
-    """
-
-    def known_modelos(self) -> tuple[ModeloIdentifier, ...]:
-        """Return the registry's modelo identifiers for the deadline engine."""
-        return tuple(ModeloIdentifier(code.value) for code in ModeloCode)
-
-    def is_known(self, modelo: ModeloIdentifier) -> bool:
-        """Return whether ``modelo`` is one of the registered modelos."""
-        return str(modelo) in {code.value for code in ModeloCode}
-
-
 def year_plan(year: int, profile: AutonomoProfile) -> Schedule:
     """Resolve the full filing :class:`Schedule` for a year and profile.
 
@@ -261,5 +243,4 @@ def year_plan(year: int, profile: AutonomoProfile) -> Schedule:
         The :class:`aeat.deadlines.Schedule` produced by the deadline
         engine for ``year`` and ``profile``.
     """
-    engine = DeadlineEngine(_InProcessCatalogue())
-    return engine.compute(profile, year=year)
+    return DeadlineEngine().compute(profile, year=year)

@@ -5,10 +5,6 @@ windows. Every entry is sourced from the AEAT *calendario del
 contribuyente* and the BOE order that fixes the filing schedule for
 the modelo, with citations propagated to every emitted
 :class:`aeat.deadlines.FilingObligation`.
-
-Year-specific overrides published by AEAT are honoured via the
-:class:`aeat.deadlines._protocols.CorpusReader` Protocol when supplied
-to the engine; absent that, the entries here are authoritative.
 """
 
 from __future__ import annotations

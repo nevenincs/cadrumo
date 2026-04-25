@@ -17,10 +17,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ...browser._site_health import SiteHealthState
+from ...browser._site_health_parsers import evaluate_response
 from ...config import PROJECT_ROOT, Settings
 from ...errors import SiteHealthError
-from ...status import SiteHealthState
-from ...status._site_health_parsers import evaluate_response
 from . import app
 from .health import HealthProbeLike, ProbeFactory, _RealProbe, override_probe_factory
 

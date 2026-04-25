@@ -7,9 +7,8 @@ factory composes the adapters into a :class:`WorkflowEngine` and is
 the entry point production call sites (e.g. the CLI) use to obtain a
 fully-wired workflow engine.
 
-The status-reader, inbox, and certificate-bundle slots remain
-``None`` by default: those subpackages are still in flight (#43, #46,
-#8). The workflow engine tolerates ``None`` for each and records the
+The session and certificate-bundle slots remain ``None`` by default:
+the workflow engine tolerates ``None`` for each and records the
 skipped stages as "not wired" diagnostics rather than failing.
 """
 
@@ -21,6 +20,7 @@ from datetime import date
 from pathlib import Path
 from typing import cast
 
+from ..auth import AeatSession
 from ..config import Settings, load_settings
 from ..deadlines import (
     AutonomoProfile,
@@ -47,8 +47,6 @@ from ._protocols import (
     DeadlineEngineProtocol,
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
-    InboxProtocol,
-    StatusReaderProtocol,
     SubmissionEngineProtocol,
     SubmittedFilingLike,
     SyncRunnerProtocol,
@@ -232,8 +230,7 @@ def default_engine(
     deadline_engine: DeadlineEngineProtocol | None = None,
     filing_draft_builder: FilingDraftBuilderProtocol | None = None,
     sync_runner: SyncRunnerProtocol | None = None,
-    status_reader: StatusReaderProtocol | None = None,
-    inbox: InboxProtocol | None = None,
+    session: AeatSession | None = None,
     certificate_bundle: CertificateBundleProtocol | None = None,
     inputs_provider: FilingInputsProviderProtocol | None = None,
     settings: Settings | None = None,
@@ -253,9 +250,10 @@ def default_engine(
             ``None`` triggers a :class:`WorkflowError`.
         sync_runner: Optional sync Protocol. ``None`` skips the sync
             stage with a "not wired" diagnostic.
-        status_reader: Optional status-reader Protocol (#43).
-        inbox: Optional inbox Protocol (#46).
-        certificate_bundle: Optional certificate Protocol (#8).
+        session: Optional authenticated :class:`aeat.auth.AeatSession`.
+            ``None`` skips both the inbox probe and the already-filed
+            probe (both stages record a "not wired" diagnostic).
+        certificate_bundle: Optional certificate Protocol.
         inputs_provider: Optional inputs Protocol; defaults to a
             :class:`JsonFileInputsProvider` backed by
             ``settings.aeat_workflow_draft_inputs_path``.
@@ -279,8 +277,7 @@ def default_engine(
         filing_draft_builder=filing_draft_builder,
         submission_engine=submission_engine,
         sync_runner=sync_runner,
-        status_reader=status_reader,
-        inbox=inbox,
+        session=session,
         certificate_bundle=certificate_bundle,
         inputs_provider=provider,
         settings=cfg,

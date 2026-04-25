@@ -27,6 +27,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | `aeat pipeline status` dashboard | ❌ | [#238](https://github.com/wgergely/aeat/issues/238) |
 | Staleness detection on approved drafts | ✅ via PR #269: `FilingApprovalBasis`, `compute_current_approval_basis`, `aeat review stale` | [#230](https://github.com/wgergely/aeat/issues/230) |
 | Verification against AEAT post-upload | ❌ | [#239](https://github.com/wgergely/aeat/issues/239) |
+| Mutation-harness coverage (ruleset regression detection) | ✅ via [#338](https://github.com/wgergely/aeat/issues/338): `sub_op` operand-swap (existing) + `percent_rate` rate-shift + `brackets_threshold` boundary-shift + `mul_div_scalar` literal-shift + orphan-node defense across 18 landed ruleset variants | [#338](https://github.com/wgergely/aeat/issues/338) |
 
 ## provenance
 

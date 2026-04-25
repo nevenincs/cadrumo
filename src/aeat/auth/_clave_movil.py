@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import quote
 
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..errors import AeatError
@@ -313,6 +314,27 @@ class ClaveMovilAuthProvider:
                 # session.
                 probe_target = target_url or sidecar.landing_url or self._default_target_url()
                 assertion = await self.verify(session, target_url=probe_target)
+                # Refresh idle TTL on successful probe so long-running
+                # discovery sessions stay alive without re-auth. AEAT's
+                # own 18-minute idle window resets on every authenticated
+                # hit to the sede — our persisted deadline should too.
+                if assertion.is_valid:
+                    refreshed = session.model_copy(
+                        update={
+                            "authenticated_at": assertion.attempted_at,
+                            "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
+                        }
+                    )
+                    self._active_session = refreshed
+                    with contextlib.suppress(Exception):
+                        refreshed_sidecar = sidecar.model_copy(
+                            update={
+                                "authenticated_at": refreshed.authenticated_at,
+                                "idle_deadline": refreshed.idle_deadline,
+                            }
+                        )
+                        self._write_json_atomic(sidecar_path, refreshed_sidecar.model_dump(mode="json"))
+                    return refreshed, assertion
                 return session, assertion
             except Exception:
                 with contextlib.suppress(Exception):
@@ -560,9 +582,11 @@ class ClaveMovilAuthProvider:
 
         session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
         context: BrowserContextLike | None = None
+        page: BrowserPageLike | None = None
         try:
             context = await session_like.create_context()
             page = await context.new_page()
+            self._attach_dialog_autodismiss(page)
             await page.goto(selector_url, timeout=self._navigation_timeout_ms)
 
             use_non_qr = self._settings.aeat_clave_prefer_non_qr
@@ -583,7 +607,8 @@ class ClaveMovilAuthProvider:
 
             try:
                 await self._wait_for_post_auth_landing(page, target_path, timeout_ms)
-            except TimeoutError as exc:
+            except (TimeoutError, PlaywrightTimeoutError) as exc:
+                await self._dump_diagnostic(page, reason="post-auth-landing-timeout")
                 raise ClaveMovilApprovalTimeoutError(
                     f"Cl@ve Móvil login timed out after {timeout_ms // 1000} seconds. "
                     "Open the Cl@ve app on your phone and approve the login request, "
@@ -593,7 +618,10 @@ class ClaveMovilAuthProvider:
             storage_state = await context.storage_state()
             landing_url = getattr(page, "url", None)
             await page.close()
-        except Exception:
+        except Exception as exc:
+            if page is not None:
+                with contextlib.suppress(Exception):
+                    await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
             if context is not None:
                 with contextlib.suppress(Exception):
                     await context.close()
@@ -787,6 +815,98 @@ class ClaveMovilAuthProvider:
                 )
             await fill("#SOPORTE", soporte)
         await click("#botonContinuar")
+        await self._raise_if_pending_request_error(page)
+
+    async def _raise_if_pending_request_error(self, page: BrowserPageLike) -> None:
+        """Detect AEAT's 'petición pendiente' refusal page and fail fast.
+
+        After #botonContinuar is clicked, AEAT sometimes returns the
+        non-QR landing page in an error state: "No ha sido posible
+        generar una nueva petición de autenticación con Cl@ve Móvil.
+        Por su seguridad, acceda a la APP Cl@ve … y rechace la petición
+        pendiente — o espere a que caduque tras un máximo de 5 minutos."
+        This happens when a prior login left an un-acknowledged push
+        alive server-side. The polling loop that normally redirects on
+        approval is never rendered, so the authenticator would otherwise
+        sit on the page until the outer timeout fires. Fail fast with a
+        clear remediation message.
+        """
+        content = getattr(page, "content", None)
+        if content is None:
+            return
+        try:
+            html = await content()
+        except Exception:
+            return
+        if "No ha sido posible generar una nueva petici" in html:
+            await self._dump_diagnostic(page, reason="pending-request-refusal")
+            raise ClaveMovilApprovalTimeoutError(
+                "AEAT refused to issue a new Cl@ve Móvil push: a prior "
+                "authentication request is still pending server-side. Open the "
+                "Cl@ve app on your phone and REJECT every pending request, then "
+                "retry `aeat auth login` (or wait up to 5 minutes for AEAT to "
+                "time them out automatically)."
+            )
+
+    @staticmethod
+    def _attach_dialog_autodismiss(page: BrowserPageLike) -> None:
+        """Auto-accept any JS dialog AEAT pops during login.
+
+        Playwright blocks the page until ``dialog`` events are handled;
+        AEAT sometimes surfaces cookie / representation-consent modals
+        that would otherwise silently stall the authenticator.
+        """
+        on = getattr(page, "on", None)
+        if on is None:
+            return
+
+        pending: set[asyncio.Task[object]] = set()
+
+        def _handle(dialog: Any) -> None:
+            accept = getattr(dialog, "accept", None)
+            if accept is None:
+                return
+            log.info(
+                "ClaveMovilAuthProvider: auto-accepting dialog type=%s message=%r",
+                getattr(dialog, "type", "?"),
+                getattr(dialog, "message", ""),
+            )
+            result = accept()
+            if asyncio.iscoroutine(result):
+                task = asyncio.create_task(result)
+                pending.add(task)
+                task.add_done_callback(pending.discard)
+
+        on("dialog", _handle)
+
+    async def _dump_diagnostic(self, page: BrowserPageLike, *, reason: str) -> None:
+        """Capture page URL + HTML + screenshot on login failure for offline triage.
+
+        Writes artefacts to ``scratch/clave-diag/<utc-timestamp>/`` so a
+        human (or the next patch author) can inspect exactly what AEAT
+        served at the moment the authenticator gave up.
+        """
+        try:
+            ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+            root = Path("scratch") / "clave-diag" / ts
+            root.mkdir(parents=True, exist_ok=True)
+            url = getattr(page, "url", "") or ""
+            (root / "url.txt").write_text(f"reason={reason}\nurl={url}\n", encoding="utf-8")
+            content = getattr(page, "content", None)
+            if content is not None:
+                html = await content()
+                (root / "page.html").write_text(html, encoding="utf-8")
+            screenshot = getattr(page, "screenshot", None)
+            if screenshot is not None:
+                await screenshot(path=str(root / "page.png"), full_page=True)
+            log.warning(
+                "ClaveMovilAuthProvider: diagnostic captured at %s (url=%s reason=%s)",
+                root,
+                url,
+                reason,
+            )
+        except Exception as exc:
+            log.warning("ClaveMovilAuthProvider: diagnostic dump failed: %s", exc)
 
     async def _wait_for_post_auth_landing(
         self,
@@ -794,21 +914,57 @@ class ClaveMovilAuthProvider:
         target_path: str,
         timeout_ms: int,
     ) -> None:
-        wait_for_url = getattr(page, "wait_for_url", None)
-        if wait_for_url is None:
-            # Fall back to polling page.url on a best-effort basis for fake pages.
-            start = time.perf_counter()
-            while time.perf_counter() - start < timeout_ms / 1000:
-                current = getattr(page, "url", "") or ""
-                if target_path in current and "SelectorAccesos" not in current:
-                    return
-                await asyncio.sleep(0.5)
-            raise TimeoutError(f"page did not navigate to {target_path!r} within {timeout_ms}ms")
+        """Poll until the browser reaches ``target_path`` or timeout.
 
-        def matcher(url: str) -> bool:
-            return target_path in url and "SelectorAccesos" not in url
+        After push approval AEAT commonly interposes
+        ``/wlpl/OVCT-CXEW/DialogoRepresentacion`` — the representation-
+        consent dispatcher — which prompts "actuar en nombre propio"
+        vs. "actuar como representante". The ``#propio`` radio is
+        checked by default; submitting the form forwards to ``ref``
+        (our ``target_path``). This poll loop detects that URL and
+        submits the form, then keeps polling for the final landing.
+        """
+        from urllib.parse import urlsplit
 
-        await wait_for_url(matcher, timeout=timeout_ms)
+        deadline = time.perf_counter() + timeout_ms / 1000
+        dispatcher_handled = False
+        while time.perf_counter() < deadline:
+            current = getattr(page, "url", "") or ""
+            if target_path in current and "SelectorAccesos" not in current:
+                return
+            # Only match DialogoRepresentacion when it is the URL PATH,
+            # not the `ref=` query parameter (which contains it URL-
+            # encoded on the push-waiting page).
+            try:
+                current_path = urlsplit(current).path
+            except Exception:
+                current_path = ""
+            if not dispatcher_handled and "DialogoRepresentacion" in current_path and "SelectorAccesos" not in current:
+                dispatcher_handled = await self._submit_representation_dispatcher(page)
+            await asyncio.sleep(0.5)
+        raise TimeoutError(f"page did not navigate to {target_path!r} within {timeout_ms}ms")
+
+    @staticmethod
+    async def _submit_representation_dispatcher(page: BrowserPageLike) -> bool:
+        """Submit the ``#repForm`` (defaulted to 'Actuar en nombre propio').
+
+        Returns True when the click fired so the caller does not retry.
+        Captured live at ``/wlpl/OVCT-CXEW/DialogoRepresentacion`` on
+        2026-04-24; the form is GET-based, the ``#propio`` radio is
+        checked by default, and the hidden ``ref`` field carries the
+        target path. Clicking the form's submit button is sufficient
+        to advance.
+        """
+        click = getattr(page, "click", None)
+        if click is None:
+            return False
+        log.info("ClaveMovilAuthProvider: DialogoRepresentacion — submitting #repForm (nombre propio)")
+        try:
+            await click("form#repForm button[type=submit]", timeout=5_000)
+        except Exception as exc:
+            log.warning("ClaveMovilAuthProvider: DialogoRepresentacion submit failed: %s", exc)
+            return False
+        return True
 
 
 __all__ = [

@@ -28,7 +28,6 @@ from . import drive as drive_module
 from . import filing as filing_module
 from . import financial as financial_module
 from . import formulas as formulas_module
-from . import inbox as inbox_module
 from . import justificante as justificante_module
 from . import llm as llm_module
 from . import manual as manual_module
@@ -39,9 +38,9 @@ from . import portals as portals_module
 from . import review as review_module
 from . import run as run_module
 from . import schema as schema_module
+from . import sede as sede_module
 from . import setup as setup_wizard_module
 from . import sheets as sheets_module
-from . import status as status_module
 from . import submission as submission_module
 from . import sync as sync_module
 from . import vat as vat_module
@@ -107,13 +106,12 @@ app.add_typer(
     name="invoices",
     help="Invoice catalogue helpers (#75) — alias for `aeat financial invoices`.",
 )
-app.add_typer(status_module.app, name="status", help="Live AEAT status reader (#43).")
+app.add_typer(sede_module.app, name="sede", help="Post-auth AEAT sede discovery (read-only, #239).")
 app.add_typer(
     submission_module.app,
     name="submission",
     help="Preflight, dry-run, and inspect AEAT filing attempts; no default CLI live-submit command.",
 )
-app.add_typer(inbox_module.app, name="inbox", help="AEAT notifications inbox (#46).")
 app.add_typer(
     review_module.app,
     name="review",

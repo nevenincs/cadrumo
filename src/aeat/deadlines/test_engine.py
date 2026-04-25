@@ -12,8 +12,6 @@ from . import (
     DeadlineEngine,
     FilingObligation,
     IVARegime,
-    ModeloCatalogueLoader,
-    ModeloIdentifier,
     ObligationStatus,
     Schedule,
     ScheduleComputationError,
@@ -21,20 +19,6 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
-
-
-class _Catalogue:
-    """Real Protocol-conforming test double - never a mock/patch/stub.
-
-    Implements :class:`aeat.deadlines.ModeloCatalogueLoader` over the
-    closed v1 set of autónomo modelos.
-    """
-
-    def known_modelos(self) -> tuple[ModeloIdentifier, ...]:
-        return tuple(ModeloIdentifier(m) for m in KNOWN_AUTONOMO_MODELOS)
-
-    def is_known(self, modelo: ModeloIdentifier) -> bool:
-        return modelo in KNOWN_AUTONOMO_MODELOS
 
 
 def _profile(**overrides: object) -> AutonomoProfile:
@@ -54,14 +38,7 @@ def _profile(**overrides: object) -> AutonomoProfile:
 
 
 def _engine() -> DeadlineEngine:
-    return DeadlineEngine(_Catalogue())
-
-
-class TestProtocolConformance:
-    """The in-test catalogue is a real Protocol implementation."""
-
-    def test_runtime_checkable(self) -> None:
-        assert isinstance(_Catalogue(), ModeloCatalogueLoader)
+    return DeadlineEngine()
 
 
 class TestComputeMembership:
@@ -228,7 +205,7 @@ class TestComputeFailures:
 
     def test_negative_due_soon_days_rejected(self) -> None:
         with pytest.raises(ValueError):
-            DeadlineEngine(_Catalogue(), due_soon_days=-1)
+            DeadlineEngine(due_soon_days=-1)
 
 
 class TestScheduleRoundTrip:

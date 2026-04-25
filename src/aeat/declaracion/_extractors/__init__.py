@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from .._errors import NoExtractorRegisteredError
 from .._extractor import DeclaracionExtractor
+from .._parsers.modelo_100 import (
+    Modelo100V2021LegacyExtractor,
+    Modelo100V2022ModernExtractor,
+    Modelo100V2023ModernExtractor,
+)
 from .._schema import TemplateRevision
 from .modelo_036_v2025 import Modelo036V2025Extractor
 from .modelo_037_v2025 import Modelo037V2025Extractor
@@ -36,6 +41,9 @@ def _key_for(extractor_cls: type[DeclaracionExtractor]) -> tuple[str, int, str]:
 _REGISTERED_CLASSES: tuple[type[DeclaracionExtractor], ...] = (
     Modelo036V2025Extractor,
     Modelo037V2025Extractor,
+    Modelo100V2021LegacyExtractor,
+    Modelo100V2022ModernExtractor,
+    Modelo100V2023ModernExtractor,
     Modelo111V2025Extractor,
     Modelo115V2025Extractor,
     Modelo123V2025Extractor,

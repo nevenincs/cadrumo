@@ -1,25 +1,29 @@
-"""Protocol stubs for cross-subpackage dependencies still in flight.
+"""Narrow Protocol surfaces and value types for the submission engine.
 
-These Protocols let the submission engine compile and ship before its
-upstream siblings land on ``main``:
+The submission engine is composed of read-only sub-systems that the
+test suite exercises with concrete, hand-rolled Protocol-conforming
+classes (no mocks, no patches). Each Protocol declares only the
+surface the engine actually consumes, decoupling submission from the
+richer surfaces of its sibling subpackages.
 
-- ``ModeloIdentifier`` — rebase-swap stub for ``aeat.models`` (#6).
-- ``Portal`` / ``PortalCatalogue`` — stubs for ``aeat.portals`` (#7).
-- ``AuthProviderDescription`` / ``AuthProviderProbe`` — stubs for
-  the provider-agnostic auth surface (#281).
-- ``CasillaRecord`` / ``CasillaCatalogue`` — stubs for
-  ``aeat.casillas`` (#23).
-- ``DeadlineWindowChecker`` — narrow stub that mirrors the surface
-  the submission engine needs from ``aeat.deadlines`` (#38, already
-  on main; decoupled here for rebase-safety).
-- ``FilingFinding`` / ``FilingDraftLike`` / ``DraftLoader`` — stubs
-  for ``aeat.filing`` (#39).
-- ``Justificante`` / ``JustificanteParser`` — stubs for
-  ``aeat.justificante`` (#44).
+- ``ModeloIdentifier`` — typed validating string for an AEAT modelo.
+- ``Portal`` / ``PortalCatalogue`` — minimal portal record / lookup
+  contract; the submission engine reads only ``modelo`` and
+  ``presentation_url``.
+- ``AuthProviderProbe`` — narrow surface over
+  :class:`aeat.auth.AuthProvider` for the preflight gate.
+- ``CasillaRecord`` / ``CasillaCatalogue`` — minimal casilla
+  record / lookup contract used by per-modelo submitters.
+- ``DeadlineWindowChecker`` — narrow surface over
+  :mod:`aeat.deadlines` used by preflight.
+- ``FilingFinding`` / ``FilingDraftLike`` / ``DraftLoader`` — narrow
+  filing draft surfaces; :class:`aeat.filing.FilingDraft`
+  structurally conforms to ``FilingDraftLike``.
+- ``Justificante`` / ``JustificanteParser`` — narrow record / parser
+  surface for the post-submission acknowledgement.
 
-Every stub is either a strict+frozen pydantic v2 model or a
+Every record is either a strict+frozen pydantic v2 model or a
 ``runtime_checkable`` ``Protocol``; no dataclasses; no bare dicts.
-Rebase-swap against the real siblings is a mechanical one-file diff.
 """
 
 from __future__ import annotations
@@ -45,8 +49,10 @@ _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
 class ModeloIdentifier(str):
     """Typed string identifier for an AEAT modelo (e.g. ``"130"``, ``"303"``).
 
-    Rebase-swap stub for the real enum from ``aeat.models`` (#6).
-    Shape-compatible with ``aeat.deadlines._protocols.ModeloIdentifier``.
+    Shape-compatible with :class:`aeat.deadlines.ModeloIdentifier`.
+    Intentionally wider than :class:`aeat.models.ModeloCode`: any
+    well-formed three-digit modelo identifier is accepted, including
+    modelos outside the v1 closed catalogue.
     """
 
     __slots__ = ()
@@ -82,7 +88,12 @@ class ModeloIdentifier(str):
 
 
 class Portal(BaseModel):
-    """Rebase-swap stub for ``aeat.portals.Portal`` (#7).
+    """Minimal portal record consumed by per-modelo submitters.
+
+    Captures only the modelo + presentation URL pair the engine drives
+    at submit time. Distinct from :class:`aeat.portals.PortalMetadata`,
+    which carries the full curated metadata graph used by the catalogue
+    integrity invariants and by the live-sync engine.
 
     Attributes:
         modelo: The modelo identifier the portal serves.
@@ -100,7 +111,7 @@ class Portal(BaseModel):
 
 @runtime_checkable
 class PortalCatalogue(Protocol):
-    """Rebase-swap stub for ``aeat.portals.PortalCatalogue`` (#7)."""
+    """Lookup contract for the engine's narrow :class:`Portal` records."""
 
     def portal_for(self, modelo: str) -> Portal:
         """Return the :class:`Portal` that serves ``modelo``."""
@@ -129,7 +140,12 @@ class CasillaInputKind(StrEnum):
 
 
 class CasillaRecord(BaseModel):
-    """Rebase-swap stub for ``aeat.casillas.CasillaRecord`` (#23).
+    """Minimal casilla record consumed by per-modelo submitters.
+
+    Captures only the (id, label, input_kind) tuple the engine drives
+    a portal form against. Distinct from
+    :class:`aeat.casillas.CasillaRecord`, which carries the curated
+    catalogue's wider provenance fields.
 
     Attributes:
         id: The casilla identifier (e.g. ``"01"``, ``"03"``).
@@ -146,7 +162,7 @@ class CasillaRecord(BaseModel):
 
 @runtime_checkable
 class CasillaCatalogue(Protocol):
-    """Rebase-swap stub for ``aeat.casillas.CasillaCatalogue`` (#23)."""
+    """Lookup contract for the engine's narrow :class:`CasillaRecord` records."""
 
     def casillas_for_modelo(self, modelo: str) -> tuple[CasillaRecord, ...]:
         """Return the tuple of casillas registered for ``modelo``."""
@@ -159,12 +175,7 @@ class CasillaCatalogue(Protocol):
 
 @runtime_checkable
 class DeadlineWindowChecker(Protocol):
-    """Narrow stub for the subset of ``aeat.deadlines`` we consume (#38).
-
-    ``aeat.deadlines`` already lives on ``main``, but the submission
-    engine still wires through a Protocol so rebase is decoupled from
-    any future internal API drift in the deadline engine.
-    """
+    """Narrow surface over :mod:`aeat.deadlines` for the preflight gate."""
 
     def is_window_open(self, modelo: str, period: str, today: date) -> bool:
         """Return ``True`` iff the AEAT filing window for ``modelo`` /
@@ -181,7 +192,12 @@ class FilingFindingSeverity(StrEnum):
 
 
 class FilingFinding(BaseModel):
-    """Rebase-swap stub for ``aeat.filing.FilingFinding`` (#39).
+    """Minimal finding record consumed by the preflight gate.
+
+    Distinct from :class:`aeat.filing.FilingValidationFinding`, which
+    carries the validator's full provenance graph; the submission
+    engine reads only ``severity`` to decide whether the draft is
+    blocked.
 
     Attributes:
         severity: The finding severity; ``ERROR`` blocks submission.
@@ -195,7 +211,11 @@ class FilingFinding(BaseModel):
 
 
 class DraftStatus(StrEnum):
-    """Rebase-swap stub for ``aeat.filing.DraftStatus`` (#39)."""
+    """Mirror of :class:`aeat.filing.FilingDraftStatus` for preflight.
+
+    Kept in sync with the source enum; the engine uses only the
+    ``APPROVED`` and ``APPROVAL_STALE`` members on its happy path.
+    """
 
     DRAFT = "DRAFT"
     VALIDATED = "VALIDATED"
@@ -211,10 +231,11 @@ class DraftStatus(StrEnum):
 
 @runtime_checkable
 class FilingDraftLike(Protocol):
-    """Rebase-swap stub for ``aeat.filing.FilingDraft`` (#39).
+    """Narrow surface over a filing draft.
 
-    Properties are declared as attributes; any class that provides
-    them structurally conforms.
+    :class:`aeat.filing.FilingDraft` structurally conforms to this
+    Protocol so the engine can accept either the real draft or any
+    Protocol-conforming hand-rolled class in tests.
     """
 
     draft_id: str
@@ -228,7 +249,7 @@ class FilingDraftLike(Protocol):
 
 @runtime_checkable
 class DraftLoader(Protocol):
-    """Rebase-swap stub for ``aeat.filing.DraftLoader`` (#39)."""
+    """Loads a :class:`FilingDraftLike` from a draft path on disk."""
 
     def load(self, draft_path: Path) -> FilingDraftLike:
         """Load and return the :class:`FilingDraftLike` at ``draft_path``."""
@@ -236,7 +257,15 @@ class DraftLoader(Protocol):
 
 
 class Justificante(BaseModel):
-    """Rebase-swap stub for ``aeat.justificante.Justificante`` (#44).
+    """Minimal justificante record consumed by the engine's transport.
+
+    Distinct from :class:`aeat.justificante.Justificante`, which carries
+    the full parsed receipt graph (modelo, period, presented_at, total
+    amounts, source PDF sha256, ...). The submission engine only
+    threads (csv, pdf_path) through to the persisted
+    :class:`aeat.submission.SubmittedFiling` record; downstream
+    consumers re-parse the PDF via :mod:`aeat.justificante` for the
+    richer surface.
 
     Attributes:
         csv: The AEAT-issued CSV (código seguro de verificación).
@@ -252,7 +281,7 @@ class Justificante(BaseModel):
 
 @runtime_checkable
 class JustificanteParser(Protocol):
-    """Rebase-swap stub for ``aeat.justificante.JustificanteParser`` (#44)."""
+    """Parses raw PDF bytes into the engine's narrow :class:`Justificante`."""
 
     def parse(self, raw_bytes: bytes) -> Justificante:
         """Parse ``raw_bytes`` (a downloaded PDF) into a :class:`Justificante`."""

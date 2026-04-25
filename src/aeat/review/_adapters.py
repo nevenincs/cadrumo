@@ -9,7 +9,7 @@ predicate table (see ADR D5).
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, datetime, time
 from decimal import Decimal
 from pathlib import Path
 
@@ -36,7 +36,6 @@ from ..financial.transactions import (
     load_transactions,
 )
 from ..i18n import Translatable
-from ..inbox import Inbox, Notificacion, NotificacionPriority
 from ..logging import get_logger
 from ..sync import (
     DivergenceClassification,
@@ -49,7 +48,6 @@ from ._errors import ReviewSourceLoadError
 from ._models import (
     DivergenceReviewItem,
     FindingReviewItem,
-    InboxReviewItem,
     InvoiceReviewItem,
     TransactionReviewItem,
 )
@@ -58,7 +56,6 @@ _LOGGER = get_logger(__name__)
 
 _TRANSACTIONS_FILENAME = "transactions.json"
 _INVOICES_FILENAME = "invoices.json"
-_INBOX_FILENAME = "inbox.json"
 
 _SUMMARY_MAX = 80
 
@@ -428,76 +425,3 @@ def _first_translation(message: Translatable) -> str | None:
         if value:
             return value
     return None
-
-
-# ── inbox ─────────────────────────────────────────────────────────
-
-
-def inbox_pending(
-    settings: Settings,
-    *,
-    inbox: Inbox | None = None,
-    today: date | None = None,
-) -> tuple[InboxReviewItem, ...]:
-    """Return :class:`InboxReviewItem`s for unacknowledged notifications."""
-    if inbox is None:
-        inbox = _load_inbox(settings)
-        if inbox is None:
-            return ()
-    today_value = today or datetime.now(tz=UTC).date()
-    lead_window = today_value + timedelta(days=settings.aeat_inbox_alert_lead_days)
-    items: list[InboxReviewItem] = []
-    for notificacion in inbox.values():
-        if notificacion.acknowledged_at is not None:
-            continue
-        items.append(
-            _to_inbox_item(
-                notificacion=notificacion,
-                lead_window=lead_window,
-            )
-        )
-    return tuple(items)
-
-
-def _load_inbox(settings: Settings) -> Inbox | None:
-    path = settings.aeat_inbox_dir.resolve() / _INBOX_FILENAME
-    if not path.exists():
-        return None
-    try:
-        return Inbox.model_validate_json(path.read_text(encoding="utf-8"))
-    except (ValidationError, OSError) as exc:
-        raise ReviewSourceLoadError(f"failed to load inbox at {path}: {exc}") from exc
-
-
-def _classify_inbox(notificacion: Notificacion, *, lead_window: date) -> ReviewSeverity:
-    """First-match-wins severity per ADR D5 inbox table."""
-    if notificacion.priority is NotificacionPriority.CRITICAL:
-        return ReviewSeverity.CRITICAL
-    if notificacion.priority is NotificacionPriority.HIGH:
-        return ReviewSeverity.HIGH
-    deadline = notificacion.appeal_deadline
-    if deadline is not None and deadline <= lead_window:
-        return ReviewSeverity.HIGH
-    if notificacion.priority is NotificacionPriority.NORMAL:
-        return ReviewSeverity.NORMAL
-    return ReviewSeverity.INFO
-
-
-def _to_inbox_item(*, notificacion: Notificacion, lead_window: date) -> InboxReviewItem:
-    subject_text = notificacion.subject.get("en") or _first_translation(notificacion.subject) or notificacion.kind.value
-    deadline_suffix = f" [deadline {notificacion.appeal_deadline.isoformat()}]" if notificacion.appeal_deadline else ""
-    summary_text = f"[{notificacion.kind.value}]{deadline_suffix} {subject_text}"
-    summary: Translatable = {
-        "es": summary_text,
-        "en": summary_text,
-        "hu": summary_text,
-    }
-    return InboxReviewItem(
-        item_id=notificacion.notificacion_id,
-        modelo=notificacion.references_modelo,
-        severity=_classify_inbox(notificacion, lead_window=lead_window),
-        summary=summary,
-        drill_command=f"aeat inbox show {notificacion.notificacion_id}",
-        since=notificacion.received_at,
-        source=notificacion,
-    )

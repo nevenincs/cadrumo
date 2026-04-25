@@ -9,7 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl
 from typer.testing import CliRunner
 
 from ...filing import (
@@ -37,12 +36,6 @@ from ...financial.transactions import (
     save_transactions,
 )
 from ...i18n import Translatable
-from ...inbox import (
-    Inbox,
-    Notificacion,
-    NotificacionKind,
-    NotificacionPriority,
-)
 from ...sync import (
     CasillaRemoved,
     DivergenceClassification,
@@ -69,8 +62,6 @@ def isolated_settings(
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
     monkeypatch.setenv("AEAT_ATTACHMENTS_DIR", str(tmp_path / "attachments"))
     monkeypatch.setenv("AEAT_SYNC_DIVERGENCE_FILE_DIR", str(tmp_path / "divergences"))
-    monkeypatch.setenv("AEAT_INBOX_DIR", str(tmp_path / "inbox"))
-    monkeypatch.setenv("AEAT_INBOX_PDF_DIR", str(tmp_path / "inbox-pdfs"))
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
     return tmp_path
 
@@ -171,26 +162,6 @@ def _seed_all(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    inbox_dir = tmp_path / "inbox"
-    inbox_dir.mkdir(parents=True, exist_ok=True)
-    received = datetime(2026, 4, 1, 10, 0, tzinfo=UTC)
-    inbox = Inbox(
-        entries={
-            "AEAT-0001": Notificacion(
-                notificacion_id="AEAT-0001",
-                kind=NotificacionKind.REQUERIMIENTO,
-                priority=NotificacionPriority.CRITICAL,
-                subject=_summary("Requerimiento"),
-                body_excerpt=_summary("Solicitamos"),
-                received_at=received,
-                effective_at=received,
-                appeal_deadline=date(2026, 4, 20),
-                source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/notif/x"),
-            )
-        }
-    )
-    (inbox_dir / "inbox.json").write_text(inbox.model_dump_json(indent=2), encoding="utf-8")
-
 
 def test_queue_empty_environment_prints_no_pending(isolated_settings: Path) -> None:
     runner = CliRunner()
@@ -206,10 +177,10 @@ def test_queue_table_lists_every_kind(isolated_settings: Path) -> None:
     assert result.exit_code == 0
     # rich truncates long column values at narrow terminal widths in CliRunner;
     # use prefix matches that survive an 80-char terminal.
-    for kind_prefix in ("transact", "invoice", "divergen", "finding", "inbox"):
+    for kind_prefix in ("transact", "invoice", "divergen", "finding"):
         assert kind_prefix in result.stdout
-    assert "5 item" in result.stdout
-    assert "5 kind" in result.stdout
+    assert "4 item" in result.stdout
+    assert "4 kind" in result.stdout
 
 
 def test_queue_filter_by_single_kind(isolated_settings: Path) -> None:
@@ -222,7 +193,6 @@ def test_queue_filter_by_single_kind(isolated_settings: Path) -> None:
     # Other kind tokens must not appear in the table at all.
     assert "transact" not in result.stdout
     assert "invoice" not in result.stdout
-    assert "inbox" not in result.stdout
 
 
 def test_queue_filter_by_multiple_kinds(isolated_settings: Path) -> None:
@@ -241,7 +211,7 @@ def test_queue_filter_by_modelo(isolated_settings: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(root_app, ["review", "queue", "--modelo", "130"])
     assert result.exit_code == 0
-    # Only divergence + finding carry modelo=130; transaction/invoice/inbox excluded.
+    # Only divergence + finding carry modelo=130; transaction/invoice excluded.
     assert "2 item" in result.stdout
 
 
@@ -252,7 +222,7 @@ def test_queue_json_format_emits_valid_payload(isolated_settings: Path) -> None:
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
     assert isinstance(payload, list)
-    assert len(payload) == 5
+    assert len(payload) == 4
     for entry in payload:
         assert {"kind", "item_id", "severity"}.issubset(entry.keys())
 

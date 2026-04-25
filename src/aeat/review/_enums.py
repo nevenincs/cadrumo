@@ -14,7 +14,7 @@ from types import MappingProxyType
 class ReviewItemKind(StrEnum):
     """Stable identifier for the source of a review item.
 
-    The five members below cover every pending source the project
+    The four members below cover every pending source the project
     currently produces. Two future-only members are reserved by the
     ADR (see [[2026-04-18-unified-review-queue-adr#kind-namespace-reservations]]):
 
@@ -32,7 +32,6 @@ class ReviewItemKind(StrEnum):
     INVOICE = "invoice"
     DIVERGENCE = "divergence"
     FINDING = "finding"
-    INBOX = "inbox"
 
 
 class ReviewSeverity(StrEnum):

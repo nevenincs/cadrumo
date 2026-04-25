@@ -1,0 +1,158 @@
+"""Strict pydantic records for the authenticated AEAT sede surface.
+
+Every record is derived from HTML / URL shapes captured live against
+Kent's production sede on 2026-04-24. No field is speculative; each
+one has at least one real observation backing its shape and bounds.
+
+Every boundary-crossing record carries ``mode: Literal["read"]`` as
+part of the five-layer write-guard — the sede module is structurally
+incapable of mutating AEAT state.
+"""
+
+from __future__ import annotations
+
+import re
+from datetime import datetime
+from typing import Final, Literal
+
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
+
+_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
+    strict=True,
+    frozen=True,
+    extra="forbid",
+)
+
+
+# AEAT expediente identifiers are <year><sequence><checksum-letter>, e.g.
+# "202310013522456T" (length 16). Observed range: 14-20 characters in
+# the live capture.
+_EXPEDIENTE_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[0-9]{4,}[A-Z0-9]+$")
+
+# CSV (Código Seguro de Verificación) is uppercase hex/alphanumeric.
+# Observed: 16 chars ("TUD4V9XAUV7QJ8QV"). Width varies across modelos.
+_CSV_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[A-Z0-9]{8,32}$")
+
+
+class Expediente(BaseModel):
+    """One AEAT expediente as listed under *Mis Expedientes*.
+
+    Captured live: the sede renders an AJAX-expanded category tree at
+    ``/wlpl/TEWV-CORE/ResumenVlt``; leaf rows carry the expediente id
+    as the link text and the detail URL on the ``<a>`` ``href``.
+
+    Attributes:
+        expediente_id: AEAT-assigned identifier. Shape
+            ``<year><sequence><checksum-letter>``, e.g.
+            ``"202310013522456T"``.
+        modelo: Modelo code inferred from the category path when
+            resolvable (e.g. ``"100"`` for IRPF anuales). ``None`` for
+            categories that do not map 1:1 to a modelo (sanciones,
+            recursos, certificados).
+        ejercicio: Tax year inferred from the expediente id's leading
+            four digits. Captured against 2021 / 2022 / 2023 IRPF.
+        category_path: Breadcrumb through the sede's tree, from
+            root to leaf. Captured live:
+            ``("Agencia Estatal de Administración Tributaria",
+               "Impuestos, tasas y prestaciones patrimoniales",
+               "Impuesto sobre la Renta de las Personas Físicas",
+               "Modelo 100- Modelo 102. IRPF. Declaración y
+                 documento de ingreso o devolución.")``.
+        detail_url: Full URL of the expediente's detail page. Per-year
+            endpoint for IRPF:
+            ``/wlpl/DASR-CORE/AccesoDR<YYYY>RVlt?exp=<id>``.
+        mode: Structural read-only marker.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    expediente_id: str = Field(min_length=12, max_length=32)
+    modelo: str | None = Field(default=None, max_length=8)
+    ejercicio: int | None = Field(default=None, ge=2000, le=2099)
+    category_path: tuple[str, ...] = Field(min_length=1)
+    detail_url: AnyHttpUrl
+    mode: Literal["read"] = "read"
+
+    @field_validator("expediente_id")
+    @classmethod
+    def _expediente_id_shape(cls, value: str) -> str:
+        if not _EXPEDIENTE_ID_PATTERN.match(value):
+            raise ValueError(f"expediente_id does not match AEAT shape: {value!r}")
+        return value
+
+    @field_validator("category_path")
+    @classmethod
+    def _category_path_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        for entry in value:
+            if not entry.strip():
+                raise ValueError("category_path entries must be non-empty")
+        return value
+
+
+class JustificanteRef(BaseModel):
+    """CSV-keyed handle for AEAT's document verifier.
+
+    Captured live: on every expediente detail page, the
+    *Grabación de la declaración* link carries the document's CSV in
+    its ``href``. The same CSV unlocks both the HTML cotejo viewer
+    (``CotejoIdSv``) and the raw PDF (``CotejoDocIdSv``).
+
+    Attributes:
+        csv: Código Seguro de Verificación — AEAT's per-document hash.
+        expediente_id: The expediente this CSV belongs to; tracked so
+            reconciliation can tie a justificante back to its listing
+            row.
+        cotejo_url: Viewer URL
+            ``/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=<csv>``.
+        pdf_url: Raw PDF URL
+            ``/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=<csv>``.
+        mode: Structural read-only marker.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    csv: str = Field(min_length=8, max_length=32)
+    expediente_id: str = Field(min_length=12, max_length=32)
+    cotejo_url: AnyHttpUrl
+    pdf_url: AnyHttpUrl
+    mode: Literal["read"] = "read"
+
+    @field_validator("csv")
+    @classmethod
+    def _csv_shape(cls, value: str) -> str:
+        if not _CSV_PATTERN.match(value):
+            raise ValueError(f"csv does not match AEAT shape: {value!r}")
+        return value
+
+
+class SedeCapture(BaseModel):
+    """One complete sede-side capture of a filing.
+
+    Bundles the expediente listing metadata, the CSV handle, the raw
+    PDF bytes, and the captured-at timestamp. Produced by
+    :func:`aeat.sede.capture_justificante`; consumed by the reconciler.
+
+    Attributes:
+        expediente: The expediente the capture originated from.
+        ref: The CSV handle the capture used.
+        pdf_bytes: Raw PDF body as served by AEAT.
+        pdf_sha256: Lowercase hex sha-256 of ``pdf_bytes``.
+        captured_at: UTC timestamp of the fetch completion.
+        mode: Structural read-only marker.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    expediente: Expediente
+    ref: JustificanteRef
+    pdf_bytes: bytes
+    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    captured_at: datetime
+    mode: Literal["read"] = "read"
+
+
+__all__ = [
+    "Expediente",
+    "JustificanteRef",
+    "SedeCapture",
+]

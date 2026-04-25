@@ -16,7 +16,6 @@ from . import (
     JsonFileDivergenceRepository,
     ModeloIdentifier,
     ResolutionState,
-    StorageDivergenceRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
@@ -88,8 +87,3 @@ def test_json_file_repository_rejects_traversal_on_save(tmp_path: Path) -> None:
     record = _record().model_copy(update={"record_id": "../escape"})
     with pytest.raises(DivergenceRepositoryError, match="simple filename token"):
         repo.save(record)
-
-
-def test_storage_repository_stub_refuses_construction() -> None:
-    with pytest.raises(NotImplementedError):
-        StorageDivergenceRepository()

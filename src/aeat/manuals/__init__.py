@@ -10,8 +10,8 @@ schema.
 
 Public surface — callers from outside this subpackage must import
 exclusively from ``aeat.manuals`` and MUST NOT reach into private
-``_schema``, ``_loader``, ``_verify``, ``_fetch``, ``_ids``, or
-``_stubs`` modules.
+``_schema``, ``_loader``, ``_verify``, ``_fetch``, or ``_ids``
+modules.
 
 Example:
     ```python

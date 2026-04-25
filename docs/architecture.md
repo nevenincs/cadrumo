@@ -68,22 +68,25 @@ hands it to the parser inside `aeat.submission`, which extracts the
 receipt number, the timestamp, and the canonical PDF hash before
 storing them.
 
-**`[status reader] ← [Mis expedientes]`** — `aeat.status` reads
-*Mis expedientes* through the same browser session. It is the
+**`[sede walker] ← [Mis expedientes]`** — `aeat.sede` reads
+*Mis expedientes* through the authenticated browser session. It is the
 authoritative AEAT-side state for what filings exist and their
 processing status; it never trusts the local store as the source of
-truth.
+truth. Backed by ground truth captured live on 2026-04-24 against a
+real Cl@ve-móvil session — every URL, selector, and record shape has
+at least one live observation. Read-only by construction.
 
 **`[self-healing sync] ↔ [local storage]`** — `aeat.sync` reconciles
-the status reader's view with `aeat.storage` after every run. If the
-two disagree, AEAT wins; the local store is patched to match. This is
-the self-healing rule: the next invocation always starts from ground
-truth.
+schema-level divergence (modelo / casilla catalogue) between AEAT's
+published shape and the local corpus. Filing-instance reconciliation
+(local `FilingDraft` vs AEAT-recorded `Justificante`) is handled
+separately by `aeat.filing.reconciliation`.
 
-**`[inbox] ← [Mis notificaciones]`** — `aeat.inbox` reads pending
-notifications from *Mis notificaciones* and surfaces them to the
-workflow engine, which decides whether the next action is a filing or
-an acknowledgement.
+**`[notifications reader] ← [Mis notificaciones]`** — `aeat.sede`'s
+notifications reader pulls the *ResumenInteresados* + *SvInteresados-
+Query* surfaces, surfacing both unread-summary and full-table views.
+Acknowledgement is strictly local — we never tell AEAT a notification
+was read. Captured live 2026-04-24.
 
 ## Cross-cutting
 
