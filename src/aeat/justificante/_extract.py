@@ -358,6 +358,14 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
         positional_match = _PERIOD_POSITIONAL_RE.search(normalised)
         if positional_match is not None:
             period = positional_match.group("period").strip()
+            # Quarterly modelos older than 2024 print only the
+            # positional ``Y0000001S 2022 4T`` line — there is
+            # no labelled ``Ejercicio 2022``. Promote the year
+            # captured by the positional regex when the labelled
+            # extractors found nothing, so downstream code (and
+            # the deep-extractor binding) sees a populated year.
+            if ejercicio is None:
+                ejercicio = positional_match.group("year").strip()
         elif ejercicio is not None and modelo in _ANNUAL_MODELOS:
             # Canonical annual token is "0A" — resolves the
             # round-2 reviewer's D3 disagreement.
