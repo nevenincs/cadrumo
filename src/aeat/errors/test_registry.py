@@ -73,6 +73,39 @@ def test_default_messages_do_not_leak_sphinx_role_markup() -> None:
         assert ":data:" not in code.default_message_en
 
 
+def test_default_messages_do_not_contain_known_broken_fragments() -> None:
+    disallowed_fragments = (
+        "Error de no configured proveedor.",
+        "No configured szolgaltato hiba.",
+        "Error de no soportado financiero origen.",
+        "Error de aeat en vivo read no enabled.",
+        "Aeat elo read nem enabled hiba.",
+        "Error de aeat inicio de sesion assertion.",
+        "Aeat bejelentkezes assertion hiba.",
+        "Error de artefacto no recognised.",
+        "Artefaktum nem recognised hiba.",
+        "Error de proveedor no implemented.",
+        "Szolgaltato nem implemented hiba.",
+        "Error de no extractor registered.",
+        "No kinyero registered hiba.",
+        "Error de sitio health.",
+        "Oldal health hiba.",
+        "Error de presentacion draft.",
+        "Beadas draft hiba.",
+        "Error de l l m",
+        "Raised when a ``manifest.",
+        "Raised when persisted JSONL or trace.",
+        "Raised when a repository operation fails (not-found, integrity, etc.",
+        "Error de flujo de trabajo aborted.",
+        "Munkafolyamat aborted hiba.",
+    )
+    for code in ERROR_REGISTRY.values():
+        messages = (code.default_message_es, code.default_message_en, code.default_message_hu)
+        for message in messages:
+            for fragment in disallowed_fragments:
+                assert fragment not in message
+
+
 def test_suggestions_parse_as_valid_cli_commands() -> None:
     command = get_command(app)
     top_level = {registered.name for registered in app.registered_commands if registered.name is not None}
