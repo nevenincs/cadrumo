@@ -526,6 +526,14 @@ def _extract_csv_from_url(url: str) -> str:
     csv_values = qs.get("CSV", [])
     if not csv_values:
         raise SedeParseError(f"cotejo URL missing CSV query: {url!r}")
+    if len(csv_values) > 1:
+        # AEAT never repeats the CSV parameter; multiple values
+        # indicate a malformed response or an attacker-crafted URL
+        # smuggling extra state past the parser. Refuse rather
+        # than silently picking the first value.
+        raise SedeParseError(
+            f"cotejo URL has {len(csv_values)} CSV values; AEAT only emits one: {url!r}",
+        )
     csv = csv_values[0]
     if not _CSV_SHAPE_RE.match(csv):
         raise SedeParseError(

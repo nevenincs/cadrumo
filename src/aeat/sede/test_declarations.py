@@ -127,3 +127,9 @@ class TestExtractCsvFromUrl:
     def test_csv_with_special_chars_rejected(self) -> None:
         with pytest.raises(SedeParseError, match="does not match AEAT shape"):
             _extract_csv_from_url(f"{self._COTEJO}AAAA1234../../etc")
+
+    def test_multiple_csv_values_rejected(self) -> None:
+        # AEAT never repeats the CSV parameter; multiple values
+        # indicate a malformed response or an attacker-crafted URL.
+        with pytest.raises(SedeParseError, match="2 CSV values"):
+            _extract_csv_from_url(f"{self._COTEJO}AAAA1234&CSV=BBBB5678")
