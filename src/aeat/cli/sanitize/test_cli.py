@@ -292,6 +292,35 @@ class TestDetectPiiSurfaces:
         importe_reals = [entry["real"] for entry in out["importe"]]
         assert importe_reals.count("549,52") == 1
 
+    def test_iban_detection_spaced_form(self) -> None:
+        # AEAT prints IBANs in 4-char groups with spaces.
+        text = "Bank account ES76 2100 0418 4012 3456 7891 confirmed."
+        out = _detect_pii_surfaces(text)
+        iban_reals = {e["real"] for e in out["iban"]}
+        assert "ES76 2100 0418 4012 3456 7891" in iban_reals
+
+    def test_iban_detection_compact_form(self) -> None:
+        # Some renderers strip the spaces.
+        text = "ES7621000418401234567891 is your IBAN"
+        out = _detect_pii_surfaces(text)
+        iban_reals = {e["real"] for e in out["iban"]}
+        assert "ES7621000418401234567891" in iban_reals
+
+    def test_phone_detection_spanish_mobile(self) -> None:
+        text = "Reach me at +34 678 12 34 56 anytime."
+        out = _detect_pii_surfaces(text)
+        phone_entries = [e for e in out["arbitrary"] if "phone" in e["surface_label"]]
+        assert any("678 12 34 56" in e["real"] for e in phone_entries)
+
+    def test_phone_detection_excludes_aeat_helplines(self) -> None:
+        # AEAT's public helpline numbers must NOT be flagged as PII —
+        # they're hardcoded across every justificante and redacting
+        # them would pollute every fixture for no privacy benefit.
+        text = "AEAT helpline: 901 33 55 33 / 915 548 770."
+        out = _detect_pii_surfaces(text)
+        phone_entries = [e for e in out["arbitrary"] if "phone" in e["surface_label"]]
+        assert phone_entries == []
+
 
 class TestVerifyMaskingDefendsAgainstSubstringFalsePositives:
     """``verify`` masks synthetics before checking for real-value leaks.
