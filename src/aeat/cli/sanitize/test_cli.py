@@ -27,6 +27,7 @@ from typer.testing import CliRunner
 from . import (
     _FORBIDDEN_FLAGS,
     _detect_pii_surfaces,
+    _synthesise_csv_for,
     app,
     reject_forbidden_flags,
 )
@@ -396,6 +397,43 @@ class TestPdfCommandRejectsForbiddenFlag:
         # Typer rejects unknown flags with code 2 before forbidden-
         # flag scan runs; either way, the call must fail.
         assert result.exit_code != 0
+
+
+class TestSynthesiseCsvFor:
+    """``_synthesise_csv_for`` produces 16-char shape-conforming CSVs.
+
+    The committed fixture corpus (``tests/fixtures/justificantes/<modelo>/``)
+    uses ``SANITIZED{modelo}{ejercicio}`` as the CSV synthetic. The
+    helper now matches that convention so ``aeat sanitize prepare-map``
+    auto-fills the same shape the operator manually edited into the
+    earlier fixture waves.
+    """
+
+    def test_embed_modelo_and_ejercicio_matches_fixture_corpus(self) -> None:
+        # Mirrors the M130 / 2024 fixtures in tests/fixtures/justificantes/130/.
+        assert _synthesise_csv_for("130", ejercicio="2024") == "SANITIZED1302024"
+        # Mirrors the M100 / 2022 IRPF anual fixture.
+        assert _synthesise_csv_for("100", ejercicio="2022") == "SANITIZED1002022"
+        # Mirrors the M390 / 2023 IVA anual fixture.
+        assert _synthesise_csv_for("390", ejercicio="2023") == "SANITIZED3902023"
+
+    def test_no_ejercicio_falls_back_to_padding(self) -> None:
+        assert _synthesise_csv_for("130") == "SANITIZED130XXXX"
+        assert _synthesise_csv_for("100") == "SANITIZED100XXXX"
+
+    def test_empty_ejercicio_falls_back_to_padding(self) -> None:
+        # When the parsed justificante has no ejercicio (rare but
+        # possible), the auto-fill must still produce a 16-char
+        # shape-conforming synthetic.
+        assert _synthesise_csv_for("130", ejercicio="") == "SANITIZED130XXXX"
+
+    def test_result_is_always_16_chars_uppercase(self) -> None:
+        for modelo in ("100", "111", "130", "190", "303", "347", "349", "390"):
+            for ejercicio in ("", "2021", "2022", "2023", "2024"):
+                synthetic = _synthesise_csv_for(modelo, ejercicio=ejercicio)
+                assert len(synthetic) == 16, (modelo, ejercicio, synthetic)
+                assert synthetic.isupper()
+                assert synthetic.isalnum()
 
 
 class TestHelpListsFourVerbs:
