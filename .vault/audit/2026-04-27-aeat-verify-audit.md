@@ -523,3 +523,71 @@ output is now a valid UTF-8 stream regardless of shell.
 This is a real bug surfaced ONLY by the live run — the offline
 test suite uses `typer.testing.CliRunner` which bypasses the
 real stdout codec.
+
+### Live-driven CLI fix: declarations-register fallback (commit `8509aa5`)
+
+`aeat filing reconcile --last --modelo 130 --period 4T` returned
+NOT_YET_FOUND despite AEAT having the M130/4T filing on record.
+Root cause: `_run_reconcile` used only `find_expediente` from
+`aeat.sede._walker`, which traverses Mis Expedientes (the
+procedure tree). Quarterly modelos (M130, M303, M111, ...)
+typically do NOT appear there — their authoritative record
+lives in *Consultar declaraciones presentadas*.
+
+Fix: extracted `_capture_for_filing(...)` that tries the
+procedure tree first (same as before), and on
+`ExpedienteNotFoundError` falls back to
+`walk_declarations_register` + `capture_declaration` (the new
+walker added in this PR). Both paths produce a `SedeCapture`
+so the downstream parse_justificante + reconcile flow is
+unchanged.
+
+Confirmed live: M130/2024/4T → MATCH (CSV `HFZPAVR85USDNPM2`,
+presented 2025-03-26 18:46:30) after the fix; M130/2025/1T
+correctly returns NOT_YET_FOUND through the same fallback path.
+
+### Live-driven fix: sanitizer error registry (commit `c4521f4`)
+
+`aeat filing reconcile` (any invocation) crashed at startup with
+`ValueError: AeatError subclass aeat.sanitizer._errors.SanitizationError
+is missing a declared ErrorCode registry entry`. Root cause: the
+AeatError base class enforces an `__init_subclass__` hook that
+resolves every subclass against the ErrorCode registry, but the
+five sanitizer error classes were never added when
+`aeat.sanitizer` landed. The crash only fires on the CLI path
+because `aeat.cli.__init__` imports `aeat.cli.sanitize` →
+`aeat.sanitizer`, triggering subclass registration. Unit tests
+that import `aeat.sanitizer` directly succeed because the
+import order is different.
+
+Added 5 registry entries (alphabetical between aeat.sede and
+aeat.setup): AlreadySanitizedError, SanitizationError,
+SanitizerSourceParseError, SignaturePresentError,
+UnknownSurfaceError. Each carries trilingual default messages.
+
+### Live verification matrix (round-5)
+
+After the three live-driven fixes above, every reachable path
+through `aeat filing reconcile` has been confirmed end-to-end
+against the live AEAT sede:
+
+| Modelo | Period | Year | Verdict        | Path | CSV               |
+|--------|--------|------|----------------|------|-------------------|
+| 100    | 0A     | 2022 | MATCH          | tree | MZRSYDRL5JMPJPRT  |
+| 100    | 0A     | 2025 | NOT_YET_FOUND  | tree | (no record)       |
+| 100    | 0A     | 2022 | DIVERGENT*     | tree | MZRSYDRL5JMPJPRT  |
+| 130    | 4T     | 2024 | MATCH          | reg  | HFZPAVR85USDNPM2  |
+| 130    | 1T     | 2025 | NOT_YET_FOUND  | reg  | (no record)       |
+| 303    | 4T     | 2024 | MATCH          | reg  | LFXDUFRGA8388AKX  |
+| 111    | 4T     | 2024 | MATCH          | reg  | ZF45RSV655G4STJD  |
+| 390    | 0A     | 2023 | MATCH          | tree | 7PMVLB5GXHG2L2MU  |
+
+\* DIVERGENT case used profile_tax_id="X9999999Z" (wrong NIE).
+
+Path key: `tree` = procedure-tree walker; `reg` =
+declarations-presentadas register fallback.
+
+Five-layer write guard intact across every live invocation: every
+AEAT touch was a GET (cotejo PDF, expedientes tree HTML) or a
+ZK form drive that fetches state. Zero writes to authenticated
+AEAT state.
