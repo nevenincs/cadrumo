@@ -1727,6 +1727,77 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.sanitizer._errors.AlreadySanitizedError",
+        ErrorCode(
+            code="REFUSED_SANITIZER_ALREADY_SANITIZED",
+            category=ErrorCategory.REFUSED,
+            default_message_es="El PDF ya esta sanitizado.",
+            default_message_en=(
+                "Raised when the source SHA already lives in SANITIZED_SHAS; bypass with --allow-already-sanitized."
+            ),
+            default_message_hu="A PDF mar sanitizalt.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.sanitizer._errors.SanitizationError",
+        ErrorCode(
+            code="ERROR_SANITIZER",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error del sanitizador.",
+            default_message_en="Base class for the AEAT PDF sanitiser failures.",
+            default_message_hu="Sanitizalo hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.sanitizer._errors.SanitizerSourceParseError",
+        ErrorCode(
+            code="FAIL_SANITIZER_SOURCE_PARSE",
+            category=ErrorCategory.FAIL,
+            default_message_es="No se pudo abrir el PDF de origen.",
+            default_message_en="Raised when pikepdf cannot open the source PDF (corrupt or password-protected).",
+            default_message_hu="Forras PDF megnyitas sikertelen.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.sanitizer._errors.SignaturePresentError",
+        ErrorCode(
+            code="REFUSED_SANITIZER_SIGNATURE_PRESENT",
+            category=ErrorCategory.REFUSED,
+            default_message_es="El PDF tiene una firma digital y no se puede sanitizar.",
+            default_message_en=(
+                "Raised when the source PDF carries a digital signature; sanitisation would invalidate it."
+            ),
+            default_message_hu="A PDF digitalis alairast tartalmaz.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.sanitizer._errors.UnknownSurfaceError",
+        ErrorCode(
+            code="ERROR_SANITIZER_UNKNOWN_SURFACE",
+            category=ErrorCategory.ERROR,
+            default_message_es="Superficie del sanitizador desconocida.",
+            default_message_en=(
+                "Raised when a TokenMap entry references a surface category the pipeline does not handle."
+            ),
+            default_message_hu="Ismeretlen sanitizalo felulet.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.setup._errors.SetupAbortedError",
         ErrorCode(
             code="REFUSED_SETUP_ABORTED",
