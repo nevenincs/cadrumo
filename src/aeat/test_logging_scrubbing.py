@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import io
 import logging
+import sys
 
 import pytest
 
-from .logging import get_logger
+from .logging import SecretScrubbingFilter, get_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
@@ -88,6 +89,82 @@ def test_secret_scrubbing_redacts_inline_message_text_when_tuple_args_exist() ->
     assert "refresh-123" not in rendered
     assert "oauth_refresh_token=<redacted>" in rendered
     assert "status=ok" in rendered
+
+
+def test_secret_scrubbing_maps_key_hints_to_the_correct_placeholder() -> None:
+    """Only the placeholder paired with the sensitive key should be scrubbed."""
+
+    logger, root_logger, handler, stream = _capture_logger_output()
+    previous_root_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    try:
+        logger.info(
+            "item %s has token: %s",
+            "safe-item",
+            "token-secret",
+            extra={
+                "cookie": "<redacted>",
+                "bearer_header": "<redacted>",
+                "region": "es",
+            },
+        )
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_root_level)
+
+    rendered = stream.getvalue()
+    assert "safe-item" in rendered
+    assert "token-secret" not in rendered
+    assert "token: <redacted>" in rendered
+
+
+def test_secret_scrubbing_handles_colon_assignments() -> None:
+    """Colon-delimited sensitive placeholders should still be scrubbed."""
+
+    logger, root_logger, handler, stream = _capture_logger_output()
+    previous_root_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    try:
+        logger.info(
+            "token: %s",
+            "colon-secret",
+            extra={
+                "cookie": "<redacted>",
+                "bearer_header": "<redacted>",
+                "region": "es",
+            },
+        )
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_root_level)
+
+    rendered = stream.getvalue()
+    assert "colon-secret" not in rendered
+    assert "token: <redacted>" in rendered
+
+
+def test_secret_scrubbing_preserves_exc_info_for_downstream_handlers() -> None:
+    """Scrubbed tracebacks should not destroy the original exception tuple."""
+
+    filter_ = SecretScrubbingFilter()
+    try:
+        raise RuntimeError("oauth_refresh_token=refresh-123")
+    except RuntimeError:
+        record = logging.LogRecord(
+            name="aeat.test_logging_scrubbing",
+            level=logging.ERROR,
+            pathname=__file__,
+            lineno=0,
+            msg="failure",
+            args=(),
+            exc_info=sys.exc_info(),
+        )
+
+    assert record.exc_info is not None
+    filter_.filter(record)
+    assert record.exc_info is not None
+    assert record.exc_text is not None
+    assert "refresh-123" not in record.exc_text
 
 
 def test_non_sensitive_fields_pass_through_unchanged() -> None:

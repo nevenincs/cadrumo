@@ -17,17 +17,19 @@ import logging
 import logging.config
 import re
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 _CONFIGURED = False
 _FACTORY_INSTALLED = False
 _STANDARD_LOG_RECORD_FIELDS = frozenset(logging.makeLogRecord({}).__dict__)
+_EXCEPTION_FORMATTER = logging.Formatter()
 
 SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
     "access_token",
     "api_key",
     "authorization",
     "bearer",
+    "bearer_header",
     "cert_password",
     "certificate_password",
     "certificate_serial",
@@ -48,27 +50,36 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
     "tax_id",
     "token",
 )
-
-_SENSITIVE_KEY_RE = re.compile(
-    "|".join(re.escape(pattern) for pattern in SCRUB_FIELD_PATTERNS),
-    flags=re.IGNORECASE,
+_SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)
+_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = cast(
+    tuple[str, ...],
+    tuple(sorted(SCRUB_FIELD_PATTERNS, key=len, reverse=True)),
 )
+
 _SENSITIVE_ASSIGNMENT_RE = re.compile(
-    r"(?P<key>[A-Za-z0-9_.-]*(?:"
-    + "|".join(re.escape(pattern) for pattern in SCRUB_FIELD_PATTERNS)
-    + r")[A-Za-z0-9_.-]*)\s*[:=]\s*(?P<value>[^,\s;]+)",
+    r"(?<![A-Za-z0-9])(?P<key>"
+    + "|".join(re.escape(pattern) for pattern in _SENSITIVE_ASSIGNMENT_KEYS)
+    + r")(?![A-Za-z0-9])\s*[:=]\s*(?P<value>[^,\s;]+)",
     flags=re.IGNORECASE,
 )
 _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
-_PERCENT_PLACEHOLDER_KEY_RE = re.compile(r"([A-Za-z0-9_.-]+)\s*=\s*%[-#+ 0-9.]*[a-zA-Z]")
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
+_PERCENT_PLACEHOLDER_RE = re.compile(r"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>%[-#+ 0-9.]*[a-zA-Z])")
+
+
+def _normalise_key(key: str) -> str:
+    """Return a canonical, separator-stable representation of ``key``."""
+
+    camel_split = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
+    collapsed = re.sub(r"[^A-Za-z0-9]+", "_", camel_split)
+    return collapsed.strip("_").lower()
 
 
 def _looks_sensitive_key(key: str | None) -> bool:
     """Return whether ``key`` should have its value redacted."""
 
-    return key is not None and _SENSITIVE_KEY_RE.search(key) is not None
+    return key is not None and _normalise_key(key) in _SENSITIVE_KEY_SET
 
 
 def _redacted_value(key: str | None, value: str) -> str:
@@ -122,9 +133,10 @@ def _scrub_value(value: Any, *, key: str | None = None) -> Any:
 def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ...]:
     """Scrub tuple-style logging args using keys inferred from ``message``."""
 
-    key_hints = _PERCENT_PLACEHOLDER_KEY_RE.findall(message)
+    placeholders = list(_PERCENT_PLACEHOLDER_RE.finditer(message))
     return tuple(
-        _scrub_value(arg, key=key_hints[index] if index < len(key_hints) else None) for index, arg in enumerate(args)
+        _scrub_value(arg, key=placeholders[index].group("key") if index < len(placeholders) else None)
+        for index, arg in enumerate(args)
     )
 
 
@@ -143,9 +155,7 @@ class SecretScrubbingFilter(logging.Filter):
             record.args = _scrub_value(record.args)
 
         if record.exc_info is not None:
-            formatter = logging.Formatter()
-            record.exc_text = _scrub_text(formatter.formatException(record.exc_info))
-            record.exc_info = None
+            record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))
         elif record.exc_text:
             record.exc_text = _scrub_text(record.exc_text)
 

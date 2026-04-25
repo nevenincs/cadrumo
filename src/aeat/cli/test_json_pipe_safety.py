@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,7 @@ from ..deadlines import AutonomoProfile, IVARegime
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
-_CLI_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "aeat.exe"
+_CLI_EXE = Path(sys.executable).with_name("aeat.exe" if os.name == "nt" else "aeat")
 _JQ_EXE = shutil.which("jq")
 
 
