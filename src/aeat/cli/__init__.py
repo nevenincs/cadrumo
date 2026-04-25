@@ -45,6 +45,18 @@ from . import submission as submission_module
 from . import sync as sync_module
 from . import vat as vat_module
 from . import workflow as workflow_module
+from ._exit_codes import ExitCode, exit_with
+from ._log_levels import LogLevel, LogLevelResolutionError, apply_to_root_logger, resolve_log_level
+from ._schemas import SCHEMA_REGISTRY, OutputSchema, OutputSchemaError, SchemaEnvelope, register_schema
+from ._tty import (
+    NonTtyRefusedError,
+    is_stderr_tty,
+    is_stdin_tty,
+    is_stdout_tty,
+    refuse_if_stdin_non_tty,
+    should_show_rich_progress,
+    should_use_color,
+)
 
 app = typer.Typer(
     name="aeat",
@@ -135,4 +147,24 @@ app.add_typer(
 app.add_typer(setup_wizard_module.app, name="setup", help="First-run interactive setup wizard (#61).")
 
 
-__all__ = ["app"]
+__all__ = [
+    "SCHEMA_REGISTRY",
+    "ExitCode",
+    "LogLevel",
+    "LogLevelResolutionError",
+    "NonTtyRefusedError",
+    "OutputSchema",
+    "OutputSchemaError",
+    "SchemaEnvelope",
+    "app",
+    "apply_to_root_logger",
+    "exit_with",
+    "is_stderr_tty",
+    "is_stdin_tty",
+    "is_stdout_tty",
+    "refuse_if_stdin_non_tty",
+    "register_schema",
+    "resolve_log_level",
+    "should_show_rich_progress",
+    "should_use_color",
+]

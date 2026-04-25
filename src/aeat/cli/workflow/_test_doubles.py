@@ -17,6 +17,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from typing import cast
 
+import pytest
+
 from ...config import Settings
 from ...deadlines import (
     AutonomoProfile,
@@ -33,6 +35,8 @@ from ...workflow import (
     WorkflowEngine,
     WorkflowError,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
 @dataclass

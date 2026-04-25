@@ -4,14 +4,156 @@ Provides a consistent logger factory to avoid scattered bare logging instances.
 The root logger carries the run-trace context filter from
 :mod:`aeat.observability._sink` so every record automatically picks up
 the active ``run_id`` / ``step_id`` while a run context is bound.
+
+This module is also the single source of truth for log-record secret
+scrubbing. Every handler attached through :func:`configure_logging`
+receives a :class:`SecretScrubbingFilter` so sensitive fields are
+redacted before formatting.
 """
+
+from __future__ import annotations
 
 import logging
 import logging.config
+import re
+from collections.abc import Mapping
 from typing import Any
 
 _CONFIGURED = False
 _FACTORY_INSTALLED = False
+_STANDARD_LOG_RECORD_FIELDS = frozenset(logging.makeLogRecord({}).__dict__)
+
+SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
+    "access_token",
+    "api_key",
+    "authorization",
+    "bearer",
+    "cert_password",
+    "certificate_password",
+    "certificate_serial",
+    "cif",
+    "cookie",
+    "credential",
+    "llm_api_key",
+    "nif",
+    "nie",
+    "oauth_access_token",
+    "oauth_refresh_token",
+    "passphrase",
+    "pkcs12",
+    "profile_tax_id",
+    "refresh_token",
+    "secret",
+    "session_cookie",
+    "tax_id",
+    "token",
+)
+
+_SENSITIVE_KEY_RE = re.compile(
+    "|".join(re.escape(pattern) for pattern in SCRUB_FIELD_PATTERNS),
+    flags=re.IGNORECASE,
+)
+_SENSITIVE_ASSIGNMENT_RE = re.compile(
+    r"(?P<key>[A-Za-z0-9_.-]*(?:"
+    + "|".join(re.escape(pattern) for pattern in SCRUB_FIELD_PATTERNS)
+    + r")[A-Za-z0-9_.-]*)\s*[:=]\s*(?P<value>[^,\s;]+)",
+    flags=re.IGNORECASE,
+)
+_BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
+_LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
+_PERCENT_PLACEHOLDER_KEY_RE = re.compile(r"([A-Za-z0-9_.-]+)\s*=\s*%[-#+ 0-9.]*[a-zA-Z]")
+_PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
+
+
+def _looks_sensitive_key(key: str | None) -> bool:
+    """Return whether ``key`` should have its value redacted."""
+
+    return key is not None and _SENSITIVE_KEY_RE.search(key) is not None
+
+
+def _redacted_value(key: str | None, value: str) -> str:
+    """Return the stable redaction marker for a sensitive value."""
+
+    if key is not None and "serial" in key.lower():
+        suffix = value[-4:] if len(value) >= 4 else "????"
+        return f"<cert:....{suffix}>"
+    return "<redacted>"
+
+
+def _scrub_text(value: str, *, key: str | None = None) -> str:
+    """Redact sensitive fragments from a free-form string."""
+
+    if not value:
+        return value
+    if _looks_sensitive_key(key):
+        return _redacted_value(key, value)
+
+    scrubbed = _SENSITIVE_ASSIGNMENT_RE.sub(
+        lambda match: (
+            match.group(0)
+            if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(match.group("value"))
+            else f"{match.group('key')}={_redacted_value(match.group('key'), match.group('value'))}"
+        ),
+        value,
+    )
+    scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
+    scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
+    return scrubbed
+
+
+def _scrub_value(value: Any, *, key: str | None = None) -> Any:
+    """Recursively scrub sensitive values in common logging payload shapes."""
+
+    if isinstance(value, str):
+        return _scrub_text(value, key=key)
+    if isinstance(value, Mapping):
+        return {item_key: _scrub_value(item_value, key=str(item_key)) for item_key, item_value in value.items()}
+    if isinstance(value, tuple):
+        return tuple(_scrub_value(item, key=key) for item in value)
+    if isinstance(value, list):
+        return [_scrub_value(item, key=key) for item in value]
+    if isinstance(value, set):
+        return {_scrub_value(item, key=key) for item in value}
+    if _looks_sensitive_key(key):
+        return _redacted_value(key, str(value))
+    return value
+
+
+def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ...]:
+    """Scrub tuple-style logging args using keys inferred from ``message``."""
+
+    key_hints = _PERCENT_PLACEHOLDER_KEY_RE.findall(message)
+    return tuple(
+        _scrub_value(arg, key=key_hints[index] if index < len(key_hints) else None) for index, arg in enumerate(args)
+    )
+
+
+class SecretScrubbingFilter(logging.Filter):
+    """Redact sensitive fields from log records before formatting."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.msg, str):
+            record.msg = _scrub_text(record.msg)
+        else:
+            record.msg = _scrub_value(record.msg)
+
+        if isinstance(record.args, tuple) and isinstance(record.msg, str):
+            record.args = _scrub_positional_args(record.msg, record.args)
+        elif record.args:
+            record.args = _scrub_value(record.args)
+
+        if record.exc_info is not None:
+            formatter = logging.Formatter()
+            record.exc_text = _scrub_text(formatter.formatException(record.exc_info))
+            record.exc_info = None
+        elif record.exc_text:
+            record.exc_text = _scrub_text(record.exc_text)
+
+        for key, value in tuple(record.__dict__.items()):
+            if key in _STANDARD_LOG_RECORD_FIELDS or key in {"msg", "args", "exc_info", "exc_text"}:
+                continue
+            record.__dict__[key] = _scrub_value(value, key=key)
+        return True
 
 
 def _install_run_context_record_factory() -> None:
@@ -113,6 +255,12 @@ def configure_logging() -> None:
     # the import is safe because configure_logging() runs after both
     # modules finish loading.
     _install_run_context_record_factory()
+    root_logger = logging.getLogger()
+    if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in root_logger.filters):
+        root_logger.addFilter(SecretScrubbingFilter())
+    for handler in root_logger.handlers:
+        if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in handler.filters):
+            handler.addFilter(SecretScrubbingFilter())
 
     _CONFIGURED = True
 
