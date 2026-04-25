@@ -1,16 +1,25 @@
 """``aeat sede`` sub-app — post-auth sede discovery CLI (#239).
 
-Subcommands:
+Subcommands (mirrors of the read-only sede surfaces in
+:mod:`aeat.sede`):
 
-- ``aeat sede list-expedientes [--modelo M]`` — walk the authenticated
-  expedientes tree and print every leaf (id, modelo, ejercicio,
+- ``aeat sede list-expedientes [--modelo M]`` — walk *Mis Expedientes*
+  (the procedure tree) and print every leaf (id, modelo, ejercicio,
   category path).
-- ``aeat sede capture <expediente-id>`` — resolve the CSV for one
-  expediente and fetch the raw justificante PDF into a local file.
+- ``aeat sede list-declarations --modelo M --ejercicio Y`` — drive
+  the *Consultar declaraciones presentadas* form for one
+  ``(modelo, ejercicio)`` query and print one row per filing.
+- ``aeat sede capture-declaration --modelo M --ejercicio Y --period P``
+  — fetch the raw justificante PDF for a single filing identified
+  by ``(modelo, ejercicio, period)`` via the declaraciones-presentadas
+  surface.
+- ``aeat sede capture-corpus --modelos M[,M...] --ejercicios Y[,Y...]``
+  — capture every declaration the authenticated NIF has for each
+  ``(modelo, ejercicio)`` pair; PDFs land under
+  ``scratch/declarations-corpus/`` with a JSONL manifest.
 - ``aeat sede discover [--modelo M]`` — one-shot walker+capturer that
   emits a per-modelo :class:`DiscoveryReport` to stdout and writes
-  every captured PDF under ``scratch/sede-discovery/<ts>/``. This is
-  the continuous-growth entry point.
+  every captured PDF under ``scratch/sede-discovery/<ts>/``.
 - ``aeat sede notifications [--summary | --query]`` — read-only walk
   of the AEAT notifications/messages surface (formal *Notificaciones*
   + lighter-weight *Comunicaciones*).
