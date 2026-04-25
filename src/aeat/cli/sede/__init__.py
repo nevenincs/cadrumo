@@ -47,6 +47,7 @@ from ...logging import get_logger
 from ...sede import (
     Expediente,
     SedeError,
+    capture_declaration,
     capture_justificante,
     fetch_notifications_query,
     fetch_notifications_summary,
@@ -212,6 +213,199 @@ def list_declarations(
             d.justificante_link_text or "",
         )
     _CONSOLE.print(table)
+
+
+@app.command(
+    "capture-declaration",
+    help="Fetch one declaration's justificante PDF by (modelo, ejercicio, period).",
+)
+def capture_declaration_cmd(
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", "-m", help="Modelo code (e.g. 100, 130, 303, 390, 111, 190)."),
+    ],
+    ejercicio: Annotated[
+        int,
+        typer.Option("--ejercicio", "-e", help="Tax year to query (e.g. 2024)."),
+    ],
+    period: Annotated[
+        str,
+        typer.Option(
+            "--period",
+            "-p",
+            help="Period token to filter on (0A annual, 1T-4T quarterly, 01-12 monthly).",
+        ),
+    ],
+    output_path: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Where to write the captured PDF.",
+        ),
+    ],
+) -> None:
+    """Drive the declaraciones register, locate the matching row, capture the PDF."""
+    session = _require_active_session()
+
+    async def _run() -> tuple[bytes, str]:
+        rows = await walk_declarations_register(session, modelo=modelo, ejercicio=ejercicio)
+        match = [r for r in rows if r.period == period]
+        if not match:
+            available = ", ".join(sorted({r.period for r in rows})) or "(none)"
+            raise SedeError(
+                f"no Modelo {modelo} declaration for {ejercicio}/{period}; available periods: {available}",
+            )
+        if len(match) > 1:
+            log.warning(
+                "%d declarations match modelo=%s ejercicio=%s period=%s; using the first",
+                len(match),
+                modelo,
+                ejercicio,
+                period,
+            )
+        capture = await capture_declaration(session, match[0])
+        return capture.pdf_bytes, capture.ref.csv
+
+    try:
+        pdf_bytes, csv = asyncio.run(_run())
+    except SedeError as exc:
+        _CONSOLE.print(f"[red]capture failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    output_path.write_bytes(pdf_bytes)
+    _CONSOLE.print(
+        f"[green]Captured Modelo {modelo} {ejercicio}/{period}:[/green] "
+        f"{output_path} ({len(pdf_bytes)} bytes, csv={csv})",
+    )
+
+
+@app.command(
+    "capture-corpus",
+    help="Capture every declaration for the authenticated NIF across "
+    "(modelo, ejercicio) tuples and write PDFs to scratch/.",
+)
+def capture_corpus_cmd(
+    modelos: Annotated[
+        str,
+        typer.Option(
+            "--modelos",
+            help="Comma-separated modelo codes (e.g. 100,130,303,390,111,190).",
+        ),
+    ] = "100,130,303,390,111,190",
+    ejercicios: Annotated[
+        str,
+        typer.Option(
+            "--ejercicios",
+            help="Comma-separated tax years (e.g. 2021,2022,2023,2024).",
+        ),
+    ] = "2021,2022,2023,2024",
+    output_root: Annotated[
+        Path,
+        typer.Option(
+            "--out",
+            help="Root directory for captures.",
+        ),
+    ] = Path("scratch/declarations-corpus"),
+    skip_existing: Annotated[
+        bool,
+        typer.Option(
+            "--skip-existing/--overwrite",
+            help="Skip PDFs already present on disk (default) or re-fetch.",
+        ),
+    ] = True,
+) -> None:
+    """Walk every (modelo, ejercicio) tuple and capture every declaration."""
+    session = _require_active_session()
+    output_root.mkdir(parents=True, exist_ok=True)
+    modelo_list = [m.strip() for m in modelos.split(",") if m.strip()]
+    ejercicio_list = [int(y.strip()) for y in ejercicios.split(",") if y.strip()]
+
+    async def _run() -> list[dict[str, object]]:
+        rows: list[dict[str, object]] = []
+        for modelo in modelo_list:
+            for ejercicio in ejercicio_list:
+                try:
+                    declarations = await walk_declarations_register(
+                        session,
+                        modelo=modelo,
+                        ejercicio=ejercicio,
+                    )
+                except SedeError as exc:
+                    rows.append(
+                        {
+                            "modelo": modelo,
+                            "ejercicio": ejercicio,
+                            "status": "walk_failed",
+                            "error": str(exc),
+                        },
+                    )
+                    continue
+                for idx, declaration in enumerate(declarations):
+                    target = output_root / f"m{modelo}-{ejercicio}-{declaration.period}-{idx}.pdf"
+                    if skip_existing and target.is_file():
+                        rows.append(
+                            {
+                                "modelo": modelo,
+                                "ejercicio": ejercicio,
+                                "period": declaration.period,
+                                "expediente_id": declaration.expediente_id,
+                                "path": str(target),
+                                "status": "cached",
+                            },
+                        )
+                        continue
+                    try:
+                        capture = await capture_declaration(session, declaration)
+                    except SedeError as exc:
+                        rows.append(
+                            {
+                                "modelo": modelo,
+                                "ejercicio": ejercicio,
+                                "period": declaration.period,
+                                "expediente_id": declaration.expediente_id,
+                                "status": "capture_failed",
+                                "error": str(exc),
+                            },
+                        )
+                        continue
+                    target.write_bytes(capture.pdf_bytes)
+                    rows.append(
+                        {
+                            "modelo": modelo,
+                            "ejercicio": ejercicio,
+                            "period": declaration.period,
+                            "expediente_id": declaration.expediente_id,
+                            "path": str(target),
+                            "csv": capture.ref.csv,
+                            "sha256": capture.pdf_sha256,
+                            "status": "captured",
+                        },
+                    )
+        return rows
+
+    try:
+        results = asyncio.run(_run())
+    except SedeError as exc:
+        _CONSOLE.print(f"[red]capture-corpus failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    summary_path = output_root / "_capture-summary.json"
+    summary_path.write_text(
+        json.dumps(results, indent=2, ensure_ascii=False, default=str),
+        encoding="utf-8",
+    )
+
+    captured = sum(1 for r in results if r.get("status") == "captured")
+    cached = sum(1 for r in results if r.get("status") == "cached")
+    walk_failed = sum(1 for r in results if r.get("status") == "walk_failed")
+    capture_failed = sum(1 for r in results if r.get("status") == "capture_failed")
+    _CONSOLE.print(
+        f"[green]capture-corpus done:[/green] "
+        f"captured={captured} cached={cached} "
+        f"walk_failed={walk_failed} capture_failed={capture_failed}; "
+        f"summary at {summary_path}",
+    )
 
 
 @app.command(
