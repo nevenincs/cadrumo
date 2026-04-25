@@ -15,6 +15,9 @@ related:
   - "[[2026-04-24-aeat-verify-research]]"
   - "[[2026-04-24-aeat-verify-reference]]"
   - "[[2026-04-25-aeat-verify-audit]]"
+  - "[[2026-04-25-pdf-sanitizer-research]]"
+  - "[[2026-04-25-pdf-sanitizer-adr]]"
+  - "[[2026-04-25-pdf-sanitizer-plan]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
