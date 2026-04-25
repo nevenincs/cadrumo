@@ -144,9 +144,10 @@ class TestStripAcroform:
         pdf = _new_one_page_pdf()
         field = pikepdf.Dictionary(T="taxpayer_nif", V="Y4113523X", DV="Y4113523X")
         pdf.Root["/AcroForm"] = pikepdf.Dictionary(Fields=pikepdf.Array([field]))
-        result = strip_acroform(pdf)
+        result, warnings = strip_acroform(pdf)
         assert result.surface == "acroform_field_value"
         assert result.count == 1
+        assert warnings == ()
         re_opened = _round_trip(pdf)
         re_field = re_opened.Root["/AcroForm"]["/Fields"][0]
         assert "/V" not in re_field
@@ -155,15 +156,26 @@ class TestStripAcroform:
     def test_drops_form_entirely(self) -> None:
         pdf = _new_one_page_pdf()
         pdf.Root["/AcroForm"] = pikepdf.Dictionary(Fields=pikepdf.Array())
-        result = strip_acroform(pdf, drop_entirely=True)
+        result, warnings = strip_acroform(pdf, drop_entirely=True)
         assert result.surface == "acroform_dropped"
         assert result.count == 1
+        assert warnings == ()
         assert "/AcroForm" not in pdf.Root
 
     def test_no_op_when_absent(self) -> None:
         pdf = _new_one_page_pdf()
-        result = strip_acroform(pdf)
+        result, warnings = strip_acroform(pdf)
         assert result.count == 0
+        assert warnings == ()
+
+    def test_emits_warning_when_kids_present(self) -> None:
+        pdf = _new_one_page_pdf()
+        child = pikepdf.Dictionary(T="child", V="real_value")
+        parent = pikepdf.Dictionary(T="parent", Kids=pikepdf.Array([child]))
+        pdf.Root["/AcroForm"] = pikepdf.Dictionary(Fields=pikepdf.Array([parent]))
+        result, warnings = strip_acroform(pdf)
+        assert result.surface == "acroform_field_value"
+        assert {w.code for w in warnings} == {"unknown_surface_present"}
 
 
 class TestStripThumbnails:

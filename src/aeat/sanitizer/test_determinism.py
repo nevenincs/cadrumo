@@ -53,24 +53,28 @@ class TestDeterministicSave:
         assert bytes_a == bytes_b
         assert flags_a == flags_b
 
-    def test_default_save_diverges_on_metadata_mutation(self) -> None:
+    def test_default_save_is_non_deterministic_under_mutation(self) -> None:
         # Establishes the failure mode the deterministic flag set
         # defends against. Without ``deterministic_id=True`` the
         # ``/ID`` array gets re-stamped any time pikepdf re-emits
-        # the trailer with mutated metadata, even if the content
-        # is otherwise identical. The deterministic helper protects
+        # the trailer with mutated metadata. Two saves of the same
+        # in-memory PDF after identical metadata mutations should
+        # produce different bytes under default save (the timestamp
+        # seeds the /ID array). The deterministic helper protects
         # the fixture-diff workflow against that drift.
-        baseline = _new_one_page_pdf()
-        buffer_baseline = io.BytesIO()
-        baseline.save(buffer_baseline)
+        first = _new_one_page_pdf()
+        with first.open_metadata() as metadata:
+            metadata["dc:title"] = "drift"
+        buffer_first = io.BytesIO()
+        first.save(buffer_first)
 
-        mutated = _new_one_page_pdf()
-        with mutated.open_metadata() as metadata:
-            metadata["dc:title"] = "X"
-        buffer_mutated = io.BytesIO()
-        mutated.save(buffer_mutated)
+        second = _new_one_page_pdf()
+        with second.open_metadata() as metadata:
+            metadata["dc:title"] = "drift"
+        buffer_second = io.BytesIO()
+        second.save(buffer_second)
 
-        assert buffer_baseline.getvalue() != buffer_mutated.getvalue()
+        assert buffer_first.getvalue() != buffer_second.getvalue()
 
     def test_round_trip_through_save_is_parseable(self) -> None:
         pdf = _new_one_page_pdf()

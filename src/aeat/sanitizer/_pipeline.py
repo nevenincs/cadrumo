@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Literal
 
 import pikepdf
-from pikepdf._core import PdfError as PikepdfError
+from pikepdf import PdfError as PikepdfError
 
 from ..logging import get_logger
 from . import fixtures as _fixtures
@@ -149,7 +149,9 @@ def sanitize_pdf(
         surfaces.append(strip_annotations(pdf))
     if drop_optional_content_groups:
         surfaces.append(strip_optional_content_groups(pdf))
-    surfaces.append(strip_acroform(pdf, drop_entirely=drop_acroform))
+    acroform_scrubbed, acroform_warnings = strip_acroform(pdf, drop_entirely=drop_acroform)
+    surfaces.append(acroform_scrubbed)
+    warnings.extend(acroform_warnings)
     surfaces.append(strip_thumbnails(pdf))
     if drop_outlines:
         surfaces.append(strip_outlines(pdf))

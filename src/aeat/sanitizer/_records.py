@@ -311,7 +311,6 @@ _WarningCode = Literal[
     "digital_signature_present_refusing",
     "incremental_update_history_consolidated",
     "source_sha256_already_in_known_sanitized_set",
-    "operand_span_split_unhandled",
     "missing_replacement_target",
 ]
 
