@@ -152,3 +152,24 @@ submitters. The full engine path is covered by existing tests in
 **PASS** - all five mandatory invariants hold, 19/19 affected tests
 pass, no Critical or High findings. The one Low (DRIFT-001) is an
 incidental bootstrap artefact and is excluded from the commit.
+
+## Triage of external review (2026-04-25, post-merge of PR #427)
+
+GEMINI-001 | MEDIUM | tighten refuse-tests to typer's standard exit code 2 and case-insensitive substring
+The Gemini code-assist bot left six identical comments on PR #427
+suggesting (a) `result.exit_code == 2` instead of `!= 0` and
+(b) `"no such option" in result.output.lower()` instead of the
+case-sensitive `"No such option" in result.output`. Both improvements
+are applied in a follow-up commit:
+
+- exit code 2 is typer/click's canonical `UsageError` code; pinning
+  it catches a regression where the CLI silently strips the flag and
+  returns 0 (or any other non-zero), where the looser `!= 0` would
+  pass.
+- `.lower()` removes the typer/click-version coupling; the rendered
+  text is `"No such option"` today but a future minor version could
+  change the casing without breaking the contract.
+
+The change touches `src/aeat/cli/workflow/test_run_refuses_live_flags.py`
+and `src/aeat/cli/workflow/test_next_refuses_live_flags.py` only;
+six lines total. The six tests still pass after the tightening.
