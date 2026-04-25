@@ -16,6 +16,9 @@ related:
   - "[[2026-04-25-aeat-verify-research]]"
   - "[[2026-04-25-aeat-verify-audit]]"
   - "[[2026-04-24-aeat-verify-reference]]"
+  - "[[2026-04-25-pdf-sanitizer-research]]"
+  - "[[2026-04-25-pdf-sanitizer-adr]]"
+  - "[[2026-04-25-pdf-sanitizer-plan]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -60,11 +63,16 @@ wave:
 - **PR1** - Live env populated. `env/.env` carries
   `AEAT_LIVE_TESTS_ENABLED=true` and the NIE / soporte. Restored
   from `feature-285-auth-cli` if missing.
-- **PR2** - Sanitiser tooling. `scripts/sanitize_justificante.py`
-  exists and the `pikepdf` dependency is on `pyproject.toml`. New
-  dependency only if the scripts/ entry point is added; existing
-  `pikepdf` likely already pinned via `aeat.justificante` (verify
-  on the first wave that actually invokes the sanitiser).
+- **PR2** - Sanitiser tooling. **Superseded** by the standalone
+  `pdf-sanitizer` sub-feature (its own research / ADR / plan
+  triad — see `related:` above). The sanitiser is no longer a
+  loose `scripts/` helper; it is the `aeat.sanitizer` subpackage
+  with strict-frozen pydantic v2 records, an `aeat sanitize` CLI
+  bridge, an adversarial-absence test, and a determinism contract.
+  PR2 here means "the sub-feature's plan has reached at least
+  phase 6 (orchestrator) so this loop can call `aeat sanitize pdf`
+  against captured PDFs". Tracked in
+  `2026-04-25-pdf-sanitizer-plan`.
 
 ## Pre-wave: enumeration sweep
 
@@ -97,8 +105,11 @@ record (created when the wave starts, even if it ends `na`).
 - P2 - **done**. Raw PDFs at the captured paths.
 - P3 - **done**. Justificante metadata extracts cleanly across all
   three template revisions.
-- P4 - **pending**. PDF sanitiser not yet built; this is the wave
-  that introduces it.
+- P4 - **blocked** on the `pdf-sanitizer` sub-feature reaching its
+  plan's phase 9 (which itself sanitises these three IRPF captures
+  and commits them as fixtures). This wave's W1 P4 is the
+  sub-feature's phase 9 — the two are the same step, executed by
+  the sub-feature's plan.
 - P5 - **done**. Modelo 100 extractor lands 83-86 casillas/year
   across `2021.legacy` / `2022.modern` / `2023.modern` revisions.
 - P6 - **na**. Modelo 100 is the consumer of 130/111/115/123;
@@ -210,19 +221,37 @@ For each modelo whose PDF the existing parser misses:
 
 ### Phase 4 (per wave) — Sanitise to fixture
 
-1. Build (W1) or extend (W2+) `scripts/sanitize_justificante.py`
-   to handle the wave's PDF layout. Token-replacement only; no
-   re-render.
-2. Run sanitiser against each captured PDF for the wave.
+This phase delegates to the `pdf-sanitizer` sub-feature. Its plan
+owns the sanitiser implementation; this loop only consumes the
+public API.
+
+1. Operator scaffolds a per-capture mapping:
+   `aeat sanitize prepare-map <captured-pdf> --output
+   scratch/<...>/sanitizer-mapping-<modelo>-<period>.yaml`. The
+   YAML carries `synthetic:` pre-filled and `real:` blank.
+   Operator fills in cleartext locally; the YAML stays gitignored.
+2. Run the sanitiser against each captured PDF for the wave:
+   `aeat sanitize pdf <captured-pdf> --mapping <yaml> --output
+   tests/fixtures/justificantes/<modelo>/<year>-<period>.pdf
+   --report tests/fixtures/justificantes/<modelo>/<year>-<period>.json`.
 3. Verify the sanitised PDF still parses through
    `aeat.justificante.parse_justificante` and produces the
-   synthetic NIF / name / CSV / NRC / IMPORTE values.
-4. Move the sanitised PDF + a sidecar `.json` (the parsed
-   `Justificante`) to
-   `tests/fixtures/justificantes/<modelo>/<year>-<period>.pdf`
-   and `.json`.
-5. Commit: `chore(fixtures): sanitised modelo <N> <year>-<period>
-   justificante (#239)`.
+   synthetic NIF / name / CSV / NRC / IMPORTE values
+   (`aeat sanitize check` runs both checks).
+4. Run `aeat sanitize verify <fixture-pdf> --against <yaml>`. Must
+   exit zero; non-zero means a `real:` value leaked into the
+   sanitised output and the fixture must NOT be committed.
+5. Append the fixture's SHA-256 to
+   `aeat.sanitizer.fixtures.SANITIZED_SHAS` so future
+   re-sanitisation attempts hit `AlreadySanitizedError`.
+6. Commit: `chore(fixtures): sanitised modelo <N> <year>-<period>
+   justificante (#239)`. Per-capture mapping YAML stays gitignored.
+
+If the wave's PDF layout exposes a token-replace edge case the
+sub-feature's `_streams.py` does not yet handle (e.g. cleartext
+spanning multiple `Tj` operands, an unobserved encoding), file a
+follow-up phase against the sub-feature's plan rather than building
+ad-hoc handling here.
 
 ### Phase 5 (per wave) — Declaración deep parse
 
