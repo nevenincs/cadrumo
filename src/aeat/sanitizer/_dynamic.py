@@ -18,7 +18,7 @@ from __future__ import annotations
 import pikepdf
 from pikepdf import Pdf
 
-from ._records import ScrubbedSurface
+from ._records import SanitizationWarning, ScrubbedSurface
 
 
 def strip_attachments(pdf: Pdf) -> ScrubbedSurface:
@@ -122,7 +122,11 @@ def strip_optional_content_groups(pdf: Pdf) -> ScrubbedSurface:
     return ScrubbedSurface(surface="optional_content_groups", count=1)
 
 
-def strip_acroform(pdf: Pdf, *, drop_entirely: bool = False) -> ScrubbedSurface:
+def strip_acroform(
+    pdf: Pdf,
+    *,
+    drop_entirely: bool = False,
+) -> tuple[ScrubbedSurface, tuple[SanitizationWarning, ...]]:
     """Clears AcroForm field values, optionally dropping the form structure.
 
     Args:
@@ -132,23 +136,30 @@ def strip_acroform(pdf: Pdf, *, drop_entirely: bool = False) -> ScrubbedSurface:
             value) entries on every field while preserving the form.
 
     Returns:
-        A counter of fields whose values were cleared (when
-        ``drop_entirely=False``) or one (when the form was dropped).
+        A 2-tuple of (counter, warnings). The counter records the
+        number of fields whose values were cleared (or 1 when the
+        form was dropped wholesale). The warnings tuple includes
+        ``unknown_surface_present`` when a hierarchical form
+        (``/Kids`` chains) is detected — the inherited values
+        require recursive walk that this version does not
+        implement, and the operator should review or pass
+        ``drop_entirely=True``.
     """
     acroform = pdf.Root.get("/AcroForm")
     if acroform is None:
         if drop_entirely:
-            return ScrubbedSurface(surface="acroform_dropped", count=0)
-        return ScrubbedSurface(surface="acroform_field_value", count=0)
+            return ScrubbedSurface(surface="acroform_dropped", count=0), ()
+        return ScrubbedSurface(surface="acroform_field_value", count=0), ()
 
     if drop_entirely:
         del pdf.Root["/AcroForm"]
-        return ScrubbedSurface(surface="acroform_dropped", count=1)
+        return ScrubbedSurface(surface="acroform_dropped", count=1), ()
 
     fields = acroform.get("/Fields")
     if fields is None:
-        return ScrubbedSurface(surface="acroform_field_value", count=0)
+        return ScrubbedSurface(surface="acroform_field_value", count=0), ()
     cleared = 0
+    has_kids = False
     # `Object` is the base pikepdf type and ty's stub doesn't
     # advertise iteration on it directly; the runtime exposes a
     # numeric index. Loop with an explicit range to keep both the
@@ -160,7 +171,23 @@ def strip_acroform(pdf: Pdf, *, drop_entirely: bool = False) -> ScrubbedSurface:
             cleared += 1
         if "/DV" in field:
             del field["/DV"]
-    return ScrubbedSurface(surface="acroform_field_value", count=cleared)
+        if "/Kids" in field:
+            has_kids = True
+
+    warnings: tuple[SanitizationWarning, ...] = ()
+    if has_kids:
+        warnings = (
+            SanitizationWarning(
+                code="unknown_surface_present",
+                detail=(
+                    "AcroForm carries hierarchical /Kids chains; child fields' /V "
+                    "values may survive the in-place clear. Pass drop_acroform=True "
+                    "to wipe the form structure entirely, or extend the sanitiser "
+                    "to recurse into /Kids before re-running."
+                ),
+            ),
+        )
+    return ScrubbedSurface(surface="acroform_field_value", count=cleared), warnings
 
 
 def strip_thumbnails(pdf: Pdf) -> ScrubbedSurface:

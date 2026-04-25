@@ -341,6 +341,23 @@ class TestSecretStrRepr:
         dumped = record.model_dump()
         assert self._CLEARTEXT_NIF not in str(dumped)
 
+    def test_model_dump_json_does_not_leak_cleartext(self) -> None:
+        # The CLI sidecar (`aeat sanitize pdf --report`) calls
+        # ``model_dump(mode="json")`` on the SanitizationResult,
+        # which transitively serialises every Replacement (NEVER
+        # the TokenMap) — but a future caller that sidecars the
+        # mapping would hit this code path. Verify both ``mode=
+        # "json"`` and ``model_dump_json`` mask the cleartext.
+        record = NifReplacement(
+            real=SecretStr(self._CLEARTEXT_NIF),
+            synthetic="Y0000001S",
+            surface_label="taxpayer NIE",
+        )
+        json_dump = record.model_dump(mode="json")
+        json_str = record.model_dump_json()
+        assert self._CLEARTEXT_NIF not in str(json_dump)
+        assert self._CLEARTEXT_NIF not in json_str
+
     def test_token_map_repr_does_not_leak_any_real_value(self) -> None:
         mapping = TokenMap(
             nif=(

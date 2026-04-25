@@ -46,13 +46,13 @@ _FORBIDDEN_VERBS: tuple[str, ...] = (
     "rechazar",
 )
 
-# Substrings that incidentally contain a forbidden verb but are
-# semantically benign. Keep this list narrow and explicit; every
-# entry must be defensible against a code reviewer.
+# Identifiers that incidentally contain a forbidden verb but are
+# semantically benign. Match exactly (not by substring) so a
+# malicious-looking ``commit_streams_to_aeat`` cannot piggyback on
+# a benign whitelist entry. Keep narrow and explicit.
 _WHITELIST: frozenset[str] = frozenset(
     {
         "commit_id",  # git commit hashes are read-only identifiers
-        "commit_streams",  # never appears today; reserved for future allowlist
     }
 )
 
@@ -108,7 +108,7 @@ class TestPublicSurfaceCarriesNoForbiddenVerb:
                     continue
                 lowered = name.lower()
                 if any(verb in lowered for verb in _FORBIDDEN_VERBS):
-                    if name in _WHITELIST or any(allowed in lowered for allowed in _WHITELIST):
+                    if name in _WHITELIST:
                         continue
                     offenders.append((path, name))
         assert offenders == [], (

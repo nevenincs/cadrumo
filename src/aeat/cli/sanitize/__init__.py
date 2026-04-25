@@ -23,10 +23,8 @@ with code 2 before Typer dispatch.
 
 from __future__ import annotations
 
-import hashlib
 import io
 import json
-import sys
 from pathlib import Path
 from typing import Annotated
 
@@ -276,7 +274,7 @@ def check_command(
 
     try:
         pikepdf.Pdf.open(output_pdf)
-    except pikepdf._core.PdfError as exc:
+    except pikepdf.PdfError as exc:
         _ERR_CONSOLE.print(f"[red]pikepdf could not parse {output_pdf}: {exc}[/red]")
         raise typer.Exit(code=1) from exc
 
@@ -455,14 +453,3 @@ def _write_report(result: SanitizationResult, path: Path) -> None:
     """
     payload = result.model_dump(mode="json", exclude={"output_bytes"})
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-
-
-def _hash_bytes(data: bytes) -> str:
-    """Returns the lowercase hex sha-256 of ``data`` (helper for debugging)."""
-    return hashlib.sha256(data).hexdigest()
-
-
-# `sys` import is used by typer / Click internally but keep the
-# binding alive for adversarial environments where lazy import
-# resolution otherwise misses it.
-_ = sys
