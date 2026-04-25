@@ -1,8 +1,8 @@
 {
   "source_sha256": "fa1fa5635be5e4875a841d688149ea21232eb821dfbc1877d697f3f8672e9153",
-  "output_sha256": "0c9c69c90f9665c207104f6a888e15c0741398153cad5f7c514959903284a31c",
+  "output_sha256": "b7e093dcb2bd293d0d93f72af50c9522e98752536dbe3fccdc747236ea697bd1",
   "source_size_bytes": 105164,
-  "output_size_bytes": 102220,
+  "output_size_bytes": 102219,
   "sanitizer_version": "0.1.0",
   "determinism_flags": {
     "deterministic_id": true,
@@ -30,7 +30,7 @@
         92
       ],
       "real_sha256": "eb525256e0c090a32b973bbf81853eba45e33e0b6be36b09e24dfb017e501b4f",
-      "synthetic": "SANITIZED130XXXX",
+      "synthetic": "SANITIZED1302023",
       "encoding": "literal"
     },
     {
@@ -80,7 +80,7 @@
         219
       ],
       "real_sha256": "eb525256e0c090a32b973bbf81853eba45e33e0b6be36b09e24dfb017e501b4f",
-      "synthetic": "SANITIZED130XXXX",
+      "synthetic": "SANITIZED1302023",
       "encoding": "literal"
     },
     {
@@ -240,7 +240,7 @@
         1156
       ],
       "real_sha256": "eb525256e0c090a32b973bbf81853eba45e33e0b6be36b09e24dfb017e501b4f",
-      "synthetic": "SANITIZED130XXXX",
+      "synthetic": "SANITIZED1302023",
       "encoding": "literal"
     }
   ],
