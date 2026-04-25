@@ -20,6 +20,8 @@ related:
   - '[[2026-04-25-aeat-verify-exec]]'
   - '[[2026-04-25-aeat-verify-plan]]'
   - '[[2026-04-25-aeat-verify-research]]'
+  - '[[2026-04-26-aeat-verify-audit]]'
+  - '[[2026-04-27-aeat-verify-audit]]'
 ---
 
 # `aeat-verify` feature index
@@ -37,6 +39,8 @@ Auto-generated index of all documents tagged with `#aeat-verify`.
 
 - `2026-04-24-aeat-verify-audit` - aeat-verify code review audit
 - `2026-04-25-aeat-verify-audit` - `aeat-verify` audit: `modelo-coverage-matrix-and-rewrite-status`
+- `2026-04-26-aeat-verify-audit` - `aeat-verify` audit: `modelo-100-w1-pipeline-status`
+- `2026-04-27-aeat-verify-audit` - `aeat-verify` audit: `post-pdf-sanitizer-completion-state`
 
 ### exec
 
