@@ -14,7 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from ...justificante import Justificante
+from ...config import PROJECT_ROOT
+from ...justificante import Justificante, parse_justificante
+from ...testing import synthesize_filing_draft
 from .._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
 from . import (
     FilingDivergenceKind,
@@ -61,8 +63,6 @@ def _make_draft(
 
 def _justificante_for(year: str) -> Justificante:
     """Parse one of the real IRPF captures under scratch/ if present."""
-    from ...justificante import parse_justificante
-
     candidates = list(Path("scratch/recon-corpus").rglob(f"irpf-{year}/justificante.pdf"))
     if not candidates:
         pytest.skip(f"no live IRPF {year} capture under scratch/recon-corpus/")
@@ -172,10 +172,6 @@ class TestLiveReconcileDryRun:
         ejercicio: str,
         period: str,
     ) -> None:
-        from ...config import PROJECT_ROOT
-        from ...justificante import parse_justificante
-        from ...testing import synthesize_filing_draft
-
         pdf_path = PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / modelo / f"{ejercicio}-{period}.pdf"
         justificante = parse_justificante(pdf_path)
         # Build an APPROVED draft whose modelo/period/tax_id match
@@ -214,8 +210,6 @@ class TestLiveReconcileDryRun:
         assert any(m.kind is FilingDivergenceKind.MODELO_MISMATCH for m in report.mismatches)
 
     def test_no_justificante_reports_not_yet_found(self) -> None:
-        from ...testing import synthesize_filing_draft
-
         draft = synthesize_filing_draft(
             modelo="100",
             period="0A",
