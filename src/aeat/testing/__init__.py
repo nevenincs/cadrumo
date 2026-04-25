@@ -86,6 +86,10 @@ from ._schema import (
     FixtureScalar,
     compute_record_id,
 )
+from ._synthesize import (
+    synthesize_filing_draft,
+    synthesize_filing_draft_from_decimals,
+)
 
 __all__ = [
     "SYNTHETIC_FIXTURES_ROOT",
@@ -97,4 +101,6 @@ __all__ = [
     "FixtureScalar",
     "compute_record_id",
     "load_filing_history",
+    "synthesize_filing_draft",
+    "synthesize_filing_draft_from_decimals",
 ]
