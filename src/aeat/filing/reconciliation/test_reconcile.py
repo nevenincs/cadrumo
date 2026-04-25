@@ -141,3 +141,87 @@ class TestTriadIsExhaustive:
             "divergent",
             "not_yet_found",
         }
+
+
+class TestLiveReconcileDryRun:
+    """End-to-end W1 P7 dry-run: synthesize_filing_draft + corpus PDF -> MATCH.
+
+    This pins the full Kent-observable happy path entirely offline:
+    a synthesised APPROVED FilingDraft for one of the committed
+    sanitised fixtures, paired with parse_justificante() reading the
+    same fixture's PDF, must reconcile to MATCH. Equivalent to the
+    live ``aeat filing reconcile`` flow but with no AEAT round-trip.
+    """
+
+    @pytest.mark.parametrize(
+        "modelo,ejercicio,period",
+        [
+            ("100", "2021", "0A"),
+            ("100", "2022", "0A"),
+            ("100", "2023", "0A"),
+            ("130", "2024", "1T"),
+            ("130", "2024", "4T"),
+            ("303", "2024", "1T"),
+            ("303", "2024", "4T"),
+            ("390", "2023", "0A"),
+        ],
+    )
+    def test_synthesised_draft_matches_committed_fixture(
+        self,
+        modelo: str,
+        ejercicio: str,
+        period: str,
+    ) -> None:
+        from ...config import PROJECT_ROOT
+        from ...justificante import parse_justificante
+        from ...testing import synthesize_filing_draft
+
+        pdf_path = PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / modelo / f"{ejercicio}-{period}.pdf"
+        justificante = parse_justificante(pdf_path)
+        # Build an APPROVED draft whose modelo/period/tax_id match
+        # the parsed fixture exactly.
+        draft = synthesize_filing_draft(
+            modelo=modelo,
+            period=period,
+            profile_tax_id=justificante.tax_id,
+            casilla_values={"01": Decimal("0")},
+        )
+        report = reconcile(draft, justificante, now=_FIXED_NOW)
+        assert report.status is ReconciliationStatus.MATCH, (
+            f"{modelo}/{ejercicio}-{period} did not MATCH: mismatches={report.mismatches}"
+        )
+        # The match path must produce a clean trilingual narrative.
+        assert report.narrative.get("es")
+        assert report.narrative.get("en")
+        assert report.narrative.get("hu")
+
+    def test_synthesised_draft_with_wrong_modelo_diverges(self) -> None:
+        from ...config import PROJECT_ROOT
+        from ...justificante import parse_justificante
+        from ...testing import synthesize_filing_draft
+
+        pdf_path = PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / "100" / "2022-0A.pdf"
+        justificante = parse_justificante(pdf_path)
+        # Deliberately mismatch — draft says 130, fixture is 100.
+        draft = synthesize_filing_draft(
+            modelo="130",
+            period="0A",
+            profile_tax_id=justificante.tax_id,
+            casilla_values={"01": Decimal("0")},
+        )
+        report = reconcile(draft, justificante, now=_FIXED_NOW)
+        assert report.status is ReconciliationStatus.DIVERGENT
+        assert any(m.kind is FilingDivergenceKind.MODELO_MISMATCH for m in report.mismatches)
+
+    def test_no_justificante_reports_not_yet_found(self) -> None:
+        from ...testing import synthesize_filing_draft
+
+        draft = synthesize_filing_draft(
+            modelo="100",
+            period="0A",
+            casilla_values={"0511": Decimal("5550.00")},
+        )
+        # Reconcile against None — simulates the AEAT-has-no-record path.
+        report = reconcile(draft, None, now=_FIXED_NOW)
+        assert report.status is ReconciliationStatus.NOT_YET_FOUND
+        assert any(m.kind is FilingDivergenceKind.FILING_NOT_YET_FOUND for m in report.mismatches)
