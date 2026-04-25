@@ -30,34 +30,9 @@ from decimal import Decimal
 
 import pytest
 
-from .._formula import (
-    BracketsFormula,
-    DivFormula,
-    MulFormula,
-    PercentFormula,
-    SubFormula,
-)
-from . import (
-    ALL_RULESETS,
-    MODELO_100_SUMMARY_2025,
-    MODELO_111_2024,
-    MODELO_111_2025,
-    MODELO_115_2024,
-    MODELO_115_2025,
-    MODELO_123_2024,
-    MODELO_123_2025,
-    MODELO_130_2024,
-    MODELO_130_2025,
-    MODELO_131_2024,
-    MODELO_131_2025,
-    MODELO_180_2024,
-    MODELO_180_2025,
-    MODELO_200_2024,
-    MODELO_202_2025,
-    MODELO_303_2024,
-    MODELO_303_2025,
-    MODELO_390_2025,
-)
+from .._formula import SubFormula
+from .._ruleset import Ruleset
+from . import ALL_RULESETS
 from ._mutators import (
     classify_percent_rate,
     iter_brackets_nodes,
@@ -69,7 +44,7 @@ from ._mutators import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
-def _count_per_ruleset(ruleset) -> dict[str, int]:
+def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
     """Return per-mutator-class node counts for a single ruleset."""
     counts = {
         "sub_op": 0,
@@ -87,11 +62,6 @@ def _count_per_ruleset(ruleset) -> dict[str, int]:
         for node in iter_compound_descendants(fd.formula):
             if isinstance(node, SubFormula):
                 counts["sub_op"] += 1
-            if isinstance(node, MulFormula):
-                # Only *direct* literal leaves of a Mul/Div are
-                # counted by the scalar mutator. The walker below
-                # via :func:`iter_scalar_leaf_paths` reflects that.
-                pass
         # PercentFormula classification.
         for path, percent_node in iter_percent_nodes(fd.formula):
             location = classify_percent_rate(fd, path, percent_node)
@@ -284,7 +254,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
 
 
 @pytest.mark.parametrize("ruleset", ALL_RULESETS, ids=lambda r: r.ruleset_id)
-def test_per_ruleset_node_counts_match_expected(ruleset) -> None:
+def test_per_ruleset_node_counts_match_expected(ruleset: Ruleset) -> None:
     """Every landed ruleset's mutable-node fingerprint matches the expected map.
 
     A divergence here means a future ruleset addition has changed the
@@ -334,8 +304,9 @@ def test_aggregate_kill_rate_floor_is_satisfied() -> None:
     # (any failure there would have failed this session before
     # reaching here).
     killed = populated
-    assert killed / populated >= Decimal("0.90") or killed >= populated, (
-        f"aggregate kill-rate {killed / populated} < 0.90 floor; "
+    kill_rate = Decimal(killed) / Decimal(populated)
+    assert kill_rate >= Decimal("0.90"), (
+        f"aggregate kill-rate {kill_rate} < 0.90 floor; "
         f"populated={populated}, killed={killed}, unflagged={catalogued_unflagged}"
     )
 
@@ -397,30 +368,3 @@ def test_catalogue_totals_are_non_trivial() -> None:
     assert "**0**" not in totals_line.split("|")[2].strip(), "percent_rate column must be non-zero"
     assert "**0**" not in totals_line.split("|")[3].strip(), "brackets_threshold column must be non-zero"
     assert "**0**" not in totals_line.split("|")[4].strip(), "mul_div_scalar column must be non-zero"
-
-
-# Mention the rulesets we explicitly test so static analysis sees them
-# as used. The kill-rate asserter consumes ``ALL_RULESETS`` and the
-# imports below are used for the readability of the EXPECTED_COUNTS
-# keys (every ruleset_id key matches a real Ruleset).
-_REFERENCED_RULESETS = (
-    MODELO_100_SUMMARY_2025,
-    MODELO_111_2024,
-    MODELO_111_2025,
-    MODELO_115_2024,
-    MODELO_115_2025,
-    MODELO_123_2024,
-    MODELO_123_2025,
-    MODELO_130_2024,
-    MODELO_130_2025,
-    MODELO_131_2024,
-    MODELO_131_2025,
-    MODELO_180_2024,
-    MODELO_180_2025,
-    MODELO_200_2024,
-    MODELO_202_2025,
-    MODELO_303_2024,
-    MODELO_303_2025,
-    MODELO_390_2025,
-)
-_REFERENCED_NODE_TYPES = (BracketsFormula, DivFormula, MulFormula, PercentFormula, SubFormula)

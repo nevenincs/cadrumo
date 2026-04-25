@@ -150,10 +150,11 @@ def _walk_with_paths(node: object, prefix: tuple[int, ...]) -> Iterator[tuple[tu
     """Yield ``(path, node)`` for every node in the subtree, root-first.
 
     ``path`` is a tuple of operand indices from the original root; an
-    empty tuple identifies the root. Paths into a :class:`Bracket`
-    (the bracket array of a :class:`BracketsFormula`) are emitted as
-    sentinel tuples with a string second element — the bracket
-    enumerator handles those separately.
+    empty tuple identifies the root. The walker descends through every
+    compound node's ``operands`` field but does NOT recurse into the
+    ``brackets`` field of a :class:`BracketsFormula` — bracket-step
+    enumeration is handled by :func:`mutate_brackets_threshold` and
+    :func:`iter_brackets_nodes` directly.
     """
     yield prefix, node
     if _is_compound(node):
