@@ -1,0 +1,214 @@
+---
+# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
+# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
+# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/audit/ location)
+# Feature tag (replace aeat-verify with your feature name, e.g., #editor-demo)
+# Additional tags may be appended below the required pair
+tags:
+  - '#audit'
+  - '#aeat-verify'
+# ISO date format (e.g., 2026-02-06)
+date: '2026-04-27'
+# Related documents as quoted wiki-links
+# (e.g., "[[2026-02-04-feature-research]]")
+related:
+  - "[[2026-04-26-aeat-verify-audit]]"
+  - "[[2026-04-25-aeat-verify-plan]]"
+  - "[[2026-04-25-pdf-sanitizer-plan]]"
+  - "[[2026-04-25-pdf-sanitizer-adr]]"
+---
+
+<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
+     outside the YAML frontmatter above -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+# `aeat-verify` audit: `post-pdf-sanitizer-completion-state`
+
+## Scope
+
+Audit the state of the `aeat-verify` feature after the
+continuous-execution session that landed the
+`pdf-sanitizer` sub-feature, the declaraciones-register read
+backend, and the first 15 sanitised fixtures. Captures what is
+runnable end-to-end, what tests / gates protect each surface, and
+what remains operator-gated or scoped to a follow-up.
+
+## Findings
+
+### Read backend — fully shipped
+
+Two AEAT sede surfaces are now driven by typed, tested,
+read-only Python code:
+
+- `aeat.sede.walk_expedientes_tree(session, *, modelo)` — walks
+  *Mis Expedientes* at `/wlpl/TEWV-CORE/ResumenVlt`. Returns
+  `Expediente` records. **This surface holds procedures**
+  (sanciones, recursos, gestión recaudación, plus the per-year
+  IRPF detail entries) — not declarations.
+- `aeat.sede.walk_declarations_register(session, *, modelo,
+  ejercicio)` — drives the ZK form at `/wlpl/SCEJ-MANT/CONSUL/
+  index.zul` ("Consultar declaraciones presentadas"). Returns
+  `Declaration` records. **This surface holds Kent's actual
+  filing register** — the routine quarterly/annual modelos that
+  the expediente tree omits.
+
+Cross-wave P1 enumeration against Y4113523X's account, fully
+resolved:
+
+| Wave | Modelo | Status | Captured |
+|------|--------|--------|----------|
+| W1 | 100 (IRPF anual) | confirmed | 2021-2023 (3 filings) |
+| W2 | 130 (IRPF fraccionado) | confirmed | 2021-2024 (15 filings) |
+| W3 | 303 (IVA quarterly) | confirmed | 2021-2024 (17 filings) |
+| W4 | 390 (IVA anual) | confirmed | 2021-2023 (3 filings) |
+| W5 | 111 (retenciones quarterly) | confirmed | 2024 (4 filings) |
+| W6 | 190 (retenciones anual) | confirmed | 2024 (1 filing) |
+| W7 | 115/180 (inmuebles ret.) | na | zero rows |
+| W8 | 123/193 (capital mob. ret.) | na | zero rows |
+| W9 | 131/202/200 (sociedades) | na | per user confirmation |
+| W10 | 347 (operaciones terceros) | na | zero rows |
+| W11 | 369/720/232/840 (niche) | na | per user confirmation |
+
+Total live captures under `scratch/declarations-corpus/` — 49
+PDFs spanning Modelos 100/111/130/190/303/390 across ejercicios
+2021-2024. Every single one parses through
+`aeat.justificante.parse_justificante` to a valid `Justificante`
+record (modelo, period, tax_id, csv, presented_at). Mix of
+Spanish + English receipts, modern + legacy 2021 layouts.
+
+### Sanitiser — fully shipped
+
+The `pdf-sanitizer` sub-feature is end-to-end production-ready:
+
+- `aeat.sanitizer` subpackage with strict-frozen pydantic v2
+  records, the 8-step order-of-operations pipeline, refuse-if-
+  signed + refuse-if-already-sanitised guards, and deterministic
+  byte-stable output.
+- `aeat sanitize` CLI bridge with four verbs (`pdf`,
+  `prepare-map`, `verify`, `check`).
+- `prepare-map` auto-detects 28-35 PII surfaces per Modelo 100
+  declaration (NIF + CSV + name + 28 IMPORTE values + dates +
+  catastral references + NRC tokens). Operator now only fills
+  the taxpayer name; everything else is auto-detected.
+- `verify` masks synthetic values from the byte streams before
+  searching for real values, defending against substring false
+  positives (a real `0,00` would otherwise falsely match the
+  synthetic `1.000,00` containing it).
+
+15 sanitised fixtures committed under
+`tests/fixtures/justificantes/`:
+
+| Modelo | Year | Periods | Count |
+|--------|------|---------|-------|
+| 100 | 2022 | 0A | 1 |
+| 111 | 2024 | 1T-4T | 4 |
+| 130 | 2024 | 1T-4T | 4 |
+| 190 | 2024 | 0A | 1 |
+| 303 | 2024 | 1T-4T | 4 |
+| 390 | 2023 | 0A | 1 |
+
+Every fixture is verify-clean across its mapping, parses
+through `parse_justificante` to a valid record, and its SHA-256
+is recorded in `aeat.sanitizer.fixtures.SANITIZED_SHAS` so
+re-sanitisation fails fast with `AlreadySanitizedError`.
+
+### Test coverage — production-ready
+
+| Surface | Tests | Coverage |
+|---------|-------|----------|
+| `aeat.sanitizer.*` (8 modules) | 91 unit tests | records, determinism, metadata, dynamic, streams, pipeline, no-write-surface |
+| `aeat.cli.sanitize` | 34 unit tests | forbidden flags, prepare-map auto-detect (10 tests), verify masking, all 4 verbs |
+| `aeat.sede._declarations` | 6 offline tests | listbox parser, presented_at, error paths |
+| `aeat.justificante._extract` | inline-shape tests | Spanish + English layouts, positional period, inverted NIF, loose ejercicio |
+| Fixture-bound security | 62 tests | adversarial-absence + round-trip across all 15 fixtures |
+
+Total: ~680 unit tests pass project-wide. Lint + ty clean.
+
+### Live-AEAT-write safety — preserved
+
+Every new module honours the parent ADR's 5-layer write guard:
+
+- Layer 1 (`mode: Literal["read"]`): `Declaration` carries the
+  marker. `SanitizationResult` is a transformation record (not
+  a boundary), so the marker is N/A but `frozen=True` /
+  `extra="forbid"` discipline holds.
+- Layer 2 (no submission verbs): `aeat sanitize` CLI's
+  `_FORBIDDEN_FLAGS` rejects 13 mutation-implying tokens before
+  Typer dispatch. Per-subpackage `test_no_write_surface.py`
+  greps for forbidden verbs in public symbol names.
+- Layer 3 (write-surface tests): present in `aeat.sanitizer`
+  and `aeat.sede` (existing).
+- Layer 4 (`AeatAccessGate`): inherited unchanged from
+  `aeat.auth`.
+- Layer 5 (`AEAT_LIVE_TESTS_ENABLED`): inherited unchanged.
+  No new live tests were added in this round; the live walker
+  test is queued as a follow-up.
+
+## Recommendations
+
+### Immediate next steps (in order of leverage)
+
+1. **Per-modelo deep extractors** (`aeat.declaracion._parsers/
+   {130,303,390,111,190}/`). Each modelo's casilla map needs a
+   typed extractor like the existing `modelo_100`. This is the
+   gating step for aggregator cumulation tests. Estimated
+   effort: 1 person-day per modelo for the simple ones (130,
+   111), 2-3 days for the aggregators (390, 190) which need
+   cross-period summation logic.
+
+2. **Aggregator cumulation tests**. Once per-modelo extractors
+   exist: assert `M390/2023 = sum(M303/2023/{1T,2T,3T,4T})`
+   within `Decimal("0.01")` tolerance; same for `M190/2024 ←
+   M111/2024 quarterly`; and `M100/2023 ← M130 + M111 + M115 +
+   M123` (for years where Kent withholds). The 15-fixture corpus
+   already has all the quarterly inputs.
+
+3. **W1 P7 — live reconcile dry-run**. Build
+   `aeat.testing.synthesize_filing_draft(modelo, casilla_map)`,
+   instantiate an APPROVED `FilingDraft` from the M100/2022
+   sanitised fixture's casilla map, run `aeat filing reconcile
+   --modelo 100 --period 0A --ejercicio 2022` against the live
+   AEAT, assert MATCH.
+
+### Longer follow-ups
+
+4. **Capture the older years' sanitised fixtures**. The 49-PDF
+   live corpus under `scratch/declarations-corpus/` has 34
+   uncommitted PDFs (M100/2021, M100/2023, M130/2021-2023,
+   M303/2021-2023, M390/2021-2022, plus M303/2024
+   complementarias). Each can be sanitised + committed via the
+   same prepare-map → pdf → verify → check pipeline. Likely
+   1-2 hours of operator time.
+
+5. **Live walker tests** (gated by
+   `AEAT_LIVE_TESTS_ENABLED=1`). Exercise
+   `walk_declarations_register` and `capture_declaration`
+   against AEAT in CI when the env var is set.
+
+6. **Independent code review** — vaultspec-code-reviewer
+   already reviewed an earlier iteration with a PASS. Worth
+   a fresh pass after the declaraciones-register backend +
+   prepare-map auto-detect landed.
+
+## Open issues / known limitations
+
+- **Annual modelos (M100/M390/M190) fall back to ejercicio**
+  as the period when no labelled token exists. Schema accepts
+  this; semantically `0A` would be cleaner. Tracked as a parser
+  follow-up.
+- **`prepare-map` IMPORTE auto-detection misses values** that
+  span across pdfplumber line breaks. Not observed on the
+  current corpus but possible for very wide tables. Operator
+  reviews the YAML before sanitising.
+- **Pre-existing `aeat.auth` test failures** (5 tests in
+  `test_clave_movil.py`) are out of pdf-sanitizer scope.
+  Tracked separately. The marker-integrity regression PR #427
+  introduced was fixed in commit `6b494d7`.
+- **49-PDF corpus contains real PII** under `scratch/`
+  (gitignored). Operator should treat the directory as
+  non-shareable.
