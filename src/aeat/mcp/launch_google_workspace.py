@@ -21,7 +21,7 @@ from typing import NoReturn
 
 from ..auth import GoogleAuthPath, inspect_google_auth
 from ..config import PROJECT_ROOT, Settings, load_settings
-from ..errors import AeatError
+from ..mcp._errors import McpLaunchError
 
 WORKSPACE_MCP_CREDENTIALS_DIR_ENV = "WORKSPACE_MCP_CREDENTIALS_DIR"
 WORKSPACE_MCP_SERVICE_ACCOUNT_FILE_ENV = "GOOGLE_SERVICE_ACCOUNT_KEY_FILE"
@@ -65,7 +65,7 @@ def ensure_project_env_file(
     if env_path.exists():
         return env_path
     if not example_path.exists():
-        raise AeatError(f"Cannot provision env file because the example is missing: {example_path}")
+        raise McpLaunchError(f"Cannot provision env file because the example is missing: {example_path}")
     env_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(example_path, env_path)
     return env_path
@@ -101,10 +101,12 @@ def _require_supported_credentials(settings: Settings) -> tuple[GoogleAuthPath, 
 
     inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
     if inspection.active_path is None:
-        raise AeatError(inspection.blocking_reason or "google-workspace MCP launch requires local Google credentials")
+        raise McpLaunchError(
+            inspection.blocking_reason or "google-workspace MCP launch requires local Google credentials"
+        )
     if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
         if not inspection.desktop_oauth_complete:
-            raise AeatError(
+            raise McpLaunchError(
                 "google-workspace MCP launch requires a complete Desktop OAuth local-dev configuration in env/.env."
             )
         return (inspection.active_path, None)
@@ -112,8 +114,8 @@ def _require_supported_credentials(settings: Settings) -> tuple[GoogleAuthPath, 
     if service_account_path is None:
         configured = inspection.service_account_configured_path
         if configured is not None:
-            raise AeatError(f"Configured service-account key file does not exist: {configured}")
-        raise AeatError("google-workspace MCP launch requires a configured service-account key path in env/.env.")
+            raise McpLaunchError(f"Configured service-account key file does not exist: {configured}")
+        raise McpLaunchError("google-workspace MCP launch requires a configured service-account key path in env/.env.")
     return (inspection.active_path, _resolve_project_path(str(service_account_path)))
 
 
@@ -159,7 +161,7 @@ def resolve_executable(spec: LaunchSpec) -> str:
 
     executable = shutil.which(spec.argv[0], path=spec.env.get("PATH"))
     if executable is None:
-        raise AeatError(f"Required executable not found on PATH: {spec.argv[0]}")
+        raise McpLaunchError(f"Required executable not found on PATH: {spec.argv[0]}")
     return executable
 
 
