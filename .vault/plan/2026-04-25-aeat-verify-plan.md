@@ -105,11 +105,17 @@ record (created when the wave starts, even if it ends `na`).
 - P2 - **done**. Raw PDFs at the captured paths.
 - P3 - **done**. Justificante metadata extracts cleanly across all
   three template revisions.
-- P4 - **blocked** on the `pdf-sanitizer` sub-feature reaching its
-  plan's phase 9 (which itself sanitises these three IRPF captures
-  and commits them as fixtures). This wave's W1 P4 is the
-  sub-feature's phase 9 — the two are the same step, executed by
-  the sub-feature's plan.
+- P4 - **partial**. The `pdf-sanitizer` sub-feature is fully
+  built (P1-P8 of its own plan: 91 sanitizer tests + 23 CLI tests,
+  120 total green). End-to-end pipeline validated against the
+  2022 IRPF capture in `scratch/sanitizer-validation/`: 19
+  content-stream rewrite edits, 9 mapping entries verified, zero
+  leaks, deterministic byte-equal output across runs. Committing
+  fixtures into `tests/fixtures/justificantes/100/` is operator-
+  gated on enumerating every Modelo-100 monetary casilla and free-
+  text field in the per-capture mapping (~80 entries per
+  declaration). See `2026-04-26-aeat-verify-audit` for the full
+  status breakdown.
 - P5 - **done**. Modelo 100 extractor lands 83-86 casillas/year
   across `2021.legacy` / `2022.modern` / `2023.modern` revisions.
 - P6 - **na**. Modelo 100 is the consumer of 130/111/115/123;

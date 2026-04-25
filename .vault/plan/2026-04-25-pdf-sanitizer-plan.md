@@ -46,16 +46,21 @@ fixtures.
 
 ## Phase status (point-in-time)
 
-- Phase 1 — `pending`
-- Phase 2 — `pending` (blocks on P1)
-- Phase 3 — `pending` (blocks on P2)
-- Phase 4 — `pending` (blocks on P3)
-- Phase 5 — `pending` (blocks on P4)
-- Phase 6 — `pending` (blocks on P5)
-- Phase 7 — `pending` (blocks on P6)
-- Phase 8 — `pending` (blocks on P7)
-- Phase 9 — `pending` (blocks on P8; integrates back into the
-  parent `aeat-verify` plan's W1 P4)
+- Phase 1 — `done` (commit `e58f2d2`)
+- Phase 2 — `done` (commit `6f9cb48`)
+- Phase 3 — `done` (commit `aa3c801`)
+- Phase 4 — `done` (commit `efcaed5`)
+- Phase 5 — `done` (commit `184898c`)
+- Phase 6 — `done` (commit `8e528d9`)
+- Phase 7 — `done` (commit `460965a`)
+- Phase 8 — `done` (commit `cf6ce32`)
+- Phase 9 — `partial`. Pipeline runs end-to-end on the 2022 IRPF
+  capture (`scratch/sanitizer-validation/`): 19 replacement edits,
+  9 mapping entries verified, deterministic output. Committing
+  fixtures into `tests/fixtures/justificantes/` is operator-gated
+  on enumerating every PII surface (monetary casillas, free-text
+  fields) in each declaration. See `2026-04-26-aeat-verify-audit`
+  for the closure path.
 
 ## Tasks
 
