@@ -168,26 +168,36 @@ Every new module honours the parent ADR's 5-layer write guard:
    M123` (for years where Kent withholds). The 15-fixture corpus
    already has all the quarterly inputs.
 
-3. **W1 P7 — live reconcile dry-run**. Build
+3. ~~**W1 P7 — live reconcile dry-run**. Build
    `aeat.testing.synthesize_filing_draft(modelo, casilla_map)`,
    instantiate an APPROVED `FilingDraft` from the M100/2022
    sanitised fixture's casilla map, run `aeat filing reconcile
    --modelo 100 --period 0A --ejercicio 2022` against the live
-   AEAT, assert MATCH.
+   AEAT, assert MATCH.~~ **Offline portion shipped** in commits
+   `c309602` (`synthesize_filing_draft` helper + 15 unit tests)
+   and `dd8e8c4` (10 dry-run tests parametrised across the
+   committed corpus: 8 MATCH, 1 DIVERGENT, 1 NOT_YET_FOUND).
+   Live AEAT version still requires a fresh Cl@ve session and
+   moves to follow-up #5 below.
 
 ### Longer follow-ups
 
-4. **Capture the older years' sanitised fixtures**. The 49-PDF
+4. ~~**Capture the older years' sanitised fixtures**. The 49-PDF
    live corpus under `scratch/declarations-corpus/` has 34
    uncommitted PDFs (M100/2021, M100/2023, M130/2021-2023,
    M303/2021-2023, M390/2021-2022, plus M303/2024
    complementarias). Each can be sanitised + committed via the
    same prepare-map → pdf → verify → check pipeline. Likely
-   1-2 hours of operator time.
+   1-2 hours of operator time.~~ **Done** in commit `c69a570`
+   (25 fixtures: M100/2021+2023, M130/2021+2022+2023 full year,
+   M303/2021+2022+2023 full year, M390/2021+2022). All passed
+   the prepare-map → pdf → verify → check pipeline; SHAs
+   registered in `aeat.sanitizer.fixtures.SANITIZED_SHAS`.
 
 5. **Live walker tests** (gated by
    `AEAT_LIVE_TESTS_ENABLED=1`). Exercise
-   `walk_declarations_register` and `capture_declaration`
+   `walk_declarations_register`, `capture_declaration`, and
+   `aeat filing reconcile --modelo 100 --ejercicio 2022 --period 0A`
    against AEAT in CI when the env var is set.
 
 6. **Independent code review** — vaultspec-code-reviewer
@@ -362,3 +372,64 @@ This is the gating design decision before per-modelo deep
 extractors are worth building in scope; recorded here so the
 follow-up PR can pick a path explicitly rather than discovering
 the constraint mid-implementation.
+
+## Round-5: corpus extension + parser fix + W1 P7 offline closure
+
+This wave drove three previously-blocking follow-ups to completion
+in a single autonomous pass with no AEAT round-trip.
+
+### Corpus extension (commit `c69a570` + `6bbf76c`)
+
+Sanitised 25 additional capture PDFs through the existing
+prepare-map → pdf → verify → check pipeline:
+
+- **M100**: 2021, 2023 (joining 2022)
+- **M130**: 2021 Q2-Q4, 2022 Q1-Q4, 2023 Q1-Q4
+- **M303**: 2021 Q2-Q4, 2022 Q1-Q4, 2023 Q1-Q4
+- **M390**: 2021, 2022 (joining 2023)
+
+Total committed corpus is now 40 sanitised justificantes
+spanning 4 modelos × 4 years (2021-2024). Every fixture passed
+verify (zero leaks against the per-capture mapping) and check
+(parse_justificante binds modelo/period/csv/tax_id correctly).
+
+### Parser fix: positional year promoted to ejercicio
+
+The corpus regression test `TestRealCorpusParses` (commit
+`6bbf76c`, 41 parametrised tests walking every committed
+fixture) surfaced a real parser bug: pre-2024 quarterly
+modelos (M130 2021-2023) print only the positional
+``Y0000001S 2022 4T`` line with no labelled "Ejercicio 2022"
+anywhere. The parser's ejercicio extraction relied on
+label-bound regexes only, so `record.ejercicio` came back
+`None` for those layouts. Fixed by promoting
+`_PERIOD_POSITIONAL_RE.group("year")` to ejercicio when the
+labelled extractors found nothing. 11 M130 fixtures
+re-generated with year-embedded synthetic CSVs to match the
+new shape. SHAs updated in `aeat.sanitizer.fixtures`.
+
+### W1 P7 offline portion (commits `c309602` + `dd8e8c4`)
+
+- **`aeat.testing.synthesize_filing_draft`** — strict-frozen
+  FilingDraft factory taking a casilla map. Default status
+  APPROVED so the result is immediately ready for
+  `aeat filing reconcile`. Companion
+  `synthesize_filing_draft_from_decimals` coerces decimal-as-string
+  values at the boundary. 15 unit tests cover every invariant
+  (frozen, draft_id determinism, status propagation, approved_by
+  provenance, decimal coercion).
+- **End-to-end dry-run** — `TestLiveReconcileDryRun` parametrises
+  10 cases across the corpus: 8 MATCH (M100/2021-2023, M130/2024
+  1T+4T, M303/2024 1T+4T, M390/2023), 1 DIVERGENT (modelo
+  mismatch), 1 NOT_YET_FOUND (justificante=None). Each MATCH
+  case asserts the trilingual narrative is populated. Pure
+  offline — never reaches AEAT.
+
+### Read-only mandate honoured
+
+Every commit in this wave is local-only: PDF sanitisation reads
+files and writes files. The reconcile dry-run reads files and
+runs pure-construction helpers. Zero AEAT requests in any path.
+The five-layer write guard (mode marker, no-write verbs,
+no-write-surface tests, AeatAccessGate, AEAT_LIVE_TESTS_ENABLED)
+remains intact.
