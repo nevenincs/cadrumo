@@ -112,12 +112,8 @@ def run_engine_next(
     today: date | None = None,
 ) -> WorkflowResult:
     """Build, run, persist, and emit a ``run_next`` invocation."""
-    try:
-        engine = _build_engine()
-        profile = _build_profile()
-    except WorkflowError as exc:
-        _CONSOLE.print(f"[red]refusing:[/red] {exc}")
-        raise typer.Exit(code=1) from exc
+    engine = _build_engine()
+    profile = _build_profile()
     result = asyncio.run(
         engine.run_next(
             profile,
@@ -140,12 +136,8 @@ def run_engine_for_period(
     today: date | None = None,
 ) -> WorkflowResult:
     """Build, run, persist, and emit a ``run_for_period`` invocation."""
-    try:
-        engine = _build_engine()
-        profile = _build_profile()
-    except WorkflowError as exc:
-        _CONSOLE.print(f"[red]refusing:[/red] {exc}")
-        raise typer.Exit(code=1) from exc
+    engine = _build_engine()
+    profile = _build_profile()
     result = asyncio.run(
         engine.run_for_period(
             profile,

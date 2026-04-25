@@ -29,7 +29,7 @@ class CasillaParseError(CasillaError):
 class VerifyError(CasillaError):
     """Base class for structured verification failures."""
 
-    code = "verify_error"
+    casilla_code = "verify_error"
 
     def __init__(
         self,
@@ -56,22 +56,22 @@ class VerifyError(CasillaError):
     def __str__(self) -> str:
         """Render a compact, user-facing error string."""
         location = self.casilla_id or "<catalogue>"
-        return f"{self.code}: {self.modelo}/{self.period}/{location}: {self.message}"
+        return f"{self.casilla_code}: {self.modelo}/{self.period}/{location}: {self.message}"
 
 
 class UnreviewedRecordError(VerifyError):
     """Raised when a canonical record lacks required review metadata."""
 
-    code = "unreviewed_record"
+    casilla_code = "unreviewed_record"
 
 
 class CrossReferenceError(VerifyError):
     """Raised when a record references another casilla that does not exist."""
 
-    code = "cross_reference"
+    casilla_code = "cross_reference"
 
 
 class MissingFieldError(VerifyError):
     """Raised when a record is missing a required logical field."""
 
-    code = "missing_field"
+    casilla_code = "missing_field"
