@@ -153,7 +153,13 @@ def _reconcile_cmd(
         raise typer.Exit(code=1) from exc
 
     if json_output:
-        typer.echo(json.dumps(report.model_dump(mode="json"), indent=2, ensure_ascii=False))
+        # Write directly to sys.stdout's buffer in UTF-8 — typer.echo
+        # (and the underlying click.echo) re-encode through stdout's
+        # locale codec, which on Windows is cp1252 by default and
+        # cannot encode the Hungarian Translatable narrative ("ő",
+        # U+0151). Bypassing the codec is the safest fix.
+        rendered = json.dumps(report.model_dump(mode="json"), indent=2, ensure_ascii=False)
+        _write_json_utf8(rendered)
     else:
         _render_report(report)
 
@@ -195,6 +201,30 @@ def _load_draft(
         _CONSOLE.print(f"[red]Draft {draft_id!r} not found under {drafts_dir}.[/red]")
         raise typer.Exit(code=1)
     return FilingDraft.model_validate_json(matches[0].read_text(encoding="utf-8"))
+
+
+def _write_json_utf8(rendered: str) -> None:
+    """Emit ``rendered`` to stdout as UTF-8, bypassing the locale codec.
+
+    On Windows the default stdout encoding is cp1252 which cannot
+    represent characters outside Latin-1. Trilingual narratives in
+    :class:`ReconciliationReport` (Spanish / English / Hungarian)
+    legitimately carry such characters (Hungarian "ő" U+0151).
+    Writing directly to ``sys.stdout.buffer`` keeps the output a
+    valid UTF-8 byte stream regardless of the surrounding shell.
+    """
+    import sys as _sys
+
+    payload = (rendered + "\n").encode("utf-8")
+    buffer = getattr(_sys.stdout, "buffer", None)
+    if buffer is None:
+        # Fallback when stdout is replaced by a non-binary stream
+        # (e.g. typer's CliRunner). Best-effort write — the runner
+        # will reassemble bytes through its own decoder.
+        _sys.stdout.write(rendered + "\n")
+        return
+    buffer.write(payload)
+    buffer.flush()
 
 
 async def _run_reconcile(
