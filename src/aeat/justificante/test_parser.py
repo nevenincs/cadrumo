@@ -170,6 +170,18 @@ class TestRealCorpusParses:
         # CSV shape always conforms to AEAT's 8-24 uppercase alphanum.
         assert record.csv.isalnum() and record.csv.isupper()
         assert 8 <= len(record.csv) <= 24, f"csv shape failure for {fixture}: got {record.csv!r}"
+        # presented_at must be a real datetime — surfaces any
+        # timestamp-extraction drift across the corpus's three
+        # layouts (Spanish modern, Spanish column-split, English).
+        # The synthetic date 01-01-1900 (or 01/01/1900 for the
+        # birthday-shape sub-token) appears in every sanitised
+        # PDF, so the parser must always bind a non-None datetime.
+        assert record.presented_at is not None
+        # source_pdf_sha256 always populated.
+        assert record.source_pdf_sha256
+        assert len(record.source_pdf_sha256) == 64
+        # verification_url must point at the AEAT cotejo surface.
+        assert "agenciatributaria.gob.es" in str(record.verification_url)
 
 
 class TestJustificanteErrorRehome:
