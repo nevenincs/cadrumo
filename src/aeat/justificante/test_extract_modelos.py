@@ -191,8 +191,8 @@ class TestPeriodPositionalRejectsMonthlyNoise:
         )
         record = extract_justificante(text, _stub_path(tmp_path, "190"))
         # The positional regex must not bind period="01" here. The
-        # annual fallback to ejercicio is the right answer.
-        assert record.period == "2024"
+        # M190 annual fallback resolves to canonical "0A".
+        assert record.period == "0A"
         assert record.ejercicio == "2024"
 
     def test_quarterly_modelos_still_match(self, tmp_path: Path) -> None:
@@ -216,16 +216,17 @@ class TestEjercicioLooseShape:
         record = extract_justificante(_SHAPE_M190_RESUMEN_ANUAL, _stub_path(tmp_path, "190"))
         assert record.modelo == "190"
         assert record.ejercicio == "2024"
-        # No labelled period and no positional period token; falls
-        # back to the ejercicio so the schema's non-empty
-        # constraint holds.
-        assert record.period == "2024"
+        # M190 is in the _ANNUAL_MODELOS set; the parser
+        # synthesises canonical "0A" when no labelled or
+        # positional period is in the text.
+        assert record.period == "0A"
 
-    def test_modelo_390_period_falls_back_to_ejercicio(self, tmp_path: Path) -> None:
+    def test_modelo_390_period_falls_back_to_canonical_annual(self, tmp_path: Path) -> None:
         record = extract_justificante(_SHAPE_M390_ANUAL, _stub_path(tmp_path, "390"))
         assert record.modelo == "390"
         assert record.ejercicio == "2023"
-        assert record.period == "2023"
+        # M390 is annual — synthesised canonical "0A".
+        assert record.period == "0A"
 
 
 class TestEnglishLayout:
@@ -254,5 +255,5 @@ class TestEnglishLayout:
         assert record.csv == "SANITIZED3902021"
         # ejercicio captured from "Financial year 2021"
         assert record.ejercicio == "2021"
-        # No quarterly token; falls back to the ejercicio.
-        assert record.period == "2021"
+        # M390 is in _ANNUAL_MODELOS — period resolves to canonical "0A".
+        assert record.period == "0A"

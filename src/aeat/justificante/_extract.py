@@ -75,6 +75,26 @@ _MODELO_RE = re.compile(
     r"(?:Modelo|Form)\s*[:\-]?\s*([0-9]{3}[A-Z]?)",
     re.IGNORECASE,
 )
+
+# Modelos whose canonical period is "0A" (annual). When the parser
+# can't locate a labelled or positional period and the source is
+# one of these, the period defaults to "0A" instead of the year.
+# This list mirrors the AEAT modelo catalogue's annual codes.
+_ANNUAL_MODELOS: frozenset[str] = frozenset(
+    {
+        "100",  # IRPF anual
+        "180",  # resumen retenciones inmuebles
+        "190",  # resumen retenciones trabajo
+        "193",  # resumen retenciones capital mobiliario
+        "200",  # IS anual
+        "232",  # vinculadas
+        "347",  # operaciones terceros
+        "349",  # intracomunitarias
+        "390",  # IVA anual
+        "720",  # bienes en el extranjero
+        "840",  # IAE
+    },
+)
 # Spanish period tokens always contain at least one digit (``1T``,
 # ``0A``, ``4T``, ``2023``). Requiring a digit in the captured group
 # stops the regex from picking up nearby words like "impositivo" out
@@ -323,12 +343,14 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     ejercicio_match = _EJERCICIO_RE.search(normalised) or _EJERCICIO_LOOSE_RE.search(normalised)
     ejercicio = ejercicio_match.group(1).strip() if ejercicio_match else None
 
-    # Period extraction has three tiers:
+    # Period extraction has four tiers:
     #   1. Labelled "Período <token>" (Modelo 100 modern body, M303).
     #   2. Positional "[<NIF>] <YYYY> <token>" lines that pdfplumber
     #      reads in form-laid-out quarterly receipts (M130, M111, ...).
-    #   3. Annual informativas / metadata-only receipts: fall back to
-    #      the ejercicio so the schema's non-empty constraint holds.
+    #   3. Annual modelo (100/190/200/390/720/etc): synthesise "0A"
+    #      (the canonical AEAT annual period token). The modelo
+    #      catalogue identifies these as ``-0`` suffix codes.
+    #   4. Anything else with an ejercicio: fall back to the year.
     period_match = _PERIOD_RE.search(normalised)
     if period_match is not None:
         period = period_match.group(1).strip()
@@ -336,6 +358,10 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
         positional_match = _PERIOD_POSITIONAL_RE.search(normalised)
         if positional_match is not None:
             period = positional_match.group("period").strip()
+        elif ejercicio is not None and modelo in _ANNUAL_MODELOS:
+            # Canonical annual token is "0A" — resolves the
+            # round-2 reviewer's D3 disagreement.
+            period = "0A"
         elif ejercicio is not None:
             period = ejercicio
         else:
