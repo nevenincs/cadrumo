@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import logging
 import sys
+from typing import Any, cast
 
 import pytest
 
@@ -165,6 +166,25 @@ def test_secret_scrubbing_preserves_exc_info_for_downstream_handlers() -> None:
     assert record.exc_info is not None
     assert record.exc_text is not None
     assert "refresh-123" not in record.exc_text
+
+
+def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
+    """List-based log args should preserve placeholder-aware scrubbing."""
+
+    filter_ = SecretScrubbingFilter()
+    record = logging.LogRecord(
+        name="aeat.test_logging_scrubbing",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=0,
+        msg="item %s has token: %s",
+        args=(),
+        exc_info=None,
+    )
+    record.args = cast(Any, ["safe-item", "token-secret"])
+
+    filter_.filter(record)
+    assert record.args == ["safe-item", "<redacted>"]
 
 
 def test_non_sensitive_fields_pass_through_unchanged() -> None:

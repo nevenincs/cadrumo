@@ -148,9 +148,7 @@ def _jsonable_payload(payload: Any) -> Any:
         return payload.model_dump(mode="json")
     if isinstance(payload, dict):
         return {key: _jsonable_payload(value) for key, value in payload.items()}
-    if isinstance(payload, tuple):
-        return [_jsonable_payload(item) for item in payload]
-    if isinstance(payload, list):
+    if isinstance(payload, list | tuple | set | frozenset):
         return [_jsonable_payload(item) for item in payload]
     return payload
 
