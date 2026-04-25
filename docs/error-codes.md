@@ -14,10 +14,10 @@ This reference is generated from the live registry after `scripts/generate_error
 | --- | --- | --- | --- | --- | --- | --- |
 | AUTH_AUTH_AUTHENTICATOR_PERSISTED_SESSION_INVALID | AUTH | La sesion persistida de AEAT no es valida. | Raised when a persisted AEAT browser session cannot be trusted. | A tarolt AEAT munkamenet nem megbizhato. | - | - |
 | AUTH_AUTH_CERTIFICATE | AUTH | Error de certificado. | Base class for every certificate-auth domain error. | Tanusitvany hiba. | - | - |
-| AUTH_AUTH_CERTIFICATE_AEAT_LIVE_READ_NOT_ENABLED | AUTH | Error de aeat en vivo read no enabled. | Raised when live-read access is required but the gate is shut. | Aeat elo read nem enabled hiba. | - | - |
-| AUTH_AUTH_CERTIFICATE_AEAT_LOGIN_ASSERTION | AUTH | Error de aeat inicio de sesion assertion. | Raised when a post-auth verification attempt cannot be produced. | Aeat bejelentkezes assertion hiba. | aeat auth login | - |
+| AUTH_AUTH_CERTIFICATE_AEAT_LIVE_READ_NOT_ENABLED | AUTH | La lectura en vivo de AEAT no esta habilitada. | Raised when live-read access is required but the gate is shut. | Az AEAT elo olvasasi mod nincs engedelyezve. | - | - |
+| AUTH_AUTH_CERTIFICATE_AEAT_LOGIN_ASSERTION | AUTH | No se pudo completar la verificacion posterior al inicio de sesion de AEAT. | Raised when a post-auth verification attempt cannot be produced. | Az AEAT bejelentkezes utani ellenorzes nem keszult el. | aeat auth login | - |
 | AUTH_AUTH_CERTIFICATE_AEAT_SESSION_EXPIRED | AUTH | La sesión autenticada de AEAT ha caducado. | The authenticated AEAT session expired. | Az AEAT hitelesített munkamenet lejárt. | aeat auth login | - |
-| AUTH_AUTH_CERTIFICATE_EXPIRED | AUTH | Certificado caducado. | Raised when a loaded certificate's ``not_after`` is in the past. | Tanusitvany lejart. | - | - |
+| AUTH_AUTH_CERTIFICATE_EXPIRED | AUTH | Certificado caducado. | The loaded certificate is already expired. | Tanusitvany lejart. | - | - |
 | AUTH_AUTH_CERTIFICATE_HANDSHAKE | AUTH | Error de certificado handshake. | Raised when handshake input is structurally invalid. | Tanusitvany kezfogas hiba. | - | - |
 | AUTH_AUTH_CERTIFICATE_LOAD | AUTH | No se pudo cargar certificado. | Raised when PKCS#12 bytes cannot be parsed at all. | Tanusitvany betoltese sikertelen. | - | - |
 | AUTH_AUTH_CERTIFICATE_NIF_PARSE | AUTH | No se pudo analizar certificado nif. | Raised when no NIF / NIE can be parsed from a certificate subject. | Tanusitvany nif feldolgozasa sikertelen. | - | - |
@@ -25,29 +25,29 @@ This reference is generated from the live registry after `scripts/generate_error
 | AUTH_AUTH_CERTIFICATE_PRE_EXPIRY | AUTH | Error de certificado pre expiry. | Raised when a certificate is within the pre-expiry danger window. | Tanusitvany elo expiry hiba. | - | - |
 | AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_APPROVAL_TIMEOUT | AUTH | La aprobacion de Clave Movil agoto el tiempo de espera. | Raised when Kent does not approve the Cl@ve push within the time window. | Clave movil jovahagyas idotullepessel vegzodott. | - | - |
 | AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_CONFIGURATION | AUTH | Clave movil no esta configurado correctamente. | Raised when required Cl@ve Móvil settings are missing or malformed. | Clave movil nincs megfeleloen beallitva. | - | - |
-| AUTH_CLI_AUTH_REGISTRY_NO_CONFIGURED_PROVIDER | AUTH | Error de no configured proveedor. | No auth provider is configured and no default was specified. | No configured szolgaltato hiba. | aeat auth init | - |
-| AUTH_CLI_AUTH_REGISTRY_PROVIDER_NOT_IMPLEMENTED | AUTH | Error de proveedor no implemented. | The provider kind is known but no implementation has shipped yet. | Szolgaltato nem implemented hiba. | aeat auth list-providers | - |
+| AUTH_CLI_AUTH_REGISTRY_NO_CONFIGURED_PROVIDER | AUTH | No hay ningun proveedor de autenticacion configurado. | No auth provider is configured and no default was specified. | Nincs beallitott hitelesitesi szolgaltato. | aeat auth init | - |
+| AUTH_CLI_AUTH_REGISTRY_PROVIDER_NOT_IMPLEMENTED | AUTH | El proveedor solicitado aun no tiene implementacion disponible. | The provider kind is known but no implementation has shipped yet. | A kert szolgaltatohoz meg nincs megvalositas. | aeat auth list-providers | - |
 | AUTH_CLI_AUTH_REGISTRY_UNKNOWN_PROVIDER | AUTH | Proveedor desconocido. | The requested provider kind is not registered. | Ismeretlen szolgaltato. | aeat auth list-providers | - |
 | DEPRECATED_DEPRECATED_ALIAS | [deprecated] | Se utilizó un alias obsoleto de la CLI. | A deprecated CLI alias was used. | Egy elavult CLI alias használata történt. | aeat --help | - |
 | ERROR_AEAT_OBSERVABILITY | ERROR | Error de aeat observabilidad. | Base class for observability-layer errors (#99). | Aeat megfigyelhetoseg hiba. | - | - |
 | ERROR_AMBIGUOUS_PERIOD | ERROR | Error de ambiguo periodo. | Raised when a period matches more than one ruleset span. | Ketertelmu idoszak hiba. | - | - |
-| ERROR_BORRADOR_ARTEFACT_NOT_RECOGNISED | ERROR | Error de artefacto no recognised. | Raised when the PDF does not match any known Modelo 100 artefact shape. | Artefaktum nem recognised hiba. | - | - |
+| ERROR_BORRADOR_ARTEFACT_NOT_RECOGNISED | ERROR | El artefacto del PDF no coincide con un formato conocido. | Raised when the PDF does not match any known Modelo 100 artefact shape. | A PDF artefaktuma nem egyezik ismert formatummal. | - | - |
 | ERROR_CASILLAS_CASILLA | ERROR | Error de casilla. | Base class for casilla-related errors. | Casilla hiba. | - | - |
 | ERROR_CASILLAS_CROSS_REFERENCE | ERROR | Error de cruce referencia. | Raised when a record references another casilla that does not exist. | Kereszt hivatkozas hiba. | - | - |
 | ERROR_CASILLAS_MISSING_FIELD | ERROR | Error de faltante campo. | Raised when a record is missing a required logical field. | Hianyzik mezo hiba. | - | - |
 | ERROR_CASILLAS_UNREVIEWED_RECORD | ERROR | Error de sin revisar registro. | Raised when a canonical record lacks required review metadata. | Ellenorizetlen rekord hiba. | - | - |
 | ERROR_CASILLAS_VERIFY | ERROR | Error de verificar. | Base class for structured verification failures. | Ellenoriz hiba. | - | - |
-| ERROR_CASILLA_NOT_DEFINED | ERROR | Error de casilla no defined. | Raised when a formula references a casilla that the ruleset does not declare. | Casilla nem defined hiba. | - | - |
+| ERROR_CASILLA_NOT_DEFINED | ERROR | La casilla referenciada no esta definida en el conjunto de reglas. | Raised when a formula references a casilla that the ruleset does not declare. | A hivatkozott casilla nincs meghatarozva. | - | - |
 | ERROR_DEADLINES_DEADLINE | ERROR | Error de plazo. | Base class for deadline-related errors. | Hatarido hiba. | - | - |
 | ERROR_DEADLINES_PROFILE | ERROR | Error de perfil. | The autonomo profile could not be loaded or validated. | Profil hiba. | - | - |
 | ERROR_DEADLINES_SCHEDULE_COMPUTATION | ERROR | Error de planificacion calculo. | The deadline schedule could not be computed. | Utemezes szamitas hiba. | aeat deadlines explain 303 --period 2024Q1 | - |
-| ERROR_DECLARACION_NO_EXTRACTOR_REGISTERED | ERROR | Error de no extractor registered. | Raised when no concrete extractor exists for the detected template. | No kinyero registered hiba. | - | - |
+| ERROR_DECLARACION_NO_EXTRACTOR_REGISTERED | ERROR | No hay un extractor registrado para la plantilla detectada. | Raised when no concrete extractor exists for the detected template. | A felismert sablonhoz nincs regisztralt kinyero. | - | - |
 | ERROR_DECLARACION_TEMPLATE_NOT_DETECTED | ERROR | No se pudo detectar la plantilla del PDF. | The declaration template could not be identified from the PDF. | A bevallasi sablon nem volt felismerheto a PDF-bol. | - | - |
 | ERROR_EVALUATION | ERROR | Error de evaluacion. | Raised when a formula evaluation produces an arithmetic domain error. | Ertekeles hiba. | - | - |
 | ERROR_FILING_AMENDMENT | ERROR | Error de presentacion rectificacion. | Base class for every amendment-related filing error. | Beadas helyesbites hiba. | - | - |
 | ERROR_FILING_BUILDER | ERROR | Error de presentacion builder. | Raised when builder selection or execution fails. | Beadas builder hiba. | - | - |
 | ERROR_FILING_COMPUTATION | ERROR | Error de presentacion calculo. | Raised when a builder cannot evaluate a formula casilla. | Beadas szamitas hiba. | - | - |
-| ERROR_FILING_DRAFT | ERROR | Error de presentacion draft. | Base class for filing-draft errors. | Beadas draft hiba. | - | - |
+| ERROR_FILING_DRAFT | ERROR | Error del borrador de presentacion. | Base class for filing-draft errors. | Beadasi tervezet hiba. | - | - |
 | ERROR_FINANCIAL_ATTACHMENTS_ATTACHMENT | ERROR | Error de adjunto. | Base error for every attachment-service failure. | Melleklet hiba. | - | - |
 | ERROR_FINANCIAL_ATTACHMENTS_ATTACHMENT_NOT_FOUND | ERROR | No se encontro adjunto. | Raised when a manifest or blob lookup targets a missing attachment. | Melleklet nem talalhato. | aeat attachments list | - |
 | ERROR_FINANCIAL_INVOICES_INVOICE | ERROR | Error de factura. | Base error for every invoice-catalogue failure. | Szamla hiba. | - | - |
@@ -57,7 +57,7 @@ This reference is generated from the live registry after `scripts/generate_error
 | ERROR_FINANCIAL_INVOICES_INVOICE_NOT_FOUND | ERROR | No se encontro factura. | Raised when a catalogue lookup targets a missing invoice. | Szamla nem talalhato. | aeat financial invoices list | - |
 | ERROR_FINANCIAL_PROVIDERS_BASE_FINANCIAL_PROVIDER | ERROR | Error de financiero proveedor. | Base error raised by financial-ingest providers. | Penzugyi szolgaltato hiba. | - | - |
 | ERROR_FINANCIAL_PROVIDERS_BASE_INVALID_FINANCIAL_SOURCE | ERROR | Error de invalid financiero origen. | Raised when a source document is unreadable or structurally invalid. | Invalid penzugyi forras hiba. | - | - |
-| ERROR_FINANCIAL_PROVIDERS_BASE_UNSUPPORTED_FINANCIAL_SOURCE | ERROR | Error de no soportado financiero origen. | Raised when no provider can interpret a source document. | Nem tamogatott penzugyi forras hiba. | - | - |
+| ERROR_FINANCIAL_PROVIDERS_BASE_UNSUPPORTED_FINANCIAL_SOURCE | ERROR | No hay un proveedor compatible para el origen financiero indicado. | Raised when no provider can interpret a source document. | A megadott penzugyi forrashoz nincs tamogatott szolgaltato. | - | - |
 | ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION | ERROR | Error de transaccion. | Base error for every transaction-catalogue failure. | Tranzakcio hiba. | - | - |
 | ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION_CATALOGUE | ERROR | Error de transaccion catalogo. | Raised when a transaction catalogue is invalid or inconsistent. | Tranzakcio katalogus hiba. | - | - |
 | ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION_NOT_FOUND | ERROR | No se encontro transaccion. | Raised when a catalogue lookup targets a missing transaction. | Tranzakcio nem talalhato. | aeat financial txs list | - |
@@ -66,7 +66,7 @@ This reference is generated from the live registry after `scripts/generate_error
 | ERROR_FINANCIAL_VAT_CATALOGUE | ERROR | Error de iva catalogo. | Raised when a VAT catalogue cannot be loaded or is malformed. | Afa katalogus hiba. | - | - |
 | ERROR_FINANCIAL_VAT_CATEGORY_NOT_FOUND | ERROR | No se encontro la categoria de IVA solicitada. | The requested VAT category could not be found in the catalogue. | A kert afa kategoria nem talalhato. | aeat vat categories list | - |
 | ERROR_FINANCIAL_VAT_CLASSIFICATION | ERROR | Error de iva clasificacion. | The VAT classifier could not produce a deterministic match. | Afa besorolas hiba. | - | - |
-| ERROR_FINANCIAL_VAT_RATE_NOT_FOUND | ERROR | No se encontro iva tipo. | Raised when ``lookup_rate`` cannot resolve a rate. | Afa kulcs nem talalhato. | aeat vat rates list | - |
+| ERROR_FINANCIAL_VAT_RATE_NOT_FOUND | ERROR | No se encontro iva tipo. | The requested VAT rate could not be resolved. | Afa kulcs nem talalhato. | aeat vat rates list | - |
 | ERROR_FINANCIAL_VAT_RATE_OVERLAP | ERROR | Error de iva tipo solapamiento. | Two VAT rate records overlap in an active time window. | Afa kulcs atfedes hiba. | - | - |
 | ERROR_FIXTURE_PROVISIONING | ERROR | Error de fixture aprovisionamiento. | Raised when Google Workspace test-fixture provisioning fails. | Fixeles letrehozas hiba. | - | - |
 | ERROR_FORMULAS | ERROR | Error de formulas. | Base class for formula-engine errors. | Formulas hiba. | - | - |
@@ -76,7 +76,7 @@ This reference is generated from the live registry after `scripts/generate_error
 | ERROR_MANUALS_MANUAL | ERROR | Error de manual. | Base class for manual-corpus errors. | Kezikonyv hiba. | - | - |
 | ERROR_MANUALS_MANUAL_NOT_FOUND | ERROR | No se encontro manual. | Raised when a requested manual/year/part is missing on disk. | Kezikonyv nem talalhato. | aeat manual fetch | - |
 | ERROR_MANUALS_MANUAL_REVIEW_REQUIRED | ERROR | Error de manual revision requerido. | Raised when a persisted record lacks reviewer metadata. | Kezikonyv ellenorzes szukseges hiba. | - | - |
-| ERROR_MANUALS_RULE_EXTRACTION | ERROR | Error de regla extraction. | Raised by the LLM-dependent CLI phases until ``#21`` lands. | Szabaly extraction hiba. | - | - |
+| ERROR_MANUALS_RULE_EXTRACTION | ERROR | Error de regla extraction. | The rule-extraction step is not available yet in this CLI phase. | Szabaly extraction hiba. | - | - |
 | ERROR_MISSING_RULESET | ERROR | Error de faltante conjunto de reglas. | Raised when no ruleset covers the requested modelo/period pair. | Hianyzik szabalykeszlet hiba. | - | - |
 | ERROR_MODELS_MODELO_REGISTRY | ERROR | Error de modelo registro. | Base class for modelo-registry errors. | Modelo jegyzek hiba. | - | - |
 | ERROR_MODELS_UNKNOWN_MODELO | ERROR | Modelo desconocido. | The requested modelo is unknown. | Ismeretlen modelo. | aeat modelos list | - |
@@ -97,8 +97,8 @@ This reference is generated from the live registry after `scripts/generate_error
 | ERROR_SETUP_ANSWERS | ERROR | Error de configuracion respuestas. | The setup answers payload could not be loaded or validated. | Beallitas valaszok hiba. | - | - |
 | ERROR_SETUP_VERIFY | ERROR | Error de configuracion verificar. | Raised when the verify step finds an ERROR-severity problem. | Beallitas ellenoriz hiba. | - | - |
 | ERROR_SUBMISSION | ERROR | Error de envio. | Base class for submission-related errors. | Bekuldes hiba. | - | - |
-| ERROR_SUBMISSION_FORM_FILL | ERROR | Error de envio form fill. | Raised when the submitter cannot fill a casilla-keyed input on the portal. | Bekuldes form fill hiba. | - | - |
-| ERROR_SUBMISSION_PREFLIGHT | ERROR | Error de envio preflight. | Raised when preflight gating rejects a draft before any browser work. | Bekuldes elokeszites hiba. | - | - |
+| ERROR_SUBMISSION_FORM_FILL | ERROR | No se pudo rellenar un campo del formulario de envio. | Raised when the submitter cannot fill a casilla-keyed input on the portal. | A bekuldesi urlap egyik mezoje nem toltheto ki. | - | - |
+| ERROR_SUBMISSION_PREFLIGHT | ERROR | La validacion previa del envio rechazo el borrador. | Raised when preflight gating rejects a draft before any browser work. | A bekuldes elotti ellenorzes elutasitotta a tervezetet. | - | - |
 | ERROR_SUBMISSION_REJECTION | ERROR | Error de envio rechazo. | Raised when AEAT rejects the filled form during the live submit leg. | Bekuldes elutasitas hiba. | - | - |
 | ERROR_SYNC | ERROR | Error de sincronizacion. | Base class for sync-related errors. | Szinkron hiba. | - | - |
 | ERROR_SYNC_DIVERGENCE_CLASSIFICATION | ERROR | Error de divergencia clasificacion. | Raised when the classifier cannot decide the shape of a divergence. | Elteres besorolas hiba. | - | - |
@@ -111,27 +111,27 @@ This reference is generated from the live registry after `scripts/generate_error
 | FAIL_CASILLAS_CASILLA_PARSE | FAIL | No se pudo analizar casilla. | Raised when a casilla catalogue file cannot be parsed or validated. | Casilla feldolgozasa sikertelen. | - | - |
 | FAIL_DECLARACION_PARSE | FAIL | No se pudo analizar declaracion. | The PDF could not be parsed into a declaration filing. | Bevallas feldolgozasa sikertelen. | - | - |
 | FAIL_FILING_IMPORT | FAIL | Error de presentacion importacion. | Raised when importing a filing from a justificante PDF fails. | Beadas importalas hiba. | - | - |
-| FAIL_FINANCIAL_ATTACHMENTS_ATTACHMENT_PERSISTENCE | FAIL | No se pudo persistir adjunto. | Raised when the attachment store cannot read or write bytes or manifests. | Melleklet mentese sikertelen. | - | - |
+| FAIL_FINANCIAL_ATTACHMENTS_ATTACHMENT_PERSISTENCE | FAIL | No se pudo persistir adjunto. | The attachment store could not read or write attachment bytes or manifests. | Melleklet mentese sikertelen. | - | - |
 | FAIL_FINANCIAL_INVOICES_INVOICE_PERSISTENCE | FAIL | No se pudo persistir factura. | Raised when invoice catalogue persistence cannot be completed. | Szamla mentese sikertelen. | - | - |
 | FAIL_FINANCIAL_TRANSACTIONS_TRANSACTION_PERSISTENCE | FAIL | No se pudo persistir transaccion. | Raised when catalogue persistence cannot be completed. | Tranzakcio mentese sikertelen. | - | - |
-| FAIL_FINANCIAL_USAGE_RATIOS_USAGE_RATIO_PERSISTENCE | FAIL | No se pudo persistir uso ratio. | Raised when the usage-ratio profile cannot be read or written. | Hasznalat arany mentese sikertelen. | - | - |
+| FAIL_FINANCIAL_USAGE_RATIOS_USAGE_RATIO_PERSISTENCE | FAIL | No se pudo persistir uso ratio. | The usage-ratio profile could not be read or written. | Hasznalat arany mentese sikertelen. | - | - |
 | FAIL_JUSTIFICANTE_PARSE | FAIL | No se pudo analizar justificante. | The PDF could not be parsed into a justificante record. | Igazolas feldolgozasa sikertelen. | - | - |
-| FAIL_LLM_L_M | FAIL | Error de l l m. | Base exception for LLM package failures. | L l m hiba. | - | - |
-| FAIL_LLM_L_M_CACHE | FAIL | Error de l l m cache. | Raised when a cache entry cannot be read, written, or parsed. | L l m cache hiba. | - | - |
-| FAIL_LLM_L_M_CONFIG | FAIL | Error de l l m config. | Raised when the LLM client configuration is invalid or incomplete. | L l m config hiba. | - | - |
-| FAIL_LLM_L_M_PROVIDER | FAIL | Error de l l m proveedor. | Raised when a provider returns an unrecoverable error. | L l m szolgaltato hiba. | - | - |
-| FAIL_LLM_L_M_RATE_LIMIT | FAIL | Error de l l m tipo limit. | Raised when a provider rejects a request because of rate limits. | L l m kulcs limit hiba. | - | - |
+| FAIL_LLM_L_M | FAIL | Error del subsistema LLM. | Base exception for LLM package failures. | LLM alrendszerhiba. | - | - |
+| FAIL_LLM_L_M_CACHE | FAIL | Error de cache del cliente LLM. | Raised when a cache entry cannot be read, written, or parsed. | Az LLM gyorsitotar hibas. | - | - |
+| FAIL_LLM_L_M_CONFIG | FAIL | Error de configuracion del cliente LLM. | Raised when the LLM client configuration is invalid or incomplete. | Az LLM kliens beallitasa hibas vagy hianyos. | - | - |
+| FAIL_LLM_L_M_PROVIDER | FAIL | Error del proveedor LLM. | Raised when a provider returns an unrecoverable error. | Az LLM szolgaltato helyrehozhatatlan hibaval valaszolt. | - | - |
+| FAIL_LLM_L_M_RATE_LIMIT | FAIL | El proveedor LLM rechazo la solicitud por limite de uso. | Raised when a provider rejects a request because of rate limits. | Az LLM szolgaltato sebessegkorlat miatt utasitotta el a kerest. | - | - |
 | FAIL_MANUALS_MANUAL_PARSE | FAIL | No se pudo analizar manual. | Raised when a committed manual record fails schema validation. | Kezikonyv feldolgozasa sikertelen. | - | - |
 | FAIL_MCP_LAUNCH | FAIL | Error de mcp launch. | Raised when a repo-managed MCP process cannot be launched safely. | Mcp launch hiba. | - | - |
 | FAIL_NORMATIVES_NORMATIVE_PARSE | FAIL | No se pudo analizar normativa. | Raised when a committed normative JSON fails schema validation. | Jogszabaly feldolgozasa sikertelen. | - | - |
 | FAIL_REVIEW_SOURCE_LOAD | FAIL | No se pudo cargar revision origen. | Raised when a source disk file is present but cannot be parsed. | Ellenorzes forras betoltese sikertelen. | - | - |
-| FAIL_SCHEMA_CACHE | FAIL | Error de esquema cache. | Raised when on-disk schema persistence fails. | Sema cache hiba. | - | - |
+| FAIL_SCHEMA_CACHE | FAIL | Error de cache del esquema. | Raised when on-disk schema persistence fails. | A sema gyorsitotar hibas. | - | - |
 | FAIL_SEDE_JUSTIFICANTE_FETCH | FAIL | Error de justificante descarga. | Raised when the CSV-keyed PDF download fails or is malformed. | Igazolas letoltes hiba. | - | - |
 | FAIL_SEDE_PARSE | FAIL | No se pudo analizar sede. | Raised when the captured HTML cannot be parsed to a record. | Sede feldolgozasa sikertelen. | - | - |
-| FAIL_SITE_HEALTH | FAIL | Error de sitio health. | Raised when AEAT site-health detection classifies a non-OK state. | Oldal health hiba. | - | - |
+| FAIL_SITE_HEALTH | FAIL | Error de estado del sitio de AEAT. | Raised when AEAT site-health detection classifies a non-OK state. | Az AEAT oldalallapota hibas. | - | - |
 | FAIL_STORAGE | FAIL | Error de almacenamiento. | Base class for storage-related errors. | Tarolas hiba. | - | - |
 | FAIL_STORAGE_MIGRATION | FAIL | Error de migracion. | Raised when an Alembic migration operation fails. | Migracio hiba. | - | - |
-| FAIL_STORAGE_REPOSITORY | FAIL | Error de repositorio. | Raised when a repository operation fails (not-found, integrity, etc. | Tarolo hiba. | - | - |
+| FAIL_STORAGE_REPOSITORY | FAIL | Error de repositorio. | A repository operation failed due to lookup, integrity, or persistence errors. | Tarolo hiba. | - | - |
 | INTEGRITY_AUDIT_DISCREPANCY | INTEGRITY | Error de auditoria discrepancia. | The audit report contains discrepancies. | Audit elteres hiba. | - | - |
 | INTEGRITY_CLI_AUTH_SESSION_CORRUPT_AUTH_SESSION | INTEGRITY | La sesión almacenada de AEAT está corrupta. | The persisted AEAT session is corrupt. | A tárolt AEAT munkamenet sérült. | aeat auth login | - |
 | INTEGRITY_CLI_VALIDATION | INTEGRITY | La validacion del comando fallo. | The command input failed validation. | A parancs bemenetenek ervenyesitese sikertelen. | - | - |
@@ -141,10 +141,10 @@ This reference is generated from the live registry after `scripts/generate_error
 | INTEGRITY_FINANCIAL_ATTACHMENTS_ATTACHMENT_VALIDATION | INTEGRITY | La validacion de adjunto fallo. | Raised when an attachment payload fails domain validation. | Melleklet ervenyesitese sikertelen. | - | - |
 | INTEGRITY_FORMULA_CYCLE | INTEGRITY | Error de formula cycle. | Raised when a ruleset DAG contains a cycle between computed casillas. | Formula cycle hiba. | - | - |
 | INTEGRITY_JUSTIFICANTE_VERIFICATION | INTEGRITY | La verificacion de justificante fallo. | Raised when the live CSV verification round-trip fails. | Igazolas ellenorzese sikertelen. | - | - |
-| INTEGRITY_MANUALS_MANIFEST | INTEGRITY | Error de manifiesto. | Raised when a ``manifest. | Manifestum hiba. | - | - |
+| INTEGRITY_MANUALS_MANIFEST | INTEGRITY | Error de manifiesto. | The manuals manifest could not be parsed. | Manifestum hiba. | - | - |
 | INTEGRITY_MODELS_REGISTRY_INTEGRITY | INTEGRITY | Error de registro integridad. | Raised at import time when the registry fails a structural check. | Jegyzek integritas hiba. | - | - |
-| INTEGRITY_OBSERVABILITY_AEAT_CORPUS_DRIFT | INTEGRITY | Error de aeat corpus drift. | Raised when replay detects that ``corpus_sha256`` has drifted. | Aeat korpusz drift hiba. | - | - |
-| INTEGRITY_OBSERVABILITY_RUN_TRACE_VALIDATION | INTEGRITY | La validacion de ejecucion traza fallo. | Raised when persisted JSONL or trace. | Futas nyomvonal ervenyesitese sikertelen. | - | - |
+| INTEGRITY_OBSERVABILITY_AEAT_CORPUS_DRIFT | INTEGRITY | Error de aeat corpus drift. | The normative corpus fingerprint no longer matches the replay metadata. | Aeat korpusz drift hiba. | - | - |
+| INTEGRITY_OBSERVABILITY_RUN_TRACE_VALIDATION | INTEGRITY | La validacion de ejecucion traza fallo. | The persisted run trace artifacts failed validation. | Futas nyomvonal ervenyesitese sikertelen. | - | - |
 | INTEGRITY_PORTALS_PORTAL_INTEGRITY | INTEGRITY | Error de portal integridad. | Raised at import time when the registry fails a structural check. | Portal integritas hiba. | - | - |
 | INTEGRITY_RULESET_VALIDATION | INTEGRITY | La validacion de conjunto de reglas fallo. | Raised when a ruleset fails structural validation at load time. | Szabalykeszlet ervenyesitese sikertelen. | - | - |
 | INTEGRITY_SCHEMA_VALIDATION | INTEGRITY | La validacion de esquema fallo. | A cached modelo JSON document failed validation. | Sema ervenyesitese sikertelen. | - | - |
@@ -157,7 +157,7 @@ This reference is generated from the live registry after `scripts/generate_error
 | REFUSED_REVIEW_KIND_RESERVED | REFUSED | El tipo de revisión solicitado está reservado. | The requested review kind is reserved. | A kért ellenőrzési típus fenntartott. | - | - |
 | REFUSED_SETUP_ABORTED | REFUSED | La configuracion fue cancelada por el usuario. | Raised when the user explicitly aborts the wizard. | A beallitasi varazslo megszakadt. | - | - |
 | REFUSED_SUBMISSION_AEAT_LIVE_CONFIRMATION_DECLINED | REFUSED | La confirmacion de envio en vivo fue rechazada. | Raised when the operator does not type the exact live-submit phrase. | Az elo bekuldes megerositese el lett utasitva. | - | - |
-| REFUSED_SUBMISSION_AEAT_LIVE_SUBMIT_NOT_ENABLED | REFUSED | El envio en vivo de AEAT no esta habilitado. | Raised when the live-submit env gate is not enabled. | Az AEAT elo bekuldes nincs engedelyezve. | aeat submission preflight | - |
-| REFUSED_SUBMISSION_AEAT_LIVE_TRANSPORT_UNAVAILABLE | REFUSED | El transporte de envio en vivo no esta disponible. | Raised when a live write is requested on a stubbed transport. | Az AEAT elo atviteli csatorna nem erheto el. | aeat submission preflight | - |
+| REFUSED_SUBMISSION_AEAT_LIVE_SUBMIT_NOT_ENABLED | REFUSED | El envio en vivo de AEAT no esta habilitado. | Live AEAT submission is not enabled. | Az AEAT elo bekuldes nincs engedelyezve. | aeat submission preflight | - |
+| REFUSED_SUBMISSION_AEAT_LIVE_TRANSPORT_UNAVAILABLE | REFUSED | El transporte de envio en vivo no esta disponible. | The live AEAT submission transport is unavailable. | Az AEAT elo atviteli csatorna nem erheto el. | aeat submission preflight | - |
 | REFUSED_SUBMISSION_AEAT_PYTEST_LIVE_WRITE_REFUSED | REFUSED | Pytest rechazo una escritura en vivo de AEAT. | Raised when pytest reaches a live-capable submission call. | A pytest elutasitotta az AEAT elo irasi hivast. | - | - |
-| REFUSED_WORKFLOW_ABORTED | REFUSED | Error de flujo de trabajo aborted. | Raised only when a caller explicitly opts in to exception-on-abort. | Munkafolyamat aborted hiba. | - | - |
+| REFUSED_WORKFLOW_ABORTED | REFUSED | El flujo de trabajo fue abortado por el solicitante. | Raised only when a caller explicitly opts in to exception-on-abort. | A munkafolyamatot a hivo megszakitotta. | - | - |

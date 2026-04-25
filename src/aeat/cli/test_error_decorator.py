@@ -86,6 +86,12 @@ def unexpected_command() -> None:
     raise RuntimeError("boom")
 
 
+@app.command("json-alias")
+def json_alias_command(as_json: bool = typer.Option(False, "--json")) -> None:
+    _ = as_json
+    raise WorkspaceLockedError()
+
+
 @app.command("passthrough")
 def passthrough_command() -> None:
     raise typer.Exit(code=2)
@@ -105,6 +111,17 @@ def test_human_readable_error_is_emitted_by_default() -> None:
 
 def test_json_error_is_emitted_when_json_flag_is_present() -> None:
     result = runner.invoke(app, ["locked", "--json"])
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.LOCKED)
+    assert result.stdout == ""
+
+    payload = json.loads(result.stderr)
+    assert payload["error"]["category"] == "LOCKED"
+    assert payload["error"]["schema_version"] == "1"
+
+
+def test_json_error_is_emitted_when_json_flag_uses_non_json_parameter_name() -> None:
+    result = runner.invoke(app, ["json-alias", "--json"])
 
     assert result.exit_code == get_error_exit_code(ErrorCategory.LOCKED)
     assert result.stdout == ""
