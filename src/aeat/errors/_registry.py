@@ -414,6 +414,32 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.cli._errors.CliValidationBoundaryError",
+        ErrorCode(
+            code="INTEGRITY_CLI_VALIDATION",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="La validacion del comando fallo.",
+            default_message_en="The command input failed validation.",
+            default_message_hu="A parancs bemenetenek ervenyesitese sikertelen.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.cli._errors.CliUnexpectedBoundaryError",
+        ErrorCode(
+            code="INTERNAL_CLI_UNEXPECTED_EXCEPTION",
+            category=ErrorCategory.INTERNAL,
+            default_message_es="El comando fallo por un error interno inesperado.",
+            default_message_en="The command failed due to an unexpected internal error.",
+            default_message_hu="A parancs varatlan belso hiba miatt meghiusult.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.cli.auth._registry.NoConfiguredProviderError",
         ErrorCode(
             code="AUTH_CLI_AUTH_REGISTRY_NO_CONFIGURED_PROVIDER",

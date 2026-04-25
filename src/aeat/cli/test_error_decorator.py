@@ -6,6 +6,7 @@ import json
 
 import pytest
 import typer
+from pydantic import BaseModel, ConfigDict, ValidationError
 from typer.testing import CliRunner
 
 from ..auth.certificate import AeatSessionExpiredError
@@ -69,6 +70,27 @@ def moved_command() -> None:
     raise MovedAliasError()
 
 
+class _StrictPayload(BaseModel):
+    model_config = ConfigDict(strict=True)
+
+    value: int
+
+
+@app.command("validation")
+def validation_command() -> None:
+    _StrictPayload.model_validate({"value": "bad"})
+
+
+@app.command("unexpected")
+def unexpected_command() -> None:
+    raise RuntimeError("boom")
+
+
+@app.command("passthrough")
+def passthrough_command() -> None:
+    raise typer.Exit(code=2)
+
+
 decorate_typer_app(app)
 
 
@@ -103,6 +125,8 @@ def test_json_error_is_emitted_when_json_flag_is_present() -> None:
         ("internal", ErrorCategory.INTERNAL),
         ("deprecated", ErrorCategory.DEPRECATED),
         ("moved", ErrorCategory.MOVED),
+        ("validation", ErrorCategory.INTEGRITY),
+        ("unexpected", ErrorCategory.INTERNAL),
     ],
 )
 def test_exit_code_matches_placeholder_category_mapping(
@@ -116,3 +140,40 @@ def test_exit_code_matches_placeholder_category_mapping(
 def test_boundary_re_raises_original_exception_under_test() -> None:
     with error_boundary_under_test(), pytest.raises(WorkspaceLockedError):
         runner.invoke(app, ["locked"], catch_exceptions=False)
+
+
+def test_validation_error_is_wrapped_into_structured_boundary() -> None:
+    result = runner.invoke(app, ["validation"])
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.INTEGRITY)
+    assert result.stdout == ""
+    assert "INTEGRITY:" in result.stderr
+    assert "The command input failed validation." in result.stderr
+    assert "error_type: ValidationError" in result.stderr
+
+
+def test_unexpected_exception_is_wrapped_into_structured_boundary() -> None:
+    result = runner.invoke(app, ["unexpected"])
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.INTERNAL)
+    assert result.stdout == ""
+    assert "INTERNAL:" in result.stderr
+    assert "The command failed due to an unexpected internal error." in result.stderr
+    assert "error_type: RuntimeError" in result.stderr
+
+
+def test_boundary_re_raises_validation_error_under_test() -> None:
+    with error_boundary_under_test(), pytest.raises(ValidationError):
+        runner.invoke(app, ["validation"], catch_exceptions=False)
+
+
+def test_boundary_re_raises_unexpected_exception_under_test() -> None:
+    with error_boundary_under_test(), pytest.raises(RuntimeError, match="boom"):
+        runner.invoke(app, ["unexpected"], catch_exceptions=False)
+
+
+def test_click_control_flow_passes_through_unchanged() -> None:
+    result = runner.invoke(app, ["passthrough"])
+
+    assert result.exit_code == 2
+    assert result.stderr == ""
