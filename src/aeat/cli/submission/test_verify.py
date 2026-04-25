@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -16,6 +17,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 _runner_plain = CliRunner()
 
 _runner = CliRunner()
+
+
+def _unwrap_result(output: str) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(output)["result"])
 
 
 def _export_then_path(tmp_path: Path, *, modelo: str, period: str) -> Path:
@@ -128,29 +133,31 @@ class TestVerifyCommand:
         path = _export_then_path(tmp_path, modelo="130", period="2024Q1")
         result = _runner.invoke(app, ["verify", str(path), "--json"])
         assert result.exit_code == 0, result.stdout
-        doc = json.loads(result.stdout)
+        doc = _unwrap_result(result.stdout)
         assert doc["status"] == "ok"
         assert doc["kind"] == "record"
         assert doc["modelo"] == "130"
         assert doc["ejercicio"] == "2024"
         assert doc["raw_length"] == 878
         # Casilla 01 = 10 000.00 round-trips as Decimal-string.
-        assert doc["casillas"]["01"] == "10000.00"
+        casillas = cast(dict[str, Any], doc["casillas"])
+        assert casillas["01"] == "10000.00"
 
     def test_verify_json_modelo_303(self, tmp_path: Path) -> None:
         """Wave 100: --json works on envelope schemas, listing segment IDs."""
         path = _export_then_path(tmp_path, modelo="303", period="2024Q1")
         result = _runner.invoke(app, ["verify", str(path), "--json"])
         assert result.exit_code == 0, result.stdout
-        doc = json.loads(result.stdout)
+        doc = _unwrap_result(result.stdout)
         assert doc["status"] == "ok"
         assert doc["kind"] == "envelope"
         assert doc["modelo"] == "303"
-        assert len(doc["segments"]) == 8
-        assert "DP30300" in doc["segments"]
-        assert "DP30301" in doc["segments"]
+        segments = cast(list[str], doc["segments"])
+        assert len(segments) == 8
+        assert "DP30300" in segments
+        assert "DP30301" in segments
         # Wave 103: envelope fields surface the merged NIF / periodo / tipo.
-        fields = doc["fields"]
+        fields = cast(dict[str, Any], doc["fields"])
         assert fields["DP30301_F007_IDENTIFICACI_N_NIF"] == "X1234567L"
         assert fields["DP30301_F010_DEVENGO_PER_ODO"] == "1T"
         assert fields["DP30301_F006_TIPO_DECLARACI_N"] == "I"
@@ -161,9 +168,10 @@ class TestVerifyCommand:
         bad.write_bytes(b"NOT-A-VALID-MODELO-130-PAYLOAD\r\n")
         result = _runner.invoke(app, ["verify", str(bad), "--modelo", "130", "--ejercicio", "2024", "--json"])
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        assert doc["status"] == "error"
-        assert doc["modelo"] == "130"
+        assert result.stdout == ""
+        doc = json.loads(result.stderr)["error"]
+        assert doc["category"] == "REFUSED"
+        assert doc["context"]["modelo"] == "130"
 
     def test_verify_explicit_flags_override_filename_inference(self, tmp_path: Path) -> None:
         """Explicit --modelo and --ejercicio win over filename auto-detect."""

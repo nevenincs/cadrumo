@@ -16,7 +16,6 @@ or any state-changing action.
 from __future__ import annotations
 
 import asyncio
-import json
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -43,11 +42,19 @@ from ...sede import (
     capture_justificante,
     find_expediente,
 )
+from .._errors import CliRefusedBoundaryError, json_output_requested
+from .._schemas import OutputRootSchema, emit_json_success, register_schema
 from ..auth import _session
 from ..auth._paths import storage_state_paths
 
 _logger = get_logger(__name__)
 _CONSOLE = Console()
+
+
+@register_schema("filing reconcile")
+class FilingReconcileJson(OutputRootSchema[ReconciliationReport]):
+    """Schema for ``aeat filing reconcile --json``."""
+
 
 # Forbidden flags — parsed before Typer dispatch; any match hard-
 # exits with code 2. Mirror of the previous write-guard implementation
@@ -66,7 +73,7 @@ _FORBIDDEN_FLAGS: tuple[str, ...] = (
 )
 
 
-def reject_forbidden_flags(argv: tuple[str, ...]) -> None:
+def reject_forbidden_flags(argv: tuple[str, ...], *, emit_json: bool = False) -> None:
     """Exit 2 on any write-implying flag before it reaches Typer.
 
     Defence-in-depth: Typer would reject the flag as unknown anyway,
@@ -76,9 +83,10 @@ def reject_forbidden_flags(argv: tuple[str, ...]) -> None:
     for token in argv:
         head = token.split("=", 1)[0]
         if head in _FORBIDDEN_FLAGS:
-            _CONSOLE.print(
-                f"[red]Refused: {head!r} implies an AEAT mutation. `aeat filing reconcile` is strictly read-only.[/red]"
-            )
+            message = f"{head!r} implies an AEAT mutation. `aeat filing reconcile` is strictly read-only."
+            if emit_json:
+                raise CliRefusedBoundaryError(message, context={"flag": head})
+            _CONSOLE.print(f"[red]Refused: {message}[/red]")
             raise typer.Exit(code=2)
 
 
@@ -121,7 +129,8 @@ def _reconcile_cmd(
     ] = False,
 ) -> None:
     """Load a draft, fetch AEAT's record, reconcile, render the triad."""
-    reject_forbidden_flags(tuple(ctx.args or ()))
+    emit_json = json_output or json_output_requested()
+    reject_forbidden_flags(tuple(ctx.args or ()), emit_json=emit_json)
 
     settings = load_settings()
     draft = _load_draft(
@@ -130,10 +139,16 @@ def _reconcile_cmd(
         last=last,
         modelo=modelo,
         period=period,
+        emit_json=emit_json,
     )
 
     resolved_ejercicio = ejercicio or _infer_ejercicio(draft.period, draft.modelo)
     if resolved_ejercicio is None:
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                "Could not infer tax year from draft period. Pass --ejercicio.",
+                context={"modelo": draft.modelo, "period": draft.period},
+            )
         _CONSOLE.print("[red]Could not infer tax year from draft period. Pass --ejercicio.[/red]")
         raise typer.Exit(code=2)
 
@@ -144,16 +159,19 @@ def _reconcile_cmd(
                 draft=draft,
                 modelo=draft.modelo,
                 ejercicio=resolved_ejercicio,
+                emit_json=emit_json,
             )
         )
     except ExpedienteNotFoundError:
         report = reconcile(draft, None, now=datetime.now(tz=UTC))
     except SedeError as exc:
+        if emit_json:
+            raise
         _CONSOLE.print(f"[red]sede walk failed: {exc}[/red]")
         raise typer.Exit(code=1) from exc
 
-    if json_output:
-        typer.echo(json.dumps(report.model_dump(mode="json"), indent=2, ensure_ascii=False))
+    if emit_json:
+        emit_json_success("filing reconcile", report)
     else:
         _render_report(report)
 
@@ -167,14 +185,25 @@ def _load_draft(
     last: bool,
     modelo: str | None,
     period: str | None,
+    emit_json: bool,
 ) -> FilingDraft:
     drafts_dir = Path(settings.aeat_drafts_dir)
     if not drafts_dir.is_dir():
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                f"Drafts directory missing: {drafts_dir}",
+                context={"drafts_dir": str(drafts_dir)},
+            )
         _CONSOLE.print(f"[red]Drafts directory missing: {drafts_dir}[/red]")
         raise typer.Exit(code=1)
 
     if last:
         if not modelo or not period:
+            if emit_json:
+                raise CliRefusedBoundaryError(
+                    "--last requires both --modelo and --period.",
+                    context={"flag": "--last"},
+                )
             raise typer.BadParameter("--last requires both --modelo and --period")
         candidates = sorted(
             drafts_dir.glob(f"{modelo}_{period}_*.json"),
@@ -185,13 +214,27 @@ def _load_draft(
             draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
             if draft.status is FilingDraftStatus.APPROVED:
                 return draft
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                f"No APPROVED draft found for modelo={modelo} period={period}.",
+                context={"modelo": modelo, "period": period},
+            )
         _CONSOLE.print(f"[yellow]No APPROVED draft found for modelo={modelo} period={period}.[/yellow]")
         raise typer.Exit(code=1)
 
     if draft_id is None:
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                "Pass a draft-id argument, or use --last with --modelo / --period.",
+            )
         raise typer.BadParameter("Pass a draft-id argument, or use --last with --modelo / --period.")
     matches = list(drafts_dir.glob(f"*_*_{draft_id}.json"))
     if not matches:
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                f"Draft {draft_id!r} not found under {drafts_dir}.",
+                context={"draft_id": draft_id, "drafts_dir": str(drafts_dir)},
+            )
         _CONSOLE.print(f"[red]Draft {draft_id!r} not found under {drafts_dir}.[/red]")
         raise typer.Exit(code=1)
     return FilingDraft.model_validate_json(matches[0].read_text(encoding="utf-8"))
@@ -203,8 +246,9 @@ async def _run_reconcile(
     draft: FilingDraft,
     modelo: str,
     ejercicio: int,
+    emit_json: bool,
 ) -> ReconciliationReport:
-    session = _resolve_session(settings)
+    session = _resolve_session(settings, emit_json=emit_json)
     expediente = await find_expediente(
         session,
         modelo=modelo,
@@ -219,13 +263,22 @@ async def _run_reconcile(
     return reconcile(draft, justificante, now=datetime.now(tz=UTC))
 
 
-def _resolve_session(settings: Settings) -> AeatSession:
+def _resolve_session(settings: Settings, *, emit_json: bool) -> AeatSession:
     """Reconstruct a Clave-based AeatSession from the cached sidecar."""
     persisted = _session.load(settings, None)
     if persisted is None:
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                "No active AEAT session. Run `aeat auth login --provider clave_movil` first.",
+            )
         _CONSOLE.print("[red]No active AEAT session. Run `aeat auth login --provider clave_movil` first.[/red]")
         raise typer.Exit(code=1)
     if persisted.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                "Reconcile currently supports Cl@ve-móvil only.",
+                context={"provider": persisted.provider_kind.value},
+            )
         _CONSOLE.print(
             f"[yellow]Reconcile currently supports Cl@ve-móvil only; active provider is "
             f"{persisted.provider_kind.value}.[/yellow]"
@@ -233,6 +286,11 @@ def _resolve_session(settings: Settings) -> AeatSession:
         raise typer.Exit(code=2)
     paths = storage_state_paths(settings, persisted.provider_kind)
     if not paths.storage_state.exists():
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                f"Session cookie file missing at {paths.storage_state}. Run `aeat auth login` to re-authenticate.",
+                context={"storage_state": str(paths.storage_state)},
+            )
         _CONSOLE.print(
             f"[red]Session cookie file missing at {paths.storage_state}. "
             "Run `aeat auth login` to re-authenticate.[/red]"

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -34,6 +35,10 @@ _runner = CliRunner()
 
 _REGISTRY_IDS = [f"{m}-{e}" for (m, e) in sorted(SCHEMA_REGISTRY.keys())]
 _REGISTRY_KEYS = sorted(SCHEMA_REGISTRY.keys())
+
+
+def _unwrap_result(output: str) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(output)["result"])
 
 
 def _ingreso_and_negativa_cases() -> list[tuple[str, str, str]]:
@@ -120,7 +125,7 @@ def test_registered_schema_round_trips_through_cli(tmp_path: Path, modelo: str, 
     # 2. verify
     verify_result = _runner.invoke(app, ["verify", str(output_file), "--json"])
     assert verify_result.exit_code == 0, f"verify failed for {output_file.name}: {verify_result.stdout}"
-    verify_doc = json.loads(verify_result.stdout)
+    verify_doc = _unwrap_result(verify_result.stdout)
     assert verify_doc["status"] == "ok"
     assert verify_doc["modelo"] == modelo
     assert verify_doc["ejercicio"] == ejercicio
@@ -128,7 +133,7 @@ def test_registered_schema_round_trips_through_cli(tmp_path: Path, modelo: str, 
     # 3. diff against self — must report identical
     diff_result = _runner.invoke(app, ["diff", str(output_file), str(output_file), "--json"])
     assert diff_result.exit_code == 0, f"self-diff failed: {diff_result.stdout}"
-    diff_doc = json.loads(diff_result.stdout)
+    diff_doc = _unwrap_result(diff_result.stdout)
     assert diff_doc["status"] == "identical"
     assert diff_doc["bytes"] == len(payload)
     assert diff_doc["casilla_deltas"] == []
@@ -172,10 +177,10 @@ def test_tipo_i_and_n_round_trip(tmp_path: Path, modelo: str, ejercicio: str, ti
 
     verify = _runner.invoke(app, ["verify", str(output_file), "--json"])
     assert verify.exit_code == 0
-    verify_doc = json.loads(verify.stdout)
+    verify_doc = _unwrap_result(verify.stdout)
     # Locate the tipo_declaracion field regardless of modelo shape (130 =
     # "TIPO_DECLARACION", 303 = "DP30301_F006_TIPO_DECLARACI_N").
-    fields = verify_doc.get("fields", {})
+    fields = cast(dict[str, Any], verify_doc.get("fields", {}))
     tipo_values = {v for k, v in fields.items() if "TIPO" in k and "DECLARACI" in k}
     # rich output surfaces the string with quotes around it for record schemas
     # (repr) whereas JSON serialises the raw value; accept either shape.
@@ -217,8 +222,8 @@ def test_tipo_d_with_iban_round_trip(tmp_path: Path, modelo: str, ejercicio: str
 
     verify = _runner.invoke(app, ["verify", str(output_file), "--json"])
     assert verify.exit_code == 0
-    verify_doc = json.loads(verify.stdout)
-    fields = verify_doc.get("fields", {})
+    verify_doc = _unwrap_result(verify.stdout)
+    fields = cast(dict[str, Any], verify_doc.get("fields", {}))
     # IBAN should be visible at DP303DID_F006_DOMICILIACI_N_DEVOLUCI_N_IBA.
     assert any(iban in str(v) for v in fields.values()), (
         f"IBAN {iban!r} not surfaced in verify output fields — devolución builder may have silently dropped it."

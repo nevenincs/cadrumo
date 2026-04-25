@@ -12,9 +12,9 @@ from __future__ import annotations
 import asyncio
 import json
 import shutil
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import typer
 from pydantic_settings import SettingsConfigDict
@@ -31,6 +31,8 @@ from ...config import PROJECT_ROOT, Settings
 from ...env_io import write_env_vars
 from ...logging import get_logger
 from ...mcp.launch_google_workspace import ensure_credentials_dir, ensure_project_env_file
+from .._errors import CliRefusedBoundaryError, json_output_requested
+from .._schemas import OutputRootSchema, OutputSchema, emit_json_success, register_schema
 from ..oauth import CREDENTIALS_PAGE_TEMPLATE, REQUIRED_BLOCK, parse_oauth_client_json
 from . import _registry, _session
 from ._paths import storage_state_paths
@@ -58,6 +60,91 @@ app = typer.Typer(
 )
 
 _CONSOLE = Console()
+
+
+class AuthListProvidersRowJson(OutputSchema):
+    """One row from ``aeat auth list-providers --json``."""
+
+    kind: AuthProviderKind
+    label: str
+    configured: bool
+    available: bool
+    identity_nif: str | None = None
+    subject: str | None = None
+    expires_on: date | None = None
+    health_severity: str | None = None
+    days_until_expiry: int | None = None
+    health_summary: str | None = None
+    implemented: bool
+
+
+@register_schema("auth list-providers")
+class AuthListProvidersJson(OutputRootSchema[list[AuthListProvidersRowJson]]):
+    """Schema for ``aeat auth list-providers --json``."""
+
+
+@register_schema("auth login")
+class AuthLoginJson(OutputSchema):
+    """Schema for ``aeat auth login --json``."""
+
+    provider_kind: AuthProviderKind
+    identity_nif: str
+    authenticated_at: datetime
+    idle_deadline: datetime
+
+
+class AuthStatusNoSessionJson(OutputSchema):
+    """No-session payload for ``aeat auth status --json``."""
+
+    session: Literal[None]
+
+
+class AuthStatusSessionJson(OutputSchema):
+    """Active-session payload for ``aeat auth status --json``."""
+
+    provider_kind: AuthProviderKind
+    authenticated_at: datetime
+    idle_deadline: datetime
+    identity_nif: str
+    storage_state_path: str
+    is_expired: bool
+    seconds_remaining: int
+    idle_ttl_seconds: int
+
+
+@register_schema("auth status")
+class AuthStatusJson(OutputRootSchema[AuthStatusNoSessionJson | AuthStatusSessionJson]):
+    """Schema for ``aeat auth status --json``."""
+
+
+class AuthWhoamiProbeJson(OutputSchema):
+    """Probe details for ``aeat auth whoami --json``."""
+
+    target_url: str
+    status_code: int | None = None
+    is_valid: bool
+    elapsed_ms: int | None = None
+    error_message: str | None = None
+    detail: dict[str, object] | None = None
+
+
+@register_schema("auth whoami")
+class AuthWhoamiJson(OutputSchema):
+    """Schema for ``aeat auth whoami --json``."""
+
+    provider_kind: AuthProviderKind
+    identity_nif: str
+    authenticated_at: datetime
+    idle_deadline: datetime
+    probe: AuthWhoamiProbeJson
+
+
+@register_schema("auth logout")
+class AuthLogoutJson(OutputSchema):
+    """Schema for ``aeat auth logout --json``."""
+
+    cleared_providers: list[AuthProviderKind]
+    removed_paths: list[str]
 
 
 def _print_step(
@@ -427,8 +514,8 @@ def list_providers(
             continue
         rows.append((entry, description))
 
-    if json_output:
-        typer.echo(json.dumps(render_list_providers_json(rows), indent=2))
+    if json_output or json_output_requested():
+        emit_json_success("auth list-providers", render_list_providers_json(rows))
         return
 
     _CONSOLE.print(render_list_providers_table(rows))
@@ -691,6 +778,10 @@ def login(
     kind = _resolve_kind(settings, _parse_kind(provider) if provider else None)
 
     if non_interactive and kind in _registry.INTERACTIVE_KINDS:
+        if json_output or json_output_requested():
+            raise CliRefusedBoundaryError(
+                f"provider {kind.value} requires an interactive approval step; cannot run with --non-interactive"
+            )
         _CONSOLE.print(
             f"[red]provider {kind.value} requires an interactive approval step; cannot run with --non-interactive[/red]"
         )
@@ -699,13 +790,17 @@ def login(
     try:
         session = asyncio.run(_do_login(settings, kind))
     except _registry.ProviderNotImplementedError as exc:
+        if json_output or json_output_requested():
+            raise
         _CONSOLE.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        if json_output or json_output_requested():
+            raise
         _CONSOLE.print(f"[red]AEAT authentication failed: {exc}[/red]")
         raise typer.Exit(code=1) from exc
 
-    if json_output:
+    if json_output or json_output_requested():
         # The storage_state_path is intentionally omitted from the JSON
         # surface — it is an internal file location that Kent has no
         # reason to consume from a login command. Downstream scripts
@@ -718,7 +813,7 @@ def login(
             "authenticated_at": session.authenticated_at.isoformat(),
             "idle_deadline": session.idle_deadline.isoformat(),
         }
-        typer.echo(json.dumps(payload, indent=2))
+        emit_json_success("auth login", payload)
         return
 
     now = datetime.now(UTC)
@@ -759,18 +854,20 @@ def status(
     try:
         session = _session.load(settings, kind)
     except _session.CorruptAuthSessionError as exc:
+        if json_output or json_output_requested():
+            raise
         _CONSOLE.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
 
     if session is None or (kind is not None and session.provider_kind != kind):
-        if json_output:
-            typer.echo(json.dumps({"session": None}, indent=2))
+        if json_output or json_output_requested():
+            emit_json_success("auth status", {"session": None})
         else:
             _CONSOLE.print(render_no_session_line(settings))
         return
 
-    if json_output:
-        typer.echo(json.dumps(render_status_json(session), indent=2))
+    if json_output or json_output_requested():
+        emit_json_success("auth status", render_status_json(session))
         return
 
     _CONSOLE.print(render_status_line(session))
@@ -821,9 +918,13 @@ def whoami(
     try:
         persisted = _session.load(settings, explicit)
     except _session.CorruptAuthSessionError as exc:
+        if json_output or json_output_requested():
+            raise
         _CONSOLE.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
     if persisted is None:
+        if json_output or json_output_requested():
+            raise CliRefusedBoundaryError(render_no_session_line(settings))
         _CONSOLE.print(render_no_session_line(settings))
         raise typer.Exit(code=1)
     kind = explicit or persisted.provider_kind
@@ -831,13 +932,17 @@ def whoami(
     try:
         refreshed, assertion = asyncio.run(_do_whoami(settings, kind))
     except _registry.ProviderNotImplementedError as exc:
+        if json_output or json_output_requested():
+            raise
         _CONSOLE.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        if json_output or json_output_requested():
+            raise
         _CONSOLE.print(f"[red]AEAT probe failed: {exc}[/red]")
         raise typer.Exit(code=1) from exc
 
-    if json_output:
+    if json_output or json_output_requested():
         detail_payload = (
             assertion.assertion_detail.model_dump(mode="json") if assertion.assertion_detail is not None else None
         )
@@ -855,7 +960,7 @@ def whoami(
                 "detail": detail_payload,
             },
         }
-        typer.echo(json.dumps(payload, indent=2))
+        emit_json_success("auth whoami", payload)
         return
 
     label = _registry.get_entry(refreshed.provider_kind).label
@@ -934,15 +1039,13 @@ def logout(
                 cleared_kinds.append(persisted.provider_kind)
                 removed.extend(removed_for_kind)
 
-    if json_output:
-        typer.echo(
-            json.dumps(
-                {
-                    "cleared_providers": [k.value for k in cleared_kinds],
-                    "removed_paths": [str(p) for p in removed],
-                },
-                indent=2,
-            )
+    if json_output or json_output_requested():
+        emit_json_success(
+            "auth logout",
+            {
+                "cleared_providers": [k.value for k in cleared_kinds],
+                "removed_paths": [str(p) for p in removed],
+            },
         )
         return
 
