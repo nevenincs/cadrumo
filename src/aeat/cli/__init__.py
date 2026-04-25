@@ -50,7 +50,14 @@ from . import workflow as workflow_module
 from ._errors import decorate_typer_app
 from ._exit_codes import ExitCode, exit_with
 from ._log_levels import LogLevel, LogLevelResolutionError, apply_to_root_logger, resolve_log_level
-from ._schemas import SCHEMA_REGISTRY, OutputSchema, OutputSchemaError, SchemaEnvelope, register_schema
+from ._schemas import (
+    SCHEMA_REGISTRY,
+    OutputSchema,
+    OutputSchemaError,
+    SchemaEnvelope,
+    emit_json_document,
+    register_schema,
+)
 from ._tty import (
     NonTtyRefusedError,
     is_stderr_tty,
@@ -199,6 +206,7 @@ __all__ = [
     "SchemaEnvelope",
     "app",
     "apply_to_root_logger",
+    "emit_json_document",
     "exit_with",
     "is_stderr_tty",
     "is_stdin_tty",

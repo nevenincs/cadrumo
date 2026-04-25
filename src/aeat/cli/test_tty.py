@@ -8,7 +8,10 @@ import subprocess
 import sys
 
 import pytest
+import typer
+from typer.testing import CliRunner
 
+from .. import cli
 from ..config import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -106,3 +109,30 @@ except NonTtyRefusedError as exc:
     assert payload["error_type"] == "NonTtyRefusedError"
     assert "Interactive stdin is unavailable" in payload["message"]
     assert payload["suggestion"] == "-> Re-run in a TTY or pass --profile FILE"
+
+
+def test_root_no_color_flag_overrides_leaf_default_false() -> None:
+    """Root ``--no-color`` should beat a leaf's default ``False`` parameter."""
+
+    app = typer.Typer()
+
+    @app.callback()
+    def root(
+        ctx: typer.Context,
+        no_color: bool = typer.Option(False, "--no-color"),
+    ) -> None:
+        state = ctx.ensure_object(dict)
+        state["no_color"] = no_color
+
+    @app.command()
+    def probe() -> None:
+        typer.echo(json.dumps({"color": cli.should_use_color(no_color=False)}))
+
+    runner = CliRunner()
+    env = dict(os.environ)
+    env["AEAT_FORCE_COLOR"] = "1"
+    env["NO_COLOR"] = ""
+    result = runner.invoke(app, ["--no-color", "probe"], env=env)
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output) == {"color": False}

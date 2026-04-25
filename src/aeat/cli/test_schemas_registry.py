@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import io
+import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any, cast
@@ -80,3 +82,13 @@ def test_public_api_reexports_schema_registry_surface() -> None:
     assert cli.SchemaEnvelope.__name__ == "SchemaEnvelope"
     assert cli.register_schema.__module__ == "aeat.cli._schemas"
     assert cli.SCHEMA_REGISTRY is not None
+
+
+def test_emit_json_document_normalises_set_payloads_to_json_arrays() -> None:
+    """Machine output should serialise set-like payloads as JSON arrays."""
+
+    stream = io.StringIO()
+    cli.emit_json_document({"items": {"a", "b"}, "frozen": frozenset({"x"})}, stream=stream)
+    payload = json.loads(stream.getvalue())
+    assert sorted(payload["items"]) == ["a", "b"]
+    assert payload["frozen"] == ["x"]

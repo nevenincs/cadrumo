@@ -149,8 +149,12 @@ class SecretScrubbingFilter(logging.Filter):
         else:
             record.msg = _scrub_value(record.msg)
 
-        if isinstance(record.args, tuple) and isinstance(record.msg, str):
-            record.args = _scrub_positional_args(record.msg, record.args)
+        if isinstance(record.args, tuple | list) and isinstance(record.msg, str):
+            scrubbed_args = _scrub_positional_args(record.msg, tuple(record.args))
+            record.args = cast(
+                Any,
+                list(scrubbed_args) if isinstance(record.args, list) else scrubbed_args,
+            )
         elif record.args:
             record.args = _scrub_value(record.args)
 

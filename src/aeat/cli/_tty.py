@@ -71,7 +71,7 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
             can adopt the helper before the global flag lands.
     """
 
-    resolved_no_color = current_cli_flag("no_color") if no_color is None else no_color
+    resolved_no_color = current_cli_flag("no_color") or bool(no_color)
     if resolved_no_color or bool(os.getenv("NO_COLOR", "").strip()):
         return False
     if _env_truthy("AEAT_FORCE_COLOR"):
@@ -92,9 +92,9 @@ def should_show_rich_progress(
     progress instead of a live spinner/progress bar.
     """
 
-    resolved_quiet = current_cli_flag("quiet") if quiet is None else quiet
-    resolved_json_mode = current_cli_flag("json") if json_mode is None else json_mode
-    resolved_no_progress = current_cli_flag("no_progress") if no_progress is None else no_progress
+    resolved_quiet = current_cli_flag("quiet") or bool(quiet)
+    resolved_json_mode = current_cli_flag("json") or bool(json_mode)
+    resolved_no_progress = current_cli_flag("no_progress") or bool(no_progress)
     if resolved_quiet or resolved_json_mode or resolved_no_progress:
         return False
     return is_stdout_tty() and is_stderr_tty()
