@@ -66,8 +66,41 @@ _MODELO_RE = re.compile(r"Modelo\s*[:\-]?\s*([0-9]{3}[A-Z]?)", re.IGNORECASE)
 # stops the regex from picking up nearby words like "impositivo" out
 # of "Período impositivo".
 _PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]*\d[0-9A-Z]*)", re.IGNORECASE)
+# Quarterly modelos (130, 303, 111, 115, 123) often print the period
+# in a positional layout that pdfplumber merges as
+# ``[<NIF>] <YYYY> <period>`` on a single line, with no "Período"
+# label. The period token is one of ``1T``, ``2T``, ``3T``, ``4T``,
+# ``0A``, or a 1-2 digit month (``01``-``12``). Captured live across
+# Modelos 130/303/111 (2026-04-25).
+_PERIOD_POSITIONAL_RE = re.compile(
+    r"(?:[A-Z][0-9A-Z]{7,9}\s+)?"  # optional NIF/NIE
+    r"\b(?P<year>\d{4})\s+"
+    r"(?P<period>0A|[1-4]T|0[1-9]|1[0-2])\b",
+)
 _EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*([0-9]{4})", re.IGNORECASE)
-_NIF_RE = re.compile(r"NIF\s*[:\-]?\s*([0-9A-Z]{8,12})", re.IGNORECASE)
+# Some annual informativas (M190 "Resumen anual") print the ejercicio
+# label with a parenthetical and a dotted leader before the value:
+# ``Ejercicio (con 4 cifras) ....... 2024``. The parenthetical may
+# contain digits ("con 4 cifras"); the regex tolerates short
+# intervening text and pinpoints the 4-digit year via a single-line
+# proximity match.
+_EJERCICIO_LOOSE_RE = re.compile(
+    r"Ejercicio\b[^\n]{0,80}?\b(20\d{2})\b",
+    re.IGNORECASE,
+)
+# Annual informativas (190, 390, 347) print only "Anual" / "0A" or
+# omit the period label entirely; the schema falls back to the
+# ejercicio in that case (see :func:`extract_justificante`).
+_NIF_RE = re.compile(
+    # NIF / NIE shape: leading letter (NIE) or digit (NIF), 7-8 mid
+    # digits, trailing checksum letter. Total length 9 in practice.
+    # Stricter than the previous "[0-9A-Z]{8,12}" pattern, which
+    # accidentally matched the word "PRESENTADOR" in the
+    # ``NIF Presentador: <value>`` register-printed shape.
+    r"NIF\s*(?:Presentador)?\s*[:\-]?\s*"
+    r"([XYZ\d]\d{7}[A-Z])",
+    re.IGNORECASE,
+)
 _PRESENTATION_ID_RE = re.compile(
     r"N[úu]mero\s+de\s+justificante\s*[:\-]?\s*([0-9A-Z]{10,40})",
     re.IGNORECASE,
@@ -240,18 +273,26 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     csv_value = csv_match.group(1).upper()
 
     modelo = _require(_MODELO_RE.search(normalised), "modelo")
-    ejercicio_match = _EJERCICIO_RE.search(normalised)
+    ejercicio_match = _EJERCICIO_RE.search(normalised) or _EJERCICIO_LOOSE_RE.search(normalised)
     ejercicio = ejercicio_match.group(1).strip() if ejercicio_match else None
 
-    # Period label is missing on annual receipts (Modelo 100 etc.); fall
-    # back to the ejercicio so the schema's non-empty constraint holds.
+    # Period extraction has three tiers:
+    #   1. Labelled "Período <token>" (Modelo 100 modern body, M303).
+    #   2. Positional "[<NIF>] <YYYY> <token>" lines that pdfplumber
+    #      reads in form-laid-out quarterly receipts (M130, M111, ...).
+    #   3. Annual informativas / metadata-only receipts: fall back to
+    #      the ejercicio so the schema's non-empty constraint holds.
     period_match = _PERIOD_RE.search(normalised)
     if period_match is not None:
         period = period_match.group(1).strip()
-    elif ejercicio is not None:
-        period = ejercicio
     else:
-        raise JustificanteParseError("could not locate required field: period")
+        positional_match = _PERIOD_POSITIONAL_RE.search(normalised)
+        if positional_match is not None:
+            period = positional_match.group("period").strip()
+        elif ejercicio is not None:
+            period = ejercicio
+        else:
+            raise JustificanteParseError("could not locate required field: period")
 
     nif = _require(_NIF_RE.search(normalised), "tax_id").upper()
 

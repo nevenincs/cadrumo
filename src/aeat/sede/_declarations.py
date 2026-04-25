@@ -23,18 +23,22 @@ caller.
 
 from __future__ import annotations
 
+import contextlib
+import hashlib
 import re
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, Literal
+from urllib.parse import parse_qs, urlsplit
 
 from playwright.async_api import Page, async_playwright
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 from ..browser import Profile
 from ..browser.session import BrowserSession
 from ..config import Settings
 from ..logging import get_logger
-from ._errors import SedeNavigationError, SedeParseError
+from ._errors import JustificanteFetchError, SedeNavigationError, SedeParseError
+from ._schema import JustificanteRef, SedeCapture
 
 if TYPE_CHECKING:
     from ..auth._authenticator import AeatSession
@@ -43,10 +47,14 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
-_LISTING_URL = "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"
+_SEDE_BASE = "https://www6.agenciatributaria.gob.es"
+_LISTING_URL = f"{_SEDE_BASE}/wlpl/SCEJ-MANT/CONSUL/index.zul"
+_COTEJO_VIEW = f"{_SEDE_BASE}/wlpl/KATA-APLI/cotejo/CotejoIdSv"
+_COTEJO_DOC = f"{_SEDE_BASE}/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
 _NAVIGATION_TIMEOUT_MS = 30_000
 _FORM_INTERACTION_TIMEOUT_MS = 10_000
 _BUSCAR_SETTLE_MS = 3_000
+_VER_CLICK_TIMEOUT_MS = 15_000
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
     strict=True,
@@ -314,7 +322,172 @@ def _parse_presented_at(value: str) -> datetime:
     )
 
 
+async def capture_declaration(
+    session: AeatSession,
+    declaration: Declaration,
+    *,
+    settings: Settings | None = None,
+) -> SedeCapture:
+    """Fetch the raw justificante PDF behind a :class:`Declaration`.
+
+    Drives the declaraciones register the same way
+    :func:`walk_declarations_register` does, locates the row whose
+    ``expediente_id`` matches ``declaration.expediente_id``, clicks
+    that row's *Obtención de Justificante* button, captures the
+    CSV from the resulting cotejo URL, and downloads the PDF via
+    :class:`APIRequestContext` (so Chrome's PDF viewer never
+    intercepts the response).
+
+    Args:
+        session: Authenticated AEAT session.
+        declaration: The Declaration row to capture, typically
+            obtained from :func:`walk_declarations_register`.
+        settings: Optional :class:`Settings` override.
+
+    Returns:
+        A :class:`SedeCapture` whose ``ref`` carries the resolved
+        CSV / cotejo URL / PDF URL and whose ``pdf_bytes`` carries
+        the raw response body.
+
+    Raises:
+        SedeNavigationError: When the form drive or row click fails.
+        SedeParseError: When the cotejo URL cannot be parsed for
+            its CSV.
+        JustificanteFetchError: When the PDF GET returns non-2xx,
+            an empty body, or a non-PDF content type.
+    """
+    settings = settings or Settings()
+    if session.storage_state_path is None:
+        raise SedeNavigationError(
+            "AeatSession.storage_state_path is None; run `aeat auth login` first",
+        )
+
+    profile = Profile(
+        name=settings.aeat_default_profile_name,
+        storage_state_path=session.storage_state_path,
+    )
+    async with async_playwright() as pw:
+        browser_session = BrowserSession(pw, settings, profile)
+        context = await browser_session.create_context(
+            storage_state_path=session.storage_state_path,
+        )
+        try:
+            page = await context.new_page()
+            await _drive_search(
+                page,
+                modelo=declaration.modelo,
+                ejercicio=declaration.ejercicio,
+            )
+
+            row_locator = _row_locator_for_expediente(
+                page,
+                expediente_id=declaration.expediente_id,
+            )
+            ver_button = row_locator.locator(
+                '.z-listcell:has-text("Ver") .z-button',
+            ).first
+
+            try:
+                async with context.expect_page(
+                    timeout=_VER_CLICK_TIMEOUT_MS,
+                ) as new_page_info:
+                    await ver_button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+                cotejo_page = await new_page_info.value
+            except Exception as exc:
+                raise SedeNavigationError(
+                    f"clicking Ver for {declaration.expediente_id!r} failed: {exc}",
+                ) from exc
+
+            try:
+                await cotejo_page.wait_for_load_state(
+                    "domcontentloaded",
+                    timeout=_NAVIGATION_TIMEOUT_MS,
+                )
+            except Exception as exc:
+                raise SedeNavigationError(
+                    f"cotejo page did not settle for {declaration.expediente_id!r}: {exc}",
+                ) from exc
+
+            csv = _extract_csv_from_url(cotejo_page.url)
+
+            ref = JustificanteRef(
+                csv=csv,
+                expediente_id=declaration.expediente_id,
+                cotejo_url=AnyHttpUrl(f"{_COTEJO_VIEW}?CSV={csv}"),
+                pdf_url=AnyHttpUrl(f"{_COTEJO_DOC}?CSV={csv}"),
+            )
+
+            pdf_response = await context.request.get(str(ref.pdf_url))
+            if not (200 <= pdf_response.status < 300):
+                raise JustificanteFetchError(
+                    f"pdf fetch for CSV={csv!r} returned HTTP {pdf_response.status}",
+                )
+            content_type = pdf_response.headers.get("content-type", "")
+            body = await pdf_response.body()
+            if not body:
+                raise JustificanteFetchError(f"empty PDF body for CSV={csv!r}")
+            if "pdf" not in content_type.lower():
+                raise JustificanteFetchError(
+                    f"unexpected content-type {content_type!r} for CSV={csv!r}",
+                )
+
+            from ._schema import Expediente
+
+            sha256 = hashlib.sha256(body).hexdigest()
+            return SedeCapture(
+                expediente=Expediente(
+                    expediente_id=declaration.expediente_id,
+                    modelo=declaration.modelo,
+                    ejercicio=declaration.ejercicio,
+                    category_path=("Declaraciones presentadas",),
+                    detail_url=AnyHttpUrl(
+                        f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}",
+                    ),
+                ),
+                ref=ref,
+                pdf_bytes=body,
+                pdf_sha256=sha256,
+                captured_at=datetime.now(UTC),
+            )
+        finally:
+            with contextlib.suppress(Exception):
+                await context.close()
+            await browser_session.close()
+
+
+def _row_locator_for_expediente(page: Page, *, expediente_id: str):
+    """Return a Playwright locator pointing at the listitem whose
+    ``Expediente`` cell text equals ``expediente_id``.
+    """
+    return page.locator(".z-listitem").filter(
+        has=page.locator(".z-listcell").filter(has_text=expediente_id),
+    )
+
+
+def _extract_csv_from_url(url: str) -> str:
+    """Extract the ``CSV`` query parameter from a cotejo URL.
+
+    Args:
+        url: Final URL after the Ver-button click landed on
+            ``/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=<csv>``.
+
+    Returns:
+        The CSV identifier.
+
+    Raises:
+        SedeParseError: When the URL does not carry a ``CSV``
+            query parameter.
+    """
+    parsed = urlsplit(url)
+    qs = parse_qs(parsed.query)
+    csv_values = qs.get("CSV", [])
+    if not csv_values:
+        raise SedeParseError(f"cotejo URL missing CSV query: {url!r}")
+    return csv_values[0]
+
+
 __all__ = [
     "Declaration",
+    "capture_declaration",
     "walk_declarations_register",
 ]

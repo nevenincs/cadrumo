@@ -44,7 +44,7 @@ Navigation flow, captured live:
 
 from __future__ import annotations
 
-from ._declarations import Declaration, walk_declarations_register
+from ._declarations import Declaration, capture_declaration, walk_declarations_register
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -81,6 +81,7 @@ __all__ = [
     "SedeError",
     "SedeNavigationError",
     "SedeParseError",
+    "capture_declaration",
     "capture_justificante",
     "fetch_notifications_query",
     "fetch_notifications_summary",
