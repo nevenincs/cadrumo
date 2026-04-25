@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -48,7 +49,9 @@ _DIFF_UNSUPPORTED: frozenset[str] = frozenset({"status", "modelo", "ejercicio", 
 _SCHEMAS_ROW: frozenset[str] = frozenset({"modelo", "ejercicio", "kind", "encoding", "bytes", "required_header_fields"})
 
 _CHECK_NIF_VALID: frozenset[str] = frozenset({"status", "input", "canonical", "kind"})
-_CHECK_NIF_INVALID: frozenset[str] = frozenset({"status", "input", "error"})
+_ERROR_ENVELOPE: frozenset[str] = frozenset(
+    {"schema_version", "code", "category", "message", "suggestion", "retryable", "runbook_id", "context", "trace_id"}
+)
 
 
 # ---- Helpers -------------------------------------------------------------
@@ -93,10 +96,22 @@ def _export(tmp_path: Path, *, modelo: str, period: str) -> Path:
     return out / f"X1234567L{ejercicio}{quarter}.{modelo}"
 
 
-def _assert_keys_superset(doc: dict[str, object], expected: frozenset[str], *, where: str) -> None:
+def _assert_keys_superset(doc: dict[str, Any], expected: frozenset[str], *, where: str) -> None:
     """Assert doc contains every expected key (extra keys OK for forward-compat)."""
     missing = expected - doc.keys()
     assert not missing, f"{where} missing keys {sorted(missing)}; got {sorted(doc.keys())}"
+
+
+def _unwrap_success(output: str) -> dict[str, Any]:
+    doc = cast(dict[str, Any], json.loads(output))
+    assert doc["schema_version"] == "1"
+    assert "command" in doc
+    assert "warnings" in doc
+    return doc["result"]
+
+
+def _unwrap_error(output: str) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(output)["error"])
 
 
 # ---- verify --json -------------------------------------------------------
@@ -107,7 +122,7 @@ class TestVerifyJsonContract:
         path = _export(tmp_path, modelo="130", period="2024Q1")
         result = _runner.invoke(app, ["verify", str(path), "--json"])
         assert result.exit_code == 0, result.stdout
-        doc = json.loads(result.stdout)
+        doc = _unwrap_success(result.stdout)
         _assert_keys_superset(doc, _VERIFY_OK_RECORD, where="verify --json (130 OK)")
         assert doc["status"] == "ok"
         assert doc["kind"] == "record"
@@ -116,7 +131,7 @@ class TestVerifyJsonContract:
         path = _export(tmp_path, modelo="303", period="2024Q1")
         result = _runner.invoke(app, ["verify", str(path), "--json"])
         assert result.exit_code == 0, result.stdout
-        doc = json.loads(result.stdout)
+        doc = _unwrap_success(result.stdout)
         _assert_keys_superset(doc, _VERIFY_OK_ENVELOPE, where="verify --json (303 OK)")
         assert doc["status"] == "ok"
         assert doc["kind"] == "envelope"
@@ -127,9 +142,10 @@ class TestVerifyJsonContract:
         bad.write_bytes(b"NOT-A-VALID-PAYLOAD\r\n")
         result = _runner.invoke(app, ["verify", str(bad), "--modelo", "130", "--ejercicio", "2024", "--json"])
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        _assert_keys_superset(doc, _VERIFY_ERROR, where="verify --json (error)")
-        assert doc["status"] == "error"
+        assert result.stdout == ""
+        doc = _unwrap_error(result.stderr)
+        _assert_keys_superset(doc, _ERROR_ENVELOPE, where="verify --json (error)")
+        assert doc["category"] == "REFUSED"
 
 
 # ---- diff --json ---------------------------------------------------------
@@ -143,7 +159,7 @@ class TestDiffJsonContract:
         b = _export(tmp_path / "b", modelo="130", period="2024Q1")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--json"])
         assert result.exit_code == 0, result.stdout
-        doc = json.loads(result.stdout)
+        doc = _unwrap_success(result.stdout)
         _assert_keys_superset(doc, _DIFF_IDENTICAL, where="diff --json (identical)")
         assert doc["status"] == "identical"
         assert doc["casilla_deltas"] == []
@@ -177,10 +193,11 @@ class TestDiffJsonContract:
         file_b = out_b / "X1234567L20241T.130"
         result = _runner.invoke(app, ["diff", str(file_a), str(file_b), "--json"])
         assert result.exit_code == 1
-        doc = json.loads(result.stdout)
+        doc = _unwrap_success(result.stdout)
         _assert_keys_superset(doc, _DIFF_MISMATCH, where="diff --json (mismatch)")
         assert doc["status"] == "mismatch"
-        assert any(d["casilla"] == "01" for d in doc["casilla_deltas"])
+        casilla_deltas = cast(list[dict[str, Any]], doc["casilla_deltas"])
+        assert any(d["casilla"] == "01" for d in casilla_deltas)
 
     def test_unsupported_shape(self, tmp_path: Path) -> None:
         a = tmp_path / "fake.390"
@@ -189,9 +206,10 @@ class TestDiffJsonContract:
         b.write_bytes(b"  ")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "390", "--ejercicio", "2024", "--json"])
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        _assert_keys_superset(doc, _DIFF_UNSUPPORTED, where="diff --json (unsupported)")
-        assert doc["status"] == "unsupported"
+        assert result.stdout == ""
+        doc = _unwrap_error(result.stderr)
+        _assert_keys_superset(doc, _ERROR_ENVELOPE, where="diff --json (unsupported)")
+        assert doc["category"] == "REFUSED"
 
 
 # ---- schemas --json ------------------------------------------------------
@@ -201,7 +219,7 @@ class TestSchemasJsonContract:
     def test_each_row_shape(self) -> None:
         result = _runner.invoke(app, ["schemas", "--json"])
         assert result.exit_code == 0, result.stdout
-        rows = json.loads(result.stdout)
+        rows = _unwrap_success(result.stdout)
         assert isinstance(rows, list) and rows
         for row in rows:
             _assert_keys_superset(row, _SCHEMAS_ROW, where=f"schemas --json row {row}")
@@ -214,13 +232,14 @@ class TestCheckNifJsonContract:
     def test_valid_shape(self) -> None:
         result = _runner.invoke(app, ["check-nif", "X1234567L", "--json"])
         assert result.exit_code == 0, result.stdout
-        doc = json.loads(result.stdout)
+        doc = _unwrap_success(result.stdout)
         _assert_keys_superset(doc, _CHECK_NIF_VALID, where="check-nif --json (valid)")
         assert doc["status"] == "valid"
 
     def test_invalid_shape(self) -> None:
         result = _runner.invoke(app, ["check-nif", "X1234567Z", "--json"])
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        _assert_keys_superset(doc, _CHECK_NIF_INVALID, where="check-nif --json (invalid)")
-        assert doc["status"] == "invalid"
+        assert result.stdout == ""
+        doc = _unwrap_error(result.stderr)
+        _assert_keys_superset(doc, _ERROR_ENVELOPE, where="check-nif --json (invalid)")
+        assert doc["category"] == "REFUSED"

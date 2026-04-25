@@ -7,10 +7,17 @@ from rich.console import Console
 from rich.json import JSON
 
 from ...config import load_settings
-from ...workflow import WorkflowError, load_run
+from ...workflow import WorkflowError, WorkflowResult, load_run
+from .._errors import json_output_requested
 from .._observability import cli_run_context
+from .._schemas import OutputRootSchema, emit_json_success, register_schema
 
 _CONSOLE = Console()
+
+
+@register_schema("workflow show")
+class WorkflowShowJson(OutputRootSchema[WorkflowResult]):
+    """Schema for ``aeat workflow show --json``."""
 
 
 def show_cmd(
@@ -38,10 +45,12 @@ def show_cmd(
         try:
             result = load_run(run_id, runs_dir=settings.aeat_workflow_runs_dir)
         except WorkflowError as exc:
+            if as_json or json_output_requested():
+                raise
             _CONSOLE.print(f"[red]not found:[/red] {exc}")
             raise typer.Exit(code=1) from exc
         payload = result.model_dump_json(indent=2)
-        if as_json:
-            typer.echo(payload)
+        if as_json or json_output_requested():
+            emit_json_success("workflow show", result)
         else:
             _CONSOLE.print(JSON(payload))

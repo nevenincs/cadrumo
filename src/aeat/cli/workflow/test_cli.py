@@ -22,6 +22,10 @@ from ._test_doubles import make_engine, make_profile
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
+def _unwrap_result(output: str):
+    return json.loads(output)["result"]
+
+
 @pytest.fixture(autouse=True)
 def _isolated_runs_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     """Redirect AEAT_WORKFLOW_RUNS_DIR to an isolated tmp dir per test."""
@@ -43,7 +47,7 @@ class TestWorkflowCli:
         runner = CliRunner()
         result = runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync"])
         assert result.exit_code == 0, result.output
-        payload = json.loads(result.output)
+        payload = _unwrap_result(result.output)
         assert payload["final_stage"] == "DONE"
         run_id = payload["run_id"]
         persisted = _isolated_runs_dir / f"{run_id}.json"
@@ -70,15 +74,15 @@ class TestWorkflowCli:
         runner = CliRunner()
         first = runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync"])
         assert first.exit_code == 0
-        run_id = json.loads(first.output)["run_id"]
+        run_id = _unwrap_result(first.output)["run_id"]
         second = runner.invoke(root_app, ["workflow", "show", run_id, "--json"])
         assert second.exit_code == 0, second.output
-        assert run_id in second.output
+        assert _unwrap_result(second.output)["run_id"] == run_id
 
     def test_list_enumerates(self, _isolated_runs_dir: Path) -> None:
         runner = CliRunner()
         runner.invoke(root_app, ["workflow", "next", "--json", "--no-sync"])
         listing = runner.invoke(root_app, ["workflow", "list", "--json"])
         assert listing.exit_code == 0, listing.output
-        payload = json.loads(listing.output)
+        payload = _unwrap_result(listing.output)
         assert len(payload) >= 1

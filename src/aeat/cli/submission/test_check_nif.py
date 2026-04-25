@@ -14,6 +14,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 _runner = CliRunner()
 
 
+def _unwrap_result(output: str):
+    return json.loads(output)["result"]
+
+
 class TestCheckNifCommand:
     def test_valid_nie_passes(self) -> None:
         result = _runner.invoke(app, ["check-nif", "X1234567L"])
@@ -39,7 +43,7 @@ class TestCheckNifCommand:
     def test_json_valid(self) -> None:
         result = _runner.invoke(app, ["check-nif", "X1234567L", "--json"])
         assert result.exit_code == 0, result.stdout
-        doc = json.loads(result.stdout)
+        doc = _unwrap_result(result.stdout)
         assert doc["status"] == "valid"
         assert doc["canonical"] == "X1234567L"
         assert doc["kind"] == "NIE"
@@ -47,9 +51,9 @@ class TestCheckNifCommand:
     def test_json_invalid(self) -> None:
         result = _runner.invoke(app, ["check-nif", "X1234567Z", "--json"])
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        assert doc["status"] == "invalid"
-        assert "error" in doc
+        payload = json.loads(result.stderr)
+        assert result.stdout == ""
+        assert payload["error"]["category"] == "REFUSED"
 
     def test_normalises_lowercase_input(self) -> None:
         """The validator uppercases input; the canonical form reflects that."""

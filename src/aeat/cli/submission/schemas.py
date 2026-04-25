@@ -11,15 +11,31 @@ Strictly read-only — no filesystem or network access.
 
 from __future__ import annotations
 
-import json
-
 import typer
 from rich.console import Console
 from rich.table import Table
 
+from .._errors import json_output_requested
+from .._schemas import OutputRootSchema, OutputSchema, emit_json_success, register_schema
 from ._schema_registry import SCHEMA_REGISTRY, SchemaEntry
 
 _CONSOLE = Console()
+
+
+class SubmissionSchemaRow(OutputSchema):
+    """One row from ``aeat submission schemas --json``."""
+
+    modelo: str
+    ejercicio: str
+    kind: str
+    encoding: str
+    bytes: int
+    required_header_fields: int
+
+
+@register_schema("submission schemas")
+class SubmissionSchemasJson(OutputRootSchema[list[SubmissionSchemaRow]]):
+    """Schema for ``aeat submission schemas --json``."""
 
 
 def _schema_row(key: tuple[str, str], entry: SchemaEntry) -> dict[str, object]:
@@ -47,8 +63,8 @@ def schemas_cmd(
     """List every fichero-BOE schema the CLI can produce and verify."""
     rows = [_schema_row(key, entry) for key, entry in sorted(SCHEMA_REGISTRY.items())]
 
-    if as_json:
-        typer.echo(json.dumps(rows, indent=2, sort_keys=True))
+    if as_json or json_output_requested():
+        emit_json_success("submission schemas", rows, sort_keys=True)
         return
 
     table = Table(title="aeat submission schemas", show_lines=False)

@@ -19,11 +19,12 @@ Exit codes:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Literal
 
 import typer
+from pydantic import Field
 from rich.console import Console
 from rich.table import Table
 
@@ -33,10 +34,45 @@ from ...submission._formats._deserialise import (
     deserialise,
     deserialise_envelope,
 )
+from .._errors import CliRefusedBoundaryError, json_output_requested
+from .._schemas import OutputRootSchema, OutputSchema, emit_json_success, register_schema
 from ._schema_registry import SCHEMA_REGISTRY, SchemaEntry, validate_ejercicio_flag, validate_modelo_flag
 from .verify import _infer_modelo_ejercicio
 
 _CONSOLE = Console()
+
+
+class SubmissionDiffDelta(OutputSchema):
+    """One field or casilla delta from ``aeat submission diff --json``."""
+
+    casilla: str | None = None
+    field_id: str | None = None
+    a: str
+    b: str
+
+
+class SubmissionDiffPayload(OutputSchema):
+    """Schema for ``aeat submission diff --json`` payload objects."""
+
+    status: Literal["identical", "mismatch", "bytes-differ-no-semantic-delta", "unsupported", "error"]
+    modelo: str | None = None
+    ejercicio: str | None = None
+    bytes: int | None = None
+    file_a: str | None = None
+    file_b: str | None = None
+    casilla_deltas: list[SubmissionDiffDelta] = Field(default_factory=list)
+    field_deltas: list[SubmissionDiffDelta] = Field(default_factory=list)
+    available: list[list[str]] | None = None
+    error_type: str | None = None
+    error_message: str | None = None
+    which_file: str | None = None
+    expected_bytes: int | None = None
+    actual_bytes: int | None = None
+
+
+@register_schema("submission diff")
+class SubmissionDiffJson(OutputRootSchema[SubmissionDiffPayload]):
+    """Schema for ``aeat submission diff --json``."""
 
 
 def diff_cmd(
@@ -68,17 +104,19 @@ def diff_cmd(
     are omitted; FILE_B is assumed to share the same schema and any
     shape mismatch surfaces at the decoder boundary with exit 2.
     """
+    emit_json = as_json or json_output_requested()
     if modelo is None or ejercicio is None:
         inferred_modelo, inferred_ejercicio = _infer_modelo_ejercicio(file_a)
         modelo = modelo or inferred_modelo
         ejercicio = ejercicio or inferred_ejercicio
     if modelo is None or ejercicio is None:
-        if as_json:
-            typer.echo(
-                json.dumps(
-                    {"status": "error", "error_type": "InferenceFailure", "file_a": file_a.name},
-                    indent=2,
-                )
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                (
+                    f"Cannot infer modelo/ejercicio from filename {file_a.name!r}. "
+                    "Pass --modelo and --ejercicio explicitly."
+                ),
+                context={"file_a": file_a.name},
             )
         else:
             _CONSOLE.print(
@@ -89,17 +127,14 @@ def diff_cmd(
 
     entry = SCHEMA_REGISTRY.get((modelo, ejercicio))
     if entry is None:
-        if as_json:
-            typer.echo(
-                json.dumps(
-                    {
-                        "status": "unsupported",
-                        "modelo": modelo,
-                        "ejercicio": ejercicio,
-                        "available": sorted([[m, e] for m, e in SCHEMA_REGISTRY]),
-                    },
-                    indent=2,
-                )
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                f"modelo {modelo} ejercicio {ejercicio} has no fichero-BOE schema.",
+                context={
+                    "modelo": modelo,
+                    "ejercicio": ejercicio,
+                    "available": sorted([[m, e] for m, e in SCHEMA_REGISTRY]),
+                },
             )
         else:
             _CONSOLE.print(
@@ -125,43 +160,35 @@ def diff_cmd(
                 f"byte(s) but modelo={modelo} ejercicio={ejercicio} expects exactly "
                 f"{expected}. Wrong --modelo/--ejercicio flag or corrupt file?"
             )
-            if as_json:
-                typer.echo(
-                    json.dumps(
-                        {
-                            "status": "error",
-                            "error_type": "PayloadLengthMismatch",
-                            "error_message": msg,
-                            "modelo": modelo,
-                            "ejercicio": ejercicio,
-                            "which_file": f"file_{label}",
-                            "expected_bytes": expected,
-                            "actual_bytes": len(content),
-                        },
-                        indent=2,
-                        ensure_ascii=False,
-                    )
+            if emit_json:
+                raise CliRefusedBoundaryError(
+                    msg,
+                    context={
+                        "modelo": modelo,
+                        "ejercicio": ejercicio,
+                        "which_file": f"file_{label}",
+                        "expected_bytes": expected,
+                        "actual_bytes": len(content),
+                    },
                 )
             else:
                 _CONSOLE.print(f"[red]{msg}[/red]")
             raise typer.Exit(code=2)
 
     if payload_a == payload_b:
-        if as_json:
-            typer.echo(
-                json.dumps(
-                    {
-                        "status": "identical",
-                        "modelo": modelo,
-                        "ejercicio": ejercicio,
-                        "bytes": len(payload_a),
-                        "file_a": file_a.name,
-                        "file_b": file_b.name,
-                        "casilla_deltas": [],
-                        "field_deltas": [],
-                    },
-                    indent=2,
-                )
+        if emit_json:
+            emit_json_success(
+                "submission diff",
+                {
+                    "status": "identical",
+                    "modelo": modelo,
+                    "ejercicio": ejercicio,
+                    "bytes": len(payload_a),
+                    "file_a": file_a.name,
+                    "file_b": file_b.name,
+                    "casilla_deltas": [],
+                    "field_deltas": [],
+                },
             )
         else:
             _CONSOLE.print(
@@ -174,24 +201,20 @@ def diff_cmd(
         parsed_a = _parse(payload_a, entry=entry)
         parsed_b = _parse(payload_b, entry=entry)
     except Exception as exc:
-        if as_json:
-            typer.echo(
-                json.dumps(
-                    {
-                        "status": "error",
-                        "error_type": type(exc).__name__,
-                        "error_message": str(exc),
-                        "modelo": modelo,
-                        "ejercicio": ejercicio,
-                    },
-                    indent=2,
-                )
-            )
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                f"{type(exc).__name__}: {exc}",
+                context={
+                    "error_type": type(exc).__name__,
+                    "modelo": modelo,
+                    "ejercicio": ejercicio,
+                },
+            ) from exc
         else:
             _CONSOLE.print(f"[red]diff FAILED:[/red] {type(exc).__name__}: {exc}")
         raise typer.Exit(code=2) from exc
 
-    if as_json:
+    if emit_json:
         diffs_found = _emit_diff_json(
             parsed_a,
             parsed_b,
@@ -332,5 +355,5 @@ def _emit_diff_json(
             {"field_id": fid, "a": _render(a_val), "b": _render(b_val)} for fid, a_val, b_val in field_deltas
         ],
     }
-    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+    emit_json_success("submission diff", payload, sort_keys=True)
     return bool(casilla_deltas or field_deltas)

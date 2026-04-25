@@ -15,14 +15,15 @@ Every command supports a ``--json`` flag that emits JSON via
 from __future__ import annotations
 
 import contextlib
-import json
 import sys
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from ..deadlines import AutonomoProfile, IVARegime
+from .._click_context import json_output_requested
+from .._json_contract import OutputRootSchema, emit_json_success, register_schema
+from ..deadlines import AutonomoProfile, FilingObligation, IVARegime
 from ._categories import ModeloCadence, ModeloCategory, TaxpayerProfile
 from ._errors import UnknownModeloError
 from ._metadata import ModeloMetadata
@@ -34,6 +35,26 @@ from ._registry import (
 )
 
 _CONSOLE = Console()
+
+
+@register_schema("modelos list")
+class ModeloListJson(OutputRootSchema[list[ModeloMetadata]]):
+    """Schema for ``aeat modelos list --json``."""
+
+
+@register_schema("modelos show")
+class ModeloShowJson(OutputRootSchema[ModeloMetadata]):
+    """Schema for ``aeat modelos show --json``."""
+
+
+@register_schema("modelos applicable-to")
+class ModeloApplicableToJson(OutputRootSchema[list[ModeloMetadata]]):
+    """Schema for ``aeat modelos applicable-to --json``."""
+
+
+@register_schema("modelos year-plan")
+class ModeloYearPlanJson(OutputRootSchema[list[FilingObligation]]):
+    """Schema for ``aeat modelos year-plan --json``."""
 
 
 def _ensure_utf8_streams() -> None:
@@ -69,10 +90,9 @@ def _entries_sorted() -> tuple[ModeloMetadata, ...]:
     return tuple(sorted(MODELO_REGISTRY.values(), key=lambda m: m.code.value))
 
 
-def _emit_entries(entries: tuple[ModeloMetadata, ...], json_out: bool) -> None:
-    if json_out:
-        payload = [e.model_dump(mode="json") for e in entries]
-        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+def _emit_entries(entries: tuple[ModeloMetadata, ...], json_out: bool, *, command: str) -> None:
+    if json_out or json_output_requested():
+        emit_json_success(command, [e.model_dump(mode="json") for e in entries])
         return
     table = Table(title="aeat modelos", header_style="bold")
     table.add_column("code", style="cyan")
@@ -113,7 +133,7 @@ def list_command(
             for e in entries
             if profile in e.applicability.mandatory_profiles or profile in e.applicability.optional_profiles
         )
-    _emit_entries(entries, json_out)
+    _emit_entries(entries, json_out, command="modelos list")
 
 
 @app.command(name="show", help="Show a single modelo catalogue entry.")
@@ -126,10 +146,10 @@ def show_command(
         metadata = get_modelo(code)
     except UnknownModeloError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    if json_out:
-        typer.echo(json.dumps(metadata.model_dump(mode="json"), ensure_ascii=False, indent=2))
+    if json_out or json_output_requested():
+        emit_json_success("modelos show", metadata.model_dump(mode="json"))
         return
-    _emit_entries((metadata,), json_out=False)
+    _emit_entries((metadata,), json_out=False, command="modelos show")
     _CONSOLE.print(f"[dim]caps_into:[/dim] {metadata.caps_into.value if metadata.caps_into else '-'}")
     submission = metadata.submission_portal.value if metadata.submission_portal else "-"
     _CONSOLE.print(f"[dim]submission portal:[/dim] {submission}")
@@ -145,7 +165,7 @@ def applicable_to_command(
 ) -> None:
     """List modelos whose applicability matches ``profile``."""
     entries = modelos_for_profile(profile)
-    _emit_entries(entries, json_out)
+    _emit_entries(entries, json_out, command="modelos applicable-to")
 
 
 def _profiles_from_autonomo(profile: AutonomoProfile) -> frozenset[TaxpayerProfile]:
@@ -231,9 +251,8 @@ def year_plan_command(
             metadata.applicability.optional_profiles
         ):
             filtered.append(obligation)
-    if json_out:
-        payload = [o.model_dump(mode="json") for o in filtered]
-        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+    if json_out or json_output_requested():
+        emit_json_success("modelos year-plan", [o.model_dump(mode="json") for o in filtered])
         return
     profile_label = ", ".join(sorted(p.value for p in taxpayers))
     table = Table(title=f"year plan {year} — {profile_label}", header_style="bold")

@@ -120,6 +120,10 @@ class Settings(BaseSettings):
         default="https://sede.agenciatributaria.gob.es",
         description="AEAT sede electrónica base URL",
     )
+    aeat_log_level: str = Field(
+        default="",
+        description="Optional default CLI log level override: quiet, default, verbose, or debug",
+    )
 
     # ── Financial ingest (#73) ─────────────────────────────────────────────
     financial_base_currency: str = Field(

@@ -24,6 +24,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 runner = CliRunner()
 
 
+def _unwrap_result(output: str):
+    return json.loads(output)["result"]
+
+
 @pytest.fixture(autouse=True)
 def _clear_hooks() -> Iterator[None]:
     clear_test_hooks()
@@ -73,7 +77,7 @@ def test_workflow_run_uses_real_runtime_wiring(runtime_env: Path) -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_result(result.output)
     assert payload["final_stage"] == "ABORTED"
     assert payload["aborted_reason"] == "PREFLIGHT_FAILED"
     assert "not approved" in payload["summary"]["en"]
@@ -90,7 +94,7 @@ def test_workflow_next_uses_real_runtime_wiring(runtime_env: Path) -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_result(result.output)
     assert payload["final_stage"] == "ABORTED"
     assert payload["aborted_reason"] == "PREFLIGHT_FAILED"
     assert "not approved" in payload["summary"]["en"]

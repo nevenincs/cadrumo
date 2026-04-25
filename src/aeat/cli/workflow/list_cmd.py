@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json as _json
 from datetime import date
 
 import typer
@@ -10,10 +9,17 @@ from rich.console import Console
 from rich.table import Table
 
 from ...config import load_settings
-from ...workflow import list_runs
+from ...workflow import WorkflowResult, list_runs
+from .._errors import CliRefusedBoundaryError, json_output_requested
 from .._observability import cli_run_context
+from .._schemas import OutputRootSchema, emit_json_success, register_schema
 
 _CONSOLE = Console()
+
+
+@register_schema("workflow list")
+class WorkflowListJson(OutputRootSchema[list[WorkflowResult]]):
+    """Schema for ``aeat workflow list --json``."""
 
 
 def list_cmd(
@@ -42,12 +48,13 @@ def list_cmd(
             try:
                 since_date = date.fromisoformat(since)
             except ValueError as exc:
+                if as_json or json_output_requested():
+                    raise CliRefusedBoundaryError(str(exc), context={"since": since}) from exc
                 _CONSOLE.print(f"[red]invalid --since:[/red] {exc}")
                 raise typer.Exit(code=2) from exc
         runs = list_runs(runs_dir=settings.aeat_workflow_runs_dir, since=since_date)
-        if as_json:
-            payload = [_json.loads(r.model_dump_json()) for r in runs]
-            typer.echo(_json.dumps(payload, indent=2))
+        if as_json or json_output_requested():
+            emit_json_success("workflow list", runs)
             return
 
         table = Table(title=f"workflow runs ({len(runs)})")

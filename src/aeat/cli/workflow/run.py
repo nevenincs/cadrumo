@@ -16,8 +16,15 @@ from ...observability import (
     WorkflowLinkPayload,
     record_event,
 )
+from ...workflow import WorkflowResult
 from .._observability import cli_run_context
+from .._schemas import OutputRootSchema, register_schema
 from ._helpers import run_engine_for_period
+
+
+@register_schema("workflow run")
+class WorkflowRunJson(OutputRootSchema[WorkflowResult]):
+    """Schema for ``aeat workflow run --json``."""
 
 
 def run_cmd(

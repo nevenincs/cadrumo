@@ -49,7 +49,10 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Compute + export 111, 115, 190, 347 | ❌ | ❌ | ❌ | ❌ | 0.3.1 | TBD |
 | Prove exported numbers match AEAT's record | ❌ | ❌ | ❌ | ❌ | 0.4.0 | [#239](https://github.com/wgergely/aeat/issues/239) |
 | Get proactive alerts (inbox, deadlines, staleness) | ❌ | ❌ | ❌ | ❌ | 0.4.0 | part of [#239](https://github.com/wgergely/aeat/issues/239) |
+| Live-submit (opt-in) | ❌ | ❌ excised | inert | ❌ | 1.0.0 | [#197](https://github.com/wgergely/aeat/issues/197), [#198](https://github.com/wgergely/aeat/issues/198), [#116](https://github.com/wgergely/aeat/issues/116) — CLI removed 2026-04-18 per ADR; engine default is opt-in only |
+| Kent can pipe `aeat X --json \| jq` across every command | ✅ | 🚧 root `--json` and the shared envelope ship for a bounded registered set, not every command | ✅ representative pipe-safety tests cover root-flag success and failure paths for registered commands | 🚧 shared `stdout`/`stderr` behavior is live for representative registered commands; CLI-wide adoption is still intentionally not claimed | TBD | [#399](https://github.com/wgergely/aeat/issues/399) |
 | Live-submit (opt-in) | ❌ | ❌ excised | inert | ❌ | 1.0.0 | [#197](https://github.com/wgergely/aeat/issues/197), [#198](https://github.com/wgergely/aeat/issues/198), [#116](https://github.com/wgergely/aeat/issues/116), [#393](https://github.com/wgergely/aeat/issues/393) — CLI removed 2026-04-18 per ADR; residual `aeat workflow run/next` live flags excised 2026-04-25 (#393 / PR #427); engine default is opt-in only |
+| Kent can pipe `aeat X --json \| jq` across every command | ✅ | 🚧 root `--json` and the shared envelope ship for a bounded registered set, not every command | ✅ representative pipe-safety tests cover root-flag success and failure paths for registered commands | 🚧 shared `stdout`/`stderr` behavior is live for representative registered commands; CLI-wide adoption is still intentionally not claimed | TBD | [#399](https://github.com/wgergely/aeat/issues/399) |
 
 ## auth protocol note
 
@@ -61,4 +64,4 @@ certificate-based path.
 
 ## provenance
 
-Last updated **2026-04-22** (EPIC #305 wave 54 — 2024 backfill rulesets land; 2024 complementaria self-audit now supported for Modelos 111/115/123/130/131/180). Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
+Last updated **2026-04-25** (`#399` shipped-branch docs pass; JSON coverage row kept conservative to the registered command set). Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
