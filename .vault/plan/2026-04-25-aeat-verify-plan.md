@@ -92,26 +92,86 @@ a minute end-to-end against Kent's account.
 
 ### Result (2026-04-25, NIE `Y4113523X`)
 
-Done. 36 expedientes enumerated. Captured to
-`scratch/sanitizer-validation/cross-wave-enumeration.json`.
+**Partial — walker covers wrong surface for this question.**
+
+Ran `aeat sede list-expedientes --json`; 36 entries returned.
 Distribution:
 
 - 3 Modelo 100 (IRPF anual): `202110013520233F` (2021),
-  `202210013522538B` (2022), `202310013522456T` (2023). Already
-  captured under `scratch/recon-corpus/20260424T184450Z/`.
-- 1 candidate Modelo 390 (IVA anual): `202239013520267Q` (2022).
-  Detail URL is a `TEWV-CORE/DetalleVlt` page, not the IRPF-shape
-  `DASR-CORE/AccesoDR…RVlt`; capture flow needs verification.
-- 1 candidate Modelo 190 (resumen anual retenciones):
-  `2024190000000000494658` (2024). Detail URL evt prefix `GIPE`
-  does not map to any modelo shape observed; low confidence.
-- 28 RSC (rectificación / sancionador) procedures — AEAT-side
-  proceedings, not Kent-filed declarations. Out of W2-W11 scope.
-- 3 GRC (gestión recaudación) procedures — same, out of scope.
+  `202210013522538B` (2022), `202310013522456T` (2023).
+  Already captured under
+  `scratch/recon-corpus/20260424T184450Z/`.
+- 1 candidate Modelo 390: `202239013520267Q` (2022).
+- 1 candidate Modelo 190: `2024190000000000494658` (2024).
+- 28 RSC + 3 GRC entries — AEAT-side proceedings, not Kent-
+  filed declarations.
 
-Net effect on wave statuses: W1 stays `running`; W2/W3/W5/W7/W8/
-W9/W10/W11 all flip to `na`; W4 and W6 are *candidate* `running`
-pending further investigation of the unknown expediente shapes.
+Crucially, the listing **does not include** the routine
+quarterly modelos (130, 303) and informativas (347, 390) that a
+direct-estimación autónomo enrolled per the 036 census file
+every year. The user (NIE `Y4113523X`) confirmed this on
+2026-04-25: as a direct-estimación autónomo he files the usual
+IRPF + IVA quarterly + annual forms plus retentions /
+informativas; only filings outside his 036 census enrolment
+should be missing.
+
+### Walker coverage gap
+
+The `aeat.sede` walker walks `Mis Expedientes` at
+`/wlpl/TEWV-CORE/ResumenVlt`. That surface lists *procedures*
+(rectificaciones, sancionadores, gestión recaudación, plus the
+per-year IRPF detail entries for Renta Web filings) — not the
+full *declaraciones presentadas* register.
+
+The full filings register lives at
+`/wlpl/SCEJ-MANT/CONSUL/index.zul?MODELO=…&EJERCICIO=…
+&NIFOBLIGADO=…` ("Consultar declaraciones presentadas"),
+discoverable from the `Mis Expedientes` landing page's left-nav
+links. The endpoint loads but is built on the ZK framework with
+dynamically-assigned input ids (`c5uX...`) and a `Buscar` button
+that issues the AJAX query — URL parameters alone do not drive
+results.
+
+A live HTML capture of the form is stored at
+`scratch/sanitizer-validation/declaraciones-presentadas.html`
+for offline analysis.
+
+### Follow-up: walker enhancement (out of pdf-sanitizer scope)
+
+A new feature is needed:
+
+- Extend `aeat.sede` (or a new `aeat.sede._declarations` module)
+  with a `walk_declarations_register(session, *, modelo: str |
+  None = None, ejercicio: int | None = None) -> tuple[
+  Declaration, ...]` helper that drives the ZK form via stable-
+  selector clicks (the form has labelled inputs and a labelled
+  `Buscar` button — selectors should bind on labels not on the
+  ZK-generated ids).
+- Per-modelo loops that follow this plan should call the new
+  helper, not `walk_expedientes_tree`. The two surfaces are
+  complementary, not redundant.
+
+Until that lands, every wave's P1 status outside W1 (Modelo
+100) is **unknown** rather than `na`. The 2026-04-25 wave-status
+update below is the best-available hypothesis based on the
+expediente-tree walk; the actual filings register will overwrite
+it once the new walker is built.
+
+### 2026-04-25 wave hypothesis (subject to revision)
+
+- W1 (100): `running`. Three IRPF anual filings confirmed.
+- W2 (130 IRPF fraccionado), W3 (303 IVA quarterly), W10 (347
+  informativa anual): hypothesis `running`. Standard autónomo
+  filing shape; not yet observable on the expediente tree but
+  expected to surface via the declaraciones register.
+- W4 (390 IVA anual): hypothesis `running`. One candidate ID
+  observed.
+- W5 (111), W7 (115/180), W8 (123/193), W6 (190/180/193): only
+  applicable if Kent withholds — pending confirmation via the
+  declaraciones register.
+- W9 (131/202/200 sociedades), W11 (369/720/232/840): `na` —
+  outside Kent's 036 census enrolment per his 2026-04-25
+  confirmation.
 
 ## Wave list
 
@@ -151,18 +211,17 @@ record (created when the wave starts, even if it ends `na`).
 
 ### W2 — Modelo 130 (IRPF fraccionado, quarterly)
 
-- Status: `na`. Cross-wave P1 enumeration (2026-04-25,
-  authenticated as `Y4113523X`) returned zero Modelo 130
-  expedientes. Kent does not file pagos fraccionados — IRPF flows
-  directly through Modelo 100 anual + retentions only.
+- Status: hypothesis `running`. Direct-estimación autónomos
+  file Modelo 130 quarterly. The expediente-tree walk did not
+  surface them, but the user's 2026-04-25 confirmation places
+  this in scope. Awaiting the declaraciones-register walker
+  (see "Walker coverage gap" above) before P1 can close.
 
 ### W3 — Modelo 303 (IVA quarterly)
 
-- Status: `na`. P1 returned zero Modelo 303 expedientes. Kent's
-  IVA position appears to flow through Modelo 390 anual rather
-  than quarterly 303 filings, OR Kent is exempt from IVA (autónomo
-  profesional under régimen especial). Confirmation requires
-  reading Modelo 036 (census), out of this plan's scope.
+- Status: hypothesis `running`. Same situation as W2.
+  Standard autónomo IVA flow; expected via the declaraciones
+  register.
 
 ### W4 — Modelo 390 (IVA anual)
 
@@ -176,39 +235,45 @@ record (created when the wave starts, even if it ends `na`).
 
 ### W5 — Modelo 111 (retenciones trabajo, quarterly)
 
-- Status: `na`. P1 returned zero Modelo 111 expedientes. Kent
-  is solo autónomo with no employees / contractors withholding.
+- Status: hypothesis `pending`. Only applicable if Kent
+  withholds (paying employees / IRPF-eligible contractors). User
+  has not confirmed; awaiting the declaraciones-register walker
+  + per-NIF inspection.
 
 ### W6 — Modelo 190 (resumen anual retenciones, anual aggregator)
 
 - Status: candidate `running`. P1 surfaced
   `2024190000000000494658` (22-char id, 2024 ejercicio) which may
-  be a Modelo 190 informativa. Detail URL is `TEWV-CORE/DetalleVlt
-  ?evt=2025EVTGIPE...`; the `GIPE` event type does not match any
-  modelo we've observed before. Low confidence on the modelo
-  binding; further investigation deferred. P6 cumulation is moot —
-  W5 (111) returned `na`.
+  be a Modelo 190 informativa. Confirmation pending capture-by-id
+  CLI command + per-modelo binding via the declaraciones register.
 
 ### W7 — Modelo 115 + 180
 
-- Status: `na`. P1 returned zero entries.
+- Status: hypothesis `pending`. Only applicable if Kent has
+  rented premises (115 quarterly retentions on rent paid).
 
 ### W8 — Modelo 123 + 193
 
-- Status: `na`. P1 returned zero entries.
+- Status: hypothesis `pending`. Only applicable for retentions
+  on capital mobiliario.
 
 ### W9 — Modelo 131, 202, 200 (sociedades)
 
-- Status: `na`. P1 returned zero entries (as expected for a solo
-  autónomo, not a sociedad).
+- Status: `na` per user 2026-04-25 confirmation. Sociedades
+  forms are outside the 036 census enrolment for an individual
+  autónomo.
 
 ### W10 — Modelo 347 + 349 (informativas)
 
-- Status: `na`. P1 returned zero entries.
+- Status: hypothesis `running` for 347 (operations with third
+  parties >€3005.06 — most autónomos file this annual
+  informativa). 349 (intra-EU operations) hypothesis `pending`
+  on whether Kent has intra-EU activity.
 
 ### W11 — Modelo 369 (IVA OSS), 720 (extranjero), 232 (vinculadas), 840 (IAE)
 
-- Status: `na`. P1 returned zero entries.
+- Status: `na` per user 2026-04-25 confirmation. Niche filings
+  outside the standard autónomo set.
 
 ### W12 — Modelo 036 / 037 (censal)
 
