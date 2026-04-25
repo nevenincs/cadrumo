@@ -274,9 +274,10 @@ _IMPORTE_RE = re.compile(
 )
 # DD-MM-YYYY or DD/MM/YYYY date tokens — common across receipts.
 _DATE_RE = re.compile(r"(?<![A-Za-z0-9])\d{2}[-/]\d{2}[-/](?:19|20)\d{2}(?![A-Za-z0-9])")
-# Catastral references: 20 alphanumeric chars, mix of upper letters
-# and digits, no hyphens.
-_CATASTRAL_RE = re.compile(r"(?<![A-Z0-9])[0-9]{4,5}[A-Z]{2}[0-9]{4}[A-Z][0-9]{4}[A-Z]{2}(?![A-Z0-9])")
+# Catastral references (Spanish ``Referencia catastral``, 20 chars):
+# 7 digits + 2 letters + 4 digits + 1 letter + 4 digits + 2 letters.
+# Sample ``9561760DF2896B0011HW``. No hyphens or whitespace.
+_CATASTRAL_RE = re.compile(r"(?<![A-Z0-9])[0-9]{7}[A-Z]{2}[0-9]{4}[A-Z][0-9]{4}[A-Z]{2}(?![A-Z0-9])")
 # NRC: 22 alphanumeric chars; AEAT prints these next to "NRC:"
 # but the shape alone is distinctive enough to detect inline.
 _NRC_RE = re.compile(r"(?<![A-Z0-9])[0-9]{13,14}[A-Z][A-Z0-9]{6,8}(?![A-Z0-9])")

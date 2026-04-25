@@ -24,7 +24,12 @@ import typer
 import yaml
 from typer.testing import CliRunner
 
-from . import _FORBIDDEN_FLAGS, app, reject_forbidden_flags
+from . import (
+    _FORBIDDEN_FLAGS,
+    _detect_pii_surfaces,
+    app,
+    reject_forbidden_flags,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
@@ -207,6 +212,135 @@ class TestVerifyCommand:
 
         result = runner.invoke(app, ["verify", str(sanitised), "--against", str(mapping)])
         assert result.exit_code == 0
+
+
+class TestDetectPiiSurfaces:
+    """``_detect_pii_surfaces`` auto-fills the operator's mapping scaffold."""
+
+    def test_importe_detection_spanish_decimals(self) -> None:
+        text = "Casilla 0171 1.234,56 Casilla 0172 549,52 Casilla 0173 0,00"
+        out = _detect_pii_surfaces(text)
+        importe_reals = {entry["real"] for entry in out["importe"]}
+        assert "1.234,56" in importe_reals
+        assert "549,52" in importe_reals
+        assert "0,00" in importe_reals
+
+    def test_importe_skips_bare_integers(self) -> None:
+        # "Casilla 0171" should not be flagged as a monetary value
+        # — only Spanish-shape decimals (with comma + 2 digits).
+        text = "Casilla 0171 Casilla 0172 Page 1 of 5"
+        out = _detect_pii_surfaces(text)
+        assert out["importe"] == []
+
+    def test_importe_handles_negative(self) -> None:
+        text = "Saldo neto -2.705,59"
+        out = _detect_pii_surfaces(text)
+        importe_reals = {entry["real"] for entry in out["importe"]}
+        assert "-2.705,59" in importe_reals
+
+    def test_importe_synthetic_is_constant_placeholder(self) -> None:
+        text = "549,52 1.234,56 0,00"
+        out = _detect_pii_surfaces(text)
+        for entry in out["importe"]:
+            assert entry["synthetic"] == "1.000,00"
+
+    def test_date_detection_dash_form(self) -> None:
+        text = "Filed on 31-01-2022 at 22:00:40"
+        out = _detect_pii_surfaces(text)
+        # Date detection writes into "arbitrary" (no dedicated category).
+        date_entries = [e for e in out["arbitrary"] if "date token" in e["surface_label"]]
+        date_reals = {entry["real"] for entry in date_entries}
+        assert "31-01-2022" in date_reals
+
+    def test_date_detection_slash_form(self) -> None:
+        text = "Born 30/08/1985"
+        out = _detect_pii_surfaces(text)
+        date_reals = {entry["real"] for entry in out["arbitrary"]}
+        assert "30/08/1985" in date_reals
+
+    def test_date_synthetic_preserves_separator(self) -> None:
+        # Important for parser round-trip: dash dates → dash synthetic,
+        # slash dates → slash synthetic. Captured live failure mode:
+        # the parser binds on "DD-MM-YYYY" and a slash synthetic broke it.
+        text_dash = "Filed on 31-01-2022 at 22:00"
+        text_slash = "Born 30/08/1985"
+        dash_entries = [e for e in _detect_pii_surfaces(text_dash)["arbitrary"] if "date" in e["surface_label"]]
+        slash_entries = [e for e in _detect_pii_surfaces(text_slash)["arbitrary"] if "date" in e["surface_label"]]
+        assert all(e["synthetic"] == "01-01-1900" for e in dash_entries)
+        assert all(e["synthetic"] == "01/01/1900" for e in slash_entries)
+
+    def test_catastral_reference_detection(self) -> None:
+        # Real catastral shape: 4-5 digits + 2 letters + 4 digits +
+        # letter + 4 digits + 2 letters. Sample: 9561760DF2896B0011HW.
+        text = "Referencia catastral 9561760DF2896B0011HW"
+        out = _detect_pii_surfaces(text)
+        catastral_reals = {entry["real"] for entry in out["arbitrary"]}
+        assert "9561760DF2896B0011HW" in catastral_reals
+
+    def test_nrc_detection(self) -> None:
+        # NRC shape: 13 digits + letter + 6-8 alphanumeric. Sample:
+        # 1004231535072J33522H1K (22 chars).
+        text = "NRC: 1004231535072J33522H1K IMPORTE: 549,52"
+        out = _detect_pii_surfaces(text)
+        nrc_reals = {entry["real"] for entry in out["nrc"]}
+        assert "1004231535072J33522H1K" in nrc_reals
+
+    def test_dedup_within_category(self) -> None:
+        # Multiple occurrences of the same value should appear once.
+        text = "549,52 first 549,52 again 549,52 third"
+        out = _detect_pii_surfaces(text)
+        importe_reals = [entry["real"] for entry in out["importe"]]
+        assert importe_reals.count("549,52") == 1
+
+
+class TestVerifyMaskingDefendsAgainstSubstringFalsePositives:
+    """``verify`` masks synthetics before checking for real-value leaks.
+
+    Without masking, a real of ``0,00`` falsely matches the synthetic
+    ``1.000,00`` that contains it as a substring. The verifier
+    masks longest-first so nested overlaps collapse cleanly.
+    """
+
+    def test_no_false_positive_on_zero_substring(self, runner: CliRunner, tmp_path: Path) -> None:
+        # Build a mapping where the importe real ``0,00`` would
+        # appear inside the importe synthetic ``1.000,00``.
+        # Without masking, verify would flag a leak.
+        mapping_path = tmp_path / "mapping.yaml"
+        mapping_path.write_text(
+            yaml.safe_dump(
+                {
+                    "nif": [
+                        {
+                            "real": "Y4113523X",
+                            "synthetic": "Y0000001S",
+                            "surface_label": "nif",
+                        }
+                    ],
+                    "importe": [
+                        {
+                            "real": "0,00",
+                            "synthetic": "1.000,00",
+                            "surface_label": "importe",
+                        }
+                    ],
+                },
+            ),
+            encoding="utf-8",
+        )
+        # Synthesise an output PDF with ONLY the synthetic value.
+        # No leak should be reported.
+        sanitised = tmp_path / "sanitised.pdf"
+        pdf = pikepdf.Pdf.new()
+        pdf.add_blank_page(page_size=(612, 792))
+        pdf.pages[0].contents_add(
+            b"BT /F1 12 Tf 100 700 Td (Y0000001S) Tj 100 680 Td (1.000,00) Tj ET\n",
+        )
+        pdf.save(sanitised)
+
+        result = runner.invoke(app, ["verify", str(sanitised), "--against", str(mapping_path)])
+        # Without masking this would EXIT 1 (false-positive leak on
+        # "0,00" contained in "1.000,00"). With masking it exits 0.
+        assert result.exit_code == 0, result.output
 
 
 class TestPdfCommandRejectsForbiddenFlag:
