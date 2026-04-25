@@ -197,10 +197,11 @@ Every new module honours the parent ADR's 5-layer write guard:
 
 ## Open issues / known limitations
 
-- **Annual modelos (M100/M390/M190) fall back to ejercicio**
+- ~~**Annual modelos (M100/M390/M190) fall back to ejercicio**
   as the period when no labelled token exists. Schema accepts
   this; semantically `0A` would be cleaner. Tracked as a parser
-  follow-up.
+  follow-up.~~ Resolved in commit `23d92e0`: annual modelos
+  now synthesise canonical `0A` via `_ANNUAL_MODELOS` set.
 - **`prepare-map` IMPORTE auto-detection misses values** that
   span across pdfplumber line breaks. Not observed on the
   current corpus but possible for very wide tables. Operator
@@ -250,8 +251,27 @@ resolved in commit `e319d38`:
   module top.
 
 Three D-flagged items (D1 per-query browser context, D2
-multi-CSV suspicion, D3 `0A` annual fallback) are documented
-follow-ups; defensible as-is per the reviewer.
+multi-CSV suspicion, D3 `0A` annual fallback) were initially
+documented as follow-ups (defensible as-is per the reviewer)
+and have since all landed:
+
+- **D3** — canonical `0A` annual period synthesis when no
+  labelled or positional period appears for an annual modelo.
+  Commit `23d92e0`. Regression tests in
+  `src/aeat/justificante/test_extract_modelos.py:215-229`
+  for M190 and M390 layouts.
+- **D2** — `_extract_csv_from_url` rejects cotejo URLs
+  carrying multiple `CSV` query values rather than silently
+  picking the first. Commit `daba8d3`. Regression test
+  `test_multiple_csv_values_rejected` in
+  `src/aeat/sede/test_declarations.py:131-135`.
+- **D1** — Playwright bringup deduplicated into a single
+  `_open_register_page` `asynccontextmanager` shared by
+  `walk_declarations_register` and `capture_declaration`.
+  Side-effect bug fix: the walker previously did not call
+  `BrowserSession.close()`, leaking the retained browser
+  handle. Commit `1e5f496`. All 42 sede unit tests stay
+  green.
 
 ### Round-3 verification (2026-04-27)
 
