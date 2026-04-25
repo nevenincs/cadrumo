@@ -10,10 +10,11 @@ import sys
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
-from typing import Protocol, TypeGuard, cast
+from typing import Never, Protocol, TypeGuard, cast
 
 import click
 import typer
+from pydantic import ValidationError
 
 from ..errors import (
     AeatError,
@@ -33,6 +34,38 @@ class _ReconfigurableTextIO(Protocol):
 
     def reconfigure(self, *, encoding: str | None = None, errors: str | None = None) -> None:
         """Reconfigure the underlying text stream."""
+
+
+class CliValidationBoundaryError(AeatError):
+    """Raised when a CLI callback leaks a Pydantic validation failure."""
+
+    def __init__(self, error: ValidationError) -> None:
+        """Wrap ``error`` in the structured CLI boundary contract."""
+
+        super().__init__(
+            "The command input failed validation.",
+            context={
+                "error_type": type(error).__name__,
+                "detail": str(error),
+            },
+        )
+        self.original_exception: ValidationError = error
+
+
+class CliUnexpectedBoundaryError(AeatError):
+    """Raised when a CLI callback leaks an unexpected exception."""
+
+    def __init__(self, error: Exception) -> None:
+        """Wrap ``error`` in the structured CLI boundary contract."""
+
+        super().__init__(
+            "The command failed due to an unexpected internal error.",
+            context={
+                "error_type": type(error).__name__,
+                "detail": str(error) or type(error).__name__,
+            },
+        )
+        self.original_exception: Exception = error
 
 
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
@@ -56,10 +89,17 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
         except AeatError as error:
             if _UNDER_TEST.get():
                 raise
-            code = get_registered_error_code(error)
-            payload = render_error_json(error) if json_output_requested() else render_error_text(error)
-            write_stderr(payload)
-            raise typer.Exit(code=get_error_exit_code(code.category)) from error
+            _emit_error_and_exit(error)
+        except ValidationError as error:
+            if _UNDER_TEST.get():
+                raise
+            _emit_error_and_exit(CliValidationBoundaryError(error))
+        except Exception as error:
+            if _is_click_control_flow(error):
+                raise
+            if _UNDER_TEST.get():
+                raise
+            _emit_error_and_exit(CliUnexpectedBoundaryError(error))
 
     _WRAPPED_CALLBACKS[id(callback)] = _wrapped
     _WRAPPED_CALLBACKS[id(_wrapped)] = _wrapped
@@ -113,6 +153,15 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
         target.flush()
 
 
+def _emit_error_and_exit(error: AeatError) -> Never:
+    """Render ``error`` to stderr and terminate with the stable exit code."""
+
+    code = get_registered_error_code(error)
+    payload = render_error_json(error) if json_output_requested() else render_error_text(error)
+    write_stderr(payload)
+    raise typer.Exit(code=get_error_exit_code(code.category)) from error
+
+
 @contextmanager
 def error_boundary_under_test() -> Iterator[None]:
     """Temporarily force the boundary to re-raise the original exception."""
@@ -158,6 +207,12 @@ def _is_wrap_candidate(callback: object) -> TypeGuard[Callable[..., object]]:
 
 def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
     return hasattr(stream, "reconfigure")
+
+
+def _is_click_control_flow(error: Exception) -> bool:
+    """Return ``True`` when ``error`` is Typer/Click control flow, not a bug."""
+
+    return isinstance(error, (click.ClickException, click.exceptions.Exit, click.Abort, typer.Exit))
 
 
 __all__ = [
