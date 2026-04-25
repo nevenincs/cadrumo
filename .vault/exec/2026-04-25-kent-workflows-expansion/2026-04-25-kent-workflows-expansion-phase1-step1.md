@@ -41,7 +41,7 @@ cases + 1 optional discrepancy case for ruleset-bearing modelos):
 | TestKentImportsModelo202Declaracion            | --from-declaracion   | 4     | IS pago fraccionado                  |
 | TestKentImportsModelo303Declaracion            | --from-declaracion   | 4     | dedicated 303 generator (33 cas)     |
 | TestKentImportsModelo390Declaracion            | --from-declaracion   | 4     | annual IVA                           |
-| TestKentImportsModelo100SummaryBorrador        | --from-borrador      | 3     | borrador audit path; 4th omitted     |
+| TestKentImportsModelo100SummaryBorrador        | --from-borrador      | 3     | happy-en + happy-es + discrepancy-via-drift (no `Extraction status:` on this CLI path) |
 
 Total new tests: 38.
 
