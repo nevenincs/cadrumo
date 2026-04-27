@@ -1,9 +1,9 @@
 """Files-only persistence for :class:`aeat.workflow.WorkflowResult`.
 
-Wave-7/8 ciphertext-at-rest: each run is now persisted as an
-``Envelope[WorkflowResult]`` ciphertext envelope at AUDIT class via
-the substrate's ``save_encrypted_envelope`` helper. The on-disk file
-no longer carries plaintext NIFs, casilla values, or filing IDs.
+Each run is persisted as an ``Envelope[WorkflowResult]`` ciphertext
+envelope at AUDIT class via the substrate's ``save_encrypted_envelope``
+helper. The on-disk file carries no plaintext NIFs, casilla values,
+or filing IDs.
 
 Storage imports are deferred inside each function body so the workflow
 package's import chain doesn't pull Alembic plugin discovery into CLI
@@ -78,9 +78,6 @@ def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
 def load_run(run_id: str, *, runs_dir: Path) -> WorkflowResult:
     """Load and return the :class:`WorkflowResult` for ``run_id``.
 
-    Honours both the new ciphertext envelope path and the legacy
-    plaintext path so operators with un-migrated runs keep working.
-
     Args:
         run_id: The stable run identifier.
         runs_dir: Directory containing persisted runs.
@@ -102,24 +99,17 @@ def load_run(run_id: str, *, runs_dir: Path) -> WorkflowResult:
         envelope_path = _envelope_path_for(runs_dir, run_id)
     except ValueError as exc:
         raise WorkflowError(str(exc)) from exc
-    if envelope_path.exists():
-        envelope = load_encrypted_envelope(
-            envelope_path,
-            Envelope[WorkflowResult],
-            expected_class=SensitivityClass.AUDIT,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_WORKFLOW_HKDF_CONTEXT,
-            max_supported_version=_WORKFLOW_RUN_VERSION,
-        )
-        return envelope.payload
-    # Legacy plaintext fallback for un-migrated operators.
-    try:
-        legacy = resolve_record_json_path(runs_dir, run_id, context="workflow run id")
-    except ValueError as exc:
-        raise WorkflowError(str(exc)) from exc
-    if not legacy.exists():
+    if not envelope_path.exists():
         raise WorkflowError(f"no persisted workflow run with id {run_id!r}")
-    return WorkflowResult.model_validate_json(legacy.read_text(encoding="utf-8"))
+    envelope = load_encrypted_envelope(
+        envelope_path,
+        Envelope[WorkflowResult],
+        expected_class=SensitivityClass.AUDIT,
+        master_key_provider=_resolve_master_key_provider(),
+        hkdf_context=_WORKFLOW_HKDF_CONTEXT,
+        max_supported_version=_WORKFLOW_RUN_VERSION,
+    )
+    return envelope.payload
 
 
 def list_runs(
@@ -128,9 +118,6 @@ def list_runs(
     since: date | None = None,
 ) -> tuple[WorkflowResult, ...]:
     """Return every persisted :class:`WorkflowResult` in ``runs_dir``.
-
-    Reads ciphertext envelopes via the substrate; legacy plaintext
-    runs are read in fallback.
 
     Args:
         runs_dir: Directory to enumerate. Missing directories yield
@@ -150,8 +137,6 @@ def list_runs(
     if not runs_dir.exists():
         return ()
     results: list[WorkflowResult] = []
-    seen_run_ids: set[str] = set()
-    # New ciphertext envelopes first.
     for path in sorted(runs_dir.glob(f"*{_WORKFLOW_RUN_ENVELOPE_SUFFIX}")):
         try:
             envelope = load_encrypted_envelope(
@@ -166,21 +151,6 @@ def list_runs(
             _logger.warning("workflow: skipping unreadable run %s: %s", path, exc)
             continue
         result = envelope.payload
-        seen_run_ids.add(result.run_id)
-        if since is not None and result.started_at.date() < since:
-            continue
-        results.append(result)
-    # Legacy plaintext fallback for un-migrated operators.
-    for path in sorted(runs_dir.glob("*.json")):
-        if path.name.endswith(_WORKFLOW_RUN_ENVELOPE_SUFFIX):
-            continue
-        try:
-            result = WorkflowResult.model_validate_json(path.read_text(encoding="utf-8"))
-        except Exception as exc:  # pragma: no cover - defensive
-            _logger.warning("workflow: skipping unreadable legacy run %s: %s", path, exc)
-            continue
-        if result.run_id in seen_run_ids:
-            continue
         if since is not None and result.started_at.date() < since:
             continue
         results.append(result)

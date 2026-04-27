@@ -333,20 +333,22 @@ def drafts_pending(
 
 
 def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
+    """Iterate every persisted draft via :class:`FilingDraftRepository`.
+
+    Drafts are ciphertext-at-rest only; the helper returns the canonical
+    envelope path alongside the typed payload so callers can echo the
+    on-disk location back to the operator without ever touching
+    plaintext.
+    """
+    from ..filing._repository import FilingDraftRepository
+
     root = settings.aeat_drafts_dir.resolve()
     if not root.exists():
         return ()
+    repository = FilingDraftRepository(store_dir=root)
     out: list[tuple[Path, FilingDraft]] = []
-    for path in sorted(root.glob("*.json")):
-        try:
-            draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-        except ValidationError:
-            _LOGGER.warning("skipping invalid draft file: %s", path)
-            continue
-        except OSError:
-            _LOGGER.warning("skipping unreadable draft file: %s", path)
-            continue
-        out.append((path, draft))
+    for draft in repository.iter_drafts():
+        out.append((repository.envelope_path_for(draft.draft_id), draft))
     return tuple(out)
 
 

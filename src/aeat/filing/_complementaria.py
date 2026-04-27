@@ -111,56 +111,31 @@ def build_complementaria(original, updated_inputs: CasillaInputs) -> FilingAmend
 
 
 def load_amendment(amendment_id: str) -> FilingAmendment:
-    """Load a previously persisted amendment by id.
-
-    Wave-7/8: tries the FilingAmendmentRepository (ciphertext) first;
-    falls back to the legacy plaintext path for un-migrated operators.
-    """
+    """Load a previously persisted amendment by id."""
     from ._complementaria_repository import FilingAmendmentRepository
 
     try:
-        # Validate the id shape (rejects path traversal).
         resolve_record_json_path(_amendments_dir(), amendment_id, context="amendment id")
     except ValueError as exc:
         raise FilingAmendmentError(str(exc)) from exc
     repository = FilingAmendmentRepository(store_dir=_amendments_dir())
-    via_repo = repository.load(amendment_id)
-    if via_repo is not None:
-        return via_repo
-    legacy_path = _amendments_dir() / f"{amendment_id}.json"
-    if not legacy_path.exists():
+    loaded = repository.load(amendment_id)
+    if loaded is None:
         raise FilingAmendmentError(f"no persisted amendment with id {amendment_id!r}")
-    return FilingAmendment.model_validate_json(legacy_path.read_text(encoding="utf-8"))
+    return loaded
 
 
 def list_amendments(*, modelo: str | None = None) -> tuple[FilingAmendment, ...]:
-    """Return every persisted amendment, optionally filtered by modelo.
-
-    Reads both the new ciphertext envelopes and any legacy plaintext
-    files for un-migrated operators."""
+    """Return every persisted amendment, optionally filtered by modelo."""
     from ._complementaria_repository import FilingAmendmentRepository
 
     target_dir = _amendments_dir()
     if not target_dir.exists():
         return ()
     repository = FilingAmendmentRepository(store_dir=target_dir)
-    results: list[FilingAmendment] = []
-    seen_ids: set[str] = set()
-    for amendment in repository.iter_amendments():
-        seen_ids.add(amendment.amendment_id)
-        if modelo is not None and amendment.original_model != modelo:
-            continue
-        results.append(amendment)
-    for path in sorted(target_dir.glob("*.json")):
-        if path.name.endswith(".envelope.json"):
-            continue
-        amendment = FilingAmendment.model_validate_json(path.read_text(encoding="utf-8"))
-        if amendment.amendment_id in seen_ids:
-            continue
-        if modelo is not None and amendment.original_model != modelo:
-            continue
-        results.append(amendment)
-    return tuple(results)
+    return tuple(
+        amendment for amendment in repository.iter_amendments() if modelo is None or amendment.original_model == modelo
+    )
 
 
 def make_amendment_id(
@@ -207,25 +182,16 @@ def _persist_amendment(amendment: FilingAmendment) -> Path:
 
 
 def _load_original_draft(draft_id: str) -> FilingDraft:
-    """Locate the original draft by id, supporting both ciphertext and
-    legacy plaintext on-disk shapes."""
+    """Locate the original draft by id via the FilingDraftRepository."""
     from ._repository import FilingDraftRepository
 
     drafts_dir = load_settings().aeat_drafts_dir
     if not drafts_dir.exists():
         raise FilingAmendmentValidationError(f"drafts directory not found: {drafts_dir}")
-    repository = FilingDraftRepository(store_dir=drafts_dir)
-    via_repo = repository.load(draft_id)
-    if via_repo is not None:
-        return via_repo
-    # Legacy plaintext fallback for un-migrated operators.
-    for path in sorted(drafts_dir.glob("*.json")):
-        if path.name.endswith(".envelope.json"):
-            continue
-        draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-        if draft.draft_id == draft_id:
-            return draft
-    raise FilingAmendmentValidationError(f"could not locate original draft for draft_id={draft_id!r}")
+    loaded = FilingDraftRepository(store_dir=drafts_dir).load(draft_id)
+    if loaded is None:
+        raise FilingAmendmentValidationError(f"could not locate original draft for draft_id={draft_id!r}")
+    return loaded
 
 
 def _resolve_original_metadata(original) -> dict[str, str]:

@@ -66,39 +66,6 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return target
 
 
-@pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path):
-    """Wave-7: install an EphemeralMasterKeyProvider so the CLI's
-    ciphertext-at-rest writes (drafts → ``FilingDraftRepository``,
-    submissions → ``SubmissionRepository``) work in the test sandbox
-    without touching the operator's real keychain."""
-    from ...storage import (
-        EncryptedBlobStore,
-        EphemeralMasterKeyProvider,
-        SecretStore,
-        override_master_key_provider,
-        override_secret_store,
-    )
-
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_master_key_provider(provider)
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
-
-
 @pytest.fixture
 def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     profile = AutonomoProfile(
@@ -118,6 +85,7 @@ def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
     from datetime import UTC, datetime
 
+    from ...filing._repository import FilingDraftRepository
     from ...submission._models import SubmissionAttempt, SubmissionStatus, SubmittedFiling
     from ...submission._repository import SubmissionRepository
 
@@ -132,8 +100,7 @@ def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
         inputs={"01": 12500, "02": 3500, "05": 400, "06": 0},
         schema_provider=build_runtime_schema_provider(),
     )
-    draft_path = drafts_dir / f"130_2024Q1_{draft.draft_id}.json"
-    draft_path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
+    FilingDraftRepository(store_dir=drafts_dir).save(draft)
 
     submitted_at = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
     filing = SubmittedFiling(
@@ -415,7 +382,9 @@ class TestFilingCLI:
             ["filing", "complementaria", "build", "130", "2024Q1", str(payload_path)],
         )
         assert build_result.exit_code == 0, build_result.output
-        amendment_id = next((submissions_dir / "amendments").glob("*.json")).stem
+        amendment_files = sorted((submissions_dir / "amendments").glob("*.envelope.json"))
+        assert len(amendment_files) == 1
+        amendment_id = amendment_files[0].name[: -len(".envelope.json")]
         amended_draft_files = [
             path for path in drafts_dir.glob("*.envelope.json") if path.name not in draft_files_before
         ]

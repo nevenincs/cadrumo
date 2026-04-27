@@ -63,6 +63,7 @@ from ._envelope import (
     EnvelopeMigrator,
     load_encrypted_envelope,
     load_envelope,
+    reencrypt_envelope_file,
     save_encrypted_envelope,
     save_envelope,
 )
@@ -199,6 +200,7 @@ __all__ = [
     "override_secret_store",
     "redact",
     "redact_structured",
+    "reencrypt_envelope_file",
     "round_trip_migrations",
     "safe_record_path",
     "safe_subpath",

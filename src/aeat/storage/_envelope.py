@@ -477,6 +477,67 @@ def load_encrypted_envelope[PayloadT: BaseModel](
     return inner
 
 
+def reencrypt_envelope_file[PayloadT: BaseModel](
+    path: Path,
+    envelope_type: type[Envelope[PayloadT]],
+    *,
+    expected_class: SensitivityClass,
+    master_key_provider: MasterKeyProvider,
+    hkdf_context: bytes,
+    max_supported_version: int,
+    migrators: tuple[EnvelopeMigrator[PayloadT], ...] = (),
+) -> bool:
+    """Re-encrypt a single plaintext envelope file in place.
+
+    Read once: if ``path`` is already a :class:`CipherEnvelope`, return
+    ``False`` (already ciphertext, nothing to do). Otherwise parse as
+    a plaintext :class:`Envelope` and re-write through
+    :func:`save_encrypted_envelope`.
+
+    Returns ``True`` iff the file was re-encrypted, ``False`` if the
+    file was already ciphertext or did not exist. The atomic-replace
+    pattern from :func:`save_encrypted_envelope` governs the on-disk
+    transition — a crash mid-migration leaves either the plaintext OR
+    the ciphertext on disk, never a torn write.
+
+    This helper exists for the one-shot ``aeat security migrate-envelopes``
+    operator command. Repository load paths are strict ciphertext-only;
+    this function is the only sanctioned path that touches plaintext
+    envelopes after wave-7.
+    """
+    if not path.exists():
+        return False
+    raw = path.read_text(encoding="utf-8")
+    # If the file already round-trips as a CipherEnvelope, it is
+    # already ciphertext-at-rest; nothing to do.
+    try:
+        CipherEnvelope.model_validate_json(raw)
+    except Exception:  # noqa: S110 - any parse failure means "not yet ciphertext"
+        pass
+    else:
+        return False
+    plaintext_envelope = envelope_type.model_validate_json(raw)
+    if plaintext_envelope.classification != expected_class:
+        raise ClassificationError(
+            f"plaintext envelope at {path} has classification "
+            f"{plaintext_envelope.classification}; consumer expected {expected_class}",
+        )
+    if plaintext_envelope.schema_version > max_supported_version:
+        raise EnvelopeVersionError(
+            f"plaintext envelope at {path} is at version "
+            f"{plaintext_envelope.schema_version}; consumer supports up to {max_supported_version}",
+        )
+    if plaintext_envelope.schema_version < max_supported_version:
+        plaintext_envelope = _apply_migrators(plaintext_envelope, max_supported_version, migrators)
+    save_encrypted_envelope(
+        plaintext_envelope,
+        path,
+        master_key_provider=master_key_provider,
+        hkdf_context=hkdf_context,
+    )
+    return True
+
+
 __all__ = [
     "CipherEnvelope",
     "EncryptionMetadata",
@@ -484,6 +545,7 @@ __all__ = [
     "EnvelopeMigrator",
     "load_encrypted_envelope",
     "load_envelope",
+    "reencrypt_envelope_file",
     "save_encrypted_envelope",
     "save_envelope",
 ]

@@ -399,10 +399,13 @@ def _draft(
 
 
 def _write_draft(settings: Settings, draft: FilingDraft) -> Path:
+    """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
+    from ..filing._repository import FilingDraftRepository
+
     settings.aeat_drafts_dir.mkdir(parents=True, exist_ok=True)
-    path = settings.aeat_drafts_dir / f"{draft.modelo}_{draft.period}_{draft.draft_id}.json"
-    path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
-    return path
+    repository = FilingDraftRepository(store_dir=settings.aeat_drafts_dir)
+    repository.save(draft)
+    return repository.envelope_path_for(draft.draft_id)
 
 
 def test_drafts_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:

@@ -159,10 +159,9 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version="filing-schema-0.1.0",
     )
-    (settings.aeat_drafts_dir / "130_2026Q1_d1.json").write_text(
-        draft.model_dump_json(indent=2),
-        encoding="utf-8",
-    )
+    from ..filing._repository import FilingDraftRepository
+
+    FilingDraftRepository(store_dir=settings.aeat_drafts_dir).save(draft)
 
     return settings
 

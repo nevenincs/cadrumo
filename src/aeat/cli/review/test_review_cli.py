@@ -35,6 +35,10 @@ def _profile() -> FilingOperatorProfile:
 
 
 def _write_draft(path: Path) -> Path:
+    """Build a draft and persist it through the FilingDraftRepository
+    (ciphertext-at-rest). Returns the canonical envelope path."""
+    from ...filing._repository import FilingDraftRepository
+
     draft = build_draft(
         modelo="130",
         period="2026Q1",
@@ -42,9 +46,9 @@ def _write_draft(path: Path) -> Path:
         inputs={"01": 12500, "02": 3500, "05": 400, "06": 0},
         schema_provider=build_runtime_schema_provider(),
     )
-    target = path / f"130_2026Q1_{draft.draft_id}.json"
-    target.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
-    return target
+    repository = FilingDraftRepository(store_dir=path)
+    repository.save(draft)
+    return repository.envelope_path_for(draft.draft_id)
 
 
 def _sample_transaction() -> Transaction:
@@ -83,38 +87,6 @@ def drafts_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return target
 
 
-@pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path):
-    """Wave-7: install an EphemeralMasterKeyProvider so the CLI's
-    ciphertext-at-rest writes (drafts → ``FilingDraftRepository``) work
-    in the test sandbox without touching the operator's real keychain."""
-    from ...storage import (
-        EncryptedBlobStore,
-        EphemeralMasterKeyProvider,
-        SecretStore,
-        override_master_key_provider,
-        override_secret_store,
-    )
-
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_master_key_provider(provider)
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
-
-
 def _read_persisted_draft(drafts_root: Path, draft_id: str) -> FilingDraft:
     """Read the post-CLI draft via the FilingDraftRepository.
 
@@ -141,7 +113,7 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 def test_review_approve_and_show_persist_metadata(drafts_dir: Path, transactions_dir: Path) -> None:
     draft_path = _write_draft(drafts_dir)
-    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
+    draft_id = draft_path.name[: -len(".envelope.json")]
 
     approve = _RUNNER.invoke(
         app,
@@ -167,7 +139,7 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
     transactions_dir: Path,
 ) -> None:
     draft_path = _write_draft(drafts_dir)
-    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
+    draft_id = draft_path.name[: -len(".envelope.json")]
     approve = _RUNNER.invoke(
         app,
         ["review", "approve", draft_id, "--approved-by", "kent", "--yes"],
@@ -194,7 +166,7 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
 
 def test_review_unapprove_clears_approval_record(drafts_dir: Path, transactions_dir: Path) -> None:
     draft_path = _write_draft(drafts_dir)
-    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
+    draft_id = draft_path.name[: -len(".envelope.json")]
     approve = _RUNNER.invoke(
         app,
         ["review", "approve", draft_id, "--approved-by", "kent", "--yes"],

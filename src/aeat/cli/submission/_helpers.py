@@ -221,13 +221,7 @@ def load_draft(path: Path) -> FilingDraftLike:
 
 
 def resolve_draft_path(draft_ref: str) -> Path:
-    """Resolve ``draft_ref`` as either a draft path or a persisted draft id.
-
-    Tries the new ``<id>.envelope.json`` ciphertext path first; falls
-    back to the legacy ``*_<id>.json`` plaintext pattern for un-migrated
-    operators.
-    """
-
+    """Resolve ``draft_ref`` as either a draft envelope path or a draft id."""
     candidate = Path(draft_ref)
     if candidate.exists():
         return candidate
@@ -237,17 +231,7 @@ def resolve_draft_path(draft_ref: str) -> Path:
     envelope_path = drafts_dir / f"{draft_ref}.envelope.json"
     if envelope_path.exists():
         return envelope_path
-    matches = sorted(
-        path
-        for path in drafts_dir.glob(f"*_{draft_ref}.json")
-        if path.is_file() and not path.name.endswith(".envelope.json")
-    )
-    if not matches:
-        raise typer.BadParameter(f"no persisted draft found for draft_ref={draft_ref!r}")
-    if len(matches) > 1:
-        joined = ", ".join(str(path) for path in matches)
-        raise typer.BadParameter(f"draft_ref={draft_ref!r} matched multiple draft files: {joined}")
-    return matches[0]
+    raise typer.BadParameter(f"no persisted draft found for draft_ref={draft_ref!r}")
 
 
 def _load_persisted_filing_draft(
@@ -255,23 +239,31 @@ def _load_persisted_filing_draft(
     *,
     payload_text: str,
 ) -> FilingDraft | None:
-    """Parse a draft JSON payload and re-persist it through the repository
-    if a state refresh changed it.
+    """Load a draft envelope and re-persist it via the repository if a
+    state refresh changed it.
 
-    Wave-8 silent-leaker close: refreshed-state writes go through the
-    FilingDraftRepository (ciphertext) instead of a direct
-    write_text(...) call.
+    ``payload_text`` is unused — kept in the signature for backward
+    compatibility with the calling preflight helper. The draft is
+    loaded via the FilingDraftRepository directly so the
+    classification gate fires.
     """
+    del payload_text  # legacy parameter; load goes via repository now
     from ...filing._repository import FilingDraftRepository
 
+    if not draft_path.name.endswith(".envelope.json"):
+        return None
+    repository = FilingDraftRepository(store_dir=draft_path.parent)
+    draft_id = draft_path.name[: -len(".envelope.json")]
     try:
-        draft = FilingDraft.model_validate_json(payload_text)
+        draft = repository.load(draft_id)
     except (FilingDraftError, ValidationError):
+        return None
+    if draft is None:
         return None
     refreshed = refresh_review_status(
         draft,
         schema_provider=build_runtime_schema_provider(),
     )
     if refreshed != draft:
-        FilingDraftRepository(store_dir=draft_path.parent).save(refreshed)
+        repository.save(refreshed)
     return refreshed
