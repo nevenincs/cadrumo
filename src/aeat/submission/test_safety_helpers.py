@@ -85,6 +85,13 @@ def test_confirm_live_submission_requires_exact_phrase() -> None:
 
 
 def test_append_live_submit_audit_writes_jsonl_and_marks_file_read_only(tmp_path: Path) -> None:
+    """Legacy writer is preserved as a deprecation wrapper — its on-disk
+    behaviour (single JSONL file, read-only after each append) is
+    unchanged so existing operator runbooks keep working until they
+    migrate to the governed sink. Wave-5 Phase 3 added the
+    DeprecationWarning."""
+    import warnings
+
     record = build_live_submit_audit_record(
         modelo="130",
         period="2026Q1",
@@ -98,8 +105,10 @@ def test_append_live_submit_audit_writes_jsonl_and_marks_file_read_only(tmp_path
     )
     target = tmp_path / "live-submit-audit.log"
 
-    append_live_submit_audit(record, target=target)
-    append_live_submit_audit(record, target=target)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        append_live_submit_audit(record, target=target)
+        append_live_submit_audit(record, target=target)
 
     lines = target.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
@@ -109,6 +118,31 @@ def test_append_live_submit_audit_writes_jsonl_and_marks_file_read_only(tmp_path
     assert payload["justificante_csv"] == "CSV-99"
     assert payload["env_state"] == {"AEAT_LIVE_SUBMIT_ENABLED": "true"}
     assert target.stat().st_mode & stat.S_IWRITE == 0
+
+
+def test_append_live_submit_audit_emits_deprecation_warning(tmp_path: Path) -> None:
+    """Wave-5 Phase 3 — the legacy writer surfaces a DeprecationWarning
+    so callers know to migrate to GovernedLiveSubmitAuditSink."""
+    import warnings
+
+    record = build_live_submit_audit_record(
+        modelo="130",
+        period="2026Q1",
+        taxpayer_nif="X1234567L",
+        draft_checksum="abc123",
+        submission_url="https://sede.example.test/130",
+        response_status="SUBMITTED",
+        justificante_csv=None,
+        confirmation_phrase="SUBMIT 130 2026Q1 X1234567L 2150.00 abc123",
+        env_state={"AEAT_LIVE_SUBMIT_ENABLED": "true"},
+    )
+    target = tmp_path / "deprecation.log"
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always", DeprecationWarning)
+        append_live_submit_audit(record, target=target)
+    deprecations = [w for w in captured if issubclass(w.category, DeprecationWarning)]
+    assert deprecations, "expected DeprecationWarning from legacy writer"
+    assert "GovernedLiveSubmitAuditSink" in str(deprecations[0].message)
 
 
 def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> None:
@@ -124,7 +158,9 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
     phrase = f"SUBMIT 130 2026Q1 X1234567L 2150.00 {checksum}"
     submissions_dir = tmp_path / "submissions"
     traces_dir = tmp_path / "traces"
-    audit_path = tmp_path / "live-submit-audit.log"
+    audit_dir = tmp_path / "audit"
+    audit_dir.mkdir()
+    audit_path = audit_dir / "live-submit-audit.envelope.jsonl"
     script = textwrap.dedent(
         """
         import asyncio
@@ -236,7 +272,7 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
             # Explicit opt-in — this safety-helper test exercises the
             # post-bypass live path. See 2026-04-18-live-submit-cli-excision-adr.
             live_transport_supported=True,
-            live_submit_audit_log_path=Path(sys.argv[3]),
+            live_submit_audit_dir=Path(sys.argv[3]),
         )
         try:
             asyncio.run(engine.submit_draft(Draft(), dry_run=False))
@@ -248,7 +284,7 @@ def test_live_transport_failure_still_appends_audit_records(tmp_path: Path) -> N
     env = os.environ.copy()
     env.pop("PYTEST_CURRENT_TEST", None)
     result = subprocess.run(  # noqa: S603 - fixed interpreter invocation for safety-path coverage
-        [sys.executable, "-c", script, str(submissions_dir), str(traces_dir), str(audit_path)],
+        [sys.executable, "-c", script, str(submissions_dir), str(traces_dir), str(audit_dir)],
         input=f"{phrase}\n",
         text=True,
         capture_output=True,
