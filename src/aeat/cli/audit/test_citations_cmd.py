@@ -19,11 +19,13 @@ from typer.testing import CliRunner
 
 from ...casillas import CasillaDataType
 from ...formulas._casilla import CasillaDefinition
-from ...formulas._rulesets import MODELO_130_2025
+from ...formulas._rulesets import MODELO_130_2025, MODELO_303_2025
 from . import (
+    aggregate_reports,
     audit_app,
     validate_citation_coverage,
 )
+from ._helpers import CitationCoverageReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
@@ -162,9 +164,48 @@ def test_aggregate_report_includes_every_missing_casilla() -> None:
         parameters=base.parameters,
         legal_citations=base.legal_citations,
     )
-    from . import aggregate_reports
-
     reports = (validate_citation_coverage(mutated),)
     aggregate = aggregate_reports(reports)
     assert aggregate.is_complete is False
     assert any("50" in m for m in aggregate.missing_casillas)
+
+
+def test_aggregate_single_modelo_preserves_modelo() -> None:
+    """When every input shares a modelo, the aggregate carries it."""
+    reports = (validate_citation_coverage(MODELO_130_2025),)
+    aggregate = aggregate_reports(reports)
+    assert aggregate.modelo == MODELO_130_2025.modelo
+
+
+def test_aggregate_mixed_modelos_yields_none_modelo() -> None:
+    """A mixed-modelo aggregate sets ``modelo`` to ``None``.
+
+    Picking an arbitrary "representative" modelo from a mixed bag
+    would mislead any downstream consumer that filters by modelo
+    (Gemini #433 medium finding).
+    """
+    reports = (
+        validate_citation_coverage(MODELO_130_2025),
+        validate_citation_coverage(MODELO_303_2025),
+    )
+    aggregate = aggregate_reports(reports)
+    assert aggregate.modelo is None
+    assert aggregate.is_complete is True
+
+
+def test_aggregate_with_none_modelo_renders_as_all() -> None:
+    """The CLI line for a multi-modelo aggregate renders 'modelo all'."""
+    from . import _render_line
+
+    aggregate_like = CitationCoverageReport(
+        ruleset_id="aggregate",
+        modelo=None,
+        effective_from=MODELO_130_2025.effective_from,
+        effective_to=MODELO_130_2025.effective_to,
+        total_computed=10,
+        with_citation=10,
+        coverage_percent=1.0,
+        missing_casillas=(),
+    )
+    rendered = _render_line(aggregate_like)
+    assert "modelo all" in rendered

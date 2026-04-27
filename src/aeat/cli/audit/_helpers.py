@@ -28,12 +28,15 @@ class CitationCoverageReport(BaseModel):
 
     ``coverage_percent`` is a fraction in the closed interval [0.0, 1.0].
     ``missing_casillas`` is non-empty iff ``coverage_percent < 1.0``.
+    ``modelo`` is :data:`None` only on aggregate reports that span more
+    than one distinct :class:`ModeloCode`; per-ruleset reports always
+    carry the ruleset's modelo.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     ruleset_id: str = Field(min_length=1)
-    modelo: ModeloCode
+    modelo: ModeloCode | None
     effective_from: date
     effective_to: date | None
     total_computed: int = Field(ge=0)
@@ -83,6 +86,12 @@ def aggregate_reports(reports: Iterable[CitationCoverageReport]) -> CitationCove
     when any input has an open span). Missing casillas are flattened
     across rulesets and prefixed with the contributing ``ruleset_id``
     so the reported ids stay unique.
+
+    ``modelo`` is set to the shared :class:`ModeloCode` only when every
+    input report carries the same modelo; otherwise it is ``None`` to
+    signal a multi-modelo aggregate. Picking an arbitrary
+    "representative" modelo from a mixed bag would mislead any
+    downstream consumer that filters by modelo.
     """
     bag = tuple(reports)
     if not bag:
@@ -94,10 +103,11 @@ def aggregate_reports(reports: Iterable[CitationCoverageReport]) -> CitationCove
     earliest_from = min(r.effective_from for r in bag)
     open_span = any(r.effective_to is None for r in bag)
     latest_to: date | None = None if open_span else max(r.effective_to for r in bag if r.effective_to)
-    representative_modelo = bag[0].modelo
+    unique_modelos = {r.modelo for r in bag if r.modelo is not None}
+    aggregate_modelo: ModeloCode | None = next(iter(unique_modelos)) if len(unique_modelos) == 1 else None
     return CitationCoverageReport(
         ruleset_id="aggregate",
-        modelo=representative_modelo,
+        modelo=aggregate_modelo,
         effective_from=earliest_from,
         effective_to=latest_to,
         total_computed=total,
