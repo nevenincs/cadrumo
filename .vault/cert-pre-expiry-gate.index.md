@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#cert-pre-expiry-gate'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-13-cert-pre-expiry-gate-adr]]'
   - '[[2026-04-13-cert-pre-expiry-gate-phase1-summary-exec]]'

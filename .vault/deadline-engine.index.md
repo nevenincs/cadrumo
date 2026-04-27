@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#deadline-engine'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-12-deadline-engine-adr]]'
   - '[[2026-04-12-deadline-engine-plan]]'

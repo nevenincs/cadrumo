@@ -22,9 +22,6 @@ from ..filing import (
 from ..filing.testing import SyntheticProfile, default_schema_provider
 from ..financial.transactions import TransactionCatalogue
 from . import (
-    AeatLiveSubmitNotEnabledError,
-    AeatLiveTransportUnavailableError,
-    AeatPytestLiveWriteRefusedError,
     AmendmentSubmissionResult,
     AuthProviderDescription,
     AuthProviderKind,
@@ -34,6 +31,7 @@ from . import (
     FilingDraftLike,
     FilingFinding,
     Justificante,
+    LiveSubmitForbiddenError,
     Portal,
     SubmissionAttempt,
     SubmissionEngine,
@@ -154,29 +152,13 @@ class _RecordingSubmitter(Submitter):
             status=SubmissionStatus.PENDING,
         )
 
-    async def submit(self, **kwargs: Any) -> tuple[SubmissionAttempt, Justificante | None]:
-        self.submit_calls += 1
-        self.last_kwargs = kwargs
-        now = datetime.now(UTC)
-        attempt = SubmissionAttempt(
-            attempt_id="live-1",
-            started_at=now,
-            ended_at=now,
-            status=SubmissionStatus.SUBMITTED,
-        )
-        return attempt, Justificante(csv="CSV-99", pdf_path=Path("var/j.pdf"))
-
 
 def _build_engine(
     tmp_path: Path,
-    *,
-    live_submit_enabled: bool = False,
-    live_transport_supported: bool = True,
 ) -> tuple[SubmissionEngine, _RecordingSubmitter]:
     settings = Settings(
         aeat_submissions_dir=tmp_path / "submissions",
         aeat_submission_browser_trace_dir=tmp_path / "traces",
-        aeat_live_submit_enabled=live_submit_enabled,
     )
     submitter = _RecordingSubmitter()
     engine = SubmissionEngine(
@@ -189,7 +171,6 @@ def _build_engine(
         justificante_parser=_Parser(),
         submitters={"130": submitter},
         settings=settings,
-        live_transport_supported=live_transport_supported,
     )
     return engine, submitter
 
@@ -261,64 +242,18 @@ class TestSubmitDraftDryRun:
             engine.load_submission("../escape")
 
 
-class TestSubmitDraftLiveGating:
-    def test_live_refused_when_live_submit_gate_off(self, tmp_path: Path) -> None:
+class TestSubmitDraftLiveRefusal:
+    def test_live_refused_when_dry_run_is_false(self, tmp_path: Path) -> None:
         engine, submitter = _build_engine(tmp_path)
-        with pytest.raises(AeatLiveSubmitNotEnabledError, match="AEAT_LIVE_SUBMIT_ENABLED"):
+        with pytest.raises(LiveSubmitForbiddenError, match="permanently forbidden"):
             asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
         assert submitter.submit_calls == 0
 
-    def test_live_refused_under_pytest_even_with_env_open(self, tmp_path: Path) -> None:
-        engine, submitter = _build_engine(
-            tmp_path,
-            live_submit_enabled=True,
-        )
-        with pytest.raises(AeatPytestLiveWriteRefusedError, match="pytest"):
-            asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
-        assert submitter.submit_calls == 0
-
-    def test_live_refused_when_transport_is_stubbed(self, tmp_path: Path) -> None:
-        engine, submitter = _build_engine(
-            tmp_path,
-            live_submit_enabled=True,
-            live_transport_supported=False,
-        )
-        with pytest.raises(AeatLiveTransportUnavailableError, match="stubbed"):
-            asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
-        assert submitter.submit_calls == 0
-
-    def test_default_engine_construction_is_safe_against_live(self, tmp_path: Path) -> None:
-        """Default ``SubmissionEngine(...)`` is inert against live writes.
-
-        Regression guard for the 2026-04-18 ADR: the default of
-        ``live_transport_supported`` was flipped from True to False so
-        that callers who omit the flag cannot accidentally reach the
-        per-modelo ``submit()`` transport. ``live_submit_enabled=True``
-        in Settings is intentionally on here to prove that even with
-        the env gate flipped open the default-constructed engine still
-        refuses.
-        """
-        settings = Settings(
-            aeat_submissions_dir=tmp_path / "submissions",
-            aeat_submission_browser_trace_dir=tmp_path / "traces",
-            aeat_live_submit_enabled=True,
-        )
-        submitter = _RecordingSubmitter()
-        engine = SubmissionEngine(
-            browser_session_factory=_Session,
-            auth_provider=_OkAuthProvider(),
-            portal_catalogue=_PortalCat(),
-            draft_loader=_Drafts(),
-            deadline_checker=_OpenDeadlines(),
-            casilla_catalogue=_Casillas(),
-            justificante_parser=_Parser(),
-            submitters={"130": submitter},
-            settings=settings,
-            # NOTE: live_transport_supported intentionally omitted.
-        )
-        assert engine.live_transport_supported is False
-        with pytest.raises(AeatLiveTransportUnavailableError, match="stubbed"):
-            asyncio.run(engine.submit_draft(_Draft(), dry_run=False))
+    def test_live_refusal_precedes_preflight(self, tmp_path: Path) -> None:
+        engine, submitter = _build_engine(tmp_path)
+        invalid_draft = _Draft(status=DraftStatus.VALIDATED)
+        with pytest.raises(LiveSubmitForbiddenError, match="permanently forbidden"):
+            asyncio.run(engine.submit_draft(invalid_draft, dry_run=False))
         assert submitter.submit_calls == 0
 
 

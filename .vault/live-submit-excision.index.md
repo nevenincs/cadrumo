@@ -2,9 +2,10 @@
 generated: true
 tags:
   - '#live-submit-excision'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-18-live-submit-cli-excision-adr]]'
+  - '[[2026-04-27-live-submit-excision-research]]'
 ---
 
 # `live-submit-excision` feature index
@@ -16,3 +17,7 @@ Auto-generated index of all documents tagged with `#live-submit-excision`.
 ### adr
 
 - `2026-04-18-live-submit-cli-excision-adr` - adr — excise the live-submit CLI surface
+
+### research
+
+- `2026-04-27-live-submit-excision-research` - `live-submit-excision` research: live-write reachability gaps identified ahead of cli excision

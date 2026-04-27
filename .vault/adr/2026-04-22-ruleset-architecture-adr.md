@@ -8,8 +8,8 @@ related:
   - "[[2026-04-12-manual-practico-adr]]"
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-citation-blocklist-adr]]"
+  - "[[2026-04-21-real-pdf-import-umbrella-research]]"
 ---
-
 # ruleset-architecture-adr
 
 ## status
@@ -259,8 +259,8 @@ wave 64 stream 2 L2 is tracked separately as
 
 ## references
 
-- [[2026-04-12-modelo-303-390-adr]] — initial 303/390 ruleset design.
-- [[2026-04-12-manual-practico-adr]] — AEAT Manual citation discipline.
+- `2026-04-12-modelo-303-390-adr` — initial 303/390 ruleset design.
+- `2026-04-12-manual-practico-adr` — AEAT Manual citation discipline.
 - Wave 41 contract-drift audit (vaultspec-code-reviewer) —
   introduced the ruleset-id grammar proposal.
 - Wave 46 architectural review (vaultspec-code-reviewer) —

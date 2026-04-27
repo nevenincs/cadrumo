@@ -1,11 +1,10 @@
-"""Static guardrails enforcing the live-submit CLI excision (2026-04-18 ADR).
+"""Static guardrails enforcing the permanent live-submit CLI excision.
 
 This module mechanically prevents the
 :mod:`aeat.cli.submission.submit` command from being reintroduced
 into the default CLI surface. See
-``.vault/adr/2026-04-18-live-submit-cli-excision-adr.md`` and
-charter #197 (produce-verify-export, live submission deferred to
-1.0.0).
+``.vault/adr/2026-04-18-live-submit-cli-excision-adr.md`` and the
+2026-04-27 permanent-forbid policy ADR.
 
 Three assertions:
 
@@ -48,13 +47,14 @@ def test_typer_app_does_not_register_submit() -> None:
         f"submission CLI must not register `submit`; got {sorted(registered)!r}. "
         "See .vault/adr/2026-04-18-live-submit-cli-excision-adr.md."
     )
-    # And the four allowed commands are all present.
-    assert {"preflight", "dry-run", "show", "list"}.issubset(registered)
+    assert {"preflight", "dry-run", "export", "verify", "diff", "schemas", "check-nif", "show", "list"}.issubset(
+        registered
+    )
 
 
 def test_submission_help_states_live_submit_is_not_on_default_cli() -> None:
     assert app.info.help is not None
-    assert "no default CLI live-submit command" in app.info.help
+    assert "never submits to AEAT" in app.info.help
 
 
 def test_no_modelo_click_selector_in_cli_tree() -> None:

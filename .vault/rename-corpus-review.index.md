@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#rename-corpus-review'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-18-rename-corpus-review-adr-audit]]'
   - '[[2026-04-18-rename-corpus-review-final-code-review-audit]]'

@@ -7,19 +7,22 @@ Walks every wave-4 repository together against real on-disk persistence:
 - :class:`aeat.filing._complementaria_repository.FilingAmendmentRepository`
   (AUDIT)
 - :class:`aeat.justificante._repository.JustificanteRepository` (AUDIT)
-- :class:`aeat.submission._governed_audit.GovernedLiveSubmitAuditSink`
-  (redaction discipline)
 - :class:`aeat.filing._history_repository.FilingHistoryRepository`
   (AUDIT)
+
+NOTE: Wave-4 phase 5 (live-submit governed audit sink) has been excised
+because the upstream charter #116 / PR #432 permanently forbade live
+AEAT submission. With no live-submit code path there is no audit-event
+emission to govern; the JSONL redaction discipline still holds via
+the run-trace sink (wave 5 phase 1) and the LLM cache + usage log
+(wave 6).
 
 The test asserts:
 
 1. The on-disk envelope's classification matches the repository's intent
    at every step (FINANCIAL for drafts; AUDIT for submission, amendment,
    justificante, filing-history).
-2. The live-submit audit sink redacts every event — no plaintext NIF or
-   submission-URL path lands in the JSONL.
-3. Re-running the same step against the same store is idempotent.
+2. Re-running the same step against the same store is idempotent.
 
 These are the load-bearing claims of the wave-4 ADR's Phase 7.
 """
@@ -44,8 +47,6 @@ from ..storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from ..submission._audit import build_live_submit_audit_record
-from ..submission._governed_audit import GovernedLiveSubmitAuditSink
 from ..submission._models import (
     SubmissionAttempt,
     SubmissionStatus,
@@ -70,8 +71,6 @@ from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 _NIF_CANARY = "12345678Z"
-_SUBMISSION_URL_PATH = "/wlpl/SECRET-PATH/Submit?session=ABCDEFGHIJ"
-_SUBMISSION_URL = "https://www.agenciatributaria.gob.es" + _SUBMISSION_URL_PATH
 
 
 @pytest.fixture(autouse=True)
@@ -194,7 +193,6 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     amendment_repo = FilingAmendmentRepository(store_dir=tmp_path / "amendments")
     justificante_repo = JustificanteRepository(store_dir=tmp_path / "justificantes")
     history_repo = FilingHistoryRepository(store_dir=tmp_path / "history")
-    audit_sink = GovernedLiveSubmitAuditSink(audit_dir=tmp_path / "audit")
 
     # --- 1. Build and persist a draft. --------------------------------
     draft = _build_draft()
@@ -229,29 +227,14 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     assert '"classification":"audit"' in justificante_envelope_text
     assert justificante_repo.load(justificante.csv) == justificante
 
-    # --- 5. Emit a live-submit audit event through the governed sink. -
-    audit_record = build_live_submit_audit_record(
-        modelo=draft.modelo,
-        period=draft.period,
-        taxpayer_nif=_NIF_CANARY,
-        draft_checksum="abcd1234",
-        submission_url=_SUBMISSION_URL,
-        response_status="ACCEPTED",
-        justificante_csv=justificante.csv,
-        confirmation_phrase="I AM SURE",
-    )
-    audit_sink.append(audit_record)
-    audit_text = audit_sink.sink_path.read_text(encoding="utf-8")
-    # The redaction-discipline claim of wave-4: no plaintext NIF and no
-    # submission-URL path lands in the JSONL.
-    assert _NIF_CANARY not in audit_text
-    assert _SUBMISSION_URL_PATH not in audit_text
-    # And the event is still appendable / parseable.
-    events = list(audit_sink.iter_events())
-    assert len(events) == 1
-    assert events[0]["modelo"] == draft.modelo
+    # NOTE: live-submit audit emission was originally wave-4 phase 5,
+    # but the upstream PR #432 (charter #116) permanently forbade live
+    # AEAT submission. With no live emissions the GovernedLiveSubmitAuditSink
+    # has no use case and was excised. The redaction discipline still
+    # holds end-to-end via the run-trace JSONL sink (wave 5) and the
+    # LLM cache + usage redaction (wave 6).
 
-    # --- 6. Persist the filing-history record for the modelo. --------
+    # --- 5. Persist the filing-history record for the modelo. --------
     history = WireFilingHistory(
         entries=(
             WireFilingEntry(
@@ -284,28 +267,3 @@ def test_wave4_idempotent_replay(tmp_path: Path) -> None:
 
     assert draft_repo.list_draft_ids() == (draft.draft_id,)
     assert submission_repo.list_submission_ids() == (filing.submission_id,)
-
-
-def test_wave4_audit_sink_no_leak_across_modelos(tmp_path: Path) -> None:
-    """Every event emitted through the sink must redact every NIF.
-
-    A second filing with a different NIF must not leak into the
-    audit log either."""
-    audit_sink = GovernedLiveSubmitAuditSink(audit_dir=tmp_path / "audit")
-    second_nif = "98765432X"
-    for nif in (_NIF_CANARY, second_nif):
-        audit_sink.append(
-            build_live_submit_audit_record(
-                modelo="130",
-                period="2026Q1",
-                taxpayer_nif=nif,
-                draft_checksum="abcd1234",
-                submission_url=_SUBMISSION_URL,
-                response_status="ACCEPTED",
-                justificante_csv="JUSTI-LEAK-CHECK",
-                confirmation_phrase="I AM SURE",
-            )
-        )
-    audit_text = audit_sink.sink_path.read_text(encoding="utf-8")
-    assert _NIF_CANARY not in audit_text
-    assert second_nif not in audit_text
