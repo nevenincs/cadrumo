@@ -17,8 +17,8 @@ from ...financial.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
 )
+from ...financial.transactions._repository import TransactionCatalogueRepository
 from .. import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -145,7 +145,7 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
     assert approve.exit_code == 0, approve.output
 
     catalogue = TransactionCatalogue.from_transactions([_sample_transaction()])
-    save_transactions(catalogue, transactions_dir / "transactions.json")
+    TransactionCatalogueRepository(store_dir=transactions_dir).save(catalogue)
 
     show = _RUNNER.invoke(app, ["review", "show", draft_id])
     assert show.exit_code == 0, show.output

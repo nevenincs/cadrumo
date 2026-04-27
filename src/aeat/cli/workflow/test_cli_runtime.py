@@ -35,8 +35,46 @@ def _clear_hooks() -> Iterator[None]:
     clear_test_hooks()
 
 
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    from ...storage import (
+        EncryptedBlobStore,
+        EphemeralMasterKeyProvider,
+        SecretStore,
+        override_master_key_provider,
+        override_secret_store,
+    )
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield None
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
 @pytest.fixture()
 def runtime_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    from datetime import UTC, datetime
+
+    from ...storage import (
+        Envelope,
+        SensitivityClass,
+        save_encrypted_envelope,
+    )
+    from ...storage._encrypted_columns import _resolve_master_key_provider
+
     profile = AutonomoProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -46,7 +84,18 @@ def runtime_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         bienes_extranjero_above_threshold=False,
     )
     profile_path = tmp_path / "profile.json"
-    profile_path.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+    envelope = Envelope[AutonomoProfile](
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=profile,
+    )
+    save_encrypted_envelope(
+        envelope,
+        profile_path,
+        master_key_provider=_resolve_master_key_provider(),
+        hkdf_context=b"aeat.setup.profile.v1",
+    )
 
     inputs_path = tmp_path / "inputs.json"
     inputs_path.write_text(json.dumps({"01": 12500, "02": 3500, "05": 400, "06": 0}), encoding="utf-8")

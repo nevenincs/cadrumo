@@ -271,6 +271,21 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
             hkdf_context=b"aeat.financial.transactions.catalogue.v1",
         ),
         RotationPlanEntry(
+            store_dir=Path(settings.aeat_invoices_dir),
+            hkdf_context=b"aeat.financial.invoices.catalogue.v1",
+        ),
+        RotationPlanEntry(
+            store_dir=Path(settings.aeat_attachments_dir) / "manifests",
+            hkdf_context=b"aeat.financial.attachments.manifest.v1",
+        ),
+        RotationPlanEntry(
+            # Per-record envelope: every UsageRatioProfile write lands as
+            # an ``*.envelope.json`` file in the parent directory of the
+            # configured ``aeat_usage_ratios_path``.
+            store_dir=Path(settings.aeat_usage_ratios_path).parent,
+            hkdf_context=b"aeat.financial.usage_ratios.profile.v1",
+        ),
+        RotationPlanEntry(
             store_dir=Path(settings.aeat_drafts_dir),
             hkdf_context=b"aeat.filing.draft.v1",
         ),
@@ -278,6 +293,13 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
             store_dir=Path(settings.aeat_submissions_dir),
             hkdf_context=b"aeat.submission.filing.v1",
         ),
+        # Amendments share one HKDF context across two store dirs.
+        # ``FilingAmendmentRepository`` is one consumer identity but it
+        # binds to two sibling subdirectories under ``aeat_submissions_dir``
+        # (``amendment-results/`` and ``amendments/``). Both directories
+        # therefore appear here as separate plan entries with the same
+        # HKDF context — DO NOT deduplicate. Removing either entry breaks
+        # rotation for the corresponding directory's envelopes.
         RotationPlanEntry(
             store_dir=Path(settings.aeat_submissions_dir) / "amendment-results",
             hkdf_context=b"aeat.filing.amendment.v1",
@@ -297,6 +319,23 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
         RotationPlanEntry(
             store_dir=Path(settings.aeat_workflow_runs_dir),
             hkdf_context=b"aeat.workflow.run.v1",
+        ),
+        RotationPlanEntry(
+            store_dir=Path(settings.aeat_sync_divergence_file_dir),
+            hkdf_context=b"aeat.sync.divergence.v1",
+        ),
+        RotationPlanEntry(
+            # The setup wizard's ``AutonomoProfile`` is written as a
+            # single-file envelope; rotation visits the parent directory
+            # of the configured profile path. ``aeat_default_profile_path``
+            # is optional in settings; rotation skips the entry when the
+            # parent directory does not exist.
+            store_dir=(
+                Path(settings.aeat_default_profile_path).parent
+                if settings.aeat_default_profile_path is not None
+                else Path(settings.aeat_secret_store_dir) / "setup"
+            ),
+            hkdf_context=b"aeat.setup.profile.v1",
         ),
     )
 

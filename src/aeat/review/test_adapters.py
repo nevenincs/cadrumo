@@ -31,15 +31,15 @@ from ..financial.invoices import (
     InvoiceLine,
     IvaRate,
     PaymentStatus,
-    save_invoices,
 )
+from ..financial.invoices._repository import InvoiceCatalogueRepository
 from ..financial.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
 )
+from ..financial.transactions._repository import TransactionCatalogueRepository
 from ..i18n import Translatable
 from ..sync import (
     CasillaAddedWithDefault,
@@ -136,7 +136,7 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
             _transaction(source_row_index=2, classification=BusinessClassification.BUSINESS),
         )
     )
-    save_transactions(catalogue, settings.aeat_financial_txs_dir / "transactions.json")
+    TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
     items = transactions_pending(settings)
     assert len(items) == 1
     item = items[0]
@@ -161,7 +161,7 @@ def test_transactions_pending_severity_mapping(
 ) -> None:
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1, classification=state),))
-    save_transactions(catalogue, settings.aeat_financial_txs_dir / "transactions.json")
+    TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
     items = transactions_pending(settings)
     assert len(items) == 1
     assert items[0].severity is expected_severity
@@ -182,7 +182,7 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
             ),
         )
     )
-    save_transactions(catalogue, settings.aeat_financial_txs_dir / "transactions.json")
+    TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
     assert transactions_pending(settings) == ()
 
 
@@ -250,7 +250,7 @@ def test_invoices_pending_severity_mapping(
     catalogue = InvoiceCatalogue.from_invoices(
         (_invoice(payment_status=payment_status, linked_transaction_ids=linked),)
     )
-    save_invoices(catalogue, settings.aeat_invoices_dir / "invoices.json")
+    InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
     items = invoices_pending(settings)
     assert len(items) == 1
     assert items[0].severity is expected_severity
@@ -272,14 +272,14 @@ def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
             ),
         )
     )
-    save_invoices(catalogue, settings.aeat_invoices_dir / "invoices.json")
+    InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
     assert invoices_pending(settings) == ()
 
 
 def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
-    save_invoices(catalogue, settings.aeat_invoices_dir / "invoices.json")
+    InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
     items = invoices_pending(settings)
     assert len(items) == 1
     assert isinstance(items[0], InvoiceReviewItem)

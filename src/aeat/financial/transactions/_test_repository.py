@@ -24,7 +24,6 @@ from ._enums import TransactionDirection
 from ._repository import (
     ImportSummary,
     TransactionCatalogueRepository,
-    migrate_legacy_catalogue_to_repository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
@@ -263,46 +262,6 @@ class TestImportSummary:
             summary.imported = 99  # type: ignore[misc]
 
 
-class TestLegacyMigration:
-    def test_migrate_legacy_to_repository(self, store_dir: Path, tmp_path: Path) -> None:
-        from ._service import save_transactions
-
-        # Build a legacy catalogue and persist it via the existing helper.
-        repo = TransactionCatalogueRepository(store_dir=store_dir)
-        seed_repo = TransactionCatalogueRepository(store_dir=tmp_path / "seed")
-        seed_repo.merge_raw_transactions(
-            [
-                _make_raw(tmp_path, transaction_id="legacy-1", amount=Decimal("10")),
-                _make_raw(tmp_path, transaction_id="legacy-2", amount=Decimal("20")),
-            ],
-            direction_resolver=_direction_resolver,
-        )
-        legacy_path = tmp_path / "transactions.json"
-        save_transactions(seed_repo.load(), legacy_path)
-
-        # Migrate.
-        summary = migrate_legacy_catalogue_to_repository(legacy_path, repository=repo)
-        assert summary.imported == 2
-        assert len(repo.load()) == 2
-
-    def test_migrate_into_non_empty_repo_without_overwrite_raises(
-        self,
-        store_dir: Path,
-        tmp_path: Path,
-    ) -> None:
-        from ._service import save_transactions
-
-        repo = TransactionCatalogueRepository(store_dir=store_dir)
-        repo.merge_raw_transactions(
-            [_make_raw(tmp_path, transaction_id="seed-1", amount=Decimal("1"))],
-            direction_resolver=_direction_resolver,
-        )
-        legacy_path = tmp_path / "legacy.json"
-        save_transactions(repo.load(), legacy_path)
-        with pytest.raises(ValueError):
-            migrate_legacy_catalogue_to_repository(legacy_path, repository=repo)
-
-
 class TestLockAcquisitionExposed:
     """Confirm LockAcquisitionError type is exported (for downstream consumers)."""
 
@@ -310,35 +269,6 @@ class TestLockAcquisitionExposed:
         from ...storage.errors import PersistenceError
 
         assert issubclass(LockAcquisitionError, PersistenceError)
-
-
-class TestMigrationLockedSpan:
-    """Wave-3 audit-gate HIGH-2 regression: migration helper holds the
-    file lock across the full read-compare-merge-save span."""
-
-    def test_migration_blocked_by_held_lock(self, store_dir: Path, tmp_path: Path) -> None:
-        from ...storage import exclusive_file_lock
-        from ._service import save_transactions
-
-        # Seed the repository with one row so we have a destination.
-        repo = TransactionCatalogueRepository(store_dir=store_dir)
-        repo.merge_raw_transactions(
-            [_make_raw(tmp_path, transaction_id="seed-1", amount=Decimal("1"))],
-            direction_resolver=_direction_resolver,
-        )
-        legacy_catalogue = repo.load()
-        legacy_path = tmp_path / "legacy.json"
-        save_transactions(legacy_catalogue, legacy_path)
-
-        # Hold the repository's lock externally; the migration helper
-        # must surface LockAcquisitionError rather than racing through
-        # without locking.
-        with exclusive_file_lock(repo.lock_target), pytest.raises(LockAcquisitionError):
-            migrate_legacy_catalogue_to_repository(
-                legacy_path,
-                repository=repo,
-                overwrite=True,
-            )
 
 
 class TestZeroAmountDirection:

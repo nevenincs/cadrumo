@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import tempfile
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
@@ -19,18 +18,11 @@ from ..transactions import (
 from ..transactions import (
     link_invoice as _transactions_link_invoice,
 )
-from ..transactions import (
-    load_transactions as _load_transactions,
-)
-from ..transactions import (
-    save_transactions as _save_transactions,
-)
 from ._enums import InvoiceKind
 from ._errors import (
     InvoiceLinkError,
     InvoiceLinkInconsistencyError,
     InvoiceNotFoundError,
-    InvoicePersistenceError,
 )
 from ._models import Invoice, InvoiceCatalogue
 
@@ -67,64 +59,6 @@ class LinkInconsistency(BaseModel):
     invoice_id: str
     transaction_id: str
     direction: Literal["invoice-only", "transaction-only"]
-
-
-def load_invoices(path: Path) -> InvoiceCatalogue:
-    """Load an invoice catalogue from one JSON file.
-
-    Args:
-        path: JSON file containing a serialised :class:`InvoiceCatalogue`.
-
-    Returns:
-        The validated catalogue loaded from disk.
-
-    Raises:
-        InvoicePersistenceError: If the file cannot be read or validated.
-    """
-    target = path.resolve()
-    try:
-        raw = target.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise InvoicePersistenceError(f"unable to read invoice catalogue: {target}") from exc
-    try:
-        catalogue = InvoiceCatalogue.model_validate_json(raw)
-    except ValidationError as exc:
-        raise InvoicePersistenceError(f"invalid invoice catalogue JSON: {target}") from exc
-    _LOGGER.debug("loaded %s invoices from %s", len(catalogue), target)
-    return catalogue
-
-
-def save_invoices(catalogue: InvoiceCatalogue, path: Path) -> None:
-    """Persist an invoice catalogue to disk atomically.
-
-    Args:
-        catalogue: Catalogue to persist.
-        path: Destination JSON file.
-
-    Raises:
-        InvoicePersistenceError: If the write cannot be completed.
-    """
-    target = path.resolve()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    payload = catalogue.model_dump_json(indent=2)
-    tmp_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(payload)
-        os.replace(tmp_path, target)
-    except OSError as exc:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
-        raise InvoicePersistenceError(f"unable to write invoice catalogue: {target}") from exc
-    _LOGGER.debug("saved %s invoices to %s", len(catalogue), target)
 
 
 def find_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice | None:
@@ -309,26 +243,27 @@ def _write_bytes(path: Path, payload: bytes) -> None:
 
 
 def link_transaction_bidirectional(
-    invoices_path: Path,
-    transactions_path: Path,
+    invoices_dir: Path,
+    transactions_dir: Path,
     invoice_id: str,
     transaction_id: str,
     *,
-    save_transactions_fn: Callable[[TransactionCatalogue, Path], None] = _save_transactions,
     rollback_temp_writer: Callable[[Path, bytes], object] | None = None,
 ) -> tuple[InvoiceCatalogue, TransactionCatalogue]:
     """Update both catalogues so they cite each other.
 
-    Loads both catalogues, computes both updates in memory, and writes
-    the invoice catalogue followed by the transaction catalogue via the
-    existing atomic temp-file pattern. If the second write fails, the
-    invoice file is rolled back to its prior byte-level content; if the
-    rollback itself fails, an :class:`InvoiceLinkInconsistencyError` is
-    raised carrying both paths so an operator can repair the drift.
+    Loads both catalogues via their respective repositories, computes
+    both updates in memory, then writes the invoice catalogue followed
+    by the transaction catalogue. Both writes go through the
+    encrypted-envelope substrate at FINANCIAL class. If the second
+    write fails, the invoice envelope is rolled back to its prior
+    byte-level ciphertext content; if the rollback itself fails, an
+    :class:`InvoiceLinkInconsistencyError` is raised carrying both
+    paths so an operator can repair the drift.
 
     Args:
-        invoices_path: Path to the invoice catalogue JSON file.
-        transactions_path: Path to the transaction catalogue JSON file.
+        invoices_dir: Directory containing the invoice envelope file.
+        transactions_dir: Directory containing the transaction envelope file.
         invoice_id: Invoice identifier to update.
         transaction_id: Transaction identifier to update.
 
@@ -342,9 +277,17 @@ def link_transaction_bidirectional(
             the invoice rollback fail; the two files are left in drifted
             state for manual repair.
     """
-    invoice_catalogue = load_invoices(invoices_path)
-    transaction_catalogue = _load_transactions(transactions_path)
-    prior_invoice_bytes = invoices_path.read_bytes()
+    from ..transactions._repository import TransactionCatalogueRepository
+    from ._repository import InvoiceCatalogueRepository
+
+    invoice_repo = InvoiceCatalogueRepository(store_dir=invoices_dir)
+    transaction_repo = TransactionCatalogueRepository(store_dir=transactions_dir)
+    invoices_path = invoice_repo.envelope_path
+    transactions_path = transaction_repo.envelope_path
+
+    invoice_catalogue = invoice_repo.load()
+    transaction_catalogue = transaction_repo.load()
+    prior_invoice_bytes = invoices_path.read_bytes() if invoices_path.exists() else None
 
     updated_invoices = link_transaction(invoice_catalogue, invoice_id, transaction_id)
 
@@ -355,9 +298,9 @@ def link_transaction_bidirectional(
     except TransactionError as exc:
         raise InvoiceLinkError(f"could not link transaction {transaction_id} to invoice {invoice_id}") from exc
 
-    save_invoices(updated_invoices, invoices_path)
+    invoice_repo.save(updated_invoices)
     try:
-        save_transactions_fn(updated_transactions, transactions_path)
+        transaction_repo.save(updated_transactions)
     except TransactionError as exc:
         _rollback_invoice_file(
             invoices_path=invoices_path,
@@ -378,16 +321,19 @@ def _rollback_invoice_file(
     transactions_path: Path,
     invoice_id: str,
     transaction_id: str,
-    prior_bytes: bytes,
+    prior_bytes: bytes | None,
     cause: BaseException,
     rollback_temp_writer: Callable[[Path, bytes], object] | None = None,
 ) -> None:
     """Best-effort restore the invoice catalogue after a transaction-write failure."""
     try:
-        tmp = invoices_path.with_suffix(invoices_path.suffix + ".rollback.tmp")
-        writer = rollback_temp_writer or _write_bytes
-        writer(tmp, prior_bytes)
-        os.replace(tmp, invoices_path)
+        if prior_bytes is None:
+            invoices_path.unlink(missing_ok=True)
+        else:
+            tmp = invoices_path.with_suffix(invoices_path.suffix + ".rollback.tmp")
+            writer = rollback_temp_writer or _write_bytes
+            writer(tmp, prior_bytes)
+            os.replace(tmp, invoices_path)
     except OSError as restore_exc:
         raise InvoiceLinkInconsistencyError(
             invoice_path=invoices_path,
