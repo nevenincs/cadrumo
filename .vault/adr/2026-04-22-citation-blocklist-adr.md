@@ -8,8 +8,8 @@ related:
   - "[[2026-04-22-real-pdf-import-wave-64-exhaustive-audit]]"
   - "[[2026-04-22-real-pdf-import-wave-66-exhaustive-audit]]"
   - "[[2026-04-22-real-pdf-import-wave-68-exhaustive-audit]]"
+  - "[[2026-04-21-real-pdf-import-umbrella-research]]"
 ---
-
 # citation-blocklist-adr
 
 ## status

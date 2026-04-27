@@ -6,7 +6,7 @@ date: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-130-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
-  - "[[2026-130-rule-delta]]"
+  - "[[2026-04-27-modelo-130-rule-delta-reference]]"
 ---
 
 # `modelo-115-calc-verify` research
@@ -103,7 +103,7 @@ sidebar is:
 - 31/01/2024
 
 The 2025 modification is **RD 253/2025** (de 1 de abril). The
-companion `[[2026-130-rule-delta]]` manifest authored under issue
+companion `2026-04-27-modelo-130-rule-delta-reference` manifest authored under issue
 `#321` already verified that RD 253/2025 modifies RIRPF art. 69
 (information obligations) — not art. 100 nor art. 110. The four
 2026 dates touch sections of the reglamento that do not include
@@ -274,12 +274,12 @@ elementary arithmetic; none is back-derived from the ruleset's
 
 ## Cross-references
 
-- `[[2026-04-27-modelo-130-calc-verify-research]]` — sibling
+- `2026-04-27-modelo-130-calc-verify-research` — sibling
   research authored under `#321`; the M115 issue mirrors its
   structure verbatim.
-- `[[2026-04-27-modelo-130-calc-verify-adr]]` — the M130 ADR is
+- `2026-04-27-modelo-130-calc-verify-adr` — the M130 ADR is
   the procedural template for this issue's ADR.
-- `[[2026-130-rule-delta]]` — the M130 rule-delta manifest is the
+- `2026-04-27-modelo-130-rule-delta-reference` — the M130 rule-delta manifest is the
   structural template for `2026-115-rule-delta.md`.
 - EPIC `#316` — per-modelo Tier-L umbrella; this issue is its
   fourth delegation.

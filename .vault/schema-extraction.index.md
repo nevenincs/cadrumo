@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#schema-extraction'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-17-schema-extraction-adr]]'
   - '[[2026-04-17-schema-extraction-plan]]'

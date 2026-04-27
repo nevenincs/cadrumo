@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#modelo-inventory'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-13-modelo-inventory-adr]]'
   - '[[2026-04-13-modelo-inventory-audit]]'

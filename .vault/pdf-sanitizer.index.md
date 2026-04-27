@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#pdf-sanitizer'
-date: '2026-04-25'
+date: '2026-04-27'
 related:
   - '[[2026-04-25-pdf-sanitizer-adr]]'
   - '[[2026-04-25-pdf-sanitizer-plan]]'

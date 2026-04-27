@@ -120,7 +120,7 @@ Import `MODELO_130_2026`.
 
 ## Phase 3 — rule-delta manifest
 
-### Step 3.1 — `.vault/reference/2026-130-rule-delta.md`
+### Step 3.1 — `.vault/reference/2026-04-27-modelo-130-rule-delta-reference.md`
 
 Author the reference document per the ADR D8 structure:
 
@@ -265,7 +265,7 @@ Walk the 8 safety invariants documented in the handover STEP 2:
    (`test_discrepancy_classified_correctly`); ASCII-safe substring
    assertions; markers preserved at module level.
 8. **L1 anchor decision documented** — explicit waiver in
-   `.vault/reference/2026-130-rule-delta.md`.
+   `.vault/reference/2026-04-27-modelo-130-rule-delta-reference.md`.
 
 ## Self-review against CLAUDE.md + `aeat-project-mandates.md`
 
