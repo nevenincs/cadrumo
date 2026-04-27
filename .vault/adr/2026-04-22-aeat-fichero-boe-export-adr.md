@@ -7,8 +7,8 @@ related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-ruleset-architecture-adr]]"
   - "[[2026-04-22-citation-blocklist-adr]]"
+  - "[[2026-04-21-real-pdf-import-umbrella-research]]"
 ---
-
 # aeat-fichero-boe-export-adr
 
 ## status

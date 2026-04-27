@@ -33,7 +33,7 @@ L1 public-anchor waiver.
 - Add per-year M123 worked examples and no-drift tests.
 - Update registry, smoke, CLI, zero-boundary, and mutation harness tests.
 - Extend `TestKentImportsModelo123Declaracion` with a per-year happy path.
-- Add `.vault/reference/2026-123-rule-delta.md` and exec summary evidence.
+- Add `.vault/reference/2026-04-27-modelo-123-rule-delta-reference.md` and exec summary evidence.
 - Update `docs/coverage/modelos.md` M123 row and provenance.
 
 ## Parallelization

@@ -7,16 +7,16 @@ related:
   - "[[2026-04-27-modelo-115-calc-verify-research]]"
   - "[[2026-04-27-modelo-115-calc-verify-adr]]"
   - "[[2026-04-27-modelo-130-calc-verify-plan]]"
-  - "[[2026-130-rule-delta]]"
+  - "[[2026-04-27-modelo-130-rule-delta-reference]]"
 ---
 
 # `modelo-115-calc-verify` plan — issue `#319`
 
 This plan executes the decisions in
-[[2026-04-27-modelo-115-calc-verify-adr]] for issue `#319` on
+`2026-04-27-modelo-115-calc-verify-adr` for issue `#319` on
 branch `feature/319-modelo-115-calc-verify`. The work mirrors the
 M130 reference implementation
-([[2026-04-27-modelo-130-calc-verify-plan]]) on a smaller surface
+(`2026-04-27-modelo-130-calc-verify-plan`) on a smaller surface
 (2 computed casillas vs M130's 9; 6 total vs 19).
 
 ## Phase 1 — 2026 ruleset + rule-delta manifest
@@ -214,9 +214,9 @@ handover prompt:
 
 Self-reviewed against:
 
-- [[2026-04-27-modelo-115-calc-verify-adr]] decisions D1..D12 —
+- `2026-04-27-modelo-115-calc-verify-adr` decisions D1..D12 —
   every decision has a corresponding step.
-- M130 reference implementation ([[2026-04-27-modelo-130-calc-verify-plan]])
+- M130 reference implementation (`2026-04-27-modelo-130-calc-verify-plan`)
   — every M130 phase has an M115 analogue except the casilla-13
   bracket helper (M115 has no brackets) and the 12-casilla
   extractor extension (M115's 6 casillas are already

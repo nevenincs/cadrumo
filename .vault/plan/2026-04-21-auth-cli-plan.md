@@ -7,6 +7,8 @@ related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-auth-protocol-adr]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
+  - "[[2026-04-18-auth-protocol-research]]"
+  - "[[2026-04-18-aeat-auth-providers-research]]"
 ---
 
 # auth-cli plan (issue #285)

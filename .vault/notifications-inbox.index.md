@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#notifications-inbox'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-12-notifications-inbox-adr]]'
   - '[[2026-04-12-notifications-inbox-phase1-summary-exec]]'

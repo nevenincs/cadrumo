@@ -9,6 +9,7 @@ related:
   - "[[2026-04-25-mandatory-citations-adr]]"
   - "[[2026-04-25-mutation-harness-extension-adr]]"
   - "[[2026-04-25-kent-workflows-expansion-adr]]"
+  - "[[2026-04-27-modelo-130-rule-delta-reference]]"
 ---
 
 # `modelo-115-calc-verify` ADR — child of EPIC `#316`
@@ -57,7 +58,7 @@ the per-modelo Tier-L bar requires:
 8. `docs/coverage/modelos.md` row flip.
 
 The research document
-([[2026-04-27-modelo-115-calc-verify-research]]) confirms three
+(`2026-04-27-modelo-115-calc-verify-research`) confirms three
 load-bearing facts:
 
 1. The 2024 → 2025 → 2026 rule delta on RIRPF art. 100 is
@@ -334,18 +335,18 @@ See D12 above.
 
 ## References
 
-- [[2026-04-27-modelo-115-calc-verify-research]] — research
+- `2026-04-27-modelo-115-calc-verify-research` — research
   findings.
-- [[2026-04-27-modelo-130-calc-verify-adr]] — sibling ADR for
+- `2026-04-27-modelo-130-calc-verify-adr` — sibling ADR for
   the reference implementation; this issue mirrors its
   structure.
-- [[2026-04-25-mandatory-citations-adr]] — `#339` mandatory-
+- `2026-04-25-mandatory-citations-adr` — `#339` mandatory-
   citation enforcement (consumed here).
-- [[2026-04-25-mutation-harness-extension-adr]] — `#338`
+- `2026-04-25-mutation-harness-extension-adr` — `#338`
   mutation harness extension (consumed here).
-- [[2026-04-25-kent-workflows-expansion-adr]] — `#340` Tier-L
+- `2026-04-25-kent-workflows-expansion-adr` — `#340` Tier-L
   CLI integration coverage (extended here).
-- [[2026-130-rule-delta]] — sibling rule-delta manifest authored
+- `2026-04-27-modelo-130-rule-delta-reference` — sibling rule-delta manifest authored
   under `#321`; `2026-115-rule-delta.md` mirrors its shape.
 - EPIC `#316` — per-modelo calc-verify-roundtrip umbrella.
 - Issue `#319` — this issue.

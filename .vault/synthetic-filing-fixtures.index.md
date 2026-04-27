@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#synthetic-filing-fixtures'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-12-synthetic-filing-fixtures-adr]]'
   - '[[2026-04-12-synthetic-filing-fixtures-audit]]'

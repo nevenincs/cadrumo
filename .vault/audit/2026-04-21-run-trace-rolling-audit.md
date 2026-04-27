@@ -10,7 +10,7 @@ related:
   - "[[2026-04-14-run-trace-research]]"
   - "[[2026-04-14-run-trace-adr]]"
   - "[[2026-04-14-run-trace-plan]]"
-  - "[[2026-04-14-run-trace-phase1-summary]]"
+  - "[[2026-04-14-run-trace-phase1-summary-exec]]"
 ---
 
 # run-trace rolling audit — PR #140

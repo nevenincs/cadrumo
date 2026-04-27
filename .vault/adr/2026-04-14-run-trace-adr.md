@@ -20,7 +20,7 @@ Accepted — 2026-04-14. Supersedes nothing.
 
 ## context
 
-See [[2026-04-14-run-trace-research]]. The project needs a structured,
+See `2026-04-14-run-trace-research`. The project needs a structured,
 cross-subpackage run trace with deterministic dry-run replay so any past CLI
 invocation can be reproduced for audit. This ADR records the decisions that
 shape the implementation plan.

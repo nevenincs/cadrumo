@@ -6,8 +6,8 @@ date: "2026-04-21"
 related:
   - "[[2026-04-21-integration-tests-ci-plan]]"
   - "[[2026-04-21-casilla-schema-completeness-plan]]"
-  - "[[2026-04-21-real-pdf-import-phase-3-summary]]"
-  - "[[2026-04-21-real-pdf-import-phase-4-summary]]"
+  - "[[2026-04-21-real-pdf-import-phase-3-summary-exec]]"
+  - "[[2026-04-21-real-pdf-import-phase-4-summary-exec]]"
 ---
 
 # real-pdf-import execution waves 6 / 7 — code review audit
