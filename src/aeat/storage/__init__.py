@@ -43,6 +43,13 @@ from ._crypto import (
     derive_key,
     encrypt_record,
 )
+from ._encrypted_columns import (
+    EncryptedBytes,
+    EncryptedJSON,
+    EncryptedString,
+    HashedLookup,
+    override_master_key_provider,
+)
 from ._lock import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
 from ._master_key import (
     EphemeralMasterKeyProvider,
@@ -82,9 +89,13 @@ __all__ = [
     "CorpusArtifactRepository",
     "DecryptionError",
     "EncryptedBlob",
+    "EncryptedBytes",
+    "EncryptedJSON",
+    "EncryptedString",
     "EncryptionError",
     "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
+    "HashedLookup",
     "KeyDerivationError",
     "KeyringMasterKeyProvider",
     "KeyringUnavailableError",
@@ -119,6 +130,7 @@ __all__ = [
     "get_engine",
     "get_master_key_provider",
     "get_sessionmaker",
+    "override_master_key_provider",
     "round_trip_migrations",
     "session_scope",
     "upgrade_to_head",
