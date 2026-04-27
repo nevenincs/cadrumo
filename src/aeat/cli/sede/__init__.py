@@ -61,6 +61,7 @@ from ...sede import (
     capture_justificante,
     fetch_notifications_query,
     fetch_notifications_summary,
+    shared_playwright,
     walk_declarations_register,
     walk_expedientes_tree,
 )
@@ -370,32 +371,63 @@ def capture_corpus_cmd(
     async def _run() -> list[dict[str, object]]:
         rows: list[dict[str, object]] = []
         first_iter = True
-        for modelo in modelo_list:
-            for ejercicio in ejercicio_list:
-                if not first_iter and delay_seconds > 0:
-                    await asyncio.sleep(delay_seconds)
-                first_iter = False
-                try:
-                    declarations = await walk_declarations_register(
-                        session,
-                        modelo=modelo,
-                        ejercicio=ejercicio,
-                    )
-                except Exception as exc:
-                    rows.append(
-                        {
-                            "modelo": modelo,
-                            "ejercicio": ejercicio,
-                            "status": "walk_failed",
-                            "error": f"{type(exc).__name__}: {exc}",
-                        },
-                    )
-                    continue
-                for idx, declaration in enumerate(declarations):
-                    if delay_seconds > 0:
+        # Bulk loop: hoist Playwright startup OUT of every walker /
+        # capture call so the corpus pays one ~1s startup cost
+        # instead of ~1s per (modelo, ejercicio) tuple + per row.
+        async with shared_playwright(session) as pw:
+            for modelo in modelo_list:
+                for ejercicio in ejercicio_list:
+                    if not first_iter and delay_seconds > 0:
                         await asyncio.sleep(delay_seconds)
-                    target = output_root / f"m{modelo}-{ejercicio}-{declaration.period}-{idx}.pdf"
-                    if skip_existing and target.is_file():
+                    first_iter = False
+                    try:
+                        declarations = await walk_declarations_register(
+                            session,
+                            modelo=modelo,
+                            ejercicio=ejercicio,
+                            playwright=pw,
+                        )
+                    except Exception as exc:
+                        rows.append(
+                            {
+                                "modelo": modelo,
+                                "ejercicio": ejercicio,
+                                "status": "walk_failed",
+                                "error": f"{type(exc).__name__}: {exc}",
+                            },
+                        )
+                        continue
+                    for idx, declaration in enumerate(declarations):
+                        if delay_seconds > 0:
+                            await asyncio.sleep(delay_seconds)
+                        target = output_root / f"m{modelo}-{ejercicio}-{declaration.period}-{idx}.pdf"
+                        if skip_existing and target.is_file():
+                            rows.append(
+                                {
+                                    "modelo": modelo,
+                                    "ejercicio": ejercicio,
+                                    "period": declaration.period,
+                                    "expediente_id": declaration.expediente_id,
+                                    "path": str(target),
+                                    "status": "cached",
+                                },
+                            )
+                            continue
+                        try:
+                            capture = await capture_declaration(session, declaration, playwright=pw)
+                        except Exception as exc:
+                            rows.append(
+                                {
+                                    "modelo": modelo,
+                                    "ejercicio": ejercicio,
+                                    "period": declaration.period,
+                                    "expediente_id": declaration.expediente_id,
+                                    "status": "capture_failed",
+                                    "error": f"{type(exc).__name__}: {exc}",
+                                },
+                            )
+                            continue
+                        target.write_bytes(capture.pdf_bytes)
                         rows.append(
                             {
                                 "modelo": modelo,
@@ -403,37 +435,11 @@ def capture_corpus_cmd(
                                 "period": declaration.period,
                                 "expediente_id": declaration.expediente_id,
                                 "path": str(target),
-                                "status": "cached",
+                                "csv": capture.ref.csv,
+                                "sha256": capture.pdf_sha256,
+                                "status": "captured",
                             },
                         )
-                        continue
-                    try:
-                        capture = await capture_declaration(session, declaration)
-                    except Exception as exc:
-                        rows.append(
-                            {
-                                "modelo": modelo,
-                                "ejercicio": ejercicio,
-                                "period": declaration.period,
-                                "expediente_id": declaration.expediente_id,
-                                "status": "capture_failed",
-                                "error": f"{type(exc).__name__}: {exc}",
-                            },
-                        )
-                        continue
-                    target.write_bytes(capture.pdf_bytes)
-                    rows.append(
-                        {
-                            "modelo": modelo,
-                            "ejercicio": ejercicio,
-                            "period": declaration.period,
-                            "expediente_id": declaration.expediente_id,
-                            "path": str(target),
-                            "csv": capture.ref.csv,
-                            "sha256": capture.pdf_sha256,
-                            "status": "captured",
-                        },
-                    )
         return rows
 
     try:

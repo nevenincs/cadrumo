@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, Final, Literal
 from urllib.parse import parse_qs, urlsplit
 
 from bs4 import BeautifulSoup
-from playwright.async_api import BrowserContext, Page, async_playwright
+from playwright.async_api import BrowserContext, Page, Playwright, async_playwright
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 from ..browser import Profile
@@ -113,10 +113,59 @@ class Declaration(BaseModel):
 
 
 @asynccontextmanager
+async def shared_playwright(
+    session: AeatSession,
+) -> AsyncIterator[Playwright]:
+    """Yield a long-lived Playwright instance for bulk register loops.
+
+    `walk_declarations_register` and `capture_declaration` each spin
+    up their own Playwright + BrowserSession when called standalone,
+    which is fine for one-shot use. Bulk callers
+    (e.g. ``aeat sede capture-corpus``) pay ~1s per iteration on
+    Playwright startup; wrapping the loop in this helper amortises
+    that cost across the entire run.
+
+    Usage:
+
+    .. code-block:: python
+
+        async with shared_playwright(session) as pw:
+            for modelo in modelos:
+                rows = await walk_declarations_register(
+                    session, modelo=modelo, ejercicio=ejercicio,
+                    playwright=pw,
+                )
+                for declaration in rows:
+                    capture = await capture_declaration(
+                        session, declaration, playwright=pw,
+                    )
+
+    Args:
+        session: Authenticated AEAT session. Validated upfront so
+            the loop fails fast rather than per-iteration.
+
+    Yields:
+        A live :class:`Playwright` instance. Cleaned up automatically
+        on exit.
+
+    Raises:
+        SedeNavigationError: When ``session.storage_state_path`` is
+            ``None``.
+    """
+    if session.storage_state_path is None:
+        raise SedeNavigationError(
+            "AeatSession.storage_state_path is None; run `aeat auth login` first",
+        )
+    async with async_playwright() as pw:
+        yield pw
+
+
+@asynccontextmanager
 async def _open_register_page(
     session: AeatSession,
     *,
     settings: Settings | None = None,
+    playwright: Playwright | None = None,
 ) -> AsyncIterator[tuple[Page, BrowserContext]]:
     """Yield a Playwright ``(page, context)`` bound to the AEAT session.
 
@@ -131,6 +180,12 @@ async def _open_register_page(
     Args:
         session: Authenticated AEAT session.
         settings: Optional :class:`Settings` override.
+        playwright: Optional pre-started :class:`Playwright` instance
+            (typically produced by :func:`shared_playwright`). When
+            provided, the helper reuses it instead of starting its
+            own — saves ~1s per iteration in bulk loops. Caller owns
+            the lifetime; this helper does not stop a passed-in
+            instance.
 
     Yields:
         A ``(page, context)`` pair. The page is a fresh
@@ -149,19 +204,34 @@ async def _open_register_page(
         name=settings.aeat_default_profile_name,
         storage_state_path=session.storage_state_path,
     )
-    async with async_playwright() as pw:
-        browser_session = BrowserSession(pw, settings, profile)
-        context = await browser_session.create_context(
-            storage_state_path=session.storage_state_path,
-        )
-        try:
-            page = await context.new_page()
+    if playwright is not None:
+        async with _opened_browser_session(playwright, settings, profile, session) as (page, context):
             yield page, context
-        finally:
-            with contextlib.suppress(Exception):
-                await context.close()
-            with contextlib.suppress(Exception):
-                await browser_session.close()
+        return
+    async with async_playwright() as pw, _opened_browser_session(pw, settings, profile, session) as (page, context):
+        yield page, context
+
+
+@asynccontextmanager
+async def _opened_browser_session(
+    pw: Playwright,
+    settings: Settings,
+    profile: Profile,
+    session: AeatSession,
+) -> AsyncIterator[tuple[Page, BrowserContext]]:
+    """Inner helper: create + tear down a BrowserSession + context."""
+    browser_session = BrowserSession(pw, settings, profile)
+    context = await browser_session.create_context(
+        storage_state_path=session.storage_state_path,
+    )
+    try:
+        page = await context.new_page()
+        yield page, context
+    finally:
+        with contextlib.suppress(Exception):
+            await context.close()
+        with contextlib.suppress(Exception):
+            await browser_session.close()
 
 
 async def walk_declarations_register(
@@ -170,6 +240,7 @@ async def walk_declarations_register(
     modelo: str,
     ejercicio: int,
     settings: Settings | None = None,
+    playwright: Playwright | None = None,
 ) -> tuple[Declaration, ...]:
     """Drive the *Consultar declaraciones presentadas* form for one query.
 
@@ -181,6 +252,11 @@ async def walk_declarations_register(
             ``"<modelo> -"`` text.
         ejercicio: Tax year to query (``2024``).
         settings: Optional :class:`Settings` override.
+        playwright: Optional pre-started Playwright instance
+            (typically from :func:`shared_playwright`). Reused
+            across the call to amortise the ~1s startup cost in
+            bulk loops. When ``None``, a fresh instance is started
+            and torn down per call.
 
     Returns:
         Tuple of :class:`Declaration` records, one per filing row.
@@ -192,7 +268,10 @@ async def walk_declarations_register(
             settle within the timeout.
         SedeParseError: When the result table cannot be parsed.
     """
-    async with _open_register_page(session, settings=settings) as (page, _context):
+    async with _open_register_page(session, settings=settings, playwright=playwright) as (
+        page,
+        _context,
+    ):
         await _drive_search(page, modelo=modelo, ejercicio=ejercicio)
         return _parse_listbox(await page.content(), modelo=modelo, ejercicio=ejercicio)
 
@@ -398,6 +477,7 @@ async def capture_declaration(
     declaration: Declaration,
     *,
     settings: Settings | None = None,
+    playwright: Playwright | None = None,
 ) -> SedeCapture:
     """Fetch the raw justificante PDF behind a :class:`Declaration`.
 
@@ -414,6 +494,11 @@ async def capture_declaration(
         declaration: The Declaration row to capture, typically
             obtained from :func:`walk_declarations_register`.
         settings: Optional :class:`Settings` override.
+        playwright: Optional pre-started Playwright instance
+            (typically from :func:`shared_playwright`). Reused
+            across the call to amortise the ~1s startup cost in
+            bulk loops. When ``None``, a fresh instance is started
+            and torn down per call.
 
     Returns:
         A :class:`SedeCapture` whose ``ref`` carries the resolved
@@ -427,7 +512,10 @@ async def capture_declaration(
         JustificanteFetchError: When the PDF GET returns non-2xx,
             an empty body, or a non-PDF content type.
     """
-    async with _open_register_page(session, settings=settings) as (page, context):
+    async with _open_register_page(session, settings=settings, playwright=playwright) as (
+        page,
+        context,
+    ):
         await _drive_search(
             page,
             modelo=declaration.modelo,
@@ -563,5 +651,6 @@ def _extract_csv_from_url(url: str) -> str:
 __all__ = [
     "Declaration",
     "capture_declaration",
+    "shared_playwright",
     "walk_declarations_register",
 ]
