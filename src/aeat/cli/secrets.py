@@ -14,26 +14,29 @@ Four subcommands:
 
 The CLI consumes the post-#398 error decorator and the post-#399
 ``--json`` schema-registry contract.
+
+Storage subpackage imports are deferred to subcommand bodies so the
+root ``aeat`` Typer app does not transitively trigger Alembic plugin
+discovery on every CLI invocation.
 """
 
 from __future__ import annotations
 
 import sys
 from datetime import UTC, datetime, timedelta
+from enum import StrEnum
 from pathlib import Path
 
 import typer
 from rich.console import Console
 
-from ..storage import (
-    SecretRecord,
-    SensitivityClass,
-    get_secret_store,
-)
-from ..storage.errors import (
-    SecretAlreadyExistsError,
-    SecretNotFoundError,
-)
+
+class _ClassChoice(StrEnum):
+    """Operator-facing CLI subset of :class:`SensitivityClass`."""
+
+    SECRET = "SECRET"  # noqa: S105 — sensitivity tag, not a credential
+    SESSION = "SESSION"
+
 
 app = typer.Typer(help="Secret-store management.")
 _console = Console()
@@ -81,6 +84,8 @@ def list_command() -> None:
     Plaintext keys are intentionally unrecoverable from the store; the
     digest is the only stable handle for inventory / auditing.
     """
+    from ..storage import get_secret_store
+
     store = get_secret_store()
     digests = list(store.list_digests())
     if not digests:
@@ -106,8 +111,8 @@ def put_command(
         "--from-stdin",
         help="Read the secret value from stdin (raw bytes).",
     ),
-    classification: SensitivityClass = typer.Option(
-        SensitivityClass.SECRET,
+    classification: _ClassChoice = typer.Option(
+        _ClassChoice.SECRET,
         "--classification",
         case_sensitive=False,
         help="Sensitivity class. Must be SECRET or SESSION.",
@@ -124,14 +129,16 @@ def put_command(
     ),
 ) -> None:
     """Persist a new secret under ``key``."""
-    if classification not in {SensitivityClass.SECRET, SensitivityClass.SESSION}:
-        raise typer.BadParameter("--classification must be SECRET or SESSION.")
+    from ..storage import SecretRecord, SensitivityClass, get_secret_store
+    from ..storage.errors import SecretAlreadyExistsError
+
+    sensitivity = SensitivityClass(classification.value.lower())
     value = _read_value(from_file, from_stdin)
     expires_at = _parse_expires_in(expires_in)
     record = SecretRecord(
         key=key,
         value=value,
-        classification=classification,
+        classification=sensitivity,
         created_at=datetime.now(UTC),
         expires_at=expires_at,
     )
@@ -148,6 +155,9 @@ def rm_command(
     key: str = typer.Argument(..., help="Natural key of the record to delete."),
 ) -> None:
     """Delete the record persisted under ``key``."""
+    from ..storage import get_secret_store
+    from ..storage.errors import SecretNotFoundError
+
     store = get_secret_store()
     try:
         store.delete(key)
@@ -179,6 +189,9 @@ def rotate_command(
     ),
 ) -> None:
     """Rotate the value of an existing secret."""
+    from ..storage import get_secret_store
+    from ..storage.errors import SecretNotFoundError
+
     value = _read_value(from_file, from_stdin)
     expires_at = _parse_expires_in(expires_in)
     store = get_secret_store()

@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 from rich.console import Console
@@ -12,11 +13,9 @@ from rich.json import JSON
 
 from ...financial import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider, detect_provider
 from ...financial.providers import FinancialProviderError, RawTransaction
-from ...financial.transactions._enums import TransactionDirection
-from ...financial.transactions._repository import (
-    ImportSummary,
-    TransactionCatalogueRepository,
-)
+
+if TYPE_CHECKING:
+    from ...financial.transactions._repository import ImportSummary
 
 _CONSOLE = Console()
 
@@ -123,8 +122,21 @@ def _persist_transactions(
     *,
     catalogue_dir: Path | None,
 ) -> ImportSummary:
-    """Merge ``transactions`` through the governed repository."""
+    """Merge ``transactions`` through the governed repository.
+
+    The repository (and the storage substrate it imports) is loaded
+    lazily on first persist so other CLI commands that never touch
+    the financial-domain persistence path are not slowed down by
+    Alembic plugin discovery during import.
+    """
     from ...config import load_settings
+    from ...financial.transactions._enums import TransactionDirection
+    from ...financial.transactions._repository import TransactionCatalogueRepository
+
+    def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
+        if raw.amount > 0:
+            return TransactionDirection.INCOMING
+        return TransactionDirection.OUTGOING
 
     if catalogue_dir is None:
         settings = load_settings()
@@ -134,13 +146,6 @@ def _persist_transactions(
         transactions,
         direction_resolver=_direction_from_amount,
     )
-
-
-def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
-    """Default direction-resolver: positive amount → INCOMING; otherwise OUTGOING."""
-    if raw.amount > 0:
-        return TransactionDirection.INCOMING
-    return TransactionDirection.OUTGOING
 
 
 def _resolve_provider(provider: ProviderChoice, path: Path):
