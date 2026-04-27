@@ -20,13 +20,18 @@ logger at the same time.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import threading
 from pathlib import Path
 from typing import TextIO
 
+from ..storage import SensitivityClass, redact_structured
+from ..storage._redaction import default_rules_for_class
 from ._models import RunEvent
+
+_DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
 
 
 class JsonlRunSink(logging.Handler):
@@ -88,15 +93,18 @@ class JsonlRunSink(logging.Handler):
         if event.run_id != self._run_id:
             return
         try:
-            # Encode outside the lock — pydantic serialization is
-            # CPU-bound and thread-safe on a frozen model, so holding
-            # the lock across the encode step would serialize work
-            # that does not need mutual exclusion. The encode is
-            # still inside the try so any encoder error (extremely
-            # unlikely on a strict+frozen model but possible in
-            # principle) is routed through handleError rather than
-            # escaping into the logging subsystem.
-            line = event.model_dump_json() + "\n"
+            # Run traces are DIAGNOSTIC class. The substrate's redaction
+            # rule set walks every string leaf (NIF SHA-256-prefixed, URL
+            # host-only, bearer-shaped tokens fingerprinted, opaque
+            # bearers fingerprinted) before serialisation so the JSONL
+            # never carries a plaintext NIF / token / URL path even if
+            # a caller feeds one in. Encoding happens outside the lock
+            # — pydantic dump and dict walk are CPU-bound and
+            # thread-safe on a frozen model, so holding the lock across
+            # the encode step would serialise work that does not need
+            # mutual exclusion.
+            redacted = redact_structured(event.model_dump(mode="json"), rules=_DIAGNOSTIC_RULES)
+            line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
             with self._lock:
                 handle = self._open()
                 handle.write(line)
