@@ -70,3 +70,7 @@ class KeyringUnavailableError(SecretStoreError):
 
 class MasterKeyUnavailableError(SecretStoreError):
     """Raised when no master key can be acquired from any provider."""
+
+
+class LockAcquisitionError(PersistenceError):
+    """Raised when an exclusive file lock cannot be acquired within the timeout."""

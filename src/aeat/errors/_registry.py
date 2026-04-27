@@ -1941,6 +1941,19 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.storage.errors.LockAcquisitionError",
+        ErrorCode(
+            code="LOCKED_STORAGE_LOCK_ACQUISITION",
+            category=ErrorCategory.LOCKED,
+            default_message_es="No se pudo adquirir el bloqueo de archivo exclusivo.",
+            default_message_en="Failed to acquire the exclusive file lock within the configured timeout.",
+            default_message_hu="A fajl zarolas nem sikerult.",
+            default_suggestion=None,
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.KeyringUnavailableError",
         ErrorCode(
             code="AUTH_STORAGE_KEYRING_UNAVAILABLE",

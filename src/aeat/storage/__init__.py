@@ -43,6 +43,7 @@ from ._crypto import (
     derive_key,
     encrypt_record,
 )
+from ._lock import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
 from ._master_key import (
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
@@ -56,6 +57,7 @@ from .errors import (
     EncryptionError,
     KeyDerivationError,
     KeyringUnavailableError,
+    LockAcquisitionError,
     MasterKeyUnavailableError,
     MigrationError,
     NonceCollisionError,
@@ -70,6 +72,7 @@ from .repository import CorpusArtifactRepository, ModeloRepository, PortalReposi
 from .session import get_sessionmaker, session_scope
 
 __all__ = [
+    "DEFAULT_LOCK_TIMEOUT",
     "GCM_TAG_SIZE",
     "KEY_SIZE",
     "NONCE_SIZE",
@@ -85,6 +88,7 @@ __all__ = [
     "KeyDerivationError",
     "KeyringMasterKeyProvider",
     "KeyringUnavailableError",
+    "LockAcquisitionError",
     "MasterKeyProvider",
     "MasterKeyUnavailableError",
     "MigrationError",
@@ -111,6 +115,7 @@ __all__ = [
     "dispose_engine",
     "downgrade_to_base",
     "encrypt_record",
+    "exclusive_file_lock",
     "get_engine",
     "get_master_key_provider",
     "get_sessionmaker",
