@@ -369,9 +369,11 @@ class TestFilingCLI:
         assert build_result.exit_code == 0, build_result.output
         assert "aeat review show" in build_result.output
         assert "aeat review approve" in build_result.output
-        amendment_files = sorted((submissions_dir / "amendments").glob("*.json"))
+        amendment_files = sorted((submissions_dir / "amendments").glob("*.envelope.json"))
         assert len(amendment_files) == 1
-        amendment_id = amendment_files[0].stem
+        # Path.stem removes only the trailing ``.json`` — strip the
+        # ``.envelope`` suffix too to recover the bare amendment id.
+        amendment_id = amendment_files[0].name[: -len(".envelope.json")]
         amended_draft_files = [
             path for path in drafts_dir.glob("*.envelope.json") if path.name not in draft_files_before
         ]

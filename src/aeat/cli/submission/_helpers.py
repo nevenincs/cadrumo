@@ -221,7 +221,12 @@ def load_draft(path: Path) -> FilingDraftLike:
 
 
 def resolve_draft_path(draft_ref: str) -> Path:
-    """Resolve ``draft_ref`` as either a draft path or a persisted draft id."""
+    """Resolve ``draft_ref`` as either a draft path or a persisted draft id.
+
+    Tries the new ``<id>.envelope.json`` ciphertext path first; falls
+    back to the legacy ``*_<id>.json`` plaintext pattern for un-migrated
+    operators.
+    """
 
     candidate = Path(draft_ref)
     if candidate.exists():
@@ -229,7 +234,14 @@ def resolve_draft_path(draft_ref: str) -> Path:
     if candidate.suffix == ".json" or candidate.parent != Path("."):
         raise typer.BadParameter(f"draft file not found: {candidate}")
     drafts_dir = load_settings().aeat_drafts_dir.resolve()
-    matches = sorted(path for path in drafts_dir.glob(f"*_{draft_ref}.json") if path.is_file())
+    envelope_path = drafts_dir / f"{draft_ref}.envelope.json"
+    if envelope_path.exists():
+        return envelope_path
+    matches = sorted(
+        path
+        for path in drafts_dir.glob(f"*_{draft_ref}.json")
+        if path.is_file() and not path.name.endswith(".envelope.json")
+    )
     if not matches:
         raise typer.BadParameter(f"no persisted draft found for draft_ref={draft_ref!r}")
     if len(matches) > 1:
@@ -243,6 +255,15 @@ def _load_persisted_filing_draft(
     *,
     payload_text: str,
 ) -> FilingDraft | None:
+    """Parse a draft JSON payload and re-persist it through the repository
+    if a state refresh changed it.
+
+    Wave-8 silent-leaker close: refreshed-state writes go through the
+    FilingDraftRepository (ciphertext) instead of a direct
+    write_text(...) call.
+    """
+    from ...filing._repository import FilingDraftRepository
+
     try:
         draft = FilingDraft.model_validate_json(payload_text)
     except (FilingDraftError, ValidationError):
@@ -252,5 +273,5 @@ def _load_persisted_filing_draft(
         schema_provider=build_runtime_schema_provider(),
     )
     if refreshed != draft:
-        draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
+        FilingDraftRepository(store_dir=draft_path.parent).save(refreshed)
     return refreshed

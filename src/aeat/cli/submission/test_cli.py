@@ -39,6 +39,37 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path
 
 
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path):
+    """Wave-7: install an EphemeralMasterKeyProvider so the CLI's
+    ciphertext-at-rest writes work in the test sandbox."""
+    from ...storage import (
+        EncryptedBlobStore,
+        EphemeralMasterKeyProvider,
+        SecretStore,
+        override_master_key_provider,
+        override_secret_store,
+    )
+
+    provider = EphemeralMasterKeyProvider()
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_master_key_provider(provider)
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
 @pytest.fixture()
 def draft_path(tmp_path: Path) -> Path:
     draft = _approved_draft()
@@ -143,7 +174,14 @@ class TestPreflightCommand:
         assert result.exit_code == 1
         assert "stale" in result.output
 
-        refreshed = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+        # Wave-7/8: the refreshed draft is now persisted through the
+        # FilingDraftRepository (ciphertext) rather than rewriting the
+        # legacy plaintext file in place.
+        from ...filing._repository import FilingDraftRepository
+
+        original = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+        refreshed = FilingDraftRepository(store_dir=draft_path.parent).load(original.draft_id)
+        assert refreshed is not None
         assert refreshed.status.value == "APPROVAL_STALE"
 
 
