@@ -60,7 +60,14 @@ def _synth_modelo_130_pdf(
     period_printed: str = "1T",
     casilla_values: dict[str, str] | None = None,
 ) -> Path:
-    """Render a synthetic Modelo 130 declaración + return the on-disk path."""
+    """Render a synthetic Modelo 130 declaración + return the on-disk path.
+
+    Issue #321: the M130 generator now renders the full 19-casilla
+    liquidación block (casillas 08-19 newly added). Defaults below
+    cover all 19 casillas with zeros for the new ones so a caller
+    overriding only Apartado I (01-07) still produces a synthetic PDF
+    where every casilla prints an amount the extractor can find.
+    """
     defaults = {
         "01": "12500.00",
         "02": "3500.00",
@@ -69,6 +76,21 @@ def _synth_modelo_130_pdf(
         "05": "400.00",
         "06": "0.00",
         "07": "1400.00",
+        # Issue #321: Apartado II + minoración + diferencia.
+        # Default to all-zeros for non-agraria autónomos with no
+        # minoración, no carryover, and no vivienda deduction.
+        "08": "0.00",
+        "09": "0.00",
+        "10": "0.00",
+        "11": "0.00",
+        "12": "1400.00",  # max(0, 07 + 11) = max(0, 1400 + 0)
+        "13": "0.00",
+        "14": "1400.00",  # 12 - 13
+        "15": "0.00",
+        "16": "0.00",
+        "17": "1400.00",  # 14 - 15 - 16
+        "18": "0.00",
+        "19": "1400.00",  # 17 - 18
     }
     merged = {**defaults, **(casilla_values or {})}
     params = Modelo130GenParams(
@@ -198,6 +220,89 @@ class TestKentImportsModelo130Declaracion:
         assert "Verification status: NEEDS_REVIEW" in result.output
         # Missing casillas must surface in the warnings block.
         assert "casilla 05" in result.output and "casilla 06" in result.output
+
+    @pytest.mark.parametrize("ejercicio", ["2024", "2025", "2026"])
+    def test_per_year_happy_path_verified(
+        self,
+        ejercicio: str,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+    ) -> None:
+        """Issue #321: each of 2024 / 2025 / 2026 declaraciones returns VERIFIED.
+
+        Gemini PR-440 review surfaced that the registry only resolved
+        2025 declaraciones; 2024 / 2026 raised NoExtractorRegisteredError.
+        This case asserts that a clean synthetic PDF for each of the
+        three Tier-L years drives the full
+        ``aeat filing import --from-declaracion`` flow to a
+        ``VERIFIED`` verdict (extraction status COMPLETE, no
+        discrepancies).
+
+        Asserts on stable substrings only — forward-compatible with
+        future envelope evolution.
+        """
+        del drafts_dir, submissions_dir, english_output
+        pdf = _synth_modelo_130_pdf(tmp_path, ejercicio=ejercicio)
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-declaracion", str(pdf)],
+        )
+        assert result.exit_code == 0, result.output
+        assert "Extraction status: COMPLETE" in result.output
+        assert "Verification status: VERIFIED" in result.output
+        # The resolved ruleset matches the year on the PDF.
+        assert f"Modelo 130 {ejercicio}Q1" in result.output, result.output
+
+    def test_discrepancy_classified_correctly(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+    ) -> None:
+        """Issue #321 4th case: a printed casilla disagrees with the engine.
+
+        Generates a PDF where casilla 04 prints 1 800,00 EUR while the
+        engine re-derives 04 = 20% of (10 000 - 0) = 2 000,00. The
+        verification pass must surface a CORRECTNESS_DIVERGENCE on
+        casilla 04 (not on the cross-quarter pool surface, since 05/06
+        are zero in this fixture). Kent's verdict should be
+        NEEDS_REVIEW with a discrepancy line naming casilla 04 and
+        the magnitudes.
+
+        Asserts on stable substrings only (status marker, casilla id,
+        cause-classification token) — forward-compatible with future
+        envelope evolution.
+        """
+        del drafts_dir, submissions_dir, english_output
+        pdf = _synth_modelo_130_pdf(
+            tmp_path,
+            casilla_values={
+                "01": "10000.00",
+                "02": "0.00",
+                "03": "10000.00",
+                "04": "1800.00",  # engine re-derives 2 000,00 — 200,00 € drift
+                "05": "0.00",
+                "06": "0.00",
+                "07": "1800.00",  # 04 - 05 - 06 (consistent with the printed 04)
+                "12": "1800.00",
+                "14": "1800.00",
+                "17": "1800.00",
+                "19": "1800.00",
+            },
+        )
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-declaracion", str(pdf)],
+        )
+        assert result.exit_code == 0, result.output
+        assert "Verification status: NEEDS_REVIEW" in result.output, result.output
+        # The classifier must surface casilla 04 as a divergence and
+        # cite its cause token. Use stable substrings only.
+        assert "casilla 04" in result.output, result.output
+        assert "CORRECTNESS_DIVERGENCE" in result.output, result.output
 
 
 class TestKentImportsModelo130Justificante:
