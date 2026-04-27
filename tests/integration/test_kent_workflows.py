@@ -153,8 +153,8 @@ class TestKentImportsModelo130Declaracion:
             ["filing", "import", "--from-declaracion", str(pdf)],
         )
         assert result.exit_code == 0, result.output
-        # Regex-match rather than a fixed count — the declaración extractor
-        # expands its casilla set in future waves (cluster D phase 2+);
+        # Regex-match rather than a fixed count because the declaration
+        # extractor can expand its casilla set as coverage grows;
         # happy path should remain green as long as N-of-N = COMPLETE.
         match = re.search(r"(\d+) of (\d+) casillas extracted", result.output)
         assert match is not None, result.output
