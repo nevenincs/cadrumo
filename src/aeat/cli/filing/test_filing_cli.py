@@ -68,6 +68,15 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture
 def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    from datetime import UTC, datetime
+
+    from ...storage import (
+        Envelope,
+        SensitivityClass,
+        save_encrypted_envelope,
+    )
+    from ...storage._encrypted_columns import _resolve_master_key_provider
+
     profile = AutonomoProfile(
         tax_id="00000000T",
         iva_regime=IVARegime.GENERAL,
@@ -77,7 +86,18 @@ def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         bienes_extranjero_above_threshold=False,
     )
     target = tmp_path / "profile.json"
-    target.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+    envelope = Envelope[AutonomoProfile](
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=profile,
+    )
+    save_encrypted_envelope(
+        envelope,
+        target,
+        master_key_provider=_resolve_master_key_provider(),
+        hkdf_context=b"aeat.setup.profile.v1",
+    )
     monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", str(target))
     return target
 

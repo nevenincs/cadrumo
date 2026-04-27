@@ -1,10 +1,11 @@
 """Content-addressed byte and manifest store for the attachment service.
 
-The store separates write-once byte blobs from mutable JSON manifests under a
+The store separates write-once byte blobs from encrypted JSON manifests under a
 shared configured root:
 
-* ``<root>/blobs/<sha256>``      — raw bytes, write-once.
-* ``<root>/manifests/<sha256>.json`` — JSON manifest, rewritten as links evolve.
+* ``<root>/blobs/<sha256>``                   — raw bytes, write-once.
+* ``<root>/manifests/<sha256>.envelope.json`` — encrypted manifest envelope at
+  FINANCIAL class via :func:`save_encrypted_envelope`.
 
 Every public method that composes a path from an ``attachment_id`` / ``sha256``
 input first validates the token is a 64-character lowercase hex digest, so
@@ -18,6 +19,7 @@ import hashlib
 import os
 import tempfile
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import BinaryIO, Self
 
@@ -32,9 +34,12 @@ _LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _BLOBS_DIRNAME = "blobs"
 _MANIFESTS_DIRNAME = "manifests"
-_MANIFEST_SUFFIX = ".json"
+_MANIFEST_SUFFIX = ".envelope.json"
+_MANIFEST_LOCK_SUFFIX = ".lock"
 _STREAM_CHUNK_SIZE = 1024 * 1024  # 1 MiB
 _HEX_DIGITS = frozenset("0123456789abcdef")
+_HKDF_CONTEXT_ATTACHMENT_MANIFEST = b"aeat.financial.attachments.manifest.v1"
+_ATTACHMENT_MANIFEST_VERSION = 1
 
 
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
@@ -112,6 +117,11 @@ class AttachmentStore(BaseModel):
         """
         digest = _require_digest(attachment_id)
         return self.manifests_dir / f"{digest}{_MANIFEST_SUFFIX}"
+
+    def _manifest_lock_target(self, attachment_id: str) -> Path:
+        """Return the per-manifest lock sidecar path."""
+        digest = _require_digest(attachment_id)
+        return self.manifests_dir / f"{digest}{_MANIFEST_LOCK_SUFFIX}"
 
     def put_bytes(self, data: bytes) -> str:
         """Write ``data`` under its SHA-256 digest if not already present.
@@ -281,16 +291,45 @@ class AttachmentStore(BaseModel):
     def write_manifest(self, attachment: Attachment) -> None:
         """Persist ``attachment`` to its manifest file atomically.
 
+        The manifest is written as a :class:`CipherEnvelope` at
+        FINANCIAL class via the substrate's ``save_encrypted_envelope``
+        helper — no plaintext linkage between the attachment digest and
+        the linked transaction/invoice IDs lands on disk.
+
         Args:
             attachment: Validated attachment whose manifest should be written.
 
         Raises:
             AttachmentPersistenceError: When the manifest cannot be written.
         """
+        # Storage imports are deferred so the attachments package does
+        # not pull ``aeat.storage`` (with its Alembic plugin discovery)
+        # into every CLI command's import chain. Mirrors the json-pipe-
+        # safety discipline applied to every other persistence consumer.
+        from ...storage import (
+            Envelope,
+            SensitivityClass,
+            exclusive_file_lock,
+            save_encrypted_envelope,
+        )
+        from ...storage._encrypted_columns import _resolve_master_key_provider
+
         target = self.manifest_path(attachment.attachment_id)
         try:
             self.manifests_dir.mkdir(parents=True, exist_ok=True)
-            _atomic_write_text(target, attachment.model_dump_json(indent=2))
+            with exclusive_file_lock(self._manifest_lock_target(attachment.attachment_id)):
+                envelope = Envelope[Attachment](
+                    schema_version=_ATTACHMENT_MANIFEST_VERSION,
+                    written_at=datetime.now(UTC),
+                    classification=SensitivityClass.FINANCIAL,
+                    payload=attachment,
+                )
+                save_encrypted_envelope(
+                    envelope,
+                    target,
+                    master_key_provider=_resolve_master_key_provider(),
+                    hkdf_context=_HKDF_CONTEXT_ATTACHMENT_MANIFEST,
+                )
         except OSError as exc:
             raise AttachmentPersistenceError(f"unable to write attachment manifest: {target}") from exc
         _LOGGER.info("wrote attachment manifest %s", attachment.attachment_id)
@@ -317,18 +356,34 @@ class AttachmentStore(BaseModel):
             AttachmentNotFoundError: When no manifest exists.
             AttachmentPersistenceError: When the manifest cannot be read.
         """
+        from ...storage import (
+            Envelope,
+            SensitivityClass,
+            load_encrypted_envelope,
+        )
+        from ...storage._encrypted_columns import _resolve_master_key_provider
+        from ...storage.errors import ClassificationError, EnvelopeVersionError
+
         digest = _require_digest(attachment_id)
         target = self.manifest_path(digest)
         if not target.exists():
             raise AttachmentNotFoundError(f"attachment manifest not found: {digest}")
         try:
-            raw = target.read_text(encoding="utf-8")
-        except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to read attachment manifest: {target}") from exc
-        try:
-            attachment = Attachment.model_validate_json(raw)
+            envelope = load_encrypted_envelope(
+                target,
+                Envelope[Attachment],
+                expected_class=SensitivityClass.FINANCIAL,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_ATTACHMENT_MANIFEST,
+                max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
+            )
+        except (ClassificationError, EnvelopeVersionError) as exc:
+            raise AttachmentValidationError(f"invalid attachment manifest: {target}") from exc
         except ValidationError as exc:
             raise AttachmentValidationError(f"invalid attachment manifest: {target}") from exc
+        except OSError as exc:
+            raise AttachmentPersistenceError(f"unable to read attachment manifest: {target}") from exc
+        attachment = envelope.payload
         if attachment.attachment_id != digest:
             raise AttachmentValidationError(
                 f"manifest filename {digest} does not match stored attachment_id {attachment.attachment_id}"
@@ -338,10 +393,11 @@ class AttachmentStore(BaseModel):
     def iter_manifests(self) -> Iterator[Attachment]:
         """Iterate over every manifest on disk in sorted-filename order.
 
-        Only filenames whose stem is a valid 64-char lowercase hex digest are
-        yielded; any other ``.json`` file under ``manifests/`` is ignored.
-        Each yielded manifest additionally satisfies the filename-vs-payload
-        cross-check enforced by :meth:`load_manifest`.
+        Only filenames matching ``<digest>.envelope.json`` whose digest
+        is a valid 64-char lowercase hex digest are yielded; any other
+        file under ``manifests/`` is ignored. Each yielded manifest
+        additionally satisfies the filename-vs-payload cross-check
+        enforced by :meth:`load_manifest`.
 
         Yields:
             Each validated ``Attachment`` manifest stored under the root.
@@ -357,13 +413,16 @@ class AttachmentStore(BaseModel):
         except OSError as exc:
             raise AttachmentPersistenceError(f"unable to list attachment manifests: {self.manifests_dir}") from exc
         for entry in entries:
-            if entry.suffix != _MANIFEST_SUFFIX or not entry.is_file():
+            if not entry.is_file():
                 continue
-            stem = entry.stem
-            if len(stem) != 64 or any(char not in _HEX_DIGITS for char in stem):
+            name = entry.name
+            if not name.endswith(_MANIFEST_SUFFIX):
+                continue
+            digest = name[: -len(_MANIFEST_SUFFIX)]
+            if len(digest) != 64 or any(char not in _HEX_DIGITS for char in digest):
                 _LOGGER.debug("skipping non-digest manifest filename: %s", entry.name)
                 continue
-            yield self.load_manifest(stem)
+            yield self.load_manifest(digest)
 
 
 def _commit_write_once(tmp_path: Path, target: Path) -> None:
@@ -404,32 +463,6 @@ def _write_once_bytes(target: Path, data: bytes) -> None:
             handle.write(data)
         _commit_write_once(tmp_path, target)
         tmp_path = None
-    except OSError:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
-        raise
-
-
-def _atomic_write_text(target: Path, payload: str) -> None:
-    """Atomically write ``payload`` (UTF-8) to ``target`` via a sibling tempfile.
-
-    Manifests are mutable (links evolve), so this helper uses ``os.replace``
-    for full overwrite semantics. Byte blobs must instead route through
-    :func:`_write_once_bytes` / :func:`_commit_write_once`.
-    """
-    tmp_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(payload)
-        os.replace(tmp_path, target)
     except OSError:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)

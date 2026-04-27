@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -11,23 +12,49 @@ import pytest
 from typer.testing import CliRunner
 
 from ...cli import app as root_app
+from ...storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from .. import RawProvenance, SourceFormat
 from ..providers import RawTransaction
 from ..transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
 )
+from ..transactions._repository import TransactionCatalogueRepository
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
-from ._service import load_invoices, save_invoices
+from ._repository import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
-_INVOICE_FILENAME = "invoices.json"
-_TRANSACTION_FILENAME = "transactions.json"
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
 
 
 def _make_invoice(
@@ -106,8 +133,8 @@ def _seed_environment(tmp_path: Path) -> tuple[InvoiceCatalogue, TransactionCata
         ]
     )
     transaction_catalogue = TransactionCatalogue.from_transactions([_make_transaction()])
-    save_invoices(invoice_catalogue, invoices_dir / _INVOICE_FILENAME)
-    save_transactions(transaction_catalogue, transactions_dir / _TRANSACTION_FILENAME)
+    InvoiceCatalogueRepository(store_dir=invoices_dir).save(invoice_catalogue)
+    TransactionCatalogueRepository(store_dir=transactions_dir).save(transaction_catalogue)
     env = {
         "AEAT_INVOICES_DIR": str(invoices_dir),
         "AEAT_FINANCIAL_TXS_DIR": str(transactions_dir),
@@ -169,7 +196,7 @@ def test_financial_invoices_link_updates_both_files(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert transaction.transaction_id in payload["linked_transaction_ids"]
 
-    updated_invoices = load_invoices(tmp_path / "invoices" / _INVOICE_FILENAME)
+    updated_invoices = InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").load()
     updated_invoice = updated_invoices.get(invoice.invoice_id)
     assert updated_invoice is not None
     assert transaction.transaction_id in updated_invoice.linked_transaction_ids
@@ -193,7 +220,7 @@ def test_financial_invoices_reconcile_apply_persists_links(tmp_path: Path) -> No
     result = _RUNNER.invoke(root_app, ["financial", "invoices", "reconcile", "--apply"], env=env)
     assert result.exit_code == 0, result.output
 
-    updated = load_invoices(tmp_path / "invoices" / _INVOICE_FILENAME)
+    updated = InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").load()
     assert any(transaction.transaction_id in invoice.linked_transaction_ids for invoice in updated.values())
 
 
@@ -238,9 +265,8 @@ def test_financial_invoices_verify_exits_two_when_drifted(tmp_path: Path) -> Non
             "linked_transaction_ids": (transaction.transaction_id,),
         }
     )
-    save_invoices(
+    InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").save(
         InvoiceCatalogue.from_invoices([drifted]),
-        tmp_path / "invoices" / _INVOICE_FILENAME,
     )
 
     result = _RUNNER.invoke(root_app, ["financial", "invoices", "verify"], env=env)

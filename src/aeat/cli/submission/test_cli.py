@@ -17,8 +17,8 @@ from ...financial.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
 )
+from ...financial.transactions._repository import TransactionCatalogueRepository
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -180,9 +180,11 @@ class TestPreflightCommand:
         draft_path: Path,
         isolated_dirs: Path,
     ) -> None:
-        transactions_path = isolated_dirs / "transactions" / "transactions.json"
-        transactions_path.parent.mkdir(parents=True, exist_ok=True)
-        save_transactions(TransactionCatalogue.from_transactions([_sample_transaction()]), transactions_path)
+        transactions_dir = isolated_dirs / "transactions"
+        transactions_dir.mkdir(parents=True, exist_ok=True)
+        TransactionCatalogueRepository(store_dir=transactions_dir).save(
+            TransactionCatalogue.from_transactions([_sample_transaction()]),
+        )
 
         result = runner.invoke(app, ["preflight", str(draft_path)])
         assert result.exit_code == 1

@@ -3,17 +3,14 @@
 Wraps the substrate's :class:`Envelope[TransactionCatalogue]` contract
 behind a small, typed surface that the bank-import command and any
 future consumer can call. Every read consults the envelope file
-first; every write goes through ``save_envelope`` at the FINANCIAL
-sensitivity classification with an exclusive file lock for the
-duration so concurrent writers serialise rather than race.
+first; every write goes through ``save_encrypted_envelope`` at the
+FINANCIAL sensitivity classification with an exclusive file lock for
+the duration so concurrent writers serialise rather than race.
 
-The repository does NOT replace the existing
-:func:`aeat.financial.transactions.load_transactions` /
-:func:`save_transactions` helpers. Those remain the legacy entry
-points for already-deployed catalogues; the read-through adapter
-in :mod:`aeat.financial.transactions._service` consults this
-repository first and falls back to the legacy plaintext JSON with
-a one-shot deprecation log when the substrate has no envelope yet.
+The repository is the only sanctioned read/write path for the
+transaction catalogue. There is no plaintext fallback: every CLI
+command and downstream consumer routes through this surface so the
+on-disk record is always the encrypted envelope.
 
 Idempotency is inherited from the existing
 :func:`derive_transaction_id` SHA-256 hash on the
@@ -226,90 +223,10 @@ class TransactionCatalogueRepository:
         )
 
 
-def migrate_legacy_catalogue_to_repository(
-    legacy_path: Path,
-    *,
-    repository: TransactionCatalogueRepository,
-    overwrite: bool = False,
-) -> ImportSummary:
-    """Move a legacy ``transactions.json`` into the governed repository.
-
-    Reads the legacy plaintext catalogue, persists it through the
-    repository (which writes the envelope under FINANCIAL class), and
-    returns a summary describing the migration.
-
-    Args:
-        legacy_path: Path to the legacy plaintext JSON catalogue.
-        repository: The destination repository.
-        overwrite: When ``True``, replaces any catalogue already
-            persisted in the repository. When ``False`` and the
-            destination is non-empty, raises :class:`ValueError`.
-
-    Returns:
-        An :class:`ImportSummary` whose ``imported`` field counts the
-        transactions migrated and whose ``skipped`` field reflects
-        any rows already present in the destination.
-
-    Raises:
-        FileNotFoundError: If ``legacy_path`` does not exist.
-    """
-    if not legacy_path.exists():
-        raise FileNotFoundError(legacy_path)
-    from ._service import load_transactions
-
-    legacy_catalogue = load_transactions(legacy_path)
-    # Wave-3 audit gate HIGH-2 — the entire read-compare-merge-save
-    # span runs under the same exclusive_file_lock the merge write
-    # path uses. Without this the migration helper observes a stale
-    # snapshot at .load() and overwrites any rows a concurrent
-    # merge_raw_transactions writer persisted between the load and
-    # the save.
-    repository._store_dir.mkdir(parents=True, exist_ok=True)
-    with exclusive_file_lock(repository.lock_target):
-        existing = repository.load()
-        if not overwrite and len(existing) > 0:
-            raise ValueError(
-                f"destination repository at {repository.envelope_path} is non-empty; pass overwrite=True to replace.",
-            )
-        imported = 0
-        skipped = 0
-        merged = dict(existing.transactions) if not overwrite else {}
-        for tx in legacy_catalogue:
-            if tx.transaction_id in merged:
-                skipped += 1
-                continue
-            merged[tx.transaction_id] = tx
-            imported += 1
-        envelope = Envelope[TransactionCatalogue](
-            schema_version=_TX_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
-            classification=SensitivityClass.FINANCIAL,
-            payload=TransactionCatalogue.model_validate({"transactions": merged}),
-        )
-        save_encrypted_envelope(
-            envelope,
-            repository.envelope_path,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_TX_CATALOGUE,
-        )
-    _log.info(
-        "migrated legacy catalogue %s into repository: imported=%d skipped=%d",
-        legacy_path,
-        imported,
-        skipped,
-    )
-    return ImportSummary(
-        imported=imported,
-        skipped=skipped,
-        catalogue_path=str(repository.envelope_path.resolve()),
-    )
-
-
 __all__ = [
     "ClassificationError",
     "DirectionResolver",
     "EnvelopeVersionError",
     "ImportSummary",
     "TransactionCatalogueRepository",
-    "migrate_legacy_catalogue_to_repository",
 ]

@@ -9,10 +9,17 @@ of keys — see :func:`owned_env_keys`.
 The PKCS#12 password is **never** a field in the env writer's
 payload. Only the name of the env var that holds it is recorded, and
 only as an informational comment line.
+
+The :class:`AutonomoProfile` carries the operator's NIF — IDENTITY
+class per the default policy table. :func:`write_profile_file` routes
+the write through the substrate's
+:func:`save_encrypted_envelope` helper at IDENTITY class so the
+on-disk record is always AES-256-GCM ciphertext.
 """
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 from ..deadlines import AutonomoProfile
@@ -24,6 +31,8 @@ log = get_logger(__name__)
 
 
 _PASSWORD_COMMENT_PREFIX = "# PKCS#12 password sourced from env var: "
+_HKDF_CONTEXT_SETUP_PROFILE = b"aeat.setup.profile.v1"
+_PROFILE_ENVELOPE_VERSION = 1
 
 
 def owned_env_keys() -> tuple[str, ...]:
@@ -125,17 +134,32 @@ def write_env_file(answers: SetupAnswers, target: Path) -> None:
 
 
 def write_profile_file(answers: SetupAnswers, target: Path) -> None:
-    """Persist the user's :class:`AutonomoProfile` as JSON at ``target``.
+    """Persist the user's :class:`AutonomoProfile` as ciphertext at ``target``.
 
     The profile file is consumed by ``aeat deadlines`` and is separate
     from the env file so the wizard never has to hand-craft JSON for
-    a nested record.
+    a nested record. The profile carries the operator's NIF — IDENTITY
+    class per the default policy table — so the write routes through
+    :func:`save_encrypted_envelope` and lands as a
+    :class:`CipherEnvelope` on disk under HKDF context
+    ``aeat.setup.profile.v1``.
 
     Args:
         answers: Validated :class:`SetupAnswers` payload.
-        target: Absolute path where the profile JSON should be
+        target: Absolute path where the profile envelope should be
             written.
     """
+    # Storage imports are deferred so the setup module's import chain
+    # does not pull Alembic plugin discovery into every CLI command's
+    # startup path. Mirrors the json-pipe-safety discipline applied to
+    # every other governed-persistence consumer.
+    from ..storage import (
+        Envelope,
+        SensitivityClass,
+        save_encrypted_envelope,
+    )
+    from ..storage._encrypted_columns import _resolve_master_key_provider
+
     profile = AutonomoProfile(
         tax_id=answers.tax_id,
         iva_regime=answers.iva_regime,
@@ -149,5 +173,48 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         notes=answers.notes,
     )
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
-    log.info("setup: wrote AutonomoProfile JSON to %s", target)
+    envelope = Envelope[AutonomoProfile](
+        schema_version=_PROFILE_ENVELOPE_VERSION,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=profile,
+    )
+    save_encrypted_envelope(
+        envelope,
+        target,
+        master_key_provider=_resolve_master_key_provider(),
+        hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
+    )
+    log.info("setup: wrote AutonomoProfile envelope to %s", target)
+
+
+def load_profile_envelope(target: Path) -> AutonomoProfile:
+    """Load the operator's :class:`AutonomoProfile` from a setup envelope.
+
+    The setup wizard writes the profile through
+    :func:`save_encrypted_envelope`. Downstream consumers (the
+    ``aeat deadlines`` CLI) round-trip through this helper rather than
+    parsing the file as plaintext JSON.
+
+    Args:
+        target: Absolute path to the setup-profile envelope file.
+
+    Returns:
+        The validated :class:`AutonomoProfile` payload.
+    """
+    from ..storage import (
+        Envelope,
+        SensitivityClass,
+        load_encrypted_envelope,
+    )
+    from ..storage._encrypted_columns import _resolve_master_key_provider
+
+    envelope = load_encrypted_envelope(
+        target,
+        Envelope[AutonomoProfile],
+        expected_class=SensitivityClass.IDENTITY,
+        master_key_provider=_resolve_master_key_provider(),
+        hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
+        max_supported_version=_PROFILE_ENVELOPE_VERSION,
+    )
+    return envelope.payload

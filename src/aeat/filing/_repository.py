@@ -6,15 +6,16 @@ call. Each draft is persisted as its own envelope file
 (``<draft_id>.envelope.json``) under :attr:`aeat.config.AeatSettings.aeat_drafts_dir`,
 so per-draft locking does not contend across the whole drafts directory.
 
-The repository does NOT replace the legacy plaintext draft file format
-(``<modelo>_<period>_<draft_id>.json``); the migration helper
-:func:`migrate_legacy_drafts_to_repository` reads every legacy draft
-JSON in a source directory and persists it through the repository.
+The repository is the only sanctioned read/write path for filing
+drafts. There is no plaintext fallback: every reader and writer
+routes through this surface so the on-disk record is always the
+encrypted envelope.
 
 Sensitivity classification: drafts carry per-line casilla arithmetic
 that drives the exact tax due. Per the Wave-1 default policy table,
 that is :class:`SensitivityClass.FINANCIAL`; the gate at
-:func:`load_envelope` rejects payloads whose recorded class drifted.
+:func:`load_encrypted_envelope` rejects payloads whose recorded class
+drifted.
 """
 
 from __future__ import annotations

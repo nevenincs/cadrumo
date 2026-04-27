@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,22 @@ from . import SCHEMA_REGISTRY
 from . import app as root_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
+
+@pytest.fixture(autouse=True)
+def _cleanup_master_key_override() -> Iterator[None]:
+    """Ensure each test starts with a clean ``override_master_key_provider`` state.
+
+    The workflow tests in this file install an in-process master-key
+    provider via ``_prepare_workflow_env``; this fixture clears it
+    after each test so unrelated tests do not inherit a stale override.
+    """
+    yield
+    from ..storage import override_master_key_provider, override_secret_store
+
+    override_master_key_provider(None)
+    override_secret_store(None)
+
 
 _RUNNER = CliRunner()
 _EXPECTED_REGISTERED_COMMANDS = {
@@ -44,6 +61,36 @@ _EXPECTED_REGISTERED_COMMANDS = {
 
 
 def _prepare_workflow_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from datetime import UTC, datetime
+
+    from ..storage import (
+        EncryptedBlobStore,
+        Envelope,
+        EphemeralMasterKeyProvider,
+        SecretStore,
+        SensitivityClass,
+        override_master_key_provider,
+        override_secret_store,
+        save_encrypted_envelope,
+    )
+    from ..storage._encrypted_columns import _resolve_master_key_provider
+
+    # Install an in-process master-key + secret store for the duration
+    # of this test so the workflow CLI's
+    # ``load_default_filing_profile`` round-trips through the substrate.
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+
     profile = AutonomoProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -53,7 +100,18 @@ def _prepare_workflow_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
         bienes_extranjero_above_threshold=False,
     )
     profile_path = tmp_path / "profile.json"
-    profile_path.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+    envelope = Envelope[AutonomoProfile](
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=profile,
+    )
+    save_encrypted_envelope(
+        envelope,
+        profile_path,
+        master_key_provider=_resolve_master_key_provider(),
+        hkdf_context=b"aeat.setup.profile.v1",
+    )
 
     inputs_path = tmp_path / "inputs.json"
     inputs_path.write_text(json.dumps({"01": 12500, "02": 3500, "05": 400, "06": 0}), encoding="utf-8")

@@ -26,14 +26,14 @@ from ..financial.invoices import (
     InvoiceLine,
     IvaRate,
     PaymentStatus,
-    save_invoices,
 )
+from ..financial.invoices._repository import InvoiceCatalogueRepository
 from ..financial.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
 )
+from ..financial.transactions._repository import TransactionCatalogueRepository
 from ..i18n import Translatable
 from ..sync import (
     CasillaRemoved,
@@ -92,7 +92,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
     )
     transaction = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
     catalogue = TransactionCatalogue.from_transactions((transaction,))
-    save_transactions(catalogue, settings.aeat_financial_txs_dir / "transactions.json")
+    TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
 
     line = InvoiceLine(
         description="Consultoría",
@@ -119,7 +119,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
             "linked_transaction_ids": (),
         }
     )
-    save_invoices(InvoiceCatalogue.from_invoices((invoice,)), settings.aeat_invoices_dir / "invoices.json")
+    InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(InvoiceCatalogue.from_invoices((invoice,)))
 
     modelo = ModeloIdentifier("130")
     repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)

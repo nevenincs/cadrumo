@@ -3,11 +3,19 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from ..storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from . import (
     CasillaAddedWithDefault,
     DivergenceClassification,
@@ -19,6 +27,51 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
+def test_divergence_envelope_is_ciphertext_at_audit_class(tmp_path: Path) -> None:
+    """The on-disk record must be a CipherEnvelope; the modelo / casilla canaries
+    must not survive in plaintext on disk (LEAK-005 regression)."""
+    repo = JsonFileDivergenceRepository(tmp_path / "divergences")
+    record = DivergenceRecord(
+        record_id=uuid.uuid4().hex,
+        detected_at=datetime.now(tz=UTC),
+        modelo=ModeloIdentifier("100"),
+        classification=DivergenceClassification.ADDITIVE,
+        payload=CasillaAddedWithDefault(
+            modelo=ModeloIdentifier("100"),
+            casilla_id="LEAK-CANARY-CASILLA",
+            default="0",
+            label={"es": "x", "en": "x", "hu": "x"},
+        ),
+    )
+    repo.save(record)
+    target = repo._path_for(record.record_id)
+    on_disk = target.read_text(encoding="utf-8")
+    assert '"classification":"audit"' in on_disk
+    assert '"encryption":' in on_disk
+    assert "LEAK-CANARY-CASILLA" not in on_disk
 
 
 def _record() -> DivergenceRecord:
