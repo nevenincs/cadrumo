@@ -50,6 +50,13 @@ from ._encrypted_columns import (
     HashedLookup,
     override_master_key_provider,
 )
+from ._envelope import (
+    EncryptionMetadata,
+    Envelope,
+    EnvelopeMigrator,
+    load_envelope,
+    save_envelope,
+)
 from ._lock import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
 from ._master_key import (
     EphemeralMasterKeyProvider,
@@ -60,14 +67,17 @@ from ._master_key import (
 )
 from .engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
+    ClassificationError,
     DecryptionError,
     EncryptionError,
+    EnvelopeVersionError,
     KeyDerivationError,
     KeyringUnavailableError,
     LockAcquisitionError,
     MasterKeyUnavailableError,
     MigrationError,
     NonceCollisionError,
+    PathContainmentError,
     PersistenceError,
     RepositoryError,
     SecretStoreError,
@@ -84,6 +94,7 @@ __all__ = [
     "KEY_SIZE",
     "NONCE_SIZE",
     "AtRestTreatment",
+    "ClassificationError",
     "ClassificationPolicy",
     "CorpusArtifactRecord",
     "CorpusArtifactRepository",
@@ -93,6 +104,10 @@ __all__ = [
     "EncryptedJSON",
     "EncryptedString",
     "EncryptionError",
+    "EncryptionMetadata",
+    "Envelope",
+    "EnvelopeMigrator",
+    "EnvelopeVersionError",
     "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
     "HashedLookup",
@@ -106,6 +121,7 @@ __all__ = [
     "ModeloRecord",
     "ModeloRepository",
     "NonceCollisionError",
+    "PathContainmentError",
     "PersistenceError",
     "PortalAuthMethod",
     "PortalRecord",
@@ -130,8 +146,10 @@ __all__ = [
     "get_engine",
     "get_master_key_provider",
     "get_sessionmaker",
+    "load_envelope",
     "override_master_key_provider",
     "round_trip_migrations",
+    "save_envelope",
     "session_scope",
     "upgrade_to_head",
 ]
