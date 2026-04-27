@@ -94,8 +94,14 @@ class EnvelopeVersionError(PersistenceError):
     """
 
 
-class PathContainmentError(PersistenceError):
-    """Raised when a computed path escapes its configured root directory."""
+class PathContainmentError(PersistenceError, ValueError):
+    """Raised when a computed path escapes its configured root directory.
+
+    Inherits from :class:`ValueError` as well as :class:`PersistenceError` so
+    legacy call-sites that catch ``ValueError`` from the path helpers in
+    :mod:`aeat._paths` continue to work; new code should catch the
+    typed :class:`PathContainmentError` instead.
+    """
 
 
 class BlobNotFoundError(PersistenceError):
