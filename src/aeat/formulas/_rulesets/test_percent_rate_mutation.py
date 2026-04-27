@@ -49,6 +49,7 @@ from . import (
     MODELO_180_2025,
     MODELO_303_2024,
     MODELO_303_2025,
+    MODELO_303_2026,
 )
 from ._mutators import (
     classify_percent_rate,
@@ -273,6 +274,9 @@ def _ruleset_cases() -> tuple[tuple[Ruleset, str, dict[str, Decimal]], ...]:
         (MODELO_303_2025, "03", _f303_super_fixture()),
         (MODELO_303_2025, "06", _f303_reducido_fixture()),
         (MODELO_303_2025, "09", _f303_general_fixture()),
+        (MODELO_303_2026, "03", _f303_super_fixture()),
+        (MODELO_303_2026, "06", _f303_reducido_fixture()),
+        (MODELO_303_2026, "09", _f303_general_fixture()),
     )
 
 

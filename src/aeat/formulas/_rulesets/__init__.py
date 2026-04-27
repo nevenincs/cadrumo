@@ -56,6 +56,7 @@ from .modelo_200_2024 import RULESET as MODELO_200_2024
 from .modelo_202_2025 import RULESET as MODELO_202_2025
 from .modelo_303_2024 import RULESET as MODELO_303_2024
 from .modelo_303_2025 import RULESET as MODELO_303_2025
+from .modelo_303_2026 import RULESET as MODELO_303_2026
 from .modelo_390_2025 import RULESET as MODELO_390_2025
 
 # Numerically-ascending by modelo code; within a modelo, ascending by
@@ -80,6 +81,7 @@ ALL_RULESETS: tuple[Ruleset, ...] = (
     MODELO_202_2025,
     MODELO_303_2024,
     MODELO_303_2025,
+    MODELO_303_2026,
     MODELO_390_2025,
 )
 
@@ -103,5 +105,6 @@ __all__ = [
     "MODELO_202_2025",
     "MODELO_303_2024",
     "MODELO_303_2025",
+    "MODELO_303_2026",
     "MODELO_390_2025",
 ]

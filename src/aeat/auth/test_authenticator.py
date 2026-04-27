@@ -874,11 +874,12 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pyt
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
-    async with AeatAuthenticator(settings) as auth:
+    verifier = _HandshakeVerifier()
+    async with AeatAuthenticator(settings, handshake_verifier=verifier) as auth:
         # Fake a session to pass to reauthenticate. The call will fail
-        # at the network-free `authenticate` step (no handshake), so
-        # we assert that the teardown side of reauthenticate completes
-        # without deadlocking regardless of the authenticate outcome.
+        # at the network-free browser-session resolution step, so we
+        # assert that reauthenticate completes without deadlocking
+        # regardless of the authenticate outcome.
         now = datetime.now(UTC)
         session = _certificate_session(
             authenticated_at=now,
@@ -891,6 +892,7 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pyt
         # returns in bounded time (no deadlock).
         with pytest.raises(AeatLoginAssertionError):
             await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
+    assert verifier.calls == 1
 
 
 @pytest.mark.asyncio

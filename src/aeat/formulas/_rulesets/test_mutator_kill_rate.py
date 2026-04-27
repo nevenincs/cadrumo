@@ -254,6 +254,15 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,
     },
+    "modelo_303.2026": {
+        "sub_op": 2,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 3,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 1,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 1,
+    },
     "modelo_390.2025": {
         "sub_op": 1,
         "percent_rate_literal": 0,
