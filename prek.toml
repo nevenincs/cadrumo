@@ -74,6 +74,10 @@ stages = ["manual"]
 id = "spec-check"
 name = "vaultspec doctor (manual stage)"
 language = "system"
-entry = "uv run --no-sync vaultspec-core spec doctor"
+# Inline shell wrapper remaps warning-only exits (1) to success; hard
+# errors (>=2) still fail. `.claude/` carries intentional foreign files
+# (`settings.local.json`, `worktrees/`) that produce a non-fixable
+# `dir: mixed` advisory, so warning-on-fail over-triggers here.
+entry = "bash -c 'uv run --no-sync vaultspec-core spec doctor; rc=$?; [ $rc -le 1 ]'"
 pass_filenames = false
 stages = ["manual"]
