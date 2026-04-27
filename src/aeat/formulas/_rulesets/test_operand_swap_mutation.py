@@ -42,6 +42,7 @@ from . import (
     MODELO_100_SUMMARY_2025,
     MODELO_111_2025,
     MODELO_115_2025,
+    MODELO_115_2026,
     MODELO_123_2025,
     MODELO_130_2024,
     MODELO_130_2025,
@@ -568,6 +569,15 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             "06",
             _modelo_115_fixture,
             id="modelo_115.2025:casilla_06_resultado_a_ingresar",
+        ),
+        # Issue #319 — Modelo 115 2026 clones the casilla-06 sub_op chain.
+        # The 2026 ruleset re-imports formulas from the 2025 module
+        # verbatim (RIRPF art. 100 unchanged across all three years).
+        pytest.param(
+            lambda: MODELO_115_2026,
+            "06",
+            _modelo_115_fixture,
+            id="modelo_115.2026:casilla_06_resultado_a_ingresar",
         ),
         pytest.param(
             lambda: MODELO_123_2025,
