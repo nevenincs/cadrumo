@@ -65,7 +65,12 @@ Navigation flow, captured live:
 
 from __future__ import annotations
 
-from ._declarations import Declaration, capture_declaration, walk_declarations_register
+from ._declarations import (
+    Declaration,
+    capture_declaration,
+    shared_playwright,
+    walk_declarations_register,
+)
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -112,6 +117,7 @@ __all__ = [
     "parse_notifications_summary",
     "parse_resumen_tree",
     "resolve_justificante_ref",
+    "shared_playwright",
     "walk_declarations_register",
     "walk_expedientes_tree",
 ]

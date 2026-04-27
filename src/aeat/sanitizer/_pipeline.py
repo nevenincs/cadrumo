@@ -124,14 +124,17 @@ def sanitize_pdf(
             is True and the source SHA-256 is in
             :data:`fixtures.SANITIZED_SHAS`.
     """
-    source_bytes = _read_source(source)
-    source_sha = hashlib.sha256(source_bytes).hexdigest()
+    source_sha, source_size_bytes = _digest_source(source)
 
     if refuse_if_already_sanitized and source_sha in _fixtures.SANITIZED_SHAS:
         raise AlreadySanitizedError(source_sha256=source_sha)
 
     try:
-        pdf = pikepdf.Pdf.open(io.BytesIO(source_bytes))
+        # Path inputs feed pikepdf directly so QPDF's memory-mapping
+        # path can avoid a full in-memory copy of the source bytes.
+        # bytes inputs (uncommon — used by tests + library consumers
+        # with the bytes already in hand) take the BytesIO path.
+        pdf = pikepdf.Pdf.open(io.BytesIO(source) if isinstance(source, bytes) else source)
     except PikepdfError as exc:
         raise SanitizerSourceParseError(f"pikepdf could not parse source bytes: {exc}") from exc
 
@@ -177,7 +180,7 @@ def sanitize_pdf(
         output_bytes=output_bytes,
         source_sha256=source_sha,
         output_sha256=output_sha,
-        source_size_bytes=len(source_bytes),
+        source_size_bytes=source_size_bytes,
         output_size_bytes=len(output_bytes),
         sanitizer_version=SANITIZER_VERSION,
         determinism_flags=flags,
@@ -187,11 +190,34 @@ def sanitize_pdf(
     )
 
 
-def _read_source(source: bytes | Path) -> bytes:
-    """Returns the raw source bytes regardless of input shape."""
+def _digest_source(source: bytes | Path) -> tuple[str, int]:
+    """Returns ``(sha256_hex, size_bytes)`` for ``source``.
+
+    Streams ``Path`` inputs through hashlib in 1 MiB chunks so a
+    multi-hundred-megabyte capture never has to be fully resident
+    in memory. ``bytes`` inputs (rare — used by library consumers
+    with the bytes already in hand) hash directly. Result mirrors
+    the previous ``_read_source`` + ``hashlib.sha256(...)`` pair
+    but without the load-everything intermediate buffer.
+
+    Args:
+        source: Raw bytes of the source PDF, or a :class:`Path`.
+
+    Returns:
+        Tuple of (lowercase hex SHA-256 digest, byte count).
+    """
     if isinstance(source, bytes):
-        return source
-    return source.read_bytes()
+        return hashlib.sha256(source).hexdigest(), len(source)
+    digest = hashlib.sha256()
+    size = 0
+    with source.open("rb") as fh:
+        while True:
+            chunk = fh.read(1 << 20)  # 1 MiB
+            if not chunk:
+                break
+            digest.update(chunk)
+            size += len(chunk)
+    return digest.hexdigest(), size
 
 
 def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
