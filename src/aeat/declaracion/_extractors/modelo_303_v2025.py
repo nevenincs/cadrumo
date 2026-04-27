@@ -1,4 +1,4 @@
-"""Modelo 303 v2025 declaración extractor (EPIC #305 cluster D phase 2).
+"""Modelo 303 v2025 / v2026 declaración extractor.
 
 Modelo 303 is the quarterly *autoliquidación IVA* covering VAT collected
 on sales and paid on purchases. The runtime schema enumerates 33
@@ -232,4 +232,14 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-__all__ = ["Modelo303V2025Extractor"]
+class Modelo303V2026Extractor(Modelo303V2025Extractor):
+    """Modelo 303 v2026 extractor using the unchanged 2025 layout."""
+
+    template_revision: ClassVar[TemplateRevision] = TemplateRevision(
+        modelo="303",
+        año=2026,
+        revision="2026.01",
+    )
+
+
+__all__ = ["Modelo303V2025Extractor", "Modelo303V2026Extractor"]
