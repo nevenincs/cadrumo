@@ -594,6 +594,10 @@ class TestAbortReasons:
         assert result.steps[-1].stage is WorkflowStage.DRY_RUN_SUBMIT
         assert result.steps[-1].summary["en"].startswith("Preflight failed:")
         assert "permanently forbidden" in result.steps[-1].summary["en"]
+        assert result.steps[-1].summary["es"].startswith("Validación previa fallida:")
+        assert "permanentemente prohibido" in result.steps[-1].summary["es"]
+        assert result.steps[-1].summary["hu"].startswith("Előellenőrzés sikertelen:")
+        assert "véglegesen tiltott" in result.steps[-1].summary["hu"]
 
     def test_unhandled_exception_from_deadline_engine(self) -> None:
         fx = _fixtures()

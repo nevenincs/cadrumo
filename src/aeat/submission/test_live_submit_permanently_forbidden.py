@@ -24,9 +24,11 @@ from . import (
     DraftLoader,
     Justificante,
     LiveSubmitForbiddenError,
+    Modelo130Submitter,
     Portal,
     PortalCatalogue,
     SubmissionEngine,
+    Submitter,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
@@ -140,6 +142,33 @@ def test_engine_methods_do_not_reference_live_submit_dispatch() -> None:
             assert fragment not in source, (
                 f"{member.__qualname__} unexpectedly references live-submit fragment {fragment!r}"
             )
+
+
+def test_concrete_submitters_do_not_reintroduce_live_submit_dispatch() -> None:
+    banned_fragments = (
+        "button#firmar-y-enviar",
+        ".submit(",
+        "POST ",
+        "POST\\n",
+    )
+    concrete_submitters = tuple(
+        submitter_cls
+        for submitter_cls in Submitter.__subclasses__()
+        if submitter_cls is Modelo130Submitter or submitter_cls.__module__.startswith("aeat.submission")
+    )
+    assert concrete_submitters
+    for submitter_cls in concrete_submitters:
+        assert "submit" not in submitter_cls.__dict__, (
+            f"{submitter_cls.__qualname__} reintroduced a live submit() surface"
+        )
+        for _, member in vars(submitter_cls).items():
+            if not inspect.isfunction(member):
+                continue
+            source = inspect.getsource(member)
+            for fragment in banned_fragments:
+                assert fragment not in source, (
+                    f"{member.__qualname__} unexpectedly references live-submit fragment {fragment!r}"
+                )
 
 
 def test_access_gate_live_write_is_permanent_refusal() -> None:

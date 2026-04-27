@@ -99,7 +99,7 @@ class Modelo130Submitter(Submitter):
         amendment_kind: str | None,
         original_csv: str | None,
     ) -> None:
-        """Shared portal walk used by both :meth:`dry_run` and :meth:`submit`."""
+        """Shared portal walk used by the dry-run transport."""
         await session.navigate(portal.presentation_url)
         await session.screenshot(attempt_dir / "01-landing.png")
         await self._apply_amendment_controls(

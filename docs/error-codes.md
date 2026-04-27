@@ -155,7 +155,7 @@ This reference is generated from the live registry after `scripts/generate_error
 | INTEGRITY_VERIFICATION | INTEGRITY | La verificacion de verificacion fallo. | Raised on catastrophic verification failures (not ordinary discrepancies). | Ellenorzes ellenorzese sikertelen. | - | - |
 | INTERNAL_CLI_UNEXPECTED_EXCEPTION | INTERNAL | El comando fallo por un error interno inesperado. | The command failed due to an unexpected internal error. | A parancs varatlan belso hiba miatt meghiusult. | - | - |
 | INTERNAL_OBSERVABILITY_RUN_CONTEXT_MISSING | INTERNAL | Error de ejecucion contexto faltante. | Raised when an observability call is made outside an active run context. | Futas kontextus hianyzik hiba. | - | - |
-| LOCKED_SUBMISSION_LIVE_SUBMIT_FORBIDDEN | LOCKED | El envio en vivo a AEAT esta permanentemente prohibido. | Live AEAT submission is permanently forbidden. | Az elo AEAT bekuldes veglegesen tiltott. | aeat submission export | - |
+| LOCKED_SUBMISSION_LIVE_SUBMIT_FORBIDDEN | LOCKED | El envío en vivo a AEAT está permanentemente prohibido. | Live AEAT submission is permanently forbidden. | Az élő AEAT beküldés véglegesen tiltott. | aeat submission export | - |
 | LOCKED_WORKSPACE_LOCKED | LOCKED | El espacio de trabajo está bloqueado por otra operación. | The workspace is locked by another operation. | A munkaterületet egy másik művelet zárolja. | aeat workflow list | - |
 | MOVED_MOVED_ALIAS | [moved] | Se utilizó un alias movido de la CLI. | A moved CLI alias was used. | Áthelyezett CLI alias használata történt. | aeat --help | - |
 | REFUSED_CLI_BOUNDARY | REFUSED | El comando rechazo la solicitud actual. | The command refused the current request. | A parancs elutasitotta az aktualis kerest. | - | - |
