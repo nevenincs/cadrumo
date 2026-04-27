@@ -83,6 +83,54 @@ def drafts_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return target
 
 
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path):
+    """Wave-7: install an EphemeralMasterKeyProvider so the CLI's
+    ciphertext-at-rest writes (drafts → ``FilingDraftRepository``) work
+    in the test sandbox without touching the operator's real keychain."""
+    from ...storage import (
+        EncryptedBlobStore,
+        EphemeralMasterKeyProvider,
+        SecretStore,
+        override_master_key_provider,
+        override_secret_store,
+    )
+
+    provider = EphemeralMasterKeyProvider()
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_master_key_provider(provider)
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
+def _read_persisted_draft(drafts_root: Path, draft_id: str) -> FilingDraft:
+    """Read the post-CLI draft via the FilingDraftRepository.
+
+    Wave-8 silent-leaker close: the CLI now writes ciphertext via the
+    repository. Tests must read through the same repository — the
+    legacy plaintext path is the operator's pre-migration fixture,
+    not the CLI's source of truth.
+    """
+    from ...filing._repository import FilingDraftRepository
+
+    repository = FilingDraftRepository(store_dir=drafts_root)
+    loaded = repository.load(draft_id)
+    assert loaded is not None, f"FilingDraftRepository has no draft for {draft_id!r}"
+    return loaded
+
+
 @pytest.fixture()
 def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target = tmp_path / "transactions"
@@ -108,7 +156,7 @@ def test_review_approve_and_show_persist_metadata(drafts_dir: Path, transactions
     assert "aeat submission preflight" in show.output
     assert "aeat submission dry-run" in show.output
 
-    stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+    stored = _read_persisted_draft(drafts_dir, draft_id)
     assert stored.status is FilingDraftStatus.APPROVED
     assert stored.approved_by == "kent"
     assert stored.approved_at is not None
@@ -140,7 +188,7 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
     assert "transaction catalogue changed" in stale.output
     assert "aeat review show <draft_id>" in stale.output
 
-    stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+    stored = _read_persisted_draft(drafts_dir, draft_id)
     assert stored.status is FilingDraftStatus.APPROVAL_STALE
 
 
@@ -157,7 +205,7 @@ def test_review_unapprove_clears_approval_record(drafts_dir: Path, transactions_
     assert unapprove.exit_code == 0, unapprove.output
     assert "aeat review approve" in unapprove.output
 
-    stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+    stored = _read_persisted_draft(drafts_dir, draft_id)
     assert stored.status is FilingDraftStatus.READY_TO_SUBMIT
     assert stored.approved_at is None
     assert stored.approved_by is None

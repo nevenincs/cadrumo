@@ -61,27 +61,55 @@ def _drafts_dir() -> Path:
 
 
 def _resolve_draft_path(draft_ref: str) -> Path:
+    """Resolve a draft id (or filename) to a Path on disk.
+
+    Tries the new ciphertext envelope filename first, then falls back
+    to the legacy plaintext pattern so operators with un-migrated
+    drafts keep working.
+    """
     candidate = Path(draft_ref)
     if candidate.exists():
         return candidate
     if candidate.suffix == ".json" or candidate.parent != Path("."):
         raise typer.BadParameter(f"draft file not found: {candidate}")
-    matches = sorted(path for path in _drafts_dir().glob(f"*_{draft_ref}.json") if path.is_file())
-    if not matches:
+    drafts_root = _drafts_dir()
+    envelope_path = drafts_root / f"{draft_ref}.envelope.json"
+    if envelope_path.exists():
+        return envelope_path
+    legacy = sorted(path for path in drafts_root.glob(f"*_{draft_ref}.json") if path.is_file())
+    if not legacy:
         raise typer.BadParameter(f"no persisted draft found for draft_id={draft_ref!r}")
-    if len(matches) > 1:
-        joined = ", ".join(str(path) for path in matches)
+    if len(legacy) > 1:
+        joined = ", ".join(str(path) for path in legacy)
         raise typer.BadParameter(f"draft_id={draft_ref!r} matched multiple draft files: {joined}")
-    return matches[0]
+    return legacy[0]
 
 
 def _load_review_draft(path: Path) -> FilingDraft:
+    """Load a draft from ``path``, supporting both ciphertext envelopes
+    and legacy plaintext files.
+
+    Refresh-on-read writes through the FilingDraftRepository (ciphertext)
+    so any draft loaded from a legacy plaintext file is upgraded to
+    ciphertext on the next status change.
+    """
+    from ...filing._repository import FilingDraftRepository
+
     if not path.exists():
         raise typer.BadParameter(f"draft file not found: {path}")
-    try:
-        draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-    except (FilingDraftError, ValidationError) as exc:
-        raise typer.BadParameter(f"invalid draft in {path}: {exc}") from exc
+    drafts_root = _drafts_dir()
+    if path.name.endswith(".envelope.json"):
+        repository = FilingDraftRepository(store_dir=drafts_root)
+        draft_id = path.name[: -len(".envelope.json")]
+        loaded = repository.load(draft_id)
+        if loaded is None:
+            raise typer.BadParameter(f"draft envelope not found: {path}")
+        draft = loaded
+    else:
+        try:
+            draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
+        except (FilingDraftError, ValidationError) as exc:
+            raise typer.BadParameter(f"invalid draft in {path}: {exc}") from exc
     refreshed = refresh_review_status(
         draft,
         schema_provider=build_runtime_schema_provider(),
@@ -92,7 +120,18 @@ def _load_review_draft(path: Path) -> FilingDraft:
 
 
 def _save_draft(path: Path, draft: FilingDraft) -> None:
-    path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
+    """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest).
+
+    Wave-8 silent-leaker close: the review CLI no longer writes plaintext
+    drafts directly. The repository writes ciphertext under the
+    canonical envelope filename; the legacy plaintext ``path`` is left
+    in place for operator visibility (read-side fallback continues to
+    work via :func:`_load_review_draft`).
+    """
+    from ...filing._repository import FilingDraftRepository
+
+    repository = FilingDraftRepository(store_dir=_drafts_dir())
+    repository.save(draft)
 
 
 def _resolve_approver(approved_by: str | None) -> str:

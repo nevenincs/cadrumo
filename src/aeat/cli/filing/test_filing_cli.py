@@ -15,7 +15,7 @@ from typer.testing import CliRunner
 
 from ...config import PROJECT_ROOT
 from ...deadlines import AutonomoProfile, IVARegime
-from ...filing import FilingDraft, FilingDraftStatus, FilingOperatorProfile, approve_draft, build_draft
+from ...filing import FilingDraftStatus, FilingOperatorProfile, approve_draft, build_draft
 from ...filing.runtime import build_runtime_schema_provider
 from ...financial.transactions import TransactionCatalogue
 from .. import app
@@ -64,6 +64,39 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target.mkdir()
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(target))
     return target
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path):
+    """Wave-7: install an EphemeralMasterKeyProvider so the CLI's
+    ciphertext-at-rest writes (drafts → ``FilingDraftRepository``,
+    submissions → ``SubmissionRepository``) work in the test sandbox
+    without touching the operator's real keychain."""
+    from ...storage import (
+        EncryptedBlobStore,
+        EphemeralMasterKeyProvider,
+        SecretStore,
+        override_master_key_provider,
+        override_secret_store,
+    )
+
+    provider = EphemeralMasterKeyProvider()
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_master_key_provider(provider)
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
 
 
 @pytest.fixture
@@ -151,7 +184,7 @@ class TestFilingCLI:
             ],
         )
         assert result.exit_code == 0, result.output
-        produced = sorted(drafts_dir.glob("130_2026Q1_*.json"))
+        produced = sorted(drafts_dir.glob("*.envelope.json"))
         assert len(produced) == 1
 
     def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
@@ -174,7 +207,7 @@ class TestFilingCLI:
         assert " -> " in result.output
         assert "aeat review show" in result.output
         assert "aeat review approve" in result.output
-        produced = sorted(drafts_dir.glob("130_2026Q1_*.json"))
+        produced = sorted(drafts_dir.glob("*.envelope.json"))
         assert len(produced) == 1
 
     def test_show_and_validate_round_trip(self, tmp_path: Path, drafts_dir: Path, transactions_dir: Path) -> None:
@@ -193,7 +226,7 @@ class TestFilingCLI:
             ],
         )
         assert build_result.exit_code == 0
-        produced = next(drafts_dir.glob("130_2026Q1_*.json"))
+        produced = next(drafts_dir.glob("*.envelope.json"))
 
         show_result = runner.invoke(app, ["filing", "show", str(produced)])
         assert show_result.exit_code == 0
@@ -225,15 +258,20 @@ class TestFilingCLI:
             schema_provider=build_runtime_schema_provider(),
             transaction_catalogue=TransactionCatalogue(),
         )
-        draft_path = drafts_dir / f"130_2026Q1_{approved.draft_id}.json"
-        draft_path.write_text(approved.model_dump_json(indent=2), encoding="utf-8")
+        # Wave-7 ciphertext-at-rest: drafts persist via FilingDraftRepository.
+        from ...filing._repository import FilingDraftRepository
 
-        validate_result = runner.invoke(app, ["filing", "validate", str(draft_path)])
+        repo = FilingDraftRepository(store_dir=drafts_dir)
+        repo.save(approved)
+        envelope_path = repo.envelope_path_for(approved.draft_id)
+
+        validate_result = runner.invoke(app, ["filing", "validate", str(envelope_path)])
         assert validate_result.exit_code == 0, validate_result.output
         assert "aeat submission preflight" in validate_result.output
         assert "aeat submission dry-run" in validate_result.output
 
-        refreshed = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+        refreshed = repo.load(approved.draft_id)
+        assert refreshed is not None
         assert refreshed.status is FilingDraftStatus.APPROVED
         assert refreshed.approved_at is not None
         assert refreshed.approved_by == "kent"
@@ -269,7 +307,7 @@ class TestFilingCLI:
             ["filing", "import", "--from-justificante", str(pdf)],
         )
         assert result.exit_code == 0, result.output
-        drafts = sorted(drafts_dir.glob("130_2026Q1_*.json"))
+        drafts = sorted(drafts_dir.glob("*.envelope.json"))
         submissions = sorted(submissions_dir.glob("*.json"))
         assert len(drafts) == 1
         assert len(submissions) == 1
@@ -288,7 +326,7 @@ class TestFilingCLI:
             ["filing", "import", "--from-justificante", str(missing)],
         )
         assert result.exit_code != 0, result.output
-        assert not list(drafts_dir.glob("*.json"))
+        assert not list(drafts_dir.glob("*.envelope.json"))
         assert not list(submissions_dir.glob("*.json"))
 
     def test_import_rejects_unsupported_modelo(
@@ -303,7 +341,7 @@ class TestFilingCLI:
         )
         assert result.exit_code != 0, result.output
         assert "100" in result.output
-        assert not list(drafts_dir.glob("*.json"))
+        assert not list(drafts_dir.glob("*.envelope.json"))
         assert not list(submissions_dir.glob("*.json"))
 
     def test_complementaria_build_and_submit_dry_run(
@@ -315,7 +353,7 @@ class TestFilingCLI:
     ) -> None:
         del transactions_dir
         submission_id = _write_original_submission(drafts_dir, submissions_dir)
-        draft_files_before = {path.name for path in drafts_dir.glob("*.json")}
+        draft_files_before = {path.name for path in drafts_dir.glob("*.envelope.json")}
         payload = {
             "original_submission_id": submission_id,
             "updated_inputs": {"01": 13000, "02": 3500, "05": 400, "06": 0},
@@ -334,9 +372,18 @@ class TestFilingCLI:
         amendment_files = sorted((submissions_dir / "amendments").glob("*.json"))
         assert len(amendment_files) == 1
         amendment_id = amendment_files[0].stem
-        amended_draft_files = [path for path in drafts_dir.glob("*.json") if path.name not in draft_files_before]
+        amended_draft_files = [
+            path for path in drafts_dir.glob("*.envelope.json") if path.name not in draft_files_before
+        ]
         assert len(amended_draft_files) == 1
-        amended_draft = FilingDraft.model_validate_json(amended_draft_files[0].read_text(encoding="utf-8"))
+        # Wave-7 ciphertext-at-rest: read the amended draft via the
+        # FilingDraftRepository (the on-disk file is a CipherEnvelope).
+        from ...filing._repository import FilingDraftRepository
+
+        amended_draft_id = amended_draft_files[0].name[: -len(".envelope.json")]
+        loaded = FilingDraftRepository(store_dir=drafts_dir).load(amended_draft_id)
+        assert loaded is not None
+        amended_draft = loaded
         approve_result = runner.invoke(app, ["review", "approve", amended_draft.draft_id, "--yes"])
         assert approve_result.exit_code == 0, approve_result.output
 
@@ -353,7 +400,7 @@ class TestFilingCLI:
     ) -> None:
         del transactions_dir
         submission_id = _write_original_submission(drafts_dir, submissions_dir)
-        draft_files_before = {path.name for path in drafts_dir.glob("*.json")}
+        draft_files_before = {path.name for path in drafts_dir.glob("*.envelope.json")}
         payload = {
             "original_submission_id": submission_id,
             "updated_inputs": {"01": 13000, "02": 3500, "05": 400, "06": 0},
@@ -367,9 +414,18 @@ class TestFilingCLI:
         )
         assert build_result.exit_code == 0, build_result.output
         amendment_id = next((submissions_dir / "amendments").glob("*.json")).stem
-        amended_draft_files = [path for path in drafts_dir.glob("*.json") if path.name not in draft_files_before]
+        amended_draft_files = [
+            path for path in drafts_dir.glob("*.envelope.json") if path.name not in draft_files_before
+        ]
         assert len(amended_draft_files) == 1
-        amended_draft = FilingDraft.model_validate_json(amended_draft_files[0].read_text(encoding="utf-8"))
+        # Wave-7 ciphertext-at-rest: read the amended draft via the
+        # FilingDraftRepository (the on-disk file is a CipherEnvelope).
+        from ...filing._repository import FilingDraftRepository
+
+        amended_draft_id = amended_draft_files[0].name[: -len(".envelope.json")]
+        loaded = FilingDraftRepository(store_dir=drafts_dir).load(amended_draft_id)
+        assert loaded is not None
+        amended_draft = loaded
         approve_result = runner.invoke(app, ["review", "approve", amended_draft.draft_id, "--yes"])
         assert approve_result.exit_code == 0, approve_result.output
 
