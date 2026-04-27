@@ -115,6 +115,19 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
     },
+    "modelo_111.2026": {
+        # Issue #318: 2026 ruleset is a structural clone of 2024 / 2025
+        # (LIRPF arts. 99-101 + RIRPF arts. 99-100 unchanged across all
+        # three years per the rule-delta manifest), so the mutable-node
+        # fingerprint matches the 2024 / 2025 rows verbatim.
+        "sub_op": 1,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 2,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 0,
+    },
     "modelo_115.2024": {
         "sub_op": 1,
         "percent_rate_literal": 0,
