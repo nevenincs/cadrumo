@@ -14,6 +14,7 @@ import pytest
 
 from .._engine import Engine
 from . import MODELO_130_2024
+from .modelo_130_2024 import compute_casilla_13_minoracion
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -221,3 +222,40 @@ class TestModelo130Ruleset2024:
             tolerance=Decimal("0.01"),
         )
         assert report.is_clean()
+
+
+# Issue #321: external-anchored threshold-edge cases for the casilla-13
+# minoración helper. RIRPF art. 110.3.c (BOE-A-2007-6820 → consolidated
+# via RD 1003/2014) sets four bracket boundaries at 9 000 / 10 000 /
+# 11 000 / 12 000 € of *prior-year* rendimiento neto with values
+# 100 / 75 / 50 / 25 / 0 €. The expected values below are taken from
+# the statute, NOT from `_CASILLA_13_BRACKETS`. A typo in the helper's
+# bracket boundary or value would therefore fail one of these cases.
+@pytest.mark.parametrize(
+    ("previous_year_rn", "expected_minoracion"),
+    [
+        # Floor — zero / negative prior year.
+        (Decimal("0.00"), Decimal("100")),
+        # Bracket-1 (≤ 9 000 €): 100 €.
+        (Decimal("8999.99"), Decimal("100")),
+        (Decimal("9000.00"), Decimal("100")),
+        # Bracket-2 (9 000,01 -10 000 €): 75 €.
+        (Decimal("9000.01"), Decimal("75")),
+        (Decimal("10000.00"), Decimal("75")),
+        # Bracket-3 (10 000,01 -11 000 €): 50 €.
+        (Decimal("10000.01"), Decimal("50")),
+        (Decimal("11000.00"), Decimal("50")),
+        # Bracket-4 (11 000,01 -12 000 €): 25 €.
+        (Decimal("11000.01"), Decimal("25")),
+        (Decimal("12000.00"), Decimal("25")),
+        # Out of range (> 12 000 €): 0 €.
+        (Decimal("12000.01"), Decimal("0")),
+        (Decimal("50000.00"), Decimal("0")),
+    ],
+)
+def test_casilla_13_minoracion_brackets_2024(
+    previous_year_rn: Decimal,
+    expected_minoracion: Decimal,
+) -> None:
+    """Threshold-edge cases for RIRPF art. 110.3.c minoración brackets."""
+    assert compute_casilla_13_minoracion(previous_year_rn) == expected_minoracion

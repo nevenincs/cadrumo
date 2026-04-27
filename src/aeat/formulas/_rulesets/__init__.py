@@ -26,6 +26,13 @@ variant — pre-2025 periods for those modelos are deferred to the
 per-modelo sub-EPIC until Kent demonstrates a need. Resolving a
 pre-coverage period raises :class:`MissingRulesetError` from
 ``get_registry().resolve(...)``.
+
+**Issue #321 (per-modelo Tier-L bar for Modelo 130).** Modelo 130
+additionally ships a 2026 ruleset; the 2024 → 2025 → 2026 trail is
+documented in ``.vault/reference/2026-130-rule-delta.md``. RIRPF
+art. 110 is unchanged across the three years, so the 2026 ruleset is
+a structural clone of the 2024 / 2025 ruleset with its own
+``effective_from`` / ``effective_to`` window.
 """
 
 from __future__ import annotations
@@ -40,6 +47,7 @@ from .modelo_123_2024 import RULESET as MODELO_123_2024
 from .modelo_123_2025 import RULESET as MODELO_123_2025
 from .modelo_130_2024 import RULESET as MODELO_130_2024
 from .modelo_130_2025 import RULESET as MODELO_130_2025
+from .modelo_130_2026 import RULESET as MODELO_130_2026
 from .modelo_131_2024 import RULESET as MODELO_131_2024
 from .modelo_131_2025 import RULESET as MODELO_131_2025
 from .modelo_180_2024 import RULESET as MODELO_180_2024
@@ -63,6 +71,7 @@ ALL_RULESETS: tuple[Ruleset, ...] = (
     MODELO_123_2025,
     MODELO_130_2024,
     MODELO_130_2025,
+    MODELO_130_2026,
     MODELO_131_2024,
     MODELO_131_2025,
     MODELO_180_2024,
@@ -85,6 +94,7 @@ __all__ = [
     "MODELO_123_2025",
     "MODELO_130_2024",
     "MODELO_130_2025",
+    "MODELO_130_2026",
     "MODELO_131_2024",
     "MODELO_131_2025",
     "MODELO_180_2024",
