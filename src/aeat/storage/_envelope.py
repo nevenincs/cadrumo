@@ -36,9 +36,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..logging import get_logger
 from ._classification import SensitivityClass
-from ._crypto import EncryptedBlob
+from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+from ._master_key import MasterKeyProvider
 from .errors import (
     ClassificationError,
+    DecryptionError,
     EnvelopeVersionError,
 )
 
@@ -273,10 +275,215 @@ def _apply_migrators[PayloadT: BaseModel](
     return current
 
 
+_HKDF_CONTEXT_ENVELOPE_PAYLOAD = b"aeat.envelope.payload.v1"
+_CIPHER_ENVELOPE_AAD_PREFIX = b"aeat.envelope.cipher.v1::"
+
+
+class CipherEnvelope(BaseModel):
+    """On-disk wire form for ciphertext-at-rest envelopes.
+
+    A :class:`CipherEnvelope` is structurally distinct from
+    :class:`Envelope` — it carries no typed payload field, only the
+    encryption metadata and the same classification gate. The
+    plaintext :class:`Envelope` (with payload) is JSON-serialised,
+    encrypted with AES-256-GCM, and the ciphertext lives inside
+    :attr:`encryption.ciphertext_b64`.
+
+    Attributes:
+        cipher_schema_version: Wire-format version of the cipher
+            envelope itself (independent of the inner plaintext
+            envelope's :attr:`Envelope.schema_version`).
+        written_at: Timezone-aware datetime captured at write time.
+        classification: The :class:`SensitivityClass` of the inner
+            payload. Replicated at the cipher layer so a load can
+            reject foreign-class ciphertext before the master key is
+            consulted (defense in depth).
+        encryption: Required encryption metadata.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    cipher_schema_version: int = Field(default=1, ge=1)
+    written_at: datetime
+    classification: SensitivityClass
+    encryption: EncryptionMetadata
+
+    @field_validator("written_at")
+    @classmethod
+    def _require_aware(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("written_at must be timezone-aware")
+        return value
+
+
+def _build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:
+    """Build the AEAD associated-data binding for a cipher envelope.
+
+    The AAD authenticates both the classification and the consumer's
+    HKDF context, so an attacker cannot relabel ciphertext as a
+    different sensitivity class or graft a payload from one consumer
+    onto another.
+    """
+    return _CIPHER_ENVELOPE_AAD_PREFIX + classification.value.encode("ascii") + b"::" + hkdf_context
+
+
+def _derive_envelope_key(
+    *,
+    master_key: bytes,
+    hkdf_context: bytes,
+) -> bytes:
+    """Derive a per-consumer 32-byte key from the master key via HKDF-SHA256."""
+    return derive_key(
+        key_material=master_key,
+        salt=_HKDF_CONTEXT_ENVELOPE_PAYLOAD,
+        context=hkdf_context,
+    )
+
+
+def save_encrypted_envelope(
+    envelope: Envelope[Any],
+    path: Path,
+    *,
+    master_key_provider: MasterKeyProvider,
+    hkdf_context: bytes,
+) -> None:
+    """Atomically persist ``envelope`` as an AES-256-GCM ciphertext on disk.
+
+    The plaintext :class:`Envelope` is JSON-serialised, encrypted with
+    AES-256-GCM under a per-consumer key derived from the master key
+    via HKDF-SHA256, and written to ``path`` as a :class:`CipherEnvelope`
+    wire form. The classification and HKDF context are bound to the
+    ciphertext via AAD so an attacker cannot relabel or cross-consumer-
+    graft.
+
+    The same master-key provider that the test substrate already
+    overrides via :func:`override_master_key_provider` is honoured here;
+    callers can therefore exercise this code path against ephemeral
+    keys in tests.
+
+    Args:
+        envelope: The plaintext envelope to encrypt and persist.
+        path: Destination file. Parent directory is created if absent.
+        master_key_provider: Source of the master key.
+        hkdf_context: Per-consumer context bytes (e.g.
+            ``b"aeat.financial.transactions.v1"``). Different
+            consumers MUST use distinct contexts so cross-consumer
+            ciphertext substitution fails.
+    """
+    target = path.resolve()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    plaintext = envelope.model_dump_json().encode("utf-8")
+    aad = _build_aad(envelope.classification, hkdf_context)
+    derived_key = _derive_envelope_key(
+        master_key=master_key_provider.get_master_key(),
+        hkdf_context=hkdf_context,
+    )
+    blob = encrypt_record(plaintext, key=derived_key, associated_data=aad)
+    cipher_envelope = CipherEnvelope(
+        written_at=envelope.written_at,
+        classification=envelope.classification,
+        encryption=EncryptionMetadata.from_blob(blob, associated_data=aad),
+    )
+    serialised = cipher_envelope.model_dump_json()
+    tmp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
+            handle.write(serialised)
+        os.replace(tmp_path, target)
+    except OSError:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+        raise
+
+
+def load_encrypted_envelope[PayloadT: BaseModel](
+    path: Path,
+    envelope_type: type[Envelope[PayloadT]],
+    *,
+    expected_class: SensitivityClass,
+    master_key_provider: MasterKeyProvider,
+    hkdf_context: bytes,
+    max_supported_version: int,
+    migrators: tuple[EnvelopeMigrator[PayloadT], ...] = (),
+) -> Envelope[PayloadT]:
+    """Load and decrypt an at-rest-ciphertext envelope.
+
+    The on-disk shape MUST be a :class:`CipherEnvelope`. The
+    classification gate is enforced *before* the master key is
+    consulted — a foreign-class ciphertext is rejected without any
+    crypto attempt (defense in depth). After decryption, the inner
+    plaintext is parsed back into the typed :class:`Envelope`,
+    classification-checked again, and version-migrated.
+
+    Args:
+        path: Source file (must exist).
+        envelope_type: The parameterised envelope class.
+        expected_class: The sensitivity class the consumer expects.
+        master_key_provider: Source of the master key.
+        hkdf_context: Per-consumer context bytes; MUST match the
+            value supplied at save time.
+        max_supported_version: Highest inner-envelope schema version
+            the consumer supports.
+        migrators: Optional ordered tuple of forward migrators.
+
+    Raises:
+        ClassificationError: If the cipher envelope's class differs
+            from ``expected_class``, or if the inner plaintext envelope's
+            class drifts from the cipher layer (which would indicate
+            tampering since the AAD binds them).
+        DecryptionError: If the AEAD tag fails to verify.
+        EnvelopeVersionError: If the inner plaintext envelope's
+            schema version exceeds ``max_supported_version`` or no
+            migrator chain can advance it.
+    """
+    raw = path.read_text(encoding="utf-8")
+    cipher_envelope = CipherEnvelope.model_validate_json(raw)
+    if cipher_envelope.classification != expected_class:
+        raise ClassificationError(
+            f"cipher envelope at {path} has classification "
+            f"{cipher_envelope.classification}; consumer expected {expected_class}",
+        )
+    blob = cipher_envelope.encryption.to_blob()
+    aad = _build_aad(cipher_envelope.classification, hkdf_context)
+    if cipher_envelope.encryption.associated_data() != aad:
+        raise DecryptionError(
+            f"cipher envelope at {path}: AAD mismatch (classification or HKDF-context drift)",
+        )
+    derived_key = _derive_envelope_key(
+        master_key=master_key_provider.get_master_key(),
+        hkdf_context=hkdf_context,
+    )
+    plaintext = decrypt_record(blob, key=derived_key, associated_data=aad)
+    inner = envelope_type.model_validate_json(plaintext.decode("utf-8"))
+    if inner.classification != expected_class:
+        raise ClassificationError(
+            f"inner envelope at {path} drifted to {inner.classification}; consumer expected {expected_class}",
+        )
+    if inner.schema_version > max_supported_version:
+        raise EnvelopeVersionError(
+            f"inner envelope at {path} is at version {inner.schema_version}; "
+            f"consumer supports up to {max_supported_version}",
+        )
+    if inner.schema_version < max_supported_version:
+        inner = _apply_migrators(inner, max_supported_version, migrators)
+    return inner
+
+
 __all__ = [
+    "CipherEnvelope",
     "EncryptionMetadata",
     "Envelope",
     "EnvelopeMigrator",
+    "load_encrypted_envelope",
     "load_envelope",
+    "save_encrypted_envelope",
     "save_envelope",
 ]

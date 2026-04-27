@@ -57,10 +57,13 @@ from ._encrypted_columns import (
 )
 from ._envelope import (
     AeadAlgorithm,
+    CipherEnvelope,
     EncryptionMetadata,
     Envelope,
     EnvelopeMigrator,
+    load_encrypted_envelope,
     load_envelope,
+    save_encrypted_envelope,
     save_envelope,
 )
 from ._lock import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
@@ -125,6 +128,7 @@ __all__ = [
     "BlobManifest",
     "BlobNotFoundError",
     "BlobReference",
+    "CipherEnvelope",
     "ClassificationError",
     "ClassificationPolicy",
     "CorpusArtifactRecord",
@@ -188,6 +192,7 @@ __all__ = [
     "get_master_key_provider",
     "get_secret_store",
     "get_sessionmaker",
+    "load_encrypted_envelope",
     "load_envelope",
     "materialise_secret",
     "override_master_key_provider",
@@ -197,6 +202,7 @@ __all__ = [
     "round_trip_migrations",
     "safe_record_path",
     "safe_subpath",
+    "save_encrypted_envelope",
     "save_envelope",
     "session_scope",
     "upgrade_to_head",
