@@ -156,3 +156,55 @@ def test_partial_extraction_surfaces_warnings(tmp_path: Path) -> None:
     assert filing.extraction_status is not ExtractionStatus.COMPLETE
     missing_ids = {w.casilla_id for w in filing.warnings}
     assert missing_ids >= {"03", "04", "05", "06", "07"}
+
+
+def test_full_19_casilla_liquidacion_round_trip(tmp_path: Path) -> None:
+    """Issue #321: full 19-casilla liquidación block round-trips end-to-end.
+
+    Synthetic generator renders all 19 boxes with non-zero values in
+    every casilla; the extractor must recognise every label, parse
+    every Spanish-formatted amount, and surface zero warnings. The
+    resulting filing carries 19 ExtractedCasilla entries and an
+    extraction_status of COMPLETE.
+
+    The values below mirror the operand-swap rich fixture used by the
+    mutation harness (`_modelo_130_rich_fixture`); every casilla is
+    non-zero and asymmetric, so a regex collision (e.g. cas. 01 vs
+    cas. 11) would surface as a value mismatch instead of a missing
+    warning.
+    """
+    full_19 = {
+        "01": "48000.00",
+        "02": "12500.00",
+        "03": "35500.00",
+        "04": "7100.00",
+        "05": "1000.00",
+        "06": "500.00",
+        "07": "5600.00",
+        "08": "5000.00",
+        "09": "100.00",
+        "10": "50.00",
+        "11": "50.00",
+        "12": "5650.00",
+        "13": "150.00",
+        "14": "5500.00",
+        "15": "200.00",
+        "16": "300.00",
+        "17": "5000.00",
+        "18": "400.00",
+        "19": "4600.00",
+    }
+    pdf_path = _generate_pdf(tmp_path, **full_19)
+    filing = parse_declaracion(pdf_path)
+
+    assert filing.extraction_status is ExtractionStatus.COMPLETE
+    assert len(filing.warnings) == 0, [w.casilla_id for w in filing.warnings]
+
+    by_id = _values_by_id(filing)
+    assert set(by_id.keys()) == set(full_19.keys()), (
+        f"missing: {set(full_19.keys()) - set(by_id.keys())}; extra: {set(by_id.keys()) - set(full_19.keys())}"
+    )
+    for casilla_id, expected_raw in full_19.items():
+        assert by_id[casilla_id].printed_value == Decimal(expected_raw), (
+            f"cas. {casilla_id}: expected {expected_raw}, got {by_id[casilla_id].printed_value}"
+        )

@@ -2,8 +2,18 @@
 
 Parses the AEAT-produced *copia de la declaración* for Modelo 130 tax
 year 2025. Targets the label-anchored regex primitive (see
-:mod:`aeat.declaracion._extract`) for all 7 casillas the current
-runtime schema knows about (01, 02, 03, 04, 05, 06, 07).
+:mod:`aeat.declaracion._extract`) for the full 19-casilla liquidación
+block.
+
+Issue #321 (Tier-L per-modelo calc-verify-roundtrip): the regex map
+covers all 19 casillas (01..19). The MVP-7 set (01..07) remains in
+``_REQUIRED_FOR_COMPLETE`` — that is the *must-extract* invariant the
+verification status uses to surface ``COMPLETE`` vs ``PARTIAL``.
+Casillas 08..19 are *parseable* (the regex map matches them when the
+PDF prints non-blank values) but not *required*. This split avoids
+false-negative ``casilla-not-found`` warnings on real Modelo 130
+declaraciones where many of the 12 supplementary casillas are
+optional or zero-by-default for a given filing.
 
 The regex map below is curated to match both the AEAT's official
 layout (Spanish labels printed in the form's left column) and the
@@ -37,7 +47,32 @@ _SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
 # Every casilla the Modelo 130 2025 schema enumerates. Order matters —
 # the extractor attaches `source_page=1` to all hits and the validator
 # presents them in this order.
-_MODELO_130_CASILLAS: tuple[str, ...] = ("01", "02", "03", "04", "05", "06", "07")
+#
+# Issue #321: the full 19-casilla liquidación block. The required-
+# for-COMPLETE subset (``_REQUIRED_FOR_COMPLETE`` below) stays at the
+# MVP-7 set so the existing ``Tier-L`` happy-path tests preserve
+# their semantics; casillas 08..19 are *parseable* but not *required*.
+_MODELO_130_CASILLAS: tuple[str, ...] = (
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+)
 
 _LABEL_REGEX_MAP: dict[str, re.Pattern[str]] = {
     casilla_id: re.compile(
@@ -47,7 +82,13 @@ _LABEL_REGEX_MAP: dict[str, re.Pattern[str]] = {
     for casilla_id in _MODELO_130_CASILLAS
 }
 
-_REQUIRED_FOR_COMPLETE: frozenset[str] = frozenset(_MODELO_130_CASILLAS)
+# Issue #321 — keep `_REQUIRED_FOR_COMPLETE` at the MVP-7 set. Casillas
+# 08..19 are intentionally optional: many real Modelo 130 filings carry
+# only the Apartado I block (estimación directa, no agraria activity,
+# no minoración, no vivienda-habitual deduction). Treating 08..19 as
+# required would surface false-negative ``casilla-not-found`` warnings
+# on the most common filing shape.
+_REQUIRED_FOR_COMPLETE: frozenset[str] = frozenset(("01", "02", "03", "04", "05", "06", "07"))
 
 # Header-detection heuristics — tax id, ejercicio, período.
 _TAX_ID_RE = re.compile(r"NIF\s*[:\-]?\s*([0-9A-Z]{8,12})", re.IGNORECASE)

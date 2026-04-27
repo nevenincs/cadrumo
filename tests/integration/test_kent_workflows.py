@@ -60,7 +60,14 @@ def _synth_modelo_130_pdf(
     period_printed: str = "1T",
     casilla_values: dict[str, str] | None = None,
 ) -> Path:
-    """Render a synthetic Modelo 130 declaración + return the on-disk path."""
+    """Render a synthetic Modelo 130 declaración + return the on-disk path.
+
+    Issue #321: the M130 generator now renders the full 19-casilla
+    liquidación block (casillas 08-19 newly added). Defaults below
+    cover all 19 casillas with zeros for the new ones so a caller
+    overriding only Apartado I (01-07) still produces a synthetic PDF
+    where every casilla prints an amount the extractor can find.
+    """
     defaults = {
         "01": "12500.00",
         "02": "3500.00",
@@ -69,6 +76,21 @@ def _synth_modelo_130_pdf(
         "05": "400.00",
         "06": "0.00",
         "07": "1400.00",
+        # Issue #321: Apartado II + minoración + diferencia.
+        # Default to all-zeros for non-agraria autónomos with no
+        # minoración, no carryover, and no vivienda deduction.
+        "08": "0.00",
+        "09": "0.00",
+        "10": "0.00",
+        "11": "0.00",
+        "12": "1400.00",  # max(0, 07 + 11) = max(0, 1400 + 0)
+        "13": "0.00",
+        "14": "1400.00",  # 12 - 13
+        "15": "0.00",
+        "16": "0.00",
+        "17": "1400.00",  # 14 - 15 - 16
+        "18": "0.00",
+        "19": "1400.00",  # 17 - 18
     }
     merged = {**defaults, **(casilla_values or {})}
     params = Modelo130GenParams(
