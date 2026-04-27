@@ -11,6 +11,7 @@ related:
   - '[[2026-04-28-secure-persistence-foundation-adr]]'
   - '[[2026-04-28-secure-persistence-foundation-exec]]'
   - '[[2026-04-28-secure-persistence-foundation-research]]'
+  - '[[2026-04-29-secure-persistence-foundation-research]]'
 ---
 
 # `secure-persistence-foundation` feature index
@@ -37,3 +38,4 @@ Auto-generated index of all documents tagged with `#secure-persistence-foundatio
 
 - `2026-04-27-secure-persistence-foundation-research` - `secure-persistence-foundation` research: `secure-persistence-foundation-research`
 - `2026-04-28-secure-persistence-foundation-research` - `secure-persistence-foundation` wave-2 research
+- `2026-04-29-secure-persistence-foundation-research` - `secure-persistence-foundation` wave-3 research
