@@ -44,9 +44,17 @@ from ._classification import (
 # with optional leading X / Y / Z for foreigners.
 _NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
 
-# Bearer / OAuth tokens commonly start with ``ey`` (JWT) or are long
-# opaque alphanumeric strings adjacent to ``Bearer``/``Authorization``.
+# Bearer / OAuth tokens commonly start with ``ey`` (JWT).
 _BEARER_PATTERN = r"(?i)\b(?:bearer\s+)?(eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,})"
+
+# Opaque (non-JWT) bearer tokens — Google's ya29 access tokens, generic
+# Authorization-header bearer values, and OAuth refresh-token shapes.
+# Matches the entire token (including the optional 'authorization:' /
+# 'bearer ' prefix) so consumers can redact a whole header line at once.
+_OPAQUE_BEARER_PATTERN = (
+    r"(?i)(?:authorization:\s*)?bearer\s+[A-Za-z0-9._~+/=\-]{20,}"
+    r"|ya29\.[A-Za-z0-9_\-]{40,}"
+)
 
 # Generic URL pattern. Drops everything except the host component.
 _URL_PATTERN = r"https?://[^\s\"'<>]+"
@@ -96,6 +104,17 @@ _DEFAULT_RULES: Mapping[str, RedactionRule] = MappingProxyType(
         "token-fingerprint": RedactionRule(
             name="token-fingerprint",
             pattern=_BEARER_PATTERN,
+            strategy=RedactionStrategy.FINGERPRINT,
+            applies_to=(
+                SensitivityClass.SECRET,
+                SensitivityClass.SESSION,
+                SensitivityClass.AUDIT,
+                SensitivityClass.DIAGNOSTIC,
+            ),
+        ),
+        "bearer-token-fingerprint": RedactionRule(
+            name="bearer-token-fingerprint",
+            pattern=_OPAQUE_BEARER_PATTERN,
             strategy=RedactionStrategy.FINGERPRINT,
             applies_to=(
                 SensitivityClass.SECRET,

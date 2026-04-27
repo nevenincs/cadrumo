@@ -117,6 +117,30 @@ class TestTokenRedaction:
         assert "token:sha256:" in out
 
 
+class TestOpaqueBearerRedaction:
+    """The bearer-token-fingerprint rule covers non-JWT bearer shapes."""
+
+    def test_authorization_header_redacted(self) -> None:
+        token = "ABCDEFGHIJ1234567890_abcdefghij"
+        rules = (default_rules()["bearer-token-fingerprint"],)
+        out = redact(f"Authorization: Bearer {token}", rules=rules)
+        assert token not in out
+        assert "token:sha256:" in out
+
+    def test_google_ya29_token_redacted(self) -> None:
+        ya29 = "ya29." + "x" * 80
+        rules = (default_rules()["bearer-token-fingerprint"],)
+        out = redact(f"access_token={ya29}", rules=rules)
+        assert ya29 not in out
+        assert "token:sha256:" in out
+
+    def test_short_value_passes_through(self) -> None:
+        """A 'bearer foo' fragment with too-short payload is NOT redacted."""
+        rules = (default_rules()["bearer-token-fingerprint"],)
+        out = redact("Bearer abc", rules=rules)
+        assert "Bearer abc" in out
+
+
 class TestRuleChaining:
     def test_rules_apply_in_declared_order(self) -> None:
         rules = default_rules_for_class(SensitivityClass.AUDIT)

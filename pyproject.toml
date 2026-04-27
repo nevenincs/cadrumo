@@ -160,6 +160,10 @@ ignore = [
 # hardcoded passwords when they are in fact attribute identifiers.
 "src/aeat/storage/_test_encrypted_columns.py" = ["S101", "S105", "S106"]
 "src/aeat/storage/_test_master_key.py" = ["S101", "S105", "S106"]
+# Redaction tests construct synthetic bearer-shaped strings to verify
+# the rule patterns; ruff's S105 heuristic flags the synthetic literals.
+"src/aeat/storage/_test_redaction.py" = ["S101", "S105", "S106"]
+"src/aeat/storage/_test_secret_store.py" = ["S101", "S105", "S106"]
 # Typer requires `typer.Argument(...)` / `typer.Option(...)` literally inside
 # parameter defaults; B008 flags this idiom but it is the documented usage.
 "src/aeat/cli/**/*.py" = ["B008"]
