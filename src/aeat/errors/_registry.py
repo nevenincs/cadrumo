@@ -1941,6 +1941,32 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.storage.errors.KeyringUnavailableError",
+        ErrorCode(
+            code="AUTH_STORAGE_KEYRING_UNAVAILABLE",
+            category=ErrorCategory.AUTH,
+            default_message_es="El llavero del sistema operativo no esta disponible.",
+            default_message_en="The OS keychain backend is unusable; no master key could be retrieved.",
+            default_message_hu="Az operacios rendszer kulcskezeloje nem elerheto.",
+            default_suggestion="aeat config doctor",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.MasterKeyUnavailableError",
+        ErrorCode(
+            code="AUTH_STORAGE_MASTER_KEY_UNAVAILABLE",
+            category=ErrorCategory.AUTH,
+            default_message_es="No se puede acceder a la clave maestra de almacenamiento.",
+            default_message_en="No master key could be acquired from the configured backend.",
+            default_message_hu="Nem sikerult mester kulcsot beszerezni.",
+            default_suggestion="aeat config doctor",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.MigrationError",
         ErrorCode(
             code="FAIL_STORAGE_MIGRATION",
@@ -1987,6 +2013,19 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             default_message_es="Error de repositorio.",
             default_message_en="A repository operation failed due to lookup, integrity, or persistence errors.",
             default_message_hu="Tarolo hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.SecretStoreError",
+        ErrorCode(
+            code="FAIL_STORAGE_SECRET_STORE",
+            category=ErrorCategory.FAIL,
+            default_message_es="Error del almacen de secretos.",
+            default_message_en="Base class for secret-store I/O failures.",
+            default_message_hu="Titokkezelo hiba.",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

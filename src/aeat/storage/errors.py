@@ -53,3 +53,20 @@ class KeyDerivationError(EncryptionError):
 
 class NonceCollisionError(EncryptionError):
     """Raised on a defensive nonce-uniqueness invariant violation."""
+
+
+class SecretStoreError(PersistenceError):
+    """Base class for secret-store I/O failures."""
+
+
+class KeyringUnavailableError(SecretStoreError):
+    """Raised when the OS keychain backend is unusable.
+
+    Either no backend is registered (e.g. headless Linux without
+    libsecret), the backend rejected the operation, or the configured
+    backend is the no-op ``null`` keyring.
+    """
+
+
+class MasterKeyUnavailableError(SecretStoreError):
+    """Raised when no master key can be acquired from any provider."""
