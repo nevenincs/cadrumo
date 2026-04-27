@@ -8,6 +8,7 @@ related:
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
   - "[[2026-04-18-cert-provider-migration-adr]]"
   - "[[2026-04-18-auth-provider-ecosystem-research]]"
+  - "[[2026-04-27-live-cert-auth-research]]"
 ---
 
 # `live-cert-auth` adr: `issue-141 pr-148 superseded by certificateauthprovider` | (**status:** `accepted`)

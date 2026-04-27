@@ -28,7 +28,7 @@ calc-verify universe: every per-modelo issue that follows (#317 M100,
 The quality bar is therefore deliberately high.
 
 The research document
-([[2026-04-27-modelo-130-calc-verify-research]]) confirms three load-
+(`2026-04-27-modelo-130-calc-verify-research`) confirms three load-
 bearing facts:
 
 1. The 2024 → 2025 → 2026 rule delta on RIRPF art. 110 is **zero** —
@@ -48,7 +48,7 @@ bearing facts:
 The current per-issue gaps are:
 
 - **No 2026 ruleset** registered.
-- **No `2026-130-rule-delta.md`** documenting the 2024 → 2025 → 2026
+- **No `2026-04-27-modelo-130-rule-delta-reference.md`** documenting the 2024 → 2025 → 2026
   delta with BOE citations.
 - **No L1 anchor decision** for Modelo 130.
 - **Threshold-edge worked examples** for the casilla-13 minoración
@@ -225,7 +225,7 @@ keeps the test forward-compatible.
 
 ### D8. Rule-delta manifest + L1 waiver
 
-Author `.vault/reference/2026-130-rule-delta.md` with the structure:
+Author `.vault/reference/2026-04-27-modelo-130-rule-delta-reference.md` with the structure:
 
 - **Per-year delta table.** Three rows (2024, 2025, 2026) listing
   the rate / threshold / deduction values and the BOE citation that
@@ -242,7 +242,7 @@ Author `.vault/reference/2026-130-rule-delta.md` with the structure:
   declaración itself.
 
 Tag the file `#reference, #modelo-130-calc-verify`. Wiki-link it
-from the `.vault/research/...` and `.vault/adr/...` documents.
+from the `2026-04-27-modelo-130-calc-verify-research` and `2026-04-27-modelo-130-calc-verify-adr` documents.
 
 ### D9. Cent-exact rounding policy
 
@@ -342,12 +342,12 @@ Per STEP 5 of the handover prompt:
 
 ## References
 
-- [[2026-04-27-modelo-130-calc-verify-research]] — research findings.
-- [[2026-04-25-mandatory-citations-adr]] — `#339` mandatory-citation
+- `2026-04-27-modelo-130-calc-verify-research` — research findings.
+- `2026-04-25-mandatory-citations-adr` — `#339` mandatory-citation
   enforcement (consumed here).
-- [[2026-04-25-mutation-harness-extension-adr]] — `#338` mutation
+- `2026-04-25-mutation-harness-extension-adr` — `#338` mutation
   harness extension (consumed here).
-- [[2026-04-25-kent-workflows-expansion-adr]] — `#340` Tier-L CLI
+- `2026-04-25-kent-workflows-expansion-adr` — `#340` Tier-L CLI
   integration coverage (extended here).
 - EPIC `#316` — per-modelo calc-verify-roundtrip umbrella.
 - Issue `#321` — this issue.

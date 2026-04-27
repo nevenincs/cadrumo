@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#docs-rewrite'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-12-docs-rewrite-adr]]'
   - '[[2026-04-12-docs-rewrite-phase1-step1-exec]]'

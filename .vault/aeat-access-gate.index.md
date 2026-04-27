@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#aeat-access-gate'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-17-aeat-access-gate-adr]]'
   - '[[2026-04-17-aeat-access-gate-code-review-exec]]'

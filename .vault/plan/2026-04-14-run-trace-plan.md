@@ -14,7 +14,7 @@ related:
 
 ## scope
 
-Implement the decisions of [[2026-04-14-run-trace-adr]] on branch
+Implement the decisions of `2026-04-14-run-trace-adr` on branch
 `feature/99-run-trace` without touching the internals of
 `src/aeat/submission/` (#117) or `src/aeat/financial/transactions/` (#74).
 

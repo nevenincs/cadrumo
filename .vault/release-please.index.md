@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#release-please'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-12-release-please-adr]]'
   - '[[2026-04-12-release-please-audit]]'
