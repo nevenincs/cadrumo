@@ -138,10 +138,30 @@ PassphraseCallback = Callable[[], str]
 
 
 def _default_passphrase_callback() -> str:
-    """Resolve the operator's passphrase from env or stdin."""
+    """Resolve the operator's passphrase from env or stdin.
+
+    When the env-var path is taken, the value is consumed (popped) from
+    ``os.environ`` after a successful read so child processes spawned
+    later in the lifecycle do NOT inherit the passphrase. The in-memory
+    cache in :class:`FileFallbackMasterKeyProvider` is sufficient for
+    the parent process; subprocesses that need the passphrase must
+    re-supply it explicitly.
+
+    Trailing CRLF is stripped (some shells append it via
+    ``$(cat .secret)``), but interior whitespace is preserved (some
+    passphrase policies require it).
+    """
     env_value = os.environ.get(PASSPHRASE_ENV_VAR)
     if env_value:
-        return env_value
+        # Strip trailing CRLF only — the shell often appends it.
+        normalized = env_value.rstrip("\r\n")
+        if not normalized:
+            raise SecretStoreError(
+                f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
+            )
+        # Pop after read so child processes do not inherit the value.
+        os.environ.pop(PASSPHRASE_ENV_VAR, None)
+        return normalized
     return getpass.getpass(prompt="AEAT secret-store passphrase: ")
 
 
@@ -149,13 +169,18 @@ class KeyringMasterKeyProvider:
     """OS-keychain-backed master-key provider.
 
     The provider lazily imports the ``keyring`` package and lazily
-    queries the active backend. Any keyring exception (missing backend,
-    locked store, refused write) is wrapped in
-    :class:`KeyringUnavailableError`.
+    queries the active backend. Before any read or write, the active
+    keyring backend is inspected; the no-op ``fail.Keyring`` and
+    ``null.Keyring`` backends raise :class:`KeyringUnavailableError`
+    so the auto fallback can route to the file backend without
+    silently dropping the master key into a sink.
+
+    The in-process cache is keyed by ``(service, username)`` so two
+    providers bound to distinct identities never share key material.
     """
 
     _lock: ClassVar[Lock] = Lock()
-    _cache: ClassVar[bytes | None] = None
+    _cache: ClassVar[dict[tuple[str, str], bytes]] = {}
 
     def __init__(
         self,
@@ -174,12 +199,47 @@ class KeyringMasterKeyProvider:
         self._service = service
         self._username = username
 
+    @staticmethod
+    def _probe_backend() -> None:
+        """Refuse no-op keyring backends up-front.
+
+        ``keyring.backends.fail.Keyring`` and ``keyring.backends.null.Keyring``
+        are placeholder backends installed when the platform has no
+        usable keychain. ``set_password`` on these silently succeeds
+        (or raises ``NoKeyringError``) but never persists the value, so
+        the master key would be lost on the next process restart.
+        """
+        try:
+            import keyring
+        except ImportError as exc:  # pragma: no cover - keyring is a hard dep
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
+        try:
+            from keyring.backends import fail as _fail_backend
+
+            backend = keyring.get_keyring()
+        except Exception as exc:  # pragma: no cover - defensive
+            raise KeyringUnavailableError(f"unable to inspect OS keychain backend: {exc}") from exc
+        if isinstance(backend, _fail_backend.Keyring):
+            raise KeyringUnavailableError(
+                f"OS keychain backend is the no-op fail.Keyring (resolved {type(backend).__name__}); "
+                "install a usable backend or set AEAT_SECRET_STORE_BACKEND=file.",
+            )
+        # Null backend is best-detected by class name to avoid an import
+        # against a module that may not exist on every platform.
+        if type(backend).__name__ == "Keyring" and type(backend).__module__.endswith(".null"):
+            raise KeyringUnavailableError(
+                "OS keychain backend is the no-op null.Keyring; "
+                "install a usable backend or set AEAT_SECRET_STORE_BACKEND=file.",
+            )
+
     def get_master_key(self) -> bytes:
         """Fetch (or mint and store) the master key via the OS keychain."""
+        cache_key = (self._service, self._username)
         with KeyringMasterKeyProvider._lock:
-            cached = KeyringMasterKeyProvider._cache
+            cached = KeyringMasterKeyProvider._cache.get(cache_key)
             if cached is not None:
                 return cached
+            self._probe_backend()
             try:
                 import keyring
                 from keyring.errors import KeyringError
@@ -202,7 +262,7 @@ class KeyringMasterKeyProvider:
                     raise KeyringUnavailableError(
                         f"OS keychain master key has wrong size: {len(key)} (expected {KEY_SIZE}).",
                     )
-                KeyringMasterKeyProvider._cache = key
+                KeyringMasterKeyProvider._cache[cache_key] = key
                 return key
             new_key = secrets.token_bytes(KEY_SIZE)
             try:
@@ -211,15 +271,25 @@ class KeyringMasterKeyProvider:
                 raise KeyringUnavailableError(f"OS keychain refused set_password: {exc}") from exc
             except Exception as exc:  # pragma: no cover - defensive
                 raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
+            # Read back to verify the backend actually persisted the value.
+            try:
+                roundtrip = keyring.get_password(self._service, self._username)
+            except KeyringError as exc:
+                raise KeyringUnavailableError(f"OS keychain refused round-trip read: {exc}") from exc
+            if roundtrip is None or _b64decode(roundtrip) != new_key:
+                raise KeyringUnavailableError(
+                    "OS keychain accepted set_password but the round-trip read disagreed; "
+                    "the backend may be a silent dropper.",
+                )
             _log.info("master key minted in OS keychain (service=%s)", self._service)
-            KeyringMasterKeyProvider._cache = new_key
+            KeyringMasterKeyProvider._cache[cache_key] = new_key
             return new_key
 
     @classmethod
     def _reset_for_tests(cls) -> None:
         """Clear the in-process cache so tests can verify fetch paths cleanly."""
         with cls._lock:
-            cls._cache = None
+            cls._cache.clear()
 
 
 class FileFallbackMasterKeyProvider:
@@ -341,11 +411,56 @@ class FileFallbackMasterKeyProvider:
         kek = self._derive_kek_with_params(passphrase, salt, params)
         master_key = secrets.token_bytes(KEY_SIZE)
         blob = encrypt_record(master_key, key=kek, associated_data=b"aeat.master-key.v1")
-        self._kdf_params_path.write_text(params.model_dump_json(), encoding="utf-8")
-        self._master_key_path.write_bytes(base64.b64encode(blob.to_wire()))
-        self._salt_path.write_bytes(salt)
+        # Restrict directory permissions on POSIX so the wrapped master
+        # key, the salt, and the KDF parameters cannot be world-read.
+        # On Windows os.chmod is a no-op; POSIX gets 0o700 on the dir
+        # and 0o600 on every file. icacls hardening is out of scope
+        # here (the broader session-state pattern handles that).
+        self._restrict_dir_permissions(self._store_dir)
+        self._write_bytes_secure(
+            self._kdf_params_path,
+            params.model_dump_json().encode("utf-8"),
+        )
+        self._write_bytes_secure(
+            self._master_key_path,
+            base64.b64encode(blob.to_wire()),
+        )
+        self._write_bytes_secure(self._salt_path, salt)
         _log.info("master key minted in encrypted file at %s", self._master_key_path)
         return master_key
+
+    @staticmethod
+    def _restrict_dir_permissions(target: Path) -> None:
+        """Chmod ``target`` to 0o700 on POSIX; no-op on Windows."""
+        if os.name == "posix":
+            try:
+                os.chmod(target, 0o700)
+            except OSError:  # pragma: no cover - best-effort
+                _log.debug("chmod 0o700 failed on %s; continuing", target)
+
+    @staticmethod
+    def _write_bytes_secure(target: Path, payload: bytes) -> None:
+        """Write ``payload`` to ``target`` with mode 0o600 on POSIX.
+
+        Uses ``os.open(O_WRONLY|O_CREAT|O_TRUNC, 0o600)`` on POSIX so
+        the file lands restricted from creation rather than relying on
+        a chmod after the fact (which has a TOCTOU window). On Windows
+        the mode argument is ignored and the file inherits the parent
+        directory's ACL; the file backend's confidentiality posture on
+        Windows depends on per-user profile permissions plus the
+        operator's passphrase, not on POSIX mode bits.
+        """
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        # Avoid inheriting handles into child processes on Windows.
+        if hasattr(os, "O_NOINHERIT"):
+            flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
+        if hasattr(os, "O_CLOEXEC"):
+            flags |= os.O_CLOEXEC
+        fd = os.open(target, flags, 0o600)
+        try:
+            os.write(fd, payload)
+        finally:
+            os.close(fd)
 
     @staticmethod
     def _derive_kek_with_params(passphrase: bytes, salt: bytes, params: _KdfParameters) -> bytes:
