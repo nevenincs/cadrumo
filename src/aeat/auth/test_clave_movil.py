@@ -1,9 +1,13 @@
-"""Unit tests for ``aeat.auth._clave_movil.ClaveMovilAuthProvider``.
+"""Live Cl@ve Movil tests for ``aeat.auth._clave_movil.ClaveMovilAuthProvider``.
 
-Zero mocks / patches / fakes (global ban) — the tests drive the
-provider against a hand-written stand-in ``BrowserSessionLike`` that
-records the navigation + form interactions. The stand-in honours the
-same Protocol the real :class:`aeat.browser.BrowserSession` presents.
+The authenticate and resume flows model a real AEAT Cl@ve phone-approval
+path and are gated by the module-level ``live_read`` marker. They run only
+when invoked with ``AEAT_LIVE_TESTS_ENABLED=1``.
+
+Zero mocks / patches / fakes (global ban) - the tests drive the provider
+against a hand-written stand-in ``BrowserSessionLike`` that records the
+navigation + form interactions. The stand-in honours the same Protocol the
+real :class:`aeat.browser.BrowserSession` presents.
 """
 
 from __future__ import annotations
@@ -15,6 +19,7 @@ from typing import Any
 
 import pytest
 
+from ..cli._live import requires_live_enabled
 from ..config import Settings
 from ._clave_movil import (
     ClaveMovilAuthProvider,
@@ -24,7 +29,13 @@ from ._clave_movil import (
 )
 from ._providers import AuthProviderKind, ClaveMovilSessionDetail
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+
+
+@pytest.fixture(autouse=True)
+def _require_live_tests_enabled() -> None:
+    """Skip these live Cl@ve tests unless the operator explicitly opts in."""
+    requires_live_enabled()
 
 
 # ── Fakes ────────────────────────────────────────────────────────────────────
