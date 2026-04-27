@@ -45,6 +45,7 @@ from . import (
     MODELO_123_2025,
     MODELO_130_2024,
     MODELO_130_2025,
+    MODELO_130_2026,
     MODELO_131_2025,
     MODELO_200_2024,
     MODELO_202_2025,
@@ -488,6 +489,46 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             "19",
             _modelo_130_rich_fixture,
             id="modelo_130.2024:casilla_19_resultado_final",
+        ),
+        # Issue #321 — Modelo 130 2026 clones every sub_op chain.
+        # The 2026 ruleset is a structural clone of 2024 / 2025
+        # (RIRPF art. 110 unchanged across all three years), so the
+        # rich fixture applies unchanged.
+        pytest.param(
+            lambda: MODELO_130_2026,
+            "03",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2026:casilla_03_rendimiento_neto",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2026,
+            "07",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2026:casilla_07_resultado_apartado_i",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2026,
+            "11",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2026:casilla_11_resultado_apartado_ii",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2026,
+            "14",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2026:casilla_14_neto_tras_minoracion",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2026,
+            "17",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2026:casilla_17_diferencia",
+        ),
+        pytest.param(
+            lambda: MODELO_130_2026,
+            "19",
+            _modelo_130_rich_fixture,
+            id="modelo_130.2026:casilla_19_resultado_final",
         ),
         # Wave 75a (issue #314) — Modelo 303 2024 clones.
         pytest.param(
