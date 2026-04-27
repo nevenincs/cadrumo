@@ -152,7 +152,9 @@ class TestRegistryKnowsNewExtractors:
         assert ("111", 2025, "2025.01") in keys
         assert ("115", 2025, "2025.01") in keys
         assert ("123", 2025, "2025.01") in keys
+        assert ("130", 2024, "2024.01") in keys  # issue #321
         assert ("130", 2025, "2025.01") in keys
+        assert ("130", 2026, "2026.01") in keys  # issue #321
         assert ("131", 2025, "2025.01") in keys
         assert ("200", 2025, "2025.01") in keys
         assert ("202", 2025, "2025.01") in keys
