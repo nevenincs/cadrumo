@@ -49,6 +49,7 @@ from .._ruleset import Ruleset
 from .modelo_100_summary_2025 import RULESET as MODELO_100_SUMMARY_2025
 from .modelo_111_2024 import RULESET as MODELO_111_2024
 from .modelo_111_2025 import RULESET as MODELO_111_2025
+from .modelo_111_2026 import RULESET as MODELO_111_2026
 from .modelo_115_2024 import RULESET as MODELO_115_2024
 from .modelo_115_2025 import RULESET as MODELO_115_2025
 from .modelo_115_2026 import RULESET as MODELO_115_2026
@@ -76,6 +77,7 @@ ALL_RULESETS: tuple[Ruleset, ...] = (
     MODELO_100_SUMMARY_2025,
     MODELO_111_2024,
     MODELO_111_2025,
+    MODELO_111_2026,
     MODELO_115_2024,
     MODELO_115_2025,
     MODELO_115_2026,
@@ -102,6 +104,7 @@ __all__ = [
     "MODELO_100_SUMMARY_2025",
     "MODELO_111_2024",
     "MODELO_111_2025",
+    "MODELO_111_2026",
     "MODELO_115_2024",
     "MODELO_115_2025",
     "MODELO_115_2026",

@@ -38,6 +38,7 @@ from .._ruleset import Ruleset
 from . import (
     MODELO_111_2024,
     MODELO_111_2025,
+    MODELO_111_2026,
     MODELO_115_2024,
     MODELO_115_2025,
     MODELO_115_2026,
@@ -246,11 +247,13 @@ def _ruleset_cases() -> tuple[tuple[Ruleset, str, dict[str, Decimal]], ...]:
     the parameter-rate path.
     """
     return (
-        # Modelo 111 — 2024 + 2025.
+        # Modelo 111 — 2024 + 2025 + 2026 (issue #318).
         (MODELO_111_2024, "09", _f111_premios_fixture()),
         (MODELO_111_2024, "12", _f111_arrendamiento_fixture()),
         (MODELO_111_2025, "09", _f111_premios_fixture()),
         (MODELO_111_2025, "12", _f111_arrendamiento_fixture()),
+        (MODELO_111_2026, "09", _f111_premios_fixture()),
+        (MODELO_111_2026, "12", _f111_arrendamiento_fixture()),
         # Modelo 115 — 2024 + 2025 + 2026 (issue #319).
         (MODELO_115_2024, "03", _f115_fixture()),
         (MODELO_115_2025, "03", _f115_fixture()),

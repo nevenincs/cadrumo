@@ -31,6 +31,7 @@ def test_registry_has_shipped_rulesets() -> None:
     assert ruleset_ids == {
         "modelo_111.2024",
         "modelo_111.2025",
+        "modelo_111.2026",
         "modelo_115.2024",
         "modelo_115.2025",
         "modelo_115.2026",
