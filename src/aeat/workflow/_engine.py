@@ -142,6 +142,25 @@ def _t(en: str) -> Translatable:
     return cast(Translatable, {"en": en})
 
 
+def _preflight_failed_summary(error: BaseException) -> Translatable:
+    """Return a trilingual preflight-failure summary when one is available."""
+    translated = getattr(error, "translated_message", None)
+    if isinstance(translated, Mapping):
+        summary_by_language = {
+            "es": "Validación previa fallida:",
+            "en": "Preflight failed:",
+            "hu": "Előellenőrzés sikertelen:",
+        }
+        rendered = {
+            language: f"{prefix} {message}"
+            for language, prefix in summary_by_language.items()
+            if isinstance(message := translated.get(language), str) and message
+        }
+        if rendered:
+            return cast(Translatable, rendered)
+    return _t(f"Preflight failed: {error}")
+
+
 def _enum_value(value: object) -> str:
     """Return ``Enum.value`` when present, otherwise ``str(value)``."""
     if value is None:
@@ -1044,7 +1063,7 @@ class WorkflowEngine:
         started = _utcnow()
         if not dry_run:
             refusal = LiveSubmitForbiddenError()
-            preflight_summary = _t(f"Preflight failed: {refusal}")
+            preflight_summary = _preflight_failed_summary(refusal)
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.DRY_RUN_SUBMIT,

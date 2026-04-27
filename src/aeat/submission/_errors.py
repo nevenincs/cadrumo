@@ -49,8 +49,8 @@ class LiveSubmitForbiddenError(SubmissionPreflightError):
         """Construct the permanent live-submit refusal error."""
         default_translatable: Translatable = {
             "es": (
-                "El envio en vivo a AEAT esta permanentemente prohibido. "
-                "Usa produce -> verify -> export y sube el fichero tu mismo "
+                "El envío en vivo a AEAT está permanentemente prohibido. "
+                "Usa produce -> verify -> export y sube el fichero tú mismo "
                 "en el portal de AEAT."
             ),
             "en": (
@@ -59,9 +59,9 @@ class LiveSubmitForbiddenError(SubmissionPreflightError):
                 "in the AEAT portal."
             ),
             "hu": (
-                "Az elo AEAT bekuldes veglegesen tiltott. "
-                "Hasznald a produce -> verify -> export folyamatot, es toltsd "
-                "fel a fajlt te magad az AEAT portalon."
+                "Az élő AEAT beküldés véglegesen tiltott. "
+                "Használd a produce -> verify -> export folyamatot, és töltsd "
+                "fel a fájlt te magad az AEAT portálon."
             ),
         }
         super().__init__(

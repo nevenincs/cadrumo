@@ -1945,9 +1945,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="LOCKED_SUBMISSION_LIVE_SUBMIT_FORBIDDEN",
             category=ErrorCategory.LOCKED,
-            default_message_es="El envio en vivo a AEAT esta permanentemente prohibido.",
+            default_message_es="El envío en vivo a AEAT está permanentemente prohibido.",
             default_message_en="Live AEAT submission is permanently forbidden.",
-            default_message_hu="Az elo AEAT bekuldes veglegesen tiltott.",
+            default_message_hu="Az élő AEAT beküldés véglegesen tiltott.",
             default_suggestion="aeat submission export",
             retryable=False,
             runbook_id=None,
