@@ -1902,6 +1902,32 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.storage.errors.BlobIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_BLOB",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="Integridad del blob comprometida.",
+            default_message_en="A blob's on-disk SHA-256 disagrees with its manifest.",
+            default_message_hu="Blob integritasa serult.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.BlobNotFoundError",
+        ErrorCode(
+            code="FAIL_STORAGE_BLOB_NOT_FOUND",
+            category=ErrorCategory.FAIL,
+            default_message_es="Blob no encontrado.",
+            default_message_en="No blob exists at the requested reference.",
+            default_message_hu="A blob nem talalhato.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.ClassificationError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CLASSIFICATION",
