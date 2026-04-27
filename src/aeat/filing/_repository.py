@@ -30,11 +30,14 @@ from ..storage import (
     Envelope,
     SensitivityClass,
     exclusive_file_lock,
-    load_envelope,
-    save_envelope,
+    load_encrypted_envelope,
+    save_encrypted_envelope,
 )
+from ..storage._encrypted_columns import _resolve_master_key_provider
 from ..storage.errors import ClassificationError, EnvelopeVersionError
 from ._schema import FilingDraft
+
+_HKDF_CONTEXT_FILING_DRAFT = b"aeat.filing.draft.v1"
 
 _log = get_logger(__name__)
 
@@ -118,16 +121,22 @@ class FilingDraftRepository:
         target = self.envelope_path_for(draft_id)
         if not target.exists():
             return None
-        envelope = load_envelope(
+        envelope = load_encrypted_envelope(
             target,
             Envelope[FilingDraft],
             expected_class=SensitivityClass.FINANCIAL,
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=_HKDF_CONTEXT_FILING_DRAFT,
             max_supported_version=_DRAFT_ENVELOPE_VERSION,
         )
         return envelope.payload
 
     def save(self, draft: FilingDraft) -> None:
-        """Persist ``draft`` atomically under its per-draft file lock."""
+        """Persist ``draft`` atomically under its per-draft file lock.
+
+        The on-disk envelope is AES-256-GCM ciphertext at FINANCIAL
+        class — no plaintext casilla value lands on disk.
+        """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target_for(draft.draft_id)):
             envelope = Envelope[FilingDraft](
@@ -136,7 +145,12 @@ class FilingDraftRepository:
                 classification=SensitivityClass.FINANCIAL,
                 payload=draft,
             )
-            save_envelope(envelope, self.envelope_path_for(draft.draft_id))
+            save_encrypted_envelope(
+                envelope,
+                self.envelope_path_for(draft.draft_id),
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_FILING_DRAFT,
+            )
 
     def delete(self, draft_id: str) -> bool:
         """Remove the envelope for ``draft_id``.
@@ -251,7 +265,12 @@ def migrate_legacy_drafts_to_repository(
                 classification=SensitivityClass.FINANCIAL,
                 payload=draft,
             )
-            save_envelope(envelope, target)
+            save_encrypted_envelope(
+                envelope,
+                target,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_FILING_DRAFT,
+            )
             imported += 1
     _log.info(
         "migrated legacy drafts from %s into %s: imported=%d skipped=%d errors=%d",

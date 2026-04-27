@@ -136,7 +136,8 @@ class TestClassificationGate:
         assert '"classification":"audit"' in text
 
     def test_foreign_class_envelope_refused(self, store_dir: Path, tmp_path: Path) -> None:
-        from ..storage import Envelope, SensitivityClass, save_envelope
+        from ..storage import Envelope, SensitivityClass, save_encrypted_envelope
+        from ..storage._encrypted_columns import _resolve_master_key_provider
 
         store_dir.mkdir(parents=True, exist_ok=True)
         record = _make_justificante(tmp_path)
@@ -147,7 +148,12 @@ class TestClassificationGate:
             payload=record,
         )
         repo = JustificanteRepository(store_dir=store_dir)
-        save_envelope(bad, repo.envelope_path_for(record.csv))
+        save_encrypted_envelope(
+            bad,
+            repo.envelope_path_for(record.csv),
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=b"aeat.justificante.metadata.v1",
+        )
         with pytest.raises(ClassificationError):
             repo.load(record.csv)
 

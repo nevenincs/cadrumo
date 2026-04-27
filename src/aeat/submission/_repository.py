@@ -33,11 +33,14 @@ from ..storage import (
     Envelope,
     SensitivityClass,
     exclusive_file_lock,
-    load_envelope,
-    save_envelope,
+    load_encrypted_envelope,
+    save_encrypted_envelope,
 )
+from ..storage._encrypted_columns import _resolve_master_key_provider
 from ..storage.errors import ClassificationError, EnvelopeVersionError
 from ._models import SubmittedFiling
+
+_HKDF_CONTEXT_SUBMISSION = b"aeat.submission.filing.v1"
 
 _log = get_logger(__name__)
 
@@ -114,16 +117,23 @@ class SubmissionRepository:
         target = self.envelope_path_for(submission_id)
         if not target.exists():
             return None
-        envelope = load_envelope(
+        envelope = load_encrypted_envelope(
             target,
             Envelope[SubmittedFiling],
             expected_class=SensitivityClass.AUDIT,
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=_HKDF_CONTEXT_SUBMISSION,
             max_supported_version=_SUBMISSION_ENVELOPE_VERSION,
         )
         return envelope.payload
 
     def save(self, filing: SubmittedFiling) -> None:
-        """Persist ``filing`` atomically under its per-submission file lock."""
+        """Persist ``filing`` atomically under its per-submission file lock.
+
+        The on-disk envelope is AES-256-GCM ciphertext at AUDIT class —
+        no plaintext NIF, justificante CSV, or attempt timestamp lands
+        on disk.
+        """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target_for(filing.submission_id)):
             envelope = Envelope[SubmittedFiling](
@@ -132,7 +142,12 @@ class SubmissionRepository:
                 classification=SensitivityClass.AUDIT,
                 payload=filing,
             )
-            save_envelope(envelope, self.envelope_path_for(filing.submission_id))
+            save_encrypted_envelope(
+                envelope,
+                self.envelope_path_for(filing.submission_id),
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_SUBMISSION,
+            )
 
     def delete(self, submission_id: str) -> bool:
         """Remove the envelope for ``submission_id``.
@@ -237,7 +252,12 @@ def migrate_legacy_submissions_to_repository(
                 classification=SensitivityClass.AUDIT,
                 payload=filing,
             )
-            save_envelope(envelope, target)
+            save_encrypted_envelope(
+                envelope,
+                target,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_SUBMISSION,
+            )
             imported += 1
     _log.info(
         "migrated legacy submissions from %s into %s: imported=%d skipped=%d errors=%d",

@@ -77,11 +77,25 @@ def override_master_key_provider(provider: MasterKeyProvider | None) -> None:
 
 def _resolve_master_key() -> bytes:
     """Resolve the master key honouring the test override when set."""
+    return _resolve_master_key_provider().get_master_key()
+
+
+def _resolve_master_key_provider() -> MasterKeyProvider:
+    """Resolve the active :class:`MasterKeyProvider`, honouring the override.
+
+    Returns the provider installed via :func:`override_master_key_provider`
+    when set; otherwise falls back to the standard
+    :func:`get_master_key_provider` resolution. Encrypted-envelope
+    consumers (per-domain repositories) call this helper rather than
+    receiving the provider through their constructor so the same
+    test-override discipline that gates column-level decrypt also gates
+    envelope-level decrypt.
+    """
     with _provider_lock:
         override = _provider_override
     if override is not None:
-        return override.get_master_key()
-    return get_master_key_provider().get_master_key()
+        return override
+    return get_master_key_provider()
 
 
 class EncryptedString(TypeDecorator[str]):

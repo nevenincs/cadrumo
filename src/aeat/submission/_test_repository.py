@@ -160,7 +160,8 @@ class TestClassificationGate:
         assert '"classification":"audit"' in envelope_text
 
     def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
-        from ..storage import Envelope, SensitivityClass, save_envelope
+        from ..storage import Envelope, SensitivityClass, save_encrypted_envelope
+        from ..storage._encrypted_columns import _resolve_master_key_provider
 
         store_dir.mkdir(parents=True, exist_ok=True)
         filing = _make_filing()
@@ -171,7 +172,12 @@ class TestClassificationGate:
             payload=filing,
         )
         repo = SubmissionRepository(store_dir=store_dir)
-        save_envelope(bad, repo.envelope_path_for(filing.submission_id))
+        save_encrypted_envelope(
+            bad,
+            repo.envelope_path_for(filing.submission_id),
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=b"aeat.submission.filing.v1",
+        )
         with pytest.raises(ClassificationError):
             repo.load(filing.submission_id)
 

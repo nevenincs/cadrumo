@@ -153,38 +153,76 @@ class TestMixedImport:
 
 
 class TestCiphertextOnDisk:
-    """Wave-3 ADR invariant — transactions encrypted at rest at FINANCIAL class."""
+    """Wave-7: transactions encrypted at rest at FINANCIAL class via the
+    substrate's ``save_encrypted_envelope`` helper.
 
-    def test_envelope_is_financial_class(self, store_dir: Path, tmp_path: Path) -> None:
+    The repository's envelope file is now a :class:`CipherEnvelope` —
+    no plaintext transaction payload survives on disk."""
+
+    def test_envelope_is_cipher_envelope_at_financial_class(
+        self,
+        store_dir: Path,
+        tmp_path: Path,
+    ) -> None:
         repo = TransactionCatalogueRepository(store_dir=store_dir)
         repo.merge_raw_transactions(
-            [_make_raw(tmp_path, transaction_id="leak-canary", amount=Decimal("999"), description="LEAK-CANARY-VALUE")],
+            [
+                _make_raw(
+                    tmp_path,
+                    transaction_id="leak-canary",
+                    amount=Decimal("999"),
+                    description="LEAK-CANARY-VALUE",
+                )
+            ],
             direction_resolver=_direction_resolver,
         )
         envelope_text = repo.envelope_path.read_text(encoding="utf-8")
-        # The envelope is JSON-on-disk plaintext today (no encryption
-        # metadata yet — the substrate's envelope contract supports
-        # ciphertext payloads but Wave-3 Phase 1 ships the envelope
-        # contract first; ciphertext-payload support layers in via a
-        # future ADR). Confirm the envelope's classification field:
+        # CipherEnvelope wire form — classification is at the cipher layer.
         assert '"classification":"financial"' in envelope_text
+        assert '"encryption":' in envelope_text
+        # No plaintext transaction leaf survives.
+        assert "LEAK-CANARY-VALUE" not in envelope_text
+        assert "leak-canary" not in envelope_text
 
     def test_classification_mismatch_raises(self, store_dir: Path) -> None:
-        """A foreign-class envelope at the canonical path is refused at load."""
-        from ...storage import Envelope, save_envelope
+        """A foreign-class cipher envelope at the canonical path is refused
+        at load before any crypto attempt."""
+        from datetime import UTC, datetime
+
+        from ...storage import (
+            CipherEnvelope,
+            Envelope,
+            SensitivityClass,
+            save_encrypted_envelope,
+        )
+        from ...storage._encrypted_columns import _resolve_master_key_provider
         from ._models import TransactionCatalogue
 
         store_dir.mkdir(parents=True, exist_ok=True)
+        # Compose an OPERATIONAL-class envelope and write it as ciphertext
+        # using the same helper but with the wrong class declared.
         bad = Envelope[TransactionCatalogue](
             schema_version=1,
             written_at=datetime.now(UTC),
-            classification=__import__("aeat.storage", fromlist=["SensitivityClass"]).SensitivityClass.OPERATIONAL,
+            classification=SensitivityClass.OPERATIONAL,
             payload=TransactionCatalogue(),
         )
-        save_envelope(bad, store_dir / "transactions.envelope.json")
+        save_encrypted_envelope(
+            bad,
+            store_dir / "transactions.envelope.json",
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=b"aeat.financial.transactions.catalogue.v1",
+        )
         repo = TransactionCatalogueRepository(store_dir=store_dir)
         with pytest.raises(ClassificationError):
             repo.load()
+        # Sanity: confirm the on-disk file is the cipher wire form.
+        assert (
+            CipherEnvelope.model_validate_json(
+                (store_dir / "transactions.envelope.json").read_text(encoding="utf-8")
+            ).classification
+            is SensitivityClass.OPERATIONAL
+        )
 
 
 class TestConcurrency:

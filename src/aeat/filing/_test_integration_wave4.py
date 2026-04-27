@@ -199,6 +199,8 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     draft_repo.save(draft)
     draft_envelope_text = draft_repo.envelope_path_for(draft.draft_id).read_text(encoding="utf-8")
     assert '"classification":"financial"' in draft_envelope_text
+    # Wave-7 leak canary: NIF must NOT appear in the on-disk ciphertext.
+    assert _NIF_CANARY not in draft_envelope_text
     assert draft_repo.load(draft.draft_id) == draft
     # Idempotent: re-saving the same draft does not duplicate.
     draft_repo.save(draft)
@@ -209,6 +211,7 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     submission_repo.save(filing)
     submission_envelope_text = submission_repo.envelope_path_for(filing.submission_id).read_text(encoding="utf-8")
     assert '"classification":"audit"' in submission_envelope_text
+    assert _NIF_CANARY not in submission_envelope_text
     assert submission_repo.load(filing.submission_id) == filing
     submission_repo.save(filing)
     assert submission_repo.list_submission_ids() == (filing.submission_id,)
@@ -218,6 +221,8 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     amendment_repo.save(amendment)
     amendment_envelope_text = amendment_repo.envelope_path_for(amendment.amendment_id).read_text(encoding="utf-8")
     assert '"classification":"audit"' in amendment_envelope_text
+    assert _NIF_CANARY not in amendment_envelope_text
+    assert "CSV-INTEGRATION-001" not in amendment_envelope_text
     assert amendment_repo.load(amendment.amendment_id) == amendment
 
     # --- 4. Persist the justificante. ---------------------------------
@@ -225,6 +230,8 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     justificante_repo.save(justificante)
     justificante_envelope_text = justificante_repo.envelope_path_for(justificante.csv).read_text(encoding="utf-8")
     assert '"classification":"audit"' in justificante_envelope_text
+    assert _NIF_CANARY not in justificante_envelope_text
+    assert justificante.csv not in justificante_envelope_text
     assert justificante_repo.load(justificante.csv) == justificante
 
     # NOTE: live-submit audit emission was originally wave-4 phase 5,

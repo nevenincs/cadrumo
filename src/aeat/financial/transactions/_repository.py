@@ -36,11 +36,14 @@ from ...storage import (
     Envelope,
     SensitivityClass,
     exclusive_file_lock,
-    load_envelope,
-    save_envelope,
+    load_encrypted_envelope,
+    save_encrypted_envelope,
 )
+from ...storage._encrypted_columns import _resolve_master_key_provider
 from ...storage.errors import ClassificationError, EnvelopeVersionError
 from ._models import Transaction, TransactionCatalogue, derive_transaction_id
+
+_HKDF_CONTEXT_TX_CATALOGUE = b"aeat.financial.transactions.catalogue.v1"
 
 if TYPE_CHECKING:
     from .._raw_transaction import RawTransaction
@@ -116,16 +119,23 @@ class TransactionCatalogueRepository:
         target = self.envelope_path
         if not target.exists():
             return TransactionCatalogue()
-        envelope = load_envelope(
+        envelope = load_encrypted_envelope(
             target,
             Envelope[TransactionCatalogue],
             expected_class=SensitivityClass.FINANCIAL,
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=_HKDF_CONTEXT_TX_CATALOGUE,
             max_supported_version=_TX_CATALOGUE_VERSION,
         )
         return envelope.payload
 
     def save(self, catalogue: TransactionCatalogue) -> None:
-        """Persist ``catalogue`` atomically under the file lock."""
+        """Persist ``catalogue`` atomically under the file lock.
+
+        The on-disk envelope is AES-256-GCM ciphertext at FINANCIAL
+        class via the substrate's ``save_encrypted_envelope`` helper —
+        no plaintext transaction row lands on disk.
+        """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target):
             envelope = Envelope[TransactionCatalogue](
@@ -134,7 +144,12 @@ class TransactionCatalogueRepository:
                 classification=SensitivityClass.FINANCIAL,
                 payload=catalogue,
             )
-            save_envelope(envelope, self.envelope_path)
+            save_encrypted_envelope(
+                envelope,
+                self.envelope_path,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_TX_CATALOGUE,
+            )
 
     def merge_raw_transactions(
         self,
@@ -192,7 +207,12 @@ class TransactionCatalogueRepository:
                 classification=SensitivityClass.FINANCIAL,
                 payload=merged,
             )
-            save_envelope(envelope, self.envelope_path)
+            save_encrypted_envelope(
+                envelope,
+                self.envelope_path,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_TX_CATALOGUE,
+            )
         _log.info(
             "merged raw transactions: imported=%d skipped=%d catalogue=%s",
             imported,
@@ -266,7 +286,12 @@ def migrate_legacy_catalogue_to_repository(
             classification=SensitivityClass.FINANCIAL,
             payload=TransactionCatalogue.model_validate({"transactions": merged}),
         )
-        save_envelope(envelope, repository.envelope_path)
+        save_encrypted_envelope(
+            envelope,
+            repository.envelope_path,
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=_HKDF_CONTEXT_TX_CATALOGUE,
+        )
     _log.info(
         "migrated legacy catalogue %s into repository: imported=%d skipped=%d",
         legacy_path,
