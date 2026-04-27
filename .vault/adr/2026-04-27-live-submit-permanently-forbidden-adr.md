@@ -1,7 +1,6 @@
 ---
 tags:
   - '#adr'
-  - '#live-submit-forbidden'
   - '#live-submit-permanently-forbidden'
 date: '2026-04-27'
 related:

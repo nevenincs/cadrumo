@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#aeat-filing-detail-fetch'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-18-aeat-filing-detail-fetch-adr]]'
   - '[[2026-04-18-aeat-filing-detail-fetch-phase1-summary-exec]]'

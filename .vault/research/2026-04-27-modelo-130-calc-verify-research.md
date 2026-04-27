@@ -292,7 +292,7 @@ prints worked examples *of art. 110* (numerical scenarios) but those
 are not the printed PDF declaración itself.
 
 I therefore document an explicit L1 waiver in the rule-delta manifest
-under `.vault/reference/2026-130-rule-delta.md` (the issue suggests
+under `.vault/reference/2026-04-27-modelo-130-rule-delta-reference.md` (the issue suggests
 either that file or a separate waiver file; for review economy I
 co-locate the waiver at the foot of the rule-delta manifest where the
 2024 → 2025 → 2026 trail of references lives).
@@ -360,7 +360,7 @@ tests/integration/
   test_kent_workflows.py       — add test_discrepancy_classified_correctly
 
 .vault/reference/
-  2026-130-rule-delta.md       — NEW (rule delta + L1 waiver)
+  2026-04-27-modelo-130-rule-delta-reference.md       — NEW (rule delta + L1 waiver)
 
 .vault/{adr,plan,exec}/
   2026-04-27-modelo-130-calc-verify-{adr,plan}.md       — NEW

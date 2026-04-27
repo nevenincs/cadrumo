@@ -44,7 +44,7 @@ its own ``effective_from`` / ``effective_to`` window.
 
 **Issue #320 (per-modelo Tier-L bar for Modelo 123).** Modelo 123
 additionally ships a 2026 ruleset; the 2024 → 2025 → 2026 trail is
-documented in ``.vault/reference/2026-123-rule-delta.md``. LIRPF
+documented in ``.vault/reference/2026-04-27-modelo-123-rule-delta-reference.md``. LIRPF
 art. 101.4 and RIRPF art. 90 keep the ordinary IRPF capital-income
 retention rate at 19 %, while the cross-tax form verifies aggregate
 rows and the complementaria offset.
@@ -67,6 +67,7 @@ from .modelo_130_2025 import RULESET as MODELO_130_2025
 from .modelo_130_2026 import RULESET as MODELO_130_2026
 from .modelo_131_2024 import RULESET as MODELO_131_2024
 from .modelo_131_2025 import RULESET as MODELO_131_2025
+from .modelo_131_2026 import RULESET as MODELO_131_2026
 from .modelo_180_2024 import RULESET as MODELO_180_2024
 from .modelo_180_2025 import RULESET as MODELO_180_2025
 from .modelo_200_2024 import RULESET as MODELO_200_2024
@@ -94,6 +95,7 @@ ALL_RULESETS: tuple[Ruleset, ...] = (
     MODELO_130_2026,
     MODELO_131_2024,
     MODELO_131_2025,
+    MODELO_131_2026,
     MODELO_180_2024,
     MODELO_180_2025,
     MODELO_200_2024,
@@ -120,6 +122,7 @@ __all__ = [
     "MODELO_130_2026",
     "MODELO_131_2024",
     "MODELO_131_2025",
+    "MODELO_131_2026",
     "MODELO_180_2024",
     "MODELO_180_2025",
     "MODELO_200_2024",

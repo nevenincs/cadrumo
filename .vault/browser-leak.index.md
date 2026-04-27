@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#browser-leak'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-16-chromium-leak-research]]'
   - '[[2026-04-17-browser-leak-adr-audit]]'

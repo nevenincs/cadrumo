@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#cert-provider'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-18-auth-provider-ecosystem-research]]'
   - '[[2026-04-18-auth-provider-pending-items-audit]]'

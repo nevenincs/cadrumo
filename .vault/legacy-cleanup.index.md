@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#legacy-cleanup'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-18-legacy-cleanup-audit]]'
 ---

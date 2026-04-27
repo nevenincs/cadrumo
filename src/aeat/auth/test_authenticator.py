@@ -379,7 +379,7 @@ def _settings_for(
     path: Path,
     monkeypatch: pytest.MonkeyPatch,
     *,
-    verify_url: str = "https://example.invalid/",
+    verify_url: str = "https://127.0.0.1:1/",
 ):
     from ..config import Settings
 
@@ -694,7 +694,7 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, monkeypatch: py
 
     ``authenticate()`` is not exercised here because
     ``verify_handshake`` reaches the network and cannot succeed
-    against ``example.invalid``; the full path is covered by the
+    against the local closed-port verify URL; the full path is covered by the
     live test suite. This unit test asserts the helpers that do
     not require network access are usable through the same
     authenticator instance.

@@ -42,6 +42,7 @@ def test_registry_has_shipped_rulesets() -> None:
         "modelo_130.2026",
         "modelo_131.2024",
         "modelo_131.2025",
+        "modelo_131.2026",
         "modelo_180.2024",
         "modelo_180.2025",
         "modelo_200.2024",

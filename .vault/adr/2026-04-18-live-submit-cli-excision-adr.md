@@ -11,6 +11,7 @@ related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-12-submission-engine-adr]]"
   - "[[2026-04-16-live-write-test-audit-research]]"
+  - "[[2026-04-27-live-submit-excision-research]]"
 ---
 
 # adr — excise the live-submit CLI surface

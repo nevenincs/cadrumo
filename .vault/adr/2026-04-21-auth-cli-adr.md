@@ -8,6 +8,10 @@ related:
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
   - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-17-aeat-access-gate-adr]]"
+  - "[[2026-04-21-clave-portal-reference]]"
+  - "[[2026-04-18-auth-protocol-research]]"
+  - "[[2026-04-18-aeat-auth-providers-research]]"
+  - "[[2026-04-27-auth-cli-research]]"
 ---
 
 # `auth-cli` adr: `issue-285 aeat auth login / list-providers / status / logout` | (**status:** `accepted`)
@@ -208,7 +212,7 @@ changed between "ADR approved" and "merge-ready":
    the same PR instead of being deferred. The registry entry for
    Cl@ve Móvil is now `implemented=True`; Cl@ve Permanente is
    confirmed **not offered by AEAT Sede today** and remains a
-   placeholder (see `.vault/reference/2026-04-21-clave-portal-reference.md`
+   placeholder (see `2026-04-21-clave-portal-reference`
    § "Executive finding"). Cl@ve PIN stays P3 per the EPIC.
 
 2. **Settings surface is larger than one field.** The "gains a new
@@ -228,6 +232,6 @@ changed between "ADR approved" and "merge-ready":
    in this PR; they are latent in other modules (status reader,
    submission engine, justificante verifier) and tracked as
    follow-up GitHub issue #311 — see
-   [[2026-04-21-clave-portal-reference]] § "Assumptions vs live-verified
+   `2026-04-21-clave-portal-reference` § "Assumptions vs live-verified
    reality" for the canonical deltas. Any future AEAT URL decision
    must validate against that reference before landing in code.
