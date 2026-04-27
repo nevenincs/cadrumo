@@ -74,3 +74,25 @@ class MasterKeyUnavailableError(SecretStoreError):
 
 class LockAcquisitionError(PersistenceError):
     """Raised when an exclusive file lock cannot be acquired within the timeout."""
+
+
+class ClassificationError(PersistenceError):
+    """Raised when a record's declared sensitivity class is incompatible with its repository.
+
+    Example: writing a CORPUS-class blob through the encrypted-blob path,
+    or loading an envelope under a different classification than the
+    one persisted on disk.
+    """
+
+
+class EnvelopeVersionError(PersistenceError):
+    """Raised when an on-disk envelope is older or newer than the consumer expects.
+
+    Older envelopes may be migrated forward via
+    :func:`migrate_envelope`; newer envelopes are not safely
+    consumable by older code and refuse to load.
+    """
+
+
+class PathContainmentError(PersistenceError):
+    """Raised when a computed path escapes its configured root directory."""
