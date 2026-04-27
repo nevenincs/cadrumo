@@ -1,4 +1,4 @@
-"""Sensitivity classification primitive for the secure persistence foundation.
+"""Sensitivity classification primitive for persisted state.
 
 Every persisted record (SQL row, file-backed envelope, blob, secret-store
 entry, audit-log entry) declares a :class:`SensitivityClass`. Each class
@@ -11,9 +11,6 @@ The default policy table is the single point of truth. Per-domain
 repositories MAY override the default for an individual record (e.g.
 when an operator tags a corpus blob as identity-bearing), but the
 default is always available via :func:`default_policy_for`.
-
-Wave 1 of the secure-persistence-foundation feature ships the primitive
-only. Per-domain consumers consume the primitive in subsequent waves.
 """
 
 from __future__ import annotations
@@ -98,8 +95,8 @@ class RetentionPolicy(BaseModel):
 
     A policy declares how long a record SHOULD live and when it SHOULD
     be archived. Repositories enforce ``max_age`` at read time when the
-    record carries a ``written_at`` field; archival is a downstream
-    Wave-N concern.
+    record carries a ``written_at`` field; archival itself is implemented
+    by per-domain repositories.
 
     Attributes:
         max_age: Maximum live-record age. ``None`` means unbounded
@@ -143,9 +140,8 @@ class RedactionStrategy(StrEnum):
 class RedactionRule(BaseModel):
     """One rule applied at write time by the audit sink and run-trace path.
 
-    The Wave-1 substrate ships the rule shape only; the matching
-    :func:`aeat.storage.redact` helper is added in the audit-sink
-    redaction-contract phase.
+    The rule shape is stable; the matching :func:`aeat.storage.redact`
+    helper consumes a tuple of rules and applies them in order.
 
     Attributes:
         name: Stable identifier for log diagnostics. Lowercase
@@ -183,10 +179,10 @@ class ClassificationPolicy(BaseModel):
         redaction_rules: Tuple of redaction-rule names (matched by
             :attr:`RedactionRule.name`) that apply when this class
             participates in audit-sink writes. Resolution to live
-            :class:`RedactionRule` instances happens in the redaction
-            phase (Phase 10 of Wave 1); the policy carries names only
-            so the table can be loaded eagerly without depending on
-            the rule registry.
+            :class:`RedactionRule` instances is performed by the
+            redaction helper; the policy carries names only so the
+            table can be loaded eagerly without depending on the rule
+            registry.
     """
 
     model_config = _STRICT_FROZEN

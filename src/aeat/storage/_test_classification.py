@@ -1,4 +1,4 @@
-"""Tests for the sensitivity classification primitive (#216 Wave 1 Phase 1)."""
+"""Tests for the sensitivity classification primitive."""
 
 from __future__ import annotations
 
