@@ -71,6 +71,12 @@ from ._master_key import (
     get_master_key_provider,
 )
 from ._path_safety import safe_record_path, safe_subpath
+from ._redaction import (
+    default_rules,
+    default_rules_for,
+    default_rules_for_class,
+    redact,
+)
 from .engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
     BlobIntegrityError,
@@ -151,6 +157,9 @@ __all__ = [
     "decrypt_record",
     "default_policy_for",
     "default_policy_table",
+    "default_rules",
+    "default_rules_for",
+    "default_rules_for_class",
     "derive_key",
     "dispose_engine",
     "downgrade_to_base",
@@ -161,6 +170,7 @@ __all__ = [
     "get_sessionmaker",
     "load_envelope",
     "override_master_key_provider",
+    "redact",
     "round_trip_migrations",
     "safe_record_path",
     "safe_subpath",

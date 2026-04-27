@@ -241,6 +241,14 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "secrets",
         description="Directory for the encrypted secret-store master-key file and ciphertext records",
     )
+    aeat_blob_store_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "blobs",
+        description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
+    )
+    aeat_audit_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "audit",
+        description="Directory for the governed audit sink (redacted, classification-aware)",
+    )
 
     # ── Casilla corpus ──────────────────────────────────────────────────────
     aeat_casillas_root: Path = Field(
@@ -792,6 +800,8 @@ class Settings(BaseSettings):
         "aeat_attachments_dir",
         "aeat_storage_backup_dir",
         "aeat_secret_store_dir",
+        "aeat_blob_store_dir",
+        "aeat_audit_dir",
         "aeat_casillas_root",
         "aeat_manuals_root",
         "aeat_normatives_root",
