@@ -24,6 +24,16 @@ write migrations.
 
 from __future__ import annotations
 
+from ._classification import (
+    AtRestTreatment,
+    ClassificationPolicy,
+    RedactionRule,
+    RedactionStrategy,
+    RetentionPolicy,
+    SensitivityClass,
+    default_policy_for,
+    default_policy_table,
+)
 from .engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import MigrationError, RepositoryError, StorageError
 from .migrations_api import downgrade_to_base, round_trip_migrations, upgrade_to_head
@@ -32,6 +42,8 @@ from .repository import CorpusArtifactRepository, ModeloRepository, PortalReposi
 from .session import get_sessionmaker, session_scope
 
 __all__ = [
+    "AtRestTreatment",
+    "ClassificationPolicy",
     "CorpusArtifactRecord",
     "CorpusArtifactRepository",
     "MigrationError",
@@ -40,10 +52,16 @@ __all__ = [
     "PortalAuthMethod",
     "PortalRecord",
     "PortalRepository",
+    "RedactionRule",
+    "RedactionStrategy",
     "Repository",
     "RepositoryError",
+    "RetentionPolicy",
+    "SensitivityClass",
     "StorageError",
     "create_engine_from_settings",
+    "default_policy_for",
+    "default_policy_table",
     "dispose_engine",
     "downgrade_to_base",
     "get_engine",
