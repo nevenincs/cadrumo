@@ -71,6 +71,12 @@ from ._master_key import (
     MasterKeyProvider,
     get_master_key_provider,
 )
+from ._materialisation import (
+    export_to_temp_path,
+    get_secret_store,
+    materialise_secret,
+    override_secret_store,
+)
 from ._path_safety import safe_record_path, safe_subpath
 from ._redaction import (
     default_rules,
@@ -176,11 +182,15 @@ __all__ = [
     "downgrade_to_base",
     "encrypt_record",
     "exclusive_file_lock",
+    "export_to_temp_path",
     "get_engine",
     "get_master_key_provider",
+    "get_secret_store",
     "get_sessionmaker",
     "load_envelope",
+    "materialise_secret",
     "override_master_key_provider",
+    "override_secret_store",
     "redact",
     "round_trip_migrations",
     "safe_record_path",
