@@ -77,6 +77,7 @@ from ._redaction import (
     default_rules_for_class,
     redact,
 )
+from ._secret_store import SecretRecord, SecretStore
 from .engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
     BlobIntegrityError,
@@ -94,6 +95,9 @@ from .errors import (
     PathContainmentError,
     PersistenceError,
     RepositoryError,
+    RetentionPolicyError,
+    SecretAlreadyExistsError,
+    SecretNotFoundError,
     SecretStoreError,
     StorageError,
 )
@@ -150,6 +154,11 @@ __all__ = [
     "Repository",
     "RepositoryError",
     "RetentionPolicy",
+    "RetentionPolicyError",
+    "SecretAlreadyExistsError",
+    "SecretNotFoundError",
+    "SecretRecord",
+    "SecretStore",
     "SecretStoreError",
     "SensitivityClass",
     "StorageError",

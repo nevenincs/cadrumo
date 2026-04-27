@@ -2097,6 +2097,45 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.storage.errors.RetentionPolicyError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_RETENTION_POLICY",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="Politica de retencion violada por el registro.",
+            default_message_en="A persisted record's retention metadata violates its classification policy.",
+            default_message_hu="A megorzesi szabalyzat sertese.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.SecretAlreadyExistsError",
+        ErrorCode(
+            code="REFUSED_STORAGE_SECRET_ALREADY_EXISTS",
+            category=ErrorCategory.REFUSED,
+            default_message_es="Ya existe un secreto con esa clave.",
+            default_message_en="A secret already exists for the given key; pass overwrite=True to replace it.",
+            default_message_hu="Mar letezik a titkos kulcs.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.SecretNotFoundError",
+        ErrorCode(
+            code="FAIL_STORAGE_SECRET_NOT_FOUND",
+            category=ErrorCategory.FAIL,
+            default_message_es="Secreto no encontrado.",
+            default_message_en="No secret exists at the requested key.",
+            default_message_hu="A titkos kulcs nem talalhato.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.SecretStoreError",
         ErrorCode(
             code="FAIL_STORAGE_SECRET_STORE",

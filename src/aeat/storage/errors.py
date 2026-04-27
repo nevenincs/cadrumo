@@ -110,3 +110,15 @@ class BlobNotFoundError(PersistenceError):
 
 class BlobIntegrityError(PersistenceError):
     """Raised when a blob's on-disk SHA-256 disagrees with its manifest."""
+
+
+class SecretNotFoundError(SecretStoreError):
+    """Raised when a secret-store ``get`` does not find a record for the requested key."""
+
+
+class SecretAlreadyExistsError(SecretStoreError):
+    """Raised when a secret-store ``put`` would overwrite an existing key without ``overwrite=True``."""
+
+
+class RetentionPolicyError(PersistenceError):
+    """Raised when a record's retention metadata violates its classification policy."""
