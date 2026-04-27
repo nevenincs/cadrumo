@@ -37,11 +37,13 @@ Architectural drivers:
 - The LLM cache is CACHE class per the substrate's default-policy
   table — public reference data that may carry identity-bearing
   caches; the policy comment notes "identity-bearing caches escalate
-  to IDENTITY". Wave 6 takes the redaction-at-write path so the
-  cache stays at CACHE class with no NIF leakage rather than
-  upgrading the whole cache to IDENTITY (which would pull
-  ciphertext-at-rest into a prerequisite, blocked by the
-  ciphertext-wiring ADR's deferral).
+  to IDENTITY". The CACHE default policy has an empty rule set; wave
+  6 therefore borrows the DIAGNOSTIC rule set (NIF / URL / token
+  fingerprinting) rather than upgrading the whole cache to IDENTITY
+  (which would pull ciphertext-at-rest into a prerequisite, blocked
+  by the ciphertext-wiring ADR's deferral). The cache stays at CACHE
+  class on the wire; the *redaction* discipline is borrowed from
+  DIAGNOSTIC.
 - The usage log is DIAGNOSTIC class — same rule set the wave-5 sink
   uses for run traces.
 - Redaction at write is *idempotent*: re-reading an already-redacted
@@ -64,11 +66,14 @@ Architectural drivers:
 
 `LLMCache.write` is wrapped so every cached entry passes through
 `redact_structured(entry.model_dump(mode="json"), rules=
-default_rules_for_class(SensitivityClass.CACHE))` before
+default_rules_for_class(SensitivityClass.DIAGNOSTIC))` before
 serialisation. The redacted dict is then re-encoded via
 `json.dumps(..., indent=2)` and written to the same content-addressed
-path. The storage import is deferred inside the write method body to
-preserve the CLI json-pipe-safety contract.
+path. The DIAGNOSTIC rule set is used (rather than CACHE) because the
+CACHE default policy has an empty rule set — see the Considerations
+section above for the rationale. The storage import is deferred
+inside the write method body to preserve the CLI json-pipe-safety
+contract.
 
 Tests confirm:
 
