@@ -26,7 +26,7 @@ Land the M111 Tier-L bar via:
 3. New 2024 + 2026 colocated test files — worked examples + no-drift
    regressions. (ADR §D3 / §D6 / §D7.)
 4. Mutation-harness extension for `modelo_111.2026`. (ADR §D5.)
-5. New rule-delta manifest at `.vault/reference/2026-111-rule-delta.md`
+5. New rule-delta manifest at `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md`
    with the L1 anchor waiver. (ADR §D9 / §D10.)
 6. Coverage table flip in `docs/coverage/modelos.md`. (ADR §D12.)
 
@@ -69,8 +69,8 @@ Land the M111 Tier-L bar via:
   1. Run `uv run pytest src/aeat/declaracion/` — baseline green.
 
 - **Phase 4 — rule-delta manifest**
-  1. Create `.vault/reference/2026-111-rule-delta.md` mirroring
-     `.vault/reference/2026-130-rule-delta.md`: statutory grounding
+  1. Create `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md` mirroring
+     `.vault/reference/2026-04-27-modelo-130-rule-delta-reference.md`: statutory grounding
      table + per-year delta table + diff narrative + citation
      completeness + mutation-harness fingerprint + L1 waiver + audit
      trail.
@@ -105,7 +105,7 @@ Land the M111 Tier-L bar via:
   1. Run mandatory code review via `vaultspec-code-review` skill.
 
 - **Phase 8 — exec summary + PR**
-  1. Author `.vault/exec/2026-04-27-modelo-111-calc-verify/2026-04-27-modelo-111-calc-verify-summary.md`
+  1. Author `.vault/exec/2026-04-27-modelo-111-calc-verify/2026-04-27-modelo-111-calc-verify-summary-exec.md`
      with per-year casilla inventory, mutation kill-rate, BOE source
      list, scope decision, sibling-coordination notes.
   1. Push branch and open PR.
@@ -143,7 +143,7 @@ This issue lands when **every** bullet below is true:
    `test_modelo_111_2025.py` + `test_modelo_111_2026.py` all pass.
 6. **Round-trip closes**: the M111 integration test class passes
    (4 cases via `#340`).
-7. **L1 waiver documented**: `.vault/reference/2026-111-rule-delta.md`
+7. **L1 waiver documented**: `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md`
    carries the explicit waiver section.
 8. **Coverage table flipped**: `docs/coverage/modelos.md` M111 row
    shows ✅ on applicable columns with provenance.

@@ -38,6 +38,7 @@ def test_list_subcommand(runner: CliRunner) -> None:
         "modelo_115.2026",
         "modelo_123.2024",
         "modelo_123.2025",
+        "modelo_123.2026",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_130.2026",
