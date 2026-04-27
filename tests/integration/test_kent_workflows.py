@@ -1003,6 +1003,48 @@ class TestKentImportsModelo115Declaracion:
         assert "Extraction status: PARTIAL" in result.output
         assert "casilla 05" in result.output or "casilla 06" in result.output
 
+    @pytest.mark.parametrize("ejercicio", ["2024", "2025", "2026"])
+    def test_per_year_happy_path_verified(
+        self,
+        ejercicio: str,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+    ) -> None:
+        """Issue #319: each of 2024 / 2025 / 2026 declaraciones returns VERIFIED.
+
+        Mirrors the M130 per-year case introduced under #321: the
+        extractor registry must resolve a 2024 or 2026 PDF to a
+        working extractor (Modelo115V2024Extractor /
+        Modelo115V2026Extractor sibling classes) and the formula
+        engine must resolve to the matching per-annum ruleset
+        (MODELO_115_2024 / MODELO_115_2026). A clean synthetic
+        PDF for each of the three Tier-L years drives the full
+        ``aeat filing import --from-declaracion`` flow to a
+        ``VERIFIED`` verdict.
+
+        Asserts on stable substrings only — forward-compatible
+        with future envelope evolution.
+        """
+        del drafts_dir, submissions_dir, english_output
+        pdf = _synth_quarterly_pdf(
+            tmp_path,
+            modelo="115",
+            labels=self._LABELS,
+            values=_M115_HAPPY,
+            filename=f"modelo_115_{ejercicio}Q1_happy.pdf",
+            año=int(ejercicio),
+            ejercicio=ejercicio,
+            template_revision=f"{ejercicio}.01",
+        )
+        result = runner.invoke(app, ["filing", "import", "--from-declaracion", str(pdf)])
+        assert result.exit_code == 0, result.output
+        assert "Extraction status: COMPLETE" in result.output
+        assert "Verification status: VERIFIED" in result.output
+        # The resolved ruleset matches the year on the PDF.
+        assert f"Modelo 115 {ejercicio}Q1" in result.output, result.output
+
     def test_discrepancy_classified_correctly(
         self,
         tmp_path: Path,
