@@ -192,9 +192,8 @@ def _load_draft(
 ) -> FilingDraft:
     """Load a draft via :class:`FilingDraftRepository`.
 
-    No legacy plaintext fallback — drafts are ciphertext-at-rest.
-    Operators upgrading from a pre-wave-7 build run
-    ``aeat security migrate-envelopes`` once before reconciling.
+    Drafts are ciphertext-at-rest only; the repository enforces the
+    classification gate and version contract.
     """
     from ...filing._repository import FilingDraftRepository
 

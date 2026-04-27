@@ -500,10 +500,8 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     transition — a crash mid-migration leaves either the plaintext OR
     the ciphertext on disk, never a torn write.
 
-    This helper exists for the one-shot ``aeat security migrate-envelopes``
-    operator command. Repository load paths are strict ciphertext-only;
-    this function is the only sanctioned path that touches plaintext
-    envelopes after wave-7.
+    Repository load paths are strict ciphertext-only; this function
+    is the only sanctioned path that touches plaintext envelopes.
     """
     if not path.exists():
         return False

@@ -61,11 +61,10 @@ class _CliDraftLoader:
     """
 
     def load(self, draft_path: Path) -> FilingDraftLike:
-        payload_text = draft_path.read_text(encoding="utf-8")
-        filing_draft = _load_persisted_filing_draft(draft_path, payload_text=payload_text)
+        filing_draft = _load_persisted_filing_draft(draft_path)
         if filing_draft is not None:
             return cast(FilingDraftLike, filing_draft)
-        raw = json.loads(payload_text)
+        raw = json.loads(draft_path.read_text(encoding="utf-8"))
         findings = tuple(
             FilingFinding(
                 severity=FilingFindingSeverity(entry["severity"]),
@@ -234,20 +233,13 @@ def resolve_draft_path(draft_ref: str) -> Path:
     raise typer.BadParameter(f"no persisted draft found for draft_ref={draft_ref!r}")
 
 
-def _load_persisted_filing_draft(
-    draft_path: Path,
-    *,
-    payload_text: str,
-) -> FilingDraft | None:
-    """Load a draft envelope and re-persist it via the repository if a
-    state refresh changed it.
+def _load_persisted_filing_draft(draft_path: Path) -> FilingDraft | None:
+    """Load a ciphertext envelope through :class:`FilingDraftRepository`.
 
-    ``payload_text`` is unused — kept in the signature for backward
-    compatibility with the calling preflight helper. The draft is
-    loaded via the FilingDraftRepository directly so the
-    classification gate fires.
+    Returns the refreshed draft (re-persisting through the repository
+    when the refresh produced a new state) or ``None`` when the path is
+    not an envelope file or the envelope cannot be deserialised.
     """
-    del payload_text  # legacy parameter; load goes via repository now
     from ...filing._repository import FilingDraftRepository
 
     if not draft_path.name.endswith(".envelope.json"):

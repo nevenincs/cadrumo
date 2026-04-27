@@ -162,17 +162,12 @@ def _amendments_dir() -> Path:
 
 
 def _persist_amendment(amendment: FilingAmendment) -> Path:
-    """Persist ``amendment`` through the governed FilingAmendmentRepository.
-
-    Wave-8 silent-leaker close: this helper used to write plaintext
-    ``<amendment_id>.json`` directly to disk. It now routes through
-    the AUDIT-class ciphertext repository.
-    """
+    """Persist ``amendment`` through the AUDIT-class FilingAmendmentRepository."""
     from ._complementaria_repository import FilingAmendmentRepository
 
     try:
-        # Reject path-traversal-shaped ids early (mirrors the legacy
-        # ``resolve_record_json_path`` validation contract).
+        # Reject path-traversal-shaped ids before composing the
+        # repository's envelope path.
         resolve_record_json_path(_amendments_dir(), amendment.amendment_id, context="amendment id")
     except ValueError as exc:
         raise FilingAmendmentError(str(exc)) from exc
