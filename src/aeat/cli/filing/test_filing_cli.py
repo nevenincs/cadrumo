@@ -225,7 +225,6 @@ class TestFilingCLI:
             schema_provider=build_runtime_schema_provider(),
             transaction_catalogue=TransactionCatalogue(),
         )
-        # Wave-7 ciphertext-at-rest: drafts persist via FilingDraftRepository.
         from ...filing._repository import FilingDraftRepository
 
         repo = FilingDraftRepository(store_dir=drafts_dir)
@@ -345,8 +344,6 @@ class TestFilingCLI:
             path for path in drafts_dir.glob("*.envelope.json") if path.name not in draft_files_before
         ]
         assert len(amended_draft_files) == 1
-        # Wave-7 ciphertext-at-rest: read the amended draft via the
-        # FilingDraftRepository (the on-disk file is a CipherEnvelope).
         from ...filing._repository import FilingDraftRepository
 
         amended_draft_id = amended_draft_files[0].name[: -len(".envelope.json")]
@@ -389,8 +386,6 @@ class TestFilingCLI:
             path for path in drafts_dir.glob("*.envelope.json") if path.name not in draft_files_before
         ]
         assert len(amended_draft_files) == 1
-        # Wave-7 ciphertext-at-rest: read the amended draft via the
-        # FilingDraftRepository (the on-disk file is a CipherEnvelope).
         from ...filing._repository import FilingDraftRepository
 
         amended_draft_id = amended_draft_files[0].name[: -len(".envelope.json")]

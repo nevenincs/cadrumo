@@ -1,7 +1,9 @@
 """Shared review-CLI test fixtures.
 
-Wave-9: install an :class:`EphemeralMasterKeyProvider` for every test
-that hits the CLI's ciphertext-at-rest persistence path.
+Installs an :class:`EphemeralMasterKeyProvider` for every test that
+hits the CLI's ciphertext-at-rest persistence path so the
+:class:`FilingDraftRepository` round-trips against a real on-disk
+secret store rather than the production master key.
 """
 
 from __future__ import annotations

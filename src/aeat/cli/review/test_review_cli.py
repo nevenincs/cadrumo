@@ -90,10 +90,8 @@ def drafts_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def _read_persisted_draft(drafts_root: Path, draft_id: str) -> FilingDraft:
     """Read the post-CLI draft via the FilingDraftRepository.
 
-    Wave-8 silent-leaker close: the CLI now writes ciphertext via the
-    repository. Tests must read through the same repository — the
-    legacy plaintext path is the operator's pre-migration fixture,
-    not the CLI's source of truth.
+    The CLI persists ciphertext envelopes through the repository; tests
+    read back through the same repository so the encryption gate fires.
     """
     from ...filing._repository import FilingDraftRepository
 

@@ -77,11 +77,6 @@ def _drafts_dir() -> Path:
     return path
 
 
-def _draft_filename(draft: FilingDraft) -> str:
-    """Build the canonical filename for a draft on disk."""
-    return f"{draft.modelo}_{draft.period}_{draft.draft_id}.json"
-
-
 def _submission_engine() -> SubmissionEngine:
     """Return a submission engine instance for amendment commands."""
     return build_submission_engine()
@@ -133,8 +128,7 @@ def _load_draft(path: Path) -> FilingDraft:
         raise typer.BadParameter(f"draft file not found: {path}")
     if not path.name.endswith(".envelope.json"):
         raise typer.BadParameter(
-            f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file. "
-            "Run `aeat security migrate-envelopes` if you upgraded from an older build.",
+            f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file.",
         )
     repository = _draft_repository()
     draft_id = path.name[: -len(".envelope.json")]
@@ -389,8 +383,6 @@ def validate(
         schema_provider=_schema_provider(),
     )
     refreshed = _refresh_persisted_draft(draft_path, refreshed)
-    # Wave-8: re-validation now persists ciphertext-at-rest via the
-    # repository instead of a plaintext write_text to draft_path.
     _draft_repository().save(refreshed)
     typer.echo(f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})")
     _render_draft(refreshed)
@@ -553,9 +545,6 @@ def _handle_justificante_import(from_justificante: Path) -> None:
         raise typer.BadParameter(str(exc)) from exc
 
     draft_path = _save_draft(result.draft)
-    # Wave-8 silent-leaker close: route the justificante-import submission
-    # write through the governed SubmissionRepository (ciphertext-at-rest
-    # at AUDIT class) instead of a direct plaintext write.
     from ...submission._repository import SubmissionRepository
 
     submission_repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)

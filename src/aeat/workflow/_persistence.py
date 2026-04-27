@@ -30,8 +30,8 @@ _WORKFLOW_HKDF_CONTEXT = b"aeat.workflow.run.v1"
 def _envelope_path_for(runs_dir: Path, run_id: str) -> Path:
     """Return the canonical envelope path for ``run_id``.
 
-    Path-traversal-shaped ids are rejected via the legacy
-    ``resolve_record_json_path`` validator before composition.
+    Path-traversal-shaped ids are rejected via
+    :func:`resolve_record_json_path` before composition.
     """
     resolve_record_json_path(runs_dir, run_id, context="workflow run id")
     return runs_dir / f"{run_id}{_WORKFLOW_RUN_ENVELOPE_SUFFIX}"

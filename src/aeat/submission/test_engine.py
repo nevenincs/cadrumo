@@ -225,8 +225,8 @@ class TestSubmitDraftDryRun:
         assert submitter.dry_run_calls == 1
         assert submitter.submit_calls == 0
         assert filing.status is SubmissionStatus.PENDING
-        # Persisted through the wave-4 SubmissionRepository — envelope
-        # filename, AUDIT-classification gate.
+        # SubmissionRepository persists every dry-run as a ciphertext
+        # envelope under the AUDIT classification gate.
         persisted = tmp_path / "submissions" / f"{filing.submission_id}.envelope.json"
         assert persisted.exists()
 

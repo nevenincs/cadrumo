@@ -80,8 +80,7 @@ def _load_review_draft(path: Path) -> FilingDraft:
         raise typer.BadParameter(f"draft file not found: {path}")
     if not path.name.endswith(".envelope.json"):
         raise typer.BadParameter(
-            f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file. "
-            "Run `aeat security migrate-envelopes` if you upgraded from an older build.",
+            f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file.",
         )
     repository = FilingDraftRepository(store_dir=_drafts_dir())
     draft_id = path.name[: -len(".envelope.json")]
@@ -93,19 +92,12 @@ def _load_review_draft(path: Path) -> FilingDraft:
         schema_provider=build_runtime_schema_provider(),
     )
     if refreshed != loaded:
-        _save_draft(path, refreshed)
+        _save_draft(refreshed)
     return refreshed
 
 
-def _save_draft(path: Path, draft: FilingDraft) -> None:
-    """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest).
-
-    Wave-8 silent-leaker close: the review CLI no longer writes plaintext
-    drafts directly. The repository writes ciphertext under the
-    canonical envelope filename; the legacy plaintext ``path`` is left
-    in place for operator visibility (read-side fallback continues to
-    work via :func:`_load_review_draft`).
-    """
+def _save_draft(draft: FilingDraft) -> None:
+    """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
     from ...filing._repository import FilingDraftRepository
 
     repository = FilingDraftRepository(store_dir=_drafts_dir())
@@ -171,7 +163,7 @@ def approve_cmd(
         _CONSOLE.print(f"[red]refusing:[/red] {exc}")
         raise typer.Exit(code=1) from exc
     assert approved.approved_at is not None
-    _save_draft(draft_path, approved)
+    _save_draft(approved)
     _CONSOLE.print(
         f"[green]approved[/green] draft {approved.draft_id} "
         f"by {approved.approved_by} at {approved.approved_at.isoformat()}"
@@ -197,7 +189,7 @@ def unapprove_cmd(
     if not yes and not typer.confirm(f"Remove approval from draft {draft.draft_id}?"):
         raise typer.Exit(code=1)
     unapproved = unapprove_draft(draft)
-    _save_draft(draft_path, unapproved)
+    _save_draft(unapproved)
     _CONSOLE.print(f"[green]unapproved[/green] draft {unapproved.draft_id}")
     _render_review_next_steps(unapproved, draft_path=draft_path)
 
@@ -248,7 +240,7 @@ def stale_cmd() -> None:
     table.add_column("path")
 
     stale_count = 0
-    for path in sorted(drafts_dir.glob("*.json")):
+    for path in sorted(drafts_dir.glob("*.envelope.json")):
         try:
             draft = _load_review_draft(path)
         except typer.BadParameter:
