@@ -153,8 +153,8 @@ class TestKentImportsModelo130Declaracion:
             ["filing", "import", "--from-declaracion", str(pdf)],
         )
         assert result.exit_code == 0, result.output
-        # Regex-match rather than a fixed count — the declaración extractor
-        # expands its casilla set in future waves (cluster D phase 2+);
+        # Regex-match rather than a fixed count because the declaration
+        # extractor can expand its casilla set as coverage grows;
         # happy path should remain green as long as N-of-N = COMPLETE.
         match = re.search(r"(\d+) of (\d+) casillas extracted", result.output)
         assert match is not None, result.output
@@ -768,13 +768,16 @@ def _synth_modelo_303_pdf(
     values: Mapping[str, str],
     filename: str = "modelo_303_2025Q1_synth.pdf",
     period_printed: str = "1T",
+    año: int = 2025,
+    ejercicio: str = "2025",
+    template_revision: str = "2025.01",
 ) -> Path:
     """Render a synthetic Modelo 303 declaración PDF via its dedicated generator."""
     params = Modelo303GenParams(
-        año=2025,
-        template_revision="2025.01",
+        año=año,
+        template_revision=template_revision,
         tax_id="00000000T",
-        ejercicio="2025",
+        ejercicio=ejercicio,
         period_printed=period_printed,
         casilla_values={k: Decimal(v) for k, v in values.items()},
         csv="ABCD1234EFGH5678",
@@ -1557,6 +1560,28 @@ class TestKentImportsModelo303Declaracion:
         assert result.exit_code == 0, result.output
         assert "Extraction status: PARTIAL" in result.output
         assert "casilla 71" in result.output or "casilla 69" in result.output
+
+    def test_happy_path_2026_english(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+    ) -> None:
+        """Clean Modelo 303 2026 PDF → VERIFIED."""
+        del drafts_dir, submissions_dir, english_output
+        pdf = _synth_modelo_303_pdf(
+            tmp_path,
+            values=_M303_HAPPY,
+            filename="modelo_303_2026Q1_happy.pdf",
+            año=2026,
+            ejercicio="2026",
+            template_revision="2026.01",
+        )
+        result = runner.invoke(app, ["filing", "import", "--from-declaracion", str(pdf)])
+        assert result.exit_code == 0, result.output
+        assert "Extraction status: COMPLETE" in result.output
+        assert "Verification status: VERIFIED" in result.output
 
     def test_discrepancy_classified_correctly(
         self,
