@@ -22,11 +22,10 @@ see what went wrong.
 
 from __future__ import annotations
 
-import json
 import re
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import typer
 from rich.console import Console
@@ -38,6 +37,8 @@ from ...submission._formats._deserialise import (
     deserialise,
     deserialise_envelope,
 )
+from .._errors import CliRefusedBoundaryError, json_output_requested
+from .._schemas import OutputRootSchema, OutputSchema, emit_json_success, register_schema
 from ._schema_registry import SCHEMA_REGISTRY, validate_ejercicio_flag, validate_modelo_flag
 
 _CONSOLE = Console()
@@ -47,6 +48,52 @@ _CONSOLE = Console()
 _FILENAME_RE = re.compile(
     r"^(?P<nif>[A-Z0-9]{9})(?P<ejercicio>\d{4})(?P<periodo>[1-4]T|0[1-9]|1[0-2])\.(?P<modelo>\d{3})$"
 )
+
+
+class SubmissionVerifyOkRecord(OutputSchema):
+    """Successful record payload for ``aeat submission verify --json``."""
+
+    status: Literal["ok"]
+    kind: Literal["record"]
+    modelo: str
+    ejercicio: str
+    file: str
+    raw_length: int
+    fields: dict[str, str]
+    casillas: dict[str, str]
+
+
+class SubmissionVerifyOkEnvelope(OutputSchema):
+    """Successful envelope payload for ``aeat submission verify --json``."""
+
+    status: Literal["ok"]
+    kind: Literal["envelope"]
+    modelo: str
+    ejercicio: str
+    file: str
+    segments: list[str]
+    fields: dict[str, str]
+    casillas: dict[str, str]
+
+
+class SubmissionVerifyError(OutputSchema):
+    """Error payload for ``aeat submission verify --json``."""
+
+    status: Literal["error"]
+    modelo: str
+    ejercicio: str
+    file: str
+    error_type: str
+    error_message: str
+    expected_bytes: int | None = None
+    actual_bytes: int | None = None
+
+
+@register_schema("submission verify")
+class SubmissionVerifyJson(
+    OutputRootSchema[SubmissionVerifyOkRecord | SubmissionVerifyOkEnvelope | SubmissionVerifyError]
+):
+    """Schema for ``aeat submission verify --json``."""
 
 
 def _infer_modelo_ejercicio(file_path: Path) -> tuple[str | None, str | None]:
@@ -92,24 +139,30 @@ def verify_cmd(
     are absent, or when the payload fails to decode against the
     selected schema.
     """
+    emit_json = as_json or json_output_requested()
     if modelo is None or ejercicio is None:
         inferred_modelo, inferred_ejercicio = _infer_modelo_ejercicio(file_path)
         modelo = modelo or inferred_modelo
         ejercicio = ejercicio or inferred_ejercicio
     if modelo is None or ejercicio is None:
-        _CONSOLE.print(
-            f"[red]verify FAILED:[/red] cannot infer modelo/ejercicio from filename {file_path.name!r}. "
-            f"Pass --modelo and --ejercicio explicitly."
+        message = (
+            f"cannot infer modelo/ejercicio from filename {file_path.name!r}. Pass --modelo and --ejercicio explicitly."
         )
+        if emit_json:
+            raise CliRefusedBoundaryError(message, context={"file": file_path.name})
+        _CONSOLE.print(f"[red]verify FAILED:[/red] {message}")
         raise typer.Exit(code=2)
 
     key = (modelo, ejercicio)
     entry = SCHEMA_REGISTRY.get(key)
     if entry is None:
-        _CONSOLE.print(
-            f"[red]verify UNSUPPORTED:[/red] modelo {modelo} ejercicio {ejercicio} "
-            f"has no fichero-BOE schema. Available: {sorted(SCHEMA_REGISTRY.keys())}"
+        message = (
+            f"modelo {modelo} ejercicio {ejercicio} has no fichero-BOE schema. "
+            f"Available: {sorted(SCHEMA_REGISTRY.keys())}"
         )
+        if emit_json:
+            raise CliRefusedBoundaryError(message, context={"modelo": modelo, "ejercicio": ejercicio})
+        _CONSOLE.print(f"[red]verify UNSUPPORTED:[/red] {message}")
         raise typer.Exit(code=2)
 
     payload = file_path.read_bytes()
@@ -133,22 +186,16 @@ def verify_cmd(
             "Likely causes: wrong --modelo / --ejercicio flag, a truncated file, "
             "or a file produced by a different schema version."
         )
-        if as_json:
-            typer.echo(
-                json.dumps(
-                    {
-                        "status": "error",
-                        "error_type": "PayloadLengthMismatch",
-                        "error_message": msg,
-                        "modelo": modelo,
-                        "ejercicio": ejercicio,
-                        "file": file_path.name,
-                        "expected_bytes": expected,
-                        "actual_bytes": len(content),
-                    },
-                    indent=2,
-                    ensure_ascii=False,
-                )
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                msg,
+                context={
+                    "modelo": modelo,
+                    "ejercicio": ejercicio,
+                    "file": file_path.name,
+                    "expected_bytes": expected,
+                    "actual_bytes": len(content),
+                },
             )
         else:
             _CONSOLE.print(f"[red]{msg}[/red]")
@@ -162,7 +209,7 @@ def verify_cmd(
                 encoding=entry.module.ENCODING,
                 total_length=entry.module.RECORD_LENGTH,
             )
-            if as_json:
+            if emit_json:
                 _emit_record_json(parsed_record, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
             else:
                 _print_record(parsed_record, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
@@ -172,13 +219,21 @@ def verify_cmd(
                 segments=entry.module.ENVELOPE,
                 encoding=entry.module.ENCODING,
             )
-            if as_json:
+            if emit_json:
                 _emit_envelope_json(parsed_envelope, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
             else:
                 _print_envelope(parsed_envelope, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
     except Exception as exc:
-        if as_json:
-            _emit_error_json(exc, modelo=modelo, ejercicio=ejercicio, file_path=file_path)
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                f"{type(exc).__name__}: {exc}",
+                context={
+                    "modelo": modelo,
+                    "ejercicio": ejercicio,
+                    "file": file_path.name,
+                    "error_type": type(exc).__name__,
+                },
+            ) from exc
         else:
             _CONSOLE.print(f"[red]verify FAILED:[/red] {type(exc).__name__}: {exc}")
         raise typer.Exit(code=2) from exc
@@ -252,7 +307,7 @@ def _emit_record_json(parsed: ParsedRecord, *, modelo: str, ejercicio: str, file
         "fields": {fid: _jsonable(val) for fid, val in parsed.field_values.items()},
         "casillas": {cid: str(val) for cid, val in parsed.casilla_values.items()},
     }
-    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+    emit_json_success("submission verify", payload, sort_keys=True)
 
 
 def _emit_envelope_json(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file_path: Path) -> None:
@@ -270,16 +325,4 @@ def _emit_envelope_json(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, 
         "fields": fields,
         "casillas": {cid: str(val) for cid, val in parsed.merged_casilla_values.items()},
     }
-    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
-
-
-def _emit_error_json(exc: BaseException, *, modelo: str, ejercicio: str, file_path: Path) -> None:
-    payload = {
-        "status": "error",
-        "modelo": modelo,
-        "ejercicio": ejercicio,
-        "file": file_path.name,
-        "error_type": type(exc).__name__,
-        "error_message": str(exc),
-    }
-    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+    emit_json_success("submission verify", payload, sort_keys=True)

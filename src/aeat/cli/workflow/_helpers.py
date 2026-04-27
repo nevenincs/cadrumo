@@ -12,7 +12,6 @@ import asyncio
 from collections.abc import Callable
 from datetime import date
 
-import typer
 from rich.console import Console
 from rich.json import JSON
 
@@ -29,6 +28,8 @@ from ...workflow import (
     default_engine,
     save_run,
 )
+from .._errors import json_output_requested
+from .._schemas import emit_json_success
 from ..deadlines._helpers import build_engine as build_deadline_engine
 from ..deadlines._helpers import load_profile, resolve_profile_path
 from ..submission._helpers import build_engine as build_submission_engine
@@ -93,13 +94,13 @@ def _build_profile() -> AutonomoProfile:
         raise WorkflowError(str(exc)) from exc
 
 
-def _emit(result: WorkflowResult, *, as_json: bool) -> None:
+def _emit(result: WorkflowResult, *, as_json: bool, command: str) -> None:
     """Persist the run and print it in the requested format."""
     settings = load_settings()
     save_run(result, runs_dir=settings.aeat_workflow_runs_dir)
     payload = result.model_dump_json(indent=2)
-    if as_json:
-        typer.echo(payload)
+    if as_json or json_output_requested():
+        emit_json_success(command, result)
         return
     _CONSOLE.print(JSON(payload))
 
@@ -122,7 +123,7 @@ def run_engine_next(
             today=today,
         )
     )
-    _emit(result, as_json=as_json)
+    _emit(result, as_json=as_json, command="workflow next")
     return result
 
 
@@ -148,7 +149,7 @@ def run_engine_for_period(
             today=today,
         )
     )
-    _emit(result, as_json=as_json)
+    _emit(result, as_json=as_json, command="workflow run")
     return result
 
 

@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import json
 from collections.abc import Awaitable, Callable, Iterator
 from datetime import UTC, datetime
 from typing import Any, Protocol
@@ -36,8 +35,15 @@ from ...browser._site_health import (
 from ...config import Settings
 from ...errors import SiteHealthError
 from ...logging import get_logger
+from .._errors import json_output_requested
+from .._schemas import OutputRootSchema, emit_json_success, register_schema
 
 logger = get_logger(__name__)
+
+
+@register_schema("browser health")
+class BrowserHealthJson(OutputRootSchema[SiteHealthStatus]):
+    """Schema for ``aeat browser health --json``."""
 
 
 _EXIT_CODES: dict[SiteHealthState, int] = {
@@ -167,11 +173,6 @@ def _render_human(status: SiteHealthStatus) -> str:
     return f"state={status.state.value} http_status={status.evidence.http_status}{retry} markers=[{markers}]"
 
 
-def _render_json(status: SiteHealthStatus) -> str:
-    """Render the :class:`SiteHealthStatus` as pretty JSON."""
-    return json.dumps(status.model_dump(mode="json"), indent=2, sort_keys=True, default=str)
-
-
 def _build_ok_status(url: str) -> SiteHealthStatus:
     """Synthesise an OK :class:`SiteHealthStatus` for a successful probe."""
     return SiteHealthStatus(
@@ -211,8 +212,8 @@ def health_cmd(
         return _build_ok_status(url)
 
     status = asyncio.run(_run())
-    if json_output:
-        typer.echo(_render_json(status))
+    if json_output or json_output_requested():
+        emit_json_success("browser health", status, sort_keys=True)
     else:
         typer.echo(_render_human(status))
     raise typer.Exit(code=_EXIT_CODES[status.state])
