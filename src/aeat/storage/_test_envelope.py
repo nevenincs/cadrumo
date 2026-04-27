@@ -251,9 +251,15 @@ class TestEncryptionMetadata:
         assert meta.associated_data() == b"context"
 
     def test_unknown_algorithm_rejected(self) -> None:
+        from typing import cast
+
+        from . import AeadAlgorithm
+
         with pytest.raises(ValidationError):
             EncryptionMetadata(
-                algorithm="some-future-thing",
+                # Closed enum: pydantic rejects unknown values at validate time.
+                # Cast keeps ty happy while exercising the runtime enum check.
+                algorithm=cast(AeadAlgorithm, "some-future-thing"),
                 nonce_b64=base64.b64encode(b"\x00" * 12).decode("ascii"),
                 ciphertext_b64=base64.b64encode(b"x" * 16).decode("ascii"),
             )

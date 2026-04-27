@@ -52,7 +52,11 @@ class EncryptedBlob(BaseModel):
             Sourced from :func:`secrets.token_bytes`; the GCM birthday
             bound permits roughly 2**32 random nonces per key.
         ciphertext: AES-256-GCM ciphertext concatenated with its 16-byte
-            authentication tag.
+            authentication tag. The ``min_length=GCM_TAG_SIZE`` permits
+            a bare 16-byte authentication tag, which is the legitimate
+            shape for an empty-plaintext encryption (``encrypt_record(b"")``);
+            shorter values are rejected because the GCM tag would be
+            truncated.
     """
 
     model_config = _STRICT_FROZEN

@@ -47,7 +47,7 @@ from ._master_key import MasterKeyProvider, get_master_key_provider
 _AAD_STRING = b"aeat.column.encrypted_string.v1"
 _AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
 _AAD_JSON = b"aeat.column.encrypted_json.v1"
-_HKDF_CONTEXT_LOOKUP = b"aeat.column.hashed_lookup.v1"
+_HKDF_CONTEXT_COLUMN_LOOKUP = b"aeat.column.hashed_lookup.v1"
 
 _HASHED_LOOKUP_DIGEST_SIZE = 32
 """HMAC-SHA256 digest size in bytes."""
@@ -212,7 +212,7 @@ class HashedLookup(TypeDecorator[bytes]):
         return derive_key(
             key_material=master_key,
             salt=b"",
-            context=_HKDF_CONTEXT_LOOKUP,
+            context=_HKDF_CONTEXT_COLUMN_LOOKUP,
         )
 
     @classmethod

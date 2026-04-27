@@ -101,6 +101,15 @@ class PathContainmentError(PersistenceError, ValueError):
     legacy call-sites that catch ``ValueError`` from the path helpers in
     :mod:`aeat._paths` continue to work; new code should catch the
     typed :class:`PathContainmentError` instead.
+
+    Method-resolution order: :class:`PathContainmentError` ->
+    :class:`PersistenceError` -> :class:`StorageError` ->
+    :class:`AeatError` -> :class:`Exception` and (separately)
+    :class:`ValueError` -> :class:`Exception`. Python's C3 linearisation
+    resolves cleanly because both bases share :class:`Exception` as their
+    common ancestor; the registered :class:`ErrorCode`
+    (``INTEGRITY_STORAGE_PATH_CONTAINMENT``) is keyed by fully qualified
+    class name, so the multi-inheritance does not introduce shadowing.
     """
 
 

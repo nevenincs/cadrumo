@@ -28,11 +28,13 @@ import base64
 import os
 import tempfile
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ..logging import get_logger
 from ._classification import SensitivityClass
 from ._crypto import EncryptedBlob
 from .errors import (
@@ -40,7 +42,20 @@ from .errors import (
     EnvelopeVersionError,
 )
 
+_log = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class AeadAlgorithm(StrEnum):
+    """Closed catalogue of AEAD identifiers recognised by the substrate.
+
+    Members:
+        AES_256_GCM_V1: AES-256 Galois Counter Mode, version 1 wire
+            format (12-byte nonce, 16-byte tag). The only algorithm
+            shipping today.
+    """
+
+    AES_256_GCM_V1 = "aes-256-gcm-v1"
 
 
 class EncryptionMetadata(BaseModel):
@@ -57,17 +72,10 @@ class EncryptionMetadata(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    algorithm: str = Field(default="aes-256-gcm-v1")
+    algorithm: AeadAlgorithm = Field(default=AeadAlgorithm.AES_256_GCM_V1)
     nonce_b64: str
     ciphertext_b64: str
     associated_data_b64: str = Field(default="")
-
-    @field_validator("algorithm")
-    @classmethod
-    def _validate_algorithm(cls, value: str) -> str:
-        if value != "aes-256-gcm-v1":
-            raise ValueError(f"unsupported AEAD algorithm: {value!r}")
-        return value
 
     @classmethod
     def from_blob(cls, blob: EncryptedBlob, *, associated_data: bytes = b"") -> EncryptionMetadata:
