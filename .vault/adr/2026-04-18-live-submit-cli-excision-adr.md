@@ -205,3 +205,16 @@ for what new contributors must respect.
 - The 4-factor live-submit gate (`AEAT_ALLOW_LIVE_SUBMIT_OPT_IN`,
   `AEAT_LIVE_SUBMIT_ENABLED`, `--i-understand-this-is-real`,
   per-submission prompt) — preserved as defense-in-depth.
+
+## 2026-04-27 amendment — permanent-forbid supersession
+
+This ADR remains valid as historical lineage for removing the public CLI submit
+surface, but its future-facing live-submit assumptions are superseded by issue
+`#432` and the 2026-04-27 permanent-forbid policy ADR.
+
+- The product does not submit to AEAT.
+- Live AEAT submission is permanently forbidden and permanently out of scope.
+- The submission engine no longer preserves an opt-in transport branch for a
+  future milestone.
+- The four-factor live-submit gate described here is historical context only,
+  not current policy.

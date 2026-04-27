@@ -859,14 +859,9 @@ def check_live_tests_flag(settings: Settings) -> Row:
 def check_live_access_gate(settings: Settings) -> Row:
     """Report the :class:`aeat.auth.AeatAccessGate` env-var state (#167).
 
-    The doctor row surfaces the three env vars that gate live AEAT
-    operations without ever exposing a secret value. It states
-    whether live READS are currently enabled (the only operator-
-    settable dial for day-to-day live work). Live WRITES gate on
-    ``AEAT_LIVE_SUBMIT_ENABLED`` which is **never** expected to be
-    persisted, so the row treats the common "not set" case as the
-    desired state and only surfaces a diagnostic when the var is
-    present.
+    The doctor row surfaces the remaining env vars that gate live AEAT
+    reads without ever exposing a secret value. Live AEAT writes are
+    permanently forbidden, so the row reports that policy explicitly.
     """
     from ..auth import AeatAccessGate
 
@@ -877,18 +872,8 @@ def check_live_access_gate(settings: Settings) -> Row:
     else:
         live_reads = "reads: skipped (AEAT_LIVE_TESTS_ENABLED!=1)"
         state = State.SKIP
-    if snapshot.aeat_live_submit_enabled:
-        live_writes = f"writes: {snapshot.aeat_live_submit_enabled!r} (charter #116 — unset after filing)"
-        state = State.WARN
-    else:
-        live_writes = "writes: unset (charter #116 default)"
-    # submit_env + pytest_current_test together is the most dangerous
-    # state: a live-write capability inside a test runtime. R5 of the
-    # charter refuses the actual call, but the doctor must shout.
-    if snapshot.pytest_current_test and snapshot.aeat_live_submit_enabled:
-        state = State.MISSING
-        live_writes += " [DANGER: PYTEST_CURRENT_TEST + submit both set]"
-    elif snapshot.pytest_current_test:
+    live_writes = "writes: permanently forbidden"
+    if snapshot.pytest_current_test:
         state = State.WARN
         live_writes += " [PYTEST_CURRENT_TEST present]"
     detail = f"{live_reads}; {live_writes}"

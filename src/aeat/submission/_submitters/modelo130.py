@@ -1,11 +1,9 @@
-"""Modelo 130 submitter (pago fraccionado IRPF autónomos).
+"""Modelo 130 dry-run submitter (pago fraccionado IRPF autonomos).
 
 Walks the AEAT Modelo 130 portal, fills casilla-keyed inputs from
 ``draft.values``, takes screenshots at every step, and records a
 Playwright trace. The :meth:`dry_run` path aborts before the final
-"Firmar y Enviar" click and writes a form-state snapshot. The
-:meth:`submit` path completes the walk and returns a
-:class:`Justificante` built from the AEAT acknowledgement page.
+"Firmar y Enviar" click and writes a form-state snapshot.
 
 The submitter consumes the narrow
 :class:`aeat.submission._submitters._contract.BrowserSessionLike`
@@ -26,7 +24,6 @@ from .._models import SubmissionAttempt, SubmissionStatus
 from .._protocols import (
     CasillaCatalogue,
     FilingDraftLike,
-    Justificante,
     Portal,
 )
 from . import Submitter
@@ -159,49 +156,6 @@ class Modelo130Submitter(Submitter):
             status=SubmissionStatus.PENDING,
             browser_trace_path=trace_path,
         )
-
-    async def submit(
-        self,
-        *,
-        draft: FilingDraftLike,
-        session: BrowserSessionLike,
-        casilla_catalogue: CasillaCatalogue,
-        portal: Portal,
-        amendment_kind: str | None = None,
-        original_csv: str | None = None,
-    ) -> tuple[SubmissionAttempt, Justificante | None]:
-        """Perform the full live walk and parse the acknowledgement."""
-        started = datetime.now(UTC)
-        attempt_dir = self._attempt_dir(draft.draft_id, "submit")
-        trace_path = attempt_dir / "trace.zip"
-
-        _logger.info("modelo130 submit start: draft=%s", draft.draft_id)
-        await session.trace_start(f"modelo130-submit-{draft.draft_id}")
-        try:
-            await self._walk_form(
-                draft=draft,
-                session=session,
-                casilla_catalogue=casilla_catalogue,
-                portal=portal,
-                attempt_dir=attempt_dir,
-                amendment_kind=amendment_kind,
-                original_csv=original_csv,
-            )
-            await session.click("button#firmar-y-enviar")
-            await session.screenshot(attempt_dir / "03-acknowledgement.png")
-        finally:
-            await session.trace_stop(trace_path)
-
-        ended = datetime.now(UTC)
-        attempt = SubmissionAttempt(
-            attempt_id=f"{draft.draft_id}-submit",
-            started_at=started,
-            ended_at=ended,
-            status=SubmissionStatus.SUBMITTED,
-            browser_trace_path=trace_path,
-        )
-        # v1: justificante parsing happens at a layer above this submitter.
-        return attempt, None
 
 
 def _iter_draft_values(draft: FilingDraftLike) -> tuple[tuple[str, str], ...]:

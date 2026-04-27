@@ -26,7 +26,7 @@ A PR closing an issue must satisfy all of:
 
 - Every DoR criterion still holds
 - Tests exercise the Kent-observable acceptance criterion
-- Charter [#197](https://github.com/wgergely/aeat/issues/197) compliance (no new default-enabled AEAT writes)
+- Charter [#197](https://github.com/wgergely/aeat/issues/197) and [#432](https://github.com/wgergely/aeat/issues/432) compliance (no executable AEAT write path)
 - No regression against Kent's journey (add a `regression-prevention` test if the PR closes a Kent wall)
 - README / getting-started / ROADMAP.md updated when user-facing
 - Coverage matrices under `docs/coverage/` updated when relevant
@@ -138,8 +138,8 @@ Releases run **locally**, never in CI. Run `just release` for a dry-run preview,
 
 ## the supreme authorities
 
-- Product direction: charter [#197](https://github.com/wgergely/aeat/issues/197) — produce, verify, export; live filing deferred to 1.0.0
-- Safety: charter [#116](https://github.com/wgergely/aeat/issues/116) — six non-negotiable rules against accidental live writes
+- Product direction: charter [#197](https://github.com/wgergely/aeat/issues/197) — produce, verify, export; Kent uploads via the AEAT portal himself
+- Safety: charter [#116](https://github.com/wgergely/aeat/issues/116) — live AEAT submission is permanently forbidden
 - Delivery process: PM charter [#240](https://github.com/wgergely/aeat/issues/240)
 
 If an issue's scope conflicts with a charter, the charter wins.

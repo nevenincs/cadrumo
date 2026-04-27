@@ -578,20 +578,22 @@ class TestAbortReasons:
         assert preflight_step.details is not None
         assert preflight_step.details["provider_kind"] == AuthProviderKind.CLAVE_PERMANENTE.value
 
-    def test_live_submit_forwards_explicit_live_mode(self) -> None:
-        """Live mode reaches the submission engine when dry_run=False is explicit."""
+    def test_live_submit_is_refused_before_submission_engine(self) -> None:
+        """The workflow API must refuse non-dry-run mode before dispatch."""
         fx = _fixtures()
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, dry_run=False))
-        assert result.final_stage is WorkflowStage.DONE
-        assert fx.submission_engine.submit_calls == [False]
-
-    def test_live_submit_preflight_refusal_maps_to_prefight_failed(self) -> None:
-        """Submission-engine live refusals stay inside the workflow preflight lane."""
-        fx = _fixtures()
-        fx.submission_engine.submit_exc = SubmissionPreflightError("live gate closed")
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, dry_run=False))
         assert result.aborted_reason is WorkflowAbortReason.PREFLIGHT_FAILED
         assert result.steps[-1].stage is WorkflowStage.DRY_RUN_SUBMIT
+        assert fx.submission_engine.submit_calls == []
+
+    def test_live_submit_refusal_mentions_permanent_prohibition(self) -> None:
+        """The workflow refusal should surface the permanent-forbid message."""
+        fx = _fixtures()
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, dry_run=False))
+        assert result.aborted_reason is WorkflowAbortReason.PREFLIGHT_FAILED
+        assert result.steps[-1].stage is WorkflowStage.DRY_RUN_SUBMIT
+        assert result.steps[-1].summary["en"].startswith("Preflight failed:")
+        assert "permanently forbidden" in result.steps[-1].summary["en"]
 
     def test_unhandled_exception_from_deadline_engine(self) -> None:
         fx = _fixtures()

@@ -773,32 +773,26 @@ def build_complementaria_cmd(
 @complementaria_app.command("submit")
 def submit_complementaria_cmd(
     amendment_id: Annotated[str, typer.Argument(help="Persisted amendment id to submit")],
-    live: Annotated[
-        bool,
-        typer.Option("--live", help="Perform a live submission instead of the safe dry-run default."),
-    ] = False,
 ) -> None:
-    """Submit a persisted amendment, dry-run by default."""
+    """Submit a persisted amendment via the dry-run-only transport."""
     amendment = load_amendment(amendment_id)
     amended_draft = _load_persisted_draft_by_id(amendment.amended_draft.draft_id)
     if amended_draft is not None:
         amendment = amendment.model_copy(update={"amended_draft": amended_draft})
     engine = _submission_engine()
 
-    dry_run = not live
     try:
         submission_result = asyncio.run(
             engine.submit_amendment(
                 amendment,
-                dry_run=dry_run,
+                dry_run=True,
             )
         )
     except SubmissionError as exc:
         _console.print(f"[red]refusing:[/red] {exc}")
         raise typer.Exit(code=1) from exc
-    status_label = "dry-run" if submission_result.dry_run else "LIVE"
     typer.echo(
-        f"{status_label} amendment submission OK amendment_id={submission_result.amendment_id} "
+        f"dry-run amendment submission OK amendment_id={submission_result.amendment_id} "
         f"submission_id={submission_result.filing.submission_id} "
         f"status={submission_result.filing.status.value}"
     )
