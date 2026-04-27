@@ -24,6 +24,7 @@ from ._rulesets.modelo_130_2024 import RULESET as MODELO_130_2024
 from ._rulesets.modelo_130_2025 import RULESET as MODELO_130_2025
 from ._rulesets.modelo_131_2024 import RULESET as MODELO_131_2024
 from ._rulesets.modelo_131_2025 import RULESET as MODELO_131_2025
+from ._rulesets.modelo_131_2026 import RULESET as MODELO_131_2026
 from ._rulesets.modelo_180_2024 import RULESET as MODELO_180_2024
 from ._rulesets.modelo_180_2025 import RULESET as MODELO_180_2025
 
@@ -44,6 +45,7 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
         "modelo_100.summary.2025",
         "modelo_111.2024",
         "modelo_111.2025",
+        "modelo_111.2026",
         "modelo_115.2024",
         "modelo_115.2025",
         "modelo_115.2026",
@@ -54,6 +56,7 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
         "modelo_130.2026",
         "modelo_131.2024",
         "modelo_131.2025",
+        "modelo_131.2026",
         "modelo_180.2024",
         "modelo_180.2025",
         "modelo_200.2024",
@@ -176,7 +179,7 @@ def test_resolve_default_variant_misses_summary() -> None:
 
 @pytest.mark.unit
 def test_resolve_131_backfill_binds_2024() -> None:
-    """Wave 44/45: Modelo 131 2024 backfill resolves for 2024-period módulos filings."""
+    """Modelo 131 resolves each covered year to its annual ruleset."""
     registry = get_registry()
     ruleset_2024 = registry.resolve(
         modelo=ModeloCode.MODELO_131,
@@ -186,8 +189,13 @@ def test_resolve_131_backfill_binds_2024() -> None:
         modelo=ModeloCode.MODELO_131,
         period=FiscalPeriod(year=2025, quarter=Quarter.Q1),
     )
+    ruleset_2026 = registry.resolve(
+        modelo=ModeloCode.MODELO_131,
+        period=FiscalPeriod(year=2026, quarter=Quarter.Q1),
+    )
     assert ruleset_2024 is MODELO_131_2024
     assert ruleset_2025 is MODELO_131_2025
+    assert ruleset_2026 is MODELO_131_2026
 
 
 @pytest.mark.unit
