@@ -40,6 +40,7 @@ from . import (
     MODELO_111_2025,
     MODELO_115_2024,
     MODELO_115_2025,
+    MODELO_115_2026,
     MODELO_130_2024,
     MODELO_130_2025,
     MODELO_130_2026,
@@ -249,9 +250,10 @@ def _ruleset_cases() -> tuple[tuple[Ruleset, str, dict[str, Decimal]], ...]:
         (MODELO_111_2024, "12", _f111_arrendamiento_fixture()),
         (MODELO_111_2025, "09", _f111_premios_fixture()),
         (MODELO_111_2025, "12", _f111_arrendamiento_fixture()),
-        # Modelo 115 — 2024 + 2025.
+        # Modelo 115 — 2024 + 2025 + 2026 (issue #319).
         (MODELO_115_2024, "03", _f115_fixture()),
         (MODELO_115_2025, "03", _f115_fixture()),
+        (MODELO_115_2026, "03", _f115_fixture()),
         # Modelo 130 — 2024 + 2025 + 2026 (issue #321).
         (MODELO_130_2024, "04", _f130_irpf_fixture()),
         (MODELO_130_2024, "09", _f130_agraria_fixture()),
