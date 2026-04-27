@@ -15,6 +15,7 @@ import pytest
 
 from .._engine import Engine
 from . import MODELO_130_2025
+from .modelo_130_2024 import compute_casilla_13_minoracion
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -166,3 +167,33 @@ class TestModelo130Ruleset2025:
             tolerance=Decimal("0.01"),
         )
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
+
+
+# Issue #321: external-anchored threshold-edge cases for the casilla-13
+# minoración helper, in the 2025 ruleset's test file. The bracket
+# boundaries (9 000 / 10 000 / 11 000 / 12 000 €) are stable across
+# 2024 → 2025 → 2026 per the rule-delta manifest; the helper imports
+# from `modelo_130_2024` and the test exercises it through the 2025
+# import path to confirm no drift.
+@pytest.mark.parametrize(
+    ("previous_year_rn", "expected_minoracion"),
+    [
+        (Decimal("0.00"), Decimal("100")),
+        (Decimal("8999.99"), Decimal("100")),
+        (Decimal("9000.00"), Decimal("100")),
+        (Decimal("9000.01"), Decimal("75")),
+        (Decimal("10000.00"), Decimal("75")),
+        (Decimal("10000.01"), Decimal("50")),
+        (Decimal("11000.00"), Decimal("50")),
+        (Decimal("11000.01"), Decimal("25")),
+        (Decimal("12000.00"), Decimal("25")),
+        (Decimal("12000.01"), Decimal("0")),
+        (Decimal("50000.00"), Decimal("0")),
+    ],
+)
+def test_casilla_13_minoracion_brackets_2025(
+    previous_year_rn: Decimal,
+    expected_minoracion: Decimal,
+) -> None:
+    """Threshold-edge cases for RIRPF art. 110.3.c minoración brackets (2025)."""
+    assert compute_casilla_13_minoracion(previous_year_rn) == expected_minoracion

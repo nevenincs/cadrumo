@@ -15,7 +15,11 @@ from .modelo_037_v2025 import Modelo037V2025Extractor
 from .modelo_111_v2025 import Modelo111V2025Extractor
 from .modelo_115_v2025 import Modelo115V2025Extractor
 from .modelo_123_v2025 import Modelo123V2025Extractor
-from .modelo_130_v2025 import Modelo130V2025Extractor
+from .modelo_130_v2025 import (
+    Modelo130V2024Extractor,
+    Modelo130V2025Extractor,
+    Modelo130V2026Extractor,
+)
 from .modelo_131_v2025 import Modelo131V2025Extractor
 from .modelo_180_v2025 import Modelo180V2025Extractor
 from .modelo_190_v2025 import Modelo190V2025Extractor
@@ -47,7 +51,9 @@ _REGISTERED_CLASSES: tuple[type[DeclaracionExtractor], ...] = (
     Modelo111V2025Extractor,
     Modelo115V2025Extractor,
     Modelo123V2025Extractor,
+    Modelo130V2024Extractor,
     Modelo130V2025Extractor,
+    Modelo130V2026Extractor,
     Modelo131V2025Extractor,
     Modelo180V2025Extractor,
     Modelo190V2025Extractor,
