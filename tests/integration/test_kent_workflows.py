@@ -221,6 +221,55 @@ class TestKentImportsModelo130Declaracion:
         # Missing casillas must surface in the warnings block.
         assert "casilla 05" in result.output and "casilla 06" in result.output
 
+    def test_discrepancy_classified_correctly(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+    ) -> None:
+        """Issue #321 4th case: a printed casilla disagrees with the engine.
+
+        Generates a PDF where casilla 04 prints 1 800,00 EUR while the
+        engine re-derives 04 = 20% of (10 000 - 0) = 2 000,00. The
+        verification pass must surface a CORRECTNESS_DIVERGENCE on
+        casilla 04 (not on the cross-quarter pool surface, since 05/06
+        are zero in this fixture). Kent's verdict should be
+        NEEDS_REVIEW with a discrepancy line naming casilla 04 and
+        the magnitudes.
+
+        Asserts on stable substrings only (status marker, casilla id,
+        cause-classification token) — forward-compatible with future
+        envelope evolution.
+        """
+        del drafts_dir, submissions_dir, english_output
+        pdf = _synth_modelo_130_pdf(
+            tmp_path,
+            casilla_values={
+                "01": "10000.00",
+                "02": "0.00",
+                "03": "10000.00",
+                "04": "1800.00",  # engine re-derives 2 000,00 — 200,00 € drift
+                "05": "0.00",
+                "06": "0.00",
+                "07": "1800.00",  # 04 - 05 - 06 (consistent with the printed 04)
+                "12": "1800.00",
+                "14": "1800.00",
+                "17": "1800.00",
+                "19": "1800.00",
+            },
+        )
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-declaracion", str(pdf)],
+        )
+        assert result.exit_code == 0, result.output
+        assert "Verification status: NEEDS_REVIEW" in result.output, result.output
+        # The classifier must surface casilla 04 as a divergence and
+        # cite its cause token. Use stable substrings only.
+        assert "casilla 04" in result.output, result.output
+        assert "CORRECTNESS_DIVERGENCE" in result.output, result.output
+
 
 class TestKentImportsModelo130Justificante:
     """Kent's original #271 justificante-import flow must still work."""
