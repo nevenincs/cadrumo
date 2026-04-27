@@ -238,21 +238,35 @@ def migrate_legacy_catalogue_to_repository(
     from ._service import load_transactions
 
     legacy_catalogue = load_transactions(legacy_path)
-    existing = repository.load()
-    if not overwrite and len(existing) > 0:
-        raise ValueError(
-            f"destination repository at {repository.envelope_path} is non-empty; pass overwrite=True to replace.",
+    # Wave-3 audit gate HIGH-2 — the entire read-compare-merge-save
+    # span runs under the same exclusive_file_lock the merge write
+    # path uses. Without this the migration helper observes a stale
+    # snapshot at .load() and overwrites any rows a concurrent
+    # merge_raw_transactions writer persisted between the load and
+    # the save.
+    repository._store_dir.mkdir(parents=True, exist_ok=True)
+    with exclusive_file_lock(repository.lock_target):
+        existing = repository.load()
+        if not overwrite and len(existing) > 0:
+            raise ValueError(
+                f"destination repository at {repository.envelope_path} is non-empty; pass overwrite=True to replace.",
+            )
+        imported = 0
+        skipped = 0
+        merged = dict(existing.transactions) if not overwrite else {}
+        for tx in legacy_catalogue:
+            if tx.transaction_id in merged:
+                skipped += 1
+                continue
+            merged[tx.transaction_id] = tx
+            imported += 1
+        envelope = Envelope[TransactionCatalogue](
+            schema_version=_TX_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC),
+            classification=SensitivityClass.FINANCIAL,
+            payload=TransactionCatalogue.model_validate({"transactions": merged}),
         )
-    imported = 0
-    skipped = 0
-    merged = dict(existing.transactions) if not overwrite else {}
-    for tx in legacy_catalogue:
-        if tx.transaction_id in merged:
-            skipped += 1
-            continue
-        merged[tx.transaction_id] = tx
-        imported += 1
-    repository.save(TransactionCatalogue.model_validate({"transactions": merged}))
+        save_envelope(envelope, repository.envelope_path)
     _log.info(
         "migrated legacy catalogue %s into repository: imported=%d skipped=%d",
         legacy_path,

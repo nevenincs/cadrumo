@@ -249,8 +249,20 @@ attachment alongside an operator one.
 Positive:
 
 - Issue #216's bank-import Kent moment is implemented end-to-end.
-- Every financial-domain consumer is encrypted at rest at
-  FINANCIAL classification.
+- Every financial-domain consumer is **classified at rest** at
+  FINANCIAL classification — every envelope's `classification`
+  field is enforced at load time so a foreign-class envelope at
+  the canonical path is refused. **Ciphertext-payload at rest
+  remains a follow-up wave**: the substrate's
+  `EncryptionMetadata` + `EncryptedBlob` primitives are ready,
+  but `TransactionCatalogueRepository.save` writes the payload
+  as plaintext-pydantic-JSON inside the envelope today. Wave 4
+  wires `encrypt_record` into the repository's save path and
+  adds a leak-canary regression test before declaring full
+  encryption-at-rest. The classification gate already gives
+  consumers integrity-against-cross-class-replay; the missing
+  piece is confidentiality-against-on-disk-disclosure for the
+  payload bytes.
 - Idempotency falls out of the existing SHA-256 design; no
   schema migration is required.
 - Concurrent imports are race-free via the substrate's

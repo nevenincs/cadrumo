@@ -272,3 +272,52 @@ class TestLockAcquisitionExposed:
         from ...storage.errors import PersistenceError
 
         assert issubclass(LockAcquisitionError, PersistenceError)
+
+
+class TestMigrationLockedSpan:
+    """Wave-3 audit-gate HIGH-2 regression: migration helper holds the
+    file lock across the full read-compare-merge-save span."""
+
+    def test_migration_blocked_by_held_lock(self, store_dir: Path, tmp_path: Path) -> None:
+        from ...storage import exclusive_file_lock
+        from ._service import save_transactions
+
+        # Seed the repository with one row so we have a destination.
+        repo = TransactionCatalogueRepository(store_dir=store_dir)
+        repo.merge_raw_transactions(
+            [_make_raw(tmp_path, transaction_id="seed-1", amount=Decimal("1"))],
+            direction_resolver=_direction_resolver,
+        )
+        legacy_catalogue = repo.load()
+        legacy_path = tmp_path / "legacy.json"
+        save_transactions(legacy_catalogue, legacy_path)
+
+        # Hold the repository's lock externally; the migration helper
+        # must surface LockAcquisitionError rather than racing through
+        # without locking.
+        with exclusive_file_lock(repo.lock_target), pytest.raises(LockAcquisitionError):
+            migrate_legacy_catalogue_to_repository(
+                legacy_path,
+                repository=repo,
+                overwrite=True,
+            )
+
+
+class TestZeroAmountDirection:
+    """MEDIUM-1: zero-amount rows must NOT silently collapse to OUTGOING."""
+
+    def test_zero_amount_resolves_to_internal_transfer(self, tmp_path: Path) -> None:
+        from ...cli.financial.ingest import _persist_transactions
+
+        # Build a zero-amount RawTransaction; merge through the CLI's
+        # _direction_from_amount inner resolver via _persist_transactions.
+        zero_row = _make_raw(tmp_path, transaction_id="zero-1", amount=Decimal("0"))
+        catalogue_dir = tmp_path / "zero-catalogue"
+        summary = _persist_transactions((zero_row,), catalogue_dir=catalogue_dir)
+        assert summary.imported == 1
+
+        repo = TransactionCatalogueRepository(store_dir=catalogue_dir)
+        catalogue = repo.load()
+        assert len(catalogue) == 1
+        only_tx = next(iter(catalogue.values()))
+        assert only_tx.direction is TransactionDirection.INTERNAL_TRANSFER

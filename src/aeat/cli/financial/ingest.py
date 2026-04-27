@@ -134,9 +134,14 @@ def _persist_transactions(
     from ...financial.transactions._repository import TransactionCatalogueRepository
 
     def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
+        # Zero-amount rows (fee waivers, FX-zero adjustments, paired
+        # reversals) map to INTERNAL_TRANSFER so the operator sees them
+        # as neutral rather than silently classed as OUTGOING.
         if raw.amount > 0:
             return TransactionDirection.INCOMING
-        return TransactionDirection.OUTGOING
+        if raw.amount < 0:
+            return TransactionDirection.OUTGOING
+        return TransactionDirection.INTERNAL_TRANSFER
 
     if catalogue_dir is None:
         settings = load_settings()
