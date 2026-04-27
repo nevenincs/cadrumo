@@ -14,6 +14,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 _runner = CliRunner()
 
 
+def _unwrap_result(output: str):
+    return json.loads(output)["result"]
+
+
 def test_list_text() -> None:
     """``aeat modelos list`` returns exit 0 and mentions modelo 303."""
     result = _runner.invoke(app, ["list"])
@@ -25,7 +29,7 @@ def test_list_json_contains_codes() -> None:
     """``aeat modelos list --json`` emits a JSON array of all entries."""
     result = _runner.invoke(app, ["list", "--json"])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_result(result.output)
     codes = {entry["code"] for entry in payload}
     assert "303" in codes
     assert "390" in codes
@@ -37,7 +41,7 @@ def test_list_category_filter_iva() -> None:
     """``--category iva --json`` returns only IVA entries."""
     result = _runner.invoke(app, ["list", "--category", "iva", "--json"])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_result(result.output)
     assert all(entry["category"] == "iva" for entry in payload)
     assert any(entry["code"] == "303" for entry in payload)
 
@@ -51,7 +55,7 @@ def test_show_round_trip_via_model_validate_json() -> None:
     # Strict pydantic v2 models reject list->frozenset coercion in
     # ``model_validate``; the JSON-native entrypoint handles the shape
     # conversions dictated by the JSON schema.
-    record = ModeloMetadata.model_validate_json(result.output)
+    record = ModeloMetadata.model_validate_json(json.dumps(json.loads(result.output)["result"]))
     assert record.code.value == "303"
 
 
@@ -65,7 +69,7 @@ def test_applicable_to_autonomo_ed_solo_contains_303() -> None:
     """``applicable-to autonomo_ed_solo --json`` contains 303."""
     result = _runner.invoke(app, ["applicable-to", "autonomo_ed_solo", "--json"])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_result(result.output)
     codes = {entry["code"] for entry in payload}
     assert "303" in codes
     assert "036" in codes
@@ -87,7 +91,7 @@ def test_year_plan_autonomo_ed_solo_has_obligations() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_result(result.output)
     assert isinstance(payload, list)
     assert len(payload) > 0
 
@@ -108,7 +112,7 @@ def test_year_plan_includes_347_when_threshold_flag_enabled() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_result(result.output)
     codes = {entry["modelo"] for entry in payload}
     assert "347" in codes
 
@@ -129,6 +133,6 @@ def test_year_plan_drops_130_for_professional_withholding_exception() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_result(result.output)
     codes = {entry["modelo"] for entry in payload}
     assert "130" not in codes

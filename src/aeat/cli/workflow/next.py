@@ -19,8 +19,15 @@ from ...observability import (
     WorkflowLinkPayload,
     record_event,
 )
+from ...workflow import WorkflowResult
 from .._observability import cli_run_context
+from .._schemas import OutputRootSchema, register_schema
 from ._helpers import run_engine_next
+
+
+@register_schema("workflow next")
+class WorkflowNextJson(OutputRootSchema[WorkflowResult]):
+    """Schema for ``aeat workflow next --json``."""
 
 
 def next_cmd(

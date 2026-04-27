@@ -55,6 +55,7 @@ from ...justificante import parse_justificante
 from ...logging import get_logger
 from ...sede import (
     Expediente,
+    NotificationsSnapshot,
     SedeError,
     capture_declaration,
     capture_justificante,
@@ -63,6 +64,8 @@ from ...sede import (
     walk_declarations_register,
     walk_expedientes_tree,
 )
+from .._errors import json_output_requested
+from .._schemas import OutputRootSchema, emit_json_success, register_schema
 from ..auth import _session
 from ..auth._paths import storage_state_paths
 
@@ -77,6 +80,16 @@ app = typer.Typer(
 _CONSOLE = Console()
 
 
+@register_schema("sede list-expedientes")
+class SedeListExpedientesJson(OutputRootSchema[list[Expediente]]):
+    """Schema for ``aeat sede list-expedientes --json``."""
+
+
+@register_schema("sede notifications")
+class SedeNotificationsJson(OutputRootSchema[NotificationsSnapshot]):
+    """Schema for ``aeat sede notifications --json``."""
+
+
 def _require_active_session() -> AeatSession:
     """Load the cached AEAT session or exit with a helpful message.
 
@@ -88,16 +101,25 @@ def _require_active_session() -> AeatSession:
     settings = load_settings()
     persisted = _session.load(settings, None)
     if persisted is None:
+        if json_output_requested():
+            raise SedeError("No active AEAT session. Run `aeat auth login` first.")
         _CONSOLE.print("[red]No active AEAT session. Run `aeat auth login` first.[/red]")
         raise typer.Exit(code=1)
     paths = storage_state_paths(settings, persisted.provider_kind)
     storage_path = paths.storage_state
     if not storage_path.exists():
+        if json_output_requested():
+            raise SedeError(f"Session cookie file missing at {storage_path}. Run `aeat auth login` to re-authenticate.")
         _CONSOLE.print(
             f"[red]Session cookie file missing at {storage_path}. Run `aeat auth login` to re-authenticate.[/red]"
         )
         raise typer.Exit(code=1)
     if persisted.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        if json_output_requested():
+            raise SedeError(
+                "aeat sede currently only supports Cl@ve-móvil sessions; "
+                "certificate and other providers are a follow-up."
+            )
         _CONSOLE.print(
             f"[yellow]aeat sede currently only supports Cl@ve-móvil sessions "
             f"(active provider: {persisted.provider_kind.value}). Certificate and "
@@ -142,12 +164,13 @@ def list_expedientes(
     try:
         expedientes = asyncio.run(walk_expedientes_tree(session, modelo=modelo))
     except SedeError as exc:
+        if json_output or json_output_requested():
+            raise
         _CONSOLE.print(f"[red]sede walk failed: {exc}[/red]")
         raise typer.Exit(code=1) from exc
 
-    if json_output:
-        payload = [e.model_dump(mode="json") for e in expedientes]
-        typer.echo(json.dumps(payload, indent=2, ensure_ascii=False))
+    if json_output or json_output_requested():
+        emit_json_success("sede list-expedientes", expedientes)
         return
 
     table = Table(title=f"AEAT expedientes ({len(expedientes)})")
@@ -512,10 +535,7 @@ def discover(
         raise typer.Exit(code=1) from exc
 
     report_path = run_dir / "discovery-report.json"
-    report_path.write_text(
-        json.dumps(reports, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
+    report_path.write_text(json.dumps(reports, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
     captured = sum(1 for r in reports if r.get("status") == "captured")
     _CONSOLE.print(f"[green]sede discover: {captured}/{len(reports)} expedientes captured → {run_dir}[/green]")
     if captured < len(reports):
@@ -550,11 +570,13 @@ def notifications(
     try:
         snapshot = asyncio.run(fetch(session))
     except SedeError as exc:
+        if json_output or json_output_requested():
+            raise
         _CONSOLE.print(f"[red]notifications fetch failed: {exc}[/red]")
         raise typer.Exit(code=1) from exc
 
-    if json_output:
-        typer.echo(json.dumps(snapshot.model_dump(mode="json"), indent=2, default=str, ensure_ascii=False))
+    if json_output or json_output_requested():
+        emit_json_success("sede notifications", snapshot)
         return
 
     title = "AEAT notifications (summary)" if summary_only else "AEAT notifications (query)"

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -26,6 +27,10 @@ from . import app
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 _runner = CliRunner()
+
+
+def _unwrap_result(output: str) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(output)["result"])
 
 
 _IBAN_CANONICAL = "ES9121000418450200051332"
@@ -106,9 +111,10 @@ class TestIbanNormalisationE2E:
         file = _export_with_iban(tmp_path, "es91 2100 0418 4502 0005 1332", "out")
         verify = _runner.invoke(app, ["verify", str(file), "--json"])
         assert verify.exit_code == 0, verify.stdout
-        doc = json.loads(verify.stdout)
+        doc = _unwrap_result(verify.stdout)
         iban_value = None
-        for fid, val in doc["fields"].items():
+        fields = cast(dict[str, Any], doc["fields"])
+        for fid, val in fields.items():
             if "IBA" in fid:  # DP303DID_F006_DOMICILIACI_N_DEVOLUCI_N_IBA
                 iban_value = val
                 break

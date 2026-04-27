@@ -18,14 +18,27 @@ Exit codes:
 
 from __future__ import annotations
 
-import json
+from typing import Literal
 
 import typer
 from rich.console import Console
 
 from ...financial.invoices._validators import validate_spanish_tax_id
+from .._errors import CliRefusedBoundaryError, json_output_requested
+from .._schemas import OutputSchema, emit_json_success, register_schema
 
 _CONSOLE = Console()
+
+
+@register_schema("submission check-nif")
+class CheckNifJson(OutputSchema):
+    """Schema for ``aeat submission check-nif --json``."""
+
+    status: Literal["valid", "invalid"]
+    input: str
+    canonical: str | None = None
+    kind: Literal["NIF", "NIE", "CIF"] | None = None
+    error: str | None = None
 
 
 def check_nif_cmd(
@@ -33,29 +46,24 @@ def check_nif_cmd(
     as_json: bool = typer.Option(False, "--json", help="Emit a machine-readable JSON document instead of rich output."),
 ) -> None:
     """Validate a Spanish tax identifier against AEAT's check-letter rules."""
+    emit_json = as_json or json_output_requested()
     try:
         canonical = validate_spanish_tax_id(tax_id)
     except ValueError as exc:
-        if as_json:
-            typer.echo(
-                json.dumps(
-                    {"status": "invalid", "input": tax_id, "error": str(exc)},
-                    indent=2,
-                    ensure_ascii=False,
-                )
-            )
+        if emit_json:
+            raise CliRefusedBoundaryError(
+                str(exc),
+                context={"input": tax_id},
+            ) from exc
         else:
             _CONSOLE.print(f"[red]check-nif INVALID:[/red] {tax_id!r} — {exc}")
         raise typer.Exit(code=2) from exc
 
     kind = _classify(canonical)
-    if as_json:
-        typer.echo(
-            json.dumps(
-                {"status": "valid", "input": tax_id, "canonical": canonical, "kind": kind},
-                indent=2,
-                ensure_ascii=False,
-            )
+    if emit_json:
+        emit_json_success(
+            "submission check-nif",
+            {"status": "valid", "input": tax_id, "canonical": canonical, "kind": kind},
         )
         return
     _CONSOLE.print(f"[green]check-nif OK[/green] {canonical} (kind={kind})")

@@ -14,13 +14,14 @@ depending on ``--json``.
 from __future__ import annotations
 
 import contextlib
-import json
 import sys
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
+from .._click_context import json_output_requested
+from .._json_contract import OutputRootSchema, emit_json_success, register_schema
 from ..models import UnknownModeloError
 from ._categories import PortalCategory
 from ._errors import UnknownPortalError
@@ -32,6 +33,21 @@ from ._registry import (
 )
 
 _CONSOLE = Console()
+
+
+@register_schema("portals list")
+class PortalListJson(OutputRootSchema[list[PortalMetadata]]):
+    """Schema for ``aeat portals list --json``."""
+
+
+@register_schema("portals show")
+class PortalShowJson(OutputRootSchema[PortalMetadata]):
+    """Schema for ``aeat portals show --json``."""
+
+
+@register_schema("portals for-modelo")
+class PortalForModeloJson(OutputRootSchema[list[PortalMetadata]]):
+    """Schema for ``aeat portals for-modelo --json``."""
 
 
 def _ensure_utf8_streams() -> None:
@@ -66,10 +82,9 @@ def _entries_sorted() -> tuple[PortalMetadata, ...]:
     return tuple(sorted(PORTAL_REGISTRY.values(), key=lambda m: m.portal.value))
 
 
-def _emit_entries(entries: tuple[PortalMetadata, ...], json_out: bool) -> None:
-    if json_out:
-        payload = [e.model_dump(mode="json") for e in entries]
-        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+def _emit_entries(entries: tuple[PortalMetadata, ...], json_out: bool, *, command: str) -> None:
+    if json_out or json_output_requested():
+        emit_json_success(command, [e.model_dump(mode="json") for e in entries], sort_keys=True)
         return
     table = Table(title="aeat portals", header_style="bold")
     table.add_column("portal", style="cyan")
@@ -111,7 +126,7 @@ def list_command(
         entries = tuple(e for e in entries if e.portal in match_set)
     if active_only:
         entries = tuple(e for e in entries if e.active)
-    _emit_entries(entries, json_out)
+    _emit_entries(entries, json_out, command="portals list")
 
 
 @app.command(name="show", help="Show a single portal catalogue entry.")
@@ -124,10 +139,10 @@ def show_command(
         metadata = get_portal(portal)
     except UnknownPortalError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    if json_out:
-        typer.echo(json.dumps(metadata.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True))
+    if json_out or json_output_requested():
+        emit_json_success("portals show", metadata.model_dump(mode="json"), sort_keys=True)
         return
-    _emit_entries((metadata,), json_out=False)
+    _emit_entries((metadata,), json_out=False, command="portals show")
     _CONSOLE.print(f"[dim]url:[/dim] {metadata.url}")
     _CONSOLE.print(f"[dim]purpose:[/dim] {metadata.purpose_es}")
 
@@ -145,7 +160,7 @@ def for_modelo_command(
         entries = portals_for_modelo(code)
     except UnknownModeloError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    _emit_entries(entries, json_out)
+    _emit_entries(entries, json_out, command="portals for-modelo")
 
 
 __all__ = ("app",)
