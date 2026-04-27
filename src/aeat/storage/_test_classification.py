@@ -125,6 +125,7 @@ class TestRedactionRuleReferences:
             "nif-hash",
             "url-host-only",
             "token-fingerprint",
+            "bearer-token-fingerprint",
         }
 
     def test_corpus_has_no_redaction_rules(self) -> None:

@@ -211,7 +211,7 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.SECRET,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(require_explicit_expiry=True),
-            redaction_rules=("token-fingerprint",),
+            redaction_rules=("token-fingerprint", "bearer-token-fingerprint"),
         ),
         SensitivityClass.SESSION: ClassificationPolicy(
             sensitivity=SensitivityClass.SESSION,
@@ -220,7 +220,7 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
                 max_age=_SHORT_SESSION_RETENTION,
                 require_explicit_expiry=True,
             ),
-            redaction_rules=("token-fingerprint", "url-host-only"),
+            redaction_rules=("token-fingerprint", "bearer-token-fingerprint", "url-host-only"),
         ),
         SensitivityClass.IDENTITY: ClassificationPolicy(
             sensitivity=SensitivityClass.IDENTITY,
@@ -238,7 +238,12 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.AUDIT,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash", "url-host-only", "token-fingerprint"),
+            redaction_rules=(
+                "nif-hash",
+                "url-host-only",
+                "token-fingerprint",
+                "bearer-token-fingerprint",
+            ),
         ),
         SensitivityClass.CACHE: ClassificationPolicy(
             sensitivity=SensitivityClass.CACHE,
@@ -262,7 +267,12 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.DIAGNOSTIC,
             at_rest=AtRestTreatment.PLAINTEXT,
             retention=RetentionPolicy(max_age=_DIAGNOSTIC_RETENTION),
-            redaction_rules=("nif-hash", "url-host-only", "token-fingerprint"),
+            redaction_rules=(
+                "nif-hash",
+                "url-host-only",
+                "token-fingerprint",
+                "bearer-token-fingerprint",
+            ),
         ),
     }
 )
