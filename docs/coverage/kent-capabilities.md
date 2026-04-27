@@ -47,8 +47,8 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Fetch previously-filed casilla values from AEAT (wall 23) | ✅ | ✅ (`StatusReader.fetch_filing_detail`) | ✅ | ✅ | 0.1.0-pre-alpha | [#227](https://github.com/wgergely/aeat/issues/227) (read surface shipped via PR #248; Kent-facing import still blocked on [#272](https://github.com/wgergely/aeat/issues/272)) |
 | Multi-currency income + expenses end-to-end | ❌ | ❌ | ❌ | ❌ | 0.3.1 | [#103](https://github.com/wgergely/aeat/issues/103) |
 | Compute + export 111, 115, 190, 347 | ❌ | ❌ | ❌ | ❌ | 0.3.1 | TBD |
-| Prove exported numbers match AEAT's record | ❌ | ❌ | ❌ | ❌ | 0.4.0 | [#239](https://github.com/wgergely/aeat/issues/239) |
-| Get proactive alerts (inbox, deadlines, staleness) | ❌ | ❌ | ❌ | ❌ | 0.4.0 | part of [#239](https://github.com/wgergely/aeat/issues/239) |
+| Prove exported numbers match AEAT's record | ✅ | ✅ (`aeat filing reconcile`, MATCH / DIVERGENT / NOT_YET_FOUND triad) | ✅ (L3 synthetic + 40 sanitised real fixtures) | ✅ live (M100/2022, M130/2024 4T, M303/2024 4T, M111/2024 4T, M390/2023) | 0.4.0 | [#239](https://github.com/wgergely/aeat/issues/239) Tier 1; per-modelo deep extractors + aggregator cumulation deferred |
+| Get proactive alerts (inbox, deadlines, staleness) | ❌ | ❌ | ❌ | ❌ | 0.4.0 | part of [#239](https://github.com/wgergely/aeat/issues/239) follow-on |
 | Live-submit (opt-in) | ❌ | ❌ excised | inert | ❌ | 1.0.0 | [#197](https://github.com/wgergely/aeat/issues/197), [#198](https://github.com/wgergely/aeat/issues/198), [#116](https://github.com/wgergely/aeat/issues/116) — CLI removed 2026-04-18 per ADR; engine default is opt-in only |
 
 ## auth protocol note
@@ -61,4 +61,4 @@ certificate-based path.
 
 ## provenance
 
-Last updated **2026-04-22** (EPIC #305 wave 54 — 2024 backfill rulesets land; 2024 complementaria self-audit now supported for Modelos 111/115/123/130/131/180). Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
+Last updated **2026-04-27** (#239 round-5 — `aeat filing reconcile` ships live MATCH / DIVERGENT / NOT_YET_FOUND triad against the live AEAT sede; declarations-presentadas register fallback enables quarterly modelos; 25 additional sanitised fixtures committed; live verification matrix covers 5 modelos × 8 (modelo, period, year) tuples). Earlier refresh **2026-04-22** (EPIC #305 wave 54 — 2024 backfill rulesets land; 2024 complementaria self-audit now supported for Modelos 111/115/123/130/131/180). Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.

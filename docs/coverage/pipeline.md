@@ -26,9 +26,9 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Unified review queue | ✅ | [#232](https://github.com/wgergely/aeat/issues/232) |
 | `aeat pipeline status` dashboard | ❌ | [#238](https://github.com/wgergely/aeat/issues/238) |
 | Staleness detection on approved drafts | ✅ via PR #269: `FilingApprovalBasis`, `compute_current_approval_basis`, `aeat review stale` | [#230](https://github.com/wgergely/aeat/issues/230) |
-| Verification against AEAT post-upload | ❌ | [#239](https://github.com/wgergely/aeat/issues/239) |
+| Verification against AEAT post-upload | ✅ via [#239](https://github.com/wgergely/aeat/issues/239): `aeat filing reconcile` (MATCH / DIVERGENT / NOT_YET_FOUND triad) reads the live justificante via `aeat.sede` (procedure-tree walker + declarations-presentadas register fallback for quarterly modelos), parses through `aeat.justificante`, compares against an APPROVED `FilingDraft` via `aeat.filing.reconciliation.reconcile`. Live-verified across M100/2022, M130/2024 4T, M303/2024 4T, M111/2024 4T, M390/2023. Tier 2 per-modelo deep extractors + aggregator cumulation deferred to follow-on PRs. | [#239](https://github.com/wgergely/aeat/issues/239) |
 | Mutation-harness coverage (ruleset regression detection) | ✅ via [#338](https://github.com/wgergely/aeat/issues/338): `sub_op` operand-swap (existing) + `percent_rate` rate-shift + `brackets_threshold` boundary-shift + `mul_div_scalar` literal-shift + orphan-node defense across 18 landed ruleset variants | [#338](https://github.com/wgergely/aeat/issues/338) |
 
 ## provenance
 
-Last updated **2026-04-18**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
+Last updated **2026-04-27** (#239 round-5 — `aeat filing reconcile` triad ships live; declarations-register fallback wired in). Earlier refresh **2026-04-18**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
