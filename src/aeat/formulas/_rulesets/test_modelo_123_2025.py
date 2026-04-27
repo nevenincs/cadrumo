@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from .._engine import Engine
-from . import MODELO_123_2025
+from .._ruleset import Ruleset
+from . import MODELO_123_2024, MODELO_123_2025, MODELO_123_2026
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _provided(**overrides: str) -> dict[str, Decimal]:
@@ -116,3 +118,189 @@ class TestModelo123Ruleset:
         )
         report = Engine().audit_against(ruleset=MODELO_123_2025, provided=provided, tolerance=Decimal("0.01"))
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
+
+
+@pytest.mark.parametrize(
+    ("ruleset", "expected_id", "expected_from", "expected_to"),
+    [
+        (MODELO_123_2024, "modelo_123.2024", date(2024, 1, 1), date(2024, 12, 31)),
+        (MODELO_123_2025, "modelo_123.2025", date(2025, 1, 1), date(2025, 12, 31)),
+        (MODELO_123_2026, "modelo_123.2026", date(2026, 1, 1), date(2026, 12, 31)),
+    ],
+)
+def test_modelo_123_per_annum_effective_ranges(
+    ruleset: Ruleset,
+    expected_id: str,
+    expected_from: date,
+    expected_to: date,
+) -> None:
+    assert ruleset.ruleset_id == expected_id
+    assert ruleset.effective_from == expected_from
+    assert ruleset.effective_to == expected_to
+
+
+@pytest.mark.parametrize(
+    ("ruleset", "case_id", "provided"),
+    [
+        pytest.param(
+            MODELO_123_2024,
+            "zero-boundary",
+            {
+                "01": Decimal("0"),
+                "02": Decimal("0"),
+                "03": Decimal("0"),
+                "04": Decimal("0.00"),
+                "05": Decimal("0.00"),
+                "06": Decimal("0.00"),
+                "07": Decimal("0.00"),
+                "08": Decimal("0.00"),
+                "09": Decimal("0.00"),
+                "10": Decimal("0.00"),
+                "11": Decimal("0.00"),
+            },
+            id="2024-zero-boundary",
+        ),
+        pytest.param(
+            MODELO_123_2024,
+            "typical-irpf-19-percent",
+            {
+                "01": Decimal("2"),
+                "02": Decimal("3"),
+                "03": Decimal("5"),
+                "04": Decimal("5000.00"),
+                "05": Decimal("12000.00"),
+                "06": Decimal("17000.00"),
+                "07": Decimal("950.00"),
+                "08": Decimal("2280.00"),
+                "09": Decimal("3230.00"),
+                "10": Decimal("0.00"),
+                "11": Decimal("3230.00"),
+            },
+            id="2024-typical",
+        ),
+        pytest.param(
+            MODELO_123_2024,
+            "complementaria-offset",
+            {
+                "01": Decimal("1"),
+                "02": Decimal("1"),
+                "03": Decimal("2"),
+                "04": Decimal("10000.00"),
+                "05": Decimal("2500.00"),
+                "06": Decimal("12500.00"),
+                "07": Decimal("1900.00"),
+                "08": Decimal("475.00"),
+                "09": Decimal("2375.00"),
+                "10": Decimal("200.00"),
+                "11": Decimal("2175.00"),
+            },
+            id="2024-complementaria",
+        ),
+        pytest.param(
+            MODELO_123_2025,
+            "zero-boundary",
+            _provided(
+                **{
+                    "01": "0",
+                    "02": "0",
+                    "03": "0",
+                    "04": "0.00",
+                    "05": "0.00",
+                    "06": "0.00",
+                    "07": "0.00",
+                    "08": "0.00",
+                    "09": "0.00",
+                    "10": "0.00",
+                    "11": "0.00",
+                }
+            ),
+            id="2025-zero-boundary",
+        ),
+        pytest.param(MODELO_123_2025, "typical-irpf-19-percent", _provided(), id="2025-typical"),
+        pytest.param(
+            MODELO_123_2025,
+            "complementaria-offset",
+            _provided(
+                **{
+                    "07": "800.00",
+                    "08": "1200.00",
+                    "09": "2000.00",
+                    "10": "500.00",
+                    "11": "1500.00",
+                }
+            ),
+            id="2025-complementaria",
+        ),
+        pytest.param(
+            MODELO_123_2026,
+            "zero-boundary",
+            {
+                "01": Decimal("0"),
+                "02": Decimal("0"),
+                "03": Decimal("0"),
+                "04": Decimal("0.00"),
+                "05": Decimal("0.00"),
+                "06": Decimal("0.00"),
+                "07": Decimal("0.00"),
+                "08": Decimal("0.00"),
+                "09": Decimal("0.00"),
+                "10": Decimal("0.00"),
+                "11": Decimal("0.00"),
+            },
+            id="2026-zero-boundary",
+        ),
+        pytest.param(
+            MODELO_123_2026,
+            "typical-irpf-19-percent",
+            {
+                "01": Decimal("4"),
+                "02": Decimal("2"),
+                "03": Decimal("6"),
+                "04": Decimal("18000.00"),
+                "05": Decimal("7000.00"),
+                "06": Decimal("25000.00"),
+                "07": Decimal("3420.00"),
+                "08": Decimal("1330.00"),
+                "09": Decimal("4750.00"),
+                "10": Decimal("0.00"),
+                "11": Decimal("4750.00"),
+            },
+            id="2026-typical",
+        ),
+        pytest.param(
+            MODELO_123_2026,
+            "complementaria-offset",
+            {
+                "01": Decimal("1"),
+                "02": Decimal("2"),
+                "03": Decimal("3"),
+                "04": Decimal("6400.00"),
+                "05": Decimal("3600.00"),
+                "06": Decimal("10000.00"),
+                "07": Decimal("1216.00"),
+                "08": Decimal("684.00"),
+                "09": Decimal("1900.00"),
+                "10": Decimal("75.00"),
+                "11": Decimal("1825.00"),
+            },
+            id="2026-complementaria",
+        ),
+    ],
+)
+def test_modelo_123_worked_examples_by_year(
+    ruleset: Ruleset,
+    case_id: str,
+    provided: dict[str, Decimal],
+) -> None:
+    """BOE-anchored aggregation examples across 2024, 2025, and 2026.
+
+    The ordinary IRPF rate examples use LIRPF art. 101.4 and RIRPF
+    art. 90 (19%) to populate user-supplied casillas 07 and 08. The
+    ruleset verifies the AEAT Modelo 123 liquidación arithmetic:
+    03=01+02, 06=04+05, 09=07+08, 11=09-10.
+    """
+    report = Engine().audit_against(ruleset=ruleset, provided=provided, tolerance=Decimal("0.01"))
+    assert report.is_clean(), (
+        case_id,
+        [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies],
+    )

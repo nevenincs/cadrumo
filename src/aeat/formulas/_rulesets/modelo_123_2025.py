@@ -13,9 +13,11 @@ The liquidación block is fully algebraic. Every row is a total (dividends
 - casilla 11 = 09 - 10 (resultado a ingresar — total retenciones menos
   resultado declaración anterior en complementaria).
 
-Per-row retention rates (19% on dividends, variable on other capital
-yields) depend on the sub-categoría and land in sub-EPIC
-#305-Modelo-123-full.
+For Kent's IRPF autónomo path, LIRPF art. 101.4 and RIRPF art. 90
+anchor the ordinary capital-income retention rate at 19%. The Modelo
+123 form also covers IS and IRNR rents, so the per-row withholding
+amounts remain user-supplied in this cross-tax ruleset; Kent verifies
+the declared aggregates and complementaria offset.
 """
 
 from __future__ import annotations
@@ -45,19 +47,27 @@ def _label(es: str, en: str, hu: str) -> Translatable:
 _CITATIONS = (
     make_citation(
         LegalCitationSource.LEY,
-        "101",
-        "Artículo 101 Ley 35/2006 (IRPF) — régimen general de retenciones sobre rendimientos del capital mobiliario.",
-        url="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+        "25",
+        "Artículo 25 Ley 35/2006 (IRPF) — define los rendimientos "
+        "íntegros del capital mobiliario, including dividends and "
+        "interest, that can feed Modelo 123 withholding declarations.",
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20260228&tn=1",
+    ),
+    make_citation(
+        LegalCitationSource.LEY,
+        "101.4",
+        "Artículo 101.4 Ley 35/2006 (IRPF) — fixes the ordinary "
+        "retención e ingreso a cuenta rate for rendimientos del "
+        "capital mobiliario at 19%, subject to statutory exceptions.",
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20260228&tn=1",
     ),
     make_citation(
         LegalCitationSource.REGLAMENTO,
         "90",
-        "Artículo 90 RD 439/2007 (Reglamento del IRPF) — importe de "
-        "las retenciones sobre rendimientos del capital mobiliario. "
-        "Wave 75b correction: prior citation of RIRPF art. 100 was "
-        "wrong — art. 100 covers arrendamientos inmuebles urbanos only "
-        "(see BOE-A-2007-6820 consolidated text).",
-        url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
+        "Artículo 90 RD 439/2007 (Reglamento del IRPF) — applies "
+        "the 19% rate to the withholding base for rendimientos del "
+        "capital mobiliario.",
+        url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820&p=20260228&tn=1",
     ),
 )
 

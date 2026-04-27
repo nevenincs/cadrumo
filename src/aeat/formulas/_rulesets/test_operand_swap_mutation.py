@@ -41,9 +41,12 @@ from .._ruleset import Ruleset
 from . import (
     MODELO_100_SUMMARY_2025,
     MODELO_111_2025,
+    MODELO_111_2026,
     MODELO_115_2025,
     MODELO_115_2026,
+    MODELO_123_2024,
     MODELO_123_2025,
+    MODELO_123_2026,
     MODELO_130_2024,
     MODELO_130_2025,
     MODELO_130_2026,
@@ -584,6 +587,12 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             id="modelo_111.2025:casilla_30_resultado_a_ingresar",
         ),
         pytest.param(
+            lambda: MODELO_111_2026,
+            "30",
+            _modelo_111_fixture,
+            id="modelo_111.2026:casilla_30_resultado_a_ingresar",
+        ),
+        pytest.param(
             lambda: MODELO_115_2025,
             "06",
             _modelo_115_fixture,
@@ -599,10 +608,22 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             id="modelo_115.2026:casilla_06_resultado_a_ingresar",
         ),
         pytest.param(
+            lambda: MODELO_123_2024,
+            "11",
+            _modelo_123_fixture,
+            id="modelo_123.2024:casilla_11_resultado_a_ingresar",
+        ),
+        pytest.param(
             lambda: MODELO_123_2025,
             "11",
             _modelo_123_fixture,
             id="modelo_123.2025:casilla_11_resultado_a_ingresar",
+        ),
+        pytest.param(
+            lambda: MODELO_123_2026,
+            "11",
+            _modelo_123_fixture,
+            id="modelo_123.2026:casilla_11_resultado_a_ingresar",
         ),
         pytest.param(
             lambda: MODELO_100_SUMMARY_2025,

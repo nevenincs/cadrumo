@@ -151,7 +151,9 @@ class TestRegistryKnowsNewExtractors:
         # Core quarterly-cadence modelos.
         assert ("111", 2025, "2025.01") in keys
         assert ("115", 2025, "2025.01") in keys
+        assert ("123", 2024, "2024.01") in keys  # issue #320
         assert ("123", 2025, "2025.01") in keys
+        assert ("123", 2026, "2026.01") in keys  # issue #320
         assert ("130", 2024, "2024.01") in keys  # issue #321
         assert ("130", 2025, "2025.01") in keys
         assert ("130", 2026, "2026.01") in keys  # issue #321
