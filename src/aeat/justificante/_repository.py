@@ -1,0 +1,258 @@
+"""Governed-persistence repository for parsed-justificante metadata.
+
+Wraps the substrate's :class:`Envelope[Justificante]` contract behind a
+small typed surface that the justificante parser and any future consumer
+can call. Each parsed justificante's metadata is persisted as its own
+envelope file (``<csv>.envelope.json``) under a caller-supplied store
+directory with a per-record :func:`exclusive_file_lock`.
+
+Sensitivity classification: the metadata captures the AEAT-assigned CSV,
+the operator's NIF, the ``presented_at`` timestamp, and the verification
+URL — auditable evidence with identity-bearing context, hence
+:class:`SensitivityClass.AUDIT`.
+
+Out of scope: the PDF blob itself remains in
+:attr:`aeat.config.AeatSettings.aeat_justificantes_dir` (operator-class
+legal proof; the substrate already handles encrypted blobs via
+:class:`aeat.storage.EncryptedBlobStore`). This repository persists only
+the *parsed metadata* — so the CSV / NIF / URL pass through the
+classification gate at load time even when the PDF is not co-located
+with the metadata.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from ..logging import get_logger
+from ..storage import (
+    Envelope,
+    SensitivityClass,
+    exclusive_file_lock,
+    load_envelope,
+    save_envelope,
+)
+from ..storage.errors import ClassificationError, EnvelopeVersionError
+from ._schema import Justificante
+
+_log = get_logger(__name__)
+
+_JUSTIFICANTE_ENVELOPE_VERSION = 1
+_JUSTIFICANTE_ENVELOPE_SUFFIX = ".envelope.json"
+_JUSTIFICANTE_LOCK_SUFFIX = ".lock"
+
+
+class JustificanteMigrationSummary(BaseModel):
+    """Frozen summary of one ``migrate_legacy_justificantes_to_repository`` call.
+
+    Attributes:
+        imported: Number of legacy metadata records persisted.
+        skipped: Number already present in the destination repository.
+        errors: Number of legacy files the helper could not parse.
+        store_dir: Resolved path to the repository's store directory.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    imported: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    errors: int = Field(default=0, ge=0)
+    store_dir: str
+
+
+class JustificanteRepository:
+    """Repository over the per-record, file-locked, envelope-backed store."""
+
+    def __init__(self, *, store_dir: Path) -> None:
+        """Bind the repository to a store directory.
+
+        Args:
+            store_dir: Directory where the per-record envelope files
+                and lock sidecars live. Created on first write.
+        """
+        self._store_dir = Path(store_dir)
+
+    @property
+    def store_dir(self) -> Path:
+        """Return the bound store directory."""
+        return self._store_dir
+
+    def envelope_path_for(self, csv: str) -> Path:
+        """Return the canonical envelope path for a justificante CSV."""
+        _validate_csv(csv)
+        return self._store_dir / f"{csv}{_JUSTIFICANTE_ENVELOPE_SUFFIX}"
+
+    def lock_target_for(self, csv: str) -> Path:
+        """Return the canonical lock-sidecar path for a justificante CSV."""
+        _validate_csv(csv)
+        return self._store_dir / f"{csv}{_JUSTIFICANTE_LOCK_SUFFIX}"
+
+    def load(self, csv: str) -> Justificante | None:
+        """Return the persisted justificante metadata or ``None`` if absent.
+
+        Raises:
+            ClassificationError: If the on-disk envelope's class is not
+                AUDIT.
+            EnvelopeVersionError: If the envelope schema version is
+                higher than the consumer supports.
+        """
+        target = self.envelope_path_for(csv)
+        if not target.exists():
+            return None
+        envelope = load_envelope(
+            target,
+            Envelope[Justificante],
+            expected_class=SensitivityClass.AUDIT,
+            max_supported_version=_JUSTIFICANTE_ENVELOPE_VERSION,
+        )
+        return envelope.payload
+
+    def save(self, justificante: Justificante) -> None:
+        """Persist ``justificante`` atomically under its per-record file lock."""
+        self._store_dir.mkdir(parents=True, exist_ok=True)
+        with exclusive_file_lock(self.lock_target_for(justificante.csv)):
+            envelope = Envelope[Justificante](
+                schema_version=_JUSTIFICANTE_ENVELOPE_VERSION,
+                written_at=datetime.now(UTC),
+                classification=SensitivityClass.AUDIT,
+                payload=justificante,
+            )
+            save_envelope(envelope, self.envelope_path_for(justificante.csv))
+
+    def delete(self, csv: str) -> bool:
+        """Remove the metadata envelope for ``csv``."""
+        target = self.envelope_path_for(csv)
+        if not self._store_dir.exists():
+            return False
+        with exclusive_file_lock(self.lock_target_for(csv)):
+            if not target.exists():
+                return False
+            target.unlink()
+        return True
+
+    def list_csvs(self) -> tuple[str, ...]:
+        """Return every justificante CSV persisted in this repository."""
+        if not self._store_dir.exists():
+            return ()
+        ids: list[str] = []
+        for path in self._store_dir.iterdir():
+            if not path.is_file():
+                continue
+            name = path.name
+            if not name.endswith(_JUSTIFICANTE_ENVELOPE_SUFFIX):
+                continue
+            csv = name[: -len(_JUSTIFICANTE_ENVELOPE_SUFFIX)]
+            if not csv:
+                continue
+            ids.append(csv)
+        ids.sort()
+        return tuple(ids)
+
+    def iter_justificantes(self) -> Iterator[Justificante]:
+        """Yield every persisted justificante, in lexicographic CSV order."""
+        for csv in self.list_csvs():
+            payload = self.load(csv)
+            if payload is not None:
+                yield payload
+
+
+def migrate_legacy_justificantes_to_repository(
+    legacy_dir: Path,
+    *,
+    repository: JustificanteRepository,
+    overwrite: bool = False,
+) -> JustificanteMigrationSummary:
+    """Move legacy plaintext justificante-metadata JSONs into the repository.
+
+    Args:
+        legacy_dir: Source directory containing legacy
+            ``<csv>.json`` files (each is a JSON-serialised
+            :class:`Justificante`).
+        repository: Destination repository.
+        overwrite: When ``True``, replaces any record already
+            persisted in the repository. When ``False`` (default),
+            already-persisted records are counted under ``skipped``.
+
+    Returns:
+        A frozen :class:`JustificanteMigrationSummary`.
+
+    Raises:
+        FileNotFoundError: If ``legacy_dir`` does not exist.
+        NotADirectoryError: If ``legacy_dir`` is not a directory.
+    """
+    if not legacy_dir.exists():
+        raise FileNotFoundError(legacy_dir)
+    if not legacy_dir.is_dir():
+        raise NotADirectoryError(legacy_dir)
+    repository._store_dir.mkdir(parents=True, exist_ok=True)
+    imported = 0
+    skipped = 0
+    errors = 0
+    for path in sorted(legacy_dir.iterdir()):
+        if not path.is_file():
+            continue
+        if path.suffix != ".json":
+            continue
+        if path.name.endswith(_JUSTIFICANTE_ENVELOPE_SUFFIX):
+            continue
+        try:
+            justificante = Justificante.model_validate_json(path.read_text(encoding="utf-8"))
+        except (ValidationError, OSError) as exc:
+            _log.warning("skipping unreadable legacy justificante %s: %s", path, exc)
+            errors += 1
+            continue
+        with exclusive_file_lock(repository.lock_target_for(justificante.csv)):
+            target = repository.envelope_path_for(justificante.csv)
+            if not overwrite and target.exists():
+                skipped += 1
+                continue
+            envelope = Envelope[Justificante](
+                schema_version=_JUSTIFICANTE_ENVELOPE_VERSION,
+                written_at=datetime.now(UTC),
+                classification=SensitivityClass.AUDIT,
+                payload=justificante,
+            )
+            save_envelope(envelope, target)
+            imported += 1
+    _log.info(
+        "migrated legacy justificantes from %s into %s: imported=%d skipped=%d errors=%d",
+        legacy_dir,
+        repository.store_dir,
+        imported,
+        skipped,
+        errors,
+    )
+    return JustificanteMigrationSummary(
+        imported=imported,
+        skipped=skipped,
+        errors=errors,
+        store_dir=str(repository.store_dir.resolve()),
+    )
+
+
+def _validate_csv(csv: str) -> None:
+    """Reject CSV strings that would compose into an unsafe filename.
+
+    AEAT CSVs are 16-char alphanumeric strings in practice, but the
+    schema permits 4-64 chars. Block path-separator and dot-prefix
+    tokens before composition into ``<store_dir>/<csv>.envelope.json``.
+    """
+    if not csv:
+        raise ValueError("csv must be non-empty")
+    if "/" in csv or "\\" in csv:
+        raise ValueError(f"csv must not contain path separators: {csv!r}")
+    if csv in {".", ".."} or csv.startswith("."):
+        raise ValueError(f"csv must not be a relative-path token: {csv!r}")
+
+
+__all__ = [
+    "ClassificationError",
+    "EnvelopeVersionError",
+    "JustificanteMigrationSummary",
+    "JustificanteRepository",
+    "migrate_legacy_justificantes_to_repository",
+]
