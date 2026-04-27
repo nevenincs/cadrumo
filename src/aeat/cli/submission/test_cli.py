@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -72,10 +71,19 @@ def _patch_master_key(tmp_path: Path):
 
 @pytest.fixture()
 def draft_path(tmp_path: Path) -> Path:
+    """Persist an approved draft via :class:`FilingDraftRepository` and
+    return its canonical envelope path.
+
+    The CLI accepts a draft id or an envelope path; tests that need a
+    file path use the latter so the preflight/dry-run loaders see a
+    real ciphertext envelope on disk.
+    """
+    from ...filing._repository import FilingDraftRepository
+
     draft = _approved_draft()
-    path = tmp_path / "draft.json"
-    path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
-    return path
+    repository = FilingDraftRepository(store_dir=tmp_path / "drafts")
+    repository.save(draft)
+    return repository.envelope_path_for(draft.draft_id)
 
 
 def _approved_draft() -> FilingDraft:
@@ -147,14 +155,20 @@ class TestPreflightCommand:
         status: str,
         expected_fragment: str,
     ) -> None:
+        import json as _json
+
+        from ...filing._repository import FilingDraftRepository
+
         payload = _approved_draft().model_dump(mode="json")
         payload["status"] = status
         payload["approved_at"] = None
         payload["approved_by"] = None
         payload["review_checksum"] = None
         payload["approval_basis"] = None
-        path = tmp_path / "bad.json"
-        path.write_text(json.dumps(payload), encoding="utf-8")
+        adjusted = FilingDraft.model_validate_json(_json.dumps(payload))
+        repository = FilingDraftRepository(store_dir=tmp_path / "bad-drafts")
+        repository.save(adjusted)
+        path = repository.envelope_path_for(adjusted.draft_id)
         result = runner.invoke(app, ["preflight", str(path)])
         assert result.exit_code == 1
         assert "FAILED" in result.output
@@ -174,13 +188,13 @@ class TestPreflightCommand:
         assert result.exit_code == 1
         assert "stale" in result.output
 
-        # Wave-7/8: the refreshed draft is now persisted through the
-        # FilingDraftRepository (ciphertext) rather than rewriting the
-        # legacy plaintext file in place.
+        # Wave-9: the refreshed draft is persisted through the
+        # FilingDraftRepository (ciphertext-only). Decode the draft id
+        # from the canonical envelope filename and load via the repo.
         from ...filing._repository import FilingDraftRepository
 
-        original = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
-        refreshed = FilingDraftRepository(store_dir=draft_path.parent).load(original.draft_id)
+        draft_id = draft_path.name[: -len(".envelope.json")]
+        refreshed = FilingDraftRepository(store_dir=draft_path.parent).load(draft_id)
         assert refreshed is not None
         assert refreshed.status.value == "APPROVAL_STALE"
 
@@ -226,7 +240,11 @@ class TestSubmitCommandRemoved:
 
 class TestShowAndList:
     def test_show_existing(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        draft = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+        from ...filing._repository import FilingDraftRepository
+
+        draft_id = draft_path.name[: -len(".envelope.json")]
+        draft = FilingDraftRepository(store_dir=draft_path.parent).load(draft_id)
+        assert draft is not None
         dry = runner.invoke(app, ["dry-run", str(draft_path)])
         assert dry.exit_code == 0
         # Extract submission_id from the output

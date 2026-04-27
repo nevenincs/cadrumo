@@ -157,10 +157,9 @@ def _seed_all(tmp_path: Path) -> None:
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version="filing-schema-0.1.0",
     )
-    (drafts_dir / "130_2026Q1_d1.json").write_text(
-        draft.model_dump_json(indent=2),
-        encoding="utf-8",
-    )
+    from ...filing._repository import FilingDraftRepository
+
+    FilingDraftRepository(store_dir=drafts_dir).save(draft)
 
 
 def test_queue_empty_environment_prints_no_pending(isolated_settings: Path) -> None:

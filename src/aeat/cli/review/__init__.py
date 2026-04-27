@@ -26,7 +26,6 @@ import getpass
 from pathlib import Path
 
 import typer
-from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
@@ -61,60 +60,39 @@ def _drafts_dir() -> Path:
 
 
 def _resolve_draft_path(draft_ref: str) -> Path:
-    """Resolve a draft id (or filename) to a Path on disk.
-
-    Tries the new ciphertext envelope filename first, then falls back
-    to the legacy plaintext pattern so operators with un-migrated
-    drafts keep working.
-    """
+    """Resolve a draft id (or envelope filename) to a Path on disk."""
     candidate = Path(draft_ref)
     if candidate.exists():
         return candidate
     if candidate.suffix == ".json" or candidate.parent != Path("."):
         raise typer.BadParameter(f"draft file not found: {candidate}")
-    drafts_root = _drafts_dir()
-    envelope_path = drafts_root / f"{draft_ref}.envelope.json"
+    envelope_path = _drafts_dir() / f"{draft_ref}.envelope.json"
     if envelope_path.exists():
         return envelope_path
-    legacy = sorted(path for path in drafts_root.glob(f"*_{draft_ref}.json") if path.is_file())
-    if not legacy:
-        raise typer.BadParameter(f"no persisted draft found for draft_id={draft_ref!r}")
-    if len(legacy) > 1:
-        joined = ", ".join(str(path) for path in legacy)
-        raise typer.BadParameter(f"draft_id={draft_ref!r} matched multiple draft files: {joined}")
-    return legacy[0]
+    raise typer.BadParameter(f"no persisted draft found for draft_id={draft_ref!r}")
 
 
 def _load_review_draft(path: Path) -> FilingDraft:
-    """Load a draft from ``path``, supporting both ciphertext envelopes
-    and legacy plaintext files.
-
-    Refresh-on-read writes through the FilingDraftRepository (ciphertext)
-    so any draft loaded from a legacy plaintext file is upgraded to
-    ciphertext on the next status change.
-    """
+    """Load a draft envelope through the FilingDraftRepository."""
     from ...filing._repository import FilingDraftRepository
 
     if not path.exists():
         raise typer.BadParameter(f"draft file not found: {path}")
-    drafts_root = _drafts_dir()
-    if path.name.endswith(".envelope.json"):
-        repository = FilingDraftRepository(store_dir=drafts_root)
-        draft_id = path.name[: -len(".envelope.json")]
-        loaded = repository.load(draft_id)
-        if loaded is None:
-            raise typer.BadParameter(f"draft envelope not found: {path}")
-        draft = loaded
-    else:
-        try:
-            draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-        except (FilingDraftError, ValidationError) as exc:
-            raise typer.BadParameter(f"invalid draft in {path}: {exc}") from exc
+    if not path.name.endswith(".envelope.json"):
+        raise typer.BadParameter(
+            f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file. "
+            "Run `aeat security migrate-envelopes` if you upgraded from an older build.",
+        )
+    repository = FilingDraftRepository(store_dir=_drafts_dir())
+    draft_id = path.name[: -len(".envelope.json")]
+    loaded = repository.load(draft_id)
+    if loaded is None:
+        raise typer.BadParameter(f"draft envelope not found: {path}")
     refreshed = refresh_review_status(
-        draft,
+        loaded,
         schema_provider=build_runtime_schema_provider(),
     )
-    if refreshed != draft:
+    if refreshed != loaded:
         _save_draft(path, refreshed)
     return refreshed
 

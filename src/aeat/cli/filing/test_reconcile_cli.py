@@ -132,14 +132,17 @@ class TestLoadDraftFromDisk:
     """The _load_draft helper resolves synthesised drafts from disk.
 
     Pins the persistence contract: if synthesize_filing_draft writes
-    a draft under the conventional ``{modelo}_{period}_{draft_id}.json``
-    layout, the CLI's ``--last`` and ``draft_id`` lookups both find it.
+    a draft under the canonical ``<draft_id>.envelope.json`` layout via
+    ``FilingDraftRepository``, the CLI's ``--last`` and ``draft_id``
+    lookups both find it.
     """
 
     def _persist(self, draft, drafts_dir):
-        path = drafts_dir / f"{draft.modelo}_{draft.period}_{draft.draft_id}.json"
-        path.write_text(draft.model_dump_json(), encoding="utf-8")
-        return path
+        from ...filing._repository import FilingDraftRepository
+
+        repository = FilingDraftRepository(store_dir=drafts_dir)
+        repository.save(draft)
+        return repository.envelope_path_for(draft.draft_id)
 
     def test_last_resolves_synthesised_draft(self, tmp_path) -> None:
         from decimal import Decimal
