@@ -70,6 +70,7 @@ from ._master_key import (
     MasterKeyProvider,
     get_master_key_provider,
 )
+from ._path_safety import safe_record_path, safe_subpath
 from .engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
     BlobIntegrityError,
@@ -161,6 +162,8 @@ __all__ = [
     "load_envelope",
     "override_master_key_provider",
     "round_trip_migrations",
+    "safe_record_path",
+    "safe_subpath",
     "save_envelope",
     "session_scope",
     "upgrade_to_head",
