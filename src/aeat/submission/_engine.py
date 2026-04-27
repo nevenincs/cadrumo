@@ -18,12 +18,13 @@ from ..config import Settings
 from ..filing import FilingAmendment, FilingDraft
 from ..filing._complementaria_repository import FilingAmendmentRepository
 from ..logging import get_logger
-from ._audit import append_live_submit_audit, build_live_submit_audit_record
+from ._audit import build_live_submit_audit_record
 from ._confirm import confirm_live_submission
 from ._errors import (
     AeatLiveTransportUnavailableError,
     SubmissionError,
 )
+from ._governed_audit import GovernedLiveSubmitAuditSink
 from ._models import (
     AmendmentSubmissionResult,
     SubmissionAttempt,
@@ -68,7 +69,7 @@ class SubmissionEngine:
         submitters: Mapping[str, Submitter],
         settings: Settings,
         live_transport_supported: bool = False,
-        live_submit_audit_log_path: Path | None = None,
+        live_submit_audit_dir: Path | None = None,
     ) -> None:
         """Construct a :class:`SubmissionEngine`.
 
@@ -93,8 +94,11 @@ class SubmissionEngine:
                 :class:`AeatLiveTransportUnavailableError`. See
                 ``.vault/adr/2026-04-18-live-submit-cli-excision-adr.md``
                 for the rationale (charter #197 + #116).
-            live_submit_audit_log_path: Optional override for the
-                append-only live submit audit log path.
+            live_submit_audit_dir: Optional override for the governed
+                live-submit audit sink's audit directory. When ``None``
+                the engine binds to ``settings.aeat_audit_dir``. Tests
+                that need to inspect the JSONL on disk pass an explicit
+                temp directory here.
         """
         self.browser_session_factory = browser_session_factory
         self.auth_provider = auth_provider
@@ -106,7 +110,7 @@ class SubmissionEngine:
         self.submitters = dict(submitters)
         self.settings = settings
         self.live_transport_supported = live_transport_supported
-        self.live_submit_audit_log_path = live_submit_audit_log_path
+        self.live_submit_audit_dir = live_submit_audit_dir
         self._preflight = Preflight(
             deadline_checker=deadline_checker,
             auth_provider=auth_provider,
@@ -246,7 +250,8 @@ class SubmissionEngine:
             _logger.info("engine: LIVE submitting modelo=%s", draft.modelo)
             assert confirmation is not None
             assert audit_env_state is not None
-            append_live_submit_audit(
+            audit_sink = self._audit_sink()
+            audit_sink.append(
                 build_live_submit_audit_record(
                     modelo=draft.modelo,
                     period=draft.period,
@@ -258,7 +263,6 @@ class SubmissionEngine:
                     confirmation_phrase=confirmation.typed_phrase,
                     env_state=audit_env_state,
                 ),
-                target=self.live_submit_audit_log_path,
             )
             try:
                 attempt, justificante = await submitter.submit(
@@ -270,7 +274,7 @@ class SubmissionEngine:
                     original_csv=original_csv,
                 )
             except Exception as exc:
-                append_live_submit_audit(
+                audit_sink.append(
                     build_live_submit_audit_record(
                         modelo=draft.modelo,
                         period=draft.period,
@@ -282,7 +286,6 @@ class SubmissionEngine:
                         confirmation_phrase=confirmation.typed_phrase,
                         env_state=audit_env_state,
                     ),
-                    target=self.live_submit_audit_log_path,
                 )
                 raise
             overall_status = SubmissionStatus.SUBMITTED
@@ -306,7 +309,7 @@ class SubmissionEngine:
         )
         self._persist(filing)
         if not dry_run and confirmation is not None:
-            append_live_submit_audit(
+            self._audit_sink().append(
                 build_live_submit_audit_record(
                     modelo=draft.modelo,
                     period=draft.period,
@@ -318,12 +321,22 @@ class SubmissionEngine:
                     confirmation_phrase=confirmation.typed_phrase,
                     env_state=audit_env_state,
                 ),
-                target=self.live_submit_audit_log_path,
             )
         return filing
 
     def _submission_repository(self) -> SubmissionRepository:
         return SubmissionRepository(store_dir=self.settings.aeat_submissions_dir)
+
+    def _audit_sink(self) -> GovernedLiveSubmitAuditSink:
+        """Return the governed live-submit audit sink for this engine.
+
+        Routes through the override audit dir when one is supplied (test
+        fixtures that need to inspect the JSONL); otherwise binds to the
+        operator-configured ``aeat_audit_dir``.
+        """
+        return GovernedLiveSubmitAuditSink(
+            audit_dir=self.live_submit_audit_dir or self.settings.aeat_audit_dir,
+        )
 
     def _amendment_repository(self) -> FilingAmendmentRepository:
         return FilingAmendmentRepository(

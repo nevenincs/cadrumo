@@ -1,10 +1,26 @@
-"""Private append-only audit log for live AEAT submissions."""
+"""Legacy private append-only audit log for live AEAT submissions.
+
+DEPRECATED. Use :class:`aeat.submission.GovernedLiveSubmitAuditSink`
+instead. The legacy writer in this module is preserved as a
+deprecation wrapper so any third-party caller that imports
+:func:`append_live_submit_audit` continues to receive a working
+function. New callers MUST emit through the governed sink — which
+applies AUDIT-class redaction (NIF SHA-256-prefixed, URL host-only,
+bearer-shaped tokens fingerprinted) and writes inside the
+operator-configured ``aeat_audit_dir``.
+
+The wrapper still writes the record verbatim to the supplied
+``target`` path so legacy assertions keep working; it does not
+relocate the file. Migration discipline is operator-driven via
+:func:`aeat.submission.migrate_legacy_live_submit_audit`.
+"""
 
 from __future__ import annotations
 
 import os
 import stat
 import sys
+import warnings
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -40,7 +56,20 @@ def append_live_submit_audit(
     *,
     target: Path | None = None,
 ) -> Path:
-    """Append ``record`` to the fixed JSONL audit log path."""
+    """Append ``record`` to the fixed JSONL audit log path.
+
+    .. deprecated::
+        Use :class:`aeat.submission.GovernedLiveSubmitAuditSink` instead.
+        The governed sink applies AUDIT-class redaction (NIF SHA-256-
+        prefixed, URL host-only, bearer-shaped tokens fingerprinted)
+        and writes inside the operator-configured ``aeat_audit_dir``.
+    """
+    warnings.warn(
+        "aeat.submission._audit.append_live_submit_audit is deprecated; "
+        "use aeat.submission.GovernedLiveSubmitAuditSink instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     target = target or _AUDIT_LOG_PATH
     target.parent.mkdir(parents=True, exist_ok=True)
     _set_writable(target)
