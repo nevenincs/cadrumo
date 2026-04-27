@@ -14,8 +14,12 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..casillas import CasillaDataType
+from ..errors import RulesetValidationError
 from ..i18n import Translatable, require_authoritative
 from ..models import LegalCitation
+
+# TODO post-#398: register an ErrorCode for RulesetValidationError under the
+# INTEGRITY category once the error-code registry lands.
 
 _CASILLA_ID_RE = re.compile(r"^\d{2,5}$")
 
@@ -51,4 +55,30 @@ class CasillaDefinition(BaseModel):
             require_authoritative(self.label, domain="aeat")
         except Exception as exc:
             raise ValueError(str(exc)) from exc
+        return self
+
+    @model_validator(mode="after")
+    def _require_legal_basis_for_computed(self) -> CasillaDefinition:
+        """Refuse construction of a computed casilla without a legal citation.
+
+        Issue #339 closure of the audit finding referenced in EPIC #316:
+        ``CasillaDefinition.legal_basis`` was previously optional, which
+        let a ruleset author ship a ``computed=True`` row with zero legal
+        provenance — bypassing the wave-69 ``KnownBadCitation`` blocklist
+        entirely (the blocklist only fires when a citation is present).
+        Tax math without legal citations is unverifiable for an AEAT-
+        inspector scenario.
+
+        The companion ``aeat audit rulesets citations`` CLI (under
+        :mod:`aeat.cli.audit`) reports per-modelo coverage and fails non-
+        zero on any gap, so future drift surfaces both at import time and
+        in the dedicated audit surface.
+        """
+        if self.computed and not self.legal_basis:
+            raise RulesetValidationError(
+                f"casilla {self.casilla_id!r}: computed casillas require at least "
+                f"one LegalCitation in legal_basis. Cite the BOE / RD / Orden / "
+                f"Ley / Reglamento / Manual práctico primary source that grounds "
+                f"this calculation."
+            )
         return self
