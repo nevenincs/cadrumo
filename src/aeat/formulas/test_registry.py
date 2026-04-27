@@ -20,6 +20,7 @@ from ._rulesets.modelo_115_2024 import RULESET as MODELO_115_2024
 from ._rulesets.modelo_115_2025 import RULESET as MODELO_115_2025
 from ._rulesets.modelo_123_2024 import RULESET as MODELO_123_2024
 from ._rulesets.modelo_123_2025 import RULESET as MODELO_123_2025
+from ._rulesets.modelo_123_2026 import RULESET as MODELO_123_2026
 from ._rulesets.modelo_130_2024 import RULESET as MODELO_130_2024
 from ._rulesets.modelo_130_2025 import RULESET as MODELO_130_2025
 from ._rulesets.modelo_131_2024 import RULESET as MODELO_131_2024
@@ -49,6 +50,7 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
         "modelo_115.2026",
         "modelo_123.2024",
         "modelo_123.2025",
+        "modelo_123.2026",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_130.2026",
@@ -139,6 +141,17 @@ def test_resolve_123_backfill_binds_2024() -> None:
     )
     assert ruleset_2024 is MODELO_123_2024
     assert ruleset_2025 is MODELO_123_2025
+
+
+@pytest.mark.unit
+def test_resolve_123_binds_2026() -> None:
+    """Issue #320: Modelo 123 resolves for 2026-period filings."""
+    registry = get_registry()
+    ruleset = registry.resolve(
+        modelo=ModeloCode.MODELO_123,
+        period=FiscalPeriod(year=2026, quarter=Quarter.Q2),
+    )
+    assert ruleset is MODELO_123_2026
 
 
 @pytest.mark.unit

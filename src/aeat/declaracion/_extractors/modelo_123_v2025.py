@@ -1,4 +1,4 @@
-"""Modelo 123 v2025 extractor — Retenciones del capital mobiliario.
+"""Modelo 123 declaración extractor (v2024 / v2025 / v2026 layouts).
 
 Modelo 123 is the monthly (grandes empresas) or quarterly (default)
 withholdings form for determined yields of movable capital — dividends,
@@ -44,4 +44,28 @@ class Modelo123V2025Extractor(GenericDeclaracionExtractor):
     )
 
 
-__all__ = ["Modelo123V2025Extractor"]
+class Modelo123V2024Extractor(Modelo123V2025Extractor):
+    """Modelo 123 v2024 extractor using the same liquidación layout."""
+
+    template_revision: ClassVar[TemplateRevision] = TemplateRevision(
+        modelo="123",
+        año=2024,
+        revision="2024.01",
+    )
+
+
+class Modelo123V2026Extractor(Modelo123V2025Extractor):
+    """Modelo 123 v2026 extractor using the same liquidación layout."""
+
+    template_revision: ClassVar[TemplateRevision] = TemplateRevision(
+        modelo="123",
+        año=2026,
+        revision="2026.01",
+    )
+
+
+__all__ = [
+    "Modelo123V2024Extractor",
+    "Modelo123V2025Extractor",
+    "Modelo123V2026Extractor",
+]
