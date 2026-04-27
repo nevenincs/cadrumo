@@ -244,8 +244,9 @@ class TestSubmitDraftDryRun:
         assert submitter.dry_run_calls == 1
         assert submitter.submit_calls == 0
         assert filing.status is SubmissionStatus.PENDING
-        # Persisted
-        persisted = tmp_path / "submissions" / f"{filing.submission_id}.json"
+        # Persisted through the wave-4 SubmissionRepository — envelope
+        # filename, AUDIT-classification gate.
+        persisted = tmp_path / "submissions" / f"{filing.submission_id}.envelope.json"
         assert persisted.exists()
 
     def test_dry_run_roundtrip(self, tmp_path: Path) -> None:
@@ -341,7 +342,7 @@ class TestSubmitAmendment:
         assert submitter.dry_run_calls == 1
         assert submitter.last_kwargs["amendment_kind"] == "complementaria"
         assert submitter.last_kwargs["original_csv"] == "CSV-ORIGINAL"
-        persisted = tmp_path / "submissions" / "amendment-results" / "amd-1.json"
+        persisted = tmp_path / "submissions" / "amendment-results" / "amd-1.envelope.json"
         assert persisted.exists()
 
     def test_submit_amendment_rejects_traversal_id(self, tmp_path: Path) -> None:

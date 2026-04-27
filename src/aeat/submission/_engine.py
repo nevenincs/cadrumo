@@ -13,10 +13,10 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import cast
 
-from .._paths import resolve_record_json_path
 from ..auth import AeatAccessGate
 from ..config import Settings
 from ..filing import FilingAmendment, FilingDraft
+from ..filing._complementaria_repository import FilingAmendmentRepository
 from ..logging import get_logger
 from ._audit import append_live_submit_audit, build_live_submit_audit_record
 from ._confirm import confirm_live_submission
@@ -41,6 +41,7 @@ from ._protocols import (
     JustificanteParser,
     PortalCatalogue,
 )
+from ._repository import SubmissionRepository
 from ._submitters import BrowserSessionLike, Submitter
 
 _logger = get_logger(__name__)
@@ -321,27 +322,44 @@ class SubmissionEngine:
             )
         return filing
 
+    def _submission_repository(self) -> SubmissionRepository:
+        return SubmissionRepository(store_dir=self.settings.aeat_submissions_dir)
+
+    def _amendment_repository(self) -> FilingAmendmentRepository:
+        return FilingAmendmentRepository(
+            store_dir=self.settings.aeat_submissions_dir / "amendment-results",
+        )
+
     def _persist(self, filing: SubmittedFiling) -> None:
-        """Write ``filing`` as pretty JSON under ``aeat_submissions_dir``."""
-        target_dir = self.settings.aeat_submissions_dir
-        target_dir.mkdir(parents=True, exist_ok=True)
+        """Persist ``filing`` through the governed submission repository."""
         try:
-            target = resolve_record_json_path(target_dir, filing.submission_id, context="submission id")
+            self._submission_repository().save(filing)
         except ValueError as exc:
-            raise SubmissionError(str(exc)) from exc
-        target.write_text(filing.model_dump_json(indent=2), encoding="utf-8")
-        _logger.info("engine: persisted %s", target)
+            # Repository validators reject path-traversal-shaped ids; map
+            # to the engine's SubmissionError contract while preserving
+            # the historical "simple filename token" phrase consumers
+            # match against.
+            raise SubmissionError(
+                f"submission id {filing.submission_id!r}: expected a simple filename token: {exc}"
+            ) from exc
+        _logger.info("engine: persisted submission_id=%s", filing.submission_id)
 
     def _persist_amendment_result(self, result: AmendmentSubmissionResult) -> None:
-        """Write ``result`` as pretty JSON under ``aeat_submissions_dir/amendment-results``."""
-        target_dir = self.settings.aeat_submissions_dir / "amendment-results"
-        target_dir.mkdir(parents=True, exist_ok=True)
+        """Persist ``result.amendment`` through the governed amendment repository.
+
+        The transport-level wrapper (`AmendmentSubmissionResult.dry_run`,
+        `submitted_at`) is dropped — the inner :class:`FilingAmendment`
+        is the load-bearing audit record. No production reader consumes
+        the wrapper today; if a future caller needs the wrapper fields
+        they can be added back as a dedicated repository.
+        """
         try:
-            target = resolve_record_json_path(target_dir, result.amendment_id, context="amendment id")
+            self._amendment_repository().save(result.amendment)
         except ValueError as exc:
-            raise SubmissionError(str(exc)) from exc
-        target.write_text(result.model_dump_json(indent=2), encoding="utf-8")
-        _logger.info("engine: persisted amendment result %s", target)
+            raise SubmissionError(
+                f"amendment id {result.amendment_id!r}: expected a simple filename token: {exc}"
+            ) from exc
+        _logger.info("engine: persisted amendment_id=%s", result.amendment_id)
 
     def load_submission(self, submission_id: str) -> SubmittedFiling:
         """Load a persisted :class:`SubmittedFiling` by id.
@@ -350,23 +368,20 @@ class SubmissionEngine:
             submission_id: The submission identifier.
 
         Returns:
-            The :class:`SubmittedFiling` previously written to
-            ``settings.aeat_submissions_dir``.
+            The :class:`SubmittedFiling` previously written through the
+            governed repository.
 
         Raises:
-            SubmissionError: If no record exists for ``submission_id``.
+            SubmissionError: If no record exists for ``submission_id``
+                or if ``submission_id`` is not a simple filename token.
         """
         try:
-            target = resolve_record_json_path(
-                self.settings.aeat_submissions_dir,
-                submission_id,
-                context="submission id",
-            )
+            filing = self._submission_repository().load(submission_id)
         except ValueError as exc:
-            raise SubmissionError(str(exc)) from exc
-        if not target.exists():
+            raise SubmissionError(f"submission id {submission_id!r}: expected a simple filename token: {exc}") from exc
+        if filing is None:
             raise SubmissionError(f"no persisted submission with id {submission_id!r}")
-        return SubmittedFiling.model_validate_json(target.read_text(encoding="utf-8"))
+        return filing
 
     def list_submissions(
         self,
@@ -383,16 +398,9 @@ class SubmissionEngine:
         Returns:
             A tuple of filings sorted by ``submitted_at`` descending.
         """
-        target_dir = self.settings.aeat_submissions_dir
-        if not target_dir.exists():
-            return ()
+        repository = self._submission_repository()
         results: list[SubmittedFiling] = []
-        for path in sorted(target_dir.glob("*.json")):
-            try:
-                filing = SubmittedFiling.model_validate_json(path.read_text(encoding="utf-8"))
-            except Exception as exc:  # pragma: no cover - defensive
-                _logger.warning("engine: skipping unreadable record %s: %s", path, exc)
-                continue
+        for filing in repository.iter_submissions():
             if modelo is not None and filing.modelo != modelo:
                 continue
             if status is not None and filing.status != status:

@@ -83,6 +83,11 @@ def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
+    from datetime import UTC, datetime
+
+    from ...submission._models import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+    from ...submission._repository import SubmissionRepository
+
     draft = build_draft(
         modelo="130",
         period="2024Q1",
@@ -97,30 +102,26 @@ def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
     draft_path = drafts_dir / f"130_2024Q1_{draft.draft_id}.json"
     draft_path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
 
-    submission_payload = {
-        "submission_id": "sub-cli-1",
-        "draft_id": draft.draft_id,
-        "modelo": "130",
-        "period": "2024Q1",
-        "profile_tax_id": "00000000T",
-        "status": "SUBMITTED",
-        "justificante_csv": "CSV-SUB-CLI-1",
-        "justificante_pdf_path": None,
-        "submitted_at": "2026-04-13T08:00:00+00:00",
-        "acknowledged_at": None,
-        "attempts": [
-            {
-                "attempt_id": "sub-cli-1.1",
-                "started_at": "2026-04-13T08:00:00+00:00",
-                "ended_at": "2026-04-13T08:00:00+00:00",
-                "status": "SUBMITTED",
-                "error_code": None,
-                "error_message": None,
-                "browser_trace_path": None,
-            }
-        ],
-    }
-    (submissions_dir / "sub-cli-1.json").write_text(json.dumps(submission_payload), encoding="utf-8")
+    submitted_at = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
+    filing = SubmittedFiling(
+        submission_id="sub-cli-1",
+        draft_id=draft.draft_id,
+        modelo="130",
+        period="2024Q1",
+        profile_tax_id="00000000T",
+        status=SubmissionStatus.SUBMITTED,
+        justificante_csv="CSV-SUB-CLI-1",
+        submitted_at=submitted_at,
+        attempts=(
+            SubmissionAttempt(
+                attempt_id="sub-cli-1.1",
+                started_at=submitted_at,
+                ended_at=submitted_at,
+                status=SubmissionStatus.SUBMITTED,
+            ),
+        ),
+    )
+    SubmissionRepository(store_dir=submissions_dir).save(filing)
     return "sub-cli-1"
 
 
