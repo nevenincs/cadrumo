@@ -1902,6 +1902,19 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.identity._documents.IdentityError",
+        ErrorCode(
+            code="INTEGRITY_IDENTITY_DOCUMENT",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="Documento de identidad no valido.",
+            default_message_en="The candidate string is not a valid NIF, NIE, or CIF.",
+            default_message_hu="Ervenytelen azonosito okmany.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.BlobIntegrityError",
         ErrorCode(
             code="INTEGRITY_STORAGE_BLOB",
