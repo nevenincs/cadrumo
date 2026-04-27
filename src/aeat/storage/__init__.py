@@ -83,6 +83,7 @@ from ._redaction import (
     default_rules_for,
     default_rules_for_class,
     redact,
+    redact_structured,
 )
 from ._secret_store import SecretRecord, SecretStore
 from .engine import create_engine_from_settings, dispose_engine, get_engine
@@ -192,6 +193,7 @@ __all__ = [
     "override_master_key_provider",
     "override_secret_store",
     "redact",
+    "redact_structured",
     "round_trip_migrations",
     "safe_record_path",
     "safe_subpath",

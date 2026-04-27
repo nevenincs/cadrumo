@@ -185,9 +185,47 @@ def redact(value: str, *, rules: tuple[RedactionRule, ...]) -> str:
     return result
 
 
+def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> object:
+    """Apply ``rules`` to every string leaf inside ``value``, recursively.
+
+    Walks dicts, lists, and tuples; redacts every string at the
+    leaves. Non-string non-container values pass through unchanged.
+    The container shape is preserved (dict stays dict; list stays
+    list; tuple stays tuple). The resulting object is a fresh copy at
+    every container level — the input is never mutated.
+
+    This is the load-bearing primitive for the audit-sink relocation:
+    submission audit events and run-trace records are nested dicts,
+    and a flat ``redact()`` call would not reach the NIF nested under
+    e.g. ``event["payload"]["taxpayer"]["nif"]``.
+
+    Args:
+        value: Any JSON-shaped value (str, int, float, bool, None,
+            dict, list, tuple, or a typed model that is dumped via
+            ``model_dump()`` upstream).
+        rules: Ordered tuple of rules.
+
+    Returns:
+        A redacted copy of ``value`` with the same nested shape.
+    """
+    if isinstance(value, str):
+        result_str = value
+        for rule in rules:
+            result_str = _apply_one(rule, result_str)
+        return result_str
+    if isinstance(value, dict):
+        return {k: redact_structured(v, rules=rules) for k, v in value.items()}
+    if isinstance(value, list):
+        return [redact_structured(item, rules=rules) for item in value]
+    if isinstance(value, tuple):
+        return tuple(redact_structured(item, rules=rules) for item in value)
+    return value
+
+
 __all__ = [
     "default_rules",
     "default_rules_for",
     "default_rules_for_class",
     "redact",
+    "redact_structured",
 ]

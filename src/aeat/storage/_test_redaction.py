@@ -14,6 +14,7 @@ from ._redaction import (
     default_rules_for,
     default_rules_for_class,
     redact,
+    redact_structured,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
@@ -160,6 +161,66 @@ class TestEllipsisStrategy:
         out = redact("secret-payload found here", rules=(rule,))
         assert "..." in out
         assert "secret-payload" not in out
+
+
+class TestRedactStructured:
+    """Recursive walk redacts string leaves while preserving container shape."""
+
+    def test_dict_leaves_redacted(self) -> None:
+        from typing import Any, cast
+
+        rules = (default_rules()["nif-hash"],)
+        payload = {"taxpayer": {"nif": "12345678Z", "name": "Kent"}, "amount": 100}
+        out = cast(dict[str, Any], redact_structured(payload, rules=rules))
+        assert isinstance(out, dict)
+        assert out["taxpayer"]["nif"].startswith("sha256:")
+        assert out["taxpayer"]["name"] == "Kent"
+        assert out["amount"] == 100
+
+    def test_list_leaves_redacted(self) -> None:
+        from typing import cast
+
+        rules = (default_rules()["nif-hash"],)
+        payload = ["operator NIF: 12345678Z", "no NIF here"]
+        out = cast(list[str], redact_structured(payload, rules=rules))
+        assert isinstance(out, list)
+        assert "12345678Z" not in out[0]
+        assert out[1] == "no NIF here"
+
+    def test_tuple_shape_preserved(self) -> None:
+        from typing import cast
+
+        rules = (default_rules()["nif-hash"],)
+        payload = ("12345678Z", "Kent")
+        out = cast(tuple[str, ...], redact_structured(payload, rules=rules))
+        assert isinstance(out, tuple)
+        assert "12345678Z" not in out[0]
+
+    def test_nested_dict_in_list(self) -> None:
+        from typing import Any, cast
+
+        rules = (default_rules()["nif-hash"], default_rules()["url-host-only"])
+        payload = {
+            "events": [
+                {"action": "filed", "url": "https://sede.example.com/x?y=1"},
+                {"taxpayer": "12345678Z"},
+            ],
+        }
+        out = cast(dict[str, Any], redact_structured(payload, rules=rules))
+        assert "/x?y=1" not in out["events"][0]["url"]
+        assert "12345678Z" not in out["events"][1]["taxpayer"]
+
+    def test_non_container_non_string_passes_through(self) -> None:
+        rules = default_rules_for_class(SensitivityClass.AUDIT)
+        for value in (None, 42, 3.14, True):
+            assert redact_structured(value, rules=rules) is value
+
+    def test_input_is_not_mutated(self) -> None:
+        rules = (default_rules()["nif-hash"],)
+        payload = {"nif": "12345678Z"}
+        redact_structured(payload, rules=rules)
+        # Input dict still carries the original NIF.
+        assert payload["nif"] == "12345678Z"
 
 
 class TestRedactInputs:
