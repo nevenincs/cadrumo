@@ -3080,11 +3080,12 @@ wheels = [
 
 [[package]]
 name = "vaultspec-rag"
-version = "0.2.3"
+version = "0.2.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "mcp" },
+    { name = "packaging" },
     { name = "pathspec" },
     { name = "psutil" },
     { name = "pydantic" },
@@ -3101,9 +3102,9 @@ dependencies = [
     { name = "vaultspec-core" },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/a5/d492a2b05048813bdd0adf623eadb4ccb712eb98cd0cc332e22c3a42bf19/vaultspec_rag-0.2.3.tar.gz", hash = "sha256:91786e535e63c437bcd22b1f41404195b0cacaeef36cbe76afe1c18fa03d5262", size = 843711, upload-time = "2026-04-24T09:35:02.013Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/09/e5/47397e1aac6523a719d45e32cac5bc8d790b90efe7b13567851c0fd020c4/vaultspec_rag-0.2.5.tar.gz", hash = "sha256:94ee9c26ba2406d35d20a2ddf2228573172c6fdfa188ee58d2bf5e875ddba192", size = 903733, upload-time = "2026-04-27T15:55:11.769Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c3/2c/8aee64a9f8884b84992dadf63e5637b3031c14cf9eaa807bb86ec1a5517a/vaultspec_rag-0.2.3-py3-none-any.whl", hash = "sha256:da8c6f1d3289c26a92ed5e79a54f58432f4d1fb277de9211f3b8cf443676a10f", size = 224869, upload-time = "2026-04-24T09:35:03.574Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/77/554afdf1a8e4801969d6ace1493e06be5d7347d9a1ee4e204bbd3ebb146e/vaultspec_rag-0.2.5-py3-none-any.whl", hash = "sha256:bbf9193ad8417104ab0a1f5001163f88ad8d92bb82a2f1b76d87124466cf91df", size = 253123, upload-time = "2026-04-27T15:55:13.747Z" },
 ]
 
 [[package]]
