@@ -1,0 +1,66 @@
+---
+# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
+# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
+# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/audit/ location)
+# Feature tag (replace live-submit-permanently-forbidden-code-review with your feature name, e.g., #editor-demo)
+# Additional tags may be appended below the required pair
+tags:
+  - '#audit'
+  - '#live-submit-permanently-forbidden-code-review'
+# ISO date format (e.g., 2026-02-06)
+date: '2026-04-27'
+# Related documents as quoted wiki-links
+# (e.g., "[[2026-02-04-feature-research]]")
+related:
+  - "[[2026-04-27-live-submit-permanently-forbidden-plan]]"
+  - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"
+  - "[[2026-04-27-live-submit-permanently-forbidden-research]]"
+  - "[[2026-04-27-security-storage-audit-audit]]"
+---
+
+<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
+     outside the YAML frontmatter above -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+# `live-submit-permanently-forbidden-code-review` audit: `code review`
+
+## Scope
+
+Final code review for issue `#432` across the changed submission, auth-gate,
+workflow, CLI, config, error-registry, documentation, and ADR surfaces that
+implement the permanent prohibition on live AEAT submission.
+
+Decision: **PASS** — the direct transport, workflow, settings,
+error-taxonomy, regression-test, and Kent-facing documentation invariants for
+issue `#432` now hold. No findings remain in the current branch state.
+
+## Findings
+
+VERIFIED-001 | INFO | No executable live-transport path remains in product code.
+Reviewed `src/aeat/submission/_engine.py`, `src/aeat/submission/_submitters/__init__.py`, `src/aeat/submission/_submitters/modelo130.py`, `src/aeat/cli/submission/__init__.py`, `src/aeat/cli/filing/__init__.py`, `src/aeat/cli/workflow/run.py`, `src/aeat/cli/workflow/next.py`, `src/aeat/workflow/_engine.py`, and `src/aeat/auth/_gate.py`. The shipped runtime exposes no live-submit CLI surface, no workflow live flags, no concrete submitter `submit()` method, and no reachable AEAT write transport in the production composition path.
+
+VERIFIED-002 | INFO | `SubmissionEngine` now refuses live execution before preflight.
+A direct runtime probe against the current branch returns `LiveSubmitForbiddenError` for `submit_draft(..., dry_run=False)` before any preflight rejection. `src/aeat/submission/_engine.py:176-180` enforces the order, and `src/aeat/submission/test_engine.py:245-256` pins both the ordinary and invalid-draft cases.
+
+VERIFIED-003 | INFO | Legacy live-submit env vars and public legacy error codes are removed.
+`src/aeat/config.py` no longer exposes `AEAT_LIVE_SUBMIT_ENABLED` / `AEAT_ALLOW_LIVE_SUBMIT_OPT_IN`; `env/.env.example` now documents permanent prohibition instead; `src/aeat/submission/__init__.py` exports only `LiveSubmitForbiddenError` and the current submission errors; `src/aeat/errors/_registry.py` and `docs/error-codes.md` no longer publish the older live-submit enablement/refusal codes.
+
+VERIFIED-004 | INFO | Historical runtime helpers are removed and ADR traceability is aligned.
+`src/aeat/submission/_confirm.py`, `src/aeat/submission/_audit.py`, and `src/aeat/submission/test_safety_helpers.py` are deleted from the branch; `src/aeat/submission/_engine.py` no longer carries the dead audit-log compatibility kwarg; and `.vault/adr/2026-04-27-live-submit-permanently-forbidden-adr.md` now includes the canonical `#live-submit-permanently-forbidden` tag, fixing the earlier vault-traceability mismatch.
+
+TEST-001 | INFO | Focused prohibition regressions are broad and passing.
+The targeted branch-state suite passes at `76 passed, 1 skipped, 1 deselected`: `src/aeat/submission/test_live_submit_permanently_forbidden.py`, `src/aeat/submission/test_engine.py`, `src/aeat/submission/test_errors.py`, `src/aeat/submission/_submitters/test_modelo130.py`, `src/aeat/auth/test_gate.py`, `src/aeat/cli/submission/test_no_submit_command.py`, `src/aeat/cli/filing/test_filing_cli.py`, `src/aeat/cli/_test_doctor.py`, `src/aeat/cli/workflow/test_next_refuses_live_flags.py`, and `src/aeat/cli/workflow/test_run_refuses_live_flags.py`. This is adequate for the direct prohibition contract at the submission/auth/CLI boundary.
+
+VERIFIED-005 | INFO | The prior workflow dry-run/live modeling finding is resolved.
+`src/aeat/workflow/_engine.py` now treats `dry_run=False` as a permanent-refusal preflight failure before calling the submission engine, `src/aeat/workflow/_protocols.py` and `src/aeat/workflow/__init__.py` document dry-run-only workflow semantics, `src/aeat/cli/workflow/run.py` and `src/aeat/cli/workflow/next.py` continue to hard-code `dry_run=True`, and the workflow-focused regression slice passes at `42 passed`: `src/aeat/workflow/test_engine.py`, `src/aeat/cli/workflow/test_next_refuses_live_flags.py`, `src/aeat/cli/workflow/test_run_refuses_live_flags.py`, `src/aeat/submission/test_engine.py`, and `src/aeat/submission/test_live_submit_permanently_forbidden.py`. The stale workflow live-success assertions are gone; the replacement tests now prove refusal before dispatch and surface the permanent-forbid message.
+
+## Recommendations
+
+No remaining findings. Continue treating issue `#432` as a standing charter
+check for any future submission, workflow, auth-gate, settings, CLI, or ADR
+change.
