@@ -41,6 +41,7 @@ from .._ruleset import Ruleset
 from . import (
     MODELO_100_SUMMARY_2025,
     MODELO_111_2025,
+    MODELO_111_2026,
     MODELO_115_2025,
     MODELO_115_2026,
     MODELO_123_2025,
@@ -582,6 +583,12 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             "30",
             _modelo_111_fixture,
             id="modelo_111.2025:casilla_30_resultado_a_ingresar",
+        ),
+        pytest.param(
+            lambda: MODELO_111_2026,
+            "30",
+            _modelo_111_fixture,
+            id="modelo_111.2026:casilla_30_resultado_a_ingresar",
         ),
         pytest.param(
             lambda: MODELO_115_2025,
