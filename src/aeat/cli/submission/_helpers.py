@@ -195,9 +195,8 @@ def build_engine(settings: Settings | None = None) -> SubmissionEngine:
     submitters: dict[str, Submitter] = {
         "130": Modelo130Submitter(artifact_dir=cfg.aeat_submission_browser_trace_dir),
     }
-    # live_transport_supported defaults to False (engine-level opt-in
-    # only, see 2026-04-18-live-submit-cli-excision-adr). The CLI
-    # surface never opts in.
+    # The submission engine is dry-run only. The CLI never exposes a
+    # live AEAT write path.
     return SubmissionEngine(
         browser_session_factory=_NullSession,
         auth_provider=_CliAuthProvider(),

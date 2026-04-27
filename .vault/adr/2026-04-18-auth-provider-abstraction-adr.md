@@ -167,3 +167,15 @@ aeat auth logout
 2. **Ship only Cl@ve Permanente; drop cert support.** Rejected: cert code is substantial, working, and needed for autónomos who have invested in FNMT infrastructure. Also, cert is the only provider that supports the live-write path without elevation in 1.0.0.
 3. **Abstract at the BrowserSession level, not the AuthProvider level.** Rejected: BrowserSession already *is* auth-agnostic; the cert-shape lives in the session record and the authenticator. Abstracting a layer higher (the authenticator itself) is the right seam.
 4. **One auth provider per Settings profile instance — no pluggability at runtime.** Rejected: prevents Kent from having cert on one machine and Cl@ve on another while sharing `env/.env` via secret store indirection.
+
+## 2026-04-27 amendment — read-only scope clarification
+
+Issue `#432` permanently forbids live AEAT submission. This ADR therefore
+remains valid only for provider-agnostic authentication, session acquisition,
+and read-path access.
+
+- Auth providers may support sede walking, notifications, status/history reads,
+  and past-filing import.
+- Auth providers do not preserve, imply, or enable a future live-submit path.
+- Any earlier wording that deferred live writes to 1.0.0 is superseded by the
+  permanent-forbid policy.

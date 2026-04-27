@@ -334,29 +334,26 @@ class TestLiveAccessGateRow:
 
     def test_reports_enabled_reads(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
-        monkeypatch.delenv("AEAT_LIVE_SUBMIT_ENABLED", raising=False)
         monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
         row = check_live_access_gate(Settings())
         assert row.section == "live access gate"
         assert row.state == State.OK
         assert "ENABLED" in row.detail
-        assert "unset" in row.detail
+        assert "writes: permanently forbidden" in row.detail
 
     def test_reports_skipped_when_reads_not_one(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
-        monkeypatch.delenv("AEAT_LIVE_SUBMIT_ENABLED", raising=False)
         monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
         row = check_live_access_gate(Settings())
         assert row.state == State.SKIP
         assert "skipped" in row.detail
 
-    def test_warns_when_submit_var_is_set(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_warns_when_running_inside_pytest(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
-        monkeypatch.setenv("AEAT_LIVE_SUBMIT_ENABLED", "true")
-        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        monkeypatch.setenv("PYTEST_CURRENT_TEST", "test-path")
         row = check_live_access_gate(Settings())
         assert row.state == State.WARN
-        assert "charter #116" in row.detail
+        assert "PYTEST_CURRENT_TEST present" in row.detail
 
 
 class TestAuthProviderPathRow:
