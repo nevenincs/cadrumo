@@ -231,7 +231,7 @@ mandate) or a synthetic-rendered AEAT-instructions exemplar (which
 would not exercise the extractor's NIF / period / CSV header logic).
 
 The same gap applies symmetrically to most per-form Tier-L modelos
-including Modelo 130 (see `2026-130-rule-delta.md`, the M130 waiver).
+including Modelo 130 (see `2026-04-27-modelo-130-rule-delta-reference.md`, the M130 waiver).
 The project's audit trail covers this with the L3 synthetic round-trip
 as the *primary* extraction-fixture bar; L1 anchors supplement when
 available but are not gating.

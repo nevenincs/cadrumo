@@ -1070,9 +1070,8 @@ class TestKentImportsModelo115Declaracion:
 
 
 class TestKentImportsModelo123Declaracion:
-    """Kent imports a Modelo 123 (retenciones rendimientos capital mobiliario) 2025.
+    """Kent imports Modelo 123 retenciones rendimientos capital mobiliario.
 
-    Year 2025 is the most recent landed ruleset. Formulas:
     c03 = c01+c02, c06 = c04+c05, c09 = c07+c08, c11 = c09 - c10.
     """
 
@@ -1164,6 +1163,41 @@ class TestKentImportsModelo123Declaracion:
         assert "Verification status: NEEDS_REVIEW" in result.output
         assert "cause=CORRECTNESS_DIVERGENCE" in result.output
         assert "casilla 11" in result.output
+
+    @pytest.mark.parametrize(
+        ("ejercicio", "template_revision"),
+        [
+            ("2024", "2024.01"),
+            ("2025", "2025.01"),
+            ("2026", "2026.01"),
+        ],
+    )
+    def test_per_year_happy_path_is_verified(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+        ejercicio: str,
+        template_revision: str,
+    ) -> None:
+        """Each M123 ruleset year resolves through declaración import."""
+        del drafts_dir, submissions_dir, english_output
+        pdf = _synth_quarterly_pdf(
+            tmp_path,
+            modelo="123",
+            labels=self._LABELS,
+            values=_M123_HAPPY,
+            filename=f"modelo_123_{ejercicio}Q1_happy.pdf",
+            año=int(ejercicio),
+            ejercicio=ejercicio,
+            template_revision=template_revision,
+        )
+        result = runner.invoke(app, ["filing", "import", "--from-declaracion", str(pdf)])
+        assert result.exit_code == 0, result.output
+        assert "Extraction status: COMPLETE" in result.output
+        assert "Verification status: VERIFIED" in result.output
+        assert f"Modelo 123 {ejercicio}Q1" in result.output, result.output
 
 
 class TestKentImportsModelo131Declaracion:
