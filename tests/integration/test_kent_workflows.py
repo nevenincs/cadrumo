@@ -221,6 +221,40 @@ class TestKentImportsModelo130Declaracion:
         # Missing casillas must surface in the warnings block.
         assert "casilla 05" in result.output and "casilla 06" in result.output
 
+    @pytest.mark.parametrize("ejercicio", ["2024", "2025", "2026"])
+    def test_per_year_happy_path_verified(
+        self,
+        ejercicio: str,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+    ) -> None:
+        """Issue #321: each of 2024 / 2025 / 2026 declaraciones returns VERIFIED.
+
+        Gemini PR-440 review surfaced that the registry only resolved
+        2025 declaraciones; 2024 / 2026 raised NoExtractorRegisteredError.
+        This case asserts that a clean synthetic PDF for each of the
+        three Tier-L years drives the full
+        ``aeat filing import --from-declaracion`` flow to a
+        ``VERIFIED`` verdict (extraction status COMPLETE, no
+        discrepancies).
+
+        Asserts on stable substrings only — forward-compatible with
+        future envelope evolution.
+        """
+        del drafts_dir, submissions_dir, english_output
+        pdf = _synth_modelo_130_pdf(tmp_path, ejercicio=ejercicio)
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-declaracion", str(pdf)],
+        )
+        assert result.exit_code == 0, result.output
+        assert "Extraction status: COMPLETE" in result.output
+        assert "Verification status: VERIFIED" in result.output
+        # The resolved ruleset matches the year on the PDF.
+        assert f"Modelo 130 {ejercicio}Q1" in result.output, result.output
+
     def test_discrepancy_classified_correctly(
         self,
         tmp_path: Path,

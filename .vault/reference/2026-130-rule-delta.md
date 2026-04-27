@@ -194,3 +194,4 @@ triggers:
 | Date          | Author                         | Change                                                                  |
 | :------------ | :----------------------------- | :---------------------------------------------------------------------- |
 | 2026-04-27    | Issue `#321` implementation    | Initial manifest. 2024 / 2025 / 2026 ruleset state recorded as identical. |
+| 2026-04-27    | Issue `#321` post-review fix   | Registered `Modelo130V2024Extractor` + `Modelo130V2026Extractor` sibling classes after Gemini PR-440 review surfaced that the registry was keyed only on `(modelo="130", año=2025, revision="2025.01")` and rejected 2024 / 2026 PDFs. Sibling classes inherit the `Modelo130V2025Extractor` extraction logic verbatim and pin only their own `template_revision` ClassVar — the form layout is unchanged across all three years. |

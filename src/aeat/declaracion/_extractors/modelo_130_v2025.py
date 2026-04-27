@@ -1,9 +1,17 @@
-"""Modelo 130 v2025 declaración extractor.
+"""Modelo 130 declaración extractor (v2024 / v2025 / v2026 layouts).
 
-Parses the AEAT-produced *copia de la declaración* for Modelo 130 tax
-year 2025. Targets the label-anchored regex primitive (see
-:mod:`aeat.declaracion._extract`) for the full 19-casilla liquidación
-block.
+Parses the AEAT-produced *copia de la declaración* for Modelo 130
+across tax years 2024, 2025, and 2026. The form layout is identical
+across the three years (RIRPF art. 110 unchanged per the
+``.vault/reference/2026-130-rule-delta.md`` rule-delta manifest), so a
+single extraction implementation backs three thin per-year subclasses:
+:class:`Modelo130V2024Extractor`, :class:`Modelo130V2025Extractor`,
+and :class:`Modelo130V2026Extractor`. Each pins its own
+``template_revision`` ClassVar so the registry under
+:mod:`aeat.declaracion._extractors` resolves the right
+``(modelo, año, revision)`` triple for every supported year. The
+shared extraction logic lives on :class:`Modelo130V2025Extractor`'s
+``extract`` method and is inherited verbatim.
 
 Issue #321 (Tier-L per-modelo calc-verify-roundtrip): the regex map
 covers all 19 casillas (01..19). The MVP-7 set (01..07) remains in
@@ -304,4 +312,46 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-__all__ = ["Modelo130V2025Extractor"]
+class Modelo130V2024Extractor(Modelo130V2025Extractor):
+    """Modelo 130 v2024 extractor — same layout as v2025 / v2026.
+
+    Issue #321: the AEAT Modelo 130 form layout is unchanged across
+    2024 → 2025 → 2026 (RIRPF art. 110 not amended; consolidated text
+    last update 2026-02-28). This subclass inherits the full
+    :meth:`Modelo130V2025Extractor.extract` implementation and pins
+    only the ``template_revision`` ClassVar so the registry resolves
+    ``(modelo="130", año=2024, revision="2024.01")`` to a working
+    extractor.
+    """
+
+    template_revision: ClassVar[TemplateRevision] = TemplateRevision(
+        modelo="130",
+        año=2024,
+        revision="2024.01",
+    )
+
+
+class Modelo130V2026Extractor(Modelo130V2025Extractor):
+    """Modelo 130 v2026 extractor — same layout as v2024 / v2025.
+
+    Issue #321: the AEAT Modelo 130 form layout is unchanged across
+    2024 → 2025 → 2026 (RIRPF art. 110 not amended; consolidated text
+    last update 2026-02-28). This subclass inherits the full
+    :meth:`Modelo130V2025Extractor.extract` implementation and pins
+    only the ``template_revision`` ClassVar so the registry resolves
+    ``(modelo="130", año=2026, revision="2026.01")`` to a working
+    extractor.
+    """
+
+    template_revision: ClassVar[TemplateRevision] = TemplateRevision(
+        modelo="130",
+        año=2026,
+        revision="2026.01",
+    )
+
+
+__all__ = [
+    "Modelo130V2024Extractor",
+    "Modelo130V2025Extractor",
+    "Modelo130V2026Extractor",
+]
