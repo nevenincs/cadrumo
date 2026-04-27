@@ -36,6 +36,11 @@ from ...workflow import (
     WorkflowError,
 )
 
+# This module is a shared test-helper file — no test functions live
+# here, but its filename matches the project's `_test_*.py` glob
+# which the marker-integrity walker enforces. Carry the same
+# pytestmark every sibling test module declares so the contract
+# stays uniform across the package.
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 

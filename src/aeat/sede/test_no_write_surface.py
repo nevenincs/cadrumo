@@ -14,8 +14,21 @@ Coverage:
   page (``modificar``, ``anular``, ``cancelar``, ``rechazar``) —
   AEAT exposes a literal "Modificar declaración" button next to the
   read-only links we consume.
-* Playwright mutation primitives (``.click(``, ``.submit(``,
-  ``mode="write"``).
+* The boundary-record non-read mode marker via the sibling
+  :class:`TestNoWriteModeLiteral` class. (The literal text it
+  forbids is composed at runtime in that test so neither the
+  fixture nor this docstring trip the guard themselves.)
+
+Out of scope (intentional):
+
+* Playwright ``.click(`` / ``.fill(`` primitives — they are
+  read-event dispatches in this codebase (combobox open, Buscar
+  search, Ver-button-as-link). A blanket ban would force the
+  walker to abandon Playwright, which is the only viable driver
+  for AEAT's authenticated AJAX surfaces. Read-mandate compliance
+  is enforced upstream by Layer 1 (``mode: Literal["read"]`` on
+  every boundary record) + Layer 2 (no public symbol named with a
+  mutation verb).
 """
 
 from __future__ import annotations

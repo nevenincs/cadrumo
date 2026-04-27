@@ -37,6 +37,14 @@ Public API
   every fixture (optionally filtered by ``modelo`` or ``period``).
 - :func:`compute_record_id` — content-addressed ID helper shared
   with fixture authoring.
+- :func:`synthesize_filing_draft` — pure-construction factory that
+  builds a strict-frozen :class:`aeat.filing.FilingDraft` from a
+  casilla map. Used by the W1 P7 reconcile dry-run path to feed
+  ``aeat filing reconcile`` an APPROVED draft without running the
+  full transactions/ruleset/formulas/validator pipeline.
+- :func:`synthesize_filing_draft_from_decimals` — convenience
+  wrapper that coerces decimal-as-string casilla values to
+  :class:`Decimal` at the boundary.
 
 Status reuses :class:`aeat.filing.FilingDraftStatus`; this
 subpackage intentionally does **not** introduce a parallel status
@@ -86,6 +94,10 @@ from ._schema import (
     FixtureScalar,
     compute_record_id,
 )
+from ._synthesize import (
+    synthesize_filing_draft,
+    synthesize_filing_draft_from_decimals,
+)
 
 __all__ = [
     "SYNTHETIC_FIXTURES_ROOT",
@@ -97,4 +109,6 @@ __all__ = [
     "FixtureScalar",
     "compute_record_id",
     "load_filing_history",
+    "synthesize_filing_draft",
+    "synthesize_filing_draft_from_decimals",
 ]
