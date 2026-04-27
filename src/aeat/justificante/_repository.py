@@ -33,11 +33,14 @@ from ..storage import (
     Envelope,
     SensitivityClass,
     exclusive_file_lock,
-    load_envelope,
-    save_envelope,
+    load_encrypted_envelope,
+    save_encrypted_envelope,
 )
+from ..storage._encrypted_columns import _resolve_master_key_provider
 from ..storage.errors import ClassificationError, EnvelopeVersionError
 from ._schema import Justificante
+
+_HKDF_CONTEXT_JUSTIFICANTE = b"aeat.justificante.metadata.v1"
 
 _log = get_logger(__name__)
 
@@ -103,16 +106,22 @@ class JustificanteRepository:
         target = self.envelope_path_for(csv)
         if not target.exists():
             return None
-        envelope = load_envelope(
+        envelope = load_encrypted_envelope(
             target,
             Envelope[Justificante],
             expected_class=SensitivityClass.AUDIT,
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=_HKDF_CONTEXT_JUSTIFICANTE,
             max_supported_version=_JUSTIFICANTE_ENVELOPE_VERSION,
         )
         return envelope.payload
 
     def save(self, justificante: Justificante) -> None:
-        """Persist ``justificante`` atomically under its per-record file lock."""
+        """Persist ``justificante`` atomically under its per-record file lock.
+
+        The on-disk envelope is AES-256-GCM ciphertext at AUDIT class —
+        no plaintext NIF, CSV, or verification URL lands on disk.
+        """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target_for(justificante.csv)):
             envelope = Envelope[Justificante](
@@ -121,7 +130,12 @@ class JustificanteRepository:
                 classification=SensitivityClass.AUDIT,
                 payload=justificante,
             )
-            save_envelope(envelope, self.envelope_path_for(justificante.csv))
+            save_encrypted_envelope(
+                envelope,
+                self.envelope_path_for(justificante.csv),
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_JUSTIFICANTE,
+            )
 
     def delete(self, csv: str) -> bool:
         """Remove the metadata envelope for ``csv``."""
@@ -216,7 +230,12 @@ def migrate_legacy_justificantes_to_repository(
                 classification=SensitivityClass.AUDIT,
                 payload=justificante,
             )
-            save_envelope(envelope, target)
+            save_encrypted_envelope(
+                envelope,
+                target,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_JUSTIFICANTE,
+            )
             imported += 1
     _log.info(
         "migrated legacy justificantes from %s into %s: imported=%d skipped=%d errors=%d",

@@ -33,11 +33,14 @@ from ..storage import (
     Envelope,
     SensitivityClass,
     exclusive_file_lock,
-    load_envelope,
-    save_envelope,
+    load_encrypted_envelope,
+    save_encrypted_envelope,
 )
+from ..storage._encrypted_columns import _resolve_master_key_provider
 from ..storage.errors import ClassificationError, EnvelopeVersionError
 from ..sync import WireFilingHistory
+
+_HKDF_CONTEXT_FILING_HISTORY = b"aeat.filing.history.v1"
 
 _log = get_logger(__name__)
 
@@ -103,16 +106,22 @@ class FilingHistoryRepository:
         target = self.envelope_path_for(modelo)
         if not target.exists():
             return None
-        envelope = load_envelope(
+        envelope = load_encrypted_envelope(
             target,
             Envelope[WireFilingHistory],
             expected_class=SensitivityClass.AUDIT,
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=_HKDF_CONTEXT_FILING_HISTORY,
             max_supported_version=_HISTORY_ENVELOPE_VERSION,
         )
         return envelope.payload
 
     def save(self, modelo: str, history: WireFilingHistory) -> None:
-        """Persist ``history`` for ``modelo`` atomically under the per-modelo lock."""
+        """Persist ``history`` for ``modelo`` atomically under the per-modelo lock.
+
+        The on-disk envelope is AES-256-GCM ciphertext at AUDIT class —
+        no plaintext filing-state row lands on disk.
+        """
         _validate_modelo(modelo)
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target_for(modelo)):
@@ -122,7 +131,12 @@ class FilingHistoryRepository:
                 classification=SensitivityClass.AUDIT,
                 payload=history,
             )
-            save_envelope(envelope, self.envelope_path_for(modelo))
+            save_encrypted_envelope(
+                envelope,
+                self.envelope_path_for(modelo),
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_FILING_HISTORY,
+            )
 
     def delete(self, modelo: str) -> bool:
         """Remove the filing-history envelope for ``modelo``."""
@@ -235,7 +249,12 @@ def migrate_legacy_filing_history_to_repository(
                 classification=SensitivityClass.AUDIT,
                 payload=history,
             )
-            save_envelope(envelope, target)
+            save_encrypted_envelope(
+                envelope,
+                target,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_FILING_HISTORY,
+            )
             imported += 1
     _log.info(
         "migrated legacy filing history from %s into %s: imported=%d skipped=%d errors=%d",

@@ -32,11 +32,14 @@ from ..storage import (
     Envelope,
     SensitivityClass,
     exclusive_file_lock,
-    load_envelope,
-    save_envelope,
+    load_encrypted_envelope,
+    save_encrypted_envelope,
 )
+from ..storage._encrypted_columns import _resolve_master_key_provider
 from ..storage.errors import ClassificationError, EnvelopeVersionError
 from ._complementaria import FilingAmendment
+
+_HKDF_CONTEXT_AMENDMENT = b"aeat.filing.amendment.v1"
 
 _log = get_logger(__name__)
 
@@ -105,16 +108,23 @@ class FilingAmendmentRepository:
         target = self.envelope_path_for(amendment_id)
         if not target.exists():
             return None
-        envelope = load_envelope(
+        envelope = load_encrypted_envelope(
             target,
             Envelope[FilingAmendment],
             expected_class=SensitivityClass.AUDIT,
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=_HKDF_CONTEXT_AMENDMENT,
             max_supported_version=_AMENDMENT_ENVELOPE_VERSION,
         )
         return envelope.payload
 
     def save(self, amendment: FilingAmendment) -> None:
-        """Persist ``amendment`` atomically under its per-record file lock."""
+        """Persist ``amendment`` atomically under its per-record file lock.
+
+        The on-disk envelope is AES-256-GCM ciphertext at AUDIT class —
+        no plaintext casilla delta or original-CSV reference lands on
+        disk.
+        """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target_for(amendment.amendment_id)):
             envelope = Envelope[FilingAmendment](
@@ -123,7 +133,12 @@ class FilingAmendmentRepository:
                 classification=SensitivityClass.AUDIT,
                 payload=amendment,
             )
-            save_envelope(envelope, self.envelope_path_for(amendment.amendment_id))
+            save_encrypted_envelope(
+                envelope,
+                self.envelope_path_for(amendment.amendment_id),
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_AMENDMENT,
+            )
 
     def delete(self, amendment_id: str) -> bool:
         """Remove the envelope for ``amendment_id``."""
@@ -222,7 +237,12 @@ def migrate_legacy_amendments_to_repository(
                 classification=SensitivityClass.AUDIT,
                 payload=amendment,
             )
-            save_envelope(envelope, target)
+            save_encrypted_envelope(
+                envelope,
+                target,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_AMENDMENT,
+            )
             imported += 1
     _log.info(
         "migrated legacy amendments from %s into %s: imported=%d skipped=%d errors=%d",
