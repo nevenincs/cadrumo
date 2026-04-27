@@ -48,6 +48,7 @@ from . import (
     MODELO_130_2025,
     MODELO_130_2026,
     MODELO_131_2025,
+    MODELO_131_2026,
     MODELO_200_2024,
     MODELO_202_2025,
     MODELO_303_2024,
@@ -434,6 +435,24 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             "15",
             _modelo_131_rich_fixture,
             id="modelo_131.2025:casilla_15_resultado_a_ingresar",
+        ),
+        pytest.param(
+            lambda: MODELO_131_2026,
+            "10",
+            _modelo_131_rich_fixture,
+            id="modelo_131.2026:casilla_10_resultado_tras_credits",
+        ),
+        pytest.param(
+            lambda: MODELO_131_2026,
+            "13",
+            _modelo_131_rich_fixture,
+            id="modelo_131.2026:casilla_13_resultado_intermedio",
+        ),
+        pytest.param(
+            lambda: MODELO_131_2026,
+            "15",
+            _modelo_131_rich_fixture,
+            id="modelo_131.2026:casilla_15_resultado_a_ingresar",
         ),
         # Modelo 303 — every sub_op-bearing casilla (2 chains).
         pytest.param(
