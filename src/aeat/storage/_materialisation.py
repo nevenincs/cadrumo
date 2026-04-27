@@ -1,0 +1,211 @@
+"""Materialisation helpers for path-shaped secret consumers.
+
+Some third-party libraries (Google's
+:func:`google.oauth2.service_account.Credentials.from_service_account_file`,
+Playwright's ``storage_state`` parameter, certain cert-based clients)
+demand a path on disk rather than bytes in memory. The substrate
+stores ciphertext; these helpers bridge the gap.
+
+:func:`materialise_secret` is a context manager that yields a
+:class:`Path` to a short-lived secure tempfile. The file is created
+under the OS tempdir with mode ``0o600`` (POSIX) via the same
+``_write_bytes_secure`` primitive used by the master-key file
+backend; on context exit the file is unlinked.
+
+:func:`export_to_temp_path` is the explicit-cleanup variant for
+callers that need the path beyond a single ``with`` block. It returns
+a ``(path, cleanup)`` tuple; the caller is responsible for invoking
+``cleanup()`` when the consumer no longer needs the path.
+
+Both helpers consult the active :class:`SecretStore` via
+:func:`get_secret_store`, a process-singleton lazy factory keyed by
+the resolved :class:`Settings`.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import os
+import tempfile
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from pathlib import Path
+from threading import Lock
+from typing import TYPE_CHECKING
+
+from ..logging import get_logger
+from ._blob_store import EncryptedBlobStore
+from ._master_key import get_master_key_provider
+from ._secret_store import SecretStore
+
+if TYPE_CHECKING:
+    from ..config import Settings
+
+_log = get_logger(__name__)
+_factory_lock = Lock()
+_singleton_store: SecretStore | None = None
+
+
+def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
+    """Return the process-wide singleton :class:`SecretStore`.
+
+    The first call constructs the store from the resolved
+    :class:`Settings`; subsequent calls return the same instance.
+    Tests should call :func:`override_secret_store` to inject a
+    deterministic stub.
+
+    Args:
+        settings: Optional pre-built settings instance. When ``None``,
+            :func:`load_settings` is consulted on first use.
+
+    Returns:
+        The singleton :class:`SecretStore`.
+    """
+    global _singleton_store
+    with _factory_lock:
+        if _singleton_store is not None:
+            return _singleton_store
+        from ..config import load_settings
+
+        resolved = settings if settings is not None else load_settings()
+        provider = get_master_key_provider(settings_override=resolved)
+        blob_store = EncryptedBlobStore(
+            root_dir=Path(resolved.aeat_blob_store_dir),
+            master_key_provider=provider,
+        )
+        _singleton_store = SecretStore(
+            store_dir=Path(resolved.aeat_secret_store_dir),
+            blob_store=blob_store,
+            master_key_provider=provider,
+        )
+        return _singleton_store
+
+
+def override_secret_store(store: SecretStore | None) -> None:
+    """Test helper: install (or clear) a process-wide secret-store override.
+
+    Args:
+        store: The :class:`SecretStore` to install. ``None`` clears
+            the override and reverts to the standard
+            :func:`get_secret_store` resolution.
+    """
+    global _singleton_store
+    with _factory_lock:
+        _singleton_store = store
+
+
+def _write_bytes_secure(target: Path, payload: bytes) -> None:
+    """Write ``payload`` to ``target`` with mode 0o600 on POSIX.
+
+    Mirrors the helper in :mod:`aeat.storage._master_key`; duplicated
+    here to avoid a cross-module private-name import.
+    """
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    if hasattr(os, "O_NOINHERIT"):
+        flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+    fd = os.open(target, flags, 0o600)
+    try:
+        os.write(fd, payload)
+    finally:
+        os.close(fd)
+
+
+@contextmanager
+def materialise_secret(
+    key: str,
+    *,
+    store: SecretStore | None = None,
+    prefix: str = "aeat-secret",
+    suffix: str = "",
+) -> Iterator[Path]:
+    """Context-managed secure tempfile holding the secret value.
+
+    The tempfile lives under the OS tempdir with mode ``0o600`` on
+    POSIX (Windows inherits the parent ACL — out of scope for this
+    helper). The file is unlinked on context exit, including on
+    exception.
+
+    Args:
+        key: Natural key passed to :meth:`SecretStore.get`.
+        store: Optional :class:`SecretStore` override. When ``None``,
+            the process-wide singleton from :func:`get_secret_store`
+            is used.
+        prefix: Filename prefix for the tempfile. Defaults to
+            ``aeat-secret``.
+        suffix: Filename suffix (e.g. ``.json`` for a Google
+            service-account JSON file). Defaults to empty.
+
+    Yields:
+        :class:`Path` to the materialised file.
+
+    Raises:
+        SecretNotFoundError: If no record exists for ``key`` (raised
+            from :meth:`SecretStore.get`).
+    """
+    active_store = store if store is not None else get_secret_store()
+    record = active_store.get(key)
+    fd, tmp_path_str = tempfile.mkstemp(prefix=f"{prefix}-", suffix=suffix)
+    os.close(fd)  # we re-open with mode 0o600 via _write_bytes_secure
+    tmp_path = Path(tmp_path_str)
+    try:
+        _write_bytes_secure(tmp_path, record.value)
+        yield tmp_path
+    finally:
+        with contextlib.suppress(FileNotFoundError):
+            tmp_path.unlink()
+
+
+def export_to_temp_path(
+    key: str,
+    *,
+    store: SecretStore | None = None,
+    prefix: str = "aeat-secret",
+    suffix: str = "",
+) -> tuple[Path, Callable[[], None]]:
+    """Return ``(path, cleanup)`` for callers that need the path beyond a ``with`` block.
+
+    The caller is responsible for invoking ``cleanup()`` once the
+    consumer no longer needs the path. ``cleanup()`` is idempotent:
+    repeated calls are safe and cost nothing on the second-and-later
+    invocations.
+
+    Args:
+        key: Natural key passed to :meth:`SecretStore.get`.
+        store: Optional :class:`SecretStore` override.
+        prefix: Filename prefix for the tempfile.
+        suffix: Filename suffix.
+
+    Returns:
+        A ``(path, cleanup)`` tuple.
+
+    Raises:
+        SecretNotFoundError: If no record exists for ``key``.
+    """
+    active_store = store if store is not None else get_secret_store()
+    record = active_store.get(key)
+    fd, tmp_path_str = tempfile.mkstemp(prefix=f"{prefix}-", suffix=suffix)
+    os.close(fd)
+    tmp_path = Path(tmp_path_str)
+    _write_bytes_secure(tmp_path, record.value)
+
+    cleaned = False
+
+    def _cleanup() -> None:
+        nonlocal cleaned
+        if cleaned:
+            return
+        cleaned = True
+        with contextlib.suppress(FileNotFoundError):
+            tmp_path.unlink()
+
+    return tmp_path, _cleanup
+
+
+__all__ = [
+    "export_to_temp_path",
+    "get_secret_store",
+    "materialise_secret",
+    "override_secret_store",
+]
