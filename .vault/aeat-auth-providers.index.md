@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#aeat-auth-providers'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-18-aeat-auth-providers-research]]'
   - '[[2026-04-18-auth-provider-abstraction-adr]]'

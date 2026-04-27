@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#live-sync-backend'
-date: '2026-04-22'
+date: '2026-04-27'
 related:
   - '[[2026-04-21-live-sync-backend-adr-audit]]'
   - '[[2026-04-21-live-sync-backend-adr]]'

@@ -122,28 +122,6 @@ def test_dry_run_fills_and_aborts_before_submit(tmp_path: Path) -> None:
     assert attempt.status is SubmissionStatus.PENDING
 
 
-def test_submit_clicks_submit_and_records_submitted(tmp_path: Path) -> None:
-    submitter = Modelo130Submitter(artifact_dir=tmp_path)
-    session = RecordingSession()
-    attempt, justificante = asyncio.run(
-        submitter.submit(
-            draft=_Draft(),
-            session=session,
-            casilla_catalogue=_Catalogue(),
-            portal=_portal(),
-        )
-    )
-    names = [call[0] for call in session.calls]
-    assert names.count("fill") == 2
-    click_calls = [c for c in session.calls if c[0] == "click"]
-    assert len(click_calls) == 1
-    selector = click_calls[0][1][0]
-    assert isinstance(selector, str)
-    assert "firmar-y-enviar" in selector
-    assert attempt.status is SubmissionStatus.SUBMITTED
-    assert justificante is None  # v1: parser runs outside the submitter
-
-
 def test_unknown_casilla_raises(tmp_path: Path) -> None:
     submitter = Modelo130Submitter(artifact_dir=tmp_path)
     draft = _Draft(values={"99": "99.00"})

@@ -7,6 +7,7 @@ related:
   - "[[2026-04-21-usage-ratios-plan]]"
   - "[[2026-04-21-usage-ratios-adr]]"
   - "[[2026-04-21-usage-ratios-research]]"
+  - "[[2026-04-21-usage-ratios-code-review-exec]]"
 ---
 
 # 2026-04-21-usage-ratios-phase1-summary
@@ -70,4 +71,4 @@ Settings field `aeat_usage_ratios_path` in `src/aeat/config.py`; default `var/fi
 
 ## Next Steps
 
-Proceed to the mandatory code-review phase ([[2026-04-21-usage-ratios-code-review-exec]]) and merge PR #306 once all green.
+Proceed to the mandatory code-review phase (`2026-04-21-usage-ratios-code-review-exec`) and merge PR #306 once all green.

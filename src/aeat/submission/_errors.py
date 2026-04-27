@@ -34,25 +34,41 @@ class SubmissionPreflightError(SubmissionError):
     """Raised when preflight gating rejects a draft before any browser work."""
 
 
-class AeatLiveSubmitNotEnabledError(SubmissionPreflightError):
-    """Raised when the live-submit env gate is not enabled."""
+class LiveSubmitForbiddenError(SubmissionPreflightError):
+    """Raised when any caller attempts a permanently forbidden live AEAT write."""
 
-
-class AeatPytestLiveWriteRefusedError(SubmissionPreflightError):
-    """Raised when pytest reaches a live-capable submission call."""
-
-
-class AeatLiveTransportUnavailableError(SubmissionPreflightError):
-    """Raised when a live write is requested on a stubbed transport."""
-
-
-class AeatLiveConfirmationDeclinedError(SubmissionPreflightError):
-    """Raised when the operator does not type the exact live-submit phrase."""
+    def __init__(
+        self,
+        message: str = (
+            "live AEAT submission is permanently forbidden; use produce -> verify -> "
+            "export and upload the file yourself in the AEAT portal"
+        ),
+        *,
+        translated_message: Translatable | None = None,
+    ) -> None:
+        """Construct the permanent live-submit refusal error."""
+        default_translatable: Translatable = {
+            "es": (
+                "El envío en vivo a AEAT está permanentemente prohibido. "
+                "Usa produce -> verify -> export y sube el fichero tú mismo "
+                "en el portal de AEAT."
+            ),
+            "en": (
+                "Live AEAT submission is permanently forbidden. "
+                "Use produce -> verify -> export and upload the file yourself "
+                "in the AEAT portal."
+            ),
+            "hu": (
+                "Az élő AEAT beküldés véglegesen tiltott. "
+                "Használd a produce -> verify -> export folyamatot, és töltsd "
+                "fel a fájlt te magad az AEAT portálon."
+            ),
+        }
+        super().__init__(
+            message,
+            translated_message=translated_message or default_translatable,
+        )
 
 
 class SubmissionFormFillError(SubmissionError):
     """Raised when the submitter cannot fill a casilla-keyed input on the portal."""
-
-
-class SubmissionRejectionError(SubmissionError):
-    """Raised when AEAT rejects the filled form during the live submit leg."""

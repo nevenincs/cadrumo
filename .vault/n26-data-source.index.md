@@ -2,12 +2,12 @@
 generated: true
 tags:
   - '#n26-data-source'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-14-n26-data-source-adr]]'
   - '[[2026-04-14-n26-data-source-research]]'
-  - '[[2026-04-21-n26-data-source-implementation-adr]]'
   - '[[2026-04-21-n26-data-source-audit]]'
+  - '[[2026-04-21-n26-data-source-implementation-adr]]'
   - '[[2026-04-21-n26-data-source-implementation-audit]]'
   - '[[2026-04-21-n26-data-source-phase-2-plan]]'
 ---

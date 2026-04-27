@@ -7,7 +7,7 @@ related:
   - '[[2026-04-21-google-auth-ux-research]]'
   - '[[2026-04-21-google-auth-ux-adr]]'
   - '[[2026-04-21-google-auth-ux-phase-1-plan]]'
-  - '[[2026-04-21-google-auth-ux-contract-review]]'
+  - '[[2026-04-21-google-auth-ux-contract-review-audit]]'
 ---
 
 # `google-auth-ux` Code Review

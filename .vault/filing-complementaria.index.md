@@ -2,13 +2,13 @@
 generated: true
 tags:
   - '#filing-complementaria'
-date: '2026-04-21'
+date: '2026-04-27'
 related:
   - '[[2026-04-13-filing-complementaria-adr]]'
   - '[[2026-04-13-filing-complementaria-plan]]'
   - '[[2026-04-13-filing-complementaria-research]]'
   - '[[2026-04-13-filing-complementaria-review-audit]]'
-  - '[[exec/2026-04-21-summary-exec]]'
+  - '[[2026-04-21-filing-complementaria-summary-exec]]'
 ---
 
 # `filing-complementaria` feature index
@@ -27,7 +27,7 @@ Auto-generated index of all documents tagged with `#filing-complementaria`.
 
 ### exec
 
-- `exec/2026-04-21-summary-exec` - execution summary
+- `2026-04-21-filing-complementaria-summary-exec` - execution summary
 
 ### plan
 

@@ -8,7 +8,8 @@ method to see exactly which abort reasons it can produce.
 
 Safety invariants enforced by this module:
 
-- Callers must spell out ``dry_run=...`` at the API level.
+- Callers must spell out ``dry_run=...`` at the API level, and
+  ``dry_run=False`` is permanently forbidden.
 - The engine never touches AEAT-side state directly; every boundary
   call flows through an injected Protocol or callable seam.
 """
@@ -36,6 +37,7 @@ from ..submission import (
     DraftStatus,
     FilingDraftLike,
     FilingFindingSeverity,
+    LiveSubmitForbiddenError,
     SubmissionPreflightError,
 )
 from ._errors import WorkflowComponentError
@@ -138,6 +140,25 @@ def _classify_cert_expiry(
 def _t(en: str) -> Translatable:
     """Build a :class:`Translatable` carrying a single English message."""
     return cast(Translatable, {"en": en})
+
+
+def _preflight_failed_summary(error: BaseException) -> Translatable:
+    """Return a trilingual preflight-failure summary when one is available."""
+    translated = getattr(error, "translated_message", None)
+    if isinstance(translated, Mapping):
+        summary_by_language = {
+            "es": "Validación previa fallida:",
+            "en": "Preflight failed:",
+            "hu": "Előellenőrzés sikertelen:",
+        }
+        rendered = {
+            language: f"{prefix} {message}"
+            for language, prefix in summary_by_language.items()
+            if isinstance(message := translated.get(language), str) and message
+        }
+        if rendered:
+            return cast(Translatable, rendered)
+    return _t(f"Preflight failed: {error}")
 
 
 def _enum_value(value: object) -> str:
@@ -253,8 +274,8 @@ class WorkflowEngine:
 
         Args:
             profile: The :class:`AutonomoProfile` to run for.
-            dry_run: When ``True`` the dry-run submit leg is taken; no
-                live AEAT submission is attempted.
+            dry_run: Must be ``True``. Passing ``False`` is treated as
+                a permanent-refusal preflight failure.
             sync_first: Whether to run the sync runner before the
                 deadline computation. ``None`` means "use the
                 ``AEAT_WORKFLOW_SYNC_FIRST_DEFAULT`` setting".
@@ -1036,10 +1057,27 @@ class WorkflowEngine:
     ) -> SubmittedFilingLike:
         """Stage 8 — dispatch to the submission engine.
 
-        The submission engine owns the live-write refusal gates and
-        confirmation hook; workflow only forwards the explicit mode.
+        The workflow contract is dry-run only. A non-dry-run request
+        is refused before the submission engine is called.
         """
         started = _utcnow()
+        if not dry_run:
+            refusal = LiveSubmitForbiddenError()
+            preflight_summary = _preflight_failed_summary(refusal)
+            steps.append(
+                WorkflowStep(
+                    stage=WorkflowStage.DRY_RUN_SUBMIT,
+                    started_at=started,
+                    ended_at=_utcnow(),
+                    success=False,
+                    summary=preflight_summary,
+                    details={"dry_run": str(dry_run), "error_message": str(refusal)},
+                )
+            )
+            raise _AbortError(
+                reason=WorkflowAbortReason.PREFLIGHT_FAILED,
+                summary=preflight_summary,
+            ) from refusal
         try:
             submission = await self._submission_engine.submit_draft(
                 draft,
@@ -1076,8 +1114,7 @@ class WorkflowEngine:
                 exc=exc,
                 steps=steps,
             )
-        mode_label = "dry-run" if dry_run else "LIVE"
-        submit_summary = _t(f"Submit {mode_label} OK submission_id={submission.submission_id}")
+        submit_summary = _t(f"Submit dry-run OK submission_id={submission.submission_id}")
         steps.append(
             WorkflowStep(
                 stage=WorkflowStage.DRY_RUN_SUBMIT,
