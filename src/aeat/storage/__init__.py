@@ -89,6 +89,12 @@ from ._redaction import (
     redact,
     redact_structured,
 )
+from ._rotation import (
+    RotationPlanEntry,
+    RotationSummary,
+    default_rotation_plan,
+    rotate_master_key,
+)
 from ._secret_store import SecretRecord, SecretStore
 from .engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
@@ -169,6 +175,8 @@ __all__ = [
     "RepositoryError",
     "RetentionPolicy",
     "RetentionPolicyError",
+    "RotationPlanEntry",
+    "RotationSummary",
     "SecretAlreadyExistsError",
     "SecretNotFoundError",
     "SecretRecord",
@@ -180,6 +188,7 @@ __all__ = [
     "decrypt_record",
     "default_policy_for",
     "default_policy_table",
+    "default_rotation_plan",
     "default_rules",
     "default_rules_for",
     "default_rules_for_class",
@@ -201,6 +210,7 @@ __all__ = [
     "redact",
     "redact_structured",
     "reencrypt_envelope_file",
+    "rotate_master_key",
     "round_trip_migrations",
     "safe_record_path",
     "safe_subpath",
