@@ -123,8 +123,8 @@ class WorkflowResult(BaseModel):
         obligation: The :class:`aeat.deadlines.FilingObligation` the
             workflow targeted, if one was computed before the bailout.
         draft_id: The filing draft id, if a draft was built.
-        submission_id: The submission id, if the dry-run or live
-            submit leg executed.
+        submission_id: The submission id, if the dry-run submission
+            leg executed.
         steps: Tuple of :class:`WorkflowStep` in the order the engine
             executed them.
         summary: Trilingual user-facing summary of the whole run.
