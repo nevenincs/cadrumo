@@ -13,7 +13,7 @@ from ..errors import (
     FormulaCycleError,
     RulesetValidationError,
 )
-from ..models import ModeloCode
+from ..models import LegalCitation, LegalCitationSource, ModeloCode
 from ._casilla import CasillaDefinition
 from ._formula import (
     CasillaRef,
@@ -29,12 +29,26 @@ from ._rulesets.modelo_130_2024 import RULESET as MODELO_130_2024
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
+_FIXTURE_CITATION = LegalCitation(
+    source=LegalCitationSource.REAL_DECRETO,
+    article="110",
+    url=None,
+    quoted_text_es=(
+        "Fixture-only citation for the Ruleset structural-invariant tests; not authored as a binding ruleset reference."
+    ),
+    retrieval_date=date(2026, 4, 25),
+    is_curated_summary=True,
+)
+
+
 def _make_casilla(casilla_id: str, *, computed: bool) -> CasillaDefinition:
+    legal_basis: tuple[LegalCitation, ...] = (_FIXTURE_CITATION,) if computed else ()
     return CasillaDefinition(
         casilla_id=casilla_id,
         label={"es": f"Casilla {casilla_id}", "en": f"box {casilla_id}", "hu": "rovat"},
         computed=computed,
         data_type=CasillaDataType.CURRENCY_EUR,
+        legal_basis=legal_basis,
     )
 
 

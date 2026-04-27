@@ -1,5 +1,33 @@
 # aeat
 
+<!--
+README OUT OF DATE — needs a dedicated overhaul pass.
+
+The codebase has drifted significantly past what this README describes.
+Notably absent / stale:
+  * Cl@ve Móvil auth (now the sanctioned live path; README still says
+    "no Cl@ve / DNIe yet").
+  * aeat.sanitizer subpackage (PDF sanitiser pipeline that produces the
+    fixture corpus, shipped as part of #239).
+  * aeat.filing.reconciliation (FilingDraft ↔ Justificante comparator
+    with MATCH / DIVERGENT / NOT_YET_FOUND triad, shipped in #239).
+  * aeat.sede.walk_declarations_register (Consultar declaraciones
+    presentadas walker; the canonical filings register, shipped #239).
+  * aeat.testing.synthesize_filing_draft (test-fixture FilingDraft
+    factory used by reconcile dry-runs).
+  * The expanded justificante fixture corpus (40 sanitised PDFs across
+    M100 2021-2023, M130 2021-2024, M303 2021-2024, M111 2024,
+    M190 2024, M390 2021-2023).
+
+Do not treat this README as the source of truth for shipped features.
+Until it is rewritten, consult `.vault/audit/`, the per-subpackage
+docstrings under `src/aeat/<name>/__init__.py`, and `docs/coverage/`
+for what is actually implemented.
+
+Tracking: needs a separate PR with dedicated attention before the
+next operator-facing release.
+-->
+
 > **Status: pre-alpha.** Local gates are authoritative — `just lint &&
 > just typecheck && just test && just hooks` is the source of truth.
 > GitHub Actions is permanently disabled on this repository; there is

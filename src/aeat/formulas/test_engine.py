@@ -351,6 +351,7 @@ def test_derive_division_by_zero_raises_evaluation_error() -> None:
     from datetime import date
 
     from ..casillas import CasillaDataType
+    from ..models import LegalCitation, LegalCitationSource
     from ._casilla import CasillaDefinition
     from ._formula import (
         CasillaRef,
@@ -366,6 +367,16 @@ def test_derive_division_by_zero_raises_evaluation_error() -> None:
             CasillaRef(casilla_id="01"),
             Literal(value=Decimal("0")),
         )
+    )
+    fixture_citation = LegalCitation(
+        source=LegalCitationSource.REAL_DECRETO,
+        article="110",
+        url=None,
+        quoted_text_es=(
+            "Fixture-only citation for the engine division-by-zero test; not authored as a binding ruleset reference."
+        ),
+        retrieval_date=date(2026, 4, 25),
+        is_curated_summary=True,
     )
     ruleset = Ruleset(
         ruleset_id="test.divzero",
@@ -384,6 +395,7 @@ def test_derive_division_by_zero_raises_evaluation_error() -> None:
                 label={"es": "B", "en": "B", "hu": "B"},
                 computed=True,
                 data_type=CasillaDataType.CURRENCY_EUR,
+                legal_basis=(fixture_citation,),
             ),
         ),
         formulas=(

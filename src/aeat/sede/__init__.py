@@ -8,14 +8,35 @@ there is no speculative scaffolding.
 Public API:
 
     from aeat.sede import (
+        # Records
+        Declaration,
         Expediente,
         JustificanteRef,
+        NotificationsSnapshot,
+        RemoteNotification,
         SedeCapture,
+        # Errors
+        ExpedienteNotFoundError,
+        JustificanteFetchError,
         SedeError,
+        SedeNavigationError,
+        SedeParseError,
+        # Declaraciones-presentadas register surface
+        capture_declaration,
+        walk_declarations_register,
+        # Mis Expedientes (procedure-tree) surface
         capture_justificante,
         find_expediente,
         resolve_justificante_ref,
         walk_expedientes_tree,
+        # Notifications / Comunicaciones surface
+        fetch_notifications_query,
+        fetch_notifications_summary,
+        # Parsers (offline-testable)
+        parse_expediente_detail,
+        parse_notifications_query,
+        parse_notifications_summary,
+        parse_resumen_tree,
     )
 
 The surface is structurally read-only (Layer 1 of the five-layer
@@ -44,6 +65,12 @@ Navigation flow, captured live:
 
 from __future__ import annotations
 
+from ._declarations import (
+    Declaration,
+    capture_declaration,
+    shared_playwright,
+    walk_declarations_register,
+)
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -69,6 +96,7 @@ from ._walker import (
 )
 
 __all__ = [
+    "Declaration",
     "Expediente",
     "ExpedienteNotFoundError",
     "JustificanteFetchError",
@@ -79,6 +107,7 @@ __all__ = [
     "SedeError",
     "SedeNavigationError",
     "SedeParseError",
+    "capture_declaration",
     "capture_justificante",
     "fetch_notifications_query",
     "fetch_notifications_summary",
@@ -88,5 +117,7 @@ __all__ = [
     "parse_notifications_summary",
     "parse_resumen_tree",
     "resolve_justificante_ref",
+    "shared_playwright",
+    "walk_declarations_register",
     "walk_expedientes_tree",
 ]

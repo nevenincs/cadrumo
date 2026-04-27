@@ -17,6 +17,7 @@ import logging
 import typer
 
 from . import attachments as attachments_module
+from . import audit as audit_module
 from . import auth as auth_module
 from . import bootstrap as bootstrap_module
 from . import browser as browser_module
@@ -39,6 +40,7 @@ from . import oauth as oauth_module
 from . import portals as portals_module
 from . import review as review_module
 from . import run as run_module
+from . import sanitize as sanitize_module
 from . import schema as schema_module
 from . import sede as sede_module
 from . import setup as setup_wizard_module
@@ -166,6 +168,11 @@ app.add_typer(
 )
 app.add_typer(sede_module.app, name="sede", help="Post-auth AEAT sede discovery (read-only, #239).")
 app.add_typer(
+    sanitize_module.app,
+    name="sanitize",
+    help="PDF PII sanitiser for fixture commits (read-only on AEAT, #239).",
+)
+app.add_typer(
     submission_module.app,
     name="submission",
     help="Preflight, dry-run, and inspect AEAT filing attempts; no default CLI live-submit command.",
@@ -191,6 +198,12 @@ app.add_typer(
     help="AEAT justificante (PDF receipt) parser and live CSV verifier (#44).",
 )
 app.add_typer(setup_wizard_module.app, name="setup", help="First-run interactive setup wizard (#61).")
+app.add_typer(
+    audit_module.audit_app,
+    name="audit",
+    help="Audit helpers (dev-only, #339).",
+    hidden=True,
+)
 
 decorate_typer_app(app)
 
