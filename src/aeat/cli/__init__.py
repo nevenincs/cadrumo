@@ -43,6 +43,7 @@ from . import run as run_module
 from . import sanitize as sanitize_module
 from . import schema as schema_module
 from . import secrets as secrets_module
+from . import security as security_module
 from . import sede as sede_module
 from . import setup as setup_wizard_module
 from . import sheets as sheets_module
@@ -172,6 +173,11 @@ app.add_typer(
     secrets_module.app,
     name="secrets",
     help="Operator-facing secret-store management (#216).",
+)
+app.add_typer(
+    security_module.app,
+    name="security",
+    help="Operator key-management commands (rotate the master key, etc.).",
 )
 app.add_typer(
     sanitize_module.app,
