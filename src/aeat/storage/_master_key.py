@@ -39,6 +39,7 @@ process lifetime so subsequent provider calls do not re-prompt.
 
 from __future__ import annotations
 
+import atexit
 import base64
 import binascii
 import getpass
@@ -127,6 +128,22 @@ def _b64decode(text: str) -> bytes:
     return base64.b64decode(text.encode("ascii"), validate=True)
 
 
+def _zeroise(buffer: bytearray | None) -> None:
+    """Best-effort overwrite of a mutable buffer with zero bytes.
+
+    Python's `bytes` is immutable so true zeroisation requires a
+    `bytearray`. The substrate's master-key + passphrase caches use
+    bytearray buffers so a memory-disclosure bug elsewhere (e.g. a
+    debug traceback printing locals) does not surface the key bytes.
+    The atexit hook (registered below) calls this on every cached
+    buffer at shutdown.
+    """
+    if buffer is None:
+        return
+    for i in range(len(buffer)):
+        buffer[i] = 0
+
+
 def _derive_kek(passphrase: bytes, salt: bytes) -> bytes:
     """Derive a 32-byte KEK from the operator's passphrase and the per-store salt."""
     scrypt = Scrypt(salt=salt, length=KEY_SIZE, n=_SCRYPT_N, r=_SCRYPT_R, p=_SCRYPT_P)
@@ -180,7 +197,7 @@ class KeyringMasterKeyProvider:
     """
 
     _lock: ClassVar[Lock] = Lock()
-    _cache: ClassVar[dict[tuple[str, str], bytes]] = {}
+    _cache: ClassVar[dict[tuple[str, str], bytearray]] = {}
 
     def __init__(
         self,
@@ -238,7 +255,7 @@ class KeyringMasterKeyProvider:
         with KeyringMasterKeyProvider._lock:
             cached = KeyringMasterKeyProvider._cache.get(cache_key)
             if cached is not None:
-                return cached
+                return bytes(cached)
             self._probe_backend()
             try:
                 import keyring
@@ -262,7 +279,7 @@ class KeyringMasterKeyProvider:
                     raise KeyringUnavailableError(
                         f"OS keychain master key has wrong size: {len(key)} (expected {KEY_SIZE}).",
                     )
-                KeyringMasterKeyProvider._cache[cache_key] = key
+                KeyringMasterKeyProvider._cache[cache_key] = bytearray(key)
                 return key
             new_key = secrets.token_bytes(KEY_SIZE)
             try:
@@ -282,13 +299,15 @@ class KeyringMasterKeyProvider:
                     "the backend may be a silent dropper.",
                 )
             _log.info("master key minted in OS keychain (service=%s)", self._service)
-            KeyringMasterKeyProvider._cache[cache_key] = new_key
+            KeyringMasterKeyProvider._cache[cache_key] = bytearray(new_key)
             return new_key
 
     @classmethod
     def _reset_for_tests(cls) -> None:
         """Clear the in-process cache so tests can verify fetch paths cleanly."""
         with cls._lock:
+            for buf in cls._cache.values():
+                _zeroise(buf)
             cls._cache.clear()
 
 
@@ -302,8 +321,8 @@ class FileFallbackMasterKeyProvider:
     """
 
     _lock: ClassVar[Lock] = Lock()
-    _cached_passphrase: ClassVar[bytes | None] = None
-    _cached_master_key: ClassVar[dict[Path, bytes]] = {}
+    _cached_passphrase: ClassVar[bytearray | None] = None
+    _cached_master_key: ClassVar[dict[Path, bytearray]] = {}
 
     def __init__(
         self,
@@ -340,30 +359,34 @@ class FileFallbackMasterKeyProvider:
         with FileFallbackMasterKeyProvider._lock:
             cached = FileFallbackMasterKeyProvider._cached_passphrase
             if cached is not None:
-                return cached
+                return bytes(cached)
             value = self._passphrase_callback()
             if not value:
                 raise SecretStoreError(
                     "secret-store passphrase resolved to empty string; set "
                     f"{PASSPHRASE_ENV_VAR} or supply a non-empty value at the prompt.",
                 )
-            material = value.encode("utf-8")
+            material = bytearray(value.encode("utf-8"))
             FileFallbackMasterKeyProvider._cached_passphrase = material
-            return material
+            return bytes(material)
 
     def get_master_key(self) -> bytes:
-        with FileFallbackMasterKeyProvider._lock:
-            cached = FileFallbackMasterKeyProvider._cached_master_key.get(self._store_dir)
-            if cached is not None:
-                return cached
+        # Normalise the path so casing / relative-vs-absolute differences
+        # do not produce two cache entries for the same logical store
+        # (vs-M-1).
         self._store_dir.mkdir(parents=True, exist_ok=True)
+        cache_key = self._store_dir.resolve()
+        with FileFallbackMasterKeyProvider._lock:
+            cached = FileFallbackMasterKeyProvider._cached_master_key.get(cache_key)
+            if cached is not None:
+                return bytes(cached)
         passphrase = self._resolve_passphrase()
         if self._master_key_path.exists() and self._kdf_params_path.exists() and self._salt_path.exists():
             key = self._unwrap_existing(passphrase)
         else:
             key = self._mint_new(passphrase)
         with FileFallbackMasterKeyProvider._lock:
-            FileFallbackMasterKeyProvider._cached_master_key[self._store_dir] = key
+            FileFallbackMasterKeyProvider._cached_master_key[cache_key] = bytearray(key)
         return key
 
     def _unwrap_existing(self, passphrase: bytes) -> bytes:
@@ -471,8 +494,25 @@ class FileFallbackMasterKeyProvider:
     def _reset_for_tests(cls) -> None:
         """Clear caches so tests can verify mint vs unwrap paths cleanly."""
         with cls._lock:
+            _zeroise(cls._cached_passphrase)
             cls._cached_passphrase = None
+            for buf in cls._cached_master_key.values():
+                _zeroise(buf)
             cls._cached_master_key.clear()
+
+
+def _purge_caches_at_exit() -> None:
+    """atexit hook: zeroise every cached key buffer at process shutdown.
+
+    sec-M-1 hardening — a memory-disclosure bug elsewhere in the
+    process (or a post-mortem core dump) cannot surface key bytes
+    that have been overwritten with zeros.
+    """
+    KeyringMasterKeyProvider._reset_for_tests()
+    FileFallbackMasterKeyProvider._reset_for_tests()
+
+
+atexit.register(_purge_caches_at_exit)
 
 
 class EphemeralMasterKeyProvider:

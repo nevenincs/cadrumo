@@ -262,27 +262,40 @@ class EncryptedBlobStore:
         return self._read_ciphertext_blob(manifest)
 
     def delete(self, reference: BlobReference) -> None:
-        """Remove the blob and its manifest."""
+        """Remove the blob and its manifest.
+
+        Order: payload bytes (plaintext or ciphertext) are unlinked
+        first, then the manifest. If the payload unlink fails, the
+        manifest is left in place so a subsequent ``get`` surfaces a
+        :class:`BlobIntegrityError` rather than a silent
+        ``BlobNotFoundError`` (sec-M-2).
+        """
         sha_hex = reference.sha256_plaintext_hex
-        candidate_paths = (
-            self._plaintext_path_for(sha_hex),
-            self._ciphertext_path_for(sha_hex),
-            self._manifest_path_for(sha_hex),
-        )
         manifest_path = self._manifest_path_for(sha_hex)
         if not manifest_path.exists():
             raise BlobNotFoundError(
                 f"no manifest at {manifest_path} for blob {sha_hex}",
             )
-        for path in candidate_paths:
-            if path.exists():
-                path.unlink()
+        # Payload first: any error here leaves the manifest intact so
+        # the inconsistency is observable on the next read.
+        for payload_path in (self._plaintext_path_for(sha_hex), self._ciphertext_path_for(sha_hex)):
+            if payload_path.exists():
+                payload_path.unlink()
+        # Manifest last; only its removal surface is allowed to be
+        # treated as best-effort (the get path raises BlobNotFoundError
+        # on a missing manifest, which is the expected post-delete
+        # state).
+        manifest_path.unlink()
 
     def iter_manifests(self) -> Iterator[BlobManifest]:
         """Yield the manifest of every blob currently persisted.
 
         The walk is shallow: only the canonical
         ``blobs/<hex[:2]>/<hex>.manifest.json`` files are visited.
+        Each manifest is loaded through :func:`load_envelope` so the
+        classification gate enforces the
+        ``envelope.classification == manifest.classification``
+        invariant at iteration time (vs-M-4).
         """
         blobs_dir = self._root_dir / "blobs"
         if not blobs_dir.exists():
@@ -291,8 +304,20 @@ class EncryptedBlobStore:
             if not shard_dir.is_dir():
                 continue
             for manifest_path in sorted(shard_dir.glob("*.manifest.json")):
-                envelope = Envelope[BlobManifest].model_validate_json(
+                # Two-step load: parse without an expected_class to
+                # discover the manifest's declared classification, then
+                # re-load with the discovered class as the gate input.
+                # This keeps iter_manifests classification-class-agnostic
+                # at the API surface while still benefiting from the
+                # envelope's gate.
+                preliminary = Envelope[BlobManifest].model_validate_json(
                     manifest_path.read_text(encoding="utf-8"),
+                )
+                envelope = load_envelope(
+                    manifest_path,
+                    Envelope[BlobManifest],
+                    expected_class=preliminary.classification,
+                    max_supported_version=_BLOB_MANIFEST_VERSION,
                 )
                 yield envelope.payload
 

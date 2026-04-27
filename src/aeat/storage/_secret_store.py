@@ -28,6 +28,8 @@ from __future__ import annotations
 
 import contextlib
 import hmac
+import os
+import tempfile
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from hashlib import sha256
@@ -35,6 +37,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ..logging import get_logger
 from ._blob_store import BlobReference, EncryptedBlobStore
 from ._classification import SensitivityClass, default_policy_for
 from ._crypto import KEY_SIZE, derive_key
@@ -42,10 +45,14 @@ from ._envelope import Envelope
 from ._lock import exclusive_file_lock
 from ._master_key import MasterKeyProvider, get_master_key_provider
 from .errors import (
+    BlobIntegrityError,
+    BlobNotFoundError,
     RetentionPolicyError,
     SecretAlreadyExistsError,
     SecretNotFoundError,
 )
+
+_log = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _INDEX_FILE_NAME = "index.json"
@@ -172,10 +179,30 @@ class SecretStore:
         return _SecretIndex.model_validate_json(index_path.read_text(encoding="utf-8"))
 
     def _write_index(self, index: _SecretIndex) -> None:
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        # The index is stored plaintext; it carries only digests (no
+        # Atomic write via tempfile + os.replace (vs-M-3) so a crashed
+        # writer cannot leave a torn JSON for a concurrent reader. The
+        # index is stored plaintext; it carries only digests (no
         # plaintext keys, no plaintext values).
-        self._index_path().write_text(index.model_dump_json(indent=2), encoding="utf-8")
+        self._store_dir.mkdir(parents=True, exist_ok=True)
+        target = self._index_path()
+        payload = index.model_dump_json(indent=2)
+        tmp_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=target.parent,
+                prefix=f"{target.stem}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                tmp_path = Path(handle.name)
+                handle.write(payload)
+            os.replace(tmp_path, target)
+        except OSError:
+            if tmp_path is not None:
+                tmp_path.unlink(missing_ok=True)
+            raise
 
     def _build_envelope(self, record: SecretRecord) -> Envelope[SecretRecord]:
         return Envelope[SecretRecord](
@@ -242,12 +269,24 @@ class SecretStore:
             self._write_index(index)
             if existing is not None and existing.blob_sha256_plaintext_hex != blob_ref.sha256_plaintext_hex:
                 # Drop the previous payload to keep the store tidy.
+                # Narrow exception handling per sec-M-3: only the
+                # benign "blob already gone" case is silently
+                # absorbed; anything else (integrity mismatch, OS
+                # error) is logged as a WARNING so the operator can
+                # investigate.
                 old_ref = BlobReference(
                     sha256_plaintext_hex=existing.blob_sha256_plaintext_hex,
                     classification=existing.classification,
                 )
-                with contextlib.suppress(Exception):
-                    self._blob_store.delete(old_ref)
+                with contextlib.suppress(BlobNotFoundError):
+                    try:
+                        self._blob_store.delete(old_ref)
+                    except (BlobIntegrityError, OSError) as exc:
+                        _log.warning(
+                            "stale secret-store blob cleanup failed: digest=%s error=%s",
+                            existing.blob_sha256_plaintext_hex,
+                            exc,
+                        )
         return blob_ref
 
     def get(self, key: str) -> SecretRecord:
@@ -286,8 +325,16 @@ class SecretStore:
                 sha256_plaintext_hex=entry.blob_sha256_plaintext_hex,
                 classification=entry.classification,
             )
-            with contextlib.suppress(Exception):
-                self._blob_store.delete(blob_ref)
+            # Narrow exception handling per sec-M-3 (mirrors the put path).
+            with contextlib.suppress(BlobNotFoundError):
+                try:
+                    self._blob_store.delete(blob_ref)
+                except (BlobIntegrityError, OSError) as exc:
+                    _log.warning(
+                        "secret-store blob cleanup on delete failed: digest=%s error=%s",
+                        entry.blob_sha256_plaintext_hex,
+                        exc,
+                    )
 
     def list_digests(self) -> Iterable[str]:
         """Yield every persisted lookup digest.

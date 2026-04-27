@@ -230,17 +230,45 @@ def _apply_migrators[PayloadT: BaseModel](
     target_version: int,
     migrators: tuple[EnvelopeMigrator[PayloadT], ...],
 ) -> Envelope[PayloadT]:
-    """Apply the migrator chain in declared order until ``target_version``."""
+    """Apply the migrator chain in declared order until ``target_version``.
+
+    Per-step debug logging records the attempted chain (vs-M-6); a
+    monotonic-version assertion (sec-M-5) raises
+    :class:`EnvelopeVersionError` if a migrator returns a non-monotonic
+    schema version, defending against migrator chains that would
+    otherwise be silent downgrade attacks.
+    """
     current = envelope
+    attempted: list[str] = []
     for migrator in migrators:
         if current.schema_version == target_version:
             break
         if migrator.source_version != current.schema_version:
+            attempted.append(
+                f"skip {type(migrator).__name__} ({migrator.source_version}->{migrator.target_version})",
+            )
             continue
+        previous_version = current.schema_version
         current = migrator.migrate(current)
+        attempted.append(
+            f"apply {type(migrator).__name__} ({previous_version}->{current.schema_version})",
+        )
+        if current.schema_version <= previous_version:
+            raise EnvelopeVersionError(
+                f"migrator {type(migrator).__name__} returned non-monotonic "
+                f"schema_version: {previous_version} -> {current.schema_version}; "
+                f"chain so far: {attempted}",
+            )
+        _log.debug(
+            "envelope migrator %s advanced version %s -> %s",
+            type(migrator).__name__,
+            previous_version,
+            current.schema_version,
+        )
     if current.schema_version != target_version:
         raise EnvelopeVersionError(
-            f"envelope is at version {current.schema_version}; no migrator chain advances it to {target_version}",
+            f"envelope is at version {current.schema_version}; no migrator chain "
+            f"advances it to {target_version}; attempted chain: {attempted}",
         )
     return current
 
