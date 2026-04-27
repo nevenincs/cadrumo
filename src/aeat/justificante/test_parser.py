@@ -126,6 +126,64 @@ class TestParseJustificante:
             parse_justificante(FIXTURES_DIR / "does_not_exist.pdf")
 
 
+def _real_corpus_pdfs() -> list[Path]:
+    """Every sanitised real-PDF fixture under tests/fixtures/justificantes/{modelo}/.
+
+    Mirrors what ``aeat sanitize check`` runs at sanitisation time, but
+    pinned in the unit suite so a parser regression on the wider corpus
+    surfaces immediately. Filename convention is
+    ``{ejercicio}-{period}.pdf`` per the per-modelo subdirectory.
+    """
+    pdfs: list[Path] = []
+    for modelo_dir in sorted(p for p in FIXTURES_DIR.iterdir() if p.is_dir()):
+        for pdf in sorted(modelo_dir.glob("*.pdf")):
+            pdfs.append(pdf)
+    return pdfs
+
+
+class TestRealCorpusParses:
+    """Every committed sanitised fixture parses cleanly end-to-end.
+
+    Pinned regression — ensures a parser change doesn't silently break
+    historical layouts (M100/2021 English-shape, M390/2021 column-split,
+    M130 quarterly positional, etc.). The expected modelo / period /
+    ejercicio is derived from the fixture's filesystem location, so a
+    misnamed fixture (or a mis-bound parser output) fails loudly.
+    """
+
+    @pytest.mark.parametrize(
+        "fixture",
+        _real_corpus_pdfs(),
+        ids=lambda p: f"{p.parent.name}/{p.stem}",
+    )
+    def test_corpus_pdf_parses(self, fixture: Path) -> None:
+        record = parse_justificante(fixture)
+        assert isinstance(record, Justificante)
+        # Filesystem layout is the source of truth for expected fields.
+        modelo_expected = fixture.parent.name
+        ejercicio_expected, period_expected = fixture.stem.split("-", 1)
+        assert record.modelo == modelo_expected, f"modelo mismatch for {fixture}: got {record.modelo}"
+        assert record.period == period_expected, f"period mismatch for {fixture}: got {record.period}"
+        assert record.ejercicio == ejercicio_expected, f"ejercicio mismatch for {fixture}: got {record.ejercicio}"
+        # Synthetic NIE/NIF survives the round-trip.
+        assert record.tax_id == "Y0000001S", f"tax_id mismatch for {fixture}: got {record.tax_id}"
+        # CSV shape always conforms to AEAT's 8-24 uppercase alphanum.
+        assert record.csv.isalnum() and record.csv.isupper()
+        assert 8 <= len(record.csv) <= 24, f"csv shape failure for {fixture}: got {record.csv!r}"
+        # presented_at must be a real datetime — surfaces any
+        # timestamp-extraction drift across the corpus's three
+        # layouts (Spanish modern, Spanish column-split, English).
+        # The synthetic date 01-01-1900 (or 01/01/1900 for the
+        # birthday-shape sub-token) appears in every sanitised
+        # PDF, so the parser must always bind a non-None datetime.
+        assert record.presented_at is not None
+        # source_pdf_sha256 always populated.
+        assert record.source_pdf_sha256
+        assert len(record.source_pdf_sha256) == 64
+        # verification_url must point at the AEAT cotejo surface.
+        assert "agenciatributaria.gob.es" in str(record.verification_url)
+
+
 class TestJustificanteErrorRehome:
     """#305 cluster A — JustificanteError inherits the shared PDF-import root."""
 
