@@ -12,8 +12,8 @@ art. 110 (RD 439/2007) was not amended between 2024 and 2026:
   (information obligations), not art. 110.
 
 The separate ruleset file simplifies future divergence (e.g., the
-La Palma 60 % reduction overlay tracked under EPIC #316 wave 2,
-which lands as a dedicated territorial overlay rather than a base-
+La Palma 60 % reduction overlay tracked under EPIC #316, which
+lands as a dedicated territorial overlay rather than a base-
 ruleset amendment). The rule-delta manifest at
 ``.vault/reference/2026-130-rule-delta.md`` documents the 2024 →
 2025 → 2026 trail with BOE citations.
