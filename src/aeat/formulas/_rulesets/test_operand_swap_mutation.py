@@ -51,6 +51,7 @@ from . import (
     MODELO_202_2025,
     MODELO_303_2024,
     MODELO_303_2025,
+    MODELO_303_2026,
     MODELO_390_2025,
 )
 
@@ -542,6 +543,18 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             "69",
             _modelo_303_fixture,
             id="modelo_303.2024:casilla_69_resultado",
+        ),
+        pytest.param(
+            lambda: MODELO_303_2026,
+            "45",
+            _modelo_303_fixture,
+            id="modelo_303.2026:casilla_45_resultado_regimen_general",
+        ),
+        pytest.param(
+            lambda: MODELO_303_2026,
+            "69",
+            _modelo_303_fixture,
+            id="modelo_303.2026:casilla_69_resultado",
         ),
         # Wave 75a (issue #314) — 111 / 115 / 123 / 100_summary / 390.
         pytest.param(
