@@ -94,22 +94,16 @@ def override_secret_store(store: SecretStore | None) -> None:
         _singleton_store = store
 
 
-def _write_bytes_secure(target: Path, payload: bytes) -> None:
-    """Write ``payload`` to ``target`` with mode 0o600 on POSIX.
+def _write_bytes_secure_fd(fd: int, payload: bytes) -> None:
+    """Write ``payload`` through an already-opened file descriptor.
 
-    Mirrors the helper in :mod:`aeat.storage._master_key`; duplicated
-    here to avoid a cross-module private-name import.
+    The caller is responsible for opening the descriptor with the
+    correct flags (``O_NOFOLLOW`` etc.) and closing it afterwards.
+    Splitting the write from the open closes the TOCTOU window between
+    ``mkstemp`` and the eventual write that would otherwise let a
+    local attacker on shared ``/tmp`` symlink-replace the path.
     """
-    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-    if hasattr(os, "O_NOINHERIT"):
-        flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
-    if hasattr(os, "O_CLOEXEC"):
-        flags |= os.O_CLOEXEC
-    fd = os.open(target, flags, 0o600)
-    try:
-        os.write(fd, payload)
-    finally:
-        os.close(fd)
+    os.write(fd, payload)
 
 
 @contextmanager
@@ -146,11 +140,19 @@ def materialise_secret(
     """
     active_store = store if store is not None else get_secret_store()
     record = active_store.get(key)
+    # ``tempfile.mkstemp`` already creates the file with mode 0o600 on
+    # POSIX (default). Writing directly through the returned fd
+    # closes the TOCTOU window that would have otherwise existed
+    # between ``os.close(fd)`` and a separate ``os.open(target,
+    # O_CREAT|O_TRUNC)`` re-open: a local attacker on a shared
+    # tempdir cannot symlink-replace a path that we never re-open.
     fd, tmp_path_str = tempfile.mkstemp(prefix=f"{prefix}-", suffix=suffix)
-    os.close(fd)  # we re-open with mode 0o600 via _write_bytes_secure
     tmp_path = Path(tmp_path_str)
     try:
-        _write_bytes_secure(tmp_path, record.value)
+        _write_bytes_secure_fd(fd, record.value)
+    finally:
+        os.close(fd)
+    try:
         yield tmp_path
     finally:
         with contextlib.suppress(FileNotFoundError):
@@ -185,10 +187,14 @@ def export_to_temp_path(
     """
     active_store = store if store is not None else get_secret_store()
     record = active_store.get(key)
+    # Same TOCTOU-safe pattern as ``materialise_secret``: write
+    # through the mkstemp fd directly; never re-open the path.
     fd, tmp_path_str = tempfile.mkstemp(prefix=f"{prefix}-", suffix=suffix)
-    os.close(fd)
     tmp_path = Path(tmp_path_str)
-    _write_bytes_secure(tmp_path, record.value)
+    try:
+        _write_bytes_secure_fd(fd, record.value)
+    finally:
+        os.close(fd)
 
     cleaned = False
 

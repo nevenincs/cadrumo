@@ -252,8 +252,19 @@ because the rule list is keyed by stable rule names.
 
 Positive:
 
-- Every CRITICAL plaintext-credential location becomes ciphertext-
-  at-rest by the end of Wave 2.
+- Every CRITICAL plaintext-credential location identified by the
+  upstream audit has a **ciphertext-at-rest migration path** by the
+  end of Wave 2: the substrate primitive (`SecretStore`), the
+  read-through adapter (`load_secret_or_legacy`), and the migration
+  helpers (`migrate_*_to_secret_store`) all ship under
+  `aeat.auth._secret_adapters`. Operators run the migration helpers
+  once per credential; the adapters then prefer the ciphertext store
+  on every subsequent read. **The actual call-site rewires in
+  `aeat.auth.__init__`, `aeat.cli.oauth`, and `aeat.cli.auth` are
+  deliberately deferred** because each call site has a different
+  test surface and a different deprecation cadence; the rewires
+  land as a follow-up commit (Wave 2.1) or piggyback on the per-
+  domain consumer migrations in Waves 3+.
 - Operators get a typed CLI surface for inspecting and managing
   their secret store.
 - The deferred Wave-1 findings are exhausted in Phases 0-1, leaving
