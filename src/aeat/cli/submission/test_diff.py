@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -13,6 +14,10 @@ from . import app
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 _runner = CliRunner()
+
+
+def _unwrap_result(output: str) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(output)["result"])
 
 
 def _write_draft_and_export(
@@ -97,8 +102,9 @@ class TestDiffCommand:
         b = _write_draft_and_export(tmp_path, modelo="303", period="2024Q2", values=_BASE_130_VALUES, out_name="b")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "303", "--ejercicio", "2024", "--json"])
         assert result.exit_code == 1, result.stdout
-        doc = json.loads(result.stdout)
-        field_ids = {d["field_id"] for d in doc["field_deltas"]}
+        doc = _unwrap_result(result.stdout)
+        field_deltas = cast(list[dict[str, Any]], doc["field_deltas"])
+        field_ids = {d["field_id"] for d in field_deltas}
         assert "DP30301_F010_DEVENGO_PER_ODO" in field_ids
 
     def test_diff_modelo_303_envelope_casilla_delta(self, tmp_path: Path) -> None:
@@ -135,7 +141,7 @@ class TestDiffCommand:
         b = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="b")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--json"])
         assert result.exit_code == 0, result.stdout
-        doc = json.loads(result.stdout)
+        doc = _unwrap_result(result.stdout)
         assert doc["status"] == "identical"
         assert doc["bytes"] == 880  # Modelo 130 content + CRLF
         assert doc["casilla_deltas"] == []
@@ -147,9 +153,10 @@ class TestDiffCommand:
         b = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=tweaked, out_name="b")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--json"])
         assert result.exit_code == 1
-        doc = json.loads(result.stdout)
+        doc = _unwrap_result(result.stdout)
         assert doc["status"] == "mismatch"
-        deltas_by_casilla = {d["casilla"]: d for d in doc["casilla_deltas"]}
+        casilla_deltas = cast(list[dict[str, Any]], doc["casilla_deltas"])
+        deltas_by_casilla = {d["casilla"]: d for d in casilla_deltas}
         assert "01" in deltas_by_casilla
         assert deltas_by_casilla["01"]["a"] == "10000.00"
         assert deltas_by_casilla["01"]["b"] == "99999.00"
@@ -161,9 +168,9 @@ class TestDiffCommand:
         b.write_bytes(b"  ")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "390", "--ejercicio", "2024", "--json"])
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        assert doc["status"] == "unsupported"
-        assert doc["modelo"] == "390"
+        doc = json.loads(result.stderr)["error"]
+        assert doc["category"] == "REFUSED"
+        assert doc["context"]["modelo"] == "390"
 
     def test_diff_auto_detects_modelo_and_ejercicio_from_filename(self, tmp_path: Path) -> None:
         a = _write_draft_and_export(tmp_path, modelo="303", period="2024Q1", values=_BASE_130_VALUES, out_name="a")

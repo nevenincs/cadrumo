@@ -30,6 +30,10 @@ _RUNNER = CliRunner()
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
 
 
+def _unwrap_result(output: str):
+    return json.loads(output)["result"]
+
+
 class _HealthyProbe:
     """Concrete probe double: always classifies the target as healthy."""
 
@@ -81,7 +85,7 @@ def test_health_ok_json_exits_zero() -> None:
     with override_probe_factory(_probe_factory(_HealthyProbe)):
         result = _RUNNER.invoke(app, ["health", "--json"])
     assert result.exit_code == 0
-    payload = json.loads(result.stdout)
+    payload = _unwrap_result(result.stdout)
     assert payload["state"] == "ok"
 
 
@@ -223,6 +227,6 @@ def test_health_json_emits_parseable_payload() -> None:
     with override_probe_factory(_probe_factory(lambda: _RaisingProbe(error))):
         result = _RUNNER.invoke(app, ["health", "--json"])
     assert result.exit_code == 2
-    payload = json.loads(result.stdout)
+    payload = _unwrap_result(result.stdout)
     assert payload["state"] == "mantenimiento"
     assert payload["evidence"]["http_status"] == 200

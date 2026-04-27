@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 import typer
 from typer.testing import CliRunner
 
 from ...filing.reconciliation import ReconciliationStatus
+from .. import app as root_app
 from ._reconcile import _exit_code_for, _infer_ejercicio, reject_forbidden_flags
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
@@ -43,6 +46,12 @@ class TestRejectForbiddenFlags:
     def test_read_only_flags_pass(self) -> None:
         # No exception, no exit.
         reject_forbidden_flags(("--json", "--last", "--modelo=100"))
+
+    def test_forbidden_flag_json_mode_raises_cli_boundary_error(self) -> None:
+        from .._errors import CliRefusedBoundaryError
+
+        with pytest.raises(CliRefusedBoundaryError):
+            reject_forbidden_flags(("--write",), emit_json=True)
 
 
 class TestInferEjercicio:
@@ -102,6 +111,22 @@ class TestCliSmoke:
         # Non-zero exit signals rejection (could be 1 or 2 depending on typer version).
         assert result.exit_code != 0
 
+    def test_root_json_reconcile_missing_drafts_dir_writes_only_stderr(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "missing-drafts"))
+
+        runner = CliRunner()
+        result = runner.invoke(root_app, ["--json", "filing", "reconcile", "missing-draft"])
+
+        assert result.exit_code == 2
+        assert result.stdout == ""
+        payload = json.loads(result.stderr)
+        assert payload["error"]["category"] == "REFUSED"
+        assert payload["error"]["context"]["drafts_dir"].endswith("missing-drafts")
+
 
 class TestLoadDraftFromDisk:
     """The _load_draft helper resolves synthesised drafts from disk.
@@ -132,7 +157,7 @@ class TestLoadDraftFromDisk:
         )
         self._persist(draft, drafts_dir)
         settings = Settings(aeat_drafts_dir=drafts_dir)
-        loaded = _load_draft(settings, draft_id=None, last=True, modelo="100", period="0A")
+        loaded = _load_draft(settings, draft_id=None, last=True, modelo="100", period="0A", emit_json=False)
         assert loaded.draft_id == draft.draft_id
         assert loaded.modelo == "100"
         assert loaded.period == "0A"
@@ -154,7 +179,7 @@ class TestLoadDraftFromDisk:
         )
         self._persist(draft, drafts_dir)
         settings = Settings(aeat_drafts_dir=drafts_dir)
-        loaded = _load_draft(settings, draft_id=draft.draft_id, last=False, modelo=None, period=None)
+        loaded = _load_draft(settings, draft_id=draft.draft_id, last=False, modelo=None, period=None, emit_json=False)
         assert loaded.draft_id == draft.draft_id
         assert loaded.modelo == "130"
 
