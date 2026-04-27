@@ -24,6 +24,11 @@ write migrations.
 
 from __future__ import annotations
 
+from ._blob_store import (
+    BlobManifest,
+    BlobReference,
+    EncryptedBlobStore,
+)
 from ._classification import (
     AtRestTreatment,
     ClassificationPolicy,
@@ -67,6 +72,8 @@ from ._master_key import (
 )
 from .engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
+    BlobIntegrityError,
+    BlobNotFoundError,
     ClassificationError,
     DecryptionError,
     EncryptionError,
@@ -94,12 +101,17 @@ __all__ = [
     "KEY_SIZE",
     "NONCE_SIZE",
     "AtRestTreatment",
+    "BlobIntegrityError",
+    "BlobManifest",
+    "BlobNotFoundError",
+    "BlobReference",
     "ClassificationError",
     "ClassificationPolicy",
     "CorpusArtifactRecord",
     "CorpusArtifactRepository",
     "DecryptionError",
     "EncryptedBlob",
+    "EncryptedBlobStore",
     "EncryptedBytes",
     "EncryptedJSON",
     "EncryptedString",

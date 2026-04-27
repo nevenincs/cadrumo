@@ -96,3 +96,11 @@ class EnvelopeVersionError(PersistenceError):
 
 class PathContainmentError(PersistenceError):
     """Raised when a computed path escapes its configured root directory."""
+
+
+class BlobNotFoundError(PersistenceError):
+    """Raised when a blob lookup misses on the encrypted blob store."""
+
+
+class BlobIntegrityError(PersistenceError):
+    """Raised when a blob's on-disk SHA-256 disagrees with its manifest."""
