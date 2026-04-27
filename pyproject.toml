@@ -47,6 +47,11 @@ dependencies = [
     "tzdata>=2026.2 ; sys_platform == 'win32'",
     # PKCS#12 parsing for client-certificate auth (#8)
     "cryptography>=47.0.0",
+    # OS-keychain abstraction for the master-key provider (Windows
+    # Credential Manager, macOS Keychain, Linux Secret Service via
+    # libsecret). Pure-Python, gracefully degrades when no usable backend
+    # is detected; the substrate's file fallback covers headless / CI.
+    "keyring>=25.6.0",
     # Configuration
     "python-dotenv>=1.2.2",
     # Persistence

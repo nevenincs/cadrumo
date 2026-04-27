@@ -34,21 +34,64 @@ from ._classification import (
     default_policy_for,
     default_policy_table,
 )
+from ._crypto import (
+    GCM_TAG_SIZE,
+    KEY_SIZE,
+    NONCE_SIZE,
+    EncryptedBlob,
+    decrypt_record,
+    derive_key,
+    encrypt_record,
+)
+from ._master_key import (
+    EphemeralMasterKeyProvider,
+    FileFallbackMasterKeyProvider,
+    KeyringMasterKeyProvider,
+    MasterKeyProvider,
+    get_master_key_provider,
+)
 from .engine import create_engine_from_settings, dispose_engine, get_engine
-from .errors import MigrationError, RepositoryError, StorageError
+from .errors import (
+    DecryptionError,
+    EncryptionError,
+    KeyDerivationError,
+    KeyringUnavailableError,
+    MasterKeyUnavailableError,
+    MigrationError,
+    NonceCollisionError,
+    PersistenceError,
+    RepositoryError,
+    SecretStoreError,
+    StorageError,
+)
 from .migrations_api import downgrade_to_base, round_trip_migrations, upgrade_to_head
 from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 from .repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository
 from .session import get_sessionmaker, session_scope
 
 __all__ = [
+    "GCM_TAG_SIZE",
+    "KEY_SIZE",
+    "NONCE_SIZE",
     "AtRestTreatment",
     "ClassificationPolicy",
     "CorpusArtifactRecord",
     "CorpusArtifactRepository",
+    "DecryptionError",
+    "EncryptedBlob",
+    "EncryptionError",
+    "EphemeralMasterKeyProvider",
+    "FileFallbackMasterKeyProvider",
+    "KeyDerivationError",
+    "KeyringMasterKeyProvider",
+    "KeyringUnavailableError",
+    "MasterKeyProvider",
+    "MasterKeyUnavailableError",
     "MigrationError",
     "ModeloRecord",
     "ModeloRepository",
+    "NonceCollisionError",
+    "PersistenceError",
     "PortalAuthMethod",
     "PortalRecord",
     "PortalRepository",
@@ -57,14 +100,19 @@ __all__ = [
     "Repository",
     "RepositoryError",
     "RetentionPolicy",
+    "SecretStoreError",
     "SensitivityClass",
     "StorageError",
     "create_engine_from_settings",
+    "decrypt_record",
     "default_policy_for",
     "default_policy_table",
+    "derive_key",
     "dispose_engine",
     "downgrade_to_base",
+    "encrypt_record",
     "get_engine",
+    "get_master_key_provider",
     "get_sessionmaker",
     "round_trip_migrations",
     "session_scope",
