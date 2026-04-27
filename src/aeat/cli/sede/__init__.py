@@ -1,16 +1,25 @@
 """``aeat sede`` sub-app — post-auth sede discovery CLI (#239).
 
-Subcommands:
+Subcommands (mirrors of the read-only sede surfaces in
+:mod:`aeat.sede`):
 
-- ``aeat sede list-expedientes [--modelo M]`` — walk the authenticated
-  expedientes tree and print every leaf (id, modelo, ejercicio,
+- ``aeat sede list-expedientes [--modelo M]`` — walk *Mis Expedientes*
+  (the procedure tree) and print every leaf (id, modelo, ejercicio,
   category path).
-- ``aeat sede capture <expediente-id>`` — resolve the CSV for one
-  expediente and fetch the raw justificante PDF into a local file.
+- ``aeat sede list-declarations --modelo M --ejercicio Y`` — drive
+  the *Consultar declaraciones presentadas* form for one
+  ``(modelo, ejercicio)`` query and print one row per filing.
+- ``aeat sede capture-declaration --modelo M --ejercicio Y --period P``
+  — fetch the raw justificante PDF for a single filing identified
+  by ``(modelo, ejercicio, period)`` via the declaraciones-presentadas
+  surface.
+- ``aeat sede capture-corpus --modelos M[,M...] --ejercicios Y[,Y...]``
+  — capture every declaration the authenticated NIF has for each
+  ``(modelo, ejercicio)`` pair; PDFs land under
+  ``scratch/declarations-corpus/`` with a JSONL manifest.
 - ``aeat sede discover [--modelo M]`` — one-shot walker+capturer that
   emits a per-modelo :class:`DiscoveryReport` to stdout and writes
-  every captured PDF under ``scratch/sede-discovery/<ts>/``. This is
-  the continuous-growth entry point.
+  every captured PDF under ``scratch/sede-discovery/<ts>/``.
 - ``aeat sede notifications [--summary | --query]`` — read-only walk
   of the AEAT notifications/messages surface (formal *Notificaciones*
   + lighter-weight *Comunicaciones*).
@@ -48,9 +57,12 @@ from ...sede import (
     Expediente,
     NotificationsSnapshot,
     SedeError,
+    capture_declaration,
     capture_justificante,
     fetch_notifications_query,
     fetch_notifications_summary,
+    shared_playwright,
+    walk_declarations_register,
     walk_expedientes_tree,
 )
 from .._errors import json_output_requested
@@ -176,6 +188,282 @@ def list_expedientes(
             leaf[:70],
         )
     _CONSOLE.print(table)
+
+
+@app.command(
+    "list-declarations",
+    help="Drive the 'Consultar declaraciones presentadas' form for one (modelo, ejercicio).",
+)
+def list_declarations(
+    modelo: Annotated[
+        str,
+        typer.Option(
+            "--modelo",
+            "-m",
+            help="Modelo code to query (e.g. 100, 130, 303, 390, 111, 190).",
+        ),
+    ],
+    ejercicio: Annotated[
+        int,
+        typer.Option(
+            "--ejercicio",
+            "-e",
+            help="Tax year to query (e.g. 2024).",
+        ),
+    ],
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON instead of a human table."),
+    ] = False,
+) -> None:
+    """Walk the declaraciones register for a single (modelo, ejercicio)."""
+    session = _require_active_session()
+    try:
+        declarations = asyncio.run(
+            walk_declarations_register(session, modelo=modelo, ejercicio=ejercicio),
+        )
+    except SedeError as exc:
+        _CONSOLE.print(f"[red]declarations walk failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    if json_output:
+        payload = [d.model_dump(mode="json") for d in declarations]
+        typer.echo(json.dumps(payload, indent=2, ensure_ascii=False, default=str))
+        return
+
+    table = Table(title=f"Declaraciones presentadas — Modelo {modelo} / {ejercicio} ({len(declarations)})")
+    table.add_column("expediente_id")
+    table.add_column("period")
+    table.add_column("estado")
+    table.add_column("presented_at")
+    table.add_column("just")
+    for d in declarations:
+        table.add_row(
+            d.expediente_id,
+            d.period,
+            d.estado,
+            d.presented_at.strftime("%Y-%m-%d %H:%M:%S"),
+            d.justificante_link_text or "",
+        )
+    _CONSOLE.print(table)
+
+
+@app.command(
+    "capture-declaration",
+    help="Fetch one declaration's justificante PDF by (modelo, ejercicio, period).",
+)
+def capture_declaration_cmd(
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", "-m", help="Modelo code (e.g. 100, 130, 303, 390, 111, 190)."),
+    ],
+    ejercicio: Annotated[
+        int,
+        typer.Option("--ejercicio", "-e", help="Tax year to query (e.g. 2024)."),
+    ],
+    period: Annotated[
+        str,
+        typer.Option(
+            "--period",
+            "-p",
+            help="Period token to filter on (0A annual, 1T-4T quarterly, 01-12 monthly).",
+        ),
+    ],
+    output_path: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Where to write the captured PDF.",
+        ),
+    ],
+) -> None:
+    """Drive the declaraciones register, locate the matching row, capture the PDF."""
+    session = _require_active_session()
+
+    async def _run() -> tuple[bytes, str]:
+        rows = await walk_declarations_register(session, modelo=modelo, ejercicio=ejercicio)
+        match = [r for r in rows if r.period == period]
+        if not match:
+            available = ", ".join(sorted({r.period for r in rows})) or "(none)"
+            raise SedeError(
+                f"no Modelo {modelo} declaration for {ejercicio}/{period}; available periods: {available}",
+            )
+        if len(match) > 1:
+            log.warning(
+                "%d declarations match modelo=%s ejercicio=%s period=%s; using the first",
+                len(match),
+                modelo,
+                ejercicio,
+                period,
+            )
+        capture = await capture_declaration(session, match[0])
+        return capture.pdf_bytes, capture.ref.csv
+
+    try:
+        pdf_bytes, csv = asyncio.run(_run())
+    except SedeError as exc:
+        _CONSOLE.print(f"[red]capture failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    output_path.write_bytes(pdf_bytes)
+    _CONSOLE.print(
+        f"[green]Captured Modelo {modelo} {ejercicio}/{period}:[/green] "
+        f"{output_path} ({len(pdf_bytes)} bytes, csv={csv})",
+    )
+
+
+@app.command(
+    "capture-corpus",
+    help="Capture every declaration for the authenticated NIF across "
+    "(modelo, ejercicio) tuples and write PDFs to scratch/.",
+)
+def capture_corpus_cmd(
+    modelos: Annotated[
+        str,
+        typer.Option(
+            "--modelos",
+            help="Comma-separated modelo codes (e.g. 100,130,303,390,111,190).",
+        ),
+    ] = "100,130,303,390,111,190",
+    ejercicios: Annotated[
+        str,
+        typer.Option(
+            "--ejercicios",
+            help="Comma-separated tax years (e.g. 2021,2022,2023,2024).",
+        ),
+    ] = "2021,2022,2023,2024",
+    output_root: Annotated[
+        Path,
+        typer.Option(
+            "--out",
+            help="Root directory for captures.",
+        ),
+    ] = Path("scratch/declarations-corpus"),
+    skip_existing: Annotated[
+        bool,
+        typer.Option(
+            "--skip-existing/--overwrite",
+            help="Skip PDFs already present on disk (default) or re-fetch.",
+        ),
+    ] = True,
+    delay_seconds: Annotated[
+        float,
+        typer.Option(
+            "--delay-seconds",
+            help="Sleep between iterations (anti-throttle pacing). Default 1.0s; pass 0 to disable.",
+            min=0.0,
+        ),
+    ] = 1.0,
+) -> None:
+    """Walk every (modelo, ejercicio) tuple and capture every declaration.
+
+    Each iteration is wrapped in a broad ``Exception`` catch so a
+    transient Playwright timeout on one query doesn't abort the
+    entire corpus. ``--delay-seconds`` paces the loop to reduce
+    the chance of AEAT's anti-bot heuristics flagging the run.
+    """
+    session = _require_active_session()
+    output_root.mkdir(parents=True, exist_ok=True)
+    modelo_list = [m.strip() for m in modelos.split(",") if m.strip()]
+    ejercicio_list = [int(y.strip()) for y in ejercicios.split(",") if y.strip()]
+
+    async def _run() -> list[dict[str, object]]:
+        rows: list[dict[str, object]] = []
+        first_iter = True
+        # Bulk loop: hoist Playwright startup OUT of every walker /
+        # capture call so the corpus pays one ~1s startup cost
+        # instead of ~1s per (modelo, ejercicio) tuple + per row.
+        async with shared_playwright(session) as pw:
+            for modelo in modelo_list:
+                for ejercicio in ejercicio_list:
+                    if not first_iter and delay_seconds > 0:
+                        await asyncio.sleep(delay_seconds)
+                    first_iter = False
+                    try:
+                        declarations = await walk_declarations_register(
+                            session,
+                            modelo=modelo,
+                            ejercicio=ejercicio,
+                            playwright=pw,
+                        )
+                    except Exception as exc:
+                        rows.append(
+                            {
+                                "modelo": modelo,
+                                "ejercicio": ejercicio,
+                                "status": "walk_failed",
+                                "error": f"{type(exc).__name__}: {exc}",
+                            },
+                        )
+                        continue
+                    for idx, declaration in enumerate(declarations):
+                        if delay_seconds > 0:
+                            await asyncio.sleep(delay_seconds)
+                        target = output_root / f"m{modelo}-{ejercicio}-{declaration.period}-{idx}.pdf"
+                        if skip_existing and target.is_file():
+                            rows.append(
+                                {
+                                    "modelo": modelo,
+                                    "ejercicio": ejercicio,
+                                    "period": declaration.period,
+                                    "expediente_id": declaration.expediente_id,
+                                    "path": str(target),
+                                    "status": "cached",
+                                },
+                            )
+                            continue
+                        try:
+                            capture = await capture_declaration(session, declaration, playwright=pw)
+                        except Exception as exc:
+                            rows.append(
+                                {
+                                    "modelo": modelo,
+                                    "ejercicio": ejercicio,
+                                    "period": declaration.period,
+                                    "expediente_id": declaration.expediente_id,
+                                    "status": "capture_failed",
+                                    "error": f"{type(exc).__name__}: {exc}",
+                                },
+                            )
+                            continue
+                        target.write_bytes(capture.pdf_bytes)
+                        rows.append(
+                            {
+                                "modelo": modelo,
+                                "ejercicio": ejercicio,
+                                "period": declaration.period,
+                                "expediente_id": declaration.expediente_id,
+                                "path": str(target),
+                                "csv": capture.ref.csv,
+                                "sha256": capture.pdf_sha256,
+                                "status": "captured",
+                            },
+                        )
+        return rows
+
+    try:
+        results = asyncio.run(_run())
+    except SedeError as exc:
+        _CONSOLE.print(f"[red]capture-corpus failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    summary_path = output_root / "_capture-summary.json"
+    summary_path.write_text(
+        json.dumps(results, indent=2, ensure_ascii=False, default=str),
+        encoding="utf-8",
+    )
+
+    captured = sum(1 for r in results if r.get("status") == "captured")
+    cached = sum(1 for r in results if r.get("status") == "cached")
+    walk_failed = sum(1 for r in results if r.get("status") == "walk_failed")
+    capture_failed = sum(1 for r in results if r.get("status") == "capture_failed")
+    _CONSOLE.print(
+        f"[green]capture-corpus done:[/green] "
+        f"captured={captured} cached={cached} "
+        f"walk_failed={walk_failed} capture_failed={capture_failed}; "
+        f"summary at {summary_path}",
+    )
 
 
 @app.command(
