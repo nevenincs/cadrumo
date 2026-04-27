@@ -28,7 +28,12 @@ pytestmark = [
 ]
 
 
-def _generate_pdf(tmp_path: Path, **casilla_values: str) -> Path:
+def _generate_pdf(
+    tmp_path: Path,
+    casilla_values: dict[str, str],
+    *,
+    año: int = 2025,
+) -> Path:
     """Render a synthetic Modelo 130 PDF and return its on-disk path."""
     from tests.fixtures.pdf_corpus.l3_synthetic._generators.modelo_130_generator import (
         Modelo130GenParams,
@@ -37,17 +42,17 @@ def _generate_pdf(tmp_path: Path, **casilla_values: str) -> Path:
 
     values = {k: Decimal(v) for k, v in casilla_values.items()}
     params = Modelo130GenParams(
-        año=2025,
-        template_revision="2025.01",
+        año=año,
+        template_revision=f"{año}.01",
         tax_id="00000000T",
-        ejercicio="2025",
+        ejercicio=str(año),
         period_printed="1T",
         csv="ABCD1234EFGH5678",
-        presented_at="2025-04-20 10:00:00",
+        presented_at=f"{año}-04-20 10:00:00",
         casilla_values=values,
     )
     pdf_bytes, _ = generate(params)
-    pdf_path = tmp_path / "modelo_130_2025Q1_synthetic.pdf"
+    pdf_path = tmp_path / f"modelo_130_{año}Q1_synthetic.pdf"
     pdf_path.write_bytes(pdf_bytes)
     return pdf_path
 
@@ -116,7 +121,7 @@ def test_roundtrip_extract_matches_ground_truth(
 ) -> None:
     """Synthetic round-trip: generated PDF → extractor → ground truth."""
     del case  # present in test id for xfail targeting
-    pdf_path = _generate_pdf(tmp_path, **casilla_values)
+    pdf_path = _generate_pdf(tmp_path, casilla_values)
 
     filing = parse_declaracion(pdf_path)
 
@@ -136,7 +141,7 @@ def test_template_auto_detection(tmp_path: Path) -> None:
     """The parser detects Modelo 130 + 2025 without explicit overrides."""
     pdf_path = _generate_pdf(
         tmp_path,
-        **{"01": "100.00", "02": "50.00", "03": "50.00", "04": "10.00", "05": "0.00", "06": "0.00", "07": "10.00"},
+        {"01": "100.00", "02": "50.00", "03": "50.00", "04": "10.00", "05": "0.00", "06": "0.00", "07": "10.00"},
     )
     filing = parse_declaracion(pdf_path)
     assert filing.template_revision.modelo == "130"
@@ -151,11 +156,52 @@ def test_missing_pdf_raises(tmp_path: Path) -> None:
 
 def test_partial_extraction_surfaces_warnings(tmp_path: Path) -> None:
     """Leaving out some casillas still produces a filing with warnings."""
-    pdf_path = _generate_pdf(tmp_path, **{"01": "1000.00", "02": "500.00"})
+    pdf_path = _generate_pdf(tmp_path, {"01": "1000.00", "02": "500.00"})
     filing = parse_declaracion(pdf_path)
     assert filing.extraction_status is not ExtractionStatus.COMPLETE
     missing_ids = {w.casilla_id for w in filing.warnings}
     assert missing_ids >= {"03", "04", "05", "06", "07"}
+
+
+@pytest.mark.parametrize("año", [2024, 2025, 2026], ids=["2024", "2025", "2026"])
+def test_per_year_round_trip_resolves_to_correct_template(tmp_path: Path, año: int) -> None:
+    """Issue #321: 2024 / 2025 / 2026 declaraciones each resolve to a registered extractor.
+
+    Gemini PR-440 review surfaced that the extractor registry was
+    keyed only on `(modelo="130", año=2025, revision="2025.01")` —
+    so 2024 and 2026 PDFs raised `NoExtractorRegisteredError`. This
+    parametrised case asserts that a synthetic PDF for each of the
+    three Tier-L years parses cleanly, the resolved
+    ``template_revision.año`` matches the printed ejercicio, and
+    every supplied casilla round-trips to the printed value.
+
+    The form layout is identical across 2024 / 2025 / 2026 (RIRPF
+    art. 110 unchanged per the rule-delta manifest), so the same
+    seven-casilla MVP fixture suffices for all three years; a future
+    AEAT layout reshuffle would require a per-year fixture of its own.
+    """
+    casilla_values = {
+        "01": "12500.00",
+        "02": "3500.00",
+        "03": "9000.00",
+        "04": "1800.00",
+        "05": "400.00",
+        "06": "0.00",
+        "07": "1400.00",
+    }
+    pdf_path = _generate_pdf(tmp_path, casilla_values, año=año)
+    filing = parse_declaracion(pdf_path)
+
+    assert filing.modelo == "130"
+    assert filing.ejercicio == str(año)
+    assert filing.template_revision.año == año
+    assert filing.template_revision.revision == f"{año}.01"
+    assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+    by_id = _values_by_id(filing)
+    for casilla_id, expected_raw in casilla_values.items():
+        assert casilla_id in by_id, f"casilla {casilla_id} not extracted for año={año}"
+        assert by_id[casilla_id].printed_value == Decimal(expected_raw)
 
 
 def test_full_19_casilla_liquidacion_round_trip(tmp_path: Path) -> None:
@@ -194,7 +240,7 @@ def test_full_19_casilla_liquidacion_round_trip(tmp_path: Path) -> None:
         "18": "400.00",
         "19": "4600.00",
     }
-    pdf_path = _generate_pdf(tmp_path, **full_19)
+    pdf_path = _generate_pdf(tmp_path, full_19)
     filing = parse_declaracion(pdf_path)
 
     assert filing.extraction_status is ExtractionStatus.COMPLETE

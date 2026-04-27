@@ -29,6 +29,15 @@ discrepancy.
   across all three years (RD 253/2025 modified art. 69, not art. 110;
   consolidated text last updated 2026-02-28). Rule-delta manifest:
   `.vault/reference/2026-130-rule-delta.md`.
+- **Per-year extractor coverage.** `Modelo130V2024Extractor` +
+  `Modelo130V2025Extractor` + `Modelo130V2026Extractor` all
+  registered in the extractor registry under their respective
+  `(modelo="130", año=YYYY, revision="YYYY.01")` keys. The two
+  sibling classes inherit `Modelo130V2025Extractor`'s extraction
+  logic verbatim and pin only their own `template_revision`
+  ClassVar. (Step-4 closure of the Gemini PR-440 review finding —
+  prior to step-4, only the 2025 key was registered and 2024 / 2026
+  PDFs raised `NoExtractorRegisteredError`.)
 - **Citation completeness.** All three M130 rulesets at 100,00 % on
   `computed=True` casillas (9 of 9). Aggregate over all 19 landed
   rulesets: 98 of 98 (100,00 %).
@@ -59,7 +68,9 @@ discrepancy.
   (`test_discrepancy_classified_correctly`).
 - **Integration test class.** Three mandatory cases preserved
   (english, spanish-default, partial-extraction) plus the optional
-  4th case (`test_discrepancy_classified_correctly`).
+  4th case (`test_discrepancy_classified_correctly`) plus a 5th
+  parametrised case (`test_per_year_happy_path_verified`)
+  exercising the full CLI flow for each of 2024 / 2025 / 2026.
 - **L1 anchor decision.** Explicit waiver in the rule-delta
   manifest. AEAT does not publish a specimen Modelo 130 declaración
   as a normative exemplar.
