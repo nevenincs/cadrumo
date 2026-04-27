@@ -70,7 +70,7 @@ The L1 public-anchor decision is waiver. Real Modelo 303 declarations are taxpay
 
 Bootstrap note:
 
-`uv sync --all-groups --upgrade` and `uv lock --upgrade` were executed because the issue handoff required them. The resulting lockfile updates are bootstrap-driven dependency refreshes, not Modelo 303 runtime dependencies introduced by this feature.
+`uv sync --all-groups --upgrade` and `uv lock --upgrade` were executed because the issue handoff required them. The dependency refresh was not retained in this PR because Modelo 303 calc-verify coverage does not require dependency changes.
 
 Focused test command:
 
