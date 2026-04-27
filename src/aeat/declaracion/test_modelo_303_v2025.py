@@ -64,6 +64,10 @@ _ALL_CASILLAS_HAPPY: dict[str, str] = {
 def _generate_pdf(
     tmp_path: Path,
     casilla_values: dict[str, str] | None = None,
+    *,
+    año: int = 2025,
+    ejercicio: str = "2025",
+    template_revision: str = "2025.01",
 ) -> Path:
     from tests.fixtures.pdf_corpus.l3_synthetic._generators.modelo_303_generator import (
         Modelo303GenParams,
@@ -72,17 +76,17 @@ def _generate_pdf(
 
     values = casilla_values if casilla_values is not None else _ALL_CASILLAS_HAPPY
     params = Modelo303GenParams(
-        año=2025,
-        template_revision="2025.01",
+        año=año,
+        template_revision=template_revision,
         tax_id="00000000T",
-        ejercicio="2025",
+        ejercicio=ejercicio,
         period_printed="1T",
         csv="ZZZZ9999YYYY8888",
         presented_at="2025-04-20 10:00:00",
         casilla_values={k: Decimal(v) for k, v in values.items()},
     )
     pdf_bytes, _ = generate(params)
-    path = tmp_path / "modelo_303_2025Q1_synth.pdf"
+    path = tmp_path / f"modelo_303_{ejercicio}Q1_synth.pdf"
     path.write_bytes(pdf_bytes)
     return path
 
@@ -113,6 +117,19 @@ def test_roundtrip_template_detected_as_303_2025(tmp_path: Path) -> None:
     assert filing.template_revision.modelo == "303"
     assert filing.template_revision.año == 2025
     assert filing.template_revision.revision == "2025.01"
+
+
+def test_roundtrip_template_detected_as_303_2026(tmp_path: Path) -> None:
+    pdf_path = _generate_pdf(
+        tmp_path,
+        año=2026,
+        ejercicio="2026",
+        template_revision="2026.01",
+    )
+    filing = parse_declaracion(pdf_path)
+    assert filing.template_revision.modelo == "303"
+    assert filing.template_revision.año == 2026
+    assert filing.template_revision.revision == "2026.01"
 
 
 def test_partial_extraction_surfaces_warnings(tmp_path: Path) -> None:
