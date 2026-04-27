@@ -155,6 +155,11 @@ ignore = [
 # password. `_PASSWORD_COMMENT_PREFIX` is a file-format prefix, not a secret.
 "src/aeat/setup/_env_writer.py" = ["S105"]
 "src/aeat/setup/test_*.py" = ["S101", "S105", "S106", "T20"]
+# Encrypted-column tests deliberately use literal "secret_text" / "secret_*"
+# as column / attribute names; ruff's S105/S106 heuristic flags them as
+# hardcoded passwords when they are in fact attribute identifiers.
+"src/aeat/storage/_test_encrypted_columns.py" = ["S101", "S105", "S106"]
+"src/aeat/storage/_test_master_key.py" = ["S101", "S105", "S106"]
 # Typer requires `typer.Argument(...)` / `typer.Option(...)` literally inside
 # parameter defaults; B008 flags this idiom but it is the documented usage.
 "src/aeat/cli/**/*.py" = ["B008"]
