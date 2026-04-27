@@ -71,13 +71,19 @@ def _reconfigure_utf8() -> None:
 
 
 def _render_line(report: CitationCoverageReport) -> str:
-    """Render a single :class:`CitationCoverageReport` as one line."""
+    """Render a single :class:`CitationCoverageReport` as one line.
+
+    A :data:`None` ``modelo`` renders as ``"all"`` to signal a
+    multi-modelo aggregate (per the :func:`aggregate_reports` contract).
+    Per-ruleset reports always carry a concrete modelo.
+    """
     bar = "OK " if report.is_complete else "GAP"
     pct = f"{report.coverage_percent * 100:6.2f}%"
     span = f"{report.effective_from.isoformat()}…{report.effective_to.isoformat() if report.effective_to else 'open'}"
+    modelo_label = report.modelo.value if report.modelo is not None else "all"
     body = (
         f"{bar} {report.ruleset_id:<32} "
-        f"modelo {report.modelo.value} "
+        f"modelo {modelo_label} "
         f"{span}  "
         f"computed={report.total_computed:>3d}  "
         f"with_citation={report.with_citation:>3d}  "
