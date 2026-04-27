@@ -16,7 +16,6 @@ from typing import cast
 from ..auth import AeatAccessGate
 from ..config import Settings
 from ..filing import FilingAmendment, FilingDraft
-from ..filing._complementaria_repository import FilingAmendmentRepository
 from ..logging import get_logger
 from ._audit import build_live_submit_audit_record
 from ._confirm import confirm_live_submission
@@ -24,7 +23,6 @@ from ._errors import (
     AeatLiveTransportUnavailableError,
     SubmissionError,
 )
-from ._governed_audit import GovernedLiveSubmitAuditSink
 from ._models import (
     AmendmentSubmissionResult,
     SubmissionAttempt,
@@ -42,8 +40,15 @@ from ._protocols import (
     JustificanteParser,
     PortalCatalogue,
 )
-from ._repository import SubmissionRepository
 from ._submitters import BrowserSessionLike, Submitter
+
+# Repository + governed-audit-sink imports are intentionally deferred
+# inside the engine's persist methods. Both transitively pull
+# ``aeat.storage``, which imports Alembic plugin discovery and emits
+# INFO log lines on stderr at import time. CLI commands that never
+# touch the engine's persist path (e.g. ``aeat submission models
+# --output-json``) must not pay that cost; deferring the import keeps
+# the json-pipe-safety contract intact.
 
 _logger = get_logger(__name__)
 
@@ -324,21 +329,27 @@ class SubmissionEngine:
             )
         return filing
 
-    def _submission_repository(self) -> SubmissionRepository:
+    def _submission_repository(self):  # type: ignore[no-untyped-def]
+        from ._repository import SubmissionRepository
+
         return SubmissionRepository(store_dir=self.settings.aeat_submissions_dir)
 
-    def _audit_sink(self) -> GovernedLiveSubmitAuditSink:
+    def _audit_sink(self):  # type: ignore[no-untyped-def]
         """Return the governed live-submit audit sink for this engine.
 
         Routes through the override audit dir when one is supplied (test
         fixtures that need to inspect the JSONL); otherwise binds to the
         operator-configured ``aeat_audit_dir``.
         """
+        from ._governed_audit import GovernedLiveSubmitAuditSink
+
         return GovernedLiveSubmitAuditSink(
             audit_dir=self.live_submit_audit_dir or self.settings.aeat_audit_dir,
         )
 
-    def _amendment_repository(self) -> FilingAmendmentRepository:
+    def _amendment_repository(self):  # type: ignore[no-untyped-def]
+        from ..filing._complementaria_repository import FilingAmendmentRepository
+
         return FilingAmendmentRepository(
             store_dir=self.settings.aeat_submissions_dir / "amendment-results",
         )
