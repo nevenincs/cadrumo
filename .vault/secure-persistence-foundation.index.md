@@ -9,6 +9,7 @@ related:
   - '[[2026-04-27-secure-persistence-foundation-plan]]'
   - '[[2026-04-27-secure-persistence-foundation-research]]'
   - '[[2026-04-28-secure-persistence-foundation-adr]]'
+  - '[[2026-04-28-secure-persistence-foundation-exec]]'
   - '[[2026-04-28-secure-persistence-foundation-research]]'
 ---
 
@@ -26,6 +27,7 @@ Auto-generated index of all documents tagged with `#secure-persistence-foundatio
 ### exec
 
 - `2026-04-27-secure-persistence-foundation-exec` - `secure-persistence-foundation` execution summary
+- `2026-04-28-secure-persistence-foundation-exec` - `secure-persistence-foundation` wave-2 execution summary
 
 ### plan
 
