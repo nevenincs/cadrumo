@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import os
 import secrets
 from collections.abc import Iterator
 from pathlib import Path
@@ -239,6 +240,105 @@ class TestKeyringFailureSurfaces:
 
         monkeypatch.setattr(keyring, "get_password", lambda service, username: None)
         monkeypatch.setattr(keyring, "set_password", _fail_set)
+        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}")
+        with pytest.raises(KeyringUnavailableError):
+            provider.get_master_key()
+
+
+class TestSecurityHardening:
+    """Audit-driven hardening fixes (sec H-1 / H-2, vaultspec H-1 / H-2)."""
+
+    def test_passphrase_env_var_popped_after_use(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """The default callback must pop AEAT_SECRET_PASSPHRASE so children do not inherit."""
+        from ._master_key import _default_passphrase_callback
+
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "smoke-passphrase")
+        assert _default_passphrase_callback() == "smoke-passphrase"
+        assert PASSPHRASE_ENV_VAR not in os.environ
+
+    def test_passphrase_env_var_strips_trailing_crlf(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from ._master_key import _default_passphrase_callback
+
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "value-with-newline\n")
+        assert _default_passphrase_callback() == "value-with-newline"
+
+    def test_passphrase_env_var_whitespace_only_rejected(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from ._master_key import _default_passphrase_callback
+
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "\r\n")
+        with pytest.raises(SecretStoreError):
+            _default_passphrase_callback()
+
+    @pytest.mark.skipif(os.name != "posix", reason="POSIX-only file mode bits")
+    def test_master_key_files_are_mode_0o600(self, tmp_path: Path) -> None:
+        """The wrapped master key + KDF params + salt land mode 0o600 on POSIX."""
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=tmp_path / "secrets",
+            passphrase_callback=lambda: "x",
+        )
+        provider.get_master_key()
+        for name in ("master.key", "master.kdf", "salt"):
+            mode = (tmp_path / "secrets" / name).stat().st_mode & 0o777
+            assert mode == 0o600, f"{name} must be 0o600; got {oct(mode)}"
+
+    def test_keyring_no_op_backend_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The fail.Keyring backend MUST be refused so the auto path falls back."""
+        keyring = pytest.importorskip("keyring")
+        from keyring.backends import fail
+
+        monkeypatch.setattr(keyring, "get_keyring", lambda: fail.Keyring())
+        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}")
+        with pytest.raises(KeyringUnavailableError):
+            provider.get_master_key()
+
+    def test_keyring_cache_is_per_service(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Two providers bound to distinct services do NOT share cached keys."""
+        keyring = pytest.importorskip("keyring")
+
+        # Stub the live backend so the test does not depend on the host's keychain.
+        store: dict[tuple[str, str], str] = {}
+
+        def _get(service: str, username: str) -> str | None:
+            return store.get((service, username))
+
+        def _set(service: str, username: str, password: str) -> None:
+            store[(service, username)] = password
+
+        # Stub the backend probe so it does not trip on the host's
+        # actual fail.Keyring detection.
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        monkeypatch.setattr(keyring, "get_password", _get)
+        monkeypatch.setattr(keyring, "set_password", _set)
+
+        service_a = f"aeat:test:{secrets.token_hex(8)}"
+        service_b = f"aeat:test:{secrets.token_hex(8)}"
+
+        key_a = KeyringMasterKeyProvider(service=service_a).get_master_key()
+        key_b = KeyringMasterKeyProvider(service=service_b).get_master_key()
+        assert key_a != key_b
+        # Re-binding the first service must return the same key (still cached).
+        assert KeyringMasterKeyProvider(service=service_a).get_master_key() == key_a
+
+    def test_keyring_round_trip_disagreement_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A backend that accepts set_password but drops the value MUST be detected."""
+        keyring = pytest.importorskip("keyring")
+
+        # The "silent dropper" — set_password succeeds but get_password
+        # afterwards returns None.
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        monkeypatch.setattr(keyring, "get_password", lambda service, username: None)
+        monkeypatch.setattr(keyring, "set_password", lambda service, username, password: None)
+
         provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}")
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
