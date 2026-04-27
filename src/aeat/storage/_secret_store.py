@@ -50,7 +50,7 @@ from .errors import (
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
-_HKDF_CONTEXT_LOOKUP = b"aeat.secret_store.lookup.v1"
+_HKDF_CONTEXT_SECRET_LOOKUP = b"aeat.secret_store.lookup.v1"
 _SECRET_RECORD_VERSION = 1
 
 
@@ -154,7 +154,7 @@ class SecretStore:
         sub_key = derive_key(
             key_material=self._master_key(),
             salt=b"",
-            context=_HKDF_CONTEXT_LOOKUP,
+            context=_HKDF_CONTEXT_SECRET_LOOKUP,
             length=KEY_SIZE,
         )
         return hmac.new(sub_key, key.encode("utf-8"), sha256).hexdigest()

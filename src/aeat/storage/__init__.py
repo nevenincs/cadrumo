@@ -56,6 +56,7 @@ from ._encrypted_columns import (
     override_master_key_provider,
 )
 from ._envelope import (
+    AeadAlgorithm,
     EncryptionMetadata,
     Envelope,
     EnvelopeMigrator,
@@ -111,6 +112,7 @@ __all__ = [
     "GCM_TAG_SIZE",
     "KEY_SIZE",
     "NONCE_SIZE",
+    "AeadAlgorithm",
     "AtRestTreatment",
     "BlobIntegrityError",
     "BlobManifest",

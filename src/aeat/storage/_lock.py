@@ -115,9 +115,22 @@ def exclusive_file_lock(
     Raises:
         LockAcquisitionError: If the lock cannot be acquired within
             ``timeout`` seconds. The error category is ``LOCKED`` and
-            ``retryable`` is ``True``.
+            ``retryable`` is ``True``. The retryable flag means
+            "another acquirer may release shortly and the operation
+            could succeed on retry"; consumers that retry MUST bound
+            the retry budget themselves (e.g. via the existing
+            ``timeout`` argument or an outer back-off loop). The
+            substrate does not auto-retry.
         OSError: If the lock-file descriptor cannot be opened. The
             caller decides whether to wrap.
+
+    Note:
+        On Windows ``msvcrt.locking`` enforces a mandatory lock against
+        a single byte of the lock file. On POSIX ``fcntl.flock`` is
+        advisory — readers that do not also acquire the lock can still
+        observe the protected resource mid-write. Callers MUST treat
+        the lock as advisory across the whole file regardless of the
+        underlying primitive.
     """
     if timeout < 0:
         raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")

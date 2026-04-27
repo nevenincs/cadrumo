@@ -71,7 +71,11 @@ class BlobManifest(BaseModel):
         size_plaintext: Size of the original plaintext in bytes.
         content_type: Free-form MIME type or descriptive label
             (e.g. ``application/pdf``, ``application/json``,
-            ``application/octet-stream``).
+            ``application/octet-stream``). The substrate does not parse
+            or validate the value; it is recorded for forensic clarity
+            only. Consumers that need a stricter classification should
+            choose the appropriate :class:`SensitivityClass` rather
+            than relying on the content-type label.
         classification: The :class:`SensitivityClass` of the payload.
         wrapped_dek: Per-blob data-encryption key, AES-256-GCM-wrapped
             with the master key, expressed as JSON-friendly
