@@ -116,10 +116,37 @@ def _load_inputs(path: Path) -> dict[str, object]:
     return parsed
 
 
+def _draft_repository():  # type: ignore[no-untyped-def]
+    """Return a FilingDraftRepository bound to the configured drafts dir.
+
+    Imports are deferred to avoid pulling aeat.storage (and Alembic
+    plugin discovery) into CLI commands that never persist a draft.
+    """
+    from ...filing._repository import FilingDraftRepository
+
+    return FilingDraftRepository(store_dir=_drafts_dir())
+
+
 def _load_draft(path: Path) -> FilingDraft:
-    """Load and parse a draft JSON file."""
+    """Load and parse a draft.
+
+    Wave-8 silent-leaker close: every NEW draft is ciphertext-at-rest
+    via FilingDraftRepository. Reads honour both formats so an operator
+    who has legacy plaintext drafts on disk can still read them; on
+    the next save the draft is re-persisted as ciphertext.
+    """
     if not path.exists():
         raise typer.BadParameter(f"draft file not found: {path}")
+    if path.name.endswith(".envelope.json"):
+        # New ciphertext-at-rest path — load via the repository so the
+        # AAD-bound classification gate fires.
+        repository = _draft_repository()
+        draft_id = path.name[: -len(".envelope.json")]
+        loaded = repository.load(draft_id)
+        if loaded is None:
+            raise typer.BadParameter(f"draft envelope not found: {path}")
+        return loaded
+    # Legacy plaintext fallback — kept readable for operator migration.
     try:
         return FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
     except FilingDraftError as exc:
@@ -127,7 +154,13 @@ def _load_draft(path: Path) -> FilingDraft:
 
 
 def _refresh_persisted_draft(path: Path, draft: FilingDraft | None = None) -> FilingDraft:
-    """Refresh review status for a persisted draft and rewrite it when needed."""
+    """Refresh review status for a persisted draft and rewrite it when needed.
+
+    Rewrites always go through FilingDraftRepository (ciphertext) — even
+    when the load came from a legacy plaintext file. The legacy file is
+    NOT deleted; the next read still finds it via the same path until
+    operators migrate.
+    """
 
     loaded = draft or _load_draft(path)
     refreshed = refresh_review_status(
@@ -135,28 +168,42 @@ def _refresh_persisted_draft(path: Path, draft: FilingDraft | None = None) -> Fi
         schema_provider=_schema_provider(),
     )
     if refreshed != loaded:
-        path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
+        _draft_repository().save(refreshed)
     return refreshed
 
 
 def _save_draft(draft: FilingDraft) -> Path:
-    """Write a draft to the configured drafts directory."""
-    target = _drafts_dir() / _draft_filename(draft)
-    target.write_text(
-        draft.model_dump_json(indent=2),
-        encoding="utf-8",
-    )
-    return target
+    """Write a draft through the FilingDraftRepository (ciphertext-at-rest)."""
+    repository = _draft_repository()
+    repository.save(draft)
+    return repository.envelope_path_for(draft.draft_id)
 
 
 def _load_persisted_draft_by_id(draft_id: str) -> FilingDraft | None:
-    matches = sorted(path for path in _drafts_dir().glob(f"*_{draft_id}.json") if path.is_file())
-    if not matches:
+    """Resolve a draft by its content-addressed id.
+
+    Tries the FilingDraftRepository first (new ciphertext envelopes),
+    then falls back to the legacy plaintext filename pattern so
+    operators who have not yet migrated keep working.
+    """
+    repository = _draft_repository()
+    via_repo = repository.load(draft_id)
+    if via_repo is not None:
+        # Refresh review status via the repository write path.
+        refreshed = refresh_review_status(
+            via_repo,
+            schema_provider=_schema_provider(),
+        )
+        if refreshed != via_repo:
+            repository.save(refreshed)
+        return refreshed
+    legacy_matches = sorted(path for path in _drafts_dir().glob(f"*_{draft_id}.json") if path.is_file())
+    if not legacy_matches:
         return None
-    if len(matches) > 1:
-        joined = ", ".join(str(path) for path in matches)
+    if len(legacy_matches) > 1:
+        joined = ", ".join(str(path) for path in legacy_matches)
         raise typer.BadParameter(f"draft_id={draft_id!r} matched multiple draft files: {joined}")
-    return _refresh_persisted_draft(matches[0])
+    return _refresh_persisted_draft(legacy_matches[0])
 
 
 def _render_draft_next_steps(draft: FilingDraft, *, draft_path: Path) -> None:
@@ -363,14 +410,16 @@ def build(
 def validate(
     draft_path: Annotated[Path, typer.Argument(help="Path to a draft JSON file")],
 ) -> None:
-    """Re-validate an existing draft and rewrite it to disk."""
+    """Re-validate an existing draft and rewrite it through the repository."""
     draft = _load_draft(draft_path)
     refreshed = validate_draft(
         draft,
         schema_provider=_schema_provider(),
     )
     refreshed = _refresh_persisted_draft(draft_path, refreshed)
-    draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
+    # Wave-8: re-validation now persists ciphertext-at-rest via the
+    # repository instead of a plaintext write_text to draft_path.
+    _draft_repository().save(refreshed)
     typer.echo(f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})")
     _render_draft(refreshed)
     _render_draft_next_steps(refreshed, draft_path=draft_path)
@@ -423,13 +472,37 @@ def list_drafts(
     table.add_column("path")
 
     drafts_dir = _drafts_dir()
+    repository = _draft_repository()
+    seen_ids: set[str] = set()
+    # Wave-7/8: drafts are now ciphertext envelopes via FilingDraftRepository.
+    for draft in repository.iter_drafts():
+        seen_ids.add(draft.draft_id)
+        refreshed = _refresh_persisted_draft(repository.envelope_path_for(draft.draft_id), draft)
+        if modelo is not None and refreshed.modelo != modelo:
+            continue
+        if target_status is not None and refreshed.status is not target_status:
+            continue
+        table.add_row(
+            refreshed.draft_id,
+            refreshed.modelo,
+            refreshed.period,
+            refreshed.status.value,
+            refreshed.approved_by or "-",
+            str(repository.envelope_path_for(refreshed.draft_id)),
+        )
+    # Legacy plaintext drafts (operator hasn't yet migrated) — read,
+    # display, and DO NOT re-persist here. Migration happens on the
+    # next state-changing CLI action.
     for path in sorted(drafts_dir.glob("*.json")):
+        if path.name.endswith(".envelope.json"):
+            continue
         try:
             draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
         except FilingDraftError:
             _logger.warning("Skipping invalid draft file: %s", path)
             continue
-        draft = _refresh_persisted_draft(path, draft)
+        if draft.draft_id in seen_ids:
+            continue
         if modelo is not None and draft.modelo != modelo:
             continue
         if target_status is not None and draft.status is not target_status:
@@ -537,10 +610,14 @@ def _handle_justificante_import(from_justificante: Path) -> None:
         raise typer.BadParameter(str(exc)) from exc
 
     draft_path = _save_draft(result.draft)
-    submissions_dir = settings.aeat_submissions_dir
-    submissions_dir.mkdir(parents=True, exist_ok=True)
-    submission_path = submissions_dir / f"{result.submission.submission_id}.json"
-    submission_path.write_text(result.submission.model_dump_json(indent=2), encoding="utf-8")
+    # Wave-8 silent-leaker close: route the justificante-import submission
+    # write through the governed SubmissionRepository (ciphertext-at-rest
+    # at AUDIT class) instead of a direct plaintext write.
+    from ...submission._repository import SubmissionRepository
+
+    submission_repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)
+    submission_repository.save(result.submission)
+    submission_path = submission_repository.envelope_path_for(result.submission.submission_id)
 
     typer.echo(
         f"Imported draft {result.draft.draft_id} from justificante {result.submission.justificante_csv} -> {draft_path}"
