@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -21,6 +22,10 @@ from . import app
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 _runner = CliRunner()
+
+
+def _unwrap_error(output: str) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(output)["error"])
 
 
 class TestVerifyPreflightLength:
@@ -41,11 +46,12 @@ class TestVerifyPreflightLength:
         short.write_bytes(b"SHORT")
         result = _runner.invoke(app, ["verify", str(short), "--modelo", "130", "--ejercicio", "2024", "--json"])
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        assert doc["status"] == "error"
-        assert doc["error_type"] == "PayloadLengthMismatch"
-        assert doc["expected_bytes"] == 878
-        assert doc["actual_bytes"] == 5
+        assert result.stdout == ""
+        doc = _unwrap_error(result.stderr)
+        assert doc["category"] == "REFUSED"
+        context = cast(dict[str, Any], doc["context"])
+        assert context["expected_bytes"] == "878"
+        assert context["actual_bytes"] == "5"
 
     def test_wrong_modelo_flag_surfaces_mismatch(self, tmp_path: Path) -> None:
         """A real 130 file fed to verify with --modelo 303 --ejercicio 2024
@@ -56,11 +62,11 @@ class TestVerifyPreflightLength:
         stub.write_bytes(b"X" * 878 + b"\r\n")
         result = _runner.invoke(app, ["verify", str(stub), "--modelo", "303", "--ejercicio", "2024", "--json"])
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        assert doc["status"] == "error"
-        assert doc["error_type"] == "PayloadLengthMismatch"
-        assert doc["expected_bytes"] == 7994
-        assert doc["actual_bytes"] == 878
+        assert result.stdout == ""
+        doc = _unwrap_error(result.stderr)
+        context = cast(dict[str, Any], doc["context"])
+        assert context["expected_bytes"] == "7994"
+        assert context["actual_bytes"] == "878"
 
 
 class TestDiffPreflightLength:
@@ -94,7 +100,7 @@ class TestDiffPreflightLength:
             ],
         )
         assert result.exit_code == 2
-        doc = json.loads(result.stdout)
-        assert doc["status"] == "error"
-        assert doc["error_type"] == "PayloadLengthMismatch"
-        assert doc["which_file"] == "file_b"
+        assert result.stdout == ""
+        doc = _unwrap_error(result.stderr)
+        context = cast(dict[str, Any], doc["context"])
+        assert context["which_file"] == "file_b"

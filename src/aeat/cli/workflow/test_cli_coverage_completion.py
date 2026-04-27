@@ -33,6 +33,10 @@ from ._test_doubles import make_engine, make_failing_engine, make_profile
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
+def _unwrap_result(output: str):
+    return json.loads(output)["result"]
+
+
 @pytest.fixture(autouse=True)
 def _clean_hooks() -> Iterator[None]:
     clear_test_hooks()
@@ -170,7 +174,7 @@ def test_show_renders_rich_when_not_json(isolated_runs_dir: Path, working_hooks:
     runner = CliRunner()
     seed = runner.invoke(root_app, ["workflow", "next", "--no-sync", "--json"])
     assert seed.exit_code == 0, seed.output
-    run_id = json.loads(seed.output)["run_id"]
+    run_id = _unwrap_result(seed.output)["run_id"]
     result = runner.invoke(root_app, ["workflow", "show", run_id])
     assert result.exit_code == 0, result.output
     assert run_id in result.output
