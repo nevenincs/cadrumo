@@ -23,11 +23,11 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 class SubmissionStatus(StrEnum):
     """Lifecycle status of a :class:`SubmittedFiling`.
 
-    ``PENDING`` covers dry-run and not-yet-submitted live attempts;
-    ``IN_PROGRESS`` covers a running live submission; ``SUBMITTED`` is
-    AEAT accepted the filing; ``ACKNOWLEDGED`` is the user archived
-    the justificante; ``REJECTED`` is AEAT rejected the filing;
-    ``FAILED`` is a browser/infra error.
+    ``PENDING`` covers dry-run attempts. ``IN_PROGRESS``,
+    ``SUBMITTED``, ``ACKNOWLEDGED``, ``REJECTED``, and ``FAILED`` are
+    retained for historical records imported from earlier project
+    phases, even though live AEAT submission is now permanently
+    forbidden.
     """
 
     PENDING = "PENDING"

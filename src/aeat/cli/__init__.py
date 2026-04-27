@@ -175,7 +175,7 @@ app.add_typer(
 app.add_typer(
     submission_module.app,
     name="submission",
-    help="Preflight, dry-run, and inspect AEAT filing attempts; no default CLI live-submit command.",
+    help="Preflight, dry-run, export, and inspect AEAT filing attempts; the tool never submits to AEAT.",
 )
 app.add_typer(
     review_module.app,

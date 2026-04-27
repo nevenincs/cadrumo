@@ -343,7 +343,7 @@ class TestFilingCLI:
         assert submit_result.exit_code == 0, submit_result.output
         assert "dry-run amendment submission OK" in submit_result.output
 
-    def test_complementaria_live_refuses_stub_transport(
+    def test_complementaria_submit_rejects_removed_live_flag(
         self,
         tmp_path: Path,
         drafts_dir: Path,
@@ -375,10 +375,6 @@ class TestFilingCLI:
         submit_result = runner.invoke(
             app,
             ["filing", "complementaria", "submit", amendment_id, "--live"],
-            env={
-                "AEAT_LIVE_SUBMIT_ENABLED": "true",
-            },
         )
-        assert submit_result.exit_code == 1, submit_result.output
-        assert "refusing" in submit_result.output.lower()
-        assert "stubbed" in submit_result.output.lower()
+        assert submit_result.exit_code == 2, submit_result.output
+        assert "no such option" in submit_result.output.lower()

@@ -11,10 +11,8 @@ Exposes four subcommands tied to the workflow engine
   runs.
 
 The ``next`` and ``run`` subcommands are dry-run-only on the default
-CLI surface (issue ``#393`` / Kent-first CLI wireframe ADR iteration 5).
-The submission engine retains its own four-factor live-write contract,
-but it is not reachable from these subcommands; the 1.0.0 reintroduction
-path is the planned ``aeat advanced workflow ...`` quarantine.
+CLI surface. Live AEAT submission is permanently forbidden, so these
+subcommands only participate in the produce -> verify -> export flow.
 """
 
 from __future__ import annotations

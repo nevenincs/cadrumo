@@ -361,7 +361,7 @@ class Settings(BaseSettings):
         description=(
             "Critical threshold (days) for the certificate pre-expiry gate: "
             "certificates with <= this many days remaining are CRITICAL and "
-            "block live submission unless --force-expiring-cert is passed"
+            "must be renewed before authenticated AEAT work continues"
         ),
     )
 
@@ -496,13 +496,6 @@ class Settings(BaseSettings):
     aeat_submissions_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "submissions",
         description="Directory where SubmittedFiling JSON audit records are persisted",
-    )
-    aeat_live_submit_enabled: bool = Field(
-        default=False,
-        description=(
-            "Interactive-only opt-in for real AEAT writes. Must never be enabled "
-            "from pytest, CI, fixtures, or background jobs."
-        ),
     )
     aeat_submission_browser_trace_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "browser-traces",

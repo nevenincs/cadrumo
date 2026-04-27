@@ -90,12 +90,7 @@ class TestReplayRun:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Replay must refuse traces captured with --no-dry-run.
-
-        Reconstructing argv would re-enter live-mode even though the
-        replay caller passed dry_run=True. The live-write safety
-        charter (#116) forbids this.
-        """
+        """Replay must refuse traces captured with the legacy live-mode flag."""
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
         live_trace = RunTrace(
@@ -106,11 +101,6 @@ class TestReplayRun:
             arguments=(
                 ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
                 ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.FLAG),
-                ArgumentRecord(
-                    name="i-understand-this-is-real",
-                    value="True",
-                    source=ArgumentSource.FLAG,
-                ),
             ),
             corpus_sha256=current_corpus,
             db_sha256="b" * 64,

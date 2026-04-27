@@ -14,14 +14,11 @@ from pathlib import Path
 from typing import cast
 
 from .._paths import resolve_record_json_path
-from ..auth import AeatAccessGate
 from ..config import Settings
 from ..filing import FilingAmendment, FilingDraft
 from ..logging import get_logger
-from ._audit import append_live_submit_audit, build_live_submit_audit_record
-from ._confirm import confirm_live_submission
 from ._errors import (
-    AeatLiveTransportUnavailableError,
+    LiveSubmitForbiddenError,
     SubmissionError,
 )
 from ._models import (
@@ -49,9 +46,8 @@ _logger = get_logger(__name__)
 class SubmissionEngine:
     """Orchestrates preflight, submitter dispatch, and persistence.
 
-    The engine is dry-run-by-default and double-gates every live
-    submission. See [[2026-04-12-submission-engine-adr]] for the
-    rationale.
+    The engine is dry-run-only. Any attempt to invoke a live AEAT
+    write raises :class:`LiveSubmitForbiddenError`.
     """
 
     def __init__(
@@ -66,8 +62,7 @@ class SubmissionEngine:
         justificante_parser: JustificanteParser,
         submitters: Mapping[str, Submitter],
         settings: Settings,
-        live_transport_supported: bool = False,
-        live_submit_audit_log_path: Path | None = None,
+        **legacy_live_kwargs: object,
     ) -> None:
         """Construct a :class:`SubmissionEngine`.
 
@@ -85,16 +80,17 @@ class SubmissionEngine:
             submitters: Mapping ``modelo -> Submitter`` dispatched by
                 :meth:`submit_draft`.
             settings: Application settings.
-            live_transport_supported: Whether this engine is wired
-                to a real transport that may perform a live AEAT write.
-                **Default is False — opt-in only.** With the default,
-                :meth:`submit_draft` with ``dry_run=False`` raises
-                :class:`AeatLiveTransportUnavailableError`. See
-                ``.vault/adr/2026-04-18-live-submit-cli-excision-adr.md``
-                for the rationale (charter #197 + #116).
-            live_submit_audit_log_path: Optional override for the
-                append-only live submit audit log path.
+            **legacy_live_kwargs: Historical compatibility trap. Any
+                unexpected legacy transport keyword now receives
+                :class:`LiveSubmitForbiddenError` instead of silently
+                re-opening a write path.
         """
+        if legacy_live_kwargs:
+            raise LiveSubmitForbiddenError(
+                "SubmissionEngine no longer accepts historical "
+                "live-transport compatibility keywords; live AEAT "
+                "submission is permanently forbidden"
+            )
         self.browser_session_factory = browser_session_factory
         self.auth_provider = auth_provider
         self.portal_catalogue = portal_catalogue
@@ -104,8 +100,6 @@ class SubmissionEngine:
         self.justificante_parser = justificante_parser
         self.submitters = dict(submitters)
         self.settings = settings
-        self.live_transport_supported = live_transport_supported
-        self.live_submit_audit_log_path = live_submit_audit_log_path
         self._preflight = Preflight(
             deadline_checker=deadline_checker,
             auth_provider=auth_provider,
@@ -139,7 +133,7 @@ class SubmissionEngine:
 
         Raises:
             SubmissionPreflightError: If preflight fails, or if live
-                mode is requested without the full double-gate.
+                execution is requested.
             SubmissionError: If no submitter is registered for
                 ``draft.modelo``.
         """
@@ -156,7 +150,7 @@ class SubmissionEngine:
         dry_run: bool,
         today: date | None = None,
     ) -> AmendmentSubmissionResult:
-        """Submit ``amendment`` through the existing per-modelo transport.
+        """Submit ``amendment`` through the dry-run-only transport.
 
         Args:
             amendment: The amendment produced by
@@ -197,98 +191,31 @@ class SubmissionEngine:
     ) -> SubmittedFiling:
         """Execute the shared preflight + transport flow."""
         draft_like = cast(FilingDraftLike, draft)
+        if not dry_run:
+            raise LiveSubmitForbiddenError()
         reference_today = today or date.today()
         self.preflight(draft_like, today=reference_today)
-
         if draft.modelo not in self.submitters:
             raise SubmissionError(f"no submitter registered for modelo {draft.modelo!r}")
         submitter = self.submitters[draft.modelo]
         portal = self.portal_catalogue.portal_for(draft.modelo)
-        confirmation = None
-        audit_env_state: dict[str, str] | None = None
-
-        if not dry_run:
-            if not self.live_transport_supported:
-                raise AeatLiveTransportUnavailableError(
-                    "live submission requires a real browser/certificate transport; this engine is stubbed"
-                )
-            gate = AeatAccessGate(self.settings)
-            gate.require_live_write()
-            # Gate is constructed inline from Settings — never injected,
-            # never stored on self, never accepted as a kwarg on the
-            # engine. This preserves R5 of the live-write safety
-            # charter (#116): no substitutable dependency on the
-            # write-gate. The three inline checks above (lines 207-212)
-            # remain the authoritative gate; the snapshot is consumed
-            # only by the audit log.
-            audit_env_state = gate.snapshot_env().as_audit_dict()
-            confirmation = confirm_live_submission(draft_like, portal=portal)
 
         submission_id = make_submission_id(draft.draft_id, attempt_ordinal=1)
         session = self.browser_session_factory()
         justificante_csv: str | None = None
         justificante_pdf_path: Path | None = None
 
-        if dry_run:
-            _logger.info("engine: dry-run submitting modelo=%s", draft.modelo)
-            attempt = await submitter.dry_run(
-                draft=draft_like,
-                session=session,
-                casilla_catalogue=self.casilla_catalogue,
-                portal=portal,
-                amendment_kind=amendment_kind,
-                original_csv=original_csv,
-            )
-            overall_status = SubmissionStatus.PENDING
-            attempts: tuple[SubmissionAttempt, ...] = (attempt,)
-        else:
-            _logger.info("engine: LIVE submitting modelo=%s", draft.modelo)
-            assert confirmation is not None
-            assert audit_env_state is not None
-            append_live_submit_audit(
-                build_live_submit_audit_record(
-                    modelo=draft.modelo,
-                    period=draft.period,
-                    taxpayer_nif=draft.profile_tax_id,
-                    draft_checksum=confirmation.draft_checksum,
-                    submission_url=portal.presentation_url,
-                    response_status="DISPATCH_REQUESTED",
-                    justificante_csv=None,
-                    confirmation_phrase=confirmation.typed_phrase,
-                    env_state=audit_env_state,
-                ),
-                target=self.live_submit_audit_log_path,
-            )
-            try:
-                attempt, justificante = await submitter.submit(
-                    draft=draft_like,
-                    session=session,
-                    casilla_catalogue=self.casilla_catalogue,
-                    portal=portal,
-                    amendment_kind=amendment_kind,
-                    original_csv=original_csv,
-                )
-            except Exception as exc:
-                append_live_submit_audit(
-                    build_live_submit_audit_record(
-                        modelo=draft.modelo,
-                        period=draft.period,
-                        taxpayer_nif=draft.profile_tax_id,
-                        draft_checksum=confirmation.draft_checksum,
-                        submission_url=portal.presentation_url,
-                        response_status=f"ERROR:{type(exc).__name__}",
-                        justificante_csv=None,
-                        confirmation_phrase=confirmation.typed_phrase,
-                        env_state=audit_env_state,
-                    ),
-                    target=self.live_submit_audit_log_path,
-                )
-                raise
-            overall_status = SubmissionStatus.SUBMITTED
-            attempts = (attempt,)
-            if justificante is not None:
-                justificante_csv = justificante.csv
-                justificante_pdf_path = justificante.pdf_path
+        _logger.info("engine: dry-run submitting modelo=%s", draft.modelo)
+        attempt = await submitter.dry_run(
+            draft=draft_like,
+            session=session,
+            casilla_catalogue=self.casilla_catalogue,
+            portal=portal,
+            amendment_kind=amendment_kind,
+            original_csv=original_csv,
+        )
+        overall_status = SubmissionStatus.PENDING
+        attempts: tuple[SubmissionAttempt, ...] = (attempt,)
 
         filing = SubmittedFiling(
             submission_id=submission_id,
@@ -304,21 +231,6 @@ class SubmissionEngine:
             attempts=attempts,
         )
         self._persist(filing)
-        if not dry_run and confirmation is not None:
-            append_live_submit_audit(
-                build_live_submit_audit_record(
-                    modelo=draft.modelo,
-                    period=draft.period,
-                    taxpayer_nif=draft.profile_tax_id,
-                    draft_checksum=confirmation.draft_checksum,
-                    submission_url=portal.presentation_url,
-                    response_status=attempts[0].status.value,
-                    justificante_csv=justificante_csv,
-                    confirmation_phrase=confirmation.typed_phrase,
-                    env_state=audit_env_state,
-                ),
-                target=self.live_submit_audit_log_path,
-            )
         return filing
 
     def _persist(self, filing: SubmittedFiling) -> None:

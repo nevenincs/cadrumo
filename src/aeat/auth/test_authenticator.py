@@ -375,13 +375,18 @@ def _certificate_assertion() -> AeatLoginAssertion:
     )
 
 
-def _settings_for(path: Path, monkeypatch: pytest.MonkeyPatch):
+def _settings_for(
+    path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    verify_url: str = "https://example.invalid/",
+):
     from ..config import Settings
 
     monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(path))
     monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", SECRET_PASSPHRASE)
     monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", CertificateBackend.HTTPX_FALLBACK.value)
-    monkeypatch.setenv("AEAT_CERTIFICATE_VERIFY_URL", "https://example.invalid/")
+    monkeypatch.setenv("AEAT_CERTIFICATE_VERIFY_URL", verify_url)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(path.parent / ".tokens"))
     return Settings()
 

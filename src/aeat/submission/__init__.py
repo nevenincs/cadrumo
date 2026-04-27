@@ -1,15 +1,13 @@
-"""Filing submission engine — the final leg of the AEAT filing loop.
+"""Filing submission engine — the dry-run/export leg of the AEAT filing loop.
 
 The :class:`SubmissionEngine` composes an authenticated browser
 session, a pluggable :class:`Submitter` per modelo, and a strict
 :class:`Preflight` validator to drive a ``READY_TO_SUBMIT``
 ``FilingDraft`` (from #39) through the AEAT presentation portal. The
-engine is **dry-run by default**: every call to
+engine is **dry-run only**: every call to
 :meth:`SubmissionEngine.submit_draft` walks the portal up to (but not
-including) the final submit click unless the caller explicitly passes
-``dry_run=False``. Live mode is then hard-gated inside the engine by
-the live-submit env vars, the pytest refusal check, a blocking
-confirmation phrase, and the append-only audit log.
+including) the final submit click. Any attempt to request a live AEAT
+write raises :class:`LiveSubmitForbiddenError`.
 
 Public API discipline: callers outside this subpackage must import
 only from :mod:`aeat.submission` (the package root); the underscored
@@ -24,14 +22,10 @@ from __future__ import annotations
 
 from ._engine import SubmissionEngine
 from ._errors import (
-    AeatLiveConfirmationDeclinedError,
-    AeatLiveSubmitNotEnabledError,
-    AeatLiveTransportUnavailableError,
-    AeatPytestLiveWriteRefusedError,
+    LiveSubmitForbiddenError,
     SubmissionError,
     SubmissionFormFillError,
     SubmissionPreflightError,
-    SubmissionRejectionError,
 )
 from ._models import (
     AmendmentSubmissionResult,
@@ -65,10 +59,6 @@ from ._submitters._contract import BrowserSessionLike
 from ._submitters.modelo130 import Modelo130Submitter
 
 __all__ = [
-    "AeatLiveConfirmationDeclinedError",
-    "AeatLiveSubmitNotEnabledError",
-    "AeatLiveTransportUnavailableError",
-    "AeatPytestLiveWriteRefusedError",
     "AmendmentSubmissionResult",
     "AuthProviderDescription",
     "AuthProviderKind",
@@ -85,6 +75,7 @@ __all__ = [
     "FilingFindingSeverity",
     "Justificante",
     "JustificanteParser",
+    "LiveSubmitForbiddenError",
     "Modelo130Submitter",
     "ModeloIdentifier",
     "Portal",
@@ -95,7 +86,6 @@ __all__ = [
     "SubmissionError",
     "SubmissionFormFillError",
     "SubmissionPreflightError",
-    "SubmissionRejectionError",
     "SubmissionStatus",
     "SubmittedFiling",
     "Submitter",

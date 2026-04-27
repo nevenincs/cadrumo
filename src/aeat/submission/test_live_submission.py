@@ -97,7 +97,7 @@ class _Casillas:
 
 class _Parser:
     def parse(self, raw_bytes: bytes) -> Justificante:
-        return Justificante(csv="X", pdf_path=Path("x.pdf"))
+        raise AssertionError("live dry-run test must not parse justificantes")
 
 
 class _Drafts:
@@ -118,9 +118,6 @@ class _NoopSubmitter(Submitter):
             ended_at=now,
             status=SubmissionStatus.PENDING,
         )
-
-    async def submit(self, **kwargs: Any) -> tuple[SubmissionAttempt, Justificante | None]:
-        raise AssertionError("live test must never call submit()")
 
 
 def test_live_dry_run_only(tmp_path: Path) -> None:

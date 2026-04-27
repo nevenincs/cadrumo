@@ -71,9 +71,8 @@ class CertificatePreExpiryError(CertificateError):
     workflow gate and CLI surfaces when a loaded certificate's
     ``days_until_expiry`` has fallen below the configured critical
     threshold, before the bundle becomes technically unusable. Callers
-    may suppress it via an explicit override flag (the
-    ``--force-expiring-cert`` flag survives only on programmatic
-    surfaces — the live-submit CLI was removed by the 2026-04-18 ADR).
+    may suppress it via an explicit override flag on the narrow
+    programmatic surfaces that still support certificate probes.
     """
 
 
@@ -136,7 +135,6 @@ class AeatSessionExpiredError(CertificateError):
 class AeatLiveReadNotEnabledError(AeatError):
     """Raised when live-read access is required but the gate is shut.
 
-    Mirror of :class:`AeatLiveSubmitNotEnabledError` on the read side.
     Emitted by :meth:`AeatAccessGate.require_live_read` when
     ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``. The existing
     per-test ``if os.environ[...] != "1": pytest.skip(...)``

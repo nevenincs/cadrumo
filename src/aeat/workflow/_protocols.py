@@ -68,7 +68,7 @@ class SubmittedFilingLike(BaseModel):
     """Narrow pydantic v2 stub for a submitted filing.
 
     The workflow engine records only the identifier and status of a
-    dry-run or live submission attempt, so the full
+    dry-run submission attempt, so the full
     :class:`aeat.submission.SubmittedFiling` is intentionally not
     imported here — the adapter projects the relevant fields.
     """
@@ -98,7 +98,7 @@ class SubmissionEngineProtocol(Protocol):
         dry_run: bool,
         today: date | None = None,
     ) -> SubmittedFilingLike:
-        """Submit ``draft`` with an explicit dry-run choice."""
+        """Submit ``draft`` through the dry-run-only workflow contract."""
         ...
 
 

@@ -1,9 +1,7 @@
-"""``aeat workflow run`` -- run the engine for a caller-named target.
+"""``aeat workflow run`` -- run the dry-run workflow for a caller-named target.
 
-The command is dry-run-only. The 1.0.0 reintroduction path for live
-submission is the planned ``aeat advanced workflow run --live`` leaf
-documented in the controlling Kent-first CLI wireframe ADR; it is not
-reachable from this default-CLI surface.
+The command is dry-run-only because live AEAT submission is permanently
+forbidden.
 """
 
 from __future__ import annotations
@@ -43,9 +41,8 @@ def run_cmd(
 ) -> None:
     """Drive the workflow for a named ``(modelo, period)`` target.
 
-    The command always runs the workflow in dry-run mode. Live execution
-    is not available from this surface; see the 1.0.0 reintroduction
-    path documented in the controlling CLI wireframe ADR.
+    The command always runs the workflow in dry-run mode. Live AEAT
+    submission is permanently forbidden.
 
     Args:
         modelo: Target modelo identifier.

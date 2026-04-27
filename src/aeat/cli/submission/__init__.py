@@ -12,14 +12,10 @@ excision ADR [[2026-04-18-live-submit-cli-excision-adr]]:
   persisted filing, optionally filtered.
 
 The previously-registered ``submit`` subcommand was removed per the
-2026-04-18 excision ADR. Kent's normal CLI path remains produce ->
-verify -> export, with live submission deferred to 1.0.0 behind
-stricter gates outside the default surface. Programmatic callers that
-genuinely need the live path must construct
-:class:`aeat.submission.SubmissionEngine` with explicit
-``live_transport_supported=True`` — a default-constructed engine
-raises :class:`AeatLiveTransportUnavailableError` on
-``submit_draft(dry_run=False)``.
+2026-04-18 excision ADR. Kent's CLI path is produce -> verify ->
+export. Live AEAT submission is permanently forbidden, and
+``SubmissionEngine.submit_draft(..., dry_run=False)`` raises
+:class:`aeat.submission.LiveSubmitForbiddenError`.
 """
 
 from __future__ import annotations
@@ -39,7 +35,7 @@ from .verify import verify_cmd
 app = typer.Typer(
     name="submission",
     no_args_is_help=True,
-    help="Preflight, dry-run, export, and inspect AEAT filing attempts; no default CLI live-submit command.",
+    help="Preflight, dry-run, export, and inspect AEAT filing attempts; the tool never submits to AEAT.",
 )
 
 app.command(name="preflight", help="Run preflight gates against a draft (no browser action).")(preflight_cmd)

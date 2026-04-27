@@ -6,11 +6,11 @@ path with the captured argv. Live replay is explicitly out of scope —
 ``dry_run=False`` raises :class:`AeatObservabilityError`.
 
 Defence in depth: replay also refuses when the recorded arguments
-contain a live-mode opt-in flag (``--no-dry-run`` /
-``--i-understand-this-is-real``). ``dry_run=True`` at the replay
-layer must NOT be subverted by a recorded ``--no-dry-run`` flag
-bubbling into the reconstructed argv. See [[2026-04-14-run-trace-adr]]
-decision D5 and the live-write safety charter (#116).
+contain the legacy ``--no-dry-run`` live-mode flag. ``dry_run=True``
+at the replay layer must NOT be subverted by a recorded
+``--no-dry-run`` flag bubbling into the reconstructed argv. The
+historical typed-confirmation flag was permanently removed by
+issue #432.
 """
 
 from __future__ import annotations
@@ -32,17 +32,13 @@ from ._store import load_trace
 # safety charter #116.
 REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
 
-# Flags that opt a recorded run into AEAT live-mode. Replay refuses to
-# re-enter these paths — even with ``dry_run=True`` at the replay layer
-# — because reconstructing the argv would still pass the live-mode
-# flag straight into the wrapped CLI. The canonical flag names match
-# the ones accepted by ``aeat workflow run`` / ``workflow next``.
+# Legacy flags that once opted a recorded run into AEAT live-mode.
+# Replay still refuses traces that carried ``--no-dry-run`` even though
+# live AEAT submission is now permanently forbidden.
 _LIVE_MODE_FLAG_NAMES: frozenset[str] = frozenset(
     {
         "no-dry-run",
         "no_dry_run",
-        "i-understand-this-is-real",
-        "i_understand_this_is_real",
     }
 )
 

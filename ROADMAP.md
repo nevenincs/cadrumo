@@ -4,7 +4,7 @@ This roadmap is written for **Kent** — our target user, a Spanish autónomo wh
 
 Every milestone answers ONE question: **_"What can Kent do at the end of this milestone that he could not do at the start?"_** Every milestone has ONE observable success moment — a single event that proves the milestone shipped.
 
-Our product direction is **produce → verify → export**. The tool helps Kent produce verifiable filing data, lets him review and approve it, and exports an AEAT-importable file. Kent uploads the file himself via the AEAT portal. **The tool does not submit on Kent's behalf** until milestone 1.0.0, and even then only behind an explicit four-factor opt-in.
+Our product direction is **produce → verify → export**. The tool helps Kent produce verifiable filing data, lets him review and approve it, and exports an AEAT-importable file. Kent uploads the file himself via the AEAT portal. **The tool never submits on Kent's behalf.**
 
 See also: product charter [#197](https://github.com/wgergely/aeat/issues/197) · PM governance [#240](https://github.com/wgergely/aeat/issues/240) · ADR [`export-first`](.vault/adr/2026-04-17-export-first-adr.md) · Kent journey audits [first-file](.vault/audit/2026-04-17-kent-ux-journey-audit.md) · [revise/review](.vault/audit/2026-04-17-kent-revise-review-audit.md).
 
@@ -135,20 +135,13 @@ Kent leaves the tool for a week. When he returns, `aeat doctor` tells him: two n
 
 ---
 
-## 1.0.0 — Kent can (opt-in) have the tool file for him
+## 1.0.0
 
-### success moment
-
-Kent explicitly enables live submission (`AEAT_ALLOW_LIVE_SUBMIT_OPT_IN=1` + `AEAT_LIVE_SUBMIT_ENABLED=1`), types the confirmation phrase, approves the interactive prompt — and the tool submits a Modelo 130 live to AEAT. Every other Kent-capability milestone has closed first; the four-factor gate fires correctly; the rolling audit confirms no regression.
-
-### Required gates, all four non-negotiable
-
-1. **Install-time opt-in** — `AEAT_ALLOW_LIVE_SUBMIT_OPT_IN=1`
-2. **Runtime env** — `AEAT_LIVE_SUBMIT_ENABLED=1` ([#117](https://github.com/wgergely/aeat/issues/117))
-3. **Per-invocation phrase** — `--i-understand-this-is-real`
-4. **Per-submission prompt** — interactive y/n
-
-Until this milestone closes, the **default install NEVER calls AEAT's submit endpoint**.
+1.0.0 is reserved for the next major Kent capability after the
+verification loop closes in 0.4.0. Live AEAT submission is
+permanently out of scope; the product remains
+**produce → verify → export**, and Kent uploads the exported fichero
+via the AEAT portal himself.
 
 ---
 

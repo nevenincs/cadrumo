@@ -1,12 +1,7 @@
-"""``aeat workflow next`` -- run the engine for the caller's next obligation.
+"""``aeat workflow next`` -- run the dry-run workflow for the next obligation.
 
-The command is dry-run-only. The submission engine retains its own
-four-factor live-write gate (engine default ``live_transport_supported=False``,
-inline ``AeatLiveTransportUnavailableError`` raise, ``AeatAccessGate``
-env-var checks, interactive typed-phrase confirmation) but that contract
-is not exposed from this default-CLI surface. The 1.0.0 reintroduction
-path is the planned ``aeat advanced workflow next --live`` leaf documented
-in the controlling Kent-first CLI wireframe ADR.
+The command is dry-run-only because live AEAT submission is permanently
+forbidden.
 """
 
 from __future__ import annotations
@@ -44,9 +39,8 @@ def next_cmd(
 ) -> None:
     """Drive the workflow for the next pending obligation.
 
-    The command always runs the workflow in dry-run mode. Live execution
-    is not available from this surface; see the 1.0.0 reintroduction
-    path documented in the controlling CLI wireframe ADR.
+    The command always runs the workflow in dry-run mode. Live AEAT
+    submission is permanently forbidden.
 
     Args:
         sync_first: Whether the sync stage should run.
