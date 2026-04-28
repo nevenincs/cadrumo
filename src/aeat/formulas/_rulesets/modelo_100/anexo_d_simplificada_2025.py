@@ -131,7 +131,7 @@ CASILLAS = (
     casilla(
         casilla_id="0225",
         label=_label(
-            "Gastos de difícil justificación (5 % cap 2.000 €)",
+            "Gastos de difícil justificación (5 % límite 2.000 €)",
             "Unjustified expenses (5 % capped at 2.000 €)",
             "Nehezen igazolható költségek (5 %, 2.000 € felső)",
         ),

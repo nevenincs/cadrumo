@@ -291,14 +291,34 @@ E.D. simplificada's 5%/2.000€ cap (RIRPF art. 30) is encoded as
 `min_op(percent(lit("0.05"), rendimiento_neto_pos), lit("2000.00"))`
 on the `D_SIMPLIFICADA_GASTOS_DIFICIL_JUSTIF` casilla.
 
-### D6. Per-annum strategy — full re-author per año + 2026 conservative inheritance
+### D6. Per-annum strategy — structural clone via re-import + 2026 conservative inheritance
 
-Mirror the sibling Tier-L pattern: full re-author per año (NOT
-inheritance). Each `anexo_<X>_<año>.py` is its own file with its own
-`_FORMULAS_<año>` tuple containing year-scoped formula IDs. When 2026
-is structurally a clone of 2025 (the case for tarifa estatal,
-mínimos, art. 20 reducción, RIRPF art. 30), 2026 modules are byte-
-similar to 2025 with new effective dates and new formula IDs.
+Mirror the **landed sibling Tier-L pattern** for structural clones:
+each year file imports `CASILLAS` and `CITATIONS` from the canonical
+2025 module via `from .anexo_<X>_2025 import CASILLAS, CITATIONS`, and
+declares its own year-scoped `FORMULAS` tuple (with formula IDs of the
+form `modelo_100.<año>.<reason>`) plus its own `EFFECTIVE_FROM` /
+`EFFECTIVE_TO` date constants. This matches what `modelo_111_2024.py`,
+`modelo_115_2024.py`, `modelo_123_2024.py`, `modelo_130_2024.py`, and
+`modelo_131_2024.py` do (verified by inspection on
+`origin/main` 2026-04-27).
+
+**Rationale for re-import over full inline re-author**: the sibling
+pattern was established by 5 prior Tier-L PRs and represents the
+project's actual convention. Year-scoping is preserved at the
+**formula ID** level (each year has its own `modelo_100.<año>.<reason>`
+identifier the engine ledger uses for traceability) rather than at the
+casilla level. The casilla definitions and citations are intentionally
+shared because they describe statutory entities (LIRPF arts. 17-20,
+22-26, etc.) that are invariant across years when no BOE amendment
+exists; duplicating them across 3 years would create maintenance drift
+risk without audit-traceability gain.
+
+**Corrected 2026-04-28** per gemini-code-assist HIGH finding on
+`anexo_b1_2024.py:29` and `anexo_b1_2026.py:32`: the original ADR text
+"full re-author per año (NOT inheritance)" was inconsistent with the
+landed sibling pattern. This amendment aligns the ADR text with the
+sibling-pattern reality the implementation actually follows.
 
 The 2026 ruleset's citations carry the BOE consult-date pin
 `&p=20260228&tn=1` indicating consolidated text consult at 2026-02-28.
@@ -467,11 +487,16 @@ to BOE template structure. Mirror precedent: the existing M131 (módulos)
 and M130 (estimación directa) live in separate ruleset files for the
 same reason.
 
-### Why full re-author per año (D6)
+### Why structural clone via re-import (D6)
 
-Mirror sibling Tier-L pattern. Year-scoping formula IDs is load-bearing
-for audit ledger traceability. Full re-author cost is trivial when
-years are structurally clones (verbose but maintainable).
+Mirror the landed sibling Tier-L pattern. Year-scoping at the
+**formula ID** level (`modelo_100.<año>.<reason>`) is load-bearing for
+audit ledger traceability; the casilla definitions and citations are
+shared because they describe statutory entities invariant across
+years when no BOE amendment exists. The verbose-but-explicit re-author
+alternative was rejected because the 5 prior sibling Tier-L PRs all
+use re-import, and duplicating ~50 casilla definitions × 3 years would
+create maintenance drift risk without audit-traceability gain.
 
 ### Why extend the borrador dispatch (D7)
 

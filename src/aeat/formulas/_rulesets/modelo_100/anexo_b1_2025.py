@@ -77,7 +77,7 @@ CITATIONS = (
         "a mutualidades obligatorias, detracciones por derechos pasivos, "
         "cotizaciones a colegios de huérfanos, cuotas satisfechas a "
         "sindicatos y colegios profesionales, gastos de defensa "
-        "jurídica, supplemento de 2.000 € por otros gastos, supplemento "
+        "jurídica, suplemento de 2.000 € por otros gastos, suplemento "
         "por movilidad geográfica.",
     ),
     cite_lirpf(
@@ -130,7 +130,7 @@ CASILLAS = (
         ),
         computed=False,
         legal_basis=(CITATIONS[2],),
-        notes_es=("Cuotas colegiales, sindicatos, defensa jurídica, supplemento 2.000 € art. 19.2 LIRPF."),
+        notes_es=("Cuotas colegiales, sindicatos, defensa jurídica, suplemento 2.000 € art. 19.2 LIRPF."),
     ),
     casilla(
         casilla_id="0010",
@@ -151,7 +151,10 @@ CASILLAS = (
         ),
         computed=False,
         legal_basis=(CITATIONS[1],),
-        notes_es=("Importe ya minorado por el 30% del art. 18.2 sobre la base irregular, con cap de 300.000 €."),
+        notes_es=(
+            "Importe ya minorado por el 30% del art. 18.2 sobre la base "
+            "irregular, con un límite cuantitativo de 300.000 €."
+        ),
     ),
     casilla(
         casilla_id="0020",

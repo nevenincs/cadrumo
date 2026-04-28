@@ -34,7 +34,8 @@ class AssetClass(StrEnum):
     """Closed enumeration of LIS art. 12.1.a) asset categories.
 
     The table publishes ~30 distinct categories. Each member's value is
-    a stable kebab-cased identifier suitable for casilla naming and
+    a stable identifier in `snake_case.dot` form (e.g.
+    ``"obra_civil.general"``) suitable for casilla naming and
     parameter-table keys.
     """
 
