@@ -469,10 +469,10 @@ wheels = [
 
 [[package]]
 name = "cuda-pathfinder"
-version = "1.5.3"
+version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/d6/ac63065d33dd700fee7ebd7d287332401b54e31b9346e142f871e1f0b116/cuda_pathfinder-1.5.3-py3-none-any.whl", hash = "sha256:dff021123aedbb4117cc7ec81717bbfe198fb4e8b5f1ee57e0e084fec5c8577d", size = 49991, upload-time = "2026-04-14T20:09:27.037Z" },
+    { url = "https://files.pythonhosted.org/packages/11/d0/c177e29701cf1d3008d7d2b16b5fc626592ce13bd535f8795c5f57187e0e/cuda_pathfinder-1.5.4-py3-none-any.whl", hash = "sha256:9563d3175ce1828531acf4b94e1c1c7d67208c347ca002493e2654878b26f4b7", size = 51657, upload-time = "2026-04-27T22:42:07.712Z" },
 ]
 
 [[package]]
@@ -3058,7 +3058,7 @@ wheels = [
 
 [[package]]
 name = "vaultspec-core"
-version = "0.1.14"
+version = "0.1.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -3073,9 +3073,9 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/47/9b/5527c2e7a08a0cfd210976cfc30c5b9e436d16d1825a9201d0bfb790f525/vaultspec_core-0.1.14.tar.gz", hash = "sha256:15e6d4c2a952db3d1a931f41d2fd20f072dd6d134b8f806b069f810fb60dc022", size = 1147358, upload-time = "2026-04-21T18:19:10.994Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/d2/c8794f54d5fe54b2a0f3b91f72c2514b34318ed77e68314a43453404fc57/vaultspec_core-0.1.16.tar.gz", hash = "sha256:47126b2a92366b56409296dbc156751001d1548a700b8852d5ba14e92be5db57", size = 1145743, upload-time = "2026-04-28T02:19:19.573Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/42/70/d14d979688904f8b82d1b590604b2a147c989cf03f74661e669c308aa763/vaultspec_core-0.1.14-py3-none-any.whl", hash = "sha256:c46a301cfdea34e72adb711b700dbbad681f1b7f44934c3ad711dfec2273befb", size = 423402, upload-time = "2026-04-21T18:19:12.558Z" },
+    { url = "https://files.pythonhosted.org/packages/76/f7/5c536c4f01ee516d579dd9d31869650da7cd7242b9785032723daa91863a/vaultspec_core-0.1.16-py3-none-any.whl", hash = "sha256:74ead80a25fb10aa408ab6d6bb4087a7b0d48417601c82a5f2c3eca40f9f3fa4", size = 427649, upload-time = "2026-04-28T02:19:17.79Z" },
 ]
 
 [[package]]

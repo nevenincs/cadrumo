@@ -18,17 +18,11 @@ from ...filing.runtime import build_runtime_schema_provider
 from ...submission import (
     AuthProviderDescription,
     AuthProviderKind,
-    CasillaInputKind,
-    CasillaRecord,
     DraftStatus,
     FilingDraftLike,
     FilingFinding,
     FilingFindingSeverity,
-    Justificante,
-    Modelo130Submitter,
-    Portal,
     SubmissionEngine,
-    Submitter,
 )
 
 
@@ -98,8 +92,8 @@ class _OpenDeadlineChecker:
 class _CliAuthProvider:
     """Deterministic auth-provider probe used by the CLI.
 
-    Reports a ready certificate-backed provider description so dry-run
-    and preflight can exercise the real submission engine flow.
+    Reports a ready certificate-backed provider description so
+    preflight can exercise the real submission engine gates.
     """
 
     kind = AuthProviderKind.CERTIFICATE
@@ -117,95 +111,20 @@ class _CliAuthProvider:
         )
 
 
-class _CliPortalCatalogue:
-    """Deterministic :class:`PortalCatalogue` used by the CLI."""
-
-    def portal_for(self, modelo: str) -> Portal:
-        return Portal(
-            modelo=modelo,
-            presentation_url=f"https://sede.agenciatributaria.gob.es/modelo-{modelo}",
-        )
-
-
-class _CliCasillaCatalogue:
-    """Deterministic :class:`CasillaCatalogue` used by the CLI."""
-
-    def casillas_for_modelo(self, modelo: str) -> tuple[CasillaRecord, ...]:
-        return tuple(
-            CasillaRecord(
-                id=str(i).zfill(2),
-                label={"en": f"casilla-{i}", "es": f"casilla-{i}", "hu": f"rovat-{i}"},
-                input_kind=CasillaInputKind.NUMBER,
-            )
-            for i in range(1, 20)
-        )
-
-    def get(self, casilla_id: str) -> CasillaRecord:
-        for c in self.casillas_for_modelo("130"):
-            if c.id == casilla_id:
-                return c
-        raise KeyError(casilla_id)
-
-
-class _CliJustificanteParser:
-    """Deterministic :class:`JustificanteParser` used by the CLI."""
-
-    def parse(self, raw_bytes: bytes) -> Justificante:
-        return Justificante(csv="STUB", pdf_path=Path("justificante.pdf"))
-
-
-class _NullSession:
-    """Null :class:`BrowserSessionLike` used by CLI dry-runs.
-
-    The CLI never actually launches Playwright at v1 — the
-    Modelo130Submitter structure is exercised against this
-    deterministic session. Production call sites override the engine's
-    ``browser_session_factory`` to return a real
-    :class:`aeat.browser.BrowserSession`.
-    """
-
-    async def navigate(self, url: str) -> None: ...
-    async def fill(self, selector: str, value: str) -> None: ...
-    async def click(self, selector: str) -> None: ...
-    async def screenshot(self, path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(b"")
-
-    async def trace_start(self, name: str) -> None: ...
-    async def trace_stop(self, path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(b"")
-
-    async def snapshot_form_state(self, path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("{}", encoding="utf-8")
-
-
 def build_engine(settings: Settings | None = None) -> SubmissionEngine:
-    """Construct a :class:`SubmissionEngine` with in-process CLI adapters.
+    """Construct a read-only :class:`SubmissionEngine` for CLI preflight.
 
     Args:
         settings: Optional settings override (used by tests).
 
     Returns:
-        A fully wired :class:`SubmissionEngine` ready to dispatch
-        ``submit_draft`` calls.
+        A :class:`SubmissionEngine` that can run preflight and read
+        historical local records. Transport calls always fail closed.
     """
     cfg = settings or load_settings()
-    submitters: dict[str, Submitter] = {
-        "130": Modelo130Submitter(artifact_dir=cfg.aeat_submission_browser_trace_dir),
-    }
-    # The submission engine is dry-run only. The CLI never exposes a
-    # live AEAT write path.
     return SubmissionEngine(
-        browser_session_factory=_NullSession,
         auth_provider=_CliAuthProvider(),
-        portal_catalogue=_CliPortalCatalogue(),
-        draft_loader=_CliDraftLoader(),
         deadline_checker=_OpenDeadlineChecker(),
-        casilla_catalogue=_CliCasillaCatalogue(),
-        justificante_parser=_CliJustificanteParser(),
-        submitters=submitters,
         settings=cfg,
     )
 

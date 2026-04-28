@@ -10,7 +10,7 @@ Exposes four subcommands tied to the workflow engine
 - ``aeat workflow list [--since <iso-date>]`` — enumerate persisted
   runs.
 
-The ``next`` and ``run`` subcommands are dry-run-only on the default
+The ``next`` and ``run`` subcommands are read-only on the default
 CLI surface. Live AEAT submission is permanently forbidden, so these
 subcommands only participate in the produce -> verify -> export flow.
 """
@@ -32,7 +32,7 @@ app = typer.Typer(
 
 app.command(
     name="next",
-    help="Run the workflow for the next pending obligation (dry-run by default).",
+    help="Run the read-only workflow for the next pending obligation.",
 )(next_cmd)
 app.command(
     name="run",

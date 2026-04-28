@@ -206,8 +206,8 @@ def _build_submission_record(
     """Build the companion :class:`SubmittedFiling` for an import.
 
     The ``submission_id`` hashes the CSV and the draft id together so it
-    stays stable across re-imports of the same PDF but never collides
-    with real live-submission ids (which hash ``(draft_id, attempt_ordinal)``).
+    stays stable across re-imports of the same PDF and remains distinct
+    from legacy local attempt ids.
     """
     # Deferred import: :mod:`aeat.submission._models` imports
     # ``FilingAmendment`` from :mod:`aeat.filing`, so pulling it in at
