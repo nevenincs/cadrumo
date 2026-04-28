@@ -67,6 +67,7 @@ from ._lock import exclusive_file_lock
 from .errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
+    MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
     SecretStoreError,
 )
@@ -519,8 +520,15 @@ class FileFallbackMasterKeyProvider:
         try:
             return decrypt_record(blob, key=kek, associated_data=b"aeat.master-key.v1")
         except Exception as exc:
-            raise MasterKeyUnavailableError(
-                "failed to decrypt master key; passphrase may be wrong or the file may be tampered with.",
+            # Distinguish passphrase-mismatch from material-missing so
+            # the CLI can render an actionable hint
+            # (`aeat security recover --recovery-key` for forgotten
+            # passphrase vs `aeat security provision` for absent
+            # material).
+            raise MasterKeyPassphraseMismatchError(
+                "passphrase did not unlock the master key at "
+                f"{self._master_key_path}; verify the passphrase or use "
+                "`aeat security recover --recovery-key`.",
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:

@@ -116,6 +116,28 @@ class TestFileFallbackProvider:
 
         FileFallbackMasterKeyProvider._reset_for_tests()
 
+        # Distinguish passphrase-mismatch from material-missing. Both
+        # inherit from MasterKeyUnavailableError so legacy catchers
+        # still work, but the typed subclass lets the CLI render a
+        # class-specific actionable hint.
+        from . import MasterKeyPassphraseMismatchError
+
+        with pytest.raises(MasterKeyPassphraseMismatchError):
+            FileFallbackMasterKeyProvider(
+                store_dir=tmp_path / "secrets",
+                passphrase_callback=lambda: "wrong",
+            ).get_master_key()
+
+    def test_wrong_passphrase_inherits_from_master_key_unavailable(self, tmp_path: Path) -> None:
+        """Pre-existing `pytest.raises(MasterKeyUnavailableError)` catchers continue to work via inheritance."""
+        FileFallbackMasterKeyProvider(
+            store_dir=tmp_path / "secrets",
+            passphrase_callback=lambda: "right",
+        ).get_master_key()
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+
+        # The narrowed subclass still satisfies the parent type.
         with pytest.raises(MasterKeyUnavailableError):
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
