@@ -44,9 +44,10 @@ class _CorpusName(StrEnum):
 def _read_key_file(path: Path) -> bytes:
     """Read a 32-byte raw master key from ``path``.
 
-    The on-disk format is ASCII-hex (64 lowercase hex characters) so
-    operators can safely cat / inspect / move the file without binary-
-    handling concerns. The trailing newline is tolerated.
+    The on-disk format is ASCII-hex (64 hex characters; ``bytes.fromhex``
+    accepts both upper- and lower-case) so operators can safely cat /
+    inspect / move the file without binary-handling concerns. The
+    trailing newline is tolerated.
     """
     if not path.exists():
         raise typer.BadParameter(f"key file not found: {path}")
@@ -552,54 +553,13 @@ def recover_cmd(
 
     # Re-mint the file-fallback artefacts under the operator's new
     # passphrase, preserving the recovered master-key bytes so every
-    # existing on-disk record continues to decrypt cleanly.
-    import base64
-    import secrets as _secrets
-
-    from ..storage._master_key import (
-        _ARGON2_MEMORY_COST_KIB,
-        _ARGON2_PARALLELISM,
-        _ARGON2_TIME_COST,
-        _SALT_SIZE,
-        _b64encode,
-        _KdfParameters,
-    )
-
-    for stale in (secret_dir / "master.key", secret_dir / "master.kdf", secret_dir / "salt"):
-        stale.unlink(missing_ok=True)
-    FileFallbackMasterKeyProvider._reset_for_tests()
+    # existing on-disk record continues to decrypt cleanly. The
+    # provider's complete_recovery() method writes master.kdf /
+    # master.key / salt via the atomic tempfile-and-replace pattern;
+    # a crash between writes leaves the existing on-disk state
+    # untouched (no broken-installation window).
     provider = FileFallbackMasterKeyProvider(store_dir=secret_dir)
-    passphrase = provider._resolve_passphrase()
-    salt = _secrets.token_bytes(_SALT_SIZE)
-    params = _KdfParameters(
-        memory_cost=_ARGON2_MEMORY_COST_KIB,
-        time_cost=_ARGON2_TIME_COST,
-        parallelism=_ARGON2_PARALLELISM,
-        salt_b64=_b64encode(salt),
-    )
-    kek = FileFallbackMasterKeyProvider._derive_kek_with_params(
-        passphrase,
-        salt,
-        params,
-    )
-    wrapped_master = encrypt_record(
-        master_key,
-        key=kek,
-        associated_data=b"aeat.master-key.v1",
-    )
-    FileFallbackMasterKeyProvider._restrict_dir_permissions(secret_dir)
-    FileFallbackMasterKeyProvider._write_bytes_secure(
-        secret_dir / "master.kdf",
-        params.model_dump_json().encode("utf-8"),
-    )
-    FileFallbackMasterKeyProvider._write_bytes_secure(
-        secret_dir / "master.key",
-        base64.b64encode(wrapped_master.to_wire()),
-    )
-    FileFallbackMasterKeyProvider._write_bytes_secure(
-        secret_dir / "salt",
-        salt,
-    )
+    provider.complete_recovery(master_key)
 
     # Round-trip canary verify under the restored key.
     canary_aad = b"aeat.security.recover.canary.aad.v1"
@@ -644,6 +604,7 @@ def key_export_cmd(
     from datetime import UTC, datetime
 
     from ..config import load_settings
+    from ..storage import atomic_write_secure_bytes
 
     settings = load_settings()
     secret_dir = Path(settings.aeat_secret_store_dir)
@@ -675,16 +636,15 @@ def key_export_cmd(
 
     resolved_output = output_path.expanduser().resolve()
     resolved_output.parent.mkdir(parents=True, exist_ok=True)
-    resolved_output.write_text(
-        json.dumps(record, indent=2, sort_keys=True),
-        encoding="utf-8",
-    )
-    # Restrict permissions on POSIX. Best-effort; Windows inherits the
-    # parent dir's ACL.
-    import contextlib
-
-    with contextlib.suppress(OSError):
-        resolved_output.chmod(0o600)
+    payload = json.dumps(record, indent=2, sort_keys=True).encode("utf-8")
+    # Atomic write via the provider's tempfile-and-replace helper so a
+    # mid-write crash leaves any pre-existing export untouched. The
+    # tempfile is created with O_CREAT|O_EXCL + mode=0o600 on POSIX;
+    # the sensitive payload is never world-readable, even briefly
+    # (no chmod-after-close TOCTOU). Windows inherits the parent
+    # directory's ACL; the export's confidentiality posture there
+    # depends on per-user profile permissions.
+    atomic_write_secure_bytes(resolved_output, payload)
     _console.print(
         f"[green]✓ Master-key state exported to {resolved_output}.[/green]\n"
         "Store this file off-site. To restore on a new machine: copy it back "

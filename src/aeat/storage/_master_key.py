@@ -44,6 +44,7 @@ from __future__ import annotations
 import atexit
 import base64
 import binascii
+import contextlib
 import getpass
 import json
 import os
@@ -185,6 +186,45 @@ def _b64encode(data: bytes) -> str:
 
 def _b64decode(text: str) -> bytes:
     return base64.b64decode(text.encode("ascii"), validate=True)
+
+
+def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
+    """Atomically write ``payload`` to ``target`` with mode ``0o600``.
+
+    Writes to a sibling tempfile created with ``O_CREAT|O_EXCL`` and
+    ``mode=0o600`` so the file lands restricted from creation (no
+    chmod-after-close TOCTOU window where a sensitive payload is
+    briefly readable by other users on the host). ``os.fsync``s the
+    fd, then ``os.replace`` atomically swaps the tempfile in. A crash
+    between create and replace leaves the original ``target``
+    untouched; the orphan tempfile is removed on the error path.
+
+    Use this for any persisted sensitive material (master-key state,
+    portable export bundles) where partial writes or world-readable
+    intermediate states are unacceptable. On Windows the mode argument
+    is ignored and the file inherits the parent directory's ACL; the
+    confidentiality posture there depends on per-user profile
+    permissions, not on POSIX mode bits.
+    """
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = target.with_name(f"{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    if hasattr(os, "O_NOINHERIT"):
+        flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+    fd = os.open(tmp_path, flags, 0o600)
+    try:
+        try:
+            os.write(fd, payload)
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        os.replace(tmp_path, target)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_path)
+        raise
 
 
 def _zeroise(buffer: bytearray | None) -> None:
@@ -560,6 +600,66 @@ class FileFallbackMasterKeyProvider:
         self._write_bytes_secure(self._salt_path, salt)
         _log.info("master key minted in encrypted file at %s", self._master_key_path)
         return master_key
+
+    def complete_recovery(self, master_key: bytes) -> None:
+        """Re-mint the file-fallback artefacts under recovered key bytes.
+
+        Writes ``master.kdf``, ``master.key``, and ``salt`` for the
+        operator's *current* passphrase (via the configured callback),
+        wrapping ``master_key`` under a freshly-derived Argon2id KEK.
+        The three artefacts are written via the atomic
+        tempfile-and-replace pattern so a crash between writes leaves
+        the existing on-disk state untouched.
+
+        Use after a recovery-key unwrap (`unwrap_master_key`) to bind
+        the recovered master-key bytes to a new passphrase. The
+        substrate's in-process cache is invalidated so subsequent
+        ``get_master_key()`` calls re-read the freshly-written
+        artefacts under the new passphrase.
+
+        Args:
+            master_key: The 32-byte recovered master-key value.
+
+        Raises:
+            SecretStoreError: When the master key has the wrong
+                length, the resolved passphrase is empty, or the
+                target directory is not writable.
+        """
+        if len(master_key) != KEY_SIZE:
+            raise SecretStoreError(
+                f"recovered master key must be {KEY_SIZE} bytes; got {len(master_key)}",
+            )
+        # Drop any stale cached state so the new artefacts are picked
+        # up by subsequent get_master_key() calls (and so the cached
+        # passphrase is freshly resolved against the operator's
+        # current shell environment).
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        passphrase = self._resolve_passphrase()
+        salt = secrets.token_bytes(_SALT_SIZE)
+        params = _KdfParameters(
+            memory_cost=_ARGON2_MEMORY_COST_KIB,
+            time_cost=_ARGON2_TIME_COST,
+            parallelism=_ARGON2_PARALLELISM,
+            salt_b64=_b64encode(salt),
+        )
+        kek = self._derive_kek_with_params(passphrase, salt, params)
+        blob = encrypt_record(master_key, key=kek, associated_data=b"aeat.master-key.v1")
+        self._restrict_dir_permissions(self._store_dir)
+        atomic_write_secure_bytes(
+            self._kdf_params_path,
+            params.model_dump_json().encode("utf-8"),
+        )
+        atomic_write_secure_bytes(
+            self._master_key_path,
+            base64.b64encode(blob.to_wire()),
+        )
+        atomic_write_secure_bytes(self._salt_path, salt)
+        with FileFallbackMasterKeyProvider._lock:
+            FileFallbackMasterKeyProvider._cached_master_key[self._store_dir.resolve()] = bytearray(master_key)
+        _log.info(
+            "master key recovered and re-wrapped under new passphrase at %s",
+            self._master_key_path,
+        )
 
     @staticmethod
     def _restrict_dir_permissions(target: Path) -> None:
