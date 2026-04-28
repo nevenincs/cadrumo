@@ -124,38 +124,211 @@ TARIFA_CASTILLA_Y_LEON = (
     ("60000.00", None, "0.215"),
 )
 
+# Tarifa autonómica general — Aragón (Decreto Legislativo 1/2005,
+# texto refundido, art. 110-1). Stable 2024 / 2025 / 2026.
+TARIFA_ARAGON = (
+    ("0", "13072.50", "0.095"),
+    ("13072.50", "21210.00", "0.12"),
+    ("21210.00", "36960.00", "0.15"),
+    ("36960.00", "52500.00", "0.185"),
+    ("52500.00", "60000.00", "0.205"),
+    ("60000.00", "80000.00", "0.23"),
+    ("80000.00", "90000.00", "0.24"),
+    ("90000.00", "130000.00", "0.25"),
+    ("130000.00", None, "0.255"),
+)
 
-# Per-CCAA tarifa lookup. Only the 5 highest-population CCAAs are
-# encoded here; the 10 remaining CCAAs follow their own per-CCAA texto
-# refundido / Ley de Presupuestos that is not yet first-class in the
-# codebase (caller computes externally pending follow-up per-CCAA
-# encoding wave).
+# Tarifa autonómica general — Principado de Asturias (Decreto Legislativo
+# 2/2014, art. 2). YEAR-DEPENDENT: Ley del Principado 3/2025 (BOPA
+# 2-12-2025), retroactive 1/1/2025. Tramo 1 10% -> 9%; tramo 4 18.5%
+# -> 19.20%; tramo 8 25.5% -> 26%.
+TARIFA_ASTURIAS_2024 = (
+    ("0", "12450.00", "0.10"),
+    ("12450.00", "17707.20", "0.12"),
+    ("17707.20", "33007.20", "0.14"),
+    ("33007.20", "53407.20", "0.185"),
+    ("53407.20", "70000.00", "0.215"),
+    ("70000.00", "90000.00", "0.225"),
+    ("90000.00", "175000.00", "0.25"),
+    ("175000.00", None, "0.255"),
+)
+TARIFA_ASTURIAS = (  # 2025 + 2026 (post Ley 3/2025).
+    ("0", "12450.00", "0.09"),
+    ("12450.00", "17707.20", "0.12"),
+    ("17707.20", "33007.20", "0.14"),
+    ("33007.20", "53407.20", "0.192"),
+    ("53407.20", "70000.00", "0.215"),
+    ("70000.00", "90000.00", "0.225"),
+    ("90000.00", "175000.00", "0.25"),
+    ("175000.00", None, "0.26"),
+)
+
+# Tarifa autonómica general — Illes Balears (Decreto Legislativo 1/2014,
+# art. 1). Stable 2024 / 2025 / 2026.
+TARIFA_BALEARES = (
+    ("0", "10000.00", "0.09"),
+    ("10000.00", "18000.00", "0.1125"),
+    ("18000.00", "30000.00", "0.1425"),
+    ("30000.00", "48000.00", "0.175"),
+    ("48000.00", "70000.00", "0.19"),
+    ("70000.00", "90000.00", "0.2175"),
+    ("90000.00", "120000.00", "0.2275"),
+    ("120000.00", "175000.00", "0.2375"),
+    ("175000.00", None, "0.2475"),
+)
+
+# Tarifa autonómica general — Canarias (Decreto Legislativo 1/2009,
+# art. 18 bis). YEAR-DEPENDENT: Ley 5/2024 (BOC 30-12-2024)
+# deflactación 4 % en 4 primeros tramos + 3 % en el quinto, vigente
+# 1/1/2025.
+TARIFA_CANARIAS_2024 = (
+    ("0", "13465.00", "0.09"),
+    ("13465.00", "19022.00", "0.115"),
+    ("19022.00", "35185.00", "0.14"),
+    ("35185.00", "56382.00", "0.185"),
+    ("56382.00", "91350.00", "0.235"),
+    ("91350.00", "121200.00", "0.25"),
+    ("121200.00", None, "0.26"),
+)
+TARIFA_CANARIAS = (  # 2025 + 2026 (post Ley 5/2024 deflactación).
+    ("0", "13748.00", "0.09"),
+    ("13748.00", "19422.00", "0.115"),
+    ("19422.00", "35924.00", "0.14"),
+    ("35924.00", "57566.00", "0.185"),
+    ("57566.00", "93268.00", "0.235"),
+    ("93268.00", "123745.00", "0.25"),
+    ("123745.00", None, "0.26"),
+)
+
+# Tarifa autonómica general — Cantabria (Decreto Legislativo 62/2008,
+# art. 1). Stable 2024 / 2025 / 2026.
+TARIFA_CANTABRIA = (
+    ("0", "13000.00", "0.085"),
+    ("13000.00", "21000.00", "0.11"),
+    ("21000.00", "35200.00", "0.145"),
+    ("35200.00", "60000.00", "0.18"),
+    ("60000.00", "90000.00", "0.225"),
+    ("90000.00", None, "0.245"),
+)
+
+# Tarifa autonómica general — Castilla-La Mancha (Ley 8/2013, art. 13
+# bis). Stable 2024 / 2025 / 2026.
+TARIFA_CASTILLA_LA_MANCHA = (
+    ("0", "12450.00", "0.095"),
+    ("12450.00", "20200.00", "0.12"),
+    ("20200.00", "35200.00", "0.15"),
+    ("35200.00", "60000.00", "0.185"),
+    ("60000.00", None, "0.225"),
+)
+
+# Tarifa autonómica general — Extremadura (Decreto Legislativo 1/2018,
+# art. 1). Stable 2024 / 2025 / 2026 (Decreto-ley 2/2023 deflactación
+# retroactiva 1-Jan-2023).
+TARIFA_EXTREMADURA = (
+    ("0", "12450.00", "0.08"),
+    ("12450.00", "20200.00", "0.10"),
+    ("20200.00", "24200.00", "0.16"),
+    ("24200.00", "35200.00", "0.175"),
+    ("35200.00", "60000.00", "0.21"),
+    ("60000.00", "80200.00", "0.235"),
+    ("80200.00", "99200.00", "0.24"),
+    ("99200.00", "120200.00", "0.245"),
+    ("120200.00", None, "0.25"),
+)
+
+# Tarifa autonómica general — Galicia (Decreto Legislativo 1/2011,
+# art. 4). Stable 2024 / 2025 / 2026 (post-2022 deflactación).
+TARIFA_GALICIA = (
+    ("0", "12985.35", "0.09"),
+    ("12985.35", "21068.60", "0.1165"),
+    ("21068.60", "35200.00", "0.149"),
+    ("35200.00", "60000.00", "0.184"),
+    ("60000.00", None, "0.225"),
+)
+
+# Tarifa autonómica general — Región de Murcia (Decreto Legislativo
+# 1/2010, art. 2). Stable 2024 / 2025 / 2026 at retrieval. NOTE: Ley
+# 9/2025 introduced auto-deflactación trigger if Murcia IPC YoY > 3%
+# in December — bracket boundaries may shift contingently.
+TARIFA_MURCIA = (
+    ("0", "12450.00", "0.095"),
+    ("12450.00", "20200.00", "0.112"),
+    ("20200.00", "34000.00", "0.133"),
+    ("34000.00", "60000.00", "0.179"),
+    ("60000.00", None, "0.225"),
+)
+
+# Tarifa autonómica general — La Rioja (Ley 10/2017, art. 31, modif.
+# Ley 13/2023 BOR 30-12-2023). Stable 2024 / 2025 / 2026.
+TARIFA_LA_RIOJA = (
+    ("0", "12450.00", "0.08"),
+    ("12450.00", "20200.00", "0.106"),
+    ("20200.00", "35200.00", "0.136"),
+    ("35200.00", "40000.00", "0.178"),
+    ("40000.00", "50000.00", "0.183"),
+    ("50000.00", "60000.00", "0.19"),
+    ("60000.00", "120000.00", "0.245"),
+    ("120000.00", None, "0.27"),
+)
+
+
+# Stable CCAAs (13 of 15): bracket tables identical across 2024/2025/2026.
 PER_CCAA_TARIFA_AUTONOMICA: dict[CCAA, tuple[tuple[str, str | None, str], ...]] = {
-    CCAA.MADRID: TARIFA_MADRID,
-    CCAA.CATALUNA: TARIFA_CATALUNA,
     CCAA.ANDALUCIA: TARIFA_ANDALUCIA,
-    CCAA.COMUNIDAD_VALENCIANA: TARIFA_COMUNIDAD_VALENCIANA,
+    CCAA.ARAGON: TARIFA_ARAGON,
+    CCAA.BALEARES: TARIFA_BALEARES,
+    CCAA.CANTABRIA: TARIFA_CANTABRIA,
+    CCAA.CASTILLA_LA_MANCHA: TARIFA_CASTILLA_LA_MANCHA,
     CCAA.CASTILLA_Y_LEON: TARIFA_CASTILLA_Y_LEON,
+    CCAA.CATALUNA: TARIFA_CATALUNA,
+    CCAA.COMUNIDAD_VALENCIANA: TARIFA_COMUNIDAD_VALENCIANA,
+    CCAA.EXTREMADURA: TARIFA_EXTREMADURA,
+    CCAA.GALICIA: TARIFA_GALICIA,
+    CCAA.LA_RIOJA: TARIFA_LA_RIOJA,
+    CCAA.MADRID: TARIFA_MADRID,
+    CCAA.MURCIA: TARIFA_MURCIA,
+}
+
+# Year-dependent CCAAs (2 of 15): Asturias (Ley 3/2025) + Canarias (Ley
+# 5/2024 deflactación). The (ccaa, año) tuple keys these out so the
+# helper consults this dict first and falls back to
+# `PER_CCAA_TARIFA_AUTONOMICA` for stable CCAAs.
+PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR: dict[tuple[CCAA, int], tuple[tuple[str, str | None, str], ...]] = {
+    (CCAA.ASTURIAS, 2024): TARIFA_ASTURIAS_2024,
+    (CCAA.ASTURIAS, 2025): TARIFA_ASTURIAS,
+    (CCAA.ASTURIAS, 2026): TARIFA_ASTURIAS,
+    (CCAA.CANARIAS, 2024): TARIFA_CANARIAS_2024,
+    (CCAA.CANARIAS, 2025): TARIFA_CANARIAS,
+    (CCAA.CANARIAS, 2026): TARIFA_CANARIAS,
 }
 
 
-def compute_cuota_autonomica_general(blg: Decimal, ccaa: CCAA) -> Decimal:
+def compute_cuota_autonomica_general(blg: Decimal, ccaa: CCAA, año: int = 2025) -> Decimal:
     """Compute the cuota íntegra autonómica general for `ccaa` at base
-    liquidable general `blg`.
+    liquidable general `blg` for ejercicio `año`.
 
     Pure-Python progressive-tarifa computation that mirrors the AST shape
     built by ``progressive_tarifa()`` in Anexo G. Caller uses this to
     derive casilla 0551 externally before supplying it to the engine.
 
-    For the 10 CCAAs not in `PER_CCAA_TARIFA_AUTONOMICA` (Aragón,
-    Asturias, Baleares, Canarias, Cantabria, Castilla-La Mancha,
-    Extremadura, Galicia, Murcia, La Rioja) the function raises
-    `KeyError` — caller is expected to compute externally per each
-    CCAA's vigent Decreto Legislativo / Ley de Presupuestos. Once those
-    CCAAs' tarifas land in this module, the dispatch widens
-    transparently.
+    Dispatch order:
+    1. ``PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR[(ccaa, año)]`` — Asturias
+       (Ley 3/2025 retroactive 1/1/2025) and Canarias (Ley 5/2024
+       deflactación 1/1/2025) have year-dependent schedules.
+    2. ``PER_CCAA_TARIFA_AUTONOMICA[ccaa]`` — fallback for the 13
+       stable CCAAs.
+
+    All 15 ordinary CCAAs are encoded; this function should not raise
+    `KeyError` for any in-scope CCAA. País Vasco / Navarra are not
+    members of the `CCAA` enum (foral regimes per `#424`).
     """
-    brackets = PER_CCAA_TARIFA_AUTONOMICA[ccaa]
+    # Two-step lookup: dict.get() defaults are evaluated eagerly, so
+    # `PER_CCAA_TARIFA_AUTONOMICA[ccaa]` would raise KeyError for the
+    # year-dependent CCAAs (Asturias / Canarias) that are deliberately
+    # absent from the stable dict.
+    brackets = PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR.get((ccaa, año))
+    if brackets is None:
+        brackets = PER_CCAA_TARIFA_AUTONOMICA[ccaa]
     cuota = Decimal("0.00")
     for from_value, to_value, rate in brackets:
         from_d = Decimal(from_value)
@@ -173,10 +346,23 @@ def compute_cuota_autonomica_general(blg: Decimal, ccaa: CCAA) -> Decimal:
 __all__ = [
     "CCAA",
     "PER_CCAA_TARIFA_AUTONOMICA",
+    "PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR",
     "TARIFA_ANDALUCIA",
+    "TARIFA_ARAGON",
+    "TARIFA_ASTURIAS",
+    "TARIFA_ASTURIAS_2024",
+    "TARIFA_BALEARES",
+    "TARIFA_CANARIAS",
+    "TARIFA_CANARIAS_2024",
+    "TARIFA_CANTABRIA",
+    "TARIFA_CASTILLA_LA_MANCHA",
     "TARIFA_CASTILLA_Y_LEON",
     "TARIFA_CATALUNA",
     "TARIFA_COMUNIDAD_VALENCIANA",
+    "TARIFA_EXTREMADURA",
+    "TARIFA_GALICIA",
+    "TARIFA_LA_RIOJA",
     "TARIFA_MADRID",
+    "TARIFA_MURCIA",
     "compute_cuota_autonomica_general",
 ]
