@@ -47,10 +47,10 @@ The aggregate mutation kill-rate floor (≥ 90 percent on the populated mutator 
 `aeat audit rulesets citations` aggregate over the three M390 rulesets: 18 / 18 computed casillas with ≥ 1 `LegalCitation`, coverage 100.00 percent, no missing casillas. Each computed casilla's `legal_basis` tuple is bound to the LIVA / RIVA / Orden Ministerial articles that ground the computation:
 
 - `104` ← LIVA arts. 92 (deducción) + 102 (prorrata).
-- `105` ← LIVA arts. 90 / 91 (rate buckets feeding 96) + 164 (autoliquidación).
+- `105` ← LIVA arts. 90 / 91 (rate buckets feeding 96) + 92 / 102 (deducción framework grounding the 104 subtraction) + 164 (autoliquidación).
 - `190` ← LIVA art. 164.
 - `191` ← LIVA arts. 107 (bienes-inversión regularización) + 164.
-- `192`, `193` ← LIVA art. 164 (resultado a ingresar / a devolver).
+- `192`, `193` ← LIVA art. 164 (resultado a ingresar / a devolver) + RIVA art. 71.7 + Orden EHA/3111/2009 (annual résumen filing obligation).
 
 ## BOE Sources Used
 

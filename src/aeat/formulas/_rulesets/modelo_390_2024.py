@@ -249,7 +249,7 @@ _CASILLAS = (
             "Általános rendszer eredménye",
         ),
         computed=True,
-        legal_basis=_CIT_RATES + _CIT_AUTOLIQUIDACION,
+        legal_basis=_CIT_RATES + _CIT_DEDUCCION + _CIT_AUTOLIQUIDACION,
     ),
     # ── Apartados 4-5 — otros regímenes ──────────────────────────────
     casilla(
@@ -299,7 +299,7 @@ _CASILLAS = (
             "Fizetendő összeg",
         ),
         computed=True,
-        legal_basis=_CIT_AUTOLIQUIDACION,
+        legal_basis=_CIT_AUTOLIQUIDACION + _CIT_RESUMEN_OBLIGATION,
     ),
     casilla(
         casilla_id="193",
@@ -309,7 +309,7 @@ _CASILLAS = (
             "Visszatérítendő összeg",
         ),
         computed=True,
-        legal_basis=_CIT_AUTOLIQUIDACION,
+        legal_basis=_CIT_AUTOLIQUIDACION + _CIT_RESUMEN_OBLIGATION,
     ),
     # ── Apartado 7 — regularización bienes de inversión ──────────────
     casilla(
