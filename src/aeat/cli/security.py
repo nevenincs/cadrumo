@@ -106,7 +106,9 @@ def rotate_master_key_cmd(
     from ..config import load_settings
     from ..storage import (
         EphemeralMasterKeyProvider,
+        default_blob_store_roots,
         default_rotation_plan,
+        rotate_blob_stores,
         rotate_master_key,
     )
 
@@ -119,24 +121,38 @@ def rotate_master_key_cmd(
     settings = load_settings()
     old_provider = EphemeralMasterKeyProvider(key=old_key)
     new_provider = EphemeralMasterKeyProvider(key=new_key)
-    summary = rotate_master_key(
+    envelope_summary = rotate_master_key(
         default_rotation_plan(settings),
+        old_master_key_provider=old_provider,
+        new_master_key_provider=new_provider,
+    )
+    # The blob stores wrap per-record DEKs DIRECTLY under the master
+    # key (no HKDF derivation — see _blob_store._DEK_AAD); a rotation
+    # that visits only CipherEnvelope files would leave every wrapped
+    # DEK encrypted under the old key, rendering the blobs unreadable.
+    blob_summary = rotate_blob_stores(
+        default_blob_store_roots(settings),
         old_master_key_provider=old_provider,
         new_master_key_provider=new_provider,
     )
 
     table = Table(title="Master-key rotation summary")
+    table.add_column("scope")
     table.add_column("metric")
     table.add_column("count", justify="right")
-    table.add_row("rotated", str(summary.rotated))
-    table.add_row("skipped", str(summary.skipped))
-    table.add_row("errors", str(summary.errors))
+    table.add_row("envelopes", "rotated", str(envelope_summary.rotated))
+    table.add_row("envelopes", "skipped", str(envelope_summary.skipped))
+    table.add_row("envelopes", "errors", str(envelope_summary.errors))
+    table.add_row("blob_stores", "rotated", str(blob_summary.rotated))
+    table.add_row("blob_stores", "skipped", str(blob_summary.skipped))
+    table.add_row("blob_stores", "errors", str(blob_summary.errors))
     _console.print(table)
 
-    if summary.errors > 0:
+    total_errors = envelope_summary.errors + blob_summary.errors
+    if total_errors > 0:
         _console.print(
-            "[red]One or more envelopes failed to rotate. Inspect the log "
-            "for the affected paths and re-run after addressing the cause.[/red]"
+            "[red]One or more envelopes / wrapped DEKs failed to rotate. "
+            "Inspect the log for the affected paths and re-run after addressing the cause.[/red]"
         )
         raise typer.Exit(code=1)
 

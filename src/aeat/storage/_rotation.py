@@ -35,6 +35,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..logging import get_logger
+from ._blob_store import EncryptedBlobStore
 from ._crypto import decrypt_record, encrypt_record
 from ._envelope import (
     CipherEnvelope,
@@ -42,6 +43,7 @@ from ._envelope import (
     _build_aad,  # type: ignore[attr-defined]
     _derive_envelope_key,  # type: ignore[attr-defined]
 )
+from ._lock import exclusive_file_lock
 from ._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
@@ -112,9 +114,16 @@ def _try_decrypt_bytes(
     classification + HKDF-context AAD binding is enforced before the
     crypto attempt so a wrong-class file fails fast.
     """
-    blob = cipher_envelope.encryption.to_blob()
-    aad = _build_aad(cipher_envelope.classification, hkdf_context)
-    if cipher_envelope.encryption.associated_data() != aad:
+    try:
+        blob = cipher_envelope.encryption.to_blob()
+        aad = _build_aad(cipher_envelope.classification, hkdf_context)
+        if cipher_envelope.encryption.associated_data() != aad:
+            return None
+    except Exception:
+        # Malformed nonce/ciphertext base64 or invalid AAD encoding
+        # surfaces as a probe miss rather than a hard error so the
+        # rotation can continue past the corrupt file and report it
+        # in the errors counter via the outer caller.
         return None
     derived_key = _derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
@@ -189,67 +198,74 @@ def rotate_master_key(
     skipped = 0
     errors = 0
     for path, entry in _iter_envelope_files(plan):
-        try:
-            cipher_envelope = CipherEnvelope.model_validate_json(
-                path.read_text(encoding="utf-8"),
+        # Hold the per-file repository lock across the read + decrypt
+        # + re-encrypt + atomic-rewrite sequence so a concurrent
+        # repository writer cannot stomp the rotation (or vice versa).
+        # The lock-sidecar path matches the wave-4 repository naming
+        # convention (``<envelope>.lock`` next to the envelope file).
+        lock_target = path.with_suffix(path.suffix + ".lock")
+        with exclusive_file_lock(lock_target):
+            try:
+                cipher_envelope = CipherEnvelope.model_validate_json(
+                    path.read_text(encoding="utf-8"),
+                )
+            except Exception as exc:
+                _log.warning("rotate_master_key: %s is not a CipherEnvelope: %s", path, exc)
+                errors += 1
+                continue
+
+            # Try the new key first — already-rotated files succeed here.
+            already_rotated = _try_decrypt_bytes(
+                cipher_envelope,
+                master_key_provider=new_master_key_provider,
+                hkdf_context=entry.hkdf_context,
             )
-        except Exception as exc:
-            _log.warning("rotate_master_key: %s is not a CipherEnvelope: %s", path, exc)
-            errors += 1
-            continue
+            if already_rotated is not None:
+                skipped += 1
+                continue
 
-        # Try the new key first — already-rotated files succeed here.
-        already_rotated = _try_decrypt_bytes(
-            cipher_envelope,
-            master_key_provider=new_master_key_provider,
-            hkdf_context=entry.hkdf_context,
-        )
-        if already_rotated is not None:
-            skipped += 1
-            continue
-
-        # Fall back to the old key.
-        plaintext = _try_decrypt_bytes(
-            cipher_envelope,
-            master_key_provider=old_master_key_provider,
-            hkdf_context=entry.hkdf_context,
-        )
-        if plaintext is None:
-            _log.warning(
-                "rotate_master_key: cannot decrypt %s under either old or new key",
-                path,
+            # Fall back to the old key.
+            plaintext = _try_decrypt_bytes(
+                cipher_envelope,
+                master_key_provider=old_master_key_provider,
+                hkdf_context=entry.hkdf_context,
             )
-            errors += 1
-            continue
+            if plaintext is None:
+                _log.warning(
+                    "rotate_master_key: cannot decrypt %s under either old or new key",
+                    path,
+                )
+                errors += 1
+                continue
 
-        # Re-encrypt under the new key. Build the AAD freshly so the
-        # outer cipher-envelope wrapper continues to bind the same
-        # (classification, hkdf_context) pair.
-        aad = _build_aad(cipher_envelope.classification, entry.hkdf_context)
-        new_derived_key = _derive_envelope_key(
-            master_key=new_master_key_provider.get_master_key(),
-            hkdf_context=entry.hkdf_context,
-        )
-        try:
-            new_blob = encrypt_record(plaintext, key=new_derived_key, associated_data=aad)
-        except Exception as exc:
-            _log.warning("rotate_master_key: failed to encrypt %s: %s", path, exc)
-            errors += 1
-            continue
+            # Re-encrypt under the new key. Build the AAD freshly so the
+            # outer cipher-envelope wrapper continues to bind the same
+            # (classification, hkdf_context) pair.
+            aad = _build_aad(cipher_envelope.classification, entry.hkdf_context)
+            new_derived_key = _derive_envelope_key(
+                master_key=new_master_key_provider.get_master_key(),
+                hkdf_context=entry.hkdf_context,
+            )
+            try:
+                new_blob = encrypt_record(plaintext, key=new_derived_key, associated_data=aad)
+            except Exception as exc:
+                _log.warning("rotate_master_key: failed to encrypt %s: %s", path, exc)
+                errors += 1
+                continue
 
-        new_cipher_envelope = CipherEnvelope(
-            cipher_schema_version=cipher_envelope.cipher_schema_version,
-            written_at=datetime.now(UTC),
-            classification=cipher_envelope.classification,
-            encryption=EncryptionMetadata.from_blob(new_blob, associated_data=aad),
-        )
-        try:
-            _atomic_write(path, payload=new_cipher_envelope.model_dump_json())
-        except OSError as exc:
-            _log.warning("rotate_master_key: failed to atomic-write %s: %s", path, exc)
-            errors += 1
-            continue
-        rotated += 1
+            new_cipher_envelope = CipherEnvelope(
+                cipher_schema_version=cipher_envelope.cipher_schema_version,
+                written_at=datetime.now(UTC),
+                classification=cipher_envelope.classification,
+                encryption=EncryptionMetadata.from_blob(new_blob, associated_data=aad),
+            )
+            try:
+                _atomic_write(path, payload=new_cipher_envelope.model_dump_json())
+            except OSError as exc:
+                _log.warning("rotate_master_key: failed to atomic-write %s: %s", path, exc)
+                errors += 1
+                continue
+            rotated += 1
     _log.info(
         "rotate_master_key: rotated=%d skipped=%d errors=%d at %s",
         rotated,
@@ -342,9 +358,79 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
     )
 
 
+def rotate_blob_stores(
+    blob_store_roots: tuple[Path, ...],
+    *,
+    old_master_key_provider: MasterKeyProvider,
+    new_master_key_provider: MasterKeyProvider,
+) -> RotationSummary:
+    """Re-wrap every blob's per-record DEK across the given blob-store roots.
+
+    The blob store wraps each blob's DEK directly under the master key;
+    on master-key rotation, every wrapped DEK must be re-wrapped or the
+    blob is unrecoverable. This helper composes the per-store
+    :meth:`EncryptedBlobStore.rotate_master_key` results into a single
+    summary.
+
+    Args:
+        blob_store_roots: Tuple of root directories (each containing
+            a ``blobs/`` subtree) to walk.
+        old_master_key_provider: Provider returning the master key
+            currently in use.
+        new_master_key_provider: Provider returning the new master
+            key.
+
+    Returns:
+        A frozen :class:`RotationSummary` covering every visited blob.
+    """
+    rotated = 0
+    skipped = 0
+    errors = 0
+    for root in blob_store_roots:
+        if not root.exists():
+            continue
+        store = EncryptedBlobStore(
+            root_dir=root,
+            master_key_provider=old_master_key_provider,
+        )
+        store_rotated, store_skipped, store_errors = store.rotate_master_key(
+            old_master_key_provider=old_master_key_provider,
+            new_master_key_provider=new_master_key_provider,
+        )
+        rotated += store_rotated
+        skipped += store_skipped
+        errors += store_errors
+    return RotationSummary(rotated=rotated, skipped=skipped, errors=errors)
+
+
+def default_blob_store_roots(settings: Any) -> tuple[Path, ...]:
+    """Return the canonical blob-store roots covered by master-key rotation.
+
+    The substrate persists wrapped DEKs in:
+    - The secret store (``aeat_secret_store_dir / blobs``).
+    - The financial-attachments store
+      (``aeat_attachments_dir / blobs``).
+
+    Each root is a directory whose ``blobs/<hex[:2]>/<hex>.manifest.json``
+    files carry the per-blob ``wrapped_dek`` field. Operators with
+    custom blob stores extend this tuple before calling
+    :func:`rotate_blob_stores`.
+    """
+    roots: list[Path] = []
+    secret_store_dir = Path(settings.aeat_secret_store_dir)
+    if secret_store_dir.exists():
+        roots.append(secret_store_dir)
+    attachments_dir = Path(settings.aeat_attachments_dir)
+    if attachments_dir.exists():
+        roots.append(attachments_dir)
+    return tuple(roots)
+
+
 __all__ = [
     "RotationPlanEntry",
     "RotationSummary",
+    "default_blob_store_roots",
     "default_rotation_plan",
+    "rotate_blob_stores",
     "rotate_master_key",
 ]
