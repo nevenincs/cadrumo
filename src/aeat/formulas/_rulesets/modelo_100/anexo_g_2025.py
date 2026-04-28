@@ -297,16 +297,10 @@ CASILLAS = (
         computed=False,
         legal_basis=(CITATIONS[3],),
     ),
-    casilla(
-        casilla_id="0622",
-        label=_label(
-            "Deducciones autonomicas total",
-            "Total autonomic deductions (per-CCAA Anexo N)",
-            "Autonom levonasok osszesen (CCAA-fuggo)",
-        ),
-        computed=False,
-        legal_basis=(CITATIONS[6],),
-    ),
+    # NOTE: casilla 0622 (deducciones autonomicas total) is moved to
+    # Anexo N — it's computed as the sum of the 15 per-CCAA aggregate-
+    # deduction casillas (1101..1115). Anexo G only consumes 0622 via
+    # the 0630 formula.
     # Computed deducciones + cuota liquida + cuota diferencial.
     casilla(
         casilla_id="0630",

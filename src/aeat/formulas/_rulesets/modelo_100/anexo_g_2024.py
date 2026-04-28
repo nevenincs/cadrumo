@@ -19,8 +19,8 @@ from .._common import (
     ref,
     sub_op,
 )
+from .anexo_g_2025 import CASILLAS as CASILLAS  # re-export
 from .anexo_g_2025 import (
-    CASILLAS,
     CITATIONS,
     TARIFA_ESTATAL_GENERAL_2025,
     progressive_tarifa,
