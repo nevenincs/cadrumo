@@ -1967,19 +1967,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.submission._errors.SubmissionFormFillError",
-        ErrorCode(
-            code="ERROR_SUBMISSION_FORM_FILL",
-            category=ErrorCategory.ERROR,
-            default_message_es="No se pudo rellenar un campo del formulario de envio.",
-            default_message_en="Raised when the submitter cannot fill a casilla-keyed input on the portal.",
-            default_message_hu="A bekuldesi urlap egyik mezoje nem toltheto ki.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.submission._errors.SubmissionPreflightError",
         ErrorCode(
             code="ERROR_SUBMISSION_PREFLIGHT",

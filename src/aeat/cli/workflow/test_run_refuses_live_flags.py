@@ -3,7 +3,7 @@
 If a script in the wild still passes ``--no-dry-run`` or
 ``--i-understand-this-is-real``, the CLI must fail loudly with typer's
 "no such option" error rather than silently strip the flags and let the
-caller assume a live submission was triggered.
+caller assume a remote AEAT write was triggered.
 
 Issue ``#393``; controlling Kent-first CLI wireframe ADR iteration 5.
 """

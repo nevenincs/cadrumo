@@ -48,7 +48,6 @@ from ._protocols import (
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
     SubmissionEngineProtocol,
-    SubmittedFilingLike,
     SyncRunnerProtocol,
     SyncRunSummary,
 )
@@ -115,11 +114,9 @@ class FilingDraftBuilderAdapter:
 class SubmissionEngineAdapter:
     """Wrap :class:`aeat.submission.SubmissionEngine` as a workflow Protocol.
 
-    The real engine does not expose a standalone ``preflight`` method
-    (preflight is run inline inside :meth:`submit_draft`). The adapter
-    re-uses the engine's internal :class:`Preflight` instance so the
-    workflow's ``RUNNING_PREFLIGHT`` stage can still execute the gate
-    without triggering the whole submission machinery.
+    The adapter re-uses the engine's internal :class:`Preflight`
+    instance so the workflow's ``RUNNING_PREFLIGHT`` stage can execute
+    the gate without exposing any AEAT write operation.
     """
 
     def __init__(self, engine: SubmissionEngine) -> None:
@@ -129,28 +126,6 @@ class SubmissionEngineAdapter:
     def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
         """Delegate to the engine's internal :class:`Preflight`."""
         self._engine._preflight.check(draft, today=today)
-
-    async def submit_draft(
-        self,
-        draft: FilingDraftLike,
-        *,
-        dry_run: bool,
-        today: date | None = None,
-    ) -> SubmittedFilingLike:
-        """Delegate to :meth:`SubmissionEngine.submit_draft` and project."""
-        result = await self._engine.submit_draft(
-            draft,
-            dry_run=dry_run,
-            today=today,
-        )
-        return SubmittedFilingLike(
-            submission_id=result.submission_id,
-            draft_id=result.draft_id,
-            modelo=result.modelo,
-            period=result.period,
-            status=result.status.value,
-            submitted_at=result.submitted_at,
-        )
 
 
 class SyncRunnerAdapter:

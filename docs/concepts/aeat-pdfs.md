@@ -16,7 +16,7 @@ The vocabulary is locked by [ADR `pdf-taxonomy`](../../.vault/adr/2026-04-21-pdf
 
 **What it is**: the full filed copy. Multi-page. Contains the complete per-casilla breakdown — every value Kent put on the form, AEAT-stamped with a CSV at the foot. The authoritative post-filing record.
 
-**Where Kent gets it**: downloaded from Sede after submission, or exported by the AEAT form applet at submission time.
+**Where Kent gets it**: downloaded from Sede after Kent manually files through AEAT, or exported by AEAT's own form applet during that manual flow.
 
 **Imported by**: `aeat filing import --from-declaracion <PATH>` (cluster D — in progress; lands per-modelo under EPIC #305).
 
@@ -32,7 +32,7 @@ The vocabulary is locked by [ADR `pdf-taxonomy`](../../.vault/adr/2026-04-21-pdf
 
 **What it is**: a non-binding simulation. Typically from Renta Web Open or the Modelo 100 simulators. Structure mirrors the declaración. No CSV.
 
-**Where Kent gets it**: Renta Web Open (anonymous), or the Portal Renta pre-submission flow.
+**Where Kent gets it**: Renta Web Open (anonymous), or the Portal Renta draft/export flow before Kent manually files.
 
 **Imported by**: `aeat filing import --from-predeclaracion <PATH>` (cluster F MVP shares the same extractor as the borrador — structure is equivalent for summary-block purposes).
 

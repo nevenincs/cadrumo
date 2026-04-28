@@ -8,8 +8,6 @@ method to see exactly which abort reasons it can produce.
 
 Safety invariants enforced by this module:
 
-- Callers must spell out ``dry_run=...`` at the API level, and
-  ``dry_run=False`` is permanently forbidden.
 - The engine never touches AEAT-side state directly; every boundary
   call flows through an injected Protocol or callable seam.
 """
@@ -37,7 +35,6 @@ from ..submission import (
     DraftStatus,
     FilingDraftLike,
     FilingFindingSeverity,
-    LiveSubmitForbiddenError,
     SubmissionPreflightError,
 )
 from ._errors import WorkflowComponentError
@@ -54,7 +51,6 @@ from ._protocols import (
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
     SubmissionEngineProtocol,
-    SubmittedFilingLike,
     SyncRunnerProtocol,
 )
 
@@ -140,25 +136,6 @@ def _classify_cert_expiry(
 def _t(en: str) -> Translatable:
     """Build a :class:`Translatable` carrying a single English message."""
     return cast(Translatable, {"en": en})
-
-
-def _preflight_failed_summary(error: BaseException) -> Translatable:
-    """Return a trilingual preflight-failure summary when one is available."""
-    translated = getattr(error, "translated_message", None)
-    if isinstance(translated, Mapping):
-        summary_by_language = {
-            "es": "Validación previa fallida:",
-            "en": "Preflight failed:",
-            "hu": "Előellenőrzés sikertelen:",
-        }
-        rendered = {
-            language: f"{prefix} {message}"
-            for language, prefix in summary_by_language.items()
-            if isinstance(message := translated.get(language), str) and message
-        }
-        if rendered:
-            return cast(Translatable, rendered)
-    return _t(f"Preflight failed: {error}")
 
 
 def _enum_value(value: object) -> str:
@@ -265,7 +242,6 @@ class WorkflowEngine:
         self,
         profile: AutonomoProfile,
         *,
-        dry_run: bool,
         sync_first: bool | None = None,
         fail_on_warning: bool = False,
         today: date | None = None,
@@ -274,8 +250,6 @@ class WorkflowEngine:
 
         Args:
             profile: The :class:`AutonomoProfile` to run for.
-            dry_run: Must be ``True``. Passing ``False`` is treated as
-                a permanent-refusal preflight failure.
             sync_first: Whether to run the sync runner before the
                 deadline computation. ``None`` means "use the
                 ``AEAT_WORKFLOW_SYNC_FIRST_DEFAULT`` setting".
@@ -290,7 +264,6 @@ class WorkflowEngine:
             profile=profile,
             target_modelo=None,
             target_period=None,
-            dry_run=dry_run,
             sync_first=sync_first,
             fail_on_warning=fail_on_warning,
             today=today,
@@ -302,7 +275,6 @@ class WorkflowEngine:
         modelo: str,
         period: str,
         *,
-        dry_run: bool,
         sync_first: bool | None = None,
         fail_on_warning: bool = False,
         today: date | None = None,
@@ -313,7 +285,6 @@ class WorkflowEngine:
             profile: The :class:`AutonomoProfile` to run for.
             modelo: Target modelo identifier.
             period: Target period identifier.
-            dry_run: See :meth:`run_next`.
             sync_first: See :meth:`run_next`.
             fail_on_warning: See :meth:`run_next`.
             today: See :meth:`run_next`.
@@ -325,7 +296,6 @@ class WorkflowEngine:
             profile=profile,
             target_modelo=modelo,
             target_period=period,
-            dry_run=dry_run,
             sync_first=sync_first,
             fail_on_warning=fail_on_warning,
             today=today,
@@ -339,12 +309,11 @@ class WorkflowEngine:
         profile: AutonomoProfile,
         target_modelo: str | None,
         target_period: str | None,
-        dry_run: bool,
         sync_first: bool | None,
         fail_on_warning: bool,
         today: date | None,
     ) -> WorkflowResult:
-        """Linearly walk the ten stages, bailing on the first failure."""
+        """Linearly walk the read-only stages, bailing on the first failure."""
         started_at = _utcnow()
         reference_today = today or date.today()
         should_sync = sync_first if sync_first is not None else self._settings.aeat_workflow_sync_first_default
@@ -361,7 +330,6 @@ class WorkflowEngine:
         steps: list[WorkflowStep] = []
         obligation: FilingObligation | None = None
         draft: FilingDraftLike | None = None
-        submission: SubmittedFilingLike | None = None
         final_stage: WorkflowStage = WorkflowStage.ABORTED
         aborted_reason: WorkflowAbortReason | None = None
         abort_summary: Translatable | None = None
@@ -396,12 +364,6 @@ class WorkflowEngine:
             self._stage_validating_draft(draft=draft, steps=steps)
             self._stage_running_preflight(
                 draft=draft,
-                today=reference_today,
-                steps=steps,
-            )
-            submission = await self._stage_dry_run_submit(
-                draft=draft,
-                dry_run=dry_run,
                 today=reference_today,
                 steps=steps,
             )
@@ -447,7 +409,7 @@ class WorkflowEngine:
             aborted_reason=aborted_reason,
             obligation=obligation,
             draft_id=draft.draft_id if draft is not None else None,
-            submission_id=submission.submission_id if submission is not None else None,
+            submission_id=None,
             steps=tuple(steps),
             summary=summary,
         )
@@ -1046,90 +1008,6 @@ class WorkflowEngine:
                 details=cert_details,
             )
         )
-
-    async def _stage_dry_run_submit(
-        self,
-        *,
-        draft: FilingDraftLike,
-        dry_run: bool,
-        today: date,
-        steps: list[WorkflowStep],
-    ) -> SubmittedFilingLike:
-        """Stage 8 — dispatch to the submission engine.
-
-        The workflow contract is dry-run only. A non-dry-run request
-        is refused before the submission engine is called.
-        """
-        started = _utcnow()
-        if not dry_run:
-            refusal = LiveSubmitForbiddenError()
-            preflight_summary = _preflight_failed_summary(refusal)
-            steps.append(
-                WorkflowStep(
-                    stage=WorkflowStage.DRY_RUN_SUBMIT,
-                    started_at=started,
-                    ended_at=_utcnow(),
-                    success=False,
-                    summary=preflight_summary,
-                    details={"dry_run": str(dry_run), "error_message": str(refusal)},
-                )
-            )
-            raise _AbortError(
-                reason=WorkflowAbortReason.PREFLIGHT_FAILED,
-                summary=preflight_summary,
-            ) from refusal
-        try:
-            submission = await self._submission_engine.submit_draft(
-                draft,
-                dry_run=dry_run,
-                today=today,
-            )
-        except SiteHealthError as exc:
-            self._record_site_unavailable(
-                stage=WorkflowStage.DRY_RUN_SUBMIT,
-                started=started,
-                exc=exc,
-                steps=steps,
-            )
-        except SubmissionPreflightError as exc:
-            preflight_summary = _t(f"Preflight failed: {exc}")
-            steps.append(
-                WorkflowStep(
-                    stage=WorkflowStage.DRY_RUN_SUBMIT,
-                    started_at=started,
-                    ended_at=_utcnow(),
-                    success=False,
-                    summary=preflight_summary,
-                    details={"dry_run": str(dry_run), "error_message": str(exc)},
-                )
-            )
-            raise _AbortError(
-                reason=WorkflowAbortReason.PREFLIGHT_FAILED,
-                summary=preflight_summary,
-            ) from exc
-        except Exception as exc:
-            self._record_unhandled(
-                stage=WorkflowStage.DRY_RUN_SUBMIT,
-                started=started,
-                exc=exc,
-                steps=steps,
-            )
-        submit_summary = _t(f"Submit dry-run OK submission_id={submission.submission_id}")
-        steps.append(
-            WorkflowStep(
-                stage=WorkflowStage.DRY_RUN_SUBMIT,
-                started_at=started,
-                ended_at=_utcnow(),
-                success=True,
-                summary=submit_summary,
-                details={
-                    "submission_id": submission.submission_id,
-                    "status": str(submission.status),
-                    "dry_run": str(dry_run),
-                },
-            )
-        )
-        return submission
 
     # ---------------------------------------------------------------- helpers
 

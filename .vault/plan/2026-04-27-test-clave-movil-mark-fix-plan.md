@@ -10,30 +10,30 @@ related:
 
 # `test-clave-movil-mark-fix` implementation plan
 
-This plan implements the accepted Path A decision: align the Cl@ve Movil authentication test module with the live-read marker taxonomy and remove any stale ignore workaround references.
+This plan implements the corrected decision: keep the Cl@ve Movil test module protocol-level, document that it does not prove live AEAT authentication, and remove automatic provider-side form submission.
 
 ## Proposed Changes
 
-Update `src/aeat/auth/test_clave_movil.py` so the whole module is marked `live_read` and `domain_aeat_remote`.
+Update `src/aeat/auth/test_clave_movil.py` so the whole module is marked `unit` and `domain_aeat_remote`.
 
-Document at the top of the file that these tests are operator-enabled through `AEAT_LIVE_TESTS_ENABLED=1`.
+Document at the top of the file that these tests use browser-session stand-ins and do not prove real AEAT authentication or operator Cl@ve approval.
 
-Use the shared live-test helper to ensure explicit source-only live selection skips when the opt-in flag is false.
+Remove provider code that auto-submits AEAT's representation dispatcher after Cl@ve approval.
 
 Confirm that the searched workaround surfaces contain no remaining `--ignore=src/aeat/auth/test_clave_movil.py` references.
 
 ## Tasks
 
 - Update the module marker and docstring.
-- Add the shared live opt-in guard if direct source-only collection is not otherwise gated.
+- Delete the representation dispatcher auto-submit helper and refuse that state explicitly.
 - Search the repository workaround surfaces for stale ignore references.
-- Verify default unit selection, explicit live selection with opt-in disabled, and explicit live selection with opt-in enabled.
+- Verify default unit selection and the focused Cl@ve provider tests.
 - Run lint, typecheck, unit tests, coverage, hooks, and code review.
 
 ## Parallelization
 
-This is a narrow single-file source change plus vault records. Parallel execution is useful only for independent searches and verification commands.
+This is a narrow source change plus vault records. Parallel execution is useful only for independent searches and verification commands.
 
 ## Verification
 
-Success means the module no longer appears in default unit selection, explicit `live_read` selection does not run accidentally without opt-in, and opt-in execution still collects and runs the tests. The source diff must not touch `_clave_movil.py` or any AEAT submission surface.
+Success means the module is plainly protocol-level, default unit selection can run it without touching AEAT, no automatic representation form submit remains in `_clave_movil.py`, and no AEAT submission surface is reintroduced.
