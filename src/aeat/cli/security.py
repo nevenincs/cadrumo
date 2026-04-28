@@ -313,4 +313,168 @@ def migrate_master_key_kdf_cmd(
         _console.print("[green]master.kdf was already v2; no action required.[/green]")
 
 
+@app.command("provision")
+def provision_cmd(
+    backend: Annotated[
+        str | None,
+        typer.Option(
+            "--backend",
+            help=(
+                "Master-key backend to provision: 'keyring' (OS keychain), "
+                "'file' (passphrase-derived Argon2id KEK), or 'unsecured' "
+                "(testing only; requires AEAT_ALLOW_UNENCRYPTED=1 and "
+                "refuses real NIFs). Defaults to the configured backend."
+            ),
+        ),
+    ] = None,
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force",
+            help="Overwrite an existing master key. Default refuses if any artefact already exists.",
+        ),
+    ] = False,
+) -> None:
+    """Provision the security layer for a brand-new installation.
+
+    Operator workflow:
+
+    1. Choose a backend (keyring is recommended; file-fallback is the
+       resilient backup; unsecured is testing-only).
+    2. For file-fallback: enter a passphrase. The substrate uses
+       Argon2id (OWASP-current top tier) to derive a KEK that wraps a
+       random 32-byte master key.
+    3. The substrate displays a 24-word recovery key ONCE. Print it,
+       store it somewhere safe. Without it, a forgotten passphrase or a
+       lost keychain means losing every persisted record.
+    4. The substrate round-trips a canary record under the new master
+       key to confirm provisioning succeeded.
+
+    Re-running ``aeat security provision`` on a provisioned store
+    refuses unless ``--force`` is passed; the recovery-key flow is the
+    intended remediation path for forgotten passphrases.
+    """
+    from ..config import SecretStoreBackend, load_settings
+    from ..storage import (
+        FileFallbackMasterKeyProvider,
+        KeyringMasterKeyProvider,
+        UnsecuredMasterKeyProvider,
+        decrypt_record,
+        encrypt_record,
+        generate_recovery_key,
+        save_wrapped_master_key,
+        wrap_master_key,
+    )
+
+    settings = load_settings()
+    secret_dir = Path(settings.aeat_secret_store_dir)
+    secret_dir.mkdir(parents=True, exist_ok=True)
+    chosen_backend = backend or settings.aeat_secret_store_backend.value
+    try:
+        resolved = SecretStoreBackend(chosen_backend)
+    except ValueError as exc:
+        raise typer.BadParameter(f"unknown backend: {chosen_backend!r}") from exc
+
+    # Refuse to clobber an existing master.key / master.kdf / salt
+    # triplet without --force. Operators with a provisioned store who
+    # forgot their passphrase should use `aeat security recover`.
+    existing = [p for p in (secret_dir / "master.key", secret_dir / "master.kdf", secret_dir / "salt") if p.exists()]
+    if existing and not force:
+        _console.print(
+            "[red]a master key is already provisioned in[/red] "
+            f"{secret_dir}.\n"
+            '  - Use `aeat security recover --recovery-key "<24 words>"` '
+            "to restore from a recovery key.\n"
+            "  - Use `aeat security provision --force` to overwrite "
+            "(only when you have lost the existing master key).",
+        )
+        raise typer.Exit(code=1)
+
+    # Provision the master-key provider per the chosen backend. This
+    # mints (or fetches) the master key as a side effect.
+    if resolved is SecretStoreBackend.UNSECURED:
+        if not settings.aeat_allow_unencrypted:
+            _console.print(
+                "[red]unsecured mode requires AEAT_ALLOW_UNENCRYPTED=1.[/red]\n"
+                "Unsecured mode uses a published deterministic master key — "
+                "intended for testing / throwaway data only. Set the env var "
+                "and retry, or pick `--backend keyring|file` for real data.",
+            )
+            raise typer.Exit(code=1)
+        provider = UnsecuredMasterKeyProvider()
+        _console.print(
+            "[yellow]provisioning unsecured backend: "
+            "ZERO confidentiality, real NIFs will be refused at profile-write.[/yellow]",
+        )
+    elif resolved is SecretStoreBackend.KEYRING:
+        provider = KeyringMasterKeyProvider()
+        # Probe early so failures surface here instead of in a later
+        # downstream consumer.
+        provider.get_master_key()
+        _console.print(
+            f"[green]keychain backend probed; master key minted under service '{provider._service}'.[/green]",
+        )
+    else:  # FILE or AUTO with file-fallback path.
+        # Resolve the passphrase via the same callback the substrate
+        # uses; AEAT_SECRET_PASSPHRASE env var is preferred for non-
+        # interactive runs, interactive prompt otherwise.
+        provider = FileFallbackMasterKeyProvider(store_dir=secret_dir)
+        provider.get_master_key()
+        _console.print(
+            f"[green]file-fallback backend provisioned at {secret_dir}; "
+            "master key wrapped under your passphrase via Argon2id.[/green]",
+        )
+
+    master_key = provider.get_master_key()
+
+    # Generate the recovery key + display the 24-word mnemonic ONCE.
+    # The substrate never persists the mnemonic; the operator MUST
+    # copy it now.
+    recovery = generate_recovery_key()
+    wrapped = wrap_master_key(master_key=master_key, recovery_key=recovery)
+    save_wrapped_master_key(wrapped, secret_dir / "master.recovery.key")
+    _console.print(
+        "\n[bold yellow]══════════════════════════════════════════════[/]\n"
+        "[bold yellow]RECOVERY KEY — STORE THIS NOW[/]\n"
+        "[bold yellow]══════════════════════════════════════════════[/]\n",
+    )
+    _console.print(
+        "Write down (or print) the following 24 words and store them somewhere safe.\n"
+        "WE WILL NEVER SHOW THIS KEY AGAIN. Without it, a forgotten passphrase\n"
+        "or a lost keychain means losing every persisted record.\n",
+    )
+    # Render the words in 4 rows of 6 for legibility.
+    words = recovery.mnemonic.split()
+    for row_index in range(0, len(words), 6):
+        chunk = words[row_index : row_index + 6]
+        _console.print("    " + "  ".join(f"[cyan]{w:>8s}[/]" for w in chunk))
+    _console.print(
+        "\n[bold yellow]══════════════════════════════════════════════[/]\n",
+    )
+
+    # Round-trip verify: encrypt then decrypt a canary plaintext under
+    # the new master key. If this fails, the provisioning is broken
+    # and the operator should retry rather than trusting the store.
+    canary = b"aeat.security.provision.canary.v1"
+    canary_aad = b"aeat.security.provision.canary.aad.v1"
+    try:
+        blob = encrypt_record(canary, key=master_key, associated_data=canary_aad)
+        recovered = decrypt_record(blob, key=master_key, associated_data=canary_aad)
+        assert recovered == canary
+    except Exception as exc:  # pragma: no cover - defensive
+        _console.print(f"[red]round-trip verify failed: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    _console.print(
+        "[green]✓ Round-trip verify succeeded.[/green]\n"
+        f"[green]✓ Security layer provisioned at {secret_dir}.[/green]\n"
+        f"[green]✓ Recovery key wrapped at {secret_dir / 'master.recovery.key'}.[/green]\n",
+    )
+    _console.print(
+        "Next steps: run `aeat doctor` to confirm the substrate is healthy, "
+        "then proceed with `aeat setup` (if not already run) or any "
+        "persisting CLI command.",
+    )
+
+
 __all__ = ["app"]

@@ -393,3 +393,97 @@ class TestMigrateMasterKeyKdf:
         )
         assert result.exit_code != 0
         assert "does not exist" in result.output
+
+
+class TestProvisionCommand:
+    """Interactive `aeat security provision` flow."""
+
+    def test_file_backend_round_trip(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        secrets_dir = tmp_path / "secrets"
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "test-pp-1234")
+
+        result = runner.invoke(app, ["security", "provision"])
+        assert result.exit_code == 0, result.output
+        # The CLI prints the recovery-key block exactly once + the
+        # round-trip verify ack.
+        assert "RECOVERY KEY" in result.output
+        assert "Round-trip verify succeeded" in result.output
+        # The recovery-key wrapping landed at master.recovery.key.
+        assert (secrets_dir / "master.recovery.key").exists()
+        # File-fallback artefacts persisted.
+        assert (secrets_dir / "master.key").exists()
+        assert (secrets_dir / "master.kdf").exists()
+        assert (secrets_dir / "salt").exists()
+
+    def test_refuses_to_overwrite_existing_store_without_force(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        secrets_dir = tmp_path / "secrets"
+        secrets_dir.mkdir(parents=True)
+        # Pre-existing artefacts.
+        (secrets_dir / "master.key").write_bytes(b"placeholder")
+        (secrets_dir / "master.kdf").write_text(
+            '{"version": 2, "algorithm": "argon2id"}',
+            encoding="utf-8",
+        )
+        (secrets_dir / "salt").write_bytes(b"\x00" * 16)
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "test-pp-1234")
+
+        result = runner.invoke(app, ["security", "provision"])
+        assert result.exit_code == 1
+        assert "already provisioned" in result.output
+        assert "aeat security recover" in result.output
+
+    def test_force_overwrites_existing_store(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        secrets_dir = tmp_path / "secrets"
+        secrets_dir.mkdir(parents=True)
+        (secrets_dir / "master.key").write_bytes(b"placeholder")
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "test-pp-1234")
+
+        result = runner.invoke(app, ["security", "provision", "--force"])
+        assert result.exit_code == 0, result.output
+        assert "RECOVERY KEY" in result.output
+
+    def test_unsecured_backend_requires_allow_unencrypted(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
+        monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
+        result = runner.invoke(app, ["security", "provision", "--backend", "unsecured"])
+        assert result.exit_code == 1
+        assert "AEAT_ALLOW_UNENCRYPTED" in result.output
+
+    def test_unsecured_backend_succeeds_with_allow_flag(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
+        monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+        result = runner.invoke(app, ["security", "provision", "--backend", "unsecured"])
+        assert result.exit_code == 0, result.output
+        assert "ZERO confidentiality" in result.output
+        assert "RECOVERY KEY" in result.output
