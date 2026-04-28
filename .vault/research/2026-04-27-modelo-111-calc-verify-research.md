@@ -6,7 +6,7 @@ date: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-130-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
-  - "[[2026-130-rule-delta]]"
+  - "[[2026-04-27-modelo-130-rule-delta-reference]]"
 ---
 
 # `modelo-111-calc-verify` research
@@ -274,7 +274,7 @@ Modelo 111* PDF — a guide for retenedores filling in the form, not a
 no CSV. It cannot serve as a hash-pinned extraction-target fixture.
 
 **Decision**: file an explicit L1 waiver in
-`.vault/reference/2026-111-rule-delta.md`, mirroring the M130 waiver.
+`.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md`, mirroring the M130 waiver.
 The Tier-L bar is met via the L3 synthetic generator + extractor
 round-trip + the integration test class. The waiver expires on either
 of (a) AEAT publishing a normative specimen M111 (no precedent — same
@@ -347,7 +347,7 @@ This issue lands:
 4. **2026 ruleset test file** — colocated
    `test_modelo_111_2026.py` with no-drift regression + external-
    anchored worked example + zero-boundary + a typo-detection case.
-5. **Rule-delta manifest** — `.vault/reference/2026-111-rule-delta.md`
+5. **Rule-delta manifest** — `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md`
    listing the per-year numerical state with BOE citations + the L1
    waiver.
 6. **Mutation harness extension** — one row to `EXPECTED_COUNTS`, two

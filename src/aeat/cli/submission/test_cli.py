@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -19,6 +20,7 @@ from ...financial.transactions import (
     TransactionDirection,
 )
 from ...financial.transactions._repository import TransactionCatalogueRepository
+from ...submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -38,52 +40,12 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path
 
 
-@pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path):
-    """Wave-7: install an EphemeralMasterKeyProvider so the CLI's
-    ciphertext-at-rest writes work in the test sandbox."""
-    from ...storage import (
-        EncryptedBlobStore,
-        EphemeralMasterKeyProvider,
-        SecretStore,
-        override_master_key_provider,
-        override_secret_store,
-    )
-
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_master_key_provider(provider)
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
-
-
 @pytest.fixture()
 def draft_path(tmp_path: Path) -> Path:
-    """Persist an approved draft via :class:`FilingDraftRepository` and
-    return its canonical envelope path.
-
-    The CLI accepts a draft id or an envelope path; tests that need a
-    file path use the latter so the preflight/dry-run loaders see a
-    real ciphertext envelope on disk.
-    """
-    from ...filing._repository import FilingDraftRepository
-
     draft = _approved_draft()
-    repository = FilingDraftRepository(store_dir=tmp_path / "drafts")
-    repository.save(draft)
-    return repository.envelope_path_for(draft.draft_id)
+    path = tmp_path / "draft.json"
+    path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
+    return path
 
 
 def _approved_draft() -> FilingDraft:
@@ -155,20 +117,14 @@ class TestPreflightCommand:
         status: str,
         expected_fragment: str,
     ) -> None:
-        import json as _json
-
-        from ...filing._repository import FilingDraftRepository
-
         payload = _approved_draft().model_dump(mode="json")
         payload["status"] = status
         payload["approved_at"] = None
         payload["approved_by"] = None
         payload["review_checksum"] = None
         payload["approval_basis"] = None
-        adjusted = FilingDraft.model_validate_json(_json.dumps(payload))
-        repository = FilingDraftRepository(store_dir=tmp_path / "bad-drafts")
-        repository.save(adjusted)
-        path = repository.envelope_path_for(adjusted.draft_id)
+        path = tmp_path / "bad.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
         result = runner.invoke(app, ["preflight", str(path)])
         assert result.exit_code == 1
         assert "FAILED" in result.output
@@ -180,9 +136,7 @@ class TestPreflightCommand:
         draft_path: Path,
         isolated_dirs: Path,
     ) -> None:
-        transactions_dir = isolated_dirs / "transactions"
-        transactions_dir.mkdir(parents=True, exist_ok=True)
-        TransactionCatalogueRepository(store_dir=transactions_dir).save(
+        TransactionCatalogueRepository(store_dir=isolated_dirs / "transactions").save(
             TransactionCatalogue.from_transactions([_sample_transaction()]),
         )
 
@@ -190,83 +144,80 @@ class TestPreflightCommand:
         assert result.exit_code == 1
         assert "stale" in result.output
 
-        # Wave-9: the refreshed draft is persisted through the
-        # FilingDraftRepository (ciphertext-only). Decode the draft id
-        # from the canonical envelope filename and load via the repo.
-        from ...filing._repository import FilingDraftRepository
-
-        draft_id = draft_path.name[: -len(".envelope.json")]
-        refreshed = FilingDraftRepository(store_dir=draft_path.parent).load(draft_id)
-        assert refreshed is not None
+        refreshed = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
         assert refreshed.status.value == "APPROVAL_STALE"
 
 
-class TestDryRunCommand:
-    def test_ok(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        result = runner.invoke(app, ["dry-run", str(draft_path)])
-        assert result.exit_code == 0, result.output
-        assert "dry-run OK" in result.output
-        assert "PENDING" in result.output
-
-
 class TestSubmitCommandRemoved:
-    """The ``submit`` subcommand was removed by the 2026-04-18 ADR.
+    """The ``submit`` and ``dry-run`` subcommands are absent."""
 
-    Replaced :class:`TestSubmitCommand`. The new tests assert that
-    invocation falls through to Typer's "no such command" path with
-    exit code 2 and that the help surface does not advertise it.
-    """
-
+    @pytest.mark.parametrize("command", ["submit", "dry-run"])
     def test_invocation_fails_with_no_such_command(
-        self, runner: CliRunner, draft_path: Path, isolated_dirs: Path
+        self, runner: CliRunner, draft_path: Path, isolated_dirs: Path, command: str
     ) -> None:
-        del isolated_dirs
-        result = runner.invoke(app, ["submit", str(draft_path)])
+        del isolated_dirs, draft_path
+        result = runner.invoke(app, [command])
         # Typer/click returns 2 for unknown commands.
         assert result.exit_code == 2, result.output
         assert (
-            "submit" not in (result.output or "").split("\nUsage")[0].lower()
+            command not in (result.output or "").split("\nUsage")[0].lower()
             or "no such command" in (result.output or "").lower()
         )
 
     def test_help_does_not_list_submit(self, runner: CliRunner) -> None:
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0, result.output
-        # The four allowed commands are present; "submit" is not.
-        for cmd in ("preflight", "dry-run", "show", "list"):
+        for cmd in ("preflight", "export", "verify", "diff", "schemas", "check-nif", "show", "list"):
             assert cmd in result.output, f"expected `{cmd}` in --help, got: {result.output!r}"
         assert " submit " not in result.output, (
             "submission CLI must not advertise `submit` (see .vault/adr/2026-04-18-live-submit-cli-excision-adr.md)"
         )
+        assert "dry-run" not in result.output
 
 
 class TestShowAndList:
-    def test_show_existing(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        from ...filing._repository import FilingDraftRepository
-
-        draft_id = draft_path.name[: -len(".envelope.json")]
-        draft = FilingDraftRepository(store_dir=draft_path.parent).load(draft_id)
-        assert draft is not None
-        dry = runner.invoke(app, ["dry-run", str(draft_path)])
-        assert dry.exit_code == 0
-        # Extract submission_id from the output
-        token = next(t for t in dry.output.split() if t.startswith("submission_id="))
-        submission_id = token.split("=", 1)[1]
+    def test_show_existing(self, runner: CliRunner, isolated_dirs: Path) -> None:
+        submission_id = _write_historical_submission(isolated_dirs)
         result = runner.invoke(app, ["show", submission_id])
         assert result.exit_code == 0, result.output
         assert submission_id in result.output
-        assert draft.draft_id in result.output
+        assert "draft-1" in result.output
 
     def test_show_missing_exits_1(self, runner: CliRunner, isolated_dirs: Path) -> None:
         result = runner.invoke(app, ["show", "deadbeef"])
         assert result.exit_code == 1
 
     def test_list_filters_by_modelo(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        runner.invoke(app, ["dry-run", str(draft_path)])
+        del draft_path
+        _write_historical_submission(isolated_dirs)
         result = runner.invoke(app, ["list", "--modelo", "130"])
         assert result.exit_code == 0, result.output
         assert "1 record" in result.output
         empty = runner.invoke(app, ["list", "--modelo", "303"])
         assert empty.exit_code == 0
         assert "0 record" in empty.output
-        assert "0 record" in empty.output
+
+
+def _write_historical_submission(root: Path) -> str:
+    now = datetime.now(UTC)
+    filing = SubmittedFiling(
+        submission_id="sub-1",
+        draft_id="draft-1",
+        modelo="130",
+        period="2026Q1",
+        profile_tax_id="X1234567L",
+        status=SubmissionStatus.PENDING,
+        submitted_at=now,
+        attempts=(
+            SubmissionAttempt(
+                attempt_id="attempt-1",
+                started_at=now,
+                ended_at=now,
+                status=SubmissionStatus.PENDING,
+            ),
+        ),
+    )
+    target = root / "submissions" / f"{filing.submission_id}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(filing.model_dump_json(indent=2), encoding="utf-8")
+    return filing.submission_id

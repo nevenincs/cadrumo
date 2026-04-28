@@ -7,7 +7,7 @@ related:
   - "[[2026-04-27-modelo-111-calc-verify-research]]"
   - "[[2026-04-27-modelo-111-calc-verify-adr]]"
   - "[[2026-04-27-modelo-111-calc-verify-plan]]"
-  - "[[2026-111-rule-delta]]"
+  - "[[2026-04-27-modelo-111-rule-delta-reference]]"
 ---
 
 # `modelo-111-calc-verify` exec summary
@@ -91,7 +91,7 @@ above the issue-`#338` 90 % floor). 17 M111 mutation tests pass (was
 
 ## L1 anchor decision
 
-**Waiver filed** in `.vault/reference/2026-111-rule-delta.md` per ADR
+**Waiver filed** in `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md` per ADR
 §D9. Modelo 111 is the autónomo's quarterly *autoliquidación* of
 retenciones — every real M111 filing is a private autoliquidación
 tied to a specific NIF + quarter, and AEAT does not publish any
@@ -144,9 +144,9 @@ mapping (out of scope for the formula DSL — sub-EPIC
 - `.vault/research/2026-04-27-modelo-111-calc-verify-research.md` — **new**.
 - `.vault/adr/2026-04-27-modelo-111-calc-verify-adr.md` — **new**.
 - `.vault/plan/2026-04-27-modelo-111-calc-verify-plan.md` — **new**.
-- `.vault/reference/2026-111-rule-delta.md` — **new** (rule-delta
+- `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md` — **new** (rule-delta
   manifest + L1 waiver).
-- `.vault/exec/2026-04-27-modelo-111-calc-verify/2026-04-27-modelo-111-calc-verify-summary.md` —
+- `.vault/exec/2026-04-27-modelo-111-calc-verify/2026-04-27-modelo-111-calc-verify-summary-exec.md` —
   **new** (this file).
 
 ### Docs

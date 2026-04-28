@@ -224,9 +224,9 @@ asyncio_mode = "strict"
 markers = [
     "unit: deterministic tests with no external I/O; mocks/stubs permitted per CLAUDE.md",
     "live_read: opt-in tests that READ from a real external service (covers Google scratch round-trips; see tests/README.md)",
-    "live_write: opt-in tests that WRITE to a real external service; collection-banned by default (charter #116 R1)",
+    "live_write: permanently forbidden external write-shaped tests; collection-dropped with no bypass",
     "domain_aeat_remote: exercises AEAT Sede Electronica read paths (auth, browser, casillas, inbox, justificante, portals, status, sync)",
-    "domain_submission: exercises the AEAT-write-capable submission boundary (filing, submission)",
+    "domain_submission: exercises local filing export, preflight, and historical submission records; no AEAT write surface",
     "domain_financial_input: exercises financial ingest (financial, cli/financial)",
     "domain_local_state: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, schema, deadlines, cli/deadlines)",
     "domain_mediation: exercises workflow orchestration, LLM, i18n, testing subpackages",

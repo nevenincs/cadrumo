@@ -33,6 +33,7 @@ from . import (
     MODELO_115_2025,
     MODELO_123_2024,
     MODELO_123_2025,
+    MODELO_123_2026,
     MODELO_130_2024,
     MODELO_130_2025,
     MODELO_131_2024,
@@ -44,7 +45,9 @@ from . import (
     MODELO_202_2025,
     MODELO_303_2024,
     MODELO_303_2025,
+    MODELO_390_2024,
     MODELO_390_2025,
+    MODELO_390_2026,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
@@ -58,6 +61,7 @@ _ALL_RULESETS = [
     ("modelo_115.2025", MODELO_115_2025),
     ("modelo_123.2024", MODELO_123_2024),
     ("modelo_123.2025", MODELO_123_2025),
+    ("modelo_123.2026", MODELO_123_2026),
     ("modelo_130.2024", MODELO_130_2024),
     ("modelo_130.2025", MODELO_130_2025),
     ("modelo_131.2024", MODELO_131_2024),
@@ -69,7 +73,9 @@ _ALL_RULESETS = [
     ("modelo_202.2025", MODELO_202_2025),
     ("modelo_303.2024", MODELO_303_2024),
     ("modelo_303.2025", MODELO_303_2025),
+    ("modelo_390.2024", MODELO_390_2024),
     ("modelo_390.2025", MODELO_390_2025),
+    ("modelo_390.2026", MODELO_390_2026),
 ]
 
 

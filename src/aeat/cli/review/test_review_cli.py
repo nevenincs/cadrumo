@@ -124,7 +124,8 @@ def test_review_approve_and_show_persist_metadata(drafts_dir: Path, transactions
     assert "APPROVED" in show.output
     assert "kent" in show.output
     assert "aeat submission preflight" in show.output
-    assert "aeat submission dry-run" in show.output
+    assert "aeat submission export" in show.output
+    assert "aeat submission dry-run" not in show.output
 
     stored = _read_persisted_draft(drafts_dir, draft_id)
     assert stored.status is FilingDraftStatus.APPROVED

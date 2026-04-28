@@ -22,7 +22,7 @@ being on the import path.
 
 ## Google Workspace test fixtures
 
-The project's `@pytest.mark.live` test tier hits real Google APIs —
+The project's `@pytest.mark.live_read` test tier hits real Google APIs —
 per `CLAUDE.md`, live tests **never** use mocks, patches, stubs, or
 fakes. For contributors to run those tests locally, every Google code
 path needs project-owned Drive / Sheets / Docs artefacts to read and
