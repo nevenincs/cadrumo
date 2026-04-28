@@ -88,6 +88,54 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
 # explicitly bumps the expected counts here AND extends the per-class
 # harness to cover the new nodes — a deliberate friction point.
 EXPECTED_COUNTS: dict[str, dict[str, int]] = {
+    "modelo_100.2024": {
+        # Issue #317 (megaproject Waves 5-10 — Anexos B1, B2, C, D normal/
+        # simplificada/modulos, E, F, G, N composed):
+        # - sub_op: 71 — fanout across all anexo chains: 4 in B1 rendimiento
+        #   previo chain + 4 in B1 art. 20 piecewise + 1 in B1 reducido + 2
+        #   in B2 + 1 in B2 reducido + 3 in C + 9 in D normal + 4 in D
+        #   simplificada + 1 in D modulos + 1 in E saldo neto + 2 in F BLG +
+        #   38 in G (3 progressive_tarifa applications x 6 brackets +
+        #   estatal-minimo + cuota chain + cuota liquida + cuota diferencial).
+        # - mul_div_scalar: 20 — 2 in B1 (slopes 1.75 + 1.14 in art. 20
+        #   piecewise) + 1 in D simplificada (0.05 in 5% cap) + 17 in G
+        #   (rate literals across 3 progressive_tarifa applications).
+        # No PercentFormula or BracketsFormula nodes yet — the per-CCAA
+        # tarifa autonomica progressive scales for Madrid / Cataluna /
+        # Andalucia / Comunitat Valenciana / Castilla y Leon are deferred
+        # to a follow-up wave.
+        "sub_op": 71,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 20,
+    },
+    "modelo_100.2025": {
+        # Issue #317: structural baseline for the year that anchors the 2024
+        # and 2026 clones; node fingerprint identical (LIRPF arts. 17-20 stable
+        # 2024 → 2025 → 2026 per BOE consolidated text consult 2026-02-28).
+        "sub_op": 71,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 20,
+    },
+    "modelo_100.2026": {
+        # Issue #317: 2026 ruleset inherits 2025 numerical surface; mutable-node
+        # fingerprint matches verbatim. Any 2026-specific delta lands as a
+        # follow-up issue when the 2026 Orden HAC publishes (precedent feb-mar 2027).
+        "sub_op": 71,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 20,
+    },
     "modelo_100.summary.2025": {
         "sub_op": 3,  # casilla 0698 = clamp_pos(sub_op(...)) (1) + 0720 = sub_op(sub_op(...), ref) (2 nested).
         "percent_rate_literal": 0,

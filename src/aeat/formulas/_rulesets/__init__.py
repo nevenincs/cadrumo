@@ -62,11 +62,22 @@ remain user-supplied and the ruleset only encodes the algebraic
 chain (104 = 100+101, 105 = 96-104, 190 = 105+108+109, 191 = 190-662,
 192 = clamp_pos(191), 193 = clamp_pos(0-191)). Cumulation is
 asserted at the test level, mirroring the Modelo 180 pattern.
+
+**Issue #317 (megaproject — full-form Modelo 100 RENTA).** Modelo 100
+ships full-form 2024/2025/2026 rulesets at the default variant slot
+``modelo_100.<año>`` alongside the existing ``modelo_100.summary.2025``
+variant. The full-form rulesets aggregate per-anexo per-año modules from
+the ``modelo_100/`` sub-package — first sub-package within
+``_rulesets/``, justified by the 5-10x scale relative to sibling
+Tier-L modelos.
 """
 
 from __future__ import annotations
 
 from .._ruleset import Ruleset
+from .modelo_100_2024 import RULESET as MODELO_100_2024
+from .modelo_100_2025 import RULESET as MODELO_100_2025
+from .modelo_100_2026 import RULESET as MODELO_100_2026
 from .modelo_100_summary_2025 import RULESET as MODELO_100_SUMMARY_2025
 from .modelo_111_2024 import RULESET as MODELO_111_2024
 from .modelo_111_2025 import RULESET as MODELO_111_2025
@@ -99,6 +110,9 @@ from .modelo_390_2026 import RULESET as MODELO_390_2026
 # effective-from year. Wave 42 M3: prior ordering accidentally trailed
 # MODELO_100_SUMMARY_2025 at the end, breaking the numeric sequence.
 ALL_RULESETS: tuple[Ruleset, ...] = (
+    MODELO_100_2024,
+    MODELO_100_2025,
+    MODELO_100_2026,
     MODELO_100_SUMMARY_2025,
     MODELO_111_2024,
     MODELO_111_2025,
@@ -130,6 +144,9 @@ ALL_RULESETS: tuple[Ruleset, ...] = (
 
 __all__ = [
     "ALL_RULESETS",
+    "MODELO_100_2024",
+    "MODELO_100_2025",
+    "MODELO_100_2026",
     "MODELO_100_SUMMARY_2025",
     "MODELO_111_2024",
     "MODELO_111_2025",
