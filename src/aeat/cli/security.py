@@ -1,18 +1,21 @@
-"""``aeat security`` sub-app — operator key-management tooling.
+"""``aeat security`` sub-app — operator key-management + integrity tooling.
 
-Exposes the substrate's master-key rotation helper as a single
-operator-facing command:
+Exposes the substrate's two operator-facing security tools:
 
 - ``aeat security rotate-master-key --old-key-file <path> --new-key-file <path>``
   re-encrypts every governance envelope under the new master key.
+- ``aeat security verify-corpus --corpus <name> [--regenerate]``
+  builds or verifies the SHA-256 manifest covering every file under
+  a CORPUS-class root (casillas, manuals, normatives, vat).
 
-The command is read-write but does not touch AEAT remote services in
-any way — it operates entirely on the operator's local disk under
-the configured ``aeat_*_dir`` settings.
+Every command is read-write on local disk only — no AEAT remote
+service is touched. The configured ``aeat_*_dir`` settings drive
+where the on-disk operations land.
 """
 
 from __future__ import annotations
 
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -20,9 +23,18 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-app = typer.Typer(help="Operator key-management commands.", no_args_is_help=True)
+app = typer.Typer(help="Operator key-management + integrity commands.", no_args_is_help=True)
 
 _console = Console()
+
+
+class _CorpusName(StrEnum):
+    """Operator-selectable corpus roots for ``verify-corpus``."""
+
+    CASILLAS = "casillas"
+    MANUALS = "manuals"
+    NORMATIVES = "normatives"
+    VAT = "vat"
 
 
 def _read_key_file(path: Path) -> bytes:
@@ -123,6 +135,99 @@ def rotate_master_key_cmd(
             "for the affected paths and re-run after addressing the cause.[/red]"
         )
         raise typer.Exit(code=1)
+
+
+def _corpus_root_for(corpus: _CorpusName, settings) -> Path:  # type: ignore[no-untyped-def]
+    """Resolve the on-disk root for ``corpus`` from ``settings``."""
+    if corpus is _CorpusName.CASILLAS:
+        return Path(settings.aeat_casillas_root)
+    if corpus is _CorpusName.MANUALS:
+        return Path(settings.aeat_manuals_root)
+    if corpus is _CorpusName.NORMATIVES:
+        return Path(settings.aeat_normatives_root)
+    if corpus is _CorpusName.VAT:
+        return Path(settings.aeat_vat_catalogue_root)
+    raise typer.BadParameter(f"unknown corpus: {corpus!r}")
+
+
+@app.command("verify-corpus")
+def verify_corpus_cmd(
+    corpus: Annotated[
+        _CorpusName,
+        typer.Option(
+            "--corpus",
+            case_sensitive=False,
+            help="Which corpus to verify: casillas, manuals, normatives, vat.",
+        ),
+    ],
+    regenerate: Annotated[
+        bool,
+        typer.Option(
+            "--regenerate",
+            help=(
+                "Recompute the manifest after walking the corpus, replacing "
+                "any existing sidecar. Use after intentional corpus updates."
+            ),
+        ),
+    ] = False,
+) -> None:
+    """Verify the integrity manifest for a CORPUS-class root.
+
+    Default: walk the corpus, compare every file's SHA-256 + size
+    against the recorded manifest, and exit non-zero with a per-file
+    diff on drift.
+
+    With ``--regenerate``: skip the verify step, rebuild the manifest
+    from the live corpus contents, and overwrite the sidecar in place.
+    Use after intentional corpus updates (e.g. a manual re-fetch).
+
+    Operator runbook:
+
+    1. Run ``aeat security verify-corpus --corpus casillas`` before
+       tagging a release. CI gates on a clean exit (drift = exit 1).
+    2. After an intentional corpus update (e.g. updating the casilla
+       table for a new fiscal year), re-run with ``--regenerate`` to
+       rewrite the manifest, then commit the new sidecar.
+    """
+    from ..config import load_settings
+    from ..storage import (
+        assert_corpus_clean,
+        build_corpus_manifest,
+        manifest_path_for,
+        save_corpus_manifest,
+    )
+    from ..storage.errors import CorpusManifestDriftError, CorpusManifestError
+
+    settings = load_settings()
+    corpus_root = _corpus_root_for(corpus, settings)
+    if not corpus_root.exists():
+        raise typer.BadParameter(f"corpus root does not exist: {corpus_root}")
+    sidecar = manifest_path_for(corpus_root)
+
+    if regenerate:
+        manifest = build_corpus_manifest(corpus_root, corpus_root_name=corpus.value)
+        save_corpus_manifest(manifest, sidecar)
+        _console.print(
+            f"[green]regenerated[/green] manifest for [bold]{corpus.value}[/bold] "
+            f"with {len(manifest.entries)} entries -> {sidecar}",
+        )
+        return
+
+    if not sidecar.exists():
+        _console.print(
+            f"[red]no manifest sidecar at {sidecar}.[/red] Run with --regenerate to create one.",
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        assert_corpus_clean(corpus_root)
+    except CorpusManifestDriftError as exc:
+        _console.print(f"[red]drift detected in {corpus.value}:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except CorpusManifestError as exc:
+        _console.print(f"[red]manifest invalid for {corpus.value}:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    _console.print(f"[green]clean[/green] {corpus.value} -> {sidecar}")
 
 
 __all__ = ["app"]

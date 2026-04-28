@@ -2123,6 +2123,47 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.storage.errors.CorpusManifestError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_MANIFEST",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="Manifiesto de corpus invalido o estructuralmente roto.",
+            default_message_en="A corpus manifest is structurally invalid or its version is unsupported.",
+            default_message_hu="A korpusz manifeszt strukturalisan ervenytelen.",
+            default_suggestion="aeat security verify-corpus --regenerate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.CorpusManifestTamperError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_MANIFEST_TAMPER",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="Digesto autodeclarado del manifiesto no coincide con el cuerpo.",
+            default_message_en=(
+                "A corpus manifest's recorded sha256 does not match its body; the manifest may have been tampered with."
+            ),
+            default_message_hu="A manifeszt onaltal jelolt SHA-256 nem egyezik a tartalommal.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.CorpusManifestDriftError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_MANIFEST_DRIFT",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="El corpus en disco no coincide con el manifiesto.",
+            default_message_en="The on-disk corpus diverges from its manifest (added / removed / changed files).",
+            default_message_hu="A lemezen levo korpusz elter a manifeszttol.",
+            default_suggestion="aeat security verify-corpus --regenerate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.SecretAlreadyExistsError",
         ErrorCode(
             code="REFUSED_STORAGE_SECRET_ALREADY_EXISTS",
