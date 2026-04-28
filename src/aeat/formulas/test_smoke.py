@@ -29,6 +29,10 @@ def test_registry_has_shipped_rulesets() -> None:
     registry = get_registry()
     ruleset_ids = {r.ruleset_id for r in registry.rulesets}
     assert ruleset_ids == {
+        "modelo_100.2024",
+        "modelo_100.2025",
+        "modelo_100.2026",
+        "modelo_100.summary.2025",
         "modelo_111.2024",
         "modelo_111.2025",
         "modelo_111.2026",
@@ -55,7 +59,6 @@ def test_registry_has_shipped_rulesets() -> None:
         "modelo_390.2024",
         "modelo_390.2025",
         "modelo_390.2026",
-        "modelo_100.summary.2025",
     }
 
 
