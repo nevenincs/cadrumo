@@ -163,9 +163,117 @@ DSL extension (the current DSL has no general "cap at parameter"
 operator beyond `min_op` with literal). Tracked as a known limitation
 in the rule-delta reference manifest.
 
-## Next wave
+## Wave 6 — Anexos B2 (capital mobiliario) + C (capital inmobiliario)
 
-Wave 6 — Anexo B2 (capital mobiliario) + Anexo C (capital
-inmobiliario) for 2024 / 2025 / 2026. The 60 / 70 / 90 % tiered
-reducción of LIRPF art. 23.2 (post Ley 12/2023) lands in Anexo C —
-caller-supplied tier flag + `min_op`-based enforcement.
+Landed in the same session as Wave 5; the per-año aggregator now
+composes B1 + B2 + C into 23 casillas / 7 computed / 7 formulas across
+each of 2024 / 2025 / 2026.
+
+### Files created
+
+- Anexo B2 (capital mobiliario):
+    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b2_2024.py`
+    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b2_2025.py`
+    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b2_2026.py`
+    - `src/aeat/formulas/_rulesets/modelo_100/test_anexo_b2_2025.py`
+- Anexo C (capital inmobiliario):
+    - `src/aeat/formulas/_rulesets/modelo_100/anexo_c_2024.py`
+    - `src/aeat/formulas/_rulesets/modelo_100/anexo_c_2025.py`
+    - `src/aeat/formulas/_rulesets/modelo_100/anexo_c_2026.py`
+    - `src/aeat/formulas/_rulesets/modelo_100/test_anexo_c_2025.py`
+
+### Files modified
+
+- `src/aeat/formulas/_rulesets/modelo_100_2024.py / _2025.py / _2026.py`
+  per-año aggregators extended to compose Anexo B2 + C alongside the
+  existing Anexo B1.
+- `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py` —
+  `EXPECTED_COUNTS` bumped (sub_op 9 -> 14 per ruleset; mul_div_scalar
+  unchanged at 2). The five additional sub_ops are 2 in B2 (one in
+  the rendimiento neto previo aggregation, one in the reducción
+  art. 26.2 application) and 3 in C (two in the rendimiento neto
+  previo nested chain `0061 - 0066 - 0072`, one in the reducción
+  art. 23.2 application).
+- B1 ruleset-shape tests updated from strict-equality on the computed
+  set to subset assertion (since the aggregator now also carries B2
+  and C casillas alongside B1).
+
+### Anexo B2 description
+
+LIRPF arts. 25-26 + 101.4 + RIRPF art. 90 anchors. Eight casillas:
+
+- Inputs: 0028 dividendos, 0029 intereses cuentas, 0030 intereses
+  títulos, 0031 otros, 0032 reducción art. 26.2 30 % irregularidad
+  (caller-supplied), 0035 gastos administración / custodia.
+- Computed: 0048 rendimiento neto previo capital mobiliario =
+  `clamp_pos(0028 + 0029 + 0030 + 0031 - 0035)`, 0049 rendimiento
+  neto reducido = `clamp_pos(0048 - 0032)`.
+
+The `clamp_pos` on 0048 protects against the (rare) case where gastos
+administración exceed total ingresos. The 0032 caller-supplied input
+encodes the LIRPF art. 26.2 30 % over irregularidad already minorada,
+mirroring the Anexo B1 art. 18 pattern.
+
+### Anexo C description
+
+LIRPF arts. 22-24 + 85 anchors. Seven casillas. The Ley 12/2023 tiered
+reducción art. 23.2 (50 / 60 / 70 / 90 % depending on contract metadata)
+is encoded as a caller-supplied tier amount in casilla 0078 — the DSL
+lacks conditional logic and the tier selection requires inspection of
+contract metadata (date, zona tensionada flag, inquilino age,
+rehabilitación recency, reducción vs prior contract) that lives outside
+the formula layer. The aggregation chain:
+
+- 0106 (rendimiento neto previo) =
+  `clamp_pos(0061 - 0066 - 0072)`
+- 0107 (rendimiento neto reducido) =
+  `clamp_pos(0106 - 0078)`
+
+LIRPF art. 85 imputación de rentas inmobiliarias (1,1 % / 2 % del
+valor catastral) is encoded as casilla 0085 — a parallel income line
+that does NOT feed into 0106 / 0107. Anexo F (Wave 8) will consume
+0085 directly into the base imponible general.
+
+### Wave 6 audit checkpoint
+
+- ✅ `aeat audit rulesets citations` — 100 % on every M100 ruleset
+  (existing summary 4/4, new 2024 7/7, 2025 7/7, 2026 7/7).
+- ✅ `just lint` — clean.
+- ✅ `just typecheck` — clean.
+- ✅ `just hooks` — clean.
+- ✅ `pytest src/aeat/formulas/_rulesets/` — 474 tests pass (10 new
+  Anexo B2/C cases on top of the prior 464).
+- ✅ Mutation kill-rate aggregator + operand-swap + zero-boundary +
+  exhaustiveness defense pass on the three updated rulesets.
+
+### Tests added
+
+- 4 cases for Anexo B2 (consistent filing, irregularity reduction,
+  gastos exceed ingresos clamp-to-zero, drift detection on 0048).
+- 6 cases for Anexo C (default 50 % tier, zona tensionada 70 %, max
+  90 %, negative arrendamiento clamps to zero, imputación parallel
+  income separation, drift detection on 0107).
+
+### Design notes for review
+
+- The fixture helpers `_b2_zero_b1_c()` and `_c_zero_b1_b2()` zero out
+  every other anexo's casillas so the focused tests don't depend on
+  cross-anexo state. Casilla 0021 is set to 7.302 € (the by-design
+  non-zero LIRPF art. 20 cap on zero rendimiento) since 0021 is
+  always derived non-zero — engine would otherwise flag 0 vs 7.302
+  drift.
+- Imputación rentas inmobiliarias (LIRPF art. 85) lands in Anexo C
+  as casilla 0085 even though it does not feed the aggregation chain.
+  This keeps the Anexo C surface complete and gives Anexo F a clean
+  reference target when it consumes the imputación into base
+  imponible general.
+
+### Next wave
+
+Wave 7 — Anexo D (actividades económicas) for 2024 / 2025 / 2026. The
+biggest single wave: three sub-modules per año (E.D. normal /
+simplificada / módulos), inventory + amortización integration via the
+existing `_amortization.py` and `_inventario.py` foundations, RIRPF
+art. 30 5 %/2.000 € cap on simplificada gastos de difícil
+justificación. Multi-agent review pass triggered after Wave 7 lands
+per the ADR D11 plan.
