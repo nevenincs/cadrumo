@@ -6,7 +6,7 @@ date: '2026-04-28'
 related:
   - "[[2026-04-28-modelo-180-calc-verify-plan]]"
   - "[[2026-04-28-modelo-180-calc-verify-adr]]"
-  - "[[2026-180-rule-delta]]"
+  - "[[2026-04-28-modelo-180-calc-verify-reference]]"
 ---
 
 # `modelo-180-calc-verify` Code Review
@@ -21,7 +21,7 @@ Reviewer identified that summing rounded quarterly retentions could disagree wit
 
 MODEL180-003 | MEDIUM | Vault structure check conflicts with issue-mandated artifact filenames
 
-`vaultspec-core vault check all --feature modelo-180-calc-verify --json` flags `.vault/reference/2026-180-rule-delta.md` and the issue-mandated exec summary filename as non-standard. The reference filename is retained because issue #323 explicitly requires that path. The review audit filename was renamed to the vault-standard `2026-04-28-modelo-180-calc-verify-review-audit.md`.
+Resolution: the Modelo 180 vault artifacts were normalized to vault-standard filenames during the Modelo 200 vault cleanup. `vaultspec-core vault check all` now reports clean structure, links, dangling links, schema, and references.
 
 MODEL180-004 | LOW | `uv.lock` changed during bootstrap
 
