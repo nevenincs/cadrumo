@@ -8,6 +8,7 @@ related:
   - '[[2026-04-27-modelo-100-renta-full-calc-plan]]'
   - '[[2026-04-27-modelo-100-renta-full-calc-research]]'
   - '[[2026-04-28-modelo-100-renta-full-calc-exec]]'
+  - '[[2026-04-28-modelo-100-renta-full-calc-reference]]'
 ---
 
 # `modelo-100-renta-full-calc` feature index
@@ -27,6 +28,10 @@ Auto-generated index of all documents tagged with `#modelo-100-renta-full-calc`.
 ### plan
 
 - `2026-04-27-modelo-100-renta-full-calc-plan` - `modelo-100-renta-full-calc` implementation plan
+
+### reference
+
+- `2026-04-28-modelo-100-renta-full-calc-reference` - `modelo-100-renta-full-calc` reference: rule-delta manifest 2024 / 2025 / 2026
 
 ### research
 
