@@ -1707,10 +1707,13 @@ class TestKentImportsModelo303Declaracion:
 
 
 class TestKentImportsModelo390Declaracion:
-    """Kent imports a Modelo 390 (resumen anual IVA) 2025.
+    """Kent imports a Modelo 390 (resumen anual IVA).
 
-    Year 2025 is the only landed ruleset. Three computed casillas:
-    c104 = c100+c101, c105 = c96-c104, c190 = c105+c108+c109.
+    Three rulesets ship (2024 / 2025 / 2026); the integration class
+    exercises 2025 happy-path / partial-extraction / discrepancy
+    cases. Six computed casillas: c104 = c100+c101, c105 = c96-c104,
+    c190 = c105+c108+c109, c191 = c190-c662, c192 = clamp_pos(c191),
+    c193 = clamp_pos(0-c191).
     """
 
     _LABELS = _MODELO_390_LABELS

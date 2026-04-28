@@ -48,6 +48,20 @@ documented in ``.vault/reference/2026-04-27-modelo-123-rule-delta-reference.md``
 art. 101.4 and RIRPF art. 90 keep the ordinary IRPF capital-income
 retention rate at 19 %, while the cross-tax form verifies aggregate
 rows and the complementaria offset.
+
+**Issue #327 (per-modelo Tier-L bar for Modelo 390).** Modelo 390
+ships year-scoped 2024 / 2025 / 2026 rulesets; the trail is
+documented in ``.vault/reference/2026-04-27-modelo-390-rule-delta-reference.md``.
+LIVA arts. 90 / 91 / 92 / 102 / 107 / 164 and RIVA art. 71.7 are
+unchanged across the three years, so the 2025 and 2026 rulesets are
+structural clones of the 2024 master with year-scoped
+``effective_from`` / ``effective_to`` windows. Modelo 390 is
+structurally an annual aggregator of the four quarterly Modelo 303
+filings: the cumulated casillas (95, 96, 100, 101, 108, 109, 662)
+remain user-supplied and the ruleset only encodes the algebraic
+chain (104 = 100+101, 105 = 96-104, 190 = 105+108+109, 191 = 190-662,
+192 = clamp_pos(191), 193 = clamp_pos(0-191)). Cumulation is
+asserted at the test level, mirroring the Modelo 180 pattern.
 """
 
 from __future__ import annotations
@@ -77,7 +91,9 @@ from .modelo_202_2025 import RULESET as MODELO_202_2025
 from .modelo_303_2024 import RULESET as MODELO_303_2024
 from .modelo_303_2025 import RULESET as MODELO_303_2025
 from .modelo_303_2026 import RULESET as MODELO_303_2026
+from .modelo_390_2024 import RULESET as MODELO_390_2024
 from .modelo_390_2025 import RULESET as MODELO_390_2025
+from .modelo_390_2026 import RULESET as MODELO_390_2026
 
 # Numerically-ascending by modelo code; within a modelo, ascending by
 # effective-from year. Wave 42 M3: prior ordering accidentally trailed
@@ -107,7 +123,9 @@ ALL_RULESETS: tuple[Ruleset, ...] = (
     MODELO_303_2024,
     MODELO_303_2025,
     MODELO_303_2026,
+    MODELO_390_2024,
     MODELO_390_2025,
+    MODELO_390_2026,
 )
 
 __all__ = [
@@ -136,5 +154,7 @@ __all__ = [
     "MODELO_303_2024",
     "MODELO_303_2025",
     "MODELO_303_2026",
+    "MODELO_390_2024",
     "MODELO_390_2025",
+    "MODELO_390_2026",
 ]
