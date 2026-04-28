@@ -29,6 +29,7 @@ related:
   - '[[2026-04-30-secure-persistence-foundation-wave14-adr]]'
   - '[[2026-04-30-secure-persistence-foundation-wave14-audit]]'
   - '[[2026-04-30-secure-persistence-foundation-wave14-research]]'
+  - '[[2026-04-30-secure-persistence-foundation-wave15-16-audit]]'
   - '[[2026-04-30-secure-persistence-foundation-wave5-adr]]'
   - '[[2026-04-30-secure-persistence-foundation-wave5-audit]]'
   - '[[2026-04-30-secure-persistence-foundation-wave5-research]]'
@@ -66,6 +67,7 @@ Auto-generated index of all documents tagged with `#secure-persistence-foundatio
 - `2026-04-30-secure-persistence-foundation-wave12-audit` - `secure-persistence-foundation` audit: wave-12 Argon2id KDF migration
 - `2026-04-30-secure-persistence-foundation-wave13-audit` - `secure-persistence-foundation` audit: wave-13 repository-id validator consolidation
 - `2026-04-30-secure-persistence-foundation-wave14-audit` - `secure-persistence-foundation` audit: wave-14 deferred-items closure
+- `2026-04-30-secure-persistence-foundation-wave15-16-audit` - `secure-persistence-foundation` audit: wave-15+16 review-feedback absorption
 - `2026-04-30-secure-persistence-foundation-wave5-audit` - `secure-persistence-foundation` wave-5 audit gate | (**status:** `passed`)
 - `2026-04-30-secure-persistence-foundation-wave6-audit` - `secure-persistence-foundation` wave-6 audit gate | (**status:** `passed`)
 - `2026-04-30-secure-persistence-foundation-wave7-audit` - `secure-persistence-foundation` wave-7 audit gate | (**status:** `passed`)
