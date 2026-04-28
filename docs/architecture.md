@@ -13,11 +13,11 @@ diagram below is the data-flow story that connects them.
      ↓
 [filing draft engine] ← [casilla DB] ← [manual práctico]
      ↓
-[submission engine] → [browser session] → [AEAT]
-                       ↑
-                 [auth provider]
+[submission preflight + local records]
+     ↑
+[auth provider]
      ↓
-[justificante parser] ← [submission receipt]
+[justificante parser] ← [imported historical receipt]
      ↓
 [status reader] ← [Mis expedientes]
      ↓
@@ -48,25 +48,22 @@ the casilla schema with the structured manual práctico ingested by
 manual reference, so the operator can audit any value back to its
 source paragraph.
 
-**`[submission engine] → [browser session] → [AEAT]`** —
-`aeat.submission` is dry-run by default. It hands the draft to
-`aeat.browser`, which drives a controlled Playwright session against
-AEAT. The submission engine never escalates from dry-run to a real
-submit; the operator has to re-invoke with an explicit confirm flag
-that the dry-run output prints.
+**`[submission preflight + local records]`** — `aeat.submission`
+runs read-only preflight gates and reads historical local submission
+records. It does not own a browser transport to AEAT and it does not
+expose any live submit or dry-run submit command.
 
-**`[auth provider] → [browser session]`** — architecturally,
+**`[auth provider]`** — architecturally,
 `aeat.auth` now hangs off a provider-generic seam so the browser,
 workflow, and submission layers no longer depend on one hard-coded
 authenticator shape. For Kent today, the only shipped login path is
 still the PKCS#12 certificate configured in `env/.env`. Other
 provider kinds are future work, not usable CLI login choices yet.
 
-**`[justificante parser] ← [submission receipt]`** — after a real
-submission AEAT returns a justificante PDF. The submission engine
-hands it to the parser inside `aeat.submission`, which extracts the
-receipt number, the timestamp, and the canonical PDF hash before
-storing them.
+**`[justificante parser] ← [imported historical receipt]`** —
+operators may import justificante PDFs they obtained manually from
+AEAT. The parser extracts the receipt number, timestamp, and canonical
+PDF hash for local reconciliation.
 
 **`[sede walker] ← [Mis expedientes]`** — `aeat.sede` reads
 *Mis expedientes* through the authenticated browser session. It is the

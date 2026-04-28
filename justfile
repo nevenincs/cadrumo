@@ -87,29 +87,18 @@ test-live-read:
 test-domain DOMAIN:
     uv run pytest -m "unit and domain_{{DOMAIN}}"
 
-# Documentation surface for @pytest.mark.live_write tests. Charter #116 R1
-# categorically forbids any automated live write against AEAT Sede
-# Electronica - AEAT has no sandbox and every successful write is a
-# legally binding filing. The collection hook in conftest.py DROPS every
-# live_write item unless all three bypass factors are active:
-#   1. AEAT_LIVE_WRITE_UNSAFE_BYPASS=1
-#   2. AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM="I ACCEPT THE RISK OF FILING A LIVE TAX RETURN"
-#   3. stdin attached to an interactive TTY
-# This recipe does NOT enable a live submission; charter R3 (env gate) and
-# R5 (SubmissionEngine.__init__ runtime refusal) remain the last-line
-# defences. Under default operation the recipe collects zero items.
+# Documentation surface for @pytest.mark.live_write tests. Live AEAT writes
+# are permanently forbidden and collection-dropped with no bypass.
 [unix]
 test-live-write:
     #!/usr/bin/env bash
-    echo "WARNING: @pytest.mark.live_write tests are collection-banned by default (charter #116 R1)."
-    echo "This recipe does NOT enable a live submission. See tests/README.md for the three-factor bypass."
+    echo "WARNING: @pytest.mark.live_write tests are permanently collection-dropped; there is no bypass."
     uv run pytest -m live_write
 
 [windows]
 test-live-write:
     #!pwsh
-    Write-Host "WARNING: @pytest.mark.live_write tests are collection-banned by default (charter #116 R1)."
-    Write-Host "This recipe does NOT enable a live submission. See tests/README.md for the three-factor bypass."
+    Write-Host "WARNING: @pytest.mark.live_write tests are permanently collection-dropped; there is no bypass."
     uv run pytest -m live_write
 
 # Run the unit suite with coverage and enforce the fail-under floor.

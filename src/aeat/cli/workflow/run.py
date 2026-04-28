@@ -1,6 +1,6 @@
-"""``aeat workflow run`` -- run the dry-run workflow for a caller-named target.
+"""``aeat workflow run`` -- run the read-only workflow for a caller-named target.
 
-The command is dry-run-only because live AEAT submission is permanently
+The command is read-only because live AEAT submission is permanently
 forbidden.
 """
 
@@ -41,9 +41,6 @@ def run_cmd(
 ) -> None:
     """Drive the workflow for a named ``(modelo, period)`` target.
 
-    The command always runs the workflow in dry-run mode. Live AEAT
-    submission is permanently forbidden.
-
     Args:
         modelo: Target modelo identifier.
         period: Target period identifier.
@@ -60,7 +57,6 @@ def run_cmd(
         result = run_engine_for_period(
             modelo=modelo,
             period=period,
-            dry_run=True,
             sync_first=sync_first,
             as_json=as_json,
         )
