@@ -112,20 +112,10 @@ def test_zero_boundary_is_clean(name: str, ruleset) -> None:
     # Secondary guard: computed casillas that should be zero (aggregates
     # of zero inputs) actually are zero. For 303's rate-literal casillas
     # (02/05/08), the derived rate is non-zero by design — they are
-    # constants, not aggregates. M100's casilla 0021 is the LIRPF art. 20
-    # reducción which is the constant 7.302 € for rendimientos ≤ 14.852 €
-    # (including zero), per RD-Ley 4/2024. Skip those by-design non-zero
-    # constants.
+    # constants, not aggregates.
     rate_literal_ids = {"02", "05", "08"}  # 303 rate-literal casillas
-    m100_constant_ids = {"0021"}  # full-form M100 art. 20 reducción cap
     for entry in ledger.entries:
         if name.startswith("modelo_303") and entry.casilla_id in rate_literal_ids:
-            continue
-        if (
-            name.startswith("modelo_100.2024")
-            or name.startswith("modelo_100.2025")
-            or name.startswith("modelo_100.2026")
-        ) and entry.casilla_id in m100_constant_ids:
             continue
         assert entry.value == Decimal("0.00") or entry.value == Decimal("0"), (
             f"{name}: {entry.casilla_id} derived {entry.value} on zero input — expected 0"

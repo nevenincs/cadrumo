@@ -89,13 +89,21 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
 # harness to cover the new nodes — a deliberate friction point.
 EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     "modelo_100.2024": {
-        # Issue #317 (megaproject Wave 5 — Anexo B1 only):
-        # - sub_op: 9 = (4 chained sub_ops in casilla 0020 rendimiento neto previo)
-        #             + (4 in piecewise art. 20 reducción: 2 per piece x 2 pieces)
-        #             + (1 in casilla 0022 rendimiento neto reducido).
-        # - mul_div_scalar: 2 = the two `mul_op(lit, clamp_pos(sub_op))` in piece_a
-        #             (slope 1,75) and piece_b (slope 1,14) of the art. 20 reducción.
-        # - No PercentFormula or BracketsFormula nodes yet (Anexo G will add both).
+        # Issue #317 (megaproject Waves 5-10 — Anexos B1, B2, C, D normal/
+        # simplificada/modulos, E, F, G, N composed):
+        # - sub_op: 71 — fanout across all anexo chains: 4 in B1 rendimiento
+        #   previo chain + 4 in B1 art. 20 piecewise + 1 in B1 reducido + 2
+        #   in B2 + 1 in B2 reducido + 3 in C + 9 in D normal + 4 in D
+        #   simplificada + 1 in D modulos + 1 in E saldo neto + 2 in F BLG +
+        #   38 in G (3 progressive_tarifa applications x 6 brackets +
+        #   estatal-minimo + cuota chain + cuota liquida + cuota diferencial).
+        # - mul_div_scalar: 20 — 2 in B1 (slopes 1.75 + 1.14 in art. 20
+        #   piecewise) + 1 in D simplificada (0.05 in 5% cap) + 17 in G
+        #   (rate literals across 3 progressive_tarifa applications).
+        # No PercentFormula or BracketsFormula nodes yet — the per-CCAA
+        # tarifa autonomica progressive scales for Madrid / Cataluna /
+        # Andalucia / Comunitat Valenciana / Castilla y Leon are deferred
+        # to a follow-up wave.
         "sub_op": 71,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,

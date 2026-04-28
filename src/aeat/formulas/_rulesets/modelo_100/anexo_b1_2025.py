@@ -39,6 +39,7 @@ from .._common import (
     formula,
     lit,
     max_op,
+    min_op,
     mul_op,
     ref,
     sub_op,
@@ -189,28 +190,40 @@ CASILLAS = (
 #   piece_a: reducción = clamp_pos(7302 - 1.75 * clamp_pos(rendimiento - 14852))
 #   piece_b: reducción = clamp_pos(2364.34 - 1.14 * clamp_pos(rendimiento - 17673.52))
 # The active piece at any rendimiento level is max_op(piece_a, piece_b);
-# clamp_pos zeroes the negative extrapolation tails. Verified piecewise:
-#   rendimiento = 14852 → 7302 (piece_a active)
+# clamp_pos zeroes the negative extrapolation tails. The outer min_op
+# caps the reducción at the actual rendimiento previo (0020) — LIRPF
+# art. 20 only applies "a los contribuyentes que obtengan rendimientos
+# integros del trabajo" with the implicit precondition rendimiento > 0;
+# without the cap the engine would emit 7.302 EUR even on a zero filing
+# (per the codex code-review M-1 finding).
+#
+# Verified piecewise:
+#   rendimiento = 0       → min(0, max(7302,...)) = 0 (cap protects)
+#   rendimiento = 5000    → min(5000, 7302) = 5000 (cap protects)
+#   rendimiento = 14852   → min(14852, 7302) = 7302 (piece_a active, uncapped)
 #   rendimiento = 17673.52 → 2364.34 (both pieces give 2364.34)
-#   rendimiento = 18000 → 1992.15 (piece_b active)
+#   rendimiento = 18000   → 1992.15 (piece_b active)
 #   rendimiento = 19747.50 → 0 (both pieces give ≤ 0 → clamp_pos = 0)
 #   rendimiento ≥ 19747.50 → 0 (both pieces give ≤ 0 → clamp_pos = 0)
-_REDUCCION_ART20_BODY = max_op(
-    clamp_pos(
-        sub_op(
-            lit("7302.00"),
-            mul_op(
-                lit("1.75"),
-                clamp_pos(sub_op(ref("0020"), lit("14852.00"))),
+_REDUCCION_ART20_BODY = min_op(
+    ref("0020"),
+    max_op(
+        clamp_pos(
+            sub_op(
+                lit("7302.00"),
+                mul_op(
+                    lit("1.75"),
+                    clamp_pos(sub_op(ref("0020"), lit("14852.00"))),
+                ),
             ),
         ),
-    ),
-    clamp_pos(
-        sub_op(
-            lit("2364.34"),
-            mul_op(
-                lit("1.14"),
-                clamp_pos(sub_op(ref("0020"), lit("17673.52"))),
+        clamp_pos(
+            sub_op(
+                lit("2364.34"),
+                mul_op(
+                    lit("1.14"),
+                    clamp_pos(sub_op(ref("0020"), lit("17673.52"))),
+                ),
             ),
         ),
     ),

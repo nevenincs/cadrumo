@@ -13,11 +13,21 @@ substantially:
 
 The DSL has no conditional operator, so the per-CCAA deductions are
 modeled as **15 caller-supplied aggregate-deduction casillas** — one
-per ordinary CCAA (1101..1115). The caller computes the per-deduction
-sub-totals per CCAA per the AEAT manual practico tabla y suplemenenta
-LIRPF art. 46 bis, aggregates them into the relevant CCAA casilla, and
-leaves the other 14 zero. Only ONE CCAA casilla is non-zero in any
-real filing.
+per ordinary CCAA. The caller computes the per-deduction sub-totals per
+CCAA per the AEAT manual practico tabla y suplementa LIRPF art. 46 bis,
+aggregates them into the relevant CCAA casilla, and leaves the other 14
+zero. Only ONE CCAA casilla is non-zero in any real filing.
+
+**Casilla numbering rationale (1101-1115)**: the BOE-published M100
+casilla space tops out around the 0900s for autonomic deductions; the
+1101-1115 range sits ABOVE that range and is project-internal (not
+reflected on the AEAT printed form). This avoids collision with any
+official BOE casilla. The autonomic-deduction breakdown that AEAT
+prints uses per-CCAA per-deduction casilla IDs in the 0700-0900 range
+that vary per Comunidad — modeling those exhaustively would require
+~336 casillas/year (per the rule-delta reference manifest's per-CCAA
+count summary) and is deferred to a follow-up wave; this aggregate
+shape is the minimum viable encoding for cross-anexo arithmetic.
 
 The state-level casilla 0622 (deducciones autonomicas total, consumed
 by Anexo G via 0630 = 0620 + 0622) is computed here as the sum of all
