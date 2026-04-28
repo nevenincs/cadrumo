@@ -44,6 +44,9 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
     registry = get_registry()
     ids = sorted(r.ruleset_id for r in registry.rulesets)
     assert ids == [
+        "modelo_100.2024",
+        "modelo_100.2025",
+        "modelo_100.2026",
         "modelo_100.summary.2025",
         "modelo_111.2024",
         "modelo_111.2025",
@@ -189,20 +192,26 @@ def test_resolve_modelo_100_summary_via_variant() -> None:
 
 
 @pytest.mark.unit
-def test_resolve_default_variant_misses_summary() -> None:
-    """Wave 47: default variant does NOT resolve the summary-only ruleset.
+def test_resolve_default_variant_returns_full_form_not_summary() -> None:
+    """Issue #317: default variant resolves to the full-form ruleset.
 
-    Absent a canonical (default-variant) Modelo 100 ruleset, resolving
-    without specifying ``variant`` must raise. This proves the axis
-    actually partitions the registry — otherwise the summary ruleset
-    would leak through default-variant lookups.
+    Default-variant lookup now binds to the full-form
+    ``modelo_100.<year>`` ruleset (landed by the M100 RENTA megaproject),
+    NOT the partial ``modelo_100.summary.2025``. The summary variant
+    remains reachable explicitly via ``variant="summary"``.
     """
+    from ._rulesets.modelo_100_2025 import RULESET as MODELO_100_2025
+    from ._rulesets.modelo_100_summary_2025 import (
+        RULESET as MODELO_100_SUMMARY_2025,
+    )
+
     registry = get_registry()
-    with pytest.raises(MissingRulesetError):
-        registry.resolve(
-            modelo=ModeloCode.MODELO_100,
-            period=FiscalPeriod(year=2025),
-        )
+    ruleset = registry.resolve(
+        modelo=ModeloCode.MODELO_100,
+        period=FiscalPeriod(year=2025),
+    )
+    assert ruleset is MODELO_100_2025
+    assert ruleset is not MODELO_100_SUMMARY_2025
 
 
 @pytest.mark.unit
