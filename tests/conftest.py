@@ -139,9 +139,9 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
     Ordering: the nine-marker contract (``_apply_marker_contract``) runs
     first so any taxonomy violation short-circuits with a
-    :class:`pytest.UsageError` and so ``live_write`` items without the
-    three-factor bypass are dropped before the banned-import and opt-in
-    passes operate on the surviving items.
+    :class:`pytest.UsageError` and so ``live_write`` items are dropped
+    before the banned-import and opt-in passes operate on the surviving
+    items.
 
     Args:
         config: The active :class:`pytest.Config` for the session.

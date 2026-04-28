@@ -34,21 +34,21 @@ next operator-facing release.
 > no CI badge by design.
 
 Spanish tax authority (AEAT) automation for autónomos: fetch live
-filing status, build typed filing drafts, dry-run and submit, all from
-the CLI.
+filing status, build typed filing drafts, and export/verify filing
+files from the CLI. The project does not submit filings to AEAT.
 
 ## What it does
 
 - **Authenticates against AEAT** with a real PKCS#12 client certificate
-  (FNMT-RCM and other accepted CAs) — no Cl@ve / DNIe yet.
+  (FNMT-RCM and other accepted CAs) or Cl@ve Movil where configured.
 - **Reads your filing status** directly from *Mis expedientes* and
   *Mis notificaciones* via a controlled headless browser session.
 - **Builds typed filing drafts** for the supported modelos by joining
   the AEAT casilla catalogue, the manual práctico, and the live
   normative corpus.
-- **Submits filings dry-run by default**, with the real submission
-  gated behind an explicit confirmation. The dry-run-by-default rule
-  is a feature, not a bug.
+- **Exports and verifies filing files** for Kent to upload manually in
+  AEAT's official portal. There is no live-submit or dry-run-submit CLI
+  path.
 - **Self-heals local state** by reconciling AEAT's view with the
   on-disk store after every sync, so the next run always starts from
   ground truth.
@@ -57,10 +57,9 @@ the CLI.
 
 - It is **not a tax adviser** and **not a substitute** for AEAT's
   official tools or for professional tax advice.
-- It will **never submit a filing without explicit confirmation** —
-  dry-run is the default, real submission is opt-in per invocation.
-- It does **not yet** support Cl@ve, DNIe, or any non-certificate
-  authentication path.
+- It will **never submit a filing to AEAT**. Live submission is not
+  hidden behind a confirmation flag; the code path is absent.
+- It does **not yet** support DNIe.
 - It is **not multi-tenant** — one workstation, one autónomo, one
   certificate at a time.
 - It does **not** automate around captchas or other anti-bot defences;
@@ -112,7 +111,7 @@ The on-main subpackages under `src/aeat/`:
 | `aeat.manuals`         | Manual práctico ingestion and structured extraction.                      |
 | `aeat.deadlines`       | Deadline engine — what's due, when, with what tolerance.                  |
 | `aeat.filing`          | Filing draft engine — assembles a typed draft from manuals + casillas.    |
-| `aeat.submission`      | Submission engine — dry-run by default, explicit confirm to send.         |
+| `aeat.submission`      | Read-only preflight, export/verify helpers, and local filing records.     |
 | `aeat.status`          | *Mis expedientes* reader — the authoritative AEAT-side state.             |
 | `aeat.inbox`           | *Mis notificaciones* reader — pending notifications and acknowledgements. |
 | `aeat.sync`            | Self-healing reconciliation between AEAT-side state and local storage.    |
@@ -349,7 +348,7 @@ just lint           # ruff
 just fmt            # ruff format
 just typecheck      # ty
 just test           # pytest, default skip-live
-just test-live      # pytest -m live
+just test-live      # pytest -m "unit or live_read"
 just hooks          # prek run --all-files
 ```
 
@@ -370,8 +369,8 @@ Apache 2.0 — see [LICENSE](LICENSE).
 Tax automation is legally significant. **This project is not a
 substitute for professional tax advice and is not affiliated with the
 Agencia Estatal de Administración Tributaria (AEAT).** Every
-submission path is dry-run by default; the real submission requires an
-explicit, per-invocation confirmation by the operator. Use at your own
-risk. The authors accept no liability for filings produced or actions
-taken with this software. If in doubt, consult a qualified tax
-professional and use AEAT's official tools.
+live AEAT submission is permanently forbidden in this codebase; Kent
+uploads any exported filing through AEAT's official tools himself. Use
+at your own risk. The authors accept no liability for filings produced
+or actions taken with this software. If in doubt, consult a qualified
+tax professional and use AEAT's official tools.

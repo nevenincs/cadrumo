@@ -2,8 +2,8 @@
 
 These tests exercise the production helper path rather than the
 ``set_test_hooks`` seam, using a real profile JSON file, the
-runtime filing schema provider, and the dry-run-safe submission
-engine helper already shipped in the repo.
+runtime filing schema provider, and the read-only submission
+preflight helper already shipped in the repo.
 """
 
 from __future__ import annotations

@@ -28,6 +28,7 @@ from ._rulesets.modelo_131_2025 import RULESET as MODELO_131_2025
 from ._rulesets.modelo_131_2026 import RULESET as MODELO_131_2026
 from ._rulesets.modelo_180_2024 import RULESET as MODELO_180_2024
 from ._rulesets.modelo_180_2025 import RULESET as MODELO_180_2025
+from ._rulesets.modelo_180_2026 import RULESET as MODELO_180_2026
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -61,6 +62,7 @@ def test_registry_ships_modelo_130_and_303_rulesets() -> None:
         "modelo_131.2026",
         "modelo_180.2024",
         "modelo_180.2025",
+        "modelo_180.2026",
         "modelo_200.2024",
         "modelo_202.2025",
         "modelo_303.2024",
@@ -114,6 +116,17 @@ def test_resolve_180_backfill_binds_2024() -> None:
     )
     assert ruleset_2024 is MODELO_180_2024
     assert ruleset_2025 is MODELO_180_2025
+
+
+@pytest.mark.unit
+def test_resolve_180_binds_2026() -> None:
+    """Issue #323: Modelo 180 resolves for 2026 annual filings."""
+    registry = get_registry()
+    ruleset = registry.resolve(
+        modelo=ModeloCode.MODELO_180,
+        period=FiscalPeriod(year=2026),
+    )
+    assert ruleset is MODELO_180_2026
 
 
 @pytest.mark.unit
