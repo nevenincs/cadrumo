@@ -94,7 +94,7 @@ from ._materialisation import (
     materialise_secret,
     override_secret_store,
 )
-from ._path_safety import safe_record_path, safe_subpath
+from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 from ._redaction import (
     default_rules,
     default_rules_for,
@@ -243,6 +243,7 @@ __all__ = [
     "rotate_master_key",
     "round_trip_migrations",
     "safe_record_path",
+    "safe_repository_id",
     "safe_subpath",
     "save_corpus_manifest",
     "save_encrypted_envelope",

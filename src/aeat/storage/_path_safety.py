@@ -74,7 +74,53 @@ def safe_record_path(root: Path, record_id: str, *, context: str) -> Path:
         raise PathContainmentError(str(exc)) from exc
 
 
+def safe_repository_id(token: str, *, context: str) -> str:
+    """Reject repository-id tokens that would compose into an unsafe filename.
+
+    Repositories store records as ``<store_dir>/<token>.envelope.json``.
+    A token containing a path separator, a dot-prefix, or one of the
+    relative-path tokens (``"."`` / ``".."``) would either escape the
+    store dir or shadow a hidden file. This helper is the early-rejection
+    layer at the public-method boundary; the substrate's
+    :func:`safe_record_path` enforces containment downstream.
+
+    The validation is intentionally minimal — non-empty, no path
+    separator, no dot-token. It does not claim knowledge of any
+    domain-specific id alphabet (UUIDs, AEAT CSVs, modelo numerics,
+    etc.) so a single helper covers every governance repository.
+
+    Args:
+        token: The free-string id supplied by the repository caller.
+        context: Stable label (``"submission_id"`` / ``"draft_id"`` /
+            etc.) embedded in the error message. Lets the failure
+            message remain byte-identical to the per-domain
+            validators it replaces.
+
+    Returns:
+        ``token`` unchanged. Returning the validated value lets the
+        helper appear inline (``safe_repository_id(record_id, ...)``
+        as both check and pass-through).
+
+    Raises:
+        PathContainmentError: When ``token`` is empty, contains a path
+            separator, is the bare ``.`` / ``..`` token, or starts
+            with a dot.
+    """
+    if not token:
+        raise PathContainmentError(f"{context} must be non-empty")
+    if "/" in token or "\\" in token:
+        raise PathContainmentError(
+            f"{context} must not contain path separators: {token!r}",
+        )
+    if token in {".", ".."} or token.startswith("."):
+        raise PathContainmentError(
+            f"{context} must not be a relative-path token: {token!r}",
+        )
+    return token
+
+
 __all__ = [
     "safe_record_path",
+    "safe_repository_id",
     "safe_subpath",
 ]

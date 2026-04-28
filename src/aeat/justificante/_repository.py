@@ -34,6 +34,7 @@ from ..storage import (
     SensitivityClass,
     exclusive_file_lock,
     load_encrypted_envelope,
+    safe_repository_id,
     save_encrypted_envelope,
 )
 from ..storage._encrypted_columns import _resolve_master_key_provider
@@ -86,12 +87,12 @@ class JustificanteRepository:
 
     def envelope_path_for(self, csv: str) -> Path:
         """Return the canonical envelope path for a justificante CSV."""
-        _validate_csv(csv)
+        safe_repository_id(csv, context="csv")
         return self._store_dir / f"{csv}{_JUSTIFICANTE_ENVELOPE_SUFFIX}"
 
     def lock_target_for(self, csv: str) -> Path:
         """Return the canonical lock-sidecar path for a justificante CSV."""
-        _validate_csv(csv)
+        safe_repository_id(csv, context="csv")
         return self._store_dir / f"{csv}{_JUSTIFICANTE_LOCK_SUFFIX}"
 
     def load(self, csv: str) -> Justificante | None:
@@ -251,21 +252,6 @@ def migrate_legacy_justificantes_to_repository(
         errors=errors,
         store_dir=str(repository.store_dir.resolve()),
     )
-
-
-def _validate_csv(csv: str) -> None:
-    """Reject CSV strings that would compose into an unsafe filename.
-
-    AEAT CSVs are 16-char alphanumeric strings in practice, but the
-    schema permits 4-64 chars. Block path-separator and dot-prefix
-    tokens before composition into ``<store_dir>/<csv>.envelope.json``.
-    """
-    if not csv:
-        raise ValueError("csv must be non-empty")
-    if "/" in csv or "\\" in csv:
-        raise ValueError(f"csv must not contain path separators: {csv!r}")
-    if csv in {".", ".."} or csv.startswith("."):
-        raise ValueError(f"csv must not be a relative-path token: {csv!r}")
 
 
 __all__ = [

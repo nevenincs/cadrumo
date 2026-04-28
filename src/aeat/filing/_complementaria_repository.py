@@ -33,6 +33,7 @@ from ..storage import (
     SensitivityClass,
     exclusive_file_lock,
     load_encrypted_envelope,
+    safe_repository_id,
     save_encrypted_envelope,
 )
 from ..storage._encrypted_columns import _resolve_master_key_provider
@@ -88,12 +89,12 @@ class FilingAmendmentRepository:
 
     def envelope_path_for(self, amendment_id: str) -> Path:
         """Return the canonical envelope path for ``amendment_id``."""
-        _validate_amendment_id(amendment_id)
+        safe_repository_id(amendment_id, context="amendment_id")
         return self._store_dir / f"{amendment_id}{_AMENDMENT_ENVELOPE_SUFFIX}"
 
     def lock_target_for(self, amendment_id: str) -> Path:
         """Return the canonical lock-sidecar path for ``amendment_id``."""
-        _validate_amendment_id(amendment_id)
+        safe_repository_id(amendment_id, context="amendment_id")
         return self._store_dir / f"{amendment_id}{_AMENDMENT_LOCK_SUFFIX}"
 
     def load(self, amendment_id: str) -> FilingAmendment | None:
@@ -258,16 +259,6 @@ def migrate_legacy_amendments_to_repository(
         errors=errors,
         store_dir=str(repository.store_dir.resolve()),
     )
-
-
-def _validate_amendment_id(amendment_id: str) -> None:
-    """Reject amendment ids that would compose into an unsafe filename."""
-    if not amendment_id:
-        raise ValueError("amendment_id must be non-empty")
-    if "/" in amendment_id or "\\" in amendment_id:
-        raise ValueError(f"amendment_id must not contain path separators: {amendment_id!r}")
-    if amendment_id in {".", ".."} or amendment_id.startswith("."):
-        raise ValueError(f"amendment_id must not be a relative-path token: {amendment_id!r}")
 
 
 __all__ = [
