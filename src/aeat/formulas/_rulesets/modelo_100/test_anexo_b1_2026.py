@@ -64,7 +64,11 @@ class TestModelo100AnexoB1:
         assert report_2025.is_clean()
         assert report_2026.is_clean()
 
-    def test_ruleset_shape(self) -> None:
+    def test_b1_casillas_present(self) -> None:
+        """B1 casillas must remain in the aggregated full-form ruleset."""
         computed = {c.casilla_id for c in MODELO_100_2026.casillas if c.computed}
-        assert computed == {"0020", "0021", "0022"}
-        assert len(MODELO_100_2026.formulas) == 3
+        assert {"0020", "0021", "0022"}.issubset(computed)
+        formula_ids = {fd.formula_id for fd in MODELO_100_2026.formulas}
+        assert "modelo_100.2026.b1.rendimiento_neto_previo" in formula_ids
+        assert "modelo_100.2026.b1.reduccion_art_20" in formula_ids
+        assert "modelo_100.2026.b1.rendimiento_neto_reducido" in formula_ids

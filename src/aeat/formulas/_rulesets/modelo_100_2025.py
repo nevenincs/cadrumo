@@ -6,8 +6,10 @@ the public ``RULESET`` constant registered at the default variant slot
 ``summary``) — the existing summary ruleset's docstring explicitly
 reserves the default slot for this full-form expansion.
 
-Wave 5 (megaproject `#317`) lands Anexo B1 only. Subsequent waves
-extend the aggregator with B2, C, D (3 régimenes), E, F, G, Ñ.
+Composition: Anexos B1 (rendimientos del trabajo) + B2 (rendimientos
+del capital mobiliario) + C (rendimientos del capital inmobiliario)
+land in this initial wave set. Subsequent waves extend the aggregator
+with D (3 régimenes), E, F, G, Ñ.
 """
 
 from __future__ import annotations
@@ -16,16 +18,27 @@ from datetime import date
 
 from ...models import ModeloCode
 from .._ruleset import Ruleset
-from .modelo_100 import anexo_b1_2025
+from .modelo_100 import anexo_b1_2025, anexo_b2_2025, anexo_c_2025
 
 _EFFECTIVE_FROM = date(2025, 1, 1)
 _EFFECTIVE_TO = date(2025, 12, 31)
 
 
-_CASILLAS = anexo_b1_2025.CASILLAS
-_FORMULAS = anexo_b1_2025.FORMULAS
-_PARAMETERS = anexo_b1_2025.PARAMETERS
-_CITATIONS = anexo_b1_2025.CITATIONS
+_CASILLAS = (
+    *anexo_b1_2025.CASILLAS,
+    *anexo_b2_2025.CASILLAS,
+    *anexo_c_2025.CASILLAS,
+)
+_FORMULAS = (
+    *anexo_b1_2025.FORMULAS,
+    *anexo_b2_2025.FORMULAS,
+    *anexo_c_2025.FORMULAS,
+)
+_CITATIONS = (
+    *anexo_b1_2025.CITATIONS,
+    *anexo_b2_2025.CITATIONS,
+    *anexo_c_2025.CITATIONS,
+)
 
 
 RULESET: Ruleset = Ruleset(
@@ -35,6 +48,6 @@ RULESET: Ruleset = Ruleset(
     effective_to=_EFFECTIVE_TO,
     casillas=_CASILLAS,
     formulas=_FORMULAS,
-    parameters=_PARAMETERS,
+    parameters=anexo_b1_2025.PARAMETERS,
     legal_citations=_CITATIONS,
 )
