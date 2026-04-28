@@ -12,8 +12,8 @@ date: '2026-04-28'
 # Related documents as quoted wiki-links - MUST link to parent PLAN
 # (e.g., "[[2026-02-04-feature-plan]]")
 related:
-  - "[[2026-04-28-secure-persistence-foundation-adr]]"
-  - "[[2026-04-28-secure-persistence-foundation-research]]"
+  - "[[2026-04-30-secure-persistence-foundation-wave12-adr]]"
+  - "[[2026-04-30-secure-persistence-foundation-wave12-research]]"
   - "[[2026-04-27-secure-persistence-foundation-exec]]"
 ---
 

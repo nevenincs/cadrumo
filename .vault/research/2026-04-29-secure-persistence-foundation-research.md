@@ -13,9 +13,8 @@ date: '2026-04-29'
 # (e.g., "[[2026-02-04-feature-plan]]")
 related:
   - "[[2026-04-28-secure-persistence-foundation-exec]]"
-  - "[[2026-04-28-secure-persistence-foundation-adr]]"
+  - "[[2026-04-30-secure-persistence-foundation-wave12-adr]]"
   - "[[2026-04-27-secure-persistence-foundation-research]]"
-  - "[[2026-04-27-security-storage-audit-audit]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
