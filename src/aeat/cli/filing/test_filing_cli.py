@@ -230,7 +230,8 @@ class TestFilingCLI:
         validate_result = runner.invoke(app, ["filing", "validate", str(draft_path)])
         assert validate_result.exit_code == 0, validate_result.output
         assert "aeat submission preflight" in validate_result.output
-        assert "aeat submission dry-run" in validate_result.output
+        assert "aeat submission export" in validate_result.output
+        assert "aeat submission dry-run" not in validate_result.output
 
         refreshed = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
         assert refreshed.status is FilingDraftStatus.APPROVED
@@ -305,7 +306,7 @@ class TestFilingCLI:
         assert not list(drafts_dir.glob("*.json"))
         assert not list(submissions_dir.glob("*.json"))
 
-    def test_complementaria_build_and_submit_dry_run(
+    def test_complementaria_build_has_no_submit_followup(
         self,
         tmp_path: Path,
         drafts_dir: Path,
@@ -330,20 +331,13 @@ class TestFilingCLI:
         assert build_result.exit_code == 0, build_result.output
         assert "aeat review show" in build_result.output
         assert "aeat review approve" in build_result.output
+        assert "submit" not in build_result.output.lower()
         amendment_files = sorted((submissions_dir / "amendments").glob("*.json"))
         assert len(amendment_files) == 1
-        amendment_id = amendment_files[0].stem
         amended_draft_files = [path for path in drafts_dir.glob("*.json") if path.name not in draft_files_before]
         assert len(amended_draft_files) == 1
-        amended_draft = FilingDraft.model_validate_json(amended_draft_files[0].read_text(encoding="utf-8"))
-        approve_result = runner.invoke(app, ["review", "approve", amended_draft.draft_id, "--yes"])
-        assert approve_result.exit_code == 0, approve_result.output
 
-        submit_result = runner.invoke(app, ["filing", "complementaria", "submit", amendment_id])
-        assert submit_result.exit_code == 0, submit_result.output
-        assert "dry-run amendment submission OK" in submit_result.output
-
-    def test_complementaria_submit_rejects_removed_live_flag(
+    def test_complementaria_submit_command_is_absent(
         self,
         tmp_path: Path,
         drafts_dir: Path,
@@ -366,15 +360,11 @@ class TestFilingCLI:
         )
         assert build_result.exit_code == 0, build_result.output
         amendment_id = next((submissions_dir / "amendments").glob("*.json")).stem
-        amended_draft_files = [path for path in drafts_dir.glob("*.json") if path.name not in draft_files_before]
-        assert len(amended_draft_files) == 1
-        amended_draft = FilingDraft.model_validate_json(amended_draft_files[0].read_text(encoding="utf-8"))
-        approve_result = runner.invoke(app, ["review", "approve", amended_draft.draft_id, "--yes"])
-        assert approve_result.exit_code == 0, approve_result.output
+        assert [path for path in drafts_dir.glob("*.json") if path.name not in draft_files_before]
 
         submit_result = runner.invoke(
             app,
-            ["filing", "complementaria", "submit", amendment_id, "--live"],
+            ["filing", "complementaria", "submit", amendment_id],
         )
         assert submit_result.exit_code == 2, submit_result.output
-        assert "no such option" in submit_result.output.lower()
+        assert "no such command" in submit_result.output.lower()

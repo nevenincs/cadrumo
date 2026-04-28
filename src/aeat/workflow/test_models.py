@@ -20,9 +20,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
 
 class TestWorkflowStageOrdering:
-    """The ten-stage enum must stay exact and ordered."""
+    """The read-only stage enum must stay exact and ordered."""
 
-    def test_exact_ten_stages(self) -> None:
+    def test_exact_read_only_stages(self) -> None:
         """Every stage declared in the ADR is present exactly once."""
         expected = (
             "LOADING_PROFILE",
@@ -32,7 +32,6 @@ class TestWorkflowStageOrdering:
             "BUILDING_DRAFT",
             "VALIDATING_DRAFT",
             "RUNNING_PREFLIGHT",
-            "DRY_RUN_SUBMIT",
             "DONE",
             "ABORTED",
         )
@@ -192,7 +191,7 @@ class TestWorkflowResultTerminal:
             aborted_reason=None,
             obligation=None,
             draft_id="draft-1",
-            submission_id="sub-1",
+            submission_id=None,
             steps=(self._step(),),
             summary={"en": "ok"},
         )

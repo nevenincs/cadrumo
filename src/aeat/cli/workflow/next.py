@@ -1,6 +1,6 @@
-"""``aeat workflow next`` -- run the dry-run workflow for the next obligation.
+"""``aeat workflow next`` -- run the read-only workflow for the next obligation.
 
-The command is dry-run-only because live AEAT submission is permanently
+The command is read-only because live AEAT submission is permanently
 forbidden.
 """
 
@@ -39,9 +39,6 @@ def next_cmd(
 ) -> None:
     """Drive the workflow for the next pending obligation.
 
-    The command always runs the workflow in dry-run mode. Live AEAT
-    submission is permanently forbidden.
-
     Args:
         sync_first: Whether the sync stage should run.
         as_json: When ``True``, print the :class:`WorkflowResult` as JSON.
@@ -52,7 +49,6 @@ def next_cmd(
     }
     with cli_run_context(entrypoint="aeat workflow next", arguments=arguments):
         result = run_engine_next(
-            dry_run=True,
             sync_first=sync_first,
             as_json=as_json,
         )

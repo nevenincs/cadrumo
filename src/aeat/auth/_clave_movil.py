@@ -916,18 +916,15 @@ class ClaveMovilAuthProvider:
     ) -> None:
         """Poll until the browser reaches ``target_path`` or timeout.
 
-        After push approval AEAT commonly interposes
-        ``/wlpl/OVCT-CXEW/DialogoRepresentacion`` — the representation-
-        consent dispatcher — which prompts "actuar en nombre propio"
-        vs. "actuar como representante". The ``#propio`` radio is
-        checked by default; submitting the form forwards to ``ref``
-        (our ``target_path``). This poll loop detects that URL and
-        submits the form, then keeps polling for the final landing.
+        After push approval AEAT may interpose
+        ``/wlpl/OVCT-CXEW/DialogoRepresentacion`` — the representation
+        dispatcher. That page requires a remote form submission to choose
+        an acting capacity, so the provider refuses it instead of
+        auto-submitting on Kent's behalf.
         """
         from urllib.parse import urlsplit
 
         deadline = time.perf_counter() + timeout_ms / 1000
-        dispatcher_handled = False
         while time.perf_counter() < deadline:
             current = getattr(page, "url", "") or ""
             if target_path in current and "SelectorAccesos" not in current:
@@ -939,32 +936,13 @@ class ClaveMovilAuthProvider:
                 current_path = urlsplit(current).path
             except Exception:
                 current_path = ""
-            if not dispatcher_handled and "DialogoRepresentacion" in current_path and "SelectorAccesos" not in current:
-                dispatcher_handled = await self._submit_representation_dispatcher(page)
+            if "DialogoRepresentacion" in current_path and "SelectorAccesos" not in current:
+                raise AeatLoginAssertionError(
+                    "AEAT requested representation selection after Cl@ve approval. "
+                    "The provider will not submit representation forms automatically."
+                )
             await asyncio.sleep(0.5)
         raise TimeoutError(f"page did not navigate to {target_path!r} within {timeout_ms}ms")
-
-    @staticmethod
-    async def _submit_representation_dispatcher(page: BrowserPageLike) -> bool:
-        """Submit the ``#repForm`` (defaulted to 'Actuar en nombre propio').
-
-        Returns True when the click fired so the caller does not retry.
-        Captured live at ``/wlpl/OVCT-CXEW/DialogoRepresentacion`` on
-        2026-04-24; the form is GET-based, the ``#propio`` radio is
-        checked by default, and the hidden ``ref`` field carries the
-        target path. Clicking the form's submit button is sufficient
-        to advance.
-        """
-        click = getattr(page, "click", None)
-        if click is None:
-            return False
-        log.info("ClaveMovilAuthProvider: DialogoRepresentacion — submitting #repForm (nombre propio)")
-        try:
-            await click("form#repForm button[type=submit]", timeout=5_000)
-        except Exception as exc:
-            log.warning("ClaveMovilAuthProvider: DialogoRepresentacion submit failed: %s", exc)
-            return False
-        return True
 
 
 __all__ = [
