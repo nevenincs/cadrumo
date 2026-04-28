@@ -144,6 +144,13 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     :class:`CipherEnvelope` on disk under HKDF context
     ``aeat.setup.profile.v1``.
 
+    On a brand-new installation the master key is minted as a side
+    effect of the first ``save_encrypted_envelope`` call; this helper
+    detects that case and emits a one-line nudge pointing the operator
+    at ``aeat security provision --force`` so they can generate a
+    recovery key. Existing installations (where ``master.kdf`` already
+    exists, or the keyring entry is populated) skip the nudge.
+
     Args:
         answers: Validated :class:`SetupAnswers` payload.
         target: Absolute path where the profile envelope should be
@@ -153,6 +160,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     # does not pull Alembic plugin discovery into every CLI command's
     # startup path. Mirrors the json-pipe-safety discipline applied to
     # every other governed-persistence consumer.
+    from ..config import load_settings
     from ..storage import (
         Envelope,
         SensitivityClass,
@@ -160,6 +168,15 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         save_encrypted_envelope,
     )
     from ..storage._encrypted_columns import _resolve_master_key_provider
+
+    # Detect first-run state so we can surface a recovery-key nudge
+    # after the silent mint that save_encrypted_envelope triggers. The
+    # check looks at file-fallback artefacts; keyring-only stores have
+    # no on-disk signal and are silent by design (the OS keychain is
+    # the trust boundary).
+    settings = load_settings()
+    secret_dir = Path(settings.aeat_secret_store_dir)
+    pre_mint_state_present = (secret_dir / "master.kdf").exists()
 
     profile = AutonomoProfile(
         tax_id=answers.tax_id,
@@ -192,6 +209,25 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
     )
     log.info("setup: wrote AutonomoProfile envelope to %s", target)
+
+    # Recovery-key nudge: if save_encrypted_envelope just minted a new
+    # master key (signalled by the post-write existence of master.kdf
+    # when no master.kdf existed pre-write), the operator now has an
+    # encrypted profile but no recovery wrapping. Without a recovery
+    # key, a forgotten passphrase / lost keychain means losing every
+    # persisted record.
+    if (
+        not pre_mint_state_present
+        and (secret_dir / "master.kdf").exists()
+        and not (secret_dir / "master.recovery.key").exists()
+    ):
+        log.warning(
+            "setup: a master key was just minted at %s but no recovery "
+            "wrapping exists. Run `aeat security provision --force` to "
+            "generate a 24-word recovery key now — without it, a forgotten "
+            "passphrase or lost keychain means losing every persisted record.",
+            secret_dir,
+        )
 
 
 def load_profile_envelope(target: Path) -> AutonomoProfile:
