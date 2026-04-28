@@ -175,7 +175,7 @@ app.add_typer(
 app.add_typer(
     submission_module.app,
     name="submission",
-    help="Preflight, dry-run, export, and inspect AEAT filing attempts; the tool never submits to AEAT.",
+    help="Preflight, export, verify, and inspect local AEAT filing records; the tool never writes to AEAT.",
 )
 app.add_typer(
     review_module.app,
@@ -190,7 +190,7 @@ app.add_typer(
 app.add_typer(
     run_module.app,
     name="run",
-    help="Run-trace inspection and deterministic dry-run replay (#99).",
+    help="Run-trace inspection and deterministic read-only replay (#99).",
 )
 app.add_typer(
     justificante_module.app,

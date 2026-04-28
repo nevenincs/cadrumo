@@ -2,7 +2,7 @@
 
 This module is the single source of truth for which Drive / Sheets /
 Docs / Forms fixtures the project provisions for its
-``@pytest.mark.live`` suite. The catalogue lives as a Python literal so
+``@pytest.mark.live_read`` suite. The catalogue lives as a Python literal so
 code review and diff are trivial, and every entry is a strict
 pydantic v2 model per the project-wide pydantic mandate.
 

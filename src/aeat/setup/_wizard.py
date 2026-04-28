@@ -2,7 +2,7 @@
 
 The wizard walks through every :class:`SetupStep` in order, calling
 into the :class:`Prompter` Protocol for interactive answers and the
-:class:`FirstRunRunner` Protocol for the optional workflow dry-run
+:class:`FirstRunRunner` Protocol for the optional read-only workflow check
 (#59). In non-interactive mode, a fully-populated :class:`SetupAnswers`
 short-circuits every prompt.
 """
@@ -67,7 +67,7 @@ class SetupWizard:
                 interactive mode.
             prompter: Interactive-mode only. The prompter driving the
                 state machine.
-            first_run_runner: Optional workflow-engine dry-run (#59).
+            first_run_runner: Optional read-only workflow check (#59).
                 If ``None``, the ``FIRST_RUN`` step is skipped cleanly.
             now: Clock injection point. Defaults to
                 ``datetime.now(UTC)``.
@@ -141,11 +141,11 @@ class SetupWizard:
             skipped.append(SetupStep.FIRST_RUN)
         else:
             try:
-                summary = first_run_runner.dry_run()
-                log.info("setup: first-run dry-run summary: %s", summary)
+                summary = first_run_runner.run_read_only()
+                log.info("setup: first-run read-only summary: %s", summary)
                 completed.append(SetupStep.FIRST_RUN)
             except Exception as exc:  # pragma: no cover - runner-specific
-                log.warning("setup: first-run dry-run failed: %s", exc)
+                log.warning("setup: first-run read-only check failed: %s", exc)
                 skipped.append(SetupStep.FIRST_RUN)
 
         # DONE.
