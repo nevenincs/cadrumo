@@ -32,6 +32,7 @@ from ..storage import (
     SensitivityClass,
     exclusive_file_lock,
     load_encrypted_envelope,
+    safe_repository_id,
     save_encrypted_envelope,
 )
 from ..storage._encrypted_columns import _resolve_master_key_provider
@@ -95,12 +96,12 @@ class FilingDraftRepository:
         Returns:
             ``<store_dir>/<draft_id>.envelope.json``.
         """
-        _validate_draft_id(draft_id)
+        safe_repository_id(draft_id, context="draft_id")
         return self._store_dir / f"{draft_id}{_DRAFT_ENVELOPE_SUFFIX}"
 
     def lock_target_for(self, draft_id: str) -> Path:
         """Return the canonical lock-sidecar path for ``draft_id``."""
-        _validate_draft_id(draft_id)
+        safe_repository_id(draft_id, context="draft_id")
         return self._store_dir / f"{draft_id}{_DRAFT_LOCK_SUFFIX}"
 
     def load(self, draft_id: str) -> FilingDraft | None:
@@ -287,24 +288,6 @@ def migrate_legacy_drafts_to_repository(
         errors=errors,
         store_dir=str(repository.store_dir.resolve()),
     )
-
-
-def _validate_draft_id(draft_id: str) -> None:
-    """Reject draft ids that would compose into an unsafe filename.
-
-    The substrate's path-containment helpers already block traversal,
-    but the per-draft envelope path is composed by string concatenation
-    of ``<store_dir>/<draft_id>.envelope.json``. A draft id containing a
-    path separator or starting with a dot would therefore land outside
-    the store dir or shadow a hidden file. Treat that as a hard refusal
-    rather than relying on the OS-level resolution to fail.
-    """
-    if not draft_id:
-        raise ValueError("draft_id must be non-empty")
-    if "/" in draft_id or "\\" in draft_id:
-        raise ValueError(f"draft_id must not contain path separators: {draft_id!r}")
-    if draft_id in {".", ".."} or draft_id.startswith("."):
-        raise ValueError(f"draft_id must not be a relative-path token: {draft_id!r}")
 
 
 __all__ = [

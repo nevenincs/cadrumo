@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from . import PathContainmentError
-from ._path_safety import safe_record_path, safe_subpath
+from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -63,6 +63,50 @@ class TestSafeRecordPath:
     def test_overly_long_token_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(PathContainmentError):
             safe_record_path(tmp_path, "a" * 200, context="test")
+
+
+class TestSafeRepositoryId:
+    """``safe_repository_id`` rejects tokens that would compose into an unsafe filename."""
+
+    def test_clean_token_returned_unchanged(self) -> None:
+        assert safe_repository_id("abc123-de", context="test_id") == "abc123-de"
+
+    def test_uuid_shape_accepted(self) -> None:
+        token = "550e8400-e29b-41d4-a716-446655440000"  # noqa: S105 - UUID literal, not a secret
+        assert safe_repository_id(token, context="submission_id") == token
+
+    def test_empty_rejected(self) -> None:
+        with pytest.raises(PathContainmentError, match="must be non-empty"):
+            safe_repository_id("", context="draft_id")
+
+    def test_forward_slash_rejected(self) -> None:
+        with pytest.raises(PathContainmentError, match="path separator"):
+            safe_repository_id("foo/bar", context="draft_id")
+
+    def test_backslash_rejected(self) -> None:
+        with pytest.raises(PathContainmentError, match="path separator"):
+            safe_repository_id("foo\\bar", context="draft_id")
+
+    def test_single_dot_rejected(self) -> None:
+        with pytest.raises(PathContainmentError, match="relative-path token"):
+            safe_repository_id(".", context="modelo")
+
+    def test_double_dot_rejected(self) -> None:
+        with pytest.raises(PathContainmentError, match="relative-path token"):
+            safe_repository_id("..", context="modelo")
+
+    def test_dot_prefix_rejected(self) -> None:
+        with pytest.raises(PathContainmentError, match="relative-path token"):
+            safe_repository_id(".hidden", context="csv")
+
+    def test_context_label_appears_in_error(self) -> None:
+        with pytest.raises(PathContainmentError, match=r"^submission_id must"):
+            safe_repository_id("foo/bar", context="submission_id")
+
+    def test_failure_inherits_value_error(self) -> None:
+        """Legacy ``except ValueError`` callers in test surface keep working."""
+        with pytest.raises(ValueError):
+            safe_repository_id("foo/bar", context="x")
 
 
 class TestErrorCodeBinding:

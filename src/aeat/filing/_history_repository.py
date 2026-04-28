@@ -34,6 +34,7 @@ from ..storage import (
     SensitivityClass,
     exclusive_file_lock,
     load_encrypted_envelope,
+    safe_repository_id,
     save_encrypted_envelope,
 )
 from ..storage._encrypted_columns import _resolve_master_key_provider
@@ -86,12 +87,12 @@ class FilingHistoryRepository:
 
     def envelope_path_for(self, modelo: str) -> Path:
         """Return the canonical envelope path for ``modelo``."""
-        _validate_modelo(modelo)
+        safe_repository_id(modelo, context="modelo")
         return self._store_dir / f"{modelo}{_HISTORY_ENVELOPE_SUFFIX}"
 
     def lock_target_for(self, modelo: str) -> Path:
         """Return the canonical lock-sidecar path for ``modelo``."""
-        _validate_modelo(modelo)
+        safe_repository_id(modelo, context="modelo")
         return self._store_dir / f"{modelo}{_HISTORY_LOCK_SUFFIX}"
 
     def load(self, modelo: str) -> WireFilingHistory | None:
@@ -122,7 +123,7 @@ class FilingHistoryRepository:
         The on-disk envelope is AES-256-GCM ciphertext at AUDIT class —
         no plaintext filing-state row lands on disk.
         """
-        _validate_modelo(modelo)
+        safe_repository_id(modelo, context="modelo")
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target_for(modelo)):
             envelope = Envelope[WireFilingHistory](
@@ -233,7 +234,7 @@ def migrate_legacy_filing_history_to_repository(
             errors += 1
             continue
         try:
-            _validate_modelo(modelo)
+            safe_repository_id(modelo, context="modelo")
         except ValueError as exc:
             _log.warning("skipping unsafe modelo filename %s: %s", path, exc)
             errors += 1
@@ -270,16 +271,6 @@ def migrate_legacy_filing_history_to_repository(
         errors=errors,
         store_dir=str(repository.store_dir.resolve()),
     )
-
-
-def _validate_modelo(modelo: str) -> None:
-    """Reject modelo identifiers that would compose into an unsafe filename."""
-    if not modelo:
-        raise ValueError("modelo must be non-empty")
-    if "/" in modelo or "\\" in modelo:
-        raise ValueError(f"modelo must not contain path separators: {modelo!r}")
-    if modelo in {".", ".."} or modelo.startswith("."):
-        raise ValueError(f"modelo must not be a relative-path token: {modelo!r}")
 
 
 __all__ = [

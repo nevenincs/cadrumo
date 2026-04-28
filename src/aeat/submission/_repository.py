@@ -34,6 +34,7 @@ from ..storage import (
     SensitivityClass,
     exclusive_file_lock,
     load_encrypted_envelope,
+    safe_repository_id,
     save_encrypted_envelope,
 )
 from ..storage._encrypted_columns import _resolve_master_key_provider
@@ -97,12 +98,12 @@ class SubmissionRepository:
         Returns:
             ``<store_dir>/<submission_id>.envelope.json``.
         """
-        _validate_submission_id(submission_id)
+        safe_repository_id(submission_id, context="submission_id")
         return self._store_dir / f"{submission_id}{_SUBMISSION_ENVELOPE_SUFFIX}"
 
     def lock_target_for(self, submission_id: str) -> Path:
         """Return the canonical lock-sidecar path for ``submission_id``."""
-        _validate_submission_id(submission_id)
+        safe_repository_id(submission_id, context="submission_id")
         return self._store_dir / f"{submission_id}{_SUBMISSION_LOCK_SUFFIX}"
 
     def load(self, submission_id: str) -> SubmittedFiling | None:
@@ -273,16 +274,6 @@ def migrate_legacy_submissions_to_repository(
         errors=errors,
         store_dir=str(repository.store_dir.resolve()),
     )
-
-
-def _validate_submission_id(submission_id: str) -> None:
-    """Reject submission ids that would compose into an unsafe filename."""
-    if not submission_id:
-        raise ValueError("submission_id must be non-empty")
-    if "/" in submission_id or "\\" in submission_id:
-        raise ValueError(f"submission_id must not contain path separators: {submission_id!r}")
-    if submission_id in {".", ".."} or submission_id.startswith("."):
-        raise ValueError(f"submission_id must not be a relative-path token: {submission_id!r}")
 
 
 __all__ = [
