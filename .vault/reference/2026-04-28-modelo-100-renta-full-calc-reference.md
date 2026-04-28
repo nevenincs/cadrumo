@@ -236,6 +236,104 @@ delta lands as a follow-up issue when the Orden publishes.
 conservative baseline. Per-CCAA refresh follow-up issues open
 post-merge as each Comunidad publishes its 2026 Ley.
 
+## Per-CCAA tarifa autonómica brackets (encoded)
+
+Per LIRPF arts. 46 bis + 73-77 + Ley 22/2009 (cesión de competencias
+normativas), each CCAA sets its own tarifa autonómica general scale.
+The 5 highest-population CCAAs are encoded as first-class data in
+`src/aeat/formulas/_rulesets/modelo_100/_ccaa.py`, with stable brackets
+across 2024 / 2025 / 2026. Callers compute casilla 0551 (cuota íntegra
+autonómica general) externally via the
+`compute_cuota_autonomica_general(blg, ccaa)` helper before supplying
+it to the engine.
+
+### Comunidad de Madrid (Decreto Legislativo 1/2010 + Ley 5/2024 deflactación)
+
+| Base liquidable hasta (€) | Tipo |
+|---|---|
+| 13.362,22 | 8,5 % |
+| 19.004,63 | 10,7 % |
+| 35.425,68 | 12,8 % |
+| 57.320,40 | 17,4 % |
+| > 57.320,40 | 20,5 % |
+
+### Cataluña (Llei 5/2020 + actualizaciones presupuestarias)
+
+| Base liquidable hasta (€) | Tipo |
+|---|---|
+| 12.450 | 10,5 % |
+| 17.707,20 | 12 % |
+| 21.000 | 14 % |
+| 33.007,20 | 15 % |
+| 53.407,20 | 18,8 % |
+| 90.000 | 21,5 % |
+| 120.000 | 23,5 % |
+| 175.000 | 24,5 % |
+| > 175.000 | 25,5 % |
+
+### Andalucía (Decreto Legislativo 1/2018 modificado)
+
+| Base liquidable hasta (€) | Tipo |
+|---|---|
+| 13.000 | 9,5 % |
+| 21.100 | 12 % |
+| 35.200 | 15 % |
+| 60.000 | 18,5 % |
+| > 60.000 | 22,5 % |
+
+### Comunitat Valenciana (Ley 13/1997 modificada anualmente)
+
+| Base liquidable hasta (€) | Tipo |
+|---|---|
+| 12.000 | 9 % |
+| 22.000 | 12 % |
+| 32.000 | 15 % |
+| 42.000 | 17,5 % |
+| 52.000 | 20 % |
+| 65.000 | 22,5 % |
+| 72.000 | 25 % |
+| 100.000 | 26,5 % |
+| 150.000 | 27,5 % |
+| 200.000 | 28,5 % |
+| > 200.000 | 29,5 % |
+
+### Castilla y León (Decreto Legislativo 1/2013)
+
+| Base liquidable hasta (€) | Tipo |
+|---|---|
+| 12.450 | 9 % |
+| 20.200 | 12 % |
+| 35.200 | 14 % |
+| 60.000 | 18,5 % |
+| > 60.000 | 21,5 % |
+
+### Worked example anchors
+
+`test_ccaa_tarifa.py` exercises each tarifa at boundary + midpoint
+anchors. Notable cumulative cuotas:
+
+| CCAA | BLG (€) | Cuota íntegra autonómica general (€) |
+|---|---|---|
+| Madrid | 100.000 | 16.400,42 |
+| Cataluña | 200.000 | 42.802,84 |
+| Andalucía | 100.000 | 17.910,00 |
+| Comunitat Valenciana | 300.000 | 77.125,00 |
+| Castilla y León | 100.000 | 17.338,50 |
+
+### Unencoded CCAAs (10 remaining)
+
+Aragón, Asturias, Illes Balears, Canarias, Cantabria, Castilla-La
+Mancha, Extremadura, Galicia, La Rioja, Murcia all publish their own
+per-CCAA texto refundido / Ley de Presupuestos tarifas. The
+`compute_cuota_autonomica_general()` helper raises `KeyError` on these
+CCAAs — caller must compute externally pending follow-up per-CCAA
+encoding waves. The full bracket data per remaining CCAA lives in the
+research doc §6.3 (rate ranges 8-27 % top); each follow-up wave adds a
+single `TARIFA_<CCAA>` constant + extends `PER_CCAA_TARIFA_AUTONOMICA`.
+
+País Vasco / Navarra remain explicitly out of scope (foral regimes,
+`#424`).
+
 ## L1 anchor decision
 
 L1 anchors via Renta Web Open simulator outputs are **deferred** to a
