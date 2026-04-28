@@ -1,21 +1,24 @@
 """Modelo 100 (RENTA / IRPF anual) full-form ruleset — ejercicio 2025.
 
-Default-variant slot (modelo_100.2025) coexisting with the existing
-modelo_100.summary.2025. Composition lands incrementally per the
-megaproject implementation waves (research / ADR / plan in .vault/).
-
-As of Wave 8 the aggregator composes:
+Default-variant slot (`modelo_100.2025`) coexisting with the existing
+`modelo_100.summary.2025`. The aggregator composes the per-anexo
+modules from the `modelo_100/` sub-package into one `Ruleset` covering:
 
 - Anexo B1 — rendimientos del trabajo (LIRPF arts. 17-20)
 - Anexo B2 — capital mobiliario (LIRPF arts. 25-26 + 101.4)
 - Anexo C — capital inmobiliario (LIRPF arts. 22-24 + 85)
-- Anexo D normal/simplificada/modulos — actividades economicas
-- Anexo E — ganancias y perdidas patrimoniales (LIRPF arts. 33-49)
-- Anexo F — bases imponibles + reducciones + minimo personal y
-  familiar + base liquidable (LIRPF arts. 47-61)
+- Anexo D — actividades económicas en estimación directa normal /
+  estimación directa simplificada / estimación objetiva (módulos)
+- Anexo E — ganancias y pérdidas patrimoniales (LIRPF arts. 33-49)
+- Anexo F — bases imponibles + reducciones de la base imponible +
+  mínimo personal y familiar + base liquidable (LIRPF arts. 47-61, 84)
+- Anexo G — cuotas íntegras / líquidas + tarifa estatal general +
+  tarifa estatal del ahorro + Ceuta/Melilla 60 % (LIRPF arts. 63-79)
+- Anexo Ñ — deducciones autonómicas (LIRPF art. 46 bis + 73-77)
 
-Subsequent waves add G (cuotas + tarifas + Ceuta/Melilla 60 %),
-N (deducciones autonomicas 15 CCAAs).
+The 2024 / 2025 / 2026 rulesets share casillas + citations via re-
+import from the 2025 canonical anexo modules; only year-scoped
+formula IDs and effective dates are per-year specific.
 """
 
 from __future__ import annotations

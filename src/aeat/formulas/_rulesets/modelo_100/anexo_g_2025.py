@@ -33,8 +33,9 @@ Tarifa estatal del ahorro (LIRPF art. 66, post Ley 7/2024 vigent
 Encoding: progressive cuota = sum over brackets of
   rate * (clamp_pos(operand - bracket_start) -
            clamp_pos(operand - bracket_end))
-which yields the correct progressive tax. The LIRPF art. 56 minimo
-absorption applies the same scale to min(BLG, 0500) and subtracts.
+which yields the correct progressive tax. The LIRPF art. 56 minimum
+(mínimo personal y familiar) absorption applies the same scale to
+min(BLG, 0500) and subtracts.
 """
 
 from __future__ import annotations
@@ -219,7 +220,7 @@ CASILLAS = (
     casilla(
         casilla_id="0550",
         label=_label(
-            "Cuota integra estatal general",
+            "Cuota íntegra estatal general",
             "State general gross tax",
             "Allami altalanos brutto ado",
         ),
@@ -230,7 +231,7 @@ CASILLAS = (
     casilla(
         casilla_id="0551",
         label=_label(
-            "Cuota integra autonómica general",
+            "Cuota íntegra autonómica general",
             "Autonomic general gross tax (per-CCAA caller input)",
             "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja)",
         ),
@@ -241,7 +242,7 @@ CASILLAS = (
     casilla(
         casilla_id="0560",
         label=_label(
-            "Cuota integra estatal del ahorro",
+            "Cuota íntegra estatal del ahorro",
             "State savings gross tax",
             "Allami megtakaritasi brutto ado",
         ),
@@ -252,7 +253,7 @@ CASILLAS = (
     casilla(
         casilla_id="0561",
         label=_label(
-            "Cuota integra autonómica del ahorro",
+            "Cuota íntegra autonómica del ahorro",
             "Autonomic savings gross tax (per-CCAA caller input)",
             "Autonom megtakaritasi brutto ado (CCAA-fuggo)",
         ),
@@ -263,7 +264,7 @@ CASILLAS = (
     casilla(
         casilla_id="0595",
         label=_label(
-            "Cuota integra total (estatal + autonómica)",
+            "Cuota íntegra total (estatal + autonómica)",
             "Total gross tax (state + autonomic)",
             "Teljes brutto ado (allami + autonom)",
         ),
@@ -315,7 +316,7 @@ CASILLAS = (
     casilla(
         casilla_id="0698",
         label=_label(
-            "Cuota liquida total",
+            "Cuota líquida total",
             "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla)",
             "Teljes netto ado",
         ),
