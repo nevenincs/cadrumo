@@ -20,6 +20,7 @@ import pytest
 from ._ccaa import (
     CCAA,
     PER_CCAA_TARIFA_AUTONOMICA,
+    PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR,
     compute_cuota_autonomica_general,
 )
 
@@ -152,63 +153,108 @@ class TestTarifaCastillaYLeon:
         assert compute_cuota_autonomica_general(blg, CCAA.CASTILLA_Y_LEON) == expected
 
 
-class TestUnencodedCCAAs:
-    """The 10 remaining CCAAs raise KeyError — caller computes externally
-    pending each Comunidad's per-CCAA texto refundido encoding in a
-    follow-up wave.
+class TestRemainingStableCCAAs:
+    """The 8 remaining stable CCAAs (Aragón / Illes Balears / Cantabria /
+    Castilla-La Mancha / Extremadura / Galicia / Murcia / La Rioja) —
+    bracket tables identical 2024 / 2025 / 2026.
+
+    First-bracket anchor cases verify the progressive computation
+    against AEAT manual práctico values.
     """
 
     @pytest.mark.parametrize(
-        "unencoded_ccaa",
+        ("ccaa", "blg", "expected"),
         [
-            CCAA.ARAGON,
-            CCAA.ASTURIAS,
-            CCAA.BALEARES,
-            CCAA.CANARIAS,
-            CCAA.CANTABRIA,
-            CCAA.CASTILLA_LA_MANCHA,
-            CCAA.EXTREMADURA,
-            CCAA.GALICIA,
-            CCAA.LA_RIOJA,
-            CCAA.MURCIA,
+            (CCAA.ARAGON, Decimal("13072.50"), Decimal("1241.89")),
+            (CCAA.ARAGON, Decimal("21210.00"), Decimal("2218.39")),
+            (CCAA.BALEARES, Decimal("10000.00"), Decimal("900.00")),
+            (CCAA.CANTABRIA, Decimal("13000.00"), Decimal("1105.00")),
+            (CCAA.CASTILLA_LA_MANCHA, Decimal("12450.00"), Decimal("1182.75")),
+            (CCAA.EXTREMADURA, Decimal("12450.00"), Decimal("996.00")),
+            (CCAA.GALICIA, Decimal("12985.35"), Decimal("1168.68")),
+            (CCAA.MURCIA, Decimal("12450.00"), Decimal("1182.75")),
+            (CCAA.LA_RIOJA, Decimal("12450.00"), Decimal("996.00")),
         ],
     )
-    def test_unencoded_ccaa_raises_keyerror(self, unencoded_ccaa: CCAA) -> None:
-        with pytest.raises(KeyError):
-            compute_cuota_autonomica_general(Decimal("30000.00"), unencoded_ccaa)
+    def test_stable_ccaa_first_bracket_anchors(self, ccaa: CCAA, blg: Decimal, expected: Decimal) -> None:
+        assert compute_cuota_autonomica_general(blg, ccaa) == expected
+
+
+class TestYearDependentCCAAs:
+    """Asturias (Ley 3/2025 retroactive 1/1/2025) and Canarias (Ley
+    5/2024 deflactación 1/1/2025) have year-dependent schedules.
+    """
+
+    def test_asturias_2024_pre_ley_3_2025(self) -> None:
+        """Asturias 2024 tramo 1: 12450 * 0.10 = 1245.00."""
+        assert compute_cuota_autonomica_general(Decimal("12450.00"), CCAA.ASTURIAS, año=2024) == Decimal("1245.00")
+
+    def test_asturias_2025_post_ley_3_2025(self) -> None:
+        """Ley 3/2025 reduced tramo 1 from 10% to 9%: 12450 * 0.09 = 1120.50."""
+        assert compute_cuota_autonomica_general(Decimal("12450.00"), CCAA.ASTURIAS, año=2025) == Decimal("1120.50")
+
+    def test_asturias_2026_inherits_2025(self) -> None:
+        assert compute_cuota_autonomica_general(Decimal("12450.00"), CCAA.ASTURIAS, año=2026) == Decimal("1120.50")
+
+    def test_canarias_2024_pre_ley_5_2024(self) -> None:
+        """Canarias 2024 first bracket cap 13465: 13465 * 0.09 = 1211.85."""
+        assert compute_cuota_autonomica_general(Decimal("13465.00"), CCAA.CANARIAS, año=2024) == Decimal("1211.85")
+
+    def test_canarias_2025_post_ley_5_2024(self) -> None:
+        """Canarias 2025 first bracket cap deflactado a 13748: 13748 * 0.09 = 1237.32."""
+        assert compute_cuota_autonomica_general(Decimal("13748.00"), CCAA.CANARIAS, año=2025) == Decimal("1237.32")
+
+    def test_default_año_is_2025(self) -> None:
+        """Default año=2025 hits Asturias post-Ley-3/2025 schedule."""
+        assert compute_cuota_autonomica_general(Decimal("12450.00"), CCAA.ASTURIAS) == Decimal("1120.50")
 
 
 class TestPerCCAATarifaCoverage:
-    """Verifies the PER_CCAA_TARIFA_AUTONOMICA dict covers exactly the
-    5 highest-population CCAAs declared in the docstring."""
+    """Verifies the per-CCAA tarifa dict covers all 15 in-scope CCAAs."""
 
-    def test_exactly_5_ccaas_encoded(self) -> None:
-        assert len(PER_CCAA_TARIFA_AUTONOMICA) == 5
-        assert set(PER_CCAA_TARIFA_AUTONOMICA.keys()) == {
-            CCAA.MADRID,
-            CCAA.CATALUNA,
-            CCAA.ANDALUCIA,
-            CCAA.COMUNIDAD_VALENCIANA,
-            CCAA.CASTILLA_Y_LEON,
-        }
+    def test_all_15_in_scope_ccaas_resolvable(self) -> None:
+        """No KeyError for any in-scope CCAA at any año."""
+        for ccaa in CCAA:
+            for año in (2024, 2025, 2026):
+                result = compute_cuota_autonomica_general(Decimal("30000.00"), ccaa, año=año)
+                assert result >= Decimal("0.00")
+
+    def test_stable_dict_has_13_entries(self) -> None:
+        """13 stable CCAAs (15 minus year-dependent Asturias + Canarias)."""
+        assert len(PER_CCAA_TARIFA_AUTONOMICA) == 13
+        year_dependent = {CCAA.ASTURIAS, CCAA.CANARIAS}
+        stable = set(PER_CCAA_TARIFA_AUTONOMICA.keys())
+        assert stable.isdisjoint(year_dependent)
+        assert stable | year_dependent == set(CCAA)
+
+    def test_year_dependent_dict_has_6_entries(self) -> None:
+        """2 year-dependent CCAAs * 3 años = 6 (ccaa, año) keys."""
+        assert len(PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR) == 6
 
     def test_each_tarifa_has_open_top_bracket(self) -> None:
-        """Every encoded tarifa's last bracket has `to_value=None`."""
         for ccaa, brackets in PER_CCAA_TARIFA_AUTONOMICA.items():
             _, last_to, _ = brackets[-1]
-            assert last_to is None, f"{ccaa.value}: top bracket must be open-ended (to_value=None)"
+            assert last_to is None, f"{ccaa.value}: top bracket must be open-ended"
+        for (ccaa, año), brackets in PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR.items():
+            _, last_to, _ = brackets[-1]
+            assert last_to is None, f"{ccaa.value} año {año}: top bracket must be open-ended"
 
     def test_each_tarifa_has_ascending_brackets(self) -> None:
-        """Bracket boundaries are strictly ascending per progressive-scale invariant."""
-        for ccaa, brackets in PER_CCAA_TARIFA_AUTONOMICA.items():
+        all_brackets: list[tuple[str, tuple[tuple[str, str | None, str], ...]]] = [
+            (ccaa.value, brackets) for ccaa, brackets in PER_CCAA_TARIFA_AUTONOMICA.items()
+        ]
+        all_brackets.extend(
+            (f"{ccaa.value}-{año}", brackets) for (ccaa, año), brackets in PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR.items()
+        )
+        for ccaa_id, brackets in all_brackets:
             prior_to: Decimal | None = None
             for from_value, to_value, _rate in brackets:
                 from_d = Decimal(from_value)
                 if prior_to is not None:
-                    assert from_d == prior_to, f"{ccaa.value}: bracket from {from_value} != prior to {prior_to}"
+                    assert from_d == prior_to, f"{ccaa_id}: from {from_value} != prior to {prior_to}"
                 if to_value is not None:
                     to_d = Decimal(to_value)
-                    assert to_d > from_d, f"{ccaa.value}: bracket to {to_value} <= from {from_value}"
+                    assert to_d > from_d, f"{ccaa_id}: to {to_value} <= from {from_value}"
                     prior_to = to_d
                 else:
                     prior_to = None
