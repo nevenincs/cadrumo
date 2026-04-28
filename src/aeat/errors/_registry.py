@@ -2101,6 +2101,25 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.storage.errors.UnsecuredModeRefusedError",
+        ErrorCode(
+            code="REFUSED_STORAGE_UNSECURED_MODE",
+            category=ErrorCategory.REFUSED,
+            default_message_es=(
+                "Modo no cifrado rechazado: requiere AEAT_ALLOW_UNENCRYPTED=1 y es incompatible con un NIF real."
+            ),
+            default_message_en=(
+                "Unsecured mode refused: requires AEAT_ALLOW_UNENCRYPTED=1 and is incompatible with a real NIF."
+            ),
+            default_message_hu=(
+                "Nem biztonsagos mod elutasitva: AEAT_ALLOW_UNENCRYPTED=1 szukseges es nem hasznalhato valodi NIF-fel."
+            ),
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.MigrationError",
         ErrorCode(
             code="FAIL_STORAGE_MIGRATION",

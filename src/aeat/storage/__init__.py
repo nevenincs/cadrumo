@@ -85,8 +85,11 @@ from ._master_key import (
     KeyringMasterKeyProvider,
     MasterKeyProvider,
     MigrationResult,
+    UnsecuredMasterKeyProvider,
     get_master_key_provider,
+    looks_like_real_tax_id,
     migrate_master_key_kdf,
+    refuse_unsecured_with_real_nif,
 )
 from ._materialisation import (
     export_to_temp_path,
@@ -140,6 +143,7 @@ from .errors import (
     SecretNotFoundError,
     SecretStoreError,
     StorageError,
+    UnsecuredModeRefusedError,
 )
 from .migrations_api import downgrade_to_base, round_trip_migrations, upgrade_to_head
 from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
@@ -217,6 +221,8 @@ __all__ = [
     "SecretStoreError",
     "SensitivityClass",
     "StorageError",
+    "UnsecuredMasterKeyProvider",
+    "UnsecuredModeRefusedError",
     "assert_corpus_clean",
     "build_corpus_manifest",
     "create_engine_from_settings",
@@ -241,6 +247,7 @@ __all__ = [
     "load_corpus_manifest",
     "load_encrypted_envelope",
     "load_envelope",
+    "looks_like_real_tax_id",
     "manifest_path_for",
     "materialise_secret",
     "migrate_master_key_kdf",
@@ -249,6 +256,7 @@ __all__ = [
     "redact",
     "redact_structured",
     "reencrypt_envelope_file",
+    "refuse_unsecured_with_real_nif",
     "rotate_blob_stores",
     "rotate_master_key",
     "round_trip_migrations",

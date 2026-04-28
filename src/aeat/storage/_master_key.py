@@ -70,6 +70,7 @@ from .errors import (
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
     SecretStoreError,
+    UnsecuredModeRefusedError,
 )
 
 _log = get_logger(__name__)
@@ -655,6 +656,118 @@ class EphemeralMasterKeyProvider:
         return self._key
 
 
+# Published deterministic key for the unsecured-mode provider. Public by
+# design — the goal is to keep the substrate's encryption pipeline intact
+# (every record is still a CipherEnvelope / EncryptedBlob) while making
+# the wrapping key trivially recoverable so testing / educational /
+# throwaway scenarios do not require key management. Provides ZERO
+# confidentiality. The hostile-named env var + NIF-canary refusal at
+# profile-load time guard against accidental real-data use.
+_UNSECURED_KEY_PREFIX: Final[bytes] = b"AEAT_UNSECURED_TEST_KEY"
+_UNSECURED_PUBLISHED_KEY: Final[bytes] = _UNSECURED_KEY_PREFIX + b"\x00" * (KEY_SIZE - len(_UNSECURED_KEY_PREFIX))
+assert len(_UNSECURED_PUBLISHED_KEY) == KEY_SIZE
+
+
+class UnsecuredMasterKeyProvider:
+    """Master-key provider for testing / throwaway scenarios.
+
+    Returns a published deterministic 32-byte master key. The substrate's
+    encryption pipeline is unchanged; only the wrapping key is publicly
+    known. Provides **ZERO confidentiality**.
+
+    Activation requires both signals:
+
+    - ``AEAT_ALLOW_UNENCRYPTED=1`` environment variable (the hostile-
+      named opt-out gate).
+    - ``aeat_secret_store_backend=unsecured`` setting (or equivalent
+      explicit backend selection at the substrate boundary).
+
+    Refused at profile-load time when the operator profile carries a
+    valid NIF/NIE/CIF (NIF-canary) — see :func:`refuse_unsecured_with_real_nif`
+    in the consumer modules. Real tax data is incompatible with a
+    published deterministic master key.
+    """
+
+    def get_master_key(self) -> bytes:
+        return _UNSECURED_PUBLISHED_KEY
+
+
+# Synthetic-NIF allow-list: tax-id-shaped strings that are valid under
+# the Spanish checksum algorithm but conventionally used as placeholders
+# in fixtures, tutorials, and tests. Any tax-id that is NOT in this set
+# AND is structurally valid is treated as REAL and refused by the
+# unsecured-mode canary. The list is intentionally small — tightening
+# the canary at the boundary is preferred over a permissive heuristic.
+_SYNTHETIC_TAX_IDS: Final[frozenset[str]] = frozenset(
+    {
+        "00000000T",  # all-zero NIF body — Hacienda's documented placeholder.
+        "X0000000T",  # all-zero NIE body.
+        "Z0000000T",  # all-zero NIE body, alt prefix.
+        "Y0000000Z",  # all-zero NIE body, alt prefix + check.
+        "B00000000",  # all-zero CIF body, common test prefix.
+    }
+)
+
+
+def looks_like_real_tax_id(value: str) -> bool:
+    """Return ``True`` when ``value`` parses as a real Spanish tax id.
+
+    Used by the unsecured-mode NIF-canary to refuse the unsecured
+    backend whenever the operator profile carries a real NIF / NIE /
+    CIF. Synthetic placeholders (all-zero bodies, documented test
+    sentinels — see :data:`_SYNTHETIC_TAX_IDS`) return ``False``.
+
+    Args:
+        value: Raw tax identifier (already-canonical or operator-input).
+
+    Returns:
+        ``True`` when the value validates under the Hacienda checksum
+        algorithm AND is not a synthetic placeholder. ``False`` for
+        invalid inputs and for synthetic placeholders alike — both
+        cases are safe to allow under the unsecured backend.
+    """
+    from ..financial.invoices._validators import validate_spanish_tax_id
+
+    try:
+        canonical = validate_spanish_tax_id(value)
+    except ValueError:
+        return False
+    return canonical not in _SYNTHETIC_TAX_IDS
+
+
+def refuse_unsecured_with_real_nif(
+    tax_id: str,
+    *,
+    provider: MasterKeyProvider,
+) -> None:
+    """Refuse the unsecured backend when the operator profile is real.
+
+    Called at the profile-load / profile-write boundary. When the active
+    master-key provider is :class:`UnsecuredMasterKeyProvider` AND the
+    profile's tax id parses as a real NIF / NIE / CIF (per
+    :func:`looks_like_real_tax_id`), raises
+    :class:`UnsecuredModeRefusedError`. No-op when the provider is any
+    other class.
+
+    Args:
+        tax_id: The operator profile's tax id.
+        provider: The active master-key provider.
+
+    Raises:
+        UnsecuredModeRefusedError: When the unsecured backend is active
+            and the tax id is real.
+    """
+    if not isinstance(provider, UnsecuredMasterKeyProvider):
+        return
+    if looks_like_real_tax_id(tax_id):
+        raise UnsecuredModeRefusedError(
+            f"unsecured master-key backend is incompatible with the "
+            f"real tax id {tax_id!r}; either remove "
+            "AEAT_ALLOW_UNENCRYPTED=1 / aeat_secret_store_backend=unsecured, "
+            "or use a synthetic placeholder (e.g. '00000000T').",
+        )
+
+
 def get_master_key_provider(
     *,
     backend: str | None = None,
@@ -690,6 +803,19 @@ def get_master_key_provider(
     except ValueError as exc:
         raise SecretStoreError(f"unknown secret-store backend: {backend_value!r}") from exc
     store_dir = Path(settings.aeat_secret_store_dir)
+    if resolved is SecretStoreBackend.UNSECURED:
+        # Hostile-named opt-out gate: the unsecured backend requires the
+        # operator to explicitly set AEAT_ALLOW_UNENCRYPTED=1. Refuse
+        # otherwise. The NIF-canary that fences off real tax data lives
+        # at the profile-load boundary (see consumer modules).
+        if not settings.aeat_allow_unencrypted:
+            raise UnsecuredModeRefusedError(
+                "aeat_secret_store_backend='unsecured' requires "
+                "AEAT_ALLOW_UNENCRYPTED=1. The unsecured backend uses a "
+                "published deterministic master key and provides ZERO "
+                "confidentiality; intended for testing / throwaway data only.",
+            )
+        return UnsecuredMasterKeyProvider()
     if resolved is SecretStoreBackend.KEYRING:
         provider = KeyringMasterKeyProvider()
         # Probe early so callers see the failure at construction.

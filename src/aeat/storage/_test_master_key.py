@@ -21,8 +21,12 @@ from . import (
     MasterKeyProvider,
     MasterKeyUnavailableError,
     SecretStoreError,
+    UnsecuredMasterKeyProvider,
+    UnsecuredModeRefusedError,
     get_master_key_provider,
+    looks_like_real_tax_id,
     migrate_master_key_kdf,
+    refuse_unsecured_with_real_nif,
 )
 from ._crypto import encrypt_record
 from ._master_key import (
@@ -553,3 +557,82 @@ class TestWave12KdfMigration:
             passphrase_callback=lambda: "hunter2",
         )
         assert second.get_master_key() == first_key
+
+
+class TestUnsecuredProvider:
+    """Hostile-named opt-out backend for testing / throwaway scenarios."""
+
+    def test_returns_published_deterministic_key(self) -> None:
+        # The published key is part of the substrate's public contract:
+        # anyone with the source can decrypt unsecured-mode ciphertext.
+        first = UnsecuredMasterKeyProvider().get_master_key()
+        second = UnsecuredMasterKeyProvider().get_master_key()
+        assert first == second
+        assert len(first) == KEY_SIZE
+        # The key's prefix must encode its insecurity in plaintext.
+        assert first.startswith(b"AEAT_UNSECURED_TEST_KEY")
+
+    def test_satisfies_master_key_provider_protocol(self) -> None:
+        provider = UnsecuredMasterKeyProvider()
+        assert isinstance(provider, MasterKeyProvider)
+
+    def test_factory_refuses_without_allow_unencrypted(self, tmp_path: Path) -> None:
+        # AEAT_ALLOW_UNENCRYPTED=1 is the hostile-named opt-out gate.
+        settings = Settings(
+            aeat_secret_store_dir=tmp_path / "secrets",
+            aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
+            aeat_allow_unencrypted=False,
+        )
+        with pytest.raises(UnsecuredModeRefusedError, match="AEAT_ALLOW_UNENCRYPTED"):
+            get_master_key_provider(settings_override=settings)
+
+    def test_factory_returns_unsecured_provider_when_gated(self, tmp_path: Path) -> None:
+        settings = Settings(
+            aeat_secret_store_dir=tmp_path / "secrets",
+            aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
+            aeat_allow_unencrypted=True,
+        )
+        provider = get_master_key_provider(settings_override=settings)
+        assert isinstance(provider, UnsecuredMasterKeyProvider)
+
+
+class TestUnsecuredNifCanary:
+    """The unsecured-mode NIF-canary fences off real tax data."""
+
+    @pytest.mark.parametrize(
+        "synthetic_id",
+        ["00000000T", "X0000000T", "Z0000000T", "Y0000000Z", "B00000000"],
+    )
+    def test_synthetic_tax_ids_are_not_treated_as_real(self, synthetic_id: str) -> None:
+        assert looks_like_real_tax_id(synthetic_id) is False
+
+    @pytest.mark.parametrize(
+        "real_id",
+        ["12345678Z", "X1234567L"],  # NIF + NIE shapes that validate.
+    )
+    def test_valid_non_synthetic_tax_ids_are_treated_as_real(self, real_id: str) -> None:
+        assert looks_like_real_tax_id(real_id) is True
+
+    def test_invalid_inputs_are_not_treated_as_real(self) -> None:
+        # Random non-tax-id strings are not real — the canary's failure
+        # mode is "let the unsecured backend through" rather than refuse;
+        # the substrate's other validators reject malformed ids.
+        assert looks_like_real_tax_id("not-a-tax-id") is False
+        assert looks_like_real_tax_id("") is False
+
+    def test_refuse_unsecured_with_real_nif_no_op_for_other_providers(self) -> None:
+        # A keyring or file-fallback provider passes the canary even
+        # with a real tax id (the canary gates only the unsecured path).
+        provider = EphemeralMasterKeyProvider()
+        # No raise.
+        refuse_unsecured_with_real_nif("12345678Z", provider=provider)
+
+    def test_refuse_unsecured_with_real_nif_raises_for_unsecured_provider(self) -> None:
+        provider = UnsecuredMasterKeyProvider()
+        with pytest.raises(UnsecuredModeRefusedError, match="real tax id"):
+            refuse_unsecured_with_real_nif("12345678Z", provider=provider)
+
+    def test_refuse_unsecured_with_real_nif_passes_for_synthetic(self) -> None:
+        provider = UnsecuredMasterKeyProvider()
+        # No raise — synthetic placeholders are explicitly allowed.
+        refuse_unsecured_with_real_nif("00000000T", provider=provider)
