@@ -1,12 +1,71 @@
 # Security operator runbook
 
-The `aeat security` CLI exposes three operator-facing commands for the
-secure-persistence substrate. This runbook covers each, including the
-quiesce-then-act expectation that underpins their per-file locking
-contract.
+The `aeat security` CLI exposes the operator-facing commands for the
+secure-persistence substrate: provision, recover, key-export,
+rotate-master-key, verify-corpus, migrate-master-key-kdf. This runbook
+covers each, including the quiesce-then-act expectation that underpins
+the per-file locking contract.
 
-All three commands act on **local disk only**. None of them touches a
-remote AEAT service.
+All commands act on **local disk only**. None touches a remote AEAT
+service.
+
+## First-run provisioning
+
+```sh
+aeat security provision [--backend {keyring,file,unsecured}] [--force]
+```
+
+Walks the operator through master-key minting and recovery-key generation.
+The substrate refuses to clobber an existing master key without `--force`.
+
+Backend choices:
+
+- **`keyring`** (recommended): OS keychain (Touch ID / Hello / libsecret).
+  Master key is stored in the OS keychain; no passphrase needed.
+- **`file`**: passphrase-derived KEK (Argon2id) wraps a random 32-byte
+  master key in `master.key`. Required for headless / CI installations.
+- **`unsecured`**: testing-only mode that uses a published deterministic
+  master key (zero confidentiality). Requires `AEAT_ALLOW_UNENCRYPTED=1`
+  and refuses any operator profile with a real NIF/NIE/CIF.
+
+After minting, the substrate displays a **24-word recovery key** ONCE.
+**Print it. Store it somewhere safe.** Without the recovery key, a
+forgotten passphrase or lost keychain means losing every persisted
+record. The substrate persists a recovery-key wrapping at
+`master.recovery.key` so future `aeat security recover` calls can
+unwrap the master key from the mnemonic alone.
+
+## Recovery from a lost passphrase / keychain
+
+```sh
+aeat security recover --recovery-key "<24 words>"
+```
+
+Unwraps the master key from `master.recovery.key` using the mnemonic,
+then re-mints the file-fallback artefacts (`master.key` /
+`master.kdf` / `salt`) under your new passphrase. Preserves the
+master-key bytes so every existing on-disk record continues to
+decrypt cleanly.
+
+If you typed the mnemonic incorrectly, the helper exits with a clear
+"did not unwrap" message and leaves the existing on-disk state
+untouched. Retry with the correct words.
+
+## Portable backup
+
+```sh
+aeat security key-export --out path/to/backup.json
+```
+
+Bundles the recovery wrapping plus the file-fallback artefacts into
+a portable JSON file. Store off-site (cloud backup, encrypted USB
+drive, paper printout). To restore on a new machine: copy the bundle
+back into the configured `aeat_secret_store_dir`, then run
+`aeat security recover` to re-mint the active backend state.
+
+The export is itself ciphertext at rest — no new cryptography is
+introduced; the export is a portable repackaging of the existing
+wrapped state.
 
 ## Master-key rotation
 
