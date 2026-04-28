@@ -55,3 +55,6 @@ GitHub review-thread, review, and comment queries for PR `#450` returned no revi
 
 GEMINI-001 | MEDIUM | Workflow adapter reached into `SubmissionEngine._preflight`
 Gemini review on PR `#450` flagged that `SubmissionEngineAdapter.preflight()` was calling the private `SubmissionEngine._preflight.check(...)` attribute even though `SubmissionEngine` now exposes public `preflight(...)`. The adapter now delegates to `self._engine.preflight(draft, today=today)`, preserving the read-only preflight boundary while respecting subpackage API discipline. Status: RESOLVED.
+
+PR-003 | INFO | PR `#450` CI and Gemini thread status rechecked after remediation
+After commit `6db5d26`, PR `#450` CI passed on both `ubuntu-latest / Python 3.13` and `windows-latest / Python 3.13`. The Gemini review thread for `GEMINI-001` was resolved through GitHub's review-thread API. Status: OBSERVED.
