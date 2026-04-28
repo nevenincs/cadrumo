@@ -14,7 +14,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ..filing import FilingAmendment
 from ..i18n import Translatable
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -23,11 +22,9 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 class SubmissionStatus(StrEnum):
     """Lifecycle status of a :class:`SubmittedFiling`.
 
-    ``PENDING`` covers dry-run attempts. ``IN_PROGRESS``,
-    ``SUBMITTED``, ``ACKNOWLEDGED``, ``REJECTED``, and ``FAILED`` are
-    retained for historical records imported from earlier project
-    phases, even though live AEAT submission is now permanently
-    forbidden.
+    Values are retained for historical records imported from AEAT or
+    earlier project phases, even though live AEAT submission is now
+    permanently forbidden.
     """
 
     PENDING = "PENDING"
@@ -39,7 +36,7 @@ class SubmissionStatus(StrEnum):
 
 
 class SubmissionAttempt(BaseModel):
-    """A single attempt to dry-run or submit a filing.
+    """A historical attempt record imported or retained locally.
 
     Attributes:
         attempt_id: Stable identifier for this attempt
@@ -73,7 +70,7 @@ class SubmissionAttempt(BaseModel):
 
 
 class SubmittedFiling(BaseModel):
-    """The typed audit record for one filing submission.
+    """The typed audit record for one historical filing.
 
     Attributes:
         submission_id: Stable SHA-256-derived hex digest of
@@ -119,30 +116,6 @@ class SubmittedFiling(BaseModel):
         if self.acknowledged_at is not None and self.acknowledged_at < self.submitted_at:
             raise ValueError(f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})")
         return self
-
-
-class AmendmentSubmissionResult(BaseModel):
-    """Typed submission audit record for one :class:`FilingAmendment`.
-
-    Attributes:
-        amendment_id: Stable identifier of the amendment that was
-            submitted.
-        amendment: The amendment payload used for transport.
-        filing: The persisted submission record emitted by the
-            underlying submission engine.
-        dry_run: Whether the submission stopped before the final
-            irreversible AEAT confirmation click.
-        submitted_at: UTC timestamp of the delegated submission
-            attempt.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    amendment_id: str = Field(min_length=1)
-    amendment: FilingAmendment
-    filing: SubmittedFiling
-    dry_run: bool = True
-    submitted_at: datetime
 
 
 def make_submission_id(draft_id: str, attempt_ordinal: int) -> str:

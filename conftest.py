@@ -15,8 +15,7 @@ through the same enforcement surface as items under ``tests/``:
    raised on. The hook body lives in :mod:`tests._marker_hook`; this
    conftest is a thin wrapper.
 
-See ``tests/README.md`` and charter ``#116`` for the full taxonomy and
-the three-factor ``live_write`` bypass contract.
+See ``tests/README.md`` and charter ``#116`` for the full taxonomy.
 """
 
 from __future__ import annotations
@@ -42,8 +41,6 @@ _PYTEST_GATE_KEYS: frozenset[str] = frozenset(
     {
         "AEAT_LIVE_TESTS_ENABLED",
         "AEAT_LIVE_TESTS_GOOGLE",
-        "AEAT_LIVE_WRITE_UNSAFE_BYPASS",
-        "AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM",
     }
 )
 

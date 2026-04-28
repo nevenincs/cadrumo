@@ -1,4 +1,4 @@
-"""Tests for deterministic dry-run replay and its refusal modes."""
+"""Tests for deterministic read-only replay and its refusal modes."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ def _build_trace(run_id: str, *, corpus_sha256: str) -> RunTrace:
 
 
 class TestReplayRun:
-    def test_clean_dry_run_round_trip(
+    def test_clean_replay_round_trip(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -48,7 +48,7 @@ class TestReplayRun:
         current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
         trace = _build_trace("0123456789abcdef", corpus_sha256=current_corpus)
         save_trace(trace)
-        result = replay_run(trace.run_id, dry_run=True)
+        result = replay_run(trace.run_id)
         assert result.run_id == trace.run_id
         assert result.entrypoint == "aeat hello"
 
@@ -61,7 +61,7 @@ class TestReplayRun:
         trace = _build_trace("fedcba9876543210", corpus_sha256="0" * 64)
         save_trace(trace)
         with pytest.raises(AeatCorpusDriftError) as excinfo:
-            replay_run(trace.run_id, dry_run=True)
+            replay_run(trace.run_id)
         assert excinfo.value.run_id == trace.run_id
         assert excinfo.value.recorded == "0" * 64
         assert excinfo.value.observed != "0" * 64
@@ -71,29 +71,15 @@ class TestReplayRun:
         assert "…" not in message, "error message must not use unicode ellipsis"
         assert "..." in message
 
-    def test_refuses_no_dry_run(
+    def test_refuses_replay_of_removed_write_flag_recording(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        trace = _build_trace("abcdef0123456789", corpus_sha256="1" * 64)
-        save_trace(trace)
-        # Match the specific message so an accidental drift-error or
-        # other AeatObservabilityError subclass does not mark the test
-        # green for the wrong reason.
-        with pytest.raises(AeatObservabilityError, match="dry-run only"):
-            replay_run(trace.run_id, dry_run=False)
-
-    def test_refuses_replay_of_live_mode_recording(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Replay must refuse traces captured with the legacy live-mode flag."""
+        """Replay must refuse traces captured with the removed write flag."""
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-        live_trace = RunTrace(
+        legacy_trace = RunTrace(
             run_id="aaaabbbbccccdddd",
             started_at=datetime(2026, 4, 14, tzinfo=UTC),
             finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
@@ -107,9 +93,9 @@ class TestReplayRun:
             cert_fingerprint="",
             outcome=RunOutcome.OK,
         )
-        save_trace(live_trace)
-        with pytest.raises(AeatObservabilityError, match="live-mode"):
-            replay_run(live_trace.run_id, dry_run=True)
+        save_trace(legacy_trace)
+        with pytest.raises(AeatObservabilityError, match="removed flag"):
+            replay_run(legacy_trace.run_id)
 
     def test_replay_of_propagated_via_env_var(
         self,
@@ -145,7 +131,7 @@ class TestReplayRun:
         )
         save_trace(original)
 
-        # Simulate the env var set during a live replay:
+        # Simulate the env var set during a replay:
         monkeypatch.setenv(REPLAY_ACTIVE_ENV_VAR, original.run_id)
         try:
             with run_context(entrypoint="aeat test replay-child", arguments=()) as info:
@@ -179,22 +165,22 @@ class TestReplayRun:
         assert trace.replay_of is None, "non-16-hex env value must be ignored"
 
     def test_false_value_not_detected_as_live_mode(self) -> None:
-        """A flag name in the denylist with value 'False' is not live-mode.
+        """A removed flag name with value 'False' is ignored.
 
         Exercises the predicate directly so we do not have to stand up a
         full replay pipeline; replay-path coverage for the denylist-hit
-        case is provided by :meth:`test_refuses_replay_of_live_mode_recording`.
+        case is provided by :meth:`test_refuses_replay_of_removed_write_flag_recording`.
         """
-        from ._replay import _argument_activates_live_mode
+        from ._replay import _argument_uses_removed_write_flag
 
         safe = ArgumentRecord(name="no-dry-run", value="False", source=ArgumentSource.FLAG)
-        assert _argument_activates_live_mode(safe) is False
+        assert _argument_uses_removed_write_flag(safe) is False
         active = ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.FLAG)
-        assert _argument_activates_live_mode(active) is True
+        assert _argument_uses_removed_write_flag(active) is True
         non_flag = ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.POSITIONAL)
-        assert _argument_activates_live_mode(non_flag) is False
+        assert _argument_uses_removed_write_flag(non_flag) is False
         other = ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG)
-        assert _argument_activates_live_mode(other) is False
+        assert _argument_uses_removed_write_flag(other) is False
 
 
 class TestReplayEndToEndBooleanFlag:
@@ -235,7 +221,7 @@ class TestReplayEndToEndBooleanFlag:
         )
         save_trace(recorded)
         # Must not raise — replay round-trip through the real CLI.
-        result = replay_run(recorded.run_id, dry_run=True)
+        result = replay_run(recorded.run_id)
         assert result.run_id == recorded.run_id
 
 

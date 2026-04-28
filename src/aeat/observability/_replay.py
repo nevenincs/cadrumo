@@ -1,16 +1,12 @@
-"""Deterministic dry-run replay of a recorded :class:`RunTrace`.
+"""Deterministic read-only replay of a recorded :class:`RunTrace`.
 
 Replay loads a persisted trace, recomputes the current
 ``corpus_sha256``, refuses on drift, and re-enters the same Typer CLI
-path with the captured argv. Live replay is explicitly out of scope —
-``dry_run=False`` raises :class:`AeatObservabilityError`.
+path with the captured argv.
 
-Defence in depth: replay also refuses when the recorded arguments
-contain the legacy ``--no-dry-run`` live-mode flag. ``dry_run=True``
-at the replay layer must NOT be subverted by a recorded
-``--no-dry-run`` flag bubbling into the reconstructed argv. The
-historical typed-confirmation flag was permanently removed by
-issue #432.
+Replay also refuses recorded arguments containing the removed
+``--no-dry-run`` flag, so old traces cannot reintroduce an obsolete
+CLI shape during argv reconstruction.
 """
 
 from __future__ import annotations
@@ -25,17 +21,11 @@ from ._models import ArgumentRecord, ArgumentSource, RunTrace
 from ._store import load_trace
 
 # Marker environment variable set for the duration of ``replay_run``'s
-# re-entered CLI call. The submission engine and any other AEAT-write
-# barrier can query this flag to machine-check that "we are inside a
-# replay" rather than relying on argv pattern matching. See audit
-# finding S3 (vaultspec-code-reviewer, 2026-04-21) and live-write
-# safety charter #116.
+# re-entered CLI call so run_context can label the child trace.
 REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
 
-# Legacy flags that once opted a recorded run into AEAT live-mode.
-# Replay still refuses traces that carried ``--no-dry-run`` even though
-# live AEAT submission is now permanently forbidden.
-_LIVE_MODE_FLAG_NAMES: frozenset[str] = frozenset(
+# Legacy flags removed from the workflow CLI surface.
+_REMOVED_WRITE_FLAG_NAMES: frozenset[str] = frozenset(
     {
         "no-dry-run",
         "no_dry_run",
@@ -43,17 +33,17 @@ _LIVE_MODE_FLAG_NAMES: frozenset[str] = frozenset(
 )
 
 
-def _argument_activates_live_mode(arg: ArgumentRecord) -> bool:
-    """Return True if ``arg`` is a live-mode opt-in flag set to a truthy value.
+def _argument_uses_removed_write_flag(arg: ArgumentRecord) -> bool:
+    """Return True if ``arg`` is a removed write-era flag with a truthy value.
 
     The boolean flags captured by :func:`cli_run_context` arrive as the
     stringified value ``"True"`` / ``"False"``. A ``False`` capture
-    means the caller did not opt in, and replay is safe. Any non-False
-    value pair is rejected as live-mode.
+    means the caller did not opt in. Any non-False value pair is
+    rejected before argv reconstruction.
     """
     if arg.source is not ArgumentSource.FLAG:
         return False
-    if arg.name not in _LIVE_MODE_FLAG_NAMES:
+    if arg.name not in _REMOVED_WRITE_FLAG_NAMES:
         return False
     return arg.value.strip().lower() != "false"
 
@@ -124,35 +114,27 @@ def _argv_from_arguments(
     return parts
 
 
-def replay_run(run_id: str, *, dry_run: bool = True) -> RunTrace:
+def replay_run(run_id: str) -> RunTrace:
     """Replay a recorded run after gating on corpus drift.
 
     Args:
         run_id: Identifier of the recorded run to replay.
-        dry_run: Must be ``True``. ``False`` raises explicitly because
-            live replay is out of scope (#99).
-
     Returns:
         The loaded :class:`RunTrace` of the original run.
 
     Raises:
-        AeatObservabilityError: When ``dry_run=False``.
+        AeatObservabilityError: When the trace carries removed write-era flags.
         AeatCorpusDriftError: When the current corpus hash differs
             from the recorded one.
     """
-    if not dry_run:
-        raise AeatObservabilityError(
-            "replay_run is dry-run only; live replay is out of scope (#99)",
-        )
     original = load_trace(run_id)
     for arg in original.arguments:
-        if _argument_activates_live_mode(arg):
+        if _argument_uses_removed_write_flag(arg):
             raise AeatObservabilityError(
                 f"refusing to replay run {run_id!r}: recorded entrypoint "
-                f"{original.entrypoint!r} was executed with the live-mode "
-                f"flag {arg.name!r}={arg.value!r}. Replay would re-invoke "
-                f"AEAT live-write paths even with dry_run=True at the "
-                f"replay layer. See live-write safety charter (#116).",
+                f"{original.entrypoint!r} used removed flag "
+                f"{arg.name!r}={arg.value!r}. Replay will not reconstruct "
+                "obsolete write-era CLI arguments.",
             )
     settings = Settings()
     observed = compute_corpus_sha256(PROJECT_ROOT / ".vault", settings)
@@ -166,8 +148,6 @@ def replay_run(run_id: str, *, dry_run: bool = True) -> RunTrace:
     argv = _argv_from_arguments(original.entrypoint, original.arguments)
     from ..cli import app
 
-    # Belt-and-braces live-write defense: set a marker env var that any
-    # AEAT-write barrier can query to refuse live writes during replay.
     # Restore the prior value on exit so the process env is unchanged
     # for any caller that imports ``replay_run`` programmatically.
     previous = os.environ.get(REPLAY_ACTIVE_ENV_VAR)
@@ -175,8 +155,6 @@ def replay_run(run_id: str, *, dry_run: bool = True) -> RunTrace:
     # run_context can label the new trace's ``replay_of`` field with
     # the source run. This lets ``aeat run show`` distinguish replay
     # traces from fresh runs and chain them back to their original.
-    # The value still reads truthy for any live-write barrier that
-    # just checks ``os.environ.get(REPLAY_ACTIVE_ENV_VAR)``.
     os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id
     try:
         app(argv, standalone_mode=False)

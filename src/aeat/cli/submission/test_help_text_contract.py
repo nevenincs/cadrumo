@@ -43,7 +43,6 @@ def _strip_ansi(text: str) -> str:
 
 _SUBCOMMANDS: dict[str, list[str]] = {
     "preflight": ["preflight"],
-    "dry-run": ["dry-run"],
     "export": ["export", "Export"],
     "verify": ["verify", "Re-parse"],
     "diff": ["diff", "Diff"],

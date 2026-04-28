@@ -1,9 +1,9 @@
-"""Synthesise a :class:`aeat.filing.FilingDraft` for live reconcile dry-runs.
+"""Synthesise a :class:`aeat.filing.FilingDraft` for read-only reconcile checks.
 
 The reconcile happy-path (#239 W1 P7) compares an APPROVED local
 :class:`FilingDraft` against the AEAT-stored justificante. Real
 drafts are produced by the long workflow pipeline (transactions ->
-ruleset -> formulas -> validator -> approval). For a one-shot live
+ruleset -> formulas -> validator -> approval). For a one-shot
 reconcile sanity-check we want a much shorter loop: pick a
 sanitised fixture under ``tests/fixtures/justificantes/{modelo}/``,
 read its casillas off the source-pdf parser, and stamp them onto
@@ -51,7 +51,7 @@ def synthesize_filing_draft(
     casilla_values: Mapping[str, FilingScalar],
     status: FilingDraftStatus = FilingDraftStatus.APPROVED,
     schema_version: str = SCHEMA_VERSION_DEFAULT,
-    source_label: str = "synthesized for live reconcile dry-run",
+    source_label: str = "synthesized for read-only reconcile",
     created_at: datetime | None = None,
 ) -> FilingDraft:
     """Build a strict-frozen :class:`FilingDraft` from a casilla map.
@@ -71,7 +71,7 @@ def synthesize_filing_draft(
     * ``approved_at`` matching ``created_at`` (since the synthesised
       draft is born APPROVED).
     * ``approved_by`` set to ``"synthesize_filing_draft"`` so audit
-      logs can cleanly distinguish a dry-run draft from an
+      logs can cleanly distinguish a synthesized draft from an
       operator-approved one.
 
     Args:
@@ -136,7 +136,7 @@ def synthesize_filing_draft_from_decimals(
     casilla_decimals: Mapping[str, str | Decimal],
     status: FilingDraftStatus = FilingDraftStatus.APPROVED,
     schema_version: str = SCHEMA_VERSION_DEFAULT,
-    source_label: str = "synthesized for live reconcile dry-run",
+    source_label: str = "synthesized for read-only reconcile",
     created_at: datetime | None = None,
 ) -> FilingDraft:
     """Convenience wrapper: accept decimal-as-string casilla values.
