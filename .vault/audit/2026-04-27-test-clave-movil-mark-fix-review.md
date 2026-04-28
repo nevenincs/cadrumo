@@ -47,3 +47,8 @@ DOC-004 | MEDIUM | Corrected stale live marker guidance in CI and fixture docs
 
 PR-001 | HIGH | Pull request and Gemini review state were not yet established
 GitHub checks on 2026-04-28 found no pull request for issue `#436`, no pull request for branch `bug/436-test-clave-movil-mark-fix`, and no pull request search hit for `test_clave_movil`. The remote branch exists at the same commit as local `HEAD`, but the safety-remediation worktree is still uncommitted, so there is no current PR surface for Gemini or other reviewers to inspect. Status: OPEN.
+
+PR-001 resolution: PR `#450` was opened from `bug/436-test-clave-movil-mark-fix` against `main` after commit `0ae9cfc`. Status: RESOLVED.
+
+PR-002 | INFO | Gemini and PR review findings checked on PR `#450`
+GitHub review-thread, review, and comment queries for PR `#450` returned no review threads, no submitted reviews, and no comments. Gemini had not posted any findings at the time of this audit check. GitHub CI was running for `ubuntu-latest / Python 3.13` and `windows-latest / Python 3.13`. Status: OBSERVED.
