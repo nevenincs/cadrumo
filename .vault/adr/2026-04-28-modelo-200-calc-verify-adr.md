@@ -25,13 +25,13 @@ M130 and M180 both favor year-specific ruleset IDs and non-overlapping effective
 
 Live AEAT submission remains forbidden. Verification is limited to `produce -> verify -> export`.
 
-The ruleset must not infer full tax regime eligibility. M200 taxpayers can be general-rate companies, entities under the SME regime, new entities, microenterprises, cooperatives, financial institutions, ZEC entities, or other special regimes. The current form surface already prints the selected rate in casilla 00558, so deriving the rate from entity facts would require additional inputs and validation state.
+The ruleset must not infer full tax regime eligibility from the PDF alone. M200 taxpayers can be general-rate companies, entities under the SME regime, new entities, microenterprises, cooperatives, financial institutions, ZEC entities, or other special regimes. The current form surface already prints the selected/effective rate in casilla 00558, so the ruleset verifies that printed value while dedicated statutory helpers derive the rate examples used by tests.
 
-Depreciation, BIN carryforward derivation, Pillar 2/minimum tax, foral regimes, Canarias ZEC/RIC, and full deduction itemization are out of scope for this ruleset. Their extracted summary casillas can still participate as inputs.
+Asset-level depreciation, BIN history, minimum-tax applicability, ZEC base split, and full deduction itemization are explicit inputs to the page-14 verifier. This PR includes strict helpers for the parts that can be derived from those inputs: LIS art. 12 lineal amortization, LIS art. 26 BIN caps, LIS art. 29/DT 44 rate cases including ZEC, and LIS art. 30 bis minimum liquid quota floors. País Vasco and Navarra remain outside the AEAT common-state registry because they are not filed through the AEAT Modelo 200 surface.
 
 ## Implementation
 
-Implement `modelo_200.2025` and `modelo_200.2026` as annual clones of the 2024 page-14 computation with year-specific formula IDs and effective windows. Refactor the 2024 module to expose `_make_casillas` and `_make_formulas`, so the clones reuse the same casilla inventory without duplicating labels.
+Implement `modelo_200.2025` and `modelo_200.2026` as annual clones of the 2024 page-14 computation with year-specific formula IDs and effective windows. Refactor the 2024 module to expose `_make_casillas` and `_make_formulas`, so the clones reuse the same casilla inventory without duplicating labels. Add `modelo_200_corporate_tax.py` for the statutory helper surface used by M200 worked examples.
 
 Computed casillas get year-specific legal citations from LIS arts. 29 and 30, plus RIS context. The 2024 ruleset retains Orden HAC/657/2025 as its layout citation. The 2025 and 2026 rulesets deliberately do not cite unpublished annual orders.
 
@@ -39,8 +39,8 @@ Integration behavior changes from `UNVERIFIABLE` to `VERIFIED` for a complete 20
 
 ## Rationale
 
-This design satisfies the Tier-L bar for the implemented extraction surface while keeping legal claims accurate. The form already exposes casilla 00558, so rate split coverage belongs in worked examples rather than a premature enum branch. Separate annual rulesets preserve registry correctness and future divergence space.
+This design satisfies the Tier-L bar for the implemented extraction surface while keeping legal claims accurate. The form already exposes casilla 00558, so the formula ruleset continues to verify the printed rate while the helper module derives the rate, amortization, BIN, ZEC, and minimum-tax examples from explicit facts. Separate annual rulesets preserve registry correctness and future divergence space.
 
 ## Consequences
 
-The rulesets are citation-clean and mutation-visible. Full-form corporate tax derivation remains intentionally deferred. The rule-delta manifest records the annual-order publication gap so future work can revisit layout changes when BOE publishes later M200 orders.
+The rulesets are citation-clean and mutation-visible. Corporate-side derivations that can be expressed from explicit facts now have strict helper coverage. The rule-delta manifest records the annual-order publication gap so future work can revisit layout changes when BOE publishes later M200 orders.
