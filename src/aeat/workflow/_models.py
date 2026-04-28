@@ -26,7 +26,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class WorkflowStage(StrEnum):
-    """The ten stages of the composite workflow, in strict order.
+    """The read-only stages of the composite workflow, in strict order.
 
     The engine walks the stages top-to-bottom. Downstream code (the CLI,
     future schedulers, the UI) depends on the linear ordering for the
@@ -40,7 +40,6 @@ class WorkflowStage(StrEnum):
     BUILDING_DRAFT = "BUILDING_DRAFT"
     VALIDATING_DRAFT = "VALIDATING_DRAFT"
     RUNNING_PREFLIGHT = "RUNNING_PREFLIGHT"
-    DRY_RUN_SUBMIT = "DRY_RUN_SUBMIT"
     DONE = "DONE"
     ABORTED = "ABORTED"
 
@@ -123,8 +122,8 @@ class WorkflowResult(BaseModel):
         obligation: The :class:`aeat.deadlines.FilingObligation` the
             workflow targeted, if one was computed before the bailout.
         draft_id: The filing draft id, if a draft was built.
-        submission_id: The submission id, if the dry-run submission
-            leg executed.
+        submission_id: Reserved for historical persisted records. New
+            workflow runs never create AEAT submission ids.
         steps: Tuple of :class:`WorkflowStep` in the order the engine
             executed them.
         summary: Trilingual user-facing summary of the whole run.

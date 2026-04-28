@@ -1,7 +1,7 @@
 # AEAT test suite
 
-Operator reference for the nine-marker pytest taxonomy, the three-factor
-live-write bypass, the pytest-only posture, and the associated plugin
+Operator reference for the nine-marker pytest taxonomy, the permanent
+live-write ban, the pytest-only posture, and the associated plugin
 roster. See charter `#116` (live-AEAT-write safety charter),
 `.vault/adr/2026-04-17-pytest-markers-adr.md` (marker taxonomy), and
 `.vault/adr/2026-04-17-pytest-only-testing-adr.md` (pytest-only posture,
@@ -38,7 +38,7 @@ function.
 | Marker                   | Covers                                                                            | Selection example                                |
 | :----------------------- | :-------------------------------------------------------------------------------- | :----------------------------------------------- |
 | `domain_aeat_remote`     | `auth`, `browser`, `casillas`, `inbox`, `justificante`, `portals`, `status`, `sync` | `uv run pytest -m "unit and domain_aeat_remote"` |
-| `domain_submission`      | `filing`, `submission` (the AEAT-write-capable boundary)                           | `uv run pytest -m "unit and domain_submission"`  |
+| `domain_submission`      | `filing`, `submission` local export, preflight, and historical records             | `uv run pytest -m "unit and domain_submission"`  |
 | `domain_financial_input` | `financial`, `cli/financial`                                                       | `just test-domain financial_input`               |
 | `domain_local_state`     | `storage`, `models`, `normatives`, `manuals`, `corpus`, `schema`, `deadlines`     | `just test-domain local_state`                   |
 | `domain_mediation`       | `workflow`, `llm`, `i18n`, `testing`                                              | `just test-domain mediation`                     |
@@ -63,7 +63,7 @@ shape that yields predictable marker inheritance under pytest.
 ## live_write ban
 
 `@pytest.mark.live_write` items are **dropped** (not skipped) from the
-collection by default. Drop-not-skip is intentional: skipped items
+collection with no bypass. Drop-not-skip is intentional: skipped items
 surface in pytest reports as "would have run if unskipped" and are a
 single env-var flip away from executing. Dropped items are invisible
 downstream of collection and cannot be reinstated by any marker-
@@ -72,55 +72,12 @@ expression flag.
 Zero `live_write` tests exist in the repository today. The marker,
 the collection ban, and this documentation are dormant infrastructure
 shipped so any future write-shaped probe is required to carry the
-marker and is collection-banned by default. Charter `#116` R1 is
+marker and is permanently collection-banned. Charter `#116` R1 is
 absolute: no automated test may ever produce a legally binding AEAT
 filing.
 
-### Three-factor bypass
-
-All three factors must hold simultaneously for `live_write` items to
-survive collection. Missing any one factor drops the item silently:
-
-1. `AEAT_LIVE_WRITE_UNSAFE_BYPASS=1` in the process environment.
-2. `AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM` in the environment, equal
-   byte-for-byte to the phrase:
-
-   `I ACCEPT THE RISK OF FILING A LIVE TAX RETURN`
-
-3. `sys.stdin.isatty()` returns truthy (attached to an interactive
-   terminal).
-
-Setting the bypass does **NOT** enable a live submission. Charter
-`#116` R3 (`AEAT_LIVE_SUBMIT_ENABLED` env gate) and R5
-(`SubmissionEngine.__init__` runtime refusal under
-`PYTEST_CURRENT_TEST`) remain the canonical write-prevention guards;
-the collection ban is additive defence in depth. A `live_write` item
-that survives collection still has to satisfy both R3 and R5 before
-any write-shaped call can execute.
-
-### Bypass incantation (DO NOT RUN unless you are about to file a legally binding tax return)
-
-Run only from an interactive terminal, only when you genuinely intend
-to exercise a live-write test against real AEAT infrastructure:
-
-```bash
-AEAT_LIVE_WRITE_UNSAFE_BYPASS=1 \
-AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM="I ACCEPT THE RISK OF FILING A LIVE TAX RETURN" \
-uv run pytest -m live_write
-```
-
-PowerShell equivalent:
-
-```powershell
-$env:AEAT_LIVE_WRITE_UNSAFE_BYPASS = "1"
-$env:AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM = "I ACCEPT THE RISK OF FILING A LIVE TAX RETURN"
-uv run pytest -m live_write
-```
-
-**DO NOT RUN** this command unless you are about to file a legally
-binding tax return. The bypass env vars must never appear in CI
-configuration, cron jobs, shared `.env` files, or any non-interactive
-automation.
+There is no environment variable, confirmation phrase, CLI flag, or
+interactive-terminal bypass for `live_write` collection.
 
 ## pytest-only posture
 
@@ -220,8 +177,8 @@ the floor.
 - `just test-live` — `unit or live_read`. Requires `AEAT_LIVE_TESTS_ENABLED=1`.
 - `just test-live-read` — `live_read` only.
 - `just test-domain DOMAIN` — `unit and domain_{{DOMAIN}}`.
-- `just test-live-write` — documentation surface for the three-factor bypass;
-  returns zero collected under normal operation.
+- `just test-live-write` — documentation surface for the permanent live-write
+  ban; returns zero collected.
 - `just test-cov` — unit suite with coverage; fails if below 60%.
 - `just test-parallel` — unit suite under xdist. Never on live.
 - `just lint` — ruff, including the TID251 banned-import rule.

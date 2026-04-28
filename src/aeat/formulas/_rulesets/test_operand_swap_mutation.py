@@ -44,7 +44,9 @@ from . import (
     MODELO_111_2026,
     MODELO_115_2025,
     MODELO_115_2026,
+    MODELO_123_2024,
     MODELO_123_2025,
+    MODELO_123_2026,
     MODELO_130_2024,
     MODELO_130_2025,
     MODELO_130_2026,
@@ -55,7 +57,9 @@ from . import (
     MODELO_303_2024,
     MODELO_303_2025,
     MODELO_303_2026,
+    MODELO_390_2024,
     MODELO_390_2025,
+    MODELO_390_2026,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
@@ -359,14 +363,17 @@ def _modelo_100_summary_fixture() -> dict[str, Decimal]:
 
 
 def _modelo_390_fixture() -> dict[str, Decimal]:
-    """Wave 75a (issue #314): fixture for Modelo 390 casilla 105.
+    """Asymmetric fixture for Modelo 390 sub_op chains.
 
-    Note: issue #314 body says "casilla 97" but that's an input; the
-    only sub_op-bearing computed casilla in Modelo 390 is 105 =
-    sub_op(96, 104). Outer swap yields 104-96 = -10000 vs correct
-    10000, delta 20000 >> 0.02.
+    Three sub_op-bearing computed casillas live in the Modelo 390
+    ruleset (issue #327): casilla 105 = sub_op(96, 104), casilla 191 =
+    sub_op(190, 662), casilla 193 = clamp_pos(sub_op(0, 191)). The
+    fixture sets each LHS strictly larger than its RHS so an operand
+    swap on any of them flips the sign and produces a delta well
+    above the 0.01 tolerance.
     """
     return {
+        "95": Decimal("100000.00"),
         "96": Decimal("30000.00"),
         "100": Decimal("18000.00"),
         "101": Decimal("2000.00"),
@@ -375,6 +382,10 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
         "108": Decimal("500.00"),
         "109": Decimal("300.00"),
         "190": Decimal("10800.00"),
+        "191": Decimal("9800.00"),  # 190 - 662 = 10800 - 1000
+        "192": Decimal("9800.00"),
+        "193": Decimal("0.00"),
+        "662": Decimal("1000.00"),
     }
 
 
@@ -606,10 +617,22 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             id="modelo_115.2026:casilla_06_resultado_a_ingresar",
         ),
         pytest.param(
+            lambda: MODELO_123_2024,
+            "11",
+            _modelo_123_fixture,
+            id="modelo_123.2024:casilla_11_resultado_a_ingresar",
+        ),
+        pytest.param(
             lambda: MODELO_123_2025,
             "11",
             _modelo_123_fixture,
             id="modelo_123.2025:casilla_11_resultado_a_ingresar",
+        ),
+        pytest.param(
+            lambda: MODELO_123_2026,
+            "11",
+            _modelo_123_fixture,
+            id="modelo_123.2026:casilla_11_resultado_a_ingresar",
         ),
         pytest.param(
             lambda: MODELO_100_SUMMARY_2025,
@@ -618,10 +641,40 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             id="modelo_100_summary.2025:casilla_0720_cuota_resultante",
         ),
         pytest.param(
+            lambda: MODELO_390_2024,
+            "105",
+            _modelo_390_fixture,
+            id="modelo_390.2024:casilla_105_resultado_regimen_general",
+        ),
+        pytest.param(
+            lambda: MODELO_390_2024,
+            "191",
+            _modelo_390_fixture,
+            id="modelo_390.2024:casilla_191_cuota_resultante_anual",
+        ),
+        pytest.param(
             lambda: MODELO_390_2025,
             "105",
             _modelo_390_fixture,
             id="modelo_390.2025:casilla_105_resultado_regimen_general",
+        ),
+        pytest.param(
+            lambda: MODELO_390_2025,
+            "191",
+            _modelo_390_fixture,
+            id="modelo_390.2025:casilla_191_cuota_resultante_anual",
+        ),
+        pytest.param(
+            lambda: MODELO_390_2026,
+            "105",
+            _modelo_390_fixture,
+            id="modelo_390.2026:casilla_105_resultado_regimen_general",
+        ),
+        pytest.param(
+            lambda: MODELO_390_2026,
+            "191",
+            _modelo_390_fixture,
+            id="modelo_390.2026:casilla_191_cuota_resultante_anual",
         ),
     ],
 )

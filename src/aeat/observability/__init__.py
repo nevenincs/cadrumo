@@ -1,7 +1,7 @@
 """Run-trace observability layer (#99).
 
 Public API for cross-subpackage ``run_id`` propagation, JSONL audit
-logging, and deterministic dry-run replay. See [[2026-04-14-run-trace-adr]]
+logging, and deterministic read-only replay. See [[2026-04-14-run-trace-adr]]
 for the architecture and [[2026-04-14-run-trace-plan]] for the
 implementation plan.
 """

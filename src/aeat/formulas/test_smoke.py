@@ -37,6 +37,7 @@ def test_registry_has_shipped_rulesets() -> None:
         "modelo_115.2026",
         "modelo_123.2024",
         "modelo_123.2025",
+        "modelo_123.2026",
         "modelo_130.2024",
         "modelo_130.2025",
         "modelo_130.2026",
@@ -45,12 +46,15 @@ def test_registry_has_shipped_rulesets() -> None:
         "modelo_131.2026",
         "modelo_180.2024",
         "modelo_180.2025",
+        "modelo_180.2026",
         "modelo_200.2024",
         "modelo_202.2025",
         "modelo_303.2024",
         "modelo_303.2025",
         "modelo_303.2026",
+        "modelo_390.2024",
         "modelo_390.2025",
+        "modelo_390.2026",
         "modelo_100.summary.2025",
     }
 

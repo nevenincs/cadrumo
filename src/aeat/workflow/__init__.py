@@ -5,8 +5,8 @@ The :mod:`aeat.workflow` subpackage owns the project's first
 the deadline engine (#38), the self-healing sync runner (#11), the
 filing draft engine (#39), the submission engine (#42), and the
 in-flight status / inbox / certificate surfaces into one ordered
-pipeline. The workflow is **dry-run only** because live AEAT
-submission is permanently forbidden.
+pipeline. The workflow is **read-only** because live AEAT submission
+is permanently forbidden; it stops after preflight.
 
 Public API discipline: callers outside this subpackage must import
 only from :mod:`aeat.workflow`. The underscored modules are
@@ -55,7 +55,6 @@ from ._protocols import (
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
     SubmissionEngineProtocol,
-    SubmittedFilingLike,
     SyncRunnerProtocol,
     SyncRunSummary,
 )
@@ -75,7 +74,6 @@ __all__ = [
     "JsonFileInputsProvider",
     "SubmissionEngineAdapter",
     "SubmissionEngineProtocol",
-    "SubmittedFilingLike",
     "SyncRunSummary",
     "SyncRunnerAdapter",
     "SyncRunnerProtocol",

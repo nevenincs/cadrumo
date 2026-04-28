@@ -6,7 +6,7 @@ date: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-111-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
-  - "[[2026-130-rule-delta]]"
+  - "[[2026-04-27-modelo-130-rule-delta-reference]]"
 ---
 
 # `modelo-111-calc-verify` ADR — child of EPIC `#316`
@@ -239,7 +239,7 @@ autoliquidación tied to a specific NIF + quarter. AEAT does not
 publish any specimen M111 declaración as a normative exemplar.
 
 **Decision**: file an explicit waiver in
-`.vault/reference/2026-111-rule-delta.md` mirroring the M130 waiver.
+`.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md` mirroring the M130 waiver.
 The Tier-L bar is met via the L3 synthetic generator + extractor
 round-trip + the integration test class. The waiver expires on either
 of (a) AEAT publishing a normative specimen M111 (no precedent), or
@@ -249,8 +249,8 @@ the project's privacy + scrubbing discipline.
 
 ### D10. Rule-delta manifest
 
-Author `.vault/reference/2026-111-rule-delta.md` with the structure
-established by `2026-130-rule-delta.md`: statutory grounding table +
+Author `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md` with the structure
+established by `2026-04-27-modelo-130-rule-delta-reference.md`: statutory grounding table +
 per-year delta table + diff narrative + citation completeness +
 mutation-harness fingerprint + L1 waiver + audit trail.
 

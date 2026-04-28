@@ -177,6 +177,15 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
     },
+    "modelo_123.2026": {
+        "sub_op": 1,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 0,
+    },
     "modelo_130.2024": {
         "sub_op": 8,  # casillas 03 (1), 07 (sub_op(sub_op,ref) = 2), 11 (1), 14 (1), 17 (2), 19 (1).
         "percent_rate_literal": 0,
@@ -253,6 +262,15 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
     },
+    "modelo_180.2026": {
+        "sub_op": 0,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 1,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 0,
+    },
     "modelo_200.2024": {
         "sub_op": 5,  # casilla 00611 = 4-deep sub_op nest (4 nodes); casilla 00621 has 1 sub_op.
         "percent_rate_literal": 0,
@@ -298,8 +316,26 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,
     },
+    "modelo_390.2024": {
+        "sub_op": 3,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 0,
+    },
     "modelo_390.2025": {
-        "sub_op": 1,
+        "sub_op": 3,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 0,
+    },
+    "modelo_390.2026": {
+        "sub_op": 3,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 0,
