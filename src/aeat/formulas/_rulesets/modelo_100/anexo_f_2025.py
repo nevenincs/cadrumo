@@ -146,8 +146,9 @@ CASILLAS = (
         computed=False,
         legal_basis=(CITATIONS[3], CITATIONS[4]),
         notes_es=(
-            "Caller-validated: 1.500 EUR cap general + hasta 8.500 EUR "
-            "adicional via contribuciones empresariales (LIRPF art. 52)."
+            "Verificado por el llamador: límite general de 1.500 EUR + "
+            "hasta 8.500 EUR adicionales vía contribuciones empresariales "
+            "a sistemas de previsión social (LIRPF art. 52)."
         ),
     ),
     casilla(

@@ -57,7 +57,7 @@ CITATIONS = (
         "mobiliario (administración, custodia y similares) y reducción "
         "del 30 % sobre rendimientos íntegros con período de generación "
         "superior a dos años o calificados como notoriamente "
-        "irregulares, con cap cuantitativo de 300.000 €.",
+        "irregulares, con un límite cuantitativo de 300.000 €.",
     ),
     cite_lirpf(
         "101.4",
@@ -124,7 +124,7 @@ CASILLAS = (
         ),
         computed=False,
         legal_basis=(CITATIONS[1],),
-        notes_es=("Importe ya minorado por el 30 % del art. 26.2 sobre la base irregular, con cap de 300.000 €."),
+        notes_es=("Importe ya minorado por el 30 % del art. 26.2 sobre la base irregular, con un límite de 300.000 €."),
     ),
     casilla(
         casilla_id="0035",
