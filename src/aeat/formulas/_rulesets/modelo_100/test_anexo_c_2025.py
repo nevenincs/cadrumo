@@ -39,6 +39,28 @@ class TestModelo100AnexoC:
         )
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
+    def test_rehabilitacion_60pct_tier(self) -> None:
+        """60 % tier (LIRPF art. 23.2.b post Ley 12/2023): nuevas viviendas
+        rehabilitadas o de nueva construcción, alquiler vivienda habitual.
+        Same gross numbers as default test, but reducción = 60 % of 7.000
+        = 4.200; rendimiento neto reducido 2.800.
+        """
+        provided = _c_zero_b1_b2() | {
+            "0061": Decimal("12000.00"),
+            "0066": Decimal("3500.00"),
+            "0072": Decimal("1500.00"),
+            "0078": Decimal("4200.00"),  # 60 % of 7.000
+            "0085": Decimal("0.00"),
+            "0106": Decimal("7000.00"),
+            "0107": Decimal("2800.00"),
+        }
+        report = Engine().audit_against(
+            ruleset=MODELO_100_2025,
+            provided=provided,
+            tolerance=Decimal("0.01"),
+        )
+        assert report.is_clean()
+
     def test_zona_tensionada_70pct_inquilino_joven(self) -> None:
         """70 % tier (zona tensionada, inquilino 18-35): same gross numbers
         as default test, but reducción = 70 % of 7.000 = 4.900.

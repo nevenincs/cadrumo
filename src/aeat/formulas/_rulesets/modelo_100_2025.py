@@ -26,7 +26,7 @@ from __future__ import annotations
 from datetime import date
 
 from ...models import ModeloCode
-from .._ruleset import Ruleset
+from .._ruleset import ParameterTable, Ruleset
 from .modelo_100 import (
     anexo_b1_2025,
     anexo_b2_2025,
@@ -80,6 +80,20 @@ _CITATIONS = (
     *anexo_g_2025.CITATIONS,
     *anexo_n_2025.CITATIONS,
 )
+_PARAMETERS = ParameterTable(
+    entries={
+        **anexo_b1_2025.PARAMETERS.entries,
+        **anexo_b2_2025.PARAMETERS.entries,
+        **anexo_c_2025.PARAMETERS.entries,
+        **anexo_d_normal_2025.PARAMETERS.entries,
+        **anexo_d_simplificada_2025.PARAMETERS.entries,
+        **anexo_d_modulos_2025.PARAMETERS.entries,
+        **anexo_e_2025.PARAMETERS.entries,
+        **anexo_f_2025.PARAMETERS.entries,
+        **anexo_g_2025.PARAMETERS.entries,
+        **anexo_n_2025.PARAMETERS.entries,
+    },
+)
 
 
 RULESET: Ruleset = Ruleset(
@@ -89,6 +103,6 @@ RULESET: Ruleset = Ruleset(
     effective_to=_EFFECTIVE_TO,
     casillas=_CASILLAS,
     formulas=_FORMULAS,
-    parameters=anexo_b1_2025.PARAMETERS,
+    parameters=_PARAMETERS,
     legal_citations=_CITATIONS,
 )
