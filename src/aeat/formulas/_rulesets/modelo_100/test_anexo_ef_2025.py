@@ -26,7 +26,7 @@ def _baseline() -> dict[str, Decimal]:
         "0010": Decimal("0.00"),
         "0019": Decimal("0.00"),
         "0020": Decimal("0.00"),
-        "0021": Decimal("7302.00"),  # by-design non-zero
+        "0021": Decimal("0.00"),  # post M-1 cap
         "0022": Decimal("0.00"),
         # B2.
         "0028": Decimal("0.00"),

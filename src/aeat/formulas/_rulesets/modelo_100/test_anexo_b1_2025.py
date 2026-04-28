@@ -71,8 +71,13 @@ class TestModelo100AnexoB1:
         [
             # LIRPF art. 20 piecewise (RD-Ley 4/2024 vigent 1/1/2024,
             # unchanged 2025): four anchor points + below/above caps.
-            (Decimal("0.00"), Decimal("7302.00"), "zero rendimiento"),
-            (Decimal("10000.00"), Decimal("7302.00"), "below first threshold"),
+            # Post M-1 cap fix: reduccion = min(rendimiento, max(piece_a, piece_b))
+            # so at rendimiento=0 the cap reduces 7302 -> 0; at rendimiento=5000
+            # the cap reduces 7302 -> 5000; at rendimiento=10000 the cap is
+            # inactive (10000 > 7302) so the full 7302 applies.
+            (Decimal("0.00"), Decimal("0.00"), "zero rendimiento (capped to 0)"),
+            (Decimal("5000.00"), Decimal("5000.00"), "below 7302 cap (capped to rendimiento)"),
+            (Decimal("10000.00"), Decimal("7302.00"), "above 7302 cap, below first threshold"),
             (Decimal("14852.00"), Decimal("7302.00"), "boundary 1 (piece_a max)"),
             # piece_a active 14.852 → 17.673,52 with slope 1,75:
             (Decimal("16000.00"), Decimal("5293.00"), "middle of piece_a"),
@@ -107,9 +112,11 @@ class TestModelo100AnexoB1:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_zero_boundary_is_clean(self) -> None:
-        """All inputs = 0 → reducción art. 20 caps at 7.302 (rendimiento ≤ cap).
+        """All inputs = 0 → reducción art. 20 capped at rendimiento previo (= 0).
 
-        Rendimiento neto reducido: clamp_pos(0 - 7302) = 0.
+        Post M-1 cap fix: reduccion art. 20 = min(0020, max(piece_a, piece_b)).
+        At 0020=0 the cap reduces the 7302 piece_a value to 0; the
+        rendimiento neto reducido (0022) is clamp_pos(0-0) = 0.
         """
         provided = {
             "0001": Decimal("0.00"),
@@ -118,7 +125,7 @@ class TestModelo100AnexoB1:
             "0010": Decimal("0.00"),
             "0019": Decimal("0.00"),
             "0020": Decimal("0.00"),
-            "0021": Decimal("7302.00"),
+            "0021": Decimal("0.00"),
             "0022": Decimal("0.00"),
         }
         report = Engine().audit_against(
@@ -137,8 +144,8 @@ class TestModelo100AnexoB1:
             "0010": Decimal("0.00"),
             "0019": Decimal("0.00"),
             "0020": Decimal("0.00"),  # clamp_pos(5000 - 3000 - 3000) = 0
-            "0021": Decimal("7302.00"),  # rendimiento 0 ≤ 14.852 → reducción 7302
-            "0022": Decimal("0.00"),  # clamp_pos(0 - 7302) = 0
+            "0021": Decimal("0.00"),  # post M-1 cap: min(0020=0, max=7302) = 0
+            "0022": Decimal("0.00"),  # clamp_pos(0 - 0) = 0
         }
         report = Engine().audit_against(
             ruleset=MODELO_100_2025,

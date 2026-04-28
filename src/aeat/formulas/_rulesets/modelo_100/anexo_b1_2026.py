@@ -24,6 +24,7 @@ from .._common import (
     formula,
     lit,
     max_op,
+    min_op,
     mul_op,
     ref,
     sub_op,
@@ -34,22 +35,25 @@ EFFECTIVE_FROM = date(2026, 1, 1)
 EFFECTIVE_TO = date(2026, 12, 31)
 
 
-_REDUCCION_ART20_BODY = max_op(
-    clamp_pos(
-        sub_op(
-            lit("7302.00"),
-            mul_op(
-                lit("1.75"),
-                clamp_pos(sub_op(ref("0020"), lit("14852.00"))),
+_REDUCCION_ART20_BODY = min_op(
+    ref("0020"),
+    max_op(
+        clamp_pos(
+            sub_op(
+                lit("7302.00"),
+                mul_op(
+                    lit("1.75"),
+                    clamp_pos(sub_op(ref("0020"), lit("14852.00"))),
+                ),
             ),
         ),
-    ),
-    clamp_pos(
-        sub_op(
-            lit("2364.34"),
-            mul_op(
-                lit("1.14"),
-                clamp_pos(sub_op(ref("0020"), lit("17673.52"))),
+        clamp_pos(
+            sub_op(
+                lit("2364.34"),
+                mul_op(
+                    lit("1.14"),
+                    clamp_pos(sub_op(ref("0020"), lit("17673.52"))),
+                ),
             ),
         ),
     ),

@@ -112,7 +112,7 @@ def _b2_zero_b1_c() -> dict[str, Decimal]:
         "0010": Decimal("0.00"),
         "0019": Decimal("0.00"),
         "0020": Decimal("0.00"),
-        "0021": Decimal("7302.00"),  # by-design non-zero per LIRPF art. 20
+        "0021": Decimal("0.00"),  # post M-1 cap fix: min(0020, max(piece_a, piece_b)) = 0 at zero rend
         "0022": Decimal("0.00"),
         # Anexo C inputs/computed.
         "0061": Decimal("0.00"),

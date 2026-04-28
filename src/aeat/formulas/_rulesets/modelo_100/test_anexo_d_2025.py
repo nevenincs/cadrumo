@@ -32,7 +32,7 @@ def _baseline_zero_other_anexos() -> dict[str, Decimal]:
         "0010": Decimal("0.00"),
         "0019": Decimal("0.00"),
         "0020": Decimal("0.00"),
-        "0021": Decimal("7302.00"),
+        "0021": Decimal("0.00"),
         "0022": Decimal("0.00"),
         # Anexo B2.
         "0028": Decimal("0.00"),
