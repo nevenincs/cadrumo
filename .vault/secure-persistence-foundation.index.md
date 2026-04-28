@@ -30,6 +30,9 @@ related:
   - '[[2026-04-30-secure-persistence-foundation-wave14-audit]]'
   - '[[2026-04-30-secure-persistence-foundation-wave14-research]]'
   - '[[2026-04-30-secure-persistence-foundation-wave15-16-audit]]'
+  - '[[2026-04-30-secure-persistence-foundation-wave17-adr]]'
+  - '[[2026-04-30-secure-persistence-foundation-wave17-plan]]'
+  - '[[2026-04-30-secure-persistence-foundation-wave17-research]]'
   - '[[2026-04-30-secure-persistence-foundation-wave5-adr]]'
   - '[[2026-04-30-secure-persistence-foundation-wave5-audit]]'
   - '[[2026-04-30-secure-persistence-foundation-wave5-research]]'
@@ -54,6 +57,7 @@ Auto-generated index of all documents tagged with `#secure-persistence-foundatio
 - `2026-04-30-secure-persistence-foundation-wave12-adr` - `secure-persistence-foundation` adr: wave-12 Argon2id KDF migration | (**status:** `accepted`)
 - `2026-04-30-secure-persistence-foundation-wave13-adr` - `secure-persistence-foundation` adr: wave-13 repository-id validator consolidation | (**status:** `accepted`)
 - `2026-04-30-secure-persistence-foundation-wave14-adr` - `secure-persistence-foundation` adr: wave-14 deferred-items closure | (**status:** `accepted`)
+- `2026-04-30-secure-persistence-foundation-wave17-adr` - `secure-persistence-foundation` adr: wave-17 Kent UX security integration | (**status:** `accepted`)
 - `2026-04-30-secure-persistence-foundation-wave5-adr` - `secure-persistence-foundation` wave-5 adr | (**status:** `accepted`)
 - `2026-04-30-secure-persistence-foundation-wave6-adr` - `secure-persistence-foundation` wave-6 adr | (**status:** `accepted`)
 
@@ -80,6 +84,7 @@ Auto-generated index of all documents tagged with `#secure-persistence-foundatio
 ### plan
 
 - `2026-04-27-secure-persistence-foundation-plan` - `secure-persistence-foundation` `secure-persistence-foundation-wave-1-plan` plan
+- `2026-04-30-secure-persistence-foundation-wave17-plan` - `secure-persistence-foundation` plan: wave-17 Kent UX security integration
 
 ### research
 
@@ -90,5 +95,6 @@ Auto-generated index of all documents tagged with `#secure-persistence-foundatio
 - `2026-04-30-secure-persistence-foundation-wave12-research` - `secure-persistence-foundation` research: wave-12 Argon2id KDF migration
 - `2026-04-30-secure-persistence-foundation-wave13-research` - `secure-persistence-foundation` research: wave-13 repository-id validator consolidation
 - `2026-04-30-secure-persistence-foundation-wave14-research` - `secure-persistence-foundation` research: wave-14 deferred-items closure
+- `2026-04-30-secure-persistence-foundation-wave17-research` - `secure-persistence-foundation` research: wave-17 Kent UX security integration
 - `2026-04-30-secure-persistence-foundation-wave5-research` - `secure-persistence-foundation` wave-5 research
 - `2026-04-30-secure-persistence-foundation-wave6-research` - `secure-persistence-foundation` wave-6 research
