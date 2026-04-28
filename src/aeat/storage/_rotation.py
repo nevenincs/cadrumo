@@ -54,11 +54,21 @@ class RotationPlanEntry(BaseModel):
 
     Attributes:
         store_dir: Directory that contains the consumer's
-            ``*.envelope.json`` files.
+            ``*.envelope.json`` files (or, when ``target_filename`` is
+            set, the directory containing that specific file).
         hkdf_context: The same ``hkdf_context`` the consumer's
             repository uses at save / load time.
         envelope_suffix: Filename suffix the consumer uses; defaults
             to ``.envelope.json`` (matches every wave-7 repository).
+            Ignored when ``target_filename`` is set.
+        target_filename: Optional exact filename inside ``store_dir``.
+            Use this for single-file consumers whose on-disk filename
+            does not end in ``.envelope.json`` (e.g.
+            ``usage-ratios.json`` written by the wave-7 usage-ratios
+            service, or an operator-configured
+            ``aeat_default_profile_path``). When set, the rotation
+            visits exactly ``store_dir / target_filename`` and ignores
+            every other file in the directory.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -66,6 +76,7 @@ class RotationPlanEntry(BaseModel):
     store_dir: Path
     hkdf_context: bytes
     envelope_suffix: str = ".envelope.json"
+    target_filename: str | None = None
 
 
 class RotationSummary(BaseModel):
@@ -92,6 +103,15 @@ def _iter_envelope_files(
     """Yield every envelope file across every plan entry."""
     for entry in plan:
         if not entry.store_dir.exists():
+            continue
+        if entry.target_filename is not None:
+            # Single-file mode: visit exactly this filename inside the
+            # directory. Used by consumers whose on-disk filename does
+            # not end in ``.envelope.json`` (usage_ratios, setup
+            # profile).
+            target = entry.store_dir / entry.target_filename
+            if target.is_file():
+                yield target, entry
             continue
         for path in sorted(entry.store_dir.iterdir()):
             if not path.is_file():
@@ -297,11 +317,14 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
             hkdf_context=b"aeat.financial.attachments.manifest.v1",
         ),
         RotationPlanEntry(
-            # Per-record envelope: every UsageRatioProfile write lands as
-            # an ``*.envelope.json`` file in the parent directory of the
-            # configured ``aeat_usage_ratios_path``.
+            # Single-file envelope: ``aeat_usage_ratios_path`` defaults
+            # to ``var/financial/usage-ratios.json`` — the suffix is
+            # ``.json`` not ``.envelope.json``, so target the exact
+            # filename rather than relying on the directory walk's
+            # default suffix match (which would miss this file).
             store_dir=Path(settings.aeat_usage_ratios_path).parent,
             hkdf_context=b"aeat.financial.usage_ratios.profile.v1",
+            target_filename=Path(settings.aeat_usage_ratios_path).name,
         ),
         RotationPlanEntry(
             store_dir=Path(settings.aeat_drafts_dir),
@@ -344,16 +367,24 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
         ),
         RotationPlanEntry(
             # The setup wizard's ``AutonomoProfile`` is written as a
-            # single-file envelope; rotation visits the parent directory
-            # of the configured profile path. ``aeat_default_profile_path``
-            # is optional in settings; rotation skips the entry when the
-            # parent directory does not exist.
+            # single-file envelope at the operator-configured
+            # ``aeat_default_profile_path`` (or no file at all when
+            # the setting is None). The actual filename is operator-
+            # chosen and may not end in ``.envelope.json`` — target
+            # the exact filename rather than relying on the directory
+            # walk's default suffix match (which would miss e.g.
+            # ``profile.json``).
             store_dir=(
                 Path(settings.aeat_default_profile_path).parent
                 if settings.aeat_default_profile_path is not None
                 else Path(settings.aeat_secret_store_dir) / "setup"
             ),
             hkdf_context=b"aeat.setup.profile.v1",
+            target_filename=(
+                Path(settings.aeat_default_profile_path).name
+                if settings.aeat_default_profile_path is not None
+                else None
+            ),
         ),
     )
 

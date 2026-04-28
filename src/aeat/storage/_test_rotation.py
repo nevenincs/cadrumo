@@ -469,3 +469,69 @@ class TestBlobStoreRotation:
         assert summary.rotated == 0
         assert summary.skipped == 0
         assert summary.errors == 0
+
+
+class TestSingleFileRotationEntry:
+    """Wave-16: single-file consumers (usage_ratios, setup profile)."""
+
+    def test_target_filename_visits_only_named_file(
+        self,
+        tmp_path: Path,
+        alice: EphemeralMasterKeyProvider,
+        bob: EphemeralMasterKeyProvider,
+    ) -> None:
+        # Single-file consumer: filename does not end in .envelope.json.
+        store = tmp_path / "single-file-store"
+        store.mkdir()
+        target = store / "usage-ratios.json"
+        _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_TX)
+
+        # Without target_filename the default-suffix walk would miss
+        # this file (it does not end in `.envelope.json`).
+        summary_default_suffix = rotate_master_key(
+            (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+        assert summary_default_suffix.rotated == 0
+        assert summary_default_suffix.skipped == 0
+
+        # With target_filename, rotation visits exactly that file.
+        summary = rotate_master_key(
+            (
+                RotationPlanEntry(
+                    store_dir=store,
+                    hkdf_context=_HKDF_CONTEXT_TX,
+                    target_filename="usage-ratios.json",
+                ),
+            ),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+        assert summary.rotated == 1
+        assert summary.errors == 0
+
+    def test_target_filename_missing_file_is_a_clean_no_op(
+        self,
+        tmp_path: Path,
+        alice: EphemeralMasterKeyProvider,
+        bob: EphemeralMasterKeyProvider,
+    ) -> None:
+        # Operator hasn't run setup yet — profile file does not exist.
+        # Rotation must report (0, 0, 0) without raising.
+        store = tmp_path / "single-file-store"
+        store.mkdir()
+        summary = rotate_master_key(
+            (
+                RotationPlanEntry(
+                    store_dir=store,
+                    hkdf_context=_HKDF_CONTEXT_TX,
+                    target_filename="profile.json",
+                ),
+            ),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+        assert summary.rotated == 0
+        assert summary.skipped == 0
+        assert summary.errors == 0
