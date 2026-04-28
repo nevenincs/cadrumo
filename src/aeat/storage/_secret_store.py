@@ -186,22 +186,24 @@ class SecretStore:
         self._store_dir.mkdir(parents=True, exist_ok=True)
         target = self._index_path()
         payload = index.model_dump_json(indent=2)
-        tmp_path: Path | None = None
+        # Capture tmp_path BEFORE the ``with`` so cleanup works when
+        # context entry raises. NamedTemporaryFile raising means no
+        # file was created; the outer except re-raises cleanly.
+        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+            mode="w",
+            encoding="utf-8",
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        )
+        tmp_path = Path(handle.name)
         try:
-            with tempfile.NamedTemporaryFile(
-                mode="w",
-                encoding="utf-8",
-                dir=target.parent,
-                prefix=f"{target.stem}.",
-                suffix=".tmp",
-                delete=False,
-            ) as handle:
-                tmp_path = Path(handle.name)
+            with handle:
                 handle.write(payload)
             os.replace(tmp_path, target)
         except OSError:
-            if tmp_path is not None:
-                tmp_path.unlink(missing_ok=True)
+            tmp_path.unlink(missing_ok=True)
             raise
 
     def _build_envelope(self, record: SecretRecord) -> Envelope[SecretRecord]:

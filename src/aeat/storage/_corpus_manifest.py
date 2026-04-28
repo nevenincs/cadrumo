@@ -71,6 +71,13 @@ class CorpusEntry(BaseModel):
     def _validate_relative_path(cls, value: str) -> str:
         if value in {".", "..", ""}:
             raise ValueError(f"relative_path must not be a dot token: {value!r}")
+        # PurePosixPath ignores backslashes (treats them as part of a
+        # single path token), so a Windows-style ``..\\escape`` would
+        # slip past the dot-part walk below. Reject them explicitly.
+        if "\\" in value:
+            raise ValueError(
+                f"relative_path must use POSIX-style separators only: {value!r}",
+            )
         pure = PurePosixPath(value)
         if pure.is_absolute():
             raise ValueError(f"relative_path must not be absolute: {value!r}")
@@ -158,8 +165,19 @@ def _iter_corpus_files(corpus_root: Path) -> Iterator[Path]:
     git internals or editor cruft that should not be tracked. The
     manifest sidecar at the root is excluded so the manifest does not
     cover itself recursively.
+
+    Symlinks are skipped: a hostile actor with corpus-tree write access
+    could plant a symlink pointing to a file outside the corpus and
+    cause the manifest to attest to content the corpus does not own.
+    The substrate's classification policy maps the corpus class to
+    integrity-tracked-only, but the manifest must reflect the literal
+    on-disk corpus contents — symlinks defeat that contract.
     """
     for path in sorted(corpus_root.rglob("*")):
+        # ``is_symlink()`` is checked first because ``is_file()`` follows
+        # the symlink target on most filesystems and would mask the link.
+        if path.is_symlink():
+            continue
         if not path.is_file():
             continue
         if any(part.startswith(".") for part in path.relative_to(corpus_root).parts):
@@ -308,22 +326,24 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
     resolved = target.resolve()
     resolved.parent.mkdir(parents=True, exist_ok=True)
     payload = manifest.model_dump_json()
-    tmp_path: Path | None = None
+    # Capture tmp_path BEFORE the ``with`` so cleanup works when
+    # context entry raises. NamedTemporaryFile raising means no file
+    # was created; the outer except re-raises cleanly.
+    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+        mode="w",
+        encoding="utf-8",
+        dir=resolved.parent,
+        prefix=f"{resolved.stem}.",
+        suffix=".tmp",
+        delete=False,
+    )
+    tmp_path = Path(handle.name)
     try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=resolved.parent,
-            prefix=f"{resolved.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
+        with handle:
             handle.write(payload)
         os.replace(tmp_path, resolved)
     except OSError:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
+        tmp_path.unlink(missing_ok=True)
         raise
 
 
