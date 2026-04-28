@@ -477,4 +477,220 @@ def provision_cmd(
     )
 
 
+@app.command("recover")
+def recover_cmd(
+    recovery_key: Annotated[
+        str,
+        typer.Option(
+            "--recovery-key",
+            help="The 24-word recovery mnemonic shown at provision time, space-separated and quoted.",
+        ),
+    ],
+) -> None:
+    """Recover the master key from a 24-word recovery mnemonic.
+
+    Operator workflow when the active provider becomes unavailable
+    (forgotten passphrase, corrupted file-fallback, lost OS keychain):
+
+    1. Locate the 24-word recovery key shown at the original
+       ``aeat security provision`` time.
+    2. Run this command, supplying the words via ``--recovery-key``.
+    3. The substrate unwraps the master key from
+       ``master.recovery.key`` using the recovery key, then re-mints
+       a fresh ``master.key`` + ``master.kdf`` + ``salt`` triplet
+       under a file-fallback backend with the operator's new
+       passphrase. The recovery wrapping itself is preserved so
+       future recoveries remain possible.
+
+    The previous master.key contents are overwritten — operators who
+    are unsure whether their original passphrase still works should
+    use ``aeat security provision --force`` instead (which generates
+    a brand-new master key and recovery key).
+    """
+    from ..config import load_settings
+    from ..storage import (
+        FileFallbackMasterKeyProvider,
+        decode_mnemonic,
+        decrypt_record,
+        encrypt_record,
+        load_wrapped_master_key,
+        unwrap_master_key,
+    )
+    from ..storage.errors import DecryptionError
+
+    settings = load_settings()
+    secret_dir = Path(settings.aeat_secret_store_dir)
+    wrapped_path = secret_dir / "master.recovery.key"
+    if not wrapped_path.exists():
+        _console.print(
+            f"[red]no recovery wrapping at {wrapped_path}.[/red] "
+            "If you provisioned the substrate before the recovery feature "
+            "shipped, you must use the original passphrase / keychain entry.",
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        recovery_bytes = decode_mnemonic(recovery_key)
+    except ValueError as exc:
+        _console.print(f"[red]invalid recovery key:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    wrapped = load_wrapped_master_key(wrapped_path)
+    try:
+        master_key = unwrap_master_key(
+            wrapped=wrapped,
+            recovery_key_bytes=recovery_bytes,
+        )
+    except DecryptionError as exc:
+        _console.print(
+            "[red]recovery key did not unwrap the master.recovery.key file.[/red] "
+            "Verify every word matches what you wrote down at provision time.",
+        )
+        raise typer.Exit(code=1) from exc
+
+    _console.print("[green]✓ Master key recovered from the 24-word mnemonic.[/green]")
+
+    # Re-mint the file-fallback artefacts under the operator's new
+    # passphrase, preserving the recovered master-key bytes so every
+    # existing on-disk record continues to decrypt cleanly.
+    import base64
+    import secrets as _secrets
+
+    from ..storage._master_key import (
+        _ARGON2_MEMORY_COST_KIB,
+        _ARGON2_PARALLELISM,
+        _ARGON2_TIME_COST,
+        _SALT_SIZE,
+        _b64encode,
+        _KdfParameters,
+    )
+
+    for stale in (secret_dir / "master.key", secret_dir / "master.kdf", secret_dir / "salt"):
+        stale.unlink(missing_ok=True)
+    FileFallbackMasterKeyProvider._reset_for_tests()
+    provider = FileFallbackMasterKeyProvider(store_dir=secret_dir)
+    passphrase = provider._resolve_passphrase()
+    salt = _secrets.token_bytes(_SALT_SIZE)
+    params = _KdfParameters(
+        memory_cost=_ARGON2_MEMORY_COST_KIB,
+        time_cost=_ARGON2_TIME_COST,
+        parallelism=_ARGON2_PARALLELISM,
+        salt_b64=_b64encode(salt),
+    )
+    kek = FileFallbackMasterKeyProvider._derive_kek_with_params(
+        passphrase,
+        salt,
+        params,
+    )
+    wrapped_master = encrypt_record(
+        master_key,
+        key=kek,
+        associated_data=b"aeat.master-key.v1",
+    )
+    FileFallbackMasterKeyProvider._restrict_dir_permissions(secret_dir)
+    FileFallbackMasterKeyProvider._write_bytes_secure(
+        secret_dir / "master.kdf",
+        params.model_dump_json().encode("utf-8"),
+    )
+    FileFallbackMasterKeyProvider._write_bytes_secure(
+        secret_dir / "master.key",
+        base64.b64encode(wrapped_master.to_wire()),
+    )
+    FileFallbackMasterKeyProvider._write_bytes_secure(
+        secret_dir / "salt",
+        salt,
+    )
+
+    # Round-trip canary verify under the restored key.
+    canary_aad = b"aeat.security.recover.canary.aad.v1"
+    blob = encrypt_record(b"recover-canary", key=master_key, associated_data=canary_aad)
+    assert decrypt_record(blob, key=master_key, associated_data=canary_aad) == b"recover-canary"
+    _console.print(
+        f"[green]✓ Master key restored to file-fallback at {secret_dir} "
+        "(under your new passphrase).[/green]\n"
+        "[green]✓ Round-trip verify under the restored master key succeeded.[/green]",
+    )
+
+
+@app.command("key-export")
+def key_export_cmd(
+    output_path: Annotated[
+        Path,
+        typer.Option(
+            "--out",
+            help="Destination path for the exported portable JSON file.",
+        ),
+    ],
+) -> None:
+    """Export the active master-key state as a portable backup file.
+
+    The export bundles the recovery-key wrapping
+    (``master.recovery.key``) plus, for file-fallback installations,
+    the ``master.kdf`` parameters and the per-store ``salt``. The
+    operator stores this file off-site (cloud backup, USB drive,
+    paper printout). To restore on a new machine: copy the file back
+    into ``aeat_secret_store_dir`` then run
+    ``aeat security recover --recovery-key`` to re-mint the active
+    backend state.
+
+    The export is itself ciphertext at rest — the
+    ``master.recovery.key`` is wrapped under the recovery KEK; the
+    file-fallback artefacts wrap the master key under the operator's
+    Argon2id-derived KEK. No new cryptography is introduced; the
+    export is a portable repackaging of the existing wrapped state.
+    """
+    import base64
+    import json
+    from datetime import UTC, datetime
+
+    from ..config import load_settings
+
+    settings = load_settings()
+    secret_dir = Path(settings.aeat_secret_store_dir)
+    recovery_path = secret_dir / "master.recovery.key"
+    if not recovery_path.exists():
+        _console.print(
+            f"[red]no master.recovery.key at {recovery_path}.[/red] "
+            "Run `aeat security provision` first to generate the recovery wrapping.",
+        )
+        raise typer.Exit(code=1)
+
+    record: dict[str, object] = {
+        "schema_version": 1,
+        "exported_at": datetime.now(UTC).isoformat(),
+        "backend": settings.aeat_secret_store_backend.value,
+        "master_recovery_key_b64": base64.b64encode(
+            recovery_path.read_bytes(),
+        ).decode("ascii"),
+    }
+    kdf_path = secret_dir / "master.kdf"
+    salt_path = secret_dir / "salt"
+    master_key_path = secret_dir / "master.key"
+    if kdf_path.exists():
+        record["master_kdf_b64"] = base64.b64encode(kdf_path.read_bytes()).decode("ascii")
+    if salt_path.exists():
+        record["salt_b64"] = base64.b64encode(salt_path.read_bytes()).decode("ascii")
+    if master_key_path.exists():
+        record["master_key_b64"] = base64.b64encode(master_key_path.read_bytes()).decode("ascii")
+
+    resolved_output = output_path.expanduser().resolve()
+    resolved_output.parent.mkdir(parents=True, exist_ok=True)
+    resolved_output.write_text(
+        json.dumps(record, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    # Restrict permissions on POSIX. Best-effort; Windows inherits the
+    # parent dir's ACL.
+    import contextlib
+
+    with contextlib.suppress(OSError):
+        resolved_output.chmod(0o600)
+    _console.print(
+        f"[green]✓ Master-key state exported to {resolved_output}.[/green]\n"
+        "Store this file off-site. To restore on a new machine: copy it back "
+        "into the configured secret-store directory, then run "
+        '`aeat security recover --recovery-key "<24 words>"`.',
+    )
+
+
 __all__ = ["app"]

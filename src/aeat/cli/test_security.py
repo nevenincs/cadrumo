@@ -487,3 +487,178 @@ class TestProvisionCommand:
         assert result.exit_code == 0, result.output
         assert "ZERO confidentiality" in result.output
         assert "RECOVERY KEY" in result.output
+
+
+def _extract_recovery_mnemonic(output: str) -> str:
+    """Pull the 24 words out of the recovery-key panel in CLI output."""
+    # The provision command prints the words in 4 rows of 6, each
+    # word inside a `[cyan]...[/]` rich tag. The CliRunner output
+    # has the rich markup stripped, so we just walk the lines and
+    # collect the rows that look like a 6-word block.
+    words: list[str] = []
+    for line in output.splitlines():
+        stripped = line.strip()
+        # The recovery-key panel rows are indented and have all-lowercase
+        # words. They appear AFTER the "RECOVERY KEY" header and
+        # BEFORE the closing separator. The terminal width may wrap
+        # rich content; collect everything between markers.
+        candidates = stripped.split()
+        if len(candidates) == 6 and all(c.isalpha() and c.islower() for c in candidates):
+            words.extend(candidates)
+            if len(words) == 24:
+                break
+    return " ".join(words)
+
+
+class TestRecoverCommand:
+    """Recover via 24-word mnemonic + re-mint the file-fallback state."""
+
+    def test_recovery_round_trip_under_new_passphrase(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        secrets_dir = tmp_path / "secrets"
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "original-pp-1234")
+
+        # Step 1: provision the substrate to mint the recovery key.
+        provision = runner.invoke(app, ["security", "provision"])
+        assert provision.exit_code == 0, provision.output
+        mnemonic = _extract_recovery_mnemonic(provision.output)
+        assert len(mnemonic.split()) == 24
+
+        # Step 2: capture the original master-key bytes (via a known
+        # encrypted-record round-trip) so we can verify recovery
+        # preserves them.
+        from ..storage import (
+            FileFallbackMasterKeyProvider,
+            decrypt_record,
+            encrypt_record,
+        )
+
+        original_provider = FileFallbackMasterKeyProvider(store_dir=secrets_dir)
+        original_master = original_provider.get_master_key()
+        canary = encrypt_record(
+            b"original-canary",
+            key=original_master,
+            associated_data=b"canary-aad",
+        )
+
+        # Step 3: simulate a forgotten passphrase by changing the
+        # operator's passphrase. The new file-fallback state should
+        # be re-minted under the NEW passphrase but keep the original
+        # master-key bytes (so the canary still decrypts).
+        # The substrate's env-var-driven _default_passphrase_callback
+        # pops the env var after reading; restore it explicitly with
+        # the new value so the recover command resolves the new
+        # passphrase without prompting stdin.
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        import os as _os
+
+        _os.environ["AEAT_SECRET_PASSPHRASE"] = "new-pp-5678"  # noqa: S105
+
+        recover = runner.invoke(
+            app,
+            ["security", "recover", "--recovery-key", mnemonic],
+        )
+        assert recover.exit_code == 0, recover.output
+        assert "recovered" in recover.output.lower()
+
+        # Step 4: load the master key under the new passphrase; the
+        # canary from before recovery still decrypts.
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        _os.environ["AEAT_SECRET_PASSPHRASE"] = "new-pp-5678"  # noqa: S105
+        new_provider = FileFallbackMasterKeyProvider(store_dir=secrets_dir)
+        new_master = new_provider.get_master_key()
+        assert new_master == original_master
+        assert decrypt_record(canary, key=new_master, associated_data=b"canary-aad") == b"original-canary"
+
+    def test_recovery_with_wrong_mnemonic_exits_nonzero(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        secrets_dir = tmp_path / "secrets"
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "pp")
+
+        runner.invoke(app, ["security", "provision"])
+        # All-zero mnemonic: valid checksum, but it's not the
+        # provisioned recovery key.
+        zero_mnemonic = ("abandon " * 23 + "art").strip()
+
+        result = runner.invoke(
+            app,
+            ["security", "recover", "--recovery-key", zero_mnemonic],
+        )
+        assert result.exit_code == 1
+        assert "did not unwrap" in result.output
+
+    def test_recovery_without_wrapping_file_exits_nonzero(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        secrets_dir = tmp_path / "secrets"
+        secrets_dir.mkdir(parents=True)
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+        # Don't provision — no master.recovery.key exists.
+        zero_mnemonic = ("abandon " * 23 + "art").strip()
+        result = runner.invoke(
+            app,
+            ["security", "recover", "--recovery-key", zero_mnemonic],
+        )
+        assert result.exit_code == 1
+        assert "no recovery wrapping" in result.output
+
+
+class TestKeyExportCommand:
+    """`aeat security key-export --out <path>` portable backup."""
+
+    def test_export_after_provision(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        secrets_dir = tmp_path / "secrets"
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "pp")
+
+        runner.invoke(app, ["security", "provision"])
+        out = tmp_path / "backup.json"
+        result = runner.invoke(app, ["security", "key-export", "--out", str(out)])
+        assert result.exit_code == 0, result.output
+        assert out.exists()
+        # The export is a JSON object with the expected portable fields.
+        import json
+
+        record = json.loads(out.read_text(encoding="utf-8"))
+        assert record["schema_version"] == 1
+        assert record["backend"] == "file"
+        assert "master_recovery_key_b64" in record
+        assert "master_kdf_b64" in record
+        assert "salt_b64" in record
+        assert "master_key_b64" in record
+        assert "exported_at" in record
+
+    def test_export_without_provision_exits_nonzero(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        secrets_dir = tmp_path / "secrets"
+        secrets_dir.mkdir(parents=True)
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+        out = tmp_path / "backup.json"
+        result = runner.invoke(app, ["security", "key-export", "--out", str(out)])
+        assert result.exit_code == 1
+        assert "no master.recovery.key" in result.output
