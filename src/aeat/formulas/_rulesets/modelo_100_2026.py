@@ -15,6 +15,7 @@ from .modelo_100 import (
     anexo_d_simplificada_2026,
     anexo_e_2026,
     anexo_f_2026,
+    anexo_g_2026,
 )
 
 _EFFECTIVE_FROM = date(2026, 1, 1)
@@ -30,6 +31,7 @@ _CASILLAS = (
     *anexo_d_modulos_2026.CASILLAS,
     *anexo_e_2026.CASILLAS,
     *anexo_f_2026.CASILLAS,
+    *anexo_g_2026.CASILLAS,
 )
 _FORMULAS = (
     *anexo_b1_2026.FORMULAS,
@@ -40,6 +42,7 @@ _FORMULAS = (
     *anexo_d_modulos_2026.FORMULAS,
     *anexo_e_2026.FORMULAS,
     *anexo_f_2026.FORMULAS,
+    *anexo_g_2026.FORMULAS,
 )
 _CITATIONS = (
     *anexo_b1_2026.CITATIONS,
@@ -50,6 +53,7 @@ _CITATIONS = (
     *anexo_d_modulos_2026.CITATIONS,
     *anexo_e_2026.CITATIONS,
     *anexo_f_2026.CITATIONS,
+    *anexo_g_2026.CITATIONS,
 )
 
 
