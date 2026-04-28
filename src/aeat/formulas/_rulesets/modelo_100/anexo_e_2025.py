@@ -1,14 +1,14 @@
-"""Modelo 100 Anexo E — ganancias y perdidas patrimoniales (ejercicio 2025).
+"""Modelo 100 Anexo E — ganancias y pérdidas patrimoniales (ejercicio 2025).
 
-LIRPF arts. 33-39 cover ganancias y perdidas patrimoniales (capital
+LIRPF arts. 33-39 cover ganancias y pérdidas patrimoniales (capital
 gains and losses). The integration split per LIRPF art. 49:
 
 - Held <= 1 year -> base imponible general (Anexo F casilla 0399).
 - Held > 1 year   -> base imponible ahorro (Anexo F casilla 0400).
 
-This ruleset verifies the aggregate saldo (0405 = ganancias - perdidas).
+This ruleset verifies the aggregate saldo (0405 = ganancias - pérdidas).
 The general/ahorro split is caller-supplied via 0399 + 0400 since the
-holding-period classification is per-transaccion metadata that lives
+holding-period classification is per-transacción metadata that lives
 outside the formula layer (caller iterates transmisiones, applies
 LIRPF art. 37 FIFO regla on acciones, computes the per-transaction
 holding period, and aggregates into the two integration buckets).
@@ -43,24 +43,24 @@ CITATIONS = (
     cite_lirpf(
         "33",
         "Artículo 33 Ley 35/2006 (IRPF) — concepto de ganancias y "
-        "perdidas patrimoniales: variaciones en el valor del patrimonio "
-        "del contribuyente que se pongan de manifiesto con ocasion de "
-        "cualquier alteracion en su composicion, salvo que se califiquen "
+        "pérdidas patrimoniales: variaciones en el valor del patrimonio "
+        "del contribuyente que se pongan de manifiesto con ocasión de "
+        "cualquier alteración en su composición, salvo que se califiquen "
         "como rendimientos.",
     ),
     cite_lirpf(
         "37",
         "Artículo 37 Ley 35/2006 (IRPF) — normas específicas de "
-        "valoracion: regla FIFO para transmisiones de valores cotizados "
-        "y participaciones (apartado 2). Soporta el cálculo per-transaccion "
-        "de la ganancia / perdida patrimonial.",
+        "valoración: regla FIFO para transmisiones de valores cotizados "
+        "y participaciones (apartado 2). Soporta el cálculo per-transacción "
+        "de la ganancia / pérdida patrimonial.",
     ),
     cite_lirpf(
         "49",
         "Artículo 49 Ley 35/2006 (IRPF) — integración y compensación "
         "de rentas en la base imponible del ahorro: las ganancias y "
-        "perdidas patrimoniales con periodo de generacion superior a un "
-        "ano se integran en base ahorro; las restantes en base general.",
+        "pérdidas patrimoniales con período de generación superior a un "
+        "año se integran en base ahorro; las restantes en base general.",
     ),
 )
 
@@ -79,7 +79,7 @@ CASILLAS = (
     casilla(
         casilla_id="0307",
         label=_label(
-            "Perdidas patrimoniales brutas",
+            "Pérdidas patrimoniales brutas",
             "Gross capital losses (Anexo E)",
             "Brutto vagyonveszteseg",
         ),
@@ -89,28 +89,28 @@ CASILLAS = (
     casilla(
         casilla_id="0399",
         label=_label(
-            "Saldo a integrar en base general (<= 1 ano)",
+            "Saldo a integrar en base general (<= 1 año)",
             "Net amount integrating into general base (held <= 1 yr)",
             "Altalanos alapba szamitando egyenleg (<= 1 ev)",
         ),
         computed=False,
         legal_basis=(CITATIONS[2],),
         notes_es=(
-            "Caller-computed: net of ganancias - perdidas con periodo "
-            "de generacion <= 1 ano. Puede ser negativo (perdida neta)."
+            "Caller-computed: net of ganancias - pérdidas con período "
+            "de generación <= 1 año. Puede ser negativo (pérdida neta)."
         ),
     ),
     casilla(
         casilla_id="0400",
         label=_label(
-            "Saldo a integrar en base ahorro (> 1 ano)",
+            "Saldo a integrar en base ahorro (> 1 año)",
             "Net amount integrating into savings base (held > 1 yr)",
             "Megtakaritasi alapba szamitando egyenleg (> 1 ev)",
         ),
         computed=False,
         legal_basis=(CITATIONS[2],),
         notes_es=(
-            "Caller-computed: net of ganancias - perdidas con periodo de generacion > 1 ano. Puede ser negativo."
+            "Caller-computed: net of ganancias - pérdidas con período de generación > 1 año. Puede ser negativo."
         ),
     ),
     casilla(

@@ -1,4 +1,4 @@
-"""Modelo 100 Anexo E — ganancias y perdidas patrimoniales (2026)."""
+"""Modelo 100 Anexo E — ganancias y pérdidas patrimoniales (2026)."""
 
 from __future__ import annotations
 

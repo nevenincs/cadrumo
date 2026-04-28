@@ -1,14 +1,14 @@
 """Modelo 100 Anexo N — deducciones autónomicas (ejercicio 2025).
 
 LIRPF art. 46 bis articulates the cesión de competencias normativas en
-materia de IRPF entre el Estado y las Comunidades Autonomas: cada CCAA
+materia de IRPF entre el Estado y las Comunidades Autónomas: cada CCAA
 puede establecer deducciones aplicables sobre la cuota íntegra
 autonómica (LIRPF art. 73-77). The per-CCAA deduction inventory varies
 substantially:
 
 - Andalucía ~16 deducciones; Aragón ~19; Asturias ~27; Illes Balears
   ~26; Canarias ~29; Cantabria ~21; Castilla-La Mancha ~27; Castilla y
-  Leon ~18; Cataluña ~13; Comunitat Valenciana ~41; Extremadura ~19;
+  León ~18; Cataluña ~13; Comunitat Valenciana ~41; Extremadura ~19;
   Galicia ~25; Madrid ~23; Murcia ~28; La Rioja ~24.
 
 The DSL has no conditional operator, so the per-CCAA deductions are
@@ -26,12 +26,12 @@ official BOE casilla. The autonomic-deduction breakdown that AEAT
 prints uses per-CCAA per-deduction casilla IDs in the 0700-0900 range
 that vary per Comunidad — modeling those exhaustively would require
 ~336 casillas/year (per the rule-delta reference manifest's per-CCAA
-count summary) and is deferred to a follow-up wave; this aggregate
+count summary) and is deferred to a follow-up issue; this aggregate
 shape is the minimum viable encoding for cross-anexo arithmetic.
 
-The state-level casilla 0622 (deducciones autónomicas total, consumed
+The state-level casilla 0622 (deducciones autonómicas total, consumed
 by Anexo G via 0630 = 0620 + 0622) is computed here as the sum of all
-15 per-CCAA aggregates. Pais Vasco / Navarra are out of scope (foral
+15 per-CCAA aggregates. País Vasco / Navarra are out of scope (foral
 regimes, separate Norma Foral / Decreto Foral Legislativo per #424).
 
 Stable structurally across 2024 / 2025 / 2026 — only the per-deduction
@@ -71,7 +71,7 @@ CITATIONS = (
         "46-bis",
         "Artículo 46 bis Ley 35/2006 (IRPF) — concepto de la base "
         "liquidable autonómica y cesión de competencias normativas a "
-        "las Comunidades Autonomas (en relacion con la Ley 22/2009 de "
+        "las Comunidades Autónomas (en relación con la Ley 22/2009 de "
         "cesión de tributos): cada CCAA puede establecer deducciones "
         "aplicables sobre la cuota íntegra autonómica que minoran la "
         "cuota líquida autonómica (art. 77).",
@@ -82,7 +82,7 @@ CITATIONS = (
         LegalCitationSource.MANUAL_PRACTICO,
         "renta-2025-parte-2",
         "AEAT Manual Práctico Renta 2025 — Parte 2 Deducciones "
-        "autonómicas: catalogo completo per-CCAA con importes, topes, "
+        "autonómicas: catálogo completo per-CCAA con importes, topes, "
         "y normativas aplicables (Decretos Legislativos / Leyes de "
         "Medidas Fiscales / Leyes de Presupuestos vigentes para el "
         "ejercicio).",
@@ -106,7 +106,7 @@ _CCAA_LABELS = (
     ("1111", "Extremadura", "Extremadura", "Extremadura"),
     ("1112", "Galicia", "Galicia", "Galicia"),
     ("1113", "Comunidad de Madrid", "Madrid Community", "Madridi kozosseg"),
-    ("1114", "Region de Murcia", "Murcia Region", "Murcia regio"),
+    ("1114", "Región de Murcia", "Murcia Region", "Murcia regio"),
     ("1115", "La Rioja", "La Rioja", "La Rioja"),
 )
 
@@ -116,7 +116,7 @@ CASILLAS = (
         casilla(
             casilla_id=cid,
             label=_label(
-                f"Total deducciones autónomicas — {label_es}",
+                f"Total deducciones autonómicas — {label_es}",
                 f"Total autonomic deductions — {label_en}",
                 f"Autonom levonasok osszesen — {label_hu}",
             ),
@@ -125,8 +125,8 @@ CASILLAS = (
             notes_es=(
                 f"Sumatorio agregado por el consumidor de las deducciones "
                 f"autonómicas vigentes para {label_es} en el ejercicio. "
-                "Solo una de las 15 casillas (1101-1115) deberia ser "
-                "distinta de cero por declaracion, correspondiente a la "
+                "Solo una de las 15 casillas (1101-1115) debería ser "
+                "distinta de cero por declaración, correspondiente a la "
                 "CCAA de residencia habitual del contribuyente. Las "
                 "restantes permanecen en 0,00."
             ),
@@ -136,7 +136,7 @@ CASILLAS = (
     casilla(
         casilla_id="0622",
         label=_label(
-            "Total deducciones autónomicas (suma per-CCAA)",
+            "Total deducciones autonómicas (suma per-CCAA)",
             "Total autonomic deductions (sum across 15 CCAAs)",
             "Osszes autonom levonas (15 CCAA osszege)",
         ),

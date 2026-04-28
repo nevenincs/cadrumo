@@ -192,11 +192,11 @@ class TestCeutaMelilla:
         assert derived["0698"] == Decimal("2055.50")
 
     def test_ceuta_melilla_clamps_to_zero_when_exceeds_cuota(self) -> None:
-        """If 0612 caller-supplied exceeds cuota integra (which would be a
+        """If 0612 caller-supplied exceeds cuota íntegra (which would be a
         user error — LIRPF art. 68.4 caps the deduction at 60% of cuota
-        integra), the clamp_pos protects against negative cuota líquida.
+        íntegra), the clamp_pos protects against negative cuota líquida.
         BLG 25000 (low rendimiento, art. 20 reducción active brings BLG to
-        ~25000-0 since 25000 > 19747.50 -> reducción 0). Cuota integra small;
+        ~25000-0 since 25000 > 19747.50 -> reducción 0). Cuota íntegra small;
         0612=100000 way exceeds; 0698 clamps to 0.
         """
         inputs = _zero_inputs(MODELO_100_2025)

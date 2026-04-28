@@ -90,7 +90,7 @@ def _baseline() -> dict[str, Decimal]:
 
 class TestModelo100AnexoE:
     def test_consistent_saldo_patrimonial(self) -> None:
-        """Ganancias 5.000, perdidas 1.500 -> saldo neto 3.500."""
+        """Ganancias 5.000, pérdidas 1.500 -> saldo neto 3.500."""
         provided = _baseline() | {
             "0306": Decimal("5000.00"),
             "0307": Decimal("1500.00"),

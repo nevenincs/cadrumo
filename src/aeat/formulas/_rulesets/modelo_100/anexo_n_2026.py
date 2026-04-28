@@ -1,6 +1,6 @@
-"""Modelo 100 Anexo N — deducciones autonomicas (ejercicio 2026).
+"""Modelo 100 Anexo N — deducciones autonómicas (ejercicio 2026).
 
-For 2026 only Andalucia has published its 2026 Ley de Presupuestos
+For 2026 only Andalucía has published its 2026 Ley de Presupuestos
 (Ley 8/2025) at retrieval 2026-04-27. The other 14 ordinary CCAAs use
 2025 amounts as the conservative baseline; per-CCAA refresh follow-up
 issues open post-merge as each Comunidad publishes its 2026 Ley.

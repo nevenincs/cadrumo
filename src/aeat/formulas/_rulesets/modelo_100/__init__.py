@@ -9,7 +9,9 @@ Layout overview:
 - ``_common.py`` — shared label helper, BOE URL constants, citation
   helpers reused across anexos.
 - ``_ccaa.py`` — closed ``CCAA`` enum + per-CCAA tarifa autonómica
-  brackets for the 5 highest-population CCAAs.
+  brackets for all 15 ordinary CCAAs (13 stable + Asturias / Canarias
+  year-dependent post Ley 3/2025 + Ley 5/2024 respectively); País
+  Vasco / Navarra excluded as foral regimes.
 - ``_amortization.py`` — Pydantic ``AmortizationCategory`` + closed
   ``AssetClass`` enum encoding the LIS art. 12.1.a) lineal table.
 - ``_inventario.py`` — Pydantic ``InventoryRecord`` + closed

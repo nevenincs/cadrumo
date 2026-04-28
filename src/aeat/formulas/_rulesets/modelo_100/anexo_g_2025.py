@@ -135,7 +135,7 @@ CITATIONS = (
         "66",
         "Artículo 66 Ley 35/2006 (IRPF) — tipos de gravamen del "
         "ahorro (estatal). Modificado por Ley 7/2024 con efectos "
-        "1/1/2025: el ultimo tramo (>300000) sube del 14 % al 15 %; "
+        "1/1/2025: el último tramo (>300000) sube del 14 % al 15 %; "
         "tramos 0-6000 al 9,5 %; 6000-50000 al 10,5 %; "
         "50000-200000 al 11,5 %; 200000-300000 al 13,5 %; "
         ">300000 al 15 %.",
@@ -149,10 +149,10 @@ CITATIONS = (
     cite_lirpf(
         "68",
         "Artículo 68 Ley 35/2006 (IRPF) — deducciones estatales: "
-        "donativos (Ley 49/2002 + apartado 1 art. 68), inversion en "
-        "vivienda habitual (regimen transitorio apartado 1 art. "
-        "68.1), alquiler vivienda (regimen transitorio apartado 7), "
-        "doble imposicion internacional (apartado 9). El apartado 4 "
+        "donativos (Ley 49/2002 + apartado 1 art. 68), inversión en "
+        "vivienda habitual (régimen transitorio apartado 1 art. "
+        "68.1), alquiler vivienda (régimen transitorio apartado 7), "
+        "doble imposición internacional (apartado 9). El apartado 4 "
         "establece la deducción del 60 % por rentas obtenidas en "
         "Ceuta o Melilla (post Ley 6/2018).",
     ),
@@ -173,14 +173,14 @@ CITATIONS = (
     cite_lirpf(
         "77",
         "Artículo 77 Ley 35/2006 (IRPF) — cuota líquida autonómica "
-        "total: resultado de aplicar las deducciones autónomicas "
+        "total: resultado de aplicar las deducciones autonómicas "
         "(Anexo N) a la suma de las cuotas íntegras autonómicas "
         "general y del ahorro.",
     ),
     cite_lirpf(
         "79",
         "Artículo 79 Ley 35/2006 (IRPF) — cuota diferencial: el "
-        "resultado de minorar la cuantia neta total del impuesto en "
+        "resultado de minorar la cuantía neta total del impuesto en "
         "las retenciones, ingresos a cuenta y pagos fraccionados "
         "ingresados (LIRPF art. 99-101).",
     ),
@@ -188,7 +188,7 @@ CITATIONS = (
         "99",
         "Artículo 99 Ley 35/2006 (IRPF) — obligación de practicar "
         "pagos a cuenta sobre rendimientos del trabajo, capital "
-        "mobiliario, capital inmobiliario y actividades economicas. "
+        "mobiliario, capital inmobiliario y actividades económicas. "
         "Las cantidades retenidas e ingresadas a cuenta minoran la "
         "cuota líquida.",
     ),
@@ -275,7 +275,7 @@ CASILLAS = (
     casilla(
         casilla_id="0612",
         label=_label(
-            "Deduccion 60 % rentas Ceuta / Melilla",
+            "Deducción 60 % rentas Ceuta / Melilla",
             "60 % deduction for Ceuta/Melilla income (LIRPF art. 68.4)",
             "Ceuta/Melilla bevetel 60 %-os levonas",
         ),
@@ -346,7 +346,7 @@ CASILLAS = (
     casilla(
         casilla_id="0720",
         label=_label(
-            "Cuota diferencial / resultado de la autoliquidacion",
+            "Cuota diferencial / resultado de la autoliquidación",
             "Differential cuota / autoliquidation result (art. 79)",
             "Onbevallas eredmenye / kulonbozeti ado (79. cikk)",
         ),

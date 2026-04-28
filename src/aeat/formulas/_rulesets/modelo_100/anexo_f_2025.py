@@ -59,16 +59,16 @@ CITATIONS = (
         "Artículo 48 Ley 35/2006 (IRPF) — base imponible general: "
         "suma algebraica de los rendimientos netos integrables en "
         "base general (trabajo, capital inmobiliario, actividades "
-        "economicas, imputaciones de renta) y del saldo positivo de "
-        "ganancias y perdidas patrimoniales con periodo de generacion "
-        "<= 1 ano.",
+        "económicas, imputaciones de renta) y del saldo positivo de "
+        "ganancias y pérdidas patrimoniales con período de generación "
+        "<= 1 año.",
     ),
     cite_lirpf(
         "49",
         "Artículo 49 Ley 35/2006 (IRPF) — base imponible del ahorro: "
         "rendimientos del capital mobiliario (art. 25.1, 25.2, 25.3) y "
-        "ganancias / perdidas patrimoniales con periodo de generacion "
-        "superior a un ano.",
+        "ganancias / pérdidas patrimoniales con período de generación "
+        "superior a un año.",
     ),
     cite_lirpf(
         "50",
@@ -101,20 +101,20 @@ CITATIONS = (
         "57",
         "Artículo 57 Ley 35/2006 (IRPF) — mínimo del contribuyente: "
         "5.550 EUR anuales con carácter general; +1.150 EUR si > 65 "
-        "anos; +1.400 EUR adicional si > 75.",
+        "años; +1.400 EUR adicional si > 75.",
     ),
     cite_lirpf(
         "58",
         "Artículo 58 Ley 35/2006 (IRPF) — mínimo por descendientes: "
         "2.400 EUR primer descendiente, 2.700 EUR segundo, 4.000 EUR "
         "tercero, 4.500 EUR cuarto y siguientes; bonus +2.800 EUR si "
-        "menor de 3 anos. Requisitos: convivencia + rentas del "
+        "menor de 3 años. Requisitos: convivencia + rentas del "
         "descendiente <= 8.000 EUR.",
     ),
     cite_lirpf(
         "59",
         "Artículo 59 Ley 35/2006 (IRPF) — mínimo por ascendientes: "
-        "1.150 EUR si > 65 ano o discapacidad y conviven, rentas "
+        "1.150 EUR si > 65 años o discapacidad y conviven, rentas "
         "<= 8.000 EUR; +1.400 EUR si > 75.",
     ),
     cite_lirpf(
@@ -165,7 +165,7 @@ CASILLAS = (
     casilla(
         casilla_id="0505",
         label=_label(
-            "Minimo del contribuyente",
+            "Mínimo del contribuyente",
             "Personal exemption (art. 57)",
             "Adoalany szemelyi minimum",
         ),
@@ -175,7 +175,7 @@ CASILLAS = (
     casilla(
         casilla_id="0510",
         label=_label(
-            "Minimo por descendientes",
+            "Mínimo por descendientes",
             "Dependents exemption (art. 58)",
             "Leszarmazok szerinti minimum",
         ),
@@ -185,7 +185,7 @@ CASILLAS = (
     casilla(
         casilla_id="0515",
         label=_label(
-            "Minimo por ascendientes",
+            "Mínimo por ascendientes",
             "Ascendants exemption (art. 59)",
             "Felmenok szerinti minimum",
         ),
@@ -195,7 +195,7 @@ CASILLAS = (
     casilla(
         casilla_id="0520",
         label=_label(
-            "Minimo por discapacidad",
+            "Mínimo por discapacidad",
             "Disability exemption (art. 60)",
             "Fogyatekossagi minimum",
         ),

@@ -11,22 +11,21 @@ STATE-level deduction (LIRPF art. 68.4 — 60 % reducción on the cuota
 proporcional, post Ley 6/2018) handled in Anexo G, not Anexo Ñ.
 
 This module also publishes the **per-CCAA tarifa autonómica general
-brackets** for the 5 highest-population CCAAs (Madrid, Cataluña,
-Andalucía, Comunitat Valenciana, Castilla y León) per LIRPF arts.
-46 bis + 73-77 + Ley 22/2009 (cesión de competencias normativas a las
-CCAA). The brackets follow the same shape as the estatal tarifas
+brackets** for all 15 ordinary CCAAs per LIRPF arts. 46 bis + 73-77 +
+Ley 22/2009 (cesión de competencias normativas a las CCAA). The
+brackets follow the same shape as the estatal tarifas
 (`tuple[tuple[from, to | None, rate], ...]`) consumed by
 ``progressive_tarifa()`` in Anexo G.
+
+Dispatch is two-step: ``PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR`` covers
+the year-dependent CCAAs (Asturias post Ley 3/2025; Canarias post Ley
+5/2024) keyed by ``(CCAA, año)``; everything else falls back to the
+stable ``PER_CCAA_TARIFA_AUTONOMICA`` per-CCAA dict.
 
 Caller computes the autonomic cuota íntegra (casilla 0551) externally
 via ``compute_cuota_autonomica_general(blg, ccaa, año)`` and supplies
 the result; the engine verifies the cuota chain via Anexo G's
-0551 + 0561 -> 0595 aggregation. The 10 remaining CCAAs (Aragón,
-Asturias, Baleares, Canarias, Cantabria, Castilla-La Mancha,
-Extremadura, Galicia, Murcia, La Rioja) use their own per-CCAA Decreto
-Legislativo / Ley de Presupuestos tarifa scales not yet encoded here
-(deferred follow-up — caller computes externally pending each CCAA's
-publication).
+0551 + 0561 -> 0595 aggregation.
 """
 
 from __future__ import annotations
