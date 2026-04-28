@@ -114,9 +114,9 @@ class FilingDraftBuilderAdapter:
 class SubmissionEngineAdapter:
     """Wrap :class:`aeat.submission.SubmissionEngine` as a workflow Protocol.
 
-    The adapter re-uses the engine's internal :class:`Preflight`
-    instance so the workflow's ``RUNNING_PREFLIGHT`` stage can execute
-    the gate without exposing any AEAT write operation.
+    The adapter uses the engine's public preflight method so the
+    workflow's ``RUNNING_PREFLIGHT`` stage can execute the gate without
+    exposing any AEAT write operation.
     """
 
     def __init__(self, engine: SubmissionEngine) -> None:
@@ -124,8 +124,8 @@ class SubmissionEngineAdapter:
         self._engine = engine
 
     def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
-        """Delegate to the engine's internal :class:`Preflight`."""
-        self._engine._preflight.check(draft, today=today)
+        """Delegate to the engine's public preflight method."""
+        self._engine.preflight(draft, today=today)
 
 
 class SyncRunnerAdapter:
