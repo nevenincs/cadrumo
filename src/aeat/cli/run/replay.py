@@ -1,4 +1,4 @@
-"""``aeat run replay`` — deterministic dry-run replay of a recorded run."""
+"""``aeat run replay`` — deterministic read-only replay of a recorded run."""
 
 from __future__ import annotations
 
@@ -16,20 +16,13 @@ _CONSOLE = Console()
 
 def replay_cmd(
     run_id: str = typer.Argument(..., help="The run identifier to replay."),
-    dry_run: bool = typer.Option(
-        True,
-        "--dry-run/--no-dry-run",
-        help="Dry-run replay (default). --no-dry-run is rejected explicitly.",
-    ),
 ) -> None:
     """Replay a persisted run after recomputing the corpus fingerprint.
 
-    Replay refuses on corpus drift via :class:`AeatCorpusDriftError`
-    and rejects ``--no-dry-run`` because live replay is out of scope
-    (#99).
+    Replay refuses on corpus drift via :class:`AeatCorpusDriftError`.
     """
     try:
-        trace = replay_run(run_id, dry_run=dry_run)
+        trace = replay_run(run_id)
     except AeatCorpusDriftError as exc:
         _CONSOLE.print(
             f"[red]corpus drift:[/red] {exc} (recorded={exc.recorded[:12]}... observed={exc.observed[:12]}...)"

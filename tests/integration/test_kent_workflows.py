@@ -1297,13 +1297,38 @@ class TestKentImportsModelo131Declaracion:
 
 
 class TestKentImportsModelo180Declaracion:
-    """Kent imports a Modelo 180 (resumen anual retenciones arrendamientos) 2025.
+    """Kent imports Modelo 180 annual rental-withholding summaries.
 
-    Year 2025 is the most recent landed ruleset. Single computed casilla:
-    c03 = 19% x c02.
+    Single computed casilla: c03 = 19% x c02.
     """
 
     _LABELS = _MODELO_180_LABELS
+
+    @pytest.mark.parametrize("ejercicio", ["2024", "2025", "2026"])
+    def test_per_year_happy_path_verified(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+        ejercicio: str,
+    ) -> None:
+        """Clean annual PDF resolves to the matching year ruleset and verifies."""
+        del drafts_dir, submissions_dir, english_output
+        pdf = _synth_annual_pdf(
+            tmp_path,
+            modelo="180",
+            labels=self._LABELS,
+            values=_M180_HAPPY,
+            filename=f"modelo_180_{ejercicio}_happy.pdf",
+            año=int(ejercicio),
+            ejercicio=ejercicio,
+            template_revision=f"{ejercicio}.01",
+        )
+        result = runner.invoke(app, ["filing", "import", "--from-declaracion", str(pdf)])
+        assert result.exit_code == 0, result.output
+        assert "Extraction status: COMPLETE" in result.output
+        assert "Verification status: VERIFIED" in result.output
 
     def test_happy_path_english(
         self,

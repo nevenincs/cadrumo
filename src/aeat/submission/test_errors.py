@@ -8,7 +8,6 @@ from ..errors import AeatError
 from . import (
     LiveSubmitForbiddenError,
     SubmissionError,
-    SubmissionFormFillError,
     SubmissionPreflightError,
 )
 
@@ -20,7 +19,6 @@ def test_every_error_inherits_aeat_error() -> None:
         LiveSubmitForbiddenError,
         SubmissionError,
         SubmissionPreflightError,
-        SubmissionFormFillError,
     ):
         assert issubclass(exc_cls, AeatError)
 
@@ -39,7 +37,5 @@ def test_translatable_message_preserved() -> None:
 
 
 def test_subclasses_catchable_as_submission_error() -> None:
-    with pytest.raises(SubmissionError):
-        raise SubmissionFormFillError("form fill broke")
     with pytest.raises(SubmissionError):
         raise LiveSubmitForbiddenError()
