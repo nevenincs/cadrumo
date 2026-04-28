@@ -52,3 +52,6 @@ PR-001 resolution: PR `#450` was opened from `bug/436-test-clave-movil-mark-fix`
 
 PR-002 | INFO | Gemini and PR review findings checked on PR `#450`
 GitHub review-thread, review, and comment queries for PR `#450` returned no review threads, no submitted reviews, and no comments. Gemini had not posted any findings at the time of this audit check. GitHub CI was running for `ubuntu-latest / Python 3.13` and `windows-latest / Python 3.13`. Status: OBSERVED.
+
+GEMINI-001 | MEDIUM | Workflow adapter reached into `SubmissionEngine._preflight`
+Gemini review on PR `#450` flagged that `SubmissionEngineAdapter.preflight()` was calling the private `SubmissionEngine._preflight.check(...)` attribute even though `SubmissionEngine` now exposes public `preflight(...)`. The adapter now delegates to `self._engine.preflight(draft, today=today)`, preserving the read-only preflight boundary while respecting subpackage API discipline. Status: RESOLVED.
