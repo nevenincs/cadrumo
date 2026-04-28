@@ -42,7 +42,7 @@ def _label(es: str, en: str, hu: str) -> Translatable:
 CITATIONS = (
     cite_lirpf(
         "33",
-        "Articulo 33 Ley 35/2006 (IRPF) — concepto de ganancias y "
+        "Artículo 33 Ley 35/2006 (IRPF) — concepto de ganancias y "
         "perdidas patrimoniales: variaciones en el valor del patrimonio "
         "del contribuyente que se pongan de manifiesto con ocasion de "
         "cualquier alteracion en su composicion, salvo que se califiquen "
@@ -50,14 +50,14 @@ CITATIONS = (
     ),
     cite_lirpf(
         "37",
-        "Articulo 37 Ley 35/2006 (IRPF) — normas especificas de "
+        "Artículo 37 Ley 35/2006 (IRPF) — normas específicas de "
         "valoracion: regla FIFO para transmisiones de valores cotizados "
-        "y participaciones (apartado 2). Soporta el calculo per-transaccion "
+        "y participaciones (apartado 2). Soporta el cálculo per-transaccion "
         "de la ganancia / perdida patrimonial.",
     ),
     cite_lirpf(
         "49",
-        "Articulo 49 Ley 35/2006 (IRPF) — integracion y compensacion "
+        "Artículo 49 Ley 35/2006 (IRPF) — integración y compensación "
         "de rentas en la base imponible del ahorro: las ganancias y "
         "perdidas patrimoniales con periodo de generacion superior a un "
         "ano se integran en base ahorro; las restantes en base general.",

@@ -150,10 +150,10 @@ CASILLAS = (
         computed=False,
         legal_basis=(CITATIONS[5],),
         notes_es=(
-            "Caller computes from `InventoryRecord` per LIS art. 17. "
-            "Signed: positivo = existencias finales > iniciales = "
-            "contribución a ingresos; negativo = existencias finales "
-            "< iniciales = contribución a gastos."
+            "Calculado por el consumidor a partir de `InventoryRecord` "
+            "según LIS art. 17. Con signo: positivo = existencias finales "
+            "> iniciales = contribución a ingresos; negativo = existencias "
+            "finales < iniciales = contribución a gastos."
         ),
     ),
     casilla(
@@ -186,9 +186,9 @@ CASILLAS = (
         computed=False,
         legal_basis=(CITATIONS[3],),
         notes_es=(
-            "Caller computes per LIS art. 12 lineal (tabla 33-row) o "
-            "libertad de amortización (LIS art. 102 PYMES, DA 18ª LIS, "
-            "DA 59ª LIRPF post RD-Ley 4/2024)."
+            "Calculado por el consumidor según la tabla LIS art. 12 lineal "
+            "(33 filas) o el régimen de libertad de amortización (LIS art. "
+            "102 PYMES, DA 18ª LIS, DA 59ª LIRPF tras RD-Ley 4/2024)."
         ),
     ),
     casilla(
