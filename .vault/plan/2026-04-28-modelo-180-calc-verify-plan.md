@@ -6,7 +6,7 @@ date: '2026-04-28'
 related:
   - "[[2026-04-28-modelo-180-calc-verify-research]]"
   - "[[2026-04-28-modelo-180-calc-verify-adr]]"
-  - "[[2026-180-rule-delta]]"
+  - "[[2026-04-28-modelo-180-calc-verify-reference]]"
 ---
 
 # `modelo-180-calc-verify` implementation plan

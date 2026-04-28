@@ -5,7 +5,7 @@ tags:
 date: '2026-04-28'
 related:
   - "[[2026-04-28-modelo-200-calc-verify-plan]]"
-  - "[[2026-200-rule-delta]]"
+  - "[[2026-04-28-modelo-200-calc-verify-reference]]"
 ---
 
 # `modelo-200-calc-verify` execution summary
