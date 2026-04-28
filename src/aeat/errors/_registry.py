@@ -2060,6 +2060,47 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.storage.errors.MasterKeyKeychainLockedError",
+        ErrorCode(
+            code="AUTH_STORAGE_MASTER_KEY_KEYCHAIN_LOCKED",
+            category=ErrorCategory.AUTH,
+            default_message_es=("El llavero del sistema esta bloqueado; desbloquee el llavero y reintente."),
+            default_message_en=("OS keychain is locked; unlock it (Touch ID / Hello / desktop-wallet) and retry."),
+            default_message_hu=("Az operacios rendszer kulcstartoja zarolva; oldja fel es probalja ujra."),
+            # No CLI command can unlock the OS keychain on the operator's
+            # behalf; the runbook hint lives in the message itself.
+            default_suggestion=None,
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.MasterKeyPassphraseMismatchError",
+        ErrorCode(
+            code="AUTH_STORAGE_MASTER_KEY_PASSPHRASE_MISMATCH",
+            category=ErrorCategory.AUTH,
+            default_message_es=("La frase de paso no desbloqueo la clave maestra; verifique e intente de nuevo."),
+            default_message_en=("Passphrase did not unlock the master key; verify and retry."),
+            default_message_hu=("A jelszo nem oldotta fel a mester kulcsot; ellenorizze es probalja ujra."),
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.storage.errors.MasterKeyMaterialMissingError",
+        ErrorCode(
+            code="AUTH_STORAGE_MASTER_KEY_MATERIAL_MISSING",
+            category=ErrorCategory.AUTH,
+            default_message_es=("No existe material de clave maestra; ejecute la provision."),
+            default_message_en=("No master-key material exists; run the security-provisioning command."),
+            default_message_hu=("Nincs mester kulcs anyag; futtassa a biztonsagi provisioning parancsot."),
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.MigrationError",
         ErrorCode(
             code="FAIL_STORAGE_MIGRATION",

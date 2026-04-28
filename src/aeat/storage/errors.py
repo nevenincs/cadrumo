@@ -83,6 +83,39 @@ class MasterKeyKdfVersionError(MasterKeyUnavailableError):
     """
 
 
+class MasterKeyKeychainLockedError(MasterKeyUnavailableError):
+    """Raised when the OS keychain is reachable but the entry is locked.
+
+    Distinct from :class:`KeyringUnavailableError` (no usable backend at
+    all). This class signals a recoverable state: the operator unlocks
+    the OS keychain (Touch ID / Windows Hello / desktop-wallet unlock)
+    and retries. The CLI's error envelope renders the actionable hint.
+    """
+
+
+class MasterKeyPassphraseMismatchError(MasterKeyUnavailableError):
+    """Raised when the file-fallback passphrase does not unwrap ``master.key``.
+
+    Recoverable by re-entering the passphrase. If the passphrase has
+    been forgotten, the operator can use
+    ``aeat security recover --recovery-key`` to re-mint the master key
+    from a recovery-key backup. The CLI's error envelope distinguishes
+    this case from :class:`MasterKeyMaterialMissingError` so retries
+    do not waste backoff budget on missing-file errors.
+    """
+
+
+class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
+    """Raised when no master-key material exists at all.
+
+    Neither the keyring entry nor the file-fallback artefacts
+    (``master.key`` / ``master.kdf`` / ``salt``) are present. The
+    substrate has not been provisioned. The operator's actionable
+    next step is ``aeat security provision`` or, if a recovery key
+    is available, ``aeat security recover --recovery-key``.
+    """
+
+
 class LockAcquisitionError(PersistenceError):
     """Raised when an exclusive file lock cannot be acquired within the timeout."""
 
