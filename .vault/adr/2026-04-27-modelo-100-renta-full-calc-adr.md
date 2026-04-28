@@ -199,12 +199,25 @@ Implementation:
 
 For the 5 highest-population CCAAs (Madrid, Cataluña, Andalucía,
 Comunitat Valenciana, Castilla y León), the per-CCAA tarifa autonómica
-general (LIRPF art. 74) is encoded as a `BracketsFormula` in
-`anexo_g_<año>.py` with per-CCAA bracket parameter tables in
-`modelo_100/_ccaa.py`. The 10 remaining CCAAs follow the LIRPF default
-tarifa autonómica unless their vigent texto refundido / Ley de
-Presupuestos overrides — encoded once each, per CCAA, as the research
-verifies.
+general (LIRPF art. 74) was originally scoped to be encoded as a
+`BracketsFormula` in `anexo_g_<año>.py` with per-CCAA bracket parameter
+tables in `modelo_100/_ccaa.py`.
+
+**Deferred (post-Wave-10)**: per the claude vaultspec-code-review's H2
+finding, the per-CCAA tarifa autonómica progressive scales are not
+implemented in this PR's wave set. Anexo G's casillas 0551 (cuota
+íntegra autonómica general) and 0561 (autonómica ahorro) ship as
+**caller-supplied inputs** — the caller computes the per-CCAA tarifa
+externally per the rule-delta reference manifest's per-CCAA bracket
+tables.
+
+The progressive_tarifa() helper at `anexo_g_2025.py` is generic enough
+to be parameterized with per-CCAA bracket tables in a follow-up wave;
+the helper signature accepts any `tuple[tuple[str, str | None, str], ...]`
+shape. A future per-CCAA wave authors `_ccaa.py` per-CCAA `ParameterTable`
+entries and adds per-CCAA dedicated 0551/0561 formulas mirroring the
+estatal pattern. The scaffolding (`_ccaa.py` + `progressive_tarifa()`
+helper) is in place; the wiring is the deferred work.
 
 **Ceuta + Melilla** is **NOT a CCAA** at this layer — it's a
 state-level deduction per LIRPF art. 68.4. Encoded in `anexo_g_<año>.py`
