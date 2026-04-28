@@ -1,13 +1,12 @@
-"""Live Cl@ve Movil tests for ``aeat.auth._clave_movil.ClaveMovilAuthProvider``.
+"""Protocol-level Cl@ve Movil tests for ``aeat.auth._clave_movil.ClaveMovilAuthProvider``.
 
-The authenticate and resume flows model a real AEAT Cl@ve phone-approval
-path and are gated by the module-level ``live_read`` marker. They run only
-when invoked with ``AEAT_LIVE_TESTS_ENABLED=1``.
+These tests use hand-written browser-session stand-ins and do not prove
+real AEAT authentication or operator Cl@ve approval.
 
-Zero mocks / patches / fakes (global ban) - the tests drive the provider
-against a hand-written stand-in ``BrowserSessionLike`` that records the
-navigation + form interactions. The stand-in honours the same Protocol the
-real :class:`aeat.browser.BrowserSession` presents.
+No mocks, patches, or cassettes are used. The tests drive the provider
+against hand-written ``BrowserSessionLike`` stand-ins that record the
+navigation + form interactions. The stand-ins honour the same Protocol
+the real :class:`aeat.browser.BrowserSession` presents.
 """
 
 from __future__ import annotations
@@ -19,7 +18,6 @@ from typing import Any
 
 import pytest
 
-from ..cli._live import requires_live_enabled
 from ..config import Settings
 from ._clave_movil import (
     ClaveMovilAuthProvider,
@@ -29,16 +27,10 @@ from ._clave_movil import (
 )
 from ._providers import AuthProviderKind, ClaveMovilSessionDetail
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
-@pytest.fixture(autouse=True)
-def _require_live_tests_enabled() -> None:
-    """Skip these live Cl@ve tests unless the operator explicitly opts in."""
-    requires_live_enabled()
-
-
-# ── Fakes ────────────────────────────────────────────────────────────────────
+# ── Browser-session stand-ins ────────────────────────────────────────────────
 
 
 class _FakePage:
@@ -358,6 +350,27 @@ class TestAuthenticateFresh:
                 await provider.authenticate(browser_session=fake_session)
 
         asyncio.run(run())
+
+
+class TestPostAuthLanding:
+    def test_representation_dispatcher_is_not_auto_submitted(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from ._authenticator import AeatLoginAssertionError
+
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _FakePage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = "https://www6.agenciatributaria.gob.es/wlpl/OVCT-CXEW/DialogoRepresentacion"
+
+        async def run() -> None:
+            with pytest.raises(AeatLoginAssertionError, match="will not submit representation forms"):
+                await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=100)
+
+        asyncio.run(run())
+        assert page.clicks == []
 
 
 # ── authenticate() — resume path ─────────────────────────────────────────────

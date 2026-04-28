@@ -143,8 +143,8 @@ class TestTriadIsExhaustive:
         }
 
 
-class TestLiveReconcileDryRun:
-    """End-to-end W1 P7 dry-run: synthesize_filing_draft + corpus PDF -> MATCH.
+class TestReadOnlyReconcile:
+    """End-to-end read-only check: synthesize_filing_draft + corpus PDF -> MATCH.
 
     This pins the full Kent-observable happy path entirely offline:
     a synthesised APPROVED FilingDraft for one of the committed

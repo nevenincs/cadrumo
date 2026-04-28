@@ -20,6 +20,7 @@ from ...financial.transactions import (
     TransactionDirection,
     save_transactions,
 )
+from ...submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -147,68 +148,76 @@ class TestPreflightCommand:
         assert refreshed.status.value == "APPROVAL_STALE"
 
 
-class TestDryRunCommand:
-    def test_ok(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        result = runner.invoke(app, ["dry-run", str(draft_path)])
-        assert result.exit_code == 0, result.output
-        assert "dry-run OK" in result.output
-        assert "PENDING" in result.output
-
-
 class TestSubmitCommandRemoved:
-    """The ``submit`` subcommand was removed by the 2026-04-18 ADR.
+    """The ``submit`` and ``dry-run`` subcommands are absent."""
 
-    Replaced :class:`TestSubmitCommand`. The new tests assert that
-    invocation falls through to Typer's "no such command" path with
-    exit code 2 and that the help surface does not advertise it.
-    """
-
+    @pytest.mark.parametrize("command", ["submit", "dry-run"])
     def test_invocation_fails_with_no_such_command(
-        self, runner: CliRunner, draft_path: Path, isolated_dirs: Path
+        self, runner: CliRunner, draft_path: Path, isolated_dirs: Path, command: str
     ) -> None:
-        del isolated_dirs
-        result = runner.invoke(app, ["submit", str(draft_path)])
+        del isolated_dirs, draft_path
+        result = runner.invoke(app, [command])
         # Typer/click returns 2 for unknown commands.
         assert result.exit_code == 2, result.output
         assert (
-            "submit" not in (result.output or "").split("\nUsage")[0].lower()
+            command not in (result.output or "").split("\nUsage")[0].lower()
             or "no such command" in (result.output or "").lower()
         )
 
     def test_help_does_not_list_submit(self, runner: CliRunner) -> None:
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0, result.output
-        # The four allowed commands are present; "submit" is not.
-        for cmd in ("preflight", "dry-run", "show", "list"):
+        for cmd in ("preflight", "export", "verify", "diff", "schemas", "check-nif", "show", "list"):
             assert cmd in result.output, f"expected `{cmd}` in --help, got: {result.output!r}"
         assert " submit " not in result.output, (
             "submission CLI must not advertise `submit` (see .vault/adr/2026-04-18-live-submit-cli-excision-adr.md)"
         )
+        assert "dry-run" not in result.output
 
 
 class TestShowAndList:
-    def test_show_existing(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        draft = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
-        dry = runner.invoke(app, ["dry-run", str(draft_path)])
-        assert dry.exit_code == 0
-        # Extract submission_id from the output
-        token = next(t for t in dry.output.split() if t.startswith("submission_id="))
-        submission_id = token.split("=", 1)[1]
+    def test_show_existing(self, runner: CliRunner, isolated_dirs: Path) -> None:
+        submission_id = _write_historical_submission(isolated_dirs)
         result = runner.invoke(app, ["show", submission_id])
         assert result.exit_code == 0, result.output
         assert submission_id in result.output
-        assert draft.draft_id in result.output
+        assert "draft-1" in result.output
 
     def test_show_missing_exits_1(self, runner: CliRunner, isolated_dirs: Path) -> None:
         result = runner.invoke(app, ["show", "deadbeef"])
         assert result.exit_code == 1
 
     def test_list_filters_by_modelo(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
-        runner.invoke(app, ["dry-run", str(draft_path)])
+        del draft_path
+        _write_historical_submission(isolated_dirs)
         result = runner.invoke(app, ["list", "--modelo", "130"])
         assert result.exit_code == 0, result.output
         assert "1 record" in result.output
         empty = runner.invoke(app, ["list", "--modelo", "303"])
         assert empty.exit_code == 0
         assert "0 record" in empty.output
-        assert "0 record" in empty.output
+
+
+def _write_historical_submission(root: Path) -> str:
+    now = datetime.now(UTC)
+    filing = SubmittedFiling(
+        submission_id="sub-1",
+        draft_id="draft-1",
+        modelo="130",
+        period="2026Q1",
+        profile_tax_id="X1234567L",
+        status=SubmissionStatus.PENDING,
+        submitted_at=now,
+        attempts=(
+            SubmissionAttempt(
+                attempt_id="attempt-1",
+                started_at=now,
+                ended_at=now,
+                status=SubmissionStatus.PENDING,
+            ),
+        ),
+    )
+    target = root / "submissions" / f"{filing.submission_id}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(filing.model_dump_json(indent=2), encoding="utf-8")
+    return filing.submission_id
