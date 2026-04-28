@@ -172,7 +172,7 @@ configured language (`AEAT_OUTPUT_LANGUAGE`).
 
 ## See also
 
-- `.vault/adr/2026-04-30-secure-persistence-foundation-wave10-adr.md` — master-key rotation design
 - `.vault/adr/2026-04-30-secure-persistence-foundation-wave11-adr.md` — corpus integrity manifest design
 - `.vault/adr/2026-04-30-secure-persistence-foundation-wave12-adr.md` — Argon2id KDF migration design
 - `.vault/audit/2026-04-30-secure-persistence-foundation-wave15-16-audit.md` — review-feedback absorption + blob-store rotation closure
+- Master-key rotation: see commit `bd12a7b` (initial wave-10 substrate) and the wave-16 SECURITY-CRITICAL extension that added blob-store DEK rotation.
