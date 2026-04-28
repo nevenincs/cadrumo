@@ -85,6 +85,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aeat"]
+# The recovery-key BIP-39 wordlist is shipped as package data so
+# `importlib.resources.files()` can locate it at runtime in installed
+# wheels.
+include = [
+    "src/aeat/storage/_bip39_wordlist.txt",
+]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 [tool.uv]
