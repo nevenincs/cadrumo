@@ -2045,6 +2045,21 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.storage.errors.MasterKeyKdfVersionError",
+        ErrorCode(
+            code="AUTH_STORAGE_MASTER_KEY_KDF_VERSION",
+            category=ErrorCategory.AUTH,
+            default_message_es=(
+                "El archivo master.kdf usa una version de KDF que esta build no admite; ejecute la migracion."
+            ),
+            default_message_en=("master.kdf declares a KDF version this build cannot consume; run the migration tool."),
+            default_message_hu=("A master.kdf egy nem tamogatott KDF-verziot deklaral; futtassa a migracios eszkozt."),
+            default_suggestion="aeat security migrate-master-key-kdf",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.storage.errors.MigrationError",
         ErrorCode(
             code="FAIL_STORAGE_MIGRATION",
