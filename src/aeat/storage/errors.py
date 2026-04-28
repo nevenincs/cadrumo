@@ -131,3 +131,22 @@ class SecretAlreadyExistsError(SecretStoreError):
 
 class RetentionPolicyError(PersistenceError):
     """Raised when a record's retention metadata violates its classification policy."""
+
+
+class CorpusManifestError(PersistenceError):
+    """Raised when a corpus manifest cannot be parsed or is structurally invalid."""
+
+
+class CorpusManifestTamperError(CorpusManifestError):
+    """Raised when a corpus manifest's self-attesting digest does not match its body.
+
+    The manifest's ``manifest_sha256`` field is computed over the canonical
+    serialisation of the rest of the manifest at write time. On load, the
+    same digest is re-derived and compared; mismatch means an attacker
+    edited the manifest body without recomputing the digest.
+    """
+
+
+class CorpusManifestDriftError(CorpusManifestError):
+    """Raised by ``aeat security verify-corpus`` when the on-disk corpus
+    diverges from the manifest (added / removed / changed files)."""

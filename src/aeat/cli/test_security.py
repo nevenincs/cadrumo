@@ -164,6 +164,69 @@ def test_same_key_rejected(
     assert "different" in result.output
 
 
+class TestVerifyCorpus:
+    """Wave-11 corpus integrity manifest CLI."""
+
+    def _seed_casillas(self, root: Path) -> None:
+        root.mkdir(parents=True, exist_ok=True)
+        (root / "130").mkdir()
+        (root / "130" / "2026Q1.json").write_text(
+            '{"records": [{"casilla_id": "01"}]}',
+            encoding="utf-8",
+        )
+
+    def test_regenerate_then_verify_clean(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        casillas_root = tmp_path / "casillas"
+        self._seed_casillas(casillas_root)
+        monkeypatch.setenv("AEAT_CASILLAS_ROOT", str(casillas_root))
+
+        regen = runner.invoke(app, ["security", "verify-corpus", "--corpus", "casillas", "--regenerate"])
+        assert regen.exit_code == 0, regen.output
+        assert "regenerated" in regen.output
+
+        verify = runner.invoke(app, ["security", "verify-corpus", "--corpus", "casillas"])
+        assert verify.exit_code == 0, verify.output
+        assert "clean" in verify.output
+
+    def test_drift_exits_nonzero(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        casillas_root = tmp_path / "casillas"
+        self._seed_casillas(casillas_root)
+        monkeypatch.setenv("AEAT_CASILLAS_ROOT", str(casillas_root))
+        runner.invoke(app, ["security", "verify-corpus", "--corpus", "casillas", "--regenerate"])
+
+        # Mutate one file; drift should flag.
+        (casillas_root / "130" / "2026Q1.json").write_text(
+            '{"records": [{"casilla_id": "99"}]}',
+            encoding="utf-8",
+        )
+        result = runner.invoke(app, ["security", "verify-corpus", "--corpus", "casillas"])
+        assert result.exit_code == 1
+        assert "drift detected" in result.output
+
+    def test_missing_sidecar_exits_nonzero(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        casillas_root = tmp_path / "casillas"
+        self._seed_casillas(casillas_root)
+        monkeypatch.setenv("AEAT_CASILLAS_ROOT", str(casillas_root))
+        result = runner.invoke(app, ["security", "verify-corpus", "--corpus", "casillas"])
+        assert result.exit_code == 1
+        assert "no manifest sidecar" in result.output
+
+
 def test_malformed_key_file_rejected(
     tmp_path: Path,
     runner: CliRunner,
