@@ -63,6 +63,7 @@ if TYPE_CHECKING:
 
 from ..logging import get_logger
 from ._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
+from ._lock import exclusive_file_lock
 from .errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
@@ -460,10 +461,17 @@ class FileFallbackMasterKeyProvider:
             if cached is not None:
                 return bytes(cached)
         passphrase = self._resolve_passphrase()
-        if self._master_key_path.exists() and self._kdf_params_path.exists() and self._salt_path.exists():
-            key = self._unwrap_existing(passphrase)
-        else:
-            key = self._mint_new(passphrase)
+        # Serialise the unwrap-or-mint decision under the on-disk lock
+        # so two first-time callers cannot both decide to mint and then
+        # race-write conflicting master.key + master.kdf pairs. Re-check
+        # file existence inside the lock; the second caller will see
+        # the artefacts the first caller wrote and route to unwrap.
+        lock_target = self._store_dir / "master.lock"
+        with exclusive_file_lock(lock_target):
+            if self._master_key_path.exists() and self._kdf_params_path.exists() and self._salt_path.exists():
+                key = self._unwrap_existing(passphrase)
+            else:
+                key = self._mint_new(passphrase)
         with FileFallbackMasterKeyProvider._lock:
             FileFallbackMasterKeyProvider._cached_master_key[cache_key] = bytearray(key)
         return key

@@ -25,6 +25,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
 from . import (
+    EncryptedBlobStore,
     Envelope,
     EphemeralMasterKeyProvider,
     RotationPlanEntry,
@@ -32,6 +33,7 @@ from . import (
     SensitivityClass,
     load_encrypted_envelope,
     override_master_key_provider,
+    rotate_blob_stores,
     rotate_master_key,
     save_encrypted_envelope,
 )
@@ -361,4 +363,109 @@ class TestMultiConsumerPlan:
             new_master_key_provider=bob,
         )
         assert summary.rotated == 2
+        assert summary.errors == 0
+
+
+class TestBlobStoreRotation:
+    """Wave-16: blob-store DEK re-wrapping under master-key rotation."""
+
+    def test_blob_dek_is_re_wrapped_under_new_key(
+        self,
+        tmp_path: Path,
+        alice: EphemeralMasterKeyProvider,
+        bob: EphemeralMasterKeyProvider,
+    ) -> None:
+        # Seed a FINANCIAL-class blob under alice's master key.
+        store_root = tmp_path / "blob-store"
+        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=alice)
+        ref = store_a.put(
+            b"per-blob payload bytes",
+            classification=SensitivityClass.FINANCIAL,
+            content_type="application/octet-stream",
+        )
+        # Reading under alice succeeds, under bob fails.
+        assert store_a.get(ref) == b"per-blob payload bytes"
+        store_b_pre = EncryptedBlobStore(root_dir=store_root, master_key_provider=bob)
+        with pytest.raises(DecryptionError):
+            store_b_pre.get(ref)
+
+        # Rotate the wrapped DEK from alice to bob.
+        summary = rotate_blob_stores(
+            (store_root,),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+        assert summary.rotated == 1
+        assert summary.errors == 0
+
+        # Reading under bob now succeeds; alice fails.
+        store_b_post = EncryptedBlobStore(root_dir=store_root, master_key_provider=bob)
+        assert store_b_post.get(ref) == b"per-blob payload bytes"
+
+    def test_already_rotated_blob_is_skipped(
+        self,
+        tmp_path: Path,
+        alice: EphemeralMasterKeyProvider,
+        bob: EphemeralMasterKeyProvider,
+    ) -> None:
+        store_root = tmp_path / "blob-store"
+        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=alice)
+        store_a.put(
+            b"payload",
+            classification=SensitivityClass.FINANCIAL,
+            content_type="application/octet-stream",
+        )
+        first = rotate_blob_stores(
+            (store_root,),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+        assert first.rotated == 1
+        # Re-running with the same providers — every blob now succeeds
+        # under the new key first, so they all land in ``skipped``.
+        second = rotate_blob_stores(
+            (store_root,),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+        assert second.rotated == 0
+        assert second.skipped == 1
+
+    def test_corpus_class_blob_has_no_dek_to_rotate(
+        self,
+        tmp_path: Path,
+        alice: EphemeralMasterKeyProvider,
+        bob: EphemeralMasterKeyProvider,
+    ) -> None:
+        # CORPUS-class blobs are persisted plaintext (no wrapped DEK);
+        # rotation visits the manifest but counts it as ``skipped``.
+        store_root = tmp_path / "blob-store"
+        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=alice)
+        store_a.put(
+            b"public corpus payload",
+            classification=SensitivityClass.CORPUS,
+            content_type="text/plain",
+        )
+        summary = rotate_blob_stores(
+            (store_root,),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+        assert summary.rotated == 0
+        assert summary.skipped == 1
+        assert summary.errors == 0
+
+    def test_empty_root_returns_zeros(
+        self,
+        tmp_path: Path,
+        alice: EphemeralMasterKeyProvider,
+        bob: EphemeralMasterKeyProvider,
+    ) -> None:
+        summary = rotate_blob_stores(
+            (tmp_path / "does-not-exist",),
+            old_master_key_provider=alice,
+            new_master_key_provider=bob,
+        )
+        assert summary.rotated == 0
+        assert summary.skipped == 0
         assert summary.errors == 0

@@ -241,6 +241,23 @@ class SecretStore:
                 SESSION (defensive; the pydantic validator catches this
                 at construction).
         """
+        self._store_dir.mkdir(parents=True, exist_ok=True)
+        with exclusive_file_lock(self._lock_target()):
+            return self._put_locked(record, overwrite=overwrite)
+
+    def _put_locked(
+        self,
+        record: SecretRecord,
+        *,
+        overwrite: bool = False,
+    ) -> BlobReference:
+        """Locked-by-caller variant of :meth:`put`.
+
+        The caller MUST already hold ``exclusive_file_lock(self._lock_target())``.
+        Used by :meth:`put` (which wraps in a fresh lock) and
+        :meth:`rotate` (which holds the lock across get + put for
+        atomicity).
+        """
         policy = default_policy_for(record.classification)
         if policy.retention.require_explicit_expiry and record.expires_at is None:
             raise RetentionPolicyError(
@@ -248,47 +265,45 @@ class SecretStore:
                 "set the field to a timezone-aware datetime.",
             )
         digest = self._digest(record.key)
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self._lock_target()):
-            index = self._read_index()
-            existing = index.entries.get(digest)
-            if existing is not None and not overwrite:
-                raise SecretAlreadyExistsError(
-                    f"secret already exists at digest {digest}; pass overwrite=True to replace.",
-                )
-            envelope = self._build_envelope(record)
-            wire = self._envelope_bytes(envelope)
-            blob_ref = self._blob_store.put(
-                wire,
-                classification=record.classification,
-                content_type="application/json+secret-record",
+        index = self._read_index()
+        existing = index.entries.get(digest)
+        if existing is not None and not overwrite:
+            raise SecretAlreadyExistsError(
+                f"secret already exists at digest {digest}; pass overwrite=True to replace.",
             )
-            index.entries[digest] = _SecretIndexEntry(
-                digest_hex=digest,
-                blob_sha256_plaintext_hex=blob_ref.sha256_plaintext_hex,
-                classification=record.classification,
+        envelope = self._build_envelope(record)
+        wire = self._envelope_bytes(envelope)
+        blob_ref = self._blob_store.put(
+            wire,
+            classification=record.classification,
+            content_type="application/json+secret-record",
+        )
+        index.entries[digest] = _SecretIndexEntry(
+            digest_hex=digest,
+            blob_sha256_plaintext_hex=blob_ref.sha256_plaintext_hex,
+            classification=record.classification,
+        )
+        self._write_index(index)
+        if existing is not None and existing.blob_sha256_plaintext_hex != blob_ref.sha256_plaintext_hex:
+            # Drop the previous payload to keep the store tidy.
+            # Narrow exception handling per sec-M-3: only the
+            # benign "blob already gone" case is silently
+            # absorbed; anything else (integrity mismatch, OS
+            # error) is logged as a WARNING so the operator can
+            # investigate.
+            old_ref = BlobReference(
+                sha256_plaintext_hex=existing.blob_sha256_plaintext_hex,
+                classification=existing.classification,
             )
-            self._write_index(index)
-            if existing is not None and existing.blob_sha256_plaintext_hex != blob_ref.sha256_plaintext_hex:
-                # Drop the previous payload to keep the store tidy.
-                # Narrow exception handling per sec-M-3: only the
-                # benign "blob already gone" case is silently
-                # absorbed; anything else (integrity mismatch, OS
-                # error) is logged as a WARNING so the operator can
-                # investigate.
-                old_ref = BlobReference(
-                    sha256_plaintext_hex=existing.blob_sha256_plaintext_hex,
-                    classification=existing.classification,
-                )
-                with contextlib.suppress(BlobNotFoundError):
-                    try:
-                        self._blob_store.delete(old_ref)
-                    except (BlobIntegrityError, OSError) as exc:
-                        _log.warning(
-                            "stale secret-store blob cleanup failed: digest=%s error=%s",
-                            existing.blob_sha256_plaintext_hex,
-                            exc,
-                        )
+            with contextlib.suppress(BlobNotFoundError):
+                try:
+                    self._blob_store.delete(old_ref)
+                except (BlobIntegrityError, OSError) as exc:
+                    _log.warning(
+                        "stale secret-store blob cleanup failed: digest=%s error=%s",
+                        existing.blob_sha256_plaintext_hex,
+                        exc,
+                    )
         return blob_ref
 
     def get(self, key: str) -> SecretRecord:
@@ -351,6 +366,10 @@ class SecretStore:
     def rotate(self, key: str, new_value: bytes, *, expires_at: datetime | None = None) -> BlobReference:
         """Replace the value of an existing secret and return the new blob reference.
 
+        Holds the store-wide ``exclusive_file_lock`` across the read +
+        write so a concurrent ``rotate`` / ``put`` / ``delete`` cannot
+        interleave between the lookup and the overwrite.
+
         Args:
             key: Natural key of the record to rotate.
             new_value: The new secret payload bytes.
@@ -362,16 +381,24 @@ class SecretStore:
             RetentionPolicyError: If the policy requires explicit
                 expiry and ``expires_at`` is None.
         """
-        existing = self.get(key)
-        rotated = SecretRecord(
-            key=existing.key,
-            value=new_value,
-            classification=existing.classification,
-            metadata=existing.metadata,
-            created_at=datetime.now(UTC),
-            expires_at=expires_at,
-        )
-        return self.put(rotated, overwrite=True)
+        # The atomic-rotate sequence: get → build → put-locked. We hold
+        # the store-wide lock across all three steps so a concurrent
+        # rotate / put / delete cannot interleave between the lookup
+        # and the overwrite. ``get`` is read-only and does not acquire
+        # the lock; ``_put_locked`` is the lock-bypass variant of
+        # ``put`` and is safe to call inside the outer lock.
+        self._store_dir.mkdir(parents=True, exist_ok=True)
+        with exclusive_file_lock(self._lock_target()):
+            existing = self.get(key)
+            rotated = SecretRecord(
+                key=existing.key,
+                value=new_value,
+                classification=existing.classification,
+                metadata=existing.metadata,
+                created_at=datetime.now(UTC),
+                expires_at=expires_at,
+            )
+            return self._put_locked(rotated, overwrite=True)
 
 
 __all__ = [

@@ -43,6 +43,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..logging import get_logger
 from ._classification import AtRestTreatment, SensitivityClass, default_policy_for
 from ._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
@@ -53,6 +54,8 @@ from .errors import (
     ClassificationError,
     EnvelopeVersionError,
 )
+
+_log = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -293,10 +296,21 @@ class EncryptedBlobStore:
 
         The walk is shallow: only the canonical
         ``blobs/<hex[:2]>/<hex>.manifest.json`` files are visited.
-        Each manifest is loaded through :func:`load_envelope` so the
-        classification gate enforces the
-        ``envelope.classification == manifest.classification``
-        invariant at iteration time (vs-M-4).
+        Each manifest is loaded through a single-read + inline
+        version-gate path; corrupted or unparseable manifests are
+        logged and skipped so a single broken file cannot break the
+        iteration for every other blob.
+        """
+        for path, payload in self._iter_manifests_with_paths():
+            del path
+            yield payload
+
+    def _iter_manifests_with_paths(self) -> Iterator[tuple[Path, BlobManifest]]:
+        """Yield ``(manifest_path, manifest_payload)`` pairs for every blob.
+
+        Internal helper used by :meth:`iter_manifests` and by the
+        blob-store rotation path (which needs the path to atomically
+        rewrite the manifest under the new master key).
         """
         blobs_dir = self._root_dir / "blobs"
         if not blobs_dir.exists():
@@ -308,20 +322,112 @@ class EncryptedBlobStore:
                 # Single read + inline gate: iter_manifests is
                 # classification-class-agnostic at the API surface, so
                 # the only gate that applies is the version ceiling.
-                # A previous version did a two-step load (parse for
-                # the class, then re-load via load_envelope) which
-                # incurred a redundant file I/O per manifest. The
-                # version-gate logic mirrors load_envelope's invariant
-                # so the iterator remains substrate-policy-aligned.
-                envelope = Envelope[BlobManifest].model_validate_json(
-                    manifest_path.read_text(encoding="utf-8"),
-                )
+                try:
+                    envelope = Envelope[BlobManifest].model_validate_json(
+                        manifest_path.read_text(encoding="utf-8"),
+                    )
+                except Exception as exc:
+                    # A single corrupted manifest must not break the
+                    # whole iteration. Log and skip; the operator can
+                    # surface the broken file via filesystem inspection.
+                    _log.warning(
+                        "blob_store: skipping unparseable manifest %s: %s",
+                        manifest_path,
+                        exc,
+                    )
+                    continue
                 if envelope.schema_version > _BLOB_MANIFEST_VERSION:
                     raise EnvelopeVersionError(
                         f"envelope at {manifest_path} is at version {envelope.schema_version}; "
                         f"consumer supports up to {_BLOB_MANIFEST_VERSION}",
                     )
-                yield envelope.payload
+                yield manifest_path, envelope.payload
+
+    def rotate_master_key(
+        self,
+        *,
+        old_master_key_provider: MasterKeyProvider,
+        new_master_key_provider: MasterKeyProvider,
+    ) -> tuple[int, int, int]:
+        """Re-wrap every blob's per-record DEK under the new master key.
+
+        The blob store wraps each blob's DEK directly under the master
+        key (``encrypt_record(dek, key=master_key, associated_data=_DEK_AAD)``).
+        When the master key rotates, every wrapped DEK must be re-wrapped
+        under the new master key or the blob becomes unrecoverable.
+
+        Resume-idempotent: re-running on an already-rotated store
+        decrypts the wrapped DEK under the new master key first; on
+        success the manifest is skipped.
+
+        Args:
+            old_master_key_provider: Provider returning the master key
+                that was in use when the blobs were last persisted.
+            new_master_key_provider: Provider returning the new master
+                key.
+
+        Returns:
+            A ``(rotated, skipped, errors)`` triple.
+        """
+        rotated = 0
+        skipped = 0
+        errors = 0
+        old_master_key = old_master_key_provider.get_master_key()
+        new_master_key = new_master_key_provider.get_master_key()
+        for manifest_path, manifest in self._iter_manifests_with_paths():
+            if manifest.wrapped_dek is None:
+                # Plaintext-class blob (e.g. CORPUS); no wrapped DEK
+                # to rotate.
+                skipped += 1
+                continue
+            wrapped_blob = manifest.wrapped_dek.to_blob()
+            # Try the new key first — already-rotated manifests succeed
+            # here.
+            try:
+                decrypt_record(wrapped_blob, key=new_master_key, associated_data=_DEK_AAD)
+                skipped += 1
+                continue
+            except Exception:  # noqa: S110 - intentional fallthrough to legacy unwrap
+                pass
+            # Fall back to the old key.
+            try:
+                dek = decrypt_record(wrapped_blob, key=old_master_key, associated_data=_DEK_AAD)
+            except Exception as exc:
+                _log.warning(
+                    "blob_store rotate_master_key: cannot decrypt wrapped_dek for %s: %s",
+                    manifest_path,
+                    exc,
+                )
+                errors += 1
+                continue
+            new_wrapped = encrypt_record(dek, key=new_master_key, associated_data=_DEK_AAD)
+            new_meta = EncryptionMetadata.from_blob(new_wrapped, associated_data=_DEK_AAD)
+            new_manifest = manifest.model_copy(update={"wrapped_dek": new_meta})
+            new_envelope = Envelope[BlobManifest](
+                schema_version=_BLOB_MANIFEST_VERSION,
+                written_at=datetime.now(UTC),
+                classification=manifest.classification,
+                payload=new_manifest,
+            )
+            try:
+                save_envelope(new_envelope, manifest_path)
+            except OSError as exc:
+                _log.warning(
+                    "blob_store rotate_master_key: failed to atomic-write %s: %s",
+                    manifest_path,
+                    exc,
+                )
+                errors += 1
+                continue
+            rotated += 1
+        _log.info(
+            "blob_store rotate_master_key: rotated=%d skipped=%d errors=%d (root=%s)",
+            rotated,
+            skipped,
+            errors,
+            self._root_dir,
+        )
+        return rotated, skipped, errors
 
     def _write_plaintext_blob(self, plaintext: bytes, sha_hex: str) -> None:
         target = self._plaintext_path_for(sha_hex)

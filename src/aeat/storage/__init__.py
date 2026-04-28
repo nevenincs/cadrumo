@@ -105,7 +105,9 @@ from ._redaction import (
 from ._rotation import (
     RotationPlanEntry,
     RotationSummary,
+    default_blob_store_roots,
     default_rotation_plan,
+    rotate_blob_stores,
     rotate_master_key,
 )
 from ._secret_store import SecretRecord, SecretStore
@@ -213,6 +215,7 @@ __all__ = [
     "build_corpus_manifest",
     "create_engine_from_settings",
     "decrypt_record",
+    "default_blob_store_roots",
     "default_policy_for",
     "default_policy_table",
     "default_rotation_plan",
@@ -240,6 +243,7 @@ __all__ = [
     "redact",
     "redact_structured",
     "reencrypt_envelope_file",
+    "rotate_blob_stores",
     "rotate_master_key",
     "round_trip_migrations",
     "safe_record_path",
