@@ -156,6 +156,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     from ..storage import (
         Envelope,
         SensitivityClass,
+        refuse_unsecured_with_real_nif,
         save_encrypted_envelope,
     )
     from ..storage._encrypted_columns import _resolve_master_key_provider
@@ -172,6 +173,11 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         bienes_extranjero_above_threshold=answers.bienes_extranjero_above_threshold,
         notes=answers.notes,
     )
+    # NIF-canary: refuse to write a real-NIF profile under the unsecured
+    # backend. Real tax data is incompatible with a published
+    # deterministic master key.
+    provider = _resolve_master_key_provider()
+    refuse_unsecured_with_real_nif(profile.tax_id, provider=provider)
     target.parent.mkdir(parents=True, exist_ok=True)
     envelope = Envelope[AutonomoProfile](
         schema_version=_PROFILE_ENVELOPE_VERSION,
@@ -182,7 +188,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     save_encrypted_envelope(
         envelope,
         target,
-        master_key_provider=_resolve_master_key_provider(),
+        master_key_provider=provider,
         hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
     )
     log.info("setup: wrote AutonomoProfile envelope to %s", target)

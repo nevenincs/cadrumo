@@ -116,6 +116,21 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
     """
 
 
+class UnsecuredModeRefusedError(SecretStoreError):
+    """Raised when the unsecured backend is requested without proper gating.
+
+    Two refusal classes:
+
+    1. The unsecured backend was selected (``aeat_secret_store_backend=unsecured``)
+       but the operator did not set ``AEAT_ALLOW_UNENCRYPTED=1``. The hostile-
+       named env var is the legible-and-embarrassing opt-out gate.
+    2. The unsecured backend is active AND the operator profile carries a
+       real NIF/NIE/CIF (NIF-canary). Real tax data is incompatible with a
+       published deterministic master key; the substrate refuses to write
+       such records into the unsecured store.
+    """
+
+
 class LockAcquisitionError(PersistenceError):
     """Raised when an exclusive file lock cannot be acquired within the timeout."""
 

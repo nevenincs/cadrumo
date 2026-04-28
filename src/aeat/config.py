@@ -42,11 +42,17 @@ class SecretStoreBackend(StrEnum):
         FILE: Encrypted file only — passphrase-derived KEK wraps the
             master key. Required for headless / CI execution where no
             usable keychain backend is available.
+        UNSECURED: **Testing / throwaway only.** Master key is a
+            published deterministic constant — provides ZERO
+            confidentiality. Refused unless ``AEAT_ALLOW_UNENCRYPTED=1``
+            is set, AND refused at profile-load time when the active
+            operator profile carries a real NIF/NIE/CIF (NIF-canary).
     """
 
     AUTO = "auto"
     KEYRING = "keyring"
     FILE = "file"
+    UNSECURED = "unsecured"
 
 
 # Project root: three levels up from src/aeat/config.py
@@ -234,7 +240,21 @@ class Settings(BaseSettings):
             "Master-key backend for the secret store. "
             "auto = OS keychain when available, encrypted file fallback otherwise. "
             "keyring = OS keychain only (refuses to fall back). "
-            "file = encrypted file only (required for CI / headless)."
+            "file = encrypted file only (required for CI / headless). "
+            "unsecured = testing-only mode with a published deterministic "
+            "key; requires aeat_allow_unencrypted=true and refuses real NIFs."
+        ),
+    )
+    aeat_allow_unencrypted: bool = Field(
+        default=False,
+        description=(
+            "Hostile-named opt-out gate for the unsecured backend. Must be "
+            "set to true (env var: AEAT_ALLOW_UNENCRYPTED=1) to use "
+            "aeat_secret_store_backend=unsecured. The unsecured backend "
+            "is intended for testing / educational / throwaway scenarios "
+            "only and provides ZERO confidentiality. The substrate refuses "
+            "to load an operator profile that carries a real NIF/NIE/CIF "
+            "while running in unsecured mode."
         ),
     )
     aeat_secret_store_dir: Path = Field(
