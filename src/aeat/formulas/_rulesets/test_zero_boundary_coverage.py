@@ -26,6 +26,9 @@ import pytest
 
 from .._engine import Engine
 from . import (
+    MODELO_100_2024,
+    MODELO_100_2025,
+    MODELO_100_2026,
     MODELO_100_SUMMARY_2025,
     MODELO_111_2024,
     MODELO_111_2025,
@@ -54,6 +57,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 _ALL_RULESETS = [
+    ("modelo_100.2024", MODELO_100_2024),
+    ("modelo_100.2025", MODELO_100_2025),
+    ("modelo_100.2026", MODELO_100_2026),
     ("modelo_100.summary.2025", MODELO_100_SUMMARY_2025),
     ("modelo_111.2024", MODELO_111_2024),
     ("modelo_111.2025", MODELO_111_2025),
@@ -110,7 +116,7 @@ def test_zero_boundary_is_clean(name: str, ruleset) -> None:
     # Secondary guard: computed casillas that should be zero (aggregates
     # of zero inputs) actually are zero. For 303's rate-literal casillas
     # (02/05/08), the derived rate is non-zero by design — they are
-    # constants, not aggregates. Skip those.
+    # constants, not aggregates.
     rate_literal_ids = {"02", "05", "08"}  # 303 rate-literal casillas
     for entry in ledger.entries:
         if name.startswith("modelo_303") and entry.casilla_id in rate_literal_ids:
