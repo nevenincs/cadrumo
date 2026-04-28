@@ -88,6 +88,46 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
 # explicitly bumps the expected counts here AND extends the per-class
 # harness to cover the new nodes — a deliberate friction point.
 EXPECTED_COUNTS: dict[str, dict[str, int]] = {
+    "modelo_100.2024": {
+        # Issue #317 (megaproject Wave 5 — Anexo B1 only):
+        # - sub_op: 9 = (4 chained sub_ops in casilla 0020 rendimiento neto previo)
+        #             + (4 in piecewise art. 20 reducción: 2 per piece x 2 pieces)
+        #             + (1 in casilla 0022 rendimiento neto reducido).
+        # - mul_div_scalar: 2 = the two `mul_op(lit, clamp_pos(sub_op))` in piece_a
+        #             (slope 1,75) and piece_b (slope 1,14) of the art. 20 reducción.
+        # - No PercentFormula or BracketsFormula nodes yet (Anexo G will add both).
+        "sub_op": 9,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 2,
+    },
+    "modelo_100.2025": {
+        # Issue #317: structural baseline for the year that anchors the 2024
+        # and 2026 clones; node fingerprint identical (LIRPF arts. 17-20 stable
+        # 2024 → 2025 → 2026 per BOE consolidated text consult 2026-02-28).
+        "sub_op": 9,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 2,
+    },
+    "modelo_100.2026": {
+        # Issue #317: 2026 ruleset inherits 2025 numerical surface; mutable-node
+        # fingerprint matches verbatim. Any 2026-specific delta lands as a
+        # follow-up issue when the 2026 Orden HAC publishes (precedent feb-mar 2027).
+        "sub_op": 9,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 0,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 2,
+    },
     "modelo_100.summary.2025": {
         "sub_op": 3,  # casilla 0698 = clamp_pos(sub_op(...)) (1) + 0720 = sub_op(sub_op(...), ref) (2 nested).
         "percent_rate_literal": 0,
