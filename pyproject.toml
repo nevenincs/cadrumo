@@ -47,6 +47,11 @@ dependencies = [
     "tzdata>=2026.2 ; sys_platform == 'win32'",
     # PKCS#12 parsing for client-certificate auth (#8)
     "cryptography>=47.0.0",
+    # Argon2id KDF for the file-fallback master-key provider's
+    # passphrase-to-KEK derivation (wave-12). OWASP-current top-tier
+    # password-hashing primitive; ships pre-built wheels for
+    # Linux/macOS/Windows.
+    "argon2-cffi>=23.1.0",
     # OS-keychain abstraction for the master-key provider (Windows
     # Credential Manager, macOS Keychain, Linux Secret Service via
     # libsecret). Pure-Python, gracefully degrades when no usable backend

@@ -1,12 +1,16 @@
 """``aeat security`` sub-app — operator key-management + integrity tooling.
 
-Exposes the substrate's two operator-facing security tools:
+Exposes the substrate's three operator-facing security tools:
 
 - ``aeat security rotate-master-key --old-key-file <path> --new-key-file <path>``
   re-encrypts every governance envelope under the new master key.
 - ``aeat security verify-corpus --corpus <name> [--regenerate]``
   builds or verifies the SHA-256 manifest covering every file under
   a CORPUS-class root (casillas, manuals, normatives, vat).
+- ``aeat security migrate-master-key-kdf [--store-dir <path>]``
+  re-wraps the file-fallback master key from scrypt (v1) to Argon2id
+  (v2). Must be run once on every installation that has a v1
+  ``master.kdf`` on disk.
 
 Every command is read-write on local disk only — no AEAT remote
 service is touched. The configured ``aeat_*_dir`` settings drive
@@ -228,6 +232,69 @@ def verify_corpus_cmd(
         _console.print(f"[red]manifest invalid for {corpus.value}:[/red] {exc}")
         raise typer.Exit(code=1) from exc
     _console.print(f"[green]clean[/green] {corpus.value} -> {sidecar}")
+
+
+@app.command("migrate-master-key-kdf")
+def migrate_master_key_kdf_cmd(
+    store_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--store-dir",
+            help=(
+                "Directory containing master.kdf + master.key + salt. Defaults to the configured aeat_secret_store_dir."
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Migrate the file-fallback ``master.kdf`` from scrypt (v1) to Argon2id (v2).
+
+    Operator workflow:
+
+    1. Ensure the existing master-key passphrase is reachable —
+       either set ``AEAT_SECRET_PASSPHRASE`` in the environment, or
+       be ready to type it at the interactive prompt.
+    2. Run ``aeat security migrate-master-key-kdf``.
+    3. Verify the substrate now loads cleanly: e.g.
+       ``aeat secrets list`` should return without prompting for the
+       passphrase a second time.
+
+    The migration is resume-idempotent: re-running on an already-v2
+    store reports ``skipped`` and exits 0. A wrong passphrase aborts
+    cleanly without modifying the v1 store on disk.
+    """
+    from ..config import load_settings
+    from ..storage import migrate_master_key_kdf
+    from ..storage._master_key import _default_passphrase_callback
+    from ..storage.errors import MasterKeyUnavailableError
+
+    settings = load_settings()
+    target_store = Path(store_dir) if store_dir is not None else Path(settings.aeat_secret_store_dir)
+    if not target_store.exists():
+        raise typer.BadParameter(f"secret-store directory does not exist: {target_store}")
+
+    passphrase_text = _default_passphrase_callback()
+    passphrase_bytes = passphrase_text.encode("utf-8")
+
+    try:
+        result = migrate_master_key_kdf(
+            store_dir=target_store,
+            passphrase=passphrase_bytes,
+        )
+    except MasterKeyUnavailableError as exc:
+        _console.print(f"[red]migration failed:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    table = Table(title="master.kdf migration summary")
+    table.add_column("metric")
+    table.add_column("count", justify="right")
+    table.add_row("migrated", str(result.migrated))
+    table.add_row("skipped", str(result.skipped))
+    _console.print(table)
+    _console.print(f"store_dir -> {result.store_dir}")
+    if result.migrated:
+        _console.print("[green]master.kdf is now v2 (Argon2id).[/green]")
+    else:
+        _console.print("[green]master.kdf was already v2; no action required.[/green]")
 
 
 __all__ = ["app"]

@@ -72,6 +72,17 @@ class MasterKeyUnavailableError(SecretStoreError):
     """Raised when no master key can be acquired from any provider."""
 
 
+class MasterKeyKdfVersionError(MasterKeyUnavailableError):
+    """Raised when the on-disk ``master.kdf`` declares a KDF version this build cannot consume.
+
+    The substrate gates the master.kdf parameters by version. Mismatch
+    means the operator is on a build that has rotated the password-derived
+    KDF (e.g. the wave-12 scrypt -> Argon2id transition); the operator
+    must run ``aeat security migrate-master-key-kdf`` to re-wrap the
+    master key under the new KDF.
+    """
+
+
 class LockAcquisitionError(PersistenceError):
     """Raised when an exclusive file lock cannot be acquired within the timeout."""
 

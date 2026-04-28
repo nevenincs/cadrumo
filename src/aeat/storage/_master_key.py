@@ -9,8 +9,10 @@ protocol:
   account; on first use the provider mints a 32-byte random key and
   persists it.
 - :class:`FileFallbackMasterKeyProvider` — backed by a passphrase-
-  derived KEK (scrypt) wrapping an AES-256-GCM master key persisted
-  alongside a per-store random salt.
+  derived KEK (Argon2id) wrapping an AES-256-GCM master key persisted
+  alongside a per-store random salt. Wave-12 migrated the KDF from
+  scrypt to Argon2id; the historical (v1, scrypt) format is no longer
+  loadable and must be migrated via :func:`migrate_master_key_kdf`.
 - :class:`EphemeralMasterKeyProvider` — an in-memory provider used
   exclusively by tests; the key vanishes when the provider object is
   garbage-collected.
@@ -27,7 +29,7 @@ The on-disk file backend persists three artefacts in
 - ``salt`` — 16 random bytes (read at startup, never rotated).
 - ``master.key`` — the AES-256-GCM ciphertext of the master key, plus
   its 12-byte nonce, plus the 16-byte tag, base64-encoded.
-- ``master.kdf`` — a small JSON document carrying the scrypt
+- ``master.kdf`` — a small JSON document carrying the Argon2id
   parameters used to derive the KEK from the operator's passphrase.
   This file is human-readable; only ``master.key`` is sensitive.
 
@@ -43,14 +45,17 @@ import atexit
 import base64
 import binascii
 import getpass
+import json
 import os
 import secrets
 from collections.abc import Callable
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING, ClassVar, Final, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, Protocol, runtime_checkable
 
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from argon2.low_level import Type as _Argon2Type
+from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt as _LegacyScrypt
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
@@ -60,6 +65,7 @@ from ..logging import get_logger
 from ._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from .errors import (
     KeyringUnavailableError,
+    MasterKeyKdfVersionError,
     MasterKeyUnavailableError,
     SecretStoreError,
 )
@@ -75,20 +81,27 @@ KEYRING_USERNAME: Final[str] = "master"
 PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"  # noqa: S105 — env var name, not a value
 """Environment variable consulted by the file backend before prompting."""
 
-_SCRYPT_N: Final[int] = 2**17
-"""scrypt cost parameter ``N`` (CPU/memory cost). 2**17 is OWASP-aligned."""
+_ARGON2_MEMORY_COST_KIB: Final[int] = 19 * 1024
+"""Argon2id ``memory_cost`` in KiB (19 MiB — OWASP-current top tier)."""
 
-_SCRYPT_R: Final[int] = 8
-"""scrypt block-mix parameter ``r``."""
+_ARGON2_TIME_COST: Final[int] = 2
+"""Argon2id ``time_cost`` (number of iterations) — OWASP-current top tier."""
 
-_SCRYPT_P: Final[int] = 1
-"""scrypt parallelism parameter ``p``."""
+_ARGON2_PARALLELISM: Final[int] = 1
+"""Argon2id ``parallelism`` — OWASP-current top tier."""
 
 _SALT_SIZE: Final[int] = 16
 """Per-store salt size in bytes."""
 
-_KDF_PARAMS_VERSION: Final[int] = 1
-"""Bumped when the on-disk KDF parameter shape changes."""
+_KDF_PARAMS_VERSION: Final[int] = 2
+"""Bumped when the on-disk KDF parameter shape changes.
+
+* v1: scrypt (N=2**17, r=8, p=1). Wave-1 through wave-11.
+* v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1). Wave-12.
+"""
+
+_LEGACY_KDF_PARAMS_VERSION: Final[int] = 1
+"""Wave-1..11 KDF parameter version. Read-only — only the migration helper consumes it."""
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -108,16 +121,59 @@ class MasterKeyProvider(Protocol):
 
 
 class _KdfParameters(BaseModel):
-    """On-disk record of the scrypt parameters used to derive the KEK."""
+    """On-disk record of the Argon2id parameters used to derive the KEK.
+
+    The active (v2) shape. Loading a v1 (scrypt) ``master.kdf`` against
+    this model fails by design — the version-gate in
+    :meth:`FileFallbackMasterKeyProvider._unwrap_existing` produces a
+    typed :class:`MasterKeyKdfVersionError` pointing the operator at
+    the migration tool instead of letting a strict-pydantic
+    ``ValidationError`` bubble up unannotated.
+    """
 
     model_config = _STRICT_FROZEN
 
     version: int = Field(default=_KDF_PARAMS_VERSION)
-    algorithm: str = Field(default="scrypt")
+    algorithm: Literal["argon2id"] = Field(default="argon2id")
+    memory_cost: int
+    time_cost: int
+    parallelism: int
+    salt_b64: str
+
+
+class _LegacyKdfParameters(BaseModel):
+    """Parser for v1 (scrypt) ``master.kdf`` files.
+
+    Used **only** by :func:`migrate_master_key_kdf` when re-wrapping an
+    existing master key into the v2 (Argon2id) format. The substrate's
+    regular load path never instantiates this model.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    version: Literal[1]
+    algorithm: Literal["scrypt"]
     n: int
     r: int
     p: int
     salt_b64: str
+
+
+class MigrationResult(BaseModel):
+    """Outcome of a one-shot ``master.kdf`` migration run.
+
+    Attributes:
+        migrated: ``1`` if the store was on v1 and is now v2; ``0`` if
+            the store was already v2 and required no action.
+        skipped: ``1`` if the store was already v2; ``0`` otherwise.
+        store_dir: The store directory the migration acted on.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    migrated: int = Field(default=0, ge=0, le=1)
+    skipped: int = Field(default=0, ge=0, le=1)
+    store_dir: Path
 
 
 def _b64encode(data: bytes) -> str:
@@ -145,8 +201,31 @@ def _zeroise(buffer: bytearray | None) -> None:
 
 
 def _derive_kek(passphrase: bytes, salt: bytes) -> bytes:
-    """Derive a 32-byte KEK from the operator's passphrase and the per-store salt."""
-    scrypt = Scrypt(salt=salt, length=KEY_SIZE, n=_SCRYPT_N, r=_SCRYPT_R, p=_SCRYPT_P)
+    """Derive a 32-byte KEK from the operator's passphrase and the per-store salt.
+
+    Uses Argon2id with the OWASP-current top-tier parameters
+    (``memory_cost=19 MiB, time_cost=2, parallelism=1``). The result is
+    a 32-byte KEK suitable for AES-256-GCM-wrapping the master key.
+    """
+    return _argon2_hash_secret_raw(
+        secret=passphrase,
+        salt=salt,
+        time_cost=_ARGON2_TIME_COST,
+        memory_cost=_ARGON2_MEMORY_COST_KIB,
+        parallelism=_ARGON2_PARALLELISM,
+        hash_len=KEY_SIZE,
+        type=_Argon2Type.ID,
+    )
+
+
+def _derive_legacy_scrypt_kek(passphrase: bytes, salt: bytes, params: _LegacyKdfParameters) -> bytes:
+    """Derive the 32-byte KEK under the v1 (scrypt) parameter set.
+
+    Used **only** by :func:`migrate_master_key_kdf`. Once a store has
+    been migrated to v2, this function is no longer reachable from the
+    regular load path.
+    """
+    scrypt = _LegacyScrypt(salt=salt, length=KEY_SIZE, n=params.n, r=params.r, p=params.p)
     return scrypt.derive(passphrase)
 
 
@@ -390,20 +469,29 @@ class FileFallbackMasterKeyProvider:
         return key
 
     def _unwrap_existing(self, passphrase: bytes) -> bytes:
+        raw_text = self._kdf_params_path.read_text(encoding="utf-8")
+        # Version-gate before strict pydantic parsing so a v1 file
+        # produces a typed runbook-pointing error instead of a raw
+        # ValidationError.
         try:
-            params = _KdfParameters.model_validate_json(self._kdf_params_path.read_text(encoding="utf-8"))
+            preview = json.loads(raw_text)
+        except json.JSONDecodeError as exc:
+            raise MasterKeyUnavailableError(
+                f"failed to parse KDF parameters at {self._kdf_params_path}: {exc}",
+            ) from exc
+        on_disk_version = preview.get("version")
+        if on_disk_version != _KDF_PARAMS_VERSION:
+            raise MasterKeyKdfVersionError(
+                f"master.kdf at {self._kdf_params_path} is version {on_disk_version!r}; "
+                f"this build expects version {_KDF_PARAMS_VERSION}. "
+                "Run `aeat security migrate-master-key-kdf` to upgrade.",
+            )
+        try:
+            params = _KdfParameters.model_validate_json(raw_text)
         except Exception as exc:
             raise MasterKeyUnavailableError(
                 f"failed to parse KDF parameters at {self._kdf_params_path}: {exc}",
             ) from exc
-        if params.version != _KDF_PARAMS_VERSION:
-            raise MasterKeyUnavailableError(
-                f"unsupported KDF parameters version {params.version}; expected {_KDF_PARAMS_VERSION}.",
-            )
-        if params.algorithm != "scrypt":
-            raise MasterKeyUnavailableError(
-                f"unsupported KDF algorithm {params.algorithm!r}; expected 'scrypt'.",
-            )
         try:
             salt = _b64decode(params.salt_b64)
         except (ValueError, binascii.Error) as exc:
@@ -426,9 +514,9 @@ class FileFallbackMasterKeyProvider:
     def _mint_new(self, passphrase: bytes) -> bytes:
         salt = secrets.token_bytes(_SALT_SIZE)
         params = _KdfParameters(
-            n=_SCRYPT_N,
-            r=_SCRYPT_R,
-            p=_SCRYPT_P,
+            memory_cost=_ARGON2_MEMORY_COST_KIB,
+            time_cost=_ARGON2_TIME_COST,
+            parallelism=_ARGON2_PARALLELISM,
             salt_b64=_b64encode(salt),
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
@@ -487,8 +575,15 @@ class FileFallbackMasterKeyProvider:
 
     @staticmethod
     def _derive_kek_with_params(passphrase: bytes, salt: bytes, params: _KdfParameters) -> bytes:
-        scrypt = Scrypt(salt=salt, length=KEY_SIZE, n=params.n, r=params.r, p=params.p)
-        return scrypt.derive(passphrase)
+        return _argon2_hash_secret_raw(
+            secret=passphrase,
+            salt=salt,
+            time_cost=params.time_cost,
+            memory_cost=params.memory_cost,
+            parallelism=params.parallelism,
+            hash_len=KEY_SIZE,
+            type=_Argon2Type.ID,
+        )
 
     @classmethod
     def _reset_for_tests(cls) -> None:
@@ -595,3 +690,112 @@ def get_master_key_provider(
             store_dir=store_dir,
             passphrase_callback=passphrase_callback,
         )
+
+
+def migrate_master_key_kdf(
+    *,
+    store_dir: Path,
+    passphrase: bytes,
+) -> MigrationResult:
+    """One-shot scrypt -> Argon2id migration of the file-fallback ``master.kdf``.
+
+    Reads the v1 (scrypt) on-disk parameters, derives the legacy KEK,
+    decrypts the wrapped master key, derives a fresh KEK under
+    Argon2id with the **same per-store salt + same passphrase**,
+    re-wraps the master key, and atomically replaces ``master.kdf`` +
+    ``master.key``. The on-disk salt file is untouched.
+
+    The function is resume-idempotent: on a store that is already at
+    v2 it returns ``MigrationResult(skipped=1)`` without rewriting any
+    artefact.
+
+    Args:
+        store_dir: Directory containing ``salt``, ``master.key``, and
+            ``master.kdf``. Must already exist.
+        passphrase: The operator's passphrase as raw bytes (UTF-8
+            encoded). Must match the passphrase used to write the
+            existing v1 store; mismatch produces
+            :class:`MasterKeyUnavailableError` with the v1 store
+            untouched.
+
+    Returns:
+        A :class:`MigrationResult` recording whether the migration
+        ran or was a no-op.
+
+    Raises:
+        MasterKeyUnavailableError: If the on-disk store is malformed,
+            the passphrase does not unwrap the existing master key, or
+            an I/O error prevents the atomic rewrite.
+    """
+    store_dir = Path(store_dir).resolve()
+    kdf_params_path = store_dir / "master.kdf"
+    master_key_path = store_dir / "master.key"
+    salt_path = store_dir / "salt"
+    for required in (kdf_params_path, master_key_path, salt_path):
+        if not required.exists():
+            raise MasterKeyUnavailableError(
+                f"required artefact missing for KDF migration: {required}",
+            )
+
+    raw_text = kdf_params_path.read_text(encoding="utf-8")
+    try:
+        preview = json.loads(raw_text)
+    except json.JSONDecodeError as exc:
+        raise MasterKeyUnavailableError(
+            f"failed to parse master.kdf at {kdf_params_path}: {exc}",
+        ) from exc
+    on_disk_version = preview.get("version")
+    if on_disk_version == _KDF_PARAMS_VERSION:
+        return MigrationResult(migrated=0, skipped=1, store_dir=store_dir)
+    if on_disk_version != _LEGACY_KDF_PARAMS_VERSION:
+        raise MasterKeyUnavailableError(
+            f"master.kdf at {kdf_params_path} is version {on_disk_version!r}; "
+            f"the migration helper only handles version {_LEGACY_KDF_PARAMS_VERSION} -> "
+            f"{_KDF_PARAMS_VERSION}.",
+        )
+
+    try:
+        legacy_params = _LegacyKdfParameters.model_validate_json(raw_text)
+    except Exception as exc:
+        raise MasterKeyUnavailableError(
+            f"failed to parse legacy master.kdf at {kdf_params_path}: {exc}",
+        ) from exc
+    try:
+        salt = _b64decode(legacy_params.salt_b64)
+    except (ValueError, binascii.Error) as exc:
+        raise MasterKeyUnavailableError("legacy KDF parameters carry malformed salt.") from exc
+
+    legacy_kek = _derive_legacy_scrypt_kek(passphrase, salt, legacy_params)
+    try:
+        wire = base64.b64decode(master_key_path.read_bytes(), validate=True)
+        blob = EncryptedBlob.from_wire(wire)
+    except Exception as exc:
+        raise MasterKeyUnavailableError(
+            f"failed to read wrapped master key at {master_key_path}: {exc}",
+        ) from exc
+    try:
+        master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")
+    except Exception as exc:
+        raise MasterKeyUnavailableError(
+            "failed to decrypt master key under legacy scrypt KDF; passphrase may be wrong "
+            "or the file may be tampered with. The v1 store has not been modified.",
+        ) from exc
+
+    new_params = _KdfParameters(
+        memory_cost=_ARGON2_MEMORY_COST_KIB,
+        time_cost=_ARGON2_TIME_COST,
+        parallelism=_ARGON2_PARALLELISM,
+        salt_b64=_b64encode(salt),
+    )
+    new_kek = FileFallbackMasterKeyProvider._derive_kek_with_params(passphrase, salt, new_params)
+    new_blob = encrypt_record(master_key, key=new_kek, associated_data=b"aeat.master-key.v1")
+    FileFallbackMasterKeyProvider._write_bytes_secure(
+        kdf_params_path,
+        new_params.model_dump_json().encode("utf-8"),
+    )
+    FileFallbackMasterKeyProvider._write_bytes_secure(
+        master_key_path,
+        base64.b64encode(new_blob.to_wire()),
+    )
+    _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
+    return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)

@@ -251,3 +251,145 @@ def test_malformed_key_file_rejected(
     )
     assert result.exit_code != 0
     assert "hex" in result.output
+
+
+class TestMigrateMasterKeyKdf:
+    """Wave-12 scrypt -> Argon2id master.kdf migration CLI."""
+
+    @staticmethod
+    def _seed_v1_store(tmp_path: Path, *, passphrase: str) -> tuple[Path, bytes]:
+        """Lay down a v1 store at ``tmp_path / "secrets"`` and return (store, master-key)."""
+        import base64
+        import secrets as _secrets
+
+        from ..storage import encrypt_record
+        from ..storage._master_key import (
+            _b64encode,
+            _derive_legacy_scrypt_kek,
+            _LegacyKdfParameters,
+        )
+
+        store = tmp_path / "secrets"
+        store.mkdir(parents=True, exist_ok=True)
+        salt = _secrets.token_bytes(16)
+        legacy_params = _LegacyKdfParameters(
+            version=1,
+            algorithm="scrypt",
+            n=2**14,
+            r=8,
+            p=1,
+            salt_b64=_b64encode(salt),
+        )
+        passphrase_bytes = passphrase.encode("utf-8")
+        legacy_kek = _derive_legacy_scrypt_kek(passphrase_bytes, salt, legacy_params)
+        master_key = _secrets.token_bytes(32)
+        blob = encrypt_record(master_key, key=legacy_kek, associated_data=b"aeat.master-key.v1")
+        (store / "salt").write_bytes(salt)
+        (store / "master.kdf").write_text(legacy_params.model_dump_json(), encoding="utf-8")
+        (store / "master.key").write_bytes(base64.b64encode(blob.to_wire()))
+        return store, master_key
+
+    def test_migrate_then_load(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """End-to-end: seed v1, run migrate via CLI, load works under v2."""
+        store, plaintext_key = self._seed_v1_store(tmp_path, passphrase="hunter2")  # noqa: S106 - test passphrase
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "hunter2")
+
+        result = runner.invoke(
+            app,
+            [
+                "security",
+                "migrate-master-key-kdf",
+                "--store-dir",
+                str(store),
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert "v2 (Argon2id)" in result.output
+
+        # File backend now loads v2 cleanly with the same passphrase.
+        from ..storage import FileFallbackMasterKeyProvider
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        loaded = FileFallbackMasterKeyProvider(
+            store_dir=store,
+            passphrase_callback=lambda: "hunter2",
+        ).get_master_key()
+        assert loaded == plaintext_key
+
+    def test_migrate_idempotent_on_v2_store(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Running the CLI on an already-v2 store reports skipped and exits 0."""
+        from ..storage import FileFallbackMasterKeyProvider
+
+        store = tmp_path / "secrets"
+        FileFallbackMasterKeyProvider(
+            store_dir=store,
+            passphrase_callback=lambda: "hunter2",
+        ).get_master_key()
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "hunter2")
+
+        result = runner.invoke(
+            app,
+            [
+                "security",
+                "migrate-master-key-kdf",
+                "--store-dir",
+                str(store),
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert "already v2" in result.output
+
+    def test_migrate_wrong_passphrase_exits_nonzero(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A wrong passphrase exits 1 and does not modify the v1 store."""
+        store, _ = self._seed_v1_store(tmp_path, passphrase="correct")  # noqa: S106 - test passphrase
+        before_kdf = (store / "master.kdf").read_bytes()
+        before_key = (store / "master.key").read_bytes()
+        monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "wrong")
+
+        result = runner.invoke(
+            app,
+            [
+                "security",
+                "migrate-master-key-kdf",
+                "--store-dir",
+                str(store),
+            ],
+        )
+        assert result.exit_code == 1
+        assert "migration failed" in result.output
+        assert (store / "master.kdf").read_bytes() == before_kdf
+        assert (store / "master.key").read_bytes() == before_key
+
+    def test_missing_store_dir_rejected(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+    ) -> None:
+        """Pointing at a non-existent store dir is rejected with a usage error."""
+        result = runner.invoke(
+            app,
+            [
+                "security",
+                "migrate-master-key-kdf",
+                "--store-dir",
+                str(tmp_path / "does-not-exist"),
+            ],
+        )
+        assert result.exit_code != 0
+        assert "does not exist" in result.output

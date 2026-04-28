@@ -17,15 +17,21 @@ from . import (
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     KeyringUnavailableError,
+    MasterKeyKdfVersionError,
     MasterKeyProvider,
     MasterKeyUnavailableError,
     SecretStoreError,
     get_master_key_provider,
+    migrate_master_key_kdf,
 )
+from ._crypto import encrypt_record
 from ._master_key import (
     PASSPHRASE_ENV_VAR,
     _b64decode,
+    _b64encode,
+    _derive_legacy_scrypt_kek,
     _KdfParameters,
+    _LegacyKdfParameters,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
@@ -137,8 +143,11 @@ class TestFileFallbackProvider:
         provider.get_master_key()
         params_text = (tmp_path / "secrets" / "master.kdf").read_text(encoding="utf-8")
         params = _KdfParameters.model_validate_json(params_text)
-        assert params.algorithm == "scrypt"
-        assert params.n == 2**17
+        assert params.version == 2
+        assert params.algorithm == "argon2id"
+        assert params.memory_cost == 19 * 1024
+        assert params.time_cost == 2
+        assert params.parallelism == 1
         assert len(_b64decode(params.salt_b64)) == 16
 
     def test_master_key_file_is_ciphertext_not_plaintext(self, tmp_path: Path) -> None:
@@ -398,3 +407,127 @@ class TestFactory:
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
         assert len(provider.get_master_key()) == KEY_SIZE
+
+
+def _seed_legacy_v1_store(store_dir: Path, *, passphrase: str) -> bytes:
+    """Lay down a v1 (scrypt) ``master.key`` + ``master.kdf`` + ``salt`` triplet.
+
+    Returns the plaintext master key so tests can assert that the
+    migration preserves the original key bytes.
+    """
+    store_dir.mkdir(parents=True, exist_ok=True)
+    salt = secrets.token_bytes(16)
+    legacy_params = _LegacyKdfParameters(
+        version=1,
+        algorithm="scrypt",
+        n=2**14,
+        r=8,
+        p=1,
+        salt_b64=_b64encode(salt),
+    )
+    passphrase_bytes = passphrase.encode("utf-8")
+    legacy_kek = _derive_legacy_scrypt_kek(passphrase_bytes, salt, legacy_params)
+    master_key = secrets.token_bytes(KEY_SIZE)
+    blob = encrypt_record(master_key, key=legacy_kek, associated_data=b"aeat.master-key.v1")
+    (store_dir / "salt").write_bytes(salt)
+    (store_dir / "master.kdf").write_text(legacy_params.model_dump_json(), encoding="utf-8")
+    (store_dir / "master.key").write_bytes(base64.b64encode(blob.to_wire()))
+    return master_key
+
+
+class TestWave12KdfMigration:
+    """scrypt -> Argon2id one-shot migration of the file-fallback master.kdf."""
+
+    def test_v1_store_blocks_load_with_runbook_pointer(self, tmp_path: Path) -> None:
+        """A pre-migration v1 store cannot be loaded; the error names the migration tool."""
+        store = tmp_path / "secrets"
+        _seed_legacy_v1_store(store, passphrase="hunter2")
+
+        with pytest.raises(MasterKeyKdfVersionError) as exc_info:
+            FileFallbackMasterKeyProvider(
+                store_dir=store,
+                passphrase_callback=lambda: "hunter2",
+            ).get_master_key()
+        assert "migrate-master-key-kdf" in str(exc_info.value)
+
+    def test_migrate_v1_to_v2_preserves_master_key(self, tmp_path: Path) -> None:
+        """The migration re-wraps without changing the master-key bytes."""
+        store = tmp_path / "secrets"
+        plaintext_master_key = _seed_legacy_v1_store(store, passphrase="hunter2")
+
+        result = migrate_master_key_kdf(
+            store_dir=store,
+            passphrase=b"hunter2",
+        )
+        assert result.migrated == 1
+        assert result.skipped == 0
+
+        # File backend now loads cleanly under v2.
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=store,
+            passphrase_callback=lambda: "hunter2",
+        )
+        loaded = provider.get_master_key()
+        assert loaded == plaintext_master_key
+
+        # master.kdf is on v2 and uses Argon2id.
+        params = _KdfParameters.model_validate_json(
+            (store / "master.kdf").read_text(encoding="utf-8"),
+        )
+        assert params.version == 2
+        assert params.algorithm == "argon2id"
+        assert params.memory_cost == 19 * 1024
+        assert params.time_cost == 2
+        assert params.parallelism == 1
+
+    def test_migrate_idempotent_on_v2_store(self, tmp_path: Path) -> None:
+        """Re-running the migration on an already-v2 store is a no-op."""
+        store = tmp_path / "secrets"
+        # Provision a fresh v2 store via the regular mint path.
+        FileFallbackMasterKeyProvider(
+            store_dir=store,
+            passphrase_callback=lambda: "hunter2",
+        ).get_master_key()
+
+        result = migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+        assert result.migrated == 0
+        assert result.skipped == 1
+
+    def test_migrate_wrong_passphrase_keeps_v1_intact(self, tmp_path: Path) -> None:
+        """Wrong passphrase aborts the migration and leaves the v1 store on disk untouched."""
+        store = tmp_path / "secrets"
+        _seed_legacy_v1_store(store, passphrase="correct")
+        before_kdf = (store / "master.kdf").read_bytes()
+        before_key = (store / "master.key").read_bytes()
+
+        with pytest.raises(MasterKeyUnavailableError):
+            migrate_master_key_kdf(store_dir=store, passphrase=b"wrong")
+
+        assert (store / "master.kdf").read_bytes() == before_kdf
+        assert (store / "master.key").read_bytes() == before_key
+
+    def test_migrate_missing_artefact_raises(self, tmp_path: Path) -> None:
+        """A missing master.kdf / master.key / salt aborts the migration."""
+        store = tmp_path / "secrets"
+        _seed_legacy_v1_store(store, passphrase="hunter2")
+        (store / "salt").unlink()
+
+        with pytest.raises(MasterKeyUnavailableError):
+            migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+
+    def test_v2_load_round_trip_no_migration_needed(self, tmp_path: Path) -> None:
+        """A fresh v2 mint round-trips through unwrap without invoking the migrator."""
+        store = tmp_path / "secrets"
+        first = FileFallbackMasterKeyProvider(
+            store_dir=store,
+            passphrase_callback=lambda: "hunter2",
+        )
+        first_key = first.get_master_key()
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+
+        second = FileFallbackMasterKeyProvider(
+            store_dir=store,
+            passphrase_callback=lambda: "hunter2",
+        )
+        assert second.get_master_key() == first_key
