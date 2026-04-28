@@ -1,6 +1,6 @@
 """Deterministic SHA-256 fingerprints of corpus, db, and certificate state.
 
-Used by the observability layer to gate dry-run replay. See ADR D5 for
+Used by the observability layer to gate read-only replay. See ADR D5 for
 the rationale (auditability over time-travel) and the research doc for
 the precise hash inputs.
 """

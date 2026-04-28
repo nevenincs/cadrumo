@@ -50,6 +50,7 @@ from . import (
     MODELO_131_2026,
     MODELO_180_2024,
     MODELO_180_2025,
+    MODELO_180_2026,
     MODELO_303_2024,
     MODELO_303_2025,
     MODELO_303_2026,
@@ -272,9 +273,10 @@ def _ruleset_cases() -> tuple[tuple[Ruleset, str, dict[str, Decimal]], ...]:
         (MODELO_131_2025, "06", _f131_fixture_second()),
         (MODELO_131_2026, "04", _f131_fixture_first()),
         (MODELO_131_2026, "06", _f131_fixture_second()),
-        # Modelo 180 — 2024 + 2025.
+        # Modelo 180 — 2024 + 2025 + 2026.
         (MODELO_180_2024, "03", _f180_fixture()),
         (MODELO_180_2025, "03", _f180_fixture()),
+        (MODELO_180_2026, "03", _f180_fixture()),
         # Modelo 303 — 2024 + 2025 (three rate-bearing casillas each).
         (MODELO_303_2024, "03", _f303_super_fixture()),
         (MODELO_303_2024, "06", _f303_reducido_fixture()),

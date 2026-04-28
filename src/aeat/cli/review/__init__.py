@@ -126,7 +126,7 @@ def _render_review_next_steps(
         _CONSOLE.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
         return
     _CONSOLE.print(f"Next: aeat submission preflight {draft_path}")
-    _CONSOLE.print(f"Next: aeat submission dry-run {draft_path}")
+    _CONSOLE.print(f"Next: aeat submission export {draft_path}")
 
 
 @app.command("approve")

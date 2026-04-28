@@ -1,9 +1,12 @@
-"""Unit tests for ``aeat.auth._clave_movil.ClaveMovilAuthProvider``.
+"""Protocol-level Cl@ve Movil tests for ``aeat.auth._clave_movil.ClaveMovilAuthProvider``.
 
-Zero mocks / patches / fakes (global ban) — the tests drive the
-provider against a hand-written stand-in ``BrowserSessionLike`` that
-records the navigation + form interactions. The stand-in honours the
-same Protocol the real :class:`aeat.browser.BrowserSession` presents.
+These tests use hand-written browser-session stand-ins and do not prove
+real AEAT authentication or operator Cl@ve approval.
+
+No mocks, patches, or cassettes are used. The tests drive the provider
+against hand-written ``BrowserSessionLike`` stand-ins that record the
+navigation + form interactions. The stand-ins honour the same Protocol
+the real :class:`aeat.browser.BrowserSession` presents.
 """
 
 from __future__ import annotations
@@ -27,7 +30,7 @@ from ._providers import AuthProviderKind, ClaveMovilSessionDetail
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
-# ── Fakes ────────────────────────────────────────────────────────────────────
+# ── Browser-session stand-ins ────────────────────────────────────────────────
 
 
 class _FakePage:
@@ -347,6 +350,27 @@ class TestAuthenticateFresh:
                 await provider.authenticate(browser_session=fake_session)
 
         asyncio.run(run())
+
+
+class TestPostAuthLanding:
+    def test_representation_dispatcher_is_not_auto_submitted(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from ._authenticator import AeatLoginAssertionError
+
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _FakePage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = "https://www6.agenciatributaria.gob.es/wlpl/OVCT-CXEW/DialogoRepresentacion"
+
+        async def run() -> None:
+            with pytest.raises(AeatLoginAssertionError, match="will not submit representation forms"):
+                await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=100)
+
+        asyncio.run(run())
+        assert page.clicks == []
 
 
 # ── authenticate() — resume path ─────────────────────────────────────────────

@@ -99,7 +99,6 @@ This reference is generated from the live registry after `scripts/generate_error
 | ERROR_SETUP_ANSWERS | ERROR | Error de configuracion respuestas. | The setup answers payload could not be loaded or validated. | Beallitas valaszok hiba. | - | - |
 | ERROR_SETUP_VERIFY | ERROR | Error de configuracion verificar. | Raised when the verify step finds an ERROR-severity problem. | Beallitas ellenoriz hiba. | - | - |
 | ERROR_SUBMISSION | ERROR | Error de envio. | Base class for submission-related errors. | Bekuldes hiba. | - | - |
-| ERROR_SUBMISSION_FORM_FILL | ERROR | No se pudo rellenar un campo del formulario de envio. | Raised when the submitter cannot fill a casilla-keyed input on the portal. | A bekuldesi urlap egyik mezoje nem toltheto ki. | - | - |
 | ERROR_SUBMISSION_PREFLIGHT | ERROR | La validacion previa del envio rechazo el borrador. | Raised when preflight gating rejects a draft before any browser work. | A bekuldes elotti ellenorzes elutasitotta a tervezetet. | - | - |
 | ERROR_SYNC | ERROR | Error de sincronizacion. | Base class for sync-related errors. | Szinkron hiba. | - | - |
 | ERROR_SYNC_DIVERGENCE_CLASSIFICATION | ERROR | Error de divergencia clasificacion. | Raised when the classifier cannot decide the shape of a divergence. | Elteres besorolas hiba. | - | - |

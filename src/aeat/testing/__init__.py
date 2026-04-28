@@ -39,7 +39,7 @@ Public API
   with fixture authoring.
 - :func:`synthesize_filing_draft` — pure-construction factory that
   builds a strict-frozen :class:`aeat.filing.FilingDraft` from a
-  casilla map. Used by the W1 P7 reconcile dry-run path to feed
+  casilla map. Used by the W1 P7 read-only reconcile path to feed
   ``aeat filing reconcile`` an APPROVED draft without running the
   full transactions/ruleset/formulas/validator pipeline.
 - :func:`synthesize_filing_draft_from_decimals` — convenience

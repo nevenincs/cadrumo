@@ -56,7 +56,6 @@ from . import (
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
     SubmissionEngineProtocol,
-    SubmittedFilingLike,
     SyncRunnerProtocol,
     SyncRunSummary,
     WorkflowAbortReason,
@@ -129,32 +128,12 @@ class _FakeDraftBuilder:
 @dataclass
 class _FakeSubmissionEngine:
     preflight_exc: BaseException | None = None
-    submit_exc: BaseException | None = None
-    submission_id: str = "sub-abc"
-    submit_calls: list[bool] = field(default_factory=list)
+    preflight_calls: list[date] = field(default_factory=list)
 
     def preflight(self, draft: _FakeDraft, *, today: date) -> None:
+        self.preflight_calls.append(today)
         if self.preflight_exc is not None:
             raise self.preflight_exc
-
-    async def submit_draft(
-        self,
-        draft: _FakeDraft,
-        *,
-        dry_run: bool,
-        today: date | None = None,
-    ) -> SubmittedFilingLike:
-        self.submit_calls.append(dry_run)
-        if self.submit_exc is not None:
-            raise self.submit_exc
-        return SubmittedFilingLike(
-            submission_id=self.submission_id,
-            draft_id=draft.draft_id,
-            modelo=draft.modelo,
-            period=draft.period,
-            status="PENDING",
-            submitted_at=datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC),
-        )
 
 
 @dataclass
@@ -348,18 +327,18 @@ def _fixtures() -> _Fixtures:
     )
 
 
-# ── Happy path + dry-run default ────────────────────────────────────────
+# ── Happy path ─────────────────────────────────────────────────────────
 
 
 class TestHappyPath:
     def test_run_next_happy_path(self) -> None:
         """Every stage fires and the engine reaches DONE."""
         fx = _fixtures()
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.final_stage is WorkflowStage.DONE
         assert result.aborted_reason is None
         assert result.draft_id == fx.draft.draft_id
-        assert result.submission_id == "sub-abc"
+        assert result.submission_id is None
         stages = tuple(s.stage for s in result.steps)
         assert stages == (
             WorkflowStage.LOADING_PROFILE,
@@ -369,14 +348,13 @@ class TestHappyPath:
             WorkflowStage.BUILDING_DRAFT,
             WorkflowStage.VALIDATING_DRAFT,
             WorkflowStage.RUNNING_PREFLIGHT,
-            WorkflowStage.DRY_RUN_SUBMIT,
         )
 
-    def test_explicit_dry_run_is_forwarded(self) -> None:
-        """Explicit dry-run invocation must call submit_draft with dry_run=True."""
+    def test_workflow_stops_after_preflight(self) -> None:
+        """Workflow invocation must stop after read-only preflight."""
         fx = _fixtures()
-        asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
-        assert fx.submission_engine.submit_calls == [True]
+        asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert fx.submission_engine.preflight_calls == [fx.today]
 
     def test_run_for_period(self) -> None:
         """``run_for_period`` targets a specific (modelo, period)."""
@@ -386,7 +364,6 @@ class TestHappyPath:
                 fx.profile,
                 fx.obligation.modelo,
                 fx.obligation.period,
-                dry_run=True,
                 today=fx.today,
             )
         )
@@ -395,7 +372,7 @@ class TestHappyPath:
     def test_sync_first_false_skips_sync_stage(self) -> None:
         """When ``sync_first=False`` the sync stage skips cleanly."""
         fx = _fixtures()
-        asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today, sync_first=False))
+        asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, sync_first=False))
         # The sync step is still recorded but as "skipped".
         step = next(s for s in _result(fx).steps if s.stage is WorkflowStage.SYNCING_CATALOGUES)
         assert step.details == {"skipped": "sync_first_false"}
@@ -403,7 +380,7 @@ class TestHappyPath:
 
 def _result(fx: _Fixtures) -> WorkflowResult:
     """Helper used in the tests above to re-run with sync skipped."""
-    return asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today, sync_first=False))
+    return asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, sync_first=False))
 
 
 # ── Every abort reason ──────────────────────────────────────────────────
@@ -413,7 +390,7 @@ class TestAbortReasons:
     def test_no_pending_obligation(self) -> None:
         fx = _fixtures()
         fx.deadline_engine.obligation = None
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.final_stage is WorkflowStage.ABORTED
         assert result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
 
@@ -427,7 +404,6 @@ class TestAbortReasons:
                 fx.profile,
                 past.modelo,
                 past.period,
-                dry_run=True,
                 today=fx.today,
             )
         )
@@ -453,7 +429,7 @@ class TestAbortReasons:
                 ),
             ),
         )
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO
 
     def test_already_filed(self) -> None:
@@ -469,7 +445,7 @@ class TestAbortReasons:
                 ),
             ),
         )
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.ALREADY_FILED
 
     def test_draft_has_errors_via_status(self) -> None:
@@ -477,7 +453,7 @@ class TestAbortReasons:
         fx = _fixtures()
         fx.draft = _FakeDraft(status=DraftStatus.VALIDATED)
         fx.draft_builder.draft = fx.draft
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
 
     def test_unapproved_ready_draft_fails_preflight(self) -> None:
@@ -487,7 +463,7 @@ class TestAbortReasons:
         fx.submission_engine.preflight_exc = SubmissionPreflightError(
             "draft not approved for submission (status=READY_TO_SUBMIT)"
         )
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.PREFLIGHT_FAILED
 
     def test_draft_has_errors_via_validation(self) -> None:
@@ -502,7 +478,7 @@ class TestAbortReasons:
             ),
         )
         fx.draft_builder.draft = fx.draft
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
         last = result.steps[-1]
         assert last.stage is WorkflowStage.VALIDATING_DRAFT
@@ -510,13 +486,13 @@ class TestAbortReasons:
     def test_preflight_failed(self) -> None:
         fx = _fixtures()
         fx.submission_engine.preflight_exc = SubmissionPreflightError("gate-3")
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.PREFLIGHT_FAILED
 
     def test_cert_invalid(self) -> None:
         fx = _fixtures()
         fx.certificate_bundle.raise_exc = RuntimeError("smartcard missing")
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
 
     def test_cert_pre_expiry_critical_aborts(self) -> None:
@@ -527,7 +503,7 @@ class TestAbortReasons:
             subject="CN=Expiring",
             not_after=date(2026, 4, 20),
         )
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
         preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
         assert preflight_step.details is not None
@@ -542,7 +518,7 @@ class TestAbortReasons:
             subject="CN=Expired",
             not_after=date(2026, 4, 1),
         )
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
         preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
         assert preflight_step.details is not None
@@ -557,7 +533,7 @@ class TestAbortReasons:
             subject="CN=Warning",
             not_after=date(2026, 5, 30),
         )
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.final_stage is WorkflowStage.DONE
         preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
         assert preflight_step.details is not None
@@ -572,37 +548,16 @@ class TestAbortReasons:
             not_after=None,
             kind=AuthProviderKind.CLAVE_PERMANENTE,
         )
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.final_stage is WorkflowStage.DONE
         preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
         assert preflight_step.details is not None
         assert preflight_step.details["provider_kind"] == AuthProviderKind.CLAVE_PERMANENTE.value
 
-    def test_live_submit_is_refused_before_submission_engine(self) -> None:
-        """The workflow API must refuse non-dry-run mode before dispatch."""
-        fx = _fixtures()
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, dry_run=False))
-        assert result.aborted_reason is WorkflowAbortReason.PREFLIGHT_FAILED
-        assert result.steps[-1].stage is WorkflowStage.DRY_RUN_SUBMIT
-        assert fx.submission_engine.submit_calls == []
-
-    def test_live_submit_refusal_mentions_permanent_prohibition(self) -> None:
-        """The workflow refusal should surface the permanent-forbid message."""
-        fx = _fixtures()
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, dry_run=False))
-        assert result.aborted_reason is WorkflowAbortReason.PREFLIGHT_FAILED
-        assert result.steps[-1].stage is WorkflowStage.DRY_RUN_SUBMIT
-        assert result.steps[-1].summary["en"].startswith("Preflight failed:")
-        assert "permanently forbidden" in result.steps[-1].summary["en"]
-        assert result.steps[-1].summary["es"].startswith("Validación previa fallida:")
-        assert "permanentemente prohibido" in result.steps[-1].summary["es"]
-        assert result.steps[-1].summary["hu"].startswith("Előellenőrzés sikertelen:")
-        assert "véglegesen tiltott" in result.steps[-1].summary["hu"]
-
     def test_unhandled_exception_from_deadline_engine(self) -> None:
         fx = _fixtures()
         fx.deadline_engine.raise_exc = RuntimeError("boom")
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
         assert result.steps[-1].stage is WorkflowStage.COMPUTING_DEADLINES
 
@@ -626,7 +581,7 @@ class TestSiteUnavailableArm:
 
         fx = _fixtures()
         fx.deadline_engine.raise_exc = SiteHealthError(status=real_status)
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.SITE_UNAVAILABLE
         assert result.final_stage is WorkflowStage.ABORTED
         last = result.steps[-1]
@@ -655,7 +610,7 @@ class TestSiteUnavailableArm:
         # recomputed from the resolved obligation and match the final
         # WorkflowResult.run_id.
         fx.inputs_provider.raise_exc = SiteHealthError(status=real_status)
-        result = asyncio.run(fx.engine().run_next(fx.profile, dry_run=True, today=fx.today))
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.SITE_UNAVAILABLE
         last = result.steps[-1]
         assert last.stage is WorkflowStage.BUILDING_DRAFT

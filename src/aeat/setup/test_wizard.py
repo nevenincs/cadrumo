@@ -86,7 +86,7 @@ def test_all_steps_reachable_in_non_interactive(
     monkeypatch.setenv("AEAT_TEST_PW", "x")
 
     class NoopRunner:
-        def dry_run(self) -> str:
+        def run_read_only(self) -> str:
             return "ok"
 
     result = SetupWizard().run(

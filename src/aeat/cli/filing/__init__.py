@@ -12,7 +12,6 @@ Subcommands:
 
 from __future__ import annotations
 
-import asyncio
 import json
 from collections.abc import Mapping
 from decimal import Decimal
@@ -39,7 +38,6 @@ from ...filing import (
     describe_stale_reason,
     import_filing_from_justificante,
     iter_findings,
-    load_amendment,
     refresh_review_status,
     validate_draft,
 )
@@ -47,7 +45,7 @@ from ...filing.runtime import build_runtime_schema_provider, load_default_filing
 from ...i18n import Language, get_translation
 from ...justificante import JustificanteError
 from ...logging import get_logger
-from ...submission import SubmissionEngine, SubmissionError
+from ...submission import SubmissionEngine
 from ..submission._helpers import build_engine as build_submission_engine
 from ._reconcile import register as _register_reconcile
 
@@ -59,7 +57,7 @@ app = typer.Typer(
 complementaria_app = typer.Typer(
     name="complementaria",
     no_args_is_help=True,
-    help="Build and submit amendment filings (#93).",
+    help="Build amendment filings (#93).",
 )
 
 _console = Console()
@@ -164,7 +162,7 @@ def _render_draft_next_steps(draft: FilingDraft, *, draft_path: Path) -> None:
 
     if draft.status is FilingDraftStatus.APPROVED:
         _console.print(f"Next: aeat submission preflight {draft_path}")
-        _console.print(f"Next: aeat submission dry-run {draft_path}")
+        _console.print(f"Next: aeat submission export {draft_path}")
         return
     if draft.status is FilingDraftStatus.APPROVAL_STALE:
         _console.print(f"Next: aeat review show {draft.draft_id}")
@@ -770,35 +768,7 @@ def build_complementaria_cmd(
     _render_amendment(amendment)
 
 
-@complementaria_app.command("submit")
-def submit_complementaria_cmd(
-    amendment_id: Annotated[str, typer.Argument(help="Persisted amendment id to submit")],
-) -> None:
-    """Submit a persisted amendment via the dry-run-only transport."""
-    amendment = load_amendment(amendment_id)
-    amended_draft = _load_persisted_draft_by_id(amendment.amended_draft.draft_id)
-    if amended_draft is not None:
-        amendment = amendment.model_copy(update={"amended_draft": amended_draft})
-    engine = _submission_engine()
-
-    try:
-        submission_result = asyncio.run(
-            engine.submit_amendment(
-                amendment,
-                dry_run=True,
-            )
-        )
-    except SubmissionError as exc:
-        _console.print(f"[red]refusing:[/red] {exc}")
-        raise typer.Exit(code=1) from exc
-    typer.echo(
-        f"dry-run amendment submission OK amendment_id={submission_result.amendment_id} "
-        f"submission_id={submission_result.filing.submission_id} "
-        f"status={submission_result.filing.status.value}"
-    )
-
-
-app.add_typer(complementaria_app, name="complementaria", help="Build and submit amendment filings (#93).")
+app.add_typer(complementaria_app, name="complementaria", help="Build amendment filings (#93).")
 _register_reconcile(app)
 
 

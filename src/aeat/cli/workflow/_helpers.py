@@ -1,7 +1,7 @@
 """Shared helpers for the ``aeat workflow`` CLI sub-app.
 
 Production wiring composes the on-main deadline engine, filing runtime
-schema provider, and dry-run-safe submission engine helper into a real
+schema provider, and read-only submission preflight helper into a real
 :class:`aeat.workflow.WorkflowEngine`. Tests can still override the
 construction seam by assigning ``_engine_factory`` / ``_profile_factory``.
 """
@@ -107,7 +107,6 @@ def _emit(result: WorkflowResult, *, as_json: bool, command: str) -> None:
 
 def run_engine_next(
     *,
-    dry_run: bool,
     sync_first: bool,
     as_json: bool,
     today: date | None = None,
@@ -118,7 +117,6 @@ def run_engine_next(
     result = asyncio.run(
         engine.run_next(
             profile,
-            dry_run=dry_run,
             sync_first=sync_first,
             today=today,
         )
@@ -131,7 +129,6 @@ def run_engine_for_period(
     *,
     modelo: str,
     period: str,
-    dry_run: bool,
     sync_first: bool,
     as_json: bool,
     today: date | None = None,
@@ -144,7 +141,6 @@ def run_engine_for_period(
             profile,
             modelo,
             period,
-            dry_run=dry_run,
             sync_first=sync_first,
             today=today,
         )

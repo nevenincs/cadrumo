@@ -13,11 +13,11 @@ typed refusal. The gate is consumed by:
 
 The gate is always constructed inline from a :class:`Settings`
 instance at the call site. It is never injected via a
-constructor, never stored as state on engines, never passed as a
-kwarg on any write-capable class. That anti-injection stance
-preserves R5's "no substitutable dependency on the write-gate"
-property: tests cannot swap the gate for a no-op because there is
-no seam to swap through.
+constructor, never stored as state on engines, and never passed as a
+kwarg that could make a write path substitutable. That anti-injection
+stance preserves R5's "no substitutable dependency on the write-gate"
+property: tests cannot swap the gate for a no-op because there is no
+seam to swap through.
 """
 
 from __future__ import annotations

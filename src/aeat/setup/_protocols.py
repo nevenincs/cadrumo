@@ -5,7 +5,7 @@ from Typer's ``typer.prompt`` / ``typer.confirm`` so tests can drive
 the wizard with a real in-process prompter (no mocks, no patches).
 
 The :class:`FirstRunRunner` Protocol lets the wizard hand off to a
-workflow-engine dry-run (issue #59) without hard-importing
+read-only workflow check (issue #59) without hard-importing
 ``aeat.workflow``. When no runner is supplied the ``FIRST_RUN`` step
 is skipped cleanly.
 """
@@ -56,12 +56,12 @@ class Prompter(Protocol):
 
 @runtime_checkable
 class FirstRunRunner(Protocol):
-    """Protocol for the optional first-run workflow dry-run (#59).
+    """Protocol for the optional first-run read-only workflow check (#59).
 
-    The wizard calls :meth:`dry_run` at the ``FIRST_RUN`` step when a
+    The wizard calls :meth:`run_read_only` at the ``FIRST_RUN`` step when a
     runner is supplied. The runner must not mutate any AEAT-side state.
     """
 
-    def dry_run(self) -> str:
-        """Return a short human-readable summary of the dry-run output."""
+    def run_read_only(self) -> str:
+        """Return a short human-readable summary of the read-only output."""
         ...

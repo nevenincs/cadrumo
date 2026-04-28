@@ -18,7 +18,7 @@
 
 - [ ] No new default-enabled AEAT write paths ([#197](https://github.com/wgergely/aeat/issues/197), [#116](https://github.com/wgergely/aeat/issues/116))
 - [ ] CI regression-prevention checks pass ([#205](https://github.com/wgergely/aeat/issues/205))
-- [ ] `aeat submission submit` / `aeat live-submit` still absent from default `--help`
+- [ ] `aeat submission submit`, `aeat submission dry-run`, and `aeat live-submit` still absent from default `--help`
 
 ## Regression prevention
 

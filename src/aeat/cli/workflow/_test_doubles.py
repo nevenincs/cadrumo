@@ -31,7 +31,6 @@ from ...submission import DraftStatus, FilingFinding
 from ...workflow import (
     FilingDraftBuilderProtocol,
     SubmissionEngineProtocol,
-    SubmittedFilingLike,
     WorkflowEngine,
     WorkflowError,
 )
@@ -100,26 +99,10 @@ class DraftBuilder:
 
 
 class SubmissionEngine:
-    """Submission engine stand-in for dry-run paths only."""
+    """Submission engine stand-in for read-only preflight paths."""
 
     def preflight(self, draft: Draft, *, today: date) -> None:
         return None
-
-    async def submit_draft(
-        self,
-        draft: Draft,
-        *,
-        dry_run: bool,
-        today: date | None = None,
-    ) -> SubmittedFilingLike:
-        return SubmittedFilingLike(
-            submission_id="sub-x",
-            draft_id=draft.draft_id,
-            modelo=draft.modelo,
-            period=draft.period,
-            status="PENDING",
-            submitted_at=datetime(2026, 4, 12, tzinfo=UTC),
-        )
 
 
 class InputsProvider:

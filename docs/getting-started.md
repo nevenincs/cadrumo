@@ -1,7 +1,7 @@
 # Getting started
 
 This walkthrough takes a brand-new autónomo from a fresh workstation
-to a first dry-run filing. It assumes you can read English but does
+to a first read-only filing package. It assumes you can read English but does
 not assume any Python experience. Every command can be copy-pasted
 verbatim.
 
@@ -112,11 +112,10 @@ aeat workflow next
 `aeat workflow next` looks at the deadline engine, picks the next
 filing that is due (or due soon, within the configured tolerance),
 builds a typed draft against the manual práctico and the casilla
-catalogue, and prints the dry-run submission payload along with the
-diff against the last successful filing for the same modelo.
+catalogue, runs read-only preflight, and prints the draft diagnostics
+and diff against the last successful filing for the same modelo.
 
-**Nothing is sent to AEAT.** The default mode is dry-run. The default
-CLI intentionally is not a one-shot live-submit path, so Kent's
+**Nothing is sent to AEAT.** The CLI has no live-submit path. Kent's
 normal command-line flow remains produce -> verify -> export, then
 upload through AEAT's portal himself.
 
@@ -135,20 +134,19 @@ project does not move or copy your certificate.
 configured path and re-run the relevant local verification checks.
 There is no per-tenant state tied to the certificate fingerprint.
 
-**The dry-run says "deadline passed" — now what?** AEAT charges
-late-filing surcharges. The project will still build the draft but
-flags it as overdue; submission proceeds, but you should consult
-AEAT's official late-filing flow first.
+**The workflow says "deadline passed" — now what?** AEAT charges
+late-filing surcharges. The project flags the draft as overdue; you
+should consult AEAT's official late-filing flow before manually
+uploading anything.
 
 **What if AEAT serves a captcha?** The project pauses and alerts.
 **Never automate around it.** Solve the captcha in a real browser,
 re-run `aeat workflow next`, and the engine picks up where it stopped.
 
-**How do I run the live test suite?** Set `AEAT_LIVE_TESTS_ENABLED=1`
-in your shell (or in `env/.env`), then `just test-live`. Live tests
-hit real AEAT endpoints with your real certificate and can leave
-side-effects in pre-production; never enable them in CI or on shared
-infrastructure.
+**How do I run the live-read test suite?** Set
+`AEAT_LIVE_TESTS_ENABLED=1` in your shell (or in `env/.env`), then
+`just test-live`. Live-read tests hit real AEAT endpoints with your
+real auth provider; write-shaped live tests are permanently banned.
 
 ## 7. Next steps
 

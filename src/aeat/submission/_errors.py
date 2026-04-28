@@ -68,7 +68,3 @@ class LiveSubmitForbiddenError(SubmissionPreflightError):
             message,
             translated_message=translated_message or default_translatable,
         )
-
-
-class SubmissionFormFillError(SubmissionError):
-    """Raised when the submitter cannot fill a casilla-keyed input on the portal."""

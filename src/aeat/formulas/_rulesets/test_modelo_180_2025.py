@@ -8,8 +8,12 @@ import pytest
 
 from .._engine import Engine
 from . import MODELO_180_2025
+from ._modelo_180_cumulation import (
+    Modelo180QuarterlyRetention,
+    aggregate_modelo_180_from_quarters,
+)
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 class TestModelo180Ruleset:
@@ -50,10 +54,7 @@ class TestModelo180Ruleset:
         assert len(MODELO_180_2025.formulas) == 1
 
     def test_ingresos_especie_preserves_04(self) -> None:
-        """Casilla 04 (ingresos a cuenta en especie) is user-input, not computed.
-
-        Wave 52 M6 expansion: pre-wave the test suite didn't exercise 04 at all.
-        """
+        """Casilla 04 is user-input and preserved by the four-casilla summary."""
         provided = {
             "01": Decimal("3"),
             "02": Decimal("30000.00"),
@@ -75,16 +76,13 @@ class TestModelo180Ruleset:
         assert report.is_clean()
 
     def test_external_worked_example_rirpf_100_1(self) -> None:
-        """External-anchored worked example (wave 59c H3 closure;
-        citation corrected wave 67g).
+        """External-anchored worked example for RIRPF art. 100.1.
 
         Modelo 180 is the annual rollup of Modelo 115 quarterly filings;
         RIRPF art. 100.1 fixes the 19% rate on arrendamientos urbanos.
         Fixture values derived from that rate, NOT from the ruleset's
         `irpf.arrendamientos_rate` parameter. BOE-A-2007-6820
-        consolidated retrieval 2026-04-22. Prior-wave miscite: wave 59c
-        cited art. 100.3.a — invalid (no sub-letter structure). Corrected
-        in wave 67g.
+        consolidated retrieval 2026-04-22.
 
         Scenario: Kent's 2025 annual summary with 3 landlords, total
         base 90 000:
@@ -100,3 +98,123 @@ class TestModelo180Ruleset:
         }
         report = Engine().audit_against(ruleset=MODELO_180_2025, provided=provided, tolerance=Decimal("0.01"))
         assert report.is_clean()
+
+
+def test_cumulation_from_four_quarterly_modelo_115_sources() -> None:
+    """Approach A: M180 annual summary equals four Modelo 115-style quarters."""
+    quarters = (
+        Modelo180QuarterlyRetention.from_m115_casillas(
+            {
+                "01": Decimal("1"),
+                "02": Decimal("10000.00"),
+                "03": Decimal("1900.00"),
+                "04": Decimal("0.00"),
+            },
+            recipient_ids=("landlord-a",),
+        ),
+        Modelo180QuarterlyRetention.from_m115_casillas(
+            {
+                "01": Decimal("1"),
+                "02": Decimal("12000.00"),
+                "03": Decimal("2280.00"),
+                "04": Decimal("0.00"),
+            },
+            recipient_ids=("landlord-b",),
+        ),
+        Modelo180QuarterlyRetention.from_m115_casillas(
+            {
+                "01": Decimal("2"),
+                "02": Decimal("14000.00"),
+                "03": Decimal("2660.00"),
+                "04": Decimal("25.00"),
+            },
+            recipient_ids=("landlord-c", "landlord-d"),
+        ),
+        Modelo180QuarterlyRetention.from_m115_casillas(
+            {
+                "01": Decimal("1"),
+                "02": Decimal("12000.00"),
+                "03": Decimal("2280.00"),
+                "04": Decimal("0.00"),
+            },
+            recipient_ids=("landlord-e",),
+        ),
+    )
+    annual = aggregate_modelo_180_from_quarters(quarters).as_casillas()
+
+    assert annual == {
+        "01": Decimal("5"),
+        "02": Decimal("48000.00"),
+        "03": Decimal("9120.00"),
+        "04": Decimal("25.00"),
+    }
+    report = Engine().audit_against(ruleset=MODELO_180_2025, provided=annual, tolerance=Decimal("0.01"))
+    assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
+
+
+def test_cumulation_rejects_missing_quarter() -> None:
+    """Cumulation catches the omitted-quarter shape before formula verification."""
+    quarters = (
+        Modelo180QuarterlyRetention(
+            recipients=Decimal("1"),
+            recipient_ids=("landlord-a",),
+            base_retencion=Decimal("10000.00"),
+            retenciones=Decimal("1900.00"),
+            ingresos_especie=Decimal("0.00"),
+        ),
+    )
+    with pytest.raises(ValueError, match="exactly 4 quarters"):
+        aggregate_modelo_180_from_quarters(quarters)
+
+
+def test_cumulation_uses_annual_rounding_for_retenciones() -> None:
+    """Annual M180 rounding derives 03 from annual base, not rounded quarters."""
+    quarters = tuple(
+        Modelo180QuarterlyRetention(
+            recipients=Decimal("1"),
+            recipient_ids=("landlord-a",),
+            base_retencion=Decimal("0.02"),
+            retenciones=Decimal("0.00"),
+            ingresos_especie=Decimal("0.00"),
+        )
+        for _ in range(4)
+    )
+    annual = aggregate_modelo_180_from_quarters(quarters).as_casillas()
+    assert annual == {
+        "01": Decimal("1"),
+        "02": Decimal("0.08"),
+        "03": Decimal("0.02"),
+        "04": Decimal("0.00"),
+    }
+    report = Engine().audit_against(ruleset=MODELO_180_2025, provided=annual, tolerance=Decimal("0.01"))
+    assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
+
+
+def test_cumulation_counts_unique_recipients_across_quarters() -> None:
+    """Recurring landlords count once in annual Modelo 180 casilla 01."""
+    quarters = tuple(
+        Modelo180QuarterlyRetention(
+            recipients=Decimal("1"),
+            recipient_ids=("landlord-a",),
+            base_retencion=Decimal("100.00"),
+            retenciones=Decimal("19.00"),
+            ingresos_especie=Decimal("0.00"),
+        )
+        for _ in range(4)
+    )
+    annual = aggregate_modelo_180_from_quarters(quarters).as_casillas()
+    assert annual["01"] == Decimal("1")
+    assert annual["02"] == Decimal("400.00")
+    assert annual["03"] == Decimal("76.00")
+
+
+def test_quarterly_recipient_count_must_match_ids() -> None:
+    """Synthetic cumulation fixtures must include per-recipient identities."""
+    with pytest.raises(ValueError, match="recipient count must match"):
+        Modelo180QuarterlyRetention(
+            recipients=Decimal("2"),
+            recipient_ids=("landlord-a",),
+            base_retencion=Decimal("100.00"),
+            retenciones=Decimal("19.00"),
+            ingresos_especie=Decimal("0.00"),
+        )

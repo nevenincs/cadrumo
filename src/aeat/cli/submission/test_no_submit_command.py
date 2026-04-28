@@ -1,8 +1,8 @@
-"""Static guardrails enforcing the permanent live-submit CLI excision.
+"""Static guardrails enforcing permanent remote-write CLI excision.
 
 This module mechanically prevents the
-:mod:`aeat.cli.submission.submit` command from being reintroduced
-into the default CLI surface. See
+:mod:`aeat.cli.submission.submit` and dry-run portal-walk commands from
+being reintroduced into the default CLI surface. See
 ``.vault/adr/2026-04-18-live-submit-cli-excision-adr.md`` and the
 2026-04-27 permanent-forbid policy ADR.
 
@@ -12,10 +12,9 @@ Three assertions:
    :class:`ModuleNotFoundError`.
 2. The :class:`typer.Typer` app under :mod:`aeat.cli.submission`
    does NOT register a command named ``submit``.
-3. The string ``button#firmar-y-enviar`` (the modelo-130
+3. The string ``button#firmar-y-enviar`` (the deleted modelo-130
    "sign and send" CSS selector) does not appear anywhere under
-   :mod:`aeat.cli`. The click is a submitter-internal detail and
-   must never leak into the CLI tree.
+   :mod:`aeat.cli`.
 """
 
 from __future__ import annotations
@@ -47,14 +46,13 @@ def test_typer_app_does_not_register_submit() -> None:
         f"submission CLI must not register `submit`; got {sorted(registered)!r}. "
         "See .vault/adr/2026-04-18-live-submit-cli-excision-adr.md."
     )
-    assert {"preflight", "dry-run", "export", "verify", "diff", "schemas", "check-nif", "show", "list"}.issubset(
-        registered
-    )
+    assert "dry-run" not in registered
+    assert {"preflight", "export", "verify", "diff", "schemas", "check-nif", "show", "list"}.issubset(registered)
 
 
 def test_submission_help_states_live_submit_is_not_on_default_cli() -> None:
     assert app.info.help is not None
-    assert "never submits to AEAT" in app.info.help
+    assert "never writes to AEAT" in app.info.help
 
 
 def test_no_modelo_click_selector_in_cli_tree() -> None:
@@ -72,5 +70,5 @@ def test_no_modelo_click_selector_in_cli_tree() -> None:
                 offenders.append((str(path), lineno, line))
     assert offenders == [], (
         f"AEAT submit-click selector leaked into CLI tree: {offenders!r}. "
-        "The selector belongs to aeat.submission._submitters.modelo130 only."
+        "No CLI path may contain the AEAT submit-click selector."
     )

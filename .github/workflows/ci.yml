@@ -3,7 +3,7 @@
 # It enforces cross-platform parity by running on both Ubuntu and Windows.
 #
 # No secrets are required for the unit suite; live tests are explicitly skipped.
-# AEAT_LIVE_TESTS is NEVER set on CI.
+# AEAT_LIVE_TESTS_ENABLED is NEVER set on CI.
 
 name: CI
 
@@ -69,7 +69,7 @@ jobs:
 
       - name: Test (unit)
         run: uv run pytest --junitxml=junit.xml
-        # AEAT_LIVE_TESTS is NOT set, so @pytest.mark.live tests are skipped.
+        # AEAT_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
       - name: Hooks
         run: just hooks

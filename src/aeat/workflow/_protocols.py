@@ -13,15 +13,13 @@ surfaces — not concrete classes — for two reasons:
    Protocol-conforming classes in tests instead, one per scenario.
 
 Every Protocol here describes **only** the attributes the workflow
-engine actually reads. A small companion pydantic v2 stub
-(:class:`SubmittedFilingLike`) models the submission projection so
-the schema-strict workflow can round-trip the result.
+engine actually reads.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
+from datetime import date
 from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -64,41 +62,12 @@ class FilingDraftBuilderProtocol(Protocol):
         ...
 
 
-class SubmittedFilingLike(BaseModel):
-    """Narrow pydantic v2 stub for a submitted filing.
-
-    The workflow engine records only the identifier and status of a
-    dry-run submission attempt, so the full
-    :class:`aeat.submission.SubmittedFiling` is intentionally not
-    imported here — the adapter projects the relevant fields.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    submission_id: str = Field(min_length=1)
-    draft_id: str = Field(min_length=1)
-    modelo: str = Field(min_length=1)
-    period: str = Field(min_length=1)
-    status: str = Field(min_length=1)
-    submitted_at: datetime
-
-
 @runtime_checkable
 class SubmissionEngineProtocol(Protocol):
-    """Narrow surface over :class:`aeat.submission.SubmissionEngine`."""
+    """Read-only preflight surface over :class:`aeat.submission.SubmissionEngine`."""
 
     def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
         """Run preflight gates against ``draft``; raise on failure."""
-        ...
-
-    async def submit_draft(
-        self,
-        draft: FilingDraftLike,
-        *,
-        dry_run: bool,
-        today: date | None = None,
-    ) -> SubmittedFilingLike:
-        """Submit ``draft`` through the dry-run-only workflow contract."""
         ...
 
 
@@ -177,7 +146,6 @@ __all__ = [
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
     "SubmissionEngineProtocol",
-    "SubmittedFilingLike",
     "SyncRunSummary",
     "SyncRunnerProtocol",
 ]

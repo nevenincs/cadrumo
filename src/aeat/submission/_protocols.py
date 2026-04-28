@@ -7,20 +7,13 @@ surface the engine actually consumes, decoupling submission from the
 richer surfaces of its sibling subpackages.
 
 - ``ModeloIdentifier`` — typed validating string for an AEAT modelo.
-- ``Portal`` / ``PortalCatalogue`` — minimal portal record / lookup
-  contract; the submission engine reads only ``modelo`` and
-  ``presentation_url``.
 - ``AuthProviderProbe`` — narrow surface over
   :class:`aeat.auth.AuthProvider` for the preflight gate.
-- ``CasillaRecord`` / ``CasillaCatalogue`` — minimal casilla
-  record / lookup contract used by per-modelo submitters.
 - ``DeadlineWindowChecker`` — narrow surface over
   :mod:`aeat.deadlines` used by preflight.
 - ``FilingFinding`` / ``FilingDraftLike`` / ``DraftLoader`` — narrow
   filing draft surfaces; :class:`aeat.filing.FilingDraft`
   structurally conforms to ``FilingDraftLike``.
-- ``Justificante`` / ``JustificanteParser`` — narrow record / parser
-  surface for the post-submission acknowledgement.
 
 Every record is either a strict+frozen pydantic v2 model or a
 ``runtime_checkable`` ``Protocol``; no dataclasses; no bare dicts.
@@ -35,7 +28,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler
+from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
 from ..auth import AuthProviderDescription, AuthProviderKind
@@ -87,37 +80,6 @@ class ModeloIdentifier(str):
         )
 
 
-class Portal(BaseModel):
-    """Minimal portal record consumed by per-modelo submitters.
-
-    Captures only the modelo + presentation URL pair the engine drives
-    at submit time. Distinct from :class:`aeat.portals.PortalMetadata`,
-    which carries the full curated metadata graph used by the catalogue
-    integrity invariants and by the live-sync engine.
-
-    Attributes:
-        modelo: The modelo identifier the portal serves.
-        presentation_url: The canonical AEAT portal URL for the
-            presentación of this modelo.
-        label: Optional trilingual label for UI display.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1)
-    presentation_url: str = Field(min_length=1)
-    label: Translatable | None = None
-
-
-@runtime_checkable
-class PortalCatalogue(Protocol):
-    """Lookup contract for the engine's narrow :class:`Portal` records."""
-
-    def portal_for(self, modelo: str) -> Portal:
-        """Return the :class:`Portal` that serves ``modelo``."""
-        ...
-
-
 @runtime_checkable
 class AuthProviderProbe(Protocol):
     """Narrow submission-facing auth-provider surface."""
@@ -126,50 +88,6 @@ class AuthProviderProbe(Protocol):
 
     def describe(self) -> AuthProviderDescription:
         """Return a safe description of the active auth provider."""
-        ...
-
-
-class CasillaInputKind(StrEnum):
-    """The input control kind used on the AEAT portal for a casilla."""
-
-    TEXT = "TEXT"
-    NUMBER = "NUMBER"
-    DATE = "DATE"
-    CHECKBOX = "CHECKBOX"
-    SELECT = "SELECT"
-
-
-class CasillaRecord(BaseModel):
-    """Minimal casilla record consumed by per-modelo submitters.
-
-    Captures only the (id, label, input_kind) tuple the engine drives
-    a portal form against. Distinct from
-    :class:`aeat.casillas.CasillaRecord`, which carries the curated
-    catalogue's wider provenance fields.
-
-    Attributes:
-        id: The casilla identifier (e.g. ``"01"``, ``"03"``).
-        label: Trilingual label for the casilla.
-        input_kind: The control kind used on the AEAT portal.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    id: str = Field(min_length=1)
-    label: Translatable
-    input_kind: CasillaInputKind
-
-
-@runtime_checkable
-class CasillaCatalogue(Protocol):
-    """Lookup contract for the engine's narrow :class:`CasillaRecord` records."""
-
-    def casillas_for_modelo(self, modelo: str) -> tuple[CasillaRecord, ...]:
-        """Return the tuple of casillas registered for ``modelo``."""
-        ...
-
-    def get(self, casilla_id: str) -> CasillaRecord:
-        """Return the :class:`CasillaRecord` with ``casilla_id``."""
         ...
 
 
@@ -253,36 +171,4 @@ class DraftLoader(Protocol):
 
     def load(self, draft_path: Path) -> FilingDraftLike:
         """Load and return the :class:`FilingDraftLike` at ``draft_path``."""
-        ...
-
-
-class Justificante(BaseModel):
-    """Minimal justificante record consumed by the engine's transport.
-
-    Distinct from :class:`aeat.justificante.Justificante`, which carries
-    the full parsed receipt graph (modelo, period, presented_at, total
-    amounts, source PDF sha256, ...). The submission engine only
-    threads (csv, pdf_path) through to the persisted
-    :class:`aeat.submission.SubmittedFiling` record; downstream
-    consumers re-parse the PDF via :mod:`aeat.justificante` for the
-    richer surface.
-
-    Attributes:
-        csv: The AEAT-issued CSV (código seguro de verificación).
-        pdf_path: Local filesystem path where the justificante PDF
-            was written.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    csv: str = Field(min_length=1)
-    pdf_path: Path
-
-
-@runtime_checkable
-class JustificanteParser(Protocol):
-    """Parses raw PDF bytes into the engine's narrow :class:`Justificante`."""
-
-    def parse(self, raw_bytes: bytes) -> Justificante:
-        """Parse ``raw_bytes`` (a downloaded PDF) into a :class:`Justificante`."""
         ...

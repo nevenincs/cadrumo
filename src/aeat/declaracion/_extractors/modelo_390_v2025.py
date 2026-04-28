@@ -2,12 +2,15 @@
 
 Annual aggregation of the quarterly Modelo 303 filings. Forms:
 régimen general (Apartado 3), régimen simplificado (Apartado 4),
-resultado anual (Apartado 6), regularización de la inversión en bienes
-de inversión (Apartado 7). Full form has ~680 casillas; MVP targets
-the resultado annual summary.
+resultado anual (Apartado 6), regularización de la inversión en
+bienes de inversión (Apartado 7). Full form has ~680 casillas; the
+scoped surface targets the 15-casilla result chain that the
+``modelo_390.{year}`` rulesets verify (issue #327).
 
-No ruleset exists today (blocked on #221) — verification returns
-UNVERIFIABLE.
+Three template-revision variants ship: ``Modelo390V2024Extractor``
+for 2024 filings, ``Modelo390V2025Extractor`` for 2025, and
+``Modelo390V2026Extractor`` for 2026. The casilla map is the same
+across the three years because the form layout is unchanged.
 """
 
 from __future__ import annotations
@@ -51,4 +54,28 @@ class Modelo390V2025Extractor(GenericDeclaracionExtractor):
     )
 
 
-__all__ = ["Modelo390V2025Extractor"]
+class Modelo390V2024Extractor(Modelo390V2025Extractor):
+    """Modelo 390 v2024 extractor using the unchanged 2025 layout."""
+
+    template_revision: ClassVar[TemplateRevision] = TemplateRevision(
+        modelo="390",
+        año=2024,
+        revision="2024.01",
+    )
+
+
+class Modelo390V2026Extractor(Modelo390V2025Extractor):
+    """Modelo 390 v2026 extractor using the unchanged 2025 layout."""
+
+    template_revision: ClassVar[TemplateRevision] = TemplateRevision(
+        modelo="390",
+        año=2026,
+        revision="2026.01",
+    )
+
+
+__all__ = [
+    "Modelo390V2024Extractor",
+    "Modelo390V2025Extractor",
+    "Modelo390V2026Extractor",
+]

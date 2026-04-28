@@ -45,7 +45,9 @@ from . import (
     MODELO_202_2025,
     MODELO_303_2024,
     MODELO_303_2025,
+    MODELO_390_2024,
     MODELO_390_2025,
+    MODELO_390_2026,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
@@ -71,7 +73,9 @@ _ALL_RULESETS = [
     ("modelo_202.2025", MODELO_202_2025),
     ("modelo_303.2024", MODELO_303_2024),
     ("modelo_303.2025", MODELO_303_2025),
+    ("modelo_390.2024", MODELO_390_2024),
     ("modelo_390.2025", MODELO_390_2025),
+    ("modelo_390.2026", MODELO_390_2026),
 ]
 
 
