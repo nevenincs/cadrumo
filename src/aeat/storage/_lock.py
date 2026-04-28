@@ -136,7 +136,17 @@ def exclusive_file_lock(
         raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")
     lock_path = _lock_path_for(target)
     lock_path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+    # Add the close-on-exec / no-inherit flag so the lock-file descriptor
+    # cannot leak into a subprocess spawned while the lock is held.
+    # POSIX: O_CLOEXEC; Windows: O_NOINHERIT. A leaked descriptor would
+    # extend the lock's lifetime to the child process and could deadlock
+    # an unrelated writer if the child outlives the parent.
+    open_flags = os.O_RDWR | os.O_CREAT
+    if hasattr(os, "O_CLOEXEC"):
+        open_flags |= os.O_CLOEXEC
+    if hasattr(os, "O_NOINHERIT"):
+        open_flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
+    fd = os.open(lock_path, open_flags, 0o600)
     try:
         deadline = time.monotonic() + timeout
         while True:

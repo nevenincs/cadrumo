@@ -157,22 +157,24 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     target = path.resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
     payload = envelope.model_dump_json()
-    tmp_path: Path | None = None
+    # Assign tmp_path BEFORE the ``with`` so cleanup works even when
+    # context entry raises. NamedTemporaryFile raising means no file
+    # was created; the outer except re-raises cleanly.
+    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+        mode="w",
+        encoding="utf-8",
+        dir=target.parent,
+        prefix=f"{target.stem}.",
+        suffix=".tmp",
+        delete=False,
+    )
+    tmp_path = Path(handle.name)
     try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
+        with handle:
             handle.write(payload)
         os.replace(tmp_path, target)
     except OSError:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
+        tmp_path.unlink(missing_ok=True)
         raise
 
 
@@ -385,22 +387,24 @@ def save_encrypted_envelope(
         encryption=EncryptionMetadata.from_blob(blob, associated_data=aad),
     )
     serialised = cipher_envelope.model_dump_json()
-    tmp_path: Path | None = None
+    # Assign tmp_path BEFORE the ``with`` so cleanup works even when
+    # context entry raises. NamedTemporaryFile raising means no file
+    # was created; the outer except re-raises cleanly.
+    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+        mode="w",
+        encoding="utf-8",
+        dir=target.parent,
+        prefix=f"{target.stem}.",
+        suffix=".tmp",
+        delete=False,
+    )
+    tmp_path = Path(handle.name)
     try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
+        with handle:
             handle.write(serialised)
         os.replace(tmp_path, target)
     except OSError:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
+        tmp_path.unlink(missing_ok=True)
         raise
 
 

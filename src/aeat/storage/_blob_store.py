@@ -51,6 +51,7 @@ from .errors import (
     BlobIntegrityError,
     BlobNotFoundError,
     ClassificationError,
+    EnvelopeVersionError,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -304,21 +305,22 @@ class EncryptedBlobStore:
             if not shard_dir.is_dir():
                 continue
             for manifest_path in sorted(shard_dir.glob("*.manifest.json")):
-                # Two-step load: parse without an expected_class to
-                # discover the manifest's declared classification, then
-                # re-load with the discovered class as the gate input.
-                # This keeps iter_manifests classification-class-agnostic
-                # at the API surface while still benefiting from the
-                # envelope's gate.
-                preliminary = Envelope[BlobManifest].model_validate_json(
+                # Single read + inline gate: iter_manifests is
+                # classification-class-agnostic at the API surface, so
+                # the only gate that applies is the version ceiling.
+                # A previous version did a two-step load (parse for
+                # the class, then re-load via load_envelope) which
+                # incurred a redundant file I/O per manifest. The
+                # version-gate logic mirrors load_envelope's invariant
+                # so the iterator remains substrate-policy-aligned.
+                envelope = Envelope[BlobManifest].model_validate_json(
                     manifest_path.read_text(encoding="utf-8"),
                 )
-                envelope = load_envelope(
-                    manifest_path,
-                    Envelope[BlobManifest],
-                    expected_class=preliminary.classification,
-                    max_supported_version=_BLOB_MANIFEST_VERSION,
-                )
+                if envelope.schema_version > _BLOB_MANIFEST_VERSION:
+                    raise EnvelopeVersionError(
+                        f"envelope at {manifest_path} is at version {envelope.schema_version}; "
+                        f"consumer supports up to {_BLOB_MANIFEST_VERSION}",
+                    )
                 yield envelope.payload
 
     def _write_plaintext_blob(self, plaintext: bytes, sha_hex: str) -> None:
@@ -386,21 +388,25 @@ class EncryptedBlobStore:
     @staticmethod
     def _atomic_write_bytes(target: Path, payload: bytes) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
-        tmp_path: Path | None = None
+        # Capture the tempfile path BEFORE the ``with`` so cleanup works
+        # even when context entry raises (rare but possible on some
+        # filesystems / antivirus shims). NamedTemporaryFile itself
+        # raising means no file was created; the ``except OSError``
+        # below re-raises cleanly.
+        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+            mode="wb",
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        )
+        tmp_path = Path(handle.name)
         try:
-            with tempfile.NamedTemporaryFile(
-                mode="wb",
-                dir=target.parent,
-                prefix=f"{target.stem}.",
-                suffix=".tmp",
-                delete=False,
-            ) as handle:
-                tmp_path = Path(handle.name)
+            with handle:
                 handle.write(payload)
             os.replace(tmp_path, target)
         except OSError:
-            if tmp_path is not None:
-                tmp_path.unlink(missing_ok=True)
+            tmp_path.unlink(missing_ok=True)
             raise
 
 
