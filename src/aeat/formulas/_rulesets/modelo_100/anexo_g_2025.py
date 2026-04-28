@@ -2,11 +2,11 @@
 
 Anexo G applies the IRPF tarifa progresiva to the base liquidable
 general and to the base liquidable del ahorro, both per LIRPF arts. 63
-+ 66, accounting for the LIRPF art. 56 minimo personal y familiar
++ 66, accounting for the LIRPF art. 56 mínimo personal y familiar
 absorption at the lowest brackets. The autonomic half (LIRPF arts.
-73-77) is caller-supplied per-CCAA (cesion de competencias normativas
+73-77) is caller-supplied per-CCAA (cesión de competencias normativas
 via Ley 22/2009; the per-CCAA distinct tarifa scales for Madrid /
-Cataluna / Andalucia / Comunitat Valenciana / Castilla y Leon are
+Cataluña / Andalucía / Comunitat Valenciana / Castilla y León are
 encoded as casilla parameter tables in the rule-delta reference
 manifest; the 10 remaining CCAAs use the LIRPF DT primera default
 unless overridden).
@@ -123,7 +123,7 @@ def progressive_tarifa(
 CITATIONS = (
     cite_lirpf(
         "63",
-        "Articulo 63 Ley 35/2006 (IRPF) — escala general estatal "
+        "Artículo 63 Ley 35/2006 (IRPF) — escala general estatal "
         "aplicable a la base liquidable general (LIRPF art. 50). "
         "Tramos vigentes desde 1/1/2021 (Ley 11/2020): 0-12450 al "
         "9,5 %; 12450-20200 al 12 %; 20200-35200 al 15 %; "
@@ -132,7 +132,7 @@ CITATIONS = (
     ),
     cite_lirpf(
         "66",
-        "Articulo 66 Ley 35/2006 (IRPF) — tipos de gravamen del "
+        "Artículo 66 Ley 35/2006 (IRPF) — tipos de gravamen del "
         "ahorro (estatal). Modificado por Ley 7/2024 con efectos "
         "1/1/2025: el ultimo tramo (>300000) sube del 14 % al 15 %; "
         "tramos 0-6000 al 9,5 %; 6000-50000 al 10,5 %; "
@@ -141,55 +141,55 @@ CITATIONS = (
     ),
     cite_lirpf(
         "67",
-        "Articulo 67 Ley 35/2006 (IRPF) — cuota liquida estatal: "
+        "Artículo 67 Ley 35/2006 (IRPF) — cuota líquida estatal: "
         "resultado de aplicar las deducciones del apartado precedente "
         "(art. 68) a la cantidad estatal de la cuota total previa.",
     ),
     cite_lirpf(
         "68",
-        "Articulo 68 Ley 35/2006 (IRPF) — deducciones estatales: "
+        "Artículo 68 Ley 35/2006 (IRPF) — deducciones estatales: "
         "donativos (Ley 49/2002 + apartado 1 art. 68), inversion en "
         "vivienda habitual (regimen transitorio apartado 1 art. "
         "68.1), alquiler vivienda (regimen transitorio apartado 7), "
         "doble imposicion internacional (apartado 9). El apartado 4 "
-        "establece la deduccion del 60 % por rentas obtenidas en "
+        "establece la deducción del 60 % por rentas obtenidas en "
         "Ceuta o Melilla (post Ley 6/2018).",
     ),
     cite_lirpf(
         "73",
-        "Articulo 73 Ley 35/2006 (IRPF) — cuota integra autonomica "
-        "general: aplicacion de la escala autonomica de cada Comunidad "
+        "Artículo 73 Ley 35/2006 (IRPF) — cuota íntegra autonómica "
+        "general: aplicación de la escala autonómica de cada Comunidad "
         "a la base liquidable general (LIRPF art. 50). La escala es "
-        "competencia normativa de cada Comunidad (cesion via Ley "
+        "competencia normativa de cada Comunidad (cesión vía Ley "
         "22/2009).",
     ),
     cite_lirpf(
         "76",
-        "Articulo 76 Ley 35/2006 (IRPF) — cuota integra autonomica "
-        "correspondiente al ahorro: aplicacion del tipo del ahorro a "
-        "la parte autonomica de la base liquidable del ahorro.",
+        "Artículo 76 Ley 35/2006 (IRPF) — cuota íntegra autonómica "
+        "correspondiente al ahorro: aplicación del tipo del ahorro a "
+        "la parte autonómica de la base liquidable del ahorro.",
     ),
     cite_lirpf(
         "77",
-        "Articulo 77 Ley 35/2006 (IRPF) — cuota liquida autonomica "
-        "total: resultado de aplicar las deducciones autonomicas "
-        "(Anexo N) a la suma de las cuotas integras autonomicas "
+        "Artículo 77 Ley 35/2006 (IRPF) — cuota líquida autonómica "
+        "total: resultado de aplicar las deducciones autónomicas "
+        "(Anexo N) a la suma de las cuotas íntegras autonómicas "
         "general y del ahorro.",
     ),
     cite_lirpf(
         "79",
-        "Articulo 79 Ley 35/2006 (IRPF) — cuota diferencial: el "
+        "Artículo 79 Ley 35/2006 (IRPF) — cuota diferencial: el "
         "resultado de minorar la cuantia neta total del impuesto en "
         "las retenciones, ingresos a cuenta y pagos fraccionados "
         "ingresados (LIRPF art. 99-101).",
     ),
     cite_lirpf(
         "99",
-        "Articulo 99 Ley 35/2006 (IRPF) — obligacion de practicar "
+        "Artículo 99 Ley 35/2006 (IRPF) — obligación de practicar "
         "pagos a cuenta sobre rendimientos del trabajo, capital "
         "mobiliario, capital inmobiliario y actividades economicas. "
         "Las cantidades retenidas e ingresadas a cuenta minoran la "
-        "cuota liquida.",
+        "cuota líquida.",
     ),
 )
 
@@ -209,8 +209,8 @@ CASILLAS = (
     casilla(
         casilla_id="0542",
         label=_label(
-            "Cuota tarifa estatal sobre minimo personal y familiar",
-            "State general tarifa applied to minimo (capped at BLG)",
+            "Cuota tarifa estatal sobre mínimo personal y familiar",
+            "State general tarifa applied to mínimo (capped at BLG)",
             "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva)",
         ),
         computed=True,
@@ -226,11 +226,11 @@ CASILLAS = (
         computed=True,
         legal_basis=(CITATIONS[0],),
     ),
-    # Inputs autonomica general (caller-supplied per-CCAA).
+    # Inputs autonómica general (caller-supplied per-CCAA).
     casilla(
         casilla_id="0551",
         label=_label(
-            "Cuota integra autonomica general",
+            "Cuota integra autonómica general",
             "Autonomic general gross tax (per-CCAA caller input)",
             "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja)",
         ),
@@ -248,22 +248,22 @@ CASILLAS = (
         computed=True,
         legal_basis=(CITATIONS[1],),
     ),
-    # Inputs autonomica ahorro (caller-supplied).
+    # Inputs autonómica ahorro (caller-supplied).
     casilla(
         casilla_id="0561",
         label=_label(
-            "Cuota integra autonomica del ahorro",
+            "Cuota integra autonómica del ahorro",
             "Autonomic savings gross tax (per-CCAA caller input)",
             "Autonom megtakaritasi brutto ado (CCAA-fuggo)",
         ),
         computed=False,
         legal_basis=(CITATIONS[5],),
     ),
-    # Computed cuota integra total.
+    # Computed cuota íntegra total.
     casilla(
         casilla_id="0595",
         label=_label(
-            "Cuota integra total (estatal + autonomica)",
+            "Cuota integra total (estatal + autonómica)",
             "Total gross tax (state + autonomic)",
             "Teljes brutto ado (allami + autonom)",
         ),
@@ -281,10 +281,10 @@ CASILLAS = (
         computed=False,
         legal_basis=(CITATIONS[3],),
         notes_es=(
-            "Caller computes 60 % sobre la cuota integra proporcional a "
-            "rentas obtenidas en Ceuta o Melilla (post Ley 6/2018). "
-            "Tope: la deduccion no puede exceder del 60 % de la cuota "
-            "integra total."
+            "Calculado por el consumidor: 60 % sobre la cuota íntegra "
+            "proporcional a las rentas obtenidas en Ceuta o Melilla "
+            "(tras Ley 6/2018). Tope: la deducción no puede exceder del "
+            "60 % de la cuota íntegra total."
         ),
     ),
     casilla(
@@ -297,15 +297,15 @@ CASILLAS = (
         computed=False,
         legal_basis=(CITATIONS[3],),
     ),
-    # NOTE: casilla 0622 (deducciones autonomicas total) is moved to
+    # NOTE: casilla 0622 (deducciones autónomicas total) is moved to
     # Anexo N — it's computed as the sum of the 15 per-CCAA aggregate-
     # deduction casillas (1101..1115). Anexo G only consumes 0622 via
     # the 0630 formula.
-    # Computed deducciones + cuota liquida + cuota diferencial.
+    # Computed deducciones + cuota líquida + cuota diferencial.
     casilla(
         casilla_id="0630",
         label=_label(
-            "Total deducciones (estatales + autonomicas)",
+            "Total deducciones (estatales + autonómicas)",
             "Total deductions (state + autonomic)",
             "Teljes levonasok",
         ),
@@ -316,7 +316,7 @@ CASILLAS = (
         casilla_id="0698",
         label=_label(
             "Cuota liquida total",
-            "Total net tax (cuota integra - deducciones - Ceuta/Melilla)",
+            "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla)",
             "Teljes netto ado",
         ),
         computed=True,

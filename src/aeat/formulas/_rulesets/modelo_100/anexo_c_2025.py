@@ -141,13 +141,13 @@ CASILLAS = (
         computed=False,
         legal_basis=(CITATIONS[1],),
         notes_es=(
-            "Caller computes the applicable tier per contract metadata: "
-            "default 50 %, vivienda rehabilitada en los 2 años anteriores "
-            "60 %, primer alquiler en zona tensionada a inquilino joven "
-            "o Administración Pública 70 %, zona tensionada con "
-            "reducción >= 5 % sobre renta inicial del contrato anterior "
-            "90 %. Aplica sobre rendimiento neto positivo declarado "
-            "(0106 antes de la reducción)."
+            "El consumidor calcula el tramo aplicable según los metadatos "
+            "del contrato: por defecto 50 %, vivienda rehabilitada en los "
+            "2 años anteriores 60 %, primer alquiler en zona tensionada a "
+            "inquilino joven o Administración Pública 70 %, zona tensionada "
+            "con reducción >= 5 % sobre la renta inicial del contrato "
+            "anterior 90 %. Se aplica sobre el rendimiento neto positivo "
+            "declarado (0106 antes de la reducción)."
         ),
     ),
     casilla(
@@ -160,9 +160,10 @@ CASILLAS = (
         computed=False,
         legal_basis=(CITATIONS[3],),
         notes_es=(
-            "Caller computes 1,1 % o 2 % del valor catastral por cada "
-            "inmueble no afecto. No feeds into 0106 / 0107 — separate "
-            "income line consumed by Anexo F."
+            "El consumidor calcula 1,1 % o 2 % del valor catastral por "
+            "cada inmueble no afecto. No alimenta las casillas 0106 / "
+            "0107 — es una línea de ingresos paralela consumida por el "
+            "Anexo F."
         ),
     ),
     casilla(
