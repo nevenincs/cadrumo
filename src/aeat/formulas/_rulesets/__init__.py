@@ -48,11 +48,22 @@ documented in ``.vault/reference/2026-04-27-modelo-123-rule-delta-reference.md``
 art. 101.4 and RIRPF art. 90 keep the ordinary IRPF capital-income
 retention rate at 19 %, while the cross-tax form verifies aggregate
 rows and the complementaria offset.
+
+**Issue #317 (megaproject — full-form Modelo 100 RENTA).** Modelo 100
+ships full-form 2024/2025/2026 rulesets at the default variant slot
+``modelo_100.<año>`` alongside the existing ``modelo_100.summary.2025``
+variant. The full-form rulesets aggregate per-anexo per-año modules from
+the ``modelo_100/`` sub-package — first sub-package within
+``_rulesets/``, justified by the 5-10x scale relative to sibling
+Tier-L modelos.
 """
 
 from __future__ import annotations
 
 from .._ruleset import Ruleset
+from .modelo_100_2024 import RULESET as MODELO_100_2024
+from .modelo_100_2025 import RULESET as MODELO_100_2025
+from .modelo_100_2026 import RULESET as MODELO_100_2026
 from .modelo_100_summary_2025 import RULESET as MODELO_100_SUMMARY_2025
 from .modelo_111_2024 import RULESET as MODELO_111_2024
 from .modelo_111_2025 import RULESET as MODELO_111_2025
@@ -82,6 +93,9 @@ from .modelo_390_2025 import RULESET as MODELO_390_2025
 # effective-from year. Wave 42 M3: prior ordering accidentally trailed
 # MODELO_100_SUMMARY_2025 at the end, breaking the numeric sequence.
 ALL_RULESETS: tuple[Ruleset, ...] = (
+    MODELO_100_2024,
+    MODELO_100_2025,
+    MODELO_100_2026,
     MODELO_100_SUMMARY_2025,
     MODELO_111_2024,
     MODELO_111_2025,
@@ -110,6 +124,9 @@ ALL_RULESETS: tuple[Ruleset, ...] = (
 
 __all__ = [
     "ALL_RULESETS",
+    "MODELO_100_2024",
+    "MODELO_100_2025",
+    "MODELO_100_2026",
     "MODELO_100_SUMMARY_2025",
     "MODELO_111_2024",
     "MODELO_111_2025",
