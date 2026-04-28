@@ -1,7 +1,7 @@
-"""Unit tests for Modelo 100 Anexo N — deducciones autonomicas (2025).
+"""Unit tests for Modelo 100 Anexo N — deducciones autonómicas (2025).
 
-External-anchored to LIRPF art. 46 bis + AEAT manual practico Renta
-2025 Parte 2 deducciones autonomicas.
+External-anchored to LIRPF art. 46 bis + AEAT manual práctico Renta
+2025 Parte 2 deducciones autonómicas.
 """
 
 from __future__ import annotations

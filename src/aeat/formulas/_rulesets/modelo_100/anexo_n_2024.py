@@ -1,6 +1,6 @@
-"""Modelo 100 Anexo N — deducciones autonomicas (ejercicio 2024).
+"""Modelo 100 Anexo N — deducciones autonómicas (ejercicio 2024).
 
-Per LIRPF art. 46 bis + Ley 22/2009 (cesion de tributos), each CCAA
+Per LIRPF art. 46 bis + Ley 22/2009 (cesión de tributos), each CCAA
 sets its own deductions. Inherits CASILLAS + CITATIONS from the 2025
 reference; year-scoped FORMULAS + effective dates declared here.
 """
