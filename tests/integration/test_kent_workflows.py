@@ -109,6 +109,26 @@ def _synth_modelo_130_pdf(
     return target
 
 
+@pytest.fixture(autouse=True)
+def isolated_secret_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Redirect the substrate's secret-store to a per-test tmpdir.
+
+    Kent integration tests drive the real substrate via in-process
+    Typer CliRunner; without isolation the substrate's silent first-
+    run mint writes ``master.kdf`` / ``master.key`` / ``salt`` into
+    the project-default ``var/secrets/`` and contaminates every
+    subsequent test in the same CI run. Per-test isolation here
+    keeps the integration tests honest without a session-wide
+    override that would break tests asserting on PROJECT_ROOT
+    defaults.
+    """
+    target = tmp_path / "secrets"
+    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(target))
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+    monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "kent-integration-passphrase")
+    return target
+
+
 @pytest.fixture()
 def drafts_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target = tmp_path / "drafts"

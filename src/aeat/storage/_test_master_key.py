@@ -280,6 +280,98 @@ class TestKeyringFailureSurfaces:
             provider.get_master_key()
 
 
+class TestTornStateGate:
+    """Wave-28 HIGH-1: get_master_key must refuse on torn install state.
+
+    The wave-26 ``complete_recovery`` write order is master.key →
+    master.kdf → salt; a crash between writes used to silently re-mint
+    over the partial state via ``_mint_new``, destroying the recovered
+    master.key bytes. The new gate raises
+    ``MasterKeyMaterialMissingError`` instead.
+    """
+
+    @pytest.fixture
+    def store_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        store = tmp_path / "secrets"
+        store.mkdir()
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "torn-state-passphrase")
+        return store
+
+    def test_torn_state_master_key_only_raises(
+        self,
+        store_dir: Path,
+    ) -> None:
+        # Crash after master.key, before master.kdf and salt.
+        (store_dir / "master.key").write_bytes(b"orphan-master-key")
+
+        from . import FileFallbackMasterKeyProvider
+        from .errors import MasterKeyMaterialMissingError
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
+        with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
+            provider.get_master_key()
+        # The runbook hints both options.
+        msg = str(excinfo.value)
+        assert "aeat security recover" in msg
+        assert "aeat security provision --force" in msg
+
+    def test_torn_state_master_key_plus_kdf_raises(
+        self,
+        store_dir: Path,
+    ) -> None:
+        # Crash after master.kdf, before salt.
+        (store_dir / "master.key").write_bytes(b"orphan-master-key")
+        (store_dir / "master.kdf").write_text(
+            '{"version": 2, "algorithm": "argon2id"}',
+            encoding="utf-8",
+        )
+
+        from . import FileFallbackMasterKeyProvider
+        from .errors import MasterKeyMaterialMissingError
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
+        with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
+            provider.get_master_key()
+
+    def test_torn_state_kdf_plus_salt_only_raises(
+        self,
+        store_dir: Path,
+    ) -> None:
+        # Inverted-order torn state (master.kdf + salt without
+        # master.key). The gate refuses regardless of which subset.
+        (store_dir / "master.kdf").write_text(
+            '{"version": 2, "algorithm": "argon2id"}',
+            encoding="utf-8",
+        )
+        (store_dir / "salt").write_bytes(b"\x00" * 16)
+
+        from . import FileFallbackMasterKeyProvider
+        from .errors import MasterKeyMaterialMissingError
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
+        with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
+            provider.get_master_key()
+
+    def test_no_install_mints_normally(
+        self,
+        store_dir: Path,
+    ) -> None:
+        # No artefacts at all → cold start mint is allowed (the
+        # silent-first-run-mint contract).
+        from . import FileFallbackMasterKeyProvider
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
+        key = provider.get_master_key()
+        assert len(key) == KEY_SIZE
+        # All three artefacts now present after the mint.
+        for name in ("master.key", "master.kdf", "salt"):
+            assert (store_dir / name).exists()
+
+
 class TestSecurityHardening:
     """Audit-driven hardening fixes (sec H-1 / H-2, vaultspec H-1 / H-2)."""
 

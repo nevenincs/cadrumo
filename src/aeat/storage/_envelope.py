@@ -173,6 +173,8 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     try:
         with handle:
             handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
     except OSError:
@@ -404,6 +406,8 @@ def save_encrypted_envelope(
     try:
         with handle:
             handle.write(serialised)
+            handle.flush()
+            os.fsync(handle.fileno())
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
     except OSError:

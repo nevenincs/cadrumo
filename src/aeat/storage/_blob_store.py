@@ -511,6 +511,8 @@ class EncryptedBlobStore:
         try:
             with handle:
                 handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
             os.replace(tmp_path, target)
             fsync_parent_dir(target)
         except OSError:
