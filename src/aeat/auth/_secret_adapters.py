@@ -51,7 +51,6 @@ KEY_GOOGLE_OAUTH_TOKEN_PREFIX = "aeat:google:oauth-token"  # noqa: S105 — natu
 """Token cache uses ``KEY_GOOGLE_OAUTH_TOKEN_PREFIX:<account>`` so multi-account future support slots in cleanly."""
 
 KEY_MCP_WORKSPACE_CREDENTIALS = "aeat:mcp:workspace-credentials"
-KEY_OPERATOR_PROFILE = "aeat:operator:profile"
 
 
 def google_oauth_token_key(account: str) -> str:
@@ -260,56 +259,20 @@ def migrate_mcp_workspace_credentials_to_secret_store(
     )
 
 
-def load_operator_profile(legacy_path: Path) -> dict[str, object]:
-    """Read the operator profile (Cl@ve identity values), secret-store-first."""
-    return load_secret_or_legacy(
-        key=KEY_OPERATOR_PROFILE,
-        legacy_path=legacy_path,
-        parser=lambda data: json.loads(data.decode("utf-8")),
-    )
-
-
-def migrate_operator_profile_to_secret_store(
-    legacy_path: Path,
-    *,
-    delete_legacy: bool = False,
-) -> None:
-    """Move the operator profile JSON into the secret store as IDENTITY-class.
-
-    The operator profile carries Cl@ve identity values (NIF, fecha de
-    validez del DNI). Classified as IDENTITY (not SECRET) per the
-    Wave-2 ADR; the secret store accepts both.
-    """
-    migrate_legacy_to_secret_store(
-        key=KEY_OPERATOR_PROFILE,
-        legacy_path=legacy_path,
-        # NB: SecretStore.put refuses non-SECRET/SESSION today. Until
-        # the substrate is widened to accept IDENTITY too, this helper
-        # writes SESSION (the closest fit — short TTL + ciphertext at
-        # rest) and the operator-profile reader is responsible for
-        # the IDENTITY-class semantics at the API surface.
-        classification=SensitivityClass.SESSION,
-        delete_legacy=delete_legacy,
-    )
-
-
 __all__ = [
     "KEY_GOOGLE_OAUTH_CLIENT",
     "KEY_GOOGLE_OAUTH_TOKEN_PREFIX",
     "KEY_GOOGLE_SERVICE_ACCOUNT",
     "KEY_MCP_WORKSPACE_CREDENTIALS",
-    "KEY_OPERATOR_PROFILE",
     "google_oauth_token_key",
     "load_google_oauth_client",
     "load_google_oauth_token",
     "load_google_service_account",
     "load_mcp_workspace_credentials",
-    "load_operator_profile",
     "load_secret_or_legacy",
     "migrate_google_oauth_client_to_secret_store",
     "migrate_google_oauth_token_to_secret_store",
     "migrate_google_service_account_to_secret_store",
     "migrate_legacy_to_secret_store",
     "migrate_mcp_workspace_credentials_to_secret_store",
-    "migrate_operator_profile_to_secret_store",
 ]
