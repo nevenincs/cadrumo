@@ -41,8 +41,16 @@ from ._repository import (
     RentalFincaRepository,
     RentalIncomeRepository,
 )
+from ._tier_resolver import (
+    DEFAULT_EJERCICIO_AMENDMENT_YEAR,
+    LEY_12_2023_IN_FORCE_DATE,
+    TierResolution,
+    resolve_reduccion,
+)
 
 __all__ = [
+    "DEFAULT_EJERCICIO_AMENDMENT_YEAR",
+    "LEY_12_2023_IN_FORCE_DATE",
     "AmortizationLedgerCapExceededError",
     "AnexoCAggregationError",
     "ContractNotFoundError",
@@ -60,6 +68,8 @@ __all__ = [
     "RentalIncomeRecord",
     "RentalIncomeRepository",
     "RentalRegisterError",
+    "TierResolution",
     "TierResolutionError",
     "UseType",
+    "resolve_reduccion",
 ]
