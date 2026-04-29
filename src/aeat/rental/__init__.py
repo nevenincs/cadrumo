@@ -18,6 +18,12 @@ for the rollout plan.
 
 from __future__ import annotations
 
+from ._amortization_ledger import (
+    ART_23_1_F_RATE,
+    AmortizationComputation,
+    computation_to_ledger_entry,
+    compute_amortization_for_year,
+)
 from ._enums import ExpenseCategory, ReduccionTier, UseType
 from ._errors import (
     AmortizationLedgerCapExceededError,
@@ -26,6 +32,13 @@ from ._errors import (
     FincaNotFoundError,
     RentalRegisterError,
     TierResolutionError,
+)
+from ._expense_rollup import (
+    CAPPED_CATEGORIES,
+    CARRY_FORWARD_MAX_YEARS,
+    CarryForwardEntry,
+    GastosForYear,
+    compute_gastos_for_year,
 )
 from ._models import (
     RentalAmortizationLedgerEntry,
@@ -49,13 +62,19 @@ from ._tier_resolver import (
 )
 
 __all__ = [
+    "ART_23_1_F_RATE",
+    "CAPPED_CATEGORIES",
+    "CARRY_FORWARD_MAX_YEARS",
     "DEFAULT_EJERCICIO_AMENDMENT_YEAR",
     "LEY_12_2023_IN_FORCE_DATE",
+    "AmortizationComputation",
     "AmortizationLedgerCapExceededError",
     "AnexoCAggregationError",
+    "CarryForwardEntry",
     "ContractNotFoundError",
     "ExpenseCategory",
     "FincaNotFoundError",
+    "GastosForYear",
     "ReduccionTier",
     "RentalAmortizationLedgerEntry",
     "RentalAmortizationLedgerRepository",
@@ -71,5 +90,8 @@ __all__ = [
     "TierResolution",
     "TierResolutionError",
     "UseType",
+    "computation_to_ledger_entry",
+    "compute_amortization_for_year",
+    "compute_gastos_for_year",
     "resolve_reduccion",
 ]
