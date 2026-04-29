@@ -162,11 +162,64 @@ class LLMCache:
 
         Returns:
             On-disk cache path for the entry.
-        """
 
-        return (
-            self.root_dir
-            / key.provider.value.lower()
-            / key.model.replace("/", "__")
-            / f"{key.prompt_hash}-{key.args_hash}.json"
-        )
+        Raises:
+            LLMCacheError: When the model identifier contains path-
+                traversal segments (``..``, leading dots), backslashes,
+                drive letters, NUL bytes, or other characters that
+                would compose a path outside ``root_dir``.
+        """
+        # Sanitise the operator-controllable model string before path
+        # composition. ``model_override`` flows through provider
+        # configuration / env vars, so a malicious or accidentally-
+        # malformed value (``../../etc/passwd``, ``..\\foo``,
+        # ``C:\\bar``) must not let the cache write outside
+        # ``root_dir``. Forward slashes are normalised to ``__`` (a
+        # legitimate convention for namespaced model names like
+        # ``anthropic/claude-3-7-sonnet``); every other suspicious
+        # token is rejected.
+        sanitised_model = self._sanitise_model_for_path(key.model)
+        return self.root_dir / key.provider.value.lower() / sanitised_model / f"{key.prompt_hash}-{key.args_hash}.json"
+
+    @staticmethod
+    def _sanitise_model_for_path(model: str) -> str:
+        """Normalise a model identifier into a single safe path segment.
+
+        Forward slashes (used for vendor-prefixed names like
+        ``anthropic/claude-3-7-sonnet``) are replaced with ``__`` so
+        the model becomes a single directory segment under the
+        provider directory. Every other path-shaped or unsafe value
+        raises.
+        """
+        if not model:
+            raise LLMCacheError("LLM cache: model identifier must be non-empty")
+        if "\x00" in model:
+            raise LLMCacheError("LLM cache: model identifier contains a NUL byte")
+        if "\\" in model:
+            raise LLMCacheError(
+                f"LLM cache: model identifier must not contain backslashes: {model!r}",
+            )
+        # Split and normalise on forward slashes so each segment is
+        # validated against path-traversal tokens individually.
+        segments = model.split("/")
+        for segment in segments:
+            if not segment:
+                raise LLMCacheError(
+                    f"LLM cache: model identifier contains an empty segment: {model!r}",
+                )
+            if segment in {".", ".."}:
+                raise LLMCacheError(
+                    f"LLM cache: model identifier contains a relative-path token: {model!r}",
+                )
+            if segment.startswith("."):
+                raise LLMCacheError(
+                    f"LLM cache: model identifier segment must not start with '.': {model!r}",
+                )
+            # Drive letters / colons are file-shape-suspicious on
+            # Windows (``C:\\foo``) and POSIX-portable identifiers
+            # do not need them.
+            if ":" in segment:
+                raise LLMCacheError(
+                    f"LLM cache: model identifier must not contain ':': {model!r}",
+                )
+        return "__".join(segments)
