@@ -50,6 +50,7 @@ def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
     from ..storage import (
         Envelope,
         SensitivityClass,
+        exclusive_file_lock,
         save_encrypted_envelope,
     )
     from ..storage._encrypted_columns import _resolve_master_key_provider
@@ -65,12 +66,23 @@ def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
         classification=SensitivityClass.AUDIT,
         payload=result,
     )
-    save_encrypted_envelope(
-        envelope,
-        target,
-        master_key_provider=_resolve_master_key_provider(),
-        hkdf_context=_WORKFLOW_HKDF_CONTEXT,
+    # Acquire the writer-canonical sidecar lock so concurrent
+    # ``aeat security rotate-master-key`` cannot race the run write.
+    # The lock target matches what
+    # ``RotationPlanEntry.lock_path_for`` resolves to for a multi-
+    # file consumer with ``envelope_suffix=".envelope.json"`` (strip
+    # the suffix, append ``.lock``); the wave-18 alignment thus
+    # engages OS-level serialisation between rotation and writer.
+    lock_target = target.with_name(
+        target.name[: -len(_WORKFLOW_RUN_ENVELOPE_SUFFIX)] + ".lock",
     )
+    with exclusive_file_lock(lock_target):
+        save_encrypted_envelope(
+            envelope,
+            target,
+            master_key_provider=_resolve_master_key_provider(),
+            hkdf_context=_WORKFLOW_HKDF_CONTEXT,
+        )
     _logger.info("workflow: persisted run %s to %s", result.run_id, target)
     return target
 

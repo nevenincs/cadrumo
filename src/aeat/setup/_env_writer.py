@@ -164,6 +164,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     from ..storage import (
         Envelope,
         SensitivityClass,
+        exclusive_file_lock,
         refuse_unsecured_with_real_nif,
         save_encrypted_envelope,
     )
@@ -202,12 +203,20 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         classification=SensitivityClass.IDENTITY,
         payload=profile,
     )
-    save_encrypted_envelope(
-        envelope,
-        target,
-        master_key_provider=provider,
-        hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
-    )
+    # Acquire the writer-canonical sidecar lock so concurrent
+    # ``aeat security rotate-master-key`` cannot race the profile
+    # write. The lock target matches what
+    # ``RotationPlanEntry.lock_path_for`` resolves to for a single-
+    # file consumer (``target.with_suffix('.lock')``); the wave-18
+    # alignment thus engages OS-level serialisation between rotation
+    # and writer.
+    with exclusive_file_lock(target.with_suffix(".lock")):
+        save_encrypted_envelope(
+            envelope,
+            target,
+            master_key_provider=provider,
+            hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
+        )
     log.info("setup: wrote AutonomoProfile envelope to %s", target)
 
     # Recovery-key nudge: if save_encrypted_envelope just minted a new
