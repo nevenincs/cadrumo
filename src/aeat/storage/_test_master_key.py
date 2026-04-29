@@ -410,7 +410,15 @@ class TestFactory:
         monkeypatch.setattr(keyring, "get_password", _refuse)
         monkeypatch.setattr(keyring, "set_password", _refuse)
         settings = _settings_with_store(tmp_path, SecretStoreBackend.KEYRING)
-        with pytest.raises(KeyringUnavailableError):
+        # Either error class is acceptable — the explicit ``keyring``
+        # backend rejects the operation rather than silently routing
+        # through file. ``MasterKeyKeychainLockedError`` is the
+        # narrow class for "backend works but get_password refused"
+        # (the wave-17 keychain-locked taxonomy);
+        # ``KeyringUnavailableError`` covers no-backend / package-
+        # missing failures. Both are sibling subclasses of
+        # ``MasterKeyUnavailableError``.
+        with pytest.raises(MasterKeyUnavailableError):
             get_master_key_provider(settings_override=settings)
 
     def test_auto_backend_falls_back_to_file(
