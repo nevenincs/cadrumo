@@ -569,7 +569,6 @@ def provision_cmd(
 
         try:
             import keyring as _imported_keyring
-            from keyring.errors import KeyringError as _KeyringError
         except ImportError as exc:
             if resolved is SecretStoreBackend.KEYRING:
                 _console.print(f"[red]keyring package not importable: {exc}[/red]")
@@ -577,13 +576,22 @@ def provision_cmd(
             # AUTO without an importable keyring package falls
             # through to file-fallback below.
             _existing_keyring_entry = None
-            _keyring_error_cls: type[BaseException] = Exception
         else:
             _keyring_module = _imported_keyring
-            _keyring_error_cls = _KeyringError
             try:
                 _existing_keyring_entry = _imported_keyring.get_password(KEYRING_SERVICE, KEYRING_USERNAME)
-            except _keyring_error_cls as exc:
+            except Exception as exc:
+                # Catch ``Exception`` rather than just ``KeyringError``
+                # so platform-specific exceptions (libsecret's
+                # ``secretstorage.exceptions.LockedException``,
+                # ``dbus.exceptions.DBusException``, Windows
+                # Credential Manager COM errors, etc.) surface a clean
+                # operator-facing message instead of a Python
+                # traceback. The substrate's
+                # ``KeyringMasterKeyProvider.get_master_key`` already
+                # wraps every non-KeyringError as
+                # ``KeyringUnavailableError`` defensively; mirror that
+                # discipline at the CLI probe.
                 if resolved is SecretStoreBackend.KEYRING:
                     _console.print(
                         f"[red]OS keychain refused get_password: {exc}[/red]\n"
@@ -620,7 +628,12 @@ def provision_cmd(
             assert _keyring_module is not None
             try:
                 _keyring_module.delete_password(KEYRING_SERVICE, KEYRING_USERNAME)  # type: ignore[attr-defined]
-            except _keyring_error_cls as exc:
+            except Exception as exc:
+                # Same Exception-catching discipline as the
+                # get_password probe above — platform-specific
+                # exceptions (libsecret, dbus, Windows COM) must
+                # surface a clean operator message rather than a
+                # raw traceback.
                 _console.print(
                     f"[red]failed to delete the existing keyring entry: {exc}[/red]\n"
                     "Clear the entry manually (Keychain Access / Credential Manager / libsecret-tool) "
