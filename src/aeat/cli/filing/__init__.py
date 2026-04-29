@@ -75,11 +75,6 @@ def _drafts_dir() -> Path:
     return path
 
 
-def _draft_filename(draft: FilingDraft) -> str:
-    """Build the canonical filename for a draft on disk."""
-    return f"{draft.modelo}_{draft.period}_{draft.draft_id}.json"
-
-
 def _submission_engine() -> SubmissionEngine:
     """Return a submission engine instance for amendment commands."""
     return build_submission_engine()
@@ -114,47 +109,65 @@ def _load_inputs(path: Path) -> dict[str, object]:
     return parsed
 
 
+def _draft_repository():  # type: ignore[no-untyped-def]
+    """Return a FilingDraftRepository bound to the configured drafts dir.
+
+    Imports are deferred to avoid pulling aeat.storage (and Alembic
+    plugin discovery) into CLI commands that never persist a draft.
+    """
+    from ...filing._repository import FilingDraftRepository
+
+    return FilingDraftRepository(store_dir=_drafts_dir())
+
+
 def _load_draft(path: Path) -> FilingDraft:
-    """Load and parse a draft JSON file."""
+    """Load and parse a draft from a ciphertext envelope file."""
     if not path.exists():
         raise typer.BadParameter(f"draft file not found: {path}")
-    try:
-        return FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-    except FilingDraftError as exc:
-        raise typer.BadParameter(f"invalid draft in {path}: {exc}") from exc
+    if not path.name.endswith(".envelope.json"):
+        raise typer.BadParameter(
+            f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file.",
+        )
+    repository = _draft_repository()
+    draft_id = path.name[: -len(".envelope.json")]
+    loaded = repository.load(draft_id)
+    if loaded is None:
+        raise typer.BadParameter(f"draft envelope not found: {path}")
+    return loaded
 
 
 def _refresh_persisted_draft(path: Path, draft: FilingDraft | None = None) -> FilingDraft:
     """Refresh review status for a persisted draft and rewrite it when needed."""
-
     loaded = draft or _load_draft(path)
     refreshed = refresh_review_status(
         loaded,
         schema_provider=_schema_provider(),
     )
     if refreshed != loaded:
-        path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
+        _draft_repository().save(refreshed)
     return refreshed
 
 
 def _save_draft(draft: FilingDraft) -> Path:
-    """Write a draft to the configured drafts directory."""
-    target = _drafts_dir() / _draft_filename(draft)
-    target.write_text(
-        draft.model_dump_json(indent=2),
-        encoding="utf-8",
-    )
-    return target
+    """Write a draft through the FilingDraftRepository (ciphertext-at-rest)."""
+    repository = _draft_repository()
+    repository.save(draft)
+    return repository.envelope_path_for(draft.draft_id)
 
 
 def _load_persisted_draft_by_id(draft_id: str) -> FilingDraft | None:
-    matches = sorted(path for path in _drafts_dir().glob(f"*_{draft_id}.json") if path.is_file())
-    if not matches:
+    """Resolve a draft by its content-addressed id via the repository."""
+    repository = _draft_repository()
+    loaded = repository.load(draft_id)
+    if loaded is None:
         return None
-    if len(matches) > 1:
-        joined = ", ".join(str(path) for path in matches)
-        raise typer.BadParameter(f"draft_id={draft_id!r} matched multiple draft files: {joined}")
-    return _refresh_persisted_draft(matches[0])
+    refreshed = refresh_review_status(
+        loaded,
+        schema_provider=_schema_provider(),
+    )
+    if refreshed != loaded:
+        repository.save(refreshed)
+    return refreshed
 
 
 def _render_draft_next_steps(draft: FilingDraft, *, draft_path: Path) -> None:
@@ -361,14 +374,14 @@ def build(
 def validate(
     draft_path: Annotated[Path, typer.Argument(help="Path to a draft JSON file")],
 ) -> None:
-    """Re-validate an existing draft and rewrite it to disk."""
+    """Re-validate an existing draft and rewrite it through the repository."""
     draft = _load_draft(draft_path)
     refreshed = validate_draft(
         draft,
         schema_provider=_schema_provider(),
     )
     refreshed = _refresh_persisted_draft(draft_path, refreshed)
-    draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
+    _draft_repository().save(refreshed)
     typer.echo(f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})")
     _render_draft(refreshed)
     _render_draft_next_steps(refreshed, draft_path=draft_path)
@@ -420,25 +433,20 @@ def list_drafts(
     table.add_column("approved_by")
     table.add_column("path")
 
-    drafts_dir = _drafts_dir()
-    for path in sorted(drafts_dir.glob("*.json")):
-        try:
-            draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-        except FilingDraftError:
-            _logger.warning("Skipping invalid draft file: %s", path)
+    repository = _draft_repository()
+    for draft in repository.iter_drafts():
+        refreshed = _refresh_persisted_draft(repository.envelope_path_for(draft.draft_id), draft)
+        if modelo is not None and refreshed.modelo != modelo:
             continue
-        draft = _refresh_persisted_draft(path, draft)
-        if modelo is not None and draft.modelo != modelo:
-            continue
-        if target_status is not None and draft.status is not target_status:
+        if target_status is not None and refreshed.status is not target_status:
             continue
         table.add_row(
-            draft.draft_id,
-            draft.modelo,
-            draft.period,
-            draft.status.value,
-            draft.approved_by or "-",
-            str(path),
+            refreshed.draft_id,
+            refreshed.modelo,
+            refreshed.period,
+            refreshed.status.value,
+            refreshed.approved_by or "-",
+            str(repository.envelope_path_for(refreshed.draft_id)),
         )
     _console.print(table)
 
@@ -535,10 +543,11 @@ def _handle_justificante_import(from_justificante: Path) -> None:
         raise typer.BadParameter(str(exc)) from exc
 
     draft_path = _save_draft(result.draft)
-    submissions_dir = settings.aeat_submissions_dir
-    submissions_dir.mkdir(parents=True, exist_ok=True)
-    submission_path = submissions_dir / f"{result.submission.submission_id}.json"
-    submission_path.write_text(result.submission.model_dump_json(indent=2), encoding="utf-8")
+    from ...submission._repository import SubmissionRepository
+
+    submission_repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)
+    submission_repository.save(result.submission)
+    submission_path = submission_repository.envelope_path_for(result.submission.submission_id)
 
     typer.echo(
         f"Imported draft {result.draft.draft_id} from justificante {result.submission.justificante_csv} -> {draft_path}"
