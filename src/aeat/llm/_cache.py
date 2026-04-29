@@ -122,11 +122,35 @@ class LLMCache:
             entry.model_dump(mode="json"),
             rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
         )
+        from ..storage._lock import fsync_parent_dir
+
         path = self._path_for(key)
         path.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(redacted, indent=2, sort_keys=True)
+        # Atomic write so concurrent writers (cache populated by
+        # parallel LLM calls under the same content-addressed key)
+        # cannot torn-write mid-JSON. The cache is rebuildable so a
+        # crash mid-write is recoverable, but a torn JSON visible to
+        # a concurrent reader would surface as a parse error.
+        import os
+        import tempfile
+
+        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f"{path.stem}.",
+            suffix=".tmp",
+            delete=False,
+        )
+        tmp_path = Path(handle.name)
         try:
-            path.write_text(json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
+            with handle:
+                handle.write(payload)
+            os.replace(tmp_path, path)
+            fsync_parent_dir(path)
         except OSError as exc:  # pragma: no cover - defensive filesystem path
+            tmp_path.unlink(missing_ok=True)
             msg = f"Failed to write cache entry to {path}"
             raise LLMCacheError(msg) from exc
         return entry
