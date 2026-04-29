@@ -47,6 +47,7 @@ from ..logging import get_logger
 from ._classification import AtRestTreatment, SensitivityClass, default_policy_for
 from ._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
+from ._lock import fsync_parent_dir
 from ._master_key import MasterKeyProvider, get_master_key_provider
 from .errors import (
     BlobIntegrityError,
@@ -511,6 +512,7 @@ class EncryptedBlobStore:
             with handle:
                 handle.write(payload)
             os.replace(tmp_path, target)
+            fsync_parent_dir(target)
         except OSError:
             tmp_path.unlink(missing_ok=True)
             raise

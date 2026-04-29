@@ -43,7 +43,7 @@ from ._envelope import (
     _build_aad,  # type: ignore[attr-defined]
     _derive_envelope_key,  # type: ignore[attr-defined]
 )
-from ._lock import exclusive_file_lock
+from ._lock import exclusive_file_lock, fsync_parent_dir
 from ._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
@@ -205,6 +205,7 @@ def _atomic_write(target: Path, *, payload: str) -> None:
         with handle:
             handle.write(payload)
         os.replace(tmp_path, target)
+        fsync_parent_dir(target)
     except OSError:
         tmp_path.unlink(missing_ok=True)
         raise
