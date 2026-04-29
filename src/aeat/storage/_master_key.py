@@ -976,19 +976,52 @@ def get_master_key_provider(
     try:
         keyring_provider.get_master_key()
         return keyring_provider
-    except (KeyringUnavailableError, MasterKeyKeychainLockedError) as exc:
-        # Auto-fallback covers both genuinely-unavailable backends
-        # (no usable keychain at all) and refused-get_password
-        # responses (locked keychain / cancelled biometrics). In
-        # ``auto`` mode the contract is "do whatever works"; the
-        # explicit ``keyring`` backend, by contrast, propagates the
-        # locked error so the operator can unlock and retry rather
-        # than silently routing through file with a divergent key.
-        _log.info("OS keychain not usable (%s); falling back to encrypted-file backend", exc)
+    except KeyringUnavailableError as exc:
+        # Backend itself is unusable (no-op fail/null backend, package
+        # missing). Falling back to file is safe: there is no
+        # keychain-backed master key that file-fallback could diverge
+        # from.
+        _log.info("OS keychain backend unavailable (%s); falling back to encrypted-file backend", exc)
         return FileFallbackMasterKeyProvider(
             store_dir=store_dir,
             passphrase_callback=passphrase_callback,
         )
+    except MasterKeyKeychainLockedError as exc:
+        # Backend works, but the entry is currently inaccessible
+        # (Touch ID / Hello prompt cancelled, libsecret locked, etc.).
+        # If file-fallback artefacts already exist, the operator has
+        # previously chosen the file backend — route through it
+        # safely (no divergence; the operator's existing file-fallback
+        # state is the canonical master key for the next call). If
+        # NO file-fallback artefacts exist, RAISE the locked error
+        # rather than minting a fresh K2 that would diverge from the
+        # K1 sitting in the locked keychain. The operator must either
+        # unlock the keychain or set ``AEAT_SECRET_STORE_BACKEND=file``
+        # explicitly to acknowledge the file-only path.
+        file_fallback_exists = (
+            (store_dir / "master.key").exists()
+            and (store_dir / "master.kdf").exists()
+            and (store_dir / "salt").exists()
+        )
+        if file_fallback_exists:
+            _log.info(
+                "OS keychain locked (%s); routing through pre-existing file-fallback at %s",
+                exc,
+                store_dir,
+            )
+            return FileFallbackMasterKeyProvider(
+                store_dir=store_dir,
+                passphrase_callback=passphrase_callback,
+            )
+        raise MasterKeyKeychainLockedError(
+            f"OS keychain is locked AND no file-fallback artefacts exist at {store_dir}. "
+            "auto-mode refuses to mint a fresh file-fallback master key while the keychain "
+            "may already hold a different one — the resulting two master keys would render "
+            "any record encrypted under either key unreadable when the other backend is "
+            "active. Either unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
+            "or set AEAT_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
+            "and provision a file-fallback master key with `aeat security provision`.",
+        ) from exc
 
 
 def migrate_master_key_kdf(

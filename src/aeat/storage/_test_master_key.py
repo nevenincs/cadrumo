@@ -421,23 +421,102 @@ class TestFactory:
         with pytest.raises(MasterKeyUnavailableError):
             get_master_key_provider(settings_override=settings)
 
-    def test_auto_backend_falls_back_to_file(
+    def test_auto_backend_falls_back_when_keyring_unavailable(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        keyring = pytest.importorskip("keyring")
-        from keyring.errors import KeyringError
+        # Wave-26 M-4: when the keyring backend is genuinely
+        # unusable (no usable backend, package missing,
+        # ``fail.Keyring`` no-op installed), auto falls back to
+        # file unconditionally — there is no keychain-backed
+        # master key that a file-fallback could diverge from.
+        from . import KeyringMasterKeyProvider
+        from .errors import KeyringUnavailableError
 
-        def _refuse(*_args: object, **_kwargs: object) -> None:
-            raise KeyringError("simulated unavailable keychain")
+        def _probe_fail() -> None:
+            raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
 
-        monkeypatch.setattr(keyring, "get_password", _refuse)
-        monkeypatch.setattr(keyring, "set_password", _refuse)
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(_probe_fail))
+        KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
             passphrase_callback=lambda: "x",
+        )
+        assert isinstance(provider, FileFallbackMasterKeyProvider)
+        assert len(provider.get_master_key()) == KEY_SIZE
+
+    def test_auto_backend_refuses_locked_keychain_without_file_state(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # Wave-26 M-4 regression: when the keychain is LOCKED
+        # (backend works, get_password refused — Touch ID
+        # cancelled, libsecret locked, etc.) AND no file-fallback
+        # artefacts exist, auto must NOT silently mint a fresh
+        # file-fallback master key that would diverge from
+        # whatever the keychain holds. Refuse and surface the lock
+        # state so the operator unlocks-and-retries OR explicitly
+        # switches to ``AEAT_SECRET_STORE_BACKEND=file``.
+        from . import KeyringMasterKeyProvider
+        from .errors import MasterKeyKeychainLockedError
+
+        keyring = pytest.importorskip("keyring")
+        from keyring.errors import KeyringError
+
+        def _locked(*_args: object, **_kwargs: object) -> None:
+            raise KeyringError("simulated locked keychain")
+
+        monkeypatch.setattr(keyring, "get_password", _locked)
+        monkeypatch.setattr(keyring, "set_password", _locked)
+        # Pretend the backend probe succeeds — only get_password fails.
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        KeyringMasterKeyProvider._reset_for_tests()
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
+        with pytest.raises(MasterKeyKeychainLockedError, match="auto-mode refuses"):
+            get_master_key_provider(
+                settings_override=settings,
+                passphrase_callback=lambda: "x",
+            )
+
+    def test_auto_backend_falls_back_when_locked_but_file_exists(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # Wave-26 M-4: when the keychain is LOCKED AND
+        # file-fallback artefacts already exist, auto routes
+        # through file safely — the operator has previously
+        # chosen the file backend (or already provisioned both).
+        from . import FileFallbackMasterKeyProvider, KeyringMasterKeyProvider
+
+        keyring = pytest.importorskip("keyring")
+        from keyring.errors import KeyringError
+
+        def _locked(*_args: object, **_kwargs: object) -> None:
+            raise KeyringError("simulated locked keychain")
+
+        # Seed the file-fallback artefacts via a real
+        # FileFallbackMasterKeyProvider mint so the substrate's
+        # canonical form lands on disk.
+        store_dir = tmp_path / "secrets"
+        seed_provider = FileFallbackMasterKeyProvider(
+            store_dir=store_dir,
+            passphrase_callback=lambda: "seed-passphrase",
+        )
+        seed_provider.get_master_key()
+        FileFallbackMasterKeyProvider._reset_for_tests()
+
+        monkeypatch.setattr(keyring, "get_password", _locked)
+        monkeypatch.setattr(keyring, "set_password", _locked)
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        KeyringMasterKeyProvider._reset_for_tests()
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
+        provider = get_master_key_provider(
+            settings_override=settings,
+            passphrase_callback=lambda: "seed-passphrase",
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
         assert len(provider.get_master_key()) == KEY_SIZE
