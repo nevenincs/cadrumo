@@ -44,7 +44,7 @@ from ._mutators import (
     iter_percent_nodes,
     iter_scalar_leaf_paths,
 )
-from .test_operand_swap_mutation import OUTER_SUB_OP_COVERAGE
+from .test_operand_swap_mutation import SUB_OP_COVERAGE
 from .test_percent_rate_mutation import _iter_percent_targets
 from .test_scalar_mutation import _iter_scalar_targets
 
@@ -112,7 +112,7 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
 # covers that class for that ruleset (or the populated count is 0).
 EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     "modelo_100.2024": {
-        # Issue #317 (megaproject Waves 5-10 — Anexos B1, B2, C, D normal/
+        # Issue #317 (M100 megaproject — Anexos B1, B2, C, D normal/
         # simplificada/modulos, E, F, G, N composed):
         # - sub_op: 71 — fanout across all anexo chains: 4 in B1 rendimiento
         #   previo chain + 4 in B1 art. 20 piecewise + 1 in B1 reducido + 2
@@ -126,55 +126,55 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # No PercentFormula or BracketsFormula nodes yet — the per-CCAA
         # tarifa autonomica progressive scales for Madrid / Cataluna /
         # Andalucia / Comunitat Valenciana / Castilla y Leon are deferred
-        # to a follow-up wave.
+        # to a follow-up issue.
         # Issue #457: 2 sub_op chains covered (0720 cuota_diferencial +
         # 0545 base_liquidable_general clamp-wrapped) → 69 deferred.
         # 3 mul_div_scalar archetypes covered (0540 bracket-5 / 0560
         # bracket-5 / 0021 art. 20 slope) → 17 deferred.
         "sub_op": 71,
-        "sub_op_deferred": 69,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 0,
         "percent_rate_casilla_ref_skipped": 0,
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 20,
-        "mul_div_scalar_deferred": 17,
+        "mul_div_scalar_deferred": 0,
     },
     "modelo_100.2025": {
         # Issue #317: structural baseline for the year that anchors the 2024
         # and 2026 clones; node fingerprint identical (LIRPF arts. 17-20 stable
         # 2024 → 2025 → 2026 per BOE consolidated text consult 2026-02-28).
         "sub_op": 71,
-        "sub_op_deferred": 69,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 0,
         "percent_rate_casilla_ref_skipped": 0,
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 20,
-        "mul_div_scalar_deferred": 17,
+        "mul_div_scalar_deferred": 0,
     },
     "modelo_100.2026": {
         # Issue #317: 2026 ruleset inherits 2025 numerical surface; mutable-node
         # fingerprint matches verbatim. Any 2026-specific delta lands as a
         # follow-up issue when the 2026 Orden HAC publishes (precedent feb-mar 2027).
         "sub_op": 71,
-        "sub_op_deferred": 69,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 0,
         "percent_rate_casilla_ref_skipped": 0,
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 20,
-        "mul_div_scalar_deferred": 17,
+        "mul_div_scalar_deferred": 0,
     },
     "modelo_100.summary.2025": {
         # 1 sub_op covered (0720 outer); 0698 outer + the inner
         # sub_op of 0720 are not covered (the operand-swap harness
         # mutates only the outermost SubFormula).
         "sub_op": 3,  # casilla 0698 = clamp_pos(sub_op(...)) (1) + 0720 = sub_op(sub_op(...), ref) (2 nested).
-        "sub_op_deferred": 2,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 0,
@@ -188,7 +188,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # operand-swap harness only imports M111 2025 / 2026 → 1
         # deferred. Pre-existing pre-#457 behaviour, surfaced honestly.
         "sub_op": 1,
-        "sub_op_deferred": 1,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 2,
         "percent_rate_compound_skipped": 0,
@@ -227,7 +227,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # Issue #457: M115 2024 sub_op (casilla 06) not covered by
         # operand-swap harness (only 2025 / 2026 imported) → 1 deferred.
         "sub_op": 1,
-        "sub_op_deferred": 1,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 1,
         "percent_rate_compound_skipped": 0,
@@ -301,7 +301,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # nested inside casillas 07 and 17. The operand-swap harness
         # mutates only outer sub_ops → 2 inner are deferred.
         "sub_op": 8,  # casillas 03 (1), 07 (sub_op(sub_op,ref) = 2), 11 (1), 14 (1), 17 (2), 19 (1).
-        "sub_op_deferred": 2,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 2,
         "percent_rate_compound_skipped": 0,
@@ -312,7 +312,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     },
     "modelo_130.2025": {
         "sub_op": 8,
-        "sub_op_deferred": 2,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 2,
         "percent_rate_compound_skipped": 0,
@@ -327,7 +327,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # rule-delta manifest), so the mutable-node fingerprint matches
         # the 2024 / 2025 rows verbatim.
         "sub_op": 8,
-        "sub_op_deferred": 2,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 2,
         "percent_rate_compound_skipped": 0,
@@ -340,7 +340,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # Issue #457: M131 2024 not imported by operand-swap harness
         # (only 2025 / 2026 are) → all 5 deferred.
         "sub_op": 5,
-        "sub_op_deferred": 5,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 2,
         "percent_rate_compound_skipped": 0,
@@ -353,7 +353,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # 3 outer sub_ops covered (10, 13, 15); 2 inner sub_ops nested
         # inside 10 and 13 are deferred (outer-only harness limitation).
         "sub_op": 5,
-        "sub_op_deferred": 2,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 2,
         "percent_rate_compound_skipped": 0,
@@ -364,7 +364,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     },
     "modelo_131.2026": {
         "sub_op": 5,
-        "sub_op_deferred": 2,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 2,
         "percent_rate_compound_skipped": 0,
@@ -411,7 +411,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # nest are deferred. Casilla 00621's outer sub_op is also not
         # covered.
         "sub_op": 5,  # casilla 00611 = 4-deep sub_op nest (4 nodes); casilla 00621 has 1 sub_op.
-        "sub_op_deferred": 4,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 1,  # percent_from_whole — rate is DivFormula.
@@ -422,7 +422,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     },
     "modelo_200.2025": {
         "sub_op": 5,
-        "sub_op_deferred": 4,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 1,
@@ -433,7 +433,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     },
     "modelo_200.2026": {
         "sub_op": 5,
-        "sub_op_deferred": 4,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 1,
@@ -446,7 +446,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # 1 outer sub_op covered (32); 2 inner sub_ops in the chain are
         # deferred (outer-only harness limitation).
         "sub_op": 3,
-        "sub_op_deferred": 2,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 1,
@@ -493,7 +493,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # sub_op(0, 191)) is deferred — newly mutable post-#457 helper
         # generalisation, fixture follow-up tracked separately.
         "sub_op": 3,
-        "sub_op_deferred": 1,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 0,
@@ -504,7 +504,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     },
     "modelo_390.2025": {
         "sub_op": 3,
-        "sub_op_deferred": 1,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 0,
@@ -515,7 +515,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     },
     "modelo_390.2026": {
         "sub_op": 3,
-        "sub_op_deferred": 1,
+        "sub_op_deferred": 0,
         "percent_rate_literal": 0,
         "percent_rate_param": 0,
         "percent_rate_compound_skipped": 0,
@@ -655,19 +655,20 @@ def test_deferred_count_matches_empirical_coverage_gap() -> None:
 
 
 def _empirical_sub_op_coverage() -> dict[str, int]:
-    """Return per-ruleset count of outer-only sub_op targets the operand-swap harness exercises.
+    """Return per-ruleset count of unique sub_op nodes the operand-swap harness exercises.
 
-    Reads the :data:`OUTER_SUB_OP_COVERAGE` constant from
-    :mod:`test_operand_swap_mutation` — a flat tuple of every
-    ``(ruleset_id, casilla_id)`` pair the harness covers (including
-    the casilla covered by the dedicated M202 test). The parametrize
-    block in that module is kept in sync with the tuple by
-    :func:`test_outer_sub_op_targets_match_parametrize_block`.
+    Reads :data:`SUB_OP_COVERAGE` from :mod:`test_operand_swap_mutation`
+    — a flat tuple of every ``(ruleset_id, casilla_id, sub_op_path)``
+    triple the path-based harness covers. The tuple is derived
+    programmatically from ``_SUB_OP_COVERAGE_DATA`` plus the
+    walker, so coverage is comprehensive (outer + inner sub_ops) and
+    the constant cannot drift from the parametrize block (both come
+    from the same source of truth).
     """
     coverage: dict[str, int] = {ruleset.ruleset_id: 0 for ruleset in ALL_RULESETS}
-    seen: set[tuple[str, str]] = set()
-    for ruleset_id, casilla_id in OUTER_SUB_OP_COVERAGE:
-        key = (ruleset_id, casilla_id)
+    seen: set[tuple[str, str, tuple[int, ...]]] = set()
+    for ruleset_id, casilla_id, sub_op_path in SUB_OP_COVERAGE:
+        key = (ruleset_id, casilla_id, sub_op_path)
         if key in seen:
             continue
         seen.add(key)
@@ -832,12 +833,14 @@ def test_catalogue_totals_are_non_trivial() -> None:
     assert "**0**" not in totals_line.split("|")[4].strip(), "percent_rate column must be non-zero"
     assert "**0**" not in totals_line.split("|")[5].strip(), "brackets_threshold column must be non-zero"
     assert "**0**" not in totals_line.split("|")[6].strip(), "mul_div_scalar column must be non-zero"
-    # The deferred totals are non-zero today (issue #457 catalogues
-    # the M100 mul_div_scalar + sub_op gaps); a future PR that drives
-    # both to zero is a positive signal but not enforced here.
-    assert "**0**" not in totals_line.split("|")[3].strip(), (
-        "sub_op_deferred column must be non-zero today (issue #457 deferred catalogue)"
+    # Issue #457 closure: deferred totals are zero — every populated
+    # sub_op + mul/div scalar node is enumerated by the per-class
+    # harness. A future ruleset addition that introduces a node
+    # without extending the harness will fail
+    # ``test_deferred_count_matches_empirical_coverage_gap`` first.
+    assert totals_line.split("|")[3].strip() == "**0**", (
+        f"sub_op_deferred total must be 0 (zero-deferred coverage); got {totals_line.split('|')[3].strip()!r}"
     )
-    assert "**0**" not in totals_line.split("|")[7].strip(), (
-        "mul_div_scalar_deferred column must be non-zero today (issue #457 deferred catalogue)"
+    assert totals_line.split("|")[7].strip() == "**0**", (
+        f"mul_div_scalar_deferred total must be 0; got {totals_line.split('|')[7].strip()!r}"
     )

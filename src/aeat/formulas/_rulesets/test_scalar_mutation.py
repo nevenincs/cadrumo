@@ -121,125 +121,144 @@ def _f202_for_scalar() -> dict[str, Decimal]:
     }
 
 
-# -- Issue #457: Modelo 100 selective scalar archetype fixtures ----------
+# -- Issue #457: comprehensive Modelo 100 scalar coverage ---------------
 #
-# Three archetypes per year — TARIFA_ESTATAL_GENERAL bracket-rate
-# literal, TARIFA_ESTATAL_AHORRO bracket-rate literal, LIRPF art. 20
-# slope literal — close the most Kent-relevant subset of the 60
-# uncovered M100 mul/div scalar leaves. The remaining 17 leaves per
-# year are catalogued as ``mul_div_scalar_deferred`` in
-# ``test_mutator_kill_rate.EXPECTED_COUNTS`` and tracked by a follow-up
-# issue.
+# Every Mul/Div literal leaf in every M100 year is enumerated. The
+# comprehensive sub_op fixtures from :mod:`test_operand_swap_mutation`
+# drive BLG / BLA / minimo into the top brackets of the LIRPF art. 63
+# and art. 66 progressive scales, so 18 of the 20 leaves per year —
+# 6 in 0540 + 6 in 0542 + 5 in 0560 + 1 in 0225 — are detectable with
+# the same fixtures used by the sub_op harness. The remaining 2
+# leaves per year (LIRPF art. 20 piece_a slope 1.75 + piece_b slope
+# 1.14, both nested in casilla 0021) need targeted fixtures because
+# the two pieces share a ``max_op`` so only the active one is
+# observable for any given rendimiento.
 
 
-def _f100_general_for_scalar() -> dict[str, Decimal]:
-    """Drive M100 BLG into TARIFA_ESTATAL_GENERAL bracket 5 (60 000-300 000 €).
-
-    With 0399=130 000 / 0445=20 000 / 0455=10 000 the engine derives
-    0432=130 000, 0545 (BLG) = 100 000 €. Bracket 5's 22.5 % rate
-    applies to the (100 000 - 60 000) = 40 000 € portion. The
-    progressive cuota is 17 950,75 €. A ±1 % factor on the 0.225
-    literal shifts that contribution by ±90 €.
-    """
-    return {
-        "0399": Decimal("130000.00"),
-        "0445": Decimal("20000.00"),
-        "0455": Decimal("10000.00"),
-        # Computed baseline (audit_against checks computed casillas only
-        # when supplied; supplying 0540 gates the baseline-clean
-        # assertion before the mutation, and the post-mutation audit
-        # surfaces the 90 € discrepancy on this casilla).
-        "0432": Decimal("130000.00"),
-        "0545": Decimal("100000.00"),
-        "0540": Decimal("17950.75"),
-    }
-
-
-def _f100_ahorro_for_scalar_2024() -> dict[str, Decimal]:
-    """Drive M100 BLA into TARIFA_ESTATAL_AHORRO bracket 5 (>300 000 €), 2024 rate 14 %.
-
-    0400=350 000 € → 0555 (BLA) = 350 000 €. Bracket 5 (top, 0.14 in
-    2024 per LIRPF art. 66 pre-Ley-7/2024) applies to the (350 000 -
-    300 000) = 50 000 € portion. Total cuota 0560 = 42 940 €. A ±1 %
-    factor on the 0.14 literal shifts the bracket contribution by
-    ±70 €.
-    """
-    return {
-        "0400": Decimal("350000.00"),
-        "0049": Decimal("0.00"),
-        "0460": Decimal("350000.00"),
-        "0555": Decimal("350000.00"),
-        "0560": Decimal("42940.00"),
-    }
-
-
-def _f100_ahorro_for_scalar_post_2025() -> dict[str, Decimal]:
-    """Drive M100 BLA into TARIFA_ESTATAL_AHORRO bracket 5 (>300 000 €), 2025/2026 rate 15 %.
-
-    Identical input shape to the 2024 fixture; only the bracket-5 rate
-    differs (0.14 → 0.15 per Ley 7/2024) so 0560 baseline is 43 440 €.
-    """
-    return {
-        "0400": Decimal("350000.00"),
-        "0049": Decimal("0.00"),
-        "0460": Decimal("350000.00"),
-        "0555": Decimal("350000.00"),
-        "0560": Decimal("43440.00"),
-    }
-
-
-def _f100_art20_slope_for_scalar() -> dict[str, Decimal]:
+def _f100_art20_piece_a_slope_for_scalar() -> dict[str, Decimal]:
     """Drive M100 Anexo B1 art. 20 piece_a (slope 1.75) at rendimiento 16 000 €.
 
     With 0001 = 16 000 € (sueldo bruto, no irregulares 0019=0, no
     gastos 0008..0010=0), the engine derives 0020 (rendimiento neto
     previo) = 16 000 €. Inside [14 852, 17 673,52] piece_a is active:
     reducción art. 20 = 7 302 - 1.75 x (16 000 - 14 852) = 5 293 €.
-    Capped by min(0020, …) = min(16 000, 5 293) = 5 293 €. A ±1 %
+    Capped by ``min(0020, …) = min(16 000, 5 293) = 5 293 €``. A ±1 %
     factor on the 1.75 literal shifts the reducción by ±20 € (well
     above the 0,02 € floor).
     """
     return {
         "0001": Decimal("16000.00"),
-        # Computed baseline.
         "0020": Decimal("16000.00"),
         "0021": Decimal("5293.00"),
         "0022": Decimal("10707.00"),
     }
 
 
-# Each archetype is referenced by its (casilla_id, leaf_path) target
-# inside the M100 ruleset. The walker's iter_scalar_leaf_paths
-# enumeration of the M100 trees is verified in
-# ``test_m100_selective_paths_match_walker``.
-_M100_GENERAL_PATH = (0, 4, 0)  # casilla 0540 bracket 5: 0.225 (2024-2026 stable)
-_M100_AHORRO_PATH = (0, 4, 0)  # casilla 0560 bracket 5: 0.14 (2024) / 0.15 (post-2025)
-_M100_ART20_PATH = (0, 1, 0, 0, 1, 0)  # casilla 0021 piece_a slope: 1.75 (2024-2026 stable)
+def _f100_art20_piece_b_slope_for_scalar() -> dict[str, Decimal]:
+    """Drive M100 Anexo B1 art. 20 piece_b (slope 1.14) at rendimiento 18 500 €.
+
+    With 0001 = 18 500 € the engine derives 0020 = 18 500 €. Inside
+    (17 673,52, 19 747,50) piece_b wins the ``max_op`` (piece_b =
+    1 422,15 € > piece_a = 918 €). A ±1 % factor on the 1.14
+    literal shifts piece_b's reducción by ~3,72 € — above the floor.
+    """
+    return {
+        "0001": Decimal("18500.00"),
+        "0020": Decimal("18500.00"),
+        "0021": Decimal("1422.15"),
+        "0022": Decimal("17077.85"),
+    }
+
+
+def _modelo_100_full_fixture_2024_for_scalar() -> dict[str, Decimal]:
+    """Re-export of the comprehensive M100 2024 sub_op fixture for scalar use.
+
+    Identical to the operand-swap module's ``_modelo_100_full_fixture_2024``
+    — drives every input + computed casilla so audit_against is clean
+    and a Mul/Div rate-literal mutation produces a delta on the
+    affected casilla. Imported via direct call rather than re-export
+    so the two modules share a single source of truth.
+    """
+    from .test_operand_swap_mutation import _modelo_100_full_fixture_2024
+
+    return _modelo_100_full_fixture_2024()
+
+
+def _modelo_100_full_fixture_post_2025_for_scalar() -> dict[str, Decimal]:
+    """Re-export of the comprehensive M100 post-2025 sub_op fixture for scalar use."""
+    from .test_operand_swap_mutation import _modelo_100_full_fixture_post_2025
+
+    return _modelo_100_full_fixture_post_2025()
+
+
+# All M100 scalar leaf paths per year — 20 each. Inspected via
+# :func:`iter_scalar_leaf_paths` (see
+# :func:`test_m100_selective_paths_match_walker`).
+_M100_LEAF_PATHS: dict[str, tuple[tuple[int, ...], ...]] = {
+    "0021": (
+        (0, 1, 0, 0, 1, 0),  # piece_a slope 1.75
+        (0, 1, 1, 0, 1, 0),  # piece_b slope 1.14
+    ),
+    "0225": ((0, 0, 0),),  # 0.05 cap
+    "0540": (
+        (0, 0, 0),  # bracket 1 rate 0.095
+        (0, 1, 0),  # bracket 2 rate 0.12
+        (0, 2, 0),  # bracket 3 rate 0.15
+        (0, 3, 0),  # bracket 4 rate 0.185
+        (0, 4, 0),  # bracket 5 rate 0.225
+        (0, 5, 0),  # bracket 6 rate 0.245
+    ),
+    "0542": (
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 2, 0),
+        (0, 3, 0),
+        (0, 4, 0),
+        (0, 5, 0),
+    ),
+    "0560": (
+        (0, 0, 0),  # bracket 1 rate 0.095
+        (0, 1, 0),  # bracket 2 rate 0.105
+        (0, 2, 0),  # bracket 3 rate 0.115
+        (0, 3, 0),  # bracket 4 rate 0.135
+        (0, 4, 0),  # bracket 5 rate 0.14 (2024) / 0.15 (post-2025)
+    ),
+}
 
 
 def _modelo_100_archetypes() -> tuple[
     tuple[Ruleset, str, tuple[int, ...], Callable[[], dict[str, Decimal]]],
     ...,
 ]:
-    """Return the selective M100 (ruleset, casilla, leaf_path, fixture_factory) tuples.
+    """Return every M100 (ruleset, casilla, leaf_path, fixture_factory) entry.
 
-    Three archetypes per year x 3 years = 9 entries. Each entry feeds
-    the parametrize fan-out (x2 directions = 18 cases total for M100).
+    Comprehensive enumeration: 20 leaves per year x 3 years = 60
+    entries. Per-leaf fixture routing:
+
+    - ``0021`` piece_a slope (1.75) — uses
+      :func:`_f100_art20_piece_a_slope_for_scalar` (rendimiento 16 000).
+    - ``0021`` piece_b slope (1.14) — uses
+      :func:`_f100_art20_piece_b_slope_for_scalar` (rendimiento 18 500).
+    - ``0225``, ``0540``, ``0542``, ``0560`` — comprehensive M100
+      sub_op fixture (BLG/BLA/minimo span all tarifa brackets).
     """
-    return (
-        # TARIFA_ESTATAL_GENERAL bracket 5 — 0540 — 2024 / 2025 / 2026.
-        (MODELO_100_2024, "0540", _M100_GENERAL_PATH, _f100_general_for_scalar),
-        (MODELO_100_2025, "0540", _M100_GENERAL_PATH, _f100_general_for_scalar),
-        (MODELO_100_2026, "0540", _M100_GENERAL_PATH, _f100_general_for_scalar),
-        # TARIFA_ESTATAL_AHORRO bracket 5 — 0560 — per-year (2024 vs 2025/2026 rate delta).
-        (MODELO_100_2024, "0560", _M100_AHORRO_PATH, _f100_ahorro_for_scalar_2024),
-        (MODELO_100_2025, "0560", _M100_AHORRO_PATH, _f100_ahorro_for_scalar_post_2025),
-        (MODELO_100_2026, "0560", _M100_AHORRO_PATH, _f100_ahorro_for_scalar_post_2025),
-        # LIRPF art. 20 piece_a slope — 0021 — 2024 / 2025 / 2026.
-        (MODELO_100_2024, "0021", _M100_ART20_PATH, _f100_art20_slope_for_scalar),
-        (MODELO_100_2025, "0021", _M100_ART20_PATH, _f100_art20_slope_for_scalar),
-        (MODELO_100_2026, "0021", _M100_ART20_PATH, _f100_art20_slope_for_scalar),
+    entries: list[tuple[Ruleset, str, tuple[int, ...], Callable[[], dict[str, Decimal]]]] = []
+    rulesets_by_year = (
+        (MODELO_100_2024, _modelo_100_full_fixture_2024_for_scalar),
+        (MODELO_100_2025, _modelo_100_full_fixture_post_2025_for_scalar),
+        (MODELO_100_2026, _modelo_100_full_fixture_post_2025_for_scalar),
     )
+    for ruleset, comprehensive in rulesets_by_year:
+        for casilla_id, paths in _M100_LEAF_PATHS.items():
+            for path in paths:
+                if casilla_id == "0021" and path == (0, 1, 0, 0, 1, 0):
+                    fixture: Callable[[], dict[str, Decimal]] = _f100_art20_piece_a_slope_for_scalar
+                elif casilla_id == "0021" and path == (0, 1, 1, 0, 1, 0):
+                    fixture = _f100_art20_piece_b_slope_for_scalar
+                else:
+                    fixture = comprehensive
+                entries.append((ruleset, casilla_id, path, fixture))
+    return tuple(entries)
 
 
 def _build_test_params() -> list:
