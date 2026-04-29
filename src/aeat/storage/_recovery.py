@@ -270,27 +270,17 @@ def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: bytes) -
 
 
 def save_wrapped_master_key(wrapped: WrappedMasterKey, path: Path) -> None:
-    """Atomically persist a wrapped master key to ``path``."""
-    import os
-    import tempfile
+    """Atomically persist a wrapped master key to ``path``.
 
-    path.parent.mkdir(parents=True, exist_ok=True)
+    Uses the substrate's ``atomic_write_secure_bytes`` helper so the
+    file lands restricted from creation (mode 0o600), the tempfile is
+    fsynced before the ``os.replace`` swap, and the parent directory
+    entry is fsynced after — durable across power loss on POSIX.
+    """
+    from ._master_key import atomic_write_secure_bytes
+
     payload = wrapped.model_dump_json().encode("utf-8")
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
-        mode="wb",
-        dir=path.parent,
-        prefix=f"{path.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
-    try:
-        with handle:
-            handle.write(payload)
-        os.replace(tmp_path, path)
-    except OSError:
-        tmp_path.unlink(missing_ok=True)
-        raise
+    atomic_write_secure_bytes(path, payload)
 
 
 def load_wrapped_master_key(path: Path) -> WrappedMasterKey:

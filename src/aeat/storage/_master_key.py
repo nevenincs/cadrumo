@@ -607,15 +607,22 @@ class FileFallbackMasterKeyProvider:
         # and 0o600 on every file. icacls hardening is out of scope
         # here (the broader session-state pattern handles that).
         self._restrict_dir_permissions(self._store_dir)
-        self._write_bytes_secure(
-            self._kdf_params_path,
-            params.model_dump_json().encode("utf-8"),
-        )
-        self._write_bytes_secure(
+        # Use the durable atomic-write helper so a power-loss between
+        # the three artefact writes does not leave a torn install
+        # (truncated master.key under fresh master.kdf, etc.).
+        # Same write order as ``complete_recovery``: master.key first
+        # (under the new KEK), then master.kdf (the parameters that
+        # derive the KEK), then salt (informational — the canonical
+        # salt also lives in master.kdf.salt_b64).
+        atomic_write_secure_bytes(
             self._master_key_path,
             base64.b64encode(blob.to_wire()),
         )
-        self._write_bytes_secure(self._salt_path, salt)
+        atomic_write_secure_bytes(
+            self._kdf_params_path,
+            params.model_dump_json().encode("utf-8"),
+        )
+        atomic_write_secure_bytes(self._salt_path, salt)
         _log.info("master key minted in encrypted file at %s", self._master_key_path)
         return master_key
 

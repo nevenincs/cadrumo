@@ -81,6 +81,31 @@ def rotate_master_key_cmd(
             help="Path to a 64-hex-char file containing the new master key.",
         ),
     ],
+    recovery_key: Annotated[
+        str | None,
+        typer.Option(
+            "--recovery-key",
+            help=(
+                "Existing 24-word recovery mnemonic. The substrate re-wraps "
+                "``master.recovery.key`` under the new master key while "
+                "preserving the operator's printed mnemonic. Mutually "
+                "exclusive with ``--regenerate-recovery-key``."
+            ),
+        ),
+    ] = None,
+    regenerate_recovery_key: Annotated[
+        bool,
+        typer.Option(
+            "--regenerate-recovery-key",
+            help=(
+                "Mint a fresh recovery key + 24-word mnemonic and re-wrap "
+                "``master.recovery.key`` under it. The substrate displays "
+                "the new mnemonic ONCE; the previously-printed mnemonic is "
+                "permanently invalidated. Mutually exclusive with "
+                "``--recovery-key``."
+            ),
+        ),
+    ] = False,
 ) -> None:
     """Re-encrypt every governance envelope under ``--new-key-file``.
 
@@ -88,7 +113,16 @@ def rotate_master_key_cmd(
 
     1. Mint a new 32-byte master key (e.g.
        ``python -c "import secrets; print(secrets.token_hex(32))" > new-key.hex``).
-    2. Run ``aeat security rotate-master-key --old-key-file old.hex --new-key-file new.hex``.
+    2. Run ``aeat security rotate-master-key --old-key-file old.hex --new-key-file new.hex``,
+       supplying EITHER ``--recovery-key "<24 words>"`` (to preserve the
+       operator's existing mnemonic) OR ``--regenerate-recovery-key``
+       (to mint a fresh one and display it). The substrate refuses to
+       run if ``master.recovery.key`` exists and neither flag is set —
+       a silent no-op on the recovery wrapping would leave it carrying
+       the OLD master-key bytes, and a later
+       ``aeat security recover`` would silently restore the substrate
+       to the old key while the data is at the new one (total
+       data loss on the canonical recovery path).
     3. After the run reports rotated/skipped/errors, decommission the
        old key (move ``old.hex`` to a sealed offline backup, then
        overwrite the operating master-key source — keyring entry or
@@ -106,12 +140,25 @@ def rotate_master_key_cmd(
     # storage substrate's Alembic plugin-discovery cost.
     from ..config import load_settings
     from ..storage import (
+        DecryptionError,
         EphemeralMasterKeyProvider,
+        decode_mnemonic,
         default_blob_store_roots,
         default_rotation_plan,
+        generate_recovery_key,
+        load_wrapped_master_key,
         rotate_blob_stores,
         rotate_master_key,
+        save_wrapped_master_key,
+        unwrap_master_key,
+        wrap_master_key,
     )
+    from ..storage._recovery import RecoveryKey
+
+    if recovery_key is not None and regenerate_recovery_key:
+        raise typer.BadParameter(
+            "--recovery-key and --regenerate-recovery-key are mutually exclusive.",
+        )
 
     old_key = _read_key_file(old_key_file)
     new_key = _read_key_file(new_key_file)
@@ -120,6 +167,70 @@ def rotate_master_key_cmd(
             "--old-key-file and --new-key-file must contain different keys.",
         )
     settings = load_settings()
+    secret_dir = Path(settings.aeat_secret_store_dir)
+    recovery_path = secret_dir / "master.recovery.key"
+    recovery_wrapping_existed = recovery_path.exists()
+
+    # Pre-flight on the recovery wrapping. Refuse if it exists and the
+    # operator hasn't told us how to update it. This is the H-1 fence
+    # — without it, rotation silently leaves master.recovery.key
+    # holding the OLD master-key bytes, and a later `aeat security
+    # recover` re-mints the substrate to the OLD key while the data
+    # is at the NEW key. Total data loss on the documented recovery
+    # path.
+    if recovery_wrapping_existed and recovery_key is None and not regenerate_recovery_key:
+        _console.print(
+            f"[red]master.recovery.key exists at {recovery_path}.[/red]\n"
+            "Master-key rotation must also update the recovery wrapping, otherwise "
+            "the wrapping keeps holding the OLD master-key bytes and a later "
+            "`aeat security recover` would restore the substrate to the old key.\n\n"
+            "Pass either:\n"
+            '  --recovery-key "<24 words>"         (preserve the operator\'s '
+            "printed mnemonic; the substrate re-wraps the new master key under "
+            "the same KEK)\n"
+            "  --regenerate-recovery-key           (mint a fresh recovery key "
+            "and 24-word mnemonic; the previously-printed mnemonic is "
+            "permanently invalidated)\n",
+        )
+        raise typer.Exit(code=1)
+    if recovery_key is not None and not recovery_wrapping_existed:
+        raise typer.BadParameter(
+            f"--recovery-key was given but no master.recovery.key exists at {recovery_path}; "
+            "run `aeat security provision` to create one first.",
+        )
+
+    # Validate the supplied mnemonic up-front so we surface bad input
+    # before doing the heavy rotation work.
+    supplied_recovery_bytes: bytes | None = None
+    if recovery_key is not None:
+        try:
+            supplied_recovery_bytes = decode_mnemonic(recovery_key)
+        except ValueError as exc:
+            raise typer.BadParameter(f"invalid --recovery-key: {exc}") from exc
+        # Verify the mnemonic matches the on-disk wrapping by
+        # unwrapping with the OLD master key. If the unwrap fails or
+        # the unwrapped bytes don't match `old_key`, refuse — running
+        # the rotation would re-wrap garbage.
+        existing_wrapped = load_wrapped_master_key(recovery_path)
+        try:
+            recovered_old_master = unwrap_master_key(
+                wrapped=existing_wrapped,
+                recovery_key_bytes=supplied_recovery_bytes,
+            )
+        except DecryptionError as exc:
+            _console.print(
+                "[red]--recovery-key did not unwrap master.recovery.key.[/red] "
+                "Verify every word matches what was printed at provision time.",
+            )
+            raise typer.Exit(code=1) from exc
+        if recovered_old_master != old_key:
+            _console.print(
+                "[red]--recovery-key unwrapped master.recovery.key but the bytes "
+                "do NOT match --old-key-file.[/red] Either the recovery key is "
+                "from a different installation, or --old-key-file is wrong.",
+            )
+            raise typer.Exit(code=1)
+
     old_provider = EphemeralMasterKeyProvider(key=old_key)
     new_provider = EphemeralMasterKeyProvider(key=new_key)
     envelope_summary = rotate_master_key(
@@ -136,6 +247,54 @@ def rotate_master_key_cmd(
         old_master_key_provider=old_provider,
         new_master_key_provider=new_provider,
     )
+
+    # Update the recovery wrapping last (after envelopes + blobs are
+    # safely re-encrypted). On crash between blob rotation and
+    # recovery re-wrap, the operator's existing mnemonic still
+    # unwraps the old master-key bytes — and the substrate's data is
+    # already at the new key — so a `recover` would surface a
+    # mismatch instead of silently restoring stale state. The H-1
+    # fence above plus the explicit pre-flight ensures we only land
+    # here when the operator has authorised the recovery-wrapping
+    # update.
+    if supplied_recovery_bytes is not None:
+        # Preserve the existing mnemonic. The recovery KEK is derived
+        # purely from the recovery-key bytes; re-wrap the new master
+        # key under the same KEK and persist.
+        rewrapped = wrap_master_key(
+            master_key=new_key,
+            recovery_key=RecoveryKey(
+                raw=supplied_recovery_bytes,
+                mnemonic=recovery_key.strip() if recovery_key else "",
+            ),
+        )
+        save_wrapped_master_key(rewrapped, recovery_path)
+        _console.print(
+            "[green]✓ master.recovery.key re-wrapped under the existing 24-word "
+            "mnemonic. The operator's printed mnemonic remains valid.[/green]",
+        )
+    elif regenerate_recovery_key:
+        fresh = generate_recovery_key()
+        rewrapped = wrap_master_key(master_key=new_key, recovery_key=fresh)
+        save_wrapped_master_key(rewrapped, recovery_path)
+        # Display the new mnemonic ONCE — same panel format as
+        # provision_cmd. The substrate never persists the mnemonic.
+        _console.print(
+            "\n[bold yellow]══════════════════════════════════════════════[/]\n"
+            "[bold yellow]NEW RECOVERY KEY — STORE THIS NOW[/]\n"
+            "[bold yellow]══════════════════════════════════════════════[/]\n",
+        )
+        words = fresh.mnemonic.split()
+        for row_start in range(0, len(words), 6):
+            row = "  ".join(f"[cyan]{w:>10s}[/]" for w in words[row_start : row_start + 6])
+            _console.print(f"  {row}")
+        _console.print(
+            "\n[bold yellow]══════════════════════════════════════════════[/]\n"
+            "[yellow]Print these words and store them somewhere safe. The "
+            "substrate will never display this mnemonic again. The "
+            "PREVIOUSLY-printed mnemonic is now permanently invalidated "
+            "and will fail to unwrap master.recovery.key.[/yellow]",
+        )
 
     table = Table(title="Master-key rotation summary")
     table.add_column("scope")
