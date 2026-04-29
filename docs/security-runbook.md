@@ -118,6 +118,28 @@ Re-running the command after a partial run is safe. Already-rotated
 files / wrapped DEKs decrypt cleanly under the new key and land in
 `skipped`. Operators can interrupt and resume without data loss.
 
+### Note for installations rotated before the wave-18 hardening
+
+Earlier substrate versions targeted the wrong directory when
+walking secret-store DEKs (the helper pointed at `aeat_secret_store_dir`
+rather than `aeat_blob_store_dir`). Installations that rotated under
+those versions may have left their secret-store DEKs wrapped under
+the old master key while the operator decommissioned that key.
+After upgrading, run the rotation again under the corrected helper:
+
+```sh
+aeat security rotate-master-key \
+  --old-key-file ./old-key.hex \
+  --new-key-file ./new-key.hex
+```
+
+Use the SAME old/new key pair as the original rotation. The helper
+is resume-idempotent — already-rotated files land in `skipped`,
+secret-store DEKs that the previous run missed land in `rotated`.
+The summary's `rotated` count for the secret-store should be
+non-zero on the first re-run; subsequent re-runs report `skipped`
+across the board.
+
 ## Corpus integrity verification
 
 ```sh
