@@ -283,17 +283,27 @@ class TestKeyringFailureSurfaces:
 class TestSecurityHardening:
     """Audit-driven hardening fixes (sec H-1 / H-2, vaultspec H-1 / H-2)."""
 
-    def test_passphrase_env_var_popped_after_use(
+    def test_passphrase_env_var_persists_across_callbacks(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """The default callback must pop AEAT_SECRET_PASSPHRASE so children do not inherit."""
+        """The callback must NOT pop the env var.
+
+        Wave-28 reverses the earlier "pop on first read" policy. The
+        cache in ``FileFallbackMasterKeyProvider`` is reset under
+        legitimate flows (recover re-mints, test sessions cycle the
+        cache between sub-tests), and a popped env var blocks the
+        second cache-miss read on ``getpass`` in non-TTY contexts.
+        """
         from ._master_key import _default_passphrase_callback
 
         monkeypatch.setenv(PASSPHRASE_ENV_VAR, "smoke-passphrase")
         assert _default_passphrase_callback() == "smoke-passphrase"
-        assert PASSPHRASE_ENV_VAR not in os.environ
+        # The env var must survive — subsequent callbacks resolve
+        # consistently against the same value.
+        assert os.environ.get(PASSPHRASE_ENV_VAR) == "smoke-passphrase"
+        assert _default_passphrase_callback() == "smoke-passphrase"
 
     def test_passphrase_env_var_strips_trailing_crlf(
         self,
@@ -416,9 +426,14 @@ class TestFactory:
         # narrow class for "backend works but get_password refused"
         # (the wave-17 keychain-locked taxonomy);
         # ``KeyringUnavailableError`` covers no-backend / package-
-        # missing failures. Both are sibling subclasses of
-        # ``MasterKeyUnavailableError``.
-        with pytest.raises(MasterKeyUnavailableError):
+        # missing failures. Both extend the substrate's
+        # ``SecretStoreError`` parent — accept either so the test
+        # is robust across CI runners that DO have a working
+        # keyring backend (Windows / macOS / libsecret-installed
+        # Linux: get_password path → MasterKeyKeychainLockedError)
+        # and runners that don't (no-op fail.Keyring backend
+        # surfaced by _probe_backend → KeyringUnavailableError).
+        with pytest.raises(SecretStoreError):
             get_master_key_provider(settings_override=settings)
 
     def test_auto_backend_falls_back_when_keyring_unavailable(

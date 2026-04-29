@@ -69,6 +69,7 @@ from .errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
     MasterKeyKeychainLockedError,
+    MasterKeyMaterialMissingError,
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
     SecretStoreError,
@@ -284,12 +285,22 @@ PassphraseCallback = Callable[[], str]
 def _default_passphrase_callback() -> str:
     """Resolve the operator's passphrase from env or stdin.
 
-    When the env-var path is taken, the value is consumed (popped) from
-    ``os.environ`` after a successful read so child processes spawned
-    later in the lifecycle do NOT inherit the passphrase. The in-memory
-    cache in :class:`FileFallbackMasterKeyProvider` is sufficient for
-    the parent process; subprocesses that need the passphrase must
-    re-supply it explicitly.
+    The env var is read but NOT popped from ``os.environ``. Earlier
+    revisions popped on first read with the rationale that child
+    processes spawned later would not inherit the value, but the
+    in-process cache is reset under several legitimate flows
+    (``aeat security recover`` calls ``_reset_for_tests`` then
+    ``_resolve_passphrase`` again; long-running test sessions cycle
+    the cache between sub-tests). After the pop, those second reads
+    block on ``getpass.getpass`` in non-TTY contexts (CI, batch
+    jobs, subprocess pipes), surfacing as opaque
+    ``MasterKeyPassphraseMismatchError`` once the cached operator
+    cancels and the substrate re-prompts. Keeping the env var lets
+    every cache-miss read resolve consistently; subprocesses that
+    inherit the parent's env always had access to the passphrase
+    anyway (env-var inheritance is a cooperative-isolation property,
+    not a confidentiality boundary the substrate can defend
+    on its own).
 
     Trailing CRLF is stripped (some shells append it via
     ``$(cat .secret)``), but interior whitespace is preserved (some
@@ -303,8 +314,6 @@ def _default_passphrase_callback() -> str:
             raise SecretStoreError(
                 f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
             )
-        # Pop after read so child processes do not inherit the value.
-        os.environ.pop(PASSPHRASE_ENV_VAR, None)
         return normalized
     return getpass.getpass(prompt="AEAT secret-store passphrase: ")
 
@@ -528,8 +537,31 @@ class FileFallbackMasterKeyProvider:
         # the artefacts the first caller wrote and route to unwrap.
         lock_target = self._store_dir / "master.lock"
         with exclusive_file_lock(lock_target):
-            if self._master_key_path.exists() and self._kdf_params_path.exists() and self._salt_path.exists():
+            artefacts = (self._master_key_path, self._kdf_params_path, self._salt_path)
+            present = [p for p in artefacts if p.exists()]
+            if len(present) == len(artefacts):
                 key = self._unwrap_existing(passphrase)
+            elif present:
+                # Torn install: a previous mint or recovery crashed
+                # between the per-artefact atomic writes. Refuse to
+                # silently re-mint (which would overwrite the
+                # half-written ``master.key`` and destroy any record
+                # encrypted under the recovered key). The operator
+                # must finish recovery (``aeat security recover
+                # --recovery-key "<24 words>"``) or, if the substrate
+                # was never used and no records exist yet, run
+                # ``aeat security provision --force`` to start fresh.
+                missing = [p.name for p in artefacts if not p.exists()]
+                raise MasterKeyMaterialMissingError(
+                    f"file-fallback at {self._store_dir} is in a torn state — "
+                    f"present={[p.name for p in present]} missing={missing}. "
+                    "A previous mint or recovery crashed between writes. Run "
+                    '`aeat security recover --recovery-key "<24 words>"` to '
+                    "finish recovery, or `aeat security provision --force` to "
+                    "wipe and re-provision (only if no records were ever "
+                    "written under the prior key — that operation is "
+                    "irreversible).",
+                )
             else:
                 key = self._mint_new(passphrase)
         with FileFallbackMasterKeyProvider._lock:

@@ -550,48 +550,55 @@ def provision_cmd(
         )
         raise typer.Exit(code=1)
 
-    # Provision the master-key provider per the chosen backend. This
-    # mints (or fetches) the master key as a side effect.
-    if resolved is SecretStoreBackend.UNSECURED:
-        if not settings.aeat_allow_unencrypted:
-            _console.print(
-                "[red]unsecured mode requires AEAT_ALLOW_UNENCRYPTED=1.[/red]\n"
-                "Unsecured mode uses a published deterministic master key — "
-                "intended for testing / throwaway data only. Set the env var "
-                "and retry, or pick `--backend keyring|file` for real data.",
-            )
-            raise typer.Exit(code=1)
-        provider = UnsecuredMasterKeyProvider()
-        _console.print(
-            "[yellow]provisioning unsecured backend: "
-            "ZERO confidentiality, real NIFs will be refused at profile-write.[/yellow]",
-        )
-    elif resolved is SecretStoreBackend.KEYRING:
-        # Detect a pre-existing keyring entry up-front. The
-        # file-fallback existence check above is blind to keyring
-        # entries; without this branch, ``provision`` on a keyring-
-        # backed install would silently FETCH the existing master key
-        # rather than minting a fresh one — and would then regenerate
-        # the recovery wrapping with a fresh mnemonic, invalidating
-        # the operator's previously-printed mnemonic against the new
-        # on-disk ``master.recovery.key``.
+    # Detect a pre-existing keyring entry up-front. The file-fallback
+    # existence check above is blind to keyring entries. Without this
+    # check, ``provision`` against a default-AUTO install with a
+    # populated keychain would silently FETCH the existing keychain-
+    # backed master key K1 (when backend resolves to KEYRING) or mint
+    # a divergent K2 in the file backend (when ``provision`` falls
+    # through to FILE for a never-keyring-aware path). The recovery
+    # wrapping would be bound to whichever K the provision-time
+    # provider returned, while the runtime ``get_master_key_provider``
+    # may resolve to the OTHER K — net result: any record encrypted
+    # post-provision under the runtime-resolved K is permanently
+    # unreadable after a recover. The probe here applies to KEYRING
+    # AND AUTO backends; FILE explicitly opts out of keyring lookup.
+    _keyring_module: object = None
+    if resolved in (SecretStoreBackend.KEYRING, SecretStoreBackend.AUTO):
         from ..storage._master_key import KEYRING_SERVICE, KEYRING_USERNAME
 
         try:
-            import keyring as _keyring
+            import keyring as _imported_keyring
             from keyring.errors import KeyringError as _KeyringError
         except ImportError as exc:
-            _console.print(f"[red]keyring package not importable: {exc}[/red]")
-            raise typer.Exit(code=1) from exc
-        try:
-            _existing_keyring_entry = _keyring.get_password(KEYRING_SERVICE, KEYRING_USERNAME)
-        except _KeyringError as exc:
-            _console.print(
-                f"[red]OS keychain refused get_password: {exc}[/red]\n"
-                "Unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
-                "or set `--backend file` to use the passphrase backend.",
-            )
-            raise typer.Exit(code=1) from exc
+            if resolved is SecretStoreBackend.KEYRING:
+                _console.print(f"[red]keyring package not importable: {exc}[/red]")
+                raise typer.Exit(code=1) from exc
+            # AUTO without an importable keyring package falls
+            # through to file-fallback below.
+            _existing_keyring_entry = None
+            _keyring_error_cls: type[BaseException] = Exception
+        else:
+            _keyring_module = _imported_keyring
+            _keyring_error_cls = _KeyringError
+            try:
+                _existing_keyring_entry = _imported_keyring.get_password(KEYRING_SERVICE, KEYRING_USERNAME)
+            except _keyring_error_cls as exc:
+                if resolved is SecretStoreBackend.KEYRING:
+                    _console.print(
+                        f"[red]OS keychain refused get_password: {exc}[/red]\n"
+                        "Unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
+                        "or set `--backend file` to use the passphrase backend.",
+                    )
+                    raise typer.Exit(code=1) from exc
+                # AUTO with a locked keychain falls through to file
+                # without --force only when no file-fallback exists
+                # AND no keychain entry exists. Without the probe
+                # result we conservatively pretend "no entry" so the
+                # AUTO mint happens in file. The runtime AUTO factory
+                # will surface the locked-keychain error on the next
+                # use; that's the right operator signal.
+                _existing_keyring_entry = None
         if _existing_keyring_entry is not None:
             if not force:
                 _console.print(
@@ -610,9 +617,10 @@ def provision_cmd(
             # the recovery wrapping would be regenerated around the
             # PRE-EXISTING master key, and the previously-printed
             # mnemonic would be silently invalidated.
+            assert _keyring_module is not None
             try:
-                _keyring.delete_password(KEYRING_SERVICE, KEYRING_USERNAME)
-            except _KeyringError as exc:
+                _keyring_module.delete_password(KEYRING_SERVICE, KEYRING_USERNAME)  # type: ignore[attr-defined]
+            except _keyring_error_cls as exc:
                 _console.print(
                     f"[red]failed to delete the existing keyring entry: {exc}[/red]\n"
                     "Clear the entry manually (Keychain Access / Credential Manager / libsecret-tool) "
@@ -625,6 +633,24 @@ def provision_cmd(
             _console.print(
                 "[yellow]existing keyring entry deleted; minting a fresh master key.[/yellow]",
             )
+
+    # Provision the master-key provider per the chosen backend. This
+    # mints (or fetches) the master key as a side effect.
+    if resolved is SecretStoreBackend.UNSECURED:
+        if not settings.aeat_allow_unencrypted:
+            _console.print(
+                "[red]unsecured mode requires AEAT_ALLOW_UNENCRYPTED=1.[/red]\n"
+                "Unsecured mode uses a published deterministic master key — "
+                "intended for testing / throwaway data only. Set the env var "
+                "and retry, or pick `--backend keyring|file` for real data.",
+            )
+            raise typer.Exit(code=1)
+        provider = UnsecuredMasterKeyProvider()
+        _console.print(
+            "[yellow]provisioning unsecured backend: "
+            "ZERO confidentiality, real NIFs will be refused at profile-write.[/yellow]",
+        )
+    elif resolved is SecretStoreBackend.KEYRING:
         provider = KeyringMasterKeyProvider()
         # Probe early so failures surface here instead of in a later
         # downstream consumer.
@@ -633,6 +659,22 @@ def provision_cmd(
             f"[green]keychain backend probed; master key minted under service '{provider._service}'.[/green]",
         )
     else:  # FILE or AUTO with file-fallback path.
+        # When --force is set, wipe any pre-existing file-fallback
+        # artefacts BEFORE the mint. The torn-state gate in
+        # ``FileFallbackMasterKeyProvider.get_master_key`` refuses to
+        # mint over partial on-disk state (data-loss safeguard); the
+        # operator's explicit --force is the override that says "I
+        # know this destroys any prior key — proceed". Wipe the salt
+        # and kdf as well so the subsequent get_master_key sees a
+        # clean cold-start state.
+        if force:
+            for stale in (
+                secret_dir / "master.key",
+                secret_dir / "master.kdf",
+                secret_dir / "salt",
+            ):
+                stale.unlink(missing_ok=True)
+            FileFallbackMasterKeyProvider._reset_for_tests()
         # Resolve the passphrase via the same callback the substrate
         # uses; AEAT_SECRET_PASSPHRASE env var is preferred for non-
         # interactive runs, interactive prompt otherwise.
