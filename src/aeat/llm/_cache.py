@@ -86,6 +86,19 @@ class LLMCache:
     def write(self, request: LLMRequest, response: LLMResponse) -> CachedEntry:
         """Write a response to the cache and return the stored entry.
 
+        The serialised payload is routed through the substrate's
+        :func:`redact_structured` helper at DIAGNOSTIC class before
+        persistence (the CACHE-class default policy has an empty
+        rule set because most caches are public reference data;
+        the LLM cache carries identity-bearing inputs and therefore
+        adopts the DIAGNOSTIC rule set, mirroring the run-trace
+        sink's discipline). The redaction is idempotent — re-reads
+        of an already-redacted entry stay correct because the cache
+        carries the redacted text only. Storage imports are deferred
+        inside this method body so the LLM package's import chain does
+        not pull Alembic plugin discovery into CLI commands that never
+        touch the cache.
+
         Args:
             request: Structured completion request.
             response: Public response to persist.
@@ -93,6 +106,8 @@ class LLMCache:
         Returns:
             Persisted cache entry model.
         """
+        from ..storage import SensitivityClass, redact_structured
+        from ..storage._redaction import default_rules_for_class
 
         key = self.build_key(request, response.provider, response.model)
         entry = CachedEntry(
@@ -103,10 +118,14 @@ class LLMCache:
             response=response,
             created_at=datetime.now(UTC),
         )
+        redacted = redact_structured(
+            entry.model_dump(mode="json"),
+            rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
+        )
         path = self._path_for(key)
         path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            path.write_text(entry.model_dump_json(indent=2), encoding="utf-8")
+            path.write_text(json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
         except OSError as exc:  # pragma: no cover - defensive filesystem path
             msg = f"Failed to write cache entry to {path}"
             raise LLMCacheError(msg) from exc

@@ -13,6 +13,7 @@ The writer must satisfy three load-bearing invariants:
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -21,14 +22,45 @@ from ..auth import CertificateBackend
 from ..deadlines import IVARegime
 from ..env_io import read_env_file
 from ..i18n import Language
+from ..storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from . import (
     SetupAnswers,
     owned_env_keys,
     write_env_file,
     write_profile_file,
 )
+from ._env_writer import load_profile_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    """Provide a deterministic master key so the profile envelope writer
+    does not consult the OS keychain or a passphrase prompt during tests."""
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
 
 
 def _answers(tmp_path: Path) -> SetupAnswers:
@@ -147,13 +179,25 @@ def test_write_profile_file_emits_valid_autonomo_profile(tmp_path: Path) -> None
     target = tmp_path / "profile.json"
     write_profile_file(answers, target)
 
-    from ..deadlines import AutonomoProfile
-
-    profile = AutonomoProfile.model_validate_json(target.read_text(encoding="utf-8"))
+    profile = load_profile_envelope(target)
     assert profile.tax_id == "87654321X"
     assert profile.iva_regime is IVARegime.SIMPLIFICADO
     assert profile.pays_professionals_with_retencion is True
     assert profile.third_party_transactions_above_347_threshold is True
+
+
+def test_write_profile_file_writes_ciphertext_envelope(tmp_path: Path) -> None:
+    """The on-disk profile must be a CipherEnvelope; the NIF must not survive in plaintext."""
+    answers = _answers(tmp_path)
+    target = tmp_path / "profile.json"
+    write_profile_file(answers, target)
+
+    written = target.read_text(encoding="utf-8")
+    # CipherEnvelope wire form — classification at the cipher layer.
+    assert '"classification":"identity"' in written
+    assert '"encryption":' in written
+    # The NIF canary must not appear in plaintext.
+    assert "87654321X" not in written
 
 
 def test_owned_env_keys_are_stable_and_unique() -> None:
