@@ -6,7 +6,7 @@ date: '2026-04-28'
 related:
   - "[[2026-04-28-modelo-180-calc-verify-plan]]"
   - "[[2026-04-28-modelo-180-calc-verify-adr]]"
-  - "[[2026-180-rule-delta]]"
+  - "[[2026-04-28-modelo-180-calc-verify-reference]]"
 ---
 
 # `modelo-180-calc-verify` summary
@@ -24,7 +24,7 @@ related:
 - Created: `src/aeat/formulas/_rulesets/_modelo_180_cumulation.py`
 - Created: `src/aeat/formulas/_rulesets/test_modelo_180_2024.py`
 - Created: `src/aeat/formulas/_rulesets/test_modelo_180_2026.py`
-- Created: `.vault/reference/2026-180-rule-delta.md`
+- Created: `.vault/reference/2026-04-28-modelo-180-calc-verify-reference.md`
 
 ## Description
 
@@ -63,7 +63,7 @@ L1 anchor decision: waiver. No public taxpayer-free Modelo 180 declaration PDF w
 - `just typecheck` passed.
 - `just test` passed: 3875 passed, 13 skipped, 26 deselected.
 - `just hooks` passed.
-- `uv run vaultspec-core vault check all --feature modelo-180-calc-verify --json` reports clean frontmatter, links, dangling links, schema, and references; it still flags the issue-mandated `.vault/reference/2026-180-rule-delta.md` and exec summary filename as non-standard structure paths.
+- `uv run vaultspec-core vault check all` reports clean frontmatter, links, dangling links, schema, references, and structure after vault filename normalization.
 
 ## Review Pool
 

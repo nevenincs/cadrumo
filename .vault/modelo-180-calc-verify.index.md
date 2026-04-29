@@ -6,10 +6,10 @@ date: '2026-04-28'
 related:
   - '[[2026-04-28-modelo-180-calc-verify-adr]]'
   - '[[2026-04-28-modelo-180-calc-verify-plan]]'
+  - '[[2026-04-28-modelo-180-calc-verify-reference]]'
   - '[[2026-04-28-modelo-180-calc-verify-research]]'
   - '[[2026-04-28-modelo-180-calc-verify-review-audit]]'
-  - '[[2026-04-28-modelo-180-calc-verify-summary]]'
-  - '[[2026-180-rule-delta]]'
+  - '[[2026-04-28-modelo-180-calc-verify-summary-exec]]'
 ---
 
 # `modelo-180-calc-verify` feature index
@@ -28,7 +28,7 @@ Auto-generated index of all documents tagged with `#modelo-180-calc-verify`.
 
 ### exec
 
-- `2026-04-28-modelo-180-calc-verify-summary` - `modelo-180-calc-verify` summary
+- `2026-04-28-modelo-180-calc-verify-summary-exec` - `modelo-180-calc-verify` summary
 
 ### plan
 
@@ -36,7 +36,7 @@ Auto-generated index of all documents tagged with `#modelo-180-calc-verify`.
 
 ### reference
 
-- `2026-180-rule-delta` - `modelo-180-calc-verify` reference: `2026-180-rule-delta`
+- `2026-04-28-modelo-180-calc-verify-reference` - `modelo-180-calc-verify` reference: `2026-180-rule-delta`
 
 ### research
 

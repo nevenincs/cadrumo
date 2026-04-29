@@ -8,7 +8,7 @@ related:
   - "[[2026-04-27-modelo-115-calc-verify-adr]]"
   - "[[2026-04-27-modelo-123-calc-verify-adr]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
-  - "[[2026-180-rule-delta]]"
+  - "[[2026-04-28-modelo-180-calc-verify-reference]]"
 ---
 
 # `modelo-180-calc-verify` adr: `annual rental withholding summary` | (**status:** `accepted`)

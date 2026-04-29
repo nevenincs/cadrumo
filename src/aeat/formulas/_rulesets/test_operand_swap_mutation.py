@@ -53,6 +53,8 @@ from . import (
     MODELO_131_2025,
     MODELO_131_2026,
     MODELO_200_2024,
+    MODELO_200_2025,
+    MODELO_200_2026,
     MODELO_202_2025,
     MODELO_303_2024,
     MODELO_303_2025,
@@ -485,6 +487,18 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             "00611",
             _modelo_200_fixture,
             id="modelo_200.2024:casilla_00611_cuota_diferencial_deep_nest",
+        ),
+        pytest.param(
+            lambda: MODELO_200_2025,
+            "00611",
+            _modelo_200_fixture,
+            id="modelo_200.2025:casilla_00611_cuota_diferencial_deep_nest",
+        ),
+        pytest.param(
+            lambda: MODELO_200_2026,
+            "00611",
+            _modelo_200_fixture,
+            id="modelo_200.2026:casilla_00611_cuota_diferencial_deep_nest",
         ),
         # Wave 75a (issue #314) — Modelo 130 2024 clones every sub_op chain.
         pytest.param(

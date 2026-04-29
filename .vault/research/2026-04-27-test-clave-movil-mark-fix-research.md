@@ -3,9 +3,7 @@ tags:
   - '#research'
   - '#test-clave-movil-mark-fix'
 date: '2026-04-27'
-related:
-  - '[[wgergely-aeat-436]]'
-  - '[[wgergely-aeat-439]]'
+related: []
 ---
 
 # `test-clave-movil-mark-fix` research: Cl@ve Movil test marker hygiene
