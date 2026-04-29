@@ -168,7 +168,13 @@ def decode_mnemonic(mnemonic: str) -> bytes:
 
     Raises:
         ValueError: If the mnemonic does not have 24 words, contains
-            an unknown word, or fails the BIP-39 checksum.
+            an unknown word, or fails the BIP-39 checksum. Error
+            messages report the failing **position** but never echo
+            the operator's typed word — a wrong word at position N
+            tells an attacker watching stderr / shell history /
+            session logs nothing about the recovery-key contents
+            beyond "position N has a typo", which is a 1-of-2048
+            disclosure rather than a full-word disclosure.
     """
     words = mnemonic.strip().lower().split()
     if len(words) != _MNEMONIC_WORD_COUNT:
@@ -176,10 +182,12 @@ def decode_mnemonic(mnemonic: str) -> bytes:
             f"BIP-39 mnemonic must contain exactly {_MNEMONIC_WORD_COUNT} words; got {len(words)}",
         )
     payload_int = 0
-    for word in words:
+    for position, word in enumerate(words, start=1):
         index = _WORD_TO_INDEX.get(word)
         if index is None:
-            raise ValueError(f"unknown BIP-39 word: {word!r}")
+            raise ValueError(
+                f"unknown BIP-39 word at position {position}; verify the word against the BIP-39 English wordlist.",
+            )
         payload_int = (payload_int << 11) | index
     # Split off the 8-bit checksum.
     checksum = payload_int & 0xFF
