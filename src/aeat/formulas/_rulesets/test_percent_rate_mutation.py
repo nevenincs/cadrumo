@@ -27,6 +27,7 @@ appear in the unflagged-nodes catalogue assembled by
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -318,6 +319,36 @@ def _build_test_params() -> list:
                     )
                 )
     return params
+
+
+def _iter_percent_targets() -> Iterator[tuple[str, str, str]]:
+    """Yield ``(ruleset_id, casilla_id, signature)`` for every mutated percent target.
+
+    ``signature`` is ``f"literal:{path}"`` for in-AST literal rates and
+    ``f"param:{param_id}"`` for parameter-table rates. Imported by
+    :mod:`test_mutator_kill_rate` to compute the empirical
+    percent-rate coverage. Mirrors the unique target set behind
+    :func:`_build_test_params` (the +1 pp / -1 pp directions count as
+    a single covered target).
+    """
+    seen: set[tuple[str, str, str]] = set()
+    for ruleset, casilla_id, _fixture in _ruleset_cases():
+        fd = ruleset.formula_for(casilla_id)
+        assert fd is not None
+        for path, node in iter_percent_nodes(fd.formula):
+            location = classify_percent_rate(fd, path, node)
+            if location.mode == "literal":
+                signature = f"literal:{path}"
+            elif location.mode == "param":
+                # ``location.param_id`` is non-None when ``mode == "param"``.
+                signature = f"param:{location.param_id}"
+            else:
+                continue
+            key = (ruleset.ruleset_id, casilla_id, signature)
+            if key in seen:
+                continue
+            seen.add(key)
+            yield key
 
 
 # -- Harness ------------------------------------------------------------

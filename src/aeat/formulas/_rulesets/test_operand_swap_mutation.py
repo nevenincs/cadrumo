@@ -36,9 +36,12 @@ from decimal import Decimal
 import pytest
 
 from .._engine import Engine
-from .._formula import FormulaDefinition, RoundFormula, SubFormula
+from .._formula import ClampPositiveFormula, FormulaDefinition, Operand, RoundFormula, SubFormula
 from .._ruleset import Ruleset
 from . import (
+    MODELO_100_2024,
+    MODELO_100_2025,
+    MODELO_100_2026,
     MODELO_100_SUMMARY_2025,
     MODELO_111_2025,
     MODELO_111_2026,
@@ -79,16 +82,37 @@ def _swap_sub_op(node: object) -> SubFormula:
     return SubFormula(operands=(rhs, lhs))
 
 
+def _swap_outer_sub_op_in_subtree(node: Operand) -> Operand:
+    """Return ``node`` with its outermost reachable ``SubFormula`` swapped.
+
+    Descends through unary wrappers — ``ClampPositiveFormula`` — until a
+    ``SubFormula`` is reached, then rebuilds the wrapper chain around
+    the swapped node. Required for clamp-wrapped chains like Modelo
+    100 casilla 0545 (``clamp_pos(sub_op(sub_op(...), ref))``).
+    Raises ``TypeError`` if no ``SubFormula`` is reachable through the
+    wrapper chain.
+    """
+    if isinstance(node, SubFormula):
+        return _swap_sub_op(node)
+    if isinstance(node, ClampPositiveFormula):
+        inner = node.operands[0]
+        swapped_inner = _swap_outer_sub_op_in_subtree(inner)
+        return ClampPositiveFormula(operands=(swapped_inner,))
+    raise TypeError(f"expected SubFormula or ClampPositiveFormula(SubFormula), got {type(node).__name__}")
+
+
 def _mutate_outer_sub_op(ruleset: Ruleset, target_casilla_id: str) -> Ruleset:
-    """Swap operands of the outermost ``sub_op`` in ``target_casilla_id``'s formula.
+    """Swap operands of the outermost reachable ``sub_op`` in the casilla's formula.
 
     Every ruleset wraps its formula body in a terminal ``RoundFormula``
     (via the ``formula(...)`` helper). So the layout is:
 
-        FormulaDefinition.formula = RoundFormula(operands=(sub_op, ...))
+        FormulaDefinition.formula = RoundFormula(operands=(<chain>, ...))
 
-    We unwrap the ``RoundFormula``, assert its operand is a ``SubFormula``,
-    swap, and rewrap.
+    where ``<chain>`` is either a direct ``SubFormula`` or a unary
+    wrapper sequence — currently ``ClampPositiveFormula`` — wrapping
+    one. We descend through the wrappers, swap the underlying
+    ``SubFormula`` operands, and rebuild the tree.
     """
     new_formulas: list[FormulaDefinition] = []
     swapped = False
@@ -100,7 +124,7 @@ def _mutate_outer_sub_op(ruleset: Ruleset, target_casilla_id: str) -> Ruleset:
         if not isinstance(round_node, RoundFormula):
             raise TypeError(f"formula {fd.formula_id} top-level node is {type(round_node).__name__}, not RoundFormula")
         inner = round_node.operands[0]
-        mutated_inner = _swap_sub_op(inner)
+        mutated_inner = _swap_outer_sub_op_in_subtree(inner)
         new_round = RoundFormula(operands=(mutated_inner,), digits=round_node.digits)
         new_formulas.append(
             FormulaDefinition(
@@ -364,6 +388,46 @@ def _modelo_100_summary_fixture() -> dict[str, Decimal]:
     }
 
 
+def _modelo_100_full_fixture() -> dict[str, Decimal]:
+    """Issue #457: asymmetric fixture exercising the M100 0545 + 0720 sub_op chains.
+
+    The full-form M100 ruleset's two highest-Kent-harm sub_op chains
+    are casilla 0545 (base liquidable general =
+    ``clamp_pos(sub_op(sub_op(0432, 0445), 0455))``) and casilla 0720
+    (cuota diferencial = ``sub_op(sub_op(0698, 0699), 0700)``). Both
+    are exercised by the same fixture.
+
+    Inputs drive 0432=80 000 € (via 0399 = ganancia patrimonial
+    integrable; remaining BIG components default to 0). Reducciones
+    0445 = 20 000 €, mínimo 0455 = 10 000 € → 0545 baseline = 50 000 €;
+    swap → ``clamp_pos(0455 - sub_op(0432, 0445)) = clamp_pos(-50 000) = 0``,
+    delta 50 000 €. With BLG = 50 000 € the engine derives 0540 = 0698 =
+    7 100,75 € (per LIRPF art. 63 brackets, stable 2024-2026).
+    Retenciones 0699 = 2 000 €, pagos fraccionados 0700 = 500 € →
+    0720 baseline = 4 600,75 €; swap → ``500 - (7100.75 - 2000) =
+    -4 600,75``, delta 9 201,50 €. Both deltas exceed the 0.02 € floor.
+
+    Verified identically for 2024 / 2025 / 2026 — M100 brackets,
+    art. 20 reducción slope, and the cuota chain are unchanged across
+    all three years per the rule-delta reference manifest.
+    """
+    return {
+        "0399": Decimal("80000.00"),
+        "0445": Decimal("20000.00"),
+        "0455": Decimal("10000.00"),
+        "0699": Decimal("2000.00"),
+        "0700": Decimal("500.00"),
+        # Computed baselines (audit_against checks computed casillas only
+        # when supplied; the fixture provides 0545 + 0720 to assert the
+        # baseline is clean before the mutation, and the operand-swap
+        # mutation then surfaces a discrepancy on those targets).
+        "0432": Decimal("80000.00"),
+        "0545": Decimal("50000.00"),
+        "0698": Decimal("7100.75"),
+        "0720": Decimal("4600.75"),
+    }
+
+
 def _modelo_390_fixture() -> dict[str, Decimal]:
     """Asymmetric fixture for Modelo 390 sub_op chains.
 
@@ -389,6 +453,84 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
         "193": Decimal("0.00"),
         "662": Decimal("1000.00"),
     }
+
+
+# Issue #457: enumerated tuple of every ``(ruleset_id, target_casilla)``
+# pair the operand-swap harness exercises. Imported by
+# :mod:`test_mutator_kill_rate` to compute the empirical sub_op
+# coverage for the deferred-gap invariant. The parametrize block
+# below MUST stay in sync with this tuple — the
+# :func:`test_outer_sub_op_targets_match_parametrize_block` test
+# enforces that.
+OUTER_SUB_OP_COVERAGE: tuple[tuple[str, str], ...] = (
+    # Modelo 130 — 6 chains x 3 years.
+    ("modelo_130.2024", "03"),
+    ("modelo_130.2024", "07"),
+    ("modelo_130.2024", "11"),
+    ("modelo_130.2024", "14"),
+    ("modelo_130.2024", "17"),
+    ("modelo_130.2024", "19"),
+    ("modelo_130.2025", "03"),
+    ("modelo_130.2025", "07"),
+    ("modelo_130.2025", "11"),
+    ("modelo_130.2025", "14"),
+    ("modelo_130.2025", "17"),
+    ("modelo_130.2025", "19"),
+    ("modelo_130.2026", "03"),
+    ("modelo_130.2026", "07"),
+    ("modelo_130.2026", "11"),
+    ("modelo_130.2026", "14"),
+    ("modelo_130.2026", "17"),
+    ("modelo_130.2026", "19"),
+    # Modelo 131 — 3 chains x 2 years (2025/2026 only).
+    ("modelo_131.2025", "10"),
+    ("modelo_131.2025", "13"),
+    ("modelo_131.2025", "15"),
+    ("modelo_131.2026", "10"),
+    ("modelo_131.2026", "13"),
+    ("modelo_131.2026", "15"),
+    # Modelo 303 — 2 chains x 3 years.
+    ("modelo_303.2024", "45"),
+    ("modelo_303.2024", "69"),
+    ("modelo_303.2025", "45"),
+    ("modelo_303.2025", "69"),
+    ("modelo_303.2026", "45"),
+    ("modelo_303.2026", "69"),
+    # Modelo 200 — 1 chain x 3 years.
+    ("modelo_200.2024", "00611"),
+    ("modelo_200.2025", "00611"),
+    ("modelo_200.2026", "00611"),
+    # Modelo 111 — 1 chain x 2 years (2025/2026 only).
+    ("modelo_111.2025", "30"),
+    ("modelo_111.2026", "30"),
+    # Modelo 115 — 1 chain x 2 years (2025/2026 only).
+    ("modelo_115.2025", "06"),
+    ("modelo_115.2026", "06"),
+    # Modelo 123 — 1 chain x 3 years.
+    ("modelo_123.2024", "11"),
+    ("modelo_123.2025", "11"),
+    ("modelo_123.2026", "11"),
+    # Modelo 100 summary (2025) — 0720 outer sub_op.
+    ("modelo_100.summary.2025", "0720"),
+    # Modelo 390 — 2 chains x 3 years.
+    ("modelo_390.2024", "105"),
+    ("modelo_390.2024", "191"),
+    ("modelo_390.2025", "105"),
+    ("modelo_390.2025", "191"),
+    ("modelo_390.2026", "105"),
+    ("modelo_390.2026", "191"),
+    # Modelo 100 full — 2 archetypes x 3 years (issue #457).
+    ("modelo_100.2024", "0720"),
+    ("modelo_100.2024", "0545"),
+    ("modelo_100.2025", "0720"),
+    ("modelo_100.2025", "0545"),
+    ("modelo_100.2026", "0720"),
+    ("modelo_100.2026", "0545"),
+    # Modelo 202 — covered by the dedicated
+    # ``test_modelo_202_nested_sub_op_swap_is_detected`` test, not the
+    # parametrize block, but counted for empirical coverage.
+    ("modelo_202.2025", "32"),
+)
 
 
 @pytest.mark.parametrize(
@@ -654,6 +796,48 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
             _modelo_100_summary_fixture,
             id="modelo_100_summary.2025:casilla_0720_cuota_resultante",
         ),
+        # Issue #457 — Modelo 100 full-form 2024 / 2025 / 2026: closes
+        # the operand-swap coverage gap on the two highest-Kent-harm
+        # chains (cuota diferencial 0720 + base liquidable general 0545).
+        # 0545 is clamp_pos-wrapped — exercises the
+        # ``_swap_outer_sub_op_in_subtree`` descent through
+        # ``ClampPositiveFormula``.
+        pytest.param(
+            lambda: MODELO_100_2024,
+            "0720",
+            _modelo_100_full_fixture,
+            id="modelo_100.2024:casilla_0720_cuota_diferencial",
+        ),
+        pytest.param(
+            lambda: MODELO_100_2024,
+            "0545",
+            _modelo_100_full_fixture,
+            id="modelo_100.2024:casilla_0545_base_liquidable_general_clamp_wrapped",
+        ),
+        pytest.param(
+            lambda: MODELO_100_2025,
+            "0720",
+            _modelo_100_full_fixture,
+            id="modelo_100.2025:casilla_0720_cuota_diferencial",
+        ),
+        pytest.param(
+            lambda: MODELO_100_2025,
+            "0545",
+            _modelo_100_full_fixture,
+            id="modelo_100.2025:casilla_0545_base_liquidable_general_clamp_wrapped",
+        ),
+        pytest.param(
+            lambda: MODELO_100_2026,
+            "0720",
+            _modelo_100_full_fixture,
+            id="modelo_100.2026:casilla_0720_cuota_diferencial",
+        ),
+        pytest.param(
+            lambda: MODELO_100_2026,
+            "0545",
+            _modelo_100_full_fixture,
+            id="modelo_100.2026:casilla_0545_base_liquidable_general_clamp_wrapped",
+        ),
         pytest.param(
             lambda: MODELO_390_2024,
             "105",
@@ -775,3 +959,64 @@ def test_mutate_sub_op_helper_rejects_missing_casilla() -> None:
     with pytest.raises(LookupError):
         # Casilla "01" on Modelo 130 is an input (ingresos), not computed.
         _mutate_outer_sub_op(MODELO_130_2025, "01")
+
+
+def test_outer_sub_op_targets_match_parametrize_block() -> None:
+    """Issue #457: :data:`OUTER_SUB_OP_COVERAGE` mirrors the parametrize block.
+
+    The parametrize block declares ``(ruleset_factory, target_casilla,
+    fixture_factory)`` triples; the coverage tuple flattens those to
+    ``(ruleset_id, target_casilla)`` pairs (plus the M202 case
+    exercised by the dedicated function below). A drift between the
+    two would invalidate the
+    :func:`test_deferred_count_matches_empirical_coverage_gap`
+    invariant in :mod:`test_mutator_kill_rate`.
+    """
+    pytestmark_attr = getattr(test_sub_op_operand_swap_is_detected, "pytestmark", [])
+    parametrize_marks = [mark for mark in pytestmark_attr if mark.name == "parametrize"]
+    assert len(parametrize_marks) == 1
+    pairs_from_block: set[tuple[str, str]] = set()
+    for case in parametrize_marks[0].args[1]:
+        ruleset_factory, target_casilla, _fixture_factory = case.values
+        pairs_from_block.add((ruleset_factory().ruleset_id, target_casilla))
+    # The M202 case is in the dedicated function, not the parametrize block.
+    pairs_from_block.add(("modelo_202.2025", "32"))
+    pairs_from_tuple = set(OUTER_SUB_OP_COVERAGE)
+    assert pairs_from_block == pairs_from_tuple, (
+        f"parametrize block <-> OUTER_SUB_OP_COVERAGE drift:\n"
+        f"  in block but not in tuple: {pairs_from_block - pairs_from_tuple!r}\n"
+        f"  in tuple but not in block: {pairs_from_tuple - pairs_from_block!r}"
+    )
+
+
+def test_mutate_outer_sub_op_descends_through_clamp_pos() -> None:
+    """Issue #457: the helper descends through ``ClampPositiveFormula`` wrappers.
+
+    M100 casilla 0545 (base liquidable general) wraps its outer
+    ``sub_op`` chain in a ``clamp_pos``. Without the descent step
+    introduced for #457, ``_mutate_outer_sub_op`` would raise
+    ``TypeError`` on the wrapper. This test asserts the helper
+    successfully swaps the underlying ``SubFormula`` and the audit
+    surfaces the resulting discrepancy on casilla 0545.
+    """
+    fixture = _modelo_100_full_fixture()
+    engine = Engine()
+    baseline = engine.audit_against(ruleset=MODELO_100_2024, provided=fixture, tolerance=Decimal("0.01"))
+    assert baseline.is_clean(), (
+        f"M100 fixture must audit cleanly before mutation; saw {[d.casilla_id for d in baseline.discrepancies]}"
+    )
+    mutated = _mutate_outer_sub_op(MODELO_100_2024, "0545")
+    report = engine.audit_against(ruleset=mutated, provided=fixture, tolerance=Decimal("0.01"))
+    assert any(d.casilla_id == "0545" for d in report.discrepancies)
+
+
+def test_mutate_outer_sub_op_rejects_nonsubop_inside_clamp_pos() -> None:
+    """The descent stops at the first non-wrapper node; non-``SubFormula`` raises ``TypeError``.
+
+    Modelo 130 casilla 04 is ``clamp_pos(percent(...))`` — descending
+    through the clamp_pos reaches a ``PercentFormula``, not a
+    ``SubFormula``. The helper must refuse rather than silently
+    succeed.
+    """
+    with pytest.raises(TypeError):
+        _mutate_outer_sub_op(MODELO_130_2025, "04")
