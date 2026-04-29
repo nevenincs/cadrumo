@@ -23,6 +23,7 @@ imported rulesets at import time.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -31,6 +32,9 @@ import pytest
 from .._engine import Engine
 from .._ruleset import Ruleset
 from . import (
+    MODELO_100_2024,
+    MODELO_100_2025,
+    MODELO_100_2026,
     MODELO_200_2024,
     MODELO_200_2025,
     MODELO_200_2026,
@@ -117,16 +121,150 @@ def _f202_for_scalar() -> dict[str, Decimal]:
     }
 
 
+# -- Issue #457: Modelo 100 selective scalar archetype fixtures ----------
+#
+# Three archetypes per year — TARIFA_ESTATAL_GENERAL bracket-rate
+# literal, TARIFA_ESTATAL_AHORRO bracket-rate literal, LIRPF art. 20
+# slope literal — close the most Kent-relevant subset of the 60
+# uncovered M100 mul/div scalar leaves. The remaining 17 leaves per
+# year are catalogued as ``mul_div_scalar_deferred`` in
+# ``test_mutator_kill_rate.EXPECTED_COUNTS`` and tracked by a follow-up
+# issue.
+
+
+def _f100_general_for_scalar() -> dict[str, Decimal]:
+    """Drive M100 BLG into TARIFA_ESTATAL_GENERAL bracket 5 (60 000-300 000 €).
+
+    With 0399=130 000 / 0445=20 000 / 0455=10 000 the engine derives
+    0432=130 000, 0545 (BLG) = 100 000 €. Bracket 5's 22.5 % rate
+    applies to the (100 000 - 60 000) = 40 000 € portion. The
+    progressive cuota is 17 950,75 €. A ±1 % factor on the 0.225
+    literal shifts that contribution by ±90 €.
+    """
+    return {
+        "0399": Decimal("130000.00"),
+        "0445": Decimal("20000.00"),
+        "0455": Decimal("10000.00"),
+        # Computed baseline (audit_against checks computed casillas only
+        # when supplied; supplying 0540 gates the baseline-clean
+        # assertion before the mutation, and the post-mutation audit
+        # surfaces the 90 € discrepancy on this casilla).
+        "0432": Decimal("130000.00"),
+        "0545": Decimal("100000.00"),
+        "0540": Decimal("17950.75"),
+    }
+
+
+def _f100_ahorro_for_scalar_2024() -> dict[str, Decimal]:
+    """Drive M100 BLA into TARIFA_ESTATAL_AHORRO bracket 5 (>300 000 €), 2024 rate 14 %.
+
+    0400=350 000 € → 0555 (BLA) = 350 000 €. Bracket 5 (top, 0.14 in
+    2024 per LIRPF art. 66 pre-Ley-7/2024) applies to the (350 000 -
+    300 000) = 50 000 € portion. Total cuota 0560 = 42 940 €. A ±1 %
+    factor on the 0.14 literal shifts the bracket contribution by
+    ±70 €.
+    """
+    return {
+        "0400": Decimal("350000.00"),
+        "0049": Decimal("0.00"),
+        "0460": Decimal("350000.00"),
+        "0555": Decimal("350000.00"),
+        "0560": Decimal("42940.00"),
+    }
+
+
+def _f100_ahorro_for_scalar_post_2025() -> dict[str, Decimal]:
+    """Drive M100 BLA into TARIFA_ESTATAL_AHORRO bracket 5 (>300 000 €), 2025/2026 rate 15 %.
+
+    Identical input shape to the 2024 fixture; only the bracket-5 rate
+    differs (0.14 → 0.15 per Ley 7/2024) so 0560 baseline is 43 440 €.
+    """
+    return {
+        "0400": Decimal("350000.00"),
+        "0049": Decimal("0.00"),
+        "0460": Decimal("350000.00"),
+        "0555": Decimal("350000.00"),
+        "0560": Decimal("43440.00"),
+    }
+
+
+def _f100_art20_slope_for_scalar() -> dict[str, Decimal]:
+    """Drive M100 Anexo B1 art. 20 piece_a (slope 1.75) at rendimiento 16 000 €.
+
+    With 0001 = 16 000 € (sueldo bruto, no irregulares 0019=0, no
+    gastos 0008..0010=0), the engine derives 0020 (rendimiento neto
+    previo) = 16 000 €. Inside [14 852, 17 673,52] piece_a is active:
+    reducción art. 20 = 7 302 - 1.75 x (16 000 - 14 852) = 5 293 €.
+    Capped by min(0020, …) = min(16 000, 5 293) = 5 293 €. A ±1 %
+    factor on the 1.75 literal shifts the reducción by ±20 € (well
+    above the 0,02 € floor).
+    """
+    return {
+        "0001": Decimal("16000.00"),
+        # Computed baseline.
+        "0020": Decimal("16000.00"),
+        "0021": Decimal("5293.00"),
+        "0022": Decimal("10707.00"),
+    }
+
+
+# Each archetype is referenced by its (casilla_id, leaf_path) target
+# inside the M100 ruleset. The walker's iter_scalar_leaf_paths
+# enumeration of the M100 trees is verified in
+# ``test_m100_selective_paths_match_walker``.
+_M100_GENERAL_PATH = (0, 4, 0)  # casilla 0540 bracket 5: 0.225 (2024-2026 stable)
+_M100_AHORRO_PATH = (0, 4, 0)  # casilla 0560 bracket 5: 0.14 (2024) / 0.15 (post-2025)
+_M100_ART20_PATH = (0, 1, 0, 0, 1, 0)  # casilla 0021 piece_a slope: 1.75 (2024-2026 stable)
+
+
+def _modelo_100_archetypes() -> tuple[
+    tuple[Ruleset, str, tuple[int, ...], Callable[[], dict[str, Decimal]]],
+    ...,
+]:
+    """Return the selective M100 (ruleset, casilla, leaf_path, fixture_factory) tuples.
+
+    Three archetypes per year x 3 years = 9 entries. Each entry feeds
+    the parametrize fan-out (x2 directions = 18 cases total for M100).
+    """
+    return (
+        # TARIFA_ESTATAL_GENERAL bracket 5 — 0540 — 2024 / 2025 / 2026.
+        (MODELO_100_2024, "0540", _M100_GENERAL_PATH, _f100_general_for_scalar),
+        (MODELO_100_2025, "0540", _M100_GENERAL_PATH, _f100_general_for_scalar),
+        (MODELO_100_2026, "0540", _M100_GENERAL_PATH, _f100_general_for_scalar),
+        # TARIFA_ESTATAL_AHORRO bracket 5 — 0560 — per-year (2024 vs 2025/2026 rate delta).
+        (MODELO_100_2024, "0560", _M100_AHORRO_PATH, _f100_ahorro_for_scalar_2024),
+        (MODELO_100_2025, "0560", _M100_AHORRO_PATH, _f100_ahorro_for_scalar_post_2025),
+        (MODELO_100_2026, "0560", _M100_AHORRO_PATH, _f100_ahorro_for_scalar_post_2025),
+        # LIRPF art. 20 piece_a slope — 0021 — 2024 / 2025 / 2026.
+        (MODELO_100_2024, "0021", _M100_ART20_PATH, _f100_art20_slope_for_scalar),
+        (MODELO_100_2025, "0021", _M100_ART20_PATH, _f100_art20_slope_for_scalar),
+        (MODELO_100_2026, "0021", _M100_ART20_PATH, _f100_art20_slope_for_scalar),
+    )
+
+
 def _build_test_params() -> list:
     """Generate one pytest.param per (ruleset * leaf * direction).
 
-    Walks every landed ruleset and yields a case for every direct
-    Mul/Div literal leaf. The fixture for each ruleset is selected by
-    a small dispatch table — adding a new ruleset to the harness
-    requires adding a fixture entry; this is intentional, so a future
-    author cannot quietly extend the harness without thinking about
-    the test inputs.
+    Two layered enumerations:
+
+    1. **Walked enumeration** — for the rulesets where every Mul/Div
+       leaf has a single ruleset-wide fixture, walk
+       :func:`iter_scalar_leaf_paths` and emit one case per leaf
+       (M303 / M200 / M202).
+
+    2. **Selective enumeration** — for the M100 full-form rulesets the
+       ``progressive_tarifa`` constructions yield 20 leaves per year
+       and a single ruleset-wide fixture cannot drive each leaf into
+       its target bracket. Issue #457 prescribes three archetypes per
+       year (TARIFA_ESTATAL_GENERAL, TARIFA_ESTATAL_AHORRO, LIRPF
+       art. 20 slope); each archetype is enumerated explicitly via
+       ``_modelo_100_archetypes()``. The remaining 17 leaves per year
+       are catalogued as ``mul_div_scalar_deferred`` in
+       ``test_mutator_kill_rate`` and tracked by a follow-up issue.
     """
+    params: list = []
+
+    # 1. Walked enumeration for M303 / M200 / M202.
     fixture_for_ruleset: dict[str, dict[str, Decimal]] = {
         MODELO_303_2024.ruleset_id: _f303_general_for_scalar(),
         MODELO_303_2025.ruleset_id: _f303_general_for_scalar(),
@@ -136,7 +274,7 @@ def _build_test_params() -> list:
         MODELO_200_2026.ruleset_id: _f200_for_scalar(),
         MODELO_202_2025.ruleset_id: _f202_for_scalar(),
     }
-    rulesets = (
+    walked_rulesets = (
         MODELO_303_2024,
         MODELO_303_2025,
         MODELO_303_2026,
@@ -145,8 +283,7 @@ def _build_test_params() -> list:
         MODELO_200_2026,
         MODELO_202_2025,
     )
-    params: list = []
-    for ruleset in rulesets:
+    for ruleset in walked_rulesets:
         for fd in ruleset.formulas:
             for leaf_path, _leaf, parent_op in iter_scalar_leaf_paths(fd.formula):
                 for direction_id, factor in (("plus_1pct", Decimal("1.01")), ("minus_1pct", Decimal("0.99"))):
@@ -165,7 +302,72 @@ def _build_test_params() -> list:
                             id=(f"{ruleset.ruleset_id}:casilla_{fd.casilla_id}:{parent_op}_leaf:{direction_id}"),
                         )
                     )
+
+    # 2. Selective enumeration for M100 archetypes (issue #457).
+    for ruleset, casilla_id, leaf_path, fixture_factory in _modelo_100_archetypes():
+        fd = ruleset.formula_for(casilla_id)
+        assert fd is not None, f"M100 ruleset {ruleset.ruleset_id} missing formula for casilla {casilla_id}"
+        # Resolve the leaf at the declared path so we can record the
+        # parent_op slug consistently with the walked-enumeration cases.
+        leaves_at_casilla = {p: op for p, _leaf, op in iter_scalar_leaf_paths(fd.formula)}
+        assert leaf_path in leaves_at_casilla, (
+            f"M100 archetype path {leaf_path} on {ruleset.ruleset_id} casilla {casilla_id} "
+            f"is not enumerated by iter_scalar_leaf_paths — declared leaves: "
+            f"{sorted(leaves_at_casilla)}"
+        )
+        parent_op = leaves_at_casilla[leaf_path]
+        for direction_id, factor in (("plus_1pct", Decimal("1.01")), ("minus_1pct", Decimal("0.99"))):
+            params.append(
+                pytest.param(
+                    _ScalarCase(
+                        ruleset=ruleset,
+                        casilla_id=casilla_id,
+                        formula_id=fd.formula_id,
+                        leaf_path=leaf_path,
+                        parent_op=parent_op,
+                        factor=factor,
+                        fixture=fixture_factory(),
+                        direction_id=direction_id,
+                    ),
+                    id=(f"{ruleset.ruleset_id}:casilla_{casilla_id}:{parent_op}_leaf:{direction_id}"),
+                )
+            )
+
     return params
+
+
+def _iter_scalar_targets() -> Iterator[tuple[str, str, tuple[int, ...]]]:
+    """Yield ``(ruleset_id, casilla_id, leaf_path)`` for every mutated scalar target.
+
+    Imported by :mod:`test_mutator_kill_rate` to compute the empirical
+    mul/div scalar coverage. Mirrors the unique target set behind
+    :func:`_build_test_params` (the +1 % / -1 % directions count as a
+    single covered target).
+    """
+    seen: set[tuple[str, str, tuple[int, ...]]] = set()
+    walked_rulesets = (
+        MODELO_303_2024,
+        MODELO_303_2025,
+        MODELO_303_2026,
+        MODELO_200_2024,
+        MODELO_200_2025,
+        MODELO_200_2026,
+        MODELO_202_2025,
+    )
+    for ruleset in walked_rulesets:
+        for fd in ruleset.formulas:
+            for leaf_path, _leaf, _parent_op in iter_scalar_leaf_paths(fd.formula):
+                key = (ruleset.ruleset_id, fd.casilla_id, leaf_path)
+                if key in seen:
+                    continue
+                seen.add(key)
+                yield key
+    for ruleset, casilla_id, leaf_path, _fixture_factory in _modelo_100_archetypes():
+        key = (ruleset.ruleset_id, casilla_id, leaf_path)
+        if key in seen:
+            continue
+        seen.add(key)
+        yield key
 
 
 def test_landed_rulesets_expose_some_scalar_leaves() -> None:
@@ -232,6 +434,25 @@ def test_iter_scalar_leaf_paths_finds_div_leaves_in_modelo_303() -> None:
     assert parent_op == "div"
     assert leaf.value == Decimal("100")
     assert leaf_path == (0, 1)
+
+
+def test_m100_selective_paths_match_walker() -> None:
+    """Issue #457: every selectively-enumerated M100 leaf is in the walker's enumeration.
+
+    The selective M100 enumeration declares ``(casilla, leaf_path)``
+    pairs explicitly. If a future M100 ruleset refactor changes the
+    formula tree shape so the declared path no longer points at a
+    Mul/Div literal, the harness must fail loudly rather than silently
+    skipping the archetype.
+    """
+    for ruleset, casilla_id, leaf_path, _fixture_factory in _modelo_100_archetypes():
+        fd = ruleset.formula_for(casilla_id)
+        assert fd is not None, f"{ruleset.ruleset_id}: missing formula for casilla {casilla_id}"
+        leaves = {path: op for path, _leaf, op in iter_scalar_leaf_paths(fd.formula)}
+        assert leaf_path in leaves, (
+            f"{ruleset.ruleset_id} casilla {casilla_id}: declared archetype path {leaf_path} "
+            f"is not enumerated by iter_scalar_leaf_paths; available leaves: {sorted(leaves)}"
+        )
 
 
 def test_mutate_scalar_leaf_rejects_non_literal_path() -> None:
