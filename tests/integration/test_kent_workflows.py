@@ -21,6 +21,8 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.cli import app
+from aeat.formulas._rulesets.modelo_100._ccaa import compute_cuota_autonomica_general
+from aeat.profile import CCAA, KentTaxResidence, save_tax_residence
 from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
     QuarterlyGenParams,
 )
@@ -705,6 +707,16 @@ _M100_SUMMARY_HAPPY: Mapping[str, str] = {
     "0720": "1600",
     "0721": "1600",
 }
+
+
+def _tax_residence_env(tmp_path: Path, ccaa: CCAA = CCAA.MADRID) -> dict[str, str]:
+    target = tmp_path / "tax-residence.json"
+    save_tax_residence(KentTaxResidence(ccaa=ccaa), target)
+    return {"AEAT_TAX_RESIDENCE_PROFILE_PATH": str(target)}
+
+
+def _empty_tax_residence_env(tmp_path: Path) -> dict[str, str]:
+    return {"AEAT_TAX_RESIDENCE_PROFILE_PATH": str(tmp_path / "missing-tax-residence.json")}
 
 
 def _synth_quarterly_pdf(
@@ -1841,7 +1853,11 @@ class TestKentImportsModelo100SummaryBorrador:
             values=_M100_SUMMARY_HAPPY,
             filename="modelo_100_2025_happy.pdf",
         )
-        result = runner.invoke(app, ["filing", "import", "--from-borrador", str(pdf)])
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-borrador", str(pdf)],
+            env=_tax_residence_env(tmp_path),
+        )
         assert result.exit_code == 0, result.output
         assert "Parsed Modelo 100 Renta" in result.output
         assert "Verification status: VERIFIED" in result.output
@@ -1861,7 +1877,11 @@ class TestKentImportsModelo100SummaryBorrador:
             values=_M100_SUMMARY_HAPPY,
             filename="modelo_100_2025_happy_es.pdf",
         )
-        result = runner.invoke(app, ["filing", "import", "--from-borrador", str(pdf)])
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-borrador", str(pdf)],
+            env=_tax_residence_env(tmp_path),
+        )
         assert result.exit_code == 0, result.output
         assert "Verification status: VERIFIED" in result.output
         # The borrador path emits the ruleset-id suffix; the verdict-token is
@@ -1894,8 +1914,73 @@ class TestKentImportsModelo100SummaryBorrador:
             values=tampered,
             filename="modelo_100_2025_drift.pdf",
         )
-        result = runner.invoke(app, ["filing", "import", "--from-borrador", str(pdf)])
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-borrador", str(pdf)],
+            env=_tax_residence_env(tmp_path),
+        )
         assert result.exit_code == 0, result.output
         assert "Verification status: NEEDS_REVIEW" in result.output
         assert "discrepancies" in result.output.lower()
         assert "casilla 0698" in result.output
+
+
+class TestKentRentaProfileIntegration:
+    """Kent's Modelo 100 import consumes the tax-residence profile."""
+
+    def test_happy_path_uses_profile_ccaa_for_autonomic_tarifa(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+    ) -> None:
+        del drafts_dir, submissions_dir, english_output
+        expected_0551 = compute_cuota_autonomica_general(Decimal(_M100_SUMMARY_HAPPY["0545"]), CCAA.MADRID, año=2025)
+        values = dict(_M100_SUMMARY_HAPPY) | {
+            "0551": str(expected_0551),
+            "0595": str(Decimal(_M100_SUMMARY_HAPPY["0550"]) + expected_0551 + Decimal("50") + Decimal("50")),
+        }
+        values["0698"] = values["0595"]
+        pdf = _synth_modelo_100_summary_pdf(
+            tmp_path,
+            values=values,
+            filename="modelo_100_2025_profile_ccaa.pdf",
+        )
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-borrador", str(pdf)],
+            env=_tax_residence_env(tmp_path, CCAA.MADRID),
+        )
+        assert result.exit_code == 0, result.output
+        assert "Tax residence CCAA: madrid" in result.output
+        assert "Tarifa autonómica: cuota íntegra general consistent with madrid" in result.output
+
+    def test_no_profile_path_refuses_with_suggestion(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+    ) -> None:
+        del drafts_dir, submissions_dir
+        pdf = _synth_modelo_100_summary_pdf(
+            tmp_path,
+            values=_M100_SUMMARY_HAPPY,
+            filename="modelo_100_2025_no_profile.pdf",
+        )
+        result = runner.invoke(
+            app,
+            ["filing", "import", "--from-borrador", str(pdf)],
+            env=_empty_tax_residence_env(tmp_path),
+        )
+        assert result.exit_code == 2
+        assert "aeat profile set tax-region <ccaa>" in result.output
+
+    def test_foral_regime_path_refuses(self, tmp_path: Path) -> None:
+        result = runner.invoke(
+            app,
+            ["profile", "set", "tax-region", "navarra"],
+            env=_empty_tax_residence_env(tmp_path),
+        )
+        assert result.exit_code == 2
+        assert "#424" in result.output

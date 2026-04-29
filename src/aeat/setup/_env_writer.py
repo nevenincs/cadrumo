@@ -18,6 +18,7 @@ from pathlib import Path
 from ..deadlines import AutonomoProfile
 from ..env_io import write_env_vars
 from ..logging import get_logger
+from ..profile import KentTaxResidence, save_tax_residence
 from ._models import SetupAnswers
 
 log = get_logger(__name__)
@@ -150,4 +151,5 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     )
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+    save_tax_residence(KentTaxResidence(ccaa=answers.tax_residence_ccaa))
     log.info("setup: wrote AutonomoProfile JSON to %s", target)

@@ -21,6 +21,7 @@ from ..auth import CertificateBackend
 from ..deadlines import IVARegime
 from ..env_io import read_env_file
 from ..i18n import Language
+from ..profile import CCAA
 from . import (
     SetupAnswers,
     owned_env_keys,
@@ -44,6 +45,7 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         does_intracomunitario=True,
         third_party_transactions_above_347_threshold=True,
         bienes_extranjero_above_threshold=False,
+        tax_residence_ccaa=CCAA.MADRID,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
         certificate_friendly_name="primary",
@@ -143,9 +145,17 @@ def test_write_env_file_rewrites_in_place_on_rerun(tmp_path: Path) -> None:
 
 
 def test_write_profile_file_emits_valid_autonomo_profile(tmp_path: Path) -> None:
+    old_tax_path = os.environ.get("AEAT_TAX_RESIDENCE_PROFILE_PATH")
+    os.environ["AEAT_TAX_RESIDENCE_PROFILE_PATH"] = str(tmp_path / "tax-residence.json")
     answers = _answers(tmp_path)
     target = tmp_path / "profile.json"
-    write_profile_file(answers, target)
+    try:
+        write_profile_file(answers, target)
+    finally:
+        if old_tax_path is None:
+            os.environ.pop("AEAT_TAX_RESIDENCE_PROFILE_PATH", None)
+        else:
+            os.environ["AEAT_TAX_RESIDENCE_PROFILE_PATH"] = old_tax_path
 
     from ..deadlines import AutonomoProfile
 
@@ -154,6 +164,7 @@ def test_write_profile_file_emits_valid_autonomo_profile(tmp_path: Path) -> None
     assert profile.iva_regime is IVARegime.SIMPLIFICADO
     assert profile.pays_professionals_with_retencion is True
     assert profile.third_party_transactions_above_347_threshold is True
+    assert (tmp_path / "tax-residence.json").exists()
 
 
 def test_owned_env_keys_are_stable_and_unique() -> None:

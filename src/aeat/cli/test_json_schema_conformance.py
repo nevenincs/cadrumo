@@ -30,6 +30,7 @@ _EXPECTED_REGISTERED_COMMANDS = {
     "portals for-modelo",
     "portals list",
     "portals show",
+    "profile show",
     "sede list-expedientes",
     "sede notifications",
     "submission check-nif",
@@ -123,6 +124,13 @@ def test_schema_registry_contains_current_json_contract_bindings() -> None:
         (
             "portals for-modelo",
             lambda tmp_path, monkeypatch: _RUNNER.invoke(root_app, ["portals", "for-modelo", "303", "--json"]),
+        ),
+        (
+            "profile show",
+            lambda tmp_path, monkeypatch: (
+                monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json")),
+                _RUNNER.invoke(root_app, ["profile", "show", "--json"]),
+            )[1],
         ),
         (
             "submission check-nif",

@@ -42,7 +42,7 @@ from ...filing import (
     validate_draft,
 )
 from ...filing.runtime import build_runtime_schema_provider, load_default_filing_profile
-from ...i18n import Language, get_translation
+from ...i18n import Language, Translatable, get_translation
 from ...justificante import JustificanteError
 from ...logging import get_logger
 from ...submission import SubmissionEngine
@@ -563,6 +563,14 @@ def _output_language() -> Language:
         return Language.ES
 
 
+def _t(es: str, en: str, hu: str) -> Translatable:
+    return {"es": es, "en": en, "hu": hu}
+
+
+def _msg(message: Translatable) -> str:
+    return get_translation(message, _output_language())
+
+
 def _handle_declaracion_import(
     from_declaracion: Path,
     *,
@@ -583,6 +591,19 @@ def _handle_declaracion_import(
         raise typer.BadParameter(str(exc)) from exc
 
     lang = _output_language()
+    if filing.modelo == "100":
+        from ...profile import require_tax_residence
+
+        residence = require_tax_residence()
+        typer.echo(
+            _msg(
+                _t(
+                    f"CCAA de residencia fiscal: {residence.ccaa.value}",
+                    f"Tax residence CCAA: {residence.ccaa.value}",
+                    f"Adoilletosegi CCAA: {residence.ccaa.value}",
+                )
+            )
+        )
 
     typer.echo(
         f"Parsed Modelo {filing.modelo} {filing.period} declaración "
@@ -657,6 +678,10 @@ def _handle_borrador_import(
     from ...borrador import BorradorParseError, parse_borrador
     from ...borrador._tarifa import validate_tarifa_estatal
     from ...formulas._rulesets import MODELO_100_SUMMARY_2025
+    from ...formulas._rulesets.modelo_100._ccaa import compute_cuota_autonomica_general
+    from ...profile import require_tax_residence
+
+    residence = require_tax_residence()
 
     try:
         filing = parse_borrador(from_borrador, año_override=año)
@@ -670,6 +695,15 @@ def _handle_borrador_import(
     )
     if filing.csv is not None:
         typer.echo(f"CSV: {filing.csv}")
+    typer.echo(
+        _msg(
+            _t(
+                f"CCAA de residencia fiscal: {residence.ccaa.value}",
+                f"Tax residence CCAA: {residence.ccaa.value}",
+                f"Adoilletosegi CCAA: {residence.ccaa.value}",
+            )
+        )
+    )
 
     # Verify against the partial summary ruleset.
     from ...formulas import Engine
@@ -697,6 +731,7 @@ def _handle_borrador_import(
     # cuota íntegra estatal (0550, 0560) matches the tarifa-derived value
     # when the corresponding base liquidable casilla (0545, 0555) is present.
     tarifa_ejercicio = filing.ejercicio
+    tarifa_ejercicio_int = int(filing.ejercicio)
     try:
         tarifa_findings = validate_tarifa_estatal(
             ejercicio=tarifa_ejercicio,
@@ -719,6 +754,45 @@ def _handle_borrador_import(
             )
     elif ruleset_clean:
         typer.echo(f"Tarifa progresiva: cuota íntegra estatal consistent with IRPF {tarifa_ejercicio} scale")
+
+    base_autonomica = provided.get("0545")
+    cuota_autonomica = provided.get("0551")
+    if base_autonomica is not None and cuota_autonomica is not None:
+        expected_autonomica = compute_cuota_autonomica_general(
+            base_autonomica,
+            residence.ccaa,
+            año=tarifa_ejercicio_int,
+        )
+        delta = abs(expected_autonomica - cuota_autonomica)
+        if delta <= Decimal("0.01"):
+            typer.echo(
+                _msg(
+                    _t(
+                        "Tarifa autonómica: cuota íntegra general consistente "
+                        f"con la escala IRPF {tarifa_ejercicio} de {residence.ccaa.value}",
+                        "Tarifa autonómica: cuota íntegra general consistent "
+                        f"with {residence.ccaa.value} IRPF {tarifa_ejercicio} scale",
+                        "Autonom tarifa: az altalanos teljes ado osszhangban van "
+                        f"a(z) {residence.ccaa.value} IRPF {tarifa_ejercicio} skalaval",
+                    )
+                )
+            )
+        else:
+            typer.echo(
+                _msg(
+                    _t(
+                        "Tarifa autonómica: discrepancia en la casilla 0551 "
+                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
+                        f"frente a extraído {cuota_autonomica} (delta {delta})",
+                        "Tarifa autonómica: discrepancy for casilla 0551 "
+                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
+                        f"vs. extracted {cuota_autonomica} (delta {delta})",
+                        "Autonom tarifa: elteres az 0551 mezonek "
+                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
+                        f"vs. kinyert {cuota_autonomica} (delta {delta})",
+                    )
+                )
+            )
 
 
 @complementaria_app.command("build")

@@ -38,6 +38,7 @@ from . import modelos as modelos_module
 from . import normatives as normatives_module
 from . import oauth as oauth_module
 from . import portals as portals_module
+from . import profile as profile_module
 from . import review as review_module
 from . import run as run_module
 from . import sanitize as sanitize_module
@@ -166,6 +167,7 @@ app.add_typer(
     name="invoices",
     help="Invoice catalogue helpers (#75) — alias for `aeat financial invoices`.",
 )
+app.add_typer(profile_module.app, name="profile", help=profile_module.PROFILE_HELP)
 app.add_typer(sede_module.app, name="sede", help="Post-auth AEAT sede discovery (read-only, #239).")
 app.add_typer(
     sanitize_module.app,
@@ -197,7 +199,7 @@ app.add_typer(
     name="justificante",
     help="AEAT justificante (PDF receipt) parser and live CSV verifier (#44).",
 )
-app.add_typer(setup_wizard_module.app, name="setup", help="First-run interactive setup wizard (#61).")
+app.add_typer(setup_wizard_module.app, name="setup", help=setup_wizard_module.SETUP_HELP)
 app.add_typer(
     audit_module.audit_app,
     name="audit",
