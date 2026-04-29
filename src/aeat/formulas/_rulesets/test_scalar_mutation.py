@@ -32,6 +32,8 @@ from .._engine import Engine
 from .._ruleset import Ruleset
 from . import (
     MODELO_200_2024,
+    MODELO_200_2025,
+    MODELO_200_2026,
     MODELO_202_2025,
     MODELO_303_2024,
     MODELO_303_2025,
@@ -130,9 +132,19 @@ def _build_test_params() -> list:
         MODELO_303_2025.ruleset_id: _f303_general_for_scalar(),
         MODELO_303_2026.ruleset_id: _f303_general_for_scalar(),
         MODELO_200_2024.ruleset_id: _f200_for_scalar(),
+        MODELO_200_2025.ruleset_id: _f200_for_scalar(),
+        MODELO_200_2026.ruleset_id: _f200_for_scalar(),
         MODELO_202_2025.ruleset_id: _f202_for_scalar(),
     }
-    rulesets = (MODELO_303_2024, MODELO_303_2025, MODELO_303_2026, MODELO_200_2024, MODELO_202_2025)
+    rulesets = (
+        MODELO_303_2024,
+        MODELO_303_2025,
+        MODELO_303_2026,
+        MODELO_200_2024,
+        MODELO_200_2025,
+        MODELO_200_2026,
+        MODELO_202_2025,
+    )
     params: list = []
     for ruleset in rulesets:
         for fd in ruleset.formulas:

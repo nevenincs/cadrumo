@@ -328,6 +328,24 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,  # the inner Literal("100") of percent_from_whole.
     },
+    "modelo_200.2025": {
+        "sub_op": 5,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 1,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 1,
+    },
+    "modelo_200.2026": {
+        "sub_op": 5,
+        "percent_rate_literal": 0,
+        "percent_rate_param": 0,
+        "percent_rate_compound_skipped": 1,
+        "percent_rate_casilla_ref_skipped": 0,
+        "brackets_threshold_non_terminal": 0,
+        "mul_div_scalar": 1,
+    },
     "modelo_202.2025": {
         "sub_op": 3,
         "percent_rate_literal": 0,
