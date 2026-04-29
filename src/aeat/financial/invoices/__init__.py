@@ -21,6 +21,7 @@ from ._errors import (
     InvoicePersistenceError,
 )
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ._repository import InvoiceCatalogueRepository
 from ._service import (
     LinkInconsistency,
     ReconciliationSuggestion,
@@ -28,8 +29,6 @@ from ._service import (
     find_unmatched,
     link_transaction,
     link_transaction_bidirectional,
-    load_invoices,
-    save_invoices,
     suggest_reconciliations,
     verify_link_consistency,
 )
@@ -38,6 +37,7 @@ __all__ = [
     "Invoice",
     "InvoiceCatalogue",
     "InvoiceCatalogueError",
+    "InvoiceCatalogueRepository",
     "InvoiceError",
     "InvoiceKind",
     "InvoiceLine",
@@ -54,8 +54,6 @@ __all__ = [
     "find_unmatched",
     "link_transaction",
     "link_transaction_bidirectional",
-    "load_invoices",
-    "save_invoices",
     "suggest_reconciliations",
     "verify_link_consistency",
 ]
