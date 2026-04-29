@@ -1779,6 +1779,45 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.profile._errors.TaxResidenceProfileError",
+        ErrorCode(
+            code="ERROR_PROFILE_TAX_RESIDENCE",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error del perfil de residencia fiscal.",
+            default_message_en="Tax-residence profile error.",
+            default_message_hu="Adoilletosegi profil hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.profile._errors.ProfileNotConfiguredError",
+        ErrorCode(
+            code="REFUSED_PROFILE_NOT_CONFIGURED",
+            category=ErrorCategory.REFUSED,
+            default_message_es="No hay perfil de residencia fiscal configurado para RENTA.",
+            default_message_en="No tax-residence profile is configured for RENTA.",
+            default_message_hu="Nincs beallitva RENTA adoilletosegi profil.",
+            default_suggestion="aeat profile set tax-region <ccaa>",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.profile._errors.ForalRegimeError",
+        ErrorCode(
+            code="REFUSED_PROFILE_FORAL_REGIME",
+            category=ErrorCategory.REFUSED,
+            default_message_es="El regimen foral solicitado se gestiona en #424.",
+            default_message_en="The requested foral regime is handled in #424.",
+            default_message_hu="A kert foralis rendszert a #424 kezeli.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.sanitizer._errors.AlreadySanitizedError",
         ErrorCode(
             code="REFUSED_SANITIZER_ALREADY_SANITIZED",
