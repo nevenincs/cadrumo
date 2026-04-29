@@ -488,6 +488,87 @@ class TestProvisionCommand:
         assert "ZERO confidentiality" in result.output
         assert "RECOVERY KEY" in result.output
 
+    def test_keyring_backend_refuses_when_entry_exists_without_force(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # Wave-22 M-3 regression: provisioning the keyring backend
+        # over an existing keychain entry without --force used to
+        # silently FETCH the old key and regenerate the recovery
+        # wrapping, invalidating the operator's previously-printed
+        # mnemonic. Now refuses with a clear pointer at recover or
+        # --force.
+        keyring = pytest.importorskip("keyring")
+
+        store: dict[tuple[str, str], str] = {("aeat:secure-persistence", "master"): "preexisting-b64"}
+
+        def _get(service: str, username: str) -> str | None:
+            return store.get((service, username))
+
+        def _refuse(*_args: object, **_kwargs: object) -> None:
+            raise AssertionError("provision must NOT mint when an entry already exists")
+
+        monkeypatch.setattr(keyring, "get_password", _get)
+        monkeypatch.setattr(keyring, "set_password", _refuse)
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
+        result = runner.invoke(app, ["security", "provision", "--backend", "keyring"])
+        assert result.exit_code == 1
+        assert "already stored in the OS keychain" in result.output
+        assert "aeat security recover" in result.output
+        assert "--force" in result.output
+
+    def test_keyring_backend_force_deletes_then_mints(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # With --force, the existing keyring entry must be DELETED
+        # and a fresh master key minted — otherwise the freshly-
+        # generated recovery wrapping wraps the OLD master key,
+        # invalidating any pre-existing printed mnemonic against the
+        # on-disk file.
+        from ..storage._master_key import KeyringMasterKeyProvider
+
+        keyring = pytest.importorskip("keyring")
+
+        store: dict[tuple[str, str], str] = {("aeat:secure-persistence", "master"): "old-b64"}
+        delete_calls: list[tuple[str, str]] = []
+        set_calls: list[tuple[str, str, str]] = []
+
+        def _get(service: str, username: str) -> str | None:
+            return store.get((service, username))
+
+        def _delete(service: str, username: str) -> None:
+            delete_calls.append((service, username))
+            store.pop((service, username), None)
+
+        def _set(service: str, username: str, value: str) -> None:
+            set_calls.append((service, username, value))
+            store[(service, username)] = value
+
+        monkeypatch.setattr(keyring, "get_password", _get)
+        monkeypatch.setattr(keyring, "delete_password", _delete)
+        monkeypatch.setattr(keyring, "set_password", _set)
+        # Match the substrate's keyring backend probe — the no-op
+        # backend predicate runs before any get_password call.
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
+        # Reset any cache from a previous test in the same process.
+        KeyringMasterKeyProvider._reset_for_tests()
+
+        result = runner.invoke(app, ["security", "provision", "--backend", "keyring", "--force"])
+        assert result.exit_code == 0, result.output
+        # Old entry deleted exactly once.
+        assert delete_calls == [("aeat:secure-persistence", "master")]
+        # New key set after delete (should NOT equal the old value).
+        assert len(set_calls) == 1
+        assert set_calls[0][2] != "old-b64"
+        # Recovery wrapping landed.
+        assert (tmp_path / "secrets" / "master.recovery.key").exists()
+
 
 def _extract_recovery_mnemonic(output: str) -> str:
     """Pull the 24 words out of the recovery-key panel in CLI output."""
