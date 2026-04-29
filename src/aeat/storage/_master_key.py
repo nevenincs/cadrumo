@@ -68,6 +68,7 @@ from ._lock import exclusive_file_lock
 from .errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
+    MasterKeyKeychainLockedError,
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
     SecretStoreError,
@@ -387,7 +388,20 @@ class KeyringMasterKeyProvider:
             try:
                 stored = keyring.get_password(self._service, self._username)
             except KeyringError as exc:
-                raise KeyringUnavailableError(f"OS keychain refused get_password: {exc}") from exc
+                # The probe at line above already excluded the no-op
+                # backends; reaching here means the BACKEND itself is
+                # usable but the keychain entry is currently
+                # inaccessible (e.g. macOS Keychain locked, Windows
+                # Hello prompt cancelled, Secret Service not unlocked).
+                # Distinct from KeyringUnavailableError (no usable
+                # backend at all) so the operator-facing message can
+                # point at "unlock the keychain and retry" instead of
+                # "switch backend".
+                raise MasterKeyKeychainLockedError(
+                    f"OS keychain refused get_password: {exc}; "
+                    "unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
+                    "or set AEAT_SECRET_STORE_BACKEND=file to use the passphrase backend.",
+                ) from exc
             except Exception as exc:  # pragma: no cover - defensive
                 raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
             if stored is not None:
@@ -644,16 +658,37 @@ class FileFallbackMasterKeyProvider:
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
         blob = encrypt_record(master_key, key=kek, associated_data=b"aeat.master-key.v1")
+        # Serialise the rewrite under the same on-disk lock that
+        # ``get_master_key`` acquires for first-time mint / unwrap
+        # decisions. Without this, a concurrent ``get_master_key`` in
+        # another process could read a half-rewritten triple
+        # (e.g. fresh ``master.kdf`` + stale ``master.key``) and
+        # surface as ``MasterKeyPassphraseMismatchError`` even though
+        # the operator's passphrase is correct.
+        self._store_dir.mkdir(parents=True, exist_ok=True)
         self._restrict_dir_permissions(self._store_dir)
-        atomic_write_secure_bytes(
-            self._kdf_params_path,
-            params.model_dump_json().encode("utf-8"),
-        )
-        atomic_write_secure_bytes(
-            self._master_key_path,
-            base64.b64encode(blob.to_wire()),
-        )
-        atomic_write_secure_bytes(self._salt_path, salt)
+        with exclusive_file_lock(self._store_dir / "master.lock"):
+            # Write order: ``master.key`` first (under the new KEK),
+            # then ``master.kdf`` (the parameters that derive the new
+            # KEK), then ``salt`` (informational — the canonical salt
+            # also lives in ``master.kdf.salt_b64``). A crash between
+            # the first and second write leaves a state where the new
+            # ``master.key`` cannot decrypt under the OLD KDF — and
+            # the OLD ``master.key`` content has already been
+            # overwritten — but the recovery-key wrapping at
+            # ``master.recovery.key`` is untouched, so the operator
+            # can re-run ``aeat security recover`` to complete the
+            # recovery. Compare with ``migrate_master_key_kdf`` which
+            # follows the same write-order discipline.
+            atomic_write_secure_bytes(
+                self._master_key_path,
+                base64.b64encode(blob.to_wire()),
+            )
+            atomic_write_secure_bytes(
+                self._kdf_params_path,
+                params.model_dump_json().encode("utf-8"),
+            )
+            atomic_write_secure_bytes(self._salt_path, salt)
         with FileFallbackMasterKeyProvider._lock:
             FileFallbackMasterKeyProvider._cached_master_key[self._store_dir.resolve()] = bytearray(master_key)
         _log.info(
@@ -930,8 +965,15 @@ def get_master_key_provider(
     try:
         keyring_provider.get_master_key()
         return keyring_provider
-    except KeyringUnavailableError as exc:
-        _log.info("OS keychain unavailable (%s); falling back to encrypted-file backend", exc)
+    except (KeyringUnavailableError, MasterKeyKeychainLockedError) as exc:
+        # Auto-fallback covers both genuinely-unavailable backends
+        # (no usable keychain at all) and refused-get_password
+        # responses (locked keychain / cancelled biometrics). In
+        # ``auto`` mode the contract is "do whatever works"; the
+        # explicit ``keyring`` backend, by contrast, propagates the
+        # locked error so the operator can unlock and retry rather
+        # than silently routing through file with a divergent key.
+        _log.info("OS keychain not usable (%s); falling back to encrypted-file backend", exc)
         return FileFallbackMasterKeyProvider(
             store_dir=store_dir,
             passphrase_callback=passphrase_callback,

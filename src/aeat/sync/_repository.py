@@ -98,7 +98,15 @@ class JsonFileDivergenceRepository:
         from ..storage._encrypted_columns import _resolve_master_key_provider
 
         target = self._envelope_path_for(record.record_id)
-        lock_target = target.with_suffix(".lock")
+        # Align with the wave-4 / wave-18 lock convention: strip the
+        # full ``.envelope.json`` suffix and append ``.lock``. Using
+        # ``Path.with_suffix(".lock")`` here would replace only the
+        # last ``.json`` segment, producing ``<id>.envelope.lock`` —
+        # which would NOT match what
+        # ``RotationPlanEntry.lock_path_for`` resolves to and would
+        # leave rotation and writer contending on different sidecar
+        # files (defeating the wave-18 alignment fix).
+        lock_target = target.with_name(target.name[: -len(_ENVELOPE_SUFFIX)] + ".lock")
         try:
             with exclusive_file_lock(lock_target):
                 envelope = Envelope[DivergenceRecord](

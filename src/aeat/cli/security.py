@@ -461,10 +461,14 @@ def provision_cmd(
     try:
         blob = encrypt_record(canary, key=master_key, associated_data=canary_aad)
         recovered = decrypt_record(blob, key=master_key, associated_data=canary_aad)
-        assert recovered == canary
     except Exception as exc:  # pragma: no cover - defensive
         _console.print(f"[red]round-trip verify failed: {exc}[/red]")
         raise typer.Exit(code=1) from exc
+    # Use a raise rather than an `assert` so the verification still
+    # gates correctness under `python -O`, which strips assert statements.
+    if recovered != canary:
+        _console.print("[red]round-trip verify failed: canary plaintext mismatch[/red]")
+        raise typer.Exit(code=1)
 
     _console.print(
         "[green]✓ Round-trip verify succeeded.[/green]\n"
@@ -561,10 +565,15 @@ def recover_cmd(
     provider = FileFallbackMasterKeyProvider(store_dir=secret_dir)
     provider.complete_recovery(master_key)
 
-    # Round-trip canary verify under the restored key.
+    # Round-trip canary verify under the restored key. Use a raise
+    # rather than an `assert` so the verification still gates
+    # correctness under `python -O`, which strips assert statements.
     canary_aad = b"aeat.security.recover.canary.aad.v1"
-    blob = encrypt_record(b"recover-canary", key=master_key, associated_data=canary_aad)
-    assert decrypt_record(blob, key=master_key, associated_data=canary_aad) == b"recover-canary"
+    canary = b"recover-canary"
+    blob = encrypt_record(canary, key=master_key, associated_data=canary_aad)
+    if decrypt_record(blob, key=master_key, associated_data=canary_aad) != canary:
+        _console.print("[red]round-trip verify failed: recovered canary mismatch[/red]")
+        raise typer.Exit(code=1)
     _console.print(
         f"[green]✓ Master key restored to file-fallback at {secret_dir} "
         "(under your new passphrase).[/green]\n"
