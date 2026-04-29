@@ -17,8 +17,8 @@ from ...financial.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
 )
+from ...financial.transactions._repository import TransactionCatalogueRepository
 from .. import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -35,6 +35,10 @@ def _profile() -> FilingOperatorProfile:
 
 
 def _write_draft(path: Path) -> Path:
+    """Build a draft and persist it through the FilingDraftRepository
+    (ciphertext-at-rest). Returns the canonical envelope path."""
+    from ...filing._repository import FilingDraftRepository
+
     draft = build_draft(
         modelo="130",
         period="2026Q1",
@@ -42,9 +46,9 @@ def _write_draft(path: Path) -> Path:
         inputs={"01": 12500, "02": 3500, "05": 400, "06": 0},
         schema_provider=build_runtime_schema_provider(),
     )
-    target = path / f"130_2026Q1_{draft.draft_id}.json"
-    target.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
-    return target
+    repository = FilingDraftRepository(store_dir=path)
+    repository.save(draft)
+    return repository.envelope_path_for(draft.draft_id)
 
 
 def _sample_transaction() -> Transaction:
@@ -83,6 +87,20 @@ def drafts_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return target
 
 
+def _read_persisted_draft(drafts_root: Path, draft_id: str) -> FilingDraft:
+    """Read the post-CLI draft via the FilingDraftRepository.
+
+    The CLI persists ciphertext envelopes through the repository; tests
+    read back through the same repository so the encryption gate fires.
+    """
+    from ...filing._repository import FilingDraftRepository
+
+    repository = FilingDraftRepository(store_dir=drafts_root)
+    loaded = repository.load(draft_id)
+    assert loaded is not None, f"FilingDraftRepository has no draft for {draft_id!r}"
+    return loaded
+
+
 @pytest.fixture()
 def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target = tmp_path / "transactions"
@@ -93,7 +111,7 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 def test_review_approve_and_show_persist_metadata(drafts_dir: Path, transactions_dir: Path) -> None:
     draft_path = _write_draft(drafts_dir)
-    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
+    draft_id = draft_path.name[: -len(".envelope.json")]
 
     approve = _RUNNER.invoke(
         app,
@@ -109,7 +127,7 @@ def test_review_approve_and_show_persist_metadata(drafts_dir: Path, transactions
     assert "aeat submission export" in show.output
     assert "aeat submission dry-run" not in show.output
 
-    stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+    stored = _read_persisted_draft(drafts_dir, draft_id)
     assert stored.status is FilingDraftStatus.APPROVED
     assert stored.approved_by == "kent"
     assert stored.approved_at is not None
@@ -120,7 +138,7 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
     transactions_dir: Path,
 ) -> None:
     draft_path = _write_draft(drafts_dir)
-    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
+    draft_id = draft_path.name[: -len(".envelope.json")]
     approve = _RUNNER.invoke(
         app,
         ["review", "approve", draft_id, "--approved-by", "kent", "--yes"],
@@ -128,7 +146,7 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
     assert approve.exit_code == 0, approve.output
 
     catalogue = TransactionCatalogue.from_transactions([_sample_transaction()])
-    save_transactions(catalogue, transactions_dir / "transactions.json")
+    TransactionCatalogueRepository(store_dir=transactions_dir).save(catalogue)
 
     show = _RUNNER.invoke(app, ["review", "show", draft_id])
     assert show.exit_code == 0, show.output
@@ -141,13 +159,13 @@ def test_review_show_marks_draft_stale_after_transaction_catalogue_change(
     assert "transaction catalogue changed" in stale.output
     assert "aeat review show <draft_id>" in stale.output
 
-    stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+    stored = _read_persisted_draft(drafts_dir, draft_id)
     assert stored.status is FilingDraftStatus.APPROVAL_STALE
 
 
 def test_review_unapprove_clears_approval_record(drafts_dir: Path, transactions_dir: Path) -> None:
     draft_path = _write_draft(drafts_dir)
-    draft_id = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8")).draft_id
+    draft_id = draft_path.name[: -len(".envelope.json")]
     approve = _RUNNER.invoke(
         app,
         ["review", "approve", draft_id, "--approved-by", "kent", "--yes"],
@@ -158,7 +176,7 @@ def test_review_unapprove_clears_approval_record(drafts_dir: Path, transactions_
     assert unapprove.exit_code == 0, unapprove.output
     assert "aeat review approve" in unapprove.output
 
-    stored = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+    stored = _read_persisted_draft(drafts_dir, draft_id)
     assert stored.status is FilingDraftStatus.READY_TO_SUBMIT
     assert stored.approved_at is None
     assert stored.approved_by is None

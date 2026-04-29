@@ -8,11 +8,39 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ...storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from .. import app as root_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
 
 
 @pytest.fixture(autouse=True)

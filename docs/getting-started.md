@@ -86,6 +86,44 @@ existing values are pre-filled.
 If you prefer editing `env/.env` by hand instead of running the
 wizard, every field is documented inline in `env/.env.example`.
 
+### 3a. Security layer
+
+`aeat setup` triggers master-key minting as a side effect of writing
+the operator profile (which itself is encrypted at rest). On a
+brand-new installation the substrate logs a recovery-key nudge after
+the silent mint pointing you at the explicit provisioning command:
+
+```sh
+aeat security provision
+```
+
+This prompts you for a backend (`keyring` recommended, `file` for
+headless / CI), mints the master key, and **displays a 24-word
+recovery key once**. Print it. Store it somewhere safe. Without
+the recovery key, a forgotten passphrase or lost keychain means
+losing every persisted record.
+
+To restore a lost passphrase later:
+
+```sh
+aeat security recover --recovery-key "<your 24 words>"
+```
+
+To export a portable backup of the master-key state for off-site
+storage:
+
+```sh
+aeat security key-export --out backup/master-key.json
+```
+
+The full operator runbook for these commands lives in
+[`docs/security-runbook.md`](security-runbook.md).
+
+For testing / throwaway environments the substrate also offers an
+`unsecured` backend (published deterministic master key, zero
+confidentiality). It refuses real NIFs at profile-write time and
+requires the explicit `AEAT_ALLOW_UNENCRYPTED=1` env var.
+
 ## 4. Verify
 
 ```sh
