@@ -191,6 +191,11 @@ class AttachmentStore(BaseModel):
                         hasher.update(chunk)
                         bytes_size += len(chunk)
                         tmp_handle.write(chunk)
+                tmp_handle.flush()
+                # fsync the tempfile bytes before publication so the
+                # directory entry never points at an inode whose
+                # contents haven't been written through.
+                os.fsync(tmp_handle.fileno())
             digest = hasher.hexdigest()
             target = self.blob_path(digest)
             _commit_write_once(tmp_path, target)
@@ -433,7 +438,13 @@ def _commit_write_once(tmp_path: Path, target: Path) -> None:
     filesystems that do not support hardlinks (FAT, some network shares) the
     code falls back to an ``exists`` check + ``os.replace`` — a best-effort
     degradation that matches the original single-writer contract.
+
+    After a successful publish, the parent directory entry is fsynced
+    so the rename / link is durable across power loss (file fsync does
+    not imply directory fsync on POSIX).
     """
+    from ...storage._lock import fsync_parent_dir
+
     try:
         os.link(tmp_path, target)
     except FileExistsError:
@@ -444,7 +455,9 @@ def _commit_write_once(tmp_path: Path, target: Path) -> None:
             tmp_path.unlink(missing_ok=True)
             return
         os.replace(tmp_path, target)
+        fsync_parent_dir(target)
         return
+    fsync_parent_dir(target)
     tmp_path.unlink(missing_ok=True)
 
 
@@ -461,6 +474,12 @@ def _write_once_bytes(target: Path, data: bytes) -> None:
         ) as handle:
             tmp_path = Path(handle.name)
             handle.write(data)
+            handle.flush()
+            # fsync the tempfile bytes BEFORE the link/replace so the
+            # directory entry never points at an inode whose contents
+            # haven't been written through. _commit_write_once handles
+            # the parent-dir fsync after publication.
+            os.fsync(handle.fileno())
         _commit_write_once(tmp_path, target)
         tmp_path = None
     except OSError:
