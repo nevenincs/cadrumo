@@ -408,6 +408,64 @@ def provision_cmd(
             "ZERO confidentiality, real NIFs will be refused at profile-write.[/yellow]",
         )
     elif resolved is SecretStoreBackend.KEYRING:
+        # Detect a pre-existing keyring entry up-front. The
+        # file-fallback existence check above is blind to keyring
+        # entries; without this branch, ``provision`` on a keyring-
+        # backed install would silently FETCH the existing master key
+        # rather than minting a fresh one — and would then regenerate
+        # the recovery wrapping with a fresh mnemonic, invalidating
+        # the operator's previously-printed mnemonic against the new
+        # on-disk ``master.recovery.key``.
+        from ..storage._master_key import KEYRING_SERVICE, KEYRING_USERNAME
+
+        try:
+            import keyring as _keyring
+            from keyring.errors import KeyringError as _KeyringError
+        except ImportError as exc:
+            _console.print(f"[red]keyring package not importable: {exc}[/red]")
+            raise typer.Exit(code=1) from exc
+        try:
+            _existing_keyring_entry = _keyring.get_password(KEYRING_SERVICE, KEYRING_USERNAME)
+        except _KeyringError as exc:
+            _console.print(
+                f"[red]OS keychain refused get_password: {exc}[/red]\n"
+                "Unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
+                "or set `--backend file` to use the passphrase backend.",
+            )
+            raise typer.Exit(code=1) from exc
+        if _existing_keyring_entry is not None:
+            if not force:
+                _console.print(
+                    "[red]a master key is already stored in the OS keychain[/red] "
+                    f"(service={KEYRING_SERVICE!r}, account={KEYRING_USERNAME!r}).\n"
+                    '  - Use `aeat security recover --recovery-key "<24 words>"` '
+                    "to restore the file-fallback artefacts from a recovery key.\n"
+                    "  - Use `aeat security provision --force` to delete the "
+                    "keyring entry and mint a fresh master key (this invalidates "
+                    "every existing on-disk record encrypted under the old key).",
+                )
+                raise typer.Exit(code=1)
+            # --force on an existing keyring entry: delete-then-mint
+            # so we get a genuinely fresh master key (and a recovery
+            # wrapping that actually corresponds to it). Without this
+            # the recovery wrapping would be regenerated around the
+            # PRE-EXISTING master key, and the previously-printed
+            # mnemonic would be silently invalidated.
+            try:
+                _keyring.delete_password(KEYRING_SERVICE, KEYRING_USERNAME)
+            except _KeyringError as exc:
+                _console.print(
+                    f"[red]failed to delete the existing keyring entry: {exc}[/red]\n"
+                    "Clear the entry manually (Keychain Access / Credential Manager / libsecret-tool) "
+                    "and re-run.",
+                )
+                raise typer.Exit(code=1) from exc
+            # Drop any in-process cache so the subsequent
+            # get_master_key call observes the cleared keyring.
+            KeyringMasterKeyProvider._reset_for_tests()
+            _console.print(
+                "[yellow]existing keyring entry deleted; minting a fresh master key.[/yellow]",
+            )
         provider = KeyringMasterKeyProvider()
         # Probe early so failures surface here instead of in a later
         # downstream consumer.
