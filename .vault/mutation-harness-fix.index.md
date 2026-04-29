@@ -7,6 +7,7 @@ related:
   - '[[2026-04-29-mutation-harness-fix-adr]]'
   - '[[2026-04-29-mutation-harness-fix-phase1-summary-exec]]'
   - '[[2026-04-29-mutation-harness-fix-phase1-task1-exec]]'
+  - '[[2026-04-29-mutation-harness-fix-phase2-summary-exec]]'
   - '[[2026-04-29-mutation-harness-fix-phase2-task1-exec]]'
   - '[[2026-04-29-mutation-harness-fix-phase2-task2-exec]]'
   - '[[2026-04-29-mutation-harness-fix-phase3-task1-exec]]'
@@ -30,6 +31,7 @@ Auto-generated index of all documents tagged with `#mutation-harness-fix`.
 
 - `2026-04-29-mutation-harness-fix-phase1-summary-exec` - Phase summary — `mutation-harness-fix` (issue #457)
 - `2026-04-29-mutation-harness-fix-phase1-task1-exec` - exec phase1 task1 — generalise `_mutate_outer_sub_op` for clamp-wrapped chains
+- `2026-04-29-mutation-harness-fix-phase2-summary-exec` - Phase summary — `mutation-harness-fix` Wave 1-4 (zero-deferred coverage)
 - `2026-04-29-mutation-harness-fix-phase2-task1-exec` - exec phase2 task1 — expose per-class harness coverage generators
 - `2026-04-29-mutation-harness-fix-phase2-task2-exec` - exec phase2 task2 — refactor aggregate kill-rate test
 - `2026-04-29-mutation-harness-fix-phase3-task1-exec` - exec phase3 task1 — M100 mul/div scalar fixtures
