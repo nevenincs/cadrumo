@@ -2446,6 +2446,89 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.rental._errors.RentalRegisterError",
+        ErrorCode(
+            code="ERROR_RENTAL_REGISTER",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error del registro de alquileres.",
+            default_message_en="Base class for rental-register errors (#454).",
+            default_message_hu="Bérleti nyilvántartás hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.rental._errors.FincaNotFoundError",
+        ErrorCode(
+            code="ERROR_RENTAL_FINCA_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            default_message_es="Finca no encontrada en el registro.",
+            default_message_en="Raised when a referenced finca id is not present in the rental register.",
+            default_message_hu="A bérleti ingatlan nem található a nyilvántartásban.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.rental._errors.ContractNotFoundError",
+        ErrorCode(
+            code="ERROR_RENTAL_CONTRACT_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            default_message_es="Contrato no encontrado en el registro.",
+            default_message_en="Raised when a referenced rental contract id is not present in the register.",
+            default_message_hu="A bérleti szerződés nem található a nyilvántartásban.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.rental._errors.TierResolutionError",
+        ErrorCode(
+            code="ERROR_RENTAL_TIER_RESOLUTION",
+            category=ErrorCategory.ERROR,
+            default_message_es="No se puede resolver el tramo de reducción art. 23.2.",
+            default_message_en=(
+                "Raised when contract metadata is inconsistent and the LIRPF art. 23.2 tier cannot be resolved."
+            ),
+            default_message_hu="A 23.2 cikk csökkentési szint nem oldható fel.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.rental._errors.AmortizationLedgerCapExceededError",
+        ErrorCode(
+            code="ERROR_RENTAL_AMORTIZATION_CAP_EXCEEDED",
+            category=ErrorCategory.ERROR,
+            default_message_es=("El acumulado de amortización supera el coste de adquisición de la construcción."),
+            default_message_en=(
+                "Raised in strict mode when cumulative amortización would exceed the per-finca "
+                "construction-cost basis cap."
+            ),
+            default_message_hu="A halmozott amortizáció meghaladja az építmény bekerülési értékét.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.rental._errors.AnexoCAggregationError",
+        ErrorCode(
+            code="ERROR_RENTAL_ANEXO_C_AGGREGATION",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error al agregar el Anexo C desde el registro de alquileres.",
+            default_message_en="Raised when the rental register cannot produce a coherent Anexo C aggregate set.",
+            default_message_hu="Anexo C aggregálási hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
 
 _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
