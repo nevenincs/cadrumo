@@ -24,6 +24,12 @@ from ._amortization_ledger import (
     computation_to_ledger_entry,
     compute_amortization_for_year,
 )
+from ._anexo_c_aggregator import (
+    AnexoCAggregates,
+    ContractTierAttribution,
+    FincaAttribution,
+    compute_anexo_c_aggregates,
+)
 from ._enums import ExpenseCategory, ReduccionTier, UseType
 from ._errors import (
     AmortizationLedgerCapExceededError,
@@ -60,8 +66,14 @@ from ._tier_resolver import (
     TierResolution,
     resolve_reduccion,
 )
+from .anexo_c_provider import (
+    ANEXO_C_CASILLAS,
+    AnexoCMergeReport,
+    compute_or_passthrough,
+)
 
 __all__ = [
+    "ANEXO_C_CASILLAS",
     "ART_23_1_F_RATE",
     "CAPPED_CATEGORIES",
     "CARRY_FORWARD_MAX_YEARS",
@@ -69,10 +81,14 @@ __all__ = [
     "LEY_12_2023_IN_FORCE_DATE",
     "AmortizationComputation",
     "AmortizationLedgerCapExceededError",
+    "AnexoCAggregates",
     "AnexoCAggregationError",
+    "AnexoCMergeReport",
     "CarryForwardEntry",
     "ContractNotFoundError",
+    "ContractTierAttribution",
     "ExpenseCategory",
+    "FincaAttribution",
     "FincaNotFoundError",
     "GastosForYear",
     "ReduccionTier",
@@ -92,6 +108,8 @@ __all__ = [
     "UseType",
     "computation_to_ledger_entry",
     "compute_amortization_for_year",
+    "compute_anexo_c_aggregates",
     "compute_gastos_for_year",
+    "compute_or_passthrough",
     "resolve_reduccion",
 ]
