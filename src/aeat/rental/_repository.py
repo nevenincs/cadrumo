@@ -4,17 +4,22 @@ Bridges between the public :mod:`aeat.rental._models` records and the
 internal :mod:`aeat.storage._orm` mapper rows. Every method routes
 through ``Repository._flush_or_wrap`` so DB integrity violations
 surface as :class:`RepositoryError`.
+
+Storage imports are deferred behind methods that consult them so the
+rental subpackage does not pull :mod:`aeat.storage` (with its
+Alembic plugin discovery) into every CLI command's import chain;
+this preserves the json-pipe-safety contract.
 """
 
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..logging import get_logger
-from ..storage import _orm
-from ..storage.errors import RepositoryError
 from ._enums import ExpenseCategory, UseType
 from ._models import (
     RentalAmortizationLedgerEntry,
@@ -24,10 +29,15 @@ from ._models import (
     RentalIncomeRecord,
 )
 
+if TYPE_CHECKING:  # pragma: no cover — type-only imports
+    from ..storage import _orm
+
 _log = get_logger(__name__)
 
 
 def _flush_or_wrap(session: Session, kind: str) -> None:
+    from ..storage.errors import RepositoryError
+
     try:
         session.flush()
     except IntegrityError as exc:
@@ -41,22 +51,32 @@ class RentalFincaRepository:
         self._session = session
 
     def list_all(self) -> list[RentalFinca]:
+        from ..storage import _orm
+
         rows = self._session.execute(select(_orm.RentalFincaRow).order_by(_orm.RentalFincaRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> RentalFinca:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row = self._session.get(_orm.RentalFincaRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_finca id={record_id} not found")
         return self._to_record(row)
 
     def get_by_identifier(self, identifier: str) -> RentalFinca | None:
+        from ..storage import _orm
+
         row = self._session.execute(
             select(_orm.RentalFincaRow).where(_orm.RentalFincaRow.identifier == identifier),
         ).scalar_one_or_none()
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalFinca) -> RentalFinca:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row: _orm.RentalFincaRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.RentalFincaRow, record.id)
@@ -101,6 +121,9 @@ class RentalFincaRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row = self._session.get(_orm.RentalFincaRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_finca id={record_id} not found")
@@ -109,6 +132,8 @@ class RentalFincaRepository:
 
     @staticmethod
     def _to_record(row: _orm.RentalFincaRow) -> RentalFinca:
+        from ..storage.errors import RepositoryError
+
         try:
             use_type = UseType(row.use_type)
         except ValueError as exc:
@@ -139,10 +164,14 @@ class RentalContractRepository:
         self._session = session
 
     def list_all(self) -> list[RentalContract]:
+        from ..storage import _orm
+
         rows = self._session.execute(select(_orm.RentalContractRow).order_by(_orm.RentalContractRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def list_for_finca(self, finca_id: int) -> list[RentalContract]:
+        from ..storage import _orm
+
         rows = (
             self._session.execute(
                 select(_orm.RentalContractRow)
@@ -155,12 +184,18 @@ class RentalContractRepository:
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> RentalContract:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row = self._session.get(_orm.RentalContractRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_contract id={record_id} not found")
         return self._to_record(row)
 
     def upsert(self, record: RentalContract) -> RentalContract:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row: _orm.RentalContractRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.RentalContractRow, record.id)
@@ -176,6 +211,9 @@ class RentalContractRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row = self._session.get(_orm.RentalContractRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_contract id={record_id} not found")
@@ -237,6 +275,8 @@ class RentalIncomeRepository:
         self._session = session
 
     def list_for_period(self, period_year: int) -> list[RentalIncomeRecord]:
+        from ..storage import _orm
+
         rows = (
             self._session.execute(
                 select(_orm.RentalIncomeRecordRow)
@@ -253,6 +293,8 @@ class RentalIncomeRepository:
         contract_id: int,
         period_year: int,
     ) -> RentalIncomeRecord | None:
+        from ..storage import _orm
+
         row = self._session.execute(
             select(_orm.RentalIncomeRecordRow).where(
                 _orm.RentalIncomeRecordRow.contract_id == contract_id,
@@ -262,6 +304,9 @@ class RentalIncomeRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalIncomeRecord) -> RentalIncomeRecord:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row: _orm.RentalIncomeRecordRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.RentalIncomeRecordRow, record.id)
@@ -291,6 +336,9 @@ class RentalIncomeRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row = self._session.get(_orm.RentalIncomeRecordRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_income_record id={record_id} not found")
@@ -316,6 +364,8 @@ class RentalExpenseRepository:
         self._session = session
 
     def list_for_finca_period(self, finca_id: int, period_year: int) -> list[RentalExpense]:
+        from ..storage import _orm
+
         rows = (
             self._session.execute(
                 select(_orm.RentalExpenseRow)
@@ -331,6 +381,9 @@ class RentalExpenseRepository:
         return [self._to_record(row) for row in rows]
 
     def add(self, record: RentalExpense) -> RentalExpense:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         if record.id is not None:
             raise RepositoryError(
                 "RentalExpenseRepository.add expects a record without an id; use upsert() to update an existing row",
@@ -347,6 +400,9 @@ class RentalExpenseRepository:
         return self._to_record(row)
 
     def upsert(self, record: RentalExpense) -> RentalExpense:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         if record.id is None:
             return self.add(record)
         row = self._session.get(_orm.RentalExpenseRow, record.id)
@@ -361,6 +417,9 @@ class RentalExpenseRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row = self._session.get(_orm.RentalExpenseRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_expense id={record_id} not found")
@@ -369,6 +428,8 @@ class RentalExpenseRepository:
 
     @staticmethod
     def _to_record(row: _orm.RentalExpenseRow) -> RentalExpense:
+        from ..storage.errors import RepositoryError
+
         try:
             category = ExpenseCategory(row.category)
         except ValueError as exc:
@@ -392,6 +453,8 @@ class RentalAmortizationLedgerRepository:
         self._session = session
 
     def list_for_finca(self, finca_id: int) -> list[RentalAmortizationLedgerEntry]:
+        from ..storage import _orm
+
         rows = (
             self._session.execute(
                 select(_orm.RentalAmortizationLedgerRow)
@@ -408,6 +471,8 @@ class RentalAmortizationLedgerRepository:
         finca_id: int,
         period_year: int,
     ) -> RentalAmortizationLedgerEntry | None:
+        from ..storage import _orm
+
         row = self._session.execute(
             select(_orm.RentalAmortizationLedgerRow).where(
                 _orm.RentalAmortizationLedgerRow.finca_id == finca_id,
@@ -417,6 +482,9 @@ class RentalAmortizationLedgerRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalAmortizationLedgerEntry) -> RentalAmortizationLedgerEntry:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row: _orm.RentalAmortizationLedgerRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.RentalAmortizationLedgerRow, record.id)
@@ -452,6 +520,9 @@ class RentalAmortizationLedgerRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
+        from ..storage import _orm
+        from ..storage.errors import RepositoryError
+
         row = self._session.get(_orm.RentalAmortizationLedgerRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_amortization_ledger id={record_id} not found")
