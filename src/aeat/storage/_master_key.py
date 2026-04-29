@@ -64,7 +64,7 @@ if TYPE_CHECKING:
 
 from ..logging import get_logger
 from ._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from ._lock import exclusive_file_lock
+from ._lock import exclusive_file_lock, fsync_parent_dir
 from .errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
@@ -222,6 +222,10 @@ def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
         finally:
             os.close(fd)
         os.replace(tmp_path, target)
+        # Flush the parent directory entry to disk on POSIX so the
+        # rename is durable across power loss (file fsync does not
+        # imply directory fsync on ext4 / xfs / etc.).
+        fsync_parent_dir(target)
     except BaseException:
         with contextlib.suppress(OSError):
             os.unlink(tmp_path)
