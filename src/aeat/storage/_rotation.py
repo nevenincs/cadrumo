@@ -78,6 +78,37 @@ class RotationPlanEntry(BaseModel):
     envelope_suffix: str = ".envelope.json"
     target_filename: str | None = None
 
+    def lock_path_for(self, envelope_path: Path) -> Path:
+        """Return the writer-canonical lock target for ``envelope_path``.
+
+        Aligns the rotation's ``exclusive_file_lock`` target with the
+        sidecar lock the consumer's writer acquires at ``save()``
+        time. Without this alignment, rotation and writer would
+        contend on different ``.lock`` files and lose the OS-level
+        serialisation the lock was meant to provide.
+
+        - Multi-file envelopes (``envelope_suffix`` set, default
+          ``.envelope.json``): the writer convention is
+          ``<id>.lock`` (wave-4 ``lock_target_for`` helpers). Strip
+          the configured ``envelope_suffix`` from the envelope name
+          and append ``.lock``.
+        - Single-file envelopes (``target_filename`` set, e.g.
+          ``usage-ratios.json``): the writer convention is
+          ``<base>.lock`` (``target.with_suffix('.lock')``). Use
+          :meth:`Path.with_suffix` directly.
+
+        The lock file ``exclusive_file_lock`` actually opens is the
+        returned path with an additional ``.lock`` suffix appended
+        (see :func:`aeat.storage._lock._lock_path_for`); the
+        rotation and writer therefore land on the same lock-byte
+        target.
+        """
+        if self.target_filename is not None:
+            return envelope_path.with_suffix(".lock")
+        name = envelope_path.name
+        stem = name[: -len(self.envelope_suffix)] if name.endswith(self.envelope_suffix) else envelope_path.stem
+        return envelope_path.with_name(stem + ".lock")
+
 
 class RotationSummary(BaseModel):
     """Frozen result of a :func:`rotate_master_key` call.
@@ -221,9 +252,11 @@ def rotate_master_key(
         # Hold the per-file repository lock across the read + decrypt
         # + re-encrypt + atomic-rewrite sequence so a concurrent
         # repository writer cannot stomp the rotation (or vice versa).
-        # The lock-sidecar path matches the wave-4 repository naming
-        # convention (``<envelope>.lock`` next to the envelope file).
-        lock_target = path.with_suffix(path.suffix + ".lock")
+        # The lock target is computed via ``RotationPlanEntry.lock_path_for``
+        # so rotation and writer contend on the same OS-level lock-byte
+        # target — see the helper's docstring for the wave-4 / single-
+        # file conventions.
+        lock_target = entry.lock_path_for(path)
         with exclusive_file_lock(lock_target):
             try:
                 cipher_envelope = CipherEnvelope.model_validate_json(
@@ -438,22 +471,35 @@ def default_blob_store_roots(settings: Any) -> tuple[Path, ...]:
     """Return the canonical blob-store roots covered by master-key rotation.
 
     The substrate persists wrapped DEKs in:
-    - The secret store (``aeat_secret_store_dir / blobs``).
-    - The financial-attachments store
-      (``aeat_attachments_dir / blobs``).
+    - The secret-store's blob store (``aeat_blob_store_dir``), wired up
+      by :func:`get_secret_store` for opaque-bearer credentials, OAuth
+      refresh tokens, and identity records.
+    - The financial-attachments store (``aeat_attachments_dir``), wired
+      up by :class:`aeat.financial.attachments.AttachmentStore` for
+      receipts, invoices, and bank statements.
 
     Each root is a directory whose ``blobs/<hex[:2]>/<hex>.manifest.json``
     files carry the per-blob ``wrapped_dek`` field. Operators with
     custom blob stores extend this tuple before calling
     :func:`rotate_blob_stores`.
+
+    Roots that resolve to the same absolute path (operator override /
+    shared deployment) are deduplicated so the rotation does not
+    walk the same blob twice.
     """
+    seen: set[Path] = set()
     roots: list[Path] = []
-    secret_store_dir = Path(settings.aeat_secret_store_dir)
-    if secret_store_dir.exists():
-        roots.append(secret_store_dir)
-    attachments_dir = Path(settings.aeat_attachments_dir)
-    if attachments_dir.exists():
-        roots.append(attachments_dir)
+    for setting_path in (
+        Path(settings.aeat_blob_store_dir),
+        Path(settings.aeat_attachments_dir),
+    ):
+        if not setting_path.exists():
+            continue
+        resolved = setting_path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        roots.append(setting_path)
     return tuple(roots)
 
 

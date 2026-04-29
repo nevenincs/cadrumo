@@ -535,3 +535,166 @@ class TestSingleFileRotationEntry:
         assert summary.rotated == 0
         assert summary.skipped == 0
         assert summary.errors == 0
+
+
+class TestDefaultBlobStoreRoots:
+    """`default_blob_store_roots` must walk where the SecretStore writes blobs."""
+
+    def test_uses_blob_store_dir_not_secret_store_dir(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        # The substrate's SecretStore is wired at
+        # ``aeat_blob_store_dir`` (see ``get_secret_store``) — NOT at
+        # ``aeat_secret_store_dir``. A rotation that walks the wrong
+        # directory silently skips every secret-store DEK and bricks
+        # the secret store on old-key cutover.
+        from . import default_blob_store_roots
+
+        secret_store_dir = tmp_path / "secrets"
+        blob_store_dir = tmp_path / "blobs"
+        attachments_dir = tmp_path / "attachments"
+        secret_store_dir.mkdir()
+        blob_store_dir.mkdir()
+        attachments_dir.mkdir()
+
+        class _StubSettings:
+            aeat_secret_store_dir = secret_store_dir
+            aeat_blob_store_dir = blob_store_dir
+            aeat_attachments_dir = attachments_dir
+
+        roots = default_blob_store_roots(_StubSettings())
+        assert blob_store_dir in roots, f"blob_store_dir must be in roots; got {roots!r}"
+        assert secret_store_dir not in roots, f"secret_store_dir is the wrong root for SecretStore blobs; got {roots!r}"
+
+    def test_dedupes_overlapping_roots(self, tmp_path: Path) -> None:
+        # Operator override may point both settings at the same dir;
+        # the helper must deduplicate so rotation does not visit the
+        # same blob twice.
+        from . import default_blob_store_roots
+
+        shared = tmp_path / "shared-blobs"
+        shared.mkdir()
+
+        class _StubSettings:
+            aeat_secret_store_dir = tmp_path / "secrets"
+            aeat_blob_store_dir = shared
+            aeat_attachments_dir = shared
+
+        roots = default_blob_store_roots(_StubSettings())
+        assert len(roots) == 1, f"expected one deduped root; got {roots!r}"
+
+    def test_skips_missing_directories(self, tmp_path: Path) -> None:
+        # Pre-provision installations have no blob store yet — the
+        # helper must omit non-existent directories so the rotation
+        # reports a clean (0, 0, 0) instead of an OS-level error.
+        from . import default_blob_store_roots
+
+        class _StubSettings:
+            aeat_secret_store_dir = tmp_path / "secrets"
+            aeat_blob_store_dir = tmp_path / "missing-blobs"
+            aeat_attachments_dir = tmp_path / "missing-attachments"
+
+        roots = default_blob_store_roots(_StubSettings())
+        assert roots == ()
+
+
+class TestRotationLockTargetAlignment:
+    """Rotation lock-target must match the writer's lock-target."""
+
+    def test_multi_file_envelope_uses_writer_lock_convention(self) -> None:
+        # Wave-4 writers compute ``<id>.lock`` (stripping
+        # ``.envelope.json``); rotation must match so they contend on
+        # the same OS-level lock-byte target.
+        entry = RotationPlanEntry(
+            store_dir=Path("/store"),
+            hkdf_context=_HKDF_CONTEXT_DRAFT,
+        )
+        envelope_path = Path("/store/draft-abc123.envelope.json")
+        assert entry.lock_path_for(envelope_path) == Path("/store/draft-abc123.lock")
+
+    def test_single_file_envelope_uses_with_suffix_convention(self) -> None:
+        # Single-file consumers (usage-ratios, default profile) use
+        # ``target.with_suffix('.lock')`` for their writer lock; the
+        # plan entry must produce the same path.
+        entry = RotationPlanEntry(
+            store_dir=Path("/store"),
+            hkdf_context=b"aeat.financial.usage_ratios.profile.v1",
+            target_filename="usage-ratios.json",
+        )
+        envelope_path = Path("/store/usage-ratios.json")
+        assert entry.lock_path_for(envelope_path) == Path("/store/usage-ratios.lock")
+
+    def test_falls_back_to_stem_when_suffix_missing(self) -> None:
+        # Defensive: an entry whose envelope file does NOT end in the
+        # configured suffix must still produce a sensible lock target
+        # (``<stem>.lock``) rather than crashing.
+        entry = RotationPlanEntry(
+            store_dir=Path("/store"),
+            hkdf_context=_HKDF_CONTEXT_TX,
+            envelope_suffix=".envelope.json",
+        )
+        envelope_path = Path("/store/oddly-named-file.json")
+        assert entry.lock_path_for(envelope_path) == Path("/store/oddly-named-file.lock")
+
+    def test_rotation_blocks_on_writer_held_lock(
+        self,
+        tmp_path: Path,
+        alice: EphemeralMasterKeyProvider,
+    ) -> None:
+        # Wave-4 ``FilingDraftRepository`` locks
+        # ``<store>/<draft_id>.lock`` (passed to exclusive_file_lock,
+        # which appends another ``.lock`` to make the actual lock-
+        # byte target ``<draft_id>.lock.lock``). The rotation must
+        # contend on the SAME ``<draft_id>.lock.lock`` so concurrent
+        # writers cannot stomp the rotation mid-run.
+        from . import LockAcquisitionError, exclusive_file_lock
+
+        store = tmp_path / "drafts"
+        store.mkdir()
+        draft_id = "abc123"
+        envelope_path = store / f"{draft_id}.envelope.json"
+        _seed_envelope(envelope_path, provider=alice)
+
+        writer_lock_target = store / f"{draft_id}.lock"
+        with exclusive_file_lock(writer_lock_target):
+            entry = RotationPlanEntry(
+                store_dir=store,
+                hkdf_context=_HKDF_CONTEXT_TX,
+            )
+            rotation_lock_target = entry.lock_path_for(envelope_path)
+            assert rotation_lock_target == writer_lock_target, (
+                f"rotation lock target {rotation_lock_target!r} must equal writer lock target {writer_lock_target!r}"
+            )
+            with (
+                pytest.raises(LockAcquisitionError),
+                exclusive_file_lock(rotation_lock_target, timeout=0.0),
+            ):
+                pass
+
+    def test_rotation_lock_target_for_usage_ratios_matches_writer(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        # The wave-7 usage-ratios writer locks
+        # ``target.with_suffix('.lock')`` for ``target = usage-ratios.json``.
+        # The rotation plan entry for the usage-ratios profile must
+        # produce the same lock target.
+        from . import exclusive_file_lock
+
+        store = tmp_path / "financial"
+        store.mkdir()
+        envelope_path = store / "usage-ratios.json"
+        envelope_path.write_text("{}", encoding="utf-8")
+
+        writer_lock_target = envelope_path.with_suffix(".lock")
+        entry = RotationPlanEntry(
+            store_dir=store,
+            hkdf_context=b"aeat.financial.usage_ratios.profile.v1",
+            target_filename="usage-ratios.json",
+        )
+        rotation_lock_target = entry.lock_path_for(envelope_path)
+        assert rotation_lock_target == writer_lock_target
+
+        with exclusive_file_lock(rotation_lock_target):
+            pass
