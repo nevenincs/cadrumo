@@ -47,6 +47,16 @@ dependencies = [
     "tzdata>=2026.2 ; sys_platform == 'win32'",
     # PKCS#12 parsing for client-certificate auth (#8)
     "cryptography>=47.0.0",
+    # Argon2id KDF for the file-fallback master-key provider's
+    # passphrase-to-KEK derivation (wave-12). OWASP-current top-tier
+    # password-hashing primitive; ships pre-built wheels for
+    # Linux/macOS/Windows.
+    "argon2-cffi>=23.1.0",
+    # OS-keychain abstraction for the master-key provider (Windows
+    # Credential Manager, macOS Keychain, Linux Secret Service via
+    # libsecret). Pure-Python, gracefully degrades when no usable backend
+    # is detected; the substrate's file fallback covers headless / CI.
+    "keyring>=25.6.0",
     # Configuration
     "python-dotenv>=1.2.2",
     # Persistence
@@ -75,6 +85,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aeat"]
+# The recovery-key BIP-39 wordlist is shipped as package data so
+# `importlib.resources.files()` can locate it at runtime in installed
+# wheels.
+include = [
+    "src/aeat/storage/_bip39_wordlist.txt",
+]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 [tool.uv]
@@ -150,6 +166,15 @@ ignore = [
 # password. `_PASSWORD_COMMENT_PREFIX` is a file-format prefix, not a secret.
 "src/aeat/setup/_env_writer.py" = ["S105"]
 "src/aeat/setup/test_*.py" = ["S101", "S105", "S106", "T20"]
+# Encrypted-column tests deliberately use literal "secret_text" / "secret_*"
+# as column / attribute names; ruff's S105/S106 heuristic flags them as
+# hardcoded passwords when they are in fact attribute identifiers.
+"src/aeat/storage/_test_encrypted_columns.py" = ["S101", "S105", "S106"]
+"src/aeat/storage/_test_master_key.py" = ["S101", "S105", "S106"]
+# Redaction tests construct synthetic bearer-shaped strings to verify
+# the rule patterns; ruff's S105 heuristic flags the synthetic literals.
+"src/aeat/storage/_test_redaction.py" = ["S101", "S105", "S106"]
+"src/aeat/storage/_test_secret_store.py" = ["S101", "S105", "S106"]
 # Typer requires `typer.Argument(...)` / `typer.Option(...)` literally inside
 # parameter defaults; B008 flags this idiom but it is the documented usage.
 "src/aeat/cli/**/*.py" = ["B008"]

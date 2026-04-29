@@ -126,6 +126,9 @@ The on-main subpackages under `src/aeat/`:
 A data-flow diagram with one paragraph per arrow lives in
 [`docs/architecture.md`](docs/architecture.md). The contributor
 walkthrough lives in [`docs/getting-started.md`](docs/getting-started.md).
+The operator runbook for `aeat security` (master-key rotation,
+corpus integrity verification, KDF migration) lives in
+[`docs/security-runbook.md`](docs/security-runbook.md).
 
 ## Roadmap
 

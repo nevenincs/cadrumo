@@ -13,7 +13,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ..financial.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
-from ..financial.transactions import Transaction, TransactionCatalogue, load_transactions
+from ..financial.transactions import Transaction, TransactionCatalogue
 from ..formulas import FiscalPeriod, MissingRulesetError, Quarter, get_registry
 from ..models import ModeloCode
 from ._errors import FilingDraftError
@@ -26,7 +26,6 @@ from ._schema import (
 from ._validator import derive_validation_status
 
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:Q(?P<quarter>[1-4]))?$")
-_DEFAULT_TRANSACTION_CATALOGUE_FILENAME = "transactions.json"
 _REVIEW_STATUSES = frozenset(
     {
         FilingDraftStatus.APPROVED,
@@ -280,15 +279,16 @@ def _has_review_metadata(draft: FilingDraft) -> bool:
 
 def _load_transaction_catalogue(path: Path | None) -> TransactionCatalogue:
     if path is None:
-        path = _default_transaction_catalogue_path()
-        return _load_transaction_catalogue_cached(*_catalogue_cache_key(path))
+        store_dir = _default_transaction_catalogue_dir()
+        envelope_path = store_dir / "transactions.envelope.json"
+        return _load_transaction_catalogue_cached(*_catalogue_cache_key(envelope_path), store_dir)
     return _read_transaction_catalogue(path)
 
 
-def _default_transaction_catalogue_path() -> Path:
+def _default_transaction_catalogue_dir() -> Path:
     from ..config import load_settings
 
-    return load_settings().aeat_financial_txs_dir.resolve() / _DEFAULT_TRANSACTION_CATALOGUE_FILENAME
+    return load_settings().aeat_financial_txs_dir.resolve()
 
 
 def _catalogue_cache_key(path: Path) -> tuple[Path, int | None, int | None]:
@@ -300,18 +300,34 @@ def _catalogue_cache_key(path: Path) -> tuple[Path, int | None, int | None]:
 
 @lru_cache(maxsize=8)
 def _load_transaction_catalogue_cached(
-    path: Path,
+    envelope_path: Path,
     mtime_ns: int | None,
     size: int | None,
+    store_dir: Path,
 ) -> TransactionCatalogue:
-    del mtime_ns, size
-    return _read_transaction_catalogue(path)
+    del envelope_path, mtime_ns, size
+    from ..financial.transactions._repository import TransactionCatalogueRepository
+
+    repository = TransactionCatalogueRepository(store_dir=store_dir)
+    return repository.load()
 
 
 def _read_transaction_catalogue(path: Path) -> TransactionCatalogue:
-    if not path.exists():
+    """Load a catalogue from a caller-supplied store directory.
+
+    The ``path`` argument here is the store directory (legacy callers
+    still pass a directory under :attr:`Settings.aeat_financial_txs_dir`),
+    not the legacy ``transactions.json`` file path. Loads route through
+    :class:`TransactionCatalogueRepository` so the on-disk record is
+    always the encrypted envelope.
+    """
+    from ..financial.transactions._repository import TransactionCatalogueRepository
+
+    store_dir = path if path.is_dir() else path.parent
+    repository = TransactionCatalogueRepository(store_dir=store_dir)
+    if not repository.envelope_path.exists():
         return TransactionCatalogue()
-    return load_transactions(path)
+    return repository.load()
 
 
 def _draft_review_fingerprint(draft: FilingDraft) -> str:

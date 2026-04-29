@@ -79,3 +79,36 @@ class TestPersistenceRoundTrip:
 
     def test_list_runs_missing_dir(self, tmp_path: Path) -> None:
         assert list_runs(runs_dir=tmp_path / "does-not-exist") == ()
+
+    def test_save_run_lock_target_aligns_with_rotation(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        # Wave-25 H-3 regression: the workflow run writer must
+        # acquire the writer-canonical sidecar lock so concurrent
+        # rotate-master-key contends on the same OS-level lock-byte
+        # target. The runs_dir contains
+        # ``<run_id>.envelope.json`` files; the wave-4-canonical
+        # sidecar is ``<run_id>.lock`` (not ``<run_id>.envelope.lock``).
+        from ..storage import LockAcquisitionError, RotationPlanEntry, exclusive_file_lock
+
+        runs_dir = tmp_path / "runs"
+        runs_dir.mkdir()
+        result = _result("c" * 16, datetime(2026, 4, 13, tzinfo=UTC))
+        save_run(result, runs_dir=runs_dir)
+
+        envelope_path = runs_dir / f"{result.run_id}.envelope.json"
+        rotation_entry = RotationPlanEntry(
+            store_dir=runs_dir,
+            hkdf_context=b"aeat.workflow.run.v1",
+        )
+        rotation_lock_target = rotation_entry.lock_path_for(envelope_path)
+        expected_writer_lock_target = runs_dir / f"{result.run_id}.lock"
+        assert rotation_lock_target == expected_writer_lock_target
+
+        with (
+            exclusive_file_lock(expected_writer_lock_target),
+            pytest.raises(LockAcquisitionError),
+            exclusive_file_lock(rotation_lock_target, timeout=0.0),
+        ):
+            pass

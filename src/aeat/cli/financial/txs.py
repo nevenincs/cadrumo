@@ -22,10 +22,13 @@ from ...financial.transactions import (
     TransactionError,
     find_transaction,
     resolve_classifier,
-    save_transactions,
     set_classification,
 )
-from ._catalogue import catalogue_path, load_catalogue_or_empty, load_catalogue_required
+from ._catalogue import (
+    catalogue_repository,
+    load_catalogue_or_empty,
+    load_catalogue_required,
+)
 
 _CONFIDENCE_MIN = Decimal("0")
 _CONFIDENCE_MAX = Decimal("1")
@@ -127,7 +130,8 @@ def build_cmd(
     ),
 ) -> None:
     """Persist a transaction catalogue from ingest output."""
-    target = catalogue_path()
+    repo = catalogue_repository()
+    target = repo.envelope_path
     if target.exists() and not replace:
         typer.echo(
             f"transaction catalogue already exists at {target}; rerun with --replace to overwrite it",
@@ -136,7 +140,7 @@ def build_cmd(
         raise typer.Exit(code=2)
     try:
         catalogue = _build_catalogue(source)
-        save_transactions(catalogue, target)
+        repo.save(catalogue)
     except TransactionError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
@@ -199,7 +203,7 @@ def classify_cmd(
     ),
 ) -> None:
     """Classify one transaction and write the updated catalogue to disk."""
-    path = catalogue_path()
+    repo = catalogue_repository()
     catalogue = load_catalogue_required()
     current = find_transaction(catalogue, transaction_id)
     if current is None:
@@ -258,7 +262,7 @@ def classify_cmd(
             reason=reason,
             confidence=resolved_confidence,
         )
-        save_transactions(updated, path)
+        repo.save(updated)
     except TransactionError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
@@ -391,7 +395,7 @@ def classify_llm_cmd(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
 
-    path = catalogue_path()
+    repo = catalogue_repository()
     catalogue = load_catalogue_required()
     targets = _select_llm_targets(catalogue, transaction_id=transaction_id, all_pending=all_pending)
     if not targets:
@@ -450,7 +454,7 @@ def classify_llm_cmd(
                 typer.echo(f"{prefix} persist error: {exc}", err=True)
                 continue
             try:
-                save_transactions(updated_catalogue, path)
+                repo.save(updated_catalogue)
             except TransactionError as exc:
                 failures += 1
                 typer.echo(f"{prefix} save error: {exc}", err=True)

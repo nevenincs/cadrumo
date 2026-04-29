@@ -15,6 +15,7 @@ credentials actually working" is "I called the API and it returned a
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -885,6 +886,176 @@ def check_live_access_gate(settings: Settings) -> Row:
     )
 
 
+# ── Security-layer rows ─────────────────────────────────────────────────────
+
+
+def check_secret_store_directory(settings: Settings) -> Row:
+    """Verify the secret-store directory exists and is operator-writable."""
+    secret_dir = settings.aeat_secret_store_dir
+    if not secret_dir.exists():
+        return Row(
+            section="secret-store dir",
+            required=False,
+            state=State.MISSING,
+            detail=(f"{secret_dir} does not exist; run `aeat security provision` to bootstrap the security layer."),
+        )
+    if not os.access(secret_dir, os.W_OK):
+        return Row(
+            section="secret-store dir",
+            required=True,
+            state=State.PARTIAL,
+            detail=f"{secret_dir} is not writable by the current user.",
+        )
+    return Row(
+        section="secret-store dir",
+        required=True,
+        state=State.OK,
+        detail=f"{secret_dir}",
+    )
+
+
+def check_secret_store_backend(settings: Settings) -> Row:
+    """Report which backend is active and warn loudly on the unsecured path."""
+    backend = settings.aeat_secret_store_backend
+    if backend.value == "unsecured":
+        if not settings.aeat_allow_unencrypted:
+            return Row(
+                section="secret-store backend",
+                required=True,
+                state=State.MISSING,
+                detail=(
+                    "backend=unsecured requires AEAT_ALLOW_UNENCRYPTED=1; "
+                    "the substrate will refuse every persistence call."
+                ),
+            )
+        return Row(
+            section="secret-store backend",
+            required=False,
+            state=State.WARN,
+            detail=(
+                "backend=unsecured: published deterministic master key, "
+                "ZERO confidentiality. Real NIFs are refused at profile-write."
+            ),
+        )
+    return Row(
+        section="secret-store backend",
+        required=True,
+        state=State.OK,
+        detail=f"backend={backend.value}",
+    )
+
+
+def check_master_key_readiness(settings: Settings) -> Row:
+    """Verify a master key is reachable under the active backend."""
+    secret_dir = settings.aeat_secret_store_dir
+    backend = settings.aeat_secret_store_backend.value
+    if backend == "unsecured":
+        # The unsecured backend's published key is always available; the
+        # warning row above covers the security implication.
+        return Row(
+            section="master-key readiness",
+            required=False,
+            state=State.SKIP,
+            detail="published deterministic key (unsecured backend).",
+        )
+    if backend in ("file", "auto"):
+        master_key = secret_dir / "master.key"
+        master_kdf = secret_dir / "master.kdf"
+        salt = secret_dir / "salt"
+        present = [p for p in (master_key, master_kdf, salt) if p.exists()]
+        missing = [p for p in (master_key, master_kdf, salt) if not p.exists()]
+        if not present:
+            # File-fallback artefacts not yet minted. For 'auto' this is
+            # benign when the OS keychain is reachable; for 'file' it
+            # means the substrate has not been provisioned.
+            if backend == "file":
+                return Row(
+                    section="master-key readiness",
+                    required=True,
+                    state=State.MISSING,
+                    detail=(f"no master.key / master.kdf / salt under {secret_dir}; run `aeat security provision`."),
+                )
+            return Row(
+                section="master-key readiness",
+                required=False,
+                state=State.SKIP,
+                detail="file-fallback artefacts absent; auto-mode prefers OS keychain.",
+            )
+        if missing:
+            return Row(
+                section="master-key readiness",
+                required=True,
+                state=State.PARTIAL,
+                detail=(
+                    "partial file-fallback state: "
+                    f"present={[p.name for p in present]} missing={[p.name for p in missing]}; "
+                    "run `aeat security provision --force` to rebuild."
+                ),
+            )
+        return Row(
+            section="master-key readiness",
+            required=True,
+            state=State.OK,
+            detail=f"file-fallback artefacts present in {secret_dir}.",
+        )
+    # Backend is 'keyring'.
+    return Row(
+        section="master-key readiness",
+        required=True,
+        state=State.OK,
+        detail="keyring backend selected; OS keychain is the source of truth.",
+    )
+
+
+def check_kdf_version(settings: Settings) -> Row:
+    """Verify the on-disk KDF parameters file is at the active version."""
+    kdf_path = settings.aeat_secret_store_dir / "master.kdf"
+    if not kdf_path.exists():
+        return Row(
+            section="master.kdf version",
+            required=False,
+            state=State.SKIP,
+            detail="master.kdf not present (keyring or unprovisioned).",
+        )
+    try:
+        raw = json.loads(kdf_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        return Row(
+            section="master.kdf version",
+            required=True,
+            state=State.PARTIAL,
+            detail=f"failed to parse {kdf_path.name}: {exc}",
+        )
+    if not isinstance(raw, dict):
+        return Row(
+            section="master.kdf version",
+            required=True,
+            state=State.PARTIAL,
+            detail=f"{kdf_path.name} is not a JSON object.",
+        )
+    version = raw.get("version")
+    if version == 2:
+        return Row(
+            section="master.kdf version",
+            required=True,
+            state=State.OK,
+            detail=f"v{version} (Argon2id).",
+        )
+    if version == 1:
+        return Row(
+            section="master.kdf version",
+            required=True,
+            state=State.WARN,
+            detail=(f"v{version} (scrypt) — run `aeat security migrate-master-key-kdf` to upgrade to v2 (Argon2id)."),
+        )
+    return Row(
+        section="master.kdf version",
+        required=True,
+        state=State.PARTIAL,
+        detail=f"unrecognised KDF version: {version!r}",
+    )
+
+
 # ── Orchestrator ────────────────────────────────────────────────────────────
 
 
@@ -920,6 +1091,15 @@ def collect_rows(settings: Settings) -> list[Row]:
     rows.append(check_auth_provider_path(settings))
     rows.append(check_live_tests_flag(settings))
     rows.append(check_live_access_gate(settings))
+    # Security-layer rows: secret-store dir health, active backend,
+    # master-key readiness, KDF version. Provisioning state is a hard
+    # prerequisite for every persisting CLI command, so these rows
+    # surface gaps before the operator hits an opaque
+    # MasterKeyMaterialMissingError downstream.
+    rows.append(check_secret_store_directory(settings))
+    rows.append(check_secret_store_backend(settings))
+    rows.append(check_master_key_readiness(settings))
+    rows.append(check_kdf_version(settings))
     return rows
 
 
