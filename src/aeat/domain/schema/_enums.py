@@ -12,15 +12,15 @@ from enum import StrEnum
 class SchemaSource(StrEnum):
     """Provenance class of an extracted :class:`aeat.schema.Modelo`.
 
-    ``BOE_ORDEN`` is the only member implemented in the v1 PoC; the
-    remaining members are reserved enum slots for the follow-up
-    extractors described in the 2026-04-17 ADR.
+    ``BOE_ORDEN`` is the only member implemented in the v1 PoC. Three
+    reserved follow-up extractor slots (``PORTAL_HTML_PROBE``,
+    ``MANUAL_LLM_DRAFT``, ``XSD_WIRE``) were dropped per restructure
+    ADR Decision 6 (#476) — no active branch or open issue references
+    them. Future extractors add new members here on first concrete
+    use.
     """
 
     BOE_ORDEN = "boe_orden"
-    PORTAL_HTML_PROBE = "portal_html_probe"
-    MANUAL_LLM_DRAFT = "manual_llm_draft"
-    XSD_WIRE = "xsd_wire"
 
 
 class CasillaDataType(StrEnum):
