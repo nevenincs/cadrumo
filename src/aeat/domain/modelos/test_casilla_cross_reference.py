@@ -18,7 +18,7 @@ from ._registry import get_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = Path(__file__).resolve().parents[4]
 _CASILLAS_ROOT = _REPO_ROOT / "corpus" / "casillas"
 
 

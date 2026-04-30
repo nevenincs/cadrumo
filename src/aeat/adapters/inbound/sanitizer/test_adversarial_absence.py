@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
 def _project_root() -> Path:
-    return Path(__file__).resolve().parents[3]
+    return Path(__file__).resolve().parents[5]
 
 
 def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
