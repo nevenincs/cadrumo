@@ -344,25 +344,9 @@ class TestModeloValidators:
             )
 
 
-class TestSchemaProvenanceSourceGate:
-    @pytest.mark.parametrize(
-        "reserved_source",
-        [
-            SchemaSource.PORTAL_HTML_PROBE,
-            SchemaSource.MANUAL_LLM_DRAFT,
-            SchemaSource.XSD_WIRE,
-        ],
-    )
-    def test_reserved_sources_rejected_in_v1(self, reserved_source: SchemaSource) -> None:
-        with pytest.raises(ValidationError, match="reserved enum slot"):
-            SchemaProvenance(
-                source=reserved_source,
-                origin_url=TypeAdapter(AnyHttpUrl).validate_python("https://www.boe.es/x.pdf"),
-                document_ref="BOE-A-FAKE",
-                sha256="a" * 64,
-                content_length=1,
-                fetched_at=datetime(2026, 4, 17, tzinfo=UTC),
-            )
+# Reserved-slot rejection test removed alongside the SchemaSource slots
+# themselves per restructure ADR Decision 6 (#476). Pydantic's StrEnum
+# validator now owns the gate — unknown source values raise on parse.
 
 
 class TestValidatePeriodWhitespace:
