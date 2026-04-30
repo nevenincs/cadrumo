@@ -18,7 +18,7 @@ import json
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
-from typing import cast
+from typing import Protocol, cast
 
 from ..auth import AeatSession
 from ..config import Settings, load_settings
@@ -33,6 +33,7 @@ from ..filing import (
     FilingProfile,
     build_draft,
 )
+from ..financial.aggregation._errors import AggregationUnsupportedModeloError
 from ..submission import (
     FilingDraftLike,
     SubmissionEngine,
@@ -51,6 +52,18 @@ from ._protocols import (
     SyncRunnerProtocol,
     SyncRunSummary,
 )
+
+
+class _FinancialInputsProvider(Protocol):
+    def has_catalogue(self) -> bool: ...
+
+    def load_inputs(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+    ) -> Mapping[str, object]: ...
 
 
 class DeadlineEngineAdapter:
@@ -199,6 +212,37 @@ class JsonFileInputsProvider:
         return raw
 
 
+class FinancialThenJsonInputsProvider:
+    """Use T6 financial aggregation when supported, otherwise fall back to JSON inputs."""
+
+    def __init__(
+        self,
+        *,
+        financial_provider: _FinancialInputsProvider | None,
+        fallback_provider: JsonFileInputsProvider,
+    ) -> None:
+        self._financial_provider = financial_provider
+        self._fallback_provider = fallback_provider
+
+    def load_inputs(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+    ) -> Mapping[str, object]:
+        """Load inputs from financial aggregation for supported modelos."""
+
+        if self._financial_provider is None:
+            return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
+        if not self._financial_provider.has_catalogue():
+            return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
+        try:
+            return self._financial_provider.load_inputs(modelo=modelo, period=period, profile=profile)
+        except AggregationUnsupportedModeloError:
+            return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
+
+
 def default_engine(
     *,
     submission_engine: SubmissionEngineProtocol,
@@ -246,7 +290,10 @@ def default_engine(
         raise WorkflowError("default_engine requires a deadline_engine adapter")
     if filing_draft_builder is None:
         raise WorkflowError("default_engine requires a filing_draft_builder adapter")
-    provider = inputs_provider or JsonFileInputsProvider(cfg.aeat_workflow_draft_inputs_path)
+    provider = inputs_provider or FinancialThenJsonInputsProvider(
+        financial_provider=_default_financial_inputs_provider(cfg),
+        fallback_provider=JsonFileInputsProvider(cfg.aeat_workflow_draft_inputs_path),
+    )
     return WorkflowEngine(
         deadline_engine=deadline_engine,
         filing_draft_builder=filing_draft_builder,
@@ -259,12 +306,23 @@ def default_engine(
     )
 
 
+def _default_financial_inputs_provider(cfg: Settings) -> _FinancialInputsProvider | None:
+    catalogue_dir = cfg.aeat_financial_txs_dir.resolve()
+    if not (catalogue_dir / "transactions.envelope.json").exists():
+        return None
+    from ..financial.aggregation._provider import FinancialFilingInputsProvider
+    from ..financial.transactions._repository import TransactionCatalogueRepository
+
+    return FinancialFilingInputsProvider(repository=TransactionCatalogueRepository(store_dir=catalogue_dir))
+
+
 # Re-exported so importing :mod:`aeat.workflow` surfaces the primary
 # preflight-exception type without callers having to dig into
 # :mod:`aeat.submission` for an isinstance check.
 __all__ = [
     "DeadlineEngineAdapter",
     "FilingDraftBuilderAdapter",
+    "FinancialThenJsonInputsProvider",
     "JsonFileInputsProvider",
     "SubmissionEngineAdapter",
     "SubmissionPreflightError",
