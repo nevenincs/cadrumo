@@ -8,6 +8,7 @@ first-run runner is wired correctly.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,13 @@ from ..auth import CertificateBackend
 from ..deadlines import IVARegime
 from ..i18n import Language
 from ..profile import CCAA
+from ..storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from . import (
     QueuedPrompter,
     SetupAnswers,
@@ -26,6 +34,28 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    """Ensure the wizard's profile-envelope writer can resolve a key in tests."""
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
 
 
 def _answers(tmp_path: Path) -> SetupAnswers:

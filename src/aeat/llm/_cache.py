@@ -86,6 +86,19 @@ class LLMCache:
     def write(self, request: LLMRequest, response: LLMResponse) -> CachedEntry:
         """Write a response to the cache and return the stored entry.
 
+        The serialised payload is routed through the substrate's
+        :func:`redact_structured` helper at DIAGNOSTIC class before
+        persistence (the CACHE-class default policy has an empty
+        rule set because most caches are public reference data;
+        the LLM cache carries identity-bearing inputs and therefore
+        adopts the DIAGNOSTIC rule set, mirroring the run-trace
+        sink's discipline). The redaction is idempotent — re-reads
+        of an already-redacted entry stay correct because the cache
+        carries the redacted text only. Storage imports are deferred
+        inside this method body so the LLM package's import chain does
+        not pull Alembic plugin discovery into CLI commands that never
+        touch the cache.
+
         Args:
             request: Structured completion request.
             response: Public response to persist.
@@ -93,6 +106,8 @@ class LLMCache:
         Returns:
             Persisted cache entry model.
         """
+        from ..storage import SensitivityClass, redact_structured
+        from ..storage._redaction import default_rules_for_class
 
         key = self.build_key(request, response.provider, response.model)
         entry = CachedEntry(
@@ -103,11 +118,39 @@ class LLMCache:
             response=response,
             created_at=datetime.now(UTC),
         )
+        redacted = redact_structured(
+            entry.model_dump(mode="json"),
+            rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
+        )
+        from ..storage._lock import fsync_parent_dir
+
         path = self._path_for(key)
         path.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(redacted, indent=2, sort_keys=True)
+        # Atomic write so concurrent writers (cache populated by
+        # parallel LLM calls under the same content-addressed key)
+        # cannot torn-write mid-JSON. The cache is rebuildable so a
+        # crash mid-write is recoverable, but a torn JSON visible to
+        # a concurrent reader would surface as a parse error.
+        import os
+        import tempfile
+
+        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f"{path.stem}.",
+            suffix=".tmp",
+            delete=False,
+        )
+        tmp_path = Path(handle.name)
         try:
-            path.write_text(entry.model_dump_json(indent=2), encoding="utf-8")
+            with handle:
+                handle.write(payload)
+            os.replace(tmp_path, path)
+            fsync_parent_dir(path)
         except OSError as exc:  # pragma: no cover - defensive filesystem path
+            tmp_path.unlink(missing_ok=True)
             msg = f"Failed to write cache entry to {path}"
             raise LLMCacheError(msg) from exc
         return entry
@@ -143,11 +186,64 @@ class LLMCache:
 
         Returns:
             On-disk cache path for the entry.
-        """
 
-        return (
-            self.root_dir
-            / key.provider.value.lower()
-            / key.model.replace("/", "__")
-            / f"{key.prompt_hash}-{key.args_hash}.json"
-        )
+        Raises:
+            LLMCacheError: When the model identifier contains path-
+                traversal segments (``..``, leading dots), backslashes,
+                drive letters, NUL bytes, or other characters that
+                would compose a path outside ``root_dir``.
+        """
+        # Sanitise the operator-controllable model string before path
+        # composition. ``model_override`` flows through provider
+        # configuration / env vars, so a malicious or accidentally-
+        # malformed value (``../../etc/passwd``, ``..\\foo``,
+        # ``C:\\bar``) must not let the cache write outside
+        # ``root_dir``. Forward slashes are normalised to ``__`` (a
+        # legitimate convention for namespaced model names like
+        # ``anthropic/claude-3-7-sonnet``); every other suspicious
+        # token is rejected.
+        sanitised_model = self._sanitise_model_for_path(key.model)
+        return self.root_dir / key.provider.value.lower() / sanitised_model / f"{key.prompt_hash}-{key.args_hash}.json"
+
+    @staticmethod
+    def _sanitise_model_for_path(model: str) -> str:
+        """Normalise a model identifier into a single safe path segment.
+
+        Forward slashes (used for vendor-prefixed names like
+        ``anthropic/claude-3-7-sonnet``) are replaced with ``__`` so
+        the model becomes a single directory segment under the
+        provider directory. Every other path-shaped or unsafe value
+        raises.
+        """
+        if not model:
+            raise LLMCacheError("LLM cache: model identifier must be non-empty")
+        if "\x00" in model:
+            raise LLMCacheError("LLM cache: model identifier contains a NUL byte")
+        if "\\" in model:
+            raise LLMCacheError(
+                f"LLM cache: model identifier must not contain backslashes: {model!r}",
+            )
+        # Split and normalise on forward slashes so each segment is
+        # validated against path-traversal tokens individually.
+        segments = model.split("/")
+        for segment in segments:
+            if not segment:
+                raise LLMCacheError(
+                    f"LLM cache: model identifier contains an empty segment: {model!r}",
+                )
+            if segment in {".", ".."}:
+                raise LLMCacheError(
+                    f"LLM cache: model identifier contains a relative-path token: {model!r}",
+                )
+            if segment.startswith("."):
+                raise LLMCacheError(
+                    f"LLM cache: model identifier segment must not start with '.': {model!r}",
+                )
+            # Drive letters / colons are file-shape-suspicious on
+            # Windows (``C:\\foo``) and POSIX-portable identifiers
+            # do not need them.
+            if ":" in segment:
+                raise LLMCacheError(
+                    f"LLM cache: model identifier must not contain ':': {model!r}",
+                )
+        return "__".join(segments)

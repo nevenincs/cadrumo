@@ -13,6 +13,7 @@ The writer must satisfy three load-bearing invariants:
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -22,14 +23,45 @@ from ..deadlines import IVARegime
 from ..env_io import read_env_file
 from ..i18n import Language
 from ..profile import CCAA
+from ..storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from . import (
     SetupAnswers,
     owned_env_keys,
     write_env_file,
     write_profile_file,
 )
+from ._env_writer import load_profile_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    """Provide a deterministic master key so the profile envelope writer
+    does not consult the OS keychain or a passphrase prompt during tests."""
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
 
 
 def _answers(tmp_path: Path) -> SetupAnswers:
@@ -157,14 +189,63 @@ def test_write_profile_file_emits_valid_autonomo_profile(tmp_path: Path) -> None
         else:
             os.environ["AEAT_TAX_RESIDENCE_PROFILE_PATH"] = old_tax_path
 
-    from ..deadlines import AutonomoProfile
-
-    profile = AutonomoProfile.model_validate_json(target.read_text(encoding="utf-8"))
+    profile = load_profile_envelope(target)
     assert profile.tax_id == "87654321X"
     assert profile.iva_regime is IVARegime.SIMPLIFICADO
     assert profile.pays_professionals_with_retencion is True
     assert profile.third_party_transactions_above_347_threshold is True
     assert (tmp_path / "tax-residence.json").exists()
+
+
+def test_write_profile_file_writes_ciphertext_envelope(tmp_path: Path) -> None:
+    """The on-disk profile must be a CipherEnvelope; the NIF must not survive in plaintext."""
+    answers = _answers(tmp_path)
+    target = tmp_path / "profile.json"
+    write_profile_file(answers, target)
+
+    written = target.read_text(encoding="utf-8")
+    # CipherEnvelope wire form — classification at the cipher layer.
+    assert '"classification":"identity"' in written
+    assert '"encryption":' in written
+    # The NIF canary must not appear in plaintext.
+    assert "87654321X" not in written
+
+
+def test_write_profile_file_lock_target_aligns_with_rotation(
+    tmp_path: Path,
+) -> None:
+    # Wave-25 H-2 regression: the setup-profile writer must acquire
+    # the writer-canonical sidecar lock (target.with_suffix('.lock'))
+    # so concurrent rotate-master-key contends on the same OS-level
+    # lock-byte target. With ``aeat_default_profile_path`` set, the
+    # rotation plan emits a single-file entry with
+    # ``target_filename`` set, and ``RotationPlanEntry.lock_path_for``
+    # returns ``envelope_path.with_suffix('.lock')`` for that branch.
+    from ..storage import LockAcquisitionError, RotationPlanEntry, exclusive_file_lock
+
+    answers = _answers(tmp_path)
+    target = tmp_path / "profile.json"
+    # Mint the file once so the lock target's directory exists.
+    write_profile_file(answers, target)
+
+    rotation_entry = RotationPlanEntry(
+        store_dir=target.parent,
+        hkdf_context=b"aeat.setup.profile.v1",
+        target_filename=target.name,
+    )
+    rotation_lock_target = rotation_entry.lock_path_for(target)
+    expected_writer_lock_target = target.with_suffix(".lock")
+    assert rotation_lock_target == expected_writer_lock_target
+
+    # End-to-end contention: hold the writer-canonical sidecar; the
+    # rotation acquire-with-timeout=0 must fail. Proves both paths
+    # land on the same lock-byte target.
+    with (
+        exclusive_file_lock(expected_writer_lock_target),
+        pytest.raises(LockAcquisitionError),
+        exclusive_file_lock(rotation_lock_target, timeout=0.0),
+    ):
+        pass
 
 
 def test_owned_env_keys_are_stable_and_unique() -> None:

@@ -111,6 +111,26 @@ def _synth_modelo_130_pdf(
     return target
 
 
+@pytest.fixture(autouse=True)
+def isolated_secret_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Redirect the substrate's secret-store to a per-test tmpdir.
+
+    Kent integration tests drive the real substrate via in-process
+    Typer CliRunner; without isolation the substrate's silent first-
+    run mint writes ``master.kdf`` / ``master.key`` / ``salt`` into
+    the project-default ``var/secrets/`` and contaminates every
+    subsequent test in the same CI run. Per-test isolation here
+    keeps the integration tests honest without a session-wide
+    override that would break tests asserting on PROJECT_ROOT
+    defaults.
+    """
+    target = tmp_path / "secrets"
+    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(target))
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+    monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "kent-integration-passphrase")
+    return target
+
+
 @pytest.fixture()
 def drafts_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target = tmp_path / "drafts"
@@ -588,10 +608,7 @@ _M180_HAPPY: Mapping[str, str] = {
 }
 
 _M200_VALUES: Mapping[str, str] = {
-    # Modelo 200 has only a 2024 ruleset on main but the registered extractor
-    # is template_revision="2025.01" with año=2025 → CLI verdict is
-    # UNVERIFIABLE for any 2025-rendered PDF today. Values are arbitrary
-    # but plausible per AEAT IS liquidación page-14 layout.
+    # Page-14 liquidación block for a simple 2025 IS filing.
     "00547": "0",
     "00550": "100000",
     "00552": "100000",
@@ -1431,15 +1448,7 @@ class TestKentImportsModelo180Declaracion:
 
 
 class TestKentImportsModelo200Declaracion:
-    """Kent imports a Modelo 200 (Impuesto sobre Sociedades) 2025.
-
-    Year 2025 is the only year with a registered extractor; the only
-    landed ruleset is for 2024. The CLI verdict for any 2025-rendered
-    Modelo 200 PDF is therefore UNVERIFIABLE today — locked in here so
-    the future ramp to a 2025 ruleset is a deliberate test update. The
-    discrepancy classification 4th case is omitted (no ruleset → no
-    formula divergence).
-    """
+    """Kent imports a Modelo 200 (Impuesto sobre Sociedades) 2025."""
 
     _LABELS = _MODELO_200_LABELS
 
@@ -1450,7 +1459,7 @@ class TestKentImportsModelo200Declaracion:
         submissions_dir: Path,
         english_output: None,
     ) -> None:
-        """Clean Modelo 200 PDF → UNVERIFIABLE (no 2025 ruleset)."""
+        """Clean Modelo 200 PDF -> VERIFIED."""
         del drafts_dir, submissions_dir, english_output
         pdf = _synth_annual_pdf(
             tmp_path,
@@ -1462,8 +1471,7 @@ class TestKentImportsModelo200Declaracion:
         result = runner.invoke(app, ["filing", "import", "--from-declaracion", str(pdf)])
         assert result.exit_code == 0, result.output
         assert "Extraction status: COMPLETE" in result.output
-        assert "Verification status: UNVERIFIABLE" in result.output
-        assert "no ruleset registered" in result.output.lower()
+        assert "Verification status: VERIFIED" in result.output
 
     def test_happy_path_spanish_default(
         self,
@@ -1472,7 +1480,7 @@ class TestKentImportsModelo200Declaracion:
         submissions_dir: Path,
         spanish_output: None,
     ) -> None:
-        """Spanish UNVERIFIABLE narrative."""
+        """Spanish VERIFIED narrative."""
         del drafts_dir, submissions_dir, spanish_output
         pdf = _synth_annual_pdf(
             tmp_path,
@@ -1483,8 +1491,7 @@ class TestKentImportsModelo200Declaracion:
         )
         result = runner.invoke(app, ["filing", "import", "--from-declaracion", str(pdf)])
         assert result.exit_code == 0, result.output
-        assert "Verification status: UNVERIFIABLE" in result.output
-        assert "no hay ruleset registrado" in result.output.lower()
+        assert "Verification status: VERIFIED" in result.output
 
     def test_partial_extraction_needs_review(
         self,
@@ -1493,7 +1500,7 @@ class TestKentImportsModelo200Declaracion:
         submissions_dir: Path,
         english_output: None,
     ) -> None:
-        """8 of 16 casillas → PARTIAL (still UNVERIFIABLE downstream)."""
+        """8 of 16 casillas -> PARTIAL extraction."""
         del drafts_dir, submissions_dir, english_output
         partial = _partial_subset(_M200_VALUES, 8)
         pdf = _synth_annual_pdf(
@@ -1506,8 +1513,29 @@ class TestKentImportsModelo200Declaracion:
         result = runner.invoke(app, ["filing", "import", "--from-declaracion", str(pdf)])
         assert result.exit_code == 0, result.output
         assert "Extraction status: PARTIAL" in result.output
-        # Even partial extraction terminates as UNVERIFIABLE because no 2025 ruleset.
-        assert "Verification status: UNVERIFIABLE" in result.output
+
+    def test_discrepancy_classified_correctly(
+        self,
+        tmp_path: Path,
+        drafts_dir: Path,
+        submissions_dir: Path,
+        english_output: None,
+    ) -> None:
+        """Drifted 00621 -> CORRECTNESS_DIVERGENCE."""
+        del drafts_dir, submissions_dir, english_output
+        tampered = dict(_M200_VALUES) | {"00621": "9500"}
+        pdf = _synth_annual_pdf(
+            tmp_path,
+            modelo="200",
+            labels=self._LABELS,
+            values=tampered,
+            filename="modelo_200_2025_drift.pdf",
+        )
+        result = runner.invoke(app, ["filing", "import", "--from-declaracion", str(pdf)])
+        assert result.exit_code == 0, result.output
+        assert "Verification status: NEEDS_REVIEW" in result.output
+        assert "cause=CORRECTNESS_DIVERGENCE" in result.output
+        assert "casilla 00621" in result.output
 
 
 class TestKentImportsModelo202Declaracion:
