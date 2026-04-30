@@ -32,9 +32,9 @@ from ...financial.invoices._repository import InvoiceCatalogueRepository
 from ...financial.transactions import (
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ...financial.transactions._repository import TransactionCatalogueRepository
 from ...i18n import Translatable
 from ...sync import (
     CasillaRemoved,

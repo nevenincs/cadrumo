@@ -7,6 +7,8 @@ must not reach into the private underscore modules inside this package.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ._enums import CLASSIFIED_STATES, BusinessClassification, TransactionDirection, is_classified
 from ._errors import (
     TransactionCatalogueError,
@@ -45,6 +47,21 @@ from ._service import (
     snapshot_classification_state,
 )
 
+if TYPE_CHECKING:
+    from ._repository import ImportSummary, TransactionCatalogueRepository
+
+
+def __getattr__(name: str):
+    """Lazy-import the persistence repository so importing this package does
+    not eagerly pull in SQLAlchemy + Alembic (whose plugin setup logs to
+    stderr and breaks JSON-pipe-safety contracts in CLI test scope)."""
+    if name in ("ImportSummary", "TransactionCatalogueRepository"):
+        from . import _repository
+
+        return getattr(_repository, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 __all__ = [
     "CLASSIFIED_STATES",
     "MINIMUM_CLASSIFICATION_TIER",
@@ -53,6 +70,7 @@ __all__ = [
     "CategoryChoice",
     "ClassificationChoice",
     "ClassificationHistoryEntry",
+    "ImportSummary",
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
@@ -64,6 +82,7 @@ __all__ = [
     "Transaction",
     "TransactionCatalogue",
     "TransactionCatalogueError",
+    "TransactionCatalogueRepository",
     "TransactionDirection",
     "TransactionError",
     "TransactionNotFoundError",
