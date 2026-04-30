@@ -222,10 +222,35 @@ def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> obj
     return value
 
 
+def redact_for_log(text: str) -> str:
+    """Redact ``text`` against the AUDIT-class rule set for log/error use.
+
+    Convenience wrapper for the call sites that construct
+    exception messages or log lines containing operator-controlled
+    PII (NIF / NIE / CIF, OAuth tokens, session URLs). Issue #469
+    M-3: raised exceptions previously interpolated raw NIF into
+    ``exc.args[0]``; the ``SecretScrubbingFilter`` covers the
+    ``logging`` path but not ``str(exc)`` flowing through typer's
+    default error renderer / JSON envelope / observability sinks
+    that capture exception text without going through the filter.
+    Redact at the construction site so the secret is never in the
+    exception's message field to begin with.
+
+    The AUDIT rule set is the right default for exception text: it
+    redacts NIF (sha256-prefix), URL host-only, and bearer-token
+    fingerprints. The IDENTITY class is for ciphertext-at-rest, not
+    log-shaped strings; the DIAGNOSTIC class has the same rules but
+    is named for observability sinks specifically. AUDIT is the
+    log/error path's canonical class.
+    """
+    return redact(text, rules=default_rules_for_class(SensitivityClass.AUDIT))
+
+
 __all__ = [
     "default_rules",
     "default_rules_for",
     "default_rules_for_class",
     "redact",
+    "redact_for_log",
     "redact_structured",
 ]
