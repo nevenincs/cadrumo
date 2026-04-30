@@ -2,7 +2,7 @@
 generated: true
 tags:
   - '#mutation-harness-fix'
-date: '2026-04-29'
+date: '2026-04-30'
 related:
   - '[[2026-04-29-mutation-harness-fix-adr]]'
   - '[[2026-04-29-mutation-harness-fix-phase1-summary-exec]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-04-29-mutation-harness-fix-phase4-task1-exec]]'
   - '[[2026-04-29-mutation-harness-fix-plan]]'
   - '[[2026-04-29-mutation-harness-fix-research]]'
+  - '[[2026-04-30-mutation-harness-fix-strict-audit]]'
 ---
 
 # `mutation-harness-fix` feature index
@@ -26,6 +27,10 @@ Auto-generated index of all documents tagged with `#mutation-harness-fix`.
 ### adr
 
 - `2026-04-29-mutation-harness-fix-adr` - ADR — `mutation-harness-fix`: empirical kill-rate aggregator + M100 fixture coverage
+
+### audit
+
+- `2026-04-30-mutation-harness-fix-strict-audit` - Strict-review audit — `mutation-harness-fix` Wave 5
 
 ### exec
 
