@@ -17,10 +17,10 @@ from ...financial.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
     set_classification,
 )
-from ...financial.transactions._repository import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 

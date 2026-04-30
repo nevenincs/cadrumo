@@ -306,7 +306,7 @@ def _load_transaction_catalogue_cached(
     store_dir: Path,
 ) -> TransactionCatalogue:
     del envelope_path, mtime_ns, size
-    from ..financial.transactions._repository import TransactionCatalogueRepository
+    from ..financial.transactions import TransactionCatalogueRepository
 
     repository = TransactionCatalogueRepository(store_dir=store_dir)
     return repository.load()
@@ -321,7 +321,7 @@ def _read_transaction_catalogue(path: Path) -> TransactionCatalogue:
     :class:`TransactionCatalogueRepository` so the on-disk record is
     always the encrypted envelope.
     """
-    from ..financial.transactions._repository import TransactionCatalogueRepository
+    from ..financial.transactions import TransactionCatalogueRepository
 
     store_dir = path if path.is_dir() else path.parent
     repository = TransactionCatalogueRepository(store_dir=store_dir)
