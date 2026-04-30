@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#m100-per-ano-test-parity`.
 
 ### adr
 
-- `2026-04-29-m100-per-ano-test-parity-adr` - `m100-per-ano-test-parity` adr: `mirror combined anexo modules per year` | (**status:** `accepted`)
+- `2026-04-29-m100-per-ano-test-parity-adr` - `m100-per-ano-test-parity` adr: `split E and F for missing years` | (**status:** `accepted`)
 
 ### audit
 

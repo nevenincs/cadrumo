@@ -1,6 +1,6 @@
-"""Unit tests for Modelo 100 Anexos E + F (2024).
+"""Unit tests for Modelo 100 Anexo F (2026).
 
-External-anchored to LIRPF arts. 33-39 (E), 47-61 (F), 84.
+External-anchored to LIRPF arts. 47-61 and 84.
 """
 
 from __future__ import annotations
@@ -10,13 +10,13 @@ from decimal import Decimal
 import pytest
 
 from ..._engine import Engine
-from .. import MODELO_100_2024
+from .. import MODELO_100_2026
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
 def _baseline() -> dict[str, Decimal]:
-    """Zero values for every casilla — Anexo E/F tests overwrite the
+    """Zero values for every casilla — Anexo F tests overwrite the
     relevant subset; engine derives the computed casillas accordingly."""
     return {
         # B1.
@@ -88,50 +88,6 @@ def _baseline() -> dict[str, Decimal]:
     }
 
 
-class TestModelo100AnexoE:
-    def test_consistent_saldo_patrimonial(self) -> None:
-        """Ganancias 5.000, pérdidas 1.500 -> saldo neto 3.500."""
-        provided = _baseline() | {
-            "0306": Decimal("5000.00"),
-            "0307": Decimal("1500.00"),
-            "0405": Decimal("3500.00"),
-        }
-        report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
-            provided=provided,
-            tolerance=Decimal("0.01"),
-        )
-        assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
-
-    def test_negative_saldo_patrimonial(self) -> None:
-        """Perdidas > ganancias -> saldo negativo (no clamp at this layer)."""
-        provided = _baseline() | {
-            "0306": Decimal("1000.00"),
-            "0307": Decimal("3000.00"),
-            "0405": Decimal("-2000.00"),
-        }
-        report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
-            provided=provided,
-            tolerance=Decimal("0.01"),
-        )
-        assert report.is_clean()
-
-    def test_drift_in_saldo_detected(self) -> None:
-        provided = _baseline() | {
-            "0306": Decimal("5000.00"),
-            "0307": Decimal("1500.00"),
-            "0405": Decimal("3000.00"),  # WRONG -- should be 3500
-        }
-        report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
-            provided=provided,
-            tolerance=Decimal("0.01"),
-        )
-        assert not report.is_clean()
-        assert "0405" in {d.casilla_id for d in report.discrepancies}
-
-
 class TestModelo100AnexoF:
     def test_base_imponible_general_aggregates_per_anexo(self) -> None:
         """BIG = 0022 (B1) + 0107 (C) + 0085 (C) + 0205 (D normal) +
@@ -161,7 +117,7 @@ class TestModelo100AnexoF:
             "0545": Decimal("34000.00"),  # BLG = BIG (no reductions)
         }
         report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
+            ruleset=MODELO_100_2026,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
@@ -180,7 +136,7 @@ class TestModelo100AnexoF:
             "0555": Decimal("4000.00"),
         }
         report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
+            ruleset=MODELO_100_2026,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
@@ -198,7 +154,7 @@ class TestModelo100AnexoF:
             "0500": Decimal("5550.00"),
         }
         report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
+            ruleset=MODELO_100_2026,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
@@ -219,7 +175,7 @@ class TestModelo100AnexoF:
             "0500": Decimal("13450.00"),
         }
         report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
+            ruleset=MODELO_100_2026,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
@@ -241,7 +197,7 @@ class TestModelo100AnexoF:
             "0545": Decimal("28500.00"),
         }
         report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
+            ruleset=MODELO_100_2026,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
@@ -262,7 +218,7 @@ class TestModelo100AnexoF:
             "0545": Decimal("0.00"),
         }
         report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
+            ruleset=MODELO_100_2026,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
@@ -282,7 +238,7 @@ class TestModelo100AnexoF:
             "0555": Decimal("5000.00"),
         }
         report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
+            ruleset=MODELO_100_2026,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
@@ -297,7 +253,7 @@ class TestModelo100AnexoF:
             "0500": Decimal("8000.00"),  # WRONG -- should be 7950
         }
         report = Engine().audit_against(
-            ruleset=MODELO_100_2024,
+            ruleset=MODELO_100_2026,
             provided=provided,
             tolerance=Decimal("0.01"),
         )
