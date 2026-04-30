@@ -30,7 +30,7 @@ from typing import Any
 
 import pytest
 
-from aeat.auth import (
+from aeat.adapters.outbound.aeat.auth import (
     DOCS_SCOPE,
     DRIVE_SCOPE,
     SHEETS_SCOPE,
@@ -39,7 +39,7 @@ from aeat.auth import (
     build_sheets_service,
     get_credentials_for_scopes,
 )
-from aeat.config import PROJECT_ROOT, Settings
+from aeat.core.config import PROJECT_ROOT, Settings
 
 
 def _load_fixture_catalogue() -> ModuleType:

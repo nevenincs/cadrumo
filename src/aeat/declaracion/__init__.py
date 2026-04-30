@@ -1,40 +1,12 @@
-"""Casilla-complete declaración PDF parsing (EPIC #305 cluster D).
+"""Internal re-export shim for `aeat.declaracion`.
 
-The module turns a *copia de la declaración* PDF into a strict
-:class:`DeclaracionFiling` record carrying every casilla ID + printed
-value the extractor recovered. Downstream consumers:
-
-- :mod:`aeat.filing.build_draft` materialises a :class:`FilingDraft`
-  from the extracted casillas via ``inputs={c.casilla_id: c.printed_value ...}``.
-- :mod:`aeat.verification.verify_declaracion` compares the re-derived
-  casillas against the printed ones via :class:`aeat.formulas.Engine.audit_against`.
-
-Public API:
-
-    from aeat.declaracion import (
-        DeclaracionFiling,
-        DeclaracionParseError,
-        TemplateRevision,
-        parse_declaracion,
-    )
+Canonical location: :mod:`aeat.adapters.inbound.declaracion` post the aeat-restructure layout move.
 """
 
 from __future__ import annotations
 
-from ._errors import DeclaracionParseError
-from ._parser import parse_declaracion
-from ._schema import (
-    DeclaracionFiling,
-    ExtractionStatus,
-    ExtractionWarning,
-    TemplateRevision,
-)
+import importlib as _importlib
 
-__all__ = [
-    "DeclaracionFiling",
-    "DeclaracionParseError",
-    "ExtractionStatus",
-    "ExtractionWarning",
-    "TemplateRevision",
-    "parse_declaracion",
-]
+from ..adapters.inbound.declaracion import *  # noqa: F403
+
+__all__ = getattr(_importlib.import_module("aeat.adapters.inbound.declaracion"), "__all__", ())

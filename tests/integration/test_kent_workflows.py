@@ -20,9 +20,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app
-from aeat.formulas._rulesets.modelo_100._ccaa import compute_cuota_autonomica_general
-from aeat.profile import CCAA, KentTaxResidence, save_tax_residence
+from aeat.domain.formulas._rulesets.modelo_100._ccaa import compute_cuota_autonomica_general
+from aeat.domain.profile import CCAA, KentTaxResidence, save_tax_residence
+from aeat.entrypoints.cli import app
 from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
     QuarterlyGenParams,
 )
@@ -338,7 +338,7 @@ class TestKentImportsModelo130Justificante:
     ) -> None:
         """Shipped #271 contract: aeat filing import --from-justificante still works."""
         del drafts_dir, submissions_dir, english_output
-        from aeat.config import PROJECT_ROOT
+        from aeat.core.config import PROJECT_ROOT
 
         pdf = PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / "modelo_130_2026Q1.pdf"
         if not pdf.exists():

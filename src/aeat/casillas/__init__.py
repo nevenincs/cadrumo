@@ -1,47 +1,12 @@
-"""Curated AEAT casilla catalogues.
+"""Internal re-export shim for `aeat.casillas`.
 
-This subpackage owns the strict pydantic models, JSON persistence helpers, and
-verification flow for curated casilla data stored under `corpus/casillas/`.
+Canonical location: :mod:`aeat.domain.casillas` post the aeat-restructure layout move.
 """
 
 from __future__ import annotations
 
-from .catalogue import DEFAULT_CASILLAS_ROOT, iter_casillas, load_casillas, save_casillas, verify_casillas
-from .errors import (
-    CasillaError,
-    CasillaParseError,
-    CrossReferenceError,
-    MissingFieldError,
-    UnreviewedRecordError,
-    VerifyError,
-)
-from .models import (
-    CasillaCatalogue,
-    CasillaDataType,
-    CasillaRecord,
-    LLMDraftProvenance,
-    ModeloCode,
-    PeriodType,
-    SelectOption,
-)
+import importlib as _importlib
 
-__all__ = [
-    "DEFAULT_CASILLAS_ROOT",
-    "CasillaCatalogue",
-    "CasillaDataType",
-    "CasillaError",
-    "CasillaParseError",
-    "CasillaRecord",
-    "CrossReferenceError",
-    "LLMDraftProvenance",
-    "MissingFieldError",
-    "ModeloCode",
-    "PeriodType",
-    "SelectOption",
-    "UnreviewedRecordError",
-    "VerifyError",
-    "iter_casillas",
-    "load_casillas",
-    "save_casillas",
-    "verify_casillas",
-]
+from ..domain.casillas import *  # noqa: F403
+
+__all__ = getattr(_importlib.import_module("aeat.domain.casillas"), "__all__", ())
