@@ -14,7 +14,59 @@ is treated as an error.
 
 from __future__ import annotations
 
+import os
+import tempfile
 from pathlib import Path
+
+
+def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
+    """Atomically write ``text`` to ``path`` via tempfile + os.replace.
+
+    Mirrors the substrate's atomic-write discipline at
+    :func:`aeat.storage._master_key.atomic_write_secure_bytes`. The
+    plaintext ``env/.env`` payload is operator-controlled
+    configuration, not a secret — but the durability story matters:
+    a ``path.write_text`` call truncates the existing inode in-place
+    before writing, and a power-loss / SIGKILL between the truncate
+    and the write completion leaves ``env/.env`` zero-length. The
+    operator's certificate path / database URL / live-tests-flag /
+    storage roots silently revert to defaults, surfacing as an
+    apparently-unprovisioned installation. Use tempfile +
+    ``os.replace`` so a crash leaves either the old or the new file
+    on disk, never a torn write.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+        mode="w",
+        encoding=encoding,
+        dir=path.parent,
+        prefix=f"{path.name}.",
+        suffix=".tmp",
+        delete=False,
+    )
+    tmp_path = Path(handle.name)
+    try:
+        with handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, path)
+        # Best-effort parent-dir fsync. POSIX-only — the helper
+        # imports lazily to avoid a hard dependency on the storage
+        # substrate when env_io is used outside of a provisioned
+        # install. Suppress every exception: directory fsync is a
+        # durability hardening, not a correctness gate, and the
+        # storage package may be unimportable in minimal install
+        # contexts where env_io still runs.
+        import contextlib
+
+        with contextlib.suppress(Exception):  # pragma: no cover - defensive
+            from .storage._lock import fsync_parent_dir
+
+            fsync_parent_dir(path)
+    except OSError:
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def read_env_file(path: Path) -> dict[str, str]:
@@ -100,4 +152,4 @@ def write_env_vars(path: Path, mapping: dict[str, str]) -> None:
     text = "\n".join(rewritten)
     if text and not text.endswith("\n"):
         text += "\n"
-    path.write_text(text, encoding="utf-8")
+    _atomic_write_text(path, text)
