@@ -15,8 +15,7 @@ from ..declaracion import (
     ExtractionWarning,
     TemplateRevision,
 )
-from ..formulas._registry import get_registry
-from ..formulas._ruleset import Ruleset
+from ..formulas import Ruleset, get_registry
 from ..models import ModeloCode
 from . import (
     DiscrepancyCause,
@@ -73,7 +72,7 @@ def _modelo_130_2025_ruleset() -> Ruleset:
 
 
 def _first_quarter_2025():
-    from ..formulas._period import FiscalPeriod, Quarter
+    from ..formulas import FiscalPeriod, Quarter
 
     return FiscalPeriod(year=2025, quarter=Quarter.Q1)
 

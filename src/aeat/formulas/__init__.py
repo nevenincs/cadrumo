@@ -45,10 +45,18 @@ from ._ledger import AuditReport, ComputationLedger, Discrepancy, LedgerEntry
 from ._period import FiscalPeriod
 from ._registry import RulesetRegistry, get_registry
 from ._ruleset import Bracket, ParameterTable, ParameterValue, Ruleset
+from ._rulesets import MODELO_100_SUMMARY_2025
+from ._rulesets.modelo_100._amortization import LIS_ART_12_LINEAL_TABLE, AssetClass
+from ._rulesets.modelo_100._ccaa import CCAA, compute_cuota_autonomica_general
+from ._rulesets.modelo_100._inventario import ValuationMethod
 
 __all__ = [
+    "CCAA",
+    "LIS_ART_12_LINEAL_TABLE",
+    "MODELO_100_SUMMARY_2025",
     "AddFormula",
     "AmbiguousPeriodError",
+    "AssetClass",
     "AuditDiscrepancyError",
     "AuditReport",
     "Bracket",
@@ -85,5 +93,7 @@ __all__ = [
     "RulesetRegistry",
     "RulesetValidationError",
     "SubFormula",
+    "ValuationMethod",
+    "compute_cuota_autonomica_general",
     "get_registry",
 ]

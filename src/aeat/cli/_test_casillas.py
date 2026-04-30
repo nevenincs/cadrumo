@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ..cli.casillas import app
+from .casillas import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 

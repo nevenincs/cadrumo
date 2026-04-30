@@ -25,9 +25,11 @@ from ._documents import (
     IdentityError,
     validate_identity,
 )
+from ._tax_id import validate_spanish_tax_id
 
 __all__ = [
     "IdentityDocument",
     "IdentityError",
     "validate_identity",
+    "validate_spanish_tax_id",
 ]

@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...errors import get_registered_error_code
-from ...formulas._rulesets.modelo_100._inventario import ValuationMethod
+from ...formulas import ValuationMethod
 from ...storage import EphemeralMasterKeyProvider, override_master_key_provider
 from ..errors import InventoryLedgerError, LIFOForbiddenError
 from . import (

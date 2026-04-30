@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 
 from ...errors import get_registered_error_code
-from ...formulas._rulesets.modelo_100._amortization import LIS_ART_12_LINEAL_TABLE, AssetClass
+from ...formulas import LIS_ART_12_LINEAL_TABLE, AssetClass
 from ...storage import EphemeralMasterKeyProvider, override_master_key_provider
 from ..errors import BasisCapExceededError
 from . import (

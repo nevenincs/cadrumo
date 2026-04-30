@@ -42,7 +42,6 @@ from ._models import (
     UsageRecord,
     UsageSummary,
 )
-from ._providers import ProviderRequest, _FakeAdapter
 from ._translator import BulkTranslator, Translator
 from ._usage import UsageRecorder
 
@@ -63,11 +62,9 @@ __all__ = [
     "LLMResponse",
     "PromptDefinition",
     "PromptRegistry",
-    "ProviderRequest",
     "Translation",
     "Translator",
     "UsageRecord",
     "UsageRecorder",
     "UsageSummary",
-    "_FakeAdapter",
 ]

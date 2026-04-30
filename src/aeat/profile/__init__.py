@@ -12,7 +12,7 @@ from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from ..formulas._rulesets.modelo_100._ccaa import CCAA
+from ..formulas import CCAA
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError
 from ._storage import clear_json, default_path, load_json, save_json
 

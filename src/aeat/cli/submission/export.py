@@ -30,7 +30,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from ...financial.invoices._validators import validate_spanish_tax_id
+from ...identity import validate_spanish_tax_id
 from ...submission import DraftStatus
 from ...submission._formats._serialise import serialise, serialise_envelope
 from ._helpers import load_draft

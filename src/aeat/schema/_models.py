@@ -1,7 +1,7 @@
 """Pydantic v2 models exposed by :mod:`aeat.schema`.
 
 The module declares the typed intermediate representation every
-:class:`~aeat.schema.Extractor` backend emits:
+extractor backend emits:
 
 - :class:`SchemaProvenance` / :class:`SchemaVersion` — where the
   record came from and which pydantic shape version it conforms to.

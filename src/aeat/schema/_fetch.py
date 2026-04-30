@@ -4,7 +4,7 @@ Mirrors the sha256-verified streaming-fetch pattern established by
 :mod:`aeat.manuals._fetch`. The fetched bytes are written to the
 schema cache directory; the returned :class:`FetchedSchemaSource`
 record carries the on-disk path plus every provenance scalar a
-downstream :class:`~aeat.schema.Extractor` needs.
+downstream extractor needs.
 
 No manifest sidecar is written: provenance is embedded in the
 extractor's output :class:`~aeat.schema.Modelo`, which is itself

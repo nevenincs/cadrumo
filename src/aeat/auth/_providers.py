@@ -350,7 +350,6 @@ __all__ = [
     "ClavePermanenteSessionDetail",
     "ClavePinLoginAssertionDetail",
     "ClavePinSessionDetail",
-    "describe_certificate_provider",
     "describe_provider_operator_impact",
     "select_provider",
 ]

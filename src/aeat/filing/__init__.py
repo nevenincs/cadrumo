@@ -361,6 +361,5 @@ __all__ = [
     "make_amendment_id",
     "refresh_review_status",
     "unapprove_draft",
-    "utc_now",
     "validate_draft",
 ]
