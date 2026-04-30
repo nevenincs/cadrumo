@@ -1,39 +1,12 @@
-"""Round-trip calculation verification for imported declaración drafts (#305 cluster E).
+"""Internal re-export shim for `aeat.verification`.
 
-Turns an :class:`aeat.declaracion.DeclaracionFiling` + the project's
-formula engine output into a Kent-readable verdict: ``verified`` /
-``needs_review`` / ``unverifiable``. The module consumes
-:func:`aeat.formulas.Engine.audit_against` and classifies each
-discrepancy by cause (extraction unreliable / rounding / un-modelled
-rule / correctness divergence) so Kent gets an actionable next step.
-
-Public API:
-
-    from aeat.verification import (
-        DiscrepancyCause,
-        ClassifiedDiscrepancy,
-        VerificationStatus,
-        VerificationVerdict,
-        verify_declaracion,
-    )
+Canonical location: :mod:`aeat.application.verification` post the aeat-restructure layout move.
 """
 
 from __future__ import annotations
 
-from ._errors import VerificationError
-from ._schema import (
-    ClassifiedDiscrepancy,
-    DiscrepancyCause,
-    VerificationStatus,
-    VerificationVerdict,
-)
-from ._verify import verify_declaracion
+import importlib as _importlib
 
-__all__ = [
-    "ClassifiedDiscrepancy",
-    "DiscrepancyCause",
-    "VerificationError",
-    "VerificationStatus",
-    "VerificationVerdict",
-    "verify_declaracion",
-]
+from ..application.verification import *  # noqa: F403
+
+__all__ = getattr(_importlib.import_module("aeat.application.verification"), "__all__", ())

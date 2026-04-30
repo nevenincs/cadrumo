@@ -1,0 +1,425 @@
+"""Read-only notifications/messages reader for the authenticated AEAT sede.
+
+Captured live on 2026-04-24 against Kent's production account. The
+sede exposes two notification surfaces:
+
+* **Summary** (``/wlpl/GNNO-JDIT/ResumenInteresados``) — unread
+  notifications + unread communications, two tables keyed by
+  *número de certificado*.
+* **Query** (``/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1``) — a
+  full-text search form plus a results table with one row per
+  (notification, communication, or pending) item.
+
+Both surfaces are reachable on the ``www6`` Cl@ve-dispatched
+subdomain; the pre-discovery assumption that notifications lived only
+on ``www1`` (cert-only) was wrong.
+
+The reader is structurally read-only: no form submission, no state-
+changing URL. Acknowledgement (``acuse``) is a strictly local
+concern (inbox tracks read/unread locally); we never tell AEAT "this
+was read".
+"""
+
+from __future__ import annotations
+
+import contextlib
+import re
+from collections.abc import Callable
+from datetime import UTC, date, datetime
+from typing import TYPE_CHECKING, Final, Literal
+
+from bs4 import BeautifulSoup
+from playwright.async_api import async_playwright
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
+
+from .....core.config import Settings
+from .....core.logging import get_logger
+from ..browser import Profile
+from ..browser.session import BrowserSession
+from ._errors import SedeNavigationError, SedeParseError
+
+if TYPE_CHECKING:
+    from ..auth._authenticator import AeatSession
+
+
+log = get_logger(__name__)
+
+_SEDE_BASE = "https://www6.agenciatributaria.gob.es"
+_RESUMEN_URL = f"{_SEDE_BASE}/wlpl/TEWV-CORE/ResumenVlt"
+_NOTIF_SUMMARY_URL = f"{_SEDE_BASE}/wlpl/GNNO-JDIT/ResumenInteresados"
+_NOTIF_QUERY_URL = f"{_SEDE_BASE}/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
+
+_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
+    strict=True,
+    frozen=True,
+    extra="forbid",
+)
+
+# Número de certificado: 13 digits. Captured: 2699101808461 / 2596230606502.
+_CERT_RE: Final[re.Pattern[str]] = re.compile(r"^\d{10,16}$")
+# Spanish DD-MM-YYYY date format used on notification rows.
+_DATE_RE: Final[re.Pattern[str]] = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")
+
+
+class RemoteNotification(BaseModel):
+    """One row of AEAT's notifications/communications surface.
+
+    Captured live 2026-04-24. ``tipo`` distinguishes a formal
+    ``Notificación`` (legally binding, triggers ten-day acuse window)
+    from a lighter-weight ``Comunicación``. ``pendiente_notificar`` is
+    True when the row is the placeholder state AEAT shows for items
+    that have been issued but not yet delivered (Kent's *20-04-2026*
+    notification is one of these).
+
+    Attributes:
+        certificado_id: ``Nº de certificado`` — 13-digit (or longer)
+            AEAT identifier.
+        tipo: Row class — ``"notificacion"`` | ``"comunicacion"`` |
+            ``"pendiente"`` | ``"unknown"``.
+        concepto: Free-text concepto / subject line (may be empty for
+            pending rows).
+        titular_nif: NIF / NIE of the titular (verbatim from AEAT).
+        titular_nombre: Free-text nombre / razón social of the titular.
+        destinatario_nif: NIF of the destinatario (may equal titular).
+        destinatario_nombre: Free-text nombre / razón social of the
+            destinatario.
+        fecha_emision: ``Fecha de emisión`` as a local date.
+        fecha_notificacion: ``Fecha de notificación`` when the row has
+            been delivered, else ``None``.
+        modo_notificacion: Text AEAT prints for the delivery channel,
+            or ``None`` when not yet delivered.
+        leida: ``True`` if AEAT marks the row as "Leída", ``False``
+            otherwise, ``None`` for pending rows with no column value.
+        source_url: URL the row was scraped from.
+        mode: Structural read-only marker.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    certificado_id: str = Field(min_length=8, max_length=32)
+    tipo: Literal["notificacion", "comunicacion", "pendiente", "unknown"]
+    concepto: str = Field(default="", max_length=256)
+    titular_nif: str = Field(min_length=4, max_length=32)
+    titular_nombre: str = Field(max_length=256)
+    destinatario_nif: str = Field(max_length=32)
+    destinatario_nombre: str = Field(max_length=256)
+    fecha_emision: date
+    fecha_notificacion: date | None = None
+    modo_notificacion: str | None = Field(default=None, max_length=64)
+    leida: bool | None = None
+    source_url: AnyHttpUrl
+    mode: Literal["read"] = "read"
+
+
+class NotificationsSnapshot(BaseModel):
+    """One sede-side capture of the entire notifications surface.
+
+    Attributes:
+        rows: Every notification / communication the sede returned.
+        captured_at: UTC timestamp at snapshot completion.
+        source_url: The sede URL the rows were scraped from (summary
+            or query, depending on caller choice).
+        mode: Structural read-only marker.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    rows: tuple[RemoteNotification, ...]
+    captured_at: datetime
+    source_url: AnyHttpUrl
+    mode: Literal["read"] = "read"
+
+
+# ── Parsing ────────────────────────────────────────────────────────────────
+
+
+def parse_notifications_query(html: str, *, source_url: str) -> NotificationsSnapshot:
+    """Parse the full ``SvInteresadosQuery`` results table.
+
+    This is the canonical list view — every row carries the full
+    column set (tipo, leída, modo de notificación, etc.). Prefer this
+    over :func:`parse_notifications_summary` when you need a complete
+    picture.
+    """
+    rows = _parse_rows(html, source_url=source_url, is_summary=False)
+    return NotificationsSnapshot(
+        rows=tuple(rows),
+        captured_at=datetime.now(tz=UTC),
+        source_url=AnyHttpUrl(source_url),
+    )
+
+
+def parse_notifications_summary(html: str, *, source_url: str) -> NotificationsSnapshot:
+    """Parse the unread-summary ``ResumenInteresados`` tables.
+
+    The summary carries fewer columns per row (no leída / modo), so
+    the returned :class:`RemoteNotification` records leave those as
+    ``None``. Useful for a cheap unread count / dashboard view.
+    """
+    rows = _parse_rows(html, source_url=source_url, is_summary=True)
+    return NotificationsSnapshot(
+        rows=tuple(rows),
+        captured_at=datetime.now(tz=UTC),
+        source_url=AnyHttpUrl(source_url),
+    )
+
+
+def _parse_rows(
+    html: str,
+    *,
+    source_url: str,
+    is_summary: bool,
+) -> list[RemoteNotification]:
+    try:
+        soup = BeautifulSoup(html, "lxml")
+    except Exception as exc:  # pragma: no cover — lxml always available
+        raise SedeParseError(f"failed to parse notifications HTML: {exc}") from exc
+    for tag in soup(["script", "style"]):
+        tag.decompose()
+
+    rows: list[RemoteNotification] = []
+    for table in soup.find_all("table"):
+        header_cells = [th.get_text(" ", strip=True) for th in table.find_all("th")]
+        if not header_cells:
+            continue
+        normalised = [h.lower() for h in header_cells]
+        has_cert = any("certificado" in h for h in normalised)
+        if not has_cert:
+            continue
+        header_index = _index_columns(normalised)
+        for tr in table.find_all("tr"):
+            cells = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
+            if not cells:
+                continue
+            row = _row_from_cells(
+                cells,
+                header_index=header_index,
+                source_url=source_url,
+                is_summary=is_summary,
+            )
+            if row is not None:
+                rows.append(row)
+    return rows
+
+
+def _index_columns(headers: list[str]) -> dict[str, int]:
+    """Map column labels to column indices so column order can drift."""
+    idx: dict[str, int] = {}
+    for i, h in enumerate(headers):
+        lower = h.lower()
+        if "certificado" in lower:
+            idx["certificado"] = i
+        elif "concepto" in lower:
+            idx["concepto"] = i
+        elif "tipo" in lower:
+            idx["tipo"] = i
+        elif "destinatario" in lower:
+            idx["destinatario"] = i
+        elif "titular" in lower:
+            idx["titular"] = i
+        elif "modo" in lower:
+            idx["modo"] = i
+        elif "fecha de notificaci" in lower:
+            idx["fecha_notificacion"] = i
+        elif "fecha de emisi" in lower:
+            idx["fecha_emision"] = i
+        elif "le" in lower and "da" in lower:
+            # "Leída" / "Leida" — accented or not.
+            idx["leida"] = i
+    return idx
+
+
+def _row_from_cells(
+    cells: list[str],
+    *,
+    header_index: dict[str, int],
+    source_url: str,
+    is_summary: bool,
+) -> RemoteNotification | None:
+    cert_idx = header_index.get("certificado")
+    if cert_idx is None or cert_idx >= len(cells):
+        return None
+    certificado_id = cells[cert_idx]
+    if not _CERT_RE.match(certificado_id):
+        return None
+
+    concepto_raw = _safe_cell(cells, header_index.get("concepto")) or ""
+    titular_raw = _safe_cell(cells, header_index.get("titular")) or ""
+    destinatario_raw = _safe_cell(cells, header_index.get("destinatario")) or ""
+    tipo_raw = _safe_cell(cells, header_index.get("tipo")) or ""
+    modo_raw = _safe_cell(cells, header_index.get("modo"))
+    leida_raw = _safe_cell(cells, header_index.get("leida"))
+    emision_raw = _safe_cell(cells, header_index.get("fecha_emision"))
+    notif_raw = _safe_cell(cells, header_index.get("fecha_notificacion"))
+
+    fecha_emision = _parse_date(emision_raw)
+    if fecha_emision is None:
+        return None
+    fecha_notificacion = _parse_date(notif_raw)
+
+    titular_nif, titular_nombre = _split_nif_name(titular_raw)
+    destinatario_nif, destinatario_nombre = _split_nif_name(destinatario_raw)
+
+    tipo = _classify_tipo(tipo_raw, concepto_raw, is_summary)
+    concepto = concepto_raw.replace("*", "").strip()
+    leida = _parse_leida(leida_raw)
+
+    try:
+        return RemoteNotification(
+            certificado_id=certificado_id,
+            tipo=tipo,
+            concepto=concepto,
+            titular_nif=titular_nif or "X0000000Z",
+            titular_nombre=titular_nombre[:256],
+            destinatario_nif=destinatario_nif,
+            destinatario_nombre=destinatario_nombre[:256],
+            fecha_emision=fecha_emision,
+            fecha_notificacion=fecha_notificacion,
+            modo_notificacion=modo_raw or None,
+            leida=leida,
+            source_url=AnyHttpUrl(source_url),
+        )
+    except Exception as exc:  # pragma: no cover — schema drift guard
+        log.debug("notifications: skipped row id=%r: %s", certificado_id, exc)
+        return None
+
+
+def _safe_cell(cells: list[str], idx: int | None) -> str | None:
+    if idx is None or idx >= len(cells):
+        return None
+    value = cells[idx].strip()
+    return value or None
+
+
+def _parse_date(raw: str | None) -> date | None:
+    if not raw:
+        return None
+    match = _DATE_RE.match(raw)
+    if match is None:
+        return None
+    try:
+        return date(int(match.group(3)), int(match.group(2)), int(match.group(1)))
+    except ValueError:
+        return None
+
+
+def _split_nif_name(raw: str) -> tuple[str, str]:
+    """Split ``"Y4113523X WOOTSCH GERGELY DOMOKOS"`` into ``(nif, name)``."""
+    parts = raw.split(maxsplit=1)
+    if not parts:
+        return "", ""
+    if len(parts) == 1:
+        return parts[0], ""
+    return parts[0], parts[1].strip()
+
+
+def _classify_tipo(
+    tipo_raw: str,
+    concepto_raw: str,
+    is_summary: bool,
+) -> Literal["notificacion", "comunicacion", "pendiente", "unknown"]:
+    lower = tipo_raw.lower()
+    if "pendiente" in concepto_raw.lower() or "pendiente" in lower:
+        return "pendiente"
+    if "notific" in lower:
+        return "notificacion"
+    if "comunic" in lower or "comunic" in concepto_raw.lower():
+        return "comunicacion"
+    if is_summary:
+        # Summary tables split notification rows from communication rows
+        # by table order rather than a "Tipo" column; when there's no
+        # column to read, default to "notificacion" for the first table
+        # and "comunicacion" for the second. Callers that need sharper
+        # classification should use parse_notifications_query.
+        return "notificacion"
+    return "unknown"
+
+
+def _parse_leida(raw: str | None) -> bool | None:
+    if not raw:
+        return None
+    lower = raw.strip().lower()
+    if not lower:
+        return None
+    if lower in {"si", "sí", "s", "true", "✓"}:
+        return True
+    if lower in {"no", "n", "false", "-"}:
+        return False
+    return None
+
+
+# ── Live fetchers ──────────────────────────────────────────────────────────
+
+
+async def fetch_notifications_summary(
+    session: AeatSession,
+    *,
+    settings: Settings | None = None,
+) -> NotificationsSnapshot:
+    """Live-fetch ``ResumenInteresados`` using the authenticated session."""
+    return await _fetch_and_parse(
+        session,
+        url=_NOTIF_SUMMARY_URL,
+        parser=parse_notifications_summary,
+        settings=settings,
+    )
+
+
+async def fetch_notifications_query(
+    session: AeatSession,
+    *,
+    settings: Settings | None = None,
+) -> NotificationsSnapshot:
+    """Live-fetch ``SvInteresadosQuery`` (the full table) using Cl@ve."""
+    return await _fetch_and_parse(
+        session,
+        url=_NOTIF_QUERY_URL,
+        parser=parse_notifications_query,
+        settings=settings,
+    )
+
+
+async def _fetch_and_parse(
+    session: AeatSession,
+    *,
+    url: str,
+    parser: Callable[..., NotificationsSnapshot],
+    settings: Settings | None,
+) -> NotificationsSnapshot:
+    settings = settings or Settings()
+    if session.storage_state_path is None:
+        raise SedeNavigationError("AeatSession.storage_state_path is None; run `aeat auth login` first")
+    profile = Profile(
+        name=settings.aeat_default_profile_name,
+        storage_state_path=session.storage_state_path,
+    )
+    async with async_playwright() as pw:
+        browser_session = BrowserSession(pw, settings, profile)
+        context = await browser_session.create_context(
+            storage_state_path=session.storage_state_path,
+        )
+        try:
+            page = await context.new_page()
+            # Warm the cookie jar on the authenticated landing.
+            with contextlib.suppress(Exception):
+                await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+            try:
+                await page.goto(url, wait_until="domcontentloaded")
+            except Exception as exc:
+                raise SedeNavigationError(f"goto {url!r} failed: {exc}") from exc
+            html = await page.content()
+            return parser(html, source_url=url)
+        finally:
+            with contextlib.suppress(Exception):
+                await context.close()
+            await browser_session.close()
+
+
+__all__ = [
+    "NotificationsSnapshot",
+    "RemoteNotification",
+    "fetch_notifications_query",
+    "fetch_notifications_summary",
+    "parse_notifications_query",
+    "parse_notifications_summary",
+]

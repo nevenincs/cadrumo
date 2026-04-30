@@ -32,8 +32,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.cli import app
-from aeat.cli.security import app as security_app
+from aeat.entrypoints.cli import app
+from aeat.entrypoints.cli.security import app as security_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
@@ -98,7 +98,7 @@ class TestFileFallbackFirstRun:
         # Step 5: capture an encrypted record under the original
         # master key. After recovery this same record must still
         # decrypt (preserves-master-key-bytes invariant).
-        from aeat.storage import (
+        from aeat.adapters.persistence.storage import (
             FileFallbackMasterKeyProvider,
             decrypt_record,
             encrypt_record,
@@ -191,7 +191,7 @@ class TestUnsecuredFirstRunSyntheticNIF:
         assert "RECOVERY KEY" in provision.output
 
         # The published deterministic key is NOT a real master key.
-        from aeat.storage._master_key import _UNSECURED_PUBLISHED_KEY
+        from aeat.adapters.persistence.storage._master_key import _UNSECURED_PUBLISHED_KEY
 
         assert _UNSECURED_PUBLISHED_KEY.startswith(b"AEAT_UNSECURED_TEST_KEY")
 
@@ -202,7 +202,7 @@ class TestUnsecuredFirstRunSyntheticNIF:
         # The substrate's NIF-canary explicitly allows synthetic
         # placeholders so test fixtures + tutorials work under the
         # unsecured backend.
-        from aeat.storage import (
+        from aeat.adapters.persistence.storage import (
             UnsecuredMasterKeyProvider,
             refuse_unsecured_with_real_nif,
         )
@@ -217,7 +217,7 @@ class TestUnsecuredRefusalWithRealNIF:
     """The NIF-canary fences off real tax data from the unsecured backend."""
 
     def test_refusal_at_substrate_boundary(self) -> None:
-        from aeat.storage import (
+        from aeat.adapters.persistence.storage import (
             UnsecuredMasterKeyProvider,
             UnsecuredModeRefusedError,
             refuse_unsecured_with_real_nif,
@@ -276,8 +276,8 @@ class TestDoctorAfterFirstRun:
         # CLI; the Rich Table renderer may compress / wrap the row
         # detail under narrow test terminals, but the row helper
         # returns the structured Row record with the full wording.
-        from aeat.cli.doctor import State, check_secret_store_backend
-        from aeat.config import Settings
+        from aeat.core.config import Settings
+        from aeat.entrypoints.cli.doctor import State, check_secret_store_backend
 
         secrets_dir = tmp_path / "secrets"
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
