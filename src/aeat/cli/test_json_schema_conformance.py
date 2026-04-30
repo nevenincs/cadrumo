@@ -39,6 +39,18 @@ _EXPECTED_REGISTERED_COMMANDS = {
     "auth status",
     "auth whoami",
     "browser health",
+    "data ledgers assets add",
+    "data ledgers assets amortization apply",
+    "data ledgers assets amortization preview",
+    "data ledgers assets classes list",
+    "data ledgers assets list",
+    "data ledgers assets show",
+    "data ledgers anexo-d preview",
+    "data ledgers inventory create",
+    "data ledgers inventory list",
+    "data ledgers inventory movement add",
+    "data ledgers inventory valuation preview",
+    "financial aggregate",
     "filing reconcile",
     "modelos applicable-to",
     "modelos list",
@@ -203,6 +215,52 @@ def test_schema_registry_contains_current_json_contract_bindings() -> None:
             )[1],
         ),
         (
+            "data ledgers assets add",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_assets_add(tmp_path),
+        ),
+        (
+            "data ledgers assets list",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_assets_list(tmp_path),
+        ),
+        (
+            "data ledgers assets show",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_assets_show(tmp_path),
+        ),
+        (
+            "data ledgers assets classes list",
+            lambda tmp_path, monkeypatch: _RUNNER.invoke(
+                root_app, ["--json", "data", "ledgers", "assets", "classes", "list"]
+            ),
+        ),
+        (
+            "data ledgers assets amortization preview",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_assets_amortization(tmp_path, "preview"),
+        ),
+        (
+            "data ledgers assets amortization apply",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_assets_amortization(tmp_path, "apply"),
+        ),
+        (
+            "data ledgers inventory create",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_inventory_create(tmp_path),
+        ),
+        (
+            "data ledgers inventory list",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_inventory_list(tmp_path),
+        ),
+        (
+            "data ledgers inventory movement add",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_inventory_movement_add(tmp_path),
+        ),
+        (
+            "data ledgers inventory valuation preview",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_inventory_valuation_preview(tmp_path),
+        ),
+        (
+            "data ledgers anexo-d preview",
+            lambda tmp_path, monkeypatch: _invoke_data_ledgers_anexo_d_preview(tmp_path),
+        ),
+        (
             "submission check-nif",
             lambda tmp_path, monkeypatch: _RUNNER.invoke(root_app, ["submission", "check-nif", "X1234567L", "--json"]),
         ),
@@ -263,3 +321,275 @@ def _invoke_workflow_list(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     seed = _RUNNER.invoke(root_app, ["workflow", "next", "--json", "--no-sync"])
     assert seed.exit_code == 0, seed.output
     return _RUNNER.invoke(root_app, ["workflow", "list", "--json"])
+
+
+def _prepare_ledgers_env() -> None:
+    from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
+
+    override_master_key_provider(EphemeralMasterKeyProvider())
+
+
+def _seed_data_ledger_asset(tmp_path: Path) -> None:
+    _prepare_ledgers_env()
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "data",
+            "ledgers",
+            "assets",
+            "add",
+            "pc",
+            "--description",
+            "work pc",
+            "--asset-class",
+            "electronica.equipos_tratamiento_informacion",
+            "--taxable-base",
+            "1000.00",
+            "--acquisition-date",
+            "2025-01-01",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+
+def _invoke_data_ledgers_assets_add(tmp_path: Path):
+    _prepare_ledgers_env()
+    return _RUNNER.invoke(
+        root_app,
+        [
+            "--json",
+            "data",
+            "ledgers",
+            "assets",
+            "add",
+            "pc",
+            "--description",
+            "work pc",
+            "--asset-class",
+            "electronica.equipos_tratamiento_informacion",
+            "--taxable-base",
+            "1000.00",
+            "--acquisition-date",
+            "2025-01-01",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+
+
+def _invoke_data_ledgers_assets_list(tmp_path: Path):
+    _seed_data_ledger_asset(tmp_path)
+    return _RUNNER.invoke(root_app, ["--json", "data", "ledgers", "assets", "list", "--storage-dir", str(tmp_path)])
+
+
+def _invoke_data_ledgers_assets_show(tmp_path: Path):
+    _seed_data_ledger_asset(tmp_path)
+    return _RUNNER.invoke(
+        root_app,
+        ["--json", "data", "ledgers", "assets", "show", "pc", "--storage-dir", str(tmp_path)],
+    )
+
+
+def _invoke_data_ledgers_assets_amortization(tmp_path: Path, command: str):
+    _seed_data_ledger_asset(tmp_path)
+    return _RUNNER.invoke(
+        root_app,
+        [
+            "--json",
+            "data",
+            "ledgers",
+            "assets",
+            "amortization",
+            command,
+            "--asset",
+            "pc",
+            "--year",
+            "2025",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+
+
+def _seed_data_ledger_inventory(tmp_path: Path) -> None:
+    _prepare_ledgers_env()
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "data",
+            "ledgers",
+            "inventory",
+            "create",
+            "retail",
+            "--year",
+            "2025",
+            "--valuation-method",
+            "fifo",
+            "--opening-stock",
+            "100.00",
+            "--opening-quantity",
+            "10",
+            "--opening-unit-cost",
+            "10.00",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+
+def _invoke_data_ledgers_inventory_create(tmp_path: Path):
+    _prepare_ledgers_env()
+    return _RUNNER.invoke(
+        root_app,
+        [
+            "--json",
+            "data",
+            "ledgers",
+            "inventory",
+            "create",
+            "retail",
+            "--year",
+            "2025",
+            "--valuation-method",
+            "fifo",
+            "--opening-stock",
+            "100.00",
+            "--opening-quantity",
+            "10",
+            "--opening-unit-cost",
+            "10.00",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+
+
+def _invoke_data_ledgers_inventory_list(tmp_path: Path):
+    _seed_data_ledger_inventory(tmp_path)
+    return _RUNNER.invoke(root_app, ["--json", "data", "ledgers", "inventory", "list", "--storage-dir", str(tmp_path)])
+
+
+def _invoke_data_ledgers_inventory_movement_add(tmp_path: Path):
+    _seed_data_ledger_inventory(tmp_path)
+    return _RUNNER.invoke(
+        root_app,
+        [
+            "--json",
+            "data",
+            "ledgers",
+            "inventory",
+            "movement",
+            "add",
+            "--actividad",
+            "retail",
+            "--year",
+            "2025",
+            "--movement-id",
+            "buy-1",
+            "--date",
+            "2025-01-02",
+            "--kind",
+            "purchase",
+            "--quantity",
+            "2",
+            "--unit-cost",
+            "10",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+
+
+def _invoke_data_ledgers_inventory_valuation_preview(tmp_path: Path):
+    movement = _invoke_data_ledgers_inventory_movement_add(tmp_path)
+    assert movement.exit_code == 0, movement.output
+    return _RUNNER.invoke(
+        root_app,
+        [
+            "--json",
+            "data",
+            "ledgers",
+            "inventory",
+            "valuation",
+            "preview",
+            "--actividad",
+            "retail",
+            "--year",
+            "2025",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+
+
+def _invoke_data_ledgers_anexo_d_preview(tmp_path: Path):
+    _prepare_ledgers_env()
+    asset = _RUNNER.invoke(
+        root_app,
+        [
+            "--json",
+            "data",
+            "ledgers",
+            "assets",
+            "add",
+            "pc",
+            "--description",
+            "work pc",
+            "--asset-class",
+            "electronica.equipos_tratamiento_informacion",
+            "--taxable-base",
+            "1000.00",
+            "--acquisition-date",
+            "2025-01-01",
+            "--actividad",
+            "retail",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+    assert asset.exit_code == 0, asset.output
+    inventory = _RUNNER.invoke(
+        root_app,
+        [
+            "--json",
+            "data",
+            "ledgers",
+            "inventory",
+            "create",
+            "retail",
+            "--year",
+            "2025",
+            "--valuation-method",
+            "fifo",
+            "--opening-stock",
+            "100.00",
+            "--opening-quantity",
+            "10",
+            "--opening-unit-cost",
+            "10.00",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
+    assert inventory.exit_code == 0, inventory.output
+    return _RUNNER.invoke(
+        root_app,
+        [
+            "--json",
+            "data",
+            "ledgers",
+            "anexo-d",
+            "preview",
+            "--modelo",
+            "100",
+            "--year",
+            "2025",
+            "--actividad",
+            "retail",
+            "--storage-dir",
+            str(tmp_path),
+        ],
+    )
