@@ -16,10 +16,9 @@ from . import (
     LLMProviderError,
     LLMRateLimitError,
     LLMRequest,
-    ProviderRequest,
     UsageRecorder,
-    _FakeAdapter,
 )
+from ._providers import ProviderRequest, _FakeAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
 
