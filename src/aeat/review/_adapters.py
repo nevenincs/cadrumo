@@ -26,14 +26,12 @@ from ..financial.invoices import (
     Invoice,
     InvoiceCatalogue,
     PaymentStatus,
-    load_invoices,
 )
 from ..financial.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
     is_classified,
-    load_transactions,
 )
 from ..i18n import Translatable
 from ..logging import get_logger
@@ -53,9 +51,6 @@ from ._models import (
 )
 
 _LOGGER = get_logger(__name__)
-
-_TRANSACTIONS_FILENAME = "transactions.json"
-_INVOICES_FILENAME = "invoices.json"
 
 _SUMMARY_MAX = 80
 
@@ -137,13 +132,18 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
 
 
 def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
-    path = settings.aeat_financial_txs_dir.resolve() / _TRANSACTIONS_FILENAME
-    if not path.exists():
+    from ..financial.transactions._repository import TransactionCatalogueRepository
+
+    store_dir = settings.aeat_financial_txs_dir.resolve()
+    repository = TransactionCatalogueRepository(store_dir=store_dir)
+    if not repository.envelope_path.exists():
         return None
     try:
-        return load_transactions(path)
+        return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
-        raise ReviewSourceLoadError(f"failed to load transactions catalogue at {path}: {exc}") from exc
+        raise ReviewSourceLoadError(
+            f"failed to load transactions catalogue at {repository.envelope_path}: {exc}"
+        ) from exc
 
 
 def _to_transaction_item(
@@ -196,13 +196,16 @@ def invoices_pending(
 
 
 def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
-    path = settings.aeat_invoices_dir.resolve() / _INVOICES_FILENAME
-    if not path.exists():
+    from ..financial.invoices._repository import InvoiceCatalogueRepository
+
+    store_dir = settings.aeat_invoices_dir.resolve()
+    repository = InvoiceCatalogueRepository(store_dir=store_dir)
+    if not repository.envelope_path.exists():
         return None
     try:
-        return load_invoices(path)
+        return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
-        raise ReviewSourceLoadError(f"failed to load invoices catalogue at {path}: {exc}") from exc
+        raise ReviewSourceLoadError(f"failed to load invoices catalogue at {repository.envelope_path}: {exc}") from exc
 
 
 def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:
@@ -333,20 +336,22 @@ def drafts_pending(
 
 
 def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
+    """Iterate every persisted draft via :class:`FilingDraftRepository`.
+
+    Drafts are ciphertext-at-rest only; the helper returns the canonical
+    envelope path alongside the typed payload so callers can echo the
+    on-disk location back to the operator without ever touching
+    plaintext.
+    """
+    from ..filing._repository import FilingDraftRepository
+
     root = settings.aeat_drafts_dir.resolve()
     if not root.exists():
         return ()
+    repository = FilingDraftRepository(store_dir=root)
     out: list[tuple[Path, FilingDraft]] = []
-    for path in sorted(root.glob("*.json")):
-        try:
-            draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-        except ValidationError:
-            _LOGGER.warning("skipping invalid draft file: %s", path)
-            continue
-        except OSError:
-            _LOGGER.warning("skipping unreadable draft file: %s", path)
-            continue
-        out.append((path, draft))
+    for draft in repository.iter_drafts():
+        out.append((repository.envelope_path_for(draft.draft_id), draft))
     return tuple(out)
 
 
