@@ -5,8 +5,6 @@ tags:
 date: '2026-04-27'
 related:
   - '[[2026-04-27-test-clave-movil-mark-fix-research]]'
-  - '[[wgergely-aeat-436]]'
-  - '[[wgergely-aeat-439]]'
 ---
 
 # `test-clave-movil-mark-fix` adr: Keep Cl@ve Movil tests protocol-level | (**status:** `supersedes earlier marker decision`)

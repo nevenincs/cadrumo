@@ -50,7 +50,13 @@ class TestWorkflowCli:
         payload = _unwrap_result(result.output)
         assert payload["final_stage"] == "DONE"
         run_id = payload["run_id"]
-        persisted = _isolated_runs_dir / f"{run_id}.json"
+        # Wave-7 made workflow runs CipherEnvelope-on-disk; the
+        # canonical filename is ``<run_id>.envelope.json`` (not
+        # ``<run_id>.json``). The bare-``.json`` assertion was a
+        # pre-wave-7 artefact that started silently passing on
+        # tmp-dir filesystem oddities and only began failing under
+        # CI's deterministic POSIX runners.
+        persisted = _isolated_runs_dir / f"{run_id}.envelope.json"
         assert persisted.exists()
 
     def test_run_for_period(self, _isolated_runs_dir: Path) -> None:

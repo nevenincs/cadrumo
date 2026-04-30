@@ -31,6 +31,30 @@ class DivergenceSink(StrEnum):
     FILE = "FILE"
 
 
+class SecretStoreBackend(StrEnum):
+    """Supported backends for the master-key secret store.
+
+    Members:
+        AUTO: Try the OS keychain first; fall back to the encrypted
+            file when the keychain is unavailable. Default.
+        KEYRING: OS keychain only (Windows Credential Manager, macOS
+            Keychain, Linux Secret Service). Refuses to fall back.
+        FILE: Encrypted file only — passphrase-derived KEK wraps the
+            master key. Required for headless / CI execution where no
+            usable keychain backend is available.
+        UNSECURED: **Testing / throwaway only.** Master key is a
+            published deterministic constant — provides ZERO
+            confidentiality. Refused unless ``AEAT_ALLOW_UNENCRYPTED=1``
+            is set, AND refused at profile-load time when the active
+            operator profile carries a real NIF/NIE/CIF (NIF-canary).
+    """
+
+    AUTO = "auto"
+    KEYRING = "keyring"
+    FILE = "file"
+    UNSECURED = "unsecured"
+
+
 # Project root: three levels up from src/aeat/config.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -216,6 +240,41 @@ class Settings(BaseSettings):
     aeat_storage_backup_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "backups",
         description="Directory where the storage layer writes database backups",
+    )
+    aeat_secret_store_backend: SecretStoreBackend = Field(
+        default=SecretStoreBackend.AUTO,
+        description=(
+            "Master-key backend for the secret store. "
+            "auto = OS keychain when available, encrypted file fallback otherwise. "
+            "keyring = OS keychain only (refuses to fall back). "
+            "file = encrypted file only (required for CI / headless). "
+            "unsecured = testing-only mode with a published deterministic "
+            "key; requires aeat_allow_unencrypted=true and refuses real NIFs."
+        ),
+    )
+    aeat_allow_unencrypted: bool = Field(
+        default=False,
+        description=(
+            "Hostile-named opt-out gate for the unsecured backend. Must be "
+            "set to true (env var: AEAT_ALLOW_UNENCRYPTED=1) to use "
+            "aeat_secret_store_backend=unsecured. The unsecured backend "
+            "is intended for testing / educational / throwaway scenarios "
+            "only and provides ZERO confidentiality. The substrate refuses "
+            "to load an operator profile that carries a real NIF/NIE/CIF "
+            "while running in unsecured mode."
+        ),
+    )
+    aeat_secret_store_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "secrets",
+        description="Directory for the encrypted secret-store master-key file and ciphertext records",
+    )
+    aeat_blob_store_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "blobs",
+        description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
+    )
+    aeat_audit_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "audit",
+        description="Directory for the governed audit sink (redacted, classification-aware)",
     )
 
     # ── Casilla corpus ──────────────────────────────────────────────────────
@@ -742,7 +801,12 @@ class Settings(BaseSettings):
         "aeat_token_dir",
         "aeat_usage_ratios_path",
         "aeat_financial_txs_dir",
+        "aeat_invoices_dir",
+        "aeat_attachments_dir",
         "aeat_storage_backup_dir",
+        "aeat_secret_store_dir",
+        "aeat_blob_store_dir",
+        "aeat_audit_dir",
         "aeat_casillas_root",
         "aeat_manuals_root",
         "aeat_normatives_root",
@@ -760,6 +824,7 @@ class Settings(BaseSettings):
         "aeat_workflow_runs_dir",
         "aeat_workflow_draft_inputs_path",
         "aeat_drafts_dir",
+        "aeat_runs_dir",
         "aeat_status_cache_dir",
         "aeat_status_browser_trace_dir",
         "aeat_justificantes_dir",
