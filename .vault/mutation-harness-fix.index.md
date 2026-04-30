@@ -15,6 +15,7 @@ related:
   - '[[2026-04-29-mutation-harness-fix-phase4-task1-exec]]'
   - '[[2026-04-29-mutation-harness-fix-plan]]'
   - '[[2026-04-29-mutation-harness-fix-research]]'
+  - '[[2026-04-30-mutation-harness-fix-closure-audit]]'
   - '[[2026-04-30-mutation-harness-fix-strict-audit]]'
 ---
 
@@ -30,6 +31,7 @@ Auto-generated index of all documents tagged with `#mutation-harness-fix`.
 
 ### audit
 
+- `2026-04-30-mutation-harness-fix-closure-audit` - Wave 6 closure audit — every deferral exhausted
 - `2026-04-30-mutation-harness-fix-strict-audit` - Strict-review audit — `mutation-harness-fix` Wave 5
 
 ### exec
