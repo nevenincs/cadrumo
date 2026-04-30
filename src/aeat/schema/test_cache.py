@@ -107,7 +107,7 @@ def test_cache_serialises_range_rule_aliases(tmp_path: Path) -> None:
     # the ``by_alias=True`` path survives the round-trip.
     from . import RangeRule  # local import to keep test isolated
 
-    rule = RangeRule(min_=Decimal("0"), max_=Decimal("10"))
+    rule = RangeRule.model_validate({"min": Decimal("0"), "max": Decimal("10")})
     payload = rule.model_dump(mode="json", by_alias=True)
     assert set(payload) >= {"min", "max", "kind"}
 
