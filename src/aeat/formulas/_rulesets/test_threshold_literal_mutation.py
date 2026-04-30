@@ -108,6 +108,41 @@ def _modelo_100_d_simplificada_cap_binding_fixture() -> dict[str, Decimal]:
     }
 
 
+def _modelo_390_devolver_fixture() -> dict[str, Decimal]:
+    """M390 fixture driving casilla 191 NEGATIVE so 193's Literal(0) is observable.
+
+    Casilla 193 = ``clamp_pos(sub_op(Literal(0), ref('191')))``. With
+    191 > 0 (the default ``_modelo_390_fixture`` scenario), the inner
+    ``Sub(0, 191)`` is negative and ``clamp_pos`` absorbs any
+    epsilon-shift on the literal — pre-Wave-6 this was catalogued as a
+    clamp-mask deferral. Driving 191 NEGATIVE (the legitimate
+    "devolver" scenario where annual VAT due is negative because
+    refunds exceeded charges) flips the inner ``Sub`` positive, so
+    ``clamp_pos(0 - (-4200)) = 4200`` and a +1 EUR shift on the
+    literal produces 4201 — delta 1 EUR, detectable.
+
+    Inputs: 100 = 10 000, 101 = 5 000 → 104 = 15 000;
+    96 = 30 000 → 105 = 15 000; 108 = 500, 109 = 300 → 190 = 15 800;
+    662 = 20 000 → 191 = -4 200; 192 = clamp_pos(-4200) = 0;
+    193 = clamp_pos(0 - (-4200)) = 4 200.
+    """
+    return {
+        "95": Decimal("100000.00"),
+        "96": Decimal("30000.00"),
+        "100": Decimal("10000.00"),
+        "101": Decimal("5000.00"),
+        "104": Decimal("15000.00"),
+        "105": Decimal("15000.00"),
+        "108": Decimal("500.00"),
+        "109": Decimal("300.00"),
+        "190": Decimal("15800.00"),
+        "191": Decimal("-4200.00"),
+        "192": Decimal("0.00"),
+        "193": Decimal("4200.00"),
+        "662": Decimal("20000.00"),
+    }
+
+
 def _modelo_303_fixture_with_iva_rate_baselines() -> dict[str, Decimal]:
     """M303 fixture including printed-IVA-rate baseline values for 02/05/08.
 
@@ -185,33 +220,32 @@ _THRESHOLD_PATH_OVERRIDES: dict[
     ("modelo_100.2024", "0225", (0, 1)): _modelo_100_d_simplificada_cap_binding_fixture,
     ("modelo_100.2025", "0225", (0, 1)): _modelo_100_d_simplificada_cap_binding_fixture,
     ("modelo_100.2026", "0225", (0, 1)): _modelo_100_d_simplificada_cap_binding_fixture,
+    # M390 casilla 193 Literal(0) — needs 191 < 0 to be observable.
+    # The default _modelo_390_fixture has 191 > 0 (positive cuota
+    # resultante, the "ingresar" scenario); use a "devolver"
+    # variant where 190 < 662 so 191 is negative and clamp_pos
+    # surfaces the literal.
+    ("modelo_390.2024", "193", (0, 0, 0)): _modelo_390_devolver_fixture,
+    ("modelo_390.2025", "193", (0, 0, 0)): _modelo_390_devolver_fixture,
+    ("modelo_390.2026", "193", (0, 0, 0)): _modelo_390_devolver_fixture,
 }
 
 
-# Explicit catalogue of clamp-mask-dominated literal positions where
-# an ε-shift produces no observable discrepancy because a downstream
-# ``clamp_pos`` (or equivalent) absorbs the change. The literal IS
-# part of the AST but its specific value is architecturally
-# irrelevant under any reasonable fixture; mutation cannot detect a
-# typo because there is no observable post-clamp difference.
+# Catalogue of clamp-mask-dominated literal positions whose mutation
+# produces no observable discrepancy because a downstream
+# ``clamp_pos`` absorbs the change AND no fixture redesign can flip
+# the inner sign. Empty post-Wave-6 closure: the M390 193
+# ``Literal(0)`` previously catalogued here was found to be
+# observable when 191 < 0 (the legitimate "devolver" scenario); the
+# per-path override ``_modelo_390_devolver_fixture`` in
+# :data:`_THRESHOLD_PATH_OVERRIDES` covers it.
 #
-# Each entry must carry a defensible rationale; a future contributor
-# extending this set should justify why a typo of that literal would
-# not corrupt any taxpayer's filing.
-_CLAMP_MASKED_IDENTITY_POSITIONS: dict[tuple[str, str, tuple[int, ...]], str] = {
-    # M390 casilla 193 = ``clamp_pos(sub_op(Literal(0), ref('191')))``.
-    # With ref('191') > 0 in any meaningful fixture (the cuota
-    # resultante is non-negative when there is anything owed),
-    # ``sub_op(0, 191) = -191``, which clamp_pos absorbs to 0. Any
-    # ε-shift on Literal(0) keeps the inner sub_op negative and the
-    # clamp output at 0. The literal IS in the AST for clarity
-    # ("0 - cuota = devolver"), but its value is architecturally
-    # invariant — a typo to ``Literal(0.5)`` etc. would produce
-    # identical 193 output for any positive 191.
-    ("modelo_390.2024", "193", (0, 0, 0)): "clamp_pos absorbs Sub(literal, ref191) for any non-negative 191",
-    ("modelo_390.2025", "193", (0, 0, 0)): "clamp_pos absorbs Sub(literal, ref191) for any non-negative 191",
-    ("modelo_390.2026", "193", (0, 0, 0)): "clamp_pos absorbs Sub(literal, ref191) for any non-negative 191",
-}
+# Sentinel preserved for any future structural-clamp-mask cases that
+# genuinely cannot be flipped by fixture redesign. Each entry must
+# carry a defensible rationale; a future contributor extending this
+# set should justify why a typo of that literal would not corrupt
+# any taxpayer's filing under ANY reasonable fixture.
+_CLAMP_MASKED_IDENTITY_POSITIONS: dict[tuple[str, str, tuple[int, ...]], str] = {}
 
 
 def _iter_covered_threshold_targets() -> Iterator[tuple[Ruleset, str, tuple[int, ...], str, Decimal]]:

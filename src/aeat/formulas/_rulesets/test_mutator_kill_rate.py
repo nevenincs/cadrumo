@@ -40,11 +40,19 @@ from . import ALL_RULESETS
 from ._mutators import (
     classify_percent_rate,
     is_additive_identity_literal,
+    iter_arithmetic_op_paths,
     iter_brackets_nodes,
+    iter_casilla_ref_paths,
     iter_compound_descendants,
     iter_percent_nodes,
     iter_scalar_leaf_paths,
     iter_threshold_literal_paths,
+)
+from .test_arithmetic_op_mutation import (
+    _TEST_PARAMS_CACHE as _ARITHMETIC_OP_TEST_PARAMS,
+)
+from .test_casilla_ref_topology_mutation import (
+    _TEST_PARAMS_CACHE as _CASILLA_REF_TEST_PARAMS,
 )
 from .test_operand_swap_mutation import SUB_OP_COVERAGE
 from .test_percent_rate_mutation import _iter_percent_targets
@@ -68,6 +76,8 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
         "mul_div_scalar": 0,
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
+        "arithmetic_op_swap_covered": 0,
+        "casilla_ref_topology_covered": 0,
     }
     for fd in ruleset.formulas:
         # SubFormula nodes (existing operand-swap harness — counted
@@ -102,6 +112,14 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
                 counts["threshold_literal_identity_excluded"] += 1
             else:
                 counts["threshold_literal_covered"] += 1
+        # Arithmetic-op-swap positions (Wave 6 — operator-class typos).
+        # Walker enumerates every Add/Sub position; the per-class
+        # harness's runtime probe filters fixture-masked entries
+        # (catalogued in ``_FIXTURE_MASKED_OP_POSITIONS_RATIONALES``).
+        for _ in iter_arithmetic_op_paths(fd.formula):
+            counts["arithmetic_op_swap_covered"] += 1
+        for _ in iter_casilla_ref_paths(fd.formula):
+            counts["casilla_ref_topology_covered"] += 1
     return counts
 
 
@@ -159,6 +177,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 33,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 96,
+        "arithmetic_op_swap_deferred": 3,
+        "casilla_ref_topology_covered": 131,
+        "casilla_ref_topology_deferred": 3,
     },
     "modelo_100.2025": {
         # Issue #317: structural baseline for the year that anchors the 2024
@@ -176,6 +198,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 33,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 96,
+        "arithmetic_op_swap_deferred": 3,
+        "casilla_ref_topology_covered": 131,
+        "casilla_ref_topology_deferred": 3,
     },
     "modelo_100.2026": {
         # Issue #317: 2026 ruleset inherits 2025 numerical surface; mutable-node
@@ -193,6 +219,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 33,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 96,
+        "arithmetic_op_swap_deferred": 3,
+        "casilla_ref_topology_covered": 131,
+        "casilla_ref_topology_deferred": 3,
     },
     "modelo_100.summary.2025": {
         # 1 sub_op covered (0720 outer); 0698 outer + the inner
@@ -210,6 +240,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 7,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 11,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_111.2024": {
         # Issue #457: M111 2024 has 1 sub_op (casilla 30); the
@@ -227,6 +261,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 2,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 10,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_111.2025": {
         "sub_op": 1,
@@ -241,6 +279,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 2,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 10,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_111.2026": {
         # Issue #318: 2026 ruleset is a structural clone of 2024 / 2025
@@ -259,6 +301,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 2,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 10,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_115.2024": {
         # Issue #457: M115 2024 sub_op (casilla 06) not covered by
@@ -275,6 +321,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 2,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 4,
+        "casilla_ref_topology_deferred": 1,
     },
     "modelo_115.2025": {
         "sub_op": 1,
@@ -289,6 +339,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 2,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 4,
+        "casilla_ref_topology_deferred": 1,
     },
     "modelo_115.2026": {
         # Issue #319: 2026 ruleset is a structural clone of 2024 / 2025
@@ -307,6 +361,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 2,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 4,
+        "casilla_ref_topology_deferred": 1,
     },
     "modelo_123.2024": {
         "sub_op": 1,
@@ -321,6 +379,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 4,
+        "arithmetic_op_swap_deferred": 2,
+        "casilla_ref_topology_covered": 8,
+        "casilla_ref_topology_deferred": 4,
     },
     "modelo_123.2025": {
         "sub_op": 1,
@@ -335,6 +397,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 4,
+        "arithmetic_op_swap_deferred": 2,
+        "casilla_ref_topology_covered": 8,
+        "casilla_ref_topology_deferred": 4,
     },
     "modelo_123.2026": {
         "sub_op": 1,
@@ -349,6 +415,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 4,
+        "arithmetic_op_swap_deferred": 2,
+        "casilla_ref_topology_covered": 8,
+        "casilla_ref_topology_deferred": 4,
     },
     "modelo_130.2024": {
         # M130 has 8 SubFormula descendants per year — 6 outer (one per
@@ -367,6 +437,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 1,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 9,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 18,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_130.2025": {
         "sub_op": 8,
@@ -381,6 +455,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 1,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 9,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 18,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_130.2026": {
         # Issue #321: 2026 ruleset is a structural clone of 2024 / 2025
@@ -399,6 +477,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 1,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 9,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 18,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_131.2024": {
         # Issue #457: M131 2024 not imported by operand-swap harness
@@ -415,6 +497,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 13,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_131.2025": {
         # 3 outer sub_ops covered (10, 13, 15); 2 inner sub_ops nested
@@ -431,6 +517,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 13,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_131.2026": {
         "sub_op": 5,
@@ -445,6 +535,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 13,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_180.2024": {
         "sub_op": 0,
@@ -459,6 +553,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 0,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 1,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_180.2025": {
         "sub_op": 0,
@@ -473,6 +571,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 0,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 1,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_180.2026": {
         "sub_op": 0,
@@ -487,6 +589,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 0,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 1,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_200.2024": {
         # 1 outer sub_op covered (00611); 4 inner sub_ops in the 4-deep
@@ -504,6 +610,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 2,
+        "casilla_ref_topology_covered": 10,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_200.2025": {
         "sub_op": 5,
@@ -518,6 +628,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 2,
+        "casilla_ref_topology_covered": 10,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_200.2026": {
         "sub_op": 5,
@@ -532,6 +646,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 2,
+        "casilla_ref_topology_covered": 10,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_202.2025": {
         # 1 outer sub_op covered (32); 2 inner sub_ops in the chain are
@@ -548,6 +666,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 0,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 3,
+        "arithmetic_op_swap_deferred": 2,
+        "casilla_ref_topology_covered": 8,
+        "casilla_ref_topology_deferred": 0,
     },
     "modelo_303.2024": {
         "sub_op": 2,  # casilla 45 = sub_op(add_op(...), ref(...)) (1) + casilla 69 = sub_op(ref, ref) (1).
@@ -562,6 +684,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 5,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 4,
+        "casilla_ref_topology_covered": 23,
+        "casilla_ref_topology_deferred": 15,
     },
     "modelo_303.2025": {
         "sub_op": 2,
@@ -576,6 +702,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 5,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 4,
+        "casilla_ref_topology_covered": 23,
+        "casilla_ref_topology_deferred": 15,
     },
     "modelo_303.2026": {
         "sub_op": 2,
@@ -590,6 +720,10 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "threshold_literal_covered": 5,
         "threshold_literal_identity_excluded": 0,
         "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 6,
+        "arithmetic_op_swap_deferred": 4,
+        "casilla_ref_topology_covered": 23,
+        "casilla_ref_topology_deferred": 15,
     },
     "modelo_390.2024": {
         # 2 outer sub_ops covered (105, 191); casilla 193 (clamp-wrapped
@@ -606,7 +740,11 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "mul_div_scalar_deferred": 0,
         "threshold_literal_covered": 1,
         "threshold_literal_identity_excluded": 0,
-        "threshold_literal_deferred": 1,
+        "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 5,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 11,
+        "casilla_ref_topology_deferred": 1,
     },
     "modelo_390.2025": {
         "sub_op": 3,
@@ -620,7 +758,11 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "mul_div_scalar_deferred": 0,
         "threshold_literal_covered": 1,
         "threshold_literal_identity_excluded": 0,
-        "threshold_literal_deferred": 1,
+        "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 5,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 11,
+        "casilla_ref_topology_deferred": 1,
     },
     "modelo_390.2026": {
         "sub_op": 3,
@@ -634,7 +776,11 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "mul_div_scalar_deferred": 0,
         "threshold_literal_covered": 1,
         "threshold_literal_identity_excluded": 0,
-        "threshold_literal_deferred": 1,
+        "threshold_literal_deferred": 0,
+        "arithmetic_op_swap_covered": 5,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 11,
+        "casilla_ref_topology_deferred": 1,
     },
 }
 
@@ -650,6 +796,8 @@ _POPULATED_KEYS = frozenset(
         "mul_div_scalar",
         "threshold_literal_covered",
         "threshold_literal_identity_excluded",
+        "arithmetic_op_swap_covered",
+        "casilla_ref_topology_covered",
     }
 )
 _DEFERRED_KEYS = frozenset(
@@ -657,6 +805,8 @@ _DEFERRED_KEYS = frozenset(
         "sub_op_deferred",
         "mul_div_scalar_deferred",
         "threshold_literal_deferred",
+        "arithmetic_op_swap_deferred",
+        "casilla_ref_topology_deferred",
     }
 )
 _NUMERIC_BRACKETS_SYNTHETIC = 4  # synthetic_brackets.338.2025 contributes 4 non-terminal brackets.
@@ -789,6 +939,77 @@ def test_deferred_count_matches_empirical_coverage_gap() -> None:
             f"(e.g. _CLAMP_MASKED_IDENTITY_POSITIONS in test_threshold_literal_mutation)."
         )
 
+    arithmetic_coverage = _empirical_arithmetic_op_coverage()
+    for ruleset_id, counts in EXPECTED_COUNTS.items():
+        arithmetic_gap = counts["arithmetic_op_swap_covered"] - arithmetic_coverage.get(ruleset_id, 0)
+        assert arithmetic_gap >= 0, (
+            f"{ruleset_id}: empirical arithmetic_op_swap coverage "
+            f"{arithmetic_coverage.get(ruleset_id, 0)} exceeds populated "
+            f"{counts['arithmetic_op_swap_covered']}."
+        )
+        assert arithmetic_gap == counts["arithmetic_op_swap_deferred"], (
+            f"{ruleset_id}: arithmetic_op_swap gap {arithmetic_gap} "
+            f"(populated {counts['arithmetic_op_swap_covered']} - empirical "
+            f"{arithmetic_coverage.get(ruleset_id, 0)}) does not match declared "
+            f"arithmetic_op_swap_deferred {counts['arithmetic_op_swap_deferred']}. "
+            f"Each masked position is documented in "
+            f"``_FIXTURE_MASKED_OP_POSITIONS_RATIONALES``; bump the deferred "
+            f"count or remove the position via fixture redesign to close the gap."
+        )
+
+    casilla_ref_coverage = _empirical_casilla_ref_coverage()
+    for ruleset_id, counts in EXPECTED_COUNTS.items():
+        ref_gap = counts["casilla_ref_topology_covered"] - casilla_ref_coverage.get(ruleset_id, 0)
+        assert ref_gap >= 0, (
+            f"{ruleset_id}: empirical casilla_ref_topology coverage "
+            f"{casilla_ref_coverage.get(ruleset_id, 0)} exceeds populated "
+            f"{counts['casilla_ref_topology_covered']}."
+        )
+        assert ref_gap == counts["casilla_ref_topology_deferred"], (
+            f"{ruleset_id}: casilla_ref_topology gap {ref_gap} "
+            f"(populated {counts['casilla_ref_topology_covered']} - empirical "
+            f"{casilla_ref_coverage.get(ruleset_id, 0)}) does not match declared "
+            f"casilla_ref_topology_deferred {counts['casilla_ref_topology_deferred']}. "
+            f"Each masked position is documented in "
+            f"``_FIXTURE_MASKED_REF_POSITIONS_RATIONALES``; bump the deferred "
+            f"count or extend the fixture so a substitute target exists."
+        )
+
+
+def _empirical_casilla_ref_coverage() -> dict[str, int]:
+    """Return per-ruleset count of unique casilla-ref topology targets exercised."""
+    coverage: dict[str, int] = {ruleset.ruleset_id: 0 for ruleset in ALL_RULESETS}
+    seen: set[tuple[str, str, tuple[int, ...]]] = set()
+    for param in _CASILLA_REF_TEST_PARAMS:
+        case = param.values[0]
+        key = (case.ruleset.ruleset_id, case.casilla_id, case.ref_path)
+        if key in seen:
+            continue
+        seen.add(key)
+        coverage[case.ruleset.ruleset_id] = coverage.get(case.ruleset.ruleset_id, 0) + 1
+    return coverage
+
+
+def _empirical_arithmetic_op_coverage() -> dict[str, int]:
+    """Return per-ruleset count of unique arithmetic-op (Add/Sub) targets exercised.
+
+    Reads :data:`_ARITHMETIC_OP_TEST_PARAMS` from the per-class
+    harness — the parametrize cache built at import time, populated
+    by walking every Add/Sub position and probing each via the
+    runtime fixture-mask filter. Counts unique
+    ``(ruleset_id, casilla_id, op_path)`` triples.
+    """
+    coverage: dict[str, int] = {ruleset.ruleset_id: 0 for ruleset in ALL_RULESETS}
+    seen: set[tuple[str, str, tuple[int, ...]]] = set()
+    for param in _ARITHMETIC_OP_TEST_PARAMS:
+        case = param.values[0]
+        key = (case.ruleset.ruleset_id, case.casilla_id, case.op_path)
+        if key in seen:
+            continue
+        seen.add(key)
+        coverage[case.ruleset.ruleset_id] = coverage.get(case.ruleset.ruleset_id, 0) + 1
+    return coverage
+
 
 def _empirical_threshold_literal_coverage() -> dict[str, int]:
     """Return per-ruleset count of unique threshold-literal targets exercised.
@@ -842,6 +1063,16 @@ def test_aggregate_kill_rate_floor_is_satisfied() -> None:
     :func:`test_deferred_count_matches_empirical_coverage_gap`
     assertion above guarantees that the deferred declaration is in
     sync with the per-class harness empirical coverage.
+
+    **Co-enforcement note** (re: gemini-code-assist review on PR #459):
+    this 90 % floor is intentionally the looser of two layered
+    checks. The strict-equality invariant in
+    :func:`test_aggregator_killed_equals_populated_under_test` (next)
+    is the authoritative gate; the floor is preserved as the
+    historical issue-#338 DoD anchor and as a soft fallback if a
+    future PR relaxes the equality (e.g. to admit a documented
+    "no-observable-effect mutant" set). Removing the floor would
+    erase that traceability without adding behavioral safety.
     """
     populated = 0
     deferred = 0
@@ -852,8 +1083,12 @@ def test_aggregate_kill_rate_floor_is_satisfied() -> None:
         populated += counts["percent_rate_param"]
         populated += counts["mul_div_scalar"]
         populated += counts["threshold_literal_covered"]
+        populated += counts["arithmetic_op_swap_covered"]
+        populated += counts["casilla_ref_topology_covered"]
         deferred += counts["mul_div_scalar_deferred"]
         deferred += counts["threshold_literal_deferred"]
+        deferred += counts["arithmetic_op_swap_deferred"]
+        deferred += counts["casilla_ref_topology_deferred"]
         # Compound-rate and casilla-ref percent rates are NOT counted
         # in the kill-rate denominator: they are explicitly delegated
         # to descendant mutators (compound) or are out-of-AST inputs
@@ -875,8 +1110,17 @@ def test_aggregate_kill_rate_floor_is_satisfied() -> None:
     scalar_coverage = sum(_empirical_scalar_coverage().values())
     percent_coverage = sum(_empirical_percent_coverage().values())
     threshold_coverage = sum(_empirical_threshold_literal_coverage().values())
+    arithmetic_coverage = sum(_empirical_arithmetic_op_coverage().values())
+    casilla_ref_coverage = sum(_empirical_casilla_ref_coverage().values())
     brackets_coverage = _NUMERIC_BRACKETS_SYNTHETIC
-    killed = scalar_coverage + percent_coverage + threshold_coverage + brackets_coverage
+    killed = (
+        scalar_coverage
+        + percent_coverage
+        + threshold_coverage
+        + arithmetic_coverage
+        + casilla_ref_coverage
+        + brackets_coverage
+    )
 
     kill_rate = Decimal(killed) / Decimal(populated_under_test)
     assert kill_rate >= Decimal("0.90"), (
@@ -906,12 +1150,18 @@ def test_aggregator_killed_equals_populated_under_test() -> None:
         populated_under_test -= counts["mul_div_scalar_deferred"]
         populated_under_test += counts["threshold_literal_covered"]
         populated_under_test -= counts["threshold_literal_deferred"]
+        populated_under_test += counts["arithmetic_op_swap_covered"]
+        populated_under_test -= counts["arithmetic_op_swap_deferred"]
+        populated_under_test += counts["casilla_ref_topology_covered"]
+        populated_under_test -= counts["casilla_ref_topology_deferred"]
     populated_under_test += _NUMERIC_BRACKETS_SYNTHETIC
 
     killed = (
         sum(_empirical_scalar_coverage().values())
         + sum(_empirical_percent_coverage().values())
         + sum(_empirical_threshold_literal_coverage().values())
+        + sum(_empirical_arithmetic_op_coverage().values())
+        + sum(_empirical_casilla_ref_coverage().values())
         + _NUMERIC_BRACKETS_SYNTHETIC
     )
     assert killed == populated_under_test, (
@@ -934,9 +1184,12 @@ def build_catalogue_markdown() -> str:
     lines: list[str] = []
     lines.append(
         "| Ruleset | sub_op | sub_op_def | rate (lit+param) | brackets | "
-        "mul_div_scalar | mul_div_def | thr_lit | thr_lit_def | thr_lit_id | unflagged |"
+        "mul_div_scalar | mul_div_def | thr_lit | thr_lit_def | thr_lit_id "
+        "| arith_op | arith_op_def | ref_topo | ref_topo_def | unflagged |"
     )
-    lines.append("| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
+    lines.append(
+        "| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+    )
     totals = {
         "sub_op": 0,
         "sub_op_deferred": 0,
@@ -947,6 +1200,10 @@ def build_catalogue_markdown() -> str:
         "threshold_literal_covered": 0,
         "threshold_literal_deferred": 0,
         "threshold_literal_identity_excluded": 0,
+        "arithmetic_op_swap_covered": 0,
+        "arithmetic_op_swap_deferred": 0,
+        "casilla_ref_topology_covered": 0,
+        "casilla_ref_topology_deferred": 0,
         "unflagged": 0,
     }
     for ruleset in ALL_RULESETS:
@@ -958,7 +1215,10 @@ def build_catalogue_markdown() -> str:
             f"| {rate_total} | {c['brackets_threshold_non_terminal']} "
             f"| {c['mul_div_scalar']} | {c['mul_div_scalar_deferred']} "
             f"| {c['threshold_literal_covered']} | {c['threshold_literal_deferred']} "
-            f"| {c['threshold_literal_identity_excluded']} | {unflagged} |"
+            f"| {c['threshold_literal_identity_excluded']} "
+            f"| {c['arithmetic_op_swap_covered']} | {c['arithmetic_op_swap_deferred']} "
+            f"| {c['casilla_ref_topology_covered']} | {c['casilla_ref_topology_deferred']} "
+            f"| {unflagged} |"
         )
         totals["sub_op"] += c["sub_op"]
         totals["sub_op_deferred"] += c["sub_op_deferred"]
@@ -969,8 +1229,12 @@ def build_catalogue_markdown() -> str:
         totals["threshold_literal_covered"] += c["threshold_literal_covered"]
         totals["threshold_literal_deferred"] += c["threshold_literal_deferred"]
         totals["threshold_literal_identity_excluded"] += c["threshold_literal_identity_excluded"]
+        totals["arithmetic_op_swap_covered"] += c["arithmetic_op_swap_covered"]
+        totals["arithmetic_op_swap_deferred"] += c["arithmetic_op_swap_deferred"]
+        totals["casilla_ref_topology_covered"] += c["casilla_ref_topology_covered"]
+        totals["casilla_ref_topology_deferred"] += c["casilla_ref_topology_deferred"]
         totals["unflagged"] += unflagged
-    lines.append("| **synthetic_brackets.338.2025** | 0 | 0 | 0 | 4 | 0 | 0 | 0 | 0 | 0 | 0 |")
+    lines.append("| **synthetic_brackets.338.2025** | 0 | 0 | 0 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |")
     totals["brackets_threshold_non_terminal"] += _NUMERIC_BRACKETS_SYNTHETIC
     lines.append(
         f"| **TOTAL** | **{totals['sub_op']}** | **{totals['sub_op_deferred']}** "
@@ -979,6 +1243,10 @@ def build_catalogue_markdown() -> str:
         f"| **{totals['threshold_literal_covered']}** "
         f"| **{totals['threshold_literal_deferred']}** "
         f"| **{totals['threshold_literal_identity_excluded']}** "
+        f"| **{totals['arithmetic_op_swap_covered']}** "
+        f"| **{totals['arithmetic_op_swap_deferred']}** "
+        f"| **{totals['casilla_ref_topology_covered']}** "
+        f"| **{totals['casilla_ref_topology_deferred']}** "
         f"| **{totals['unflagged']}** |"
     )
     return "\n".join(lines)
@@ -997,7 +1265,7 @@ def test_catalogue_totals_are_non_trivial() -> None:
     """The catalogue's percent_rate, mul_div_scalar, and brackets totals are non-zero."""
     markdown = build_catalogue_markdown()
     totals_line = next(line for line in markdown.splitlines() if "**TOTAL**" in line)
-    # Column layout per ``build_catalogue_markdown`` (post-Wave-5):
+    # Column layout per ``build_catalogue_markdown`` (post-Wave-6):
     #   [0] empty (leading "|")
     #   [1] **TOTAL**
     #   [2] sub_op
@@ -1009,25 +1277,22 @@ def test_catalogue_totals_are_non_trivial() -> None:
     #   [8] thr_lit
     #   [9] thr_lit_def
     #  [10] thr_lit_id (architectural identity)
-    #  [11] unflagged
-    #  [12] empty (trailing "|")
+    #  [11] arith_op
+    #  [12] arith_op_def (fixture-masked architectural-identity Adds/Subs)
+    #  [13] unflagged
+    #  [14] empty (trailing "|")
     cells = totals_line.split("|")
     assert "**0**" not in cells[2].strip(), "sub_op column must be non-zero"
     assert "**0**" not in cells[4].strip(), "percent_rate column must be non-zero"
     assert "**0**" not in cells[5].strip(), "brackets_threshold column must be non-zero"
     assert "**0**" not in cells[6].strip(), "mul_div_scalar column must be non-zero"
     assert "**0**" not in cells[8].strip(), "threshold_literal column must be non-zero"
-    # Issue #457 closure: deferred totals are zero — every populated
-    # mutable node is enumerated by the per-class harness. A future
-    # ruleset addition that introduces a node without extending the
-    # harness will fail ``test_deferred_count_matches_empirical_coverage_gap``
-    # first.
+    assert "**0**" not in cells[11].strip(), "arithmetic_op_swap column must be non-zero"
+    # Closeable ``_deferred`` totals are 0; arith_op_def is non-zero
+    # only because of architectural-identity ``Add(x, 0)`` masking
+    # (catalogued in ``_FIXTURE_MASKED_OP_POSITIONS_RATIONALES``).
     assert cells[3].strip() == "**0**", f"sub_op_deferred total must be 0; got {cells[3].strip()!r}"
     assert cells[7].strip() == "**0**", f"mul_div_scalar_deferred total must be 0; got {cells[7].strip()!r}"
-    # threshold_literal_deferred is non-zero today (M390 193's
-    # clamp-mask-dominated literal x 3 years = 3). Documented in
-    # ``_CLAMP_MASKED_IDENTITY_POSITIONS``; mutation cannot detect a
-    # typo because the architectural clamp_pos absorbs any small shift.
-    assert cells[9].strip() == "**3**", (
-        f"threshold_literal_deferred total must be 3 (M390 193 clamp-mask exclusions); got {cells[9].strip()!r}"
+    assert cells[9].strip() == "**0**", (
+        f"threshold_literal_deferred total must be 0 (Wave 6 closure); got {cells[9].strip()!r}"
     )

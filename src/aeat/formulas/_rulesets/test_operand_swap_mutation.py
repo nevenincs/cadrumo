@@ -510,10 +510,15 @@ _M100_BASE_INPUTS_AND_STABLE_COMPUTED: dict[str, Decimal] = {
     "0399": Decimal("100000.00"),
     "0445": Decimal("25000.00"),
     "0455": Decimal("12000.00"),
-    "0505": Decimal("380000.00"),
-    "0510": Decimal("0.00"),
-    "0515": Decimal("0.00"),
-    "0520": Decimal("0.00"),
+    # Each component of 0500 (mínimo personal y familiar) is non-zero
+    # so the Add-chain at 0500 = (0505+0510)+(0515+0520) carries
+    # detectable RHS magnitudes for the arithmetic-op-swap harness.
+    # Sum: 378000 + 1000 + 800 + 200 = 380 000 (preserves the 0500
+    # baseline used by every downstream calculation).
+    "0505": Decimal("378000.00"),
+    "0510": Decimal("1000.00"),
+    "0515": Decimal("800.00"),
+    "0520": Decimal("200.00"),
     "0500": Decimal("380000.00"),
     "0432": Decimal("420102.00"),
     "0545": Decimal("383102.00"),
@@ -531,21 +536,26 @@ _M100_BASE_INPUTS_AND_STABLE_COMPUTED: dict[str, Decimal] = {
     "0561": Decimal("500.00"),
     # Anexo N: per-CCAA aggregate deductions. 1101 (Andalucía) = 2 000,
     # others 0 → 0622 = 2 000.
-    "1101": Decimal("2000.00"),
-    "1102": Decimal("0.00"),
-    "1103": Decimal("0.00"),
-    "1104": Decimal("0.00"),
-    "1105": Decimal("0.00"),
-    "1106": Decimal("0.00"),
-    "1107": Decimal("0.00"),
-    "1108": Decimal("0.00"),
-    "1109": Decimal("0.00"),
-    "1110": Decimal("0.00"),
-    "1111": Decimal("0.00"),
-    "1112": Decimal("0.00"),
-    "1113": Decimal("0.00"),
-    "1114": Decimal("0.00"),
-    "1115": Decimal("0.00"),
+    # Per-CCAA aggregate deductions: every entry non-zero so the
+    # 15-operand AddFormula at 0622 has a detectable last-operand
+    # for the arithmetic-op-swap harness. Decreasing values
+    # (1900, 50, 50, ...) preserve the asymmetric design while
+    # keeping the sum at 0622 = 2 000.
+    "1101": Decimal("1860.00"),
+    "1102": Decimal("10.00"),
+    "1103": Decimal("10.00"),
+    "1104": Decimal("10.00"),
+    "1105": Decimal("10.00"),
+    "1106": Decimal("10.00"),
+    "1107": Decimal("10.00"),
+    "1108": Decimal("10.00"),
+    "1109": Decimal("10.00"),
+    "1110": Decimal("10.00"),
+    "1111": Decimal("10.00"),
+    "1112": Decimal("10.00"),
+    "1113": Decimal("10.00"),
+    "1114": Decimal("10.00"),
+    "1115": Decimal("10.00"),
     "0622": Decimal("2000.00"),
     # Deducciones estatales + Ceuta/Melilla.
     "0612": Decimal("1000.00"),

@@ -68,12 +68,16 @@ __all__ = [
     "build_percent_rate_mutants",
     "build_scalar_mutants",
     "is_additive_identity_literal",
+    "iter_arithmetic_op_paths",
     "iter_brackets_nodes",
+    "iter_casilla_ref_paths",
     "iter_compound_descendants",
     "iter_percent_nodes",
     "iter_scalar_leaf_paths",
     "iter_threshold_literal_paths",
+    "mutate_arithmetic_op",
     "mutate_brackets_threshold",
+    "mutate_casilla_ref",
     "mutate_parameter_rate",
     "mutate_percent_literal_rate",
     "mutate_scalar_leaf",
@@ -260,7 +264,7 @@ def is_additive_identity_literal(parent_slug: str, literal_value: Decimal) -> bo
     harness because a small mutation has no observable effect:
 
     - ``Max(0, X)`` with ``X > 0`` — the literal 0 is dominated; any
-      ε-mutation leaves the max at X.
+      epsilon-mutation leaves the max at X.
     - ``Min(0, X)`` with ``X > 0`` — symmetric (literal 0 wins).
 
     The rationale doubles as documentation of why the harness skips
@@ -272,6 +276,126 @@ def is_additive_identity_literal(parent_slug: str, literal_value: Decimal) -> bo
     if literal_value != Decimal("0"):
         return False
     return parent_slug in ("max", "min")
+
+
+def iter_arithmetic_op_paths(
+    formula: Formula,
+) -> Iterator[tuple[tuple[int, ...], str, int]]:
+    """Yield ``(path, op_kind, n_operands)`` for every :class:`AddFormula` / :class:`SubFormula` node.
+
+    ``op_kind`` is ``"add"`` or ``"sub"``; ``n_operands`` is the
+    operand count (always 2 for SubFormula; 2..N for AddFormula).
+    Used by the operator-class mutator to detect + <-> - typos:
+
+    - **Add -> Sub**: an author who meant ``sub_op(a, b)`` but typed
+      ``add_op(a, b)``. For 2-operand AddFormula the swap is direct;
+      for N-operand AddFormula the swap converts the *last* + into a
+      - (``add_op(a, b, c)`` -> ``sub_op(add_op(a, b), c)``), which
+      models the most common operator-typo pattern (a single + slipped
+      to - somewhere in the chain).
+    - **Sub -> Add**: an author who meant ``add_op(a, b)`` but typed
+      ``sub_op(a, b)``. SubFormula is exactly 2-operand; the swap is
+      direct.
+    """
+    for path, node in _walk_with_paths(formula, ()):
+        if isinstance(node, AddFormula):
+            yield path, "add", len(node.operands)
+        elif isinstance(node, SubFormula):
+            yield path, "sub", 2
+
+
+def mutate_arithmetic_op(
+    ruleset: Ruleset,
+    casilla_id: str,
+    op_path: tuple[int, ...],
+) -> Ruleset:
+    """Swap an :class:`AddFormula` <-> :class:`SubFormula` at ``op_path``.
+
+    Three cases:
+
+    - 2-operand ``AddFormula`` -> ``SubFormula(operands)``.
+    - 2-operand ``SubFormula`` -> ``AddFormula(operands)``.
+    - N-operand (>= 3) ``AddFormula`` -> ``SubFormula(AddFormula(operands[:-1]), operands[-1])``
+      — flips the last + to a -, modelling a single-character typo.
+
+    Raises:
+        LookupError: ``ruleset`` has no formula for ``casilla_id``.
+        TypeError: the node at ``op_path`` is neither an AddFormula
+            nor a SubFormula.
+    """
+    fd = _formula_for(ruleset, casilla_id)
+    target = _node_at_path(fd.formula, op_path)
+    new_node: AddFormula | SubFormula
+    if isinstance(target, AddFormula):
+        if len(target.operands) == 2:
+            # Direct 2-operand swap: AddFormula.operands is
+            # ``tuple[Operand, ...]`` (min_length=2, no max); narrow to
+            # the SubFormula's ``tuple[Operand, Operand]`` shape.
+            lhs, rhs = target.operands
+            new_node = SubFormula(operands=(lhs, rhs))
+        else:
+            head_operands = target.operands[:-1]
+            last_operand = target.operands[-1]
+            inner_add = AddFormula(operands=head_operands)
+            new_node = SubFormula(operands=(inner_add, last_operand))
+    elif isinstance(target, SubFormula):
+        new_node = AddFormula(operands=target.operands)
+    else:
+        raise TypeError(
+            f"expected AddFormula or SubFormula at path {op_path} for ruleset "
+            f"{ruleset.ruleset_id} casilla {casilla_id}; got {type(target).__name__}"
+        )
+    new_formula = _replace_at_path(fd.formula, op_path, new_node)
+    return _replace_formula_in_ruleset(ruleset, casilla_id, cast(Formula, new_formula))
+
+
+def iter_casilla_ref_paths(
+    formula: Formula,
+) -> Iterator[tuple[tuple[int, ...], CasillaRef]]:
+    """Yield ``(path, casilla_ref)`` for every :class:`CasillaRef` in ``formula``.
+
+    Closes the topology-typo gap catalogued in the Wave 5 audit: a
+    typo where the author wrote ``ref("0431")`` instead of
+    ``ref("0432")`` would silently route the wrong upstream value
+    into the formula. The associated mutator
+    :func:`mutate_casilla_ref` re-targets the reference; the per-class
+    harness picks a substitute with a different fixture value so the
+    typo surfaces a discrepancy.
+    """
+    for path, node in _walk_with_paths(formula, ()):
+        if isinstance(node, CasillaRef):
+            yield path, node
+
+
+def mutate_casilla_ref(
+    ruleset: Ruleset,
+    casilla_id: str,
+    ref_path: tuple[int, ...],
+    *,
+    new_target: str,
+) -> Ruleset:
+    """Return a ruleset with the :class:`CasillaRef` at ``ref_path`` re-targeted.
+
+    Replaces ``CasillaRef(casilla_id=A)`` at ``ref_path`` with
+    ``CasillaRef(casilla_id=new_target)``. The new target must be a
+    valid casilla_id in the ruleset; the per-class harness selects
+    a substitute whose fixture value differs from the original's so
+    the swap surfaces a discrepancy.
+
+    Raises:
+        LookupError: ``ruleset`` has no formula for ``casilla_id``.
+        TypeError: the node at ``ref_path`` is not a :class:`CasillaRef`.
+    """
+    fd = _formula_for(ruleset, casilla_id)
+    target_node = _node_at_path(fd.formula, ref_path)
+    if not isinstance(target_node, CasillaRef):
+        raise TypeError(
+            f"expected CasillaRef at path {ref_path} for ruleset {ruleset.ruleset_id} "
+            f"casilla {casilla_id}; got {type(target_node).__name__}"
+        )
+    new_ref = CasillaRef(casilla_id=new_target)
+    new_formula = _replace_at_path(fd.formula, ref_path, new_ref)
+    return _replace_formula_in_ruleset(ruleset, casilla_id, cast(Formula, new_formula))
 
 
 def mutate_threshold_literal(
@@ -603,6 +727,22 @@ THRESHOLD_LITERAL: Final[MutatorClass] = MutatorClass(
         "art. 20 thresholds, IVA-rate constants, additive padding, etc.)."
     ),
 )
+ARITHMETIC_OP_SWAP: Final[MutatorClass] = MutatorClass(
+    slug="arithmetic_op_swap",
+    description=(
+        "Swap an AddFormula <-> SubFormula at any AST position to detect "
+        "operator-class typos (+ vs -). 2-operand swaps are direct; "
+        "N-operand AddFormula swaps the last + to a -."
+    ),
+)
+CASILLA_REF_TOPOLOGY: Final[MutatorClass] = MutatorClass(
+    slug="casilla_ref_topology",
+    description=(
+        "Re-target a CasillaRef to a different casilla_id with a "
+        "differing fixture value to detect topology typos (ref('0431') "
+        "vs ref('0432'))."
+    ),
+)
 
 
 # Map every concrete formula-node type to the mutator class that owns it.
@@ -620,6 +760,7 @@ MUTATOR_REGISTRY: Final[dict[type, MutatorClass]] = {
     MulFormula: MUL_DIV_SCALAR,
     DivFormula: MUL_DIV_SCALAR,
     Literal: MUL_DIV_SCALAR,
+    CasillaRef: CASILLA_REF_TOPOLOGY,
 }
 
 
@@ -665,11 +806,15 @@ NOT_MUTABLE_NODE_TYPES: Final[dict[type, str]] = {
     # mutator class introduced in Wave 5 covers those positions.
     # Architectural identities (Max(0, X) / Min(0, X) lower/upper
     # bounds with X > 0) are filtered by :func:`is_additive_identity_literal`.
-    CasillaRef: (
-        "CasillaRef is a runtime indirection; mutating it would change "
-        "the formula's topology, not a value. Topology errors are out "
-        "of scope for the four-mutator surface."
-    ),
+    # NB: CasillaRef is intentionally absent from NOT_MUTABLE_NODE_TYPES
+    # post-Wave-6. The :data:`CASILLA_REF_TOPOLOGY` mutator class
+    # introduced in Wave 6 re-targets every reference to a different
+    # casilla_id with a differing fixture value. Topology typos
+    # (``ref("0431")`` vs ``ref("0432")``) are detected via that
+    # harness; no MUTATOR_REGISTRY entry is needed because CasillaRef
+    # is a leaf operand type whose mutation is owned by the topology
+    # mutator class — but the exhaustiveness test still expects it in
+    # MUTATOR_REGISTRY.
     ParamRef: (
         "ParamRef is a runtime indirection; the value it resolves to "
         "lives in the ParameterTable and is mutated by the percent-rate "
