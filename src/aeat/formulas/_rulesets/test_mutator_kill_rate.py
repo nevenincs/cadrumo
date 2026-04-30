@@ -39,14 +39,19 @@ from .._ruleset import Ruleset
 from . import ALL_RULESETS
 from ._mutators import (
     classify_percent_rate,
+    is_additive_identity_literal,
     iter_brackets_nodes,
     iter_compound_descendants,
     iter_percent_nodes,
     iter_scalar_leaf_paths,
+    iter_threshold_literal_paths,
 )
 from .test_operand_swap_mutation import SUB_OP_COVERAGE
 from .test_percent_rate_mutation import _iter_percent_targets
 from .test_scalar_mutation import _iter_scalar_targets
+from .test_threshold_literal_mutation import (
+    _iter_covered_threshold_targets,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
@@ -61,6 +66,8 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
         "percent_rate_casilla_ref_skipped": 0,
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
     }
     for fd in ruleset.formulas:
         # SubFormula nodes (existing operand-swap harness — counted
@@ -86,6 +93,15 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
         # Mul/Div literal-leaf count.
         leaves = list(iter_scalar_leaf_paths(fd.formula))
         counts["mul_div_scalar"] += len(leaves)
+        # Threshold-literal positions (issue #457 Wave 5 closure).
+        # Split into "covered by harness" (ε-shift detectable) vs
+        # "identity-excluded" (additive/multiplicative identity:
+        # Max(0, X) / Min(0, X)).
+        for _path, literal, parent_op in iter_threshold_literal_paths(fd.formula):
+            if is_additive_identity_literal(parent_op, literal.value):
+                counts["threshold_literal_identity_excluded"] += 1
+            else:
+                counts["threshold_literal_covered"] += 1
     return counts
 
 
@@ -140,6 +156,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 20,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 33,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_100.2025": {
         # Issue #317: structural baseline for the year that anchors the 2024
@@ -154,6 +173,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 20,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 33,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_100.2026": {
         # Issue #317: 2026 ruleset inherits 2025 numerical surface; mutable-node
@@ -168,6 +190,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 20,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 33,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_100.summary.2025": {
         # 1 sub_op covered (0720 outer); 0698 outer + the inner
@@ -182,6 +207,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_111.2024": {
         # Issue #457: M111 2024 has 1 sub_op (casilla 30); the
@@ -196,6 +224,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_111.2025": {
         "sub_op": 1,
@@ -207,6 +238,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_111.2026": {
         # Issue #318: 2026 ruleset is a structural clone of 2024 / 2025
@@ -222,6 +256,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_115.2024": {
         # Issue #457: M115 2024 sub_op (casilla 06) not covered by
@@ -235,6 +272,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_115.2025": {
         "sub_op": 1,
@@ -246,6 +286,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_115.2026": {
         # Issue #319: 2026 ruleset is a structural clone of 2024 / 2025
@@ -261,6 +304,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_123.2024": {
         "sub_op": 1,
@@ -272,6 +318,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_123.2025": {
         "sub_op": 1,
@@ -283,6 +332,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_123.2026": {
         "sub_op": 1,
@@ -294,6 +346,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_130.2024": {
         # M130 has 8 SubFormula descendants per year — 6 outer (one per
@@ -309,6 +364,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 1,
+        "threshold_literal_deferred": 0,
     },
     "modelo_130.2025": {
         "sub_op": 8,
@@ -320,6 +378,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 1,
+        "threshold_literal_deferred": 0,
     },
     "modelo_130.2026": {
         # Issue #321: 2026 ruleset is a structural clone of 2024 / 2025
@@ -335,6 +396,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 1,
+        "threshold_literal_deferred": 0,
     },
     "modelo_131.2024": {
         # Issue #457: M131 2024 not imported by operand-swap harness
@@ -348,6 +412,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_131.2025": {
         # 3 outer sub_ops covered (10, 13, 15); 2 inner sub_ops nested
@@ -361,6 +428,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_131.2026": {
         "sub_op": 5,
@@ -372,6 +442,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_180.2024": {
         "sub_op": 0,
@@ -383,6 +456,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_180.2025": {
         "sub_op": 0,
@@ -394,6 +470,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_180.2026": {
         "sub_op": 0,
@@ -405,6 +484,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_200.2024": {
         # 1 outer sub_op covered (00611); 4 inner sub_ops in the 4-deep
@@ -419,6 +501,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,  # the inner Literal("100") of percent_from_whole.
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_200.2025": {
         "sub_op": 5,
@@ -430,6 +515,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_200.2026": {
         "sub_op": 5,
@@ -441,6 +529,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_202.2025": {
         # 1 outer sub_op covered (32); 2 inner sub_ops in the chain are
@@ -454,6 +545,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_303.2024": {
         "sub_op": 2,  # casilla 45 = sub_op(add_op(...), ref(...)) (1) + casilla 69 = sub_op(ref, ref) (1).
@@ -465,6 +559,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,  # casilla 66's lit("100") denominator.
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 5,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_303.2025": {
         "sub_op": 2,
@@ -476,6 +573,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 5,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_303.2026": {
         "sub_op": 2,
@@ -487,6 +587,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 1,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 5,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
     },
     "modelo_390.2024": {
         # 2 outer sub_ops covered (105, 191); casilla 193 (clamp-wrapped
@@ -501,6 +604,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 1,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 1,
     },
     "modelo_390.2025": {
         "sub_op": 3,
@@ -512,6 +618,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 1,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 1,
     },
     "modelo_390.2026": {
         "sub_op": 3,
@@ -523,6 +632,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 1,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 1,
     },
 }
 
@@ -536,9 +648,17 @@ _POPULATED_KEYS = frozenset(
         "percent_rate_casilla_ref_skipped",
         "brackets_threshold_non_terminal",
         "mul_div_scalar",
+        "threshold_literal_covered",
+        "threshold_literal_identity_excluded",
     }
 )
-_DEFERRED_KEYS = frozenset({"sub_op_deferred", "mul_div_scalar_deferred"})
+_DEFERRED_KEYS = frozenset(
+    {
+        "sub_op_deferred",
+        "mul_div_scalar_deferred",
+        "threshold_literal_deferred",
+    }
+)
 _NUMERIC_BRACKETS_SYNTHETIC = 4  # synthetic_brackets.338.2025 contributes 4 non-terminal brackets.
 
 
@@ -623,6 +743,7 @@ def test_deferred_count_matches_empirical_coverage_gap() -> None:
     # operand-swap target inventory derived from the ``EXPECTED_COUNTS``
     # walker minus the operand-swap harness's covered set.
     sub_op_coverage = _empirical_sub_op_coverage()
+    threshold_coverage = _empirical_threshold_literal_coverage()
 
     for ruleset_id, counts in EXPECTED_COUNTS.items():
         scalar_gap = counts["mul_div_scalar"] - scalar_coverage.get(ruleset_id, 0)
@@ -652,6 +773,40 @@ def test_deferred_count_matches_empirical_coverage_gap() -> None:
             f"declared sub_op_deferred {counts['sub_op_deferred']}. Either "
             f"extend the operand-swap harness or update the deferred catalogue."
         )
+
+        threshold_gap = counts["threshold_literal_covered"] - threshold_coverage.get(ruleset_id, 0)
+        assert threshold_gap >= 0, (
+            f"{ruleset_id}: empirical threshold_literal coverage "
+            f"{threshold_coverage.get(ruleset_id, 0)} exceeds populated "
+            f"{counts['threshold_literal_covered']}."
+        )
+        assert threshold_gap == counts["threshold_literal_deferred"], (
+            f"{ruleset_id}: threshold_literal gap {threshold_gap} "
+            f"(populated {counts['threshold_literal_covered']} - empirical "
+            f"{threshold_coverage.get(ruleset_id, 0)}) does not match declared "
+            f"threshold_literal_deferred {counts['threshold_literal_deferred']}. "
+            f"Either extend the harness or update the deferred catalogue "
+            f"(e.g. _CLAMP_MASKED_IDENTITY_POSITIONS in test_threshold_literal_mutation)."
+        )
+
+
+def _empirical_threshold_literal_coverage() -> dict[str, int]:
+    """Return per-ruleset count of unique threshold-literal targets exercised.
+
+    Reads the per-class harness's
+    :func:`_iter_covered_threshold_targets` enumeration and counts
+    unique ``(ruleset_id, casilla_id, leaf_path)`` triples — the +1 €
+    / -1 € directions count as a single covered target.
+    """
+    coverage: dict[str, int] = {ruleset.ruleset_id: 0 for ruleset in ALL_RULESETS}
+    seen: set[tuple[str, str, tuple[int, ...]]] = set()
+    for ruleset, casilla_id, leaf_path, _parent_op, _value in _iter_covered_threshold_targets():
+        key = (ruleset.ruleset_id, casilla_id, leaf_path)
+        if key in seen:
+            continue
+        seen.add(key)
+        coverage[ruleset.ruleset_id] = coverage.get(ruleset.ruleset_id, 0) + 1
+    return coverage
 
 
 def _empirical_sub_op_coverage() -> dict[str, int]:
@@ -691,17 +846,24 @@ def test_aggregate_kill_rate_floor_is_satisfied() -> None:
     populated = 0
     deferred = 0
     catalogued_unflagged = 0
+    catalogued_identity_excluded = 0
     for _ruleset_id, counts in EXPECTED_COUNTS.items():
         populated += counts["percent_rate_literal"]
         populated += counts["percent_rate_param"]
         populated += counts["mul_div_scalar"]
+        populated += counts["threshold_literal_covered"]
         deferred += counts["mul_div_scalar_deferred"]
+        deferred += counts["threshold_literal_deferred"]
         # Compound-rate and casilla-ref percent rates are NOT counted
         # in the kill-rate denominator: they are explicitly delegated
         # to descendant mutators (compound) or are out-of-AST inputs
         # (casilla-ref). They appear in the unflagged-nodes catalogue.
         catalogued_unflagged += counts["percent_rate_compound_skipped"]
         catalogued_unflagged += counts["percent_rate_casilla_ref_skipped"]
+        # Architectural identities (Max(0, X) / Min(0, X)) are
+        # documented in NOT_MUTABLE_NODE_TYPES rationale and excluded
+        # from the kill-rate denominator with rationale.
+        catalogued_identity_excluded += counts["threshold_literal_identity_excluded"]
     # Synthetic brackets ruleset adds 4 non-terminal brackets — the
     # synthetic ruleset is not in ALL_RULESETS but its kill-rate is
     # still asserted by ``test_brackets_threshold_mutation``. No
@@ -712,15 +874,17 @@ def test_aggregate_kill_rate_floor_is_satisfied() -> None:
 
     scalar_coverage = sum(_empirical_scalar_coverage().values())
     percent_coverage = sum(_empirical_percent_coverage().values())
+    threshold_coverage = sum(_empirical_threshold_literal_coverage().values())
     brackets_coverage = _NUMERIC_BRACKETS_SYNTHETIC
-    killed = scalar_coverage + percent_coverage + brackets_coverage
+    killed = scalar_coverage + percent_coverage + threshold_coverage + brackets_coverage
 
     kill_rate = Decimal(killed) / Decimal(populated_under_test)
     assert kill_rate >= Decimal("0.90"), (
         f"aggregate kill-rate {kill_rate} < 0.90 floor; "
         f"populated={populated}, deferred={deferred}, "
         f"populated_under_test={populated_under_test}, killed={killed}, "
-        f"unflagged={catalogued_unflagged}"
+        f"unflagged={catalogued_unflagged}, "
+        f"identity_excluded={catalogued_identity_excluded}"
     )
 
 
@@ -740,11 +904,14 @@ def test_aggregator_killed_equals_populated_under_test() -> None:
         populated_under_test += counts["percent_rate_param"]
         populated_under_test += counts["mul_div_scalar"]
         populated_under_test -= counts["mul_div_scalar_deferred"]
+        populated_under_test += counts["threshold_literal_covered"]
+        populated_under_test -= counts["threshold_literal_deferred"]
     populated_under_test += _NUMERIC_BRACKETS_SYNTHETIC
 
     killed = (
         sum(_empirical_scalar_coverage().values())
         + sum(_empirical_percent_coverage().values())
+        + sum(_empirical_threshold_literal_coverage().values())
         + _NUMERIC_BRACKETS_SYNTHETIC
     )
     assert killed == populated_under_test, (
@@ -759,16 +926,17 @@ def build_catalogue_markdown() -> str:
 
     Columns: ``sub_op`` populated, ``sub_op_deferred``, ``percent_rate``
     populated (literal+param), ``brackets_threshold``, ``mul_div_scalar``
-    populated, ``mul_div_scalar_deferred``, ``unflagged``
-    (compound+casilla_ref).
+    populated, ``mul_div_scalar_deferred``, ``threshold_literal``
+    covered, ``threshold_literal_deferred``,
+    ``threshold_literal_identity`` (architectural identity, excluded
+    with rationale), ``unflagged`` (compound+casilla_ref).
     """
     lines: list[str] = []
     lines.append(
-        "| Ruleset | sub_op | sub_op_deferred | percent_rate (literal+param) "
-        "| brackets_threshold | mul_div_scalar | mul_div_scalar_deferred "
-        "| unflagged (compound+casilla_ref) |"
+        "| Ruleset | sub_op | sub_op_def | rate (lit+param) | brackets | "
+        "mul_div_scalar | mul_div_def | thr_lit | thr_lit_def | thr_lit_id | unflagged |"
     )
-    lines.append("| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
+    lines.append("| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
     totals = {
         "sub_op": 0,
         "sub_op_deferred": 0,
@@ -776,6 +944,9 @@ def build_catalogue_markdown() -> str:
         "brackets_threshold_non_terminal": 0,
         "mul_div_scalar": 0,
         "mul_div_scalar_deferred": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_deferred": 0,
+        "threshold_literal_identity_excluded": 0,
         "unflagged": 0,
     }
     for ruleset in ALL_RULESETS:
@@ -785,7 +956,9 @@ def build_catalogue_markdown() -> str:
         lines.append(
             f"| `{ruleset.ruleset_id}` | {c['sub_op']} | {c['sub_op_deferred']} "
             f"| {rate_total} | {c['brackets_threshold_non_terminal']} "
-            f"| {c['mul_div_scalar']} | {c['mul_div_scalar_deferred']} | {unflagged} |"
+            f"| {c['mul_div_scalar']} | {c['mul_div_scalar_deferred']} "
+            f"| {c['threshold_literal_covered']} | {c['threshold_literal_deferred']} "
+            f"| {c['threshold_literal_identity_excluded']} | {unflagged} |"
         )
         totals["sub_op"] += c["sub_op"]
         totals["sub_op_deferred"] += c["sub_op_deferred"]
@@ -793,13 +966,19 @@ def build_catalogue_markdown() -> str:
         totals["brackets_threshold_non_terminal"] += c["brackets_threshold_non_terminal"]
         totals["mul_div_scalar"] += c["mul_div_scalar"]
         totals["mul_div_scalar_deferred"] += c["mul_div_scalar_deferred"]
+        totals["threshold_literal_covered"] += c["threshold_literal_covered"]
+        totals["threshold_literal_deferred"] += c["threshold_literal_deferred"]
+        totals["threshold_literal_identity_excluded"] += c["threshold_literal_identity_excluded"]
         totals["unflagged"] += unflagged
-    lines.append("| **synthetic_brackets.338.2025** | 0 | 0 | 0 | 4 | 0 | 0 | 0 |")
+    lines.append("| **synthetic_brackets.338.2025** | 0 | 0 | 0 | 4 | 0 | 0 | 0 | 0 | 0 | 0 |")
     totals["brackets_threshold_non_terminal"] += _NUMERIC_BRACKETS_SYNTHETIC
     lines.append(
         f"| **TOTAL** | **{totals['sub_op']}** | **{totals['sub_op_deferred']}** "
         f"| **{totals['percent_rate']}** | **{totals['brackets_threshold_non_terminal']}** "
         f"| **{totals['mul_div_scalar']}** | **{totals['mul_div_scalar_deferred']}** "
+        f"| **{totals['threshold_literal_covered']}** "
+        f"| **{totals['threshold_literal_deferred']}** "
+        f"| **{totals['threshold_literal_identity_excluded']}** "
         f"| **{totals['unflagged']}** |"
     )
     return "\n".join(lines)
@@ -818,29 +997,37 @@ def test_catalogue_totals_are_non_trivial() -> None:
     """The catalogue's percent_rate, mul_div_scalar, and brackets totals are non-zero."""
     markdown = build_catalogue_markdown()
     totals_line = next(line for line in markdown.splitlines() if "**TOTAL**" in line)
-    # Column layout per ``build_catalogue_markdown``:
+    # Column layout per ``build_catalogue_markdown`` (post-Wave-5):
     #   [0] empty (leading "|")
     #   [1] **TOTAL**
     #   [2] sub_op
-    #   [3] sub_op_deferred
-    #   [4] percent_rate (literal+param)
-    #   [5] brackets_threshold
+    #   [3] sub_op_def
+    #   [4] rate (lit+param)
+    #   [5] brackets
     #   [6] mul_div_scalar
-    #   [7] mul_div_scalar_deferred
-    #   [8] unflagged
-    #   [9] empty (trailing "|")
-    assert "**0**" not in totals_line.split("|")[2].strip(), "sub_op column must be non-zero"
-    assert "**0**" not in totals_line.split("|")[4].strip(), "percent_rate column must be non-zero"
-    assert "**0**" not in totals_line.split("|")[5].strip(), "brackets_threshold column must be non-zero"
-    assert "**0**" not in totals_line.split("|")[6].strip(), "mul_div_scalar column must be non-zero"
+    #   [7] mul_div_def
+    #   [8] thr_lit
+    #   [9] thr_lit_def
+    #  [10] thr_lit_id (architectural identity)
+    #  [11] unflagged
+    #  [12] empty (trailing "|")
+    cells = totals_line.split("|")
+    assert "**0**" not in cells[2].strip(), "sub_op column must be non-zero"
+    assert "**0**" not in cells[4].strip(), "percent_rate column must be non-zero"
+    assert "**0**" not in cells[5].strip(), "brackets_threshold column must be non-zero"
+    assert "**0**" not in cells[6].strip(), "mul_div_scalar column must be non-zero"
+    assert "**0**" not in cells[8].strip(), "threshold_literal column must be non-zero"
     # Issue #457 closure: deferred totals are zero — every populated
-    # sub_op + mul/div scalar node is enumerated by the per-class
-    # harness. A future ruleset addition that introduces a node
-    # without extending the harness will fail
-    # ``test_deferred_count_matches_empirical_coverage_gap`` first.
-    assert totals_line.split("|")[3].strip() == "**0**", (
-        f"sub_op_deferred total must be 0 (zero-deferred coverage); got {totals_line.split('|')[3].strip()!r}"
-    )
-    assert totals_line.split("|")[7].strip() == "**0**", (
-        f"mul_div_scalar_deferred total must be 0; got {totals_line.split('|')[7].strip()!r}"
+    # mutable node is enumerated by the per-class harness. A future
+    # ruleset addition that introduces a node without extending the
+    # harness will fail ``test_deferred_count_matches_empirical_coverage_gap``
+    # first.
+    assert cells[3].strip() == "**0**", f"sub_op_deferred total must be 0; got {cells[3].strip()!r}"
+    assert cells[7].strip() == "**0**", f"mul_div_scalar_deferred total must be 0; got {cells[7].strip()!r}"
+    # threshold_literal_deferred is non-zero today (M390 193's
+    # clamp-mask-dominated literal x 3 years = 3). Documented in
+    # ``_CLAMP_MASKED_IDENTITY_POSITIONS``; mutation cannot detect a
+    # typo because the architectural clamp_pos absorbs any small shift.
+    assert cells[9].strip() == "**3**", (
+        f"threshold_literal_deferred total must be 3 (M390 193 clamp-mask exclusions); got {cells[9].strip()!r}"
     )

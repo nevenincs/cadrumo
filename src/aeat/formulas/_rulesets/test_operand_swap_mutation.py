@@ -64,7 +64,7 @@ from . import (
     MODELO_390_2025,
     MODELO_390_2026,
 )
-from ._mutators import _replace_at_path
+from ._mutators import _node_at_path, _replace_at_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -156,7 +156,7 @@ def _mutate_sub_op_at_path(ruleset: Ruleset, target_casilla_id: str, sub_op_path
         if fd.casilla_id != target_casilla_id:
             new_formulas.append(fd)
             continue
-        target_node = _node_at_path_local(fd.formula, sub_op_path)
+        target_node = _node_at_path(fd.formula, sub_op_path)
         if not isinstance(target_node, SubFormula):
             raise TypeError(
                 f"expected SubFormula at path {sub_op_path} for ruleset {ruleset.ruleset_id} "
@@ -180,27 +180,6 @@ def _mutate_sub_op_at_path(ruleset: Ruleset, target_casilla_id: str, sub_op_path
     if not swapped:
         raise LookupError(f"ruleset {ruleset.ruleset_id} has no formula for casilla {target_casilla_id!r}")
     return ruleset.model_copy(update={"formulas": tuple(new_formulas)})
-
-
-def _node_at_path_local(node: Operand, path: tuple[int, ...]) -> Operand:
-    """Return the operand reached by following ``path`` from ``node``.
-
-    Local copy of ``_mutators._node_at_path`` typed against the public
-    :class:`Operand` union (the internal helper accepts ``object`` for
-    intra-mutator flexibility; here we want strict typing for the
-    SubFormula isinstance check).
-    """
-    current: object = node
-    for idx in path:
-        from .._formula import _compound_operands, _is_compound
-
-        if not _is_compound(current):
-            raise TypeError(f"cannot descend into non-compound node {type(current).__name__}")
-        operands = _compound_operands(current)
-        if idx < 0 or idx >= len(operands):
-            raise IndexError(f"operand index {idx} out of range for {type(current).__name__}")
-        current = operands[idx]
-    return cast(Operand, current)
 
 
 def _walk_sub_op_paths(formula: Formula) -> list[tuple[int, ...]]:
@@ -616,16 +595,12 @@ def _modelo_100_full_fixture_post_2025() -> dict[str, Decimal]:
     }
 
 
-def _modelo_100_full_fixture() -> dict[str, Decimal]:
-    """Backwards-compatible alias — the post-2025 variant is structurally
-    identical for 2025 and 2026.
-
-    This function exists for any callers (tests, helper assertions)
-    that historically referenced ``_modelo_100_full_fixture`` without
-    a year suffix; for sub_op coverage the per-year variants above
-    are routed via :data:`_SUB_OP_COVERAGE_DATA`.
-    """
-    return _modelo_100_full_fixture_post_2025()
+# Note: pre-Wave-5 a backwards-compatible ``_modelo_100_full_fixture()``
+# alias resolved to the post-2025 variant unconditionally. The alias
+# was removed because applying it against the 2024 ruleset would
+# fail baseline-clean audit (the 0560 ahorro top-bracket rate is 0.14
+# in 2024 vs 0.15 in 2025/2026). Per-year callers must select the
+# correct variant explicitly.
 
 
 def _modelo_100_art20_piece_a_fixture() -> dict[str, Decimal]:
@@ -1018,6 +993,38 @@ def test_mutate_outer_sub_op_rejects_nonsubop_inside_clamp_pos() -> None:
     """
     with pytest.raises(TypeError):
         _mutate_outer_sub_op(MODELO_130_2025, "04")
+
+
+def test_sub_op_path_overrides_point_at_real_subformula_nodes() -> None:
+    """Issue #457 strict-audit defense: every override key resolves to a live ``SubFormula``.
+
+    :data:`_SUB_OP_PATH_OVERRIDES` is keyed by hand-typed path tuples;
+    a future M100 ruleset refactor that changes the AST shape would
+    silently leave the overrides pointing at the wrong nodes (or
+    nothing). This test re-walks each override key against the live
+    ruleset and asserts the path still terminates at a
+    :class:`SubFormula`. A drift fails loudly with the offending
+    triple in the message.
+    """
+    rulesets_by_id: dict[str, Ruleset] = {
+        MODELO_100_2024.ruleset_id: MODELO_100_2024,
+        MODELO_100_2025.ruleset_id: MODELO_100_2025,
+        MODELO_100_2026.ruleset_id: MODELO_100_2026,
+    }
+    for (ruleset_id, casilla_id, path), _fixture in _SUB_OP_PATH_OVERRIDES.items():
+        ruleset = rulesets_by_id.get(ruleset_id)
+        assert ruleset is not None, f"_SUB_OP_PATH_OVERRIDES references unknown ruleset {ruleset_id!r}"
+        fd = ruleset.formula_for(casilla_id)
+        assert fd is not None, (
+            f"_SUB_OP_PATH_OVERRIDES[{ruleset_id, casilla_id, path}] points at "
+            f"a casilla that does not exist on {ruleset_id}"
+        )
+        node = _node_at_path(fd.formula, path)
+        assert isinstance(node, SubFormula), (
+            f"_SUB_OP_PATH_OVERRIDES[{ruleset_id, casilla_id, path}] points at "
+            f"{type(node).__name__}, not SubFormula — the M100 AST shape may have "
+            f"changed; refresh the override paths from `iter_compound_descendants`."
+        )
 
 
 def test_mutate_sub_op_at_path_rejects_non_sub_formula_node() -> None:

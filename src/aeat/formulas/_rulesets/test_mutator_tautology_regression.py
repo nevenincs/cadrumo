@@ -56,6 +56,9 @@ def test_aggregator_catches_uncovered_populated_node(monkeypatch: pytest.MonkeyP
         "percent_rate_compound_skipped": 0,
         "percent_rate_casilla_ref_skipped": 0,
         "brackets_threshold_non_terminal": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
         # 1 populated node, but the empirical coverage map (which
         # cannot include this synthetic ruleset_id) reports 0
         # covered. Declared deferred is 0 — i.e. claiming the node
@@ -93,6 +96,9 @@ def test_aggregator_catches_inflated_deferred_count(monkeypatch: pytest.MonkeyPa
         "percent_rate_compound_skipped": 0,
         "percent_rate_casilla_ref_skipped": 0,
         "brackets_threshold_non_terminal": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
         "mul_div_scalar": 0,
         # populated == 0 but deferred == 1 → gap is -1, mismatched.
         "mul_div_scalar_deferred": 1,
@@ -119,6 +125,9 @@ def test_aggregator_passes_when_deferred_matches_gap(monkeypatch: pytest.MonkeyP
         "percent_rate_compound_skipped": 0,
         "percent_rate_casilla_ref_skipped": 0,
         "brackets_threshold_non_terminal": 0,
+        "threshold_literal_covered": 0,
+        "threshold_literal_identity_excluded": 0,
+        "threshold_literal_deferred": 0,
         "mul_div_scalar": 1,
         "mul_div_scalar_deferred": 1,
     }

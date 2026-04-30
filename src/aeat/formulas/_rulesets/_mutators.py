@@ -67,13 +67,17 @@ __all__ = [
     "PercentRateLocation",
     "build_percent_rate_mutants",
     "build_scalar_mutants",
+    "is_additive_identity_literal",
+    "iter_brackets_nodes",
     "iter_compound_descendants",
     "iter_percent_nodes",
     "iter_scalar_leaf_paths",
+    "iter_threshold_literal_paths",
     "mutate_brackets_threshold",
     "mutate_parameter_rate",
     "mutate_percent_literal_rate",
     "mutate_scalar_leaf",
+    "mutate_threshold_literal",
 ]
 
 
@@ -194,6 +198,110 @@ def iter_scalar_leaf_paths(
             for idx, operand in enumerate(node.operands):
                 if isinstance(operand, Literal):
                     yield (*path, idx), operand, "div"
+
+
+def iter_threshold_literal_paths(
+    formula: Formula,
+) -> Iterator[tuple[tuple[int, ...], Literal, str]]:
+    """Yield ``(path, literal, parent_op_slug)`` for every NON-Mul/Div :class:`Literal`.
+
+    Closes the issue-#457 strict-audit gap: BOE-anchored numeric
+    constants embedded as ``Literal`` operands of ``SubFormula``
+    (bracket boundaries, art. 20 piecewise thresholds), ``MinFormula``
+    (cap upper bounds), ``MaxFormula`` (clamp lower bounds), and
+    ``AddFormula`` (additive padding) were previously not exercised by
+    any mutator class. A typo in any of these silently miscalculates
+    tax. This walker complements :func:`iter_scalar_leaf_paths` —
+    together the two cover every :class:`Literal` position in the
+    formula tree.
+
+    The parent_op_slug is one of ``"sub"``, ``"min"``, ``"max"``,
+    ``"add"``, ``"round"``, ``"clamp_pos"``, ``"percent"`` — used in
+    test ids and the exec summary. ``"percent"`` covers the rate
+    operand at index 0 of a :class:`PercentFormula`; the rate's
+    detection floor is owned by the ``percent_rate`` mutator class
+    via :func:`mutate_percent_literal_rate` so the threshold harness
+    skips that position.
+    """
+    for path, node in _walk_with_paths(formula, ()):
+        if isinstance(node, MulFormula | DivFormula):
+            continue
+        if isinstance(node, PercentFormula):
+            # Rate operand (idx 0) is owned by the percent_rate mutator;
+            # any other operand is a base reference, never a literal.
+            continue
+        if isinstance(node, SubFormula):
+            parent_slug = "sub"
+        elif isinstance(node, MinFormula):
+            parent_slug = "min"
+        elif isinstance(node, MaxFormula):
+            parent_slug = "max"
+        elif isinstance(node, AddFormula):
+            parent_slug = "add"
+        elif isinstance(node, RoundFormula):
+            parent_slug = "round"
+        elif isinstance(node, ClampPositiveFormula):
+            parent_slug = "clamp_pos"
+        else:
+            # BracketsFormula has its own threshold mutator;
+            # other compound types do not have direct Literal operands.
+            continue
+        if not _is_compound(node):  # narrow for the type checker
+            continue
+        for idx, operand in enumerate(_compound_operands(node)):
+            if isinstance(operand, Literal):
+                yield (*path, idx), operand, parent_slug
+
+
+def is_additive_identity_literal(parent_slug: str, literal_value: Decimal) -> bool:
+    """Return ``True`` if ``literal_value`` is an architectural identity at ``parent_slug``.
+
+    Identity positions are deliberately excluded from the threshold
+    harness because a small mutation has no observable effect:
+
+    - ``Max(0, X)`` with ``X > 0`` — the literal 0 is dominated; any
+      ε-mutation leaves the max at X.
+    - ``Min(0, X)`` with ``X > 0`` — symmetric (literal 0 wins).
+
+    The rationale doubles as documentation of why the harness skips
+    these positions; a future contributor adding a new identity
+    pattern (e.g. ``Add(X, 0)``) should evaluate whether the literal
+    is truly identity-only or carries information that drift could
+    corrupt.
+    """
+    if literal_value != Decimal("0"):
+        return False
+    return parent_slug in ("max", "min")
+
+
+def mutate_threshold_literal(
+    ruleset: Ruleset,
+    casilla_id: str,
+    leaf_path: tuple[int, ...],
+    *,
+    offset: Decimal,
+) -> Ruleset:
+    """Return a ruleset with one threshold-literal shifted by ``offset``.
+
+    Targets a :class:`Literal` that is a direct operand of a
+    :class:`SubFormula`, :class:`MinFormula`, :class:`MaxFormula`,
+    :class:`AddFormula`, :class:`RoundFormula`, or
+    :class:`ClampPositiveFormula`. Every other Literal position is
+    out of scope of this mutator (rate operands of
+    :class:`PercentFormula` are owned by ``mutate_percent_literal_rate``;
+    direct Mul/Div leaves are owned by ``mutate_scalar_leaf``).
+    """
+    fd = _formula_for(ruleset, casilla_id)
+    leaf = _node_at_path(fd.formula, leaf_path)
+    if not isinstance(leaf, Literal):
+        raise TypeError(
+            f"expected Literal at path {leaf_path} for ruleset {ruleset.ruleset_id} "
+            f"casilla {casilla_id}; got {type(leaf).__name__}"
+        )
+    new_value = leaf.value + offset
+    new_leaf = Literal(value=new_value)
+    new_formula = _replace_at_path(fd.formula, leaf_path, new_leaf)
+    return _replace_formula_in_ruleset(ruleset, casilla_id, cast(Formula, new_formula))
 
 
 # -- AST surgery ----------------------------------------------------------
@@ -474,7 +582,7 @@ def _node_at_path(node: object, path: tuple[int, ...]) -> object:
 
 SUB_OP_SWAP: Final[MutatorClass] = MutatorClass(
     slug="sub_op_swap",
-    description="Swap operands of an outermost SubFormula (preserved from wave 60 stream 4).",
+    description="Swap operands of any SubFormula descendant (outer or inner).",
 )
 PERCENT_RATE: Final[MutatorClass] = MutatorClass(
     slug="percent_rate",
@@ -488,17 +596,30 @@ MUL_DIV_SCALAR: Final[MutatorClass] = MutatorClass(
     slug="mul_div_scalar",
     description="Multiply a Mul/Div Literal leaf by 1.01 or 0.99 (±1 %).",
 )
+THRESHOLD_LITERAL: Final[MutatorClass] = MutatorClass(
+    slug="threshold_literal",
+    description=(
+        "Shift a non-Mul/Div Literal operand by ±1 € (bracket boundaries, "
+        "art. 20 thresholds, IVA-rate constants, additive padding, etc.)."
+    ),
+)
 
 
 # Map every concrete formula-node type to the mutator class that owns it.
 # Adding a new ``Formula`` subclass without updating this mapping (or
-# the allow-list below) fails ``test_mutator_exhaustiveness``.
+# the allow-list below) fails ``test_mutator_exhaustiveness``. Note
+# that :class:`Literal` participates in two harnesses (mul_div_scalar
+# when a direct Mul/Div leaf operand; threshold_literal otherwise)
+# and is recorded against ``MUL_DIV_SCALAR`` here as the historical
+# anchor; ``test_threshold_literal_mutation`` enforces coverage of
+# the non-Mul/Div positions independently.
 MUTATOR_REGISTRY: Final[dict[type, MutatorClass]] = {
     SubFormula: SUB_OP_SWAP,
     PercentFormula: PERCENT_RATE,
     BracketsFormula: BRACKETS_THRESHOLD,
     MulFormula: MUL_DIV_SCALAR,
     DivFormula: MUL_DIV_SCALAR,
+    Literal: MUL_DIV_SCALAR,
 }
 
 
@@ -533,13 +654,17 @@ NOT_MUTABLE_NODE_TYPES: Final[dict[type, str]] = {
         "rounding mode) are invariants of the engine, not per-rule "
         "values, so mutation would test the engine, not the ruleset."
     ),
-    Literal: (
-        "Literal participates in the harness only when it is the rate "
-        "of a PercentFormula or the leaf of a Mul/Div node — both "
-        "scenarios are owned by their parent's mutator class. A "
-        "standalone Literal (e.g. M303 casillas 02/05/08, the printed "
-        "IVA rates) is a presentation value, not a calculation."
-    ),
+    # NB: Literal is intentionally absent from NOT_MUTABLE_NODE_TYPES.
+    # Pre-Wave-5 Literal was excluded under the rationale "Literal
+    # participates only when it is a Mul/Div leaf or a PercentFormula
+    # rate". The strict-audit (issue #457 Wave 5) showed that
+    # rationale was over-broad: ~120 Literal nodes across the landed
+    # rulesets are direct operands of Sub/Min/Max/Add/Round/ClampPos
+    # (bracket boundaries, art. 20 piecewise thresholds, IVA rate
+    # constants, additive-identity zeros). The :data:`THRESHOLD_LITERAL`
+    # mutator class introduced in Wave 5 covers those positions.
+    # Architectural identities (Max(0, X) / Min(0, X) lower/upper
+    # bounds with X > 0) are filtered by :func:`is_additive_identity_literal`.
     CasillaRef: (
         "CasillaRef is a runtime indirection; mutating it would change "
         "the formula's topology, not a value. Topology errors are out "
