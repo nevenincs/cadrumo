@@ -543,7 +543,12 @@ class ClaveMovilAuthProvider:
         try:
             with os.fdopen(fd, "wb") as handle:
                 handle.write(data)
+                handle.flush()
+                os.fsync(handle.fileno())
             os.replace(tmp_path, path)
+            from ..storage._lock import fsync_parent_dir
+
+            fsync_parent_dir(path)
         except Exception:
             with contextlib.suppress(FileNotFoundError):
                 tmp_path.unlink()

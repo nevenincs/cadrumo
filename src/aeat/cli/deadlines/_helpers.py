@@ -42,25 +42,31 @@ def resolve_profile_path(explicit: Path | None) -> Path:
 
 
 def load_profile(path: Path) -> AutonomoProfile:
-    """Load and validate an :class:`AutonomoProfile` from JSON on disk.
+    """Load and validate an :class:`AutonomoProfile` from disk.
+
+    The setup wizard writes the profile as an encrypted envelope at
+    IDENTITY class via :func:`aeat.setup.write_profile_file`; this
+    helper round-trips through the matching loader so the on-disk
+    record is always ciphertext.
 
     Args:
-        path: Path to a JSON file matching the
-            :class:`AutonomoProfile` schema.
+        path: Path to the setup-profile envelope file.
 
     Returns:
         The validated profile.
 
     Raises:
         ProfileError: If the file does not exist or its contents are
-            not a valid profile.
+            not a valid profile envelope.
     """
     if not path.exists():
         raise ProfileError(f"profile file not found: {path}")
+    from ...setup._env_writer import load_profile_envelope
+
     try:
-        return AutonomoProfile.model_validate_json(path.read_text(encoding="utf-8"))
+        return load_profile_envelope(path)
     except Exception as exc:  # pragma: no cover - defensive: covered by tests
-        raise ProfileError(f"invalid profile JSON at {path}: {exc}") from exc
+        raise ProfileError(f"invalid profile envelope at {path}: {exc}") from exc
 
 
 def build_engine() -> DeadlineEngine:

@@ -69,7 +69,9 @@ def load_default_filing_profile(
         raise ValueError("no default filing profile configured; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH")
     if not target.exists():
         raise ValueError(f"default filing profile not found: {target}")
-    profile = AutonomoProfile.model_validate_json(target.read_text(encoding="utf-8"))
+    from ..setup._env_writer import load_profile_envelope
+
+    profile = load_profile_envelope(target)
     return filing_profile_from_autonomo(profile, display_name=display_name)
 
 

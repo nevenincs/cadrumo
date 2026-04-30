@@ -26,7 +26,6 @@ import getpass
 from pathlib import Path
 
 import typer
-from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
@@ -61,38 +60,48 @@ def _drafts_dir() -> Path:
 
 
 def _resolve_draft_path(draft_ref: str) -> Path:
+    """Resolve a draft id (or envelope filename) to a Path on disk."""
     candidate = Path(draft_ref)
     if candidate.exists():
         return candidate
     if candidate.suffix == ".json" or candidate.parent != Path("."):
         raise typer.BadParameter(f"draft file not found: {candidate}")
-    matches = sorted(path for path in _drafts_dir().glob(f"*_{draft_ref}.json") if path.is_file())
-    if not matches:
-        raise typer.BadParameter(f"no persisted draft found for draft_id={draft_ref!r}")
-    if len(matches) > 1:
-        joined = ", ".join(str(path) for path in matches)
-        raise typer.BadParameter(f"draft_id={draft_ref!r} matched multiple draft files: {joined}")
-    return matches[0]
+    envelope_path = _drafts_dir() / f"{draft_ref}.envelope.json"
+    if envelope_path.exists():
+        return envelope_path
+    raise typer.BadParameter(f"no persisted draft found for draft_id={draft_ref!r}")
 
 
 def _load_review_draft(path: Path) -> FilingDraft:
+    """Load a draft envelope through the FilingDraftRepository."""
+    from ...filing._repository import FilingDraftRepository
+
     if not path.exists():
         raise typer.BadParameter(f"draft file not found: {path}")
-    try:
-        draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-    except (FilingDraftError, ValidationError) as exc:
-        raise typer.BadParameter(f"invalid draft in {path}: {exc}") from exc
+    if not path.name.endswith(".envelope.json"):
+        raise typer.BadParameter(
+            f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file.",
+        )
+    repository = FilingDraftRepository(store_dir=_drafts_dir())
+    draft_id = path.name[: -len(".envelope.json")]
+    loaded = repository.load(draft_id)
+    if loaded is None:
+        raise typer.BadParameter(f"draft envelope not found: {path}")
     refreshed = refresh_review_status(
-        draft,
+        loaded,
         schema_provider=build_runtime_schema_provider(),
     )
-    if refreshed != draft:
-        _save_draft(path, refreshed)
+    if refreshed != loaded:
+        _save_draft(refreshed)
     return refreshed
 
 
-def _save_draft(path: Path, draft: FilingDraft) -> None:
-    path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
+def _save_draft(draft: FilingDraft) -> None:
+    """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
+    from ...filing._repository import FilingDraftRepository
+
+    repository = FilingDraftRepository(store_dir=_drafts_dir())
+    repository.save(draft)
 
 
 def _resolve_approver(approved_by: str | None) -> str:
@@ -154,7 +163,7 @@ def approve_cmd(
         _CONSOLE.print(f"[red]refusing:[/red] {exc}")
         raise typer.Exit(code=1) from exc
     assert approved.approved_at is not None
-    _save_draft(draft_path, approved)
+    _save_draft(approved)
     _CONSOLE.print(
         f"[green]approved[/green] draft {approved.draft_id} "
         f"by {approved.approved_by} at {approved.approved_at.isoformat()}"
@@ -180,7 +189,7 @@ def unapprove_cmd(
     if not yes and not typer.confirm(f"Remove approval from draft {draft.draft_id}?"):
         raise typer.Exit(code=1)
     unapproved = unapprove_draft(draft)
-    _save_draft(draft_path, unapproved)
+    _save_draft(unapproved)
     _CONSOLE.print(f"[green]unapproved[/green] draft {unapproved.draft_id}")
     _render_review_next_steps(unapproved, draft_path=draft_path)
 
@@ -231,7 +240,7 @@ def stale_cmd() -> None:
     table.add_column("path")
 
     stale_count = 0
-    for path in sorted(drafts_dir.glob("*.json")):
+    for path in sorted(drafts_dir.glob("*.envelope.json")):
         try:
             draft = _load_review_draft(path)
         except typer.BadParameter:

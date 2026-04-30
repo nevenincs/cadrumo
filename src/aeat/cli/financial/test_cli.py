@@ -73,3 +73,98 @@ def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
     result = _RUNNER.invoke(root_app, ["financial", "ingest", str(source)])
     assert result.exit_code == 2
     assert "ingest error" in result.output.lower()
+
+
+# ── #216 Kent-moment integration tests ───────────────────────────────
+
+
+def test_financial_ingest_persist_kent_moment(tmp_path: Path) -> None:
+    """The Kent moment: aeat financial ingest --persist persists to the catalogue."""
+
+    from ...storage import (
+        EncryptedBlobStore,
+        EphemeralMasterKeyProvider,
+        SecretStore,
+        override_master_key_provider,
+        override_secret_store,
+    )
+
+    provider = EphemeralMasterKeyProvider()
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_master_key_provider(provider)
+    override_secret_store(secret_store)
+    catalogue_dir = tmp_path / "catalogue"
+    try:
+        result = _RUNNER.invoke(
+            root_app,
+            [
+                "financial",
+                "ingest",
+                str(_FIXTURES / "synthetic-transactions.csv"),
+                "--provider",
+                "auto",
+                "--persist",
+                "--catalogue-dir",
+                str(catalogue_dir),
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        # The envelope file landed under the catalogue directory at
+        # FINANCIAL classification.
+        envelope_path = catalogue_dir / "transactions.envelope.json"
+        assert envelope_path.exists()
+        envelope_text = envelope_path.read_text(encoding="utf-8")
+        assert '"classification":"financial"' in envelope_text
+        assert "imported=2" in result.output
+        assert "skipped=0" in result.output
+
+        # Re-import the same file: idempotency yields imported=0,
+        # skipped=2 against the existing catalogue.
+        result_b = _RUNNER.invoke(
+            root_app,
+            [
+                "financial",
+                "ingest",
+                str(_FIXTURES / "synthetic-transactions.csv"),
+                "--provider",
+                "auto",
+                "--persist",
+                "--catalogue-dir",
+                str(catalogue_dir),
+            ],
+        )
+        assert result_b.exit_code == 0, result_b.output
+        assert "imported=0" in result_b.output
+        assert "skipped=2" in result_b.output
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
+def test_financial_ingest_no_persist_preserves_pipe_workflow(tmp_path: Path) -> None:
+    """``--no-persist`` keeps the legacy stdout-only behaviour intact."""
+    result = _RUNNER.invoke(
+        root_app,
+        [
+            "financial",
+            "ingest",
+            str(_FIXTURES / "synthetic-transactions.csv"),
+            "--provider",
+            "auto",
+            "--output-json",
+            "--no-persist",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payloads = [json.loads(line) for line in result.stdout.splitlines() if line.strip().startswith("{")]
+    assert len(payloads) == 2
+    # No 'persisted' / 'imported=' summary line on stdout when --no-persist.
+    assert "imported=" not in result.output

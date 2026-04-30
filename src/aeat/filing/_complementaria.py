@@ -112,27 +112,30 @@ def build_complementaria(original, updated_inputs: CasillaInputs) -> FilingAmend
 
 def load_amendment(amendment_id: str) -> FilingAmendment:
     """Load a previously persisted amendment by id."""
+    from ._complementaria_repository import FilingAmendmentRepository
+
     try:
-        target = resolve_record_json_path(_amendments_dir(), amendment_id, context="amendment id")
+        resolve_record_json_path(_amendments_dir(), amendment_id, context="amendment id")
     except ValueError as exc:
         raise FilingAmendmentError(str(exc)) from exc
-    if not target.exists():
+    repository = FilingAmendmentRepository(store_dir=_amendments_dir())
+    loaded = repository.load(amendment_id)
+    if loaded is None:
         raise FilingAmendmentError(f"no persisted amendment with id {amendment_id!r}")
-    return FilingAmendment.model_validate_json(target.read_text(encoding="utf-8"))
+    return loaded
 
 
 def list_amendments(*, modelo: str | None = None) -> tuple[FilingAmendment, ...]:
     """Return every persisted amendment, optionally filtered by modelo."""
+    from ._complementaria_repository import FilingAmendmentRepository
+
     target_dir = _amendments_dir()
     if not target_dir.exists():
         return ()
-    results: list[FilingAmendment] = []
-    for path in sorted(target_dir.glob("*.json")):
-        amendment = FilingAmendment.model_validate_json(path.read_text(encoding="utf-8"))
-        if modelo is not None and amendment.original_model != modelo:
-            continue
-        results.append(amendment)
-    return tuple(results)
+    repository = FilingAmendmentRepository(store_dir=target_dir)
+    return tuple(
+        amendment for amendment in repository.iter_amendments() if modelo is None or amendment.original_model == modelo
+    )
 
 
 def make_amendment_id(
@@ -159,23 +162,31 @@ def _amendments_dir() -> Path:
 
 
 def _persist_amendment(amendment: FilingAmendment) -> Path:
+    """Persist ``amendment`` through the AUDIT-class FilingAmendmentRepository."""
+    from ._complementaria_repository import FilingAmendmentRepository
+
     try:
-        target = resolve_record_json_path(_amendments_dir(), amendment.amendment_id, context="amendment id")
+        # Reject path-traversal-shaped ids before composing the
+        # repository's envelope path.
+        resolve_record_json_path(_amendments_dir(), amendment.amendment_id, context="amendment id")
     except ValueError as exc:
         raise FilingAmendmentError(str(exc)) from exc
-    target.write_text(amendment.model_dump_json(indent=2), encoding="utf-8")
-    return target
+    repository = FilingAmendmentRepository(store_dir=_amendments_dir())
+    repository.save(amendment)
+    return repository.envelope_path_for(amendment.amendment_id)
 
 
 def _load_original_draft(draft_id: str) -> FilingDraft:
+    """Locate the original draft by id via the FilingDraftRepository."""
+    from ._repository import FilingDraftRepository
+
     drafts_dir = load_settings().aeat_drafts_dir
     if not drafts_dir.exists():
         raise FilingAmendmentValidationError(f"drafts directory not found: {drafts_dir}")
-    for path in sorted(drafts_dir.glob("*.json")):
-        draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-        if draft.draft_id == draft_id:
-            return draft
-    raise FilingAmendmentValidationError(f"could not locate original draft for draft_id={draft_id!r}")
+    loaded = FilingDraftRepository(store_dir=drafts_dir).load(draft_id)
+    if loaded is None:
+        raise FilingAmendmentValidationError(f"could not locate original draft for draft_id={draft_id!r}")
+    return loaded
 
 
 def _resolve_original_metadata(original) -> dict[str, str]:

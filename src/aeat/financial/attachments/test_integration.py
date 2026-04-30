@@ -38,7 +38,7 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
-_MANIFEST_SUFFIX = ".json"
+_MANIFEST_SUFFIX = ".envelope.json"
 
 
 def _write_source(path: Path, data: bytes) -> Path:

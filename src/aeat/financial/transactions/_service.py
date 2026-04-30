@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-import os
-import tempfile
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 from pydantic import ValidationError
 
 from ...logging import get_logger
 from ._enums import BusinessClassification
-from ._errors import TransactionCatalogueError, TransactionNotFoundError, TransactionPersistenceError
+from ._errors import TransactionCatalogueError, TransactionNotFoundError
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
 
 _LOGGER = get_logger(__name__)
@@ -21,64 +18,6 @@ _MANUAL_CLASSIFIED_BY = "manual"
 _DEFAULT_MANUAL_CONFIDENCE = Decimal("1.0")
 
 _EntrySignature = tuple[BusinessClassification, Decimal | None, str, str, str | None, str, Decimal | None]
-
-
-def load_transactions(path: Path) -> TransactionCatalogue:
-    """Load a transaction catalogue from one JSON file.
-
-    Args:
-        path: JSON file containing a serialized ``TransactionCatalogue``.
-
-    Returns:
-        The validated catalogue loaded from disk.
-
-    Raises:
-        TransactionPersistenceError: If the file cannot be read or validated.
-    """
-    target = path.resolve()
-    try:
-        raw = target.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise TransactionPersistenceError(f"unable to read transaction catalogue: {target}") from exc
-    try:
-        catalogue = TransactionCatalogue.model_validate_json(raw)
-    except ValidationError as exc:
-        raise TransactionPersistenceError(f"invalid transaction catalogue JSON: {target}") from exc
-    _LOGGER.debug("loaded %s transactions from %s", len(catalogue), target)
-    return catalogue
-
-
-def save_transactions(catalogue: TransactionCatalogue, path: Path) -> None:
-    """Persist a transaction catalogue to disk atomically.
-
-    Args:
-        catalogue: Catalogue to persist.
-        path: Destination JSON file.
-
-    Raises:
-        TransactionPersistenceError: If the write cannot be completed.
-    """
-    target = path.resolve()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    payload = catalogue.model_dump_json(indent=2)
-    tmp_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(payload)
-        os.replace(tmp_path, target)
-    except OSError as exc:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
-        raise TransactionPersistenceError(f"unable to write transaction catalogue: {target}") from exc
-    _LOGGER.debug("saved %s transactions to %s", len(catalogue), target)
 
 
 def find_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction | None:

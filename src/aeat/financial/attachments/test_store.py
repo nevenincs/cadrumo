@@ -111,7 +111,11 @@ def test_re_ingesting_same_bytes_merges_links_without_duplicating_blob(tmp_path:
     assert second.linked_transaction_ids == ("tx-1", "tx-2")
     assert second.linked_invoice_ids == ("inv-1",)
     blob_files = sorted(store.blobs_dir.iterdir())
-    manifest_files = sorted(store.manifests_dir.iterdir())
+    # The manifests directory now also carries per-record ``.lock`` lock
+    # sidecars next to each ``.envelope.json`` file; filter to envelope
+    # files when counting manifests so the lock files do not affect the
+    # canonical count.
+    manifest_files = sorted(p for p in store.manifests_dir.iterdir() if p.name.endswith(".envelope.json"))
     assert len(blob_files) == 1
     assert len(manifest_files) == 1
 

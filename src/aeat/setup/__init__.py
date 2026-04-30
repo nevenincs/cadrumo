@@ -11,7 +11,7 @@ the project's public-API-discipline rule.
 
 from __future__ import annotations
 
-from ._env_writer import owned_env_keys, write_env_file, write_profile_file
+from ._env_writer import load_profile_envelope, owned_env_keys, write_env_file, write_profile_file
 from ._errors import (
     SetupAbortedError,
     SetupAnswersError,
@@ -49,6 +49,7 @@ __all__ = [
     "VerifyFinding",
     "VerifySeverity",
     "load_answers_from_file",
+    "load_profile_envelope",
     "owned_env_keys",
     "write_env_file",
     "write_profile_file",

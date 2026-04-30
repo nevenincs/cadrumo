@@ -30,8 +30,12 @@ from .doctor import (
     check_desktop_oauth_client_material,
     check_google_auth_readiness,
     check_inactive_google_auth_drift,
+    check_kdf_version,
     check_live_access_gate,
+    check_master_key_readiness,
     check_mcp_credentials_cache,
+    check_secret_store_backend,
+    check_secret_store_directory,
     check_service_account,
     render_table,
     short_scope,
@@ -373,3 +377,165 @@ class TestAuthProviderPathRow:
         row = check_auth_provider_path(Settings())
         assert row.state == State.WARN
         assert "auth is fixed" in row.detail
+
+
+def _settings_with_secret_dir(
+    tmp_path: Path,
+    *,
+    backend: str | None = None,
+    allow_unencrypted: bool | None = None,
+) -> Settings:
+    """Build a Settings bound to a tmp secret-store directory."""
+    overrides: dict[str, object] = {"aeat_secret_store_dir": tmp_path / "secrets"}
+    if backend is not None:
+        overrides["aeat_secret_store_backend"] = backend
+    if allow_unencrypted is not None:
+        overrides["aeat_allow_unencrypted"] = allow_unencrypted
+    return IsolatedSettings.model_validate(overrides)
+
+
+class TestSecretStoreDirectoryRow:
+    """The secret-store directory row reports presence + writability."""
+
+    def test_missing_dir_is_a_remediation_hint(self, tmp_path: Path) -> None:
+        row = check_secret_store_directory(_settings_with_secret_dir(tmp_path))
+        assert row.section == "secret-store dir"
+        assert row.state == State.MISSING
+        assert "aeat security provision" in row.detail
+
+    def test_writable_dir_is_ok(self, tmp_path: Path) -> None:
+        secret_dir = tmp_path / "secrets"
+        secret_dir.mkdir()
+        row = check_secret_store_directory(_settings_with_secret_dir(tmp_path))
+        assert row.state == State.OK
+        assert str(secret_dir) in row.detail
+
+
+class TestSecretStoreBackendRow:
+    """The active backend row warns loudly on the unsecured path."""
+
+    def test_keyring_backend_is_ok(self, tmp_path: Path) -> None:
+        from ..config import SecretStoreBackend
+
+        row = check_secret_store_backend(
+            _settings_with_secret_dir(
+                tmp_path,
+                backend=SecretStoreBackend.KEYRING.value,
+            ),
+        )
+        assert row.state == State.OK
+        assert "backend=keyring" in row.detail
+
+    def test_unsecured_without_allow_flag_is_missing(self, tmp_path: Path) -> None:
+        from ..config import SecretStoreBackend
+
+        row = check_secret_store_backend(
+            _settings_with_secret_dir(
+                tmp_path,
+                backend=SecretStoreBackend.UNSECURED.value,
+                allow_unencrypted=False,
+            ),
+        )
+        assert row.state == State.MISSING
+        assert "AEAT_ALLOW_UNENCRYPTED" in row.detail
+
+    def test_unsecured_with_allow_flag_is_warn(self, tmp_path: Path) -> None:
+        from ..config import SecretStoreBackend
+
+        row = check_secret_store_backend(
+            _settings_with_secret_dir(
+                tmp_path,
+                backend=SecretStoreBackend.UNSECURED.value,
+                allow_unencrypted=True,
+            ),
+        )
+        assert row.state == State.WARN
+        assert "ZERO confidentiality" in row.detail
+
+
+class TestMasterKeyReadinessRow:
+    """The master-key readiness row checks file-fallback artefacts."""
+
+    def test_file_backend_with_no_artefacts_is_missing(self, tmp_path: Path) -> None:
+        from ..config import SecretStoreBackend
+
+        secret_dir = tmp_path / "secrets"
+        secret_dir.mkdir()
+        row = check_master_key_readiness(
+            _settings_with_secret_dir(
+                tmp_path,
+                backend=SecretStoreBackend.FILE.value,
+            ),
+        )
+        assert row.state == State.MISSING
+        assert "aeat security provision" in row.detail
+
+    def test_file_backend_with_complete_artefacts_is_ok(self, tmp_path: Path) -> None:
+        from ..config import SecretStoreBackend
+
+        secret_dir = tmp_path / "secrets"
+        secret_dir.mkdir()
+        for name in ("master.key", "master.kdf", "salt"):
+            (secret_dir / name).write_bytes(b"placeholder")
+        row = check_master_key_readiness(
+            _settings_with_secret_dir(
+                tmp_path,
+                backend=SecretStoreBackend.FILE.value,
+            ),
+        )
+        assert row.state == State.OK
+
+    def test_file_backend_with_partial_artefacts_is_partial(self, tmp_path: Path) -> None:
+        from ..config import SecretStoreBackend
+
+        secret_dir = tmp_path / "secrets"
+        secret_dir.mkdir()
+        # Only master.kdf — the other two are missing.
+        (secret_dir / "master.kdf").write_bytes(b"placeholder")
+        row = check_master_key_readiness(
+            _settings_with_secret_dir(
+                tmp_path,
+                backend=SecretStoreBackend.FILE.value,
+            ),
+        )
+        assert row.state == State.PARTIAL
+        assert "partial file-fallback state" in row.detail
+
+
+class TestKdfVersionRow:
+    """The KDF-version row gates on the post-Argon2id parameter shape."""
+
+    def test_no_master_kdf_is_skipped(self, tmp_path: Path) -> None:
+        secret_dir = tmp_path / "secrets"
+        secret_dir.mkdir()
+        row = check_kdf_version(_settings_with_secret_dir(tmp_path))
+        assert row.state == State.SKIP
+
+    def test_v2_kdf_is_ok(self, tmp_path: Path) -> None:
+        secret_dir = tmp_path / "secrets"
+        secret_dir.mkdir()
+        (secret_dir / "master.kdf").write_text(
+            json.dumps({"version": 2, "algorithm": "argon2id"}),
+            encoding="utf-8",
+        )
+        row = check_kdf_version(_settings_with_secret_dir(tmp_path))
+        assert row.state == State.OK
+        assert "Argon2id" in row.detail
+
+    def test_v1_kdf_is_warn_with_migration_hint(self, tmp_path: Path) -> None:
+        secret_dir = tmp_path / "secrets"
+        secret_dir.mkdir()
+        (secret_dir / "master.kdf").write_text(
+            json.dumps({"version": 1, "algorithm": "scrypt"}),
+            encoding="utf-8",
+        )
+        row = check_kdf_version(_settings_with_secret_dir(tmp_path))
+        assert row.state == State.WARN
+        assert "migrate-master-key-kdf" in row.detail
+
+    def test_unparseable_master_kdf_is_partial(self, tmp_path: Path) -> None:
+        secret_dir = tmp_path / "secrets"
+        secret_dir.mkdir()
+        (secret_dir / "master.kdf").write_text("{not json", encoding="utf-8")
+        row = check_kdf_version(_settings_with_secret_dir(tmp_path))
+        assert row.state == State.PARTIAL

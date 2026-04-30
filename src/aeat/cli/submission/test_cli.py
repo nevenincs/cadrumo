@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -18,8 +17,8 @@ from ...financial.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
 )
+from ...financial.transactions._repository import TransactionCatalogueRepository
 from ...submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import app
 
@@ -41,11 +40,45 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 @pytest.fixture()
-def draft_path(tmp_path: Path) -> Path:
+def draft_path(tmp_path: Path, isolated_dirs: Path) -> Path:
+    """Persist an approved draft via the wave-4 FilingDraftRepository envelope path.
+
+    The CLI's preflight loader prefers the envelope path; this fixture
+    writes the approved draft through ``FilingDraftRepository.save``
+    so the loader's primary code path runs (the legacy plaintext-JSON
+    fallback in ``_CliDraftLoader`` does not understand the wave-1+
+    ``tuple[FilingValue, ...]`` shape and is reserved for older
+    fixtures).
+    """
+    from ...filing._repository import FilingDraftRepository
+    from ...storage import (
+        EncryptedBlobStore,
+        EphemeralMasterKeyProvider,
+        SecretStore,
+        override_master_key_provider,
+        override_secret_store,
+    )
+
+    # Bootstrap an ephemeral master key + secret store so the
+    # FINANCIAL-class envelope round-trip succeeds in the test env.
+    provider = EphemeralMasterKeyProvider()
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_master_key_provider(provider)
+    override_secret_store(secret_store)
+
     draft = _approved_draft()
-    path = tmp_path / "draft.json"
-    path.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
-    return path
+    drafts_dir = isolated_dirs / "drafts"
+    repository = FilingDraftRepository(store_dir=drafts_dir)
+    repository.save(draft)
+    return repository.envelope_path_for(draft.draft_id)
 
 
 def _approved_draft() -> FilingDraft:
@@ -117,15 +150,46 @@ class TestPreflightCommand:
         status: str,
         expected_fragment: str,
     ) -> None:
-        payload = _approved_draft().model_dump(mode="json")
-        payload["status"] = status
-        payload["approved_at"] = None
-        payload["approved_by"] = None
-        payload["review_checksum"] = None
-        payload["approval_basis"] = None
-        path = tmp_path / "bad.json"
-        path.write_text(json.dumps(payload), encoding="utf-8")
-        result = runner.invoke(app, ["preflight", str(path)])
+        # Build an approved draft, downgrade its status to a non-
+        # preflight-eligible value, persist via the wave-4 envelope
+        # repository (ciphertext at rest), and preflight should refuse.
+        from ...filing._repository import FilingDraftRepository
+        from ...filing._schema import FilingDraftStatus
+        from ...storage import (
+            EncryptedBlobStore,
+            EphemeralMasterKeyProvider,
+            SecretStore,
+            override_master_key_provider,
+            override_secret_store,
+        )
+
+        provider = EphemeralMasterKeyProvider()
+        blob_store = EncryptedBlobStore(
+            root_dir=tmp_path / "blobs",
+            master_key_provider=provider,
+        )
+        secret_store = SecretStore(
+            store_dir=tmp_path / "secrets",
+            blob_store=blob_store,
+            master_key_provider=provider,
+        )
+        override_master_key_provider(provider)
+        override_secret_store(secret_store)
+
+        approved = _approved_draft()
+        downgraded = approved.model_copy(
+            update={
+                "status": FilingDraftStatus(status),
+                "approved_at": None,
+                "approved_by": None,
+                "review_checksum": None,
+                "approval_basis": None,
+            },
+        )
+        drafts_dir = isolated_dirs / "drafts-bad"
+        repository = FilingDraftRepository(store_dir=drafts_dir)
+        repository.save(downgraded)
+        result = runner.invoke(app, ["preflight", str(repository.envelope_path_for(downgraded.draft_id))])
         assert result.exit_code == 1
         assert "FAILED" in result.output
         assert expected_fragment in result.output
@@ -136,15 +200,26 @@ class TestPreflightCommand:
         draft_path: Path,
         isolated_dirs: Path,
     ) -> None:
-        transactions_path = isolated_dirs / "transactions" / "transactions.json"
-        transactions_path.parent.mkdir(parents=True, exist_ok=True)
-        save_transactions(TransactionCatalogue.from_transactions([_sample_transaction()]), transactions_path)
+        # Persisting a transaction catalogue with NOT_YET_PROCESSED
+        # rows means the approved draft's review checksum no longer
+        # matches the live state — preflight must mark it stale via
+        # the wave-4 envelope-repository round-trip.
+        from ...filing._repository import FilingDraftRepository
+
+        TransactionCatalogueRepository(store_dir=isolated_dirs / "transactions").save(
+            TransactionCatalogue.from_transactions([_sample_transaction()]),
+        )
 
         result = runner.invoke(app, ["preflight", str(draft_path)])
         assert result.exit_code == 1
         assert "stale" in result.output
 
-        refreshed = FilingDraft.model_validate_json(draft_path.read_text(encoding="utf-8"))
+        # The loader re-persists the refreshed (now stale) draft
+        # through the envelope repository; load it back through the
+        # same path to assert the new status.
+        repository = FilingDraftRepository(store_dir=draft_path.parent)
+        refreshed = repository.load(draft_path.name[: -len(".envelope.json")])
+        assert refreshed is not None
         assert refreshed.status.value == "APPROVAL_STALE"
 
 

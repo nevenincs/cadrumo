@@ -20,13 +20,37 @@ logger at the same time.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import threading
 from pathlib import Path
-from typing import TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
 from ._models import RunEvent
+
+if TYPE_CHECKING:
+    from ..storage._classification import RedactionRule
+
+
+# The DIAGNOSTIC-class rule set is resolved lazily on first emit so the
+# observability package does not pull aeat.storage (which imports
+# Alembic plugin discovery and emits INFO log lines on stderr at import
+# time) into every CLI command's import chain. The cost of resolving
+# the rule set once is negligible compared with one-time Alembic
+# discovery.
+_DIAGNOSTIC_RULES: tuple[Any, ...] | None = None
+
+
+def _diagnostic_rules() -> tuple[RedactionRule, ...]:
+    """Return the AUDIT-class default rule set, resolved on first call."""
+    global _DIAGNOSTIC_RULES
+    if _DIAGNOSTIC_RULES is None:
+        from ..storage import SensitivityClass
+        from ..storage._redaction import default_rules_for_class
+
+        _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
+    return _DIAGNOSTIC_RULES  # type: ignore[return-value]
 
 
 class JsonlRunSink(logging.Handler):
@@ -88,15 +112,20 @@ class JsonlRunSink(logging.Handler):
         if event.run_id != self._run_id:
             return
         try:
-            # Encode outside the lock — pydantic serialization is
-            # CPU-bound and thread-safe on a frozen model, so holding
-            # the lock across the encode step would serialize work
-            # that does not need mutual exclusion. The encode is
-            # still inside the try so any encoder error (extremely
-            # unlikely on a strict+frozen model but possible in
-            # principle) is routed through handleError rather than
-            # escaping into the logging subsystem.
-            line = event.model_dump_json() + "\n"
+            # Run traces are DIAGNOSTIC class. The substrate's redaction
+            # rule set walks every string leaf (NIF SHA-256-prefixed, URL
+            # host-only, bearer-shaped tokens fingerprinted, opaque
+            # bearers fingerprinted) before serialisation so the JSONL
+            # never carries a plaintext NIF / token / URL path even if
+            # a caller feeds one in. Encoding happens outside the lock
+            # — pydantic dump and dict walk are CPU-bound and
+            # thread-safe on a frozen model, so holding the lock across
+            # the encode step would serialise work that does not need
+            # mutual exclusion.
+            from ..storage import redact_structured
+
+            redacted = redact_structured(event.model_dump(mode="json"), rules=_diagnostic_rules())
+            line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
             with self._lock:
                 handle = self._open()
                 handle.write(line)

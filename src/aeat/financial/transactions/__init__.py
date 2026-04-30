@@ -41,8 +41,6 @@ from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalog
 from ._service import (
     find_transaction,
     link_invoice,
-    load_transactions,
-    save_transactions,
     set_classification,
     snapshot_classification_state,
 )
@@ -79,13 +77,11 @@ __all__ = [
     "find_transaction",
     "is_classified",
     "link_invoice",
-    "load_transactions",
     "profiles_for_provider",
     "prompt_spec_with_every_spending_category",
     "register_classifier",
     "resolve_classifier",
     "resolve_profile",
-    "save_transactions",
     "set_classification",
     "snapshot_classification_state",
     "unregister_classifier",

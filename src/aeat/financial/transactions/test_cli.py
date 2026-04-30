@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -11,6 +12,13 @@ import pytest
 from typer.testing import CliRunner
 
 from ...cli import app as root_app
+from ...storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from .. import CsvProvider, OfxProvider, RawProvenance, SourceFormat
 from ..providers import RawTransaction
 from . import (
@@ -19,17 +27,53 @@ from . import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    load_transactions,
     register_classifier,
-    save_transactions,
     set_classification,
     unregister_classifier,
 )
+from ._repository import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
-_CATALOGUE_FILENAME = "transactions.json"
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    """Bind every test to a fresh in-memory master key + secret store.
+
+    Required because the repository routes every read/write through
+    ``save_encrypted_envelope`` / ``load_encrypted_envelope``; without
+    a configured provider every CLI invocation would prompt for the
+    file-backend passphrase.
+    """
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
+def _load_catalogue(store_dir: Path) -> TransactionCatalogue:
+    """Read the persisted catalogue via the repository."""
+    return TransactionCatalogueRepository(store_dir=store_dir).load()
+
+
+def _save_catalogue(catalogue: TransactionCatalogue, store_dir: Path) -> None:
+    """Persist the catalogue via the repository."""
+    TransactionCatalogueRepository(store_dir=store_dir).save(catalogue)
 
 
 def _sample_transaction(
@@ -82,7 +126,7 @@ def _write_catalogue(tmp_path: Path) -> TransactionCatalogue:
             ),
         ]
     )
-    save_transactions(catalogue, tmp_path / _CATALOGUE_FILENAME)
+    _save_catalogue(catalogue, tmp_path)
     return catalogue
 
 
@@ -121,7 +165,7 @@ def _write_four_state_catalogue(tmp_path: Path) -> TransactionCatalogue:
             ),
         ]
     )
-    save_transactions(catalogue, tmp_path / _CATALOGUE_FILENAME)
+    _save_catalogue(catalogue, tmp_path)
     return catalogue
 
 
@@ -227,7 +271,7 @@ def test_financial_txs_classify_embeds_reason_into_history(tmp_path: Path) -> No
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
     assert payload["business_classification"] == "BUSINESS"
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     updated = restored.get(transaction.transaction_id)
     assert updated is not None
     assert len(updated.classification_history) == 1
@@ -278,7 +322,7 @@ def test_financial_txs_classify_updates_catalogue_file(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload["business_classification"] == "MIXED"
     assert payload["business_pct"] == "0.5"
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     updated = restored.get(transaction.transaction_id)
     assert updated is not None
     assert updated.business_classification is BusinessClassification.MIXED
@@ -336,7 +380,7 @@ def test_financial_txs_classify_accepts_category_and_reason(tmp_path: Path) -> N
     assert payload["category_id"] == "cuotas_autonomos_ss"
     assert payload["notes"] == "Payment for social security"
 
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     updated = restored.get(transaction.transaction_id)
     assert updated is not None
     assert updated.category_id == "cuotas_autonomos_ss"
@@ -354,7 +398,7 @@ def test_financial_txs_classify_allows_metadata_only_update(tmp_path: Path) -> N
         classified_by="manual",
         reason="Initial manual classification",
     )
-    save_transactions(updated, tmp_path / _CATALOGUE_FILENAME)
+    _save_catalogue(updated, tmp_path)
 
     result = _RUNNER.invoke(
         root_app,
@@ -446,7 +490,7 @@ def test_financial_txs_build_creates_catalogue_from_csv_ingest_ndjson(tmp_path: 
     )
 
     assert result.exit_code == 0, result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     amounts = sorted(transaction.raw.amount for transaction in restored.values())
     assert len(restored) == 2
     assert amounts == expected_amounts
@@ -463,7 +507,7 @@ def test_financial_txs_build_creates_catalogue_from_ofx_ingest_ndjson(tmp_path: 
     )
 
     assert result.exit_code == 0, result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     amounts = sorted(transaction.raw.amount for transaction in restored.values())
     assert len(restored) == 2
     assert amounts == expected_amounts
@@ -564,7 +608,7 @@ def test_financial_txs_build_accepts_cp1252_encoded_ndjson(tmp_path: Path) -> No
     )
 
     assert result.exit_code == 0, result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     assert len(restored) == 1
 
 
@@ -598,7 +642,7 @@ def test_financial_txs_build_accepts_utf8_bom_ndjson(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     assert len(restored) == 1
 
 
@@ -613,7 +657,7 @@ def test_financial_txs_build_accepts_direct_csv_source(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     assert len(restored) == 2
 
 
@@ -643,7 +687,7 @@ def _write_confidence_catalogue(tmp_path: Path) -> TransactionCatalogue:
             ),
         ]
     )
-    save_transactions(catalogue, tmp_path / _CATALOGUE_FILENAME)
+    _save_catalogue(catalogue, tmp_path)
     return catalogue
 
 
@@ -751,7 +795,7 @@ def test_financial_txs_list_filters_by_confidence_below(tmp_path: Path) -> None:
     env = {"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)}
 
     def _classify(provider_id: str, classification: str, confidence: str) -> None:
-        catalogue = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+        catalogue = _load_catalogue(tmp_path)
         target_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == provider_id)
         result = _RUNNER.invoke(
             root_app,
@@ -779,7 +823,7 @@ def test_financial_txs_list_filters_by_confidence_below(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    catalogue = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    catalogue = _load_catalogue(tmp_path)
     ids_by_provider = {tx.raw.transaction_id: tx.transaction_id for tx in catalogue.values()}
     assert ids_by_provider["conf-row-low"] in result.output
     assert ids_by_provider["conf-row-high"] not in result.output
@@ -791,7 +835,7 @@ def test_financial_txs_list_composes_state_and_confidence_filters(tmp_path: Path
     _write_confidence_catalogue(tmp_path)
     env = {"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)}
 
-    catalogue = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    catalogue = _load_catalogue(tmp_path)
     low_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == "conf-row-low")
     high_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == "conf-row-high")
     bare_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == "conf-row-bare")
@@ -892,9 +936,6 @@ class _ScriptedLLMClassifier:
         return self.response
 
 
-from collections.abc import Iterator  # noqa: E402 — local to LLM CLI tests
-
-
 @pytest.fixture
 def scripted_provider() -> Iterator[str]:
     """Register a deterministic classifier; yield its provider name; unregister."""
@@ -934,7 +975,7 @@ def test_classify_llm_single_persists_the_classifier_decision(
     )
 
     assert result.exit_code == 0, result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     updated = restored.get(transaction.transaction_id)
     assert updated is not None
     assert updated.business_classification is BusinessClassification.BUSINESS
@@ -968,7 +1009,7 @@ def test_classify_llm_dry_run_does_not_persist(
 
     assert result.exit_code == 0, result.output
     assert "dry-run" in result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     reloaded = restored.get(transaction.transaction_id)
     assert reloaded is not None
     assert reloaded.business_classification is original_state
@@ -989,7 +1030,7 @@ def test_classify_llm_all_only_targets_unclassified(
 
     assert result.exit_code == 0, result.output
     assert "1 classified" in result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     classifier_key = f"llm:{scripted_provider}"
     classifier_touched = [tx for tx in restored.values() if tx.classified_by == classifier_key]
     assert len(classifier_touched) == 1
@@ -1051,7 +1092,7 @@ def test_classify_llm_populates_notes_field_for_parity_with_manual_path(
     )
 
     assert result.exit_code == 0, result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     updated = restored.get(transaction.transaction_id)
     assert updated is not None
     assert updated.notes == updated.classification_reason
@@ -1094,7 +1135,7 @@ def test_classify_llm_applies_default_ratio_from_category_profile(tmp_path: Path
             env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
         )
         assert result.exit_code == 0, result.output
-        restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+        restored = _load_catalogue(tmp_path)
         updated = restored.get(transaction.transaction_id)
         assert updated is not None
         assert updated.business_classification is BusinessClassification.MIXED
@@ -1127,7 +1168,7 @@ def test_classify_llm_pct_override_beats_profile_default(tmp_path: Path) -> None
             env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
         )
         assert result.exit_code == 0, result.output
-        restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+        restored = _load_catalogue(tmp_path)
         updated = restored.get(transaction.transaction_id)
         assert updated is not None
         assert updated.business_pct == Decimal("0.5")
@@ -1167,7 +1208,7 @@ def test_classify_llm_category_hint_forces_category(tmp_path: Path) -> None:
             env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
         )
         assert result.exit_code == 0, result.output
-        restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+        restored = _load_catalogue(tmp_path)
         updated = restored.get(transaction.transaction_id)
         assert updated is not None
         assert updated.category_id == "software_suscripcion"
@@ -1199,7 +1240,7 @@ def test_classify_llm_reason_prepends_kent_text_to_llm_rationale(
     )
 
     assert result.exit_code == 0, result.output
-    restored = load_transactions(tmp_path / _CATALOGUE_FILENAME)
+    restored = _load_catalogue(tmp_path)
     updated = restored.get(transaction.transaction_id)
     assert updated is not None
     assert "Kent checked the receipt" in updated.classification_reason

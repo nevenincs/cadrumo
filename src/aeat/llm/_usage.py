@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -51,18 +52,39 @@ class UsageRecorder:
     def record(self, record: UsageRecord) -> Path:
         """Append a record to the daily JSONL file.
 
+        The record is routed through the substrate's
+        :func:`redact_structured` helper at DIAGNOSTIC class before
+        encoding (NIF SHA-256-prefixed, URL host-only, bearer-shape
+        fingerprinted). Storage imports are deferred inside this
+        method body so the LLM package's import chain does not pull
+        Alembic plugin discovery into CLI commands that never touch
+        the recorder.
+
         Args:
             record: Usage record to append.
 
         Returns:
             Path to the JSONL file that received the record.
         """
+        from ..storage import SensitivityClass, exclusive_file_lock, redact_structured
+        from ..storage._redaction import default_rules_for_class
 
         path = self.root_dir / f"usage-{record.created_at.date().isoformat()}.jsonl"
+        redacted = redact_structured(
+            record.model_dump(mode="json"),
+            rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
+        )
+        line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
+        # Hold an exclusive lock across the open-append-close so two
+        # concurrent writers cannot interleave bytes mid-line. The
+        # JSONL contract is one record per line; a torn line would
+        # surface as a parse error in ``load_records``.
         try:
-            with path.open("a", encoding="utf-8") as handle:
-                handle.write(record.model_dump_json())
-                handle.write("\n")
+            with (
+                exclusive_file_lock(path),
+                path.open("a", encoding="utf-8") as handle,
+            ):
+                handle.write(line)
         except OSError as exc:  # pragma: no cover - defensive filesystem path
             msg = f"Failed to append usage record to {path}"
             raise LLMCacheError(msg) from exc

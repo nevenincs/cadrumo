@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import sys
 from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 from rich.console import Console
 from rich.json import JSON
 
 from ...financial import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider, detect_provider
-from ...financial.providers import FinancialProviderError
+from ...financial.providers import FinancialProviderError, RawTransaction
+
+if TYPE_CHECKING:
+    from ...financial.transactions._repository import ImportSummary
 
 _CONSOLE = Console()
 
@@ -43,6 +48,23 @@ def ingest_cmd(
         "--verbose",
         help="Pretty-print each emitted RawTransaction after ingest.",
     ),
+    persist: bool | None = typer.Option(
+        None,
+        "--persist/--no-persist",
+        help=(
+            "When ON, parsed rows are merged through the governed "
+            "TransactionCatalogueRepository (encrypted-at-rest at "
+            "FINANCIAL classification, idempotent re-imports, "
+            "file-locked for concurrency). Default: ON when stdout is "
+            "a TTY, OFF when piped (preserves the existing "
+            "RawTransaction-jsonl-to-stdout behaviour)."
+        ),
+    ),
+    catalogue_dir: Path | None = typer.Option(
+        None,
+        "--catalogue-dir",
+        help=("Optional override for the catalogue directory. Defaults to AEAT_FINANCIAL_TXS_DIR / <provider-name>."),
+    ),
 ) -> None:
     """Validate a source file and emit strict raw transaction records."""
     provider_impl = _resolve_provider(provider, path)
@@ -61,20 +83,74 @@ def ingest_cmd(
     except FinancialProviderError as exc:
         typer.echo(f"ingest error: {exc}", err=True)
         raise typer.Exit(code=2) from exc
+
+    # --persist defaults: ON when stdout is a TTY (interactive
+    # operator), OFF when piped (preserves the
+    # RawTransaction-jsonl-to-stdout pipe-to-file workflow).
+    persist_resolved = persist if persist is not None else sys.stdout.isatty()
+    summary: ImportSummary | None = None
+    if persist_resolved:
+        summary = _persist_transactions(transactions, catalogue_dir=catalogue_dir)
+
     if output_json:
         for transaction in transactions:
             typer.echo(transaction.model_dump_json())
-        typer.echo(
-            f"ingested {len(transactions)} record(s) via {provider_impl.name}",
-            err=True,
-        )
+        if summary is not None:
+            typer.echo(summary.model_dump_json(), err=True)
+        else:
+            typer.echo(
+                f"ingested {len(transactions)} record(s) via {provider_impl.name}",
+                err=True,
+            )
         return
+
     _CONSOLE.print(
         f"[green]ingested[/green] {len(transactions)} record(s) via [bold]{provider_impl.name}[/bold]",
     )
+    if summary is not None:
+        _CONSOLE.print(
+            f"[green]persisted[/green] imported={summary.imported} "
+            f"skipped={summary.skipped} catalogue={summary.catalogue_path}",
+        )
     if verbose:
         for transaction in transactions:
             _CONSOLE.print(JSON(transaction.model_dump_json(indent=2)))
+
+
+def _persist_transactions(
+    transactions: tuple[RawTransaction, ...],
+    *,
+    catalogue_dir: Path | None,
+) -> ImportSummary:
+    """Merge ``transactions`` through the governed repository.
+
+    The repository (and the storage substrate it imports) is loaded
+    lazily on first persist so other CLI commands that never touch
+    the financial-domain persistence path are not slowed down by
+    Alembic plugin discovery during import.
+    """
+    from ...config import load_settings
+    from ...financial.transactions._enums import TransactionDirection
+    from ...financial.transactions._repository import TransactionCatalogueRepository
+
+    def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
+        # Zero-amount rows (fee waivers, FX-zero adjustments, paired
+        # reversals) map to INTERNAL_TRANSFER so the operator sees them
+        # as neutral rather than silently classed as OUTGOING.
+        if raw.amount > 0:
+            return TransactionDirection.INCOMING
+        if raw.amount < 0:
+            return TransactionDirection.OUTGOING
+        return TransactionDirection.INTERNAL_TRANSFER
+
+    if catalogue_dir is None:
+        settings = load_settings()
+        catalogue_dir = Path(settings.aeat_financial_txs_dir)
+    repository = TransactionCatalogueRepository(store_dir=catalogue_dir)
+    return repository.merge_raw_transactions(
+        transactions,
+        direction_resolver=_direction_from_amount,
+    )
 
 
 def _resolve_provider(provider: ProviderChoice, path: Path):

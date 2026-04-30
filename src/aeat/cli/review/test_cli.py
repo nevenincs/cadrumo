@@ -27,14 +27,14 @@ from ...financial.invoices import (
     InvoiceLine,
     IvaRate,
     PaymentStatus,
-    save_invoices,
 )
+from ...financial.invoices._repository import InvoiceCatalogueRepository
 from ...financial.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
 )
+from ...financial.transactions._repository import TransactionCatalogueRepository
 from ...i18n import Translatable
 from ...sync import (
     CasillaRemoved,
@@ -86,9 +86,8 @@ def _seed_all(tmp_path: Path) -> None:
         raw_fields={"Concepto": "Bank fee"},
     )
     transaction = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
-    save_transactions(
+    TransactionCatalogueRepository(store_dir=tmp_path / "transactions").save(
         TransactionCatalogue.from_transactions((transaction,)),
-        tmp_path / "transactions" / "transactions.json",
     )
 
     line = InvoiceLine(
@@ -116,7 +115,7 @@ def _seed_all(tmp_path: Path) -> None:
             "linked_transaction_ids": (),
         }
     )
-    save_invoices(InvoiceCatalogue.from_invoices((invoice,)), tmp_path / "invoices" / "invoices.json")
+    InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").save(InvoiceCatalogue.from_invoices((invoice,)))
 
     modelo = ModeloIdentifier("130")
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
@@ -157,10 +156,9 @@ def _seed_all(tmp_path: Path) -> None:
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version="filing-schema-0.1.0",
     )
-    (drafts_dir / "130_2026Q1_d1.json").write_text(
-        draft.model_dump_json(indent=2),
-        encoding="utf-8",
-    )
+    from ...filing._repository import FilingDraftRepository
+
+    FilingDraftRepository(store_dir=drafts_dir).save(draft)
 
 
 def test_queue_empty_environment_prints_no_pending(isolated_settings: Path) -> None:
@@ -305,9 +303,8 @@ def _seed_transactions_with_varied_confidence(tmp_path: Path) -> tuple[str, str,
             "business_classification": "NOT_YET_PROCESSED",
         }
     )
-    save_transactions(
+    TransactionCatalogueRepository(store_dir=tmp_path / "transactions").save(
         TransactionCatalogue.from_transactions((low, high, bare)),
-        tmp_path / "transactions" / "transactions.json",
     )
     return low.transaction_id, high.transaction_id, bare.transaction_id
 

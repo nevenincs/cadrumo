@@ -18,14 +18,13 @@ from ...financial.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    save_transactions,
     set_classification,
 )
+from ...financial.transactions._repository import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
-_CATALOGUE_FILENAME = "transactions.json"
 
 
 def _sample_transaction(provider_id: str = "review-row-1") -> Transaction:
@@ -74,7 +73,7 @@ def test_review_history_prints_full_chain_oldest_first(tmp_path: Path) -> None:
         classified_by="manual",
         reason="corrected after review",
     )
-    save_transactions(refined, tmp_path / _CATALOGUE_FILENAME)
+    TransactionCatalogueRepository(store_dir=tmp_path).save(refined)
 
     result = _RUNNER.invoke(
         root_app,
@@ -98,7 +97,7 @@ def test_review_history_exits_cleanly_for_missing_transaction(tmp_path: Path) ->
     """Unknown transaction IDs must exit 2 with a clear diagnostic."""
     transaction = _sample_transaction()
     catalogue = TransactionCatalogue.from_transactions([transaction])
-    save_transactions(catalogue, tmp_path / _CATALOGUE_FILENAME)
+    TransactionCatalogueRepository(store_dir=tmp_path).save(catalogue)
 
     result = _RUNNER.invoke(
         root_app,

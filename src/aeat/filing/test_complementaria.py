@@ -25,6 +25,38 @@ from .testing import SyntheticProfile, default_schema_provider
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path):
+    """Wave-9: install an EphemeralMasterKeyProvider so the
+    FilingDraftRepository / FilingAmendmentRepository ciphertext-at-rest
+    writes work in the test sandbox without touching a real keychain."""
+    from ..storage import (
+        EncryptedBlobStore,
+        EphemeralMasterKeyProvider,
+        SecretStore,
+        override_master_key_provider,
+        override_secret_store,
+    )
+
+    provider = EphemeralMasterKeyProvider()
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_master_key_provider(provider)
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
 def _profile(*modelos: str) -> SyntheticProfile:
     return SyntheticProfile(
         tax_id="00000000T",
@@ -34,14 +66,15 @@ def _profile(*modelos: str) -> SyntheticProfile:
 
 
 def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, draft: FilingDraft) -> None:
+    from ._repository import FilingDraftRepository
+
     drafts_dir = tmp_path / "drafts"
     submissions_dir = tmp_path / "submissions"
     drafts_dir.mkdir()
     submissions_dir.mkdir()
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(drafts_dir))
     monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(submissions_dir))
-    target = drafts_dir / f"{draft.modelo}_{draft.period}_{draft.draft_id}.json"
-    target.write_text(draft.model_dump_json(indent=2), encoding="utf-8")
+    FilingDraftRepository(store_dir=drafts_dir).save(draft)
 
 
 def _submitted_filing(draft: FilingDraft, *, submission_id: str = "sub-1") -> SubmittedFiling:

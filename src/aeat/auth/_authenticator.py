@@ -1116,8 +1116,13 @@ class AeatAuthenticator:
                 tmp_path = Path(handle.name)
                 handle.write(json_text)
                 handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
             self._restrict_file_permissions(tmp_path)
             os.replace(tmp_path, path)
+            from ..storage._lock import fsync_parent_dir
+
+            fsync_parent_dir(path)
             self._restrict_file_permissions(path)
         finally:
             if tmp_path is not None:

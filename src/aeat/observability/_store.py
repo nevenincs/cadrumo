@@ -3,19 +3,49 @@
 One subdirectory per ``run_id`` under :attr:`Settings.aeat_runs_dir`,
 containing ``trace.json`` and ``events.jsonl``. Both files round-trip
 through the strict pydantic models in :mod:`aeat.observability._models`.
+
+Run traces are DIAGNOSTIC class. The substrate's redaction rule set
+(``default_rules_for_class(SensitivityClass.DIAGNOSTIC)``) walks every
+string leaf — NIF SHA-256-prefixed, URL host-only, bearer-shaped tokens
+fingerprinted, opaque bearers fingerprinted — before serialisation. The
+storage import is deferred so the observability package does not pull
+``aeat.storage`` (with its Alembic plugin discovery) into every CLI
+command's import chain; this preserves the json-pipe-safety contract.
 """
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 
 from ..config import Settings, load_settings
 from ._errors import RunTraceValidationError
 from ._models import RunEvent, RunTrace
+
+if TYPE_CHECKING:
+    from ..storage._classification import RedactionRule
+
+
+# Cached at first use so repeated emits do not repeatedly resolve the
+# substrate rule set.
+_DIAGNOSTIC_RULES: tuple[Any, ...] | None = None
+
+
+def _diagnostic_rules() -> tuple[RedactionRule, ...]:
+    """Return the DIAGNOSTIC-class default rule set, resolved on first call."""
+    global _DIAGNOSTIC_RULES
+    if _DIAGNOSTIC_RULES is None:
+        from ..storage import SensitivityClass
+        from ..storage._redaction import default_rules_for_class
+
+        _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
+    return _DIAGNOSTIC_RULES  # type: ignore[return-value]
+
 
 _TRACE_FILENAME = "trace.json"
 _EVENTS_FILENAME = "events.jsonl"
@@ -68,9 +98,19 @@ def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
 
 
 def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
-    """Persist a :class:`RunTrace` to ``<runs_dir>/<run_id>/trace.json``."""
+    """Persist a :class:`RunTrace` to ``<runs_dir>/<run_id>/trace.json``.
+
+    Every string leaf passes through the substrate's
+    :func:`redact_structured` helper at DIAGNOSTIC class before
+    serialisation so the on-disk record never carries a plaintext NIF,
+    bearer token, or sensitive URL path even if a caller fed one into
+    ``arguments`` or ``metadata``.
+    """
+    from ..storage import redact_structured
+
     target = _run_dir(trace.run_id, settings=settings) / _TRACE_FILENAME
-    target.write_text(trace.model_dump_json(indent=2), encoding="utf-8")
+    redacted = redact_structured(trace.model_dump(mode="json"), rules=_diagnostic_rules())
+    target.write_text(json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
     return target
 
 
@@ -104,10 +144,16 @@ def save_events_append(
 
     ``newline=""`` pins the on-disk line terminator to ``\\n`` on every
     platform — mirroring :class:`JsonlRunSink` — so events.jsonl is
-    byte-stable across Windows and POSIX writers.
+    byte-stable across Windows and POSIX writers. Every string leaf in
+    the event is redacted at DIAGNOSTIC class before serialisation so
+    the on-disk record stays free of plaintext NIFs / tokens / sensitive
+    URLs.
     """
+    from ..storage import redact_structured
+
     target = _run_dir(run_id, settings=settings) / _EVENTS_FILENAME
-    line = event.model_dump_json() + "\n"
+    redacted = redact_structured(event.model_dump(mode="json"), rules=_diagnostic_rules())
+    line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
     with target.open("a", encoding="utf-8", newline="") as handle:
         handle.write(line)
         handle.flush()

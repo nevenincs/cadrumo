@@ -3,11 +3,19 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from ..storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from . import (
     CasillaAddedWithDefault,
     DivergenceClassification,
@@ -19,6 +27,51 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
+def test_divergence_envelope_is_ciphertext_at_audit_class(tmp_path: Path) -> None:
+    """The on-disk record must be a CipherEnvelope; the modelo / casilla canaries
+    must not survive in plaintext on disk (LEAK-005 regression)."""
+    repo = JsonFileDivergenceRepository(tmp_path / "divergences")
+    record = DivergenceRecord(
+        record_id=uuid.uuid4().hex,
+        detected_at=datetime.now(tz=UTC),
+        modelo=ModeloIdentifier("100"),
+        classification=DivergenceClassification.ADDITIVE,
+        payload=CasillaAddedWithDefault(
+            modelo=ModeloIdentifier("100"),
+            casilla_id="LEAK-CANARY-CASILLA",
+            default="0",
+            label={"es": "x", "en": "x", "hu": "x"},
+        ),
+    )
+    repo.save(record)
+    target = repo._path_for(record.record_id)
+    on_disk = target.read_text(encoding="utf-8")
+    assert '"classification":"audit"' in on_disk
+    assert '"encryption":' in on_disk
+    assert "LEAK-CANARY-CASILLA" not in on_disk
 
 
 def _record() -> DivergenceRecord:
@@ -87,3 +140,41 @@ def test_json_file_repository_rejects_traversal_on_save(tmp_path: Path) -> None:
     record = _record().model_copy(update={"record_id": "../escape"})
     with pytest.raises(DivergenceRepositoryError, match="simple filename token"):
         repo.save(record)
+
+
+def test_writer_lock_target_aligns_with_rotation_lock_path_for(
+    tmp_path: Path,
+) -> None:
+    # Wave-20 H-1 regression: the divergence writer's lock target
+    # must match what ``RotationPlanEntry.lock_path_for`` resolves
+    # to for the same envelope path. Without this alignment the
+    # writer locks ``<id>.envelope.lock.lock`` while rotation locks
+    # ``<id>.lock.lock`` — different OS-level lock-byte targets,
+    # so concurrent save/rotate traffic can race despite both sides
+    # holding "the lock".
+    from ..storage import LockAcquisitionError, RotationPlanEntry, exclusive_file_lock
+
+    repo = JsonFileDivergenceRepository(tmp_path / "divergences")
+    record_id = _record().record_id
+    envelope_path = repo._envelope_path_for(record_id)
+    expected_writer_lock_target = envelope_path.with_name(
+        envelope_path.name[: -len(".envelope.json")] + ".lock",
+    )
+    rotation_entry = RotationPlanEntry(
+        store_dir=repo.root,
+        hkdf_context=b"aeat.sync.divergence.v1",
+    )
+    rotation_lock_target = rotation_entry.lock_path_for(envelope_path)
+    assert rotation_lock_target == expected_writer_lock_target
+
+    # End-to-end contention: hold the writer's lock target via
+    # exclusive_file_lock; the rotation acquire-with-timeout=0
+    # against the same target must fail. Proof that the OS-level
+    # lock-byte targets are identical.
+    repo.root.mkdir(parents=True, exist_ok=True)
+    with (
+        exclusive_file_lock(expected_writer_lock_target),
+        pytest.raises(LockAcquisitionError),
+        exclusive_file_lock(rotation_lock_target, timeout=0.0),
+    ):
+        pass

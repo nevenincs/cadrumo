@@ -6,7 +6,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 
 | Stage | Name | Implementation | CLI | Tests | Observability | Review surface | Error-path quality | Tracking |
 |---|---|---|---|---|---|---|---|---|
-| T1 | Ingest (CSV/XLSX/OFX → RawTransaction) | ✅ | 🚧 (no persist) | ✅ | ❌ | N/A | partial | [#216](https://github.com/wgergely/aeat/issues/216) |
+| T1 | Ingest (CSV/XLSX/OFX → RawTransaction) | ✅ | ✅ persisted via `aeat financial ingest --persist` (FINANCIAL ciphertext envelope, file-locked, idempotent via `derive_transaction_id`) | ✅ | ❌ | N/A | partial | [#216](https://github.com/wgergely/aeat/issues/216) |
 | T2 | Normalise (RawTransaction → Transaction in catalogue) | ✅ | ✅ | ✅ | ❌ | N/A | partial | [#216](https://github.com/wgergely/aeat/issues/216) |
 | T3 | Enrich (metadata, invoice/attachments) | partial | partial | partial | ❌ | ✅ [#232](https://github.com/wgergely/aeat/issues/232) | ❌ | ⏳ TBD |
 | T4 | Classify (BusinessClassification + confidence + rules/LLM) | ✅ manual; 🚧 LLM (claude/gemini/codex) via [#236](https://github.com/wgergely/aeat/issues/236); ❌ deterministic bulk rules | ✅ manual + `classify-llm` | ✅ | ✅ confidence on every decision ([#236](https://github.com/wgergely/aeat/issues/236)) | ✅ [#232](https://github.com/wgergely/aeat/issues/232) | 🚧 | [#217](https://github.com/wgergely/aeat/issues/217) |

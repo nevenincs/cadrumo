@@ -10,6 +10,7 @@ import typer
 from ...config import load_settings
 from ...financial.invoices import (
     InvoiceCatalogue,
+    InvoiceCatalogueRepository,
     InvoiceError,
     InvoiceKind,
     LinkInconsistency,
@@ -17,18 +18,14 @@ from ...financial.invoices import (
     find_invoice,
     find_unmatched,
     link_transaction_bidirectional,
-    load_invoices,
     suggest_reconciliations,
     verify_link_consistency,
 )
 from ...financial.transactions import (
     TransactionCatalogue,
     TransactionError,
-    load_transactions,
 )
-from ._catalogue import catalogue_path as _transaction_catalogue_path
-
-_DEFAULT_INVOICE_FILENAME = "invoices.json"
+from ._catalogue import catalogue_dir as _transaction_catalogue_dir
 
 app = typer.Typer(
     name="invoices",
@@ -91,12 +88,10 @@ def link_cmd(
     transaction_id: str = typer.Argument(..., help="Stable transaction identifier."),
 ) -> None:
     """Perform a bidirectional link and print the updated invoice."""
-    invoices_path = _invoice_catalogue_path()
-    transactions_path = _transaction_catalogue_path()
+    invoices_dir = _invoice_catalogue_dir()
+    transactions_dir = _transaction_catalogue_dir()
     try:
-        updated_invoices, _ = link_transaction_bidirectional(
-            invoices_path, transactions_path, invoice_id, transaction_id
-        )
+        updated_invoices, _ = link_transaction_bidirectional(invoices_dir, transactions_dir, invoice_id, transaction_id)
     except (InvoiceError, TransactionError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
@@ -119,8 +114,8 @@ def reconcile_cmd(
     ),
 ) -> None:
     """Print reconciliation suggestions and optionally apply them."""
-    invoices_path = _invoice_catalogue_path()
-    transactions_path = _transaction_catalogue_path()
+    invoices_dir = _invoice_catalogue_dir()
+    transactions_dir = _transaction_catalogue_dir()
     invoices = _load_invoice_catalogue_or_empty()
     transactions = _load_transaction_catalogue_or_empty()
     suggestions = suggest_reconciliations(invoices, transactions)
@@ -134,8 +129,8 @@ def reconcile_cmd(
     for suggestion in suggestions:
         try:
             link_transaction_bidirectional(
-                invoices_path,
-                transactions_path,
+                invoices_dir,
+                transactions_dir,
                 suggestion.invoice_id,
                 suggestion.transaction_id,
             )
@@ -198,16 +193,24 @@ def unmatched_cmd(
         )
 
 
-def _invoice_catalogue_path() -> Path:
-    """Return the default on-disk invoice catalogue path from settings."""
-    return load_settings().aeat_invoices_dir.resolve() / _DEFAULT_INVOICE_FILENAME
+def _invoice_catalogue_dir() -> Path:
+    """Return the configured invoice catalogue store directory."""
+    return load_settings().aeat_invoices_dir.resolve()
+
+
+def _invoice_catalogue_repository() -> InvoiceCatalogueRepository:
+    """Return an :class:`InvoiceCatalogueRepository` bound to the configured store dir."""
+    return InvoiceCatalogueRepository(store_dir=_invoice_catalogue_dir())
 
 
 def _load_invoice_catalogue_required() -> InvoiceCatalogue:
     """Load the configured invoice catalogue or exit cleanly on failure."""
-    path = _invoice_catalogue_path()
+    repository = _invoice_catalogue_repository()
+    if not repository.envelope_path.exists():
+        typer.echo(f"invoice catalogue not found at {repository.envelope_path}", err=True)
+        raise typer.Exit(code=2)
     try:
-        return load_invoices(path)
+        return repository.load()
     except InvoiceError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
@@ -215,19 +218,21 @@ def _load_invoice_catalogue_required() -> InvoiceCatalogue:
 
 def _load_invoice_catalogue_or_empty() -> InvoiceCatalogue:
     """Load the configured invoice catalogue, returning an empty one when absent."""
-    path = _invoice_catalogue_path()
-    if path.exists():
-        return _load_invoice_catalogue_required()
-    return InvoiceCatalogue()
+    repository = _invoice_catalogue_repository()
+    try:
+        return repository.load()
+    except InvoiceError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
 
 
 def _load_transaction_catalogue_or_empty() -> TransactionCatalogue:
     """Load the configured transaction catalogue, returning an empty one when absent."""
-    path = _transaction_catalogue_path()
-    if not path.exists():
-        return TransactionCatalogue()
+    from ...financial.transactions._repository import TransactionCatalogueRepository
+
+    repository = TransactionCatalogueRepository(store_dir=_transaction_catalogue_dir())
     try:
-        return load_transactions(path)
+        return repository.load()
     except TransactionError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc

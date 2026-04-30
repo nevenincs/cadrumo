@@ -21,6 +21,15 @@ _JQ_EXE = shutil.which("jq")
 
 
 def _prepare_workflow_env(tmp_path: Path) -> dict[str, str]:
+    from datetime import UTC, datetime
+
+    from ..storage import (
+        Envelope,
+        FileFallbackMasterKeyProvider,
+        SensitivityClass,
+        save_encrypted_envelope,
+    )
+
     env = dict(os.environ)
     profile = AutonomoProfile(
         tax_id="X1234567L",
@@ -31,7 +40,34 @@ def _prepare_workflow_env(tmp_path: Path) -> dict[str, str]:
         bienes_extranjero_above_threshold=False,
     )
     profile_path = tmp_path / "profile.json"
-    profile_path.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+    # Wave 5: the setup wizard writes the profile through
+    # ``save_encrypted_envelope`` at IDENTITY class. Match that wire
+    # shape here so the workflow CLI's ``load_default_filing_profile``
+    # round-trips through the substrate. Use the file backend with a
+    # known passphrase so the seed (parent process) and the subprocess
+    # CLI run derive the same master key.
+    secret_store_dir = tmp_path / "secret-store"
+    secret_store_dir.mkdir(parents=True, exist_ok=True)
+    env["AEAT_SECRET_STORE_BACKEND"] = "file"  # noqa: S105 — backend selector, not a value
+    env["AEAT_SECRET_STORE_DIR"] = str(secret_store_dir)
+    env["AEAT_SECRET_PASSPHRASE"] = "json-pipe-safety-test-passphrase"  # noqa: S105 — test-only deterministic passphrase
+    bootstrap_provider = FileFallbackMasterKeyProvider(
+        store_dir=secret_store_dir,
+        passphrase_callback=lambda: "json-pipe-safety-test-passphrase",
+    )
+    bootstrap_provider.get_master_key()
+    envelope = Envelope[AutonomoProfile](
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=profile,
+    )
+    save_encrypted_envelope(
+        envelope,
+        profile_path,
+        master_key_provider=bootstrap_provider,
+        hkdf_context=b"aeat.setup.profile.v1",
+    )
 
     inputs_path = tmp_path / "inputs.json"
     inputs_path.write_text(json.dumps({"01": 12500, "02": 3500, "05": 400, "06": 0}), encoding="utf-8")

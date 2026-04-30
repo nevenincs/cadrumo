@@ -190,6 +190,13 @@ def _load_draft(
     period: str | None,
     emit_json: bool,
 ) -> FilingDraft:
+    """Load a draft via :class:`FilingDraftRepository`.
+
+    Drafts are ciphertext-at-rest only; the repository enforces the
+    classification gate and version contract.
+    """
+    from ...filing._repository import FilingDraftRepository
+
     drafts_dir = Path(settings.aeat_drafts_dir)
     if not drafts_dir.is_dir():
         if emit_json:
@@ -200,6 +207,8 @@ def _load_draft(
         _CONSOLE.print(f"[red]Drafts directory missing: {drafts_dir}[/red]")
         raise typer.Exit(code=1)
 
+    repository = FilingDraftRepository(store_dir=drafts_dir)
+
     if last:
         if not modelo or not period:
             if emit_json:
@@ -208,22 +217,26 @@ def _load_draft(
                     context={"flag": "--last"},
                 )
             raise typer.BadParameter("--last requires both --modelo and --period")
-        candidates = sorted(
-            drafts_dir.glob(f"{modelo}_{period}_*.json"),
-            key=lambda p: p.stat().st_mtime,
+        candidates: list[FilingDraft] = []
+        for draft in repository.iter_drafts():
+            if draft.modelo != modelo or draft.period != period:
+                continue
+            if draft.status is FilingDraftStatus.APPROVED:
+                candidates.append(draft)
+        if not candidates:
+            if emit_json:
+                raise CliRefusedBoundaryError(
+                    f"No APPROVED draft found for modelo={modelo} period={period}.",
+                    context={"modelo": modelo, "period": period},
+                )
+            _CONSOLE.print(f"[yellow]No APPROVED draft found for modelo={modelo} period={period}.[/yellow]")
+            raise typer.Exit(code=1)
+        # Pick the most recent by mtime on the underlying envelope file.
+        candidates.sort(
+            key=lambda d: repository.envelope_path_for(d.draft_id).stat().st_mtime,
             reverse=True,
         )
-        for path in candidates:
-            draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-            if draft.status is FilingDraftStatus.APPROVED:
-                return draft
-        if emit_json:
-            raise CliRefusedBoundaryError(
-                f"No APPROVED draft found for modelo={modelo} period={period}.",
-                context={"modelo": modelo, "period": period},
-            )
-        _CONSOLE.print(f"[yellow]No APPROVED draft found for modelo={modelo} period={period}.[/yellow]")
-        raise typer.Exit(code=1)
+        return candidates[0]
 
     if draft_id is None:
         if emit_json:
@@ -231,8 +244,8 @@ def _load_draft(
                 "Pass a draft-id argument, or use --last with --modelo / --period.",
             )
         raise typer.BadParameter("Pass a draft-id argument, or use --last with --modelo / --period.")
-    matches = list(drafts_dir.glob(f"*_*_{draft_id}.json"))
-    if not matches:
+    loaded = repository.load(draft_id)
+    if loaded is None:
         if emit_json:
             raise CliRefusedBoundaryError(
                 f"Draft {draft_id!r} not found under {drafts_dir}.",
@@ -240,7 +253,7 @@ def _load_draft(
             )
         _CONSOLE.print(f"[red]Draft {draft_id!r} not found under {drafts_dir}.[/red]")
         raise typer.Exit(code=1)
-    return FilingDraft.model_validate_json(matches[0].read_text(encoding="utf-8"))
+    return loaded
 
 
 async def _run_reconcile(

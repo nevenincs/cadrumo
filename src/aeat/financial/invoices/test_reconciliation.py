@@ -2,32 +2,60 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ...storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from .. import RawProvenance, SourceFormat
 from ..providers import RawTransaction
 from ..transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
-    load_transactions,
-    save_transactions,
 )
+from ..transactions._repository import TransactionCatalogueRepository
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._errors import InvoiceLinkError, InvoiceLinkInconsistencyError
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
+from ._repository import InvoiceCatalogueRepository
 from ._service import (
     link_transaction_bidirectional,
-    save_invoices,
     suggest_reconciliations,
     verify_link_consistency,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
 
 
 def _invoice(
@@ -266,13 +294,15 @@ def test_link_bidirectional_updates_both_files(tmp_path: Path) -> None:
         amount=Decimal("121.00"),
         counterparty="Cliente SL",
     )
-    invoices_path = tmp_path / "invoices.json"
-    transactions_path = tmp_path / "transactions.json"
-    save_invoices(InvoiceCatalogue.from_invoices([invoice]), invoices_path)
-    save_transactions(TransactionCatalogue.from_transactions([transaction]), transactions_path)
+    invoices_dir = tmp_path / "invoices"
+    transactions_dir = tmp_path / "transactions"
+    InvoiceCatalogueRepository(store_dir=invoices_dir).save(InvoiceCatalogue.from_invoices([invoice]))
+    TransactionCatalogueRepository(store_dir=transactions_dir).save(
+        TransactionCatalogue.from_transactions([transaction]),
+    )
 
     updated_invoices, updated_transactions = link_transaction_bidirectional(
-        invoices_path, transactions_path, invoice.invoice_id, transaction.transaction_id
+        invoices_dir, transactions_dir, invoice.invoice_id, transaction.transaction_id
     )
 
     updated_invoice = updated_invoices.get(invoice.invoice_id)
@@ -283,42 +313,54 @@ def test_link_bidirectional_updates_both_files(tmp_path: Path) -> None:
     assert updated_transaction.invoice_id == invoice.invoice_id
 
     # Catalogues on disk agree with the returned in-memory values.
-    assert load_transactions(transactions_path).get(transaction.transaction_id) == updated_transaction
+    reloaded = TransactionCatalogueRepository(store_dir=transactions_dir).load()
+    assert reloaded.get(transaction.transaction_id) == updated_transaction
 
 
-def test_link_bidirectional_restores_invoice_on_transaction_write_failure(tmp_path: Path) -> None:
-    """If the transaction write fails, the invoice file must be restored."""
+def test_link_bidirectional_restores_invoice_on_transaction_write_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """If the transaction write fails, the invoice envelope must be restored."""
     invoice = _invoice()
     transaction = _transaction(
         provider_id="row-1",
         amount=Decimal("121.00"),
         counterparty="Cliente SL",
     )
-    invoices_path = tmp_path / "invoices.json"
-    transactions_path = tmp_path / "transactions.json"
-    save_invoices(InvoiceCatalogue.from_invoices([invoice]), invoices_path)
-    save_transactions(TransactionCatalogue.from_transactions([transaction]), transactions_path)
-    prior_invoice_bytes = invoices_path.read_bytes()
+    invoices_dir = tmp_path / "invoices"
+    transactions_dir = tmp_path / "transactions"
+    InvoiceCatalogueRepository(store_dir=invoices_dir).save(InvoiceCatalogue.from_invoices([invoice]))
+    TransactionCatalogueRepository(store_dir=transactions_dir).save(
+        TransactionCatalogue.from_transactions([transaction]),
+    )
+    invoices_envelope = InvoiceCatalogueRepository(store_dir=invoices_dir).envelope_path
+    prior_invoice_bytes = invoices_envelope.read_bytes()
 
     from ..transactions import TransactionPersistenceError
 
-    def _fail_save(*args: object, **kwargs: object) -> None:
+    def _fail_save(self: object, catalogue: object) -> None:
+        del self, catalogue
         raise TransactionPersistenceError("simulated failure")
+
+    monkeypatch.setattr(TransactionCatalogueRepository, "save", _fail_save)
 
     with pytest.raises(InvoiceLinkError):
         link_transaction_bidirectional(
-            invoices_path,
-            transactions_path,
+            invoices_dir,
+            transactions_dir,
             invoice.invoice_id,
             transaction.transaction_id,
-            save_transactions_fn=_fail_save,
         )
 
-    # The invoice file must be restored to its pre-update bytes.
-    assert invoices_path.read_bytes() == prior_invoice_bytes
+    # The invoice envelope must be restored to its pre-update bytes.
+    assert invoices_envelope.read_bytes() == prior_invoice_bytes
 
 
-def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(tmp_path: Path) -> None:
+def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """When both the tx write and the invoice rollback fail, an inconsistency is raised."""
     invoice = _invoice()
     transaction = _transaction(
@@ -326,15 +368,22 @@ def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(tmp_pat
         amount=Decimal("121.00"),
         counterparty="Cliente SL",
     )
-    invoices_path = tmp_path / "invoices.json"
-    transactions_path = tmp_path / "transactions.json"
-    save_invoices(InvoiceCatalogue.from_invoices([invoice]), invoices_path)
-    save_transactions(TransactionCatalogue.from_transactions([transaction]), transactions_path)
+    invoices_dir = tmp_path / "invoices"
+    transactions_dir = tmp_path / "transactions"
+    InvoiceCatalogueRepository(store_dir=invoices_dir).save(InvoiceCatalogue.from_invoices([invoice]))
+    TransactionCatalogueRepository(store_dir=transactions_dir).save(
+        TransactionCatalogue.from_transactions([transaction]),
+    )
+    invoices_envelope = InvoiceCatalogueRepository(store_dir=invoices_dir).envelope_path
+    transactions_envelope = TransactionCatalogueRepository(store_dir=transactions_dir).envelope_path
 
     from ..transactions import TransactionPersistenceError
 
-    def _fail_save(*args: object, **kwargs: object) -> None:
+    def _fail_save(self: object, catalogue: object) -> None:
+        del self, catalogue
         raise TransactionPersistenceError("simulated failure")
+
+    monkeypatch.setattr(TransactionCatalogueRepository, "save", _fail_save)
 
     def _fail_write_bytes(path: Path, payload: bytes) -> None:
         del path, payload
@@ -342,16 +391,15 @@ def test_link_bidirectional_raises_inconsistency_when_restore_also_fails(tmp_pat
 
     with pytest.raises(InvoiceLinkInconsistencyError) as excinfo:
         link_transaction_bidirectional(
-            invoices_path,
-            transactions_path,
+            invoices_dir,
+            transactions_dir,
             invoice.invoice_id,
             transaction.transaction_id,
-            save_transactions_fn=_fail_save,
             rollback_temp_writer=_fail_write_bytes,
         )
 
     error = excinfo.value
-    assert error.invoice_path == invoices_path.resolve()
-    assert error.transactions_path == transactions_path.resolve()
+    assert error.invoice_path == invoices_envelope
+    assert error.transactions_path == transactions_envelope
     assert error.invoice_id == invoice.invoice_id
     assert error.transaction_id == transaction.transaction_id
