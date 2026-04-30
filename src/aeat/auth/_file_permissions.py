@@ -84,10 +84,18 @@ def restrict_file_permissions(path: Path) -> None:
                 path,
                 result.stderr.strip() if result is not None and result.stderr else "icacls returned non-zero",
             )
-        except (OSError, KeyError) as exc:
-            # FileNotFoundError (icacls.exe missing) / KeyError on
-            # an absent USER env var / unexpected OSError on the
-            # subprocess invocation: log and continue.
+        except Exception as exc:
+            # Catch Exception (not just OSError) so the docstring's
+            # "every error is swallowed" contract truly holds. The
+            # candidates that have actually been observed are
+            # ``OSError`` (icacls.exe missing → FileNotFoundError;
+            # subprocess.run / icacls write to a path the operator
+            # cannot ACL), but a future ``getpass`` / ``subprocess``
+            # internal change could surface other exception types
+            # here, and the auth flow must NOT abort because of a
+            # best-effort hardening side-effect. (gemini #471
+            # finding: ``KeyError`` was redundant — os.environ.get
+            # returns None, never raises.)
             _log.warning(
                 "restrict_file_permissions: best-effort hardening failed on %s: %s",
                 path,
