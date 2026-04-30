@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 def _capture_logger_output() -> tuple[logging.Logger, logging.Logger, logging.Handler, io.StringIO]:
     """Attach a temporary stream handler to the root logger."""
 
-    logger = get_logger("aeat.test_logging_scrubbing")
+    logger = get_logger("aeat.test_logging")
     root_logger = logging.getLogger()
     stream = io.StringIO()
     handler = logging.StreamHandler(stream)
@@ -152,7 +152,7 @@ def test_secret_scrubbing_preserves_exc_info_for_downstream_handlers() -> None:
         raise RuntimeError("oauth_refresh_token=refresh-123")
     except RuntimeError:
         record = logging.LogRecord(
-            name="aeat.test_logging_scrubbing",
+            name="aeat.test_logging",
             level=logging.ERROR,
             pathname=__file__,
             lineno=0,
@@ -173,7 +173,7 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
 
     filter_ = SecretScrubbingFilter()
     record = logging.LogRecord(
-        name="aeat.test_logging_scrubbing",
+        name="aeat.test_logging",
         level=logging.INFO,
         pathname=__file__,
         lineno=0,
