@@ -5,7 +5,7 @@ tags:
 date: '2026-04-30'
 related:
   - "[[2026-04-27-security-storage-audit-audit]]"
-  - "[[2026-04-30-secure-persistence-foundation-final-security-audit-resolved]]"
+  - "[[2026-04-30-secure-persistence-foundation-final-security-resolution-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave7-audit]]"
 ---
 
@@ -133,7 +133,7 @@ The internal final security audit at HEAD identified four HIGH and
 four MEDIUM findings that were not visible to the upstream
 2026-04-27 audit (the upstream audit ran against a smaller persistence
 surface). All eight have been closed - see
-`2026-04-30-secure-persistence-foundation-final-security-audit-resolved.md`
+`2026-04-30-secure-persistence-foundation-final-security-resolution-audit.md`
 for the per-finding closure log.
 
 ## Items intentionally deferred

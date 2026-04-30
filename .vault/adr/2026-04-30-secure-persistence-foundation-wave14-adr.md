@@ -5,7 +5,7 @@ tags:
 date: '2026-04-30'
 related:
   - "[[2026-04-30-secure-persistence-foundation-wave14-research]]"
-  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation]]"
+  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave12-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave13-audit]]"
 ---

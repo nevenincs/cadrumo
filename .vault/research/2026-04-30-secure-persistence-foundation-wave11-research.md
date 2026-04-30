@@ -4,7 +4,7 @@ tags:
   - '#secure-persistence-foundation'
 date: '2026-04-30'
 related:
-  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation]]"
+  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation-audit]]"
   - "[[2026-04-27-security-storage-audit-audit]]"
 ---
 
