@@ -80,7 +80,7 @@ def save_json(payload: Mapping[str, object], path: Path | None = None) -> None:
     target = path or default_path()
     target.parent.mkdir(parents=True, exist_ok=True)
     fd = -1
-    temp_path: Path | None = None
+    raw_temp_path: str | None = None
     try:
         import json
 
@@ -101,9 +101,9 @@ def save_json(payload: Mapping[str, object], path: Path | None = None) -> None:
     except (OSError, TypeError, ValueError, ValidationError) as exc:
         if fd >= 0:
             os.close(fd)
-        if temp_path is not None:
+        if raw_temp_path is not None:
             with suppress(OSError):
-                temp_path.unlink()
+                os.unlink(raw_temp_path)
         raise TaxResidenceProfileError(f"could not write tax-residence profile: {target}") from exc
 
 

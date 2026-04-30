@@ -8,6 +8,7 @@ personal local state needed to parameterize RENTA verification.
 from __future__ import annotations
 
 from datetime import date
+from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
@@ -94,7 +95,7 @@ class KentTaxResidence(BaseModel, frozen=True, strict=True):
 def parse_tax_region(raw: str) -> CCAA:
     """Parse a CLI/user tax-region token into the closed ``CCAA`` enum."""
 
-    normalized = raw.strip().lower().replace(" ", "_")
+    normalized = _normalize_region_token(raw)
     if normalized in _FORAL_ALIASES:
         raise ForalRegimeError(raw)
     try:
@@ -106,6 +107,12 @@ def parse_tax_region(raw: str) -> CCAA:
             context={"tax_region": raw},
             suggestion="aeat profile set tax-region <ccaa>",
         ) from exc
+
+
+def _normalize_region_token(raw: str) -> str:
+    stripped = raw.strip().lower().replace(" ", "_").replace("-", "_")
+    decomposed = normalize("NFD", stripped)
+    return "".join(char for char in decomposed if category(char) != "Mn")
 
 
 def load_tax_residence(path: object | None = None) -> KentTaxResidence | None:
