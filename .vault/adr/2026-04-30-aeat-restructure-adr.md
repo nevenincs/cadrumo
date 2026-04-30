@@ -44,6 +44,39 @@ related:
 > `SchemaSource` enum slots) are resolved autonomously at Step 0 of
 > the execution plan via audit-grounded decision rules. See
 > Autonomous decision rules section.
+>
+> ### Step 0/1 outcomes (recorded 2026-04-30)
+>
+> **Decision 6** (`SchemaSource` reserved enum slots): no active branch
+> nor open issue references `PORTAL_HTML_PROBE`, `MANUAL_LLM_DRAFT`, or
+> `XSD_WIRE`. Autonomous rule fires `DELETE`. Slots ride into Step 7's
+> keystone PR with the `domain/schema/` move; phase-2 dead-code (see
+> updated Phase 2 list below).
+>
+> **Decision 10** (migration-helper retention): the actual count is
+> **5 helpers**, not the "3" appearing in the EPIC and plan bodies
+> (`migrate_legacy_submissions_to_repository`,
+> `migrate_legacy_amendments_to_repository`,
+> `migrate_legacy_filing_history_to_repository`,
+> `migrate_legacy_drafts_to_repository`,
+> `migrate_legacy_justificantes_to_repository`). All 5 landed
+> 2026-04-27 — far short of the > 6 month threshold. Autonomous rule
+> fires `RETAIN with TODO + tracking issue`. Tracking issue `#477`
+> filed; earliest removal 2026-10-27.
+>
+> **Step 1 sub-pass 3 outcome**: ~37 test files marked
+> `domain_local_state` move to destination layers outside the rule's
+> stated 2-bucket reclassification (`adapters/outbound/`,
+> `adapters/inbound/`, `application/`). The Test-marker realignment
+> migration mechanic is extended below to cover all destination
+> layers, not just two. Manual-override list final count is
+> **zero-length** (audit-grounded by mechanical reclassification per
+> the extended rule).
+>
+> Detailed evidence for each outcome lives in
+> `.vault/exec/2026-04-30-aeat-restructure/2026-04-30-aeat-restructure-step-00-adr-lock-in-exec.md`
+> and
+> `.vault/exec/2026-04-30-aeat-restructure/2026-04-30-aeat-restructure-step-01-pre-move-scan-exec.md`.
 
 ## Problem Statement
 
@@ -307,15 +340,34 @@ where their marker is wrong relative to their location.
 
 **Migration mechanic — per-test-file**: every test FILE currently
 marked `domain_local_state` (via module-level `pytestmark = [...]`) is
-reclassified by its containing module's destination at move time:
+reclassified by its containing module's destination at move time. The
+rule covers ALL destination layers, not just `domain/` and
+`adapters/persistence/` (extended per Step 1 sub-pass 3 finding —
+2026-04-30):
 
 - Test files in modules that move under `domain/` get `domain_model`.
 - Test files in modules that move under `adapters/persistence/` get
   `domain_persistence`.
+- Test files in modules that move under `adapters/inbound/` get
+  `domain_inbound`.
+- Test files in modules that move under `adapters/outbound/` get
+  `domain_outbound`. Tests under
+  `adapters/outbound/aeat/export/` additionally carry the
+  `domain_export` sub-marker.
+- Test files in modules that move under `application/` get
+  `domain_application`.
+- Test files in modules that move under `core/` get `domain_core`.
 
 The audit produces the per-module destination decision; the marker
 rewrite is then mechanical from the destination. Manual override only
 when a test crosses module boundaries — flagged during the audit.
+
+The Step 1 audit identified ~37 test files in this extended-rule
+bucket: ~33 under `submission/_formats/*` (move to
+`adapters/outbound/aeat/export/` → `domain_outbound + domain_export`);
+3 under `review/*` (move to `application/review/` →
+`domain_application`); 1 under `identity/*` (moves to
+`adapters/inbound/identity/` → `domain_inbound`).
 
 **Override list as hard pre-merge gate** (per refreshed cold-review
 22.9): the audit produces an EXPLICIT list of every test file that
@@ -650,6 +702,16 @@ list"):
   `ManualRulesLoader`, `SchemaLoader`) on `LiveSyncRunner`.
 - `errors.WorkspaceLockedError` (test-only fixture; rename or
   delete).
+- `SchemaSource.PORTAL_HTML_PROBE`, `SchemaSource.MANUAL_LLM_DRAFT`,
+  `SchemaSource.XSD_WIRE` reserved enum members and their
+  `_models.py` docstring + `test_models.py` references (per Step 0
+  Decision 6 outcome — no active branch / open issue references
+  these slots).
+- The 5 `migrate_legacy_*_to_repository` helpers are NOT in this
+  list — Step 0 Decision 10 fires `RETAIN with TODO(#477)` because
+  all 5 landed 2026-04-27, well short of the 6-month retention
+  threshold. They will be revisited at the deprecation-eligibility
+  date (2026-10-27) tracked in `#477`.
 
 ### Transition mechanic (parallel branches and agent slots)
 
