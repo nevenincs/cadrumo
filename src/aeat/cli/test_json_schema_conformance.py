@@ -39,6 +39,7 @@ _EXPECTED_REGISTERED_COMMANDS = {
     "auth status",
     "auth whoami",
     "browser health",
+    "financial aggregate",
     "filing reconcile",
     "modelos applicable-to",
     "modelos list",

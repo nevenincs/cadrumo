@@ -11,7 +11,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | T3 | Enrich (metadata, invoice/attachments) | partial | partial | partial | ❌ | ✅ [#232](https://github.com/wgergely/aeat/issues/232) | ❌ | ⏳ TBD |
 | T4 | Classify (BusinessClassification + confidence + rules/LLM) | ✅ manual; 🚧 LLM (claude/gemini/codex) via [#236](https://github.com/wgergely/aeat/issues/236); ❌ deterministic bulk rules | ✅ manual + `classify-llm` | ✅ | ✅ confidence on every decision ([#236](https://github.com/wgergely/aeat/issues/236)) | ✅ [#232](https://github.com/wgergely/aeat/issues/232) | 🚧 | [#217](https://github.com/wgergely/aeat/issues/217) |
 | T5 | Persist (catalogue + one-way Sheets export) | ✅ | ✅ | ✅ | partial | N/A | good | existing |
-| T6 | Period close + casilla derivation | ❌ (load-bearing blocker) | ❌ | ❌ | ❌ | N/A | ❌ | [#218](https://github.com/wgergely/aeat/issues/218) |
+| T6 | Period close + casilla derivation | ✅ Modelo 130 quarterly catalogue aggregation to `CasillaAggregation` (`casilla_values` + first-class `provenance`); Modelo 303 deferred until VAT base/rate inputs exist | ✅ `aeat financial aggregate --modelo 130 --period YYYY-Qn` plus shared `--json`; `workflow` uses the financial inputs provider for supported modelos | ✅ real classified-catalogue fixtures cover aggregation, formula-engine handoff, registered JSON output, typed failures | partial (ledger provenance; no pipeline dashboard yet) | N/A | good (registered `AeatError` taxonomy for unsupported modelo, bad period, missing classification, category coverage, and casilla mapping gaps) | [#218](https://github.com/wgergely/aeat/issues/218) |
 
 ## cross-cutting observables
 
@@ -32,4 +32,4 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 
 ## provenance
 
-Last updated **2026-04-27** (#239 round-5 — `aeat filing reconcile` triad ships live; declarations-register fallback wired in). Earlier refresh **2026-04-18**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
+Last updated **2026-04-30** (#218 — T6 aggregation ships for quarterly Modelo 130: `aeat financial aggregate`, strict `CasillaAggregation` ledger, formula-engine handoff, and workflow inputs-provider wiring; Modelo 303 aggregation remains deferred). Earlier refresh **2026-04-27** (#239 round-5 — `aeat filing reconcile` triad ships live; declarations-register fallback wired in). Earlier refresh **2026-04-18**. Refreshed via [#241](https://github.com/wgergely/aeat/issues/241) monthly-audit PRs.
