@@ -21,7 +21,7 @@ Step 2 PR 1 of N. Carrier PR for Step 0 + Step 1 ADR amendments + plan amendment
 - Delete `src/aeat/auth/_secret_adapters.py` (whole module, 278 LOC).
 - Delete `src/aeat/auth/_test_secret_adapters.py` (colocated test, ~190 LOC, 12 tests).
 - Add `# TODO(#477):` annotations on all 5 `migrate_legacy_*_to_repository` helpers per Step 0 Decision 10 outcome.
-- ADR amendments (Step 0/1 outcomes; test-marker rule extension to 4 destination layers; Phase 2 dead-code list addition for `SchemaSource` enum slots).
+- ADR amendments (Step 0/1 outcomes; test-marker rule extension to all 6 destination layers; Phase 2 dead-code list addition for `SchemaSource` enum slots).
 - Plan amendment (migration-helper count correction 3 → 5; SchemaSource enum slots added to Step 10 list).
 
 ## pre-merge safety check
