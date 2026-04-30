@@ -7,7 +7,7 @@ related:
   - "[[2026-04-30-secure-persistence-foundation-wave11-research]]"
   - "[[2026-04-30-secure-persistence-foundation-wave11-adr]]"
   - "[[2026-04-30-secure-persistence-foundation-final-security-audit]]"
-  - "[[2026-04-30-secure-persistence-foundation-final-security-audit-resolved]]"
+  - "[[2026-04-30-secure-persistence-foundation-final-security-resolution-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave7-audit]]"
 ---
 

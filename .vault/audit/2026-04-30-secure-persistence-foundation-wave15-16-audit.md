@@ -7,7 +7,7 @@ related:
   - "[[2026-04-30-secure-persistence-foundation-wave14-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave12-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-final-security-audit]]"
-  - "[[2026-04-30-secure-persistence-foundation-final-security-audit-resolved]]"
+  - "[[2026-04-30-secure-persistence-foundation-final-security-resolution-audit]]"
 ---
 
 # `secure-persistence-foundation` audit: wave-15+16 review-feedback absorption
