@@ -140,6 +140,238 @@ def test_rotate_master_key_round_trip(
     assert _NIF_CANARY not in after
 
 
+def test_rotate_refuses_when_recovery_wrapping_exists_without_flag(
+    tmp_path: Path,
+    runner: CliRunner,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Wave-24 H-1 regression: rotate-master-key MUST NOT silently
+    # proceed when ``master.recovery.key`` exists and the operator
+    # hasn't told us how to update it. Without the fence, the
+    # wrapping would keep holding the OLD master-key bytes and a
+    # later ``aeat security recover`` would restore the substrate
+    # to the old key while data is at the new one.
+    import secrets
+
+    from ..storage import RecoveryKey, save_wrapped_master_key, wrap_master_key
+
+    secrets_dir = tmp_path / "secrets"
+    secrets_dir.mkdir()
+    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+    old_key = secrets.token_bytes(32)
+    new_key = secrets.token_bytes(32)
+    old_path = tmp_path / "old.hex"
+    new_path = tmp_path / "new.hex"
+    _write_key(old_path, key=old_key)
+    _write_key(new_path, key=new_key)
+    # Provision an existing recovery wrapping under a fresh mnemonic.
+    rk = RecoveryKey(raw=secrets.token_bytes(32), mnemonic="abandon " * 24)
+    save_wrapped_master_key(
+        wrap_master_key(master_key=old_key, recovery_key=rk),
+        secrets_dir / "master.recovery.key",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "security",
+            "rotate-master-key",
+            "--old-key-file",
+            str(old_path),
+            "--new-key-file",
+            str(new_path),
+        ],
+    )
+    assert result.exit_code == 1
+    assert "master.recovery.key exists" in result.output
+    assert "--recovery-key" in result.output
+    assert "--regenerate-recovery-key" in result.output
+
+
+def test_rotate_with_regenerate_recovery_produces_recoverable_new_key(
+    tmp_path: Path,
+    runner: CliRunner,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Wave-24 H-1 regression: --regenerate-recovery-key mints a
+    # fresh mnemonic + re-wraps the NEW master key. Decoding the new
+    # mnemonic and unwrapping master.recovery.key must yield the
+    # NEW master-key bytes (not the old).
+    import secrets
+
+    from ..storage import (
+        RecoveryKey,
+        decode_mnemonic,
+        load_wrapped_master_key,
+        save_wrapped_master_key,
+        unwrap_master_key,
+        wrap_master_key,
+    )
+
+    secrets_dir = tmp_path / "secrets"
+    secrets_dir.mkdir()
+    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+    txs_dir = tmp_path / "transactions"
+    txs_dir.mkdir()
+    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(txs_dir))
+    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
+    monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(tmp_path / "submissions"))
+
+    old_key = secrets.token_bytes(32)
+    new_key = secrets.token_bytes(32)
+    _write_key(tmp_path / "old.hex", key=old_key)
+    _write_key(tmp_path / "new.hex", key=new_key)
+    rk = RecoveryKey(raw=secrets.token_bytes(32), mnemonic="abandon " * 24)
+    save_wrapped_master_key(
+        wrap_master_key(master_key=old_key, recovery_key=rk),
+        secrets_dir / "master.recovery.key",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "security",
+            "rotate-master-key",
+            "--old-key-file",
+            str(tmp_path / "old.hex"),
+            "--new-key-file",
+            str(tmp_path / "new.hex"),
+            "--regenerate-recovery-key",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "NEW RECOVERY KEY" in result.output
+
+    fresh_mnemonic = _extract_recovery_mnemonic(result.output)
+    assert len(fresh_mnemonic.split()) == 24
+    fresh_bytes = decode_mnemonic(fresh_mnemonic)
+
+    # Unwrap with the fresh mnemonic; must yield the NEW master-key
+    # bytes — proving the substrate's recovery flow now lands on the
+    # active master key after rotation.
+    wrapped = load_wrapped_master_key(secrets_dir / "master.recovery.key")
+    recovered = unwrap_master_key(wrapped=wrapped, recovery_key_bytes=fresh_bytes)
+    assert recovered == new_key
+    assert recovered != old_key
+
+
+def test_rotate_with_recovery_key_preserves_existing_mnemonic(
+    tmp_path: Path,
+    runner: CliRunner,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Wave-24 H-1 regression: --recovery-key "<existing mnemonic>"
+    # re-wraps the NEW master key under the SAME KEK so the
+    # operator's previously-printed mnemonic remains valid.
+    import secrets
+
+    from ..storage import (
+        encode_mnemonic,
+        load_wrapped_master_key,
+        save_wrapped_master_key,
+        unwrap_master_key,
+        wrap_master_key,
+    )
+    from ..storage._recovery import RecoveryKey
+
+    secrets_dir = tmp_path / "secrets"
+    secrets_dir.mkdir()
+    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "transactions"))
+    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
+    monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(tmp_path / "submissions"))
+
+    old_key = secrets.token_bytes(32)
+    new_key = secrets.token_bytes(32)
+    _write_key(tmp_path / "old.hex", key=old_key)
+    _write_key(tmp_path / "new.hex", key=new_key)
+    rk_bytes = secrets.token_bytes(32)
+    rk_mnemonic = encode_mnemonic(rk_bytes)
+    save_wrapped_master_key(
+        wrap_master_key(
+            master_key=old_key,
+            recovery_key=RecoveryKey(raw=rk_bytes, mnemonic=rk_mnemonic),
+        ),
+        secrets_dir / "master.recovery.key",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "security",
+            "rotate-master-key",
+            "--old-key-file",
+            str(tmp_path / "old.hex"),
+            "--new-key-file",
+            str(tmp_path / "new.hex"),
+            "--recovery-key",
+            rk_mnemonic,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "remains valid" in result.output
+
+    # The same mnemonic must now unwrap to the NEW master key.
+    wrapped = load_wrapped_master_key(secrets_dir / "master.recovery.key")
+    recovered = unwrap_master_key(wrapped=wrapped, recovery_key_bytes=rk_bytes)
+    assert recovered == new_key
+
+
+def test_rotate_recovery_key_must_match_old_key_file(
+    tmp_path: Path,
+    runner: CliRunner,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Wave-24 H-1 defensive: --recovery-key + --old-key-file must
+    # agree. If the supplied mnemonic decrypts master.recovery.key
+    # to bytes that don't match --old-key-file, the operator has
+    # provided inconsistent inputs and the rotation must refuse
+    # rather than re-wrap garbage.
+    import secrets
+
+    from ..storage import (
+        encode_mnemonic,
+        save_wrapped_master_key,
+        wrap_master_key,
+    )
+    from ..storage._recovery import RecoveryKey
+
+    secrets_dir = tmp_path / "secrets"
+    secrets_dir.mkdir()
+    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
+
+    old_key_in_wrapping = secrets.token_bytes(32)
+    different_old_key = secrets.token_bytes(32)
+    new_key = secrets.token_bytes(32)
+    _write_key(tmp_path / "old.hex", key=different_old_key)
+    _write_key(tmp_path / "new.hex", key=new_key)
+    rk_bytes = secrets.token_bytes(32)
+    rk_mnemonic = encode_mnemonic(rk_bytes)
+    save_wrapped_master_key(
+        wrap_master_key(
+            master_key=old_key_in_wrapping,
+            recovery_key=RecoveryKey(raw=rk_bytes, mnemonic=rk_mnemonic),
+        ),
+        secrets_dir / "master.recovery.key",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "security",
+            "rotate-master-key",
+            "--old-key-file",
+            str(tmp_path / "old.hex"),
+            "--new-key-file",
+            str(tmp_path / "new.hex"),
+            "--recovery-key",
+            rk_mnemonic,
+        ],
+    )
+    assert result.exit_code == 1
+    assert "do NOT match" in result.output
+
+
 def test_same_key_rejected(
     tmp_path: Path,
     runner: CliRunner,
@@ -487,6 +719,87 @@ class TestProvisionCommand:
         assert result.exit_code == 0, result.output
         assert "ZERO confidentiality" in result.output
         assert "RECOVERY KEY" in result.output
+
+    def test_keyring_backend_refuses_when_entry_exists_without_force(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # Wave-22 M-3 regression: provisioning the keyring backend
+        # over an existing keychain entry without --force used to
+        # silently FETCH the old key and regenerate the recovery
+        # wrapping, invalidating the operator's previously-printed
+        # mnemonic. Now refuses with a clear pointer at recover or
+        # --force.
+        keyring = pytest.importorskip("keyring")
+
+        store: dict[tuple[str, str], str] = {("aeat:secure-persistence", "master"): "preexisting-b64"}
+
+        def _get(service: str, username: str) -> str | None:
+            return store.get((service, username))
+
+        def _refuse(*_args: object, **_kwargs: object) -> None:
+            raise AssertionError("provision must NOT mint when an entry already exists")
+
+        monkeypatch.setattr(keyring, "get_password", _get)
+        monkeypatch.setattr(keyring, "set_password", _refuse)
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
+        result = runner.invoke(app, ["security", "provision", "--backend", "keyring"])
+        assert result.exit_code == 1
+        assert "already stored in the OS keychain" in result.output
+        assert "aeat security recover" in result.output
+        assert "--force" in result.output
+
+    def test_keyring_backend_force_deletes_then_mints(
+        self,
+        tmp_path: Path,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # With --force, the existing keyring entry must be DELETED
+        # and a fresh master key minted — otherwise the freshly-
+        # generated recovery wrapping wraps the OLD master key,
+        # invalidating any pre-existing printed mnemonic against the
+        # on-disk file.
+        from ..storage._master_key import KeyringMasterKeyProvider
+
+        keyring = pytest.importorskip("keyring")
+
+        store: dict[tuple[str, str], str] = {("aeat:secure-persistence", "master"): "old-b64"}
+        delete_calls: list[tuple[str, str]] = []
+        set_calls: list[tuple[str, str, str]] = []
+
+        def _get(service: str, username: str) -> str | None:
+            return store.get((service, username))
+
+        def _delete(service: str, username: str) -> None:
+            delete_calls.append((service, username))
+            store.pop((service, username), None)
+
+        def _set(service: str, username: str, value: str) -> None:
+            set_calls.append((service, username, value))
+            store[(service, username)] = value
+
+        monkeypatch.setattr(keyring, "get_password", _get)
+        monkeypatch.setattr(keyring, "delete_password", _delete)
+        monkeypatch.setattr(keyring, "set_password", _set)
+        # Match the substrate's keyring backend probe — the no-op
+        # backend predicate runs before any get_password call.
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
+        # Reset any cache from a previous test in the same process.
+        KeyringMasterKeyProvider._reset_for_tests()
+
+        result = runner.invoke(app, ["security", "provision", "--backend", "keyring", "--force"])
+        assert result.exit_code == 0, result.output
+        # Old entry deleted exactly once.
+        assert delete_calls == [("aeat:secure-persistence", "master")]
+        # New key set after delete (should NOT equal the old value).
+        assert len(set_calls) == 1
+        assert set_calls[0][2] != "old-b64"
+        # Recovery wrapping landed.
+        assert (tmp_path / "secrets" / "master.recovery.key").exists()
 
 
 def _extract_recovery_mnemonic(output: str) -> str:

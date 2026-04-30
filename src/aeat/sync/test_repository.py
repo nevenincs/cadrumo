@@ -140,3 +140,41 @@ def test_json_file_repository_rejects_traversal_on_save(tmp_path: Path) -> None:
     record = _record().model_copy(update={"record_id": "../escape"})
     with pytest.raises(DivergenceRepositoryError, match="simple filename token"):
         repo.save(record)
+
+
+def test_writer_lock_target_aligns_with_rotation_lock_path_for(
+    tmp_path: Path,
+) -> None:
+    # Wave-20 H-1 regression: the divergence writer's lock target
+    # must match what ``RotationPlanEntry.lock_path_for`` resolves
+    # to for the same envelope path. Without this alignment the
+    # writer locks ``<id>.envelope.lock.lock`` while rotation locks
+    # ``<id>.lock.lock`` — different OS-level lock-byte targets,
+    # so concurrent save/rotate traffic can race despite both sides
+    # holding "the lock".
+    from ..storage import LockAcquisitionError, RotationPlanEntry, exclusive_file_lock
+
+    repo = JsonFileDivergenceRepository(tmp_path / "divergences")
+    record_id = _record().record_id
+    envelope_path = repo._envelope_path_for(record_id)
+    expected_writer_lock_target = envelope_path.with_name(
+        envelope_path.name[: -len(".envelope.json")] + ".lock",
+    )
+    rotation_entry = RotationPlanEntry(
+        store_dir=repo.root,
+        hkdf_context=b"aeat.sync.divergence.v1",
+    )
+    rotation_lock_target = rotation_entry.lock_path_for(envelope_path)
+    assert rotation_lock_target == expected_writer_lock_target
+
+    # End-to-end contention: hold the writer's lock target via
+    # exclusive_file_lock; the rotation acquire-with-timeout=0
+    # against the same target must fail. Proof that the OS-level
+    # lock-byte targets are identical.
+    repo.root.mkdir(parents=True, exist_ok=True)
+    with (
+        exclusive_file_lock(expected_writer_lock_target),
+        pytest.raises(LockAcquisitionError),
+        exclusive_file_lock(rotation_lock_target, timeout=0.0),
+    ):
+        pass

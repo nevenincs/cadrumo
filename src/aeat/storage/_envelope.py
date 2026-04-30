@@ -37,6 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ..logging import get_logger
 from ._classification import SensitivityClass
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+from ._lock import fsync_parent_dir
 from ._master_key import MasterKeyProvider
 from .errors import (
     ClassificationError,
@@ -172,7 +173,10 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     try:
         with handle:
             handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
         os.replace(tmp_path, target)
+        fsync_parent_dir(target)
     except OSError:
         tmp_path.unlink(missing_ok=True)
         raise
@@ -402,7 +406,10 @@ def save_encrypted_envelope(
     try:
         with handle:
             handle.write(serialised)
+            handle.flush()
+            os.fsync(handle.fileno())
         os.replace(tmp_path, target)
+        fsync_parent_dir(target)
     except OSError:
         tmp_path.unlink(missing_ok=True)
         raise

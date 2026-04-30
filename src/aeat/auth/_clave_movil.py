@@ -543,16 +543,25 @@ class ClaveMovilAuthProvider:
         try:
             with os.fdopen(fd, "wb") as handle:
                 handle.write(data)
+                handle.flush()
+                os.fsync(handle.fileno())
             os.replace(tmp_path, path)
+            from ..storage._lock import fsync_parent_dir
+
+            fsync_parent_dir(path)
         except Exception:
             with contextlib.suppress(FileNotFoundError):
                 tmp_path.unlink()
             raise
-        try:
-            if os.name == "posix":
-                os.chmod(path, 0o600)
-        except OSError as exc:  # pragma: no cover - permissions best-effort
-            log.warning("ClaveMovilAuthProvider: chmod 0600 failed on %s: %s", path, exc)
+        # Issue #469 M-2: harden ACLs on every platform via the
+        # shared helper. Previously this branch only chmod'd 0o600
+        # on POSIX and silently fell through on Windows, leaving
+        # the storage-state JSON (containing localStorage + cookies
+        # of the AEAT browser session — bearer-equivalent material)
+        # readable by anything inheriting the parent dir's ACL.
+        from ._file_permissions import restrict_file_permissions
+
+        restrict_file_permissions(path)
 
     @staticmethod
     def _sha256_file(path: Path) -> str:
