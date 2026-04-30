@@ -752,6 +752,77 @@ class TestWave12KdfMigration:
         )
         assert second.get_master_key() == first_key
 
+    def test_migration_acquires_master_lock(self, tmp_path: Path) -> None:
+        """Issue #465 HIGH-2: migrate_master_key_kdf must hold master.lock.
+
+        Without the lock, a concurrent ``get_master_key`` reader
+        could observe a torn state (master.key rewritten under
+        new KEK, master.kdf still v1) and surface a spurious
+        ``MasterKeyPassphraseMismatchError``.
+        """
+        from . import LockAcquisitionError, exclusive_file_lock
+
+        store = tmp_path / "secrets"
+        _seed_legacy_v1_store(store, passphrase="hunter2")
+
+        # Hold master.lock; the migration must block waiting for it.
+        # Using timeout=0 forces an immediate failure rather than a
+        # deadlock — the migration's own exclusive_file_lock will
+        # surface LockAcquisitionError.
+        from . import _master_key as _mk
+
+        with exclusive_file_lock(store / "master.lock"):
+            # Patch the migration's lock acquisition to a zero-timeout
+            # acquire so we observe the contention instead of waiting
+            # for the default 30s.
+            original_lock = _mk.exclusive_file_lock
+
+            def _zero_timeout_lock(target, **kwargs):
+                kwargs.setdefault("timeout", 0.0)
+                return original_lock(target, **kwargs)
+
+            _mk.exclusive_file_lock = _zero_timeout_lock
+            try:
+                with pytest.raises(LockAcquisitionError):
+                    migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+            finally:
+                _mk.exclusive_file_lock = original_lock
+
+        # After the outer lock is released, a fresh migration call
+        # succeeds (resume idempotency). The second migration sees
+        # the v1 still on disk (the contended migration never wrote
+        # anything because it failed at lock acquisition).
+        result = migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+        assert result.migrated == 1
+        assert result.skipped == 0
+
+    def test_migration_uses_atomic_writes(self, tmp_path: Path) -> None:
+        """Issue #465 HIGH-1: master.key + master.kdf writes must be atomic.
+
+        The previous _write_bytes_secure path opened with
+        O_WRONLY|O_CREAT|O_TRUNC — a power loss between truncate
+        and write left master.key zero-length and unrecoverable.
+        atomic_write_secure_bytes uses tempfile + os.replace so a
+        crash leaves either the old or the new file intact.
+
+        We can't simulate a real crash, but we CAN observe that no
+        ``.tmp`` orphan is left behind after a successful migration
+        (the helper unlinks on error and renames on success).
+        """
+        store = tmp_path / "secrets"
+        _seed_legacy_v1_store(store, passphrase="hunter2")
+
+        result = migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+        assert result.migrated == 1
+
+        # No tempfiles left behind in the secret-store directory.
+        leftover = list(store.glob("*.tmp"))
+        assert leftover == [], f"atomic-write helper left orphan tempfiles: {leftover}"
+        # All three artefacts present and well-formed.
+        assert (store / "master.key").exists()
+        assert (store / "master.kdf").exists()
+        assert (store / "salt").exists()
+
 
 class TestUnsecuredProvider:
     """Hostile-named opt-out backend for testing / throwaway scenarios."""
