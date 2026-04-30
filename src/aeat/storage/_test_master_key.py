@@ -796,32 +796,92 @@ class TestWave12KdfMigration:
         assert result.migrated == 1
         assert result.skipped == 0
 
-    def test_migration_uses_atomic_writes(self, tmp_path: Path) -> None:
-        """Issue #465 HIGH-1: master.key + master.kdf writes must be atomic.
+    def test_migration_rollback_on_replace_failure(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Issue #465 HIGH-1: master.key writes must survive a mid-rename crash.
 
-        The previous _write_bytes_secure path opened with
-        O_WRONLY|O_CREAT|O_TRUNC — a power loss between truncate
-        and write left master.key zero-length and unrecoverable.
-        atomic_write_secure_bytes uses tempfile + os.replace so a
-        crash leaves either the old or the new file intact.
+        Simulates a crash during the ``os.replace`` swap of the new
+        ``master.key`` ciphertext. Under the fixed code path
+        (``atomic_write_secure_bytes`` → tempfile + os.replace),
+        the original v1 ``master.key`` inode is untouched: the
+        tempfile was written to a sibling path, ``os.replace``
+        raises before the rename takes effect, and the helper's
+        ``BaseException`` handler unlinks the orphan tempfile. The
+        original v1 bytes survive on disk.
 
-        We can't simulate a real crash, but we CAN observe that no
-        ``.tmp`` orphan is left behind after a successful migration
-        (the helper unlinks on error and renames on success).
+        Under the LEGACY ``_write_bytes_secure`` path that the
+        wave-12 migration used to call, ``master.key`` was opened
+        with ``O_TRUNC`` directly — the inode was zeroed before the
+        write completed. A mid-write crash left ``master.key``
+        partially-written or empty with no recovery path. Patching
+        ``os.replace`` would have had NO effect because the legacy
+        path never called it; the test would fail with bytes
+        actually mutated on disk.
+
+        This test therefore positively proves the fixed code is on
+        the call path. If a future refactor reverts to direct
+        ``O_TRUNC`` writes, this test fails because the on-disk
+        ``master.key`` no longer matches the original.
         """
         store = tmp_path / "secrets"
         _seed_legacy_v1_store(store, passphrase="hunter2")
 
+        original_master_key_bytes = (store / "master.key").read_bytes()
+        original_master_kdf_bytes = (store / "master.kdf").read_bytes()
+
+        import os as _os
+        from typing import Any
+
+        real_replace = _os.replace
+        # Track whether we've already raised once. List-of-bool
+        # closure is more typing-friendly than function attributes.
+        already_raised: list[bool] = [False]
+
+        def _replace_raising_first_then_real(src: Any, dst: Any, **kwargs: Any) -> None:
+            # Raise on the FIRST call (the master.key swap inside
+            # the migration body). Subsequent calls (the master.kdf
+            # swap, plus any cleanup os.replace from the test
+            # harness or the lock release) pass through to the real
+            # implementation. Production code triggers exactly one
+            # os.replace per atomic_write_secure_bytes call; here
+            # the migration would call it twice (master.key, then
+            # master.kdf) — the first raise short-circuits before
+            # the second.
+            if not already_raised[0]:
+                already_raised[0] = True
+                raise OSError("simulated mid-replace crash on master.key swap")
+            return real_replace(src, dst, **kwargs)
+
+        monkeypatch.setattr(_os, "replace", _replace_raising_first_then_real)
+
+        # The migration must propagate the OSError (atomic_write_secure_bytes
+        # re-raises BaseException after cleanup). The wrapping layer in
+        # migrate_master_key_kdf does not currently catch OSError, so the
+        # raw OSError surfaces — which is correct: the operator wants to
+        # know rotate / migrate failed for an I/O reason, not a typed
+        # MasterKeyUnavailableError that suggests passphrase issues.
+        with pytest.raises(OSError, match="simulated mid-replace crash"):
+            migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+
+        # Crucial assertion: master.key bytes on disk MATCH the
+        # original v1 wrapped blob. This is the rollback guarantee.
+        assert (store / "master.key").read_bytes() == original_master_key_bytes
+        # master.kdf is also still v1 — the migration never reached
+        # the kdf swap because it raised on the master.key swap.
+        assert (store / "master.kdf").read_bytes() == original_master_kdf_bytes
+        # No orphan tempfiles surviving the cleanup-on-error path.
+        assert list(store.glob("*.tmp")) == []
+
+        # And the migration is resume-idempotent: a fresh run after
+        # the simulated crash succeeds (operator removes the
+        # transient I/O fault and retries).
+        monkeypatch.setattr(_os, "replace", real_replace)
         result = migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
         assert result.migrated == 1
-
-        # No tempfiles left behind in the secret-store directory.
-        leftover = list(store.glob("*.tmp"))
-        assert leftover == [], f"atomic-write helper left orphan tempfiles: {leftover}"
-        # All three artefacts present and well-formed.
-        assert (store / "master.key").exists()
-        assert (store / "master.kdf").exists()
-        assert (store / "salt").exists()
+        assert result.skipped == 0
 
 
 class TestUnsecuredProvider:
