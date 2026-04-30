@@ -25,6 +25,7 @@ from pathlib import Path
 from ..deadlines import AutonomoProfile
 from ..env_io import write_env_vars
 from ..logging import get_logger
+from ..profile import KentTaxResidence, save_tax_residence
 from ._models import SetupAnswers
 
 log = get_logger(__name__)
@@ -222,6 +223,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
             master_key_provider=provider,
             hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
         )
+    save_tax_residence(KentTaxResidence(ccaa=answers.tax_residence_ccaa))
     log.info("setup: wrote AutonomoProfile envelope to %s", target)
 
     # Recovery-key nudge: if save_encrypted_envelope just minted a new
