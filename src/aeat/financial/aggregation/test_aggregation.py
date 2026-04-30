@@ -274,6 +274,38 @@ def test_modelo_130_refuses_computed_expense_mapping(tmp_path: Path) -> None:
         aggregate_catalogue(catalogue, modelo="130", period="2025-Q1", category_profiles=profiles)
 
 
+def test_default_profiles_are_resolved_from_period_year(tmp_path: Path) -> None:
+    with pytest.raises(AggregationCasillaMappingError):
+        aggregate_catalogue(_classified_catalogue(tmp_path), modelo="130", period="2026-Q1")
+
+
+def test_category_with_multiple_modelo_130_mappings_is_refused(tmp_path: Path) -> None:
+    office = _transaction(
+        tmp_path,
+        provider_id="office-supplies",
+        amount=Decimal("-200.00"),
+        booked_date=date(2025, 2, 2),
+        row_index=1,
+    )
+    catalogue = set_classification(
+        TransactionCatalogue.from_transactions([office]),
+        office.transaction_id,
+        classification=BusinessClassification.BUSINESS,
+        category_id=SpendingCategory.MATERIAL_OFICINA.value,
+        classified_by="manual",
+        reason="office supplies",
+    )
+    profile = CATEGORY_PROFILES_2025[SpendingCategory.MATERIAL_OFICINA]
+    alternate_mapping = profile.casilla_mappings[0].model_copy(update={"casilla_code": "05"})
+    overridden_profile = profile.model_copy(
+        update={"casilla_mappings": (profile.casilla_mappings[0], alternate_mapping)}
+    )
+    profiles = {**CATEGORY_PROFILES_2025, SpendingCategory.MATERIAL_OFICINA: overridden_profile}
+
+    with pytest.raises(AggregationCasillaMappingError):
+        aggregate_catalogue(catalogue, modelo="130", period="2025-Q1", category_profiles=profiles)
+
+
 def test_unclassified_in_period_transaction_is_refused(tmp_path: Path) -> None:
     transaction = _transaction(
         tmp_path,
