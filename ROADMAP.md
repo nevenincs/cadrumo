@@ -59,6 +59,43 @@ Kent imports three bank CSVs (BBVA, Wise EUR, Wise GBP — multi-currency work w
 
 ---
 
+## 0.1.5 — Codebase Restructure (tooling intermission, NOT a Kent-capability milestone)
+
+### why this exists as a milestone
+
+Conscious project-mandate exception. Project mandates require every milestone to ship a Kent-observable success moment; this one does not. It is a **tooling intermission** that re-aligns `src/aeat/` to a hexagonal `domain/` + `adapters/{inbound,outbound,persistence}/` + `application/` + `entrypoints/{cli,mcp}/` + `core/` layout so every future capability ships under stable, layered destinations and boundary violations fail CI.
+
+### why now (the natural break)
+
+- 0.1.0 just landed its keystone (#218 T6 aggregation); the pipeline middle is real
+- 0.1.1 is calendar-blocked on #279 auth EPIC (no active children); free runway
+- 0.2.0 is gated on #390 (Kent-first CLI wireframe ADR) which the restructure subsumes — letting the 33-iteration CLI hardening EPIC #392 run under the OLD `cli/` path means churning every test post-move
+- 6 agent slots are free; mechanical-in-bulk work fits parallel-slot delivery
+- `submission/` → `export/` rename matches the export-first charter; doing it later means another mass rename
+
+### what this milestone ships
+
+- Hexagonal layout move + top-5 monolithic splits (`storage` ~12k, `cli` ~7.6k, `auth` ~4.8k, `filing` ~4.5k, `errors` ~3k)
+- `submission/` → `adapters/outbound/aeat/export/` rename (legal-liability clarity)
+- `models/` → `domain/modelos/` (Spanish-canonical, avoids Pydantic naming collision)
+- Static import-boundary enforcement via `import-linter` (CI fails on violation)
+- Test-marker realignment in lockstep (`domain_local_state` bifurcates into `domain_model` + `domain_persistence`; `domain_aeat_remote` → `domain_outbound`; etc.)
+- Public-surface preservation via re-export shims (`from aeat.errors`, `from aeat.auth`)
+- Vault-corpus supersession (Tier 1-4 contradiction list, hard gate on Tier 2 security guardrails)
+- Dead-code workstream Phase 1 + Phase 2 (~590 LOC + 4 empty placeholder subpackages)
+
+### what does NOT change
+
+- Live AEAT writes stay forbidden. The `submission` → `export` rename is a labelling change; the CLI excision (2026-04-18) and four-factor live-submit gate stay in effect as defense-in-depth.
+
+### tracker
+
+EPIC [#475](https://github.com/wgergely/aeat/issues/475) — see also charter parent [#120](https://github.com/wgergely/aeat/issues/120). RE-SEQUENCED through #475: [#390](https://github.com/wgergely/aeat/issues/390), [#392](https://github.com/wgergely/aeat/issues/392), [#291](https://github.com/wgergely/aeat/issues/291), [#416](https://github.com/wgergely/aeat/issues/416). Destination signal (no scope change): [#233](https://github.com/wgergely/aeat/issues/233), [#279](https://github.com/wgergely/aeat/issues/279).
+
+ADR `2026-04-30-aeat-restructure-adr.md` (status: **accepted — execution-ready**); research `2026-04-30-aeat-restructure-research.md`; plan `2026-04-30-aeat-restructure-plan.md` (18-step autonomous pipeline; single-agent execution).
+
+---
+
 ## 0.1.1 — Kent can see his AEAT filing history and inbox
 
 ### success moment
