@@ -15,7 +15,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints, field_validator
 
-from ..financial.invoices._validators import validate_spanish_tax_id
+from ..identity import validate_spanish_tax_id
 
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
