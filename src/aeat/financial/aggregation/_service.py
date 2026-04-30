@@ -7,11 +7,11 @@ from decimal import Decimal
 
 from ...casillas import ModeloCode as CategoryModeloCode
 from ...financial.categories import (
-    CATEGORY_PROFILES_2025,
     CasillaMapping,
     CategoryProfile,
     ProportionalityKind,
     SpendingCategory,
+    load_category_profiles_from_manual,
 )
 from ...models import ModeloCode
 from ..transactions import (
@@ -25,6 +25,7 @@ from ._errors import (
     AggregationCasillaMappingError,
     AggregationCategoryCoverageError,
     AggregationMissingClassificationError,
+    AggregationPeriodError,
     AggregationUnsupportedModeloError,
     t,
 )
@@ -41,7 +42,7 @@ def aggregate_catalogue(
     *,
     modelo: str | ModeloCode,
     period: str | Period,
-    category_profiles: Mapping[SpendingCategory, CategoryProfile] = CATEGORY_PROFILES_2025,
+    category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> CasillaAggregation:
     """Aggregate a classified transaction catalogue into casilla totals."""
 
@@ -57,7 +58,7 @@ def aggregate_catalogue(
         )
     resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
     if resolved_period.kind is not PeriodKind.QUARTERLY:
-        raise AggregationCasillaMappingError(
+        raise AggregationPeriodError(
             translated_message=t(
                 "Modelo 130 requiere un periodo trimestral.",
                 "Modelo 130 requires a quarterly period.",
@@ -65,6 +66,7 @@ def aggregate_catalogue(
             ),
             context={"period": resolved_period.raw},
         )
+    resolved_profiles = category_profiles or _category_profiles_for_year(resolved_period.year)
 
     in_period = tuple(
         transaction
@@ -90,7 +92,7 @@ def aggregate_catalogue(
             transaction,
             modelo=modelo_code,
             period=resolved_period,
-            category_profiles=category_profiles,
+            category_profiles=resolved_profiles,
         )
         if contribution is None:
             continue
@@ -118,6 +120,20 @@ def aggregate_catalogue(
         casilla_values=totals,
         provenance=provenance,
     )
+
+
+def _category_profiles_for_year(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
+    try:
+        return load_category_profiles_from_manual(year)
+    except ValueError as exc:
+        raise AggregationCasillaMappingError(
+            translated_message=t(
+                "No hay perfiles fiscales de categorias para el ejercicio solicitado.",
+                "No fiscal category profiles are available for the requested tax year.",
+                "A kert adoevre nem erheto el adozasi kategoriaprofil.",
+            ),
+            context={"year": year},
+        ) from exc
 
 
 def _transaction_contribution(
@@ -220,8 +236,22 @@ def _resolve_casilla(
                 "modelo": modelo.value,
             },
         )
+    if len(mappings) != 1:
+        raise AggregationCasillaMappingError(
+            translated_message=t(
+                "La categoria tiene mas de un mapeo de casilla compatible.",
+                "The category has more than one compatible casilla mapping.",
+                "A kategorianak egynel tobb kompatibilis casilla-lekepezese van.",
+            ),
+            context={
+                "transaction_id": transaction.transaction_id,
+                "category_id": profile.category.value,
+                "modelo": modelo.value,
+                "mapping_count": len(mappings),
+            },
+        )
     mapping = mappings[0]
-    if modelo is ModeloCode.MODELO_130 and transaction.direction is TransactionDirection.OUTGOING:
+    if modelo is ModeloCode.MODELO_130:
         if mapping.casilla_code == "01":
             return "02"
         if mapping.casilla_code not in _MODELO_130_INPUT_CASILLAS:
