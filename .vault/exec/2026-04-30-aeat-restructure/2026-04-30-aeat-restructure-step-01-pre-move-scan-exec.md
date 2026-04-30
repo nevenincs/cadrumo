@@ -78,7 +78,7 @@ The ADR's `domain_local_state` reclassification rule covers two destination buck
 | `review/test_*.py` | 3 | `domain_local_state` | `application/review/` | `domain_application` |
 | `identity/test_documents.py` | 1 | `domain_local_state` | `adapters/inbound/identity/` | `domain_inbound` |
 
-**Disposition: FIX**. The ADR's Migration mechanic / per-test-file rule needs to be extended to cover all 4 destination layers (`domain/`, `adapters/persistence/`, `adapters/inbound/`, `adapters/outbound/`, `application/`, `core/`), not just the 2 stated buckets. The mechanical rewrite is unambiguous given the destination → marker mapping in the ADR Test-marker realignment table; no manual override required for these 37 files. Application: ADR amendment text (rides in Step 2's first PR per no-design-only-PRs rule) extends the rule. The Step 7 keystone PR's marker-rewrite step applies the extended rule mechanically.
+**Disposition: FIX**. The ADR's Migration mechanic / per-test-file rule needs to be extended to cover all 6 destination layers (`domain/`, `adapters/persistence/`, `adapters/inbound/`, `adapters/outbound/`, `application/`, `core/`), not just the 2 stated buckets. The mechanical rewrite is unambiguous given the destination → marker mapping in the ADR Test-marker realignment table; no manual override required for these 37 files. Application: ADR amendment text (rides in Step 2's first PR per no-design-only-PRs rule) extends the rule. The Step 7 keystone PR's marker-rewrite step applies the extended rule mechanically.
 
 ### findings — modules with already-correct axis-B markers (no concern)
 
@@ -110,7 +110,7 @@ The ADR rule extension (covering `adapters/inbound/`, `adapters/outbound/`, `app
 | 1.3 | sub-pass 1 — `__import__("re")` defensive pattern | STRIKE | n/a |
 | 1.4 | sub-pass 1 — pyproject.toml `aeat.cli:app` entry point | FIX (via shim) | Step 7 keystone |
 | 2.1–2.8 | sub-pass 2 — 8 splitting-module `__init__.py` boundaries | FIX | Step 5 (rebase-script construction) → Step 7 keystone (delivery) |
-| 3.1 | sub-pass 3 — ADR test-marker rule extension to 4 layers | FIX (ADR amendment) | Step 2's first PR |
+| 3.1 | sub-pass 3 — ADR test-marker rule extension to 6 layers | FIX (ADR amendment) | Step 2's first PR |
 | 3.2 | sub-pass 3 — 37 destination-aware test reclassifications | FIX (mechanical rewrite per extended rule) | Step 7 keystone |
 | 3.3 | sub-pass 3 — `filing/_test_integration_wave4.py` filename sanitization | FILE | Step 11 sanitization loop (per-module pass over `filing/`) |
 
@@ -122,7 +122,7 @@ The ADR rule extension (covering `adapters/inbound/`, `adapters/outbound/`, `app
 
 - this exec record (uncommitted; rides into Step 2's first PR alongside Step 0's exec record + ADR amendment)
 - ADR amendment text additions (committed in Step 2's first PR):
-  - Test-marker realignment / Migration mechanic — per-test-file: extend rule to cover all 4 destination layers per the table in sub-pass 3 findings above.
+  - Test-marker realignment / Migration mechanic — per-test-file: extend rule to cover all 6 destination layers per the table in sub-pass 3 findings above.
   - Operational contract / Acceptance criteria: confirm manual-override list is zero-length (audit-grounded).
 - No new GitHub issues filed. (`filing/_test_integration_wave4.py` is **FILE**'d for Step 11 sanitization, not for issue tracking.)
 
