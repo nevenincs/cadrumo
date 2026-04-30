@@ -115,6 +115,7 @@ from ._redaction import (
     default_rules_for,
     default_rules_for_class,
     redact,
+    redact_for_log,
     redact_structured,
 )
 from ._rotation import (
@@ -273,6 +274,7 @@ __all__ = [
     "override_master_key_provider",
     "override_secret_store",
     "redact",
+    "redact_for_log",
     "redact_structured",
     "reencrypt_envelope_file",
     "refuse_unsecured_with_real_nif",

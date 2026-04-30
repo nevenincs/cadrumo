@@ -106,8 +106,13 @@ def _ensure_password_comment(path: Path, env_var_name: str) -> None:
     text = "\n".join(rewritten)
     if text and not text.endswith("\n"):
         text += "\n"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    # Atomic write so a power-loss / SIGKILL between the truncate
+    # and the write completion does not leave env/.env zero-length
+    # (silently reverting the operator's certificate path / database
+    # URL / live-tests-flag to defaults).
+    from ..env_io import _atomic_write_text
+
+    _atomic_write_text(path, text)
 
 
 def write_env_file(answers: SetupAnswers, target: Path) -> None:
