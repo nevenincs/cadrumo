@@ -6,7 +6,7 @@ date: '2026-04-30'
 related:
   - "[[2026-04-30-secure-persistence-foundation-wave13-research]]"
   - "[[2026-04-30-secure-persistence-foundation-wave12-audit]]"
-  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation]]"
+  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation-audit]]"
 ---
 
 # `secure-persistence-foundation` adr: wave-13 repository-id validator consolidation | (**status:** `accepted`)
