@@ -29,14 +29,10 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...logging import get_logger
-from ...storage import (
-    Envelope,
-    SensitivityClass,
-    exclusive_file_lock,
-    load_encrypted_envelope,
-    save_encrypted_envelope,
-)
+from ...storage._classification import SensitivityClass
 from ...storage._encrypted_columns import _resolve_master_key_provider
+from ...storage._envelope import Envelope, load_encrypted_envelope, save_encrypted_envelope
+from ...storage._lock import exclusive_file_lock
 from ...storage.errors import ClassificationError, EnvelopeVersionError
 from ._models import Transaction, TransactionCatalogue, derive_transaction_id
 
