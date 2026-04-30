@@ -21,8 +21,8 @@ def _baseline_zero_other_anexos() -> dict[str, Decimal]:
     """Zero values for B1 / B2 / C plus all D casillas not under test.
 
     Casilla 0021 (LIRPF art. 20 reducción del trabajo) defaults to
-    7.302 € (the by-design non-zero cap on zero rendimiento) since
-    the engine derives it as a constant when 0001-0019 are all zero.
+    0.00 € (post M-1 cap fix) since the engine derives it as zero
+    when 0001-0019 are all zero.
     """
     return {
         # Anexo B1.

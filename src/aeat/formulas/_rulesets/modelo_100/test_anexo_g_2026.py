@@ -88,7 +88,7 @@ class TestMinimoAbsorption:
         assert derived["0550"] == Decimal("3055.50")
 
 
-class TestProgressiveTarifaAhorro2025:
+class TestProgressiveTarifaAhorro2026:
     """LIRPF art. 66 post Ley 7/2024: state half rates 9.5/10.5/11.5/13.5/15 %."""
 
     @pytest.mark.parametrize(
@@ -130,17 +130,17 @@ class TestProgressiveTarifaAhorro2024:
         derived = _derived(MODELO_100_2024, inputs)
         assert derived["0560"] == Decimal("63940.00")
 
-    def test_tarifa_ahorro_2025_vs_2024_top_bracket_delta(self) -> None:
-        """At BIA 500.000: 2025 - 2024 = 65940 - 63940 = 2000 EUR (delta of
+    def test_tarifa_ahorro_2026_vs_2024_top_bracket_delta(self) -> None:
+        """At BIA 500.000: 2026 - 2024 = 65940 - 63940 = 2000 EUR (delta of
         200.000 EUR above 300.000 EUR x (15% - 14%) = 2.000 EUR).
         """
         inputs_2024 = _zero_inputs(MODELO_100_2024)
         inputs_2024["0028"] = Decimal("500000.00")
-        inputs_2025 = _zero_inputs(MODELO_100_2026)
-        inputs_2025["0028"] = Decimal("500000.00")
+        inputs_2026 = _zero_inputs(MODELO_100_2026)
+        inputs_2026["0028"] = Decimal("500000.00")
         derived_2024 = _derived(MODELO_100_2024, inputs_2024)
-        derived_2025 = _derived(MODELO_100_2026, inputs_2025)
-        assert derived_2025["0560"] - derived_2024["0560"] == Decimal("2000.00")
+        derived_2026 = _derived(MODELO_100_2026, inputs_2026)
+        assert derived_2026["0560"] - derived_2024["0560"] == Decimal("2000.00")
 
 
 class TestCuotaChain:
