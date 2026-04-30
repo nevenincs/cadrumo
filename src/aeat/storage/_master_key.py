@@ -1101,100 +1101,120 @@ def migrate_master_key_kdf(
                 f"required artefact missing for KDF migration: {required}",
             )
 
-    raw_text = kdf_params_path.read_text(encoding="utf-8")
-    try:
-        preview = json.loads(raw_text)
-    except json.JSONDecodeError as exc:
-        raise MasterKeyUnavailableError(
-            f"failed to parse master.kdf at {kdf_params_path}: {exc}",
-        ) from exc
-    if not isinstance(preview, dict):
-        raise MasterKeyUnavailableError(
-            f"master.kdf at {kdf_params_path} must be a JSON object, got {type(preview).__name__}",
+    # Acquire the same on-disk lock that ``get_master_key`` and
+    # ``complete_recovery`` hold during their multi-write sequences.
+    # Without this, a concurrent ``get_master_key`` reader can
+    # observe a torn state mid-migration (master.key rewritten under
+    # the new KEK but master.kdf still at v1) and surface a spurious
+    # ``MasterKeyPassphraseMismatchError`` despite a correct
+    # passphrase. Re-check the on-disk version inside the lock so
+    # two concurrent migrators serialise cleanly — the second sees
+    # v2 and returns ``skipped=1`` without rewriting anything.
+    with exclusive_file_lock(store_dir / "master.lock"):
+        raw_text = kdf_params_path.read_text(encoding="utf-8")
+        try:
+            preview = json.loads(raw_text)
+        except json.JSONDecodeError as exc:
+            raise MasterKeyUnavailableError(
+                f"failed to parse master.kdf at {kdf_params_path}: {exc}",
+            ) from exc
+        if not isinstance(preview, dict):
+            raise MasterKeyUnavailableError(
+                f"master.kdf at {kdf_params_path} must be a JSON object, got {type(preview).__name__}",
+            )
+        on_disk_version = preview.get("version")
+        if on_disk_version == _KDF_PARAMS_VERSION:
+            return MigrationResult(migrated=0, skipped=1, store_dir=store_dir)
+        if on_disk_version != _LEGACY_KDF_PARAMS_VERSION:
+            raise MasterKeyUnavailableError(
+                f"master.kdf at {kdf_params_path} is version {on_disk_version!r}; "
+                f"the migration helper only handles version {_LEGACY_KDF_PARAMS_VERSION} -> "
+                f"{_KDF_PARAMS_VERSION}.",
+            )
+
+        try:
+            legacy_params = _LegacyKdfParameters.model_validate_json(raw_text)
+        except Exception as exc:
+            raise MasterKeyUnavailableError(
+                f"failed to parse legacy master.kdf at {kdf_params_path}: {exc}",
+            ) from exc
+        try:
+            salt = _b64decode(legacy_params.salt_b64)
+        except (ValueError, binascii.Error) as exc:
+            raise MasterKeyUnavailableError("legacy KDF parameters carry malformed salt.") from exc
+
+        legacy_kek = _derive_legacy_scrypt_kek(passphrase, salt, legacy_params)
+        try:
+            wire = base64.b64decode(master_key_path.read_bytes(), validate=True)
+            blob = EncryptedBlob.from_wire(wire)
+        except Exception as exc:
+            raise MasterKeyUnavailableError(
+                f"failed to read wrapped master key at {master_key_path}: {exc}",
+            ) from exc
+
+        new_params = _KdfParameters(
+            memory_cost=_ARGON2_MEMORY_COST_KIB,
+            time_cost=_ARGON2_TIME_COST,
+            parallelism=_ARGON2_PARALLELISM,
+            salt_b64=_b64encode(salt),
         )
-    on_disk_version = preview.get("version")
-    if on_disk_version == _KDF_PARAMS_VERSION:
-        return MigrationResult(migrated=0, skipped=1, store_dir=store_dir)
-    if on_disk_version != _LEGACY_KDF_PARAMS_VERSION:
-        raise MasterKeyUnavailableError(
-            f"master.kdf at {kdf_params_path} is version {on_disk_version!r}; "
-            f"the migration helper only handles version {_LEGACY_KDF_PARAMS_VERSION} -> "
-            f"{_KDF_PARAMS_VERSION}.",
-        )
+        new_kek = FileFallbackMasterKeyProvider._derive_kek_with_params(passphrase, salt, new_params)
 
-    try:
-        legacy_params = _LegacyKdfParameters.model_validate_json(raw_text)
-    except Exception as exc:
-        raise MasterKeyUnavailableError(
-            f"failed to parse legacy master.kdf at {kdf_params_path}: {exc}",
-        ) from exc
-    try:
-        salt = _b64decode(legacy_params.salt_b64)
-    except (ValueError, binascii.Error) as exc:
-        raise MasterKeyUnavailableError("legacy KDF parameters carry malformed salt.") from exc
+        # Recovery for the partial-migration window: a previous run may
+        # have rewritten master.key under the new Argon2id KEK but crashed
+        # before flipping master.kdf to v2. Try the new KEK first; if it
+        # succeeds, master.key is already migrated and we only need to
+        # write master.kdf to complete the transition.
+        master_key: bytes
+        try:
+            master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")
+            _log.info(
+                "master.key at %s already wrapped under Argon2id KEK; "
+                "completing partial migration by rewriting master.kdf only",
+                master_key_path,
+            )
+            # master.key is already v2; just flip master.kdf to v2.
+            # Use atomic_write_secure_bytes so a crash mid-write
+            # leaves the on-disk master.kdf intact (old or new),
+            # never truncated.
+            atomic_write_secure_bytes(
+                kdf_params_path,
+                new_params.model_dump_json().encode("utf-8"),
+            )
+            _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
+            return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
+        except Exception:  # noqa: S110 - intentional fallthrough; not a partial-migration state
+            # Not a partial-migration state. Fall through to the normal
+            # legacy-unwrap → re-wrap path. The next try-block performs the
+            # legacy decrypt and surfaces a typed error if that fails too.
+            pass
 
-    legacy_kek = _derive_legacy_scrypt_kek(passphrase, salt, legacy_params)
-    try:
-        wire = base64.b64decode(master_key_path.read_bytes(), validate=True)
-        blob = EncryptedBlob.from_wire(wire)
-    except Exception as exc:
-        raise MasterKeyUnavailableError(
-            f"failed to read wrapped master key at {master_key_path}: {exc}",
-        ) from exc
+        try:
+            master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")
+        except Exception as exc:
+            raise MasterKeyUnavailableError(
+                "failed to decrypt master key under legacy scrypt KDF; passphrase may be wrong "
+                "or the file may be tampered with. The v1 store has not been modified.",
+            ) from exc
 
-    new_params = _KdfParameters(
-        memory_cost=_ARGON2_MEMORY_COST_KIB,
-        time_cost=_ARGON2_TIME_COST,
-        parallelism=_ARGON2_PARALLELISM,
-        salt_b64=_b64encode(salt),
-    )
-    new_kek = FileFallbackMasterKeyProvider._derive_kek_with_params(passphrase, salt, new_params)
-
-    # Recovery for the partial-migration window: a previous run may
-    # have rewritten master.key under the new Argon2id KEK but crashed
-    # before flipping master.kdf to v2. Try the new KEK first; if it
-    # succeeds, master.key is already migrated and we only need to
-    # write master.kdf to complete the transition.
-    master_key: bytes
-    try:
-        master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")
-        _log.info(
-            "master.key at %s already wrapped under Argon2id KEK; "
-            "completing partial migration by rewriting master.kdf only",
+        new_blob = encrypt_record(master_key, key=new_kek, associated_data=b"aeat.master-key.v1")
+        # Write order: master.key first (so a crash leaves a
+        # recoverable state — see the partial-migration recovery
+        # branch above), THEN master.kdf (the v2 declaration is the
+        # very last on-disk change). Use ``atomic_write_secure_bytes``
+        # for both so a crash between the file open and the write
+        # leaves either the old or new file intact — the old
+        # ``_write_bytes_secure`` opened with ``O_WRONLY|O_CREAT|O_TRUNC``
+        # which truncates the existing inode in-place, so a power
+        # loss between the truncate and the write left ``master.key``
+        # zero-length and unrecoverable from the v1 path.
+        atomic_write_secure_bytes(
             master_key_path,
+            base64.b64encode(new_blob.to_wire()),
         )
-        # master.key is already v2; just flip master.kdf to v2.
-        FileFallbackMasterKeyProvider._write_bytes_secure(
+        atomic_write_secure_bytes(
             kdf_params_path,
             new_params.model_dump_json().encode("utf-8"),
         )
         _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
         return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
-    except Exception:  # noqa: S110 - intentional fallthrough; not a partial-migration state
-        # Not a partial-migration state. Fall through to the normal
-        # legacy-unwrap → re-wrap path. The next try-block performs the
-        # legacy decrypt and surfaces a typed error if that fails too.
-        pass
-
-    try:
-        master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")
-    except Exception as exc:
-        raise MasterKeyUnavailableError(
-            "failed to decrypt master key under legacy scrypt KDF; passphrase may be wrong "
-            "or the file may be tampered with. The v1 store has not been modified.",
-        ) from exc
-
-    new_blob = encrypt_record(master_key, key=new_kek, associated_data=b"aeat.master-key.v1")
-    # Write order: master.key first (so a crash leaves a recoverable
-    # state — see the partial-migration recovery branch above), THEN
-    # master.kdf (the v2 declaration is the very last on-disk change).
-    FileFallbackMasterKeyProvider._write_bytes_secure(
-        master_key_path,
-        base64.b64encode(new_blob.to_wire()),
-    )
-    FileFallbackMasterKeyProvider._write_bytes_secure(
-        kdf_params_path,
-        new_params.model_dump_json().encode("utf-8"),
-    )
-    _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
-    return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
