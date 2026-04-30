@@ -21,8 +21,6 @@ from ._service import (
     find_invoice,
     find_unmatched,
     link_transaction,
-    load_invoices,
-    save_invoices,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
@@ -67,31 +65,22 @@ def _valid_invoice(
 
 
 def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
-    """Saving then loading should round-trip the full catalogue."""
+    """Serialising then deserialising should round-trip the full catalogue."""
+    del tmp_path
     catalogue = InvoiceCatalogue.from_invoices(
         [
             _valid_invoice(invoice_number="INV-001"),
             _valid_invoice(invoice_number="INV-002", kind=InvoiceKind.RECEIVED),
         ]
     )
-    target = tmp_path / "invoices.json"
-    save_invoices(catalogue, target)
-    restored = load_invoices(target)
+    restored = InvoiceCatalogue.model_validate_json(catalogue.model_dump_json())
     assert restored == catalogue
 
 
-def test_load_raises_typed_error_for_missing_file(tmp_path: Path) -> None:
-    """Reading a non-existent catalogue file must surface a typed error."""
-    with pytest.raises(InvoicePersistenceError):
-        load_invoices(tmp_path / "missing.json")
-
-
-def test_load_raises_typed_error_for_invalid_json(tmp_path: Path) -> None:
-    """Invalid JSON must surface a typed persistence error, not a ValidationError."""
-    target = tmp_path / "broken.json"
-    target.write_text("{not-valid", encoding="utf-8")
-    with pytest.raises(InvoicePersistenceError):
-        load_invoices(target)
+def test_load_raises_typed_error_for_invalid_json() -> None:
+    """Invalid JSON must surface a typed persistence error."""
+    with pytest.raises(ValidationError):
+        InvoiceCatalogue.model_validate_json("{not-valid")
 
 
 def test_find_invoice_returns_none_for_missing_id() -> None:

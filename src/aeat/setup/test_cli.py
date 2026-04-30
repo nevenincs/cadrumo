@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -11,11 +12,40 @@ from ..auth import CertificateBackend
 from ..cli import app
 from ..deadlines import IVARegime
 from ..i18n import Language
+from ..profile import CCAA
+from ..storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from . import SetupAnswers
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 _runner = CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
 
 
 def _seed_answers_file(tmp_path: Path) -> tuple[Path, SetupAnswers]:
@@ -31,6 +61,7 @@ def _seed_answers_file(tmp_path: Path) -> tuple[Path, SetupAnswers]:
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
+        tax_residence_ccaa=CCAA.MADRID,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
         certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
@@ -49,11 +80,24 @@ def _seed_answers_file(tmp_path: Path) -> tuple[Path, SetupAnswers]:
 def test_setup_help() -> None:
     result = _runner.invoke(app, ["setup", "--help"])
     assert result.exit_code == 0
+    assert "env/.env" in result.output
+    assert "RENTA" in result.output
+    assert "CCAA" in result.output
 
 
 def test_setup_verify_help() -> None:
     result = _runner.invoke(app, ["setup", "verify", "--help"])
     assert result.exit_code == 0
+    assert "SetupAnswers" in result.output
+    assert "sin escribir" in result.output
+
+
+def test_setup_show_help_mentions_renta_ccaa() -> None:
+    result = _runner.invoke(app, ["setup", "show", "--help"])
+    assert result.exit_code == 0
+    assert "SetupAnswers" in result.output
+    assert "RENTA" in result.output
+    assert "CCAA" in result.output
 
 
 def test_setup_show_roundtrip(tmp_path: Path) -> None:
@@ -68,6 +112,7 @@ def test_setup_non_interactive_runs_end_to_end(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("AEAT_TEST_PW", "x")
+    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
     path, answers = _seed_answers_file(tmp_path)
     env_file = tmp_path / ".env"
     result = _runner.invoke(
@@ -84,6 +129,7 @@ def test_setup_non_interactive_runs_end_to_end(
     assert result.exit_code == 0, result.output
     assert env_file.exists()
     assert answers.default_profile_path.exists()
+    assert (tmp_path / "tax-residence.json").exists()
 
 
 def test_setup_non_interactive_requires_from(

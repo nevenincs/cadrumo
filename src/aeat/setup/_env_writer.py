@@ -9,21 +9,31 @@ of keys — see :func:`owned_env_keys`.
 The PKCS#12 password is **never** a field in the env writer's
 payload. Only the name of the env var that holds it is recorded, and
 only as an informational comment line.
+
+The :class:`AutonomoProfile` carries the operator's NIF — IDENTITY
+class per the default policy table. :func:`write_profile_file` routes
+the write through the substrate's
+:func:`save_encrypted_envelope` helper at IDENTITY class so the
+on-disk record is always AES-256-GCM ciphertext.
 """
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 from ..deadlines import AutonomoProfile
 from ..env_io import write_env_vars
 from ..logging import get_logger
+from ..profile import KentTaxResidence, save_tax_residence
 from ._models import SetupAnswers
 
 log = get_logger(__name__)
 
 
 _PASSWORD_COMMENT_PREFIX = "# PKCS#12 password sourced from env var: "
+_HKDF_CONTEXT_SETUP_PROFILE = b"aeat.setup.profile.v1"
+_PROFILE_ENVELOPE_VERSION = 1
 
 
 def owned_env_keys() -> tuple[str, ...]:
@@ -97,8 +107,13 @@ def _ensure_password_comment(path: Path, env_var_name: str) -> None:
     text = "\n".join(rewritten)
     if text and not text.endswith("\n"):
         text += "\n"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    # Atomic write so a power-loss / SIGKILL between the truncate
+    # and the write completion does not leave env/.env zero-length
+    # (silently reverting the operator's certificate path / database
+    # URL / live-tests-flag to defaults).
+    from ..env_io import _atomic_write_text
+
+    _atomic_write_text(path, text)
 
 
 def write_env_file(answers: SetupAnswers, target: Path) -> None:
@@ -125,17 +140,51 @@ def write_env_file(answers: SetupAnswers, target: Path) -> None:
 
 
 def write_profile_file(answers: SetupAnswers, target: Path) -> None:
-    """Persist the user's :class:`AutonomoProfile` as JSON at ``target``.
+    """Persist the user's :class:`AutonomoProfile` as ciphertext at ``target``.
 
     The profile file is consumed by ``aeat deadlines`` and is separate
     from the env file so the wizard never has to hand-craft JSON for
-    a nested record.
+    a nested record. The profile carries the operator's NIF — IDENTITY
+    class per the default policy table — so the write routes through
+    :func:`save_encrypted_envelope` and lands as a
+    :class:`CipherEnvelope` on disk under HKDF context
+    ``aeat.setup.profile.v1``.
+
+    On a brand-new installation the master key is minted as a side
+    effect of the first ``save_encrypted_envelope`` call; this helper
+    detects that case and emits a one-line nudge pointing the operator
+    at ``aeat security provision --force`` so they can generate a
+    recovery key. Existing installations (where ``master.kdf`` already
+    exists, or the keyring entry is populated) skip the nudge.
 
     Args:
         answers: Validated :class:`SetupAnswers` payload.
-        target: Absolute path where the profile JSON should be
+        target: Absolute path where the profile envelope should be
             written.
     """
+    # Storage imports are deferred so the setup module's import chain
+    # does not pull Alembic plugin discovery into every CLI command's
+    # startup path. Mirrors the json-pipe-safety discipline applied to
+    # every other governed-persistence consumer.
+    from ..config import load_settings
+    from ..storage import (
+        Envelope,
+        SensitivityClass,
+        exclusive_file_lock,
+        refuse_unsecured_with_real_nif,
+        save_encrypted_envelope,
+    )
+    from ..storage._encrypted_columns import _resolve_master_key_provider
+
+    # Detect first-run state so we can surface a recovery-key nudge
+    # after the silent mint that save_encrypted_envelope triggers. The
+    # check looks at file-fallback artefacts; keyring-only stores have
+    # no on-disk signal and are silent by design (the OS keychain is
+    # the trust boundary).
+    settings = load_settings()
+    secret_dir = Path(settings.aeat_secret_store_dir)
+    pre_mint_state_present = (secret_dir / "master.kdf").exists()
+
     profile = AutonomoProfile(
         tax_id=answers.tax_id,
         iva_regime=answers.iva_regime,
@@ -148,6 +197,82 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         bienes_extranjero_above_threshold=answers.bienes_extranjero_above_threshold,
         notes=answers.notes,
     )
+    # NIF-canary: refuse to write a real-NIF profile under the unsecured
+    # backend. Real tax data is incompatible with a published
+    # deterministic master key.
+    provider = _resolve_master_key_provider()
+    refuse_unsecured_with_real_nif(profile.tax_id, provider=provider)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
-    log.info("setup: wrote AutonomoProfile JSON to %s", target)
+    envelope = Envelope[AutonomoProfile](
+        schema_version=_PROFILE_ENVELOPE_VERSION,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=profile,
+    )
+    # Acquire the writer-canonical sidecar lock so concurrent
+    # ``aeat security rotate-master-key`` cannot race the profile
+    # write. The lock target matches what
+    # ``RotationPlanEntry.lock_path_for`` resolves to for a single-
+    # file consumer (``target.with_suffix('.lock')``); the wave-18
+    # alignment thus engages OS-level serialisation between rotation
+    # and writer.
+    with exclusive_file_lock(target.with_suffix(".lock")):
+        save_encrypted_envelope(
+            envelope,
+            target,
+            master_key_provider=provider,
+            hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
+        )
+    save_tax_residence(KentTaxResidence(ccaa=answers.tax_residence_ccaa))
+    log.info("setup: wrote AutonomoProfile envelope to %s", target)
+
+    # Recovery-key nudge: if save_encrypted_envelope just minted a new
+    # master key (signalled by the post-write existence of master.kdf
+    # when no master.kdf existed pre-write), the operator now has an
+    # encrypted profile but no recovery wrapping. Without a recovery
+    # key, a forgotten passphrase / lost keychain means losing every
+    # persisted record.
+    if (
+        not pre_mint_state_present
+        and (secret_dir / "master.kdf").exists()
+        and not (secret_dir / "master.recovery.key").exists()
+    ):
+        log.warning(
+            "setup: a master key was just minted at %s but no recovery "
+            "wrapping exists. Run `aeat security provision --force` to "
+            "generate a 24-word recovery key now — without it, a forgotten "
+            "passphrase or lost keychain means losing every persisted record.",
+            secret_dir,
+        )
+
+
+def load_profile_envelope(target: Path) -> AutonomoProfile:
+    """Load the operator's :class:`AutonomoProfile` from a setup envelope.
+
+    The setup wizard writes the profile through
+    :func:`save_encrypted_envelope`. Downstream consumers (the
+    ``aeat deadlines`` CLI) round-trip through this helper rather than
+    parsing the file as plaintext JSON.
+
+    Args:
+        target: Absolute path to the setup-profile envelope file.
+
+    Returns:
+        The validated :class:`AutonomoProfile` payload.
+    """
+    from ..storage import (
+        Envelope,
+        SensitivityClass,
+        load_encrypted_envelope,
+    )
+    from ..storage._encrypted_columns import _resolve_master_key_provider
+
+    envelope = load_encrypted_envelope(
+        target,
+        Envelope[AutonomoProfile],
+        expected_class=SensitivityClass.IDENTITY,
+        master_key_provider=_resolve_master_key_provider(),
+        hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
+        max_supported_version=_PROFILE_ENVELOPE_VERSION,
+    )
+    return envelope.payload
