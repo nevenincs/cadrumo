@@ -13,7 +13,6 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ..deadlines import AutonomoProfile
 from ..i18n import Translatable
 from ..logging import get_logger
 from ._models import SetupAnswers, VerifyFinding, VerifySeverity
@@ -118,26 +117,28 @@ def _check_profile_file(answers: SetupAnswers) -> VerifyFinding:
         return _finding(
             name="autonomo_profile_json_valid",
             severity=VerifySeverity.WARNING,
-            en=f"Profile JSON not found at {path}; the wizard will write it.",
-            es=f"JSON de perfil no encontrado en {path}; el asistente lo escribirá.",
-            hu=f"A profil JSON nincs itt: {path}; a varázsló létrehozza.",
+            en=f"Profile envelope not found at {path}; the wizard will write it.",
+            es=f"Sobre cifrado del perfil no encontrado en {path}; el asistente lo escribirá.",
+            hu=f"A profil titkosított csomagja nincs itt: {path}; a varázsló létrehozza.",
         )
+    from ._env_writer import load_profile_envelope
+
     try:
-        AutonomoProfile.model_validate_json(path.read_text(encoding="utf-8"))
+        load_profile_envelope(path)
     except (OSError, ValueError, ValidationError) as exc:
         return _finding(
             name="autonomo_profile_json_valid",
             severity=VerifySeverity.ERROR,
-            en=f"Profile JSON at {path} is invalid: {exc}",
-            es=f"El JSON del perfil en {path} no es válido: {exc}",
-            hu=f"A profil JSON érvénytelen itt: {path}: {exc}",
+            en=f"Profile envelope at {path} is invalid: {exc}",
+            es=f"El sobre del perfil en {path} no es válido: {exc}",
+            hu=f"A profil csomag érvénytelen itt: {path}: {exc}",
         )
     return _finding(
         name="autonomo_profile_json_valid",
         severity=VerifySeverity.OK,
-        en=f"Profile JSON at {path} round-trips through pydantic.",
-        es=f"El JSON del perfil en {path} valida con pydantic.",
-        hu=f"A profil JSON itt: {path} érvényes pydantic szerint.",
+        en=f"Profile envelope at {path} round-trips through the substrate.",
+        es=f"El sobre del perfil en {path} se valida correctamente.",
+        hu=f"A profil csomag itt: {path} érvényes.",
     )
 
 

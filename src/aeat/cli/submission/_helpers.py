@@ -55,11 +55,10 @@ class _CliDraftLoader:
     """
 
     def load(self, draft_path: Path) -> FilingDraftLike:
-        payload_text = draft_path.read_text(encoding="utf-8")
-        filing_draft = _load_persisted_filing_draft(draft_path, payload_text=payload_text)
+        filing_draft = _load_persisted_filing_draft(draft_path)
         if filing_draft is not None:
             return cast(FilingDraftLike, filing_draft)
-        raw = json.loads(payload_text)
+        raw = json.loads(draft_path.read_text(encoding="utf-8"))
         findings = tuple(
             FilingFinding(
                 severity=FilingFindingSeverity(entry["severity"]),
@@ -140,36 +139,42 @@ def load_draft(path: Path) -> FilingDraftLike:
 
 
 def resolve_draft_path(draft_ref: str) -> Path:
-    """Resolve ``draft_ref`` as either a draft path or a persisted draft id."""
-
+    """Resolve ``draft_ref`` as either a draft envelope path or a draft id."""
     candidate = Path(draft_ref)
     if candidate.exists():
         return candidate
     if candidate.suffix == ".json" or candidate.parent != Path("."):
         raise typer.BadParameter(f"draft file not found: {candidate}")
     drafts_dir = load_settings().aeat_drafts_dir.resolve()
-    matches = sorted(path for path in drafts_dir.glob(f"*_{draft_ref}.json") if path.is_file())
-    if not matches:
-        raise typer.BadParameter(f"no persisted draft found for draft_ref={draft_ref!r}")
-    if len(matches) > 1:
-        joined = ", ".join(str(path) for path in matches)
-        raise typer.BadParameter(f"draft_ref={draft_ref!r} matched multiple draft files: {joined}")
-    return matches[0]
+    envelope_path = drafts_dir / f"{draft_ref}.envelope.json"
+    if envelope_path.exists():
+        return envelope_path
+    raise typer.BadParameter(f"no persisted draft found for draft_ref={draft_ref!r}")
 
 
-def _load_persisted_filing_draft(
-    draft_path: Path,
-    *,
-    payload_text: str,
-) -> FilingDraft | None:
+def _load_persisted_filing_draft(draft_path: Path) -> FilingDraft | None:
+    """Load a ciphertext envelope through :class:`FilingDraftRepository`.
+
+    Returns the refreshed draft (re-persisting through the repository
+    when the refresh produced a new state) or ``None`` when the path is
+    not an envelope file or the envelope cannot be deserialised.
+    """
+    from ...filing._repository import FilingDraftRepository
+
+    if not draft_path.name.endswith(".envelope.json"):
+        return None
+    repository = FilingDraftRepository(store_dir=draft_path.parent)
+    draft_id = draft_path.name[: -len(".envelope.json")]
     try:
-        draft = FilingDraft.model_validate_json(payload_text)
+        draft = repository.load(draft_id)
     except (FilingDraftError, ValidationError):
+        return None
+    if draft is None:
         return None
     refreshed = refresh_review_status(
         draft,
         schema_provider=build_runtime_schema_provider(),
     )
     if refreshed != draft:
-        draft_path.write_text(refreshed.model_dump_json(indent=2), encoding="utf-8")
+        repository.save(refreshed)
     return refreshed

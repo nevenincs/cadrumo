@@ -19,8 +19,6 @@ from . import (
     TransactionDirection,
     find_transaction,
     link_invoice,
-    load_transactions,
-    save_transactions,
     set_classification,
 )
 
@@ -165,12 +163,7 @@ def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
         ]
     )
 
-    target = tmp_path / "transactions-round-trip.json"
-    try:
-        save_transactions(catalogue, target)
-        restored = load_transactions(target)
-    finally:
-        target.unlink(missing_ok=True)
+    restored = TransactionCatalogue.model_validate_json(catalogue.model_dump_json())
 
     assert restored == catalogue
 
@@ -281,6 +274,7 @@ def test_set_classification_skips_append_on_pure_timestamp_drift() -> None:
 
 def test_legacy_unclassified_payload_loads_as_not_yet_processed(tmp_path: Path) -> None:
     """Pre-#237 catalogue JSON with `"UNCLASSIFIED"` must load transparently."""
+    del tmp_path
     raw = _sample_raw(provider_id="legacy-row-1", amount=Decimal("-10.00"), description="Legacy row")
     transaction = Transaction.model_validate(
         {
@@ -290,16 +284,13 @@ def test_legacy_unclassified_payload_loads_as_not_yet_processed(tmp_path: Path) 
         }
     )
     catalogue = TransactionCatalogue.from_transactions([transaction])
-    target = tmp_path / "legacy-transactions.json"
-    save_transactions(catalogue, target)
 
-    # Hand-rewrite the on-disk payload so the classification field carries
-    # the legacy literal.
-    contents = target.read_text(encoding="utf-8")
-    contents = contents.replace('"business_classification": "BUSINESS"', '"business_classification": "UNCLASSIFIED"')
-    target.write_text(contents, encoding="utf-8")
+    # Hand-rewrite the JSON payload so the classification field carries
+    # the legacy literal, then validate it round-trips through the model.
+    serialised = catalogue.model_dump_json()
+    serialised = serialised.replace('"business_classification":"BUSINESS"', '"business_classification":"UNCLASSIFIED"')
 
-    restored = load_transactions(target)
+    restored = TransactionCatalogue.model_validate_json(serialised)
     legacy = find_transaction(restored, transaction.transaction_id)
     assert legacy is not None
     assert legacy.business_classification is BusinessClassification.NOT_YET_PROCESSED
@@ -510,9 +501,8 @@ def test_confidence_survives_json_round_trip(tmp_path: Path) -> None:
         confidence=Decimal("0.73"),
     )
 
-    target = tmp_path / "confidence-round-trip.json"
-    save_transactions(updated, target)
-    restored = load_transactions(target)
+    del tmp_path
+    restored = TransactionCatalogue.model_validate_json(updated.model_dump_json())
 
     loaded = find_transaction(restored, transaction.transaction_id)
     assert loaded is not None

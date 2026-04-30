@@ -26,7 +26,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, Literal
@@ -394,20 +394,18 @@ def _parse_listbox(
     except Exception as exc:
         raise SedeParseError(f"failed to parse declaraciones HTML: {exc}") from exc
 
-    listbox = soup.find(
-        class_=lambda c: c and "z-listbox" in (c if isinstance(c, list) else [c]),  # ty: ignore[invalid-argument-type]
-    )
+    listbox = soup.find(class_=_class_contains("z-listbox"))
     if listbox is None:
         raise SedeParseError("declaraciones response missing .z-listbox container")
 
     items = listbox.find_all(
-        class_=lambda c: c and "z-listitem" in (c if isinstance(c, list) else [c]),
+        class_=_class_contains("z-listitem"),
     )
 
     rows: list[Declaration] = []
     for item in items:
         cells = item.find_all(
-            class_=lambda c: c and "z-listcell" in (c if isinstance(c, list) else [c]),
+            class_=_class_contains("z-listcell"),
         )
         cell_texts = [cell.get_text(" ", strip=True) for cell in cells]
 
@@ -441,6 +439,17 @@ def _parse_listbox(
             )
         )
     return tuple(rows)
+
+
+def _class_contains(token: str) -> Callable[[str | None], bool]:
+    """Return a BeautifulSoup class matcher for a CSS class token."""
+
+    def _matches(value: str | None) -> bool:
+        if value is None:
+            return False
+        return token in value.split()
+
+    return _matches
 
 
 _PRESENTED_AT_RE = re.compile(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,14 @@ import pytest
 from ..auth import CertificateBackend
 from ..deadlines import IVARegime
 from ..i18n import Language
+from ..profile import CCAA
+from ..storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
 from . import (
     SetupAnswers,
     SetupAnswersError,
@@ -27,6 +36,27 @@ from ._verifier import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
 def _answers(tmp_path: Path) -> SetupAnswers:
     cert = tmp_path / "cert.p12"
     cert.write_bytes(b"x")
@@ -40,6 +70,7 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
+        tax_residence_ccaa=CCAA.MADRID,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
         certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
@@ -57,6 +88,7 @@ def test_verifier_happy_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("AEAT_TEST_PW", "something")
+    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
     answers = _answers(tmp_path)
     # Pre-seed the profile JSON so the profile check reports OK.
     from . import write_profile_file
