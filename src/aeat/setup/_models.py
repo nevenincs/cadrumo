@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..auth import CertificateBackend
 from ..deadlines import IVARegime
 from ..i18n import Language, Translatable
+from ..profile import CCAA
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -105,6 +106,7 @@ class SetupAnswers(BaseModel):
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
+    tax_residence_ccaa: CCAA
 
     # ── certificate (NEVER the password value) ───────────────────────────
     certificate_path: Path
