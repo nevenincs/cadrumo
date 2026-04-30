@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...formulas._rulesets.modelo_100._inventario import ValuationMethod
+from ...formulas import ValuationMethod
 from ...logging import get_logger
 from ..errors import InventoryLedgerError, LIFOForbiddenError
 

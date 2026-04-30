@@ -650,8 +650,7 @@ def _resolve_ruleset_for_filing(
     filing_ejercicio: str,
 ):
     """Resolve the ruleset for the filing's (modelo, period). None when absent."""
-    from ...formulas._period import FiscalPeriod, Quarter
-    from ...formulas._registry import get_registry
+    from ...formulas import FiscalPeriod, Quarter, get_registry
     from ...models import ModeloCode
 
     try:
@@ -686,8 +685,7 @@ def _handle_borrador_import(
     """Dispatch the Modelo 100 (Renta) import path (#305 cluster F MVP)."""
     from ...borrador import BorradorParseError, parse_borrador
     from ...borrador._tarifa import validate_tarifa_estatal
-    from ...formulas._rulesets import MODELO_100_SUMMARY_2025
-    from ...formulas._rulesets.modelo_100._ccaa import compute_cuota_autonomica_general
+    from ...formulas import MODELO_100_SUMMARY_2025, compute_cuota_autonomica_general
     from ...profile import require_tax_residence
 
     residence = require_tax_residence()
