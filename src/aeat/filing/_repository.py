@@ -202,6 +202,7 @@ class FilingDraftRepository:
                 yield payload
 
 
+# TODO(#477): remove after 2026-10-27 retention window per restructure ADR Decision 10.
 def migrate_legacy_drafts_to_repository(
     legacy_dir: Path,
     *,
