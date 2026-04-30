@@ -13,7 +13,7 @@ from ._ingest import ingest_dr_spec_path
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 _FIXTURE_DIR = (
-    Path(__file__).resolve().parent.parent.parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs"
+    Path(__file__).resolve().parent.parent.parent.parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs"
 )
 
 

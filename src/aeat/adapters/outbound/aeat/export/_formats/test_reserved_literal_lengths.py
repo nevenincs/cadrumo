@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 _DR_SPEC_DIR = (
-    Path(__file__).resolve().parent.parent.parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs"
+    Path(__file__).resolve().parent.parent.parent.parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs"
 )
 
 
