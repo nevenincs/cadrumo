@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from . import CCAA, KentTaxResidence, ResidenceChange
+from . import CCAA, ForalRegimeError, KentTaxResidence, ResidenceChange, parse_tax_region
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
@@ -41,3 +41,14 @@ def test_residence_change_validates_closed_ccaa() -> None:
     )
     assert change.to_ccaa is CCAA.ANDALUCIA
     assert ResidenceChange.model_validate_json(change.model_dump_json()) == change
+
+
+def test_parse_tax_region_accepts_accented_display_names() -> None:
+    assert parse_tax_region("Aragón") is CCAA.ARAGON
+    assert parse_tax_region("Cataluña") is CCAA.CATALUNA
+    assert parse_tax_region("Castilla y León") is CCAA.CASTILLA_Y_LEON
+
+
+def test_parse_tax_region_refuses_accented_foral_alias() -> None:
+    with pytest.raises(ForalRegimeError):
+        parse_tax_region("País Vasco")
