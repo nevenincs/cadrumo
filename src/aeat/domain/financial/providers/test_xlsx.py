@@ -10,7 +10,7 @@ from .. import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
-_FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
+_FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial"
 
 
 def test_xlsx_provider_ingests_header_detected_worksheet() -> None:

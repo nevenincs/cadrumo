@@ -28,7 +28,7 @@ pytestmark = [
 ]
 
 
-_CORPUS_ROOT = Path(__file__).resolve().parents[5] / "scratch" / "recon-corpus" / "20260424T184450Z"
+_CORPUS_ROOT = Path(__file__).resolve().parents[7] / "scratch" / "recon-corpus" / "20260424T184450Z"
 
 
 def _justificante(ejercicio: str) -> Path:

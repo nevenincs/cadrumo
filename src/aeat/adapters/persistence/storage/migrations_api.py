@@ -18,7 +18,7 @@ from .errors import MigrationError
 
 _log = get_logger(__name__)
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = Path(__file__).resolve().parents[5]
 _ALEMBIC_INI = _REPO_ROOT / "alembic.ini"
 
 

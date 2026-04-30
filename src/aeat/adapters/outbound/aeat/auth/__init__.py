@@ -336,7 +336,7 @@ def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> B
             can be found via any method.
     """
     scopes = scopes or SCOPES
-    inspection = inspect_google_auth(settings, project_root=Path(__file__).resolve().parents[3])
+    inspection = inspect_google_auth(settings, project_root=Path(__file__).resolve().parents[6])
 
     if inspection.active_path == GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION:
         sa_path = inspection.service_account_existing_path

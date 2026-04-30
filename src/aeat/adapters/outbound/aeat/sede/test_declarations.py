@@ -22,7 +22,7 @@ from ._errors import SedeParseError
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
-_FIXTURE_ROOT = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "aeat-sede"
+_FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"
 
 
 class TestParseListbox:

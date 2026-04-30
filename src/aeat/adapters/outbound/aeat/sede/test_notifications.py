@@ -19,7 +19,7 @@ from ._notifications import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
-_FIXTURE_ROOT = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "aeat-sede"
+_FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"
 _SUMMARY_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/ResumenInteresados"
 _QUERY_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
 

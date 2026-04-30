@@ -17,7 +17,7 @@ from ._parse import parse_expediente_detail, parse_resumen_tree
 pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
 
 
-_FIXTURE_ROOT = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "aeat-sede"
+_FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"
 _SEDE_BASE = "https://www6.agenciatributaria.gob.es"
 
 

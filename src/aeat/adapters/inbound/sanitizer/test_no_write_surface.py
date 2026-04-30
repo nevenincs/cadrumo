@@ -60,8 +60,8 @@ _WHITELIST: frozenset[str] = frozenset(
 def _project_root() -> Path:
     """Returns the repository root from this test file's location."""
     here = Path(__file__).resolve()
-    # src/aeat/sanitizer/test_no_write_surface.py → up 4 levels
-    return here.parents[3]
+    # src/aeat/adapters/inbound/sanitizer/test_no_write_surface.py → up 6 levels
+    return here.parents[5]
 
 
 def _public_python_files() -> list[Path]:
@@ -72,7 +72,7 @@ def _public_python_files() -> list[Path]:
     """
     root = _project_root()
     candidates: list[Path] = []
-    for sub in ("src/aeat/sanitizer", "src/aeat/cli/sanitize"):
+    for sub in ("src/aeat/adapters/inbound/sanitizer", "src/aeat/entrypoints/cli/sanitize"):
         for path in (root / sub).rglob("*.py"):
             name = path.name
             if name.startswith("test_") or name.startswith("_test_"):
