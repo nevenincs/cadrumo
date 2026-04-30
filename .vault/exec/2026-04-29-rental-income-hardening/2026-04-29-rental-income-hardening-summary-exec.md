@@ -167,16 +167,50 @@ Pre-existing tests preserved:
 - The CLI surface is exercised through Typer's `CliRunner`; no
   visual smoke test in a real terminal.
 
-## Pre-existing test failures on the branch (NOT introduced by #454)
+## Branch-issue absorption (scope expansion 2026-04-30)
 
-Inherited from the merged `feature/216-bank-import-persistence`
-(WIP, deliberately merged per user direction). Reproduce on a
-clean checkout of this branch but NOT on `origin/main`:
+The user expanded the PR scope to absorb every locally-audited
+issue and every gemini-code-assist finding on PR #462. All
+twelve items are now fixed:
 
-- 9 `ty` type-check errors in `browser/test_session.py`,
-  `schema/test_cache.py`, `schema/test_models.py`,
-  `sede/_declarations.py`.
-- 1 workflow test (`test_next_json_round_trips`): code persists
-  `{run_id}.envelope.json` but test expects `{run_id}.json`.
+### #216 carry-over fixes (10 items)
 
-These are upstream of #454 and out of scope for this PR.
+- 9 `ty` errors cleared without `type: ignore` — split
+  assertion + dict-cast in `browser/test_session.py`; switch
+  to `RangeRule.model_validate(...)` at three sites in
+  `schema/test_cache.py` + `schema/test_models.py`; extract
+  typed `_has_class` helper in `sede/_declarations.py`.
+- 1 workflow test (`test_next_json_round_trips`) aligned with
+  the new `{run_id}.envelope.json` persistence suffix.
+
+### gemini-code-assist findings on PR #462 (2 items)
+
+- CRITICAL `cli/financial/txs.py::classify_llm_cmd` — replace
+  the per-iteration `repo.save` with a single atomic save at
+  the end of the loop (mirrors the canonical financial-
+  subpackage repository discipline). A `dirty` flag prevents
+  writing when every iteration was a no-op.
+- MEDIUM `cli/financial/invoices.py::reconcile_cmd` — replace
+  per-suggestion `link_transaction_bidirectional` with
+  in-memory `link_transaction` + `link_invoice` followed by a
+  single per-catalogue `repo.save` at the end. Per-suggestion
+  errors still surface; the final save is atomic (both
+  catalogues written or neither, with a non-zero exit on
+  failure).
+
+### Final four-gate sweep (post-fix)
+
+- `just lint` — clean.
+- `just typecheck` — clean (was 9 errors).
+- `just test` — 4 862 passed, 0 failures (was 9 failures).
+- `just hooks` — clean.
+
+### Commit log for scope expansion
+
+- `dd8f49c` — `fix(typecheck)`: clear 9 ty errors carried over
+  from #216 merge.
+- `e23c951` — `fix(workflow)`: align
+  `test_next_json_round_trips` with envelope-suffixed
+  persistence.
+- `0cfdc97` — `fix(cli/financial)`: adopt atomic-save pattern in
+  classify-llm + reconcile (gemini findings).
