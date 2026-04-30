@@ -240,7 +240,7 @@ class TestEnvFileFingerprint:
     ) -> None:
         import hashlib
 
-        from ... import config as config_mod
+        from .. import config as config_mod
         from . import _fingerprint as fp_mod
         from ._fingerprint import compute_corpus_sha256 as _compute_corpus_sha256
 
