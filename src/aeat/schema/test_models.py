@@ -179,7 +179,7 @@ class TestValidationRules:
             RangeRule()  # type: ignore[call-arg]
 
     def test_range_rule_alias_round_trip(self) -> None:
-        rule: ValidationRule = RangeRule(min_=Decimal("0"), max_=Decimal("100"))
+        rule: ValidationRule = RangeRule(min_=Decimal("0"), max_=Decimal("100"))  # ty: ignore[unknown-argument]
         adapter = TypeAdapter(ValidationRule)
         dumped = adapter.dump_json(rule, by_alias=True)
         assert b'"min"' in dumped
@@ -189,7 +189,7 @@ class TestValidationRules:
 
     def test_range_rule_min_exceeds_max_rejected(self) -> None:
         with pytest.raises(ValidationError):
-            RangeRule(min_=Decimal("5"), max_=Decimal("1"))
+            RangeRule(min_=Decimal("5"), max_=Decimal("1"))  # ty: ignore[unknown-argument]
 
     def test_regex_rule_rejects_bad_pattern(self) -> None:
         with pytest.raises(ValidationError):

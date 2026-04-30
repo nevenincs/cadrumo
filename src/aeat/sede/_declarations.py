@@ -395,7 +395,7 @@ def _parse_listbox(
         raise SedeParseError(f"failed to parse declaraciones HTML: {exc}") from exc
 
     listbox = soup.find(
-        class_=lambda c: c and "z-listbox" in (c if isinstance(c, list) else [c]),
+        class_=lambda c: c and "z-listbox" in (c if isinstance(c, list) else [c]),  # ty: ignore[invalid-argument-type]
     )
     if listbox is None:
         raise SedeParseError("declaraciones response missing .z-listbox container")

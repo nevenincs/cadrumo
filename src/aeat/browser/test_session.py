@@ -270,8 +270,9 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     assert "client_certificates" in kwargs
     cc = kwargs["client_certificates"]
     assert isinstance(cc, list) and len(cc) == 1
-    assert cc[0]["pfxPath"] == str(bundle_path)
-    assert cc[0]["passphrase"] == "pw"  # noqa: S105 — test fixture
+    cert_entry = cast(dict[str, str], cc[0])
+    assert cert_entry["pfxPath"] == str(bundle_path)
+    assert cert_entry["passphrase"] == "pw"  # noqa: S105 — test fixture
     marker = getattr(context, CERTIFICATE_THUMBPRINT_MARKER, None)
     assert marker == loaded.sha256_thumbprint
 
