@@ -50,7 +50,7 @@ class TestWorkflowCli:
         payload = _unwrap_result(result.output)
         assert payload["final_stage"] == "DONE"
         run_id = payload["run_id"]
-        persisted = _isolated_runs_dir / f"{run_id}.json"
+        persisted = _isolated_runs_dir / f"{run_id}.envelope.json"
         assert persisted.exists()
 
     def test_run_for_period(self, _isolated_runs_dir: Path) -> None:
