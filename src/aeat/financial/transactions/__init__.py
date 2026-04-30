@@ -38,6 +38,7 @@ from ._llm import (
 )
 from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
+from ._repository import ImportSummary, TransactionCatalogueRepository
 from ._service import (
     find_transaction,
     link_invoice,
@@ -53,6 +54,7 @@ __all__ = [
     "CategoryChoice",
     "ClassificationChoice",
     "ClassificationHistoryEntry",
+    "ImportSummary",
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
@@ -64,6 +66,7 @@ __all__ = [
     "Transaction",
     "TransactionCatalogue",
     "TransactionCatalogueError",
+    "TransactionCatalogueRepository",
     "TransactionDirection",
     "TransactionError",
     "TransactionNotFoundError",
