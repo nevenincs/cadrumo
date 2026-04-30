@@ -1,6 +1,6 @@
 """BOE-Orden extractor backend for :mod:`aeat.schema`.
 
-Implements the line-based :class:`~aeat.schema.Extractor` for the
+Implements the line-based extractor for the
 PDF form of an AEAT *Orden ministerial* published in the Boletín
 Oficial del Estado. The extractor uses :mod:`pdfplumber` to read
 text, skips every page up to and including the annex heading

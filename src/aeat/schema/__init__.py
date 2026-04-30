@@ -40,7 +40,6 @@ from ._errors import (
     SchemaExtractionError,
     SchemaValidationError,
 )
-from ._extractor import Extractor
 from ._fetch import (
     BOE_ORDEN_SOURCES,
     BoeOrdenSource,
@@ -78,7 +77,6 @@ __all__ = (
     "CompareOp",
     "CrossCasillaRule",
     "EnumRule",
-    "Extractor",
     "FetchedSchemaSource",
     "FormulaNode",
     "LiteralFormula",
