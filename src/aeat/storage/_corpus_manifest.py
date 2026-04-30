@@ -341,7 +341,12 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
     try:
         with handle:
             handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
         os.replace(tmp_path, resolved)
+        from ._lock import fsync_parent_dir
+
+        fsync_parent_dir(resolved)
     except OSError:
         tmp_path.unlink(missing_ok=True)
         raise

@@ -269,11 +269,10 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     kwargs: dict[str, object] = cast(StubContext, context).kwargs
     assert "client_certificates" in kwargs
     cc = kwargs["client_certificates"]
-    assert isinstance(cc, list)
-    assert len(cc) == 1
-    entry = cast(dict[str, object], cc[0])
-    assert entry["pfxPath"] == str(bundle_path)
-    assert entry["passphrase"] == "pw"  # noqa: S105 — test fixture
+    assert isinstance(cc, list) and len(cc) == 1
+    client_certificates = cast(list[dict[str, str]], cc)
+    assert client_certificates[0]["pfxPath"] == str(bundle_path)
+    assert client_certificates[0]["passphrase"] == "pw"  # noqa: S105 — test fixture
     marker = getattr(context, CERTIFICATE_THUMBPRINT_MARKER, None)
     assert marker == loaded.sha256_thumbprint
 

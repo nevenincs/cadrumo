@@ -22,6 +22,7 @@ from ..auth import CertificateBackend
 from ..deadlines import IVARegime
 from ..env_io import read_env_file
 from ..i18n import Language
+from ..profile import CCAA
 from ..storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
@@ -76,6 +77,7 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         does_intracomunitario=True,
         third_party_transactions_above_347_threshold=True,
         bienes_extranjero_above_threshold=False,
+        tax_residence_ccaa=CCAA.MADRID,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
         certificate_friendly_name="primary",
@@ -175,15 +177,24 @@ def test_write_env_file_rewrites_in_place_on_rerun(tmp_path: Path) -> None:
 
 
 def test_write_profile_file_emits_valid_autonomo_profile(tmp_path: Path) -> None:
+    old_tax_path = os.environ.get("AEAT_TAX_RESIDENCE_PROFILE_PATH")
+    os.environ["AEAT_TAX_RESIDENCE_PROFILE_PATH"] = str(tmp_path / "tax-residence.json")
     answers = _answers(tmp_path)
     target = tmp_path / "profile.json"
-    write_profile_file(answers, target)
+    try:
+        write_profile_file(answers, target)
+    finally:
+        if old_tax_path is None:
+            os.environ.pop("AEAT_TAX_RESIDENCE_PROFILE_PATH", None)
+        else:
+            os.environ["AEAT_TAX_RESIDENCE_PROFILE_PATH"] = old_tax_path
 
     profile = load_profile_envelope(target)
     assert profile.tax_id == "87654321X"
     assert profile.iva_regime is IVARegime.SIMPLIFICADO
     assert profile.pays_professionals_with_retencion is True
     assert profile.third_party_transactions_above_347_threshold is True
+    assert (tmp_path / "tax-residence.json").exists()
 
 
 def test_write_profile_file_writes_ciphertext_envelope(tmp_path: Path) -> None:
@@ -198,6 +209,43 @@ def test_write_profile_file_writes_ciphertext_envelope(tmp_path: Path) -> None:
     assert '"encryption":' in written
     # The NIF canary must not appear in plaintext.
     assert "87654321X" not in written
+
+
+def test_write_profile_file_lock_target_aligns_with_rotation(
+    tmp_path: Path,
+) -> None:
+    # Wave-25 H-2 regression: the setup-profile writer must acquire
+    # the writer-canonical sidecar lock (target.with_suffix('.lock'))
+    # so concurrent rotate-master-key contends on the same OS-level
+    # lock-byte target. With ``aeat_default_profile_path`` set, the
+    # rotation plan emits a single-file entry with
+    # ``target_filename`` set, and ``RotationPlanEntry.lock_path_for``
+    # returns ``envelope_path.with_suffix('.lock')`` for that branch.
+    from ..storage import LockAcquisitionError, RotationPlanEntry, exclusive_file_lock
+
+    answers = _answers(tmp_path)
+    target = tmp_path / "profile.json"
+    # Mint the file once so the lock target's directory exists.
+    write_profile_file(answers, target)
+
+    rotation_entry = RotationPlanEntry(
+        store_dir=target.parent,
+        hkdf_context=b"aeat.setup.profile.v1",
+        target_filename=target.name,
+    )
+    rotation_lock_target = rotation_entry.lock_path_for(target)
+    expected_writer_lock_target = target.with_suffix(".lock")
+    assert rotation_lock_target == expected_writer_lock_target
+
+    # End-to-end contention: hold the writer-canonical sidecar; the
+    # rotation acquire-with-timeout=0 must fail. Proves both paths
+    # land on the same lock-byte target.
+    with (
+        exclusive_file_lock(expected_writer_lock_target),
+        pytest.raises(LockAcquisitionError),
+        exclusive_file_lock(rotation_lock_target, timeout=0.0),
+    ):
+        pass
 
 
 def test_owned_env_keys_are_stable_and_unique() -> None:

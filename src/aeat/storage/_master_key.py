@@ -64,10 +64,12 @@ if TYPE_CHECKING:
 
 from ..logging import get_logger
 from ._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from ._lock import exclusive_file_lock
+from ._lock import exclusive_file_lock, fsync_parent_dir
 from .errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
+    MasterKeyKeychainLockedError,
+    MasterKeyMaterialMissingError,
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
     SecretStoreError,
@@ -221,6 +223,10 @@ def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
         finally:
             os.close(fd)
         os.replace(tmp_path, target)
+        # Flush the parent directory entry to disk on POSIX so the
+        # rename is durable across power loss (file fsync does not
+        # imply directory fsync on ext4 / xfs / etc.).
+        fsync_parent_dir(target)
     except BaseException:
         with contextlib.suppress(OSError):
             os.unlink(tmp_path)
@@ -279,12 +285,22 @@ PassphraseCallback = Callable[[], str]
 def _default_passphrase_callback() -> str:
     """Resolve the operator's passphrase from env or stdin.
 
-    When the env-var path is taken, the value is consumed (popped) from
-    ``os.environ`` after a successful read so child processes spawned
-    later in the lifecycle do NOT inherit the passphrase. The in-memory
-    cache in :class:`FileFallbackMasterKeyProvider` is sufficient for
-    the parent process; subprocesses that need the passphrase must
-    re-supply it explicitly.
+    The env var is read but NOT popped from ``os.environ``. Earlier
+    revisions popped on first read with the rationale that child
+    processes spawned later would not inherit the value, but the
+    in-process cache is reset under several legitimate flows
+    (``aeat security recover`` calls ``_reset_for_tests`` then
+    ``_resolve_passphrase`` again; long-running test sessions cycle
+    the cache between sub-tests). After the pop, those second reads
+    block on ``getpass.getpass`` in non-TTY contexts (CI, batch
+    jobs, subprocess pipes), surfacing as opaque
+    ``MasterKeyPassphraseMismatchError`` once the cached operator
+    cancels and the substrate re-prompts. Keeping the env var lets
+    every cache-miss read resolve consistently; subprocesses that
+    inherit the parent's env always had access to the passphrase
+    anyway (env-var inheritance is a cooperative-isolation property,
+    not a confidentiality boundary the substrate can defend
+    on its own).
 
     Trailing CRLF is stripped (some shells append it via
     ``$(cat .secret)``), but interior whitespace is preserved (some
@@ -298,8 +314,6 @@ def _default_passphrase_callback() -> str:
             raise SecretStoreError(
                 f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
             )
-        # Pop after read so child processes do not inherit the value.
-        os.environ.pop(PASSPHRASE_ENV_VAR, None)
         return normalized
     return getpass.getpass(prompt="AEAT secret-store passphrase: ")
 
@@ -387,7 +401,20 @@ class KeyringMasterKeyProvider:
             try:
                 stored = keyring.get_password(self._service, self._username)
             except KeyringError as exc:
-                raise KeyringUnavailableError(f"OS keychain refused get_password: {exc}") from exc
+                # The probe at line above already excluded the no-op
+                # backends; reaching here means the BACKEND itself is
+                # usable but the keychain entry is currently
+                # inaccessible (e.g. macOS Keychain locked, Windows
+                # Hello prompt cancelled, Secret Service not unlocked).
+                # Distinct from KeyringUnavailableError (no usable
+                # backend at all) so the operator-facing message can
+                # point at "unlock the keychain and retry" instead of
+                # "switch backend".
+                raise MasterKeyKeychainLockedError(
+                    f"OS keychain refused get_password: {exc}; "
+                    "unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
+                    "or set AEAT_SECRET_STORE_BACKEND=file to use the passphrase backend.",
+                ) from exc
             except Exception as exc:  # pragma: no cover - defensive
                 raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
             if stored is not None:
@@ -510,8 +537,31 @@ class FileFallbackMasterKeyProvider:
         # the artefacts the first caller wrote and route to unwrap.
         lock_target = self._store_dir / "master.lock"
         with exclusive_file_lock(lock_target):
-            if self._master_key_path.exists() and self._kdf_params_path.exists() and self._salt_path.exists():
+            artefacts = (self._master_key_path, self._kdf_params_path, self._salt_path)
+            present = [p for p in artefacts if p.exists()]
+            if len(present) == len(artefacts):
                 key = self._unwrap_existing(passphrase)
+            elif present:
+                # Torn install: a previous mint or recovery crashed
+                # between the per-artefact atomic writes. Refuse to
+                # silently re-mint (which would overwrite the
+                # half-written ``master.key`` and destroy any record
+                # encrypted under the recovered key). The operator
+                # must finish recovery (``aeat security recover
+                # --recovery-key "<24 words>"``) or, if the substrate
+                # was never used and no records exist yet, run
+                # ``aeat security provision --force`` to start fresh.
+                missing = [p.name for p in artefacts if not p.exists()]
+                raise MasterKeyMaterialMissingError(
+                    f"file-fallback at {self._store_dir} is in a torn state — "
+                    f"present={[p.name for p in present]} missing={missing}. "
+                    "A previous mint or recovery crashed between writes. Run "
+                    '`aeat security recover --recovery-key "<24 words>"` to '
+                    "finish recovery, or `aeat security provision --force` to "
+                    "wipe and re-provision (only if no records were ever "
+                    "written under the prior key — that operation is "
+                    "irreversible).",
+                )
             else:
                 key = self._mint_new(passphrase)
         with FileFallbackMasterKeyProvider._lock:
@@ -589,15 +639,22 @@ class FileFallbackMasterKeyProvider:
         # and 0o600 on every file. icacls hardening is out of scope
         # here (the broader session-state pattern handles that).
         self._restrict_dir_permissions(self._store_dir)
-        self._write_bytes_secure(
-            self._kdf_params_path,
-            params.model_dump_json().encode("utf-8"),
-        )
-        self._write_bytes_secure(
+        # Use the durable atomic-write helper so a power-loss between
+        # the three artefact writes does not leave a torn install
+        # (truncated master.key under fresh master.kdf, etc.).
+        # Same write order as ``complete_recovery``: master.key first
+        # (under the new KEK), then master.kdf (the parameters that
+        # derive the KEK), then salt (informational — the canonical
+        # salt also lives in master.kdf.salt_b64).
+        atomic_write_secure_bytes(
             self._master_key_path,
             base64.b64encode(blob.to_wire()),
         )
-        self._write_bytes_secure(self._salt_path, salt)
+        atomic_write_secure_bytes(
+            self._kdf_params_path,
+            params.model_dump_json().encode("utf-8"),
+        )
+        atomic_write_secure_bytes(self._salt_path, salt)
         _log.info("master key minted in encrypted file at %s", self._master_key_path)
         return master_key
 
@@ -644,16 +701,37 @@ class FileFallbackMasterKeyProvider:
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
         blob = encrypt_record(master_key, key=kek, associated_data=b"aeat.master-key.v1")
+        # Serialise the rewrite under the same on-disk lock that
+        # ``get_master_key`` acquires for first-time mint / unwrap
+        # decisions. Without this, a concurrent ``get_master_key`` in
+        # another process could read a half-rewritten triple
+        # (e.g. fresh ``master.kdf`` + stale ``master.key``) and
+        # surface as ``MasterKeyPassphraseMismatchError`` even though
+        # the operator's passphrase is correct.
+        self._store_dir.mkdir(parents=True, exist_ok=True)
         self._restrict_dir_permissions(self._store_dir)
-        atomic_write_secure_bytes(
-            self._kdf_params_path,
-            params.model_dump_json().encode("utf-8"),
-        )
-        atomic_write_secure_bytes(
-            self._master_key_path,
-            base64.b64encode(blob.to_wire()),
-        )
-        atomic_write_secure_bytes(self._salt_path, salt)
+        with exclusive_file_lock(self._store_dir / "master.lock"):
+            # Write order: ``master.key`` first (under the new KEK),
+            # then ``master.kdf`` (the parameters that derive the new
+            # KEK), then ``salt`` (informational — the canonical salt
+            # also lives in ``master.kdf.salt_b64``). A crash between
+            # the first and second write leaves a state where the new
+            # ``master.key`` cannot decrypt under the OLD KDF — and
+            # the OLD ``master.key`` content has already been
+            # overwritten — but the recovery-key wrapping at
+            # ``master.recovery.key`` is untouched, so the operator
+            # can re-run ``aeat security recover`` to complete the
+            # recovery. Compare with ``migrate_master_key_kdf`` which
+            # follows the same write-order discipline.
+            atomic_write_secure_bytes(
+                self._master_key_path,
+                base64.b64encode(blob.to_wire()),
+            )
+            atomic_write_secure_bytes(
+                self._kdf_params_path,
+                params.model_dump_json().encode("utf-8"),
+            )
+            atomic_write_secure_bytes(self._salt_path, salt)
         with FileFallbackMasterKeyProvider._lock:
             FileFallbackMasterKeyProvider._cached_master_key[self._store_dir.resolve()] = bytearray(master_key)
         _log.info(
@@ -931,11 +1009,51 @@ def get_master_key_provider(
         keyring_provider.get_master_key()
         return keyring_provider
     except KeyringUnavailableError as exc:
-        _log.info("OS keychain unavailable (%s); falling back to encrypted-file backend", exc)
+        # Backend itself is unusable (no-op fail/null backend, package
+        # missing). Falling back to file is safe: there is no
+        # keychain-backed master key that file-fallback could diverge
+        # from.
+        _log.info("OS keychain backend unavailable (%s); falling back to encrypted-file backend", exc)
         return FileFallbackMasterKeyProvider(
             store_dir=store_dir,
             passphrase_callback=passphrase_callback,
         )
+    except MasterKeyKeychainLockedError as exc:
+        # Backend works, but the entry is currently inaccessible
+        # (Touch ID / Hello prompt cancelled, libsecret locked, etc.).
+        # If file-fallback artefacts already exist, the operator has
+        # previously chosen the file backend — route through it
+        # safely (no divergence; the operator's existing file-fallback
+        # state is the canonical master key for the next call). If
+        # NO file-fallback artefacts exist, RAISE the locked error
+        # rather than minting a fresh K2 that would diverge from the
+        # K1 sitting in the locked keychain. The operator must either
+        # unlock the keychain or set ``AEAT_SECRET_STORE_BACKEND=file``
+        # explicitly to acknowledge the file-only path.
+        file_fallback_exists = (
+            (store_dir / "master.key").exists()
+            and (store_dir / "master.kdf").exists()
+            and (store_dir / "salt").exists()
+        )
+        if file_fallback_exists:
+            _log.info(
+                "OS keychain locked (%s); routing through pre-existing file-fallback at %s",
+                exc,
+                store_dir,
+            )
+            return FileFallbackMasterKeyProvider(
+                store_dir=store_dir,
+                passphrase_callback=passphrase_callback,
+            )
+        raise MasterKeyKeychainLockedError(
+            f"OS keychain is locked AND no file-fallback artefacts exist at {store_dir}. "
+            "auto-mode refuses to mint a fresh file-fallback master key while the keychain "
+            "may already hold a different one — the resulting two master keys would render "
+            "any record encrypted under either key unreadable when the other backend is "
+            "active. Either unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
+            "or set AEAT_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
+            "and provision a file-fallback master key with `aeat security provision`.",
+        ) from exc
 
 
 def migrate_master_key_kdf(
@@ -983,100 +1101,134 @@ def migrate_master_key_kdf(
                 f"required artefact missing for KDF migration: {required}",
             )
 
-    raw_text = kdf_params_path.read_text(encoding="utf-8")
-    try:
-        preview = json.loads(raw_text)
-    except json.JSONDecodeError as exc:
-        raise MasterKeyUnavailableError(
-            f"failed to parse master.kdf at {kdf_params_path}: {exc}",
-        ) from exc
-    if not isinstance(preview, dict):
-        raise MasterKeyUnavailableError(
-            f"master.kdf at {kdf_params_path} must be a JSON object, got {type(preview).__name__}",
+    # Acquire the same on-disk lock that ``get_master_key`` and
+    # ``complete_recovery`` hold during their multi-write sequences.
+    # Without this, a concurrent ``get_master_key`` reader can
+    # observe a torn state mid-migration (master.key rewritten under
+    # the new KEK but master.kdf still at v1) and surface a spurious
+    # ``MasterKeyPassphraseMismatchError`` despite a correct
+    # passphrase. Re-check the on-disk version inside the lock so
+    # two concurrent migrators serialise cleanly — the second sees
+    # v2 and returns ``skipped=1`` without rewriting anything.
+    with exclusive_file_lock(store_dir / "master.lock"):
+        raw_text = kdf_params_path.read_text(encoding="utf-8")
+        try:
+            preview = json.loads(raw_text)
+        except json.JSONDecodeError as exc:
+            raise MasterKeyUnavailableError(
+                f"failed to parse master.kdf at {kdf_params_path}: {exc}",
+            ) from exc
+        if not isinstance(preview, dict):
+            raise MasterKeyUnavailableError(
+                f"master.kdf at {kdf_params_path} must be a JSON object, got {type(preview).__name__}",
+            )
+        on_disk_version = preview.get("version")
+        if on_disk_version == _KDF_PARAMS_VERSION:
+            return MigrationResult(migrated=0, skipped=1, store_dir=store_dir)
+        if on_disk_version != _LEGACY_KDF_PARAMS_VERSION:
+            raise MasterKeyUnavailableError(
+                f"master.kdf at {kdf_params_path} is version {on_disk_version!r}; "
+                f"the migration helper only handles version {_LEGACY_KDF_PARAMS_VERSION} -> "
+                f"{_KDF_PARAMS_VERSION}.",
+            )
+
+        try:
+            legacy_params = _LegacyKdfParameters.model_validate_json(raw_text)
+        except Exception as exc:
+            raise MasterKeyUnavailableError(
+                f"failed to parse legacy master.kdf at {kdf_params_path}: {exc}",
+            ) from exc
+        try:
+            salt = _b64decode(legacy_params.salt_b64)
+        except (ValueError, binascii.Error) as exc:
+            raise MasterKeyUnavailableError("legacy KDF parameters carry malformed salt.") from exc
+
+        legacy_kek = _derive_legacy_scrypt_kek(passphrase, salt, legacy_params)
+        try:
+            wire = base64.b64decode(master_key_path.read_bytes(), validate=True)
+            blob = EncryptedBlob.from_wire(wire)
+        except Exception as exc:
+            raise MasterKeyUnavailableError(
+                f"failed to read wrapped master key at {master_key_path}: {exc}",
+            ) from exc
+
+        new_params = _KdfParameters(
+            memory_cost=_ARGON2_MEMORY_COST_KIB,
+            time_cost=_ARGON2_TIME_COST,
+            parallelism=_ARGON2_PARALLELISM,
+            salt_b64=_b64encode(salt),
         )
-    on_disk_version = preview.get("version")
-    if on_disk_version == _KDF_PARAMS_VERSION:
-        return MigrationResult(migrated=0, skipped=1, store_dir=store_dir)
-    if on_disk_version != _LEGACY_KDF_PARAMS_VERSION:
-        raise MasterKeyUnavailableError(
-            f"master.kdf at {kdf_params_path} is version {on_disk_version!r}; "
-            f"the migration helper only handles version {_LEGACY_KDF_PARAMS_VERSION} -> "
-            f"{_KDF_PARAMS_VERSION}.",
-        )
+        new_kek = FileFallbackMasterKeyProvider._derive_kek_with_params(passphrase, salt, new_params)
 
-    try:
-        legacy_params = _LegacyKdfParameters.model_validate_json(raw_text)
-    except Exception as exc:
-        raise MasterKeyUnavailableError(
-            f"failed to parse legacy master.kdf at {kdf_params_path}: {exc}",
-        ) from exc
-    try:
-        salt = _b64decode(legacy_params.salt_b64)
-    except (ValueError, binascii.Error) as exc:
-        raise MasterKeyUnavailableError("legacy KDF parameters carry malformed salt.") from exc
+        # Recovery for the partial-migration window: a previous run may
+        # have rewritten master.key under the new Argon2id KEK but crashed
+        # before flipping master.kdf to v2. Try the new KEK first; if it
+        # succeeds, master.key is already migrated and we only need to
+        # write master.kdf to complete the transition.
+        #
+        # Use ``try ... else`` to isolate the decrypt probe from the
+        # subsequent atomic write. An I/O failure during the
+        # ``master.kdf`` write (disk full / permission denied / fs read-
+        # only) must propagate cleanly rather than fall through to the
+        # legacy-decrypt path — falling through would surface the I/O
+        # failure as the misleading "passphrase wrong / file tampered"
+        # error message that the legacy branch raises. Issue #469
+        # gemini-review HIGH on PR #466.
+        master_key: bytes
+        try:
+            master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")
+        except Exception:
+            # Not a partial-migration state. Fall through to the
+            # normal legacy-unwrap → re-wrap path. The next try-block
+            # performs the legacy decrypt and surfaces a typed error
+            # if that fails too. Sentinel value for the loop —
+            # immediately overwritten in the legacy-decrypt branch
+            # below.
+            master_key = b""
+        else:
+            _log.info(
+                "master.key at %s already wrapped under Argon2id KEK; "
+                "completing partial migration by rewriting master.kdf only",
+                master_key_path,
+            )
+            # master.key is already v2; just flip master.kdf to v2.
+            # Use atomic_write_secure_bytes so a crash mid-write
+            # leaves the on-disk master.kdf intact (old or new),
+            # never truncated. Any OSError from this write
+            # propagates — it is NOT a passphrase mismatch.
+            atomic_write_secure_bytes(
+                kdf_params_path,
+                new_params.model_dump_json().encode("utf-8"),
+            )
+            _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
+            return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
 
-    legacy_kek = _derive_legacy_scrypt_kek(passphrase, salt, legacy_params)
-    try:
-        wire = base64.b64decode(master_key_path.read_bytes(), validate=True)
-        blob = EncryptedBlob.from_wire(wire)
-    except Exception as exc:
-        raise MasterKeyUnavailableError(
-            f"failed to read wrapped master key at {master_key_path}: {exc}",
-        ) from exc
+        try:
+            master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")
+        except Exception as exc:
+            raise MasterKeyUnavailableError(
+                "failed to decrypt master key under legacy scrypt KDF; passphrase may be wrong "
+                "or the file may be tampered with. The v1 store has not been modified.",
+            ) from exc
 
-    new_params = _KdfParameters(
-        memory_cost=_ARGON2_MEMORY_COST_KIB,
-        time_cost=_ARGON2_TIME_COST,
-        parallelism=_ARGON2_PARALLELISM,
-        salt_b64=_b64encode(salt),
-    )
-    new_kek = FileFallbackMasterKeyProvider._derive_kek_with_params(passphrase, salt, new_params)
-
-    # Recovery for the partial-migration window: a previous run may
-    # have rewritten master.key under the new Argon2id KEK but crashed
-    # before flipping master.kdf to v2. Try the new KEK first; if it
-    # succeeds, master.key is already migrated and we only need to
-    # write master.kdf to complete the transition.
-    master_key: bytes
-    try:
-        master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")
-        _log.info(
-            "master.key at %s already wrapped under Argon2id KEK; "
-            "completing partial migration by rewriting master.kdf only",
+        new_blob = encrypt_record(master_key, key=new_kek, associated_data=b"aeat.master-key.v1")
+        # Write order: master.key first (so a crash leaves a
+        # recoverable state — see the partial-migration recovery
+        # branch above), THEN master.kdf (the v2 declaration is the
+        # very last on-disk change). Use ``atomic_write_secure_bytes``
+        # for both so a crash between the file open and the write
+        # leaves either the old or new file intact — the old
+        # ``_write_bytes_secure`` opened with ``O_WRONLY|O_CREAT|O_TRUNC``
+        # which truncates the existing inode in-place, so a power
+        # loss between the truncate and the write left ``master.key``
+        # zero-length and unrecoverable from the v1 path.
+        atomic_write_secure_bytes(
             master_key_path,
+            base64.b64encode(new_blob.to_wire()),
         )
-        # master.key is already v2; just flip master.kdf to v2.
-        FileFallbackMasterKeyProvider._write_bytes_secure(
+        atomic_write_secure_bytes(
             kdf_params_path,
             new_params.model_dump_json().encode("utf-8"),
         )
         _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
         return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
-    except Exception:  # noqa: S110 - intentional fallthrough; not a partial-migration state
-        # Not a partial-migration state. Fall through to the normal
-        # legacy-unwrap → re-wrap path. The next try-block performs the
-        # legacy decrypt and surfaces a typed error if that fails too.
-        pass
-
-    try:
-        master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")
-    except Exception as exc:
-        raise MasterKeyUnavailableError(
-            "failed to decrypt master key under legacy scrypt KDF; passphrase may be wrong "
-            "or the file may be tampered with. The v1 store has not been modified.",
-        ) from exc
-
-    new_blob = encrypt_record(master_key, key=new_kek, associated_data=b"aeat.master-key.v1")
-    # Write order: master.key first (so a crash leaves a recoverable
-    # state — see the partial-migration recovery branch above), THEN
-    # master.kdf (the v2 declaration is the very last on-disk change).
-    FileFallbackMasterKeyProvider._write_bytes_secure(
-        master_key_path,
-        base64.b64encode(new_blob.to_wire()),
-    )
-    FileFallbackMasterKeyProvider._write_bytes_secure(
-        kdf_params_path,
-        new_params.model_dump_json().encode("utf-8"),
-    )
-    _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
-    return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)

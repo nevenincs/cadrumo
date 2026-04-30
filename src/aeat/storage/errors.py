@@ -113,6 +113,14 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
     substrate has not been provisioned. The operator's actionable
     next step is ``aeat security provision`` or, if a recovery key
     is available, ``aeat security recover --recovery-key``.
+
+    Reserved for callers that need to distinguish "not provisioned"
+    from "wrong passphrase" — the default ``get_master_key`` path
+    silently mints when material is absent (the wave-17 silent first-
+    run mint contract), so this class does not fire on the canonical
+    load path. Future load-only / probe-only entry points (e.g. a
+    diagnostic API or a ``--no-mint`` CLI option) raise this class
+    instead of triggering a silent mint.
     """
 
 

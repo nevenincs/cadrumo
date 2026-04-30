@@ -16,6 +16,7 @@ import pytest
 from ..auth import CertificateBackend
 from ..deadlines import IVARegime
 from ..i18n import Language
+from ..profile import CCAA
 from ..storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
@@ -70,6 +71,7 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
+        tax_residence_ccaa=CCAA.MADRID,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
         certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
@@ -87,6 +89,7 @@ def test_non_interactive_happy_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("AEAT_TEST_PW", "something")
+    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
     env_file = tmp_path / ".env"
     answers = _answers(tmp_path)
     result = SetupWizard().run(
@@ -97,6 +100,7 @@ def test_non_interactive_happy_path(
     assert result.outcome is SetupOutcome.COMPLETED
     assert env_file.exists()
     assert answers.default_profile_path.exists()
+    assert (tmp_path / "tax-residence.json").exists()
 
 
 def test_non_interactive_requires_defaults(tmp_path: Path) -> None:
@@ -114,6 +118,7 @@ def test_all_steps_reachable_in_non_interactive(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("AEAT_TEST_PW", "x")
+    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
 
     class NoopRunner:
         def run_read_only(self) -> str:
@@ -137,6 +142,7 @@ def test_first_run_skipped_when_runner_is_none(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("AEAT_TEST_PW", "x")
+    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
     result = SetupWizard().run(
         env_file=tmp_path / ".env",
         non_interactive=True,
@@ -152,6 +158,7 @@ def test_verify_failure_short_circuits_outcome(
 ) -> None:
     """Deleting the certificate after construction triggers an ERROR finding."""
     monkeypatch.setenv("AEAT_TEST_PW", "x")
+    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
     answers = _answers(tmp_path)
     answers.certificate_path.unlink()
     result = SetupWizard().run(
@@ -188,6 +195,7 @@ def test_interactive_collects_from_queued_prompter(
         False,
         False,
         False,
+        CCAA.MADRID.value,
         # cert path
         cert,
         # password env var name
@@ -227,6 +235,7 @@ def test_result_env_file_path_is_absolute_target(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("AEAT_TEST_PW", "x")
+    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
     target = tmp_path / "sub" / ".env"
     result = SetupWizard().run(
         env_file=target,

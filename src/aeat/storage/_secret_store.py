@@ -179,16 +179,17 @@ class SecretStore:
         return _SecretIndex.model_validate_json(index_path.read_text(encoding="utf-8"))
 
     def _write_index(self, index: _SecretIndex) -> None:
-        # Atomic write via tempfile + os.replace (vs-M-3) so a crashed
-        # writer cannot leave a torn JSON for a concurrent reader. The
-        # index is stored plaintext; it carries only digests (no
-        # plaintext keys, no plaintext values).
+        # Atomic write via tempfile + fsync + os.replace + parent-dir
+        # fsync so a crashed writer cannot leave a torn JSON for a
+        # concurrent reader, and a power loss between os.replace and
+        # the directory flush cannot lose the swap. The index is
+        # stored plaintext; it carries only digests (no plaintext
+        # keys, no plaintext values).
+        from ._lock import fsync_parent_dir
+
         self._store_dir.mkdir(parents=True, exist_ok=True)
         target = self._index_path()
         payload = index.model_dump_json(indent=2)
-        # Capture tmp_path BEFORE the ``with`` so cleanup works when
-        # context entry raises. NamedTemporaryFile raising means no
-        # file was created; the outer except re-raises cleanly.
         handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
             mode="w",
             encoding="utf-8",
@@ -201,7 +202,10 @@ class SecretStore:
         try:
             with handle:
                 handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
             os.replace(tmp_path, target)
+            fsync_parent_dir(target)
         except OSError:
             tmp_path.unlink(missing_ok=True)
             raise

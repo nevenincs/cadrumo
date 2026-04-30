@@ -56,8 +56,26 @@ class TestMnemonicRoundTrip:
 
     def test_rejects_unknown_word(self) -> None:
         words = ["abandon"] * 23 + ["NOT_A_BIP39_WORD"]
-        with pytest.raises(ValueError, match="unknown BIP-39 word"):
+        with pytest.raises(ValueError, match="unknown BIP-39 word") as excinfo:
             decode_mnemonic(" ".join(words))
+        message = str(excinfo.value)
+        # Wave-23 redaction: the failing word must NOT be echoed in
+        # the error message. The error reports the position only so
+        # operator-visible logs / shell history / session captures
+        # do not leak partial recovery-key contents.
+        assert "NOT_A_BIP39_WORD" not in message
+        assert "not_a_bip39_word" not in message
+        assert "position 24" in message
+
+    def test_rejects_unknown_word_does_not_echo_input(self) -> None:
+        # Defensive: a typo with a real-looking BIP-39 word also
+        # never lands in the error message. Position-only diagnostics.
+        unique_typo = "absolutelynotabip39word"
+        words = [unique_typo] + ["abandon"] * 23
+        with pytest.raises(ValueError) as excinfo:
+            decode_mnemonic(" ".join(words))
+        assert unique_typo not in str(excinfo.value)
+        assert "position 1" in str(excinfo.value)
 
     def test_rejects_checksum_failure(self) -> None:
         # Take a valid mnemonic and replace the last word with a

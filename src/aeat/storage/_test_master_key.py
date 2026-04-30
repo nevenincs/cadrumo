@@ -280,20 +280,122 @@ class TestKeyringFailureSurfaces:
             provider.get_master_key()
 
 
+class TestTornStateGate:
+    """Wave-28 HIGH-1: get_master_key must refuse on torn install state.
+
+    The wave-26 ``complete_recovery`` write order is master.key →
+    master.kdf → salt; a crash between writes used to silently re-mint
+    over the partial state via ``_mint_new``, destroying the recovered
+    master.key bytes. The new gate raises
+    ``MasterKeyMaterialMissingError`` instead.
+    """
+
+    @pytest.fixture
+    def store_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        store = tmp_path / "secrets"
+        store.mkdir()
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "torn-state-passphrase")
+        return store
+
+    def test_torn_state_master_key_only_raises(
+        self,
+        store_dir: Path,
+    ) -> None:
+        # Crash after master.key, before master.kdf and salt.
+        (store_dir / "master.key").write_bytes(b"orphan-master-key")
+
+        from . import FileFallbackMasterKeyProvider
+        from .errors import MasterKeyMaterialMissingError
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
+        with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
+            provider.get_master_key()
+        # The runbook hints both options.
+        msg = str(excinfo.value)
+        assert "aeat security recover" in msg
+        assert "aeat security provision --force" in msg
+
+    def test_torn_state_master_key_plus_kdf_raises(
+        self,
+        store_dir: Path,
+    ) -> None:
+        # Crash after master.kdf, before salt.
+        (store_dir / "master.key").write_bytes(b"orphan-master-key")
+        (store_dir / "master.kdf").write_text(
+            '{"version": 2, "algorithm": "argon2id"}',
+            encoding="utf-8",
+        )
+
+        from . import FileFallbackMasterKeyProvider
+        from .errors import MasterKeyMaterialMissingError
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
+        with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
+            provider.get_master_key()
+
+    def test_torn_state_kdf_plus_salt_only_raises(
+        self,
+        store_dir: Path,
+    ) -> None:
+        # Inverted-order torn state (master.kdf + salt without
+        # master.key). The gate refuses regardless of which subset.
+        (store_dir / "master.kdf").write_text(
+            '{"version": 2, "algorithm": "argon2id"}',
+            encoding="utf-8",
+        )
+        (store_dir / "salt").write_bytes(b"\x00" * 16)
+
+        from . import FileFallbackMasterKeyProvider
+        from .errors import MasterKeyMaterialMissingError
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
+        with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
+            provider.get_master_key()
+
+    def test_no_install_mints_normally(
+        self,
+        store_dir: Path,
+    ) -> None:
+        # No artefacts at all → cold start mint is allowed (the
+        # silent-first-run-mint contract).
+        from . import FileFallbackMasterKeyProvider
+
+        FileFallbackMasterKeyProvider._reset_for_tests()
+        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
+        key = provider.get_master_key()
+        assert len(key) == KEY_SIZE
+        # All three artefacts now present after the mint.
+        for name in ("master.key", "master.kdf", "salt"):
+            assert (store_dir / name).exists()
+
+
 class TestSecurityHardening:
     """Audit-driven hardening fixes (sec H-1 / H-2, vaultspec H-1 / H-2)."""
 
-    def test_passphrase_env_var_popped_after_use(
+    def test_passphrase_env_var_persists_across_callbacks(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """The default callback must pop AEAT_SECRET_PASSPHRASE so children do not inherit."""
+        """The callback must NOT pop the env var.
+
+        Wave-28 reverses the earlier "pop on first read" policy. The
+        cache in ``FileFallbackMasterKeyProvider`` is reset under
+        legitimate flows (recover re-mints, test sessions cycle the
+        cache between sub-tests), and a popped env var blocks the
+        second cache-miss read on ``getpass`` in non-TTY contexts.
+        """
         from ._master_key import _default_passphrase_callback
 
         monkeypatch.setenv(PASSPHRASE_ENV_VAR, "smoke-passphrase")
         assert _default_passphrase_callback() == "smoke-passphrase"
-        assert PASSPHRASE_ENV_VAR not in os.environ
+        # The env var must survive — subsequent callbacks resolve
+        # consistently against the same value.
+        assert os.environ.get(PASSPHRASE_ENV_VAR) == "smoke-passphrase"
+        assert _default_passphrase_callback() == "smoke-passphrase"
 
     def test_passphrase_env_var_strips_trailing_crlf(
         self,
@@ -410,26 +512,118 @@ class TestFactory:
         monkeypatch.setattr(keyring, "get_password", _refuse)
         monkeypatch.setattr(keyring, "set_password", _refuse)
         settings = _settings_with_store(tmp_path, SecretStoreBackend.KEYRING)
-        with pytest.raises(KeyringUnavailableError):
+        # Either error class is acceptable — the explicit ``keyring``
+        # backend rejects the operation rather than silently routing
+        # through file. ``MasterKeyKeychainLockedError`` is the
+        # narrow class for "backend works but get_password refused"
+        # (the wave-17 keychain-locked taxonomy);
+        # ``KeyringUnavailableError`` covers no-backend / package-
+        # missing failures. Both extend the substrate's
+        # ``SecretStoreError`` parent — accept either so the test
+        # is robust across CI runners that DO have a working
+        # keyring backend (Windows / macOS / libsecret-installed
+        # Linux: get_password path → MasterKeyKeychainLockedError)
+        # and runners that don't (no-op fail.Keyring backend
+        # surfaced by _probe_backend → KeyringUnavailableError).
+        with pytest.raises(SecretStoreError):
             get_master_key_provider(settings_override=settings)
 
-    def test_auto_backend_falls_back_to_file(
+    def test_auto_backend_falls_back_when_keyring_unavailable(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        keyring = pytest.importorskip("keyring")
-        from keyring.errors import KeyringError
+        # Wave-26 M-4: when the keyring backend is genuinely
+        # unusable (no usable backend, package missing,
+        # ``fail.Keyring`` no-op installed), auto falls back to
+        # file unconditionally — there is no keychain-backed
+        # master key that a file-fallback could diverge from.
+        from . import KeyringMasterKeyProvider
+        from .errors import KeyringUnavailableError
 
-        def _refuse(*_args: object, **_kwargs: object) -> None:
-            raise KeyringError("simulated unavailable keychain")
+        def _probe_fail() -> None:
+            raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
 
-        monkeypatch.setattr(keyring, "get_password", _refuse)
-        monkeypatch.setattr(keyring, "set_password", _refuse)
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(_probe_fail))
+        KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
             passphrase_callback=lambda: "x",
+        )
+        assert isinstance(provider, FileFallbackMasterKeyProvider)
+        assert len(provider.get_master_key()) == KEY_SIZE
+
+    def test_auto_backend_refuses_locked_keychain_without_file_state(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # Wave-26 M-4 regression: when the keychain is LOCKED
+        # (backend works, get_password refused — Touch ID
+        # cancelled, libsecret locked, etc.) AND no file-fallback
+        # artefacts exist, auto must NOT silently mint a fresh
+        # file-fallback master key that would diverge from
+        # whatever the keychain holds. Refuse and surface the lock
+        # state so the operator unlocks-and-retries OR explicitly
+        # switches to ``AEAT_SECRET_STORE_BACKEND=file``.
+        from . import KeyringMasterKeyProvider
+        from .errors import MasterKeyKeychainLockedError
+
+        keyring = pytest.importorskip("keyring")
+        from keyring.errors import KeyringError
+
+        def _locked(*_args: object, **_kwargs: object) -> None:
+            raise KeyringError("simulated locked keychain")
+
+        monkeypatch.setattr(keyring, "get_password", _locked)
+        monkeypatch.setattr(keyring, "set_password", _locked)
+        # Pretend the backend probe succeeds — only get_password fails.
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        KeyringMasterKeyProvider._reset_for_tests()
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
+        with pytest.raises(MasterKeyKeychainLockedError, match="auto-mode refuses"):
+            get_master_key_provider(
+                settings_override=settings,
+                passphrase_callback=lambda: "x",
+            )
+
+    def test_auto_backend_falls_back_when_locked_but_file_exists(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # Wave-26 M-4: when the keychain is LOCKED AND
+        # file-fallback artefacts already exist, auto routes
+        # through file safely — the operator has previously
+        # chosen the file backend (or already provisioned both).
+        from . import FileFallbackMasterKeyProvider, KeyringMasterKeyProvider
+
+        keyring = pytest.importorskip("keyring")
+        from keyring.errors import KeyringError
+
+        def _locked(*_args: object, **_kwargs: object) -> None:
+            raise KeyringError("simulated locked keychain")
+
+        # Seed the file-fallback artefacts via a real
+        # FileFallbackMasterKeyProvider mint so the substrate's
+        # canonical form lands on disk.
+        store_dir = tmp_path / "secrets"
+        seed_provider = FileFallbackMasterKeyProvider(
+            store_dir=store_dir,
+            passphrase_callback=lambda: "seed-passphrase",
+        )
+        seed_provider.get_master_key()
+        FileFallbackMasterKeyProvider._reset_for_tests()
+
+        monkeypatch.setattr(keyring, "get_password", _locked)
+        monkeypatch.setattr(keyring, "set_password", _locked)
+        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        KeyringMasterKeyProvider._reset_for_tests()
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
+        provider = get_master_key_provider(
+            settings_override=settings,
+            passphrase_callback=lambda: "seed-passphrase",
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
         assert len(provider.get_master_key()) == KEY_SIZE
@@ -557,6 +751,139 @@ class TestWave12KdfMigration:
             passphrase_callback=lambda: "hunter2",
         )
         assert second.get_master_key() == first_key
+
+    def test_migration_acquires_master_lock(self, tmp_path: Path) -> None:
+        """Issue #465 HIGH-2: migrate_master_key_kdf must hold master.lock.
+
+        Without the lock, a concurrent ``get_master_key`` reader
+        could observe a torn state (master.key rewritten under
+        new KEK, master.kdf still v1) and surface a spurious
+        ``MasterKeyPassphraseMismatchError``.
+        """
+        from . import LockAcquisitionError, exclusive_file_lock
+
+        store = tmp_path / "secrets"
+        _seed_legacy_v1_store(store, passphrase="hunter2")
+
+        # Hold master.lock; the migration must block waiting for it.
+        # Using timeout=0 forces an immediate failure rather than a
+        # deadlock — the migration's own exclusive_file_lock will
+        # surface LockAcquisitionError.
+        from . import _master_key as _mk
+
+        with exclusive_file_lock(store / "master.lock"):
+            # Patch the migration's lock acquisition to a zero-timeout
+            # acquire so we observe the contention instead of waiting
+            # for the default 30s.
+            original_lock = _mk.exclusive_file_lock
+
+            def _zero_timeout_lock(target, **kwargs):
+                kwargs.setdefault("timeout", 0.0)
+                return original_lock(target, **kwargs)
+
+            _mk.exclusive_file_lock = _zero_timeout_lock
+            try:
+                with pytest.raises(LockAcquisitionError):
+                    migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+            finally:
+                _mk.exclusive_file_lock = original_lock
+
+        # After the outer lock is released, a fresh migration call
+        # succeeds (resume idempotency). The second migration sees
+        # the v1 still on disk (the contended migration never wrote
+        # anything because it failed at lock acquisition).
+        result = migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+        assert result.migrated == 1
+        assert result.skipped == 0
+
+    def test_migration_rollback_on_replace_failure(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Issue #465 HIGH-1: master.key writes must survive a mid-rename crash.
+
+        Simulates a crash during the ``os.replace`` swap of the new
+        ``master.key`` ciphertext. Under the fixed code path
+        (``atomic_write_secure_bytes`` → tempfile + os.replace),
+        the original v1 ``master.key`` inode is untouched: the
+        tempfile was written to a sibling path, ``os.replace``
+        raises before the rename takes effect, and the helper's
+        ``BaseException`` handler unlinks the orphan tempfile. The
+        original v1 bytes survive on disk.
+
+        Under the LEGACY ``_write_bytes_secure`` path that the
+        wave-12 migration used to call, ``master.key`` was opened
+        with ``O_TRUNC`` directly — the inode was zeroed before the
+        write completed. A mid-write crash left ``master.key``
+        partially-written or empty with no recovery path. Patching
+        ``os.replace`` would have had NO effect because the legacy
+        path never called it; the test would fail with bytes
+        actually mutated on disk.
+
+        This test therefore positively proves the fixed code is on
+        the call path. If a future refactor reverts to direct
+        ``O_TRUNC`` writes, this test fails because the on-disk
+        ``master.key`` no longer matches the original.
+        """
+        store = tmp_path / "secrets"
+        _seed_legacy_v1_store(store, passphrase="hunter2")
+
+        original_master_key_bytes = (store / "master.key").read_bytes()
+        original_master_kdf_bytes = (store / "master.kdf").read_bytes()
+
+        import os as _os
+        from typing import Any
+
+        real_replace = _os.replace
+        # Track whether we've already raised once via ``nonlocal``
+        # — more idiomatic than the list-of-bool closure pattern.
+        # Issue #469 gemini-review MEDIUM on PR #468.
+        already_raised = False
+
+        def _replace_raising_first_then_real(*args: Any, **kwargs: Any) -> None:
+            # Raise on the FIRST call (the master.key swap inside
+            # the migration body). Subsequent calls (the master.kdf
+            # swap, plus any cleanup os.replace from the test
+            # harness or the lock release) pass through to the real
+            # implementation. Production code triggers exactly one
+            # os.replace per atomic_write_secure_bytes call; here
+            # the migration would call it twice (master.key, then
+            # master.kdf) — the first raise short-circuits before
+            # the second.
+            nonlocal already_raised
+            if not already_raised:
+                already_raised = True
+                raise OSError("simulated mid-replace crash on master.key swap")
+            return real_replace(*args, **kwargs)
+
+        monkeypatch.setattr(_os, "replace", _replace_raising_first_then_real)
+
+        # The migration must propagate the OSError (atomic_write_secure_bytes
+        # re-raises BaseException after cleanup). The wrapping layer in
+        # migrate_master_key_kdf does not currently catch OSError, so the
+        # raw OSError surfaces — which is correct: the operator wants to
+        # know rotate / migrate failed for an I/O reason, not a typed
+        # MasterKeyUnavailableError that suggests passphrase issues.
+        with pytest.raises(OSError, match="simulated mid-replace crash"):
+            migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+
+        # Crucial assertion: master.key bytes on disk MATCH the
+        # original v1 wrapped blob. This is the rollback guarantee.
+        assert (store / "master.key").read_bytes() == original_master_key_bytes
+        # master.kdf is also still v1 — the migration never reached
+        # the kdf swap because it raised on the master.key swap.
+        assert (store / "master.kdf").read_bytes() == original_master_kdf_bytes
+        # No orphan tempfiles surviving the cleanup-on-error path.
+        assert list(store.glob("*.tmp")) == []
+
+        # And the migration is resume-idempotent: a fresh run after
+        # the simulated crash succeeds (operator removes the
+        # transient I/O fault and retries).
+        monkeypatch.setattr(_os, "replace", real_replace)
+        result = migrate_master_key_kdf(store_dir=store, passphrase=b"hunter2")
+        assert result.migrated == 1
+        assert result.skipped == 0
 
 
 class TestUnsecuredProvider:

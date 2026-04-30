@@ -25,6 +25,7 @@ from pathlib import Path
 from ..deadlines import AutonomoProfile
 from ..env_io import write_env_vars
 from ..logging import get_logger
+from ..profile import KentTaxResidence, save_tax_residence
 from ._models import SetupAnswers
 
 log = get_logger(__name__)
@@ -106,8 +107,13 @@ def _ensure_password_comment(path: Path, env_var_name: str) -> None:
     text = "\n".join(rewritten)
     if text and not text.endswith("\n"):
         text += "\n"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    # Atomic write so a power-loss / SIGKILL between the truncate
+    # and the write completion does not leave env/.env zero-length
+    # (silently reverting the operator's certificate path / database
+    # URL / live-tests-flag to defaults).
+    from ..env_io import _atomic_write_text
+
+    _atomic_write_text(path, text)
 
 
 def write_env_file(answers: SetupAnswers, target: Path) -> None:
@@ -164,6 +170,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     from ..storage import (
         Envelope,
         SensitivityClass,
+        exclusive_file_lock,
         refuse_unsecured_with_real_nif,
         save_encrypted_envelope,
     )
@@ -202,12 +209,21 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         classification=SensitivityClass.IDENTITY,
         payload=profile,
     )
-    save_encrypted_envelope(
-        envelope,
-        target,
-        master_key_provider=provider,
-        hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
-    )
+    # Acquire the writer-canonical sidecar lock so concurrent
+    # ``aeat security rotate-master-key`` cannot race the profile
+    # write. The lock target matches what
+    # ``RotationPlanEntry.lock_path_for`` resolves to for a single-
+    # file consumer (``target.with_suffix('.lock')``); the wave-18
+    # alignment thus engages OS-level serialisation between rotation
+    # and writer.
+    with exclusive_file_lock(target.with_suffix(".lock")):
+        save_encrypted_envelope(
+            envelope,
+            target,
+            master_key_provider=provider,
+            hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
+        )
+    save_tax_residence(KentTaxResidence(ccaa=answers.tax_residence_ccaa))
     log.info("setup: wrote AutonomoProfile envelope to %s", target)
 
     # Recovery-key nudge: if save_encrypted_envelope just minted a new
