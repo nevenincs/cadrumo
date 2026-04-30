@@ -32,7 +32,9 @@ from .modelo_303_2024 import ENVELOPE as ENVELOPE_303
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
-_DR_SPEC_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs"
+_DR_SPEC_DIR = (
+    Path(__file__).resolve().parent.parent.parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs"
+)
 
 
 class TestReservedLiteralLengths:

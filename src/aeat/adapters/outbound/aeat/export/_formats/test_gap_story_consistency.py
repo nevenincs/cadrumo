@@ -35,7 +35,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
 _FIXTURE_PATH = (
-    Path(__file__).resolve().parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs" / "dr303e24.json"
+    Path(__file__).resolve().parent.parent.parent.parent.parent.parent.parent
+    / "tests"
+    / "fixtures"
+    / "dr_specs"
+    / "dr303e24.json"
 )
 
 

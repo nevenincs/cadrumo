@@ -13,7 +13,7 @@ from .. import app as root_app
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 _RUNNER = CliRunner()
-_FIXTURES = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial"
+_FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial"
 
 
 def test_financial_ingest_json_stream() -> None:
