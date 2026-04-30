@@ -48,33 +48,59 @@ def restrict_file_permissions(path: Path) -> None:
     intended, surfaced via the warning log.
     """
     if os.name == "nt":  # pragma: no cover - Windows-specific
-        username = getpass.getuser()
-        icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\\Windows")) / "System32" / "icacls.exe"
-        candidates = [username]
-        userdomain = os.environ.get("USERDOMAIN")
-        if userdomain:
-            candidates.insert(0, f"{userdomain}\\{username}")
-        result: subprocess.CompletedProcess[str] | None = None
-        for candidate in candidates:
-            result = subprocess.run(  # noqa: S603 - local best-effort ACL hardening only
-                [
-                    str(icacls_path),
-                    str(path),
-                    "/inheritance:r",
-                    "/grant:r",
-                    f"{candidate}:(F)",
-                ],
-                capture_output=True,
-                text=True,
-                check=False,
+        # Wrap every Windows-only call in a single try/except so the
+        # docstring's "best-effort, never raises" contract holds even
+        # when icacls.exe is missing from PATH (FileNotFoundError),
+        # getpass.getuser() raises (no operator name available), or
+        # the subprocess.run hits an unexpected OSError. Issue #469
+        # gemini-review MEDIUM on PR #470: the previous code path
+        # could raise OSError out of subprocess.run / getpass and
+        # abort the auth flow entirely.
+        try:
+            username = getpass.getuser()
+            icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\\Windows")) / "System32" / "icacls.exe"
+            candidates = [username]
+            userdomain = os.environ.get("USERDOMAIN")
+            if userdomain:
+                candidates.insert(0, f"{userdomain}\\{username}")
+            result: subprocess.CompletedProcess[str] | None = None
+            for candidate in candidates:
+                result = subprocess.run(  # noqa: S603 - local best-effort ACL hardening only
+                    [
+                        str(icacls_path),
+                        str(path),
+                        "/inheritance:r",
+                        "/grant:r",
+                        f"{candidate}:(F)",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    return
+            _log.warning(
+                "restrict_file_permissions: failed to harden Windows ACLs on %s: %s",
+                path,
+                result.stderr.strip() if result is not None and result.stderr else "icacls returned non-zero",
             )
-            if result.returncode == 0:
-                return
-        _log.warning(
-            "restrict_file_permissions: failed to harden Windows ACLs on %s: %s",
-            path,
-            result.stderr.strip() if result is not None and result.stderr else "icacls returned non-zero",
-        )
+        except Exception as exc:
+            # Catch Exception (not just OSError) so the docstring's
+            # "every error is swallowed" contract truly holds. The
+            # candidates that have actually been observed are
+            # ``OSError`` (icacls.exe missing → FileNotFoundError;
+            # subprocess.run / icacls write to a path the operator
+            # cannot ACL), but a future ``getpass`` / ``subprocess``
+            # internal change could surface other exception types
+            # here, and the auth flow must NOT abort because of a
+            # best-effort hardening side-effect. (gemini #471
+            # finding: ``KeyError`` was redundant — os.environ.get
+            # returns None, never raises.)
+            _log.warning(
+                "restrict_file_permissions: best-effort hardening failed on %s: %s",
+                path,
+                exc,
+            )
         return
     if os.name != "posix":
         return
