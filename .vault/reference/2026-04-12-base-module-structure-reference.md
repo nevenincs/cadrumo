@@ -3,7 +3,9 @@ tags:
   - "#reference"
   - "#base-module-structure"
 date: 2026-04-12
-related: []
+superseded_by: "[[2026-04-30-aeat-restructure-adr]]"
+related:
+  - "[[2026-04-30-aeat-restructure-adr]]"
 ---
 # AEAT Base Module Structure Conventions
 Date: 2026-04-12

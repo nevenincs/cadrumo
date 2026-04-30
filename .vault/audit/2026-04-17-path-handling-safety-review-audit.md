@@ -11,7 +11,7 @@ related:
 # `path-handling-safety` Code Review
 
 PATH-001 | HIGH | `aeat sync` exposes directory traversal through raw `record_id` path joins
-`src/aeat/sync/_divergence.py:216` allows any non-empty `record_id`, `src/aeat/sync/_repository.py:70` turns that string into `self._root / f"{record_id}.json"` without normalization or containment checks, and the CLI passes operator input straight through in `src/aeat/cli/sync/show.py:21` and `src/aeat/cli/sync/resolve.py:50`. A crafted `record_id` containing separators or `..` can escape `AEAT_SYNC_DIVERGENCE_FILE_DIR` and target arbitrary sibling paths for reads, and resolution flows can persist back to an unintended location when the loaded JSON validates as a `DivergenceRecord`.
+`src/aeat/sync/_divergence.py:216` allows any non-empty `record_id`, `src/aeat/application/sync/_repository.py:70` turns that string into `self._root / f"{record_id}.json"` without normalization or containment checks, and the CLI passes operator input straight through in `src/aeat/cli/sync/show.py:21` and `src/aeat/cli/sync/resolve.py:50`. A crafted `record_id` containing separators or `..` can escape `AEAT_SYNC_DIVERGENCE_FILE_DIR` and target arbitrary sibling paths for reads, and resolution flows can persist back to an unintended location when the loaded JSON validates as a `DivergenceRecord`.
 
 PATH-002 | MEDIUM | Manuals corpus loaders trust persisted relative paths without root containment
 `src/aeat/manuals/_schema.py:209` and `src/aeat/manuals/_schema.py:290` accept free-form strings for `SectionRef.relative_path` and `FetchedManualPart.relative_pdf_path`. Those values are then joined directly against the part root in `src/aeat/manuals/_loader.py:191` and `src/aeat/manuals/_fetch.py:236` with no `resolve()` + `relative_to()` style containment check. A malformed or tampered corpus record can therefore walk outside the intended manual part root and cause reads against arbitrary files reachable by the process.
@@ -26,12 +26,12 @@ PATH-005 | HIGH | The raw-ID-to-path bug class repeats in submission, amendment,
 `src/aeat/submission/_engine.py:278` reads `settings.aeat_submissions_dir / f"{submission_id}.json"` and the operator-facing CLI passes user input straight through in `src/aeat/cli/submission/show.py:17`. `src/aeat/filing/_complementaria.py:113-115` does the same for `amendment_id`, which is then used by `aeat filing complementaria submit`. `src/aeat/workflow/_persistence.py:51` similarly reads `runs_dir / f"{run_id}.json"` and is exposed by `src/aeat/cli/workflow/show.py:32`. None of these IDs are path-constrained at the load boundary, so crafted values containing separators or `..` can escape the intended persistence roots and turn the show/load commands into arbitrary local JSON read gadgets.
 
 PATH-006 | LOW | The affected path boundaries have no traversal-focused regression coverage
-The current tests cover happy-path round trips but do not assert rejection of separators, `..`, or root escapes. Representative examples are `src/aeat/sync/test_repository.py`, `src/aeat/workflow/test_persistence.py`, `src/aeat/submission/test_engine.py`, and `src/aeat/manuals/test_loader.py`, all of which exercise valid ids/relative paths only. That leaves the current path-safety findings easy to reintroduce after they are fixed unless explicit negative tests are added.
+The current tests cover happy-path round trips but do not assert rejection of separators, `..`, or root escapes. Representative examples are `src/aeat/application/sync/test_repository.py`, `src/aeat/workflow/test_persistence.py`, `src/aeat/submission/test_engine.py`, and `src/aeat/manuals/test_loader.py`, all of which exercise valid ids/relative paths only. That leaves the current path-safety findings easy to reintroduce after they are fixed unless explicit negative tests are added.
 
 ## Rolling Review Update | 2026-04-17
 
 PATH-001 | RESOLVED
-`src/aeat/_paths.py` now centralizes `resolve_record_json_path()` with token validation plus root containment, and the sync repository consumes it in `src/aeat/sync/_repository.py`. Regression coverage was added in `src/aeat/sync/test_repository.py` for traversal attempts on both load and save.
+`src/aeat/core/paths.py` now centralizes `resolve_record_json_path()` with token validation plus root containment, and the sync repository consumes it in `src/aeat/application/sync/_repository.py`. Regression coverage was added in `src/aeat/application/sync/test_repository.py` for traversal attempts on both load and save.
 
 PATH-002 | RESOLVED
 The manuals schema now rejects non-contained POSIX relative paths at validation time in `src/aeat/manuals/_schema.py`, and the runtime loaders re-check containment with `resolve_relative_subpath()` in `src/aeat/manuals/_loader.py` and `src/aeat/manuals/_fetch.py`. Regression coverage landed in `src/aeat/manuals/test_loader.py` and `src/aeat/manuals/test_fetch.py`.
@@ -48,11 +48,11 @@ The raw-id-to-path bug class is removed from submission, amendment, and workflow
 PATH-006 | RESOLVED
 Traversal-focused regression tests now cover config path anchoring, sync divergence ids, submission ids, amendment ids, workflow run ids, manuals section refs, manuals PDF refs, and relative SQLite URLs. The targeted verification command passed cleanly:
 
-`uv run pytest tests/test_config.py src/aeat/sync/test_repository.py src/aeat/workflow/test_persistence.py src/aeat/submission/test_engine.py src/aeat/filing/test_complementaria.py src/aeat/manuals/test_loader.py src/aeat/manuals/test_fetch.py src/aeat/storage/_test_engine.py`
+`uv run pytest tests/test_config.py src/aeat/application/sync/test_repository.py src/aeat/workflow/test_persistence.py src/aeat/submission/test_engine.py src/aeat/filing/test_complementaria.py src/aeat/manuals/test_loader.py src/aeat/manuals/test_fetch.py src/aeat/storage/_test_engine.py`
 
 ## Adjacency Sweep | 2026-04-17
 
-Post-fix grep and lint review found no remaining production call sites that materialize `record_id`, `submission_id`, `amendment_id`, or `run_id` directly into `<root>/<id>.json` paths outside `src/aeat/_paths.py`, which is the intended guardrail boundary. Remaining `f"{run_id}.json"` hits are test-only (`src/aeat/cli/workflow/test_cli.py`).
+Post-fix grep and lint review found no remaining production call sites that materialize `record_id`, `submission_id`, `amendment_id`, or `run_id` directly into `<root>/<id>.json` paths outside `src/aeat/core/paths.py`, which is the intended guardrail boundary. Remaining `f"{run_id}.json"` hits are test-only (`src/aeat/entrypoints/cli/workflow/test_cli.py`).
 
 The remaining `relative_path` / `relative_pdf_path` occurrences are schema definitions, validated fixture data, and the hardened loader/fetch call sites in `src/aeat/manuals/_loader.py` and `src/aeat/manuals/_fetch.py`.
 
