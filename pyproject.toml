@@ -129,6 +129,10 @@ dev = [
     "playwright-stealth>=2.0.3",
     # Used only to generate synthetic fixture PDFs in tests (#44).
     "reportlab>=4.4.10",
+    # Import-linter for layered-architecture boundary enforcement (#475/#476).
+    # Contract definition lives in `.importlinter` at repo root; activated by
+    # the Step 7 keystone PR when the hexagonal layout move lands.
+    "import-linter>=2.0",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
