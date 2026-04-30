@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from .aggregate import aggregate_cmd
 from .ingest import ingest_cmd
 from .invoices import app as invoices_app
 from .profile import app as profile_app
@@ -19,6 +20,10 @@ app.command(
     name="ingest",
     help="Validate and ingest a CSV/XLSX/OFX/PDF source into RawTransaction records.",
 )(ingest_cmd)
+app.command(
+    name="aggregate",
+    help="Aggregate classified transactions into AEAT casilla inputs (T6).",
+)(aggregate_cmd)
 app.add_typer(
     txs_app,
     name="txs",

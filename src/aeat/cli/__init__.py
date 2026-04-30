@@ -24,6 +24,7 @@ from . import browser as browser_module
 from . import casillas as casillas_module
 from . import categories as categories_module
 from . import cloud as cloud_module
+from . import data as data_module
 from . import deadlines as deadlines_module
 from . import docs as docs_module
 from . import doctor as doctor_module
@@ -39,6 +40,7 @@ from . import normatives as normatives_module
 from . import oauth as oauth_module
 from . import portals as portals_module
 from . import profile as profile_module
+from . import rental as rental_module
 from . import review as review_module
 from . import run as run_module
 from . import sanitize as sanitize_module
@@ -147,6 +149,7 @@ app.add_typer(drive_module.app, name="drive", help="Google Drive helpers.")
 app.add_typer(sheets_module.app, name="sheets", help="Google Sheets helpers.")
 app.add_typer(docs_module.app, name="docs", help="Google Docs helpers.")
 app.add_typer(cloud_module.app, name="cloud", help="GCP product helpers (Functions / Run / Storage).")
+app.add_typer(data_module.app, name="data", help="Local encrypted data ledgers.")
 app.add_typer(llm_module.app, name="llm", help="LLM prompt, translation, cache, and usage helpers.")
 app.add_typer(oauth_module.app, name="oauth-client", help="OAuth 2.0 Desktop client provisioning.")
 app.add_typer(manual_module.app, name="manual", help="AEAT Manual práctico corpus helpers (#25).")
@@ -190,6 +193,11 @@ app.add_typer(
     submission_module.app,
     name="submission",
     help="Preflight, export, verify, and inspect local AEAT filing records; the tool never writes to AEAT.",
+)
+app.add_typer(
+    rental_module.app,
+    name="rental",
+    help="Per-finca rental register, Ley 12/2023 tier auto-resolver, art. 23.1.f amortización ledger (#454).",
 )
 app.add_typer(
     review_module.app,

@@ -407,6 +407,7 @@ def classify_llm_cmd(
     successes = 0
     failures = 0
     stopped_early = False
+    dirty = False
     started = time.monotonic()
     for index, target in enumerate(targets, start=1):
         if max_total_seconds is not None and time.monotonic() - started >= max_total_seconds:
@@ -449,17 +450,20 @@ def classify_llm_cmd(
                     category_id=effective_category.value if effective_category is not None else None,
                     notes=combined_reason,
                 )
+                dirty = True
             except TransactionError as exc:
                 failures += 1
                 typer.echo(f"{prefix} persist error: {exc}", err=True)
                 continue
-            try:
-                repo.save(updated_catalogue)
-            except TransactionError as exc:
-                failures += 1
-                typer.echo(f"{prefix} save error: {exc}", err=True)
-                continue
         successes += 1
+
+    if not dry_run and dirty:
+        try:
+            repo.save(updated_catalogue)
+        except TransactionError as exc:
+            failures += successes
+            successes = 0
+            typer.echo(f"final save error: {exc}", err=True)
 
     tail = "dry-run" if dry_run else "persisted"
     if stopped_early:

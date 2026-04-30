@@ -30,6 +30,7 @@ from . import _models as _workflow_models
 from ._adapters import (
     DeadlineEngineAdapter,
     FilingDraftBuilderAdapter,
+    FinancialThenJsonInputsProvider,
     JsonFileInputsProvider,
     SubmissionEngineAdapter,
     SyncRunnerAdapter,
@@ -71,6 +72,7 @@ __all__ = [
     "FilingDraftBuilderAdapter",
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
+    "FinancialThenJsonInputsProvider",
     "JsonFileInputsProvider",
     "SubmissionEngineAdapter",
     "SubmissionEngineProtocol",

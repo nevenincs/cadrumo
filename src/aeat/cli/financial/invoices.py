@@ -17,6 +17,7 @@ from ...financial.invoices import (
     ReconciliationSuggestion,
     find_invoice,
     find_unmatched,
+    link_transaction,
     link_transaction_bidirectional,
     suggest_reconciliations,
     verify_link_consistency,
@@ -24,8 +25,10 @@ from ...financial.invoices import (
 from ...financial.transactions import (
     TransactionCatalogue,
     TransactionError,
+    link_invoice,
 )
 from ._catalogue import catalogue_dir as _transaction_catalogue_dir
+from ._catalogue import catalogue_repository as _transaction_catalogue_repository
 
 app = typer.Typer(
     name="invoices",
@@ -113,9 +116,14 @@ def reconcile_cmd(
         help="Persist each suggestion via link_transaction_bidirectional.",
     ),
 ) -> None:
-    """Print reconciliation suggestions and optionally apply them."""
-    invoices_dir = _invoice_catalogue_dir()
-    transactions_dir = _transaction_catalogue_dir()
+    """Print reconciliation suggestions and optionally apply them.
+
+    When ``--apply`` is set, every accepted suggestion is folded into
+    in-memory copies of both catalogues; the two catalogues are then
+    saved once at the end via their respective repositories. This
+    mirrors the canonical atomic-save pattern used elsewhere in the
+    repository (vs. one round-trip per suggestion).
+    """
     invoices = _load_invoice_catalogue_or_empty()
     transactions = _load_transaction_catalogue_or_empty()
     suggestions = suggest_reconciliations(invoices, transactions)
@@ -126,20 +134,39 @@ def reconcile_cmd(
     if not apply:
         return
     applied = 0
+    pending_invoices = invoices
+    pending_transactions = transactions
+    dirty = False
     for suggestion in suggestions:
         try:
-            link_transaction_bidirectional(
-                invoices_dir,
-                transactions_dir,
+            updated_invoices = link_transaction(
+                pending_invoices,
                 suggestion.invoice_id,
                 suggestion.transaction_id,
             )
-            applied += 1
+            updated_transactions = link_invoice(
+                pending_transactions,
+                suggestion.transaction_id,
+                suggestion.invoice_id,
+            )
         except (InvoiceError, TransactionError) as exc:
             typer.echo(
                 f"skipped {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
                 err=True,
             )
+            continue
+        pending_invoices = updated_invoices
+        pending_transactions = updated_transactions
+        dirty = True
+        applied += 1
+
+    if dirty:
+        try:
+            _invoice_catalogue_repository().save(pending_invoices)
+            _transaction_catalogue_repository().save(pending_transactions)
+        except (InvoiceError, TransactionError) as exc:
+            typer.echo(f"final save failed; no changes persisted: {exc}", err=True)
+            raise typer.Exit(code=2) from exc
     typer.echo(f"applied {applied} of {len(suggestions)} suggestions.")
 
 

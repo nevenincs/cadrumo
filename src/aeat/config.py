@@ -181,6 +181,10 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
         description="User-configured per-category usage ratio overrides (#259)",
     )
+    aeat_ledgers_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "ledgers",
+        description="Directory for encrypted inventory and amortization ledgers (#453)",
+    )
 
     # ── Trilingual i18n ─────────────────────────────────────────────────────
     aeat_output_language: str = Field(
@@ -803,6 +807,7 @@ class Settings(BaseSettings):
         "aeat_financial_txs_dir",
         "aeat_invoices_dir",
         "aeat_attachments_dir",
+        "aeat_ledgers_dir",
         "aeat_storage_backup_dir",
         "aeat_secret_store_dir",
         "aeat_blob_store_dir",
