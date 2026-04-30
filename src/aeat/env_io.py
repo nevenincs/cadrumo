@@ -36,21 +36,33 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
     on disk, never a torn write.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
-        mode="w",
-        encoding=encoding,
-        dir=path.parent,
-        prefix=f"{path.name}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    # Initialise tmp_path to None BEFORE the try so the finally
+    # cleanup never hits an UnboundLocalError if NamedTemporaryFile
+    # itself raises. Use try/finally (not try/except OSError) so a
+    # KeyboardInterrupt or any other BaseException mid-write also
+    # unlinks the orphan tempfile. Issue #469 gemini-review MEDIUM
+    # on PR #470: the previous narrow ``except OSError`` arm leaked
+    # the tempfile on non-OSError exceptions.
+    tmp_path: Path | None = None
     try:
+        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+            mode="w",
+            encoding=encoding,
+            dir=path.parent,
+            prefix=f"{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        )
+        tmp_path = Path(handle.name)
         with handle:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(tmp_path, path)
+        # On a successful os.replace the tempfile no longer exists
+        # under tmp_path (it was renamed to ``path``). Clear the
+        # local so the finally cleanup is a no-op.
+        tmp_path = None
         # Best-effort parent-dir fsync. POSIX-only — the helper
         # imports lazily to avoid a hard dependency on the storage
         # substrate when env_io is used outside of a provisioned
@@ -64,9 +76,9 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
             from .storage._lock import fsync_parent_dir
 
             fsync_parent_dir(path)
-    except OSError:
-        tmp_path.unlink(missing_ok=True)
-        raise
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
 
 
 def read_env_file(path: Path) -> dict[str, str]:

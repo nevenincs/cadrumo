@@ -1165,9 +1165,27 @@ def migrate_master_key_kdf(
         # before flipping master.kdf to v2. Try the new KEK first; if it
         # succeeds, master.key is already migrated and we only need to
         # write master.kdf to complete the transition.
+        #
+        # Use ``try ... else`` to isolate the decrypt probe from the
+        # subsequent atomic write. An I/O failure during the
+        # ``master.kdf`` write (disk full / permission denied / fs read-
+        # only) must propagate cleanly rather than fall through to the
+        # legacy-decrypt path — falling through would surface the I/O
+        # failure as the misleading "passphrase wrong / file tampered"
+        # error message that the legacy branch raises. Issue #469
+        # gemini-review HIGH on PR #466.
         master_key: bytes
         try:
             master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")
+        except Exception:
+            # Not a partial-migration state. Fall through to the
+            # normal legacy-unwrap → re-wrap path. The next try-block
+            # performs the legacy decrypt and surfaces a typed error
+            # if that fails too. Sentinel value for the loop —
+            # immediately overwritten in the legacy-decrypt branch
+            # below.
+            master_key = b""
+        else:
             _log.info(
                 "master.key at %s already wrapped under Argon2id KEK; "
                 "completing partial migration by rewriting master.kdf only",
@@ -1176,18 +1194,14 @@ def migrate_master_key_kdf(
             # master.key is already v2; just flip master.kdf to v2.
             # Use atomic_write_secure_bytes so a crash mid-write
             # leaves the on-disk master.kdf intact (old or new),
-            # never truncated.
+            # never truncated. Any OSError from this write
+            # propagates — it is NOT a passphrase mismatch.
             atomic_write_secure_bytes(
                 kdf_params_path,
                 new_params.model_dump_json().encode("utf-8"),
             )
             _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
             return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
-        except Exception:  # noqa: S110 - intentional fallthrough; not a partial-migration state
-            # Not a partial-migration state. Fall through to the normal
-            # legacy-unwrap → re-wrap path. The next try-block performs the
-            # legacy decrypt and surfaces a typed error if that fails too.
-            pass
 
         try:
             master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")

@@ -180,11 +180,23 @@ def _filter_env_to_allowlist(source_env: Mapping[str, str]) -> dict[str, str]:
     """Project ``source_env`` onto the launcher's allow-list.
 
     Returns a fresh dict containing only allow-listed keys. The
-    Google-OAuth / service-account / impersonation keys the launcher
-    populates explicitly below are NOT in the allow-list because they
-    are pulled from validated settings, not from the parent process
-    env (the operator's pre-existing values would be ambiguous).
-    Settings-derived keys are added on top of the allow-list copy.
+    workspace-MCP-specific keys (``WORKSPACE_MCP_CREDENTIALS_DIR_ENV``,
+    ``WORKSPACE_MCP_SERVICE_ACCOUNT_FILE_ENV``,
+    ``WORKSPACE_MCP_USER_EMAIL_ENV``) ARE in the allow-list so any
+    operator-set values flow through, and ``build_launch_spec``
+    OVERWRITES the credentials-dir / service-account / impersonation
+    keys with values pulled from validated settings (so the final
+    child env is settings-correct regardless of what the operator
+    had in their parent env). The Google-OAuth client ID / secret /
+    redirect URI keys are NOT in the allow-list — those flow only
+    from validated settings via the explicit injection in
+    ``build_launch_spec`` (the operator's pre-existing values for
+    those keys would be ambiguous).
+
+    Issue #469 gemini-review MEDIUM on PR #470: docstring previously
+    claimed the workspace-MCP keys were NOT in the allow-list, which
+    contradicted the actual ``_LAUNCH_ENV_ALLOWLIST`` content. Now
+    accurately reflects the per-key inclusion / exclusion rationale.
     """
     return {key: value for key, value in source_env.items() if key in _LAUNCH_ENV_ALLOWLIST}
 

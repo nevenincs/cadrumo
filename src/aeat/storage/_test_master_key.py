@@ -836,11 +836,12 @@ class TestWave12KdfMigration:
         from typing import Any
 
         real_replace = _os.replace
-        # Track whether we've already raised once. List-of-bool
-        # closure is more typing-friendly than function attributes.
-        already_raised: list[bool] = [False]
+        # Track whether we've already raised once via ``nonlocal``
+        # — more idiomatic than the list-of-bool closure pattern.
+        # Issue #469 gemini-review MEDIUM on PR #468.
+        already_raised = False
 
-        def _replace_raising_first_then_real(src: Any, dst: Any, **kwargs: Any) -> None:
+        def _replace_raising_first_then_real(*args: Any, **kwargs: Any) -> None:
             # Raise on the FIRST call (the master.key swap inside
             # the migration body). Subsequent calls (the master.kdf
             # swap, plus any cleanup os.replace from the test
@@ -850,10 +851,11 @@ class TestWave12KdfMigration:
             # the migration would call it twice (master.key, then
             # master.kdf) — the first raise short-circuits before
             # the second.
-            if not already_raised[0]:
-                already_raised[0] = True
+            nonlocal already_raised
+            if not already_raised:
+                already_raised = True
                 raise OSError("simulated mid-replace crash on master.key swap")
-            return real_replace(src, dst, **kwargs)
+            return real_replace(*args, **kwargs)
 
         monkeypatch.setattr(_os, "replace", _replace_raising_first_then_real)
 
