@@ -58,6 +58,7 @@ from ._clave_movil import (
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
 )
+from ._file_permissions import restrict_file_permissions
 from ._gate import AeatAccessGate, AeatGateEnvSnapshot
 from ._google_paths import (
     GoogleAuthInspection,
@@ -173,6 +174,7 @@ __all__ = [
     "load_certificate",
     "normalize_google_auth_path",
     "preload_into_browser_context",
+    "restrict_file_permissions",
     "select_provider",
     "verify_handshake",
 ]
