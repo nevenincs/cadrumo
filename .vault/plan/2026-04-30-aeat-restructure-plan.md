@@ -659,10 +659,20 @@ module. The phase summary lands at Step 14 close as
   `SchemaLoader`), the `WorkspaceLockedError` test-only fixture
   resolution (rename to `_TestableAeatError` or replace with synthetic
   test exception), the duplicate `default_schema_provider` in
-  `filing/_builders/_modelo_130_schema.py`, and the migration helpers
-  per the project-owner retention-window decision recorded in Step 0.
-  Each PR runs the unrestricted `grep -r '<symbol>' src/` pre-merge
-  safety check. Code review applies the FIX / FILE / STRIKE matrix.
+  `filing/_builders/_modelo_130_schema.py`, and the 3 reserved
+  `SchemaSource` enum members per Step 0 Decision 6 (`PORTAL_HTML_PROBE`,
+  `MANUAL_LLM_DRAFT`, `XSD_WIRE`). The **5 migration helpers**
+  (`migrate_legacy_submissions_to_repository`,
+  `migrate_legacy_amendments_to_repository`,
+  `migrate_legacy_filing_history_to_repository`,
+  `migrate_legacy_drafts_to_repository`,
+  `migrate_legacy_justificantes_to_repository` — count corrected from
+  the prior "3" by Step 0 audit) are NOT deleted in this step per
+  Step 0 Decision 10 (`RETAIN with TODO(#477)`); they remain in tree
+  with annotations and are revisited at the 2026-10-27 retention
+  expiry tracked in `#477`. Each PR runs the unrestricted
+  `grep -r '<symbol>' src/` pre-merge safety check. Code review
+  applies the FIX / FILE / STRIKE matrix.
 - **Output**: One exec record per PR at
   `.vault/exec/2026-04-30-aeat-restructure/step-10-phase2-<item>.md`.
 - **Audit**: Phase-2 list is fully closed. Every item is either
