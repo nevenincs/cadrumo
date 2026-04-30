@@ -294,30 +294,68 @@ strings reference real top-level CLI commands per the
   this audit; the changes only add to coverage rather than
   remove it.)
 
-## Findings — pre-existing branch state (NOT introduced by #454)
+## Findings — branch issues absorbed in-scope (2026-04-30)
 
-The merged `feature/216-bank-import-persistence` branch carries
-the following regressions vs `origin/main`. Each was independently
-reproduced on `origin/main` (clean) and on this branch (the WIP
-merge) and confirmed NOT to be #454-introduced:
+The user expanded #454's scope to also resolve the regressions
+inherited from the `feature/216-bank-import-persistence` merge
+plus the gemini-code-assist findings posted on PR #462. All
+twelve items are now fixed and verified by the four-gate sweep:
 
-- **9 `ty` type errors**: in `browser/test_session.py`,
-  `schema/test_cache.py`, `schema/test_models.py`,
-  `sede/_declarations.py`. Files unchanged from `origin/main`;
-  failures originate in the modules they reference (which were
-  modified on this branch by #216).
-- **1 workflow test (`test_next_json_round_trips`)**: code
-  persists `{run_id}.envelope.json` but test expects
-  `{run_id}.json`. Code/test mismatch upstream of this PR.
+### #216 carry-over fixes
 
-These are upstream of #454 and out of scope for this PR. The user
-acknowledged this state at branch open ("the wip 216 is merged
-deliberately and continue working").
+- **9 `ty` type errors**, addressed without `type: ignore`:
+  - `browser/test_session.py:269-274` — split the compound
+    `assert isinstance(cc, list) and len(cc) == 1` so ty narrows
+    `cc` to `list` before subscripting; cast the subscripted
+    entry to `dict[str, object]` so the str-key
+    `__getitem__` resolves.
+  - `schema/test_cache.py:110` + `schema/test_models.py:182,
+    192` — replace the three `RangeRule(min_=..., max_=...)`
+    constructions with `RangeRule.model_validate({"min": ...,
+    "max": ...})` so ty's pydantic-aliased-field signature
+    stays satisfied. Runtime semantics unchanged.
+  - `sede/_declarations.py` — extract the bs4
+    `class_=lambda c: ...` matchers into a typed
+    `_has_class(target) -> Callable[..., bool]` helper so ty's
+    bs4 `Tag.find` overload selection succeeds.
+
+- **1 workflow test (`test_next_json_round_trips`)**: the workflow
+  runs persistence path writes
+  `{run_id}.envelope.json` (encrypted-envelope ciphertext at
+  AUDIT class via the substrate's
+  `save_encrypted_envelope`); the test was still asserting the
+  legacy plain-JSON suffix. Aligned the test to the canonical
+  envelope filename.
+
+### gemini-code-assist findings on PR #462
+
+- **CRITICAL — `cli/financial/txs.py::classify_llm_cmd`**: the
+  loop called `repo.save(updated_catalogue)` inside every
+  iteration (N round-trips for N classifications). Refactored
+  to track an in-memory `updated_catalogue` across the loop and
+  perform a single atomic `repo.save` at the end (matches the
+  canonical financial-subpackage save discipline). A `dirty`
+  flag prevents writing when every iteration was a no-op.
+- **MEDIUM — `cli/financial/invoices.py::reconcile_cmd`**:
+  replaced the per-suggestion
+  `link_transaction_bidirectional` calls (which load + save
+  both catalogues from disk every call) with in-memory
+  `link_transaction` + `link_invoice` against running catalogue
+  variables, followed by a single `repo.save` per catalogue at
+  the end. Per-suggestion errors still surface and are
+  tolerated; the final save is atomic (both catalogues written
+  or neither, with a non-zero exit on failure).
+
+### Verification
+
+- `just lint` — clean.
+- `just typecheck` — clean (was 9 errors, now 0).
+- `just test` — 4 862 passed, 0 failures (was 9 failures inherited
+  from #216 in the post-merge run).
+- `just hooks` — clean.
 
 ## Recommendations
 
-- **Defer to #216's owner** for resolution of the 9 typecheck
-  errors and 1 workflow test mismatch.
 - **File a follow-up issue** for CCAA-driven stressed-area auto-
   detection once #452 lands (the per-finca `is_stressed_area`
   flag is a stopgap pending Ministerio resolution lookup).
@@ -334,5 +372,6 @@ deliberately and continue working").
 mandates (Pydantic v2, AeatError discipline, no mocks, no
 wave/phase numbering, public API, trilingual, module-level
 markers, BOE primary-source citations) verified. 86 new tests
-green; 7 pre-existing M100 Anexo C tests preserved. Pre-existing
-#216 regressions are documented and out of #454 scope.
+green; 7 pre-existing M100 Anexo C tests preserved. Inherited
+#216 regressions and gemini findings absorbed in-scope and
+fixed; full four-gate sweep clean.
