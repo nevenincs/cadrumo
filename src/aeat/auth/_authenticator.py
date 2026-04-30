@@ -34,11 +34,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import getpass
 import hashlib
 import json
 import os
-import subprocess
 import tempfile
 import time
 from collections.abc import Callable
@@ -638,9 +636,13 @@ class AeatAuthenticator:
                 or ``close()`` was called).
         """
         if session.is_stale():
+            from ..storage._redaction import redact_for_log
+
             raise AeatSessionExpiredError(
-                f"session for nif={session.certificate_nif} is stale "
-                f"(idle_deadline={session.idle_deadline.isoformat()})"
+                redact_for_log(
+                    f"session for nif={session.certificate_nif} is stale "
+                    f"(idle_deadline={session.idle_deadline.isoformat()})"
+                )
             )
 
         # Snapshot-and-register the context under the lock so that
@@ -1131,40 +1133,16 @@ class AeatAuthenticator:
 
     @staticmethod
     def _restrict_file_permissions(path: Path) -> None:
-        """Best-effort user-only permissions for persisted session files."""
-        if os.name == "nt":
-            username = getpass.getuser()
-            icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\\Windows")) / "System32" / "icacls.exe"
-            candidates = [username]
-            userdomain = os.environ.get("USERDOMAIN")
-            if userdomain:
-                candidates.insert(0, f"{userdomain}\\{username}")
-            result: subprocess.CompletedProcess[str] | None = None
-            for candidate in candidates:
-                result = subprocess.run(  # noqa: S603 - local best-effort ACL hardening only
-                    [
-                        str(icacls_path),
-                        str(path),
-                        "/inheritance:r",
-                        "/grant:r",
-                        f"{candidate}:(F)",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                )
-                if result.returncode == 0:
-                    return
-            log.warning(
-                "AeatAuthenticator: failed to harden Windows ACLs on %s: %s",
-                path,
-                result.stderr.strip() if result is not None and result.stderr else "icacls returned non-zero",
-            )
-            return
-        if os.name != "posix":
-            return
-        with contextlib.suppress(OSError):
-            os.chmod(path, 0o600)
+        """Best-effort user-only permissions for persisted session files.
+
+        Delegates to :func:`aeat.auth._file_permissions.restrict_file_permissions`
+        so the Windows ACL hardening discipline is shared with the
+        Cl@ve Móvil provider (issue #469 M-2 — the Cl@ve Móvil writer
+        previously skipped ACL hardening on Windows entirely).
+        """
+        from ._file_permissions import restrict_file_permissions
+
+        restrict_file_permissions(path)
 
     def _require_bundle(self) -> CertificateBundle:
         """Assemble a :class:`CertificateBundle` from ``settings``.

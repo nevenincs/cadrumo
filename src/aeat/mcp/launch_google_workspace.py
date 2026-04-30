@@ -119,6 +119,76 @@ def _require_supported_credentials(settings: Settings) -> tuple[GoogleAuthPath, 
     return (inspection.active_path, _resolve_project_path(str(service_account_path)))
 
 
+# Keys we propagate from the parent process environment into the
+# upstream workspace-mcp child. Everything OUTSIDE this allow-list
+# (including AEAT_CERTIFICATE_PASSWORD_SECRET, AEAT_SECRET_PASSPHRASE,
+# LLM provider API keys, and any other secret env var the operator has
+# set) is intentionally NOT inherited. The upstream MCP server is a
+# third-party dependency with its own attack surface; minimise what it
+# can read from os.environ. The keys this allow-list permits are the
+# bare minimum the upstream actually needs (PATH for executable
+# resolution, user-profile / temp-dir keys for credentials cache, and
+# the Google-specific keys the build path injects below).
+_LAUNCH_ENV_ALLOWLIST: frozenset[str] = frozenset(
+    {
+        # Cross-platform basics — PATH for shutil.which, user-profile
+        # vars so the upstream can locate per-user state, locale for
+        # output, terminal vars so the child can render correctly.
+        "PATH",
+        "PATHEXT",
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "TERM",
+        "COLORTERM",
+        # POSIX home / temp.
+        "HOME",
+        "USER",
+        "LOGNAME",
+        "TMPDIR",
+        "TMP",
+        # Windows home / temp / shell helpers.
+        "USERPROFILE",
+        "USERNAME",
+        "USERDOMAIN",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "PROGRAMDATA",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "SYSTEMROOT",
+        "SYSTEMDRIVE",
+        "WINDIR",
+        "TEMP",
+        "COMSPEC",
+        # Python interpreter / venv markers (the upstream may import
+        # from the same .venv).
+        "PYTHONUNBUFFERED",
+        "VIRTUAL_ENV",
+        "VIRTUAL_ENV_PROMPT",
+        # Workspace-MCP-specific keys (set explicitly below; the
+        # allow-list also permits any pre-existing operator overrides
+        # to flow through).
+        WORKSPACE_MCP_CREDENTIALS_DIR_ENV,
+        WORKSPACE_MCP_SERVICE_ACCOUNT_FILE_ENV,
+        WORKSPACE_MCP_USER_EMAIL_ENV,
+    }
+)
+
+
+def _filter_env_to_allowlist(source_env: Mapping[str, str]) -> dict[str, str]:
+    """Project ``source_env`` onto the launcher's allow-list.
+
+    Returns a fresh dict containing only allow-listed keys. The
+    Google-OAuth / service-account / impersonation keys the launcher
+    populates explicitly below are NOT in the allow-list because they
+    are pulled from validated settings, not from the parent process
+    env (the operator's pre-existing values would be ambiguous).
+    Settings-derived keys are added on top of the allow-list copy.
+    """
+    return {key: value for key, value in source_env.items() if key in _LAUNCH_ENV_ALLOWLIST}
+
+
 def build_launch_spec(
     settings: Settings,
     *,
@@ -128,7 +198,13 @@ def build_launch_spec(
     """Build the upstream argv/env contract from repo-local settings."""
 
     active_path, service_account_path = _require_supported_credentials(settings)
-    env = dict(base_env) if base_env is not None else dict(os.environ)
+    # Project the parent environment onto the explicit allow-list so
+    # secrets (certificate passphrase, master-key passphrase, LLM API
+    # keys) never flow into the spawned workspace-mcp server. The
+    # settings-derived Google keys are injected below from validated
+    # config, not from os.environ.
+    raw_env = base_env if base_env is not None else os.environ
+    env = _filter_env_to_allowlist(raw_env)
 
     if active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
         env[_settings_env_key("google_oauth_client_id")] = settings.google_oauth_client_id
