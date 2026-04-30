@@ -42,6 +42,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped
 | Import Modelo 100 pre-filing borrador (summary block) | ✅ | ✅ (`--from-borrador`) | ✅ (L3 synthetic) | ✅ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster F |
 | Import Modelo 100 predeclaración / simulación (summary block) | ✅ | ✅ (`--from-borrador`) | ✅ (L3 synthetic) | ✅ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster F |
 | Capture tax-residence CCAA for automatic RENTA | ✅ | ✅ (`aeat profile show/set tax-region/clear`; required by M100 imports) | ✅ | ✅ local JSON profile drives 0545/0551/0622 regional context | 0.3.0 | [#452](https://github.com/wgergely/aeat/issues/452) (Path A JSON; foral regimes deferred to [#424](https://github.com/wgergely/aeat/issues/424)) |
+| Track inventory + amortization for autónomo activities | ✅ | ✅ (`aeat data ledgers assets`, `aeat data ledgers inventory`) | ✅ | ✅ | 0.3.1 | [#453](https://github.com/wgergely/aeat/issues/453) |
 | See import verdict (verified / needs-review / unverifiable) | ✅ | ✅ | ✅ | ✅ | 0.3.0 | [#305](https://github.com/wgergely/aeat/issues/305) cluster E |
 | File autoliquidación rectificativa | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#234](https://github.com/wgergely/aeat/issues/234) |
 | Amend any supported modelo via wizard | ❌ | ❌ | ❌ | ❌ | 0.3.0 | [#235](https://github.com/wgergely/aeat/issues/235) |
