@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,19 @@ from ...cli import SCHEMA_REGISTRY, app
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 runner = CliRunner()
+
+# Rich wraps styled CLI help text with ANSI escape codes. On narrow
+# terminals (CI runners, ~80 cols) it can inject styling between the
+# characters of a flag (e.g. ``--since`` becomes
+# ``-\x1b[0m\x1b[1;36m-since``), so plain substring matches on the raw
+# ``result.output`` miss flags that are visibly present.
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _strip_ansi(text: str) -> str:
+    """Return ``text`` with ANSI styling codes stripped."""
+
+    return _ANSI_RE.sub("", text)
 
 
 def _env(tmp_path: Path, *, language: str = "es") -> dict[str, str]:
@@ -32,21 +46,23 @@ def test_profile_show_without_profile(tmp_path: Path) -> None:
 def test_profile_help_explains_renta_tax_region_setup() -> None:
     result = runner.invoke(app, ["profile", "--help"])
     assert result.exit_code == 0, result.output
-    assert "RENTA" in result.output
-    assert "residencia fiscal" in result.output
-    assert "set" in result.output
-    assert "show" in result.output
+    plain = _strip_ansi(result.output)
+    assert "RENTA" in plain
+    assert "residencia fiscal" in plain
+    assert "set" in plain
+    assert "show" in plain
 
 
 def test_profile_tax_region_help_lists_values_and_foral_boundary() -> None:
     result = runner.invoke(app, ["profile", "set", "tax-region", "--help"])
     assert result.exit_code == 0, result.output
-    assert "andalucia" in result.output
-    assert "cataluna" in result.output
-    assert "madrid" in result.output
-    assert "Pais Vasco" in result.output
-    assert "Navarra" in result.output
-    assert "--since" in result.output
+    plain = _strip_ansi(result.output)
+    assert "andalucia" in plain
+    assert "cataluna" in plain
+    assert "madrid" in plain
+    assert "Pais Vasco" in plain
+    assert "Navarra" in plain
+    assert "--since" in plain
 
 
 def test_profile_set_tax_region_persists(tmp_path: Path) -> None:
