@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from types import UnionType
+from typing import Union, get_args, get_origin
 
 import pytest
 from pydantic_settings import SettingsConfigDict
@@ -242,3 +244,117 @@ class TestStatusDetailUrlTemplate:
         settings = IsolatedSettings()
         assert settings.aeat_certificate_password_secret is None
         assert settings.aeat_llm_openai_api_key is None
+
+
+class TestRepoRelativePathNormalisationCoverage:
+    """#216 — every Path-typed settings field must route through the repo-relative
+    path normaliser, otherwise relative env values silently escape into cwd-anchored
+    locations. The 2026-04-27 security storage audit graded this MEDIUM-HIGH after
+    spotting drift on three financial / observability settings.
+    """
+
+    _PATH_FIELD_SUFFIXES: tuple[str, ...] = ("_dir", "_path", "_root")
+    """Suffixes that mark a settings field as a repo-relative path."""
+
+    _STRING_PATH_FIELDS: frozenset[str] = frozenset(
+        {
+            "google_oauth_client_json",
+            "google_application_credentials",
+        }
+    )
+    """String-typed path fields routed through the string-mode normaliser."""
+
+    _EXEMPT_PATH_FIELDS: frozenset[str] = frozenset()
+    """Path-typed `_dir`/`_path`/`_root` fields legitimately exempt from normalisation.
+
+    Empty today — every such field must be normalised. New exemptions require an
+    ADR amendment on the secure-persistence-foundation feature.
+    """
+
+    @staticmethod
+    def _validator_field_set(validator_name: str) -> set[str]:
+        """Return the field names a Settings field-validator covers."""
+        decorators = Settings.__pydantic_decorators__.field_validators
+        info = decorators[validator_name]
+        return set(info.info.fields)
+
+    def test_every_path_typed_setting_is_normalised(self) -> None:
+        """Every `_dir`/`_path`/`_root` Path-typed settings field must be covered by
+        ``_normalize_repo_relative_paths`` (or its string-mode sibling) — modulo the
+        explicit exempt list above.
+        """
+        path_validator = self._validator_field_set("_normalize_repo_relative_paths")
+        path_typed_settings: set[str] = set()
+        for field_name, field_info in Settings.model_fields.items():
+            if not field_name.endswith(self._PATH_FIELD_SUFFIXES):
+                continue
+            annotation = field_info.annotation
+            origin = get_origin(annotation)
+            members: tuple[object, ...] = get_args(annotation) if origin in (Union, UnionType) else (annotation,)
+            if any(member is Path for member in members):
+                path_typed_settings.add(field_name)
+
+        missing = sorted(path_typed_settings - path_validator - self._EXEMPT_PATH_FIELDS)
+        assert not missing, (
+            "Path-typed Settings fields missing from "
+            "_normalize_repo_relative_paths in src/aeat/config.py: "
+            f"{missing}. Either add each to the validator's field tuple or "
+            "add it to TestRepoRelativePathNormalisationCoverage._EXEMPT_PATH_FIELDS "
+            "with an ADR-grade justification."
+        )
+
+    def test_audit_flagged_drift_settings_are_normalised(self) -> None:
+        """The three settings the 2026-04-27 security audit named MUST be normalised."""
+        path_validator = self._validator_field_set("_normalize_repo_relative_paths")
+        for field_name in ("aeat_invoices_dir", "aeat_attachments_dir", "aeat_runs_dir"):
+            assert field_name in path_validator, (
+                f"{field_name} was flagged by the security audit as missing from "
+                "_normalize_repo_relative_paths but is still not in the validator. "
+                "Re-add it to the field tuple in src/aeat/config.py."
+            )
+
+    def test_string_path_normaliser_covers_known_fields(self) -> None:
+        """String-typed path fields must remain on the string-mode validator."""
+        string_validator = self._validator_field_set("_normalize_repo_relative_path_strings")
+        assert string_validator == set(self._STRING_PATH_FIELDS), (
+            "_normalize_repo_relative_path_strings must cover exactly: "
+            f"{sorted(self._STRING_PATH_FIELDS)}; live validator covers: "
+            f"{sorted(string_validator)}."
+        )
+
+    def test_relative_audit_flagged_paths_resolve_under_project_root(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """End-to-end: relative env values for the three audit-flagged paths anchor to
+        ``PROJECT_ROOT`` (not the process cwd)."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            "\n".join(
+                (
+                    "AEAT_INVOICES_DIR=var/financial/invoices",
+                    "AEAT_ATTACHMENTS_DIR=var/financial/attachments",
+                    "AEAT_RUNS_DIR=var/runs",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        class RelativeAuditSettings(Settings):
+            """Settings variant bound to a temp env file with the audit-flagged paths."""
+
+            model_config = SettingsConfigDict(
+                env_file=env_path,
+                env_file_encoding="utf-8",
+                env_ignore_empty=True,
+            )
+
+        settings = RelativeAuditSettings()
+        assert settings.aeat_invoices_dir == PROJECT_ROOT / "var" / "financial" / "invoices"
+        assert settings.aeat_attachments_dir == PROJECT_ROOT / "var" / "financial" / "attachments"
+        assert settings.aeat_runs_dir == PROJECT_ROOT / "var" / "runs"

@@ -2,19 +2,54 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
 from ...deadlines import AutonomoProfile, IVARegime
+from ...storage import (
+    EncryptedBlobStore,
+    Envelope,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    SensitivityClass,
+    override_master_key_provider,
+    override_secret_store,
+    save_encrypted_envelope,
+)
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 
 
+@pytest.fixture(autouse=True)
+def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
 @pytest.fixture()
 def profile_path(tmp_path: Path) -> Path:
+    from ...storage._encrypted_columns import _resolve_master_key_provider
+
     profile = AutonomoProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -24,7 +59,18 @@ def profile_path(tmp_path: Path) -> Path:
         bienes_extranjero_above_threshold=False,
     )
     path = tmp_path / "profile.json"
-    path.write_text(profile.model_dump_json(), encoding="utf-8")
+    envelope = Envelope[AutonomoProfile](
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=profile,
+    )
+    save_encrypted_envelope(
+        envelope,
+        path,
+        master_key_provider=_resolve_master_key_provider(),
+        hkdf_context=b"aeat.setup.profile.v1",
+    )
     return path
 
 
