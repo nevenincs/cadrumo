@@ -5,7 +5,7 @@ tags:
 date: '2026-04-30'
 related:
   - "[[2026-04-30-secure-persistence-foundation-wave11-research]]"
-  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation]]"
+  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation-audit]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields

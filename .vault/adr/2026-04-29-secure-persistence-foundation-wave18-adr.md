@@ -19,8 +19,8 @@ Accepted (in-PR follow-up to wave-17 audit gate).
 
 The wave-17 audit gate PASSED but the consolidated review flagged
 two pre-existing P1 findings in the rotation substrate. Both are
-confirmed-real against current code (see
-[[2026-04-29-secure-persistence-foundation-wave18-research]]):
+confirmed-real against current code (see the related wave-18
+research artefact in the frontmatter):
 
 - **R1**: `default_blob_store_roots` adds `aeat_secret_store_dir`
   but `SecretStore` writes blobs to `aeat_blob_store_dir`. A default-

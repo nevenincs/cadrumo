@@ -39,6 +39,7 @@ from . import normatives as normatives_module
 from . import oauth as oauth_module
 from . import portals as portals_module
 from . import profile as profile_module
+from . import rental as rental_module
 from . import review as review_module
 from . import run as run_module
 from . import sanitize as sanitize_module
@@ -190,6 +191,11 @@ app.add_typer(
     submission_module.app,
     name="submission",
     help="Preflight, export, verify, and inspect local AEAT filing records; the tool never writes to AEAT.",
+)
+app.add_typer(
+    rental_module.app,
+    name="rental",
+    help="Per-finca rental register, Ley 12/2023 tier auto-resolver, art. 23.1.f amortización ledger (#454).",
 )
 app.add_typer(
     review_module.app,

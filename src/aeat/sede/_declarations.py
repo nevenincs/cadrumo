@@ -26,7 +26,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import re
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, Literal
@@ -369,6 +369,23 @@ async def _select_combobox_value(
 _NO_RESULTS_TEXT = "No se han encontrado resultados para la consulta realizada."
 
 
+def _has_class(target: str):
+    """Return a bs4 ``class_=`` matcher that yields ``True`` when ``target`` is present.
+
+    bs4's ``find`` / ``find_all`` accept a callable for the ``class_``
+    keyword that must return ``bool``. Returning a truthy non-bool
+    value (e.g. ``str``) trips ty's ``Tag.find`` overload checks.
+    """
+
+    def _matcher(value: str | list[str] | None) -> bool:
+        if not value:
+            return False
+        classes = value if isinstance(value, list) else [value]
+        return target in classes
+
+    return _matcher
+
+
 def _parse_listbox(
     html: str,
     *,
@@ -394,19 +411,15 @@ def _parse_listbox(
     except Exception as exc:
         raise SedeParseError(f"failed to parse declaraciones HTML: {exc}") from exc
 
-    listbox = soup.find(class_=_class_contains("z-listbox"))
+    listbox = soup.find(class_=_has_class("z-listbox"))
     if listbox is None:
         raise SedeParseError("declaraciones response missing .z-listbox container")
 
-    items = listbox.find_all(
-        class_=_class_contains("z-listitem"),
-    )
+    items = listbox.find_all(class_=_has_class("z-listitem"))
 
     rows: list[Declaration] = []
     for item in items:
-        cells = item.find_all(
-            class_=_class_contains("z-listcell"),
-        )
+        cells = item.find_all(class_=_has_class("z-listcell"))
         cell_texts = [cell.get_text(" ", strip=True) for cell in cells]
 
         if len(cell_texts) == 1 and cell_texts[0] == _NO_RESULTS_TEXT:
@@ -439,17 +452,6 @@ def _parse_listbox(
             )
         )
     return tuple(rows)
-
-
-def _class_contains(token: str) -> Callable[[str | None], bool]:
-    """Return a BeautifulSoup class matcher for a CSS class token."""
-
-    def _matches(value: str | None) -> bool:
-        if value is None:
-            return False
-        return token in value.split()
-
-    return _matches
 
 
 _PRESENTED_AT_RE = re.compile(

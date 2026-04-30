@@ -6,7 +6,7 @@ date: '2026-04-30'
 related:
   - "[[2026-04-30-secure-persistence-foundation-wave12-research]]"
   - "[[2026-04-30-secure-persistence-foundation-final-security-audit]]"
-  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation]]"
+  - "[[2026-04-30-secure-persistence-foundation-upstream-reconciliation-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave11-audit]]"
 ---
 
