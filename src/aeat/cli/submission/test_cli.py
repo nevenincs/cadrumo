@@ -16,9 +16,9 @@ from ...financial.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ...financial.transactions._repository import TransactionCatalogueRepository
 from ...submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import app
 

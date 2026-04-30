@@ -27,7 +27,7 @@ def catalogue_dir() -> Path:
 
 def catalogue_repository():
     """Return a :class:`TransactionCatalogueRepository` bound to the configured store dir."""
-    from ...financial.transactions._repository import TransactionCatalogueRepository
+    from ...financial.transactions import TransactionCatalogueRepository
 
     return TransactionCatalogueRepository(store_dir=catalogue_dir())
 

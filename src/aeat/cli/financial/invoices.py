@@ -255,7 +255,7 @@ def _load_invoice_catalogue_or_empty() -> InvoiceCatalogue:
 
 def _load_transaction_catalogue_or_empty() -> TransactionCatalogue:
     """Load the configured transaction catalogue, returning an empty one when absent."""
-    from ...financial.transactions._repository import TransactionCatalogueRepository
+    from ...financial.transactions import TransactionCatalogueRepository
 
     repository = TransactionCatalogueRepository(store_dir=_transaction_catalogue_dir())
     try:
