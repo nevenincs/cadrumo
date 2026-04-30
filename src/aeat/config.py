@@ -148,6 +148,13 @@ class Settings(BaseSettings):
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
     )
+    aeat_tax_residence_profile_path: Path | None = Field(
+        default=None,
+        description=(
+            "Optional override for Kent's tax-residence profile JSON. "
+            "When unset, aeat.profile uses the OS config directory."
+        ),
+    )
 
     # ── Financial ingest (#73) ─────────────────────────────────────────────
     financial_base_currency: str = Field(
@@ -706,6 +713,7 @@ class Settings(BaseSettings):
     @field_validator(
         "aeat_certificate_path",
         "aeat_default_profile_path",
+        "aeat_tax_residence_profile_path",
         "aeat_workflow_draft_inputs_path",
         mode="before",
     )
@@ -807,6 +815,7 @@ class Settings(BaseSettings):
         "aeat_llm_cache_dir",
         "aeat_llm_usage_dir",
         "aeat_default_profile_path",
+        "aeat_tax_residence_profile_path",
         "aeat_submissions_dir",
         "aeat_submission_browser_trace_dir",
         "aeat_sync_divergence_file_dir",

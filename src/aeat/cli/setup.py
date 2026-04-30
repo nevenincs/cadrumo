@@ -17,7 +17,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ..config import PROJECT_ROOT
+from ..config import PROJECT_ROOT, load_settings
+from ..i18n import Language, Translatable, get_translation
 from ..setup import (
     SetupAnswers,
     SetupOutcome,
@@ -29,9 +30,47 @@ from ..setup import (
     load_answers_from_file,
 )
 
+
+def _t(es: str, en: str, hu: str) -> Translatable:
+    return {"es": es, "en": en, "hu": hu}
+
+
+def _lang() -> Language:
+    try:
+        return Language(load_settings().aeat_output_language)
+    except (KeyError, ValueError):
+        return Language.ES
+
+
+def _msg(message: Translatable) -> str:
+    return get_translation(message, _lang())
+
+
+SETUP_HELP = _msg(
+    _t(
+        "Asistente inicial: escribe env/.env, el perfil autonomo y la CCAA de residencia fiscal para RENTA.",
+        "First-run setup: writes env/.env, the autonomo profile, and the RENTA tax-residence CCAA.",
+        "Elso futtatas beallitasa: env/.env, autonomo profil es RENTA adoilletosegi CCAA mentese.",
+    )
+)
+VERIFY_HELP = _msg(
+    _t(
+        "Verifica un JSON SetupAnswers sin escribir archivos.",
+        "Verify a SetupAnswers JSON file without writing files.",
+        "SetupAnswers JSON ellenorzese fajlok irasa nelkul.",
+    )
+)
+SHOW_HELP = _msg(
+    _t(
+        "Muestra un JSON SetupAnswers, incluida la CCAA RENTA configurada, sin ejecutar el asistente.",
+        "Show a SetupAnswers JSON file, including the configured RENTA CCAA, without running setup.",
+        "SetupAnswers JSON megjelenitese, a beallitott RENTA CCAA-val, a beallitas futtatasa nelkul.",
+    )
+)
+
 app = typer.Typer(
     name="setup",
-    help="First-run interactive setup wizard (#61).",
+    help=SETUP_HELP,
     no_args_is_help=False,
 )
 
@@ -69,17 +108,35 @@ def setup(
     env_file: Path = typer.Option(
         PROJECT_ROOT / "env" / ".env",
         "--env-file",
-        help="Target env file to write.",
+        help=_msg(
+            _t(
+                "Archivo env destino que se escribira.",
+                "Target env file to write.",
+                "Cel env fajl, amely irasra kerul.",
+            )
+        ),
     ),
     non_interactive: bool = typer.Option(
         False,
         "--non-interactive",
-        help="Run without prompts; requires --from to supply a SetupAnswers JSON file.",
+        help=_msg(
+            _t(
+                "Ejecuta sin preguntas; requiere --from con un JSON SetupAnswers completo.",
+                "Run without prompts; requires --from with a complete SetupAnswers JSON file.",
+                "Kerdesek nelkuli futtatas; teljes SetupAnswers JSON kell a --from kapcsoloval.",
+            )
+        ),
     ),
     answers_from: Path | None = typer.Option(
         None,
         "--from",
-        help="Path to a SetupAnswers JSON file (required with --non-interactive).",
+        help=_msg(
+            _t(
+                "Ruta a un JSON SetupAnswers; obligatorio con --non-interactive y util como valores por defecto.",
+                "Path to a SetupAnswers JSON file; required with --non-interactive and useful as defaults.",
+                "SetupAnswers JSON utvonala; kotelezo --non-interactive mellett es alapertelmezesnek is hasznos.",
+            )
+        ),
     ),
 ) -> None:
     """Run the interactive setup wizard (or a scripted run with ``--from``)."""
@@ -113,12 +170,18 @@ def setup(
         raise typer.Exit(code=2)
 
 
-@app.command("verify", help="Run the verifier against a SetupAnswers JSON file.")
+@app.command("verify", help=VERIFY_HELP)
 def verify(
     answers_from: Path = typer.Option(
         ...,
         "--from",
-        help="Path to the SetupAnswers JSON file to verify.",
+        help=_msg(
+            _t(
+                "Ruta al JSON SetupAnswers que se verificara.",
+                "Path to the SetupAnswers JSON file to verify.",
+                "Az ellenorzendo SetupAnswers JSON utvonala.",
+            )
+        ),
     ),
 ) -> None:
     """Run the pure verifier without mutating any state."""
@@ -129,12 +192,18 @@ def verify(
         raise typer.Exit(code=2)
 
 
-@app.command("show", help="Show a SetupAnswers JSON file without running the wizard.")
+@app.command("show", help=SHOW_HELP)
 def show(
     answers_from: Path = typer.Option(
         ...,
         "--from",
-        help="Path to the SetupAnswers JSON file to display.",
+        help=_msg(
+            _t(
+                "Ruta al JSON SetupAnswers que se mostrara.",
+                "Path to the SetupAnswers JSON file to display.",
+                "A megjelenitendo SetupAnswers JSON utvonala.",
+            )
+        ),
     ),
 ) -> None:
     """Pretty-print a SetupAnswers payload. Never writes."""
@@ -151,3 +220,6 @@ def show(
             rendered = str(value) if value is not None else "-"
         table.add_row(name, rendered)
     _console.print(table)
+
+
+__all__ = ["SETUP_HELP", "app"]

@@ -14,9 +14,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ..auth import CertificateBackend
+from ..config import load_settings
 from ..deadlines import IVARegime
-from ..i18n import Language
+from ..i18n import Language, Translatable, get_translation
 from ..logging import get_logger
+from ..profile import CCAA
 from ._env_writer import write_env_file, write_profile_file
 from ._errors import SetupError
 from ._models import (
@@ -37,6 +39,18 @@ _DEFAULT_ENV_FILE = Path("env") / ".env"
 
 def _utcnow() -> datetime:
     return datetime.now(UTC)
+
+
+def _t(es: str, en: str, hu: str) -> Translatable:
+    return {"es": es, "en": en, "hu": hu}
+
+
+def _setup_text(message: Translatable) -> str:
+    try:
+        language = Language(load_settings().aeat_output_language)
+    except (KeyError, ValueError):
+        language = Language.ES
+    return get_translation(message, language)
 
 
 class SetupWizard:
@@ -231,6 +245,18 @@ class SetupWizard:
             prompt="Do you hold bienes en el extranjero above the 720 threshold?",
             default=defaults.bienes_extranjero_above_threshold if defaults else False,
         )
+        tax_residence_raw = prompter.prompt_choice(
+            key="tax_residence_ccaa",
+            prompt=_setup_text(
+                _t(
+                    "CCAA de residencia fiscal para RENTA",
+                    "Tax-residence CCAA for RENTA",
+                    "Adoilletosegi CCAA a RENTA-hoz",
+                )
+            ),
+            choices=tuple(ccaa.value for ccaa in CCAA),
+            default=(defaults.tax_residence_ccaa.value if defaults else CCAA.MADRID.value),
+        )
 
         cert_path = prompter.prompt_path(
             key="certificate_path",
@@ -314,6 +340,7 @@ class SetupWizard:
             does_intracomunitario=does_intracomunitario,
             third_party_transactions_above_347_threshold=third_party_transactions_above_347_threshold,
             bienes_extranjero_above_threshold=bienes_extranjero,
+            tax_residence_ccaa=CCAA(tax_residence_raw),
             certificate_path=cert_path,
             certificate_password_secret_var_name=cert_password_var,
             certificate_friendly_name=cert_friendly_name or None,

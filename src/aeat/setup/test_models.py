@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from ..auth import CertificateBackend
 from ..deadlines import IVARegime
 from ..i18n import Language
+from ..profile import CCAA
 from . import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
@@ -28,6 +29,7 @@ def _canonical_answers(tmp_path: Path) -> SetupAnswers:
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
+        tax_residence_ccaa=CCAA.MADRID,
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
         certificate_friendly_name="test cert",
