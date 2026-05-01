@@ -21,7 +21,7 @@ import pytest
 from ...entrypoints.cli._live import requires_live_enabled
 from . import SubmissionEngineProtocol, WorkflowError, default_engine
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
 
 
 def test_default_engine_requires_adapters() -> None:

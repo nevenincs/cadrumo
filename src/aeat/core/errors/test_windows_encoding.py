@@ -12,7 +12,7 @@ import pytest
 from ...entrypoints.cli._errors import write_stderr
 from . import WorkspaceLockedError, render_error_text
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 @contextmanager

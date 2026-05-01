@@ -11,7 +11,7 @@ from . import (
     SubmissionPreflightError,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def test_every_error_inherits_aeat_error() -> None:

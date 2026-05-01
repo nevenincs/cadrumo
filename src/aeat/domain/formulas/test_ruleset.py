@@ -26,7 +26,7 @@ from ._formula import (
 from ._ruleset import ParameterTable, ParameterValue, Ruleset
 from ._rulesets.modelo_130_2024 import RULESET as MODELO_130_2024
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _FIXTURE_CITATION = LegalCitation(

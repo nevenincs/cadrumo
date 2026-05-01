@@ -10,7 +10,7 @@ import pytest
 from .._engine import Engine
 from . import MODELO_180_2024
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.parametrize(

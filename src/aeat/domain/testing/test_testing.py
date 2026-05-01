@@ -26,7 +26,7 @@ from . import (
     load_filing_history,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _EXPECTED_MODELOS = frozenset({"130", "303", "390"})
 _EXPECTED_SCENARIOS = frozenset(

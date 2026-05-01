@@ -44,7 +44,7 @@ from .modelo_303_2024 import (
     REQUIRED_HEADER_FIELDS as REQUIRED_303,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 #: Characters both encodings support and Kent may reasonably file with.

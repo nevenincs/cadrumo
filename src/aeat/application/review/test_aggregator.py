@@ -49,7 +49,7 @@ from . import (
     ReviewState,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _summary(text: str = "demo") -> Translatable:

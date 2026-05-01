@@ -9,7 +9,7 @@ import pytest
 
 from . import VAT_CATALOGUE_2025, VAT_CATALOGUES_BY_YEAR, resolve_catalogue
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_catalogues_by_year_contains_2025() -> None:

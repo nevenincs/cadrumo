@@ -6,7 +6,7 @@ import pytest
 
 from ._validators import validate_country_code, validate_spanish_tax_id, validate_vat_number
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.parametrize(

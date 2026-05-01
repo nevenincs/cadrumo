@@ -9,7 +9,7 @@ import pytest
 
 from . import SPANISH_AMOUNT_GROUP, LabelHit, apply_label_regex, parse_spanish_decimal
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 class TestParseSpanishDecimal:

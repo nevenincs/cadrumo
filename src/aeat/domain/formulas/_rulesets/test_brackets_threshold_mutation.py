@@ -41,7 +41,7 @@ from ._mutators import (
     mutate_brackets_threshold,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 # -- Synthetic ruleset --------------------------------------------------

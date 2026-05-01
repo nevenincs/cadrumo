@@ -7,7 +7,7 @@ import pytest
 from . import modelo_130_2024 as m130_2024
 from . import modelo_130_2025 as m130_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestModelo1302025ClonesParity:

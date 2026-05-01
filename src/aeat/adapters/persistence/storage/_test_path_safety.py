@@ -9,7 +9,7 @@ import pytest
 from . import PathContainmentError
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 class TestSafeSubpath:

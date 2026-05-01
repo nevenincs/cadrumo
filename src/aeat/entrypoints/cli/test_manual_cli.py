@@ -9,7 +9,7 @@ from ...domain.manuals.errors import RuleExtractionError
 from . import app
 from ._errors import error_boundary_under_test
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _runner = CliRunner()
 

@@ -40,7 +40,7 @@ from . import (
     upgrade_to_head,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _migrated_engine(tmp_path: Path, name: str = "constraints.db"):

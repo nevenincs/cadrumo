@@ -20,7 +20,7 @@ from . import (
 from ._sink import JsonlRunSink
 from ._store import _EVENTS_FILENAME, runs_dir
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 class TestJsonlStoreRoundTrip:

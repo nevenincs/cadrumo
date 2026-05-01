@@ -14,7 +14,7 @@ from . import (
     compute_gastos_for_year,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _expense(category: ExpenseCategory, amount: Decimal, *, year: int = 2025) -> RentalExpense:

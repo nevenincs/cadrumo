@@ -13,7 +13,7 @@ from ._model_tier import (
     resolve_profile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_model_tier_is_ordered() -> None:

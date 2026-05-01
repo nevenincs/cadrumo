@@ -20,7 +20,7 @@ from . import (
 )
 from ._blob_store import EncryptedBlobStore
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _digest_hex(data: bytes) -> str:

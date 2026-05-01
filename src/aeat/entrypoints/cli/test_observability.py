@@ -7,7 +7,7 @@ import pytest
 from ...core.observability import ArgumentSource
 from ._observability import build_arguments
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestBuildArguments:

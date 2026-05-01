@@ -13,7 +13,7 @@ from ._amortization import AssetClass
 from ._inventario import ValuationMethod
 from .anexo_d_ledgers import derive_anexo_d_normal_inputs
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_direct_aggregates_remain_unchanged_without_ledgers() -> None:

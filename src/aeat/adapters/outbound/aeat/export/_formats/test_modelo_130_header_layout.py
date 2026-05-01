@@ -20,7 +20,7 @@ import pytest
 
 from .modelo_130_2024 import RECORD_SPECS
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 #: Canonical 130-header layout per dr130.09.pdf + DR130e15v12.xls.

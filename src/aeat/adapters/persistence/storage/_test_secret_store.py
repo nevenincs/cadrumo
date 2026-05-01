@@ -22,7 +22,7 @@ from .errors import (
     SecretNotFoundError,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _expiry() -> datetime:

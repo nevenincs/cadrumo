@@ -41,7 +41,7 @@ from .doctor import (
     short_scope,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
 

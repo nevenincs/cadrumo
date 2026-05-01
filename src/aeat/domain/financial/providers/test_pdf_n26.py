@@ -10,7 +10,7 @@ import pytest
 
 from .. import PdfN26Provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial" / "n26"
 

@@ -11,7 +11,7 @@ from ....core.config import Settings
 from . import create_engine_from_settings, session_scope
 from ._orm import Base
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _engine(tmp_path: Path):

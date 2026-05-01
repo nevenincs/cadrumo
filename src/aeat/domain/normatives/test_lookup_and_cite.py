@@ -19,7 +19,7 @@ from . import (
     short_title,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _catalogue() -> NormativeCatalogue:

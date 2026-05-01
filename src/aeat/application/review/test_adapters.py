@@ -61,7 +61,7 @@ from . import (
     transactions_pending,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 # ── shared helpers ────────────────────────────────────────────────

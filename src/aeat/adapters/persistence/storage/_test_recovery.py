@@ -19,7 +19,7 @@ from ._recovery import (
 )
 from .errors import DecryptionError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 class TestMnemonicRoundTrip:

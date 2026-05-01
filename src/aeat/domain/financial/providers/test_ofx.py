@@ -8,7 +8,7 @@ import pytest
 
 from .. import OfxProvider
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial"
 

@@ -6,7 +6,7 @@ import pytest
 
 from . import modelo_303_2024, modelo_303_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestModelo3032025Clone:

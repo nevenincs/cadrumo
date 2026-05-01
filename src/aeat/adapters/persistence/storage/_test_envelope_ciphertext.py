@@ -38,7 +38,7 @@ from . import (
 )
 from .errors import ClassificationError, DecryptionError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _NIF_CANARY = "12345678Z"
 _AMOUNT_CANARY = "987654.32"

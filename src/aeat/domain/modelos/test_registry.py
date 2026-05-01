@@ -17,7 +17,7 @@ from ._registry import (
     year_plan,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_registry_completeness() -> None:

@@ -42,7 +42,7 @@ from .modelo_130_2025 import RECORD_LENGTH as RECORD_LENGTH_2025
 from .modelo_130_2025 import RECORD_SPECS as RECORD_SPECS_2025
 from .modelo_130_2025 import REQUIRED_HEADER_FIELDS as REQUIRED_HEADER_FIELDS_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestKentE2EModelo130Q12024:

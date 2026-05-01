@@ -17,7 +17,7 @@ from . import (
     cite,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_catalogue_covers_every_vat_category() -> None:

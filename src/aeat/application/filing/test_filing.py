@@ -1,6 +1,6 @@
 """Unit tests for :mod:`aeat.filing`.
 
-The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]`` per the project rule.
+The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_application]`` per the project rule.
 The tests use real Protocol-conforming pydantic doubles defined
 in :mod:`aeat.filing.testing` — no mocks, patches, fakes, or
 stubs.
@@ -50,7 +50,7 @@ from .testing import (
     default_schema_provider,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _profile() -> SyntheticProfile:

@@ -17,7 +17,7 @@ from ._redaction import (
     redact_structured,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 class TestDefaultRulesRegistry:

@@ -9,7 +9,7 @@ import pytest
 from ...casillas import ModeloCode, load_casillas
 from . import CATEGORY_PROFILES_2025, SpendingCategory, load_category_profiles_from_manual
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_registry_covers_every_spending_category() -> None:

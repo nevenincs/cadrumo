@@ -24,7 +24,7 @@ from ._rulesets.modelo_130_2024 import (
     compute_casilla_13_minoracion,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _resolve_2024_q2():

@@ -35,7 +35,7 @@ from ._records import (
     TokenMap,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 _SHA = "0" * 64

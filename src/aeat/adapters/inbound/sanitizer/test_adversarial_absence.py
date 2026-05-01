@@ -38,7 +38,7 @@ from pathlib import Path
 import pikepdf
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _project_root() -> Path:

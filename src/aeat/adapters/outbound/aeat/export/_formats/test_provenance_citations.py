@@ -34,7 +34,7 @@ import pytest
 
 from . import modelo_130_2024, modelo_130_2025, modelo_303_2024, modelo_303_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 _ORDEN_RE = re.compile(r"Orden\s+[A-Z]{2,4}/\d+/\d{4}")

@@ -21,7 +21,7 @@ import pytest
 
 from . import modelo_130_2024, modelo_130_2025, modelo_303_2024, modelo_303_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def _record_field_ids(module: ModuleType) -> frozenset[str]:

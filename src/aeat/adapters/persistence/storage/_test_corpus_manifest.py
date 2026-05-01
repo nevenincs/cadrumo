@@ -23,7 +23,7 @@ from .errors import (
     CorpusManifestTamperError,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _seed_corpus(root: Path) -> None:

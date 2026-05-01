@@ -11,7 +11,7 @@ import pytest
 
 from . import WorkspaceLockedError, build_error_envelope, render_error_json, render_error_text
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 @contextmanager

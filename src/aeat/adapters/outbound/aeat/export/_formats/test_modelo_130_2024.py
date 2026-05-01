@@ -13,7 +13,7 @@ import pytest
 from ._record_spec import FieldKind, validate_record_specs
 from .modelo_130_2024 import ENCODING, RECORD_LENGTH, RECORD_SPECS
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestModelo1302024Shape:

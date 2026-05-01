@@ -14,7 +14,7 @@ from typer.testing import CliRunner
 from ... import cli
 from ...core.config import PROJECT_ROOT
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _run_probe(script: str, *, env_overrides: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:

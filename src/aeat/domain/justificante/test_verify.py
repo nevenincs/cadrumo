@@ -9,7 +9,7 @@ import pytest
 from . import _verify as verify_module
 from ._verify import verify_csv
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class _FakeKeyboard:

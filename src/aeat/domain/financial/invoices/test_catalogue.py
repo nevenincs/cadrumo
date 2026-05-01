@@ -23,7 +23,7 @@ from ._service import (
     link_transaction,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _valid_invoice(

@@ -4,7 +4,7 @@ import pytest
 
 from .... import errors, llm, logging
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def test_smoke_llm() -> None:

@@ -32,7 +32,7 @@ from ..adapters.outbound.aeat.auth import (
 )
 from .config import Settings
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
 

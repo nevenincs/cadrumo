@@ -33,7 +33,7 @@ from . import (
 )
 from ._repository import TransactionCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _RUNNER = CliRunner()
 

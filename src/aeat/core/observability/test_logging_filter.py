@@ -10,7 +10,7 @@ import pytest
 from ..logging import get_logger
 from . import run_context
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 class _CaptureHandler(logging.Handler):

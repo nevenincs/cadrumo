@@ -22,7 +22,7 @@ from . import (
     set_classification,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _sample_raw(*, provider_id: str, amount: Decimal, description: str) -> RawTransaction:

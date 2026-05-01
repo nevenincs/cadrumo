@@ -18,7 +18,7 @@ import pytest
 
 from .modelo_303_2024 import ENVELOPE
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 #: Canonical per-segment layout of the Modelo 303 2024 envelope.

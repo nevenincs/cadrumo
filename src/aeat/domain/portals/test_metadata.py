@@ -10,7 +10,7 @@ from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from ._codes import Portal
 from ._metadata import PortalMetadata
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _base_kwargs(**overrides: object) -> dict[str, object]:

@@ -13,7 +13,7 @@ from typer.testing import CliRunner
 from ....entrypoints.cli import app as root_app
 from . import AttachmentKind, AttachmentSource, AttachmentStore
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _RUNNER = CliRunner()
 

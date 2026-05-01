@@ -27,7 +27,7 @@ from . import (
     HandshakeResult,
 )
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
 def test_aeat_authenticator_synchronous_surface_live() -> None:

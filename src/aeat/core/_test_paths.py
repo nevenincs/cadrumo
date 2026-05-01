@@ -24,7 +24,7 @@ import pytest
 
 from .paths import resolve_record_json_path, resolve_relative_subpath
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 @pytest.fixture

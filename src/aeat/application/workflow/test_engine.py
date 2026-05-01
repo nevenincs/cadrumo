@@ -64,7 +64,7 @@ from . import (
     WorkflowStage,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 # ── Test doubles ────────────────────────────────────────────────────────
 

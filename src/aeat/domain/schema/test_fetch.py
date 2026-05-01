@@ -26,7 +26,7 @@ from ._fetch import (
 )
 from .testing import build_fake_boe_pdf
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _settings_with(cache_dir: Path, override: str = "") -> Settings:

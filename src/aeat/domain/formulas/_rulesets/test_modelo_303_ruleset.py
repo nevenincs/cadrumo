@@ -15,7 +15,7 @@ from .._registry import RulesetRegistry
 from .modelo_303_2024 import RULESET as MODELO_303_2024
 from .modelo_303_2025 import RULESET as MODELO_303_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_modelo_303_2024_loads() -> None:

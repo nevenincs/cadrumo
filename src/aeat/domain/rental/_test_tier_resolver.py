@@ -22,7 +22,7 @@ from . import (
     resolve_reduccion,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _finca(*, is_stressed_area: bool = False) -> RentalFinca:

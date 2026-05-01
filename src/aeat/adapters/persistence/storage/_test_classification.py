@@ -19,7 +19,7 @@ from . import (
 )
 from ._classification import _DEFAULT_POLICY_TABLE
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 class TestSensitivityClass:

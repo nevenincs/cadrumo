@@ -9,7 +9,7 @@ import pytest
 
 from ... import cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.mark.parametrize(

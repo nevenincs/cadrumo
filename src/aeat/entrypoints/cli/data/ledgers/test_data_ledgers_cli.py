@@ -11,7 +11,7 @@ from typer.testing import CliRunner
 from .....adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
 from ... import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
 

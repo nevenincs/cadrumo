@@ -33,7 +33,7 @@ from . import (
 )
 from .certificate import _select_backend
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 

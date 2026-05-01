@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from ._categories import LegalCitationSource
 from ._citations import LegalCitation
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _make(**overrides: object) -> LegalCitation:
