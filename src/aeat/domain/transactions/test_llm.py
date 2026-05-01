@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ..financial import RawProvenance, SourceFormat
-from ..financial.categories import SpendingCategory
-from ..financial.providers import RawTransaction
+from ...adapters.inbound.financial import RawProvenance, SourceFormat
+from ..categories import SpendingCategory
+from ...adapters.inbound.financial.providers import RawTransaction
 from . import (
     PIPELINE_ONLY_CLASSIFICATIONS,
     BusinessClassification,

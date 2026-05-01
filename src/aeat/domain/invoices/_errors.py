@@ -1,4 +1,4 @@
-"""Domain exceptions for ``aeat.domain.financial.invoices``."""
+"""Domain exceptions for ``aeat.domain.invoices``."""
 
 from __future__ import annotations
 

@@ -9,7 +9,7 @@ from pathlib import Path
 import typer
 
 from ...core.config import load_settings
-from ...domain.financial.attachments import (
+from ...domain.attachments import (
     Attachment,
     AttachmentError,
     AttachmentKind,

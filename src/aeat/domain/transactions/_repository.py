@@ -36,10 +36,10 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...core.logging import get_logger
 from ._models import Transaction, TransactionCatalogue, derive_transaction_id
 
-_HKDF_CONTEXT_TX_CATALOGUE = b"aeat.domain.financial.transactions.catalogue.v1"
+_HKDF_CONTEXT_TX_CATALOGUE = b"aeat.domain.transactions.catalogue.v1"
 
 if TYPE_CHECKING:
-    from ..financial._raw_transaction import RawTransaction
+    from ...adapters.inbound.financial._raw_transaction import RawTransaction
     from ._enums import TransactionDirection
 
 _log = get_logger(__name__)

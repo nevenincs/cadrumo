@@ -19,8 +19,8 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...entrypoints.cli import app as root_app
-from ..financial import CsvProvider, OfxProvider, RawProvenance, SourceFormat
-from ..financial.providers import RawTransaction
+from ...adapters.inbound.financial import CsvProvider, OfxProvider, RawProvenance, SourceFormat
+from ...adapters.inbound.financial.providers import RawTransaction
 from . import (
     BusinessClassification,
     LLMClassificationResponse,
@@ -1101,7 +1101,7 @@ def test_classify_llm_populates_notes_field_for_parity_with_manual_path(
 
 def _register_mixed_home_office_provider() -> str:
     """Register a classifier whose fixed response is a MIXED home-office row."""
-    from ..financial.categories import SpendingCategory
+    from ..categories import SpendingCategory
     from . import LLMClassificationResponse, register_classifier
 
     name = "test-home-office-mixed"
@@ -1181,7 +1181,7 @@ def test_classify_llm_category_hint_forces_category(tmp_path: Path) -> None:
     catalogue = _write_catalogue(tmp_path)
     transaction = next(catalogue.values())
 
-    from ..financial.categories import SpendingCategory
+    from ..categories import SpendingCategory
     from . import LLMClassificationResponse, register_classifier, unregister_classifier
 
     fixed = LLMClassificationResponse(

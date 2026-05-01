@@ -1,4 +1,4 @@
-"""Catalogue-level verification for ``aeat.domain.financial.vat``.
+"""Catalogue-level verification for ``aeat.domain.vat``.
 
 Runs cross-record checks on top of the per-model validation that
 pydantic already performs: every :class:`VATCategory` member must be

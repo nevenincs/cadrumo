@@ -921,7 +921,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.attachments._errors.AttachmentError",
+        "aeat.domain.attachments._errors.AttachmentError",
         ErrorCode(
             code="ERROR_FINANCIAL_ATTACHMENTS_ATTACHMENT",
             category=ErrorCategory.ERROR,
@@ -934,7 +934,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.attachments._errors.AttachmentNotFoundError",
+        "aeat.domain.attachments._errors.AttachmentNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_ATTACHMENTS_ATTACHMENT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -947,7 +947,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.attachments._errors.AttachmentPersistenceError",
+        "aeat.domain.attachments._errors.AttachmentPersistenceError",
         ErrorCode(
             code="FAIL_FINANCIAL_ATTACHMENTS_ATTACHMENT_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -960,7 +960,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.attachments._errors.AttachmentValidationError",
+        "aeat.domain.attachments._errors.AttachmentValidationError",
         ErrorCode(
             code="INTEGRITY_FINANCIAL_ATTACHMENTS_ATTACHMENT_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -973,7 +973,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.invoices._errors.InvoiceCatalogueError",
+        "aeat.domain.invoices._errors.InvoiceCatalogueError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE_CATALOGUE",
             category=ErrorCategory.ERROR,
@@ -986,7 +986,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.invoices._errors.InvoiceError",
+        "aeat.domain.invoices._errors.InvoiceError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE",
             category=ErrorCategory.ERROR,
@@ -999,7 +999,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.invoices._errors.InvoiceLinkError",
+        "aeat.domain.invoices._errors.InvoiceLinkError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE_LINK",
             category=ErrorCategory.ERROR,
@@ -1012,7 +1012,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.invoices._errors.InvoiceLinkInconsistencyError",
+        "aeat.domain.invoices._errors.InvoiceLinkInconsistencyError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE_LINK_INCONSISTENCY",
             category=ErrorCategory.ERROR,
@@ -1025,7 +1025,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.invoices._errors.InvoiceNotFoundError",
+        "aeat.domain.invoices._errors.InvoiceNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1038,7 +1038,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.invoices._errors.InvoicePersistenceError",
+        "aeat.domain.invoices._errors.InvoicePersistenceError",
         ErrorCode(
             code="FAIL_FINANCIAL_INVOICES_INVOICE_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -1051,7 +1051,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.providers._base.FinancialProviderError",
+        "aeat.adapters.inbound.financial.providers._base.FinancialProviderError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDERS_BASE_FINANCIAL_PROVIDER",
             category=ErrorCategory.ERROR,
@@ -1064,7 +1064,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.providers._base.InvalidFinancialSourceError",
+        "aeat.adapters.inbound.financial.providers._base.InvalidFinancialSourceError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDERS_BASE_INVALID_FINANCIAL_SOURCE",
             category=ErrorCategory.ERROR,
@@ -1077,7 +1077,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.providers._base.UnsupportedFinancialSourceError",
+        "aeat.adapters.inbound.financial.providers._base.UnsupportedFinancialSourceError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDERS_BASE_UNSUPPORTED_FINANCIAL_SOURCE",
             category=ErrorCategory.ERROR,
@@ -1220,7 +1220,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.usage_ratios._errors.UsageRatioError",
+        "aeat.domain.usage_ratios._errors.UsageRatioError",
         ErrorCode(
             code="ERROR_FINANCIAL_USAGE_RATIOS_USAGE_RATIO",
             category=ErrorCategory.ERROR,
@@ -1233,7 +1233,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.usage_ratios._errors.UsageRatioPersistenceError",
+        "aeat.domain.usage_ratios._errors.UsageRatioPersistenceError",
         ErrorCode(
             code="FAIL_FINANCIAL_USAGE_RATIOS_USAGE_RATIO_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -2188,7 +2188,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.LockAcquisitionError",
+        "aeat.core.locks.LockAcquisitionError",
         ErrorCode(
             code="LOCKED_STORAGE_LOCK_ACQUISITION",
             category=ErrorCategory.LOCKED,

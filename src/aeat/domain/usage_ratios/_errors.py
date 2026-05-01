@@ -1,4 +1,4 @@
-"""Domain exceptions for :mod:`aeat.domain.financial.usage_ratios`."""
+"""Domain exceptions for :mod:`aeat.domain.usage_ratios`."""
 
 from __future__ import annotations
 

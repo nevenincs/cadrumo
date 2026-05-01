@@ -16,7 +16,7 @@ Wires the review subcommands per the feature ADRs:
   is currently stale (#230).
 
 These commands delegate every domain decision to :mod:`aeat.application.review`,
-:mod:`aeat.domain.financial.transactions`, or :mod:`aeat.application.filing`; this
+:mod:`aeat.domain.transactions`, or :mod:`aeat.application.filing`; this
 module is pure CLI glue.
 """
 

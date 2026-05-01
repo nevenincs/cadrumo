@@ -42,7 +42,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ..financial.categories import CATEGORY_PROFILES_2025, SpendingCategory
+from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ._enums import BusinessClassification
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
 from ._models import Transaction
@@ -189,7 +189,7 @@ def prompt_spec_with_every_spending_category(
     """Return a prompt spec that also asks the LLM to suggest a SpendingCategory.
 
     Pulls authoritative Spanish display labels from
-    :data:`aeat.domain.financial.categories.CATEGORY_PROFILES_2025` (shipped by
+    :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` (shipped by
     #253) rather than inventing ad-hoc hints from the enum value —
     the LLM picks categories far more accurately against the real AEAT
     terminology than against mangled snake_case. Categories with no
@@ -473,7 +473,7 @@ def build_claude_classifier(
     Args:
         alias: Capability-tier alias (``claude-sonnet`` / ``claude-opus``
             / ``claude-haiku``). Resolves to the current model ID via
-            :func:`aeat.domain.financial.transactions._model_tier.resolve_profile`
+            :func:`aeat.domain.transactions._model_tier.resolve_profile`
             and enforces ``minimum_tier``.
         model: Explicit provider-specific model override. When set,
             takes precedence over ``alias`` AND skips the tier check;
@@ -605,7 +605,7 @@ def resolve_classifier(
         provider: One of ``"claude"``, ``"gemini"``, ``"codex"``, or a
             name registered via :func:`register_classifier`.
         alias: Optional capability-tier alias (see
-            :class:`aeat.domain.financial.transactions._model_tier.ModelProfile`).
+            :class:`aeat.domain.transactions._model_tier.ModelProfile`).
             Resolves to a current model ID via the tier catalogue.
         model: Optional raw model-ID override. Takes precedence over
             alias and skips the tier check. Reserved for advanced

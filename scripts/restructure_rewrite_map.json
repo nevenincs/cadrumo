@@ -35,7 +35,7 @@
     "aeat.submission": "aeat.adapters.outbound.aeat.export",
     "aeat.llm": "aeat.adapters.outbound.llm",
     "aeat.observability": "aeat.core.observability",
-    "aeat.financial": "aeat.domain.financial",
+    "aeat.financial": "aeat.adapters.inbound.financial",
     "aeat.storage": "aeat.adapters.persistence.storage",
     "aeat.filing": "aeat.application.filing",
     "aeat.review": "aeat.application.review",

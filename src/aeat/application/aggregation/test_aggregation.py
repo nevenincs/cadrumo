@@ -26,16 +26,16 @@ from ...entrypoints.cli import app as root_app
 from ...domain.deadlines import AutonomoProfile, IVARegime
 from ...domain.formulas import Engine, FiscalPeriod, Quarter, get_registry
 from ...domain.modelos import ModeloCode
-from ...domain.financial._raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...adapters.inbound.financial._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
-from ...domain.financial.transactions import (
+from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
     set_classification,
 )
-from ...domain.financial.transactions._repository import TransactionCatalogueRepository
+from ...domain.transactions._repository import TransactionCatalogueRepository
 from . import (
     AggregationCasillaMappingError,
     AggregationError,

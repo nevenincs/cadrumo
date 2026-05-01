@@ -15,7 +15,7 @@ from . import app
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _NIF_CANARY = "12345678Z"
-_HKDF_CONTEXT_TX = b"aeat.domain.financial.transactions.catalogue.v1"
+_HKDF_CONTEXT_TX = b"aeat.domain.transactions.catalogue.v1"
 
 
 class _Sample(BaseModel):
