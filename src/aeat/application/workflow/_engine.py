@@ -65,12 +65,12 @@ async def _default_expedientes_source(
     session: AeatSession,
     modelo: str | None,
 ) -> tuple[Expediente, ...]:
-    """Default seam: forward to the live :func:`aeat.sede.walk_expedientes_tree`."""
+    """Default seam: forward to the live :func:`aeat.adapters.outbound.aeat.sede.walk_expedientes_tree`."""
     return await _sede.walk_expedientes_tree(session, modelo=modelo)
 
 
 async def _default_notifications_source(session: AeatSession) -> NotificationsSnapshot:
-    """Default seam: forward to the live :func:`aeat.sede.fetch_notifications_query`."""
+    """Default seam: forward to the live :func:`aeat.adapters.outbound.aeat.sede.fetch_notifications_query`."""
     return await _sede.fetch_notifications_query(session)
 
 
@@ -80,7 +80,7 @@ def _period_to_year(period: str) -> int | None:
     Period strings used in the deadline engine carry the year as the
     first four digits — ``"2026"`` (annual), ``"2026Q1"`` (quarterly),
     ``"2026M3"`` (monthly). The expediente record carries
-    :attr:`aeat.sede.Expediente.ejercicio` as a separate integer year,
+    :attr:`aeat.adapters.outbound.aeat.sede.Expediente.ejercicio` as a separate integer year,
     so the workflow's "already filed" gate matches modelo + year.
     """
     head = period[:4]
@@ -107,10 +107,10 @@ def _classify_cert_expiry(
     """Classify a certificate's expiry window against operator thresholds.
 
     Operates on the provider description's expiry date rather than the
-    rich :class:`aeat.auth.LoadedCertificate`, so it can be called from
+    rich :class:`aeat.adapters.outbound.aeat.auth.LoadedCertificate`, so it can be called from
     the workflow engine without forcing certificate-only types into the
     workflow boundary. Boundary semantics match
-    :func:`aeat.auth.evaluate_loaded_certificate_health`:
+    :func:`aeat.adapters.outbound.aeat.auth.evaluate_loaded_certificate_health`:
     exactly ``critical_days`` remaining is CRITICAL (inclusive), and
     exactly ``warn_days`` remaining is WARN (inclusive).
 
@@ -191,13 +191,13 @@ class WorkflowEngine:
         """Construct a :class:`WorkflowEngine`.
 
         Args:
-            deadline_engine: Protocol over :class:`aeat.deadlines.DeadlineEngine`.
-            filing_draft_builder: Protocol over :func:`aeat.filing.build_draft`.
-            submission_engine: Protocol over :class:`aeat.submission.SubmissionEngine`.
+            deadline_engine: Protocol over :class:`aeat.domain.deadlines.DeadlineEngine`.
+            filing_draft_builder: Protocol over :func:`aeat.application.filing.build_draft`.
+            submission_engine: Protocol over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`.
             sync_runner: Optional Protocol over the sync runner. ``None``
                 causes the ``SYNCING_CATALOGUES`` stage to skip.
-            session: Optional authenticated :class:`aeat.auth.AeatSession`
-                used to drive the live :mod:`aeat.sede` reader. ``None``
+            session: Optional authenticated :class:`aeat.adapters.outbound.aeat.auth.AeatSession`
+                used to drive the live :mod:`aeat.adapters.outbound.aeat.sede` reader. ``None``
                 skips both the inbox probe and the already-filed probe.
             certificate_bundle: Optional Protocol over the certificate
                 backend. ``None`` skips the cert load probe.
@@ -205,10 +205,10 @@ class WorkflowEngine:
                 the draft stage.
             settings: Application :class:`Settings` instance.
             expedientes_source: Test seam over
-                :func:`aeat.sede.walk_expedientes_tree`. Defaults to the
+                :func:`aeat.adapters.outbound.aeat.sede.walk_expedientes_tree`. Defaults to the
                 live walker.
             notifications_source: Test seam over
-                :func:`aeat.sede.fetch_notifications_query`. Defaults to
+                :func:`aeat.adapters.outbound.aeat.sede.fetch_notifications_query`. Defaults to
                 the live fetcher.
         """
         self._deadline_engine = deadline_engine
@@ -869,7 +869,7 @@ class WorkflowEngine:
 
         Aborts with ``CERT_INVALID`` if the auth-provider Protocol
         raises, and with ``PREFLIGHT_FAILED`` on any
-        :class:`aeat.submission.SubmissionPreflightError`.
+        :class:`aeat.adapters.outbound.aeat.export.SubmissionPreflightError`.
         """
         started = _utcnow()
         cert_details: dict[str, str]
@@ -1079,7 +1079,7 @@ class WorkflowEngine:
         Invoked from the ``except SiteHealthError`` arm inserted
         strictly *before* the generic ``except Exception`` catch in
         every stage method that wraps a component call. The helper
-        composes a :class:`aeat.browser._site_health.SiteHealthAlert`
+        composes a :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthAlert`
         around the caught error, appends a failed :class:`WorkflowStep`
         carrying the alert, and raises
         ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``

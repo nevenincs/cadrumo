@@ -904,7 +904,7 @@ def looks_like_real_tax_id(value: str) -> bool:
         invalid inputs and for synthetic placeholders alike — both
         cases are safe to allow under the unsecured backend.
     """
-    from ...inbound.identity import validate_spanish_tax_id
+    from ....core.identity import validate_spanish_tax_id
 
     try:
         canonical = validate_spanish_tax_id(value)

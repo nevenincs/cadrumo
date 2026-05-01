@@ -30,9 +30,9 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from ....adapters.inbound.identity import validate_spanish_tax_id
 from ....adapters.outbound.aeat.export import DraftStatus
 from ....adapters.outbound.aeat.export._formats._serialise import serialise, serialise_envelope
+from ....core.identity import validate_spanish_tax_id
 from ._helpers import load_draft
 from ._schema_registry import SCHEMA_REGISTRY, CliInputs, validate_iban_flag, validate_swift_flag
 

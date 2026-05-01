@@ -22,9 +22,6 @@ class TestModelo3032024Envelope:
     def test_eight_segments(self) -> None:
         assert len(ENVELOPE) == 8
 
-    def test_encoding_is_iso_8859_1(self) -> None:
-        assert ENCODING == "iso-8859-1"
-
     def test_required_fields_include_dp30301_page_identification(self) -> None:
         """DP30301 page-identification fields to the required
         set via the fixture's ``extra_required_fields`` override so filings

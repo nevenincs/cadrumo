@@ -2084,7 +2084,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.identity._documents.IdentityError",
+        "aeat.core.identity._documents.IdentityError",
         ErrorCode(
             code="INTEGRITY_IDENTITY_DOCUMENT",
             category=ErrorCategory.INTEGRITY,

@@ -1,11 +1,10 @@
 """Counterparty identity validators for invoice records.
 
 The Spanish tax-identity algorithm (:func:`validate_spanish_tax_id`)
-moved to :mod:`aeat.adapters.inbound.identity` so other subpackages
-(storage, sanitizer, CLI submission gates) can import it from a public
-surface instead of reaching into this private module. The function is
-re-exported here for invoice-side callers that bind to the name
-locally.
+lives in :mod:`aeat.core.identity` — a shared-kernel primitive used by
+the persistence substrate (NIF canary), the inbound sanitizer, and CLI
+gates. The function is re-exported here for invoice-side callers that
+bind to the name locally.
 
 The EU-VAT prefix check and ISO-3166 alpha-2 country-code normaliser
 remain in this module because they are invoice-domain concerns.
@@ -16,7 +15,7 @@ surfaces the error as a validation error in the enclosing
 
 from __future__ import annotations
 
-from ....adapters.inbound.identity import validate_spanish_tax_id
+from ....core.identity import validate_spanish_tax_id
 
 __all__ = ["validate_country_code", "validate_spanish_tax_id", "validate_vat_number"]
 

@@ -8,7 +8,7 @@ and confirm the character sequence is sound without going through
 the whole export flow.
 
 Delegates to the already-shipped
-:func:`aeat.identity.validate_spanish_tax_id`
+:func:`aeat.core.identity.validate_spanish_tax_id`
 so the rules stay single-sourced.
 
 Exit codes:
@@ -23,7 +23,7 @@ from typing import Literal
 import typer
 from rich.console import Console
 
-from ....adapters.inbound.identity import validate_spanish_tax_id
+from ....core.identity import validate_spanish_tax_id
 from .._errors import CliRefusedBoundaryError, json_output_requested
 from .._schemas import OutputSchema, emit_json_success, register_schema
 

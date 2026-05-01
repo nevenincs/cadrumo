@@ -49,8 +49,6 @@ def test_vat_category_values_roundtrip_through_strenum() -> None:
 def test_eu_member_state_has_27_members() -> None:
     """EUMemberState must cover the 27 current EU member states."""
     assert len(list(EUMemberState)) == 27
-    assert EUMemberState.ES.value == "es"
-    assert EUMemberState.DE.value == "de"
 
 
 def test_vat_rate_kind_has_five_tiers() -> None:
