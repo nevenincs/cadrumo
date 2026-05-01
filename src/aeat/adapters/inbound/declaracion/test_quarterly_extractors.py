@@ -325,7 +325,7 @@ def _make_m347_human_detail_pdf(tmp_path: Path) -> Path:
     c = canvas.Canvas(buffer, pagesize=(A4_WIDTH, A4_HEIGHT))
     c.setTitle("Modelo 347 human detail")
     draw_header(c, modelo="347", ejercicio="2025", periodo="0A", page_num=1, page_count=1)
-    summary_values = {"01": Decimal("1"), "02": Decimal("12000.00"), "03": Decimal("0"), "04": Decimal("0.00")}
+    summary_values = {"01": Decimal("1"), "02": Decimal("12000.00"), "03": Decimal("1"), "04": Decimal("6100.00")}
     for index, (casilla_id, label) in enumerate(_MODELO_347_LABELS.items()):
         draw_casilla_box(
             c,
@@ -336,7 +336,8 @@ def _make_m347_human_detail_pdf(tmp_path: Path) -> Path:
     c.drawString(
         MARGIN_LEFT,
         A4_HEIGHT - 80 * mm,
-        "Declarado B12345678 Cliente Uno SL Clave B Total 12000.00 1T 3000.00 2T 3000.00 3T 3000.00 4T 3000.00",
+        "Declarado NIF B12345678 Nombre Empresa Clave de Sol SL Clave B Total 12.000,00 "
+        "1T 3.000,00 2T 3.000,00 3T 3.000,00 4T 3.000,00 Metalico 6.100,00 Origen 2025",
     )
     draw_footer(c, tax_id="00000000T", presented_at="2026-02-20 10:00:00")
     c.showPage()
@@ -448,8 +449,11 @@ class TestModelo347V2025Extractor:
         assert len(filing.modelo_347_records) == 1
         record = filing.modelo_347_records[0]
         assert record.declared_tax_id == "B12345678"
+        assert record.declared_name == "Empresa Clave de Sol SL"
         assert record.operation_key == "B"
         assert record.annual_operation_amount == Decimal("12000.00")
+        assert record.first_quarter_amount == Decimal("3000.00")
+        assert record.cash_received_amount == Decimal("6100.00")
 
 
 class TestModelo390V2025Extractor:

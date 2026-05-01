@@ -54,3 +54,7 @@ M347-REVIEW-004 addressed: `verify_modelo_347_summary` now returns `ruleset_id=N
 M347-REVIEW-005 addressed with additional tests for summary count mismatch, row drift, broader field preservation, and the human-readable detail extraction path.
 
 M347-REVIEW-006 remains an external tooling/config blocker: `just lint-imports` first fails on stale ignored imports; removing them reveals broad pre-existing architecture-contract violations outside the M347 diff. The M347 diff itself follows the intended dependency direction.
+
+## Gemini Closure Notes
+
+The Gemini review findings were addressed after PR open. The human-readable M347 detail extractor now uses the shared Spanish decimal parser for `1.234,56`/`1 234,56`/`1234.56` formats, requires explicit `NIF` and `Nombre` delimiters, and preserves names that contain the word `Clave`. The Tier-S verifier now treats omitted optional zero-valued summary casillas as printed zero before applying tolerance, avoiding false `NEEDS_REVIEW` verdicts when AEAT omits zero cash totals.

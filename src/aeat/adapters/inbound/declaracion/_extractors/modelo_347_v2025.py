@@ -8,22 +8,24 @@ from pathlib import Path
 from typing import ClassVar
 
 from .....domain.modelos.m347 import ClaveOperacion, Modelo347RecordLine
+from ...pdf import parse_spanish_decimal
 from .._generic_extractor import GenericDeclaracionExtractor
 from .._parsers import extract_pages_text
 from .._schema import DeclaracionFiling, TemplateRevision
 
 _DETAIL_RE = re.compile(r"^M347-RECORD\s*\|\s*(?P<body>.+)$", re.MULTILINE)
+_SPANISH_AMOUNT_PATTERN = r"-?(?:[0-9]{1,3}(?:[.\s\xa0][0-9]{3})+|[0-9]+)(?:[,.][0-9]{2})"
 _HUMAN_DETAIL_RE = re.compile(
     r"^Declarado\s+"
-    r"(?P<nif>[0-9A-Z][0-9A-Z -]{6,15})\s+"
-    r"(?P<name>.+?)\s+"
+    r"NIF\s+(?P<nif>[0-9A-Z][0-9A-Z -]{6,15})\s+"
+    r"Nombre\s+(?P<name>.+)\s+"
     r"Clave\s+(?P<key>[A-G])\s+"
-    r"Total\s+(?P<total>-?[0-9]+(?:\.[0-9]{2})?)\s+"
-    r"1T\s+(?P<q1>-?[0-9]+(?:\.[0-9]{2})?)\s+"
-    r"2T\s+(?P<q2>-?[0-9]+(?:\.[0-9]{2})?)\s+"
-    r"3T\s+(?P<q3>-?[0-9]+(?:\.[0-9]{2})?)\s+"
-    r"4T\s+(?P<q4>-?[0-9]+(?:\.[0-9]{2})?)"
-    r"(?:\s+Metalico\s+(?P<cash>-?[0-9]+(?:\.[0-9]{2})?)\s+Origen\s+(?P<cash_year>[0-9]{4}))?"
+    rf"Total\s+(?P<total>{_SPANISH_AMOUNT_PATTERN})\s+"
+    rf"1T\s+(?P<q1>{_SPANISH_AMOUNT_PATTERN})\s+"
+    rf"2T\s+(?P<q2>{_SPANISH_AMOUNT_PATTERN})\s+"
+    rf"3T\s+(?P<q3>{_SPANISH_AMOUNT_PATTERN})\s+"
+    rf"4T\s+(?P<q4>{_SPANISH_AMOUNT_PATTERN})"
+    rf"(?:\s+Metalico\s+(?P<cash>{_SPANISH_AMOUNT_PATTERN})\s+Origen\s+(?P<cash_year>[0-9]{{4}}))?"
     r"\s*$",
     re.MULTILINE,
 )
@@ -158,7 +160,7 @@ def _record_from_fields(raw_fields: dict[str, str]) -> Modelo347RecordLine:
         if value == "":
             continue
         if field_name in _AMOUNT_FIELDS:
-            parsed[field_name] = Decimal(value)
+            parsed[field_name] = _parse_amount(value)
         elif field_name in _BOOL_FIELDS:
             parsed[field_name] = value.upper() in {"1", "Y", "YES", "S", "SI", "TRUE", "X"}
         elif field_name in _INT_FIELDS:
@@ -168,6 +170,13 @@ def _record_from_fields(raw_fields: dict[str, str]) -> Modelo347RecordLine:
         else:
             parsed[field_name] = value
     return Modelo347RecordLine.model_validate(parsed)
+
+
+def _parse_amount(value: str) -> Decimal:
+    parsed = parse_spanish_decimal(value)
+    if parsed is None:
+        raise ValueError(f"invalid Modelo 347 monetary amount: {value!r}")
+    return parsed
 
 
 def _split_detail_fields(body: str) -> dict[str, str]:

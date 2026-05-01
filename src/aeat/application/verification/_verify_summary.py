@@ -96,9 +96,9 @@ def _append_if_mismatch(
     actual: Decimal | None,
     tolerance: Decimal,
 ) -> None:
-    if actual is not None and abs(expected - actual) <= tolerance:
-        return
     actual_value = Decimal("0.00") if actual is None else actual
+    if abs(expected - actual_value) <= tolerance:
+        return
     delta = actual_value - expected
     discrepancies.append(
         ClassifiedDiscrepancy(

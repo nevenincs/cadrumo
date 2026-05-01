@@ -123,3 +123,28 @@ def test_modelo_347_summary_needs_review_when_count_differs() -> None:
     verdict = verify_modelo_347_summary(filing)
     assert verdict.status is VerificationStatus.NEEDS_REVIEW
     assert {d.casilla_id for d in verdict.discrepancies} == {"01"}
+
+
+def test_modelo_347_summary_treats_omitted_zero_cash_total_as_zero() -> None:
+    records = (_record("1000.00"), _record("2500.25", tax_id="B87654321"))
+    filing = _filing(summary_total="3500.25", records=records).model_copy(
+        update={
+            "values": (
+                ExtractedCasilla(
+                    casilla_id="01",
+                    printed_value=Decimal("2"),
+                    source_page=1,
+                    extraction_confidence=1.0,
+                ),
+                ExtractedCasilla(
+                    casilla_id="02",
+                    printed_value=Decimal("3500.25"),
+                    source_page=1,
+                    extraction_confidence=1.0,
+                ),
+            )
+        }
+    )
+    verdict = verify_modelo_347_summary(filing)
+    assert verdict.status is VerificationStatus.VERIFIED
+    assert verdict.discrepancies == ()
