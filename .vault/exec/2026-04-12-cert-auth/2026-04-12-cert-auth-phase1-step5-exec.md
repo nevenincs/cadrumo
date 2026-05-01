@@ -11,7 +11,7 @@ related:
 # cert-auth phase1 step5: unit + live tests
 
 ## Scope
-- `src/aeat/auth/test_certificate.py` — 22 unit tests, all marked
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py` — 22 unit tests, all marked
   `@pytest.mark.unit`, all colocated Rust-style. Each test that
   needs a bundle **generates a real self-signed PKCS#12 in-process**
   via `cryptography.x509` + `pkcs12.serialize_key_and_certificates`.
@@ -38,7 +38,7 @@ related:
   - Settings integration: setting all five cert env vars produces a
     `Settings` with the expected values and `repr(settings)` does
     not leak the passphrase.
-- `src/aeat/auth/test_certificate_live.py` — one
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py` — one
   `@pytest.mark.live` test gated on `AEAT_LIVE_TESTS_ENABLED=1` AND
   on the cert env vars being set. Skips cleanly otherwise. Zero
   mocks. Runs a real mTLS handshake against the configured verify URL.

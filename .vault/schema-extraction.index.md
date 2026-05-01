@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#schema-extraction`.
 
 ### plan
 
-- `2026-04-17-schema-extraction-plan` - Implementation plan: `aeat.schema` subpackage (#9)
+- `2026-04-17-schema-extraction-plan` - Implementation plan: `aeat.domain.schema` subpackage (#9)
 
 ### research
 

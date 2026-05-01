@@ -9,7 +9,7 @@ related:
 
 # Scaffold i18n package and configuration
 
-Created `src/aeat/i18n/` directory.
+Created `src/aeat/core/i18n/` directory.
 Updated `src/aeat/config.py` with i18n configuration variables:
 - `aeat_output_language`
 - `aeat_authoritative_language_aeat_terms`

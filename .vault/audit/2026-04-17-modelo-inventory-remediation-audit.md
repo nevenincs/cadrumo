@@ -16,7 +16,7 @@ related:
 # `modelo-inventory` Code Review
 
 MODELO-REMEDIATION-001 | OK | Registry/deadline parity restored
-The working-tree remediation removes the previously audited split between `aeat.models` and `aeat.deadlines` for the targeted gaps. `modelo 037` no longer surfaces as a current applicable filing, `modelo 130` is no longer hardcoded universal, `modelo 347` now has runtime applicability and a canonical annual window, and `modelo 123` now resolves to `modelo 193`.
+The working-tree remediation removes the previously audited split between `aeat.domain.modelos` and `aeat.domain.deadlines` for the targeted gaps. `modelo 037` no longer surfaces as a current applicable filing, `modelo 130` is no longer hardcoded universal, `modelo 347` now has runtime applicability and a canonical annual window, and `modelo 123` now resolves to `modelo 193`.
 
 MODELO-REMEDIATION-002 | OK | Shared profile contract widened end-to-end
 `AutonomoProfile`, the `aeat modelos year-plan` CLI, and the setup/profile-authoring surface now carry the same additional booleans required for the audited legal distinctions. This removes the prior CLI-only/manual-filtering behavior that hid unsupported cases.

@@ -42,10 +42,10 @@ observations recorded for transparency; neither is a blocker.
   (locks strict-mode behaviour), and the deliberate `DIRECTIVA_UE`
   omission.
 - **Inv 3 — All 18 rulesets import clean.** Confirmed via the
-  `from aeat.formulas._rulesets import ALL_RULESETS` smoke check
+  `from aeat.domain.formulas._rulesets import ALL_RULESETS` smoke check
   returning 18 ids; 89/89 computed casillas already cite.
 - **Inv 4 — No fabrication.** `git diff --stat` over
-  `src/aeat/formulas/_rulesets/*.py` is empty (zero ruleset files
+  `src/aeat/domain/formulas/_rulesets/*.py` is empty (zero ruleset files
   modified). The 89 pre-existing citations are unchanged.
 - **Inv 5 — `#338` mutation suite green.**
   `pytest -k mutation` collects 106 in this branch and passes them
@@ -64,7 +64,7 @@ observations recorded for transparency; neither is a blocker.
   non-ASCII probe and the `model_construct` gap path round out the
   surface.
 - **Inv 8 — `cli/__init__.py` UNCHANGED.** `git diff
-  origin/main..HEAD -- src/aeat/cli/__init__.py` returns empty.
+  origin/main..HEAD -- src/aeat/entrypoints/cli/__init__.py` returns empty.
   Phase 2 deferral honoured.
 
 ### Cross-cutting checks (all PASS)
@@ -82,7 +82,7 @@ observations recorded for transparency; neither is a blocker.
   `typer.echo(...)` to stdout and `typer.echo(..., err=True)` to
   stderr.
 - **Public API & underscore convention.** Callers import from
-  `aeat.formulas`, `aeat.models`, `aeat.cli.audit` only. Internals
+  `aeat.domain.formulas`, `aeat.domain.modelos`, `aeat.entrypoints.cli.audit` only. Internals
   (`_casilla`, `_helpers`, `_ruleset`) carry leading underscores.
 - **Test markers.** Every new test module sets
   `pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]`

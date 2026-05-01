@@ -28,10 +28,10 @@ Verification status: NEEDS_REVIEW (ruleset=modelo_303.2025)
 
 ## Files landed
 
-- `src/aeat/declaracion/_extractors/modelo_303_v2025.py` — line-anchored regex for all 33 casillas covering Apartado 1 (01-09), Apartado 2 (28-43), Resultado (44, 45, 64-71). Multi-match confidence downgrade + `ambiguous-label` warning mirror the Modelo 130 primitive stack.
-- `src/aeat/declaracion/_extractors/__init__.py` — registry extended with `(303, 2025, "2025.01")`.
+- `src/aeat/adapters/inbound/declaracion/_extractors/modelo_303_v2025.py` — line-anchored regex for all 33 casillas covering Apartado 1 (01-09), Apartado 2 (28-43), Resultado (44, 45, 64-71). Multi-match confidence downgrade + `ambiguous-label` warning mirror the Modelo 130 primitive stack.
+- `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py` — registry extended with `(303, 2025, "2025.01")`.
 - `tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_303_generator.py` — `Modelo303GenParams` + `generate()` renders 33 casillas in declaration order. Shares `_generator_shared` primitives with Modelo 130.
-- `src/aeat/declaracion/test_modelo_303_v2025.py` — 3 unit tests: 33-casilla COMPLETE round-trip, template auto-detection, sparse 23-of-33 PARTIAL extraction + 10 casilla-not-found warnings.
+- `src/aeat/adapters/inbound/declaracion/test_modelo_303_v2025.py` — 3 unit tests: 33-casilla COMPLETE round-trip, template auto-detection, sparse 23-of-33 PARTIAL extraction + 10 casilla-not-found warnings.
 
 ## Kent UX roleplay
 

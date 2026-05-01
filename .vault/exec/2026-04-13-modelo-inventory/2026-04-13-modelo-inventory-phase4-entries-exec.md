@@ -15,7 +15,7 @@ related:
 
 ## delivered
 
-- Added `src/aeat/models/_entries/_common.py` with `build_entry`,
+- Added `src/aeat/domain/modelos/_entries/_common.py` with `build_entry`,
   `build_applicability`, `make_citation` helpers to reduce boilerplate
   across entry modules. `make_citation` routes through
   `LegalCitation.model_validate(...)` so the helper's declared

@@ -14,21 +14,21 @@ related:
 
 ## Problem Statement
 
-The casilla corpus has 4 / 4 / 3 entries for modelos 130, 303, 390 — respectively 21 %, ~5 %, ~0.4 % of real form coverage. Rulesets in `src/aeat/formulas/_rulesets/` already reference casillas that are absent from the corpus (Modelo 130 ruleset: 9 formula casillas vs 4 in corpus), producing silent correctness bugs: drafts built today are missing most of the casillas the form requires. No test catches this. PDF-extraction work (clusters D, F) against real filing PDFs will produce `ExtractedCasilla` tuples whose IDs the corpus does not recognise, and the builder will silently drop them. Before any extractor is useful, the corpus must (a) cover every real-form casilla, (b) agree with its ruleset, and (c) carry source citations so the legal authority of every entry is auditable.
+The casilla corpus has 4 / 4 / 3 entries for modelos 130, 303, 390 — respectively 21 %, ~5 %, ~0.4 % of real form coverage. Rulesets in `src/aeat/domain/formulas/_rulesets/` already reference casillas that are absent from the corpus (Modelo 130 ruleset: 9 formula casillas vs 4 in corpus), producing silent correctness bugs: drafts built today are missing most of the casillas the form requires. No test catches this. PDF-extraction work (clusters D, F) against real filing PDFs will produce `ExtractedCasilla` tuples whose IDs the corpus does not recognise, and the builder will silently drop them. Before any extractor is useful, the corpus must (a) cover every real-form casilla, (b) agree with its ruleset, and (c) carry source citations so the legal authority of every entry is auditable.
 
 ## Considerations
 
 - AEAT publishes four independent sources that define a modelo's casillas: **BOE order** (legal), **Manual práctico** (operational), **interactive form XML on Sede electrónica** (machine-readable), **printed form PDF** (human-readable). Only the XML path is ready for deterministic ingest; BOE is parseable but pattern-narrow (Modelo 130 only today); Manual is stub.
-- `CasillaSchema` (at `src/aeat/filing/_protocols.py`) already models `id`, `value_type`, `required`, `formula_inputs`, `min_value`, `max_value`, `default` — adequate for the real-form casilla set but missing provenance fields.
-- Rulesets (`src/aeat/formulas/_rulesets/modelo_*.py`) are today the de-facto source of truth for "which casillas exist" on the modelos that have a formula implementation. They cover 130 and 303 only; no 390 ruleset exists (see #221).
-- The formula engine (`src/aeat/formulas/_engine.py`) exposes `Engine.audit_against(ruleset, provided, tolerance) -> AuditReport` — cluster E's round-trip verification primitive. The primitive can only audit casillas the ruleset knows; extending the ruleset is therefore part of this cluster's scope for 130 / 303.
+- `CasillaSchema` (at `src/aeat/application/filing/_protocols.py`) already models `id`, `value_type`, `required`, `formula_inputs`, `min_value`, `max_value`, `default` — adequate for the real-form casilla set but missing provenance fields.
+- Rulesets (`src/aeat/domain/formulas/_rulesets/modelo_*.py`) are today the de-facto source of truth for "which casillas exist" on the modelos that have a formula implementation. They cover 130 and 303 only; no 390 ruleset exists (see #221).
+- The formula engine (`src/aeat/domain/formulas/_engine.py`) exposes `Engine.audit_against(ruleset, provided, tolerance) -> AuditReport` — cluster E's round-trip verification primitive. The primitive can only audit casillas the ruleset knows; extending the ruleset is therefore part of this cluster's scope for 130 / 303.
 - Year-over-year casilla renumbering is a real phenomenon (303 *autoliquidación rectificativa* renumbered casillas from 2024-09 onward). The ADR must bake in versioning.
 - Trilingual labels per project mandate — Spanish authoritative, English + Hungarian companion.
 - The repo already has `corpus/casillas/modelo_*/YYYYXX.json` as the on-disk shape. We extend, not replace.
 
 ## Constraints
 
-- **No breakage of `#271` shipping contract.** `aeat.justificante`, `FilingDraft.draft_id` hash shape, `SubmittedFiling`, amendment baseline flow — all untouched.
+- **No breakage of `#271` shipping contract.** `aeat.domain.justificante`, `FilingDraft.draft_id` hash shape, `SubmittedFiling`, amendment baseline flow — all untouched.
 - **Strict+frozen pydantic v2** for every record; extra fields forbidden.
 - **Spanish label authority**; English + Hungarian as companions. `Translatable` TypedDict.
 - **No cert coupling**; all authoritative sources are publicly fetchable.
@@ -40,7 +40,7 @@ The casilla corpus has 4 / 4 / 3 entries for modelos 130, 303, 390 — respectiv
 
 ### 1. Extend `CasillaSchema` with provenance
 
-Edit `src/aeat/filing/_protocols.py`:
+Edit `src/aeat/application/filing/_protocols.py`:
 
 ```python
 class CasillaSource(BaseModel):
@@ -75,7 +75,7 @@ The existing 11 corpus files (4+4+3) are rewritten to carry `label`, `sources`, 
 
 ### 2. Enforce corpus ↔ ruleset agreement
 
-New test at `src/aeat/filing/test_schema_completeness.py`:
+New test at `src/aeat/application/filing/test_schema_completeness.py`:
 
 ```python
 @pytest.mark.unit
@@ -114,7 +114,7 @@ For Modelo N to count as "schema-complete":
 
 ### 5. Source strategy: interactive form XML as primary
 
-`src/aeat/schema/_forms_xml_loader.py` (new):
+`src/aeat/domain/schema/_forms_xml_loader.py` (new):
 
 - Downloads the AEAT interactive form XML for a given `(modelo, año)` from the public Sede electrónica URL pattern.
 - Stores the raw XML under `corpus/_sources/interactive_forms/modelo_N/YYYY.xml` with its SHA-256 recorded.
@@ -123,7 +123,7 @@ For Modelo N to count as "schema-complete":
 
 A separate `just regen-corpus` target re-runs the loader for every `(modelo, año)` pair. The loader is **not** invoked at runtime; corpus JSON is committed.
 
-Fallback for modelos where the interactive form XML is unavailable: a BOE PDF fallback wired to `src/aeat/schema/_boe_extractor.py`. Implemented only if needed — scope depends on which modelos XML covers.
+Fallback for modelos where the interactive form XML is unavailable: a BOE PDF fallback wired to `src/aeat/domain/schema/_boe_extractor.py`. Implemented only if needed — scope depends on which modelos XML covers.
 
 ### 6. Ruleset completion (scoped to cluster)
 

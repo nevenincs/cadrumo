@@ -14,7 +14,7 @@ related:
 
 # submission-pipeline-hardening
 
-Capstone reference for the autonomous-loop cycle spanning **waves 89–148** on `src/aeat/submission/_formats/` and `src/aeat/cli/submission/`. First written at wave 130; extended at wave 140 (50-wave milestone) and wave 149 (this revision) to cover the waves 141–148 structural-layout locks.
+Capstone reference for the autonomous-loop cycle spanning **waves 89–148** on `src/aeat/adapters/outbound/aeat/export/_formats/` and `src/aeat/entrypoints/cli/submission/`. First written at wave 130; extended at wave 140 (50-wave milestone) and wave 149 (this revision) to cover the waves 141–148 structural-layout locks.
 
 ## scope
 
@@ -95,7 +95,7 @@ Total: **32 perpetual-guard surfaces**.
 
 ## numeric summary
 
-- **59 waves landed** across `src/aeat/submission/` and `src/aeat/cli/submission/` since cycle start (wave 89)
+- **59 waves landed** across `src/aeat/adapters/outbound/aeat/export/` and `src/aeat/entrypoints/cli/submission/` since cycle start (wave 89)
 - **543 tests passing** (4 intentional kind-filtered skips)
 - **29 test files authored** with perpetual-guard invariants
 - **4 schema modules** pinned per ejercicio
@@ -147,7 +147,7 @@ The analogous structure for Modelo 130 is locked by wave 145 (11-field header + 
 
 A future contributor should:
 
-1. Run `uv run pytest src/aeat/submission/ src/aeat/cli/submission/` — 543 tests is the baseline.
+1. Run `uv run pytest src/aeat/adapters/outbound/aeat/export/ src/aeat/entrypoints/cli/submission/` — 543 tests is the baseline.
 2. Read `.claude/rules/aeat-project-mandates.md` and `.vault/adr/2026-04-17-export-first-adr.md`.
 3. For a new modelo, follow the 303 pattern: JSON fixture in `tests/fixtures/dr_specs/`, run the generator, register in `_schema_registry.py`, add golden SHA, add the ruleset metadata lock entry. The wave-124 registry-parametrised smoke test picks up the new entry automatically.
 4. When closing the 303 casilla gap, update `_EXPECTED_GAPS`, the fixture's `source.notes`, and regenerate — the wave-121/122 consistency tests will guide the edits.

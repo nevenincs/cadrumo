@@ -17,7 +17,7 @@ never collapses into `UNHANDLED_EXCEPTION`.
 
 ## Changes
 
-- `src/aeat/workflow/test_engine.py` — new
+- `src/aeat/application/workflow/test_engine.py` — new
   `TestSiteUnavailableArm` test class. The scenario builds a real
   `SiteHealthStatus` from
   `tests/fixtures/site_health/mantenimiento/interstitial.html`,

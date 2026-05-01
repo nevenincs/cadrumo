@@ -21,8 +21,8 @@ Extractor work (cluster D), calc-verification (cluster E), and Modelo 100 (clust
 - AEAT publishes enough **public material** (Manuales prácticos, BOE orders, Renta Web Open simulator output, Diseño de Registro specs) to establish layout ground truth and a small set of filled-case reference samples — **but not enough for parametrised scale**.
 - Kent has his own **private archive** of real filings (likely in Google Drive, named "MODELO *"). Those are authoritative but PII-laden — usable only as scrubbed derivatives, and only with explicit consent recorded per-file.
 - A **synthetic PDF generator** mirroring AEAT's rendering can supply unlimited parametrised scale, but only if its fidelity is validated against real anchors; an unvalidated generator is worse than no generator because it produces false confidence.
-- The project's `aeat drive` CLI (`src/aeat/cli/drive.py`) + `aeat.auth` Google OAuth plumbing already exist. A separate scrubbing library belongs under the new `src/aeat/_pdf_import/` package cluster A defines.
-- The `Engine.audit_against` primitive (`src/aeat/formulas/_engine.py:51`) expects a known-good `(casilla_id, value)` mapping. The synthetic generator's ground truth *is* that mapping — the two primitives pair cleanly.
+- The project's `aeat drive` CLI (`src/aeat/entrypoints/cli/drive.py`) + `aeat.adapters.outbound.aeat.auth` Google OAuth plumbing already exist. A separate scrubbing library belongs under the new `src/aeat/adapters/inbound/pdf/` package cluster A defines.
+- The `Engine.audit_against` primitive (`src/aeat/domain/formulas/_engine.py:51`) expects a known-good `(casilla_id, value)` mapping. The synthetic generator's ground truth *is* that mapping — the two primitives pair cleanly.
 - CI cannot pull user-private data; CI runs L1 + L3 only. L2 (scrubbed privates) runs locally + in the owning contributor's branch builds.
 - Project mandate: Pydantic v2 strict+frozen for every boundary record; no bare dicts; relative imports; `AeatError`-rooted exceptions.
 
@@ -67,7 +67,7 @@ tests/fixtures/
 │       └── _generator_shared.py   # reportlab layout primitives (AEAT-mimicking)
 ```
 
-### 2. New `src/aeat/_pdf_import/_scrub.py` library
+### 2. New `src/aeat/adapters/inbound/pdf/_scrub.py` library
 
 Lives in the package cluster A opens. Public API:
 
@@ -175,4 +175,4 @@ With counts per `(modelo, año, template_revision)`. Ties to cluster B's schema-
 - **Parametrised calc-verification works.** Tests can sweep `@pytest.mark.parametrize` across the casilla input space; `Engine.audit_against` checks every case.
 - **User consent is first-class.** Nothing enters the repo without a sidecar record; revocation is supported; every scrubbed file carries its own audit trail.
 - **Synthetic generator doubles as a product surface** — once built, Kent could generate a mock justificante / declaración for training / demo purposes. Not scope now, but a latent win.
-- **A new `src/aeat/_pdf_import/_scrub.py` library** lands; consumable by CLI surfaces, CI jobs, and future product features beyond fixtures.
+- **A new `src/aeat/adapters/inbound/pdf/_scrub.py` library** lands; consumable by CLI surfaces, CI jobs, and future product features beyond fixtures.

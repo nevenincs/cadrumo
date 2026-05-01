@@ -69,7 +69,7 @@ the 99-100 series of the RIRPF or the 99-101.7 series of the LIRPF.
 ### Citation hygiene — wave 67a corrections (already landed)
 
 The wave-67a citation audit (recorded in
-`src/aeat/models/_citation_registry.py` as `KnownBadCitation` rows)
+`src/aeat/domain/modelos/_citation_registry.py` as `KnownBadCitation` rows)
 established two non-negotiable mappings for M111:
 
 - **Premios en metálico → 19 %**: rate is fixed by **LIRPF art. 101.7**
@@ -81,7 +81,7 @@ established two non-negotiable mappings for M111:
   *Not* art. 100.3.a or art. 100.3.c — RIRPF art. 100 has no
   sub-letter structure.
 
-The citation tuple in `src/aeat/formulas/_rulesets/modelo_111_2025.py`
+The citation tuple in `src/aeat/domain/formulas/_rulesets/modelo_111_2025.py`
 already encodes these corrected mappings and is blocklist-clean
 (`uv run aeat audit rulesets citations` reports `OK modelo_111.2025
 ... coverage=100.00%` per the issue-`#339` audit CLI).
@@ -90,7 +90,7 @@ already encodes these corrected mappings and is blocklist-clean
 
 ### `modelo_111.2024`
 
-- File: `src/aeat/formulas/_rulesets/modelo_111_2024.py`.
+- File: `src/aeat/domain/formulas/_rulesets/modelo_111_2024.py`.
 - Structural clone of 2025 — re-imports `_CASILLAS_2025`,
   `_CITATIONS_2025`, `_FORMULAS_2025`. Declares its own
   `ParameterTable` with the 2024 effective range.
@@ -101,7 +101,7 @@ already encodes these corrected mappings and is blocklist-clean
 
 ### `modelo_111.2025`
 
-- File: `src/aeat/formulas/_rulesets/modelo_111_2025.py`.
+- File: `src/aeat/domain/formulas/_rulesets/modelo_111_2025.py`.
 - Canonical year — declares `_CITATIONS`, `_CASILLAS`, `_FORMULAS`.
 - Casillas (11 modelled, 4 computed): 03, 06, 08, 09, 11, 12, 15, 18,
   28, 29, 30. The 21-casilla BOE template prints additional perceptores
@@ -121,7 +121,7 @@ The 2026 ruleset is the primary new artefact this issue ships.
 
 ### Test coverage
 
-`src/aeat/formulas/_rulesets/test_modelo_111_2025.py` ships eight
+`src/aeat/domain/formulas/_rulesets/test_modelo_111_2025.py` ships eight
 worked-example tests (happy path + sum mismatch + complementaria
 deduction + casilla count assertion + premios at 19 % + external
 worked example LIRPF 99 + zero boundary + premios typo). The 2024
@@ -199,7 +199,7 @@ M111's flat 21-casilla layout does not have.
 
 ### Extractor
 
-`src/aeat/declaracion/_extractors/modelo_111_v2025.py` ships a
+`src/aeat/adapters/inbound/declaracion/_extractors/modelo_111_v2025.py` ships a
 `Modelo111V2025Extractor` subclassing `GenericDeclaracionExtractor`
 with `casilla_ids = ("01", "02", ..., "18", "28", "29", "30")`. The
 `template_revision = ("111", 2025, "2025.01")` triple resolves at
@@ -220,7 +220,7 @@ layout has been published).
 
 ## Mutation coverage — current fingerprint
 
-`src/aeat/formulas/_rulesets/test_mutator_kill_rate.py::EXPECTED_COUNTS`
+`src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py::EXPECTED_COUNTS`
 reports for both `modelo_111.2024` and `modelo_111.2025`:
 
 - `sub_op = 1` (casilla 30's `28 - 29`).
@@ -328,14 +328,14 @@ Four concurrent per-modelo Tier-L branches (post-`#321`):
 PR-open soft collisions on three shared files:
 `tests/integration/test_kent_workflows.py` (different test class),
 `docs/coverage/modelos.md` (different row),
-`src/aeat/formulas/_rulesets/__init__.py` (different ruleset
+`src/aeat/domain/formulas/_rulesets/__init__.py` (different ruleset
 register). Mechanical 4-way textual unions at PR-open time.
 
 ## Acceptance summary
 
 This issue lands:
 
-1. **2026 ruleset** — `src/aeat/formulas/_rulesets/modelo_111_2026.py`
+1. **2026 ruleset** — `src/aeat/domain/formulas/_rulesets/modelo_111_2026.py`
    as a structural clone of 2024 / 2025. Registered in `__init__.py`.
 2. **2024 + 2026 sibling extractors** —
    `Modelo111V2024Extractor` + `Modelo111V2026Extractor` registered

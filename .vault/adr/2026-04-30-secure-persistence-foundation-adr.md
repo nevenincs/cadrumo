@@ -45,16 +45,16 @@ real AUDIT-class events.
 
 Architectural drivers:
 
-- The `aeat.filing` and `aeat.submission` modules already use the
+- The `aeat.application.filing` and `aeat.adapters.outbound.aeat.export` modules already use the
   pydantic-v2-frozen + atomic-tempfile-write pattern. Migration
   is structurally a thin envelope wrapper (the existing
   `Wave-3` repository pattern carries forward verbatim).
 - The live-submit audit log emission is the load-bearing change.
-  Today `aeat.submission._audit` writes JSONL to
+  Today `aeat.adapters.outbound.aeat.export._audit` writes JSONL to
   `.aeat/live-submit-audit.log` (project-relative, outside
   `aeat_audit_dir`). The relocation replaces the writer with
   one that routes every event through
-  `aeat.storage.redact_structured(event, rules=default_rules_for_class(SensitivityClass.AUDIT))`
+  `aeat.adapters.persistence.storage.redact_structured(event, rules=default_rules_for_class(SensitivityClass.AUDIT))`
   before writing JSONL to
   `aeat_audit_dir / live-submit-audit.envelope.jsonl`. The
   legacy log is migrated forward with an explicit redaction pass
@@ -102,7 +102,7 @@ field validation; cross-module error re-export discipline).
 
 ### Phase 1 — Filing draft repository
 
-New module `aeat.filing._repository` mirroring the Wave-3
+New module `aeat.application.filing._repository` mirroring the Wave-3
 `TransactionCatalogueRepository` pattern:
 
 - `FilingDraftRepository(*, store_dir)` wraps
@@ -119,27 +119,27 @@ New module `aeat.filing._repository` mirroring the Wave-3
 
 ### Phase 2 — Submission repository
 
-`aeat.submission._repository` — submission records at AUDIT
+`aeat.adapters.outbound.aeat.export._repository` — submission records at AUDIT
 class. Same per-record envelope shape; same per-record lock.
 
 ### Phase 3 — Amendment repository
 
-`aeat.filing._complementaria_repository` — amendments at AUDIT
+`aeat.application.filing._complementaria_repository` — amendments at AUDIT
 class. Co-located with the submission repository because the
 existing complementaria flow consumes both.
 
 ### Phase 4 — Justificante records repository
 
-`aeat.justificante._repository` — parsed justificante metadata
+`aeat.domain.justificante._repository` — parsed justificante metadata
 at AUDIT class. The PDF blobs themselves remain in
 `aeat_justificantes_dir` (operator-class legal proof; the
 substrate already handles them via `EncryptedBlobStore`).
 
 ### Phase 5 — Live-submit audit relocation
 
-The big one. New `aeat.submission._governed_audit` writer:
+The big one. New `aeat.adapters.outbound.aeat.export._governed_audit` writer:
 
-- Replaces the existing `aeat.submission._audit` writer.
+- Replaces the existing `aeat.adapters.outbound.aeat.export._audit` writer.
 - Sink target: `aeat_audit_dir / live-submit-audit.envelope.jsonl`.
 - Every event passes through
   `redact_structured(event, rules=default_rules_for_class(SensitivityClass.AUDIT))`
@@ -154,7 +154,7 @@ The big one. New `aeat.submission._governed_audit` writer:
 
 ### Phase 6 — Filing-history repository
 
-`aeat.filing._history_repository` — historical filing-state
+`aeat.application.filing._history_repository` — historical filing-state
 records at AUDIT class. The HTML detail-page archive stays in
 the existing `aeat_filing_history_dir` (large blobs; operator-
 visible legal record).

@@ -29,22 +29,22 @@ Autonomous execution record for `#44` on branch
    ``modelo_100_2025A.pdf``. Every identifier (NIF, CSV, presentation
    id) is fictitious. The generator is committed as a reproducibility
    reference.
-4. **Subpackage.** Built ``src/aeat/justificante/`` with the strict
+4. **Subpackage.** Built ``src/aeat/domain/justificante/`` with the strict
    pydantic v2 ``Justificante`` record (frozen, extra=forbid), the four
-   error classes inheriting from ``aeat.errors.AeatError``, the
+   error classes inheriting from ``aeat.core.errors.AeatError``, the
    regex-driven extractor, the pdfplumber backend, the synchronous
    public ``parse_justificante`` entry point, and the async
    ``verify_csv`` coroutine.
-5. **CLI.** Added ``src/aeat/cli/justificante/__init__.py`` with
+5. **CLI.** Added ``src/aeat/entrypoints/cli/justificante/__init__.py`` with
    ``parse`` and ``verify`` subcommands and wired it into
-   ``src/aeat/cli/__init__.py`` via ``app.add_typer``.
+   ``src/aeat/entrypoints/cli/__init__.py`` via ``app.add_typer``.
 6. **Settings.** Added ``aeat_justificantes_dir`` and
    ``aeat_justificante_parser_backend`` to ``Settings`` and to
    ``env/.env.example``. The config-alignment test
    (``tests/test_config.py``) stays green. A cyclic-import risk between
-   ``aeat.config`` and ``aeat.justificante`` was identified and
+   ``aeat.core.config`` and ``aeat.domain.justificante`` was identified and
    resolved by moving ``load_settings`` into the body of
-   ``parse_justificante`` and by deferring ``aeat.browser`` imports in
+   ``parse_justificante`` and by deferring ``aeat.adapters.outbound.aeat.browser`` imports in
    ``_verify.py`` to function scope.
 7. **Tests.** Wrote ``test_parser.py`` with 12 unit tests covering the
    per-modelo fixture parse, sha-256 capture, determinism, both enum
@@ -67,7 +67,7 @@ branch was fast-forwarded onto the new base before committing; the
 resulting gate stays green (394 pass, 1 live-skipped, 16 deselected).
 
 PR `#49` defined a rebase-swap stub at
-``src/aeat/submission/_protocols.py``:
+``src/aeat/adapters/outbound/aeat/export/_protocols.py``:
 
 - ``Justificante(BaseModel)`` with ``csv: str`` and ``pdf_path: Path``
 - ``JustificanteParser`` Protocol with ``parse(raw_bytes: bytes) -> Justificante``

@@ -36,7 +36,7 @@ issue: wgergely/aeat#67
    subpackages by name (well above the ≥5 floor).
 4. Created `tests/test_docs.py` at the repo-root `tests/` level with
    four `@pytest.mark.unit` smoke tests. No mocks/patches/stubs.
-   Reuses `aeat.config.PROJECT_ROOT` to anchor the asserts.
+   Reuses `aeat.core.config.PROJECT_ROOT` to anchor the asserts.
 5. Left `RELEASING.md` untouched — it is already authoritative from
    #60 and the project-meta test verifies its existence and the
    presence of the `just release` reference.

@@ -45,8 +45,8 @@ classification, and trilingual error messaging.
 - The project already standardises on typed domain exceptions and strict
   Pydantic v2 models, so the registry should extend that shape rather than
   introduce a parallel mechanism.
-- The user explicitly fenced off `src/aeat/cli/workflow/run.py` and
-  `src/aeat/cli/workflow/next.py` until sibling issue #393 lands.
+- The user explicitly fenced off `src/aeat/entrypoints/cli/workflow/run.py` and
+  `src/aeat/entrypoints/cli/workflow/next.py` until sibling issue #393 lands.
 - Later foundational issues reuse this work directly:
   - issue #399 consumes the error envelope and JSON discipline;
   - issue #400 consumes the registered `LOCKED`, `INTEGRITY`, and `REFUSED`
@@ -60,22 +60,22 @@ classification, and trilingual error messaging.
 
 ## Constraints
 
-- The existing public import path `from aeat.errors import ...` must keep
-  working, even though the single-file `aeat.errors` module needs to grow a
+- The existing public import path `from aeat.core.errors import ...` must keep
+  working, even though the single-file `aeat.core.errors` module needs to grow a
   `_registry.py` sibling.
 - Every concrete `AeatError` subclass on `main` needs a registered code, but
   the implementation must stay phaseable enough to avoid a repo-wide manual
   rewrite of every CLI error site in one pass.
 - The issue requires ASCII-stable prefixes and Windows-safe stderr handling for
   non-ASCII localized messages.
-- The public surface must remain `aeat.errors`; callers should not import
-  directly from `aeat.errors._registry`.
+- The public surface must remain `aeat.core.errors`; callers should not import
+  directly from `aeat.core.errors._registry`.
 
 ## Implementation
 
-- Convert `aeat.errors` from a single module into a package and re-export the
-  existing public symbols from `aeat.errors.__init__`.
-- Add `aeat.errors._registry` with:
+- Convert `aeat.core.errors` from a single module into a package and re-export the
+  existing public symbols from `aeat.core.errors.__init__`.
+- Add `aeat.core.errors._registry` with:
   - a closed `ErrorCategory` enum for the stable stderr prefixes;
   - strict, frozen Pydantic models for `ErrorCode` and `ErrorEnvelope`;
   - a registration surface that binds a code record to each `AeatError`
@@ -124,7 +124,7 @@ and the registry stayed aligned.
 
 ## Consequences
 
-- `aeat.errors` becomes a package, so the implementation must preserve
+- `aeat.core.errors` becomes a package, so the implementation must preserve
   imports and avoid circular-import regressions.
 - The first landing provides the registry, envelope, and central CLI emission
   path, but it does not finish the parse-time Click translation problem or the

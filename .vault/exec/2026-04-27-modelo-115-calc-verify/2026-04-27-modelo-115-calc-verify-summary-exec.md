@@ -80,8 +80,8 @@ waiver".
 
 - `just lint` → All checks passed.
 - `just typecheck` → All checks passed.
-- `uv run pytest --ignore=src/aeat/auth/test_authenticator.py
-  --ignore=src/aeat/auth/test_clave_movil.py`
+- `uv run pytest --ignore=src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py
+  --ignore=src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`
   → 3 708 passed, 13 skipped.
   (The two ignored modules carry pre-existing flaky network /
   TLS handshake tests unrelated to this issue —
@@ -96,23 +96,23 @@ waiver".
 
 ## Files changed (summary)
 
-- **NEW** `src/aeat/formulas/_rulesets/modelo_115_2026.py`
-- **NEW** `src/aeat/formulas/_rulesets/test_modelo_115_2026.py`
+- **NEW** `src/aeat/domain/formulas/_rulesets/modelo_115_2026.py`
+- **NEW** `src/aeat/domain/formulas/_rulesets/test_modelo_115_2026.py`
 - **NEW** `.vault/research/2026-04-27-modelo-115-calc-verify-research.md`
 - **NEW** `.vault/adr/2026-04-27-modelo-115-calc-verify-adr.md`
 - **NEW** `.vault/plan/2026-04-27-modelo-115-calc-verify-plan.md`
 - **NEW** `.vault/reference/2026-115-rule-delta.md`
 - **NEW** `.vault/exec/2026-04-27-modelo-115-calc-verify/...`
   (5 files)
-- **EDIT** `src/aeat/formulas/_rulesets/__init__.py`
-- **EDIT** `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`
-- **EDIT** `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py`
-- **EDIT** `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`
-- **EDIT** `src/aeat/declaracion/_extractors/modelo_115_v2025.py`
-- **EDIT** `src/aeat/declaracion/_extractors/__init__.py`
-- **EDIT** `src/aeat/formulas/test_smoke.py`
-- **EDIT** `src/aeat/formulas/test_registry.py`
-- **EDIT** `src/aeat/formulas/test_cli.py`
+- **EDIT** `src/aeat/domain/formulas/_rulesets/__init__.py`
+- **EDIT** `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`
+- **EDIT** `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py`
+- **EDIT** `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py`
+- **EDIT** `src/aeat/adapters/inbound/declaracion/_extractors/modelo_115_v2025.py`
+- **EDIT** `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py`
+- **EDIT** `src/aeat/domain/formulas/test_smoke.py`
+- **EDIT** `src/aeat/domain/formulas/test_registry.py`
+- **EDIT** `src/aeat/domain/formulas/test_cli.py`
 - **EDIT** `tests/integration/test_kent_workflows.py`
 - **EDIT** `docs/coverage/modelos.md`
 

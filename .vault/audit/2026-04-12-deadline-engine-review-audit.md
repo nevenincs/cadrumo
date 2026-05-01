@@ -20,9 +20,9 @@ territories) and the ADR / plan checklists.
 
 ## scope of review
 
-Files added under `src/aeat/deadlines/`, `src/aeat/cli/deadlines/`,
+Files added under `src/aeat/domain/deadlines/`, `src/aeat/entrypoints/cli/deadlines/`,
 `.vault/{research,adr,plan,exec,audit}/`, plus the additive edits to
-`src/aeat/cli/__init__.py`, `src/aeat/config.py`, and
+`src/aeat/entrypoints/cli/__init__.py`, `src/aeat/config.py`, and
 `env/.env.example`. Sibling-branch territories
 (`pyproject.toml [tool.pytest]`, `tests/conftest.py`,
 `src/aeat/{models,corpus,manuals,portals,auth,schema,sync,storage}/`)
@@ -78,30 +78,30 @@ time only - the engine itself reads no global state.
 ### ERRORS-001 | INFO | error hierarchy rooted at AeatError
 
 `DeadlineError`, `ProfileError`, and `ScheduleComputationError` all
-inherit (transitively) from `aeat.errors.AeatError`. No stdlib
-exceptions cross the public API of `aeat.deadlines`. The CLI raises
+inherit (transitively) from `aeat.core.errors.AeatError`. No stdlib
+exceptions cross the public API of `aeat.domain.deadlines`. The CLI raises
 `typer.BadParameter` for missing-argument cases, which is the standard
 typer convention and never propagates as a domain error.
 
-### LOGGING-001 | INFO | logging via aeat.logging.get_logger only
+### LOGGING-001 | INFO | logging via aeat.core.logging.get_logger only
 
-`_engine.py` uses `aeat.logging.get_logger(__name__)`. No bare
+`_engine.py` uses `aeat.core.logging.get_logger(__name__)`. No bare
 `logging.getLogger`, no `print`, no stdout writes from the engine
 itself. The CLI uses `rich.console.Console` for user-facing output,
 which is the documented convention from the existing
-`aeat.cli.sync` sub-app.
+`aeat.entrypoints.cli.sync` sub-app.
 
-### PUBLIC-API-001 | INFO | callers import only from aeat.deadlines
+### PUBLIC-API-001 | INFO | callers import only from aeat.domain.deadlines
 
 Every internal module is `_`-prefixed (`_models`, `_engine`,
 `_calendar`, `_applies`, `_protocols`, `_errors`). The public surface
-is the closed `__all__` list in `aeat.deadlines.__init__`. The CLI
-sub-app imports only from `aeat.deadlines`, never from any
+is the closed `__all__` list in `aeat.domain.deadlines.__init__`. The CLI
+sub-app imports only from `aeat.domain.deadlines`, never from any
 underscore-prefixed internal module.
 
 ### DOCSTRINGS-001 | INFO | Google-style docstrings + type hints on every public symbol
 
-Every public class, method, and function in `aeat.deadlines` has a
+Every public class, method, and function in `aeat.domain.deadlines` has a
 Google-style docstring with `Args`, `Returns`, and `Raises` sections
 where applicable. Type annotations are exhaustive on every public
 signature.
@@ -109,7 +109,7 @@ signature.
 ### SIBLING-001 | INFO | sibling-branch territories left untouched
 
 `git status --porcelain` shows the only modified files outside the new
-subpackage are `src/aeat/cli/__init__.py` (additive sub-app mount),
+subpackage are `src/aeat/entrypoints/cli/__init__.py` (additive sub-app mount),
 `src/aeat/config.py` (additive Settings fields), and
 `env/.env.example` (additive entries). `.gitignore` carried a
 pre-existing modification from the worktree bootstrap. No files in
@@ -119,7 +119,7 @@ pre-existing modification from the worktree bootstrap. No files in
 ### SETTINGS-001 | INFO | settings + .env.example aligned
 
 `AEAT_DEFAULT_PROFILE_PATH` and `AEAT_DEADLINE_DUE_SOON_DAYS` are
-defined in `aeat.config.Settings` with documented defaults and
+defined in `aeat.core.config.Settings` with documented defaults and
 documented in `env/.env.example`. The alignment test
 `tests/test_config.py::TestEnvExampleAlignment` passes for both
 fields.

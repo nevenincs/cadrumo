@@ -12,14 +12,14 @@ related:
 
 Implemented issue #320 for Modelo 123 2024/2025/2026 calc-verify-roundtrip.
 
-- Created: `src/aeat/formulas/_rulesets/modelo_123_2026.py`
-- Created: `src/aeat/formulas/_rulesets/test_modelo_123_2024.py`
-- Created: `src/aeat/formulas/_rulesets/test_modelo_123_2026.py`
+- Created: `src/aeat/domain/formulas/_rulesets/modelo_123_2026.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_modelo_123_2024.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_modelo_123_2026.py`
 - Created: `.vault/reference/2026-04-27-modelo-123-rule-delta-reference.md`
-- Modified: `src/aeat/formulas/_rulesets/modelo_123_2025.py`
-- Modified: `src/aeat/formulas/_rulesets/__init__.py`
-- Modified: `src/aeat/declaracion/_extractors/modelo_123_v2025.py`
-- Modified: `src/aeat/declaracion/_extractors/__init__.py`
+- Modified: `src/aeat/domain/formulas/_rulesets/modelo_123_2025.py`
+- Modified: `src/aeat/domain/formulas/_rulesets/__init__.py`
+- Modified: `src/aeat/adapters/inbound/declaracion/_extractors/modelo_123_v2025.py`
+- Modified: `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py`
 - Modified: M123 registry, CLI, smoke, mutation, extractor, integration, and
   coverage tests.
 - Modified: `docs/coverage/modelos.md`
@@ -71,7 +71,7 @@ Mutation fingerprint:
 
 Focused verification passed:
 
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_123_2025.py src/aeat/formulas/_rulesets/test_modelo_123_2024.py src/aeat/formulas/_rulesets/test_modelo_123_2026.py src/aeat/formulas/test_registry.py src/aeat/formulas/test_cli.py src/aeat/formulas/test_smoke.py src/aeat/declaracion/test_quarterly_extractors.py src/aeat/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/formulas/_rulesets/test_operand_swap_mutation.py tests/integration/test_kent_workflows.py::TestKentImportsModelo123Declaracion`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_123_2025.py src/aeat/domain/formulas/_rulesets/test_modelo_123_2024.py src/aeat/domain/formulas/_rulesets/test_modelo_123_2026.py src/aeat/domain/formulas/test_registry.py src/aeat/domain/formulas/test_cli.py src/aeat/domain/formulas/test_smoke.py src/aeat/adapters/inbound/declaracion/test_quarterly_extractors.py src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py tests/integration/test_kent_workflows.py::TestKentImportsModelo123Declaracion`
   passed with 156 tests.
 - `uv run aeat audit rulesets citations` passed with aggregate 100% coverage.
 

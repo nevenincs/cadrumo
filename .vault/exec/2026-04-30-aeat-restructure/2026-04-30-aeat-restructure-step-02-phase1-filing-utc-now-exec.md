@@ -13,11 +13,11 @@ related:
 
 ## status
 
-Step 2 PR 3 of 6. `__all__` removal of `aeat.filing.utc_now` per ADR Dead-code workstream / Phase 1.
+Step 2 PR 3 of 6. `__all__` removal of `aeat.application.filing.utc_now` per ADR Dead-code workstream / Phase 1.
 
 ## scope
 
-- Remove `"utc_now"` from `src/aeat/filing/__init__.py` `__all__` (line 364).
+- Remove `"utc_now"` from `src/aeat/application/filing/__init__.py` `__all__` (line 364).
 - Function definition stays at `__init__.py:294`.
 
 ## pre-merge safety check
@@ -26,7 +26,7 @@ Step 2 PR 3 of 6. `__all__` removal of `aeat.filing.utc_now` per ADR Dead-code w
 
 ## verification
 
-- `python -c "import aeat.filing"` — succeeds.
+- `python -c "import aeat.application.filing"` — succeeds.
 - `prek` pre-commit hooks — to be enforced on commit.
 
 ## next step

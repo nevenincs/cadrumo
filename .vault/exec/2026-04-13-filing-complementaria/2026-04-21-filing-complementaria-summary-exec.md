@@ -14,17 +14,17 @@ related:
 
 ## delivered
 
-- Added the new amendment engine under `aeat.filing` with strict pydantic v2
+- Added the new amendment engine under `aeat.application.filing` with strict pydantic v2
   types:
   `AmendmentKind`,
   `CasillaChange`,
   `CasillaDelta`,
   `FilingAmendment`,
   and `build_complementaria(...)`.
-- Added additive public exports from `aeat.filing`.
+- Added additive public exports from `aeat.application.filing`.
 - Persisted built amendments to the existing file-backed submission substrate
   under an `amendments/` directory.
-- Extended `aeat.submission` with `AmendmentSubmissionResult` and
+- Extended `aeat.adapters.outbound.aeat.export` with `AmendmentSubmissionResult` and
   `SubmissionEngine.submit_amendment(...)`.
 - Routed amendment submission through the existing submitter transport while
   keeping dry-run as the default and preserving the manual/live gate.

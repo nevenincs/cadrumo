@@ -32,7 +32,7 @@ Deliver issue `#163` as a single-branch, test-infrastructure-only refactor that 
 - Add `tests/test_marker_integrity.py` as an AST-backed unit test that walks every test module under `src/aeat/` and `tests/` and rejects any module missing exactly one access marker or at least one domain marker applied at module level.
 - Migrate every existing `test_*.py` and `_test_*.py` module (approximately 140 files; 14 currently `live`-marked, 126 currently `unit`-marked) to module-level `pytestmark = [pytest.mark.<access>, pytest.mark.<domain>]`. Strip per-function `@pytest.mark.unit` and `@pytest.mark.live` decorators. Rename any remaining `@pytest.mark.live` function references to `live_read`.
 - Split any module that mixes `unit` and `live_read` test functions into two modules before applying markers (zero such modules have been identified in the research survey, but the integrity test will surface any that the survey missed).
-- Add `aeat_live_write_unsafe_bypass: bool = Field(default=False, description=...)` and `aeat_live_write_unsafe_bypass_confirm: str = Field(default="", description=...)` to `aeat.config.Settings` with loud warning text supplied in the `description=` kwarg (NOT as Python docstrings or comments), mirror both lines in `env/.env.example`, and keep `tests/test_config.py` green. `tests/test_config.py` enforces alignment against `Field(description=...)`; inline Python docstrings do not satisfy the invariant.
+- Add `aeat_live_write_unsafe_bypass: bool = Field(default=False, description=...)` and `aeat_live_write_unsafe_bypass_confirm: str = Field(default="", description=...)` to `aeat.core.config.Settings` with loud warning text supplied in the `description=` kwarg (NOT as Python docstrings or comments), mirror both lines in `env/.env.example`, and keep `tests/test_config.py` green. `tests/test_config.py` enforces alignment against `Field(description=...)`; inline Python docstrings do not satisfy the invariant.
 - Rewrite the `justfile` `test` and `test-live` recipes, add `test-live-read`, `test-domain DOMAIN`, and add `test-live-write` as a documentation surface for the three-factor bypass.
 - Update `CLAUDE.md` testing paragraph to describe the new axes and the module-level mandate; add `tests/README.md` documenting the nine markers, the bypass phrase verbatim, and the cross-reference to charter `#116`.
 
@@ -40,7 +40,7 @@ Deliver issue `#163` as a single-branch, test-infrastructure-only refactor that 
 
 During plan authoring the two candidate hook locations were probed directly to remove ambiguity from phase 3:
 
-- Probe A: placed a `pytest_collection_modifyitems` that raises `RuntimeError("CONFTEST HOOK REACHED")` into `tests/conftest.py`, then ran `uv run pytest --collect-only -q src/aeat/auth/test_smoke.py`. Result: collection succeeded, NO `RuntimeError` surfaced. The hook is not reached for items collected under `src/aeat/...`.
+- Probe A: placed a `pytest_collection_modifyitems` that raises `RuntimeError("CONFTEST HOOK REACHED")` into `tests/conftest.py`, then ran `uv run pytest --collect-only -q src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_smoke.py`. Result: collection succeeded, NO `RuntimeError` surfaced. The hook is not reached for items collected under `src/aeat/...`.
 - Probe B: placed the same probe into a repo-root `conftest.py`, reran the same command. Result: pytest internal error with the expected `RuntimeError` in the traceback. The hook IS reached for `src/aeat/...` items from a repo-root conftest.
 
 Deterministic conclusion: the canonical hook host is a new repo-root `conftest.py`. `tests/conftest.py` still exists for per-subtree fixtures but also imports and invokes the shared hook helper for completeness. Step 2.4 becomes a confirmatory re-run rather than a branching decision.
@@ -132,7 +132,7 @@ Rollback: `git checkout -- pyproject.toml` restores the prior marker table; no r
 
 Description:
 
-- Add two pydantic-settings fields to `aeat.config.Settings`, following the existing project convention of `pydantic.Field(default=..., description=...)` used by every neighbouring field (for example `aeat_storage_auto_migrate`, `aeat_live_tests_enabled`, `aeat_casillas_review_required`). The warning text lives in the `description=` kwarg, NOT as a Python docstring or an inline comment; `tests/test_config.py` enforces alignment against `Field(description=...)` and `.env.example` mirrors the same copy.
+- Add two pydantic-settings fields to `aeat.core.config.Settings`, following the existing project convention of `pydantic.Field(default=..., description=...)` used by every neighbouring field (for example `aeat_storage_auto_migrate`, `aeat_live_tests_enabled`, `aeat_casillas_review_required`). The warning text lives in the `description=` kwarg, NOT as a Python docstring or an inline comment; `tests/test_config.py` enforces alignment against `Field(description=...)` and `.env.example` mirrors the same copy.
   - `aeat_live_write_unsafe_bypass: bool = Field(default=False, description="UNSAFE. Pytest collection bypass factor 1 of 3 for @pytest.mark.live_write tests. NEVER set outside an interactive live-filing session. See charter #116.")`
   - `aeat_live_write_unsafe_bypass_confirm: str = Field(default="", description="UNSAFE. Pytest collection bypass factor 2 of 3. Must equal the phrase: I ACCEPT THE RISK OF FILING A LIVE TAX RETURN. NEVER set outside an interactive live-filing session.")`
 - Mirror both in `env/.env.example` under a new `-- Live-write bypass (charter #116 R1) --` section using the same warning copy that appears in `description=`, plus an explicit "never set in CI or cron" line so the operator-facing surface matches the programmatic surface byte-for-byte where possible.
@@ -191,7 +191,7 @@ Verification commands:
 - `uv run pytest --collect-only -m live_write -q` must print "0 tests collected" with no `AEAT_LIVE_WRITE_UNSAFE_BYPASS` env vars set.
 - `uv run pytest --collect-only -m live_read -q` must collect a positive count (14 modules per the research inventory).
 - `uv run pytest --collect-only -q 2>&1 | head -5` must not raise a `UsageError` with all markers correctly applied after phase 3.
-- `uv run pytest --collect-only src/aeat/auth/test_smoke.py -q` must succeed (confirms the root-level hook participates cleanly in collection under `src/aeat/`).
+- `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_smoke.py -q` must succeed (confirms the root-level hook participates cleanly in collection under `src/aeat/`).
 
 Rollback: `git checkout -- tests/conftest.py` reverts `tests/conftest.py`; `rm tests/_marker_hook.py conftest.py` removes the new infrastructure.
 
@@ -245,10 +245,10 @@ Description:
 
 - This step is confirmatory only: the planning-time probe (see `Planning-time probe: hook reach` section above) has already established that a `tests/conftest.py`-only hook does NOT reach `src/aeat/...` items, and that the repo-root `conftest.py` does. Step 2.2 has therefore already installed the hook at the correct location (repo-root `conftest.py`, with a shared `tests/_marker_hook.py` helper and a parallel wrapper in `tests/conftest.py`). No branching decision remains.
 - Execute the deterministic confirmation:
-  1. Temporarily edit a single file under `src/aeat/submission/` (for example `src/aeat/submission/test_engine.py`) to add `pytest.mark.live_write` to its `pytestmark` list in place of the existing access marker.
-  2. Run `uv run pytest --collect-only src/aeat/submission/test_engine.py -q` with no bypass env vars set.
+  1. Temporarily edit a single file under `src/aeat/adapters/outbound/aeat/export/` (for example `src/aeat/adapters/outbound/aeat/export/test_engine.py`) to add `pytest.mark.live_write` to its `pytestmark` list in place of the existing access marker.
+  2. Run `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/test_engine.py -q` with no bypass env vars set.
   3. Expect: the item is dropped (zero collected). A session-level warning may surface.
-  4. Revert the temporary edit with `git checkout -- src/aeat/submission/test_engine.py` before closing the step.
+  4. Revert the temporary edit with `git checkout -- src/aeat/adapters/outbound/aeat/export/test_engine.py` before closing the step.
 - The decision tree that was originally specified in this step (leave in `tests/conftest.py` vs. promote to a shared helper) is retired because the planning-time probe has already chosen the promotion path.
 
 Files touched: none (the ad-hoc edit is reverted before the step closes).
@@ -257,10 +257,10 @@ Dependencies: step 2.2 and phase 3 landed (so the file under edit already carrie
 
 Verification commands:
 
-- `uv run pytest --collect-only src/aeat/submission/test_engine.py -q` with the ad-hoc `live_write` tag returns zero collected.
-- `uv run pytest --collect-only src/aeat/submission/test_engine.py -q` after revert returns the pre-refactor item count.
+- `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/test_engine.py -q` with the ad-hoc `live_write` tag returns zero collected.
+- `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/test_engine.py -q` after revert returns the pre-refactor item count.
 
-Rollback: `git checkout -- src/aeat/submission/test_engine.py` (or the file the reviewer picked).
+Rollback: `git checkout -- src/aeat/adapters/outbound/aeat/export/test_engine.py` (or the file the reviewer picked).
 
 ---
 
@@ -283,21 +283,21 @@ Description: apply module-level `pytestmark` and strip per-function access marke
 
 Inventory (path -> new `pytestmark`):
 
-- `src/aeat/auth/test_certificate.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/auth/test_certificate_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
-- `src/aeat/auth/test_health.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/auth/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/browser/test_evasion.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/browser/test_live_evasion.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
-- `src/aeat/browser/test_profile.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/browser/test_session.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_health.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_evasion.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_live_evasion.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_profile.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 - `src/aeat/inbox/test_classifier.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 - `src/aeat/inbox/test_deadline.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 - `src/aeat/inbox/test_fetcher.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 - `src/aeat/inbox/test_live_inbox.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
 - `src/aeat/inbox/test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/justificante/test_parser.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/justificante/test_verify_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
+- `src/aeat/domain/justificante/test_parser.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/domain/justificante/test_verify_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
 - `src/aeat/status/test_cache.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 - `src/aeat/status/test_cache_key.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 - `src/aeat/status/test_errors.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
@@ -306,19 +306,19 @@ Inventory (path -> new `pytestmark`):
 - `src/aeat/status/test_reader.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 - `src/aeat/status/test_site_health.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 - `src/aeat/status/_parsers/test_expedientes.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/casillas/test_live_cli.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
-- `src/aeat/casillas/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/casillas/_test_catalogue.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/casillas/_test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/sync/test_bounded_policy.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/sync/test_classifier.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/sync/test_live_sync.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
-- `src/aeat/sync/test_repository.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/sync/test_runner.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/sync/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/sync/test_strategies.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/sync/test_wire.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
-- `src/aeat/portals/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/domain/casillas/test_live_cli.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
+- `src/aeat/domain/casillas/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/domain/casillas/_test_catalogue.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/domain/casillas/_test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/application/sync/test_bounded_policy.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/application/sync/test_classifier.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/application/sync/test_live_sync.py` -> `[pytest.mark.live_read, pytest.mark.domain_aeat_remote]`
+- `src/aeat/application/sync/test_repository.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/application/sync/test_runner.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/application/sync/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/application/sync/test_strategies.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/application/sync/test_wire.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
+- `src/aeat/domain/portals/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_aeat_remote]`
 
 Files touched: the 36 paths above (each as an absolute path under `Y:/code/aeat-worktrees/feature-163-pytest-markers/`).
 
@@ -344,17 +344,17 @@ Description: apply module-level `pytestmark` to the write-capable boundary. Ever
 
 Inventory:
 
-- `src/aeat/filing/test_complementaria.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
-- `src/aeat/filing/test_filing.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
-- `src/aeat/filing/test_live_complementaria.py` -> `[pytest.mark.live_read, pytest.mark.domain_submission]`
-- `src/aeat/filing/test_modelo_303_390.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
-- `src/aeat/submission/test_engine.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
-- `src/aeat/submission/test_errors.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
-- `src/aeat/submission/test_live_submission.py` -> `[pytest.mark.live_read, pytest.mark.domain_submission]`
-- `src/aeat/submission/test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
-- `src/aeat/submission/test_preflight.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
-- `src/aeat/submission/test_safety_helpers.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
-- `src/aeat/submission/_submitters/test_modelo130.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/application/filing/test_complementaria.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/application/filing/test_filing.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/application/filing/test_live_complementaria.py` -> `[pytest.mark.live_read, pytest.mark.domain_submission]`
+- `src/aeat/application/filing/test_modelo_303_390.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/adapters/outbound/aeat/export/test_engine.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/adapters/outbound/aeat/export/test_errors.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/adapters/outbound/aeat/export/test_live_submission.py` -> `[pytest.mark.live_read, pytest.mark.domain_submission]`
+- `src/aeat/adapters/outbound/aeat/export/test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/adapters/outbound/aeat/export/test_preflight.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/test_modelo130.py` -> `[pytest.mark.unit, pytest.mark.domain_submission]`
 
 Files touched: the 11 paths above.
 
@@ -363,7 +363,7 @@ Dependencies: none within phase 3.
 Verification commands:
 
 - `uv run pytest src/aeat/filing src/aeat/submission -m unit -q` must pass.
-- `uv run pytest --collect-only src/aeat/submission/test_live_submission.py -m live_read` must collect the file's items; `... -m live_write` must collect zero.
+- `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/test_live_submission.py -m live_read` must collect the file's items; `... -m live_write` must collect zero.
 
 Rollback: per-file `git checkout --`.
 
@@ -380,34 +380,34 @@ Description: apply module-level `pytestmark = [pytest.mark.unit, pytest.mark.dom
 
 Inventory:
 
-- `src/aeat/financial/categories/test_profile.py`
-- `src/aeat/financial/categories/test_proportionality.py`
-- `src/aeat/financial/categories/test_registry.py`
-- `src/aeat/financial/categories/test_spending_category.py`
-- `src/aeat/financial/invoices/test_catalogue.py`
-- `src/aeat/financial/invoices/test_cli.py`
-- `src/aeat/financial/invoices/test_models.py`
-- `src/aeat/financial/invoices/test_reconciliation.py`
-- `src/aeat/financial/invoices/test_validators.py`
-- `src/aeat/financial/providers/test_base.py`
-- `src/aeat/financial/providers/test_csv.py`
-- `src/aeat/financial/providers/test_ofx.py`
-- `src/aeat/financial/providers/test_xlsx.py`
-- `src/aeat/financial/transactions/test_catalogue.py`
-- `src/aeat/financial/transactions/test_cli.py`
-- `src/aeat/financial/transactions/test_models.py`
-- `src/aeat/financial/vat/test_categories.py`
-- `src/aeat/financial/vat/test_corpus.py`
-- `src/aeat/financial/vat/test_rates.py`
-- `src/aeat/financial/vat/test_rules.py`
-- `src/aeat/financial/vat/test_verify.py`
-- `src/aeat/cli/financial/test_cli.py`
+- `src/aeat/domain/financial/categories/test_profile.py`
+- `src/aeat/domain/financial/categories/test_proportionality.py`
+- `src/aeat/domain/financial/categories/test_registry.py`
+- `src/aeat/domain/financial/categories/test_spending_category.py`
+- `src/aeat/domain/financial/invoices/test_catalogue.py`
+- `src/aeat/domain/financial/invoices/test_cli.py`
+- `src/aeat/domain/financial/invoices/test_models.py`
+- `src/aeat/domain/financial/invoices/test_reconciliation.py`
+- `src/aeat/domain/financial/invoices/test_validators.py`
+- `src/aeat/domain/financial/providers/test_base.py`
+- `src/aeat/domain/financial/providers/test_csv.py`
+- `src/aeat/domain/financial/providers/test_ofx.py`
+- `src/aeat/domain/financial/providers/test_xlsx.py`
+- `src/aeat/domain/financial/transactions/test_catalogue.py`
+- `src/aeat/domain/financial/transactions/test_cli.py`
+- `src/aeat/domain/financial/transactions/test_models.py`
+- `src/aeat/domain/financial/vat/test_categories.py`
+- `src/aeat/domain/financial/vat/test_corpus.py`
+- `src/aeat/domain/financial/vat/test_rates.py`
+- `src/aeat/domain/financial/vat/test_rules.py`
+- `src/aeat/domain/financial/vat/test_verify.py`
+- `src/aeat/entrypoints/cli/financial/test_cli.py`
 
 Files touched: the 22 paths above.
 
 Dependencies: none.
 
-Verification: `uv run pytest src/aeat/financial src/aeat/cli/financial -m unit -q` passes.
+Verification: `uv run pytest src/aeat/financial src/aeat/entrypoints/cli/financial -m unit -q` passes.
 
 Rollback: per-file `git checkout --`.
 
@@ -424,42 +424,42 @@ Description: apply module-level `pytestmark = [pytest.mark.unit, pytest.mark.dom
 
 Inventory:
 
-- `src/aeat/storage/test_smoke.py`
-- `src/aeat/storage/_test_constraints.py`
-- `src/aeat/storage/_test_engine.py`
-- `src/aeat/storage/_test_migrations.py`
-- `src/aeat/storage/_test_records.py`
-- `src/aeat/storage/_test_repository.py`
-- `src/aeat/storage/_test_session.py`
-- `src/aeat/models/test_applicability.py`
-- `src/aeat/models/test_casilla_cross_reference.py`
-- `src/aeat/models/test_citations.py`
-- `src/aeat/models/test_cli.py`
-- `src/aeat/models/test_codes.py`
-- `src/aeat/models/test_metadata.py`
-- `src/aeat/models/test_registry.py`
-- `src/aeat/models/test_smoke.py`
-- `src/aeat/normatives/test_loader.py`
-- `src/aeat/normatives/test_lookup_and_cite.py`
-- `src/aeat/normatives/test_schema.py`
-- `src/aeat/normatives/test_verify.py`
-- `src/aeat/manuals/test_fetch.py`
-- `src/aeat/manuals/test_loader.py`
-- `src/aeat/manuals/test_schema.py`
-- `src/aeat/manuals/test_verify.py`
+- `src/aeat/adapters/persistence/storage/test_smoke.py`
+- `src/aeat/adapters/persistence/storage/_test_constraints.py`
+- `src/aeat/adapters/persistence/storage/_test_engine.py`
+- `src/aeat/adapters/persistence/storage/_test_migrations.py`
+- `src/aeat/adapters/persistence/storage/_test_records.py`
+- `src/aeat/adapters/persistence/storage/_test_repository.py`
+- `src/aeat/adapters/persistence/storage/_test_session.py`
+- `src/aeat/domain/modelos/test_applicability.py`
+- `src/aeat/domain/modelos/test_casilla_cross_reference.py`
+- `src/aeat/domain/modelos/test_citations.py`
+- `src/aeat/domain/modelos/test_cli.py`
+- `src/aeat/domain/modelos/test_codes.py`
+- `src/aeat/domain/modelos/test_metadata.py`
+- `src/aeat/domain/modelos/test_registry.py`
+- `src/aeat/domain/modelos/test_smoke.py`
+- `src/aeat/domain/normatives/test_loader.py`
+- `src/aeat/domain/normatives/test_lookup_and_cite.py`
+- `src/aeat/domain/normatives/test_schema.py`
+- `src/aeat/domain/normatives/test_verify.py`
+- `src/aeat/domain/manuals/test_fetch.py`
+- `src/aeat/domain/manuals/test_loader.py`
+- `src/aeat/domain/manuals/test_schema.py`
+- `src/aeat/domain/manuals/test_verify.py`
 - `src/aeat/corpus/test_smoke.py`
-- `src/aeat/schema/test_smoke.py`
-- `src/aeat/deadlines/test_applies.py`
-- `src/aeat/deadlines/test_calendar.py`
-- `src/aeat/deadlines/test_engine.py`
-- `src/aeat/deadlines/test_models.py`
-- `src/aeat/cli/deadlines/test_cli.py`
+- `src/aeat/domain/schema/test_smoke.py`
+- `src/aeat/domain/deadlines/test_applies.py`
+- `src/aeat/domain/deadlines/test_calendar.py`
+- `src/aeat/domain/deadlines/test_engine.py`
+- `src/aeat/domain/deadlines/test_models.py`
+- `src/aeat/entrypoints/cli/deadlines/test_cli.py`
 
 Files touched: the 30 paths above.
 
 Dependencies: none.
 
-Verification: `uv run pytest src/aeat/storage src/aeat/models src/aeat/normatives src/aeat/manuals src/aeat/corpus src/aeat/schema src/aeat/deadlines src/aeat/cli/deadlines -m unit -q` passes.
+Verification: `uv run pytest src/aeat/storage src/aeat/models src/aeat/normatives src/aeat/manuals src/aeat/corpus src/aeat/schema src/aeat/deadlines src/aeat/entrypoints/cli/deadlines -m unit -q` passes.
 
 Rollback: per-file `git checkout --`.
 
@@ -476,20 +476,20 @@ Description: apply module-level `pytestmark` per inventory.
 
 Inventory:
 
-- `src/aeat/workflow/test_engine.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/workflow/test_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_mediation]`
-- `src/aeat/workflow/test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/workflow/test_persistence.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/llm/test_live_anthropic.py` -> `[pytest.mark.live_read, pytest.mark.domain_mediation]`
-- `src/aeat/llm/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/llm/_test_cache.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/llm/_test_client.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/llm/_test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/llm/_test_prompts.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/llm/_test_translation.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/llm/_test_usage.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/i18n/test_i18n.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
-- `src/aeat/testing/test_testing.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/application/workflow/test_engine.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/application/workflow/test_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_mediation]`
+- `src/aeat/application/workflow/test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/application/workflow/test_persistence.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/adapters/outbound/llm/test_live_anthropic.py` -> `[pytest.mark.live_read, pytest.mark.domain_mediation]`
+- `src/aeat/adapters/outbound/llm/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/adapters/outbound/llm/_test_cache.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/adapters/outbound/llm/_test_client.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/adapters/outbound/llm/_test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/adapters/outbound/llm/_test_prompts.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/adapters/outbound/llm/_test_translation.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/adapters/outbound/llm/_test_usage.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/core/i18n/test_i18n.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
+- `src/aeat/domain/testing/test_testing.py` -> `[pytest.mark.unit, pytest.mark.domain_mediation]`
 
 Files touched: the 14 paths above.
 
@@ -514,33 +514,33 @@ Inventory:
 
 - `src/aeat/_test_auth.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
 - `src/aeat/_test_env_io.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/test_categories_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/test_manual_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/test_vat_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/browser/test_health.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/filing/test_filing_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/inbox/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/llm/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/submission/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/sync/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/workflow/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_bootstrap.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_cloud.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_cloud_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_docs_helpers.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_docs_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_doctor.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_drive_helpers.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_drive_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_oauth.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_sheets_helpers.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/cli/_test_sheets_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_infra]`
-- `src/aeat/setup/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/setup/test_env_writer.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/setup/test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/setup/test_verifier.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
-- `src/aeat/setup/test_wizard.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/test_categories_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/test_manual_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/test_vat_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/browser/test_health.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/filing/test_filing_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/inbox/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/llm/test_smoke.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/submission/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/sync/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/workflow/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_bootstrap.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_cloud.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_cloud_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_docs_helpers.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_docs_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_doctor.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_drive_helpers.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_drive_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_oauth.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_sheets_helpers.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/entrypoints/cli/_test_sheets_live.py` -> `[pytest.mark.live_read, pytest.mark.domain_infra]`
+- `src/aeat/application/setup/test_cli.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/application/setup/test_env_writer.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/application/setup/test_models.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/application/setup/test_verifier.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
+- `src/aeat/application/setup/test_wizard.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
 - `tests/test_config.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
 - `tests/test_docs.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
 - `tests/test_release_config.py` -> `[pytest.mark.unit, pytest.mark.domain_infra]`
@@ -680,8 +680,8 @@ Verification commands (core suite):
 
 Three-factor bypass invariants (factor-by-factor). The `uv run pytest` command as invoked by CI and by developer terminals is NOT a TTY in the default case; this means the TTY factor already fails for the sub-checks below, and partial env-set probes on their own do not prove the env-var gates work. The sub-checks are therefore framed as "which factor is missing" to make the invariant explicit rather than implicit.
 
-- `6.1a (automated): no env vars, non-TTY` -> `uv run pytest --collect-only src/aeat/submission/ -m live_write -q` expected zero collected. Covers the 3-factor default; no factor is present.
-- `6.1b (automated): both env vars set, non-TTY` -> `AEAT_LIVE_WRITE_UNSAFE_BYPASS=1 AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM="I ACCEPT THE RISK OF FILING A LIVE TAX RETURN" uv run pytest --collect-only src/aeat/submission/ -m live_write -q` expected zero collected. Isolates the TTY factor: both env vars are present, only the TTY factor is missing, so collection must still drop.
+- `6.1a (automated): no env vars, non-TTY` -> `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/ -m live_write -q` expected zero collected. Covers the 3-factor default; no factor is present.
+- `6.1b (automated): both env vars set, non-TTY` -> `AEAT_LIVE_WRITE_UNSAFE_BYPASS=1 AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM="I ACCEPT THE RISK OF FILING A LIVE TAX RETURN" uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/ -m live_write -q` expected zero collected. Isolates the TTY factor: both env vars are present, only the TTY factor is missing, so collection must still drop.
 - `6.1c (manual-only, not automated): both env vars set + interactive TTY` -> a human operator in an interactive terminal runs the same command with both env vars set and verifies that a temporary `live_write`-tagged test (created and reverted in-step like phase 2 step 2.4) IS collected. This sub-check is documented in `tests/README.md` and executed once per implementation cycle by the reviewer; automated TTY simulation is out of scope of this plan.
 - `6.1d (automated): confirm env set alone, non-TTY` -> expected zero collected. Isolates the bypass env var: the confirmation phrase on its own does nothing.
 - `6.1e (automated): bypass env set alone, non-TTY` -> expected zero collected. Isolates the confirmation phrase: the bypass env var on its own does nothing.
@@ -715,7 +715,7 @@ Mission success criteria tied to the ADR and research inputs:
 - `tests/test_release_config.py` is green; no `.github/workflows/*` file added.
 - Zero `PytestUnknownMarkWarning` across the suite.
 - `grep -rn "@pytest.mark.live\b" src tests` returns zero matches; the stale binary marker is fully retired.
-- Charter `#116` R1..R6 remain verbatim; `AEAT_LIVE_SUBMIT_ENABLED` and `SubmissionEngine.__init__` are untouched. This is verified by `git diff src/aeat/submission/_engine.py` (or equivalent) being empty and by `grep -n "AEAT_LIVE_SUBMIT_ENABLED" src/aeat/config.py env/.env.example` returning the same lines as before the refactor.
+- Charter `#116` R1..R6 remain verbatim; `AEAT_LIVE_SUBMIT_ENABLED` and `SubmissionEngine.__init__` are untouched. This is verified by `git diff src/aeat/adapters/outbound/aeat/export/_engine.py` (or equivalent) being empty and by `grep -n "AEAT_LIVE_SUBMIT_ENABLED" src/aeat/config.py env/.env.example` returning the same lines as before the refactor.
 - A reviewer's spot-check of three randomly selected migrated files confirms test function bodies are byte-for-byte identical to pre-refactor (only marker metadata changed).
 
 Honest coverage caveats:

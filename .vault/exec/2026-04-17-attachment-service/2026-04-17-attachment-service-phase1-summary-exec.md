@@ -23,7 +23,7 @@ Delivered issue `#76` end-to-end in one execution pass per the plan's sequential
 
 ## Artefacts
 
-- New subpackage `src/aeat/financial/attachments/` with:
+- New subpackage `src/aeat/domain/financial/attachments/` with:
   - `_enums.py` — `AttachmentKind`, `AttachmentSource` (`StrEnum`).
   - `_errors.py` — `AttachmentError` hierarchy inheriting from `AeatError`.
   - `_models.py` — strict frozen pydantic v2 `Attachment` (with `attachment_id == sha256` invariant, ordered dedup'd link tuples, `str`-only metadata escape hatch) and `AttachmentCatalogue`.
@@ -31,7 +31,7 @@ Delivered issue `#76` end-to-end in one execution pass per the plan's sequential
   - `_service.py` — `add_attachment` merge-on-re-ingest semantics, `load_attachment`, `list_attachments`.
   - `_stubs.py` — typing-only `SupportsTransactionId` / `SupportsInvoiceId` Protocols.
   - `test_models.py`, `test_catalogue.py`, `test_store.py`, `test_cli.py` — 31 unit tests covering hash invariants, dedup, write-once, link merge, orphan-blob handling, metadata parsing, CLI surfaces.
-- New CLI module `src/aeat/cli/attachments.py` wired into the root `aeat` app at `aeat attachments`.
+- New CLI module `src/aeat/entrypoints/cli/attachments.py` wired into the root `aeat` app at `aeat attachments`.
 - Settings: additive `AEAT_ATTACHMENTS_DIR` in `src/aeat/config.py` + `env/.env.example`.
 - Vaultspec trail: research, ADR, plan, and this summary.
 

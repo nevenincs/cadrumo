@@ -131,7 +131,7 @@ These three concepts together answer Kent's question. The CLI exposes exactly on
 
 Kent has a €89 invoice from a UK hosting provider. Post-Brexit this is `IMPORT_THIRD_COUNTRY` or (if the supplier treats him as an EU business customer) reverse-charge treatment. He doesn't know which.
 
-The tool *has* the answer. `src/aeat/financial/vat/_classification.py` is a 15-rule decision table that takes `VATClassificationCriteria` (counterparty country, VAT ID presence, intra-EU flags, supply type) and returns one of the 17 `VATCategory` values. A pure function. Typed. Tested (presumably).
+The tool *has* the answer. `src/aeat/domain/financial/vat/_classification.py` is a 15-rule decision table that takes `VATClassificationCriteria` (counterparty country, VAT ID presence, intra-EU flags, supply type) and returns one of the 17 `VATCategory` values. A pure function. Typed. Tested (presumably).
 
 **It is not wired to any CLI command.** Kent cannot run `aeat vat classify --from-invoice inv-xyz` or `aeat vat classify --counterparty-country GB --counterparty-has-vat-id --supply-type services`. He can browse the catalogue (`aeat vat categories list`) and read the regulations (`aeat vat show DOMESTIC_GENERAL_21`), but he cannot ask the engine for a verdict.
 
@@ -175,7 +175,7 @@ There is no command that answers this.
 
 The `ProportionalityRule` on `suministros_home_office_luz` is `USAGE_RATIO_HOME_AREA`. The default ratio is set in the category registry. The VAT treatment is `DOMESTIC_GENERAL_21` with 21% IVA. Composing these facts produces: deductible income-tax expense = €45 × 0.21 = €9.45; deductible IVA = (€45 × 21/121) × 0.21 = ~€1.64.
 
-No code in `src/aeat/financial/` produces this composition. No `Transaction.deductible_amount`. No `Transaction.deductible_iva`. No `aeat financial compute-deductible` command.
+No code in `src/aeat/domain/financial/` produces this composition. No `Transaction.deductible_amount`. No `Transaction.deductible_iva`. No `aeat financial compute-deductible` command.
 
 ★ **DP13 — No service computes deductible amounts from proportionality + VAT rules.** The rules exist as data; the arithmetic is unimplemented. The T6 aggregation step ([#218](https://github.com/wgergely/aeat/issues/218)) is supposed to take classified+categorised transactions and produce casilla-level numbers — but DP13 is a prerequisite: without knowing what each transaction's deductible portion *is*, aggregation has nothing to sum.
 

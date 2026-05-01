@@ -117,7 +117,7 @@ Milestones keep their numbers so existing issue references remain valid. Titles 
 **Labels:** `charter`, `type:chore`, `blocker`, `domain:aeat-remote`
 **Milestone:** `0.0.2-foundations`
 **Body:**
-> A static check / pre-commit hook that fails if any new code path (a) calls a POST/PUT against an AEAT endpoint without being inside the `aeat.submission.live_submit` module, and (b) is discoverable from the default CLI. Extends the existing #118 static audit.
+> A static check / pre-commit hook that fails if any new code path (a) calls a POST/PUT against an AEAT endpoint without being inside the `aeat.adapters.outbound.aeat.export.live_submit` module, and (b) is discoverable from the default CLI. Extends the existing #118 static audit.
 
 ### C6 — Publish `ROADMAP.md` anchored to Kent-centric milestone questions
 

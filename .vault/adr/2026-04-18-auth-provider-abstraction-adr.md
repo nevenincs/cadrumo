@@ -18,7 +18,7 @@ Proposed — 2026-04-18. Supersedes the `Non-goals` section of `2026-04-12-cert-
 
 ## context
 
-`src/aeat/auth/` today implements PKCS#12 certificate authentication as the sole AEAT Sede Electrónica login mechanism. The code models a `CertificateBundle`, a `LoadedCertificate`, four `CertificateBackend` enum values, and an `AeatSession` record four of whose fields are cert-specific. `AeatAuthenticator.__init__` unconditionally constructs a cert bundle.
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/` today implements PKCS#12 certificate authentication as the sole AEAT Sede Electrónica login mechanism. The code models a `CertificateBundle`, a `LoadedCertificate`, four `CertificateBackend` enum values, and an `AeatSession` record four of whose fields are cert-specific. `AeatAuthenticator.__init__` unconditionally constructs a cert bundle.
 
 The AEAT Sede accepts EIGHT distinct identification methods. Kent (our Spanish autónomo user) may have a digital certificate — or may have Cl@ve (most common for individuals who haven't gone through FNMT enrollment) — or both. Restricting the tool to cert auth excludes a large fraction of autónomos.
 
@@ -143,14 +143,14 @@ aeat auth logout
 
 **Negative / cost:**
 
-- Breaking type change on `AeatSession`, `BrowserSessionLike.create_context`, and downstream consumers (`aeat.browser`, `aeat.submission`, `aeat.workflow` stubs).
+- Breaking type change on `AeatSession`, `BrowserSessionLike.create_context`, and downstream consumers (`aeat.adapters.outbound.aeat.browser`, `aeat.adapters.outbound.aeat.export`, `aeat.application.workflow` stubs).
 - Test matrix grows: each provider needs unit + live tests; `live_read` marker now applies per provider.
 - Cl@ve Permanente password storage is a new secret surface (treat like the cert passphrase: env var, optional OS keyring).
 - Cl@ve Móvil UX requires a polling + "approve on your phone" prompt that is new to the CLI.
 
 **Neutral:**
 
-- `LoadedCertificate` stub in `aeat.submission._protocols` and `aeat.workflow._protocols` still needs the rebase-swap per the existing TODO comments; this ADR is a good anchor to do it.
+- `LoadedCertificate` stub in `aeat.adapters.outbound.aeat.export._protocols` and `aeat.application.workflow._protocols` still needs the rebase-swap per the existing TODO comments; this ADR is a good anchor to do it.
 
 ## rollout
 

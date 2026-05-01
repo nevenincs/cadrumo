@@ -19,14 +19,14 @@ the rule-delta manifest's no-amendment finding.
 
 ## Files created
 
-- `src/aeat/formulas/_rulesets/modelo_130_2026.py` — new ruleset.
+- `src/aeat/domain/formulas/_rulesets/modelo_130_2026.py` — new ruleset.
   Re-imports `_CASILLAS_2024` + `_CITATIONS_2024` from
   `modelo_130_2024`. Declares own `_FORMULAS` with the
   `modelo_130.2026.<reason>` formula-id namespace and own
   `_PARAMETERS` with `effective_from=2026-01-01` /
   `effective_to=2026-12-31` and identical numerical values
   (`irpf.trimestral_rate=0.20`, `agraria.trimestral_rate=0.02`).
-- `src/aeat/formulas/_rulesets/test_modelo_130_2026.py` — 8
+- `src/aeat/domain/formulas/_rulesets/test_modelo_130_2026.py` — 8
   class-level cases plus 11 parametrised threshold-edge minoración
   cases. Includes:
   - `test_consistent_quarter_is_clean` — Q2 2026 mixed-régimen
@@ -48,18 +48,18 @@ the rule-delta manifest's no-amendment finding.
 
 ## Files modified
 
-- `src/aeat/formulas/_rulesets/__init__.py` — registered
+- `src/aeat/domain/formulas/_rulesets/__init__.py` — registered
   `MODELO_130_2026`. Added to `ALL_RULESETS` and `__all__` in
   numerically-ascending order between 2025 and 131. Updated module
   docstring to mention issue `#321` + the rule-delta manifest.
-- `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py` — added
+- `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py` — added
   `modelo_130.2026` row to `EXPECTED_COUNTS`. Fingerprint matches
   2024 / 2025 (`sub_op=8, percent_rate_param=2`).
-- `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py` —
+- `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py` —
   added `MODELO_130_2026` import and 6 `pytest.param` entries (one
   per `sub_op`-bearing casilla: 03, 07, 11, 14, 17, 19) reusing the
   existing `_modelo_130_rich_fixture`.
-- `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py` —
+- `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py` —
   added `MODELO_130_2026` import and 2 case-table entries (casillas
   04 + 09) reusing the existing `_f130_irpf_fixture` /
   `_f130_agraria_fixture`.

@@ -11,10 +11,10 @@ related:
 # Live Sync Backend Research
 
 ## 1. Overview
-This research covers the integration of GitHub Issue #170 (AEAT Messages Integration) and Issue #272 (Live Past Filing Extraction) into the `aeat` library. Specifically, it maps the current state of `src/aeat/status/` and `src/aeat/browser/` and determines the architectural shape for the new extraction backends (`InboxReader` and `FilingDetailScraper`).
+This research covers the integration of GitHub Issue #170 (AEAT Messages Integration) and Issue #272 (Live Past Filing Extraction) into the `aeat` library. Specifically, it maps the current state of `src/aeat/status/` and `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/` and determines the architectural shape for the new extraction backends (`InboxReader` and `FilingDetailScraper`).
 
 ## 2. Existing Architecture
-### `aeat.browser`
+### `aeat.adapters.outbound.aeat.browser`
 - `BrowserSession`: Manages the Playwright `BrowserContext`, incorporating stealth evasion strategies (`PlaywrightStealthEvasion`), user profile configurations, and proxy settings.
 - **Health Probing**: The `navigate()` method includes automatic classification of AEAT site health (maintenance banners, WAF challenges, rate limits) via `probe_response()`.
 

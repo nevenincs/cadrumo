@@ -14,18 +14,18 @@ related:
 
 ## Problem
 
-The module name `aeat.justificante` is technically correct (it parses *justificantes de presentación*) but colloquially "importing a justificante" has been used as shorthand for "importing a past filing" — which is a broader operation than what the receipt enables. The pdf-taxonomy ADR (cluster A) locked a canonical vocabulary that disambiguates receipt from declaración. This cluster handles the soft consequence: making sure existing docs, issue titles, and developer narrative follow the new vocabulary without breaking any shipped contract.
+The module name `aeat.domain.justificante` is technically correct (it parses *justificantes de presentación*) but colloquially "importing a justificante" has been used as shorthand for "importing a past filing" — which is a broader operation than what the receipt enables. The pdf-taxonomy ADR (cluster A) locked a canonical vocabulary that disambiguates receipt from declaración. This cluster handles the soft consequence: making sure existing docs, issue titles, and developer narrative follow the new vocabulary without breaking any shipped contract.
 
 ## Observed uses of "justificante" today (evidence)
 
 Grepping the repo turns up four classes of reference:
 
-- **Correct** — code that actually reads receipts: `src/aeat/justificante/` module, `Justificante` pydantic record, `parse_justificante`, CLI `aeat filing import --from-justificante`, `SubmittedFiling.justificante_csv` / `justificante_pdf_path`. These stay.
+- **Correct** — code that actually reads receipts: `src/aeat/domain/justificante/` module, `Justificante` pydantic record, `parse_justificante`, CLI `aeat filing import --from-justificante`, `SubmittedFiling.justificante_csv` / `justificante_pdf_path`. These stay.
 - **Overloaded** — docs / issue titles using "justificante" as a synonym for "past filing":
     - EPIC #233 title uses "justificante" but scopes all import backends.
     - `docs/coverage/kent-capabilities.md` mentions "import from justificante" as a wall.
     - ROADMAP-era commentary around past-filing import.
-- **Amendment-baseline dependency** — `_resolve_original_metadata` in `src/aeat/filing/_complementaria.py` reads `original.justificante_csv` / `original.justificante_pdf_path` when resolving an original filing's CSV for an amendment. This coupling stays — the amendment engine correctly consumes the receipt.
+- **Amendment-baseline dependency** — `_resolve_original_metadata` in `src/aeat/application/filing/_complementaria.py` reads `original.justificante_csv` / `original.justificante_pdf_path` when resolving an original filing's CSV for an amendment. This coupling stays — the amendment engine correctly consumes the receipt.
 - **Doctor-surface language** — none today.
 
 The overloaded uses are the only real targets of this cluster. Code-level references are already correct.
@@ -34,10 +34,10 @@ The overloaded uses are the only real targets of this cluster. Code-level refere
 
 The pdf-taxonomy ADR (`2026-04-21-pdf-taxonomy-adr`) locks:
 
-- Module keeps its name (`aeat.justificante`).
+- Module keeps its name (`aeat.domain.justificante`).
 - Public surface unchanged.
 - CLI flag unchanged (`--from-justificante`).
-- New siblings `aeat.declaracion` / `aeat.borrador` / `aeat.predeclaracion` come with their clusters.
+- New siblings `aeat.adapters.inbound.declaracion` / `aeat.adapters.inbound.borrador` / `aeat.predeclaracion` come with their clusters.
 
 What cluster A did **not** address: docs, concept pages, issue titles, public narrative. That's this cluster's narrow scope.
 
@@ -49,7 +49,7 @@ What cluster A did **not** address: docs, concept pages, issue titles, public na
 
 ## What does NOT change
 
-- `aeat.justificante` module name, exports, error hierarchy (`JustificanteError` just moves under `PdfFilingImportError` per cluster A).
+- `aeat.domain.justificante` module name, exports, error hierarchy (`JustificanteError` just moves under `PdfFilingImportError` per cluster A).
 - `Justificante` pydantic record shape.
 - `parse_justificante` signature.
 - `aeat filing import --from-justificante` command.

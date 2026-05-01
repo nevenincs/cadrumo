@@ -19,12 +19,12 @@ Following the `2026-04-18-auth-provider-abstraction-adr.md`, the AEAT authentica
 
 ## decision
 
-1. **Protocol Definition**: We will define the `AuthProvider` protocol and `AuthProviderKind` enum in `src/aeat/auth/provider.py`.
+1. **Protocol Definition**: We will define the `AuthProvider` protocol and `AuthProviderKind` enum in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/provider.py`.
 2. **Session Refactoring**: `AeatSession` will be updated to hold a `provider_detail` discriminated union. We will define `CertificateSessionDetail` with kind `AuthProviderKind.CERTIFICATE`. `identity_nif` will replace `certificate_nif` on the root of `AeatSession`.
 3. **Module Restructuring**:
-   - Move `src/aeat/auth/certificate.py` to `src/aeat/auth/_providers/_certificate/certificate.py`.
-   - Move `src/aeat/auth/_certificate_backends/` to `src/aeat/auth/_providers/_certificate/_certificate_backends/`.
-   - Implement `CertificateAuthProvider` in `src/aeat/auth/_providers/_certificate/provider.py`.
+   - Move `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` to `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers/_certificate/certificate.py`.
+   - Move `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/` to `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers/_certificate/_certificate_backends/`.
+   - Implement `CertificateAuthProvider` in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers/_certificate/provider.py`.
 4. **Facade Updates**: `AeatAuthenticator` will be refactored or kept as a thin facade/session manager that operates on an injected `AuthProvider` instead of hardcoding certificate loading. Or, if `AeatAuthenticator` is no longer the intended facade, we replace its functionality with the direct use of `AuthProvider`. Given the requirement to keep tests passing identically, we'll keep `AeatAuthenticator` backward-compatible if possible, or update tests to test `CertificateAuthProvider` directly.
 5. **No Behavior Change**: The actual PKCS#12 parsing and Playwright integration will remain identical.
 

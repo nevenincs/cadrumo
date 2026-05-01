@@ -22,7 +22,7 @@ architectural decisions that govern the work.
 
 ## Decisions
 
-### D1 — All fetches go through `aeat.browser.BrowserSession`
+### D1 — All fetches go through `aeat.adapters.outbound.aeat.browser.BrowserSession`
 
 No raw `httpx`. The browser session already handles proxy, evasion,
 profile, and (via #8) certificate preload. The status reader
@@ -90,7 +90,7 @@ navigation. Subsequent calls reuse the same `BrowserContext`.
 
 ### D7 — Cert backend via Protocol stub
 
-We do not import from `aeat.auth.certificate`. Instead we declare a
+We do not import from `aeat.adapters.outbound.aeat.auth.certificate`. Instead we declare a
 `CertificateBackend` `Protocol` in `src/aeat/status/_protocols.py`
 with the minimal surface we need:
 

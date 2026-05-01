@@ -24,7 +24,7 @@ Live AEAT submission stays out of scope. All new boundary models are pydantic v2
 
 ## Implementation
 
-Create `src/aeat/financial/aggregation/` as the T6 package. It owns `Period`, `CasillaAggregation`, `CasillaProvenance`, typed errors, the aggregation service, and a concrete `FinancialFilingInputsProvider`.
+Create `src/aeat/domain/financial/aggregation/` as the T6 package. It owns `Period`, `CasillaAggregation`, `CasillaProvenance`, typed errors, the aggregation service, and a concrete `FinancialFilingInputsProvider`.
 
 `Period` is a strict frozen model with `raw`, `year`, optional `quarter`, optional `month`, `start`, `end`, and `period_type`. It accepts `YYYY-Qn`, `YYYYQn`, `YYYY-MM`, and `YYYY`; ambiguous or unsupported input raises `AggregationPeriodError`.
 

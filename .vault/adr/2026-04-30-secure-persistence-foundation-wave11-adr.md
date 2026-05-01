@@ -60,7 +60,7 @@ Architectural drivers:
 
 ### Phase 1 — substrate
 
-`src/aeat/storage/_corpus_manifest.py`:
+`src/aeat/adapters/persistence/storage/_corpus_manifest.py`:
 
 - `CorpusEntry(relative_path: str, sha256: str, content_length: int)`
   — frozen pydantic v2 record per file. `relative_path` is
@@ -82,13 +82,13 @@ Architectural drivers:
 - `save_corpus_manifest(manifest, target)` /
   `load_corpus_manifest(target)` — atomic write + strict
   parse + manifest-self-digest verification on load.
-- New errors in `aeat.storage.errors`:
+- New errors in `aeat.adapters.persistence.storage.errors`:
   `CorpusManifestError`, `CorpusManifestTamperError`,
   `CorpusManifestDriftError`.
 
 ### Phase 2 — CLI
 
-`src/aeat/cli/security.py` gains a second command:
+`src/aeat/entrypoints/cli/security.py` gains a second command:
 
 ```
 aeat security verify-corpus --corpus <name> [--regenerate]

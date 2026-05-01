@@ -13,11 +13,11 @@ related:
 
 ## status
 
-Step 3 PR 2 of N — resolves layered violations 2 + 6 + 7 in one move (3 of 7 violations) by promoting 6 internal `aeat.formulas` symbols to the public surface and rewriting all 14 caller import lines.
+Step 3 PR 2 of N — resolves layered violations 2 + 6 + 7 in one move (3 of 7 violations) by promoting 6 internal `aeat.domain.formulas` symbols to the public surface and rewriting all 14 caller import lines.
 
 ## scope
 
-### symbols promoted to `aeat.formulas` public surface
+### symbols promoted to `aeat.domain.formulas` public surface
 
 - `MODELO_100_SUMMARY_2025` (was at `formulas._rulesets`)
 - `LIS_ART_12_LINEAL_TABLE`, `AssetClass` (were at `formulas._rulesets.modelo_100._amortization`)
@@ -30,22 +30,22 @@ Existing already-public symbols (no promotion needed; only import-path rewrite):
 
 | File | Old path (subpackage-private) | New path (public) |
 |---|---|---|
-| `src/aeat/profile/__init__.py:15` | `..formulas._rulesets.modelo_100._ccaa` | `..formulas` |
-| `src/aeat/profile/assets/__init__.py:11` | `...formulas._rulesets.modelo_100._amortization` | `...formulas` |
-| `src/aeat/profile/assets/test_assets.py:12` | (same) | `...formulas` |
-| `src/aeat/profile/inventory/__init__.py:12` | `...formulas._rulesets.modelo_100._inventario` | `...formulas` |
-| `src/aeat/profile/inventory/test_inventory.py:13` | (same) | `...formulas` |
-| `src/aeat/verification/_verify.py:10–11` | `..formulas._ledger` + `..formulas._ruleset` | `..formulas` |
-| `src/aeat/verification/test_verify.py:18–19` | `..formulas._registry` + `..formulas._ruleset` | `..formulas` |
-| `src/aeat/verification/test_verify.py:76` | `..formulas._period` | `..formulas` |
-| `src/aeat/cli/filing/__init__.py:653–654` | `...formulas._period` + `...formulas._registry` | `...formulas` |
-| `src/aeat/cli/filing/__init__.py:689–690` | `...formulas._rulesets` + `...formulas._rulesets.modelo_100._ccaa` | `...formulas` |
+| `src/aeat/domain/profile/__init__.py:15` | `..formulas._rulesets.modelo_100._ccaa` | `..formulas` |
+| `src/aeat/domain/profile/assets/__init__.py:11` | `...formulas._rulesets.modelo_100._amortization` | `...formulas` |
+| `src/aeat/domain/profile/assets/test_assets.py:12` | (same) | `...formulas` |
+| `src/aeat/domain/profile/inventory/__init__.py:12` | `...formulas._rulesets.modelo_100._inventario` | `...formulas` |
+| `src/aeat/domain/profile/inventory/test_inventory.py:13` | (same) | `...formulas` |
+| `src/aeat/application/verification/_verify.py:10–11` | `..formulas._ledger` + `..formulas._ruleset` | `..formulas` |
+| `src/aeat/application/verification/test_verify.py:18–19` | `..formulas._registry` + `..formulas._ruleset` | `..formulas` |
+| `src/aeat/application/verification/test_verify.py:76` | `..formulas._period` | `..formulas` |
+| `src/aeat/entrypoints/cli/filing/__init__.py:653–654` | `...formulas._period` + `...formulas._registry` | `...formulas` |
+| `src/aeat/entrypoints/cli/filing/__init__.py:689–690` | `...formulas._rulesets` + `...formulas._rulesets.modelo_100._ccaa` | `...formulas` |
 
 ## verification
 
-- `python -c "from aeat.formulas import CCAA, LIS_ART_12_LINEAL_TABLE, MODELO_100_SUMMARY_2025, AssetClass, ValuationMethod, compute_cuota_autonomica_general"` — succeeds.
+- `python -c "from aeat.domain.formulas import CCAA, LIS_ART_12_LINEAL_TABLE, MODELO_100_SUMMARY_2025, AssetClass, ValuationMethod, compute_cuota_autonomica_general"` — succeeds.
 - `pytest --collect-only` — 6796/6820 tests collect; zero collection errors.
-- `grep -rn "from .*formulas\\._(period|registry|ruleset|ledger|rulesets)" src/aeat/profile src/aeat/verification src/aeat/cli/filing` — zero remaining hits.
+- `grep -rn "from .*formulas\\._(period|registry|ruleset|ledger|rulesets)" src/aeat/profile src/aeat/verification src/aeat/entrypoints/cli/filing` — zero remaining hits.
 
 ## findings (FIX / FILE / STRIKE)
 
@@ -53,6 +53,6 @@ None additional — clean batch promotion + rewrites.
 
 ## next step
 
-Step 3 PR 3 — relocate `casillas/_test_cli.py` and `casillas/test_live_cli.py` from `aeat.casillas/` to `aeat.cli.casillas/` (audit 18, layered violation #1 — tests reaching into entrypoint while colocated with domain).
+Step 3 PR 3 — relocate `casillas/_test_cli.py` and `casillas/test_live_cli.py` from `aeat.domain.casillas/` to `aeat.entrypoints.cli.casillas/` (audit 18, layered violation #1 — tests reaching into entrypoint while colocated with domain).
 
-After PR 3 ships, Step 3 covers 4 of 7 violations. Violation 3 (`filing._review` → `aeat.financial.transactions._repository`) is the final substantive untangle; the remainders fold into Step 7 keystone treatment.
+After PR 3 ships, Step 3 covers 4 of 7 violations. Violation 3 (`filing._review` → `aeat.domain.financial.transactions._repository`) is the final substantive untangle; the remainders fold into Step 7 keystone treatment.

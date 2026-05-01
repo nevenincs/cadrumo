@@ -35,26 +35,26 @@ related:
   returns `VAT_CATALOGUE_2025` for 2025 with an INFO fallback log,
   raises `VatCatalogueError` for any other year.
 - Added `_verify.py` with `verify_catalogue(catalogue)` mirroring
-  the `aeat.normatives._verify` pattern; checks category coverage,
+  the `aeat.domain.normatives._verify` pattern; checks category coverage,
   citation presence, `quoted_text_es` non-emptiness, normative id
   shape, modelo number shape.
-- Wired the public surface in `src/aeat/financial/vat/__init__.py`.
+- Wired the public surface in `src/aeat/domain/financial/vat/__init__.py`.
 - Added colocated unit tests: `test_categories.py`, `test_rates.py`,
   `test_rules.py`, `test_corpus.py`, `test_verify.py`.
 
 ## files touched
 
-- `src/aeat/financial/vat/_rates.py` (new)
-- `src/aeat/financial/vat/_catalogue.py` (new)
-- `src/aeat/financial/vat/_lookup.py` (new)
-- `src/aeat/financial/vat/_corpus.py` (new)
-- `src/aeat/financial/vat/_verify.py` (new)
-- `src/aeat/financial/vat/__init__.py` (new)
-- `src/aeat/financial/vat/test_categories.py` (new)
-- `src/aeat/financial/vat/test_rates.py` (new)
-- `src/aeat/financial/vat/test_rules.py` (new)
-- `src/aeat/financial/vat/test_corpus.py` (new)
-- `src/aeat/financial/vat/test_verify.py` (new)
+- `src/aeat/domain/financial/vat/_rates.py` (new)
+- `src/aeat/domain/financial/vat/_catalogue.py` (new)
+- `src/aeat/domain/financial/vat/_lookup.py` (new)
+- `src/aeat/domain/financial/vat/_corpus.py` (new)
+- `src/aeat/domain/financial/vat/_verify.py` (new)
+- `src/aeat/domain/financial/vat/__init__.py` (new)
+- `src/aeat/domain/financial/vat/test_categories.py` (new)
+- `src/aeat/domain/financial/vat/test_rates.py` (new)
+- `src/aeat/domain/financial/vat/test_rules.py` (new)
+- `src/aeat/domain/financial/vat/test_corpus.py` (new)
+- `src/aeat/domain/financial/vat/test_verify.py` (new)
 
 ## gate results
 

@@ -10,7 +10,7 @@ related:
 # base-module-structure phase-1 execution
 
 Executed the initial base module structure according to plan.
-- Created `aeat.errors` and `aeat.logging`.
+- Created `aeat.core.errors` and `aeat.core.logging`.
 - Created subpackages for `models`, `portals`, `auth`, `schema`, `storage`, `sync`, `browser`, `corpus`, and `cli`.
 - Scaffolded Typer for the CLI.
 - Corrected Typer dependency in pyproject.toml and added `project.scripts` for the CLI.

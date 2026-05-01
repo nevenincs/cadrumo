@@ -52,11 +52,11 @@ comment on #13). It is not optional.
 
 The provisioning and teardown scripts MUST reuse:
 
-- `aeat.auth.get_credentials_for_scopes` (credential resolver)
-- `aeat.auth.build_drive_service` / `build_sheets_service` / `build_docs_service`
-- `aeat.auth.DRIVE_SCOPE` / `SHEETS_SCOPE` / `DOCS_SCOPE`
-- `aeat.env_io.write_env_vars` (idempotent env rewrite)
-- The idempotent find-or-create pattern from `aeat.cli.bootstrap`
+- `aeat.adapters.outbound.aeat.auth.get_credentials_for_scopes` (credential resolver)
+- `aeat.adapters.outbound.aeat.auth.build_drive_service` / `build_sheets_service` / `build_docs_service`
+- `aeat.adapters.outbound.aeat.auth.DRIVE_SCOPE` / `SHEETS_SCOPE` / `DOCS_SCOPE`
+- `aeat.core.env_io.write_env_vars` (idempotent env rewrite)
+- The idempotent find-or-create pattern from `aeat.entrypoints.cli.bootstrap`
 
 No competing Google client is defined. No parallel credential resolver.
 
@@ -73,7 +73,7 @@ Rejected alternatives:
 
 - `src/aeat/fixtures/` — would leak test-provisioning logic onto the
   library's importable surface.
-- `src/aeat/testing/` — feature-14 owns this subpackage; touching it would
+- `src/aeat/domain/testing/` — feature-14 owns this subpackage; touching it would
   cross branch boundaries.
 
 ### D5 — Errors inherit from `AeatError`

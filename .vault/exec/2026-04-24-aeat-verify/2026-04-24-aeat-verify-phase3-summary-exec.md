@@ -30,7 +30,7 @@ related:
 # `aeat-verify` `phase-3` `reconciliation-comparator`
 
 Phase 3 of the `aeat-verify` plan lands the sealed
-`aeat.filing.reconciliation` subpackage: the pure comparator that
+`aeat.application.filing.reconciliation` subpackage: the pure comparator that
 walks a local `FilingDraft` against a remote `RemoteFiling` and emits
 the Kent-observable terminal triad locked by the accepted ADR
 (`MATCH` / `DIVERGENT` / `NOT_YET_FOUND`). Every record stays strict,
@@ -39,16 +39,16 @@ frozen, `extra="forbid"`; every monetary comparison runs on
 Layer 3 grep guard is colocated under the new subpackage and follows
 the Phase 1 sidecar-fixture pattern verbatim.
 
-- Created: `src/aeat/filing/reconciliation/__init__.py` (sealed public API; alphabetised `__all__`).
-- Created: `src/aeat/filing/reconciliation/_kind.py` (closed `FilingDivergenceKind` StrEnum, six variants).
-- Created: `src/aeat/filing/reconciliation/_tolerance.py` (`RECONCILIATION_TOLERANCE: Final[Decimal] = Decimal("0.01")`).
-- Created: `src/aeat/filing/reconciliation/_schema.py` (`ReconciliationStatus`, `CasillaDelta`, `FilingDraftRef`, `ReconciliationReport`, `KIND_TO_STATUS` static mapping).
-- Created: `src/aeat/filing/reconciliation/_narrative.py` (trilingual `compose_delta_narrative` and `compose_report_narrative`).
-- Created: `src/aeat/filing/reconciliation/_reconcile.py` (pure `reconcile(draft, remote, *, tolerance, now)` comparator).
-- Created: `src/aeat/filing/reconciliation/_persist.py` (parallel `FilingReconciliationDivergenceRecord` plus `reconciliation_records()` adapter).
-- Created: `src/aeat/filing/reconciliation/_errors.py` (`ReconciliationError` extending `aeat.errors.AeatError`).
-- Created: `src/aeat/filing/reconciliation/test_kind.py`, `test_tolerance.py`, `test_schema.py`, `test_narrative.py`, `test_reconcile.py`, `test_persist.py` (75 unit cases).
-- Created: `src/aeat/filing/reconciliation/test_no_write_surface.py` plus `_no_write_surface_fixture.txt` (Layer 3 grep guard, sidecar-fixture pattern).
+- Created: `src/aeat/application/filing/reconciliation/__init__.py` (sealed public API; alphabetised `__all__`).
+- Created: `src/aeat/application/filing/reconciliation/_kind.py` (closed `FilingDivergenceKind` StrEnum, six variants).
+- Created: `src/aeat/application/filing/reconciliation/_tolerance.py` (`RECONCILIATION_TOLERANCE: Final[Decimal] = Decimal("0.01")`).
+- Created: `src/aeat/application/filing/reconciliation/_schema.py` (`ReconciliationStatus`, `CasillaDelta`, `FilingDraftRef`, `ReconciliationReport`, `KIND_TO_STATUS` static mapping).
+- Created: `src/aeat/application/filing/reconciliation/_narrative.py` (trilingual `compose_delta_narrative` and `compose_report_narrative`).
+- Created: `src/aeat/application/filing/reconciliation/_reconcile.py` (pure `reconcile(draft, remote, *, tolerance, now)` comparator).
+- Created: `src/aeat/application/filing/reconciliation/_persist.py` (parallel `FilingReconciliationDivergenceRecord` plus `reconciliation_records()` adapter).
+- Created: `src/aeat/application/filing/reconciliation/_errors.py` (`ReconciliationError` extending `aeat.core.errors.AeatError`).
+- Created: `src/aeat/application/filing/reconciliation/test_kind.py`, `test_tolerance.py`, `test_schema.py`, `test_narrative.py`, `test_reconcile.py`, `test_persist.py` (75 unit cases).
+- Created: `src/aeat/application/filing/reconciliation/test_no_write_surface.py` plus `_no_write_surface_fixture.txt` (Layer 3 grep guard, sidecar-fixture pattern).
 
 ## Description
 
@@ -56,7 +56,7 @@ the Phase 1 sidecar-fixture pattern verbatim.
 
 `__init__.py` exports exactly the seven symbols the plan locks plus
 `ReconciliationError` (the project mandate requires every domain
-error to inherit from `aeat.errors.AeatError`). `__all__` is
+error to inherit from `aeat.core.errors.AeatError`). `__all__` is
 alphabetised per `RUF022` and rejects every English / Spanish
 write-verb prefix the Layer 3 grep guard catalogues.
 
@@ -64,9 +64,9 @@ write-verb prefix the Layer 3 grep guard catalogues.
 
 `FilingDivergenceKind` is an `enum.StrEnum` with the six variants the
 ADR enumerates. The module docstring explicitly explains why the enum
-is disjoint from `aeat.sync._divergence.DivergenceKind` (the
+is disjoint from `aeat.application.sync._divergence.DivergenceKind` (the
 schema-level auto-heal contract must stay narrow). `RECONCILIATION_TOLERANCE`
-is a `Final[Decimal]` mirroring `aeat.verification._verify._DEFAULT_TOLERANCE`
+is a `Final[Decimal]` mirroring `aeat.application.verification._verify._DEFAULT_TOLERANCE`
 by value; the duplication is deliberate and the docstring documents
 the cross-link. `test_tolerance_matches_verification_tolerance_by_value`
 asserts the invariant so accidental drift fails the suite.
@@ -125,7 +125,7 @@ because:
 string per `FilingDivergenceKind` variant) and
 `compose_report_narrative` (one trilingual string per
 `ReconciliationStatus`). Mirrors the
-`aeat.verification._verify._compose_narrative` pattern verbatim. No
+`aeat.application.verification._verify._compose_narrative` pattern verbatim. No
 partial localisation; `test_narrative.py` parametrises over every
 variant and asserts non-empty `es` / `en` / `hu` strings for each.
 
@@ -133,17 +133,17 @@ variant and asserts non-empty `es` / `en` / `hu` strings for each.
 
 `_persist.py` declares a parallel `FilingReconciliationPayload`
 discriminated union and `FilingReconciliationDivergenceRecord`
-wrapping record. The shape mirrors `aeat.sync.DivergenceRecord` (id +
+wrapping record. The shape mirrors `aeat.application.sync.DivergenceRecord` (id +
 detected_at + classification + payload + resolution_state + notes)
-and re-uses `aeat.sync.DivergenceClassification` and
-`aeat.sync.ResolutionState` enums verbatim — only the payload union
+and re-uses `aeat.application.sync.DivergenceClassification` and
+`aeat.application.sync.ResolutionState` enums verbatim — only the payload union
 is forked, never the surrounding shells.
 
 ### Deviation from the plan: parallel record vs. payload injection
 
 The plan (3.7) suggested defining a `FilingReconciliationPayload`
 that "satisfies the existing `DivergencePayload` Protocol". On
-inspection, `aeat.sync._divergence.DivergencePayload` is **not** a
+inspection, `aeat.application.sync._divergence.DivergencePayload` is **not** a
 Protocol — it is a closed `Annotated[Union, Field(discriminator="kind")]`
 of ten concrete payload variants. Pydantic strict mode would reject
 any payload outside that union. The plan's fork-rationale paragraph
@@ -151,8 +151,8 @@ governs this case ("the payload is persisted as a wrapping record
 that satisfies the `DivergenceRecord.payload` type without cross-enum
 pollution") so the execution emits a parallel
 `FilingReconciliationDivergenceRecord` instead. The non-negotiable
-constraint #8 ("do NOT modify `aeat.sync._divergence`") is fully
-respected — `aeat.sync` files are untouched. Phase 5's sync-run
+constraint #8 ("do NOT modify `aeat.application.sync._divergence`") is fully
+respected — `aeat.application.sync` files are untouched. Phase 5's sync-run
 integration will route both record types into the same Kent-facing
 sink.
 
@@ -170,14 +170,14 @@ without importing the Phase 1 module — each subpackage owns its own
 guard. The forbidden write-mode literal is composed at runtime from
 fixture parts (`"mode" + "=" + '"' + "write" + '"'`) so the full
 string never materialises in any Python source under
-`src/aeat/filing/reconciliation/`. The walker auto-discovers every
+`src/aeat/application/filing/reconciliation/`. The walker auto-discovers every
 `.py` file under the subpackage; no whitelisting and no per-file
 exemption.
 
 ### Public-API discipline & relative imports
 
 Every consumer-facing import lands through
-`aeat.filing.reconciliation` directly; private modules carry the
+`aeat.application.filing.reconciliation` directly; private modules carry the
 leading underscore. All cross-subpackage imports are relative
 (`from ...remote import ...`, `from ...sync import ...`,
 `from .._schema import ...`) so the project's `check_relative_imports.py`
@@ -188,12 +188,12 @@ gate stays clean.
 - `just lint` — green (`ruff check .` plus the custom relative-imports check).
 - `just typecheck` — green (`ty check src tests`).
 - `just hooks` — green on every changed file (prek pre-commit hook chain).
-- `uv run pytest src/aeat/filing/reconciliation/ -m unit` — 75 passed.
+- `uv run pytest src/aeat/application/filing/reconciliation/ -m unit` — 75 passed.
 - `uv run pytest -m unit -k "remote or reconciliation"` — 681 passed,
   including marker-integrity walker over every new test module.
 - Repository-wide `uv run pytest` — 3240 passed, 5 skipped, 29
   deselected; one pre-existing failure in
-  `tests/test_marker_integrity.py::test_module_carries_valid_pytestmark[src/aeat/submission/_formats/_test_fixtures.py]`
+  `tests/test_marker_integrity.py::test_module_carries_valid_pytestmark[src/aeat/adapters/outbound/aeat/export/_formats/_test_fixtures.py]`
   that predates this branch (verified by Phase 1 and Phase 2
   summaries) and is explicitly out of Phase 3 scope per the executing
   prompt.

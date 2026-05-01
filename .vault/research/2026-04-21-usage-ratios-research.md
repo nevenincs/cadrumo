@@ -19,9 +19,9 @@ Ground issue `#259` — "Kent configures his own usage ratios once". Kent measur
 
 ### 1. existing proportionality surface
 
-**Model — `src/aeat/financial/categories/_proportionality.py:64–108`.** `ProportionalityRule` is a frozen pydantic v2 model with `kind: ProportionalityKind`, `fixed_pct: Decimal | None`, `default_ratio: Decimal | None`, `statutory_cap_*`, `citations`, `notes_es`. Cross-field `model_validator(mode="after")` already pins `default_ratio` to `USAGE_RATIO_HOME_AREA` or `USAGE_RATIO_PERSONAL` kinds and bounds every ratio-valued field to `[0, 1]` via `Field(ge=Decimal("0"), le=Decimal("1"))`.
+**Model — `src/aeat/domain/financial/categories/_proportionality.py:64–108`.** `ProportionalityRule` is a frozen pydantic v2 model with `kind: ProportionalityKind`, `fixed_pct: Decimal | None`, `default_ratio: Decimal | None`, `statutory_cap_*`, `citations`, `notes_es`. Cross-field `model_validator(mode="after")` already pins `default_ratio` to `USAGE_RATIO_HOME_AREA` or `USAGE_RATIO_PERSONAL` kinds and bounds every ratio-valued field to `[0, 1]` via `Field(ge=Decimal("0"), le=Decimal("1"))`.
 
-**Kinds — `src/aeat/financial/categories/_proportionality.py:46–54`.**
+**Kinds — `src/aeat/domain/financial/categories/_proportionality.py:46–54`.**
 
 ```
 FULL_DEDUCTIBLE, FIXED_PERCENTAGE, USAGE_RATIO_PERSONAL,
@@ -30,7 +30,7 @@ USAGE_RATIO_HOME_AREA, STATUTORY_CAP, NON_DEDUCTIBLE
 
 Only the two `USAGE_RATIO_*` kinds are candidates for user-override today. `FIXED_PERCENTAGE` is statutory; `STATUTORY_CAP` is legally bounded; `FULL_DEDUCTIBLE` / `NON_DEDUCTIBLE` are not coefficient-shaped.
 
-**Category registry — `src/aeat/financial/categories/_registry.py:400–616` (usage-ratio rows only).**
+**Category registry — `src/aeat/domain/financial/categories/_registry.py:400–616` (usage-ratio rows only).**
 
 | `SpendingCategory` | `kind` | `default_ratio` |
 |---|---|---|
@@ -49,13 +49,13 @@ Only the two `USAGE_RATIO_*` kinds are candidates for user-override today. `FIXE
 
 Twelve categories in total. No user-override write surface exists today.
 
-**`SpendingCategory` — `src/aeat/financial/categories/_spending_category.py:8–48`.** Closed `StrEnum` of 39 stable identifiers. `SpendingCategoryFamily` groups are declared in the same file (`HOME_OFFICE`, `VEHICLE`, `TELECOMS`, …) and the membership table at lines 69–132 maps each family to its categories.
+**`SpendingCategory` — `src/aeat/domain/financial/categories/_spending_category.py:8–48`.** Closed `StrEnum` of 39 stable identifiers. `SpendingCategoryFamily` groups are declared in the same file (`HOME_OFFICE`, `VEHICLE`, `TELECOMS`, …) and the membership table at lines 69–132 maps each family to its categories.
 
-**`CategoryProfile` container — `src/aeat/financial/categories/_profile.py:29–52`.** Holds the `ProportionalityRule`, per-modelo casilla mappings, and VAT hint. No override slot today.
+**`CategoryProfile` container — `src/aeat/domain/financial/categories/_profile.py:29–52`.** Holds the `ProportionalityRule`, per-modelo casilla mappings, and VAT hint. No override slot today.
 
 ### 2. CLI layout
 
-**Financial sub-app — `src/aeat/cli/financial/__init__.py:11–33`.** `aeat financial` currently wires three children via `app.add_typer(...)` and `app.command(...)`:
+**Financial sub-app — `src/aeat/entrypoints/cli/financial/__init__.py:11–33`.** `aeat financial` currently wires three children via `app.add_typer(...)` and `app.command(...)`:
 
 - `ingest` (command) — `aeat financial ingest`
 - `txs` (sub-app) — `aeat financial txs list|show|classify|…`
@@ -63,7 +63,7 @@ Twelve categories in total. No user-override write surface exists today.
 
 No `profile` sub-app exists. Adding `aeat financial profile …` is a matter of dropping a new `profile.py` next to `invoices.py` and appending one `app.add_typer(profile_app, name="profile", …)` line.
 
-**Invoice sub-app template — `src/aeat/cli/financial/invoices.py:33–222`.** Canonical pattern:
+**Invoice sub-app template — `src/aeat/entrypoints/cli/financial/invoices.py:33–222`.** Canonical pattern:
 
 - `app = typer.Typer(name=…, no_args_is_help=True, help=…)`
 - Each command uses `typer.echo(...)` for tab-separated lists or `typer.echo(model.model_dump_json(indent=2))` for single records.
@@ -75,13 +75,13 @@ No `profile` sub-app exists. Adding `aeat financial profile …` is a matter of 
 
 ### 3. persistence pattern
 
-**Invoice service — `src/aeat/financial/invoices/_service.py:71–126`.**
+**Invoice service — `src/aeat/domain/financial/invoices/_service.py:71–126`.**
 
 - `load_invoices(path)` → `path.read_text(encoding="utf-8")` → `InvoiceCatalogue.model_validate_json(raw)`; OSError → `InvoicePersistenceError`; ValidationError → `InvoicePersistenceError`.
 - `save_invoices(catalogue, path)` → `path.parent.mkdir(parents=True, exist_ok=True)` → write to a sibling `NamedTemporaryFile` in the same directory → `os.replace(tmp, target)` for crash-safe atomic replacement. On OSError, unlink the temp and raise `InvoicePersistenceError`.
 - Both log one `INFO` line via `get_logger(__name__)`.
 
-**Transaction service — `src/aeat/financial/transactions/_service.py:23–78`.** Identical shape with its own error type (`TransactionPersistenceError`).
+**Transaction service — `src/aeat/domain/financial/transactions/_service.py:23–78`.** Identical shape with its own error type (`TransactionPersistenceError`).
 
 **Takeaway.** The "atomic JSON round-trip" helper pair is the repo's canonical shape for any user-writable profile document. `UsageRatioProfile` must follow it verbatim, including the tempfile + `os.replace` dance.
 
@@ -106,7 +106,7 @@ Not exported; each package redeclares its own (`_STRICT_FROZEN = ConfigDict(stri
 
 ### 5. test patterns
 
-**Module-level marker — `src/aeat/financial/categories/test_proportionality.py:19`.**
+**Module-level marker — `src/aeat/domain/financial/categories/test_proportionality.py:19`.**
 
 ```python
 pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
@@ -114,7 +114,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 No per-function markers; axis A (`unit`) + axis B (`domain_financial_input`) applied once.
 
-**CLI test — `src/aeat/cli/financial/test_cli.py:13`** uses the same two markers and drives commands via `CliRunner`. Fixtures live at `tests/fixtures/financial/`.
+**CLI test — `src/aeat/entrypoints/cli/financial/test_cli.py:13`** uses the same two markers and drives commands via `CliRunner`. Fixtures live at `tests/fixtures/financial/`.
 
 **Validation assertion pattern — `test_proportionality.py:32–76`.** Every "rejects X" test uses `with pytest.raises(ValidationError): ProportionalityRule(...)`. Round-trip tests instantiate + read back field values directly.
 
@@ -146,13 +146,13 @@ No per-function markers; axis A (`unit`) + axis B (`domain_financial_input`) app
 
 ## references
 
-- `src/aeat/financial/categories/_proportionality.py`
-- `src/aeat/financial/categories/_registry.py`
-- `src/aeat/financial/categories/_spending_category.py`
-- `src/aeat/financial/categories/_profile.py`
-- `src/aeat/cli/financial/__init__.py`
-- `src/aeat/cli/financial/invoices.py`
-- `src/aeat/financial/invoices/_service.py`
-- `src/aeat/financial/transactions/_service.py`
+- `src/aeat/domain/financial/categories/_proportionality.py`
+- `src/aeat/domain/financial/categories/_registry.py`
+- `src/aeat/domain/financial/categories/_spending_category.py`
+- `src/aeat/domain/financial/categories/_profile.py`
+- `src/aeat/entrypoints/cli/financial/__init__.py`
+- `src/aeat/entrypoints/cli/financial/invoices.py`
+- `src/aeat/domain/financial/invoices/_service.py`
+- `src/aeat/domain/financial/transactions/_service.py`
 - `src/aeat/config.py`
 - `.vault/audit/2026-04-18-kent-data-prep-journey-audit.md`

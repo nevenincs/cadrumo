@@ -15,7 +15,7 @@ related:
 PR #448 (the M100 RENTA megaproject — closing #317 / #341 / #342 / #343 / #344)
 landed full-form `modelo_100.{2024,2025,2026}` rulesets with 71 `sub_op`
 nodes and 20 `mul/div` scalar leaves per year. Each year was added to
-`EXPECTED_COUNTS` in `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`,
+`EXPECTED_COUNTS` in `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`,
 yet none of the per-class mutation harnesses (`test_scalar_mutation.py`,
 `test_operand_swap_mutation.py`) were extended to import the new
 rulesets. The aggregate kill-rate test continued to report 100 %

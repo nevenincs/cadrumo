@@ -32,23 +32,23 @@ related:
 
 Phase 4 of the `aeat-verify` plan lands the `aeat filing reconcile`
 subcommand as a sibling of `aeat filing import`. The command consumes
-the Phase-3 `aeat.filing.reconciliation.reconcile` comparator and the
+the Phase-3 `aeat.application.filing.reconciliation.reconcile` comparator and the
 Phase-1 `aeat.remote.RemoteFilingFetcher` Protocol so the CLI surface
 stays Phase-5-ready (sync-run integration reuses the same shape). The
 write-guard posture the ADR locks is preserved end-to-end: no flag
 declared in this module mutates AEAT state, and the narrow
 source-scoped Layer-3 grep guard walks only the new files.
 
-- Created: `src/aeat/cli/filing/_reconcile.py` (reconcile subcommand,
+- Created: `src/aeat/entrypoints/cli/filing/_reconcile.py` (reconcile subcommand,
   pre-parse flag guard, strict-pydantic `ReconcileCliArgs`, draft
   resolvers, human + JSON rendering, exit-code mapping).
-- Created: `src/aeat/cli/filing/test_reconcile.py` (43 unit cases
+- Created: `src/aeat/entrypoints/cli/filing/test_reconcile.py` (43 unit cases
   covering every Phase-4 acceptance item).
-- Created: `src/aeat/cli/filing/test_no_write_surface.py` (Layer-3
+- Created: `src/aeat/entrypoints/cli/filing/test_no_write_surface.py` (Layer-3
   grep guard narrowly scoped to the two new source files).
-- Created: `src/aeat/cli/filing/_no_write_surface_fixture.txt`
+- Created: `src/aeat/entrypoints/cli/filing/_no_write_surface_fixture.txt`
   (plain-text sidecar mirroring the Phase-1 / Phase-3 fixture shape).
-- Modified: `src/aeat/cli/filing/__init__.py` (import-and-register the
+- Modified: `src/aeat/entrypoints/cli/filing/__init__.py` (import-and-register the
   reconcile subcommand; added the `reconcile` entry to the module
   docstring).
 
@@ -128,17 +128,17 @@ reconcile module's `__all__`. The fixture-sidecar pattern is preserved:
 the fixture is a `.txt` file, never importable Python, and composes
 the forbidden literal at runtime so no guarded source materialises
 the forbidden string. The guard is deliberately **not** scoped to the
-whole `src/aeat/cli/filing/` tree because sibling commands
+whole `src/aeat/entrypoints/cli/filing/` tree because sibling commands
 (`submit_complementaria_cmd`, the complementaria build/submit pair)
 legitimately speak `submit` / `enviar` / `send` via the audited
-submission engine in `aeat.submission`.
+submission engine in `aeat.adapters.outbound.aeat.export`.
 
 ### Deviation from the plan: dedicated source module
 
 The plan text (4.1) suggested adding the subcommand "as a sibling of
-the existing `import_`" inside `src/aeat/cli/filing/__init__.py`.
+the existing `import_`" inside `src/aeat/entrypoints/cli/filing/__init__.py`.
 The execution instead puts the reconcile command in a dedicated
-sibling `src/aeat/cli/filing/_reconcile.py` and wires it via a
+sibling `src/aeat/entrypoints/cli/filing/_reconcile.py` and wires it via a
 `register(app, ...)` call from `__init__.py`. Three concrete reasons:
 
 1. The Phase-4 non-negotiable #1 (zero writes) demands a source-level
@@ -146,7 +146,7 @@ sibling `src/aeat/cli/filing/_reconcile.py` and wires it via a
    `__init__.py` would force the guard to cover
    `submit_complementaria_cmd` and the complementaria submission
    plumbing, which are by design write-enabled surfaces routed
-   through the audited `aeat.submission` engine. Keeping the two
+   through the audited `aeat.adapters.outbound.aeat.export` engine. Keeping the two
    surfaces in separate files lets Layer 3 stay narrow and
    meaningful.
 2. The `register(app, *, fetcher_provider, now_provider)` factory
@@ -168,14 +168,14 @@ sibling `src/aeat/cli/filing/_reconcile.py` and wires it via a
 - `just typecheck` — green (`ty check src tests`).
 - `just hooks` — green on every modified file via the prek chain
   (trailing whitespace, ruff check / format, ty, relative-imports).
-- `uv run pytest src/aeat/cli/filing/ -m unit` — 52 passed
+- `uv run pytest src/aeat/entrypoints/cli/filing/ -m unit` — 52 passed
   (43 new from Phase 4, 9 pre-existing from `test_filing_cli.py`).
 - `uv run pytest -m unit -k "filing or reconcile or remote"` —
   823 passed, 2497 deselected; includes every marker-integrity walker
   over the three new test modules.
 - Repository-wide `uv run pytest` — 3285 passed, 5 skipped,
   29 deselected. One pre-existing failure in
-  `tests/test_marker_integrity.py::test_module_carries_valid_pytestmark[src/aeat/submission/_formats/_test_fixtures.py]`
+  `tests/test_marker_integrity.py::test_module_carries_valid_pytestmark[src/aeat/adapters/outbound/aeat/export/_formats/_test_fixtures.py]`
   that predates this branch and is explicitly out of Phase 4 scope
   per the executing prompt.
 - Live CLI smoke: `uv run aeat filing reconcile --write` exits `2`

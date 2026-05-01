@@ -24,7 +24,7 @@ the original class of bugs so the agent prompt can be hardened.
 
 ## Background
 
-PR #28 introduced `src/aeat/storage/` (SQLite + SQLAlchemy 2.x + Alembic),
+PR #28 introduced `src/aeat/adapters/persistence/storage/` (SQLite + SQLAlchemy 2.x + Alembic),
 a public pydantic v2 record surface, three repositories, an engine
 factory, a session helper, and a programmatic Alembic facade. The
 external review history is captured on the PR comments thread:
@@ -50,7 +50,7 @@ checklist needs new entries to catch these classes of bugs in the future.
 - Read `gh issue view 32` to get the canonical bug list.
 - Read `gh pr view 28 --comments` and `gh pr diff 28` to confirm the
   external bots' raw findings and the fixes applied.
-- Read every file under `src/aeat/storage/` and `migrations/` on `main`.
+- Read every file under `src/aeat/adapters/persistence/storage/` and `migrations/` on `main`.
 - Verify that the round-trip migration test, FK cascade test, CHECK
   rejection test, natural-key upsert test, integrity-error wrapping test,
   in-memory injected-engine test, and `aeat_storage_auto_migrate` test all
@@ -58,8 +58,8 @@ checklist needs new entries to catch these classes of bugs in the future.
 - Run `just lint && just typecheck && just test && just hooks` against
   the worktree to confirm a green starting state.
 - Grep for `logging.getLogger`, `# type: ignore`, bare `dict[str, Any]`
-  / `: Any` annotations across `src/aeat/storage/`.
-- Grep for cross-package imports of `aeat.storage._*` from outside the
+  / `: Any` annotations across `src/aeat/adapters/persistence/storage/`.
+- Grep for cross-package imports of `aeat.adapters.persistence.storage._*` from outside the
   subpackage to verify public-API discipline.
 - Read `.vaultspec/rules/agents/vaultspec-code-reviewer.md` and the
   associated `code-review.md` template to identify exactly which checklist
@@ -69,34 +69,34 @@ checklist needs new entries to catch these classes of bugs in the future.
 
 Each of the nine externally-reported bugs is now fixed on `main`:
 
-1. `src/aeat/storage/engine.py:46-65` installs a `connect` event listener
+1. `src/aeat/adapters/persistence/storage/engine.py:46-65` installs a `connect` event listener
    that issues `PRAGMA foreign_keys=ON` for every SQLite connection.
-2. `src/aeat/storage/engine.py:115-126` consults
+2. `src/aeat/adapters/persistence/storage/engine.py:115-126` consults
    `resolved.aeat_storage_auto_migrate` and runs `upgrade_to_head` before
    publishing the engine to the cache; the setting is documented in
    `env/.env.example:64`.
-3. `src/aeat/storage/_orm.py:56-61` declares the
+3. `src/aeat/adapters/persistence/storage/_orm.py:56-61` declares the
    `ck_portals_auth_method` CHECK constraint, and
    `migrations/versions/0002_constraints.py:25-28` adds it via
    `batch_alter_table`.
-4. `src/aeat/storage/_orm.py:91-98` declares the
+4. `src/aeat/adapters/persistence/storage/_orm.py:91-98` declares the
    `uq_corpus_artifacts_identity` UNIQUE constraint, and
    `migrations/versions/0002_constraints.py:30-34` adds it via Alembic.
-5. The three `upsert` methods in `src/aeat/storage/repository.py` look up
+5. The three `upsert` methods in `src/aeat/adapters/persistence/storage/repository.py` look up
    the existing row by natural key when `record.id is None`
    (`identifier` for modelos and portals,
    `(year, modelo_id, file_path)` for corpus artifacts).
-6. `src/aeat/storage/repository.py:25-38` wraps `IntegrityError` as
+6. `src/aeat/adapters/persistence/storage/repository.py:25-38` wraps `IntegrityError` as
    `RepositoryError`; `repository.py:175-180` wraps the `ValueError` from
    the `PortalAuthMethod` decode.
-7. `src/aeat/storage/engine.py:110-127` only writes `_engines[url]`
+7. `src/aeat/adapters/persistence/storage/engine.py:110-127` only writes `_engines[url]`
    *after* migrations complete, and disposes the engine on migration
    failure so a broken cache entry can never be observed.
 8. `migrations/env.py:55-65` reuses the engine injected via
    `config.attributes["connection"]` and only falls back to
    `engine_from_config` for the `alembic` CLI path; the in-memory
    injected-engine test at `_test_constraints.py:233-244` covers this.
-9. `src/aeat/storage/repository.py:38` interpolates the `kind` argument
+9. `src/aeat/adapters/persistence/storage/repository.py:38` interpolates the `kind` argument
    into the error message ("integrity violation during {kind}
    operation"), so the `delete` callers no longer get the hardcoded
    `"upsert"` text.
@@ -108,13 +108,13 @@ Each of the nine externally-reported bugs is now fixed on `main`:
   The full pytest run reports `212 passed, 1 skipped, 9 deselected`,
   including every storage regression test added in round 2.
 - No `logging.getLogger` calls — every storage module uses
-  `aeat.logging.get_logger(__name__)`.
-- No `# type: ignore` comments anywhere in `src/aeat/storage/`. The only
+  `aeat.core.logging.get_logger(__name__)`.
+- No `# type: ignore` comments anywhere in `src/aeat/adapters/persistence/storage/`. The only
   `Any` annotation is a deliberate frozen-model mutation probe in
-  `src/aeat/storage/_test_records.py:25`.
+  `src/aeat/adapters/persistence/storage/_test_records.py:25`.
 - All public records are pydantic v2 with `ConfigDict(strict=True,
   frozen=True)`; no public signature exposes a raw `dict[str, Any]`.
-- All storage errors inherit from `aeat.errors.AeatError` via
+- All storage errors inherit from `aeat.core.errors.AeatError` via
   `StorageError`, and `MigrationError`/`RepositoryError` inherit from
   `StorageError` in turn.
 - Every test carries `@pytest.mark.unit`; no `unittest` imports anywhere
@@ -122,11 +122,11 @@ Each of the nine externally-reported bugs is now fixed on `main`:
   all hit a real SQLite engine, including an in-memory variant for the
   Alembic injected-engine path.
 - Public API discipline holds for runtime callers: no module outside
-  `src/aeat/storage/` imports any private (`_`-prefixed) symbol.
+  `src/aeat/adapters/persistence/storage/` imports any private (`_`-prefixed) symbol.
 - Public API discipline is **violated by two colocated test modules**:
-  `src/aeat/storage/_test_repository.py:23` and
-  `src/aeat/storage/_test_session.py:12` import `Base` from
-  `aeat.storage._orm` and call `Base.metadata.create_all(engine)` to
+  `src/aeat/adapters/persistence/storage/_test_repository.py:23` and
+  `src/aeat/adapters/persistence/storage/_test_session.py:12` import `Base` from
+  `aeat.adapters.persistence.storage._orm` and call `Base.metadata.create_all(engine)` to
   bootstrap the schema instead of using `upgrade_to_head` from the
   public surface. This is the same flavor of finding the LLM-client
   review surfaced as `public-api-001`.

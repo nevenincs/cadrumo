@@ -17,7 +17,7 @@ Date: 2026-04-12
    - Create `src/aeat/<subpackage>/__init__.py`.
    - Add a meaningful docstring to `__init__.py`.
    - Create `src/aeat/<subpackage>/test_smoke.py` validating that the subpackage loads, has a docstring, and optionally exports some placeholder class if necessary.
-4. Set up CLI using Typer in `src/aeat/cli/` with a dummy `hello` command.
+4. Set up CLI using Typer in `src/aeat/entrypoints/cli/` with a dummy `hello` command.
 5. Create `.vault/reference/2026-04-12-base-module-structure-reference.md` (and append/update CLAUDE.md) defining conventions.
 6. Run lint, typecheck, tests, and hooks.
 

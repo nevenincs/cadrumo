@@ -14,7 +14,7 @@ related:
 
 ## intent
 
-Deliver `aeat.workflow` — the project's first composite end-user
+Deliver `aeat.application.workflow` — the project's first composite end-user
 command — per the accepted ADR
 `[[2026-04-12-workflow-engine-adr]]`. The engine orchestrates the
 already-merged deadline / sync / filing / submission components and
@@ -24,7 +24,7 @@ it compiles and tests standalone.
 ## layout
 
 ```
-src/aeat/workflow/
+src/aeat/application/workflow/
 ├── __init__.py              # public facade, re-exports only
 ├── _errors.py               # WorkflowError / WorkflowAbortedError / WorkflowComponentError
 ├── _models.py               # pydantic v2 models + enums (WorkflowStage etc.)
@@ -41,7 +41,7 @@ src/aeat/workflow/
 CLI wiring:
 
 ```
-src/aeat/cli/workflow/
+src/aeat/entrypoints/cli/workflow/
 ├── __init__.py              # typer sub-app mounted via app.add_typer
 ├── _helpers.py              # shared printing + run_id resolution
 ├── next.py                  # aeat workflow next
@@ -120,8 +120,8 @@ src/aeat/cli/workflow/
      `NotImplementedError` with a "wire #43/#46/#8 here" message so
      callers are forced to inject their own handles until those land.
 
-7. **CLI (`src/aeat/cli/workflow/`)**
-   - Mirrors `src/aeat/cli/submission/`. Four subcommands, each with
+7. **CLI (`src/aeat/entrypoints/cli/workflow/`)**
+   - Mirrors `src/aeat/entrypoints/cli/submission/`. Four subcommands, each with
      `--json`.
    - `next` and `run` require `--i-understand-this-is-real` alongside
      `--no-dry-run` to enter live mode; otherwise the engine returns
@@ -146,7 +146,7 @@ src/aeat/cli/workflow/
    - `test_persistence.py`: save/load/list round-trip, `since` filter.
    - `test_live.py`: single `@pytest.mark.live` test gated via
      `requires_live_enabled()`.
-   - CLI tests under `src/aeat/cli/workflow/test_workflow_cli.py`.
+   - CLI tests under `src/aeat/entrypoints/cli/workflow/test_workflow_cli.py`.
 
 ## plan review
 
@@ -161,11 +161,11 @@ the existing submission surface for uniformity.
 ## execution sequence
 
 1. Add settings + env lines; confirm `test_config.py` still passes.
-2. Land `aeat.workflow._models`, `_errors`, `_protocols`.
+2. Land `aeat.application.workflow._models`, `_errors`, `_protocols`.
 3. Land `_engine.py` + the happy-path engine test.
 4. Add one test per `WorkflowAbortReason`, then persistence tests.
 5. Land `_default.py` and the CLI subpackage.
-6. Wire the new typer sub-app in `aeat.cli.__init__`.
+6. Wire the new typer sub-app in `aeat.entrypoints.cli.__init__`.
 7. Run `just lint`, `just typecheck`, `just test`, `just hooks`.
 8. Write exec step records + phase summary.
 9. Invoke `vaultspec-code-review` skill, persist the audit.

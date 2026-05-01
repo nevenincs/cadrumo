@@ -13,10 +13,10 @@ Completed the CLI surface, colocated tests, bootstrap refresh, and repo-wide ver
 
 - Modified: `.vaultspec/providers.json`
 - Modified: `uv.lock`
-- Created: `src/aeat/cli/financial/txs.py`
-- Created: `src/aeat/financial/transactions/test_models.py`
-- Created: `src/aeat/financial/transactions/test_catalogue.py`
-- Created: `src/aeat/financial/transactions/test_cli.py`
+- Created: `src/aeat/entrypoints/cli/financial/txs.py`
+- Created: `src/aeat/domain/financial/transactions/test_models.py`
+- Created: `src/aeat/domain/financial/transactions/test_catalogue.py`
+- Created: `src/aeat/domain/financial/transactions/test_cli.py`
 
 ## Description
 
@@ -24,4 +24,4 @@ Extended the existing `aeat financial` subgroup with `txs list`, `txs show`, and
 
 ## Tests
 
-Executed `uv run pytest src/aeat/financial/transactions`, then the full local gates: `just lint`, `just typecheck`, `just test`, and `just hooks`. All completed successfully.
+Executed `uv run pytest src/aeat/domain/financial/transactions`, then the full local gates: `just lint`, `just typecheck`, `just test`, and `just hooks`. All completed successfully.

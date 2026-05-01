@@ -15,17 +15,17 @@ related:
 
 ## phase 1 — schema + errors + settings
 
-1. Create `src/aeat/financial/__init__.py` (docstring + empty
+1. Create `src/aeat/domain/financial/__init__.py` (docstring + empty
    `__all__`).
-2. Create `src/aeat/financial/vat/_schema.py` with:
+2. Create `src/aeat/domain/financial/vat/_schema.py` with:
    - `_StrictFrozen`, `_StrictMutable` mirrored on
-     `aeat.normatives._schema`.
+     `aeat.domain.normatives._schema`.
    - `_require_spanish` model-validator helper.
    - StrEnums `VATCategory` (16 members per issue #85 body),
      `EUMemberState` (27 members), `VATRateKind`, `CitationSource`.
    - Models `VATRate`, `Citation`, `VATRegulation`, `VATCatalogue`,
      `VerificationIssue`, `VerificationReport`.
-3. Create `src/aeat/financial/vat/errors.py` with `VatError`,
+3. Create `src/aeat/domain/financial/vat/errors.py` with `VatError`,
    `VatRateNotFoundError`, `VatCategoryNotFoundError`,
    `VatCatalogueError`.
 4. Add `aeat_vat_catalogue_root` to `src/aeat/config.py` and the
@@ -36,17 +36,17 @@ green.
 
 ## phase 2 — catalogue + rates + helpers + verify
 
-1. Populate `src/aeat/financial/vat/_rates.py` with `VAT_RATE_TABLE`
+1. Populate `src/aeat/domain/financial/vat/_rates.py` with `VAT_RATE_TABLE`
    (≥50 entries; ES/DE/FR/IT/NL fully expanded).
-2. Populate `src/aeat/financial/vat/_catalogue.py` with
+2. Populate `src/aeat/domain/financial/vat/_catalogue.py` with
    `VAT_CATALOGUE_2025` — one `VATRegulation` per `VATCategory`,
    each carrying ≥2 `Citation` records (total ≥32) quoting real
    Ley 37/1992 article text.
-3. Add `src/aeat/financial/vat/_lookup.py` (`lookup_rate`, `cite`).
-4. Add `src/aeat/financial/vat/_corpus.py`
+3. Add `src/aeat/domain/financial/vat/_lookup.py` (`lookup_rate`, `cite`).
+4. Add `src/aeat/domain/financial/vat/_corpus.py`
    (`load_vat_rules_from_manual`).
-5. Add `src/aeat/financial/vat/_verify.py` (`verify_catalogue`).
-6. Wire everything through `src/aeat/financial/vat/__init__.py`
+5. Add `src/aeat/domain/financial/vat/_verify.py` (`verify_catalogue`).
+6. Wire everything through `src/aeat/domain/financial/vat/__init__.py`
    public surface.
 7. Colocated unit tests: `test_categories.py`, `test_rates.py`,
    `test_rules.py`, `test_corpus.py`, `test_verify.py`.
@@ -56,10 +56,10 @@ green.
 
 ## phase 3 — cli wiring + cli tests
 
-1. Add `src/aeat/cli/vat.py` with the Typer sub-app (`categories
+1. Add `src/aeat/entrypoints/cli/vat.py` with the Typer sub-app (`categories
    list`, `rates list`, `show`, `rule`, `verify`).
-2. Wire it in `src/aeat/cli/__init__.py`.
-3. Add `src/aeat/cli/test_vat_cli.py` exercising the commands with
+2. Wire it in `src/aeat/entrypoints/cli/__init__.py`.
+3. Add `src/aeat/entrypoints/cli/test_vat_cli.py` exercising the commands with
    `typer.testing.CliRunner`.
 
 **Gate**: `just lint && just typecheck && just test && just hooks`

@@ -25,7 +25,7 @@ Pipeline: research → ADR → plan → task execution → code review
 
 - Two new concrete `FilingBuilder` subclasses —
   `Modelo303Builder` (quarterly IVA) and `Modelo390Builder`
-  (annual IVA summary) — registered with `aeat.filing.build_draft`.
+  (annual IVA summary) — registered with `aeat.application.filing.build_draft`.
 - Two hand-curated casilla schemas sourced from the Manual
   práctico IVA 2025 (AEAT) chapters on modelo 303 / 390,
   cited in the ADR.

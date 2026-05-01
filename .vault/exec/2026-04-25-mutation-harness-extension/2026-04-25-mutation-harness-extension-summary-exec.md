@@ -17,14 +17,14 @@ preserved the existing `sub_op` operand-swap mutator, and added the
 orphan-node defense + kill-rate aggregator. The harness now covers
 every mutable formula-leaf in every landed ruleset variant.
 
-- Created: `src/aeat/formulas/_rulesets/_mutators.py`
-- Created: `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py`
-- Created: `src/aeat/formulas/_rulesets/test_brackets_threshold_mutation.py`
-- Created: `src/aeat/formulas/_rulesets/test_scalar_mutation.py`
-- Created: `src/aeat/formulas/_rulesets/test_mutator_exhaustiveness.py`
-- Created: `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`
+- Created: `src/aeat/domain/formulas/_rulesets/_mutators.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_brackets_threshold_mutation.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_mutator_exhaustiveness.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`
 - Modified: `docs/coverage/pipeline.md` (added a mutation-harness row to the cross-cutting observables table).
-- Untouched: `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py` (the existing harness; the issue forbids any behaviour change there).
+- Untouched: `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py` (the existing harness; the issue forbids any behaviour change there).
 
 ## Description
 
@@ -108,7 +108,7 @@ session-level kill-rate is **100 %**, well above the 90 % DoD floor.
 
 ## Tests
 
-Local run on Windows (`uv run pytest src/aeat/formulas/_rulesets/`)
+Local run on Windows (`uv run pytest src/aeat/domain/formulas/_rulesets/`)
 returned 259 passed, 0 failed. The new modules contribute 86 cases:
 
 - `test_percent_rate_mutation.py` — 49 cases.

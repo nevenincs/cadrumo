@@ -20,29 +20,29 @@ Execution follows the phases below. Each phase is committable in
 isolation with `just lint && just typecheck && just test` green.
 Commit messages follow the conventional-commits rule (type(scope):
 subject) per `CLAUDE.md`. All new public surface goes through
-`aeat.auth.__init__` re-exports.
+`aeat.adapters.outbound.aeat.auth.__init__` re-exports.
 
 ## Phase 1 — Error surface additions
 
-- **Files**: `src/aeat/auth/certificate.py`,
-  `src/aeat/auth/__init__.py`.
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py`.
 - **Content**:
   - Add `AeatLiveReadNotEnabledError(AeatError)` to the errors
     region of `certificate.py`.
   - Add `AeatSessionExpiredError(CertificateError)`.
   - Add `AeatLoginAssertionError(CertificateError)`.
   - Add `CertificateNifParseError(CertificateError)`.
-  - Re-export from `aeat.auth.__init__.__all__`.
-- **Tests** (`src/aeat/auth/test_certificate.py`): one assertion that
+  - Re-export from `aeat.adapters.outbound.aeat.auth.__init__.__all__`.
+- **Tests** (`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py`): one assertion that
   every new error class is `issubclass(AeatError)` and inherits from
   the documented parent.
 - **Commit**: `feat(auth): error surface for access gate (#167)`.
 
 ## Phase 2 — NIF extractor + unit tests
 
-- **Files**: `src/aeat/auth/certificate.py` (add
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` (add
   `extract_nif_from_subject(cert) -> str`),
-  `src/aeat/auth/test_certificate.py`.
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py`.
 - **Content**:
   - Regexes for `IDCES-` prefix, DNI shape, NIE shape.
   - Function walks the `subject` RFC-4514 string and searches for a
@@ -62,9 +62,9 @@ subject) per `CLAUDE.md`. All new public surface goes through
 
 ## Phase 3 — `AeatGateEnvSnapshot` + `AeatAccessGate`
 
-- **Files**: `src/aeat/auth/_gate.py` (NEW),
-  `src/aeat/auth/test_gate.py` (NEW — colocated Rust-style),
-  `src/aeat/auth/__init__.py` (re-export).
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py` (NEW),
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_gate.py` (NEW — colocated Rust-style),
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py` (re-export).
 - **Content**:
   - `AeatGateEnvSnapshot(BaseModel)`: strict, frozen,
     `extra="forbid"`; fields
@@ -92,15 +92,15 @@ subject) per `CLAUDE.md`. All new public surface goes through
 
 ## Phase 4 — `AeatSession` + `AeatLoginAssertion` records
 
-- **Files**: `src/aeat/auth/_authenticator.py` (NEW — records only
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` (NEW — records only
   in this phase; class lands in Phase 6),
-  `src/aeat/auth/test_authenticator.py` (NEW),
-  `src/aeat/auth/__init__.py` (re-export records).
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py` (NEW),
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py` (re-export records).
 - **Surface-stability boundary**: until Phase 6 lands,
-  `aeat.auth.__all__` exposes the `AeatSession` /
+  `aeat.adapters.outbound.aeat.auth.__all__` exposes the `AeatSession` /
   `AeatLoginAssertion` records **without** an `AeatAuthenticator`
   lifecycle owner. Downstream consumers (#168–#171 roadmap) MUST
-  NOT pin imports against `aeat.auth` until the end-of-Phase-6
+  NOT pin imports against `aeat.adapters.outbound.aeat.auth` until the end-of-Phase-6
   commit SHA (the facade class); Phases 4–6 are reviewable
   together as a single unit rather than incrementally.
 - **Content**:
@@ -120,9 +120,9 @@ subject) per `CLAUDE.md`. All new public surface goes through
 
 ## Phase 5 — Fix BrowserSession cert wiring (G2 regression)
 
-- **Files**: `src/aeat/browser/session.py`,
-  `src/aeat/browser/test_session.py`,
-  `src/aeat/auth/_certificate_backends/_playwright_context.py` (no
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_playwright_context.py` (no
   change to behaviour; confirm `_MARKER_ATTR` export for tests).
 - **Content**:
   - Rename `auth_backend: object | None` to
@@ -149,8 +149,8 @@ subject) per `CLAUDE.md`. All new public surface goes through
 
 ## Phase 6 — `AeatAuthenticator` class
 
-- **Files**: `src/aeat/auth/_authenticator.py` (extend),
-  `src/aeat/auth/test_authenticator.py`.
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` (extend),
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py`.
 - **Content**:
   - Class per ADR D1, including `__aenter__` / `__aexit__` so it
     can be used as `async with AeatAuthenticator(settings) as a: ...`.
@@ -188,9 +188,9 @@ subject) per `CLAUDE.md`. All new public surface goes through
 
 ## Phase 7 — Engine integration (env-snapshot consolidation)
 
-- **Files**: `src/aeat/submission/_engine.py`,
-  `src/aeat/submission/_audit.py`,
-  `src/aeat/submission/test_engine.py`.
+- **Files**: `src/aeat/adapters/outbound/aeat/export/_engine.py`,
+  `src/aeat/adapters/outbound/aeat/export/_audit.py`,
+  `src/aeat/adapters/outbound/aeat/export/test_engine.py`.
 - **Content**:
   - In `_submit_with_transport()`:
     - **Lines 207-212 MUST remain byte-identical.** Those are the
@@ -229,7 +229,7 @@ subject) per `CLAUDE.md`. All new public surface goes through
 
 ## Phase 9 — Live authenticator test
 
-- **Files**: `src/aeat/auth/test_authenticator_live.py` (NEW).
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator_live.py` (NEW).
 - **Content**:
   - Single `@pytest.mark.live` module.
   - Skip when `AEAT_LIVE_TESTS_ENABLED != "1"` OR
@@ -252,14 +252,14 @@ subject) per `CLAUDE.md`. All new public surface goes through
 
 ## Phase 10 — Doctor row (mandatory)
 
-- **Files**: `src/aeat/cli/doctor.py`.
+- **Files**: `src/aeat/entrypoints/cli/doctor.py`.
 - **Content**: a single "Live access gate" row driven by
   `AeatAccessGate(settings).snapshot_env()` — OK when
   `AEAT_LIVE_TESTS_ENABLED=="1"`, WARN when absent, MISSING if
   the read-gate would refuse. The row surfaces the three env var
   states (no secret values). This row is promised by the ADR's
   §Operator-runbook and must ship in this PR.
-- **Tests** (`src/aeat/cli/test_doctor.py`): new case asserting
+- **Tests** (`src/aeat/entrypoints/cli/test_doctor.py`): new case asserting
   the row renders the expected state per env configuration.
 - **Commit**: `feat(cli): doctor row for live access gate env (#167)`.
 
@@ -299,7 +299,7 @@ subject) per `CLAUDE.md`. All new public surface goes through
 
 ## Architectural invariants
 
-- **No new subpackage.** Everything lives under `aeat.auth`.
+- **No new subpackage.** Everything lives under `aeat.adapters.outbound.aeat.auth`.
 - **No new env var.** Session TTL is a hard-coded constant.
 - **`SubmissionEngine` interface unchanged.** No `gate=` kwarg,
   no `self.gate`, no injection seam.

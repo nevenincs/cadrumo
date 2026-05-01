@@ -36,24 +36,24 @@ This research grounds the bundled fix for issues `#142`, `#143`, `#144`, `#145`,
   - `settings.aeat_submission_require_human_confirmation` is truthy
 - No production code under `src/aeat/` checks `AEAT_LIVE_SUBMIT_ENABLED`.
 - No production code under `src/aeat/` checks `PYTEST_CURRENT_TEST`.
-- No `src/aeat/submission/_confirm.py` or `src/aeat/submission/_audit.py` module exists.
+- No `src/aeat/adapters/outbound/aeat/export/_confirm.py` or `src/aeat/adapters/outbound/aeat/export/_audit.py` module exists.
 
 ### CLI and amendment drift
 
-- `aeat submission submit` still routes through `aeat.cli.submission._helpers.build_engine()`, which wires `_NullSession` plus stubbed certificate, portal, and justificante providers.
+- `aeat submission submit` still routes through `aeat.entrypoints.cli.submission._helpers.build_engine()`, which wires `_NullSession` plus stubbed certificate, portal, and justificante providers.
 - The command still prints `LIVE submission OK` even though the session factory is not a real AEAT transport.
-- `aeat filing complementaria submit --live` reuses `aeat.cli._live.requires_live_enabled()`, which is explicitly a live-test read gate over `AEAT_LIVE_TESTS_ENABLED`, not a live-write gate.
+- `aeat filing complementaria submit --live` reuses `aeat.entrypoints.cli._live.requires_live_enabled()`, which is explicitly a live-test read gate over `AEAT_LIVE_TESTS_ENABLED`, not a live-write gate.
 - The same complementaria command still uses `typer.confirm(..., abort=True)` rather than the charter-required exact confirmation phrase.
 
 ### Workflow contract drift
 
-- `src/aeat/workflow/_protocols.py` still defines `SubmissionEngineProtocol.submit_draft(..., dry_run: bool = True, override_confirmation: bool = False, ...)`.
+- `src/aeat/application/workflow/_protocols.py` still defines `SubmissionEngineProtocol.submit_draft(..., dry_run: bool = True, override_confirmation: bool = False, ...)`.
 - `WorkflowEngine.run_next`, `run_for_period`, and `_stage_dry_run_submit` still preserve the legacy `dry_run` default and `override_confirmation` bailout behavior.
 - The workflow CLI commands still encode the old `--no-dry-run` + `--i-understand-this-is-real` contract, even though the production workflow helper is intentionally not wired on this branch.
 
 ### Real-transport status on this branch
 
-- `aeat.browser.session.BrowserSession` exists, but its auth-backend path inside `create_context()` is still an explicit stub (`pass` after logging).
+- `aeat.adapters.outbound.aeat.browser.session.BrowserSession` exists, but its auth-backend path inside `create_context()` is still an explicit stub (`pass` after logging).
 - There is no existing production helper that wires `SubmissionEngine` to a real Playwright browser session plus the certificate backend for a live filing path.
 - Because that transport composition is still incomplete, the safest resolution for issue `#146` on this branch is to fail closed on the CLI live-submit path rather than claim a real live submission succeeded.
 

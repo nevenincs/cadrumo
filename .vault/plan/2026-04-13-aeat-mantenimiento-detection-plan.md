@@ -18,16 +18,16 @@ executor follows them verbatim. No edits outside the modules listed.
 ## Proposed Changes
 
 Implement a typed AEAT site-health detection layer inside `aeat.status`,
-hoist a neutral `SiteHealthError` into `aeat.errors`, wire a thin
-navigation-time probe into `aeat.browser.session`, add a dedicated
-`except SiteHealthError` arm in `aeat.workflow._engine` before the
+hoist a neutral `SiteHealthError` into `aeat.core.errors`, wire a thin
+navigation-time probe into `aeat.adapters.outbound.aeat.browser.session`, add a dedicated
+`except SiteHealthError` arm in `aeat.application.workflow._engine` before the
 generic exception catch, expose `aeat browser health` via a new
-directory-backed CLI sub-app, extend `aeat.config.Settings` with two
+directory-backed CLI sub-app, extend `aeat.core.config.Settings` with two
 fields, and land a fixture corpus under `tests/fixtures/site_health/`.
 
 All new records are strict-frozen-forbid pydantic v2 models; the closed
-state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
-`src/aeat/filing/**`, or `src/aeat/financial/**`. No live tests without
+state catalogue is an `enum.StrEnum`. No edits to `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/**`,
+`src/aeat/application/filing/**`, or `src/aeat/domain/financial/**`. No live tests without
 `AEAT_LIVE_TESTS_ENABLED=1`. No mocks, patches, fakes, or stubs.
 
 ## Tasks
@@ -42,7 +42,7 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
     accepts a required keyword-only `status` argument and stores it as
     a public attribute; the string message mirrors
     `status.state.value`.
-  - Acceptance: `python -c "from aeat.errors import SiteHealthError"`
+  - Acceptance: `python -c "from aeat.core.errors import SiteHealthError"`
     succeeds; `SiteHealthError` is a direct subclass of `AeatError`.
   - Gate: Phase 8 `just lint && just typecheck`.
 
@@ -68,7 +68,7 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
       `observed_at: AwareDatetime`,
       `retry_after_seconds: int | None = Field(default=None, ge=1)`.
     - `SiteHealthAlert(_SiteHealthRecord)` fields:
-      `stage: WorkflowStage` (imported from `aeat.workflow`),
+      `stage: WorkflowStage` (imported from `aeat.application.workflow`),
       `status: SiteHealthStatus`,
       `run_id: str = Field(min_length=1, max_length=128)`.
     - Module-level `_URL_ADAPTER = TypeAdapter(AnyHttpUrl)` for parser
@@ -122,7 +122,7 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
     substrings.
   - The module takes a required keyword `rate_limit_retry_after_default: int`
     injected by the browser session hook (Phase 4); it does not import
-    `aeat.config` directly.
+    `aeat.core.config` directly.
   - Acceptance: `evaluate_response` returns a pydantic
     `SiteHealthStatus` on any fixture under
     `tests/fixtures/site_health/{mantenimiento,waf_challenge,rate_limited}/`
@@ -187,13 +187,13 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
 
 - Step 4.1 - Add health-probe helper and `navigate`
   - Files:
-    - `src/aeat/browser/_site_health_probe.py` (new) - private helper
+    - `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/_site_health_probe.py` (new) - private helper
       exporting `probe_response(url, http_status, headers, html, *, rate_limit_retry_after_default) -> SiteHealthStatus | None`.
       Imports `evaluate_response` from
       `aeat.status._site_health_parsers`. Forbids importing anything
-      from `aeat.auth`, `aeat.filing`, or `aeat.financial`.
-    - `src/aeat/browser/session.py` - additive:
-      - Import `SiteHealthError` from `aeat.errors`.
+      from `aeat.adapters.outbound.aeat.auth`, `aeat.application.filing`, or `aeat.domain.financial`.
+    - `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py` - additive:
+      - Import `SiteHealthError` from `aeat.core.errors`.
       - Import `Settings` resolution via the existing pattern.
       - Add `async def navigate(self, page, url: str) -> Response`:
         - Calls `await page.goto(url)` and captures the `Response`.
@@ -207,12 +207,12 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
           `detected_markers=("transport-error:<exc-type>",)`).
       - The existing `create_context` signature and return type are
         untouched.
-  - Acceptance: `python -c "from aeat.browser.session import BrowserSession; assert hasattr(BrowserSession, 'navigate')"`
+  - Acceptance: `python -c "from aeat.adapters.outbound.aeat.browser.session import BrowserSession; assert hasattr(BrowserSession, 'navigate')"`
     succeeds; direct `page.goto` is still callable.
   - Gate: Phase 8 `just typecheck`.
 
 - Step 4.2 - Session unit tests (no live)
-  - Files: `src/aeat/browser/test_session.py` (extend existing or
+  - Files: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py` (extend existing or
     create if absent)
   - Contents:
     - `@pytest.mark.unit` tests that exercise `navigate`'s
@@ -223,14 +223,14 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
       required, no mocks).
     - Negative control: an `ok/` fixture returns `None` and does NOT
       raise.
-  - Acceptance: `uv run pytest src/aeat/browser/test_session.py -m unit -q`
+  - Acceptance: `uv run pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py -m unit -q`
     green.
   - Gate: Phase 8 `just test`.
 
 ### Phase 5 - Workflow pause-and-alert
 
 - Step 5.1 - Extend the abort enum
-  - Files: `src/aeat/workflow/_models.py`
+  - Files: `src/aeat/application/workflow/_models.py`
   - Add `SITE_UNAVAILABLE = "site_unavailable"` to
     `WorkflowAbortReason`.
   - Add a new field on `WorkflowStep`:
@@ -243,8 +243,8 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
   - Gate: Phase 5.3 tests.
 
 - Step 5.2 - Typed catch arm in the engine
-  - Files: `src/aeat/workflow/_engine.py`
-  - Import `SiteHealthError` from `aeat.errors`.
+  - Files: `src/aeat/application/workflow/_engine.py`
+  - Import `SiteHealthError` from `aeat.core.errors`.
   - In each stage method that currently wraps a component call with
     `_record_unhandled`, insert, strictly BEFORE the generic
     `except Exception`, a new arm:
@@ -262,7 +262,7 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
   - Gate: Phase 5.3 tests; Phase 8 typecheck.
 
 - Step 5.3 - Engine unit test scenario
-  - Files: `src/aeat/workflow/test_engine.py` (extend)
+  - Files: `src/aeat/application/workflow/test_engine.py` (extend)
   - Contents:
     - `@pytest.mark.unit` test that instantiates the real
       `WorkflowEngine` with a real component implementing the stage
@@ -275,7 +275,7 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
       `WorkflowAbortReason.SITE_UNAVAILABLE`, the last step carries a
       `SiteHealthAlert`, and the generic unhandled arm is not
       triggered.
-  - Acceptance: `uv run pytest src/aeat/workflow/test_engine.py -m unit -q`
+  - Acceptance: `uv run pytest src/aeat/application/workflow/test_engine.py -m unit -q`
     green.
   - Gate: Phase 8 `just test`.
 
@@ -283,10 +283,10 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
 
 - Step 6.1 - Directory-backed `aeat browser` sub-app
   - Files:
-    - `src/aeat/cli/browser/__init__.py` (new):
+    - `src/aeat/entrypoints/cli/browser/__init__.py` (new):
       - Defines `app = typer.Typer(name="browser", help="Playwright browser session health probes")`.
       - Imports the `health` command from `health.py`.
-    - `src/aeat/cli/browser/health.py` (new):
+    - `src/aeat/entrypoints/cli/browser/health.py` (new):
       - `@app.command("health") def health_cmd(json_output: bool = typer.Option(False, "--json"))`.
       - Instantiates `Settings()` and opens a real `BrowserSession`.
       - Calls `session.navigate(page, settings.site_health_probe_url)`.
@@ -302,15 +302,15 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
         - `5` -> `UNREACHABLE`
         - `6` -> `UNKNOWN_ERROR`
       - Exit code `1` reserved for Typer usage errors (unchanged).
-    - `src/aeat/cli/__init__.py`:
-      - `from aeat.cli import browser as browser_module`
+    - `src/aeat/entrypoints/cli/__init__.py`:
+      - `from aeat.entrypoints.cli import browser as browser_module`
       - `app.add_typer(browser_module.app, name="browser", help="...")`
   - Acceptance: `uv run aeat browser health --help` lists `--json`;
     `uv run aeat --help` lists the `browser` sub-app.
   - Gate: Phase 6.2 tests; Phase 8 `just lint`.
 
 - Step 6.2 - CLI unit tests
-  - Files: `src/aeat/cli/browser/test_health.py` (new)
+  - Files: `src/aeat/entrypoints/cli/browser/test_health.py` (new)
   - Contents:
     - `@pytest.mark.unit` tests using Typer's `CliRunner`.
     - A real test double class implementing the minimal navigate
@@ -323,7 +323,7 @@ state catalogue is an `enum.StrEnum`. No edits to `src/aeat/auth/**`,
     - Assertions: human output contains the state value; `--json`
       output parses as JSON; exit codes match the ADR table for each
       state (parametrised).
-  - Acceptance: `uv run pytest src/aeat/cli/browser/test_health.py -m unit -q`
+  - Acceptance: `uv run pytest src/aeat/entrypoints/cli/browser/test_health.py -m unit -q`
     green.
   - Gate: Phase 8 `just test`.
 
@@ -392,8 +392,8 @@ executors. Phase 8 is a sequential final gate.
   hoist, navigation hook shape, workflow pause-and-alert with typed
   arm BEFORE generic `except Exception`, CLI exit-code table, two
   settings additions, fixture layout, pydantic conventions).
-- [x] No edits to `src/aeat/auth/**`, `src/aeat/filing/**`, or
-  `src/aeat/financial/**` - every listed file path is outside those
+- [x] No edits to `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/**`, `src/aeat/application/filing/**`, or
+  `src/aeat/domain/financial/**` - every listed file path is outside those
   trees.
 - [x] Pydantic v2 `strict=True, frozen=True, extra="forbid"` enforced
   on every new record via the private `_SiteHealthRecord` base;

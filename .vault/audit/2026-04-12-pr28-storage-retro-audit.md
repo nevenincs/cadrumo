@@ -10,7 +10,7 @@ related:
 
 # `pr28-storage-retro` Code Review
 
-This audit re-reviews the merged `src/aeat/storage/` layer (PR #28,
+This audit re-reviews the merged `src/aeat/adapters/persistence/storage/` layer (PR #28,
 squash-merged as `a4692fb`) against the project mandates listed in
 `CLAUDE.md`, verifies that every bug the external bots flagged on PR #28
 is actually fixed on `main`, and records the gaps in the in-pipeline
@@ -29,41 +29,41 @@ and line range that proves the fix, and whether the in-pipeline reviewer
 checklist as currently written would have caught the original.
 
 retro-001 | RESOLVED | SQLite `PRAGMA foreign_keys=ON` is now enabled
-The connect-event listener at `src/aeat/storage/engine.py:46-65` issues
+The connect-event listener at `src/aeat/adapters/persistence/storage/engine.py:46-65` issues
 `PRAGMA foreign_keys=ON` for every new SQLite connection. The cascade is
-covered end-to-end by `src/aeat/storage/_test_constraints.py:51-75`,
+covered end-to-end by `src/aeat/adapters/persistence/storage/_test_constraints.py:51-75`,
 which inserts a `corpus_artifact`, deletes the parent `modelo`, and
 asserts the artifact row is gone. *In-pipeline gap:* the reviewer prompt
 has no driver-defaults check.
 
 retro-002 | RESOLVED | `AEAT_STORAGE_AUTO_MIGRATE` is now consulted
-`src/aeat/storage/engine.py:115-126` reads `aeat_storage_auto_migrate`
+`src/aeat/adapters/persistence/storage/engine.py:115-126` reads `aeat_storage_auto_migrate`
 from the resolved settings and runs `upgrade_to_head` against the new
 engine *before* publishing it to the URL-keyed cache.
-`src/aeat/storage/_test_constraints.py:174-188` proves the auto-migrate
+`src/aeat/adapters/persistence/storage/_test_constraints.py:174-188` proves the auto-migrate
 path produces the migrated schema. The setting is documented in
 `env/.env.example:64`. *In-pipeline gap:* the reviewer prompt does not
 require new settings to have a grep-verified reader in the same diff.
 
 retro-003 | RESOLVED | `portals.auth_method` has a CHECK constraint
-`src/aeat/storage/_orm.py:56-61` declares the `ck_portals_auth_method`
+`src/aeat/adapters/persistence/storage/_orm.py:56-61` declares the `ck_portals_auth_method`
 constraint on the ORM table, and
 `migrations/versions/0002_constraints.py:25-28` adds it via
-`batch_alter_table`. `src/aeat/storage/_test_constraints.py:78-95`
+`batch_alter_table`. `src/aeat/adapters/persistence/storage/_test_constraints.py:78-95`
 inserts a raw row with `auth_method='totally-bogus'` and asserts the
 SQLite check fires. *In-pipeline gap:* the reviewer prompt does not
 require closed catalogues to have a database-level CHECK constraint.
 
 retro-004 | RESOLVED | `corpus_artifacts (year, modelo_id, file_path)` is unique
-`src/aeat/storage/_orm.py:91-98` declares the
+`src/aeat/adapters/persistence/storage/_orm.py:91-98` declares the
 `uq_corpus_artifacts_identity` constraint, and
 `migrations/versions/0002_constraints.py:30-34` adds it via Alembic.
-`src/aeat/storage/_test_constraints.py:98-136` exercises the natural-key
+`src/aeat/adapters/persistence/storage/_test_constraints.py:98-136` exercises the natural-key
 upsert path on a duplicate. *In-pipeline gap:* the reviewer prompt does
 not require natural keys to have a UNIQUE constraint.
 
 retro-005 | RESOLVED | `upsert` is now a true natural-key upsert
-The three repositories at `src/aeat/storage/repository.py:94-111`,
+The three repositories at `src/aeat/adapters/persistence/storage/repository.py:94-111`,
 `:138-164`, and `:204-236` look up the existing row by natural key when
 `record.id is None` and update in place if found. The natural-key
 behavior is covered by `_test_constraints.py:139-151` (modelo) and
@@ -72,11 +72,11 @@ reviewer prompt does not require the executor to spell out the intended
 upsert semantics (PK only, natural key, or `ON CONFLICT`) per repository.
 
 retro-006 | RESOLVED | `IntegrityError` is wrapped at the boundary
-`src/aeat/storage/repository.py:25-38` (`_flush_or_wrap`) flushes the
+`src/aeat/adapters/persistence/storage/repository.py:25-38` (`_flush_or_wrap`) flushes the
 session and converts `sqlalchemy.exc.IntegrityError` into
 `RepositoryError`. Every mutation path on every repository goes through
 this helper. The `PortalAuthMethod` decode at
-`src/aeat/storage/repository.py:175-180` likewise wraps `ValueError` as
+`src/aeat/adapters/persistence/storage/repository.py:175-180` likewise wraps `ValueError` as
 `RepositoryError`. The orphan-FK case is covered by
 `_test_constraints.py:154-170`; the legacy-row decode case is covered
 by `_test_constraints.py:191-230`. *In-pipeline gap:* the reviewer
@@ -85,7 +85,7 @@ that touches a library call, name the exception types the library can
 raise and verify each is wrapped."
 
 retro-007 | RESOLVED | engine cache no longer publishes a half-built engine
-`src/aeat/storage/engine.py:110-127` resolves the URL under `_lock`,
+`src/aeat/adapters/persistence/storage/engine.py:110-127` resolves the URL under `_lock`,
 checks the cache, creates and migrates the engine, and only writes
 `_engines[url]` *after* `upgrade_to_head` returns. On migration failure
 the engine is disposed before the lock is released, so a broken cache
@@ -95,7 +95,7 @@ initialize order under concurrent callers and under init failure"
 walk-through for new singletons / factories.
 
 retro-008 | RESOLVED | `migrations/env.py` reuses the injected engine
-`src/aeat/storage/migrations_api.py:26-40` injects the caller's engine
+`src/aeat/adapters/persistence/storage/migrations_api.py:26-40` injects the caller's engine
 via `config.attributes["connection"]`, and `migrations/env.py:55-65`
 prefers that engine over `engine_from_config` whenever it is present.
 The `sqlite:///:memory:` regression test at
@@ -105,7 +105,7 @@ diff" pass over paired files where each file looks correct in isolation
 but the seam between them is the actual contract.
 
 retro-009 | RESOLVED | `_flush_or_wrap` error text now reflects the caller
-`src/aeat/storage/repository.py:38` interpolates the `kind` argument
+`src/aeat/adapters/persistence/storage/repository.py:38` interpolates the `kind` argument
 into the message ("integrity violation during {kind} operation"), so
 `delete` paths no longer report `"upsert"`. The label is plumbed through
 on every call site. *In-pipeline gap:* the reviewer prompt's "language
@@ -117,11 +117,11 @@ the actual caller scope."
 All fresh findings on the merged layer are LOW or below.
 
 public-api-001 | LOW | Colocated tests bootstrap schema via `Base.metadata.create_all`
-`src/aeat/storage/_test_repository.py:23-30` and
-`src/aeat/storage/_test_session.py:12-25` import the private `Base`
-mapper from `aeat.storage._orm` and call `Base.metadata.create_all` to
+`src/aeat/adapters/persistence/storage/_test_repository.py:23-30` and
+`src/aeat/adapters/persistence/storage/_test_session.py:12-25` import the private `Base`
+mapper from `aeat.adapters.persistence.storage._orm` and call `Base.metadata.create_all` to
 seed the schema. Runtime callers comply with the public-API discipline
-declared in `src/aeat/storage/__init__.py`, but these two test modules
+declared in `src/aeat/adapters/persistence/storage/__init__.py`, but these two test modules
 violate it the same way the LLM-client review surfaced as
 `public-api-001`. The functional impact is zero today (the metadata is
 the same shape as the migrated schema), but it lets the test suite
@@ -134,7 +134,7 @@ because issue #32 is a process retro and the executing-team rule is
 "minimal, targeted fixes only."
 
 encoding-001 | INFO | Text columns are stored without explicit NFC normalization
-`src/aeat/storage/_orm.py` declares plain `String(...)` columns for
+`src/aeat/adapters/persistence/storage/_orm.py` declares plain `String(...)` columns for
 `identifier`, `name`, `label`, `base_url`, `file_path`, `source_url`,
 and `sha256`. The trilingual contract in `CLAUDE.md` calls out NFC as
 the canonical Unicode form for cross-language text, but no normalization
@@ -145,14 +145,14 @@ the trilingual primitive and will define the boundary contract. Logged
 here so the issue #20 owner can pick it up rather than rediscover it.
 
 joined-load-001 | INFO | `relationship(..., lazy="joined")` is the default for portal/artifact reads
-`src/aeat/storage/_orm.py:74` and `_orm.py:111` declare `lazy="joined"`
+`src/aeat/adapters/persistence/storage/_orm.py:74` and `_orm.py:111` declare `lazy="joined"`
 on the `portals.modelo` and `corpus_artifacts.modelo` relationships.
 This eagerly issues a JOIN on every read and is fine at the current
 data volume (a handful of modelos and portals) but is worth re-examining
 once `corpus_artifacts` grows past a few hundred rows. Not a bug today.
 
 datetime-tz-001 | LOW | `CorpusArtifactRecord.fetched_at` accepts naive datetimes
-`src/aeat/storage/records.py:92` declares `fetched_at: datetime` with no
+`src/aeat/adapters/persistence/storage/records.py:92` declares `fetched_at: datetime` with no
 timezone constraint. The column is stored as `DateTime(timezone=True)`
 in `_orm.py:109` and the field docstring says "UTC", but pydantic v2
 `strict=True` rejects coercion, not naive datetimes — so a caller can
@@ -167,24 +167,24 @@ on this branch is "minimal, targeted fixes, do not change the public
 API surface other branches stub against," and tightening the field
 validation is observable to callers.
 
-private-import-001 | INFO | `migrations/env.py` reaches into `aeat.storage.engine._ensure_sqlite_parent`
+private-import-001 | INFO | `migrations/env.py` reaches into `aeat.adapters.persistence.storage.engine._ensure_sqlite_parent`
 `migrations/env.py:17` imports the underscore-private helper
-`_ensure_sqlite_parent` from `aeat.storage.engine` so the Alembic
+`_ensure_sqlite_parent` from `aeat.adapters.persistence.storage.engine` so the Alembic
 environment can create the SQLite parent directory before opening a
 connection. The Rule Verification grep below records "no runtime
-caller imports `aeat.storage._*`" — that statement is true for
+caller imports `aeat.adapters.persistence.storage._*`" — that statement is true for
 `src/aeat/` runtime code, but the Alembic environment file at
 repo-root `migrations/env.py` is technically outside the package and
 *does* reach a private symbol. Acceptable for now (env.py is the
 package's own glue, not a third-party caller), but worth recording so
 it is not rediscovered as a finding on a future audit. *Possible fix:*
 re-export `ensure_sqlite_parent` (no underscore) from
-`aeat.storage` as part of the migration glue surface.
+`aeat.adapters.persistence.storage` as part of the migration glue surface.
 
 ## Rule Verification
 
 - **`src/aeat/`-only layout:** PASS. Every storage module lives under
-  `src/aeat/storage/`.
+  `src/aeat/adapters/persistence/storage/`.
 - **Public API discipline (runtime callers):** PASS for `src/aeat/`
   runtime code. Grep for `aeat\.storage\._` from outside the package
   returns zero matches in runtime code; the only hits are the two
@@ -195,19 +195,19 @@ re-export `ensure_sqlite_parent` (no underscore) from
   discipline violation.
 - **Pydantic v2 mandate:** PASS. Every public record is a pydantic v2
   model with `ConfigDict(strict=True, frozen=True)` via the shared
-  `_StrictFrozen` base in `src/aeat/storage/records.py:33-36`.
-- **Errors inherit from `aeat.errors.AeatError`:** PASS. The full
+  `_StrictFrozen` base in `src/aeat/adapters/persistence/storage/records.py:33-36`.
+- **Errors inherit from `aeat.core.errors.AeatError`:** PASS. The full
   hierarchy is `AeatError → StorageError → {MigrationError,
-  RepositoryError}` in `src/aeat/storage/errors.py`.
-- **Logging via `aeat.logging.get_logger(__name__)`:** PASS. Grep for
-  `logging.getLogger` in `src/aeat/storage/` returns zero matches.
+  RepositoryError}` in `src/aeat/adapters/persistence/storage/errors.py`.
+- **Logging via `aeat.core.logging.get_logger(__name__)`:** PASS. Grep for
+  `logging.getLogger` in `src/aeat/adapters/persistence/storage/` returns zero matches.
 - **No bare `dict[str, Any]` / `: Any` in public signatures:** PASS.
   The single `Any` annotation in `_test_records.py:25` is a deliberate
   frozen-model mutation probe, not a public signature.
 - **No `# type: ignore` comments:** PASS. Grep returns zero matches in
   the storage subpackage.
 - **Tests use pytest only, every test marked, no mocks/patches/stubs in
-  live tests:** PASS. Every test in `src/aeat/storage/` carries
+  live tests:** PASS. Every test in `src/aeat/adapters/persistence/storage/` carries
   `@pytest.mark.unit`; no `unittest` imports anywhere; the regression
   tests all hit a real SQLite engine, including the `sqlite:///:memory:`
   case for the Alembic injected-engine path.
@@ -221,7 +221,7 @@ re-export `ensure_sqlite_parent` (no underscore) from
 
 ## Reviewed Files
 
-- All files under `src/aeat/storage/`: `__init__.py`, `_orm.py`,
+- All files under `src/aeat/adapters/persistence/storage/`: `__init__.py`, `_orm.py`,
   `engine.py`, `errors.py`, `migrations_api.py`, `records.py`,
   `repository.py`, `session.py`, `test_smoke.py`, `_test_constraints.py`,
   `_test_engine.py`, `_test_migrations.py`, `_test_records.py`,
@@ -255,7 +255,7 @@ matters is explicitly overridden in code. This single check would have
 caught retro-001 on round 1.
 
 R-02 | Dead-settings sweep
-Any new field on `aeat.config.Settings` must have a grep-verified
+Any new field on `aeat.core.config.Settings` must have a grep-verified
 reader inside the same diff. The reviewer must produce that grep
 result in the report; an empty result is a `HIGH` finding. This would
 have caught retro-002 on round 1.
@@ -268,7 +268,7 @@ both the ORM mapper and the migration include the constraint *and*
 that the catalogue values are not duplicated as string literals across
 the pydantic enum, the ORM `CheckConstraint`, and the Alembic
 `create_check_constraint` call. Today
-`src/aeat/storage/_orm.py:58` and
+`src/aeat/adapters/persistence/storage/_orm.py:58` and
 `migrations/versions/0002_constraints.py:21` each spell out the four
 auth-method values independently — if `PortalAuthMethod` grows a fifth
 value, three places drift in lockstep. The reviewer must demand a

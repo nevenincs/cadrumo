@@ -37,19 +37,19 @@ All 15 checklist items PASS. Lint, typecheck, tests
 3. **Protocol stubs, no hard imports — PASS.** Zero imports from
    `aeat.{corpus,schema,manuals,llm,storage,auth.certificate,
    models,portals}` under `src/aeat/sync` and
-   `src/aeat/cli/sync`. Only `aeat.browser` and `aeat.i18n`
+   `src/aeat/entrypoints/cli/sync`. Only `aeat.adapters.outbound.aeat.browser` and `aeat.core.i18n`
    imported directly, per ADR.
 
 4. **Public API discipline — PASS.** Everything re-exported from
-   `src/aeat/sync/__init__.py` via `__all__`. Internal modules
-   `_`-prefixed. Tests and CLI import from `aeat.sync`.
+   `src/aeat/application/sync/__init__.py` via `__all__`. Internal modules
+   `_`-prefixed. Tests and CLI import from `aeat.application.sync`.
 
 5. **Errors — PASS.** `SyncError(AeatError)` +
    `WireValidationError`, `DivergenceClassificationError`,
    `HealingError`, `DivergenceRepositoryError`.
 
 6. **Logging — PASS.** Every module uses
-   `aeat.logging.get_logger(__name__)`.
+   `aeat.core.logging.get_logger(__name__)`.
 
 7. **Type hints + Google-style docstrings — PASS.**
 
@@ -95,7 +95,7 @@ All 15 checklist items PASS. Lint, typecheck, tests
 ## diff-stat drift note (not a finding)
 
 `git diff origin/main..HEAD --stat` shows deletions under
-`src/aeat/storage/`, `migrations/`, `alembic.ini`. These are
+`src/aeat/adapters/persistence/storage/`, `migrations/`, `alembic.ini`. These are
 NOT authored by this branch — `origin/main` merged #10 after
 the branch diverged. On rebase, the branch will cleanly
 acquire the real storage module and the

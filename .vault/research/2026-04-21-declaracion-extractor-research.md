@@ -14,7 +14,7 @@ related:
 
 ## Problem
 
-Clusters A (taxonomy), B (schema), C (fixtures) establish vocabulary, casilla catalogue, and a three-layer test corpus. The extractor itself — the `aeat.declaracion` module that turns a filing-copy PDF's pixel/text stream into a `tuple[ExtractedCasilla, ...]` tuple — is cluster D. The research below grounds three choices the ADR must lock: (1) the extraction primitive (text-layer regex vs. bbox-anchored vs. AcroForm field reader), (2) per-modelo registry shape, (3) AEAT template-revision handling.
+Clusters A (taxonomy), B (schema), C (fixtures) establish vocabulary, casilla catalogue, and a three-layer test corpus. The extractor itself — the `aeat.adapters.inbound.declaracion` module that turns a filing-copy PDF's pixel/text stream into a `tuple[ExtractedCasilla, ...]` tuple — is cluster D. The research below grounds three choices the ADR must lock: (1) the extraction primitive (text-layer regex vs. bbox-anchored vs. AcroForm field reader), (2) per-modelo registry shape, (3) AEAT template-revision handling.
 
 ## Extraction primitives (ranked by applicability)
 
@@ -22,7 +22,7 @@ Clusters A (taxonomy), B (schema), C (fixtures) establish vocabulary, casilla ca
 
 `pdfplumber.open(path).pages[i].extract_text()` returns a reading-order text stream. For AEAT's declaración PDFs this text carries the full casilla payload: each casilla's printed number, its label, its value, and neighbouring structural tokens. Regex anchored to the label text (`"01 Ingresos íntegros"` → capture the trailing `1.234,56`) extracts the value with ~99 % reliability on static PDFs.
 
-**Pros**: zero coordinate math, survives layout micro-drifts, already the backbone of `aeat.justificante`'s receipt extractor.
+**Pros**: zero coordinate math, survives layout micro-drifts, already the backbone of `aeat.domain.justificante`'s receipt extractor.
 
 **Cons**: breaks when AEAT reorders sections (column reading order shuffles); breaks when two casillas share the same label word (common for 303 "Tipo / Cuota" pairs); breaks on multi-line labels (common for 100 Anexos).
 
@@ -64,10 +64,10 @@ Order of attempt: **P3 → P1 → P2**. First one that yields a complete `tuple[
 
 ## Per-modelo registry shape
 
-Mirrors `FilingBuilder` registry in `src/aeat/filing/_builders/`. One concrete `DeclaracionExtractor` subclass per `(modelo, template_revision)` pair:
+Mirrors `FilingBuilder` registry in `src/aeat/application/filing/_builders/`. One concrete `DeclaracionExtractor` subclass per `(modelo, template_revision)` pair:
 
 ```
-src/aeat/declaracion/
+src/aeat/adapters/inbound/declaracion/
     __init__.py               # public API
     _schema.py                # DeclaracionFiling pydantic record
     _extract.py               # primitives P1/P2/P3 as pure functions
@@ -92,11 +92,11 @@ A detector function `detect_template_revision(pdf_path) -> tuple[str, str]` peek
 - **Intra-año revisions** exist when AEAT amends a form mid-year (Modelo 303 `v2024.09` after Orden HAC/819/2024).
 - **Year-over-year renumbering** occasionally happens (Modelo 303 `105` → `103` + `150` split, 2024).
 - **Font hinting drift** is cosmetic but produces different bbox coordinates by 1–2 px. P1 is immune; P2 needs ≤ ±3 px tolerance on every bbox.
-- **Multi-language receipts** exist for Catalan / Galician / Basque (label text differs). `aeat.justificante._extract` already handles this via `_strip_accents` + flexible regex; cluster D inherits the same primitives.
+- **Multi-language receipts** exist for Catalan / Galician / Basque (label text differs). `aeat.domain.justificante._extract` already handles this via `_strip_accents` + flexible regex; cluster D inherits the same primitives.
 
 ## Cross-cluster dependency sanity
 
-- Cluster A: `src/aeat/_pdf_import/` package + `ExtractedCasilla` type must ship before cluster D.
+- Cluster A: `src/aeat/adapters/inbound/pdf/` package + `ExtractedCasilla` type must ship before cluster D.
 - Cluster B: casilla corpus for modelo N must be complete before cluster D's extractor for modelo N can land (otherwise the extractor produces casillas the builder drops).
 - Cluster C: L3 synthetic generator for modelo N must produce PDFs; cluster D's unit tests run against L3 output; ≥3 L1/L2 anchors validate fidelity.
 - Cluster E: consumes `DeclaracionFiling.values` → runs `Engine.audit_against`.
@@ -107,6 +107,6 @@ A detector function `detect_template_revision(pdf_path) -> tuple[str, str]` peek
 1. **CLI flag name**: `aeat filing import --from-declaracion <PATH>` vs. `--from-filing-copy`? Lock to Spanish per project mandate: `--from-declaracion`.
 2. **Auto-detection vs. explicit modelo flag**: the detector from header/footer text succeeds on ~95 % of modern PDFs. When it fails, `--modelo N --año YYYY` override required.
 3. **Partial extraction** — what if we find 60 of 88 casillas for a Modelo 303? ADR choice: **return partial + warn**, don't fail. Cluster E then flags the draft `EXTRACTION_PARTIAL` and Kent reviews.
-4. **Decimal parsing of Spanish-formatted numbers** — reuse `_parse_decimal` from `aeat.justificante._extract`? Answer: promote to shared helper in `_pdf_import/_shared.py`.
+4. **Decimal parsing of Spanish-formatted numbers** — reuse `_parse_decimal` from `aeat.domain.justificante._extract`? Answer: promote to shared helper in `_pdf_import/_shared.py`.
 5. **Multi-page traversal** — how do we associate a casilla extracted on page 2 with its label on page 1? Answer: extractor operates per-page; the schema knows which page each casilla lives on (via the `page_hint` field added to `CasillaSchema` in cluster B).
 6. **MVP modelo order**: 130 first (19 casillas, simplest layout), 303 second (88 casillas but ruleset exists), 111 third (analogous to 130), 115 fourth. 390 / 100 deferred to later clusters.

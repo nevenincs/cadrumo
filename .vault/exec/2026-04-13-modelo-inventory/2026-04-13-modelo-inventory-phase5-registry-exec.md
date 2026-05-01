@@ -27,7 +27,7 @@ related:
   - `year_plan(year, profile)` thin wrapper over
     :class:`DeadlineEngine` built from an `_InProcessCatalogue` whose
     `known_modelos()` returns every `ModeloCode` value wrapped in
-    :class:`aeat.deadlines.ModeloIdentifier`.
+    :class:`aeat.domain.deadlines.ModeloIdentifier`.
 - `test_registry.py` covers completeness, caps_into resolution, enum
   and string lookup, both error paths, profile filtering for
   `autonomo_ed_solo`, a `_check_caps_into` synthetic dangling
@@ -37,9 +37,9 @@ related:
 
 - `just lint` — fixed (moved `Mapping` to `collections.abc`).
 - `just typecheck` — fixed by importing `ModeloIdentifier` from
-  `aeat.deadlines` and constructing it from each `ModeloCode.value`;
+  `aeat.domain.deadlines` and constructing it from each `ModeloCode.value`;
   the private `_InProcessCatalogue` now matches the
-  `ModeloCatalogueLoader` protocol shape declared on `aeat.deadlines`.
+  `ModeloCatalogueLoader` protocol shape declared on `aeat.domain.deadlines`.
 - `just test` — 749 passed, 1 skipped, 23 deselected.
 - `just hooks` — ruff-format flattened two long-string error
   messages; re-run green.

@@ -11,7 +11,7 @@ related:
 
 Completed the first implementation pass of the accepted Google auth UX contract and added explicit verification evidence for the runtime and operator surfaces.
 
-- Modified: `src/aeat/cli/auth.py`
+- Modified: `src/aeat/entrypoints/cli/auth.py`
 - Created: `.vault/exec/2026-04-21-google-auth-ux-phase-1-step-1.md`
 
 ## Description
@@ -24,4 +24,4 @@ The user-facing guidance and compatibility wrappers were updated to match the ru
 
 ## Tests
 
-Local verification passed for the focused auth UX suite, `ruff`, `ty`, and docs hooks. Manual command checks also passed for `aeat auth --help`, `aeat auth init --path desktop-oauth-local-dev --no-doctor`, and `python -m aeat.mcp.launch_google_workspace --dump-launch-spec`.
+Local verification passed for the focused auth UX suite, `ruff`, `ty`, and docs hooks. Manual command checks also passed for `aeat auth --help`, `aeat auth init --path desktop-oauth-local-dev --no-doctor`, and `python -m aeat.entrypoints.mcp.launch_google_workspace --dump-launch-spec`.

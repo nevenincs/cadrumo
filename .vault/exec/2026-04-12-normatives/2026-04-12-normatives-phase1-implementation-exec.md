@@ -13,17 +13,17 @@ related:
 
 ## Scope
 
-Deliver the full v1 of `aeat.normatives` as approved in the plan: strict
+Deliver the full v1 of `aeat.domain.normatives` as approved in the plan: strict
 pydantic v2 schema, file-backed loader, lookup helpers, citation
 renderer, verify pipeline, CLI sub-app, settings alignment, seven
 hand-reviewed corpus files, and colocated unit tests.
 
 ## Changes landed
 
-### New subpackage `src/aeat/normatives/`
+### New subpackage `src/aeat/domain/normatives/`
 
 - `errors.py` — `NormativeError`, `NormativeParseError`,
-  `NormativeNotFoundError` inheriting from `aeat.errors.AeatError`.
+  `NormativeNotFoundError` inheriting from `aeat.core.errors.AeatError`.
 - `_schema.py` — strict pydantic v2 types: `NormativeKind` (StrEnum),
   `Articulo`, `NormativeReference`, `NormativeCatalogue`,
   `VerificationIssue`, `VerificationReport`. All persisted records
@@ -35,7 +35,7 @@ hand-reviewed corpus files, and colocated unit tests.
   boe_id alignment.
 - `_loader.py` — `load_catalogue()` walks the corpus root, parses
   every `<id>.json`, and returns a fully-validated aggregate. Uses
-  `aeat.logging.get_logger(__name__)` and `aeat.config.load_settings`.
+  `aeat.core.logging.get_logger(__name__)` and `aeat.core.config.load_settings`.
 - `_lookup.py` — `find_reference`, `find_articulo`. Both raise
   `NormativeNotFoundError` on miss.
 - `_cite.py` — `short_title(reference)` and `cite(reference,
@@ -63,10 +63,10 @@ consolidated-text URL during the research phase:
 - `orden-hac-242-2025.json` — BOE-A-2025-5049 (Orden anual IRPF 2024),
   apartado primero.
 
-### CLI `src/aeat/cli/normatives.py`
+### CLI `src/aeat/entrypoints/cli/normatives.py`
 
 Typer sub-app with `list [--tag TAG]`, `show <id>`, and `verify`.
-Registered in `src/aeat/cli/__init__.py` as `aeat normatives`.
+Registered in `src/aeat/entrypoints/cli/__init__.py` as `aeat normatives`.
 
 ### Settings `src/aeat/config.py` + `env/.env.example`
 
@@ -95,7 +95,7 @@ No mocks, no patches, no fakes, no stubs. All tests carry
 - `just lint` — ruff clean.
 - `just typecheck` — ty clean, no new `type: ignore` comments (the
   single `type: ignore[override]` on `NormativeCatalogue.__iter__`
-  mirrors the existing pattern in `aeat.manuals._schema`).
+  mirrors the existing pattern in `aeat.domain.manuals._schema`).
 - `just test` — 408 passed, 1 skipped, 15 deselected.
 - `just hooks` — all prek hooks passed.
 
@@ -104,9 +104,9 @@ No mocks, no patches, no fakes, no stubs. All tests carry
 Reviewed by the `vaultspec-code-reviewer` persona. Verdict: APPROVE.
 Three LOW nits were raised: one was resolved in place by switching the
 test helper to `Settings.model_validate`; the other two (a broad
-`except Exception` in the loader that mirrors `aeat.manuals._loader`
+`except Exception` in the loader that mirrors `aeat.domain.manuals._loader`
 and the `__iter__` override type ignore that also mirrors
-`aeat.manuals._schema`) were retained deliberately to keep the two
+`aeat.domain.manuals._schema`) were retained deliberately to keep the two
 subpackages stylistically consistent on `main`.
 
 ## Out of scope (tracked)
@@ -114,5 +114,5 @@ subpackages stylistically consistent on `main`.
 - Full-text mirroring of any article body.
 - Historical-revision tracking.
 - Autonomic (Catalonian / Basque / Galician) normatives.
-- Rewire of `aeat.manuals`, `aeat.models`, or `aeat.casillas` to cite
+- Rewire of `aeat.domain.manuals`, `aeat.domain.modelos`, or `aeat.domain.casillas` to cite
   normatives by id.

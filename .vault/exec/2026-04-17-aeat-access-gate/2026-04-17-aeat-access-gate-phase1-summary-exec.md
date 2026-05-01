@@ -20,14 +20,14 @@ one targeted bugfix — no existing behaviour was rewritten.
 
 ### Phase 1 — Error surface
 
-Added to `src/aeat/auth/certificate.py`:
+Added to `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py`:
 
 - `CertificateNifParseError(CertificateError)` — subject-parse failure.
 - `AeatLoginAssertionError(CertificateError)` — structural verify_login failure.
 - `AeatSessionExpiredError(CertificateError)` — stale-session signal, also raised when a single `reauthenticate()` still yields `certificate_recognised=False`.
 - `AeatLiveReadNotEnabledError(AeatError)` — read-side counterpart to `AeatLiveSubmitNotEnabledError`.
 
-All re-exported from `aeat.auth.__init__.__all__`.
+All re-exported from `aeat.adapters.outbound.aeat.auth.__init__.__all__`.
 
 ### Phase 2 — NIF / NIE extractor
 
@@ -40,7 +40,7 @@ self-signed bundles carry synthetic FNMT subjects.
 
 ### Phase 3 — `AeatAccessGate` + `AeatGateEnvSnapshot`
 
-New `src/aeat/auth/_gate.py` holds the unified read+write gate.
+New `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py` holds the unified read+write gate.
 `AeatAccessGate` is a frozen dataclass that (a) surfaces
 `require_live_read()` / `require_live_write()` as typed
 preconditions and (b) emits an `AeatGateEnvSnapshot` for audit
@@ -51,7 +51,7 @@ wants the typed error shape up-front. Ten colocated unit tests.
 
 ### Phase 4 + 6 — `AeatAuthenticator`, `AeatSession`, `AeatLoginAssertion`
 
-New `src/aeat/auth/_authenticator.py` is the single entry point
+New `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` is the single entry point
 for future remote-read work. The module delivers:
 
 - `AEAT_SESSION_IDLE_TTL = timedelta(minutes=18)` — code-level
@@ -78,7 +78,7 @@ stale-session refusal, no-context refusal, close idempotency.
 
 ### Phase 5 — BrowserSession cert wiring (G2 regression fix)
 
-`src/aeat/browser/session.py` previously accepted an
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py` previously accepted an
 `auth_backend: object | None` stub parameter and discarded it
 (documented as "stub for #8"). That left `PlaywrightContextBackend.preload()`
 permanently failing because no call-site ever stamped the
@@ -89,7 +89,7 @@ The fix is narrow:
 - `create_context` now accepts a typed `cert: LoadedCertificate | None`.
 - When a cert is supplied, the session builds the
   `client_certificates` kwarg via
-  `aeat.auth._certificate_backends._playwright_context.build_client_certificates_kwarg`
+  `aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.build_client_certificates_kwarg`
   and merges it into the `new_context(**kwargs)` call — wiring the
   cert at construction time, the only place Playwright accepts it.
 - After construction, the session stamps the thumbprint marker
@@ -104,14 +104,14 @@ self-signed bundle is supplied.
 
 ### Phase 7 — Engine env-snapshot consolidation
 
-`src/aeat/submission/_engine.py` constructs an `AeatAccessGate`
+`src/aeat/adapters/outbound/aeat/export/_engine.py` constructs an `AeatAccessGate`
 inline from `self.settings` and delegates the env-snapshot dict
 build to `gate.snapshot_env().as_audit_dict()`. The three inline
 gate checks on lines 207-212 (`live_transport_supported`,
 `aeat_live_submit_enabled`, `PYTEST_CURRENT_TEST`) are
 **byte-identical** — the nine-point gate is preserved in full.
 
-`src/aeat/submission/_audit.py:77-82`'s env re-read fallback is
+`src/aeat/adapters/outbound/aeat/export/_audit.py:77-82`'s env re-read fallback is
 **retained** as R6 last-mile defence: any future call-site that
 invokes `append_live_submit_audit` without threading `env_state`
 through still produces a complete audit record. The JSONL schema
@@ -130,7 +130,7 @@ pointers to issue #116 and the submission safety sweep ADR.
 
 ### Phase 9 — Live authenticator tests
 
-`src/aeat/auth/test_authenticator_live.py` carries two
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator_live.py` carries two
 `@pytest.mark.live` items:
 
 1. Synchronous surface: health, verify_handshake, NIF extraction.
@@ -169,24 +169,24 @@ This summary + the colocated research / ADR / plan under
 ## Files changed (summary)
 
 ### New (6)
-- `src/aeat/auth/_authenticator.py`
-- `src/aeat/auth/_gate.py`
-- `src/aeat/auth/test_authenticator.py`
-- `src/aeat/auth/test_authenticator_live.py`
-- `src/aeat/auth/test_gate.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator_live.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_gate.py`
 - `.vault/research/2026-04-17-aeat-access-gate-research.md`
 - `.vault/adr/2026-04-17-aeat-access-gate-adr.md`
 - `.vault/plan/2026-04-17-aeat-access-gate-plan.md`
 - `.vault/exec/2026-04-17-aeat-access-gate/2026-04-17-aeat-access-gate-phase1-summary.md`
 
 ### Modified (7)
-- `src/aeat/auth/certificate.py` — four new errors + NIF extractor.
-- `src/aeat/auth/__init__.py` — re-exports for the new public surface.
-- `src/aeat/browser/session.py` — cert wiring fix (G2 regression).
-- `src/aeat/browser/test_session.py` — cert-wiring regression test.
-- `src/aeat/submission/_engine.py` — env snapshot via `AeatAccessGate`.
-- `src/aeat/cli/doctor.py` — live access gate row.
-- `src/aeat/cli/_test_doctor.py` — tests for the new row.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` — four new errors + NIF extractor.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py` — re-exports for the new public surface.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py` — cert wiring fix (G2 regression).
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py` — cert-wiring regression test.
+- `src/aeat/adapters/outbound/aeat/export/_engine.py` — env snapshot via `AeatAccessGate`.
+- `src/aeat/entrypoints/cli/doctor.py` — live access gate row.
+- `src/aeat/entrypoints/cli/_test_doctor.py` — tests for the new row.
 - `env/.env.example` — R3 comment block.
 
 ## Verification

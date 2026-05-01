@@ -39,7 +39,7 @@ suite.
   additive schema field.
 - `aeat.status._parsers.expedientes` — capture `detail_url` when
   AEAT renders an explicit detail anchor.
-- `aeat.config.Settings.aeat_status_detail_url_template` — new env
+- `aeat.core.config.Settings.aeat_status_detail_url_template` — new env
   var, strict format validator.
 - `env/.env.example` — document the new env var.
 - Fixtures + unit tests for every new code path.

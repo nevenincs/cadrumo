@@ -30,15 +30,15 @@ related:
 This plan delivers issue #239 in a single mono-PR that (a) introduces the
 read-only `aeat.remote` subpackage as the project's first typed model of
 the authenticated AEAT sede electronica and (b) introduces the
-`aeat.filing.reconciliation` comparator that walks a `FilingDraft` against
+`aeat.application.filing.reconciliation` comparator that walks a `FilingDraft` against
 a `RemoteFiling` and emits the three Kent-observable terminal states the
 ADR locks — `MATCH`, `DIVERGENT`, `NOT_YET_FOUND`. Every task traces to a
 specific ADR decision: the naming split between `aeat.remote` and
-`aeat.filing.reconciliation`; the `FilingDivergenceKind` fork that keeps
-the `aeat.sync._divergence.DivergenceKind` auto-heal invariant narrow;
+`aeat.application.filing.reconciliation`; the `FilingDivergenceKind` fork that keeps
+the `aeat.application.sync._divergence.DivergenceKind` auto-heal invariant narrow;
 the Protocol-stub strategy that isolates this work from PR #312
 internals; the Tier-1 modelo scope (130, 303, 390) anchored on existing
-history parsers; the rounding tolerance shared with `aeat.verification`
+history parsers; the rounding tolerance shared with `aeat.application.verification`
 at `Decimal("0.01")`; the `FilingDraftStatus.APPROVED` gate for the
 `aeat sync run` integration; and — most loud-bearingly — the five-layer
 write guard (structural pydantic marker, public-API contract,
@@ -71,20 +71,20 @@ write-guard layers it satisfies.
   record carries `mode: Literal["read"] = "read"` (Layer 1). The
   subpackage is covered by `test_no_write_surface.py` (Layer 3).
 
-- **New subpackage `aeat.filing.reconciliation`.** Sealed public API
+- **New subpackage `aeat.application.filing.reconciliation`.** Sealed public API
   exporting `reconcile`, `ReconciliationReport`, `ReconciliationStatus`
   (alias for the terminal-triad enum used by the public surface),
   `CasillaDelta`, `FilingDivergenceKind`, and
   `RECONCILIATION_TOLERANCE`. Contains the comparator, the trilingual
   `Translatable` narrative builder (es / en / hu) mirroring
-  `aeat.verification._verify._compose_narrative`, and the persistence
+  `aeat.application.verification._verify._compose_narrative`, and the persistence
   adapter that funnels `DIVERGENT` / `NOT_YET_FOUND` reports into the
-  existing `aeat.sync._divergence.DivergenceRecord` sink without
+  existing `aeat.application.sync._divergence.DivergenceRecord` sink without
   extending `DivergenceKind`. Covered by its own
   `test_no_write_surface.py` (Layer 3).
 
 - **New CLI verb `aeat filing reconcile`.** Lands as a sibling of
-  `aeat filing import` inside `src/aeat/cli/filing/__init__.py`.
+  `aeat filing import` inside `src/aeat/entrypoints/cli/filing/__init__.py`.
   Supports `aeat filing reconcile <draft-id>` and
   `aeat filing reconcile --last --modelo <M> --period <P>`. Forbidden
   flags (`--write`, `--submit`, `--enviar`, `--presentar`, `--firmar`)
@@ -95,7 +95,7 @@ write-guard layers it satisfies.
   `DIVERGENT`, 2 = `NOT_YET_FOUND`, 4 = live-access error).
 
 - **`aeat sync run` auto-reconciliation.** The sync-run orchestrator
-  in `src/aeat/cli/sync/run.py` gains a post-schema-sync stage that
+  in `src/aeat/entrypoints/cli/sync/run.py` gains a post-schema-sync stage that
   iterates over local `FilingDraft`s whose `status` is exactly
   `FilingDraftStatus.APPROVED` and invokes the reconciler for each
   `(modelo, period)`. One `AeatSession` is reused across the whole
@@ -109,7 +109,7 @@ write-guard layers it satisfies.
   Layer 2 lives in the public-API docstrings and the parser
   declaration of the CLI (forbidden flags rejected at parser level).
   Layer 3 lives in `src/aeat/remote/test_no_write_surface.py` and
-  `src/aeat/filing/reconciliation/test_no_write_surface.py`, each a
+  `src/aeat/application/filing/reconciliation/test_no_write_surface.py`, each a
   file-walking grep guard. Layer 4 lives in the reconciler's live
   path that consumes `AeatAccessGate` / `AeatGateEnvSnapshot` as-is
   (no new write-safety helpers introduced) and propagates
@@ -174,7 +174,7 @@ write-guard layers it satisfies.
      `"Subsanada"`, `"Complementaria"`, `"Anulada"`) to enum members.
      Unknown strings map to `UNKNOWN` and the caller preserves the raw
      Spanish prose in `RemoteFiling.raw_status`. Emit a
-     `logging.warning` through `aeat.logging.get_logger(__name__)` with
+     `logging.warning` through `aeat.core.logging.get_logger(__name__)` with
      modelo + period context when `UNKNOWN` is selected.
   1. Create `src/aeat/remote/_protocols.py` with `RemoteFilingFetcher`
      and `NotificationReader` `typing.Protocol`s. Signatures duck-type
@@ -187,7 +187,7 @@ write-guard layers it satisfies.
      tests. No import from `aeat.status._reader` — the Protocol is
      enough.
   1. Create `src/aeat/remote/_errors.py` with a minimal error hierarchy
-     rooted at the existing `aeat.errors.AeatError`: `RemoteFetchError
+     rooted at the existing `aeat.core.errors.AeatError`: `RemoteFetchError
      < AeatError`, `RemoteParseError < RemoteFetchError`,
      `RemoteNavigationError < RemoteFetchError`. Frozen dataclasses or
      `class ... (AeatError)` per the rest of the project convention.
@@ -246,7 +246,7 @@ write-guard layers it satisfies.
      projects the result into the Phase-1 record. Richer
      casilla-mapping work is left for follow-on PRs; for Tier 1 the
      one-to-one projection is sufficient. Every fetcher imports
-     `AeatSession` from `aeat.auth` as a Protocol seam so tests can
+     `AeatSession` from `aeat.adapters.outbound.aeat.auth` as a Protocol seam so tests can
      inject a Protocol-conforming Python class.
   1. Unit tests per fetcher under `src/aeat/remote/filings/`:
      `test_fetch_modelo_130.py`, `test_fetch_modelo_303.py`,
@@ -260,7 +260,7 @@ write-guard layers it satisfies.
      `src/aeat/remote/test_fetch_live.py`. Exactly one live test per
      ADR Layer 5. Decorated with `@pytest.mark.live_read` and
      `@pytest.mark.live`. The test calls
-     `aeat.cli._live.requires_live_enabled()` at the top of the test
+     `aeat.entrypoints.cli._live.requires_live_enabled()` at the top of the test
      body (no `@pytest.mark.skipif(os.environ.get(...))`). It logs in
      via `ClaveMovilAuthProvider` (triggering Kent's phone prompt on
      fresh sessions; resuming from storage state within the 18-minute
@@ -276,14 +276,14 @@ write-guard layers it satisfies.
      auto-picks up new files so no modification to the test itself is
      required.
 
-- **Phase 3 — Reconciliation comparator (`aeat.filing.reconciliation`)**
-  1. Create `src/aeat/filing/reconciliation/__init__.py` with a sealed
+- **Phase 3 — Reconciliation comparator (`aeat.application.filing.reconciliation`)**
+  1. Create `src/aeat/application/filing/reconciliation/__init__.py` with a sealed
      public API. Export exactly: `reconcile`, `ReconciliationReport`,
      `ReconciliationStatus` (alias for the terminal-triad enum;
      members `MATCH`, `DIVERGENT`, `NOT_YET_FOUND`), `CasillaDelta`,
      `FilingDivergenceKind`, `RECONCILIATION_TOLERANCE`. Populate
      `__all__` alphabetically. No `submit`, `send`, etc. (Layer 2).
-  1. Create `src/aeat/filing/reconciliation/_schema.py` with
+  1. Create `src/aeat/application/filing/reconciliation/_schema.py` with
      `ReconciliationReport` (fields per ADR: `status:
      Literal["match", "divergent", "not_yet_found"]`,
      `casilla_deltas: tuple[CasillaDelta, ...]`, `remote_ref:
@@ -297,23 +297,23 @@ write-guard layers it satisfies.
      `MappingProxyType` binding each `FilingDivergenceKind` to the
      Kent-observable triad entry. All records use
      `ConfigDict(strict=True, frozen=True, extra="forbid")`.
-  1. Create `src/aeat/filing/reconciliation/_kind.py` with
+  1. Create `src/aeat/application/filing/reconciliation/_kind.py` with
      `FilingDivergenceKind` StrEnum — six variants per ADR:
      `CASILLA_VALUE_MISMATCH`, `CASILLA_MISSING_LOCAL`,
      `CASILLA_EXTRA_LOCAL`, `FILING_STATUS_DIVERGENCE`,
      `ROUNDING_ONLY`, `FILING_NOT_YET_FOUND`. Include a module
      docstring explicitly calling out that this enum is disjoint from
-     `aeat.sync._divergence.DivergenceKind` and explaining why (ADR
+     `aeat.application.sync._divergence.DivergenceKind` and explaining why (ADR
      rationale section paragraph on the fork).
-  1. Create `src/aeat/filing/reconciliation/_tolerance.py` with a
+  1. Create `src/aeat/application/filing/reconciliation/_tolerance.py` with a
      single public constant `RECONCILIATION_TOLERANCE =
      Decimal("0.01")`. Docstring explicitly ties it to
-     `aeat.verification._verify._DEFAULT_TOLERANCE` so a future
+     `aeat.application.verification._verify._DEFAULT_TOLERANCE` so a future
      contributor who nudges one sees the other. No import of
-     `aeat.verification` at runtime — values are duplicated
+     `aeat.application.verification` at runtime — values are duplicated
      deliberately to keep the module dependency graph clean; the tie
      is documentational.
-  1. Create `src/aeat/filing/reconciliation/_reconcile.py` exporting
+  1. Create `src/aeat/application/filing/reconciliation/_reconcile.py` exporting
      `reconcile(draft: FilingDraft, remote: tuple[RemoteFiling, ...],
      *, tolerance: Decimal = RECONCILIATION_TOLERANCE, now:
      Callable[[], datetime] = _utcnow) -> ReconciliationReport`. Flow
@@ -329,30 +329,30 @@ write-guard layers it satisfies.
      function is pure and async-free; it takes already-fetched
      `remote` data rather than a `RemoteFilingFetcher` — fetcher
      invocation is the caller's job (Phase 4 and Phase 5 wrap it).
-  1. Create `src/aeat/filing/reconciliation/_narrative.py` with a
+  1. Create `src/aeat/application/filing/reconciliation/_narrative.py` with a
      trilingual (es / en / hu) `Translatable` narrative builder
      mirroring the pattern in
-     `src/aeat/verification/_verify.py::_compose_narrative`. One
+     `src/aeat/application/verification/_verify.py::_compose_narrative`. One
      narrative per `FilingDivergenceKind` variant plus one aggregate
      narrative at the report level. All three languages are required
      for every string; no partial localisation.
-  1. Create `src/aeat/filing/reconciliation/_persist.py` as the
+  1. Create `src/aeat/application/filing/reconciliation/_persist.py` as the
      adapter that turns a `DIVERGENT` or `NOT_YET_FOUND`
      `ReconciliationReport` into a `DivergenceRecord` consumable by
-     the existing `aeat.sync` sink. Do NOT extend
-     `aeat.sync._divergence.DivergenceKind`; instead, define a new
+     the existing `aeat.application.sync` sink. Do NOT extend
+     `aeat.application.sync._divergence.DivergenceKind`; instead, define a new
      `FilingReconciliationPayload` pydantic record in
      `_persist.py` that satisfies the `DivergencePayload` protocol
      shape (same `ConfigDict(strict=True, frozen=True,
      extra="forbid")`, same discriminator-on-`kind` pattern) without
-     touching `aeat.sync` internals. Inspect
-     `src/aeat/sync/_divergence.py` during implementation to confirm
+     touching `aeat.application.sync` internals. Inspect
+     `src/aeat/application/sync/_divergence.py` during implementation to confirm
      the payload surface accepts external variants via the
      discriminated union; if it does not, the payload is persisted as
      a wrapping record that satisfies the `DivergenceRecord.payload`
      type without cross-enum pollution (the ADR rationale paragraph
      on the fork governs this decision).
-  1. Unit tests per file under `src/aeat/filing/reconciliation/`:
+  1. Unit tests per file under `src/aeat/application/filing/reconciliation/`:
      `test_schema.py`, `test_kind.py`, `test_tolerance.py`,
      `test_reconcile.py`, `test_narrative.py`, `test_persist.py`.
      `test_reconcile.py` covers the triad × six `FilingDivergenceKind`
@@ -362,13 +362,13 @@ write-guard layers it satisfies.
      `unittest.mock`. `test_narrative.py` asserts every variant
      produces non-empty es / en / hu strings.
   1. Write-guard Layer 3 test:
-     `src/aeat/filing/reconciliation/test_no_write_surface.py`. Same
+     `src/aeat/application/filing/reconciliation/test_no_write_surface.py`. Same
      grep walker + `__all__` check + `mode == "read"` runtime check as
      Phase 1.8, retargeted at the reconciliation subpackage.
 
 - **Phase 4 — CLI surface (`aeat filing reconcile`)**
   1. Add the `reconcile` subcommand inside
-     `src/aeat/cli/filing/__init__.py` as a sibling of the existing
+     `src/aeat/entrypoints/cli/filing/__init__.py` as a sibling of the existing
      `import` (registered as `import_`). Declared via the same
      `@app.command(...)` pattern used by sibling commands. Parameters:
      `draft_id: Annotated[str | None, typer.Argument(...)] = None`,
@@ -396,7 +396,7 @@ write-guard layers it satisfies.
      `4` = live-access error (raised as
      `AeatLiveReadNotEnabledError` from the live fetch path). The
      command maps these through `typer.Exit(code=...)`.
-  1. Unit tests: `src/aeat/cli/filing/test_reconcile.py`. Cover
+  1. Unit tests: `src/aeat/entrypoints/cli/filing/test_reconcile.py`. Cover
      success (`MATCH`), `DIVERGENT` output formatting,
      `NOT_YET_FOUND` formatting, `--json` round-trip through
      `ReconciliationReport.model_validate_json`, parser refusal of
@@ -406,11 +406,11 @@ write-guard layers it satisfies.
      per the existing test conventions.
 
 - **Phase 5 — Sync-run integration**
-  1. Read `src/aeat/cli/sync/run.py` end-to-end first to locate the
+  1. Read `src/aeat/entrypoints/cli/sync/run.py` end-to-end first to locate the
      correct insertion point for the reconciliation stage (after
      schema-level divergence processing, before summary rendering).
      Wire the new stage as a dedicated async helper in a new
-     `src/aeat/cli/sync/_reconcile_stage.py` that takes the existing
+     `src/aeat/entrypoints/cli/sync/_reconcile_stage.py` that takes the existing
      sync-run context plus an
      `AsyncIterable[FilingDraft]` and emits an iterable of
      `ReconciliationReport`s. Gate entry on `draft.status ==
@@ -425,7 +425,7 @@ write-guard layers it satisfies.
      pass; TTL expiry during a run falls back to the existing
      re-auth path in `AeatAuthenticator`.
   1. Surface `NOT_YET_FOUND` prominently in the sync-run summary with
-     a warning-level log through `aeat.logging.get_logger(__name__)`
+     a warning-level log through `aeat.core.logging.get_logger(__name__)`
      and an obvious marker in the human output (leading icon or
      upper-case label — follow the existing convention already used
      by schema-level divergence surfaces). `DIVERGENT` results feed
@@ -436,7 +436,7 @@ write-guard layers it satisfies.
      `_persist.py` adapter. One Kent-facing queue handles both
      schema-level and filing-level divergences per the ADR.
   1. Unit tests:
-     `src/aeat/cli/sync/test_reconcile_stage.py`. Cover
+     `src/aeat/entrypoints/cli/sync/test_reconcile_stage.py`. Cover
      `FilingDraftStatus.APPROVED` gating (every other status is
      skipped), session reuse across multiple `(modelo, period)`
      pairs (a Protocol-conforming session wrapper counts
@@ -478,7 +478,7 @@ explicitly so the execute-phase orchestrator can pack work sensibly.
 
 Phase 1 and the record-shape slice of Phase 3 (steps 3.1 – 3.4) are
 genuinely independent — `aeat.remote._schema.py` and
-`aeat.filing.reconciliation._schema.py` touch different subpackages,
+`aeat.application.filing.reconciliation._schema.py` touch different subpackages,
 import from different upstreams, and are covered by disjoint test
 files. These two slices can be dispatched to parallel sub-agents
 with no merge conflicts expected. Phase 1.7 and Phase 3.8 (the unit
@@ -493,7 +493,7 @@ independent and can parallelise; so can their unit tests.
 Phase 4 depends on Phase 3 (the CLI consumes the `reconcile` function
 and the `ReconciliationReport` record). The CLI steps themselves
 (4.1 through 4.5) are serial within the same file
-(`src/aeat/cli/filing/__init__.py`).
+(`src/aeat/entrypoints/cli/filing/__init__.py`).
 
 Phase 5 depends on Phase 4 (sync-run calls the same comparator the
 CLI calls) and on Phase 1 / 2 / 3 being green as a whole.
@@ -547,25 +547,25 @@ lands after them.
 
 - No phase imports from PR #312 internals. Phase 1.4 declares the
   `RemoteFilingFetcher` and `NotificationReader` Protocols; Phase 2
-  fetchers import only from `aeat.auth` (the sanctioned public
+  fetchers import only from `aeat.adapters.outbound.aeat.auth` (the sanctioned public
   API) and from the Protocol declarations. No `from aeat.status._parsers
   import ...`, no `from aeat.inbox._live_source import ...`, no
-  `from aeat.cli._live_reader import ...`.
+  `from aeat.entrypoints.cli._live_reader import ...`.
 
-- No phase touches `aeat.verification` internals (the
+- No phase touches `aeat.application.verification` internals (the
   `RECONCILIATION_TOLERANCE` constant in Phase 3.4 duplicates the
   value rather than importing from
-  `aeat.verification._verify._DEFAULT_TOLERANCE`). No phase touches
-  `aeat.auth` internals (only `AeatSession`, `AeatAccessGate`,
+  `aeat.application.verification._verify._DEFAULT_TOLERANCE`). No phase touches
+  `aeat.adapters.outbound.aeat.auth` internals (only `AeatSession`, `AeatAccessGate`,
   `AeatGateEnvSnapshot`, `AeatLiveReadNotEnabledError`,
   `ClaveMovilAuthProvider`, `AeatAuthenticator` — all already public
-  via `src/aeat/auth/__init__.py`). No phase touches
-  `aeat.sync._divergence` enums — Phase 3.7 adds a new payload
-  record inside `aeat.filing.reconciliation._persist` that satisfies
+  via `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py`). No phase touches
+  `aeat.application.sync._divergence` enums — Phase 3.7 adds a new payload
+  record inside `aeat.application.filing.reconciliation._persist` that satisfies
   the sink's existing Protocol shape; `DivergenceKind` is not
-  widened. No phase touches `aeat.filing` approval state (Phase 5.1
+  widened. No phase touches `aeat.application.filing` approval state (Phase 5.1
   consumes `FilingDraftStatus.APPROVED` read-only; the draft
-  lifecycle machinery in `src/aeat/filing/_review.py` is not
+  lifecycle machinery in `src/aeat/application/filing/_review.py` is not
   modified).
 
 - Clave 2FA live-test path exists and is gated correctly. Phase 2.4

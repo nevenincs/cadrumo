@@ -46,13 +46,13 @@ Sibling issues #224 (`REVIEWED_EXCLUDED` enum value), #225 (rename corpus `revie
 
 ## decision
 
-Add a new, additive, read-only `aeat.review` subpackage and a single new top-level CLI command — `aeat review queue` — that aggregates pending review items from the five existing on-disk sources into one unified `tuple[ReviewItem, ...]` and renders them as a single rich table.
+Add a new, additive, read-only `aeat.application.review` subpackage and a single new top-level CLI command — `aeat review queue` — that aggregates pending review items from the five existing on-disk sources into one unified `tuple[ReviewItem, ...]` and renders them as a single rich table.
 
 ### D1 — `ReviewItem` is a discriminated union over per-kind models
 
 The unified record type is a `pydantic.Annotated[…, Field(discriminator="kind")]` union. Each member is a strict frozen pydantic v2 model that carries the same set of unified fields (`item_id`, `kind`, `modelo`, `severity`, `summary`, `drill_command`, `since`) **plus** a verbatim copy of the underlying source record (`source: Transaction | Invoice | DivergenceRecord | DraftFinding | Notificacion`).
 
-Rationale: the discriminated-union shape mirrors the proven `DivergencePayload` pattern (`src/aeat/sync/_divergence.py:174`); per-kind models keep source-specific richness accessible for a future `aeat review show <item-id>` drill command without re-fetching from disk; the whole tuple is JSON-serialisable for `--format json` output.
+Rationale: the discriminated-union shape mirrors the proven `DivergencePayload` pattern (`src/aeat/application/sync/_divergence.py:174`); per-kind models keep source-specific richness accessible for a future `aeat review show <item-id>` drill command without re-fetching from disk; the whole tuple is JSON-serialisable for `--format json` output.
 
 Rejected alternatives:
 
@@ -61,7 +61,7 @@ Rejected alternatives:
 
 ### D2 — One adapter per source, all read-only
 
-Five concrete adapter functions live in `src/aeat/review/_adapters.py`. Each adapter:
+Five concrete adapter functions live in `src/aeat/application/review/_adapters.py`. Each adapter:
 
 - Takes a `Settings` instance and any pre-loaded source data (for testability).
 - Returns `tuple[ReviewItem, ...]`.
@@ -70,7 +70,7 @@ Five concrete adapter functions live in `src/aeat/review/_adapters.py`. Each ada
 | Adapter | Source | Pending predicate |
 |---|---|---|
 | `transactions_pending` | `TransactionCatalogue` (`<aeat_financial_txs_dir>/transactions.json`) | `not is_classified(business_classification)` AND `business_classification is not BusinessClassification.SKIPPED_BY_RULE` (post-#237 state model: NOT_YET_PROCESSED → NORMAL, PROCESSED_UNCLASSIFIED → HIGH, FAILED_VALIDATION → CRITICAL; SKIPPED_BY_RULE has a final disposition and is excluded) |
-| `invoices_pending` | `InvoiceCatalogue` loaded via `aeat.financial.invoices.load_invoices(<aeat_invoices_dir>/invoices.json)` | `linked_transaction_ids == ()` OR `payment_status in {PENDING, PARTIALLY_PAID, OVERDUE}` (severity per D5 first-match-wins table) |
+| `invoices_pending` | `InvoiceCatalogue` loaded via `aeat.domain.financial.invoices.load_invoices(<aeat_invoices_dir>/invoices.json)` | `linked_transaction_ids == ()` OR `payment_status in {PENDING, PARTIALLY_PAID, OVERDUE}` (severity per D5 first-match-wins table) |
 | `divergences_pending` | `JsonFileDivergenceRepository.list()` | `resolution_state is ResolutionState.PENDING` |
 | `drafts_pending` | every JSON under `<aeat_drafts_dir>` (loaded via `Path.glob("*.json")` + `FilingDraft.model_validate_json`) | one row per finding with severity `ERROR`/`WARNING`/`INFO` (kind=FINDING); plus, **only if** the draft has zero findings AND `status in {DRAFT, VALIDATED}`, one extra row (kind=FINDING, severity=NORMAL, summary "draft not ready to submit"). Deduped by `(draft_path, finding.code, finding.casilla_id)` |
 | `inbox_pending` | `Inbox.model_validate_json(<aeat_inbox_dir>/inbox.json)` (direct read — `InboxFetcher` requires a `NotificacionSource` we do not need for read-only aggregation) | `acknowledged_at is None` (severity per D5 first-match-wins inbox table) |
@@ -87,7 +87,7 @@ Each adapter degrades to `()` when its source directory is missing or empty. No 
 
 ### D4 — `aeat review queue` is the single CLI surface
 
-Wired into `src/aeat/cli/__init__.py` as `app.add_typer(review_module.app, name="review", ...)`.
+Wired into `src/aeat/entrypoints/cli/__init__.py` as `app.add_typer(review_module.app, name="review", ...)`.
 
 ```
 aeat review queue [--kind transaction|invoice|divergence|finding|inbox] ...
@@ -146,7 +146,7 @@ Severity is **derived per adapter**, not stored on the source. The evaluation ru
 | `state is BusinessClassification.PROCESSED_UNCLASSIFIED` | HIGH |
 | `state is BusinessClassification.NOT_YET_PROCESSED` | NORMAL |
 
-`invoices` source (top-down) — using the actual `PaymentStatus` enum from `aeat.financial.invoices` (`PAID`, `PENDING`, `PARTIALLY_PAID`, `OVERDUE`, `CANCELLED`):
+`invoices` source (top-down) — using the actual `PaymentStatus` enum from `aeat.domain.financial.invoices` (`PAID`, `PENDING`, `PARTIALLY_PAID`, `OVERDUE`, `CANCELLED`):
 
 | Predicate | Severity |
 |---|---|
@@ -227,7 +227,7 @@ The remaining in-scope items for #232 are: the `ReviewItem` abstraction (C4k), t
 **Positive:**
 
 - Kent's wall 32 closes: one command, one table, every pending item.
-- The aggregator is purely additive — sibling agents working on `aeat.financial.*`, `aeat.sync.*`, `aeat.inbox.*`, or `aeat.filing.*` are not blocked.
+- The aggregator is purely additive — sibling agents working on `aeat.domain.financial.*`, `aeat.application.sync.*`, `aeat.inbox.*`, or `aeat.application.filing.*` are not blocked.
 - The discriminated union mirrors the existing `DivergencePayload` pattern — no new architectural shape to learn.
 - JSON output mode (`--format json`) makes the queue scriptable and LLM-consumable, supporting downstream automation.
 - Forward-compatible with #224, #225, #230, #231, and C4p-port without retroactive changes.
@@ -247,9 +247,9 @@ The remaining in-scope items for #232 are: the `ReviewItem` abstraction (C4k), t
 
 **In scope for this ADR (what changes):**
 
-- New subpackage `src/aeat/review/` with `_enums.py`, `_errors.py`, `_models.py`, `_adapters.py`, `_aggregator.py`.
-- New CLI sub-app `src/aeat/cli/review/` with the `queue` command.
-- One-line wiring in `src/aeat/cli/__init__.py`.
+- New subpackage `src/aeat/application/review/` with `_enums.py`, `_errors.py`, `_models.py`, `_adapters.py`, `_aggregator.py`.
+- New CLI sub-app `src/aeat/entrypoints/cli/review/` with the `queue` command.
+- One-line wiring in `src/aeat/entrypoints/cli/__init__.py`.
 - Unit tests under `pytest.mark.unit` + `pytest.mark.domain_local_state` for models, adapters, aggregator, and CLI.
 
 **Explicitly out of scope:**
@@ -272,11 +272,11 @@ The remaining in-scope items for #232 are: the `ReviewItem` abstraction (C4k), t
 - Every adapter degrades to `()` when its on-disk source is missing.
 - Unit tests assert each adapter's pending predicate, the aggregator's sort order, the CLI happy path, and the JSON round-trip.
 - Coverage on `src/aeat/review` ≥ 90% lines.
-- No edits land in `src/aeat/sync/`, `src/aeat/financial/`, `src/aeat/inbox/`, or `src/aeat/filing/`.
+- No edits land in `src/aeat/application/sync/`, `src/aeat/domain/financial/`, `src/aeat/inbox/`, or `src/aeat/application/filing/`.
 
 ## verification
 
-- `uv run pytest src/aeat/review src/aeat/cli/review` passes.
+- `uv run pytest src/aeat/review src/aeat/entrypoints/cli/review` passes.
 - `uv run aeat review queue --help` shows the documented flags.
-- `git diff --stat HEAD~1` shows changes only under `src/aeat/review/`, `src/aeat/cli/review/`, `src/aeat/cli/__init__.py`, and `tests/` if applicable.
+- `git diff --stat HEAD~1` shows changes only under `src/aeat/application/review/`, `src/aeat/entrypoints/cli/review/`, `src/aeat/entrypoints/cli/__init__.py`, and `tests/` if applicable.
 - `just test-cov` keeps the project floor at ≥ 60%.

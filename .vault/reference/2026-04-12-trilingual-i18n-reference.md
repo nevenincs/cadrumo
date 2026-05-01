@@ -10,7 +10,7 @@ related:
 # Trilingual i18n Reference
 
 ## Package Structure
-- `src/aeat/i18n/`: Core primitives for managing translations.
+- `src/aeat/core/i18n/`: Core primitives for managing translations.
 
 ## Core Primitives
 - `Language(StrEnum)`: `ES` (es), `EN` (en), `HU` (hu).
@@ -29,5 +29,5 @@ related:
 - `AEAT_FALLBACK_LANGUAGES`: Fallbacks logic list.
 
 ## Testing Strategy
-- Tests are collocated in `src/aeat/i18n/test_i18n.py`.
+- Tests are collocated in `src/aeat/core/i18n/test_i18n.py`.
 - No mock/patch logic applied. Pure primitives tested with literal input dictionaries.

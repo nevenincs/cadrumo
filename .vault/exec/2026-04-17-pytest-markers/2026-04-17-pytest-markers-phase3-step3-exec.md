@@ -12,9 +12,9 @@ related:
 
 ## migrate-domain-financial-input-test-modules
 
-Applied `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]` to 22 modules across `src/aeat/financial/**` and `src/aeat/cli/financial/`. All tests are `unit`-access.
+Applied `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]` to 22 modules across `src/aeat/domain/financial/**` and `src/aeat/entrypoints/cli/financial/`. All tests are `unit`-access.
 
 ## verification
 
-- `uv run pytest src/aeat/financial src/aeat/cli/financial -m unit` -> green.
+- `uv run pytest src/aeat/financial src/aeat/entrypoints/cli/financial -m unit` -> green.
 - Integrity test passes for all 22 modules.

@@ -17,7 +17,7 @@ related:
 Decision: **PASS** — no CRITICAL or HIGH findings. Static checks: `ruff check` passes; `ruff format --check` passes.
 
 SAFETY-001 | INFO | No write verbs in new code paths.
-Verified across `src/aeat/status/**`, `src/aeat/inbox/_live_source.py`, `src/aeat/cli/_live_reader.py`, `src/aeat/cli/inbox/**`, `src/aeat/cli/filing/__init__.py`. Only `page.goto(url, wait_until="domcontentloaded")` + `page.content()` via `_fetch_html`.
+Verified across `src/aeat/status/**`, `src/aeat/inbox/_live_source.py`, `src/aeat/entrypoints/cli/_live_reader.py`, `src/aeat/entrypoints/cli/inbox/**`, `src/aeat/entrypoints/cli/filing/__init__.py`. Only `page.goto(url, wait_until="domcontentloaded")` + `page.content()` via `_fetch_html`.
 
 SAFETY-002 | INFO | Public API names are read-only shaped.
 `fetch_notificaciones`, `build_live_status_reader`, `LiveAeatNotificacionSource`, `build_live_source`, `filing import --from-aeat`.

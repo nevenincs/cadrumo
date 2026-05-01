@@ -14,16 +14,16 @@ Delivered issue `#74` as a new immutable transaction catalogue package, CLI surf
 
 - Modified: `.vaultspec/providers.json`
 - Modified: `env/.env.example`
-- Modified: `src/aeat/cli/financial/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/financial/__init__.py`
 - Modified: `src/aeat/config.py`
-- Modified: `src/aeat/financial/providers/__init__.py`
+- Modified: `src/aeat/domain/financial/providers/__init__.py`
 - Modified: `uv.lock`
-- Created: `src/aeat/cli/financial/txs.py`
-- Created: `src/aeat/financial/transactions/`
+- Created: `src/aeat/entrypoints/cli/financial/txs.py`
+- Created: `src/aeat/domain/financial/transactions/`
 
 ## Description
 
-The new `aeat.financial.transactions` package now exposes strict immutable transaction models, immutable-return catalogue operations, JSON persistence with atomic replace, and the `aeat financial txs` command group. The implementation preserves `RawTransaction` verbatim, keeps invoice/category dependencies as typing-only stubs, and confines the public import surface to `aeat.financial.transactions`.
+The new `aeat.domain.financial.transactions` package now exposes strict immutable transaction models, immutable-return catalogue operations, JSON persistence with atomic replace, and the `aeat financial txs` command group. The implementation preserves `RawTransaction` verbatim, keeps invoice/category dependencies as typing-only stubs, and confines the public import surface to `aeat.domain.financial.transactions`.
 
 ## Tests
 

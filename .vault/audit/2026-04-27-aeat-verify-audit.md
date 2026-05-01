@@ -45,12 +45,12 @@ what remains operator-gated or scoped to a follow-up.
 Two AEAT sede surfaces are now driven by typed, tested,
 read-only Python code:
 
-- `aeat.sede.walk_expedientes_tree(session, *, modelo)` — walks
+- `aeat.adapters.outbound.aeat.sede.walk_expedientes_tree(session, *, modelo)` — walks
   *Mis Expedientes* at `/wlpl/TEWV-CORE/ResumenVlt`. Returns
   `Expediente` records. **This surface holds procedures**
   (sanciones, recursos, gestión recaudación, plus the per-year
   IRPF detail entries) — not declarations.
-- `aeat.sede.walk_declarations_register(session, *, modelo,
+- `aeat.adapters.outbound.aeat.sede.walk_declarations_register(session, *, modelo,
   ejercicio)` — drives the ZK form at `/wlpl/SCEJ-MANT/CONSUL/
   index.zul` ("Consultar declaraciones presentadas"). Returns
   `Declaration` records. **This surface holds Kent's actual
@@ -77,7 +77,7 @@ resolved:
 Total live captures under `scratch/declarations-corpus/` — 49
 PDFs spanning Modelos 100/111/130/190/303/390 across ejercicios
 2021-2024. Every single one parses through
-`aeat.justificante.parse_justificante` to a valid `Justificante`
+`aeat.domain.justificante.parse_justificante` to a valid `Justificante`
 record (modelo, period, tax_id, csv, presented_at). Mix of
 Spanish + English receipts, modern + legacy 2021 layouts.
 
@@ -85,7 +85,7 @@ Spanish + English receipts, modern + legacy 2021 layouts.
 
 The `pdf-sanitizer` sub-feature is end-to-end production-ready:
 
-- `aeat.sanitizer` subpackage with strict-frozen pydantic v2
+- `aeat.adapters.inbound.sanitizer` subpackage with strict-frozen pydantic v2
   records, the 8-step order-of-operations pipeline, refuse-if-
   signed + refuse-if-already-sanitised guards, and deterministic
   byte-stable output.
@@ -114,17 +114,17 @@ The `pdf-sanitizer` sub-feature is end-to-end production-ready:
 
 Every fixture is verify-clean across its mapping, parses
 through `parse_justificante` to a valid record, and its SHA-256
-is recorded in `aeat.sanitizer.fixtures.SANITIZED_SHAS` so
+is recorded in `aeat.adapters.inbound.sanitizer.fixtures.SANITIZED_SHAS` so
 re-sanitisation fails fast with `AlreadySanitizedError`.
 
 ### Test coverage — production-ready
 
 | Surface | Tests | Coverage |
 |---------|-------|----------|
-| `aeat.sanitizer.*` (8 modules) | 91 unit tests | records, determinism, metadata, dynamic, streams, pipeline, no-write-surface |
-| `aeat.cli.sanitize` | 34 unit tests | forbidden flags, prepare-map auto-detect (10 tests), verify masking, all 4 verbs |
-| `aeat.sede._declarations` | 6 offline tests | listbox parser, presented_at, error paths |
-| `aeat.justificante._extract` | inline-shape tests | Spanish + English layouts, positional period, inverted NIF, loose ejercicio |
+| `aeat.adapters.inbound.sanitizer.*` (8 modules) | 91 unit tests | records, determinism, metadata, dynamic, streams, pipeline, no-write-surface |
+| `aeat.entrypoints.cli.sanitize` | 34 unit tests | forbidden flags, prepare-map auto-detect (10 tests), verify masking, all 4 verbs |
+| `aeat.adapters.outbound.aeat.sede._declarations` | 6 offline tests | listbox parser, presented_at, error paths |
+| `aeat.domain.justificante._extract` | inline-shape tests | Spanish + English layouts, positional period, inverted NIF, loose ejercicio |
 | Fixture-bound security | 62 tests | adversarial-absence + round-trip across all 15 fixtures |
 
 Total: ~680 unit tests pass project-wide. Lint + ty clean.
@@ -141,10 +141,10 @@ Every new module honours the parent ADR's 5-layer write guard:
   `_FORBIDDEN_FLAGS` rejects 13 mutation-implying tokens before
   Typer dispatch. Per-subpackage `test_no_write_surface.py`
   greps for forbidden verbs in public symbol names.
-- Layer 3 (write-surface tests): present in `aeat.sanitizer`
-  and `aeat.sede` (existing).
+- Layer 3 (write-surface tests): present in `aeat.adapters.inbound.sanitizer`
+  and `aeat.adapters.outbound.aeat.sede` (existing).
 - Layer 4 (`AeatAccessGate`): inherited unchanged from
-  `aeat.auth`.
+  `aeat.adapters.outbound.aeat.auth`.
 - Layer 5 (`AEAT_LIVE_TESTS_ENABLED`): inherited unchanged.
   No new live tests were added in this round; the live walker
   test is queued as a follow-up.
@@ -153,7 +153,7 @@ Every new module honours the parent ADR's 5-layer write guard:
 
 ### Immediate next steps (in order of leverage)
 
-1. **Per-modelo deep extractors** (`aeat.declaracion._parsers/
+1. **Per-modelo deep extractors** (`aeat.adapters.inbound.declaracion._parsers/
    {130,303,390,111,190}/`). Each modelo's casilla map needs a
    typed extractor like the existing `modelo_100`. This is the
    gating step for aggregator cumulation tests. Estimated
@@ -169,7 +169,7 @@ Every new module honours the parent ADR's 5-layer write guard:
    already has all the quarterly inputs.
 
 3. ~~**W1 P7 — live reconcile dry-run**. Build
-   `aeat.testing.synthesize_filing_draft(modelo, casilla_map)`,
+   `aeat.domain.testing.synthesize_filing_draft(modelo, casilla_map)`,
    instantiate an APPROVED `FilingDraft` from the M100/2022
    sanitised fixture's casilla map, run `aeat filing reconcile
    --modelo 100 --period 0A --ejercicio 2022` against the live
@@ -192,7 +192,7 @@ Every new module honours the parent ADR's 5-layer write guard:
    (25 fixtures: M100/2021+2023, M130/2021+2022+2023 full year,
    M303/2021+2022+2023 full year, M390/2021+2022). All passed
    the prepare-map → pdf → verify → check pipeline; SHAs
-   registered in `aeat.sanitizer.fixtures.SANITIZED_SHAS`.
+   registered in `aeat.adapters.inbound.sanitizer.fixtures.SANITIZED_SHAS`.
 
 5. **Live walker tests** (gated by
    `AEAT_LIVE_TESTS_ENABLED=1`). Exercise
@@ -216,14 +216,14 @@ Every new module honours the parent ADR's 5-layer write guard:
   span across pdfplumber line breaks. Not observed on the
   current corpus but possible for very wide tables. Operator
   reviews the YAML before sanitising.
-- **Pre-existing `aeat.auth` test failures** (5 tests in
+- **Pre-existing `aeat.adapters.outbound.aeat.auth` test failures** (5 tests in
   `test_clave_movil.py`) are out of pdf-sanitizer scope. The
   failures were re-confirmed in this session: the tests are
   marked `@pytest.mark.unit` but `fake_session_login` fixture
   triggers a real Cl@ve flow that times out after 5 min on the
   2FA push. Fix requires substantive auth-subsystem rework;
   tracked separately. Full-unit runs need
-  `--ignore=src/aeat/auth/test_clave_movil.py` until then. The
+  `--ignore=src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py` until then. The
   marker-integrity regression PR #427 introduced was fixed in
   commit `6b494d7`.
 - **49-PDF corpus contains real PII** under `scratch/`
@@ -268,13 +268,13 @@ and have since all landed:
 - **D3** — canonical `0A` annual period synthesis when no
   labelled or positional period appears for an annual modelo.
   Commit `23d92e0`. Regression tests in
-  `src/aeat/justificante/test_extract_modelos.py:215-229`
+  `src/aeat/domain/justificante/test_extract_modelos.py:215-229`
   for M190 and M390 layouts.
 - **D2** — `_extract_csv_from_url` rejects cotejo URLs
   carrying multiple `CSV` query values rather than silently
   picking the first. Commit `daba8d3`. Regression test
   `test_multiple_csv_values_rejected` in
-  `src/aeat/sede/test_declarations.py:131-135`.
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/test_declarations.py:131-135`.
 - **D1** — Playwright bringup deduplicated into a single
   `_open_register_page` `asynccontextmanager` shared by
   `walk_declarations_register` and `capture_declaration`.
@@ -330,7 +330,7 @@ A direct unit test would be tautological.
 ### Full unit suite (2026-04-27)
 
 `uv run --no-sync pytest -m unit -q --tb=no
---ignore=src/aeat/auth/test_clave_movil.py` →
+--ignore=src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py` →
 **3186 passed, 9 skipped, 0 failed**, 90.5s wall.
 
 The `--ignore` clause excludes the pre-existing auth tests
@@ -366,7 +366,7 @@ For meaningful aggregator cumulation testing, one of:
   contributor-local. Runs on the operator's box, not in CI.
 - **Synthetic test fixtures with hand-crafted casilla maps**
   whose values cumulate by construction. Uses
-  `aeat.filing.testing` patterns rather than real captures.
+  `aeat.application.filing.testing` patterns rather than real captures.
 
 This is the gating design decision before per-modelo deep
 extractors are worth building in scope; recorded here so the
@@ -406,11 +406,11 @@ label-bound regexes only, so `record.ejercicio` came back
 `_PERIOD_POSITIONAL_RE.group("year")` to ejercicio when the
 labelled extractors found nothing. 11 M130 fixtures
 re-generated with year-embedded synthetic CSVs to match the
-new shape. SHAs updated in `aeat.sanitizer.fixtures`.
+new shape. SHAs updated in `aeat.adapters.inbound.sanitizer.fixtures`.
 
 ### W1 P7 offline portion (commits `c309602` + `dd8e8c4`)
 
-- **`aeat.testing.synthesize_filing_draft`** — strict-frozen
+- **`aeat.domain.testing.synthesize_filing_draft`** — strict-frozen
   FilingDraft factory taking a casilla map. Default status
   APPROVED so the result is immediately ready for
   `aeat filing reconcile`. Companion
@@ -447,17 +447,17 @@ dry-run tests). Independent verification confirmed:
   cleartext `real:` keys (privacy-preserving `real_sha256`
   only).
 - Parser fix is a single-line minimal change at
-  `src/aeat/justificante/_extract.py:367-368`.
+  `src/aeat/domain/justificante/_extract.py:367-368`.
 - All 11 M130 SHAs genuinely re-sanitised (differ from
   `c69a570` baseline).
 - `synthesize_filing_draft` has zero HTTP imports and zero
   forbidden verbs.
 - 28/28 no-write-surface guards remain green on
-  `aeat.sede` and `aeat.filing.reconciliation`.
+  `aeat.adapters.outbound.aeat.sede` and `aeat.application.filing.reconciliation`.
 
 ### Full unit suite (round-5)
 
-`uv run --no-sync pytest -m unit --ignore=src/aeat/auth/test_clave_movil.py
+`uv run --no-sync pytest -m unit --ignore=src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py
 -q --tb=no` → **3505 passed, 9 skipped, 0 failed**, 135.5s wall.
 
 That's +319 over the round-4 baseline (3186 → 3505): 41 corpus
@@ -474,7 +474,7 @@ session, every Kent-observable triad branch was driven against
 the live AEAT sede. **All read-only**: every request was a GET
 or a ZK form drive that fetches state, never POSTs / submits.
 
-- **Live walker tests** — `pytest src/aeat/sede/test_declarations_live.py
+- **Live walker tests** — `pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/test_declarations_live.py
   -m live_read` with `AEAT_LIVE_TESTS_ENABLED=1`:
   - `test_walk_modelo_100_returns_at_least_one_declaration` PASSED
   - `test_capture_declaration_returns_pdf_bytes` PASSED — fetched
@@ -529,7 +529,7 @@ real stdout codec.
 `aeat filing reconcile --last --modelo 130 --period 4T` returned
 NOT_YET_FOUND despite AEAT having the M130/4T filing on record.
 Root cause: `_run_reconcile` used only `find_expediente` from
-`aeat.sede._walker`, which traverses Mis Expedientes (the
+`aeat.adapters.outbound.aeat.sede._walker`, which traverses Mis Expedientes (the
 procedure tree). Quarterly modelos (M130, M303, M111, ...)
 typically do NOT appear there — their authoritative record
 lives in *Consultar declaraciones presentadas*.
@@ -549,19 +549,19 @@ correctly returns NOT_YET_FOUND through the same fallback path.
 ### Live-driven fix: sanitizer error registry (commit `c4521f4`)
 
 `aeat filing reconcile` (any invocation) crashed at startup with
-`ValueError: AeatError subclass aeat.sanitizer._errors.SanitizationError
+`ValueError: AeatError subclass aeat.adapters.inbound.sanitizer._errors.SanitizationError
 is missing a declared ErrorCode registry entry`. Root cause: the
 AeatError base class enforces an `__init_subclass__` hook that
 resolves every subclass against the ErrorCode registry, but the
 five sanitizer error classes were never added when
-`aeat.sanitizer` landed. The crash only fires on the CLI path
-because `aeat.cli.__init__` imports `aeat.cli.sanitize` →
-`aeat.sanitizer`, triggering subclass registration. Unit tests
-that import `aeat.sanitizer` directly succeed because the
+`aeat.adapters.inbound.sanitizer` landed. The crash only fires on the CLI path
+because `aeat.entrypoints.cli.__init__` imports `aeat.entrypoints.cli.sanitize` →
+`aeat.adapters.inbound.sanitizer`, triggering subclass registration. Unit tests
+that import `aeat.adapters.inbound.sanitizer` directly succeed because the
 import order is different.
 
-Added 5 registry entries (alphabetical between aeat.sede and
-aeat.setup): AlreadySanitizedError, SanitizationError,
+Added 5 registry entries (alphabetical between aeat.adapters.outbound.aeat.sede and
+aeat.application.setup): AlreadySanitizedError, SanitizationError,
 SanitizerSourceParseError, SignaturePresentError,
 UnknownSurfaceError. Each carries trilingual default messages.
 

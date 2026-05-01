@@ -46,49 +46,49 @@ ground-truth captured live from Kent's production sede on 2026-04-24.
 
 ## Modified
 
-- `src/aeat/auth/_clave_movil.py` — DialogoRepresentacion handshake +
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py` — DialogoRepresentacion handshake +
   idle-TTL refresh on `probe_persisted_session`.
-- `src/aeat/justificante/_extract.py` — annual-modelo regex set so
+- `src/aeat/domain/justificante/_extract.py` — annual-modelo regex set so
   Modelo 100 IRPF receipts now parse end-to-end (verified against 3
   real captures).
-- `src/aeat/declaracion/` — three new template revisions for Modelo
+- `src/aeat/adapters/inbound/declaracion/` — three new template revisions for Modelo
   100 (2021 legacy, 2022 modern, 2023 modern); extractor produces
   83-86 typed casillas per real PDF.
-- `src/aeat/cli/__init__.py` — `aeat sede` sub-app registered; the
+- `src/aeat/entrypoints/cli/__init__.py` — `aeat sede` sub-app registered; the
   deleted `aeat status` / `aeat inbox` sub-apps unwired.
-- `src/aeat/cli/filing/__init__.py` — registers the new `reconcile`
+- `src/aeat/entrypoints/cli/filing/__init__.py` — registers the new `reconcile`
   subcommand; `--from-aeat` import path removed (was tied to the
   deleted live status reader).
-- `src/aeat/workflow/_engine.py`, `_protocols.py`, `_adapters.py`,
+- `src/aeat/application/workflow/_engine.py`, `_protocols.py`, `_adapters.py`,
   `__init__.py`, `test_engine.py` — rewired off the orphan
   `StatusReaderProtocol` / `InboxProtocol` stubs; constructor seams
-  inject the real `aeat.sede.walk_expedientes_tree` and
+  inject the real `aeat.adapters.outbound.aeat.sede.walk_expedientes_tree` and
   `fetch_notifications_query` paths.
-- `src/aeat/deadlines/` — dropped orphan `CorpusReader` and
+- `src/aeat/domain/deadlines/` — dropped orphan `CorpusReader` and
   `ModeloCatalogueLoader` stubs; engine validates against the
   in-code closed modelo tuple.
-- `src/aeat/sync/` — refreshed framing on every Protocol stub;
+- `src/aeat/application/sync/` — refreshed framing on every Protocol stub;
   dropped `CorpusLoader` and `StorageBackendStub`.
-- `src/aeat/submission/_protocols.py` — refreshed boundary-record
+- `src/aeat/adapters/outbound/aeat/export/_protocols.py` — refreshed boundary-record
   framing.
-- `src/aeat/browser/_site_health.py`, `_site_health_parsers.py`,
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/_site_health.py`, `_site_health_parsers.py`,
   `test_site_health.py` — salvaged real, useful AEAT-mantenimiento
   detection logic from the deleted `aeat.status` subpackage.
 - `tests/test_docs.py`, `docs/architecture.md` — module-list updates.
 
 ## Created
 
-- `src/aeat/sede/` — read-only sede walker subpackage. Files:
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/` — read-only sede walker subpackage. Files:
   `_schema.py`, `_parse.py`, `_walker.py`, `_notifications.py`,
   `_errors.py`, `_no_write_surface_fixture.txt`, `test_parse.py`,
   `test_notifications.py`, `test_no_write_surface.py`.
-- `src/aeat/filing/reconciliation/` — FilingDraft to Justificante
+- `src/aeat/application/filing/reconciliation/` — FilingDraft to Justificante
   comparator. Files: `_schema.py`, `_kind.py`, `_reconcile.py`,
   `_no_write_surface_fixture.txt`, `test_reconcile.py`,
   `test_no_write_surface.py`.
-- `src/aeat/cli/sede/__init__.py` — `aeat sede` Typer sub-app
+- `src/aeat/entrypoints/cli/sede/__init__.py` — `aeat sede` Typer sub-app
   (`list-expedientes`, `discover`, `notifications`).
-- `src/aeat/cli/filing/_reconcile.py` + `test_reconcile_cli.py` —
+- `src/aeat/entrypoints/cli/filing/_reconcile.py` + `test_reconcile_cli.py` —
   `aeat filing reconcile` end-to-end command.
 - `scripts/recon_modelo_100.py`, `recon_modelo_100_detail.py`,
   `recon_modelo_303.py`, `recon_notifications.py` — discovery scripts
@@ -114,11 +114,11 @@ Speculative subpackages, never validated against live AEAT:
 - `src/aeat/inbox/` — Protocol-stubbed integration over the deleted
   StatusReader (~1456 lines).
 - `src/aeat/corpus/` — empty stub package promised to land "later".
-- `src/aeat/cli/status/`, `src/aeat/cli/inbox/`,
-  `src/aeat/cli/_live_reader.py` — CLI shells over the deleted
+- `src/aeat/entrypoints/cli/status/`, `src/aeat/entrypoints/cli/inbox/`,
+  `src/aeat/entrypoints/cli/_live_reader.py` — CLI shells over the deleted
   modules.
 - Various skip-only "live test placeholders" scattered across
-  `aeat.status`, `aeat.history`, `aeat.sync`, `aeat.inbox`.
+  `aeat.status`, `aeat.history`, `aeat.application.sync`, `aeat.inbox`.
 
 ## Description
 
@@ -156,19 +156,19 @@ one sanctioned human touchpoint.
 
 ## Tests
 
-- `aeat.sede` — 28 unit tests covering parser fidelity against
+- `aeat.adapters.outbound.aeat.sede` — 28 unit tests covering parser fidelity against
   captured HTML, write-guard, notifications parser.
-- `aeat.justificante` — 17 unit tests, including the extended
+- `aeat.domain.justificante` — 17 unit tests, including the extended
   annual-modelo paths.
-- `aeat.declaracion` Modelo 100 extractors — 50 unit tests across
+- `aeat.adapters.inbound.declaracion` Modelo 100 extractors — 50 unit tests across
   three template revisions.
-- `aeat.filing.reconciliation` — 6 unit tests for every triad branch
+- `aeat.application.filing.reconciliation` — 6 unit tests for every triad branch
   plus 14 write-guard tests.
-- `aeat.cli.filing.reconcile` — 25 unit tests covering forbidden-flag
+- `aeat.entrypoints.cli.filing.reconcile` — 25 unit tests covering forbidden-flag
   rejection, period-to-ejercicio inference, exit-code mapping, CLI
   smoke.
 - Full repo: roughly 2940 unit tests pass (modulo the documented
-  transient `aeat.auth.test_clave_movil` Playwright-backed tests
+  transient `aeat.adapters.outbound.aeat.auth.test_clave_movil` Playwright-backed tests
   whose flakiness predated this PR and is unrelated to the rewrite).
 
 Live verifications performed against Kent's production account:
@@ -180,8 +180,8 @@ Live verifications performed against Kent's production account:
 - `aeat sede list-expedientes --modelo 100` — returned Kent's three
   real IRPF expedientes (2021, 2022, 2023).
 - Discovery run captured all three IRPF justificante PDFs as raw
-  bytes; all parsed cleanly through `aeat.justificante` and
-  `aeat.declaracion`.
+  bytes; all parsed cleanly through `aeat.domain.justificante` and
+  `aeat.adapters.inbound.declaracion`.
 - Notifications surface captured: 2 unread rows on the summary
   endpoint, 1 pending row on the query endpoint, all parsed correctly
-  by `aeat.sede._notifications`.
+  by `aeat.adapters.outbound.aeat.sede._notifications`.

@@ -24,17 +24,17 @@ Tests delta (mutation harness suite): 188 → 223 (+35).
 
 ## Files changed (4 modified + 1 new)
 
-- `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py` —
+- `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py` —
   empirical aggregator + deferred catalogue + 3 new tests.
-- `src/aeat/formulas/_rulesets/test_scalar_mutation.py` — selective
+- `src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py` — selective
   M100 archetype enumeration + `_iter_scalar_targets` + 1 new test.
-- `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py` —
+- `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py` —
   `_swap_outer_sub_op_in_subtree` helper + M100 fixture + 6
   parametrize entries + `OUTER_SUB_OP_COVERAGE` constant + 3 new
   tests.
-- `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py` —
+- `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py` —
   `_iter_percent_targets` generator (no test count change).
-- `src/aeat/formulas/_rulesets/test_mutator_tautology_regression.py`
+- `src/aeat/domain/formulas/_rulesets/test_mutator_tautology_regression.py`
   — NEW. 4 tests defending the structural fix.
 
 No source-code (production) changes.
@@ -125,13 +125,13 @@ populated` source line fails (3).
 ## Test execution evidence
 
 ```
-$ uv run pytest src/aeat/formulas/_rulesets/test_mutator_kill_rate.py
-              src/aeat/formulas/_rulesets/test_scalar_mutation.py
-              src/aeat/formulas/_rulesets/test_operand_swap_mutation.py
-              src/aeat/formulas/_rulesets/test_percent_rate_mutation.py
-              src/aeat/formulas/_rulesets/test_brackets_threshold_mutation.py
-              src/aeat/formulas/_rulesets/test_mutator_exhaustiveness.py
-              src/aeat/formulas/_rulesets/test_mutator_tautology_regression.py -q
+$ uv run pytest src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py
+              src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py
+              src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py
+              src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py
+              src/aeat/domain/formulas/_rulesets/test_brackets_threshold_mutation.py
+              src/aeat/domain/formulas/_rulesets/test_mutator_exhaustiveness.py
+              src/aeat/domain/formulas/_rulesets/test_mutator_tautology_regression.py -q
 ============================= 223 passed in 1.40s =============================
 ```
 
@@ -139,7 +139,7 @@ $ uv run pytest src/aeat/formulas/_rulesets/test_mutator_kill_rate.py
 
 `just test-cov` reports 82.60 % coverage on `src/aeat` (well above
 the 60 % floor). One pre-existing flaky failure
-(`src/aeat/cli/workflow/test_cli.py::TestWorkflowCli::test_next_json_round_trips`)
+(`src/aeat/entrypoints/cli/workflow/test_cli.py::TestWorkflowCli::test_next_json_round_trips`)
 is unrelated to #457 — verified by reproducing on the pre-#457
 worktree state (`git stash` then re-run).
 

@@ -72,7 +72,7 @@ Architectural drivers:
 
 ### Phase 1 — Run-trace redaction discipline
 
-Wrap `aeat.observability._sink.JsonlRunSink.emit` so every event passes
+Wrap `aeat.core.observability._sink.JsonlRunSink.emit` so every event passes
 through `redact_structured(event.model_dump(mode="json"), rules=
 default_rules_for_class(SensitivityClass.DIAGNOSTIC))` before write.
 The rule set is the DIAGNOSTIC default — same shape as the AUDIT

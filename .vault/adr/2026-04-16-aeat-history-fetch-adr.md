@@ -96,7 +96,7 @@ merge is a one-file Protocol-removal diff.
 
 **Rationale:** AEAT's wire format mixes Spanish-locale decimals,
 dates, and booleans freely, and the typed shape lives in
-`aeat.casillas.CasillaRecord.data_type`. Typing at this boundary
+`aeat.domain.casillas.CasillaRecord.data_type`. Typing at this boundary
 would force the fetcher to embed a copy of the casilla catalogue,
 duplicating #6 and creating two sources of truth. The verification
 engine (downstream) is the correct place to coerce via
@@ -191,12 +191,12 @@ Inside `src/aeat/history/_protocols.py` we declare:
 - `ExpedienteSource` — as above; swapped out on merge for the real
   `aeat.status.StatusReader` facade.
 - `FilingDetailFetcher` — as above; swapped out on merge for a
-  real facade wrapping `aeat.browser.BrowserSession`.
+  real facade wrapping `aeat.adapters.outbound.aeat.browser.BrowserSession`.
 - `CertificateBackend` — a structural mirror of the one in
   `aeat.status._protocols`. We do **not** cross-import from
   `aeat.status._protocols` (it is a private module per #43's
   underscore convention); we declare the identical minimal surface
-  locally. The public `aeat.auth.certificate` module already ships a
+  locally. The public `aeat.adapters.outbound.aeat.auth.certificate` module already ships a
   real `CertificateService` on main, but the local Protocol stub
   exists so unit tests can construct a `HistoryFetcher` without
   spinning up a real browser session or certificate backend — the
@@ -239,7 +239,7 @@ consumers (verification) can filter by `parse_warnings` or
 
 `_parse_decimal` in the new `aeat.history._decimal` module is
 copy-and-documented from
-`aeat.justificante._extract._parse_decimal`. We do **not** cross-
+`aeat.domain.justificante._extract._parse_decimal`. We do **not** cross-
 import from `_extract` (it is private to the justificante
 subpackage). Duplication is preferred to coupling because the
 Spanish-locale parser is a 15-line pure function and both packages

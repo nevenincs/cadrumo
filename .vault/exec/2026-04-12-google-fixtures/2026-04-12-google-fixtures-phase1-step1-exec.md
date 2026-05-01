@@ -46,13 +46,13 @@ README → verify (lint / typecheck / test / hooks).
   with `root_folder_spec()` and `children_of()`. Module-level
   `CATALOGUE` literal carries exactly three entries (root folder +
   smoke Sheet + smoke Doc) per the ADR's minimum-viable decision.
-- `scripts/provision_google_fixtures.py` — reuses `aeat.auth`
+- `scripts/provision_google_fixtures.py` — reuses `aeat.adapters.outbound.aeat.auth`
   (`get_credentials_for_scopes`, `build_drive_service`,
   `build_sheets_service`, `build_docs_service`), walks the catalogue
   parent-first, find-or-creates each resource via a helper that
-  mirrors `aeat.cli.bootstrap` dedup logic, seeds only freshly
+  mirrors `aeat.entrypoints.cli.bootstrap` dedup logic, seeds only freshly
   created Sheets (`values.update A1`) and Docs (`documents.batchUpdate
-  insertText`), persists IDs via `aeat.env_io.write_env_vars`, prints
+  insertText`), persists IDs via `aeat.core.env_io.write_env_vars`, prints
   a rich summary table. Raises `FixtureProvisioningError` on failure.
 - `scripts/teardown_google_fixtures.py` — reads
   `Settings.aeat_google_test_fixtures_folder_id`, recursively deletes
@@ -127,16 +127,16 @@ Walking every changed file against the project's core mandates:
 - **Error hierarchy** — `FixtureProvisioningError(AeatError)` is the
   only domain error raised; no bare `Exception`.
 - **Logging** — provisioning and teardown use
-  `aeat.logging.get_logger(__name__)`. No scattered
+  `aeat.core.logging.get_logger(__name__)`. No scattered
   `logging.getLogger(__name__)`.
 - **Public API discipline** — no new module under `src/aeat/`; only an
   additive error subclass and additive Settings fields. `scripts/` is
   the documented escape hatch, not on the import path.
 - **Branch-boundary respect** — untouched: `tests/conftest.py`
-  (feature-15), `src/aeat/storage/` (feature-10), `src/aeat/browser/`
-  (feature-16), `src/aeat/i18n/` (feature-20), `src/aeat/corpus/`
-  (feature-17), `src/aeat/models/` (feature-6), `src/aeat/portals/`
-  (feature-7), `tests/fixtures/filing_history/` + `src/aeat/testing/`
+  (feature-15), `src/aeat/adapters/persistence/storage/` (feature-10), `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/`
+  (feature-16), `src/aeat/core/i18n/` (feature-20), `src/aeat/corpus/`
+  (feature-17), `src/aeat/domain/modelos/` (feature-6), `src/aeat/domain/portals/`
+  (feature-7), `tests/fixtures/filing_history/` + `src/aeat/domain/testing/`
   (feature-14). Only additive edits to shared files
   (`src/aeat/config.py`, `src/aeat/errors.py`, `env/.env.example`,
   `justfile`).
@@ -147,8 +147,8 @@ Walking every changed file against the project's core mandates:
 - **Live-test discipline** — `@pytest.mark.live`, dual opt-in, no
   mocks / patches / stubs / fakes, hit real Google services.
 - **Reuse** — no new Google client surface defined; every API call
-  goes through `aeat.auth.build_*_service` and
-  `aeat.auth.get_credentials_for_scopes`.
+  goes through `aeat.adapters.outbound.aeat.auth.build_*_service` and
+  `aeat.adapters.outbound.aeat.auth.get_credentials_for_scopes`.
 
 **Review verdict: approved for merge.**
 

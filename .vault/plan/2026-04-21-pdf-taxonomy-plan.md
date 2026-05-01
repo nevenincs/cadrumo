@@ -15,16 +15,16 @@ related:
 
 Land the vocabulary, shared types, shared error hierarchy, and coverage-matrix axis defined in `2026-04-21-pdf-taxonomy-adr`. **No parser code.** The cluster ships the scaffolding that clusters B–H consume.
 
-## Step 1 — Add `src/aeat/_pdf_import/` shared module
+## Step 1 — Add `src/aeat/adapters/inbound/pdf/` shared module
 
-**New directory**: `src/aeat/_pdf_import/`.
+**New directory**: `src/aeat/adapters/inbound/pdf/`.
 
 Files:
 
-- `src/aeat/_pdf_import/__init__.py` — public surface re-exports `ExtractedCasilla`, `PdfFilingImportError`.
-- `src/aeat/_pdf_import/_shared.py` — `ExtractedCasilla` pydantic v2 record exactly as in the ADR §3.
-- `src/aeat/_pdf_import/_errors.py` — `PdfFilingImportError(AeatError)` root.
-- `src/aeat/_pdf_import/test_shared.py` — unit tests:
+- `src/aeat/adapters/inbound/pdf/__init__.py` — public surface re-exports `ExtractedCasilla`, `PdfFilingImportError`.
+- `src/aeat/adapters/inbound/pdf/_shared.py` — `ExtractedCasilla` pydantic v2 record exactly as in the ADR §3.
+- `src/aeat/adapters/inbound/pdf/_errors.py` — `PdfFilingImportError(AeatError)` root.
+- `src/aeat/adapters/inbound/pdf/test_shared.py` — unit tests:
     - module-level markers `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]`
     - `ExtractedCasilla` is strict+frozen (mutation raises `ValidationError`)
     - extra fields rejected
@@ -36,7 +36,7 @@ Relative-imports only (`from ..errors import AeatError`).
 
 ## Step 2 — Re-home `JustificanteError`
 
-**Edit** `src/aeat/justificante/_errors.py`:
+**Edit** `src/aeat/domain/justificante/_errors.py`:
 
 ```python
 from .._pdf_import._errors import PdfFilingImportError
@@ -47,7 +47,7 @@ class JustificanteError(PdfFilingImportError):
 
 No changes to subclasses. `AeatError` remains the grand-parent so every existing `except AeatError` call site keeps catching.
 
-**Tests**: add one assertion in `src/aeat/justificante/test_parser.py` (TestJustificanteModel):
+**Tests**: add one assertion in `src/aeat/domain/justificante/test_parser.py` (TestJustificanteModel):
 
 ```python
 def test_justificante_error_is_pdf_filing_import_error(self) -> None:
@@ -57,19 +57,19 @@ def test_justificante_error_is_pdf_filing_import_error(self) -> None:
 
 ## Step 3 — Expose the shared surface from `aeat`
 
-**Edit** `src/aeat/__init__.py` only if it exports error types today (check first). If not, skip — shared types are accessed via `aeat._pdf_import` directly.
+**Edit** `src/aeat/__init__.py` only if it exports error types today (check first). If not, skip — shared types are accessed via `aeat.adapters.inbound.pdf` directly.
 
 ## Step 4 — Coverage-matrix axis
 
 **Edit** `docs/coverage/modelos.md`:
 
 - Add four columns after the existing submission-engine columns:
-    - `aeat.justificante` (receipt metadata import)
-    - `aeat.declaracion` (filing-copy casilla import)
-    - `aeat.borrador` (pre-filing draft import — Renta)
+    - `aeat.domain.justificante` (receipt metadata import)
+    - `aeat.adapters.inbound.declaracion` (filing-copy casilla import)
+    - `aeat.adapters.inbound.borrador` (pre-filing draft import — Renta)
     - `aeat.predeclaracion` (simulation import)
 - For every row:
-    - `aeat.justificante`: ✅ for 100, 130, 303 (fixtures shipped); 🚧 for everything else.
+    - `aeat.domain.justificante`: ✅ for 100, 130, 303 (fixtures shipped); 🚧 for everything else.
     - Remaining three columns: all ❌ at this moment — clusters D/F will fill them.
 
 **Edit** `docs/coverage/kent-capabilities.md`:
@@ -94,9 +94,9 @@ def test_justificante_error_is_pdf_filing_import_error(self) -> None:
 
 ## Step 7 — Lint, type-check, test
 
-- `uv run ruff check src/aeat/_pdf_import/ src/aeat/justificante/` — clean.
-- `uv run ty check src/aeat/_pdf_import/ src/aeat/justificante/` — clean.
-- `uv run pytest -m unit src/aeat/_pdf_import/ src/aeat/justificante/` — green (the existing 12 justificante tests + the new shared-module unit tests).
+- `uv run ruff check src/aeat/adapters/inbound/pdf/ src/aeat/domain/justificante/` — clean.
+- `uv run ty check src/aeat/adapters/inbound/pdf/ src/aeat/domain/justificante/` — clean.
+- `uv run pytest -m unit src/aeat/adapters/inbound/pdf/ src/aeat/domain/justificante/` — green (the existing 12 justificante tests + the new shared-module unit tests).
 
 ## Step 8 — Docs build smoke
 
@@ -112,16 +112,16 @@ If `docs/` is built via a docs-generator, run the local build once to catch brok
 ## Non-goals for this cluster
 
 - **No parser code.** Clusters D, F deliver that.
-- **No changes to `aeat.justificante` public API.** Only the error base class moves.
+- **No changes to `aeat.domain.justificante` public API.** Only the error base class moves.
 - **No changes to `aeat filing import --from-justificante`.** Behaviour locked.
-- **No `aeat.declaracion` / `aeat.borrador` / `aeat.predeclaracion` / `aeat.datos_fiscales` directories created.** They come with their cluster.
+- **No `aeat.adapters.inbound.declaracion` / `aeat.adapters.inbound.borrador` / `aeat.predeclaracion` / `aeat.datos_fiscales` directories created.** They come with their cluster.
 - **No updates to `FilingValueKind`.** Cluster D revisits.
 
 ## Acceptance (Kent-observable)
 
 Kent doesn't see anything change from this cluster — it is pure scaffolding for the downstream clusters. The acceptance criterion is **developer-observable**:
 
-- `from aeat._pdf_import import ExtractedCasilla, PdfFilingImportError` imports cleanly.
-- `issubclass(aeat.justificante.JustificanteError, aeat._pdf_import.PdfFilingImportError) is True`.
+- `from aeat.adapters.inbound.pdf import ExtractedCasilla, PdfFilingImportError` imports cleanly.
+- `issubclass(aeat.domain.justificante.JustificanteError, aeat.adapters.inbound.pdf.PdfFilingImportError) is True`.
 - `docs/coverage/modelos.md` renders with the four new columns; per-row values match the ADR's scope statement.
 - `docs/concepts/aeat-pdfs.md` exists and distinguishes the six PDF classes.

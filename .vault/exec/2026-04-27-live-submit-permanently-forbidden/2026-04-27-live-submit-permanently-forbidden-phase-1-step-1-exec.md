@@ -12,16 +12,16 @@ related:
 Implemented the runtime excision and the first regression layer for the
 permanent live-submit prohibition.
 
-- Modified: `src/aeat/submission/_engine.py`
-- Modified: `src/aeat/auth/_gate.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/_engine.py`
+- Modified: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py`
 - Modified: `src/aeat/config.py`
-- Modified: `src/aeat/submission/_submitters/modelo130.py`
-- Modified: `src/aeat/cli/filing/__init__.py`
-- Modified: `src/aeat/cli/submission/__init__.py`
-- Modified: `src/aeat/cli/workflow/run.py`
-- Modified: `src/aeat/cli/workflow/next.py`
-- Modified: `src/aeat/cli/doctor.py`
-- Created: `src/aeat/submission/test_live_submit_permanently_forbidden.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py`
+- Modified: `src/aeat/entrypoints/cli/filing/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/submission/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/workflow/run.py`
+- Modified: `src/aeat/entrypoints/cli/workflow/next.py`
+- Modified: `src/aeat/entrypoints/cli/doctor.py`
+- Created: `src/aeat/adapters/outbound/aeat/export/test_live_submit_permanently_forbidden.py`
 
 ## Description
 
@@ -36,4 +36,4 @@ permanent-forbid assertions.
 
 Focused unit validation passed against the changed surfaces:
 
-- `uv run pytest src/aeat/submission/test_live_submit_permanently_forbidden.py src/aeat/submission/test_engine.py src/aeat/auth/test_gate.py src/aeat/cli/filing/test_filing_cli.py src/aeat/submission/_submitters/test_modelo130.py src/aeat/cli/submission/test_no_submit_command.py -q`
+- `uv run pytest src/aeat/adapters/outbound/aeat/export/test_live_submit_permanently_forbidden.py src/aeat/adapters/outbound/aeat/export/test_engine.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_gate.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/adapters/outbound/aeat/export/_submitters/test_modelo130.py src/aeat/entrypoints/cli/submission/test_no_submit_command.py -q`

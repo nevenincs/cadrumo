@@ -66,7 +66,7 @@ plugin-y abstractions are premature for v1.
 ### D5: dependencies injected via Protocols, never hard-imports
 
 The engine takes every sibling dependency as a Protocol instance in
-its constructor. This is the same pattern from `aeat.deadlines` and it
+its constructor. This is the same pattern from `aeat.domain.deadlines` and it
 makes rebase against in-flight siblings a single-file diff
 (`_protocols.py` → `aeat.<sibling>`). See
 `[[2026-04-12-submission-engine-research]]` §in-flight-dependencies.
@@ -74,7 +74,7 @@ makes rebase against in-flight siblings a single-file diff
 ### D6: BrowserSessionLike narrow protocol, real test doubles
 
 The submitter takes `BrowserSessionLike`, a Protocol listing only the
-methods it uses. The concrete `aeat.browser.BrowserSession` conforms
+methods it uses. The concrete `aeat.adapters.outbound.aeat.browser.BrowserSession` conforms
 structurally. Unit tests pass a deterministic Python class that
 records every call into a list; this is explicitly **not** a mock —
 it is a Protocol implementation written by hand, per the project rule.

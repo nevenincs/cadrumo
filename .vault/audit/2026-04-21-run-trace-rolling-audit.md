@@ -200,11 +200,11 @@ git diff HEAD~1 HEAD --stat | grep -E "observability|cli/_observability|cli/run|
 (no matches)
 ```
 
-The merge touched **zero** observability-relevant files. Main's new work (`aeat.financial.usage_ratios` + `aeat.cli.financial.profile`) is orthogonal to #99. No cross-cutting interaction detected.
+The merge touched **zero** observability-relevant files. Main's new work (`aeat.domain.financial.usage_ratios` + `aeat.entrypoints.cli.financial.profile`) is orthogonal to #99. No cross-cutting interaction detected.
 
 ### Re-verification
 
-- `uv run pytest src/aeat/observability/ src/aeat/cli/test_observability.py -q` → 59 passed
+- `uv run pytest src/aeat/core/observability/ src/aeat/entrypoints/cli/test_observability.py -q` → 59 passed
 - `uv run pytest -q` → **2108 passed** (main added 71 new tests; every one green)
 - No ruff / format / ty / relative-imports regressions introduced by the merge
 

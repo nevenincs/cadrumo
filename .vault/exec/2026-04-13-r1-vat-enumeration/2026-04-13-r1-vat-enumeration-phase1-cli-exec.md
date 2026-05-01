@@ -15,15 +15,15 @@ related:
 
 ## what was done
 
-- Added `src/aeat/cli/vat.py` with a Typer sub-app `aeat vat`
+- Added `src/aeat/entrypoints/cli/vat.py` with a Typer sub-app `aeat vat`
   wrapping two nested sub-apps: `categories` (with `list`) and
   `rates` (with `list --member-state`) plus top-level `show`,
   `rule`, and `verify` commands. Error paths raise `typer.Exit(1)`
   with red-coloured messages; the happy paths render with
   `rich.table.Table`.
-- Wired `vat_module` into `src/aeat/cli/__init__.py` alongside the
+- Wired `vat_module` into `src/aeat/entrypoints/cli/__init__.py` alongside the
   existing normatives sub-app.
-- Added `src/aeat/cli/test_vat_cli.py` with `CliRunner` integration
+- Added `src/aeat/entrypoints/cli/test_vat_cli.py` with `CliRunner` integration
   tests covering every command surface: categories list, rates
   list (Spain filter), show (happy path), rule (canonical
   citation suffix), verify (clean catalogue), show (unknown
@@ -31,9 +31,9 @@ related:
 
 ## files touched
 
-- `src/aeat/cli/vat.py` (new)
-- `src/aeat/cli/__init__.py`
-- `src/aeat/cli/test_vat_cli.py` (new)
+- `src/aeat/entrypoints/cli/vat.py` (new)
+- `src/aeat/entrypoints/cli/__init__.py`
+- `src/aeat/entrypoints/cli/test_vat_cli.py` (new)
 
 ## gate results
 

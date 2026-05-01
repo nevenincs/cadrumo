@@ -19,7 +19,7 @@ This document tracks identified issue domains and pools for the `AuthProvider` e
 - **[ ] SLATED: Configurable Auth Timeouts**
   - **Capability:** Kent can use the tool on low-bandwidth or high-latency connections.
   - **Task:** Migrate hardcoded `30,000ms` timeouts to `Settings.aeat_auth_timeout_ms`.
-  - **Context:** Identified in `src/aeat/auth/_authenticator.py` and `provider.py`.
+  - **Context:** Identified in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` and `provider.py`.
 
 - **[ ] SLATED: Provider-Aware Retry Strategy**
   - **Capability:** Transient network glitches don't force a full re-login.

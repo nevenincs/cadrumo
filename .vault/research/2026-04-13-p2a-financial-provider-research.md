@@ -19,7 +19,7 @@ This research grounds issue `#73` within TDP step `T1` from issue `#104`. The go
 - Issue `#73` is explicitly a `T1 — Ingest` step: file inputs in, `RawTransaction` out, with the provenance chain preserved back to the source document.
 - Issue `#104` defines the non-negotiable invariant: every downstream record must be traceable back to its raw source through `source_path`, content hash, and source position.
 - Issue `#74` is not on `main`, so the safe boundary is to define the concrete `RawTransaction` producer model in this issue and keep cross-step references out of the implementation surface.
-- The repo already standardizes on strict frozen pydantic v2 models, `enum.StrEnum` for closed sets, Typer for CLI, `aeat.errors.AeatError` for domain exceptions, `aeat.logging.get_logger(__name__)` for logging, and colocated pytest modules marked `@pytest.mark.unit` or `@pytest.mark.live`.
+- The repo already standardizes on strict frozen pydantic v2 models, `enum.StrEnum` for closed sets, Typer for CLI, `aeat.core.errors.AeatError` for domain exceptions, `aeat.core.logging.get_logger(__name__)` for logging, and colocated pytest modules marked `@pytest.mark.unit` or `@pytest.mark.live`.
 
 ### OFX format research
 
@@ -71,7 +71,7 @@ https://openpyxl.readthedocs.io/en/3.1/api/openpyxl.reader.excel.html
 
 ### Recommended implementation direction
 
-- Create `src/aeat/financial/` as the public Phase 2 entry point and keep all implementation modules underscored except public re-exports.
+- Create `src/aeat/domain/financial/` as the public Phase 2 entry point and keep all implementation modules underscored except public re-exports.
 - Define `RawTransaction`, `RawProvenance`, `SourceFormat`, and `ProviderValidation` as strict frozen pydantic v2 models with `extra="forbid"`.
 - Keep the provider surface synchronous for file imports: `can_handle`, `validate_source`, `ingest`.
 - Use deterministic synthetic transaction IDs when no external ID exists: hash prefix + source row index is enough for T1 and does not pre-empt the richer catalogue logic planned for `#74`.

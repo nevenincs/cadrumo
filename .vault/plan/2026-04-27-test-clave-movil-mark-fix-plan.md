@@ -14,13 +14,13 @@ This plan implements the corrected decision: keep the Cl@ve Movil test module pr
 
 ## Proposed Changes
 
-Update `src/aeat/auth/test_clave_movil.py` so the whole module is marked `unit` and `domain_aeat_remote`.
+Update `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py` so the whole module is marked `unit` and `domain_aeat_remote`.
 
 Document at the top of the file that these tests use browser-session stand-ins and do not prove real AEAT authentication or operator Cl@ve approval.
 
 Remove provider code that auto-submits AEAT's representation dispatcher after Cl@ve approval.
 
-Confirm that the searched workaround surfaces contain no remaining `--ignore=src/aeat/auth/test_clave_movil.py` references.
+Confirm that the searched workaround surfaces contain no remaining `--ignore=src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py` references.
 
 ## Tasks
 

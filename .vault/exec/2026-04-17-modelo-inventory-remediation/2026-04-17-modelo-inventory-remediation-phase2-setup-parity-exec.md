@@ -16,14 +16,14 @@ related:
 
 Extended the setup and profile-authoring surface so generated profile JSON can express the same traits the deadline engine now consumes.
 
-- Modified: `src/aeat/setup/_models.py`
-- Modified: `src/aeat/setup/_wizard.py`
-- Modified: `src/aeat/setup/_env_writer.py`
-- Modified: `src/aeat/setup/test_cli.py`
-- Modified: `src/aeat/setup/test_env_writer.py`
-- Modified: `src/aeat/setup/test_models.py`
-- Modified: `src/aeat/setup/test_verifier.py`
-- Modified: `src/aeat/setup/test_wizard.py`
+- Modified: `src/aeat/application/setup/_models.py`
+- Modified: `src/aeat/application/setup/_wizard.py`
+- Modified: `src/aeat/application/setup/_env_writer.py`
+- Modified: `src/aeat/application/setup/test_cli.py`
+- Modified: `src/aeat/application/setup/test_env_writer.py`
+- Modified: `src/aeat/application/setup/test_models.py`
+- Modified: `src/aeat/application/setup/test_verifier.py`
+- Modified: `src/aeat/application/setup/test_wizard.py`
 
 ## Description
 
@@ -37,5 +37,5 @@ The setup flow previously collapsed multiple legal traits into a smaller profile
 
 The widened setup surface passed together with the affected integration consumers:
 
-- `uv run pytest src/aeat/setup src/aeat/cli/deadlines/test_cli.py src/aeat/workflow/test_engine.py -q`
+- `uv run pytest src/aeat/setup src/aeat/entrypoints/cli/deadlines/test_cli.py src/aeat/application/workflow/test_engine.py -q`
 - Result: `62 passed`

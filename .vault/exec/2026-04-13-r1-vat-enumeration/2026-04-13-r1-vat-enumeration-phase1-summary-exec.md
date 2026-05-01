@@ -19,13 +19,13 @@ related:
 
 ## outcomes
 
-- Landed the `aeat.financial.vat` subpackage as a strict pydantic v2
+- Landed the `aeat.domain.financial.vat` subpackage as a strict pydantic v2
   substrate covering the 16 Spanish VAT situations called out in
   issue #85, with ≥32 Ley 37/1992-backed citations and a
   27-member-state EU rate table holding 61 `VATRate` entries.
 - Wired a Typer `aeat vat` sub-app (categories list, rates list,
   show, rule, verify) into the root CLI.
-- Added `AEAT_VAT_CATALOGUE_ROOT` to both `aeat.config.Settings`
+- Added `AEAT_VAT_CATALOGUE_ROOT` to both `aeat.core.config.Settings`
   and `env/.env.example`; `tests/test_config.py` stays aligned.
 - Colocated unit tests (`@pytest.mark.unit`) covering
   enumerations, rate lookup, catalogue invariants, corpus fallback
@@ -59,29 +59,29 @@ related:
 
 ### source
 
-- `src/aeat/financial/__init__.py`
-- `src/aeat/financial/vat/__init__.py`
-- `src/aeat/financial/vat/_schema.py`
-- `src/aeat/financial/vat/_rates.py`
-- `src/aeat/financial/vat/_catalogue.py`
-- `src/aeat/financial/vat/_lookup.py`
-- `src/aeat/financial/vat/_corpus.py`
-- `src/aeat/financial/vat/_verify.py`
-- `src/aeat/financial/vat/errors.py`
+- `src/aeat/domain/financial/__init__.py`
+- `src/aeat/domain/financial/vat/__init__.py`
+- `src/aeat/domain/financial/vat/_schema.py`
+- `src/aeat/domain/financial/vat/_rates.py`
+- `src/aeat/domain/financial/vat/_catalogue.py`
+- `src/aeat/domain/financial/vat/_lookup.py`
+- `src/aeat/domain/financial/vat/_corpus.py`
+- `src/aeat/domain/financial/vat/_verify.py`
+- `src/aeat/domain/financial/vat/errors.py`
 
 ### tests
 
-- `src/aeat/financial/vat/test_categories.py`
-- `src/aeat/financial/vat/test_rates.py`
-- `src/aeat/financial/vat/test_rules.py`
-- `src/aeat/financial/vat/test_corpus.py`
-- `src/aeat/financial/vat/test_verify.py`
-- `src/aeat/cli/test_vat_cli.py`
+- `src/aeat/domain/financial/vat/test_categories.py`
+- `src/aeat/domain/financial/vat/test_rates.py`
+- `src/aeat/domain/financial/vat/test_rules.py`
+- `src/aeat/domain/financial/vat/test_corpus.py`
+- `src/aeat/domain/financial/vat/test_verify.py`
+- `src/aeat/entrypoints/cli/test_vat_cli.py`
 
 ### cli + config
 
-- `src/aeat/cli/vat.py`
-- `src/aeat/cli/__init__.py` (edited)
+- `src/aeat/entrypoints/cli/vat.py`
+- `src/aeat/entrypoints/cli/__init__.py` (edited)
 - `src/aeat/config.py` (edited)
 - `env/.env.example` (edited)
 

@@ -13,9 +13,9 @@ related:
 ## Summary
 Audited the changes made during the category assignment implementation.
 - **Files modified:**
-  - `src/aeat/financial/transactions/_service.py`
-  - `src/aeat/cli/financial/txs.py`
-  - `src/aeat/financial/transactions/test_cli.py`
+  - `src/aeat/domain/financial/transactions/_service.py`
+  - `src/aeat/entrypoints/cli/financial/txs.py`
+  - `src/aeat/domain/financial/transactions/test_cli.py`
 
 ## Findings
 - **Type Safety:** The integration relies on Typer typing the `--category` argument as `SpendingCategory`, ensuring immediate rejection of invalid enum values. `set_classification` receives these safely. Typechecking via `ty` passes completely.

@@ -24,21 +24,21 @@ submit requires explicit confirmation matching the submission engine.
 
 | package              | symbol                                          | status                |
 | -------------------- | ----------------------------------------------- | --------------------- |
-| `aeat.deadlines`     | `DeadlineEngine.compute(profile, year)`         | merged on main        |
-| `aeat.deadlines`     | `AutonomoProfile`, `FilingObligation`           | merged on main        |
-| `aeat.filing`        | `build_draft(...)` → `FilingDraft`              | merged on main        |
-| `aeat.filing`        | `validate_draft`, `compute_draft_id`            | merged on main        |
-| `aeat.submission`    | `SubmissionEngine.submit_draft(draft, ...)`     | merged on main        |
-| `aeat.submission`    | `Preflight.check(draft, today=...)`             | merged on main        |
-| `aeat.submission`    | `LoadedCertificate` (protocol-stubbed pydantic) | merged on main        |
-| `aeat.sync`          | `LiveSyncRunner.run(...)`                       | merged on main        |
-| `aeat.i18n`          | `Translatable`, `Language`                      | merged on main        |
-| `aeat.cli._live`     | `requires_live_enabled()`                       | merged on main        |
-| `aeat.config`        | `Settings` (pydantic-settings)                  | merged on main        |
-| `aeat.errors`        | `AeatError`                                     | merged on main        |
+| `aeat.domain.deadlines`     | `DeadlineEngine.compute(profile, year)`         | merged on main        |
+| `aeat.domain.deadlines`     | `AutonomoProfile`, `FilingObligation`           | merged on main        |
+| `aeat.application.filing`        | `build_draft(...)` → `FilingDraft`              | merged on main        |
+| `aeat.application.filing`        | `validate_draft`, `compute_draft_id`            | merged on main        |
+| `aeat.adapters.outbound.aeat.export`    | `SubmissionEngine.submit_draft(draft, ...)`     | merged on main        |
+| `aeat.adapters.outbound.aeat.export`    | `Preflight.check(draft, today=...)`             | merged on main        |
+| `aeat.adapters.outbound.aeat.export`    | `LoadedCertificate` (protocol-stubbed pydantic) | merged on main        |
+| `aeat.application.sync`          | `LiveSyncRunner.run(...)`                       | merged on main        |
+| `aeat.core.i18n`          | `Translatable`, `Language`                      | merged on main        |
+| `aeat.entrypoints.cli._live`     | `requires_live_enabled()`                       | merged on main        |
+| `aeat.core.config`        | `Settings` (pydantic-settings)                  | merged on main        |
+| `aeat.core.errors`        | `AeatError`                                     | merged on main        |
 | `aeat.status`        | —                                               | **not on this branch** |
 | `aeat.inbox`         | —                                               | **not on this branch** |
-| `aeat.auth.certificate` | —                                            | **not on this branch** (Protocol-stubbed in `aeat.submission`) |
+| `aeat.adapters.outbound.aeat.auth.certificate` | —                                            | **not on this branch** (Protocol-stubbed in `aeat.adapters.outbound.aeat.export`) |
 
 ## key facts
 
@@ -51,9 +51,9 @@ submit requires explicit confirmation matching the submission engine.
   `app.add_typer(<module>.app, name=...)`. we mirror this exactly.
 - `tests/test_config.py` enforces strict alignment between the `Settings`
   model and `.env.example`. every new setting must land in both.
-- `aeat.models/__init__.py` is currently empty; `AutonomoProfile` lives at
-  `aeat.deadlines._models` and is re-exported from `aeat.deadlines`. we
-  import it from `aeat.deadlines` (the public facade), not from the private
+- `aeat.domain.modelos/__init__.py` is currently empty; `AutonomoProfile` lives at
+  `aeat.domain.deadlines._models` and is re-exported from `aeat.domain.deadlines`. we
+  import it from `aeat.domain.deadlines` (the public facade), not from the private
   module.
 - `Translatable` is a TypedDict with optional `es`/`en`/`hu` fields; pydantic
   v2 happily validates a `dict[str, str]` against it as long as keys are in
@@ -67,7 +67,7 @@ submit requires explicit confirmation matching the submission engine.
 | ----------------------------------- | ---------------------------------- | -------------------------------------------------------------------------- |
 | feature-15-pytest-only-testing      | `pyproject.toml [tool.pytest]`, conftest | do not touch                                                          |
 | feature-14-synthetic-filing-fixtures | tests/fixtures                    | no overlap                                                                |
-| feature-8-cert-auth                 | `src/aeat/auth/certificate`        | Protocol stub `CertificateBundleProtocol`; reuse `aeat.submission.LoadedCertificate` shape |
+| feature-8-cert-auth                 | `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate`        | Protocol stub `CertificateBundleProtocol`; reuse `aeat.adapters.outbound.aeat.export.LoadedCertificate` shape |
 | feature-43-status-reader            | `src/aeat/status/`                 | Protocol stub `StatusReaderProtocol.fetch_expedientes`                    |
 | feature-46-notifications-inbox      | `src/aeat/inbox/`                  | Protocol stub `InboxProtocol`, `Notificacion`-like model                  |
 
@@ -112,7 +112,7 @@ before the draft is built; if the period is already filed we abort with
 
 ## test strategy
 
-unit tests (`@pytest.mark.unit`) colocated under `src/aeat/workflow/`.
+unit tests (`@pytest.mark.unit`) colocated under `src/aeat/application/workflow/`.
 every `WorkflowAbortReason` gets at least one dedicated test that:
 
 1. constructs real Protocol-conforming test doubles (no mocks/patches);

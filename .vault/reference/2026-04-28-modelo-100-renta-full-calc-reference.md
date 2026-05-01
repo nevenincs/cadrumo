@@ -31,8 +31,8 @@ related:
 
 Comprehensive per-anexo per-año rule-delta manifest for the full-form
 Modelo 100 (RENTA / IRPF anual) ruleset. The implementation lives at
-`src/aeat/formulas/_rulesets/modelo_100/` (sub-package) and the per-año
-aggregators `src/aeat/formulas/_rulesets/modelo_100_<año>.py`.
+`src/aeat/domain/formulas/_rulesets/modelo_100/` (sub-package) and the per-año
+aggregators `src/aeat/domain/formulas/_rulesets/modelo_100_<año>.py`.
 
 This manifest is the authoritative reference for what changed from
 2024 to 2025, from 2025 to 2026, and what remains stable across the
@@ -68,7 +68,7 @@ three years per BOE consolidated text consult 2026-02-28.
 | Mutation harness sub_op count | 71 per ruleset |
 | Mutation harness mul_div_scalar count | 20 per ruleset |
 | Citation coverage (`aeat audit rulesets citations`) | 100 % |
-| Test count (`pytest src/aeat/formulas/_rulesets/`) | 496 pass |
+| Test count (`pytest src/aeat/domain/formulas/_rulesets/`) | 496 pass |
 
 ## Per-anexo casilla inventory
 
@@ -241,7 +241,7 @@ post-merge as each Comunidad publishes its 2026 Ley.
 Per LIRPF arts. 46 bis + 73-77 + Ley 22/2009 (cesión de competencias
 normativas), each CCAA sets its own tarifa autonómica general scale.
 The 5 highest-population CCAAs are encoded as first-class data in
-`src/aeat/formulas/_rulesets/modelo_100/_ccaa.py`, with stable brackets
+`src/aeat/domain/formulas/_rulesets/modelo_100/_ccaa.py`, with stable brackets
 across 2024 / 2025 / 2026. Callers compute casilla 0551 (cuota íntegra
 autonómica general) externally via the
 `compute_cuota_autonomica_general(blg, ccaa)` helper before supplying
@@ -338,7 +338,7 @@ País Vasco / Navarra remain explicitly out of scope (foral regimes,
 
 L1 anchors via Renta Web Open simulator outputs are **deferred** to a
 post-merge follow-up. The synthetic L3 round-trip evidence (extending
-the existing `Modelo100GenParams` synthetic generator + `aeat.borrador`
+the existing `Modelo100GenParams` synthetic generator + `aeat.adapters.inbound.borrador`
 extractor) lands as a Wave 11 follow-up. Mirrors the M123 precedent:
 L1 anchor coverage waivable when public anchors are not readily
 hash-pinnable, with synthetic L3 round-trip as the verification path.
@@ -374,7 +374,7 @@ The 20 mul_div_scalar nodes fan out: 2 in Anexo B1 (slopes 1.75 +
   aggregates; the per-CCAA per-deduction breakdown (~336
   deductions/año across 15 CCAAs) lands as per-CCAA follow-up issues.
 - **Multi-anexo borrador extractor + synthetic generator extension**
-  (Wave 11 deferred) — extends `src/aeat/borrador/_extractors/`
+  (Wave 11 deferred) — extends `src/aeat/adapters/inbound/borrador/_extractors/`
   modelo_100 surface to cover the full-form casilla map.
 - **Kent integration test full-form class** — extends
   `tests/integration/test_kent_workflows.py` with a sibling class

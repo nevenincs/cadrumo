@@ -56,11 +56,11 @@ issue `#393`.
 
 - Branch `bug/393-workflow-live-flag-excision`, base `origin/main` at
   commit `19a1054`.
-- Modify only `src/aeat/cli/workflow/run.py` and
-  `src/aeat/cli/workflow/next.py` in production code.
-- Do not modify `src/aeat/cli/workflow/__init__.py` (visibility / `hidden=`
+- Modify only `src/aeat/entrypoints/cli/workflow/run.py` and
+  `src/aeat/entrypoints/cli/workflow/next.py` in production code.
+- Do not modify `src/aeat/entrypoints/cli/workflow/__init__.py` (visibility / `hidden=`
   flips are out of scope per the controlling ADR).
-- Do not modify `src/aeat/submission/_engine.py`. The engine's
+- Do not modify `src/aeat/adapters/outbound/aeat/export/_engine.py`. The engine's
   `live_transport_supported=False` default must remain; this issue
   pins it via a regression test rather than touching it.
 - Do not modify the controlling CLI wireframe ADR. The authoring agent
@@ -77,7 +77,7 @@ issue `#393`.
 
 ### file changes (production)
 
-`src/aeat/cli/workflow/run.py`:
+`src/aeat/entrypoints/cli/workflow/run.py`:
 
 - Drop the `--no-dry-run` typer option and the `no_dry_run: bool` parameter.
 - Drop the `--i-understand-this-is-real` typer option and the
@@ -97,7 +97,7 @@ issue `#393`.
 - Adjust the module-level docstring to reflect the dry-run-only
   contract.
 
-`src/aeat/cli/workflow/next.py`:
+`src/aeat/entrypoints/cli/workflow/next.py`:
 
 - Drop the `--no-dry-run` typer option and the `no_dry_run: bool` parameter.
 - Drop the `--i-understand-this-is-real` typer option and the
@@ -113,7 +113,7 @@ issue `#393`.
   "double-gate contract" is moved to describe the engine-level gate
   rather than CLI-level flags.
 
-`src/aeat/cli/workflow/__init__.py`:
+`src/aeat/entrypoints/cli/workflow/__init__.py`:
 
 - No change. The advanced-quarantine migration is iteration 4 (`#397`).
 
@@ -127,7 +127,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 ```
 
-`src/aeat/cli/workflow/test_run_help_ascii_safe.py`:
+`src/aeat/entrypoints/cli/workflow/test_run_help_ascii_safe.py`:
 
 - Use `typer.testing.CliRunner` to invoke
   `runner.invoke(root_app, ["workflow", "run", "--help"])`.
@@ -137,11 +137,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 - Document the ASCII-safe approach in the test docstring with a pointer
   to `#389`.
 
-`src/aeat/cli/workflow/test_next_help_ascii_safe.py`:
+`src/aeat/entrypoints/cli/workflow/test_next_help_ascii_safe.py`:
 
 - Mirror of the above for `["workflow", "next", "--help"]`.
 
-`src/aeat/cli/workflow/test_run_refuses_live_flags.py`:
+`src/aeat/entrypoints/cli/workflow/test_run_refuses_live_flags.py`:
 
 - Invoke `runner.invoke(root_app, ["workflow", "run", "--modelo", "130",
   "--period", "2026Q1", "--no-dry-run",
@@ -152,17 +152,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 - Document the intent: "if a script in the wild still passes these
   flags, the CLI must fail loudly rather than silently strip them."
 
-`src/aeat/cli/workflow/test_next_refuses_live_flags.py`:
+`src/aeat/entrypoints/cli/workflow/test_next_refuses_live_flags.py`:
 
 - Mirror of the above for `["workflow", "next"]`.
 
-`src/aeat/submission/test_access_gate_workflow_untouched.py`:
+`src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py`:
 
 - Engine-level invariant pin. Imports `SubmissionEngine` from
-  `aeat.submission` and `AeatAccessGate` /
+  `aeat.adapters.outbound.aeat.export` and `AeatAccessGate` /
   `AeatLiveSubmitNotEnabledError` /
-  `AeatPytestLiveWriteRefusedError` from `aeat.auth` /
-  `aeat.submission`.
+  `AeatPytestLiveWriteRefusedError` from `aeat.adapters.outbound.aeat.auth` /
+  `aeat.adapters.outbound.aeat.export`.
 - Pin 1: assert that `SubmissionEngine` exposes a constructor parameter
   `live_transport_supported` whose default value is `False`. The check
   uses `inspect.signature(SubmissionEngine.__init__)` so it does not
@@ -186,14 +186,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 ### what is intentionally unchanged
 
-- `src/aeat/submission/_engine.py` line 69 (`live_transport_supported:
+- `src/aeat/adapters/outbound/aeat/export/_engine.py` line 69 (`live_transport_supported:
   bool = False` default).
-- `src/aeat/submission/_engine.py` lines 211-214 (`AeatLiveTransportUnavailableError`
+- `src/aeat/adapters/outbound/aeat/export/_engine.py` lines 211-214 (`AeatLiveTransportUnavailableError`
   raise).
-- `src/aeat/auth/_gate.py` (the entire access-gate module).
-- `src/aeat/submission/_confirm.py` (typed-phrase confirmation).
-- `src/aeat/cli/workflow/__init__.py` (typer group registration).
-- `src/aeat/cli/workflow/_helpers.py` (helper signatures and bodies).
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py` (the entire access-gate module).
+- `src/aeat/adapters/outbound/aeat/export/_confirm.py` (typed-phrase confirmation).
+- `src/aeat/entrypoints/cli/workflow/__init__.py` (typer group registration).
+- `src/aeat/entrypoints/cli/workflow/_helpers.py` (helper signatures and bodies).
 
 ## Rationale
 
@@ -226,7 +226,7 @@ that this issue's change interacts with.
   pass `no_dry_run=` / `i_understand_this_is_real=` keyword arguments
   will fail with `TypeError`. A grep across `src/aeat/` confirms no
   such callers exist; the only callers are the typer registration in
-  `src/aeat/cli/workflow/__init__.py`, which takes the function by
+  `src/aeat/entrypoints/cli/workflow/__init__.py`, which takes the function by
   reference.
 - Scripts in the wild that pass `--no-dry-run --i-understand-this-is-real`
   on the command line will exit non-zero with typer's "no such option"
@@ -240,6 +240,6 @@ that this issue's change interacts with.
 - The 1.0.0 reintroduction path (`aeat advanced workflow run --live`)
   remains open. Its design and implementation belong to a future ADR
   and a future issue, not this one.
-- Coverage on `src/aeat/cli/workflow` decreases marginally because
+- Coverage on `src/aeat/entrypoints/cli/workflow` decreases marginally because
   the refuse-branch (lines 54-58 / 58-62) is no longer measured. The
   five new tests more than compensate; the 60% floor is preserved.

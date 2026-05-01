@@ -103,9 +103,9 @@ The inbox does not hard-import from:
   `NotificacionSource` Protocol matching
   `async fetch_notificaciones(*, since: date | None = None) ->
   tuple[RawNotificacion, ...]`.
-- `aeat.auth.certificate` (#8) — the cert backend. Not consumed
+- `aeat.adapters.outbound.aeat.auth.certificate` (#8) — the cert backend. Not consumed
   directly; #43 owns certificate preloading.
-- `aeat.normatives` (#45) — the normatives catalogue. Appeal-window
+- `aeat.domain.normatives` (#45) — the normatives catalogue. Appeal-window
   rules cite LGT articles as bare strings (`"LGT art. 99"`), never
   as hard imports.
 

@@ -34,7 +34,7 @@ Every plugin must solve a concrete, near-term problem. The following are accepte
 | plugin | role | scope | rationale |
 | --- | --- | --- | --- |
 | `pytest-asyncio` | async test collection | unit + live | Playwright path is async-first; already installed. Pin `asyncio_mode = "strict"` so plain coroutines are not collected by accident. |
-| `pytest-playwright` | browser fixtures for live AEAT flow tests | live only | `aeat.browser` needs a standardised harness; complements the MCP Playwright path. |
+| `pytest-playwright` | browser fixtures for live AEAT flow tests | live only | `aeat.adapters.outbound.aeat.browser` needs a standardised harness; complements the MCP Playwright path. |
 | `pytest-httpx` | httpx wire-shape assertions | unit only | AEAT integrations ride httpx; unit tests must assert URL / headers / body without hitting the network. Must be a **banned import** in any `@pytest.mark.live` file. |
 | `pytest-rerunfailures` | retry flaky live endpoints | live only, per-test opt-in via `@pytest.mark.flaky(reruns=N)` | AEAT has real maintenance windows; scoped retries prevent environmental flake from masking commits. **Never** applied globally and **never** to unit tests. |
 | `syrupy` | snapshot diffing | both | #7 casilla extractions and #9 modelo schemas produce large structured output. |

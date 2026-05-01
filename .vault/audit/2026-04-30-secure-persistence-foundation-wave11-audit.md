@@ -19,9 +19,9 @@ Audit gate for **wave-11**: directory-level SHA-256 integrity manifest for the f
 
 Wave-11 in scope:
 
-- Substrate module `src/aeat/storage/_corpus_manifest.py` (~340 LoC)
+- Substrate module `src/aeat/adapters/persistence/storage/_corpus_manifest.py` (~340 LoC)
 - Three new error classes + trilingual error-code registry registrations
-- Public re-exports through `src/aeat/storage/__init__.py`
+- Public re-exports through `src/aeat/adapters/persistence/storage/__init__.py`
 - CLI command `aeat security verify-corpus` with `--corpus` and `--regenerate`
 - 27 tests (21 substrate + 6 CLI)
 - Vault: research + ADR + this audit

@@ -13,7 +13,7 @@ related:
 
 Research for generalising AEAT authentication from single-provider (PKCS#12 certificate) to multi-provider (certificate + Cl@ve Permanente + Cl@ve Móvil + Cl@ve PIN + DNI electrónico). Supersedes the `Non-goals` in `2026-04-12-cert-auth-adr.md` which listed Cl@ve and DNIe as out-of-scope.
 
-## current state of `src/aeat/auth/`
+## current state of `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/`
 
 ### cert-specific surface (what exists today)
 
@@ -117,11 +117,11 @@ Observed behaviours on the real portal:
 
 | Consumer | Coupling | Generalisation effort |
 |---|---|---|
-| `aeat.browser.session.BrowserSession.create_context(cert=...)` | Typed parameter `LoadedCertificate \| None` | Change signature to accept a `BrowserContextProvisioner` (new protocol) |
+| `aeat.adapters.outbound.aeat.browser.session.BrowserSession.create_context(cert=...)` | Typed parameter `LoadedCertificate \| None` | Change signature to accept a `BrowserContextProvisioner` (new protocol) |
 | `cli/submission/submit.py` | Imports `CertificateError`, `CertificateHealthSeverity`, `health` | Health surface must become per-provider; cert remains one of several |
 | `cli/doctor.py` | Cert rows in health table | Add per-provider rows |
-| `aeat.submission._protocols.LoadedCertificate` (stub) | Local stub with rebase-swap comment | Swap to the new provider-agnostic session type when #8 closes |
-| `aeat.workflow._protocols.CertificateBundleProtocol` | Named for cert | Generalise to `AuthProviderBundle` |
+| `aeat.adapters.outbound.aeat.export._protocols.LoadedCertificate` (stub) | Local stub with rebase-swap comment | Swap to the new provider-agnostic session type when #8 closes |
+| `aeat.application.workflow._protocols.CertificateBundleProtocol` | Named for cert | Generalise to `AuthProviderBundle` |
 
 ---
 

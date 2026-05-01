@@ -11,7 +11,7 @@ related:
 # Trilingual i18n Phase 1 Summary
 
 Phase 1 implemented the core structural pieces for trilingual i18n handling:
-1. Created the `aeat.i18n` subpackage and relevant environment configuration.
+1. Created the `aeat.core.i18n` subpackage and relevant environment configuration.
 2. Implemented typed primitives: `Language`, `Translatable`, and functions `get_translation`, `require_authoritative`.
 3. Created robust collocated unit tests for the primitives.
 4. Documented the standard in `CLAUDE.md`.

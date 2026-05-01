@@ -78,7 +78,7 @@ load-bearing facts:
 
 ### D1. 2026 ruleset is a structural clone of 2025
 
-Author `src/aeat/formulas/_rulesets/modelo_115_2026.py` as a clone
+Author `src/aeat/domain/formulas/_rulesets/modelo_115_2026.py` as a clone
 of the 2024 module's pattern: it imports `_CASILLAS_2025`,
 `_CITATIONS_2025`, and `_FORMULAS_2025` from `modelo_115_2025`
 and ships its own `_PARAMETERS` table with `effective_from=
@@ -110,7 +110,7 @@ ledger entry shape is keyed on `casilla_id`, not on
 `formula_id`'s year suffix.
 
 Register `MODELO_115_2026` in
-`src/aeat/formulas/_rulesets/__init__.py` and add it to
+`src/aeat/domain/formulas/_rulesets/__init__.py` and add it to
 `ALL_RULESETS`.
 
 ### D2. Extractor sibling classes for 2024 + 2026
@@ -129,7 +129,7 @@ subclass of `GenericDeclaracionExtractor`). Each sibling pins
 only the `template_revision` ClassVar; the extraction logic is
 inherited verbatim because the form layout is unchanged across
 all three years. Register both new classes in
-`src/aeat/declaracion/_extractors/__init__.py::_REGISTERED_CLASSES`.
+`src/aeat/adapters/inbound/declaracion/_extractors/__init__.py::_REGISTERED_CLASSES`.
 
 ### D3. Rule-delta manifest
 
@@ -288,7 +288,7 @@ Per STEP 5 of the handover prompt:
 - Ceuta / Melilla 60 % overlay (caller-gated; future issue).
 - Live-submit forbidden enforcement sweep (`#432`, in flight).
 - Any new CLI commands or root-level Typer changes.
-- Any modification to `aeat.storage` / `aeat.financial` (`#216`
+- Any modification to `aeat.adapters.persistence.storage` / `aeat.domain.financial` (`#216`
   territory).
 
 ## Consequences

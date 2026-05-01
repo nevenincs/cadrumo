@@ -50,7 +50,7 @@ provenance invariant). Sibling transaction catalogue: #74.
   extractable byte-level artefact that survives as provenance.
 - **Channel 2 (in-app CSV export)** is the cleanest route *if* the user is
   willing to trigger exports manually on a cadence. It produces a file the
-  existing `CsvProvider` in `src/aeat/financial/providers/_csv.py` can handle
+  existing `CsvProvider` in `src/aeat/domain/financial/providers/_csv.py` can handle
   with a new N26 column-map entry — no new provider class strictly required.
   Cadence is "whenever the user taps export", which is the same as
   BBVA/Santander CSV today.
@@ -250,7 +250,7 @@ Three feasible routes, in descending order of recommendation:
 ### Provenance strategy for the PDF path
 
 The existing `RawProvenance` model at
-`src/aeat/financial/_raw_transaction.py` gives us the full invariant for
+`src/aeat/domain/financial/_raw_transaction.py` gives us the full invariant for
 free — `source_path`, `source_sha256`, `source_row_index`, `source_format`,
 `ingested_at`, `provider_name`. For N26 PDFs:
 
@@ -266,7 +266,7 @@ free — `source_path`, `source_sha256`, `source_row_index`, `source_format`,
   "row 42 of the January 2026 statement."
 - `source_format` → new enum value `SourceFormat.PDF` (see follow-up #1 in
   §R5 — requires a one-line addition to the enum in
-  `src/aeat/financial/_raw_transaction.py`, which is the only src/ edit
+  `src/aeat/domain/financial/_raw_transaction.py`, which is the only src/ edit
   the follow-up implementation issue will make outside its own subpackage).
 - `ingested_at` → timezone-aware UTC at ingest time.
 - `provider_name` → `"n26-pdf"`.
@@ -283,7 +283,7 @@ the convention for CSV/XLSX/OFX in #73.
 
 ### Effort to ship as `PdfN26Provider`
 
-- New `src/aeat/financial/providers/_pdf_n26.py`: ~250 LoC (parser +
+- New `src/aeat/domain/financial/providers/_pdf_n26.py`: ~250 LoC (parser +
   row-to-RawTransaction adaptor + validator, including header-derived table
   detection, locale-aware date parsing, and currency extraction).
 - One-line `SourceFormat.PDF` addition to `_raw_transaction.py`.
@@ -525,7 +525,7 @@ Rationale:
 4. **Option A leverages the substrate already on main.** PR #134 merged
    the `FinancialProvider` ABC and its `CsvProvider` / `XlsxProvider` /
    `OfxProvider` concrete implementations. A `PdfN26Provider` drops into
-   `src/aeat/financial/providers/` alongside the existing three with
+   `src/aeat/domain/financial/providers/` alongside the existing three with
    a single new `SourceFormat.PDF` enum value and no architectural
    disruption.
 5. **Option C stays on the shelf, not in the bin.** If the user later
@@ -538,12 +538,12 @@ Rationale:
 
 ### Sketch 1 — `feat(financial): PdfN26Provider for monthly statements`
 
-- **Target subpackage:** `src/aeat/financial/providers/_pdf_n26.py`,
+- **Target subpackage:** `src/aeat/domain/financial/providers/_pdf_n26.py`,
   plus a one-line `SourceFormat.PDF` addition to
-  `src/aeat/financial/_raw_transaction.py`, plus one-line registrations
+  `src/aeat/domain/financial/_raw_transaction.py`, plus one-line registrations
   in `providers/__init__.py` and `_detection.py`.
 - **Conformance to #73's ABC:** subclasses `FinancialProvider` from
-  `aeat.financial.providers`, implements `validate_source()` +
+  `aeat.domain.financial.providers`, implements `validate_source()` +
   `ingest()`. Declares `supported_extensions={".pdf"}` and
   `source_format=SourceFormat.PDF`. Emits strict `RawTransaction`
   records with the shared `RawProvenance` contract.
@@ -559,7 +559,7 @@ Rationale:
   month, FX month, multi-page month, locale-shift (ES↔EN) month, and
   SEPA-mandate month. The user supplies the fixtures from real
   statements with IBAN/name/counterparty/amount redacted. Colocated
-  tests live at `src/aeat/financial/providers/test_pdf_n26.py`. No
+  tests live at `src/aeat/domain/financial/providers/test_pdf_n26.py`. No
   live-gated tests are required.
 - **Acceptance:** extracted transactions round-trip to a golden JSON
   per fixture; hash changes on any fixture flip the golden and the
@@ -571,7 +571,7 @@ Rationale:
 
 ### Sketch 2 — `feat(financial): N26 CSV column map extension`
 
-- **Target subpackage:** `src/aeat/financial/providers/_csv.py`
+- **Target subpackage:** `src/aeat/domain/financial/providers/_csv.py`
   extension only. Adds an `N26_STANDARD` / `N26_BUSINESS` entry to
   the existing bank-layout catalogue. No new provider class, no new
   `SourceFormat` value.
@@ -610,8 +610,8 @@ recommendation.
   from §R3 all returns non-hostile; (c) Option A (`PdfN26Provider`)
   has already landed and is producing the authoritative record for
   reconciliation.
-- **Target subpackage:** `src/aeat/financial/providers/_live_n26.py`
-  plus a new `src/aeat/financial/_android_rig/` harness module for
+- **Target subpackage:** `src/aeat/domain/financial/providers/_live_n26.py`
+  plus a new `src/aeat/domain/financial/_android_rig/` harness module for
   the ADB + UI-automation transport.
 - **TDP T1 step:** T1 — Ingest, with the explicit note that this
   provider emits *provisional* rows until reconciled against the

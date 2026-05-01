@@ -130,7 +130,7 @@ counts captured as rendered):
 **Category-to-modelo mapping**: the modelo code is embedded in the
 deepest category label — e.g. "Modelo 100- Modelo 102. IRPF." yields
 modelo `"100"` for every expediente under it. The parser in
-`src/aeat/sede/_parse.py` pulls modelo via a `\bModelo\s+(\d{2,4})\b`
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/_parse.py` pulls modelo via a `\bModelo\s+(\d{2,4})\b`
 regex against the reversed category path.
 
 **Tree expansion**: each category anchor fires
@@ -247,17 +247,17 @@ stream. This footer is the most reliable CSV fallback.
 
 ## Module boundaries
 
-- `src/aeat/auth/_clave_movil.py` — Cl@ve-móvil authentication,
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py` — Cl@ve-móvil authentication,
   including the DialogoRepresentacion handshake and idle-TTL refresh.
-- `src/aeat/sede/` — read-only sede walker: `Expediente`,
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/` — read-only sede walker: `Expediente`,
   `JustificanteRef`, `SedeCapture` records; pure-function HTML
   parsers; Playwright walker
   (`walk_expedientes_tree`, `resolve_justificante_ref`,
   `capture_justificante`, `find_expediente`).
-- `src/aeat/justificante/` — PDF parser, now handles both layouts.
-- `src/aeat/filing/reconciliation/` — `FilingDraft` ↔ `Justificante`
+- `src/aeat/domain/justificante/` — PDF parser, now handles both layouts.
+- `src/aeat/application/filing/reconciliation/` — `FilingDraft` ↔ `Justificante`
   comparator emitting `ReconciliationReport`.
-- `src/aeat/auth/` — session management (unchanged besides the Clave
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/` — session management (unchanged besides the Clave
   patches above).
 
 ## Open questions for follow-ups

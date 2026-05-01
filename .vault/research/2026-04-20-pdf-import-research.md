@@ -18,15 +18,15 @@ The task is orthogonal to the cert-blocked `fetch_filing_detail` path (`#222`) a
 
 ## Existing building blocks
 
-- `src/aeat/justificante/_extract.py` already converts the raw PDF text into a frozen `Justificante` record (`csv`, `modelo`, `period`, `presentation_id`, `presented_at`, `tax_id`, `total_a_ingresar`, `total_a_devolver`, `verification_url`, `source_pdf_path`, `source_pdf_sha256`, `parsed_at`).
-    - Public surface: `from aeat.justificante import parse_justificante` (public in `__init__.py`).
+- `src/aeat/domain/justificante/_extract.py` already converts the raw PDF text into a frozen `Justificante` record (`csv`, `modelo`, `period`, `presentation_id`, `presented_at`, `tax_id`, `total_a_ingresar`, `total_a_devolver`, `verification_url`, `source_pdf_path`, `source_pdf_sha256`, `parsed_at`).
+    - Public surface: `from aeat.domain.justificante import parse_justificante` (public in `__init__.py`).
     - `_EJERCICIO_RE` is used internally but the parsed ejercicio string is NOT surfaced on the `Justificante` schema.
     - `presented_at` is returned as a *naive* datetime — AEAT does not print a timezone (callers that need UTC must apply Europe/Madrid themselves).
-- `src/aeat/filing/_builders/` has registered builders for modelos `130`, `303`, `390` only. `get_builder("100")` raises `FilingBuilderError`.
+- `src/aeat/application/filing/_builders/` has registered builders for modelos `130`, `303`, `390` only. `get_builder("100")` raises `FilingBuilderError`.
 - Every builder (e.g. `Modelo130Builder._materialise_literal`) already fans out every schema casilla to a `FilingValue` with kind `EMPTY` when no input is supplied. So passing an empty inputs dict to `build_draft` yields a draft with modelo + period + profile + every casilla in `EMPTY` state — exactly the scaffold issue `#271` describes.
 - `FilingDraft` is frozen and strict; `compute_draft_id` hashes `(modelo, period, profile_tax_id, schema_version, values)` — adding a new optional field that is NOT in the hash input is backwards-compatible.
-- `src/aeat/submission/_models.py` defines `SubmittedFiling` with `justificante_csv`, `justificante_pdf_path`, `submitted_at`, `status`, `attempts`. `_resolve_original_metadata` in `_complementaria.py` already reads this record (or re-parses the PDF) when Kent later amends.
-- `src/aeat/cli/filing/__init__.py` owns the existing `aeat filing build / validate / show / list` sub-app; adding a new `import` command there matches the established convention.
+- `src/aeat/adapters/outbound/aeat/export/_models.py` defines `SubmittedFiling` with `justificante_csv`, `justificante_pdf_path`, `submitted_at`, `status`, `attempts`. `_resolve_original_metadata` in `_complementaria.py` already reads this record (or re-parses the PDF) when Kent later amends.
+- `src/aeat/entrypoints/cli/filing/__init__.py` owns the existing `aeat filing build / validate / show / list` sub-app; adding a new `import` command there matches the established convention.
 
 ## Period normalisation
 

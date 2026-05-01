@@ -22,7 +22,7 @@ Tests delta (mutation harness suite): 188 (pre-#457) → 568
 (post-Wave-2). 1 144 tests across the full `_rulesets/` package
 green. Full project suite: 4 555 passed, 14 skipped, 24 deselected,
 0 unexpected failures (1 pre-existing flaky test in
-`src/aeat/cli/workflow/test_cli.py` excluded — unrelated to this PR
+`src/aeat/entrypoints/cli/workflow/test_cli.py` excluded — unrelated to this PR
 and reproduces on a stash --keep-index of the pre-#457 worktree).
 Coverage: 80.52 % on `src/aeat`. Lint / typecheck / hooks all green.
 

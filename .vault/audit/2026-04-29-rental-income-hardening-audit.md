@@ -40,29 +40,29 @@ declared in the handover prompt. Carried out at branch tip
 
 Source created:
 
-- `src/aeat/rental/__init__.py`
-- `src/aeat/rental/_enums.py`
-- `src/aeat/rental/_models.py`
-- `src/aeat/rental/_errors.py`
-- `src/aeat/rental/_repository.py`
-- `src/aeat/rental/_tier_resolver.py`
-- `src/aeat/rental/_amortization_ledger.py`
-- `src/aeat/rental/_expense_rollup.py`
-- `src/aeat/rental/_anexo_c_aggregator.py`
-- `src/aeat/rental/anexo_c_provider.py`
-- `src/aeat/rental/_test_repository.py`
-- `src/aeat/rental/_test_tier_resolver.py`
-- `src/aeat/rental/_test_amortization_ledger.py`
-- `src/aeat/rental/_test_expense_rollup.py`
-- `src/aeat/rental/_test_anexo_c_aggregator.py`
-- `src/aeat/cli/rental/__init__.py`
-- `src/aeat/cli/rental/_helpers.py`
-- `src/aeat/cli/rental/finca.py`
-- `src/aeat/cli/rental/contract.py`
-- `src/aeat/cli/rental/income.py`
-- `src/aeat/cli/rental/expense.py`
-- `src/aeat/cli/rental/anexo_c.py`
-- `src/aeat/cli/rental/test_cli.py`
+- `src/aeat/domain/rental/__init__.py`
+- `src/aeat/domain/rental/_enums.py`
+- `src/aeat/domain/rental/_models.py`
+- `src/aeat/domain/rental/_errors.py`
+- `src/aeat/domain/rental/_repository.py`
+- `src/aeat/domain/rental/_tier_resolver.py`
+- `src/aeat/domain/rental/_amortization_ledger.py`
+- `src/aeat/domain/rental/_expense_rollup.py`
+- `src/aeat/domain/rental/_anexo_c_aggregator.py`
+- `src/aeat/domain/rental/anexo_c_provider.py`
+- `src/aeat/domain/rental/_test_repository.py`
+- `src/aeat/domain/rental/_test_tier_resolver.py`
+- `src/aeat/domain/rental/_test_amortization_ledger.py`
+- `src/aeat/domain/rental/_test_expense_rollup.py`
+- `src/aeat/domain/rental/_test_anexo_c_aggregator.py`
+- `src/aeat/entrypoints/cli/rental/__init__.py`
+- `src/aeat/entrypoints/cli/rental/_helpers.py`
+- `src/aeat/entrypoints/cli/rental/finca.py`
+- `src/aeat/entrypoints/cli/rental/contract.py`
+- `src/aeat/entrypoints/cli/rental/income.py`
+- `src/aeat/entrypoints/cli/rental/expense.py`
+- `src/aeat/entrypoints/cli/rental/anexo_c.py`
+- `src/aeat/entrypoints/cli/rental/test_cli.py`
 - `migrations/versions/0003_rental_register.py`
 - `docs/concepts/rental-income.md`
 - `.vault/research/2026-04-29-rental-income-hardening-research.md`
@@ -73,17 +73,17 @@ Source created:
 
 Source modified:
 
-- `src/aeat/storage/_orm.py`
-- `src/aeat/errors/_registry.py`
-- `src/aeat/cli/__init__.py`
-- `src/aeat/cli/test_json_schema_conformance.py`
+- `src/aeat/adapters/persistence/storage/_orm.py`
+- `src/aeat/core/errors/_registry.py`
+- `src/aeat/entrypoints/cli/__init__.py`
+- `src/aeat/entrypoints/cli/test_json_schema_conformance.py`
 - `docs/coverage/kent-capabilities.md`
 
 ## Findings — eight safety invariants
 
 ### 1. Per-finca model is Pydantic v2 strict-frozen — PASS
 
-`src/aeat/rental/_models.py` declares `_RentalRecord(BaseModel,
+`src/aeat/domain/rental/_models.py` declares `_RentalRecord(BaseModel,
 model_config=ConfigDict(strict=True, frozen=True, extra="forbid"))`
 as the shared base. All five public records — `RentalFinca`,
 `RentalContract`, `RentalIncomeRecord`, `RentalExpense`,
@@ -104,7 +104,7 @@ extra="forbid")`.
 
 ### 2. Tier priority order correct — PASS
 
-`src/aeat/rental/_tier_resolver.py::resolve_reduccion` dispatches
+`src/aeat/domain/rental/_tier_resolver.py::resolve_reduccion` dispatches
 in the BOE-prescribed order:
 
 1. Pre-amendment ejercicio (period_year < 2024) → flat 60 %.
@@ -146,7 +146,7 @@ ADR by name.
 
 ### 4. Amortización 3 % ledger cap enforced — PASS
 
-`src/aeat/rental/_amortization_ledger.py::compute_amortization_for_year`
+`src/aeat/domain/rental/_amortization_ledger.py::compute_amortization_for_year`
 computes `gross = max(coste_construccion, valor_catastral_
 construccion) × 0.03 × dias_alquilados / 365` (rounded half-up to
 cents) and clamps `capped = min(gross, remaining_cap)` where
@@ -161,7 +161,7 @@ cap is enforced across years.
 
 ### 5. M100 backwards-compat shim works — PASS
 
-`src/aeat/rental/anexo_c_provider.py::compute_or_passthrough` returns
+`src/aeat/domain/rental/anexo_c_provider.py::compute_or_passthrough` returns
 the supplied casillas verbatim when:
 
 - Any of the five repositories is `None` (caller has not opted in).
@@ -174,9 +174,9 @@ overridden`. The seven pre-existing M100 Anexo C tests in
 `test_anexo_c_2025.py` continue to pass without modification —
 verified after the Phase 5 commit.
 
-### 6. Path B persistence (SQLite via aeat.storage) — PASS
+### 6. Path B persistence (SQLite via aeat.adapters.persistence.storage) — PASS
 
-Five new ORM tables in `src/aeat/storage/_orm.py`:
+Five new ORM tables in `src/aeat/adapters/persistence/storage/_orm.py`:
 `rental_fincas`, `rental_contracts`, `rental_income_records`,
 `rental_expenses`, `rental_amortization_ledger`. Address column on
 `rental_fincas` uses the existing `EncryptedString` substrate.
@@ -185,13 +185,13 @@ up creates all five with FK ondelete CASCADE + check / unique
 constraints; down drops in reverse FK-dependency order. Migration
 round-trip test (`_test_migrations.py`) passes against the new
 schema. No dependency on a separate persistence layer; uses the
-already-merged `aeat.storage` substrate from `feature/216-bank-
+already-merged `aeat.adapters.persistence.storage` substrate from `feature/216-bank-
 import-persistence`.
 
 ### 7. CLI commands work end-to-end — PASS
 
 The `aeat rental` sub-app registers under
-`src/aeat/cli/__init__.py` between `portals` and `review`. Five
+`src/aeat/entrypoints/cli/__init__.py` between `portals` and `review`. Five
 sub-groups expose 12 commands total:
 
 - `aeat rental finca {add, list, show}`
@@ -212,26 +212,26 @@ shape (`schema_version`, `command`, `result`) verified.
 ### 8. #398 error registration — PASS
 
 Six new `AeatError` subclasses each have an `ErrorCode` row in
-`aeat.errors._registry._DECLARED_ERROR_CODES`:
+`aeat.core.errors._registry._DECLARED_ERROR_CODES`:
 
-- `aeat.rental._errors.RentalRegisterError` →
+- `aeat.domain.rental._errors.RentalRegisterError` →
   `ERROR_RENTAL_REGISTER`.
-- `aeat.rental._errors.FincaNotFoundError` →
+- `aeat.domain.rental._errors.FincaNotFoundError` →
   `ERROR_RENTAL_FINCA_NOT_FOUND` (suggestion: `aeat rental finca
   list`).
-- `aeat.rental._errors.ContractNotFoundError` →
+- `aeat.domain.rental._errors.ContractNotFoundError` →
   `ERROR_RENTAL_CONTRACT_NOT_FOUND` (suggestion: `aeat rental
   contract list`).
-- `aeat.rental._errors.TierResolutionError` →
+- `aeat.domain.rental._errors.TierResolutionError` →
   `ERROR_RENTAL_TIER_RESOLUTION`.
-- `aeat.rental._errors.AmortizationLedgerCapExceededError` →
+- `aeat.domain.rental._errors.AmortizationLedgerCapExceededError` →
   `ERROR_RENTAL_AMORTIZATION_CAP_EXCEEDED`.
-- `aeat.rental._errors.AnexoCAggregationError` →
+- `aeat.domain.rental._errors.AnexoCAggregationError` →
   `ERROR_RENTAL_ANEXO_C_AGGREGATION`.
 
 The `__init_subclass__` hook on `AeatError` enforces registration
 at class declaration time; the registry-enforcement test
-(`aeat.errors.test_registry_enforcement`) passes. The suggestion
+(`aeat.core.errors.test_registry_enforcement`) passes. The suggestion
 strings reference real top-level CLI commands per the
 `test_suggestions_parse_as_valid_cli_commands` invariant.
 
@@ -247,15 +247,15 @@ strings reference real top-level CLI commands per the
   Raises docstring; `ty` typecheck passes on the rental
   subpackage and the CLI sub-app.
 
-- **Errors inherit from `aeat.errors.AeatError`**: PASS — all six
+- **Errors inherit from `aeat.core.errors.AeatError`**: PASS — all six
   rental errors descend from `RentalRegisterError(AeatError)`.
 
-- **Logging via `aeat.logging.get_logger(__name__)` only**: PASS
+- **Logging via `aeat.core.logging.get_logger(__name__)` only**: PASS
   — the only logger factory used is `from ..logging import
   get_logger` in `_repository.py`, `_anexo_c_aggregator.py`, and
   `anexo_c_provider.py`.
 
-- **Public API discipline**: PASS — `aeat.rental.__init__` is the
+- **Public API discipline**: PASS — `aeat.domain.rental.__init__` is the
   only re-export surface; every internal module is `_`-prefixed
   except the public-facing `anexo_c_provider`. CLI imports use
   the public API only.
@@ -281,8 +281,8 @@ strings reference real top-level CLI commands per the
 
 - **Lint / typecheck / test / hooks all green** on the new
   surface: PASS — `uv run ruff check src/aeat/rental
-  src/aeat/cli/rental` clean; `uv run ty check src/aeat/rental
-  src/aeat/cli/rental` clean; 86 new tests pass; 7 pre-existing
+  src/aeat/entrypoints/cli/rental` clean; `uv run ty check src/aeat/rental
+  src/aeat/entrypoints/cli/rental` clean; 86 new tests pass; 7 pre-existing
   M100 Anexo C tests still pass; `test_json_pipe_safety.py` (7)
   and `test_json_schema_conformance.py` (16) pass after the
   deferred-storage-import fix.

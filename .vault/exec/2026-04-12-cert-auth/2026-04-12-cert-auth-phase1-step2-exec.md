@@ -20,7 +20,7 @@ related:
 - `_select_backend()` — enum-dispatched factory with lazy imports so
   the cryptography + playwright dependency cost is paid only for
   backends that are actually requested.
-- `src/aeat/auth/_certificate_backends/` — private package with
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/` — private package with
   `_base._CertBackend` ABC and two stub backends
   (`_user_data_dir.UserDataDirBackend`,
   `_mtls_proxy.MtlsProxyBackend`) that raise `NotImplementedError`

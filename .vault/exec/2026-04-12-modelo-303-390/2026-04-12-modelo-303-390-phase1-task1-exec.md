@@ -19,41 +19,41 @@ Branch: `feature/62-modelo-303-390`
 
 ## Work performed
 
-- Added `src/aeat/filing/_builders/_modelo_303_schema.py`
+- Added `src/aeat/application/filing/_builders/_modelo_303_schema.py`
   (static casilla collection, 27 casillas covering IVA devengado
   general regime, IVA deducible, resultado de la liquidación).
-- Added `src/aeat/filing/_builders/_modelo_390_schema.py`
+- Added `src/aeat/application/filing/_builders/_modelo_390_schema.py`
   (static casilla collection, 15 casillas: ejercicio, 10
   quarterly-sum annual totals, 4 intra-390 aggregates).
-- Added `src/aeat/filing/_builders/modelo_303.py`
+- Added `src/aeat/application/filing/_builders/modelo_303.py`
   (`Modelo303Builder`, fixed-point formula resolver mirroring
   the Modelo 130 pattern, Google-style docstrings, strict
   coercion helpers).
-- Added `src/aeat/filing/_builders/modelo_390.py`
+- Added `src/aeat/application/filing/_builders/modelo_390.py`
   (`Modelo390Builder`, quarterly 303 draft tuple ingestion via
   reserved `_quarterly_303` inputs key, INHERITED provenance on
   quarterly-sum casillas, COMPUTED provenance on the four
   intra-390 aggregates, shape-validation of the four quarterly
   drafts).
-- Extended `src/aeat/filing/_builders/__init__.py` registry to
+- Extended `src/aeat/application/filing/_builders/__init__.py` registry to
   include `Modelo303Builder` and `Modelo390Builder`.
-- Extended `src/aeat/filing/_validator.py` with an additive
+- Extended `src/aeat/application/filing/_validator.py` with an additive
   `quarterly_303_drafts` kwarg and a new
   `_validate_quarterly_reconciliation` rule that emits two new
   finding codes (`filing-390-303-mismatch`,
   `filing-303-internal-mismatch`) with trilingual
   (`es`/`en`/`hu`) `Translatable` messages. The 130 and 303
   validation paths are unchanged.
-- Extended `src/aeat/filing/__init__.py` so `build_draft`
+- Extended `src/aeat/application/filing/__init__.py` so `build_draft`
   forwards the four quarterly drafts into the validator when the
   target modelo is 390 and exports `Modelo303Builder` /
   `Modelo390Builder` / `QUARTERLY_303_INPUT_KEY` on the public
   API.
-- Extended `src/aeat/filing/testing.py` so
+- Extended `src/aeat/application/filing/testing.py` so
   `default_schema_provider()` wires the 130/303/390 collections
   and the module re-exports `MODELO_303_SCHEMA` /
   `MODELO_390_SCHEMA`.
-- Added `src/aeat/filing/test_modelo_303_390.py` — 21 colocated
+- Added `src/aeat/application/filing/test_modelo_303_390.py` — 21 colocated
   unit tests (`@pytest.mark.unit`) covering:
   - Modelo 303 happy path (21% only) with hand-calculated
     casilla values.

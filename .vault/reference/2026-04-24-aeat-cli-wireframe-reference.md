@@ -237,7 +237,7 @@ a general pointer. This is the hard contract.
 ### Error-code registry module
 
 Error codes live in a single source of truth at
-`src/aeat/errors/_registry.py` as a frozen Pydantic v2 model. Each entry:
+`src/aeat/core/errors/_registry.py` as a frozen Pydantic v2 model. Each entry:
 
 ```text
 ErrorCode:
@@ -369,7 +369,7 @@ stderr while stdout stays empty. `result` is the command-specific payload.
 `metadata` is stable across commands and scripts can rely on its shape.
 
 Each command's `result` shape is registered in a JSON-schema catalogue at
-`src/aeat/cli/_schemas.py`. A regression test loads every registered
+`src/aeat/entrypoints/cli/_schemas.py`. A regression test loads every registered
 schema and asserts the command under `--json` emits a conforming document.
 Drift from the schema fails the test.
 
@@ -517,7 +517,7 @@ and asserts the pipeline succeeds.
 - Every Kent-first command supports `--json` or is explicitly exempted in
   an ADR amendment.
 - Every `--json` result is schema-checked at test time against the
-  registry at `src/aeat/cli/_schemas.py`.
+  registry at `src/aeat/entrypoints/cli/_schemas.py`.
 - stdout is reserved for primary results (human or JSON). stderr carries
   everything else.
 - Exit codes come from the registered set. An `if` that returns a bare
@@ -557,7 +557,7 @@ the operational-safety gap in iterations 1 through 7.
 ### Command mutability classification
 
 Every Kent-first command belongs to exactly one mutability class. The
-class is declared in a central registry `src/aeat/cli/_mutability.py` as a
+class is declared in a central registry `src/aeat/entrypoints/cli/_mutability.py` as a
 frozen Pydantic v2 model. Freeform mutation escapes the registry.
 
 | Class | Definition |
@@ -766,7 +766,7 @@ can locate the resume point.
 ### Hardening rules derived from iteration 8
 
 - Every mutating command declares `class` and `idempotency` in
-  `src/aeat/cli/_mutability.py`. Missing declarations fail the registry
+  `src/aeat/entrypoints/cli/_mutability.py`. Missing declarations fail the registry
   test.
 - Every undo path is registered and testable. Commands without an undo
   path refuse to mutate unless explicitly exempted in an ADR amendment
@@ -898,7 +898,7 @@ redirect messages.
 ### Central catalogue
 
 Translatable strings live in a central catalogue module at
-`src/aeat/i18n/_catalog.py`. Each entry is keyed by a dot-path that
+`src/aeat/core/i18n/_catalog.py`. Each entry is keyed by a dot-path that
 combines command and role:
 
 ```python
@@ -942,7 +942,7 @@ Rules:
 A `t()` helper reads the catalogue at render time:
 
 ```python
-from aeat.i18n import t, select_language
+from aeat.core.i18n import t, select_language
 
 lang = select_language()
 print(t("status.today.header", lang=lang))
@@ -1148,20 +1148,20 @@ Scope: internal plumbing plus the one Kent-visible excision.
 PR list:
 
 1. Close the workflow live-flag leak per iteration 5. Single PR touching
-   `src/aeat/cli/workflow/run.py`, `src/aeat/cli/workflow/next.py`, and
-   `src/aeat/cli/workflow/__init__.py`, with regression tests.
-2. Introduce the error-code registry at `src/aeat/errors/_registry.py`
+   `src/aeat/entrypoints/cli/workflow/run.py`, `src/aeat/entrypoints/cli/workflow/next.py`, and
+   `src/aeat/entrypoints/cli/workflow/__init__.py`, with regression tests.
+2. Introduce the error-code registry at `src/aeat/core/errors/_registry.py`
    per iteration 6. `AeatError` subclasses carry a `code` attribute
    mapped to the registry. Add the error-emission decorator.
 3. Introduce the CLI mutability and idempotency registry at
-   `src/aeat/cli/_mutability.py` per iteration 8. Classify every
+   `src/aeat/entrypoints/cli/_mutability.py` per iteration 8. Classify every
    existing CLI leaf and add the registry enforcement test.
 4. Introduce the i18n catalogue infrastructure at
-   `src/aeat/i18n/_catalog.py` per iteration 9 plus the `Translatable`
+   `src/aeat/core/i18n/_catalog.py` per iteration 9 plus the `Translatable`
    Pydantic validator and the `t()` helper. Populate initial ES and
    EN strings for every existing CLI command's help text.
 5. Introduce the `--json` output envelope and the per-command schema
-   registry at `src/aeat/cli/_schemas.py` per iteration 7. Wire the
+   registry at `src/aeat/entrypoints/cli/_schemas.py` per iteration 7. Wire the
    envelope into every existing command without renaming. `--json`
    support becomes uniform.
 6. Persist `ComputationLedger` and `AuditReport` to
@@ -2598,16 +2598,16 @@ code.
 
 Registries and their tests:
 
-- `src/aeat/errors/_registry.py` (iteration 6): `test_error_registry.py`
+- `src/aeat/core/errors/_registry.py` (iteration 6): `test_error_registry.py`
   asserts every `AeatError` subclass carries a registered `code`, every
   code has `default_message_es` and `default_message_en`, and every
   `default_suggestion` parses against the current CLI.
-- `src/aeat/cli/_mutability.py` (iteration 8): `test_mutability.py`
+- `src/aeat/entrypoints/cli/_mutability.py` (iteration 8): `test_mutability.py`
   asserts every Click leaf declares a class and an idempotency rule.
-- `src/aeat/cli/_schemas.py` (iteration 7): `test_output_schemas.py`
+- `src/aeat/entrypoints/cli/_schemas.py` (iteration 7): `test_output_schemas.py`
   asserts every Kent-first command has a registered schema and that
   each schema is a valid JSON Schema document.
-- `src/aeat/i18n/_catalog.py` (iteration 9): `test_i18n_catalog.py`
+- `src/aeat/core/i18n/_catalog.py` (iteration 9): `test_i18n_catalog.py`
   asserts every catalogue entry has non-empty `es` and `en`, no
   catalogue key is unused by any call site, and no call site references
   a key absent from the catalogue.
@@ -2621,7 +2621,7 @@ Registries and their tests:
 - `src/aeat/configure/_profile_schema.py` (iteration 11):
   `test_profile_schema.py` asserts tax-id-kind to modelo compatibility
   is truthful.
-- `src/aeat/auth/_credential_schema.py` (iteration 12):
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_credential_schema.py` (iteration 12):
   `test_credential_schema.py` asserts no credential kind persists Cl@ve
   material and every persisted kind has an encryption-at-rest rule.
 - `src/aeat/onboarding/_banners.py` (iteration 13):
@@ -3055,7 +3055,7 @@ on completion to
 ```
 
 Counters and timings keys are registered per command in
-`src/aeat/observability/_metrics_registry.py`. Emitting an unregistered
+`src/aeat/core/observability/_metrics_registry.py`. Emitting an unregistered
 key fails a startup-check test in development builds and is silently
 dropped in release builds (never silently added to the schema).
 
@@ -3266,7 +3266,7 @@ On opt-out:
 ### Metrics schema registry
 
 Per-command metric keys live in
-`src/aeat/observability/_metrics_registry.py`:
+`src/aeat/core/observability/_metrics_registry.py`:
 
 ```python
 class MetricSchema(BaseModel):
@@ -3660,7 +3660,7 @@ Workspace total budget alerts at 15 GB via `aeat doctor`.
 ### Hardening rules derived from iteration 16
 
 - Every Kent-first command has a documented wall-clock budget in this
-  iteration's table. Budgets live in `src/aeat/cli/_perf_budgets.py`.
+  iteration's table. Budgets live in `src/aeat/entrypoints/cli/_perf_budgets.py`.
 - Scale fixture exists at `tests/fixtures/workspaces/scale-10-years/`
   and is regenerated when the schema changes.
 - SQLite indexes are derived, never source-of-truth, and are
@@ -4314,14 +4314,14 @@ Rules:
 3. Add registry entries:
    - `src/aeat/modelos/_registry.py`: `ModeloEntry` for each
      (100, ejercicio).
-   - `src/aeat/schema/_100_<ejercicio>.py`: schema definition.
-   - `src/aeat/formulas/_100_<ejercicio>.py`: formula ruleset.
-   - `src/aeat/filing/_validators/_100_<ejercicio>.py`: finding rules.
+   - `src/aeat/domain/schema/_100_<ejercicio>.py`: schema definition.
+   - `src/aeat/domain/formulas/_100_<ejercicio>.py`: formula ruleset.
+   - `src/aeat/application/filing/_validators/_100_<ejercicio>.py`: finding rules.
    - `src/aeat/revise/_registry.py`: add revise-kind entries.
 4. Implement fichero BOE serializer at
-   `src/aeat/submission/_serializers/_100.py`.
+   `src/aeat/adapters/outbound/aeat/export/_serializers/_100.py`.
 5. Implement fichero BOE deserializer at
-   `src/aeat/submission/_deserializers/_100.py` for verify and diff.
+   `src/aeat/adapters/outbound/aeat/export/_deserializers/_100.py` for verify and diff.
 6. Add portal URL, manual references, normative citations.
 7. Write journey test
    `tests/journey/test_journey_modelo_100_first_export.py` against a
@@ -5135,7 +5135,7 @@ is detected or Kent invokes `aeat advanced diagnostics llm-rollback`.
 ### Cost tracking
 
 Pricing tables live at
-`src/aeat/llm/_pricing.py` with a `retrieved_at` date stamp per
+`src/aeat/adapters/outbound/llm/_pricing.py` with a `retrieved_at` date stamp per
 provider:
 
 ```python
@@ -6667,8 +6667,8 @@ duplication; drift above baseline fails the audit.
 
 - Relative imports only inside `src/aeat/` (project mandate).
 - Cross-subpackage imports reference the subpackage root only.
-  Example: `from aeat.filing import FilingDraft` is allowed;
-  `from aeat.filing._internal import SomeHelper` is not.
+  Example: `from aeat.application.filing import FilingDraft` is allowed;
+  `from aeat.application.filing._internal import SomeHelper` is not.
 - Tests colocate with modules (Rust-style, project mandate).
 - Live tests live under `tests/live/` with correct markers.
 - Scale tests live under `tests/scale/` with `@pytest.mark.slow`.
@@ -6910,8 +6910,8 @@ $ just release
   findings: 1 red, 2 amber
 
   RED: layering violation
-    src/aeat/filing/_helpers.py:47
-    imports from src/aeat/cli/ (CLI -> domain allowed, domain -> CLI forbidden)
+    src/aeat/application/filing/_helpers.py:47
+    imports from src/aeat/entrypoints/cli/ (CLI -> domain allowed, domain -> CLI forbidden)
     owner: @maintainer-handle
     tracking: #942
 
@@ -7947,7 +7947,7 @@ class RevisionSupport(BaseModel):
 
 ### ARI filing validator rules
 
-`src/aeat/filing/_validators/_ari.py` enforces:
+`src/aeat/application/filing/_validators/_ari.py` enforces:
 
 1. `baseline_submission` must exist with `status=ACCEPTED`.
 2. `baseline_submission.modelo` equals the ARI's modelo.
@@ -10310,7 +10310,7 @@ layouts for modelo 303-F; Canarias uses IGIC-specific layout for
 420.
 
 Per-regime fichero serializers live under
-`src/aeat/submission/_serializers/{regime}/` with symmetric
+`src/aeat/adapters/outbound/aeat/export/_serializers/{regime}/` with symmetric
 deserializers. The iteration 3 evidence-bundle manifest gains
 `regime` as a required field on every fichero record.
 

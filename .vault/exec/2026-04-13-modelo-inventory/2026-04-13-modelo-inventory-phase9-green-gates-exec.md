@@ -32,14 +32,14 @@ additional fixup.
   files introduced.
 - `tests/test_release_config.py` — passed, including the
   `test_no_release_please_github_actions_workflow` check.
-- `src/aeat/models/test_smoke.py` — preserved unchanged.
+- `src/aeat/domain/modelos/test_smoke.py` — preserved unchanged.
 
 ## commit
 
 During end-to-end verification on Windows, `aeat modelos list` hit a
 `UnicodeEncodeError` emitting the Hungarian `ő` on a cp1252 stdout.
 Added a defensive stdout/stderr UTF-8 reconfigure block at the top of
-`src/aeat/models/_cli.py` guarded by `contextlib.suppress(ValueError,
+`src/aeat/domain/modelos/_cli.py` guarded by `contextlib.suppress(ValueError,
 OSError)`. This does not affect the test suite (CliRunner uses UTF-8
 internally) but makes the CLI usable on a vanilla Windows console.
 

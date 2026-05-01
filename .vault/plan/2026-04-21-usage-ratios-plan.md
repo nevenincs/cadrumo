@@ -17,9 +17,9 @@ Executes `[[2026-04-21-usage-ratios-adr]]` against issue `#259`. Single phase; e
 
 ## Phase 1 — implementation
 
-### Step 1 — scaffold `aeat.financial.usage_ratios` package
+### Step 1 — scaffold `aeat.domain.financial.usage_ratios` package
 
-Create `src/aeat/financial/usage_ratios/`:
+Create `src/aeat/domain/financial/usage_ratios/`:
 
 - `__init__.py` — empty placeholder now, fill in step 6.
 - `_errors.py` — define `UsageRatioError(AeatError)` and `UsageRatioPersistenceError(UsageRatioError)`. Relative import of `AeatError` from `...errors`. `__all__` lists both names. Google-style docstrings on each class.
@@ -28,7 +28,7 @@ No tests in this step; the package must import cleanly.
 
 ### Step 2 — `_model.py`: `UsageRatioProfile`, `ELIGIBLE_USAGE_RATIO_CATEGORIES`, `resolve_user_ratio`
 
-Write `src/aeat/financial/usage_ratios/_model.py`:
+Write `src/aeat/domain/financial/usage_ratios/_model.py`:
 
 - Relative imports only (`..categories`).
 - Declare `_USER_RATIO_KINDS: frozenset[ProportionalityKind] = frozenset({USAGE_RATIO_HOME_AREA, USAGE_RATIO_PERSONAL})`.
@@ -41,7 +41,7 @@ Write `src/aeat/financial/usage_ratios/_model.py`:
 - `resolve_user_ratio(profile, category) -> Decimal | None`: one-line `profile.ratios.get(category)` with a Google-style docstring citing #257 and #259.
 - Export `_USER_RATIO_KINDS` as a private module attribute (used by `_aliases.py`). No `__all__`; exports flow through the package `__init__`.
 
-Colocate `src/aeat/financial/usage_ratios/test_model.py`:
+Colocate `src/aeat/domain/financial/usage_ratios/test_model.py`:
 
 - `from __future__ import annotations`
 - Module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]`.
@@ -64,13 +64,13 @@ Colocate `src/aeat/financial/usage_ratios/test_model.py`:
 
 ### Step 3 — `_aliases.py`: family alias mapping
 
-Write `src/aeat/financial/usage_ratios/_aliases.py`:
+Write `src/aeat/domain/financial/usage_ratios/_aliases.py`:
 
 - Declare helpers `_home_office_area_members()`, `_mileage_business_members()` as described in the ADR.
 - Build `FAMILY_ALIASES: Mapping[str, tuple[SpendingCategory, ...]] = MappingProxyType({...})` with three entries.
 - Tuples are sorted by `category.value` for deterministic iteration.
 
-Colocate `src/aeat/financial/usage_ratios/test_aliases.py`:
+Colocate `src/aeat/domain/financial/usage_ratios/test_aliases.py`:
 
 - Module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]`.
 - Tests:
@@ -82,7 +82,7 @@ Colocate `src/aeat/financial/usage_ratios/test_aliases.py`:
 
 ### Step 4 — `_service.py`: atomic load/save
 
-Write `src/aeat/financial/usage_ratios/_service.py`:
+Write `src/aeat/domain/financial/usage_ratios/_service.py`:
 
 - Relative imports.
 - `_LOGGER = get_logger(__name__)`.
@@ -103,7 +103,7 @@ Write `src/aeat/financial/usage_ratios/_service.py`:
   - On `OSError`: unlink temp if present, raise `UsageRatioPersistenceError` from.
   - Log INFO on success.
 
-Colocate `src/aeat/financial/usage_ratios/test_service.py`:
+Colocate `src/aeat/domain/financial/usage_ratios/test_service.py`:
 
 - Module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]`.
 - Tests use `tmp_path` fixture:
@@ -140,7 +140,7 @@ The existing `tests/test_config.py` enforces 1:1 parity between `Settings` field
 
 ### Step 6 — package `__init__.py`
 
-Write `src/aeat/financial/usage_ratios/__init__.py`:
+Write `src/aeat/domain/financial/usage_ratios/__init__.py`:
 
 - Google-style module docstring.
 - Re-export from the sibling modules:
@@ -150,13 +150,13 @@ Write `src/aeat/financial/usage_ratios/__init__.py`:
   - `load_usage_ratios`, `save_usage_ratios` from `._service`.
 - `__all__` lists every public name above.
 
-Leave `src/aeat/financial/__init__.py` alone. It re-exports `FinancialProvider`, `RawTransaction`, and ingest helpers but deliberately does *not* re-export `invoices` or `categories` child symbols (its docstring instructs callers to import from subpackages directly). `usage_ratios` follows the same pattern — callers write `from aeat.financial.usage_ratios import …`.
+Leave `src/aeat/domain/financial/__init__.py` alone. It re-exports `FinancialProvider`, `RawTransaction`, and ingest helpers but deliberately does *not* re-export `invoices` or `categories` child symbols (its docstring instructs callers to import from subpackages directly). `usage_ratios` follows the same pattern — callers write `from aeat.domain.financial.usage_ratios import …`.
 
-Verify: `python -c "from aeat.financial.usage_ratios import UsageRatioProfile; p = UsageRatioProfile(); print(p.model_dump_json())"` prints `{"ratios":{}}`.
+Verify: `python -c "from aeat.domain.financial.usage_ratios import UsageRatioProfile; p = UsageRatioProfile(); print(p.model_dump_json())"` prints `{"ratios":{}}`.
 
 ### Step 7 — CLI `profile.py` + registration
 
-Write `src/aeat/cli/financial/profile.py` per the ADR body. Key points:
+Write `src/aeat/entrypoints/cli/financial/profile.py` per the ADR body. Key points:
 
 - Relative imports (`...config`, `...financial.categories`, `...financial.usage_ratios`).
 - Two Typer apps: `app` (verbs `set-ratio`, `unset-ratio`) and `ratios_app` (verb `list`); `app.add_typer(ratios_app, name="ratios")`.
@@ -173,7 +173,7 @@ Write `src/aeat/cli/financial/profile.py` per the ADR body. Key points:
 - Path helper `_usage_ratios_path()` reads from `load_settings().aeat_usage_ratios_path.resolve()`.
 - `_format_decimal(value)` returns `"0"` for zero and `format(value.normalize(), "f")` otherwise — matches the invoice CLI's renderer.
 
-Edit `src/aeat/cli/financial/__init__.py`:
+Edit `src/aeat/entrypoints/cli/financial/__init__.py`:
 
 - Add `from .profile import app as profile_app`.
 - Add one `app.add_typer(profile_app, name="profile", help="Kent's financial profile (#259).")` line.
@@ -181,7 +181,7 @@ Edit `src/aeat/cli/financial/__init__.py`:
 
 ### Step 8 — CLI tests
 
-Write `src/aeat/cli/financial/test_profile.py`:
+Write `src/aeat/entrypoints/cli/financial/test_profile.py`:
 
 - `from __future__ import annotations`.
 - Imports: `CliRunner`, `pytest`, `Path`, and the root financial app (`from .. import app as root_app`).
@@ -197,10 +197,10 @@ Write `src/aeat/cli/financial/test_profile.py`:
 Run in this order from the worktree root:
 
 ```
-uv run ruff check src/aeat/financial/usage_ratios src/aeat/cli/financial/profile.py
-uv run ruff format --check src/aeat/financial/usage_ratios src/aeat/cli/financial/profile.py
-uv run ty check src/aeat/financial/usage_ratios src/aeat/cli/financial/profile.py
-uv run pytest src/aeat/financial/usage_ratios src/aeat/cli/financial -q
+uv run ruff check src/aeat/domain/financial/usage_ratios src/aeat/entrypoints/cli/financial/profile.py
+uv run ruff format --check src/aeat/domain/financial/usage_ratios src/aeat/entrypoints/cli/financial/profile.py
+uv run ty check src/aeat/domain/financial/usage_ratios src/aeat/entrypoints/cli/financial/profile.py
+uv run pytest src/aeat/domain/financial/usage_ratios src/aeat/entrypoints/cli/financial -q
 uv run just test-cov      # or the project-equivalent coverage target; ≥ 60% floor on touched files
 uv run prek run --files $(git diff --name-only --diff-filter=AM main...HEAD)
 ```
@@ -234,10 +234,10 @@ Two rolling audit rounds amended the implementation after this plan was approved
 
 - **`_validate_bounds` now returns a dict sorted by `SpendingCategory.value`** so two equal profiles serialise to byte-identical JSON. Implements the canonical-ordering invariant flagged by the round-1 Pydantic audit.
 - **The `is_finite()` guard in `_validate_bounds` was dropped.** Pydantic strict mode rejects `NaN` / `Infinity` at the type layer before the field validator runs, so the guard was dead code. The CLI `_parse_ratio` keeps its own `is_finite()` check.
-- **`FAMILY_ALIASES` moved from `src/aeat/financial/usage_ratios/_aliases.py` to `src/aeat/cli/financial/_profile_aliases.py`** (round-2 architecture + downstream audits converged on this). The module-private location prevents the #214 wizard and #257 compute from depending on alias strings.
+- **`FAMILY_ALIASES` moved from `src/aeat/domain/financial/usage_ratios/_aliases.py` to `src/aeat/entrypoints/cli/financial/_profile_aliases.py`** (round-2 architecture + downstream audits converged on this). The module-private location prevents the #214 wizard and #257 compute from depending on alias strings.
 - **The `phone_fixed_business` alias was removed.** `TELEFONIA_FIJA` already belonged to `home_office_area`, so the two aliases silently clobbered one another. Disjointness is now enforced by `test_profile_aliases.py::test_no_alias_overlap_across_the_mapping`.
 - **`UsageRatioPersistenceError` messages now surface the wrapped exception detail.** Hand-edit failures (out-of-range ratio, ineligible category, unknown key) name the offending field and reason via a `_summarise_validation_errors` helper; OS failures (locked file, disk full, directory target) carry the OSError class and message.
 - **The `set-ratio` unknown-key hint was extended** to include the twelve eligible category ids plus `difflib` near-match suggestions, so `home_office_are` produces `did you mean: home_office_area`.
-- **Test coverage expanded from 44 → 58 tests** with net **100 % coverage** on `src/aeat/financial/usage_ratios/` and ≥ 93 % on `src/aeat/cli/financial/profile.py`. New tests assert the behaviours above end-to-end through the CLI and through hand-edited JSON.
+- **Test coverage expanded from 44 → 58 tests** with net **100 % coverage** on `src/aeat/domain/financial/usage_ratios/` and ≥ 93 % on `src/aeat/entrypoints/cli/financial/profile.py`. New tests assert the behaviours above end-to-end through the CLI and through hand-edited JSON.
 
 Commits implementing the amendments (on `feature/259-usage-ratios`): `9b51c78` (round 1) and the subsequent round-2 hardening commit.

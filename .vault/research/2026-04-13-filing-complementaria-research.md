@@ -27,7 +27,7 @@ The implementation must respect two external constraints:
 
 - The legal correction mechanism depends on the type of model and, for IVA,
   also on the filing period date.
-- Sibling work on `aeat.auth`, `aeat.browser`, `aeat.status`, and Track B
+- Sibling work on `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.browser`, `aeat.status`, and Track B
   provenance internals is not available for hard imports; integration must stay
   inside the public surfaces already on `main` or use Protocol seams.
 
@@ -133,7 +133,7 @@ Implication for #93:
 
 ### filing
 
-- `aeat.filing` currently exposes only original draft builders and strict draft
+- `aeat.application.filing` currently exposes only original draft builders and strict draft
 -level types: `FilingDraft`, `FilingValue`, `FilingDraftStatus`.
 - `130` ends in payable casilla `07`, `303` in result casillas `69` and `71`,
   and `390` in annual-result casillas `86` and `95` depending on the schema.
@@ -142,14 +142,14 @@ Implication for #93:
 
 Implication:
 
-- `src/aeat/filing/_complementaria.py` is the correct place for the new strict
+- `src/aeat/application/filing/_complementaria.py` is the correct place for the new strict
   pydantic v2 amendment types and the builder function.
 - The public package root should re-export only the issue-mandated public
-  surface from `aeat.filing`.
+  surface from `aeat.application.filing`.
 
 ### submission
 
-- `aeat.submission` persists `SubmittedFiling` records as JSON under
+- `aeat.adapters.outbound.aeat.export` persists `SubmittedFiling` records as JSON under
   `settings.aeat_submissions_dir`; there is no DB-backed submission repository.
 - `SubmissionEngine` already owns the live/dry-run contract and the persistence
   helper.
@@ -167,13 +167,13 @@ Implication:
 
 ### storage and prior-filing lookup
 
-- `aeat.storage` on `main` is currently the SQLAlchemy-backed repository for
+- `aeat.adapters.persistence.storage` on `main` is currently the SQLAlchemy-backed repository for
   model/catalogue records, not for filed returns.
 - The real persisted filing history on `main` is file-based:
-  `aeat.filing` drafts under `aeat_drafts_dir`, `aeat.submission`
+  `aeat.application.filing` drafts under `aeat_drafts_dir`, `aeat.adapters.outbound.aeat.export`
   submissions under `aeat_submissions_dir`, and synthetic historical fixtures
-  under `aeat.testing`.
-- `aeat.testing` already carries historical complementaria fixtures with
+  under `aeat.domain.testing`.
+- `aeat.domain.testing` already carries historical complementaria fixtures with
   `complementaria_of`, which is useful as synthetic ground truth for unit tests
   but is not the production persistence surface.
 
@@ -187,7 +187,7 @@ Implication:
 
 ### justificante and audit trail
 
-- `aeat.justificante.Justificante` already provides `csv`, `modelo`, `period`,
+- `aeat.domain.justificante.Justificante` already provides `csv`, `modelo`, `period`,
   and AEAT presentation metadata.
 - Issue `#82` requires every persisted record to preserve provenance and to use
   Protocol stubs for in-flight Track B integrations.
@@ -198,15 +198,15 @@ Implication:
   justificante/submission record and keep the human `reason` at the
   `CasillaChange` level.
 - Any optional audit-trail adapter should be injected via a local Protocol
-  rather than by importing `aeat.financial.audit`.
+  rather than by importing `aeat.domain.financial.audit`.
 
 ## implementation constraints derived from the issue set
 
-- Stay out of `aeat.auth`, `aeat.browser`, and `aeat.status` because branches
+- Stay out of `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.browser`, and `aeat.status` because branches
   `#94` and `#95` own them.
 - Do not change AEAT site-health parsing or certificate logic.
 - `AEAT_LIVE_TESTS_ENABLED` must gate live tests via
-  `aeat.cli._live.requires_live_enabled()`.
+  `aeat.entrypoints.cli._live.requires_live_enabled()`.
 - The "repeat the 14-bullet list from SLOT A1 verbatim" instruction could not
   be resolved from fetched issue/thread context or repo search. The controlling
   local conventions therefore remain the checked-in `AGENTS.md`,
@@ -214,7 +214,7 @@ Implication:
 
 ## recommended architecture
 
-- Introduce a new strict amendment schema in `aeat.filing` rather than trying
+- Introduce a new strict amendment schema in `aeat.application.filing` rather than trying
   to overload `FilingDraft`.
 - Compute amendments from a prior persisted `SubmittedFiling` plus a new set of
   casilla inputs, using the existing draft builders to obtain the new absolute
@@ -226,7 +226,7 @@ Implication:
   `complementaria` may only increase payable liability or reduce refund /
   compensation; `390` maps to `sustitutiva`; `303` at or after the 2024 cutover
   should raise a gap error because the legal path is `rectificativa`.
-- Extend `aeat.submission` with a parallel amendment-submission record and
+- Extend `aeat.adapters.outbound.aeat.export` with a parallel amendment-submission record and
   engine method, but let the browser submitter path degrade to a typed "gap"
   error or stub where the current `Modelo130Submitter` abstraction cannot
   safely express the AEAT complementaria branch.

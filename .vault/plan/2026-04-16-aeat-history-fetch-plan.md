@@ -78,14 +78,14 @@ mapping, and persists the result as strict pydantic v2 records.
    - `FiledModeloMetadata.presented_at` must be tz-aware and not in
      the future.
    - `RawCalculationPayload.casillas` keys match `^[0-9A-Z]{2,8}$`
-     (mirrors `_CASILLA_ID_RE` in `aeat.casillas.models`) — use a
+     (mirrors `_CASILLA_ID_RE` in `aeat.domain.casillas.models`) — use a
      pre-compiled regex local to `_models.py` to avoid the
      private-module cross-import ADR-D12 rule forbids.
    - `FilingHistory.entries` key must equal each record's
      `metadata.expediente_id`.
 4. Create `src/aeat/history/_decimal.py` with a documented
    `parse_decimal` port of
-   `aeat.justificante._extract._parse_decimal`. Raises
+   `aeat.domain.justificante._extract._parse_decimal`. Raises
    `HistoryParseError` on invalid input.
 5. Write `src/aeat/history/test_models.py`: round-trip every model
    through `model_dump_json()` / `model_validate_json()`, verify

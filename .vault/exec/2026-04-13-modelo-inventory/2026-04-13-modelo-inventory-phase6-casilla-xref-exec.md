@@ -16,7 +16,7 @@ related:
 
 - `test_casilla_cross_reference.py` walks `corpus/casillas/modelo_*/`
   using `pathlib.Path.iterdir`, strips the `modelo_` prefix, and
-  asserts each code resolves via `aeat.models._registry.get_modelo`.
+  asserts each code resolves via `aeat.domain.modelos._registry.get_modelo`.
   Corpus root is computed from `Path(__file__).resolve().parents[3]`
   relative to the worktree root.
 - Covers the three on-disk casilla catalogue directories (130, 303,

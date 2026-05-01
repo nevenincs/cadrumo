@@ -56,7 +56,7 @@ Three iteration loops:
 
 ## final verification
 
-- `uv run pytest src/aeat/review src/aeat/cli/review` — **57 tests pass** (49 from phase 1 + 4 new transaction-state tests + 2 new history tests adopted from #252's `test_review.py` + 2 new placeholder/finding-INFO tests).
+- `uv run pytest src/aeat/review src/aeat/entrypoints/cli/review` — **57 tests pass** (49 from phase 1 + 4 new transaction-state tests + 2 new history tests adopted from #252's `test_review.py` + 2 new placeholder/finding-INFO tests).
 - `uv run pytest -m unit` — **1859 passed** (no regressions; project gained 73 unit tests across all merged PRs since phase 1).
 - `uv run ruff check` — clean.
 - `uv run ruff format --check` — clean.

@@ -17,22 +17,22 @@ Step 2 PR 2 of 6. `__all__` removal of `auth._providers.describe_certificate_pro
 
 ## scope
 
-- Remove `"describe_certificate_provider"` from `src/aeat/auth/_providers.py` `__all__` (line 353).
+- Remove `"describe_certificate_provider"` from `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers.py` `__all__` (line 353).
 - Function definition stays at `_providers.py:268` — accessible via private API for tests but no longer on the public surface.
 
 ## pre-merge safety check
 
 Unrestricted grep for `describe_certificate_provider` across the repo:
 
-- Definition: `src/aeat/auth/_providers.py:268`.
-- `__all__` entry: `src/aeat/auth/_providers.py:353` (this PR removes).
+- Definition: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers.py:268`.
+- `__all__` entry: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers.py:353` (this PR removes).
 - Vault references: forensic-only (`.vault/research/`, `.vault/adr/`, `.vault/plan/`).
 
 Zero external consumers in production source. Removal is safe.
 
 ## verification
 
-`python -c "from aeat.auth._providers import describe_certificate_provider"` still succeeds (function definition retained); only the `__all__` export is removed.
+`python -c "from aeat.adapters.outbound.aeat.auth._providers import describe_certificate_provider"` still succeeds (function definition retained); only the `__all__` export is removed.
 
 ## findings (FIX / FILE / STRIKE)
 

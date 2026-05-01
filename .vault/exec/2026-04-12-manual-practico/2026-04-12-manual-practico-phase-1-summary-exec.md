@@ -21,7 +21,7 @@ merges and include a live human reviewer.
 
 ## Tasks executed
 
-- Landed `src/aeat/manuals/` subpackage:
+- Landed `src/aeat/domain/manuals/` subpackage:
   - `_schema.py` with strict pydantic v2 models for `ManualId`,
     `ManualPart`, `RuleKind`, `LLMProvenance`, `SectionSource`,
     `RuleSource`, `Paragraph`, `Rule`, `SectionRef`, `Section`,
@@ -48,25 +48,25 @@ merges and include a live human reviewer.
   - `errors.py` with the full `ManualError` hierarchy.
   - `__init__.py` re-exports the public surface (36 symbols in
     `__all__`).
-- Extended `aeat.config.Settings` with `aeat_manuals_root` (default
+- Extended `aeat.core.config.Settings` with `aeat_manuals_root` (default
   `<repo>/corpus/manuals`) and `aeat_manuals_review_required`
   (default `True`). Matching entries added to `env/.env.example`.
   `tests/test_config.py` stays green. Also added explicit
   `encoding="utf-8"` to `tests/test_config.py::_parse_env_example_vars`
   to unblock the Windows dev loop against the existing non-ASCII
   box-drawing characters in `.env.example` (minimal targeted fix).
-- Added `src/aeat/cli/manual.py` with seven subcommands. `fetch`,
+- Added `src/aeat/entrypoints/cli/manual.py` with seven subcommands. `fetch`,
   `verify`, `list`, `show` are fully functional. `structure`,
   `extract-rules`, `translate` raise `RuleExtractionError` pointing
   at `#21`. Registered as `app.add_typer(manual_module.app, name=
-  "manual", ...)` in `src/aeat/cli/__init__.py`.
+  "manual", ...)` in `src/aeat/entrypoints/cli/__init__.py`.
 - Materialised the three raw manual PDFs via the real `aeat manual
   fetch` CLI against AEAT's sede electrónica; wrote committed
   manifests and git-ignored the binaries.
-- Added colocated unit tests under `src/aeat/manuals/`
+- Added colocated unit tests under `src/aeat/domain/manuals/`
   (`test_schema.py`, `test_loader.py`, `test_verify.py`,
   `test_fetch.py`) and a CLI smoke test at
-  `src/aeat/cli/test_manual_cli.py`. All `@pytest.mark.unit`, no
+  `src/aeat/entrypoints/cli/test_manual_cli.py`. All `@pytest.mark.unit`, no
   mocks, no patches, no fakes, no stubs (beyond the typed
   `Protocol`s used for type-annotation only).
 
@@ -96,8 +96,8 @@ Final dev loop, run on Windows on `2026-04-12`:
 - `uv run ruff check .` — clean.
 - `uv run ty check src tests` — clean.
 - `uv run pytest` — 154 passed, 1 skipped, 7 deselected (live tests
-  opt-in). All new tests in `src/aeat/manuals/` and
-  `src/aeat/cli/test_manual_cli.py` green.
+  opt-in). All new tests in `src/aeat/domain/manuals/` and
+  `src/aeat/entrypoints/cli/test_manual_cli.py` green.
 - `uv run prek run --all-files` — every hook passes
   (`trim trailing whitespace`, `fix end of files`, `check yaml`,
   `check toml`, `check for added large files`, `check for merge

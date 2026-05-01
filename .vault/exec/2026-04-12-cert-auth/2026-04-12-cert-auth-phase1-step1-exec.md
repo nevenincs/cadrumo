@@ -12,14 +12,14 @@ related:
 # cert-auth phase1 step1: schema + error hierarchy
 
 ## Scope
-- `src/aeat/auth/certificate.py` — new module containing
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` — new module containing
   `CertificateBackend` StrEnum, `CertificateBundle`, `LoadedCertificate`
   (with `PrivateAttr` fields for the PKCS#12 bytes, passphrase
   `SecretStr`, and parsed private key handle), `HandshakeResult`, and
   the full `CertificateError` hierarchy (`CertificateLoadError`,
   `CertificatePasswordError`, `CertificateExpiredError`,
   `CertificateHandshakeError`).
-- `src/aeat/auth/__init__.py` — additive re-exports. No changes to the
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py` — additive re-exports. No changes to the
   existing Google-auth public API.
 
 ## Design notes

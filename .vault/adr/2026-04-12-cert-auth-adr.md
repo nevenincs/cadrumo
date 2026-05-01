@@ -18,7 +18,7 @@ Accepted — 2026-04-12.
 AEAT's Sede Electrónica gates most autónomo-facing endpoints behind a
 client-TLS handshake using an FNMT-RCM PKCS#12 *certificado de persona
 física*. Issue #8 requires a programmatic auth path for the
-Playwright-driven `aeat.browser` subpackage. Cl@ve and DNIe are explicit
+Playwright-driven `aeat.adapters.outbound.aeat.browser` subpackage. Cl@ve and DNIe are explicit
 non-goals. See `[[2026-04-12-cert-auth-research]]` for the survey.
 
 ## Decision
@@ -51,12 +51,12 @@ not justified by the primary use case today.
 - Raw PKCS#12 bytes and the parsed private-key handle live in
   `PrivateAttr` fields on `LoadedCertificate` and are therefore
   **NEVER** serialised by `model_dump()` and **NEVER** exposed by `repr()`.
-- The public API lives in `aeat.auth.certificate`; backends live in
-  `aeat.auth._certificate_backends/` as private modules. Callers import
-  exclusively from `aeat.auth`.
+- The public API lives in `aeat.adapters.outbound.aeat.auth.certificate`; backends live in
+  `aeat.adapters.outbound.aeat.auth._certificate_backends/` as private modules. Callers import
+  exclusively from `aeat.adapters.outbound.aeat.auth`.
 
 ### Error hierarchy
-All domain errors inherit from `aeat.errors.AeatError` via a single
+All domain errors inherit from `aeat.core.errors.AeatError` via a single
 `CertificateError` base:
 
 - `CertificateError` — base.
@@ -116,11 +116,11 @@ Five additive fields on the existing `Settings` model, all documented in
    cert — they may still contain stale session tokens.
 
 ## Consequences
-- New code lives under `src/aeat/auth/certificate.py` and
-  `src/aeat/auth/_certificate_backends/`. Existing Google auth symbols
-  in `aeat/auth/__init__.py` are untouched; cert symbols are re-exported
+- New code lives under `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` and
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/`. Existing Google auth symbols
+  in `aeat/adapters/outbound/aeat/auth/__init__.py` are untouched; cert symbols are re-exported
   additively.
-- `aeat.browser.session.BrowserSession` must eventually learn to accept
+- `aeat.adapters.outbound.aeat.browser.session.BrowserSession` must eventually learn to accept
   a `CertificateBundle` and propagate it to
   `browser.new_context(client_certificates=[...])`. That wiring is
   **out of scope for this issue** but is explicitly enabled by the

@@ -28,7 +28,7 @@ related:
 # aeat-verify code review audit
 
 Full code-review audit of the `#239` aeat-verify feature branch covering
-the two new subpackages (`aeat.remote` and `aeat.filing.reconciliation`),
+the two new subpackages (`aeat.remote` and `aeat.application.filing.reconciliation`),
 the `aeat filing reconcile` CLI surface, and the `aeat sync run`
 auto-reconcile integration. Verdict line below.
 
@@ -53,19 +53,19 @@ that preceded this audit:
 - `5bce67c` `Merge remote-tracking branch 'origin/main' into feature/239-aeat-verify`
 
 Scope includes every file under `src/aeat/remote/`,
-`src/aeat/filing/reconciliation/`, the CLI surface at
-`src/aeat/filing/_cli.py`, the sync-run surface at
-`src/aeat/sync/_run.py`, and their colocated test suites. Out of scope:
+`src/aeat/application/filing/reconciliation/`, the CLI surface at
+`src/aeat/application/filing/_cli.py`, the sync-run surface at
+`src/aeat/application/sync/_run.py`, and their colocated test suites. Out of scope:
 modules untouched on this branch.
 
 ## Non-negotiable constraints audit
 
 - **Zero writes on the wire**: verified. No module under `aeat.remote`
-  or `aeat.filing.reconciliation` contains a mutating Playwright
+  or `aeat.application.filing.reconciliation` contains a mutating Playwright
   primitive, a mutating HTTP verb, or an English/Spanish write-verb
   prefix on the public API. The Layer 3 structural grep guard at
   `src/aeat/remote/test_no_write_surface.py` and
-  `src/aeat/filing/reconciliation/test_no_write_surface.py`
+  `src/aeat/application/filing/reconciliation/test_no_write_surface.py`
   enforces this at CI time, and both walk their respective subtrees
   exhaustively.
 - **Clave never mocked**: verified. The live-read integration test at
@@ -78,9 +78,9 @@ modules untouched on this branch.
   `ConfigDict(strict=True, frozen=True, extra="forbid")`. The Layer 1
   write-guard marker `mode: Literal["read"] = "read"` was already
   present on every `aeat.remote` record; it is now present on every
-  `aeat.filing.reconciliation` record too (M1 fix in this commit).
+  `aeat.application.filing.reconciliation` record too (M1 fix in this commit).
 - **No edits to forbidden modules**: verified. The closed
-  `aeat.sync._divergence.DivergencePayload` discriminated union is
+  `aeat.application.sync._divergence.DivergencePayload` discriminated union is
   not widened. The persistence adapter emits a parallel wrapping
   record (`FilingReconciliationDivergenceRecord`) per the ADR's
   fork-rationale paragraph.
@@ -101,8 +101,8 @@ None.
 ### Medium
 
 - **M1 — `mode: Literal["read"] = "read"` missing on reconciliation
-  records**. `src/aeat/filing/reconciliation/_schema.py` and
-  `src/aeat/filing/reconciliation/_persist.py` did not carry the
+  records**. `src/aeat/application/filing/reconciliation/_schema.py` and
+  `src/aeat/application/filing/reconciliation/_persist.py` did not carry the
   Layer 1 write-guard marker on `CasillaDelta`, `FilingDraftRef`,
   `ReconciliationReport`, the six payload variants, or
   `FilingReconciliationDivergenceRecord`. The adjacent
@@ -112,9 +112,9 @@ None.
   Field added to every record, module docstring updated to mention
   the marker, runtime test
   `test_every_boundary_record_reports_read_mode` added to
-  `src/aeat/filing/reconciliation/test_no_write_surface.py`.
+  `src/aeat/application/filing/reconciliation/test_no_write_surface.py`.
 - **M2 — Dead `elif delta == 0` branch in `_classify_pair`**.
-  `src/aeat/filing/reconciliation/_reconcile.py:145-147` carried an
+  `src/aeat/application/filing/reconciliation/_reconcile.py:145-147` carried an
   unreachable branch that re-classified a zero delta as
   `ROUNDING_ONLY`. The caller in the same module at lines 351-352
   already short-circuits with `continue` whenever
@@ -128,10 +128,10 @@ None.
 
 - **L1 — Narrative builder duplicates mirror pattern**. The
   trilingual narrative builder at
-  `src/aeat/filing/reconciliation/_narrative.py` intentionally
-  mirrors `aeat.verification._verify._compose_narrative` by value,
+  `src/aeat/application/filing/reconciliation/_narrative.py` intentionally
+  mirrors `aeat.application.verification._verify._compose_narrative` by value,
   as the ADR requires. A future refactor could lift the shared
-  vocabulary into `aeat.i18n` to eliminate the by-value duplication,
+  vocabulary into `aeat.core.i18n` to eliminate the by-value duplication,
   but the ADR explicitly accepts the duplication so Kent sees one
   definition of "rounding" today. **Status: accepted per ADR.**
 - **L2 — `_FILING_SCOPE_SENTINEL` is a 1-char placeholder**. The
@@ -173,7 +173,7 @@ None.
 - **C2 — `aeat sync run` auto-reconcile integration relies on a
   real `RemoteFilingFetcher` Protocol-conforming class in tests**.
   The Phase 5 sync-run integration test at
-  `src/aeat/sync/test_run_reconcile.py` builds a real pydantic
+  `src/aeat/application/sync/test_run_reconcile.py` builds a real pydantic
   `RemoteFiling` inline and threads it through via a
   Protocol-conforming class (no mocks). One edge case not covered:
   `RemoteFilingStatus.UNKNOWN` on a submitted draft. The current
@@ -192,7 +192,7 @@ None.
 
 - **The fork-rationale for `DivergencePayload` is the right call**:
   widening the closed discriminated union would silently widen
-  `aeat.sync`'s auto-heal-safety contract, which is load-bearing for
+  `aeat.application.sync`'s auto-heal-safety contract, which is load-bearing for
   the existing Kent-facing divergence queue. The parallel wrapping
   record is the minimum structural change that preserves both
   contracts.
@@ -223,7 +223,7 @@ standard gate command chain reports:
 - `just test` — 3364 passed, 5 skipped, 29 deselected (the +1 over
   the pre-fix 3363 count is the new
   `test_every_boundary_record_reports_read_mode` Layer-1 runtime
-  test landing in `src/aeat/filing/reconciliation/test_no_write_surface.py`).
+  test landing in `src/aeat/application/filing/reconciliation/test_no_write_surface.py`).
 - `just hooks` — every `prek` hook (whitespace, EOF, YAML, TOML,
   large-file, merge-conflict, private-key, ruff check, ruff format,
   `ty`, relative-imports guard) passes.

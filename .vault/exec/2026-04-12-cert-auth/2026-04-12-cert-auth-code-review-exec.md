@@ -17,16 +17,16 @@ Scope: every file touched by issue #8 in the feature/8-cert-auth
 worktree. Verdict at the bottom.
 
 ## Files reviewed
-- `src/aeat/auth/certificate.py`
-- `src/aeat/auth/__init__.py`
-- `src/aeat/auth/_certificate_backends/__init__.py`
-- `src/aeat/auth/_certificate_backends/_base.py`
-- `src/aeat/auth/_certificate_backends/_playwright_context.py`
-- `src/aeat/auth/_certificate_backends/_httpx_fallback.py`
-- `src/aeat/auth/_certificate_backends/_user_data_dir.py`
-- `src/aeat/auth/_certificate_backends/_mtls_proxy.py`
-- `src/aeat/auth/test_certificate.py`
-- `src/aeat/auth/test_certificate_live.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/__init__.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_base.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_playwright_context.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_httpx_fallback.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_user_data_dir.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_mtls_proxy.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py`
 - `src/aeat/config.py`
 - `env/.env.example`
 - `pyproject.toml`
@@ -88,18 +88,18 @@ a Google-style docstring. Verified via `uv run ty check src tests`
 `CertificateExpiredError`, `CertificateHandshakeError`). No domain
 errors leak `ValueError` / `RuntimeError` across the public boundary.
 
-### Logging via `aeat.logging.get_logger`
+### Logging via `aeat.core.logging.get_logger`
 **PASS.** Every module uses `log = get_logger(__name__)`. No bare
 `logging.getLogger` in new code. (The existing `log = logging.getLogger(__name__)`
-in `aeat/auth/__init__.py` is pre-existing Google-auth code and is
+in `aeat/adapters/outbound/aeat/auth/__init__.py` is pre-existing Google-auth code and is
 explicitly out of scope for this issue.)
 
 ### Public API discipline
-**PASS.** Callers import exclusively from `aeat.auth`; every cert
-symbol is re-exported from `aeat/auth/__init__.py` and listed in
+**PASS.** Callers import exclusively from `aeat.adapters.outbound.aeat.auth`; every cert
+symbol is re-exported from `aeat/adapters/outbound/aeat/auth/__init__.py` and listed in
 `__all__`. Backend implementations live under
-`aeat/auth/_certificate_backends/` (leading underscore = private).
-`aeat.auth.certificate._select_backend` is the only module that
+`aeat/adapters/outbound/aeat/auth/_certificate_backends/` (leading underscore = private).
+`aeat.adapters.outbound.aeat.auth.certificate._select_backend` is the only module that
 imports from the backends package.
 
 ### Lint / typecheck / tests / hooks
@@ -125,7 +125,7 @@ opt-in pattern.
 `tests/test_config.py::TestEnvExampleAlignment` passes.
 
 ## Risks / follow-ups noted
-- `aeat.browser.session.BrowserSession` still treats `auth_backend`
+- `aeat.adapters.outbound.aeat.browser.session.BrowserSession` still treats `auth_backend`
   as an opaque stub (see the pre-existing `if self.auth_backend: pass`
   block). Wiring `build_client_certificates_kwarg` into
   `browser.new_context(client_certificates=...)` is explicitly out

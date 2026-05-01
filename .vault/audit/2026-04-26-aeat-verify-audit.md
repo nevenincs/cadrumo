@@ -75,7 +75,7 @@ the AEAT-side state for these filings is stable.
 
 ### P3 — Justificante metadata parse
 
-`done`. `aeat.justificante.parse_justificante` extracts a valid
+`done`. `aeat.domain.justificante.parse_justificante` extracts a valid
 `Justificante` from each captured PDF. The 2021 legacy column-split
 layout required a regex extension (`_PRESENTED_AT_ANNUAL_INVERTED_RE`,
 `_NRC_IMPORTE_RE`) that landed in the discovery-driven rewrite
@@ -85,7 +85,7 @@ canonical regex set without further extension.
 ### P4 — Sanitise to fixture
 
 `partially complete`. The sanitiser infrastructure (the
-`pdf-sanitizer` sub-feature) is fully built: `aeat.sanitizer`
+`pdf-sanitizer` sub-feature) is fully built: `aeat.adapters.inbound.sanitizer`
 subpackage with strict-frozen pydantic v2 records, the 8-step
 order-of-operations pipeline, the `aeat sanitize` CLI bridge with
 all four verbs, and the three load-bearing security gates
@@ -123,7 +123,7 @@ autonomous-AI-bounded.
 
 ### P5 — Declaración deep parse
 
-`done`. The `aeat.declaracion._parsers.modelo_100` extractor was
+`done`. The `aeat.adapters.inbound.declaracion._parsers.modelo_100` extractor was
 built during the prior discovery-driven rewrite and lands 83-86
 casillas/year across the `2021.legacy`, `2022.modern`, and
 `2023.modern` template revisions. Regression tests assert field
@@ -148,8 +148,8 @@ invocation against the captured expediente.
 ### P8 — Write-guard re-verify
 
 `done`. Per-subpackage `test_no_write_surface.py` covers
-`aeat.sede`, `aeat.filing.reconciliation`, `aeat.cli.filing._reconcile`,
-and the new `aeat.sanitizer` + `aeat.cli.sanitize`. No public symbol
+`aeat.adapters.outbound.aeat.sede`, `aeat.application.filing.reconciliation`, `aeat.entrypoints.cli.filing._reconcile`,
+and the new `aeat.adapters.inbound.sanitizer` + `aeat.entrypoints.cli.sanitize`. No public symbol
 in the new sanitiser surface carries a forbidden mutation verb
 (`submit`, `send`, `commit`, `enviar`, `presentar`, `firmar`,
 `radicar`, `remitir`, `modificar`, `anular`, `cancelar`, `rechazar`).
@@ -167,9 +167,9 @@ operator review) rather than declaring W1 closed.
 
 The `pdf-sanitizer` sub-feature (issue #239 sub-scope) ships:
 
-- `src/aeat/sanitizer/` — package with 12 source files, 5 test
+- `src/aeat/adapters/inbound/sanitizer/` — package with 12 source files, 5 test
   files, 91 unit tests passing.
-- `src/aeat/cli/sanitize/` — CLI bridge with 4 verbs (`pdf`,
+- `src/aeat/entrypoints/cli/sanitize/` — CLI bridge with 4 verbs (`pdf`,
   `prepare-map`, `verify`, `check`), 23 unit tests.
 - `pyproject.toml` — adds `pikepdf>=10.0.0` as a hard runtime
   dependency.
@@ -206,12 +206,12 @@ The 2022 capture validation produced:
 The discovery-driven rewrite remains the load-bearing W1
 infrastructure:
 
-- `aeat.sede` walker (Expediente, JustificanteRef, SedeCapture,
+- `aeat.adapters.outbound.aeat.sede` walker (Expediente, JustificanteRef, SedeCapture,
   walk_expedientes_tree, capture_justificante, find_expediente,
   fetch_notifications_query, fetch_notifications_summary).
-- `aeat.declaracion._parsers.modelo_100` deep extractor (83-86
+- `aeat.adapters.inbound.declaracion._parsers.modelo_100` deep extractor (83-86
   casillas/year, three template revisions).
-- `aeat.filing.reconciliation` comparator with
+- `aeat.application.filing.reconciliation` comparator with
   `FilingDivergenceKind` enum and `ReconciliationStatus` triad
   (MATCH / DIVERGENT / NOT_YET_FOUND).
 - `aeat sede` and `aeat filing reconcile` CLI surfaces, both
@@ -228,7 +228,7 @@ infrastructure:
    reference), then runs `aeat sanitize pdf` and
    `aeat sanitize verify` in sequence. Only when verify exits zero
    does the fixture commit.
-2. **Update `aeat.sanitizer.fixtures.SANITIZED_SHAS`** with the
+2. **Update `aeat.adapters.inbound.sanitizer.fixtures.SANITIZED_SHAS`** with the
    SHA-256 of each committed sanitised PDF.
 3. **Run W1 P7 live reconcile dry-run** once a fixture exists.
    `aeat filing reconcile --modelo 100 --period 0A --ejercicio

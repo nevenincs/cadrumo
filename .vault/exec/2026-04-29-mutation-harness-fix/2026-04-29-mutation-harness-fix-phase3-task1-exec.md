@@ -12,7 +12,7 @@ related:
 
 ## What
 
-`src/aeat/formulas/_rulesets/test_scalar_mutation.py`:
+`src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py`:
 
 - Imported `MODELO_100_2024 / 2025 / 2026` and the `Iterator`
   collection ABC.
@@ -53,7 +53,7 @@ per ruleset).
 
 ## Verification
 
-`uv run pytest src/aeat/formulas/_rulesets/test_scalar_mutation.py -q`
+`uv run pytest src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py -q`
 → 36 passed (was 17 pre-#457). 18 new M100 cases (9 archetypes × 2
 directions) plus 1 new sanity-check test. Each M100 mutation
 produces a discrepancy ≥ 0.02 € on the target casilla.

@@ -48,7 +48,7 @@ line to a daily JSONL file under ``aeat_llm_usage_dir``. The record's
 ``text`` field is the full response text — same leakage surface as
 the cache.
 
-### Existing `aeat.storage` substrate covers the discipline
+### Existing `aeat.adapters.persistence.storage` substrate covers the discipline
 
 The substrate's `redact_structured(value, rules=
 default_rules_for_class(SensitivityClass.CACHE))` walks the dumped

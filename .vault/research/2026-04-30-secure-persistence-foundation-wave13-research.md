@@ -23,11 +23,11 @@ A cross-codebase grep against the wave-12 HEAD reveals the precise consolidation
 
 | File | Function | Param |
 | --- | --- | --- |
-| `src/aeat/submission/_repository.py` | `_validate_submission_id` | `submission_id` |
-| `src/aeat/filing/_repository.py` | `_validate_draft_id` | `draft_id` |
-| `src/aeat/filing/_complementaria_repository.py` | `_validate_amendment_id` | `amendment_id` |
-| `src/aeat/justificante/_repository.py` | `_validate_csv` | `csv` |
-| `src/aeat/filing/_history_repository.py` | `_validate_modelo` | `modelo` |
+| `src/aeat/adapters/outbound/aeat/export/_repository.py` | `_validate_submission_id` | `submission_id` |
+| `src/aeat/application/filing/_repository.py` | `_validate_draft_id` | `draft_id` |
+| `src/aeat/application/filing/_complementaria_repository.py` | `_validate_amendment_id` | `amendment_id` |
+| `src/aeat/domain/justificante/_repository.py` | `_validate_csv` | `csv` |
+| `src/aeat/application/filing/_history_repository.py` | `_validate_modelo` | `modelo` |
 
 All five share the identical body (the parameter name and the `_id` suffix in error messages are the only differences):
 
@@ -61,9 +61,9 @@ All five validators are called immediately before composing a path of the form `
 - Dot-tokens (`.`, `..`) that would resolve to the store dir or its parent.
 - Dot-prefix tokens that would create hidden files (`.foo.envelope.json`).
 
-This is **belt-and-braces** validation: the substrate's `safe_record_path` (and `aeat._paths.resolve_record_json_path`) already enforce path containment downstream. The repository-level validator is an early-rejection layer so the failure mode is a clean `ValueError` at the API boundary rather than a deeper path-resolution exception.
+This is **belt-and-braces** validation: the substrate's `safe_record_path` (and `aeat.core.paths.resolve_record_json_path`) already enforce path containment downstream. The repository-level validator is an early-rejection layer so the failure mode is a clean `ValueError` at the API boundary rather than a deeper path-resolution exception.
 
-### F2 — Consolidation target: `aeat.storage._path_safety`
+### F2 — Consolidation target: `aeat.adapters.persistence.storage._path_safety`
 
 The substrate already houses two path-safety helpers in `_path_safety.py`:
 
@@ -80,7 +80,7 @@ class PathContainmentError(PersistenceError, ValueError):
 
     Inherits from :class:`ValueError` as well as :class:`PersistenceError` so
     legacy call-sites that catch ``ValueError`` from the path helpers in
-    :mod:`aeat._paths` continue to work; new code should catch the
+    :mod:`aeat.core.paths` continue to work; new code should catch the
     typed :class:`PathContainmentError` instead.
     """
 ```
@@ -89,19 +89,19 @@ class PathContainmentError(PersistenceError, ValueError):
 
 A grep across the five domain test files reveals 5 tests that exercise the validators directly with `pytest.raises(ValueError)`. These all pass through the `ValueError`-inheritance chain and require **no change** to keep working:
 
-- `src/aeat/filing/_test_repository.py:200` (draft_id)
-- `src/aeat/filing/_test_history_repository.py:163` (modelo)
-- `src/aeat/filing/_test_complementaria_repository.py:182` (amendment_id)
-- `src/aeat/submission/_test_repository.py:192` (submission_id)
-- `src/aeat/justificante/_test_repository.py:168` (csv)
+- `src/aeat/application/filing/_test_repository.py:200` (draft_id)
+- `src/aeat/application/filing/_test_history_repository.py:163` (modelo)
+- `src/aeat/application/filing/_test_complementaria_repository.py:182` (amendment_id)
+- `src/aeat/adapters/outbound/aeat/export/_test_repository.py:192` (submission_id)
+- `src/aeat/domain/justificante/_test_repository.py:168` (csv)
 
 Total existing-test surface preserved; consolidation is non-breaking.
 
 ### F4 — Consolidation does not introduce a coupling regression
 
-The five repositories already import from `aeat.storage` (the substrate's public surface). Adding `safe_repository_id` to `aeat.storage`'s `__all__` and importing it from each repository reuses the existing dependency edge. No new cross-module dependency edge is introduced.
+The five repositories already import from `aeat.adapters.persistence.storage` (the substrate's public surface). Adding `safe_repository_id` to `aeat.adapters.persistence.storage`'s `__all__` and importing it from each repository reuses the existing dependency edge. No new cross-module dependency edge is introduced.
 
-The `aeat.observability._validate_run_id` and `aeat.schema._validate_casilla_id` validators are kept domain-local because their rules are not the simple path-token shape — they would over-fit `safe_repository_id` if folded in.
+The `aeat.core.observability._validate_run_id` and `aeat.domain.schema._validate_casilla_id` validators are kept domain-local because their rules are not the simple path-token shape — they would over-fit `safe_repository_id` if folded in.
 
 ### F5 — Error message stability vs. the new `context` parameter
 
@@ -135,6 +135,6 @@ The existing three-check shape (non-empty + no path separators + no dot tokens) 
 
 ## Recommendation
 
-Author the wave-13 ADR with the **substrate-helper** shape (F2). One `safe_repository_id` function in `aeat.storage._path_safety`, exported through the `aeat.storage` public surface, called from all five repositories, raising the existing `PathContainmentError` (which already inherits from `ValueError`).
+Author the wave-13 ADR with the **substrate-helper** shape (F2). One `safe_repository_id` function in `aeat.adapters.persistence.storage._path_safety`, exported through the `aeat.adapters.persistence.storage` public surface, called from all five repositories, raising the existing `PathContainmentError` (which already inherits from `ValueError`).
 
 Five lines of body × 5 callers = 25 lines deleted, replaced by one helper + 5 single-line call sites. Pure code-quality refactor with zero security regression and zero existing-test surface churn.

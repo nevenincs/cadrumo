@@ -60,14 +60,14 @@ For each plugin, the research records: **what** it does, **why** this project wi
 ### async — `pytest-asyncio` (already installed)
 
 - **What:** collects and runs `async def` tests. Built-in for pytest.
-- **Why:** the `aeat.browser` Playwright path is async-first; async tests already exist in `src/aeat/browser/`.
+- **Why:** the `aeat.adapters.outbound.aeat.browser` Playwright path is async-first; async tests already exist in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/`.
 - **Where:** both unit and live.
 - **Pitfalls:** `asyncio_mode` must be pinned (`strict` recommended) to avoid accidental auto-collection of plain coroutines.
 
 ### live HTTP / browser — `pytest-playwright`
 
 - **What:** Playwright's official pytest plugin. Provides `page`, `browser`, `context` fixtures and CLI flags (`--headed`, `--browser`, `--tracing`).
-- **Why:** `src/aeat/browser/test_live_evasion.py` and future AEAT flow tests need a standardised browser harness. The project already pins `playwright>=1.58.0` as a runtime dep; the pytest plugin is additive.
+- **Why:** `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_live_evasion.py` and future AEAT flow tests need a standardised browser harness. The project already pins `playwright>=1.58.0` as a runtime dep; the pytest plugin is additive.
 - **Where:** live only (browser sessions consume quota; unit tests must remain hermetic).
 - **Pitfalls:** plugin pulls its own browser download step (`playwright install`). Not a problem since we already document it.
 

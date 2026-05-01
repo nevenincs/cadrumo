@@ -15,7 +15,7 @@ Plan reference:
 
 ## Files changed
 
-- `src/aeat/declaracion/_extractors/modelo_115_v2025.py` — added
+- `src/aeat/adapters/inbound/declaracion/_extractors/modelo_115_v2025.py` — added
   `Modelo115V2024Extractor` and `Modelo115V2026Extractor` sibling
   subclasses. Each pins only its own `template_revision`
   ClassVar; the extraction logic is inherited verbatim via
@@ -23,7 +23,7 @@ Plan reference:
   `GenericDeclaracionExtractor`). Module docstring updated to
   document the three-year layout invariance per the rule-delta
   manifest. `__all__` updated.
-- `src/aeat/declaracion/_extractors/__init__.py` — extended the
+- `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py` — extended the
   import statement and registered both new classes in
   `_REGISTERED_CLASSES`.
 
@@ -31,8 +31,8 @@ Plan reference:
 
 - Smoke test in Python REPL:
   ```python
-  from aeat.declaracion._extractors import get_extractor
-  from aeat.declaracion._schema import TemplateRevision
+  from aeat.adapters.inbound.declaracion._extractors import get_extractor
+  from aeat.adapters.inbound.declaracion._schema import TemplateRevision
   for año in (2024, 2025, 2026):
       tr = TemplateRevision(modelo='115', año=año, revision=f'{año}.01')
       cls = type(get_extractor(tr))

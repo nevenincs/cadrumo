@@ -18,7 +18,7 @@ Implement the fresh-clone authentication fix for issue `#153` by inserting a pro
 
 The implementation follows the accepted ADR and its audit findings. The work stays narrow:
 
-- add a small `aeat.mcp` package with a launcher module for the `google-workspace` MCP server
+- add a small `aeat.entrypoints.mcp` package with a launcher module for the `google-workspace` MCP server
 - bridge existing repo settings into the exact upstream `workspace-mcp` auth env vars, including the preserved service-account impersonation path
 - redirect upstream credential persistence into a repo-local gitignored directory under `env/`
 - rewire `.mcp.json` to execute the launcher through `uv run python -m ...` with no embedded secrets and no `env` block
@@ -28,13 +28,13 @@ The implementation follows the accepted ADR and its audit findings. The work sta
 ## Tasks
 
 - `Phase 1 — Launcher module`
-  1. Create `src/aeat/mcp/` and add the launcher module plus package init files.
+  1. Create `src/aeat/entrypoints/mcp/` and add the launcher module plus package init files.
   2. Structure the launcher as pure derivation helpers plus a thin process-replacement boundary so env and argv behaviour can be unit tested without mocks or patched process APIs.
   3. Implement settings loading, auth-path validation, upstream env-var mapping, project-local credential-directory creation, and process replacement into the real `workspace-mcp` command.
   4. Ensure the launcher preserves the supported service-account path by mapping `GOOGLE_APPLICATION_CREDENTIALS` to `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` and passing through `GOOGLE_IMPERSONATE_EMAIL` when present.
 
 - `Phase 2 — Tracked config handoff`
-  1. Update `.mcp.json` so `google-workspace` runs the new launcher through `uv run python -m aeat.mcp.launch_google_workspace`.
+  1. Update `.mcp.json` so `google-workspace` runs the new launcher through `uv run python -m aeat.entrypoints.mcp.launch_google_workspace`.
   2. Update `.gitignore` only as needed to make the chosen `workspace-mcp` credential-cache path explicitly gitignored and auditable.
 
 - `Phase 3 — Unit verification`

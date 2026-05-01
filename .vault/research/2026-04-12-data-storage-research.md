@@ -28,9 +28,9 @@ automated, reviewable migrations and honestly evaluates Google Sheets/Drive.
 - Certificate bytes stay out of the DB; only references.
 - Zero-config is strongly preferred for the current phase.
 - Python 3.13, uv-managed, src layout, tests via pytest exclusively.
-- Public API discipline: callers import from `aeat.storage` only.
+- Public API discipline: callers import from `aeat.adapters.persistence.storage` only.
 - Sibling branches:
-  - `#14` owns filing fixtures / `src/aeat/testing/` — storage tests use inline fixtures.
+  - `#14` owns filing fixtures / `src/aeat/domain/testing/` — storage tests use inline fixtures.
   - `#15` owns pytest config — do not touch.
   - `#16` / `#20` may amend `src/aeat/config.py`; additive only, no clobber.
   - `#20` owns trilingual primitives — translatable fields MUST be stubbed with TODO markers.

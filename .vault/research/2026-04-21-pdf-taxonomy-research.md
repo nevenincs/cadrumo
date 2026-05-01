@@ -13,7 +13,7 @@ related:
 
 ## Problem
 
-`aeat.justificante` reads one specific document (the *justificante de presentación* — receipt). The `#271` import command is named "import past filing from justificante PDF" but a justificante does not carry casilla values, so the feature can only reconstruct a metadata scaffold. The user's concern is that real calculation-verified import requires targeting a **different** AEAT document entirely.
+`aeat.domain.justificante` reads one specific document (the *justificante de presentación* — receipt). The `#271` import command is named "import past filing from justificante PDF" but a justificante does not carry casilla values, so the feature can only reconstruct a metadata scaffold. The user's concern is that real calculation-verified import requires targeting a **different** AEAT document entirely.
 
 Before scoping extractors (cluster D), fixture corpora (cluster C), or schema completion (cluster B), we need a clear, code-grounded taxonomy of the PDFs AEAT produces and an explicit map of "which PDF is the import target for which flow."
 
@@ -23,7 +23,7 @@ Every AEAT-produced PDF a taxpayer encounters falls into one of six classes. The
 
 | PDF class | ES name | Stage | Carries casillas? | Carries CSV / metadata? | Notes |
 | --- | --- | --- | --- | --- | --- |
-| **Receipt** | *Justificante de presentación* | Post-filing | ❌ (totales only) | ✅ | 1–2 pages. Legal proof of filing. What `aeat.justificante` currently parses. |
+| **Receipt** | *Justificante de presentación* | Post-filing | ❌ (totales only) | ✅ | 1–2 pages. Legal proof of filing. What `aeat.domain.justificante` currently parses. |
 | **Filing copy** | *Declaración / Copia de la declaración / Ejemplar para el declarante* | Post-filing | ✅ (full) | ✅ (CSV printed at foot) | Multi-page. One section per modelo block. The target for calc-verified import. |
 | **Draft** | *Borrador* | Pre-filing | ✅ (pre-populated) | ❌ (no CSV — unfiled) | Multi-page, Renta-specific primarily; downloadable from Portal Renta. Carries AEAT's pre-computed draft. |
 | **Pre-declaration** | *Predeclaración / Simulación* | Pre-filing | ✅ | ❌ | Non-binding preview. Used by Modelo 100 simulators. Structure matches declaración. |
@@ -66,15 +66,15 @@ All four are **Kent-local** once Kent has saved them. None require the tool to h
 
 ## Evidence from the repo
 
-- `.vault/adr/2026-04-12-justificante-parser-adr.md` — scopes `aeat.justificante` to the receipt only.
+- `.vault/adr/2026-04-12-justificante-parser-adr.md` — scopes `aeat.domain.justificante` to the receipt only.
 - `.vault/adr/2026-04-20-pdf-import-adr.md` §2.7 — explicitly records that line-level casillas are not in the receipt and emits a warning.
-- `src/aeat/justificante/_schema.py` — `Justificante` fields: `csv`, `modelo`, `period`, `ejercicio`, `presentation_id`, `presented_at`, `tax_id`, `total_a_ingresar`, `total_a_devolver`, `verification_url`, `source_pdf_path`, `source_pdf_sha256`, `parsed_at`. No casilla tuple. Consistent with receipt-only scope.
-- `src/aeat/filing/_import.py` — wraps the receipt parser; draft casillas fall through to `FilingValueKind.EMPTY` via the builder's `_materialise_literal`.
+- `src/aeat/domain/justificante/_schema.py` — `Justificante` fields: `csv`, `modelo`, `period`, `ejercicio`, `presentation_id`, `presented_at`, `tax_id`, `total_a_ingresar`, `total_a_devolver`, `verification_url`, `source_pdf_path`, `source_pdf_sha256`, `parsed_at`. No casilla tuple. Consistent with receipt-only scope.
+- `src/aeat/application/filing/_import.py` — wraps the receipt parser; draft casillas fall through to `FilingValueKind.EMPTY` via the builder's `_materialise_literal`.
 - No code anywhere reads a *declaración*, *borrador*, *predeclaración*, *datos fiscales*, or *datos personales* PDF today.
 
 ## Naming drift in existing code
 
-- Module name `aeat.justificante` is correct for the receipt.
+- Module name `aeat.domain.justificante` is correct for the receipt.
 - Command name `aeat filing import --from-justificante` is correct for the receipt.
 - EPIC `#233` is titled **"Kent imports a past filing from its justificante PDF"** — this conflates receipt import with filing import and is where the user's concern surfaces linguistically. The EPIC's child issues need to distinguish "receipt import" (#271 — shipped) from "filing-copy import" (new — not yet scoped).
 
@@ -82,9 +82,9 @@ All four are **Kent-local** once Kent has saved them. None require the tool to h
 
 | Project term | ES source | Meaning |
 | --- | --- | --- |
-| `JustificanteReceipt` / `aeat.justificante` | *justificante de presentación* | Post-filing receipt. Metadata + totals only. (As today.) |
-| `FilingCopy` / `aeat.declaracion` (new) | *copia de la declaración* | Post-filing full filing PDF. Casilla-complete. |
-| `FilingDraftPdf` / `aeat.borrador` (new) | *borrador* | Pre-filing draft (primarily Renta). Casilla-complete, un-CSV-stamped. |
+| `JustificanteReceipt` / `aeat.domain.justificante` | *justificante de presentación* | Post-filing receipt. Metadata + totals only. (As today.) |
+| `FilingCopy` / `aeat.adapters.inbound.declaracion` (new) | *copia de la declaración* | Post-filing full filing PDF. Casilla-complete. |
+| `FilingDraftPdf` / `aeat.adapters.inbound.borrador` (new) | *borrador* | Pre-filing draft (primarily Renta). Casilla-complete, un-CSV-stamped. |
 | `FilingPreview` / `aeat.predeclaracion` (new) | *predeclaración / simulación* | Pre-filing simulation. Casilla-complete, non-binding. |
 | `FiscalDataStatement` / `aeat.datos_fiscales` (new) | *datos fiscales* | Informational statements used as **inputs** to Modelo 100. Not a filing-import source. |
 
@@ -100,6 +100,6 @@ The word "justificante" stays locked to the receipt. "Declaración", "borrador",
 
 ## Open questions (to close in the ADR)
 
-1. Do we rename `aeat.justificante` to `aeat.receipt` / `aeat.justificante_receipt` or leave the Spanish as the project convention? Policy: Spanish is the authoritative AEAT terminology (per project mandate), so **keep** `aeat.justificante` and introduce siblings `aeat.declaracion`, `aeat.borrador`, etc.
+1. Do we rename `aeat.domain.justificante` to `aeat.receipt` / `aeat.justificante_receipt` or leave the Spanish as the project convention? Policy: Spanish is the authoritative AEAT terminology (per project mandate), so **keep** `aeat.domain.justificante` and introduce siblings `aeat.adapters.inbound.declaracion`, `aeat.adapters.inbound.borrador`, etc.
 2. Is `aeat filing import --from-justificante` kept, renamed, or supplemented? Recommendation: **supplement** — add `--from-declaracion`, `--from-borrador` flags; keep `--from-justificante` for the amendment-baseline path.
 3. Does cluster E's verification apply across all three casilla-carrying classes uniformly? Yes — all three produce the same `(casilla_id, printed_value)` tuple shape, so one verification pipeline fits all.

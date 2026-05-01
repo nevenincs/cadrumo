@@ -16,16 +16,16 @@ Plan reference:
 
 ## Files changed
 
-- `src/aeat/formulas/_rulesets/modelo_115_2026.py` — NEW.
+- `src/aeat/domain/formulas/_rulesets/modelo_115_2026.py` — NEW.
   Re-import-clone of `modelo_115_2025` with the 2026 effective
   range. Module docstring quotes the verbatim BOE art. 100
   statute and references the rule-delta manifest. Numerical
   content of `ParameterTable` identical to 2024 / 2025.
-- `src/aeat/formulas/_rulesets/__init__.py` — register
+- `src/aeat/domain/formulas/_rulesets/__init__.py` — register
   `MODELO_115_2026` in the import block, `ALL_RULESETS`, and
   `__all__`. Updated module docstring to add an issue-#319
   section noting M115's 2024 → 2025 → 2026 trail mirrors M130's.
-- `src/aeat/formulas/_rulesets/test_modelo_115_2026.py` — NEW.
+- `src/aeat/domain/formulas/_rulesets/test_modelo_115_2026.py` — NEW.
   Mirrors `test_modelo_130_2026.py` on the smaller M115 surface.
   Seven class methods + six parametrised cases (13 tests total):
   - `test_consistent_quarter_is_clean` — base happy-path audit.
@@ -44,23 +44,23 @@ Plan reference:
   - parametrised `test_casilla_derivations_at_various_bases_2026`
     — six (base, in-kind, complementaria) tuples covering zero-
     boundary, typical, and large-base scenarios.
-- `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py` —
+- `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py` —
   added `modelo_115.2026` row to `EXPECTED_COUNTS` mirroring
   the 2024 / 2025 fingerprint (`sub_op=1, percent_rate_param=1`).
-- `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py` —
+- `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py` —
   added `MODELO_115_2026` import + `(MODELO_115_2026, "03",
   _f115_fixture())` row in `_ruleset_cases`.
-- `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py` —
+- `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py` —
   added `MODELO_115_2026` import + a 2026 `pytest.param` reusing
   `_modelo_115_fixture` for the casilla-06 sub_op chain.
 
 ## Verification
 
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_115_2026.py`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_115_2026.py`
   → 13 passed.
-- `uv run pytest src/aeat/formulas/_rulesets/test_mutator_kill_rate.py
-  src/aeat/formulas/_rulesets/test_percent_rate_mutation.py
-  src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py
+  src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py
+  src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py`
   → 113 passed.
 - `uv run aeat audit rulesets citations | grep 115`
   → `OK modelo_115.2026 ... coverage=100.00%`.

@@ -14,14 +14,14 @@ related:
 
 ## Problem Statement
 
-Cluster D delivers the `aeat.declaracion` module — a per-modelo extractor that turns a *copia de la declaración* PDF into a strict `DeclaracionFiling` record with every casilla ID + printed value identified, ready for cluster E's round-trip calc verification. The module must be reliable across AEAT template revisions, survive intra-año form amendments, produce deterministic output for the synthetic L3 generator, and degrade gracefully (partial extraction > hard failure).
+Cluster D delivers the `aeat.adapters.inbound.declaracion` module — a per-modelo extractor that turns a *copia de la declaración* PDF into a strict `DeclaracionFiling` record with every casilla ID + printed value identified, ready for cluster E's round-trip calc verification. The module must be reliable across AEAT template revisions, survive intra-año form amendments, produce deterministic output for the synthetic L3 generator, and degrade gracefully (partial extraction > hard failure).
 
 ## Considerations
 
 - Three extraction primitives are viable: label-anchored regex (simplest, fastest, 90 % coverage), bbox-anchored (resilient, maintenance-heavy), AcroForm reader (narrow applicability but cheap to try). OCR is an escape hatch for scans but out of MVP scope.
 - AEAT template revisions drift mid-año (Orden HAC/819/2024 re-numbered Modelo 303 casillas 2024-09). The registry must key on `(modelo, template_revision)`, not just `(modelo, año)`.
-- The existing `aeat.justificante._extract` helpers (`_parse_decimal`, `_strip_accents`, `_require`) are directly reusable — promoted to the shared `_pdf_import/_shared.py` module cluster A opens.
-- `aeat.filing.build_draft(..., inputs=extracted_casillas_dict, ...)` is the right pairing point: the extractor produces casilla-ID-keyed literals; `build_draft` materialises the computed casillas on top; cluster E then re-runs the formula engine over everything and diffs.
+- The existing `aeat.domain.justificante._extract` helpers (`_parse_decimal`, `_strip_accents`, `_require`) are directly reusable — promoted to the shared `_pdf_import/_shared.py` module cluster A opens.
+- `aeat.application.filing.build_draft(..., inputs=extracted_casillas_dict, ...)` is the right pairing point: the extractor produces casilla-ID-keyed literals; `build_draft` materialises the computed casillas on top; cluster E then re-runs the formula engine over everything and diffs.
 - The `Engine.audit_against` primitive expects a ruleset. Extractor output for a modelo-with-no-ruleset (390 today) can still flow through `build_draft` but cluster E cannot verify — the CLI reports `EXTRACTION_OK, VERIFICATION_UNAVAILABLE`.
 - Project mandate: Pydantic v2 strict+frozen boundary records; no bare dicts; `AeatError`-rooted exceptions; Spanish CLI flag names.
 - Kent-observable AC: `aeat filing import --from-declaracion <pdf>` produces a draft whose casilla tuple matches the printed values; any casilla the extractor could not resolve surfaces as a warning with a readable explanation.
@@ -38,10 +38,10 @@ Cluster D delivers the `aeat.declaracion` module — a per-modelo extractor that
 
 ## Implementation
 
-### 1. `aeat.declaracion` module layout
+### 1. `aeat.adapters.inbound.declaracion` module layout
 
 ```
-src/aeat/declaracion/
+src/aeat/adapters/inbound/declaracion/
     __init__.py           # re-exports DeclaracionFiling, parse_declaracion,
                           # DeclaracionParseError, TemplateRevision
     _schema.py            # DeclaracionFiling, ExtractionWarning, TemplateRevision
@@ -64,7 +64,7 @@ src/aeat/declaracion/
 ### 2. Public API
 
 ```python
-# src/aeat/declaracion/__init__.py
+# src/aeat/adapters/inbound/declaracion/__init__.py
 
 def parse_declaracion(
     pdf_path: Path,
@@ -164,7 +164,7 @@ Each concrete `modelo_N_vY.py` ships as its own PR, fully code-reviewed and veri
 
 ### 8. CLI wiring (cluster-A additive flag materialised here)
 
-`src/aeat/cli/filing/__init__.py`:
+`src/aeat/entrypoints/cli/filing/__init__.py`:
 
 ```python
 @app.command("import")

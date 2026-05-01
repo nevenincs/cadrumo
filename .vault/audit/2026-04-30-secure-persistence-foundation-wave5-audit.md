@@ -37,7 +37,7 @@ Wave 5 closes the three carry-forwards from the wave-4 audit gate:
   three engine `append_live_submit_audit` call sites now route through
   `GovernedLiveSubmitAuditSink.append`. Engine knob renamed
   `live_submit_audit_log_path` → `live_submit_audit_dir`. Legacy
-  `aeat.submission._audit.append_live_submit_audit` becomes a
+  `aeat.adapters.outbound.aeat.export._audit.append_live_submit_audit` becomes a
   `DeprecationWarning` wrapper that preserves on-disk behaviour for
   third-party callers but points them at the governed sink.
 
@@ -65,7 +65,7 @@ All three wave-4 carry-forwards are now closed:
 
 Wave-5 phase-1 and phase-2 introduced top-level `from ..storage
 import ...` statements at module scope in `observability/_sink.py` and
-`submission/_engine.py`. The `aeat.storage` package eagerly imports
+`submission/_engine.py`. The `aeat.adapters.persistence.storage` package eagerly imports
 Alembic plugin discovery, which logs INFO lines on stderr at import
 time. The CLI json-pipe-safety contract requires stderr to remain
 empty when ``--json`` output is in flight.
@@ -117,7 +117,7 @@ on-disk persistence.
 The following are *carried forward* into wave 6 (caches and corpora)
 rather than blocking wave 5:
 
-- The legacy `aeat.submission._audit` writer is still in the public
+- The legacy `aeat.adapters.outbound.aeat.export._audit` writer is still in the public
   surface as a deprecation wrapper. A future wave excises it cleanly
   after operators have migrated their callers.
 - The transport-level `AmendmentSubmissionResult.dry_run` and

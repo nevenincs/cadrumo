@@ -28,7 +28,7 @@ Implements `[[2026-04-12-data-storage-adr]]`. Scope is strictly issue wgergely/a
 
 ## phase 2 — storage subpackage
 
-All files under `src/aeat/storage/`:
+All files under `src/aeat/adapters/persistence/storage/`:
 
 - `errors.py` — `StorageError(AeatError)` plus `MigrationError` and `RepositoryError`
   subclasses. Google-style docstrings.
@@ -64,8 +64,8 @@ Top-level `migrations/` directory:
 - `alembic.ini` at the repo root. `script_location = migrations`. `sqlalchemy.url`
   is left empty and injected at runtime from `Settings.aeat_database_url`.
 - `migrations/env.py` — standard Alembic env.py tailored for SQLAlchemy 2.x. Loads
-  `Settings`, reads `aeat_database_url`, imports `aeat.storage._orm.metadata` as
-  `target_metadata`, and uses `aeat.logging.get_logger` for its logger calls.
+  `Settings`, reads `aeat_database_url`, imports `aeat.adapters.persistence.storage._orm.metadata` as
+  `target_metadata`, and uses `aeat.core.logging.get_logger` for its logger calls.
 - `migrations/script.py.mako` — standard template.
 - `migrations/versions/0001_initial.py` — the first revision that creates
   `modelos`, `portals`, `corpus_artifacts`. Hand-written (no autogen noise),
@@ -82,8 +82,8 @@ No existing recipes touched.
 
 ## phase 5 — tests
 
-All colocated under `src/aeat/storage/` with `@pytest.mark.unit` markers. No
-mocks/patches/fakes/stubs. Inline fixtures (no reliance on `src/aeat/testing/`
+All colocated under `src/aeat/adapters/persistence/storage/` with `@pytest.mark.unit` markers. No
+mocks/patches/fakes/stubs. Inline fixtures (no reliance on `src/aeat/domain/testing/`
 which is owned by #14).
 
 - `_test_engine.py` — engine factory composes a URL, writes to a tmp sqlite file,
@@ -118,7 +118,7 @@ already defers to ADRs for layout decisions.
 Cross-checked against CLAUDE.md, issue #10 acceptance criteria, vaultspec rules,
 sibling branch territories, and the pydantic-mandate memory.
 
-- **CLAUDE.md — public API discipline**: covered. Only `aeat.storage.__init__`
+- **CLAUDE.md — public API discipline**: covered. Only `aeat.adapters.persistence.storage.__init__`
   re-exports; ORM internals live in `_orm.py` (leading underscore convention).
 - **CLAUDE.md — Google-style docstrings + full type hints**: every public symbol
   gets one during phase 2.
@@ -132,15 +132,15 @@ sibling branch territories, and the pydantic-mandate memory.
 - **Pydantic mandate memory**: the public surface is pydantic v2 records with
   `strict=True, frozen=True`; ORM mapper classes are *internal only* and never
   leak. No bare `dict[str, Any]` in any public signature.
-- **Sibling #14 (`tests/fixtures/filing_history/`, `src/aeat/testing/`)**: not
+- **Sibling #14 (`tests/fixtures/filing_history/`, `src/aeat/domain/testing/`)**: not
   touched; storage tests use inline fixtures.
 - **Sibling #15 (pytest config)**: not touched.
-- **Sibling #16 (`src/aeat/browser/`)**: not touched.
+- **Sibling #16 (`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/`)**: not touched.
 - **Sibling #20 (trilingual primitives)**: translatable columns are plain `str`
   today with inline `TODO(#20)` markers. No competing translation type defined.
 - **Issue #10 acceptance**:
   - research + ADR + plan + exec artefacts — yes.
-  - `src/aeat/storage/` connection factory, session helpers, base, errors — yes.
+  - `src/aeat/adapters/persistence/storage/` connection factory, session helpers, base, errors — yes.
   - Alembic under `migrations/` + initial revision + `just db-migrate` +
     `just db-upgrade` — yes.
   - first-cut `modelos` / `portals` / `corpus_artifacts` with translatable

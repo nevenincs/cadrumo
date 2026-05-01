@@ -16,8 +16,8 @@ related:
 
 Three EPIC-#305 clusters executed end-to-end in the `feature/271-pdf-import` worktree:
 
-- **Cluster A** (PDF taxonomy scaffolding) — new `src/aeat/_pdf_import/` package (`ExtractedCasilla`, `PdfFilingImportError`) + `docs/concepts/aeat-pdfs.md` + re-home of `JustificanteError` under `PdfFilingImportError`.
-- **Cluster G** (justificante reframing — code part) — `src/aeat/justificante/test_vocabulary_stable.py` public-surface pin + EPIC #233 title polish.
+- **Cluster A** (PDF taxonomy scaffolding) — new `src/aeat/adapters/inbound/pdf/` package (`ExtractedCasilla`, `PdfFilingImportError`) + `docs/concepts/aeat-pdfs.md` + re-home of `JustificanteError` under `PdfFilingImportError`.
+- **Cluster G** (justificante reframing — code part) — `src/aeat/domain/justificante/test_vocabulary_stable.py` public-surface pin + EPIC #233 title polish.
 - **Cluster B phase 1** (schema provenance extension) — `CasillaSource` pydantic record + optional `sources` / `valid_from` / `valid_to` fields on `StaticCasillaSchema` + parametrised `test_schema_completeness.py` (pass for 303; xfail strict for 130 until phase 2 completes the corpus).
 
 ## Review outcome
@@ -58,7 +58,7 @@ Traceback readability impacted marginally. Consider promoting to `aeat.pdf_impor
 - Every new test module carries `pytestmark = [pytest.mark.unit, pytest.mark.domain_*]` at module level.
 - All relative imports inside `src/aeat/`; no `aeat.*` absolute drift.
 - `issubclass(JustificanteError, AeatError)` preserved and guarded by a new unit test.
-- `aeat.justificante.__all__` frozen-set pinned by `test_vocabulary_stable.py`.
+- `aeat.domain.justificante.__all__` frozen-set pinned by `test_vocabulary_stable.py`.
 - `SubmittedFiling.justificante_csv` / `justificante_pdf_path` untouched.
 - `aeat filing import --from-justificante` behaviour unchanged; `test_filing_cli.py` still green.
 - `ExtractedCasilla`, `CasillaSource`, `PdfFilingImportError` all strict+frozen+`extra="forbid"`.
@@ -71,18 +71,18 @@ Traceback readability impacted marginally. Consider promoting to `aeat.pdf_impor
 
 Kent directly observes nothing from this wave. Acceptance is developer-observable:
 
-- `from aeat._pdf_import import ExtractedCasilla, PdfFilingImportError` imports cleanly — ✅ verified in `test_shared.py`.
-- `issubclass(aeat.justificante.JustificanteError, aeat._pdf_import.PdfFilingImportError) is True` — ✅ verified in `test_parser.py::TestJustificanteErrorRehome`.
-- `aeat.justificante.__all__` retains every frozen symbol — ✅ verified in `test_vocabulary_stable.py`.
+- `from aeat.adapters.inbound.pdf import ExtractedCasilla, PdfFilingImportError` imports cleanly — ✅ verified in `test_shared.py`.
+- `issubclass(aeat.domain.justificante.JustificanteError, aeat.adapters.inbound.pdf.PdfFilingImportError) is True` — ✅ verified in `test_parser.py::TestJustificanteErrorRehome`.
+- `aeat.domain.justificante.__all__` retains every frozen symbol — ✅ verified in `test_vocabulary_stable.py`.
 - `docs/concepts/aeat-pdfs.md` renders the six-PDF-class taxonomy with one paragraph per class — ✅ present.
 - `docs/coverage/modelos.md` + `docs/coverage/kent-capabilities.md` carry the new import axes — ✅ present after H1 fix.
 - Every existing `aeat filing import --from-justificante` workflow still runs — ✅ verified by the existing `test_filing_cli.py` suite (unchanged; all green).
 
 ## Quality gates
 
-- `uv run ruff check src/aeat/_pdf_import/ src/aeat/justificante/ src/aeat/filing/ docs/concepts/` — clean.
-- `uv run ty check src/aeat/_pdf_import/ src/aeat/justificante/ src/aeat/filing/` — clean.
-- `uv run pytest -m unit src/aeat/_pdf_import/ src/aeat/justificante/ src/aeat/filing/` — 96 passed, 2 deselected, 2 xfailed (intentional: Modelo 130 schema completeness).
+- `uv run ruff check src/aeat/adapters/inbound/pdf/ src/aeat/domain/justificante/ src/aeat/application/filing/ docs/concepts/` — clean.
+- `uv run ty check src/aeat/adapters/inbound/pdf/ src/aeat/domain/justificante/ src/aeat/application/filing/` — clean.
+- `uv run pytest -m unit src/aeat/adapters/inbound/pdf/ src/aeat/domain/justificante/ src/aeat/application/filing/` — 96 passed, 2 deselected, 2 xfailed (intentional: Modelo 130 schema completeness).
 
 ## Decision
 

@@ -1,6 +1,6 @@
 ---
 name: 2026-04-13-modelo-inventory-audit
-description: Mandatory code review for the modelo inventory + pydantic registry under aeat.models (#108)
+description: Mandatory code review for the modelo inventory + pydantic registry under aeat.domain.modelos (#108)
 type: audit
 tags:
   - "#audit"
@@ -21,11 +21,11 @@ related:
 ## Scope
 
 All 41 files / +2769 lines touched by the 9 exec commits. Key files:
-- src/aeat/models/__init__.py, _codes.py, _categories.py, _citations.py,
+- src/aeat/domain/modelos/__init__.py, _codes.py, _categories.py, _citations.py,
   _applicability.py, _metadata.py, _errors.py, _registry.py, _cli.py
-- src/aeat/models/_entries/_common.py + 20 per-modelo entries
-- src/aeat/models/test_{codes,registry,applicability,citations,metadata,cli,casilla_cross_reference}.py
-- src/aeat/cli/modelos/__init__.py, src/aeat/cli/__init__.py (2-line wire-up),
+- src/aeat/domain/modelos/_entries/_common.py + 20 per-modelo entries
+- src/aeat/domain/modelos/test_{codes,registry,applicability,citations,metadata,cli,casilla_cross_reference}.py
+- src/aeat/entrypoints/cli/modelos/__init__.py, src/aeat/entrypoints/cli/__init__.py (2-line wire-up),
   pyproject.toml (1-line B008 per-file ignore for _cli.py)
 
 ## Gate outcomes
@@ -91,7 +91,7 @@ Package docstring and every public symbol carry Google-style docstrings.
 
 ### 10. Public API discipline - OK
 __init__.py.__all__ = 15 symbols (alphabetised per plan deviation). Every other file underscore-prefixed.
-No external imports from aeat.models._*. src/aeat/cli/modelos/__init__.py shim imports aeat.models._cli mirroring the existing aeat.cli.deadlines/manual pattern on main.
+No external imports from aeat.domain.modelos._*. src/aeat/entrypoints/cli/modelos/__init__.py shim imports aeat.domain.modelos._cli mirroring the existing aeat.entrypoints.cli.deadlines/manual pattern on main.
 INFO: ADR section 12 declaration order loosened to alphabetical tuple order per plan-documented deviation. Accepted.
 
 ### 11. Errors - OK
@@ -101,20 +101,20 @@ _finalise_registry raises RegistryIntegrityError on every invariant class.
 test_error_classes_import asserts subclass relationships.
 
 ### 12. Logging - OK
-_registry uses aeat.logging.get_logger and logs loaded-N-modelo-entries at INFO exactly once at import.
-CLI uses typer.echo / rich.Console. Grep for import-logging and print-calls under src/aeat/models/ returned zero matches.
+_registry uses aeat.core.logging.get_logger and logs loaded-N-modelo-entries at INFO exactly once at import.
+CLI uses typer.echo / rich.Console. Grep for import-logging and print-calls under src/aeat/domain/modelos/ returned zero matches.
 
 ### 13. CLI - OK
-aeat modelos list/show/applicable-to/year-plan wired into src/aeat/cli/__init__.py alphabetically. Every subcommand carries --json.
+aeat modelos list/show/applicable-to/year-plan wired into src/aeat/entrypoints/cli/__init__.py alphabetically. Every subcommand carries --json.
 year-plan builds AutonomoProfile and calls year_plan(year, profile) which wraps DeadlineEngine(_InProcessCatalogue()).compute(...) honouring the plan DeadlineRule deviation.
 test_cli exercises text+JSON for list, --category iva filter, show 303 --json round-trip via model_validate_json, show 999 non-zero, applicable-to autonomo_ed_solo, and year-plan 2026 --tax-id X1234567L --iva-regime GENERAL --json. Zero mocks; real DeadlineEngine exercised.
 
 test_cli uses model_validate_json (not model_validate) because strict pydantic v2 rejects list->frozenset dict coercion - commented in-source.
 
-INFO: _cli.py lines 36-44 reconfigure stdout/stderr to UTF-8 at import time for Windows cp1252. Guarded with contextlib.suppress and idempotent; not a blocker but worth flagging as import-time side-effect for any consumer of aeat.models._cli.
+INFO: _cli.py lines 36-44 reconfigure stdout/stderr to UTF-8 at import time for Windows cp1252. Guarded with contextlib.suppress and idempotent; not a blocker but worth flagging as import-time side-effect for any consumer of aeat.domain.modelos._cli.
 
 ### 14. Tests - OK
-All new test files colocated under src/aeat/models/. Every test module declares pytestmark = pytest.mark.unit.
+All new test files colocated under src/aeat/domain/modelos/. Every test module declares pytestmark = pytest.mark.unit.
 Zero mock/patch/MagicMock/fake/stub occurrences. test_smoke.py unchanged (15 lines). 756 tests pass.
 
 ### 15. No workflow files - OK
@@ -124,7 +124,7 @@ Zero mock/patch/MagicMock/fake/stub occurrences. test_smoke.py unchanged (15 lin
 
 ### 17. Commit hygiene - OK
 Exactly 9 commits, each conventional-commit with (#108) suffix, each matching one plan phase:
-- 5b9b3e7 feat(models): scaffold aeat.models registry module skeleton
+- 5b9b3e7 feat(models): scaffold aeat.domain.modelos registry module skeleton
 - 1c42e77 feat(models): enums + LegalCitation/Applicability/Metadata
 - b2154d3 feat(models): error hierarchy for registry lookups
 - 3f3817e feat(models): populate registry with 20 modelo metadata entries
@@ -134,7 +134,7 @@ Exactly 9 commits, each conventional-commit with (#108) suffix, each matching on
 - 0e8fbd2 docs(models): public API docstrings + __all__ lock
 - bf9e57b chore(models): lint + typecheck + test green gates
 
-pyproject.toml B008 per-file ignore for _cli.py mirrors the existing src/aeat/cli/**/*.py Typer-defaults ignore; rationale in Phase 9 exec record. No extraneous commits.
+pyproject.toml B008 per-file ignore for _cli.py mirrors the existing src/aeat/entrypoints/cli/**/*.py Typer-defaults ignore; rationale in Phase 9 exec record. No extraneous commits.
 
 ### 18. Plan deviations - all accepted
 - DeadlineRule field dropped from ModeloMetadata: _metadata.py has no deadline_rule; year_plan resolves at query time via DeadlineEngine.compute. Preserves ADR section 7 intent. ACCEPTED.
@@ -143,7 +143,7 @@ pyproject.toml B008 per-file ignore for _cli.py mirrors the existing src/aeat/cl
 - B008 per-file ignore for _cli.py: honoured in pyproject.toml. ACCEPTED.
 
 ### 19. Windows path hygiene - OK
-Zero hard-coded backslashes in src/aeat/models/. test_casilla_cross_reference uses Path(__file__).resolve().parents[3] / corpus / casillas.
+Zero hard-coded backslashes in src/aeat/domain/modelos/. test_casilla_cross_reference uses Path(__file__).resolve().parents[3] / corpus / casillas.
 _cli.py reconfigures stdout to UTF-8 explicitly for Windows cp1252. Tests passed on Windows during this review run.
 
 ## Deviations from plan / ADR
@@ -155,7 +155,7 @@ _cli.py reconfigures stdout to UTF-8 explicitly for Windows cp1252. Tests passed
 | Modelo 123 caps_into=None | Plan Phase 4 / Risks | ACCEPTED |
 | pyproject.toml B008 per-file ignore for _cli.py | Exec Phase 9 | ACCEPTED |
 
-No undocumented deviations. aeat.deadlines public surface unchanged.
+No undocumented deviations. aeat.domain.deadlines public surface unchanged.
 
 ## Verdict
 
@@ -164,5 +164,5 @@ APPROVED - ready for PR.
 - Findings: 19 OK, 2 info (CLI stdout-reconfigure import-time side-effect; __all__ alphabetisation), 0 warn, 0 error, 0 blocker.
 - All four gates green on Windows (756 passed / 1 skipped / 23 deselected).
 - Registry faithfully materialises all 20 modelos; data matches research doc for spot-checked cases (100, 130, 720).
-- Every ADR invariant enforced at the earliest sensible phase (import-time where cheap, test-time for casilla cross-ref to avoid dragging aeat.casillas into every consumer).
+- Every ADR invariant enforced at the earliest sensible phase (import-time where cheap, test-time for casilla cross-ref to avoid dragging aeat.domain.casillas into every consumer).
 - The execution agent may open the pull request.

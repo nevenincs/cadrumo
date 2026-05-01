@@ -48,17 +48,17 @@ rewrite.
 | `aeat.status/` | 4093 | deleted in 8df3733 |
 | `aeat.history/` | 2341 | deleted in 8df3733 |
 | `aeat.inbox/` | ~1456 | deleted in 8df3733 |
-| `aeat.cli.status/` | ~120 | deleted in 8df3733 |
-| `aeat.cli.inbox/` | 607 | deleted in 8df3733 |
-| `aeat.cli._live_reader.py` | ~80 | deleted in 8df3733 |
+| `aeat.entrypoints.cli.status/` | ~120 | deleted in 8df3733 |
+| `aeat.entrypoints.cli.inbox/` | 607 | deleted in 8df3733 |
+| `aeat.entrypoints.cli._live_reader.py` | ~80 | deleted in 8df3733 |
 
 Salvaged: the site-health detection records and parsers (which were
 genuinely useful, not speculation) moved from `aeat.status._site_health`
-to `aeat.browser._site_health`.
+to `aeat.adapters.outbound.aeat.browser._site_health`.
 
 Downstream cleanup (handled by the dependent agent in 8df3733):
-`aeat.review` lost its inbox adapter; `aeat.workflow` had its
-`SiteHealthAlert` import retargeted; `aeat.cli.filing.import_` lost the
+`aeat.application.review` lost its inbox adapter; `aeat.application.workflow` had its
+`SiteHealthAlert` import retargeted; `aeat.entrypoints.cli.filing.import_` lost the
 `--from-aeat` flag and its supporting `_handle_aeat_import` /
 `_fetch_filed_modelos` helpers.
 
@@ -66,11 +66,11 @@ Downstream cleanup (handled by the dependent agent in 8df3733):
 
 | New surface | Status | Live-validated? |
 | --- | --- | --- |
-| `aeat.sede` (walker, expediente schema, justificante refs) | shipped | yes (Kent's 3 IRPF expedientes captured live) |
-| `aeat.sede._notifications` (parsers + live fetchers) | shipped | yes (2 unread + 1 pending row captured live) |
-| `aeat.justificante` (annual-modelo regex set) | extended | yes (3 IRPF justificantes parse end-to-end) |
-| `aeat.declaracion` Modelo 100 extractors (2021/2022/2023) | shipped | yes (83-86 casillas/year extracted from real PDFs) |
-| `aeat.filing.reconciliation` | shipped | yes (verified against captured Justificantes) |
+| `aeat.adapters.outbound.aeat.sede` (walker, expediente schema, justificante refs) | shipped | yes (Kent's 3 IRPF expedientes captured live) |
+| `aeat.adapters.outbound.aeat.sede._notifications` (parsers + live fetchers) | shipped | yes (2 unread + 1 pending row captured live) |
+| `aeat.domain.justificante` (annual-modelo regex set) | extended | yes (3 IRPF justificantes parse end-to-end) |
+| `aeat.adapters.inbound.declaracion` Modelo 100 extractors (2021/2022/2023) | shipped | yes (83-86 casillas/year extracted from real PDFs) |
+| `aeat.application.filing.reconciliation` | shipped | yes (verified against captured Justificantes) |
 | `aeat sede list-expedientes` CLI | shipped | yes (returns Kent's 3 IRPF rows live) |
 | `aeat sede discover` CLI | shipped | smoke-tested, full live PDF capture loop |
 | `aeat sede notifications` CLI | shipped | parser verified against live HTML; live fetch yet to run |
@@ -110,7 +110,7 @@ project needs one of:
   PDF + parsed metadata under `scratch/sede-discovery/<ts>/`, which
   feeds the next regression-test capture.
 - A new Modelo-100-style deep extractor (in
-  `src/aeat/declaracion/_parsers/<modelo>/`) once a real PDF is in hand.
+  `src/aeat/adapters/inbound/declaracion/_parsers/<modelo>/`) once a real PDF is in hand.
 
 The continuous-discovery loop is intentionally bounded by Kent's actual
 filings; speculative shape work is explicitly out of scope per the
@@ -118,7 +118,7 @@ ground-truth-first mandate.
 
 ## Open audit items
 
-- 4 transient failures observed in `src/aeat/auth/test_clave_movil.py`
+- 4 transient failures observed in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`
   during the cleanup wave were verified to pass cleanly on a fresh run
   (b7wcbw5ww and byzys6epr completion notices); not pre-existing as the
   earlier executor surmised.

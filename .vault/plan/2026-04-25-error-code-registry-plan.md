@@ -38,7 +38,7 @@ types, tests, and hooks.
 Grounded by the 2026-04-25 ADR and research artifacts plus the 2026-04-24
 iteration-6 reference, this work will:
 
-- convert `aeat.errors` into a package with a public registry surface;
+- convert `aeat.core.errors` into a package with a public registry surface;
 - bind a stable `ErrorCode` to every imported `AeatError` subclass;
 - add envelope rendering, localization selection, and secret scrubbing;
 - wrap Typer callbacks centrally from the CLI root while explicitly skipping
@@ -51,11 +51,11 @@ iteration-6 reference, this work will:
 ## Tasks
 
 - `Phase 1 - Registry foundation`
-  1. Convert `aeat.errors` into a package and add the strict registry and
+  1. Convert `aeat.core.errors` into a package and add the strict registry and
      envelope models.
   1. Replace direct base-exception holdouts that would bypass registry
      enforcement.
-  1. Preserve the public `aeat.errors` import surface through re-exports.
+  1. Preserve the public `aeat.core.errors` import surface through re-exports.
 - `Phase 2 - CLI boundary`
   1. Add the shared Typer callback error wrapper and stderr writer.
   1. Apply it from the CLI root to every command except `workflow run` and
@@ -82,7 +82,7 @@ Review outcome: approved for execution with one explicit deferral.
 - Scope matches issue #398 and the iteration-6 reference: registry first,
   envelope second, CLI wrapper third, tests/docs last.
 - The plan respects the sibling branch boundary by not modifying
-  `src/aeat/cli/workflow/run.py` or `src/aeat/cli/workflow/next.py` in this
+  `src/aeat/entrypoints/cli/workflow/run.py` or `src/aeat/entrypoints/cli/workflow/next.py` in this
   branch. Their decorator pass remains deferred until #393 merges.
 - The trilingual contract is preserved through `default_message_es/en/hu`
   fields and runtime language resolution.

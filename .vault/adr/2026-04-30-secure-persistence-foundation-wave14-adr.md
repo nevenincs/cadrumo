@@ -48,7 +48,7 @@ Action: none. The decision is documented here; future agents can reference this 
 
 ### D2 — IDENTITY-class records in SecretStore widening | **status: rejected**
 
-The substrate's IDENTITY-class storage is already wired via the **envelope path**: `aeat.setup._env_writer.write_profile_file` persists `AutonomoProfile` at IDENTITY class through `save_encrypted_envelope` (HKDF context `aeat.setup.profile.v1`). Master-key rotation already includes that path.
+The substrate's IDENTITY-class storage is already wired via the **envelope path**: `aeat.application.setup._env_writer.write_profile_file` persists `AutonomoProfile` at IDENTITY class through `save_encrypted_envelope` (HKDF context `aeat.application.setup.profile.v1`). Master-key rotation already includes that path.
 
 `SecretStore` is keyed by `(service, key) → bytes` for **string-keyed bearer state** (OAuth secrets, session storage). IDENTITY records are **one-per-installation singletons** (the operator's NIF + business profile + contact details) — the envelope path's "single file per profile" model is the correct shape.
 

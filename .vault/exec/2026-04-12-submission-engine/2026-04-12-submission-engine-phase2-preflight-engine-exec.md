@@ -13,14 +13,14 @@ issue: wgergely/aeat#42
 
 ## artefacts produced
 
-- `src/aeat/submission/_preflight.py` — four-gate `Preflight` validator
+- `src/aeat/adapters/outbound/aeat/export/_preflight.py` — four-gate `Preflight` validator
   (draft-ready, no-ERROR-findings, window-open, cert-loads) with INFO
   logging on every gate outcome.
-- `src/aeat/submission/_engine.py` — `SubmissionEngine.submit_draft`
+- `src/aeat/adapters/outbound/aeat/export/_engine.py` — `SubmissionEngine.submit_draft`
   with dry-run default, double-gate for live mode, JSON persistence
   under `settings.aeat_submissions_dir`, and `load_submission` /
   `list_submissions` helpers.
 
 ## verification
 
-- `uv run pytest src/aeat/submission/test_preflight.py src/aeat/submission/test_engine.py -q` — passed.
+- `uv run pytest src/aeat/adapters/outbound/aeat/export/test_preflight.py src/aeat/adapters/outbound/aeat/export/test_engine.py -q` — passed.

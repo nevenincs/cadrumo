@@ -11,7 +11,7 @@ related:
 
 # portal-catalogue implementation plan
 
-Implements the `aeat.portals` subpackage per the portal-catalogue ADR:
+Implements the `aeat.domain.portals` subpackage per the portal-catalogue ADR:
 closed `Portal` enum, strict pydantic v2 `PortalMetadata` registry, 41
 portal entries, CLI mirror, and typed `submission_portal` cross-
 reference on `ModeloMetadata`. The #108 modelo registry migrates from
@@ -20,18 +20,18 @@ the free-form `submission_portal_hint: str` to a typed
 
 ## Proposed Changes
 
-- New subpackage `src/aeat/portals/` with: `_codes.py`, `_categories.py`,
+- New subpackage `src/aeat/domain/portals/` with: `_codes.py`, `_categories.py`,
   `_metadata.py`, `_registry.py`, `_errors.py`, `_cli.py`,
   `_entries/` (41 files), colocated tests, and a thin public API
-  re-exported from `src/aeat/portals/__init__.py`.
-- Migration of `src/aeat/models/_metadata.py` to replace
+  re-exported from `src/aeat/domain/portals/__init__.py`.
+- Migration of `src/aeat/domain/modelos/_metadata.py` to replace
   `submission_portal_hint: str` with `submission_portal: Portal | None`
   and add a registry-level cross-reference invariant.
-- Update of all 20 modelo entries under `src/aeat/models/_entries/` to
+- Update of all 20 modelo entries under `src/aeat/domain/modelos/_entries/` to
   bind their new `submission_portal` to the matching `Portal` member.
-- New test `src/aeat/models/test_portal_cross_reference.py` closing
+- New test `src/aeat/domain/modelos/test_portal_cross_reference.py` closing
   the round-trip.
-- Wiring of the new Typer subcommand into `src/aeat/cli/__init__.py`.
+- Wiring of the new Typer subcommand into `src/aeat/entrypoints/cli/__init__.py`.
 - Conventional-commit messages throughout.
 
 ## Tasks
@@ -55,13 +55,13 @@ the free-form `submission_portal_hint: str` to a typed
      resolves, `related_modelo` round-trip, modelo closure with M037
      carve-out), and the three helpers (`get_portal`,
      `portals_for_modelo`, `portals_by_category`).
-  4. Wire `src/aeat/portals/__init__.py` public API: re-export the
+  4. Wire `src/aeat/domain/portals/__init__.py` public API: re-export the
      enums, the model, the errors, the registry, and the helpers.
 - `Phase 3 — CLI`
   1. Create `_cli.py` with `aeat portals list`, `show`, `for-modelo`
      subcommands emitting deterministic JSON (sorted by `Portal`
      value).
-  2. Wire the subcommand into `src/aeat/cli/__init__.py`.
+  2. Wire the subcommand into `src/aeat/entrypoints/cli/__init__.py`.
 - `Phase 4 — Unit tests`
   1. `test_codes.py` — `Portal` has exactly 41 members; values match
      member names lowercased; no duplicates.
@@ -93,23 +93,23 @@ the free-form `submission_portal_hint: str` to a typed
      and combined; invalid inputs raise `UnknownPortalError` /
      `UnknownModeloError`.
   7. `test_smoke.py` — keep the existing stub; harden it to import
-     every public name from `aeat.portals`.
+     every public name from `aeat.domain.portals`.
 - `Phase 5 — ModeloMetadata migration`
-  1. Change `src/aeat/models/_metadata.py`:
+  1. Change `src/aeat/domain/modelos/_metadata.py`:
      replace `submission_portal_hint: str` with
      `submission_portal: Portal | None`. Remove the `submission_portal_hint`
      validator bullet. Update the docstring.
-  2. Update all 20 `src/aeat/models/_entries/modelo_*.py` files:
+  2. Update all 20 `src/aeat/domain/modelos/_entries/modelo_*.py` files:
      replace `submission_portal_hint="..."` with
      `submission_portal=Portal.PORTAL_M<code>_<SHORT>`.
-  3. Extend `src/aeat/models/_registry.py` with a new
+  3. Extend `src/aeat/domain/modelos/_registry.py` with a new
      `_check_submission_portal` invariant called from
      `_finalise_registry` — asserts every `submission_portal` (when
      non-None) resolves in `PORTAL_REGISTRY` and that
      `metadata.submission_portal.related_modelo == metadata.code`.
-  4. Create `src/aeat/models/test_portal_cross_reference.py` pinning
+  4. Create `src/aeat/domain/modelos/test_portal_cross_reference.py` pinning
      the round-trip for every `ModeloCode` member.
-  5. Update `src/aeat/models/__init__.py` if any public surface
+  5. Update `src/aeat/domain/modelos/__init__.py` if any public surface
      shifted (no shift expected — the field rename is internal to the
      record).
 - `Phase 6 — Verification`
@@ -165,7 +165,7 @@ Mission success criteria, anchored to the ADR acceptance items:
 - **No new env vars.** `tests/test_config.py` continues to pass
   unchanged.
 - **No live-write surface.** Portal metadata is read-only; no
-  `aeat.submission`, `aeat.filing`, or `aeat.browser` touched.
+  `aeat.adapters.outbound.aeat.export`, `aeat.application.filing`, or `aeat.adapters.outbound.aeat.browser` touched.
 
 Honest caveats: the G-code and per-modelo URLs are curated from public
 AEAT Sede pages as of 2026-04-17. Unit tests cannot detect AEAT-side

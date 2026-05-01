@@ -13,7 +13,7 @@ Added canonical casilla settings and enforced verification on canonical writes.
 
 - Modified: `src/aeat/config.py`
 - Modified: `env/.env.example`
-- Modified: `src/aeat/casillas/catalogue.py`
+- Modified: `src/aeat/domain/casillas/catalogue.py`
 
 ## Description
 

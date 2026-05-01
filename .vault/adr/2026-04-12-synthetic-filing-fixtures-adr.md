@@ -25,7 +25,7 @@ and demos run offline. Real filing history is sensitive and live.
 
 ## Decision
 
-Introduce a new `aeat.testing` subpackage under `src/aeat/` that
+Introduce a new `aeat.domain.testing` subpackage under `src/aeat/` that
 owns the typed public API for loading synthetic filing fixtures.
 Persist the fixtures as JSON files under
 `tests/fixtures/filing_history/<modelo>/<period>-<scenario>.json`.
@@ -39,7 +39,7 @@ Every boundary-crossing record is a strict, frozen pydantic v2
 - `FilingRecord` — one past filing. Carries `record_id`,
   `synthetic: Literal[True]`, `_comment: str` (non-empty),
   `modelo`, `period`, `period_kind`, `profile_tax_id`, `status`
-  (reusing `aeat.filing.FilingDraftStatus`), `casillas`,
+  (reusing `aeat.application.filing.FilingDraftStatus`), `casillas`,
   `totals: dict[str, Decimal]`, `created_at`, `submitted_at`,
   `acknowledged_at`, `source: Literal["synthetic"]`, `scenario`,
   `complementaria_of`, `notes`.
@@ -52,7 +52,7 @@ Every boundary-crossing record is a strict, frozen pydantic v2
   `COMPLEMENTARIA`, `WITH_ERRORS`, `AMENDED`, `CANCELLED`,
   `ROUNDING`.
 
-`FilingDraftStatus` is reused from `aeat.filing` (merged on main
+`FilingDraftStatus` is reused from `aeat.application.filing` (merged on main
 via #39) — no new status enum.
 
 ### Serialisation format — JSON
@@ -70,7 +70,7 @@ parses a fixture without both fields present.
 
 ### Loader shape
 
-`src/aeat/testing/__init__.py` exposes the public API:
+`src/aeat/domain/testing/__init__.py` exposes the public API:
 
 - `FilingRecord`, `FixtureCasilla`, `FilingRecordPeriodKind`,
   `FilingRecordScenario` — re-exported.
@@ -85,7 +85,7 @@ parses a fixture without both fields present.
 - `FilingFixtureError(AeatError)` — the subpackage's only error
   type.
 
-Callers outside the subpackage import only from `aeat.testing`.
+Callers outside the subpackage import only from `aeat.domain.testing`.
 Private helpers live in `_loader.py`.
 
 ### Location of the fixtures — `tests/` not `src/`

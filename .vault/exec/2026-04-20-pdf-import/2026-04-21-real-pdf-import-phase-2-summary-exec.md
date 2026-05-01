@@ -29,17 +29,17 @@ Kent does not observe phases A or G directly (scaffolding), nor phase B-1 (schem
 ## Commits landed (in order)
 
 1. `fbde5d2` — wave 2 cluster C scaffolding (PII scrub library, synthetic generator primitives, L1 manifest fetcher, pytest markers).
-2. `398ef82` — wave 3 cluster D phase 1 (aeat.declaracion module + Modelo 130 v2025 extractor + synthetic Modelo 130 L3 generator + CLI `--from-declaracion`).
-3. `1723119` — wave 4 cluster E (aeat.verification module + discrepancy classifier + CLI verification chaining).
+2. `398ef82` — wave 3 cluster D phase 1 (aeat.adapters.inbound.declaracion module + Modelo 130 v2025 extractor + synthetic Modelo 130 L3 generator + CLI `--from-declaracion`).
+3. `1723119` — wave 4 cluster E (aeat.application.verification module + discrepancy classifier + CLI verification chaining).
 4. This commit (audit-driven hardening) — fixes H1, H2, M1, M2, M4, M5 from the formal code review (`.vault/audit/2026-04-21-real-pdf-import-execution-wave-234-audit.md`).
 
 ## Files touched this phase
 
-- `src/aeat/_pdf_import/_scrub.py` — full Spanish-PII regex set (NIF / NIE / IBAN / phone / email / CP / prefixed name / amounts / CSV / presentation ID).
-- `src/aeat/_pdf_import/test_scrub.py` — 20 scrub tests (up from 13).
-- `src/aeat/declaracion/` — new module family; 7 extractor tests + 7 integration round-trip tests.
-- `src/aeat/verification/` — new module; 6 tests.
-- `src/aeat/cli/filing/__init__.py` — `--from-declaracion` + verification chaining + trilingual output.
+- `src/aeat/adapters/inbound/pdf/_scrub.py` — full Spanish-PII regex set (NIF / NIE / IBAN / phone / email / CP / prefixed name / amounts / CSV / presentation ID).
+- `src/aeat/adapters/inbound/pdf/test_scrub.py` — 20 scrub tests (up from 13).
+- `src/aeat/adapters/inbound/declaracion/` — new module family; 7 extractor tests + 7 integration round-trip tests.
+- `src/aeat/application/verification/` — new module; 6 tests.
+- `src/aeat/entrypoints/cli/filing/__init__.py` — `--from-declaracion` + verification chaining + trilingual output.
 - `tests/fixtures/pdf_corpus/` — three-layer corpus directory skeleton + synthetic generator primitives.
 - `scripts/fetch_l1_anchors.py` — L1 manifest + hash-verified fetch + drift detection.
 - `pyproject.toml` — `fixture_tier_l1/l2/l3` markers registered.

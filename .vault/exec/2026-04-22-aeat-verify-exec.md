@@ -28,30 +28,30 @@ related:
 
 # `aeat-verify` `cleanup` `manuals-stub-cleanup`
 
-Final stub-cleanup pass for `aeat.manuals`: the rebase-swap placeholders in
-`src/aeat/manuals/_stubs.py` outlived their sibling branches. `aeat.corpus`
+Final stub-cleanup pass for `aeat.domain.manuals`: the rebase-swap placeholders in
+`src/aeat/domain/manuals/_stubs.py` outlived their sibling branches. `aeat.corpus`
 was demolished in this PR and never rejoined the tree, and the four
 Protocols inside `_stubs.py` were never imported anywhere — the only live
 symbol was `MODELO_CASILLA_PATTERN`, anchored to a hardcoded three-digit
-regex instead of the real `aeat.models.ModeloCode` enum. This pass deletes
+regex instead of the real `aeat.domain.modelos.ModeloCode` enum. This pass deletes
 the dead code and re-anchors the casilla cross-reference pattern to the
 canonical modelo registry.
 
-- Deleted: `src/aeat/manuals/_stubs.py` (102 lines: four Protocols, one
+- Deleted: `src/aeat/domain/manuals/_stubs.py` (102 lines: four Protocols, one
   unused `stub_extracted_at()` helper, and the hand-rolled
   `MODELO_CASILLA_PATTERN` regex constant).
 - Deleted: `src/aeat/corpus/` (empty residual directory left after the
   earlier deletion of the speculative subpackage).
-- Modified: `src/aeat/manuals/_schema.py` (folded the casilla
+- Modified: `src/aeat/domain/manuals/_schema.py` (folded the casilla
   cross-reference pattern inline as the private
   `_MODELO_CASILLA_PATTERN`; the `MODELO_NNN` prefix is now derived
-  from `aeat.models.ModeloCode` member values, so a new modelo cannot
+  from `aeat.domain.modelos.ModeloCode` member values, so a new modelo cannot
   be cited from a manual rule without first being registered in
-  `aeat.models`).
-- Modified: `src/aeat/manuals/_fetch.py` (dropped the docstring passage
+  `aeat.domain.modelos`).
+- Modified: `src/aeat/domain/manuals/_fetch.py` (dropped the docstring passage
   about being rewired to `aeat.corpus.Fetcher` once `#17` lands; the
   fetcher is now described as the production path that it actually is).
-- Modified: `src/aeat/manuals/__init__.py` (removed the `_stubs` mention
+- Modified: `src/aeat/domain/manuals/__init__.py` (removed the `_stubs` mention
   from the private-module enumeration in the package docstring).
 
 ## Description
@@ -65,7 +65,7 @@ not coming back. `FetcherProtocol` was never imported anywhere in
 `src/`; deleting it is purely subtractive.
 
 `LLMClientProtocol`, `TranslatorProtocol`, `BulkTranslatorProtocol` —
-described as placeholders for `aeat.llm`. The real subpackage exists and
+described as placeholders for `aeat.adapters.outbound.llm`. The real subpackage exists and
 ships `LLMClient`, `Translator`, `BulkTranslator` — but with
 fundamentally incompatible signatures (async, structured pydantic
 request/response models versus the Protocols' synchronous string-only
@@ -79,7 +79,7 @@ consumed by `_schema.py` to validate `Rule.references_casillas`
 entries (`MODELO_NNN[:CASILLA]` strings). The previous shape allowed any
 three-digit modelo number, which would silently accept references to
 modelos the project does not track. The replacement builds the
-alternation group from `aeat.models.ModeloCode` member values, so the
+alternation group from `aeat.domain.modelos.ModeloCode` member values, so the
 regex is now strictly anchored to the closed twenty-one-modelo registry.
 The casilla suffix remains a free-form alphanumeric token because
 casillas may be cited from a manual before the casilla catalogue is
@@ -100,15 +100,15 @@ warn callers about.
 
 Quality gates after the cleanup:
 
-- `uv run ruff check src/aeat/manuals/` — clean.
-- `uv run ty check src/aeat/manuals/` — clean.
-- `uv run pytest src/aeat/manuals/ -m unit -q` — 38 / 38 pass.
-- `uv run pytest src/aeat/cli/test_manual_cli.py -m unit -q` — 5 / 5
-  pass (the CLI integration tests that exercise `aeat.manuals` exports
+- `uv run ruff check src/aeat/domain/manuals/` — clean.
+- `uv run ty check src/aeat/domain/manuals/` — clean.
+- `uv run pytest src/aeat/domain/manuals/ -m unit -q` — 38 / 38 pass.
+- `uv run pytest src/aeat/entrypoints/cli/test_manual_cli.py -m unit -q` — 5 / 5
+  pass (the CLI integration tests that exercise `aeat.domain.manuals` exports
   still go green).
 - `uv run ruff check src/aeat/` — clean.
 - `uv run ty check src/aeat/` — clean.
-- Forbidden-phrase grep over `src/aeat/manuals/`
+- Forbidden-phrase grep over `src/aeat/domain/manuals/`
   (`aeat\.corpus|rebase-swap|in flight|when.*lands`) returns zero hits.
 
 The casilla-pattern narrowing is non-breaking: every existing fixture

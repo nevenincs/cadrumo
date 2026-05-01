@@ -26,7 +26,7 @@ related:
 ## phase-by-phase delivery
 
 - **Phase 1 — scaffolding** (`5b9b3e7`). Empty module skeleton for
-  `src/aeat/models/` and 20 entry stubs, placeholder unit tests.
+  `src/aeat/domain/modelos/` and 20 entry stubs, placeholder unit tests.
 - **Phase 2 — enums + primitive models** (`1c42e77`). `ModeloCode`,
   `ModeloCategory`, `ModeloCadence`, `TaxpayerProfile`,
   `LegalCitationSource`, `LegalCitation`, `ModeloApplicability`,
@@ -46,10 +46,10 @@ related:
   modelo resolves in the registry.
 - **Phase 7 — CLI subcommands** (`b334637`). Typer `list` / `show` /
   `applicable-to` / `year-plan` wired through
-  `src/aeat/cli/modelos/__init__.py` into the root `aeat` app.
-  Added a `src/aeat/models/_cli.py` per-file B008 ignore in
+  `src/aeat/entrypoints/cli/modelos/__init__.py` into the root `aeat` app.
+  Added a `src/aeat/domain/modelos/_cli.py` per-file B008 ignore in
   `pyproject.toml` matching the existing Typer treatment.
-- **Phase 8 — public API lock** (`0e8fbd2`). `src/aeat/models/__init__.py`
+- **Phase 8 — public API lock** (`0e8fbd2`). `src/aeat/domain/modelos/__init__.py`
   docstring + locked `__all__` covering the 15 symbols from the
   plan.
 - **Phase 9 — green gates** (`bf9e57b`). All four local gates
@@ -103,13 +103,13 @@ bcceb3c test(models): cross-reference casilla catalogue coverage (#108)
 3f3817e feat(models): populate registry with 20 modelo metadata entries (#108)
 b2154d3 feat(models): error hierarchy for registry lookups (#108)
 1c42e77 feat(models): add ModeloCode/Category/Cadence/Profile enums + LegalCitation/Applicability/Metadata (#108)
-5b9b3e7 feat(models): scaffold aeat.models registry module skeleton (#108)
+5b9b3e7 feat(models): scaffold aeat.domain.modelos registry module skeleton (#108)
 ```
 
 ## deviations
 
 - **`DeadlineRule` dropped** (ADR §7 vs. reality). ADR §7 referenced
-  a `DeadlineRule` type on `aeat.deadlines`; no such type exists on
+  a `DeadlineRule` type on `aeat.domain.deadlines`; no such type exists on
   `main`. The plan self-review accepted dropping the field and
   resolving deadlines at query time via
   `DeadlineEngine.compute`. Implementation honours the plan.
@@ -120,8 +120,8 @@ b2154d3 feat(models): error hierarchy for registry lookups (#108)
   the locked tuple on first run in Phase 8. The set of exported
   symbols is identical to the ADR §12 tuple; semantics unchanged.
 - **`pyproject.toml` B008 ignore extended** to cover
-  `src/aeat/models/_cli.py`, matching the existing per-file pattern
-  for `src/aeat/cli/**`. No new ruff rules added, no `# noqa` or
+  `src/aeat/domain/modelos/_cli.py`, matching the existing per-file pattern
+  for `src/aeat/entrypoints/cli/**`. No new ruff rules added, no `# noqa` or
   `# type: ignore` bandages introduced.
 
 ## pointers

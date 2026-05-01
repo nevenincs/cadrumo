@@ -25,7 +25,7 @@ invocation to resume cleanly once AEAT recovers.
 
 Research section 1 binds the scope to a handover prompt that overrides
 the issue body: the model and parsers must live under aeat.status, a
-thin hook sits in aeat.browser, and the workflow engine must learn a
+thin hook sits in aeat.adapters.outbound.aeat.browser, and the workflow engine must learn a
 new typed abort arm. Auth (#94) and filing (#93) subpackages are
 strictly out of scope.
 
@@ -37,7 +37,7 @@ strictly out of scope.
   that layer reaches all callers without touching four subpackages
   independently.
 - **Cross-subpackage error type.** The hook is raised from
-  aeat.browser but must be caught by aeat.workflow and surfaced by
+  aeat.adapters.outbound.aeat.browser but must be caught by aeat.application.workflow and surfaced by
   aeat.status. Placing the exception inside either subpackage forces
   an import cycle.
 - **Closed-enum discipline.** Project convention (research section 3)
@@ -55,12 +55,12 @@ strictly out of scope.
   existing _AbortError signal with a new reason and attaches a typed
   alert so a resumed run can inspect the previous halt.
 - **CLI discoverability.** No aeat browser Typer sub-app exists yet.
-  Adding one as a directory-backed package mirrors aeat.cli.status
-  and aeat.cli.workflow and leaves room for future browser commands.
+  Adding one as a directory-backed package mirrors aeat.entrypoints.cli.status
+  and aeat.entrypoints.cli.workflow and leaves room for future browser commands.
 
 ## Constraints
 
-- No edits to aeat.auth/** (owned by #94) or aeat.filing/** (owned
+- No edits to aeat.adapters.outbound.aeat.auth/** (owned by #94) or aeat.application.filing/** (owned
   by #93).
 - The browser session hook must be additive: the existing
   BrowserSession.create_context behaviour and signature are preserved.
@@ -93,31 +93,31 @@ parsers land inside the status subpackage, not the browser subpackage:
 Rationale: the handover prompt is authoritative (research section 1);
 the status subpackage is already the home of AEAT wire records and
 the reader that first discovered the mantenimiento blind spot.
-Placing the detection logic in aeat.browser would mix transport
+Placing the detection logic in aeat.adapters.outbound.aeat.browser would mix transport
 concerns with domain classification and force every marker refresh
 into the browser layer.
 
-### Decision 2 - Error hoist to aeat.errors
+### Decision 2 - Error hoist to aeat.core.errors
 
-SiteHealthError is hoisted to aeat.errors as a direct subclass of
+SiteHealthError is hoisted to aeat.core.errors as a direct subclass of
 AeatError, alongside existing domain error bases:
 
-- aeat.errors.SiteHealthError(AeatError) carries a strict
+- aeat.core.errors.SiteHealthError(AeatError) carries a strict
   status: SiteHealthStatus attribute (pydantic instance).
-- aeat.browser.session imports the error from aeat.errors only.
-- aeat.workflow._engine and aeat.status import from aeat.errors.
+- aeat.adapters.outbound.aeat.browser.session imports the error from aeat.core.errors only.
+- aeat.application.workflow._engine and aeat.status import from aeat.core.errors.
 
 Rationale: research section 4 identifies the circular-import trap if
-the error lives in either subpackage. aeat.errors already hosts
+the error lives in either subpackage. aeat.core.errors already hosts
 AeatError and FilingFixtureError; it is the designated neutral ground
 and both leaf subpackages already depend on it.
 
 ### Decision 3 - Browser session navigation hook
 
-aeat.browser.session gains a health-probe helper invoked after every
+aeat.adapters.outbound.aeat.browser.session gains a health-probe helper invoked after every
 successful page.goto:
 
-- A new module-level helper under aeat.browser._site_health_probe
+- A new module-level helper under aeat.adapters.outbound.aeat.browser._site_health_probe
   takes (url, http_status, headers, html) and runs the three parsers
   in a deterministic order: parse_rate_limit_response (cheapest,
   header-only short-circuit), then parse_mantenimiento_banner, then
@@ -141,9 +141,9 @@ contract untouched (additive hook).
 
 ### Decision 4 - Workflow pause-and-alert
 
-aeat.workflow._engine.WorkflowEngine learns a dedicated catch arm:
+aeat.application.workflow._engine.WorkflowEngine learns a dedicated catch arm:
 
-- aeat.workflow._models.WorkflowAbortReason gains SITE_UNAVAILABLE.
+- aeat.application.workflow._models.WorkflowAbortReason gains SITE_UNAVAILABLE.
   Name chosen over AEAT_SERVICE_DOWN because it is neutral across
   all five non-OK states (research section 9).
 - WorkflowStep gains an optional
@@ -168,11 +168,11 @@ prevents the collapse without perturbing the generic safety net.
 
 ### Decision 5 - CLI sub-app
 
-A new aeat.cli.browser directory-backed sub-app exposes
+A new aeat.entrypoints.cli.browser directory-backed sub-app exposes
 aeat browser health [--json]:
 
-- src/aeat/cli/browser/__init__.py defines app = typer.Typer(...).
-- src/aeat/cli/__init__.py wires it with
+- src/aeat/entrypoints/cli/browser/__init__.py defines app = typer.Typer(...).
+- src/aeat/entrypoints/cli/__init__.py wires it with
   app.add_typer(browser_module.app, name="browser", ...).
 - The health command opens a BrowserSession, calls navigate against
   settings.site_health_probe_url, and prints a human summary by
@@ -188,7 +188,7 @@ aeat browser health [--json]:
 
 ### Decision 6 - Settings additions
 
-aeat.config.Settings gains two fields:
+aeat.core.config.Settings gains two fields:
 
 - site_health_probe_url: str (validated via AnyHttpUrl adapter) with
   default https://sede.agenciatributaria.gob.es/.
@@ -252,9 +252,9 @@ drive plain strings from disk.
 
 ### Decision 9 - Out-of-scope guards
 
-- Zero edits to src/aeat/auth/**. The browser session hook must not
-  import from aeat.auth.
-- Zero edits to src/aeat/filing/**. The workflow engine catch arm is
+- Zero edits to src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/**. The browser session hook must not
+  import from aeat.adapters.outbound.aeat.auth.
+- Zero edits to src/aeat/application/filing/**. The workflow engine catch arm is
   narrowed to SiteHealthError and does not alter filing-side abort
   semantics.
 - The browser session hook is strictly additive: the existing
@@ -266,20 +266,20 @@ drive plain strings from disk.
 The central architectural choice is where the typed detection
 boundary lives. Two alternatives were weighed:
 
-- Alternative A - keep detection inside aeat.browser. The issue body
-  originally proposed aeat.browser.aeat_service_health plus an
+- Alternative A - keep detection inside aeat.adapters.outbound.aeat.browser. The issue body
+  originally proposed aeat.adapters.outbound.aeat.browser.aeat_service_health plus an
   AeatServiceState. This co-locates the hook and the model, but
   (a) it mixes transport concerns with AEAT-specific domain
   classification, (b) every marker refresh requires a browser-layer
   change, and (c) it contradicts the handover prompt, which is the
   authoritative scope per research section 1.
-- Alternative B - detection in aeat.status, thin hook in aeat.browser,
-  neutral error in aeat.errors. Chosen. It keeps aeat.browser
+- Alternative B - detection in aeat.status, thin hook in aeat.adapters.outbound.aeat.browser,
+  neutral error in aeat.core.errors. Chosen. It keeps aeat.adapters.outbound.aeat.browser
   responsible only for raising a pre-defined typed error, lets
   aeat.status own the marker corpus and parser suite next to the rest
   of the AEAT wire records, and resolves the circular-import hazard
   identified in research section 4 by hoisting the error to
-  aeat.errors.
+  aeat.core.errors.
 
 The workflow-engine pause-and-alert shape reuses the existing
 _AbortError / WorkflowStep / WorkflowAbortReason machinery documented

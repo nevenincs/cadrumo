@@ -61,12 +61,12 @@ The paired research document is `2026-04-14-n26-data-source-research`
 
 ## Constraints
 
-- Public API must continue to live under `aeat.financial` and
-  `aeat.financial.providers` only.
+- Public API must continue to live under `aeat.domain.financial` and
+  `aeat.domain.financial.providers` only.
 - New boundary types must be strict frozen pydantic v2 models with
   `enum.StrEnum` closed sets — the research records that the only
   cross-cutting type change required is a new `SourceFormat.PDF`
-  enum value in `src/aeat/financial/_raw_transaction.py`.
+  enum value in `src/aeat/domain/financial/_raw_transaction.py`.
 - No live tests against a real N26 account. Any provider that ships
   must honour the live-write safety charter and must not require
   hitting production banking infrastructure from CI.
@@ -91,7 +91,7 @@ the existing `CsvProvider` for the in-app CSV export channel.
 ## Implementation (shape for the follow-up issues, NOT code landed here)
 
 - **Primary path — `PdfN26Provider`** under
-  `src/aeat/financial/providers/_pdf_n26.py`:
+  `src/aeat/domain/financial/providers/_pdf_n26.py`:
   - Uses `pdfplumber` (MIT) as the sole new dependency; pinned in
     `pyproject.toml`.
   - Derives table boundaries from detected header-word positions on
@@ -121,13 +121,13 @@ the existing `CsvProvider` for the in-app CSV export channel.
   monthly statement cycle.
 - **Cross-cutting type change:** add `PDF = "pdf"` to the
   `SourceFormat` `StrEnum` in
-  `src/aeat/financial/_raw_transaction.py`. One-line addition; no
+  `src/aeat/domain/financial/_raw_transaction.py`. One-line addition; no
   other cross-cutting model changes.
 - **No new subpackages.** The implementation touches
-  `aeat.financial.providers` only, plus the one-line enum addition
+  `aeat.domain.financial.providers` only, plus the one-line enum addition
   above. Public API discipline holds.
 - **Testing:** colocated `@pytest.mark.unit` tests under
-  `src/aeat/financial/providers/test_pdf_n26.py` against 3–5 scrubbed
+  `src/aeat/domain/financial/providers/test_pdf_n26.py` against 3–5 scrubbed
   fixture PDFs the user supplies. No `@pytest.mark.live` tests for
   this provider. Live test gating continues to use
   `AEAT_LIVE_TESTS_ENABLED=1` as the canonical env var across the

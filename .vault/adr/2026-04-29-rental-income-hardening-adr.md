@@ -95,7 +95,7 @@ basis cap.
   Portal, CorpusArtifact). Path B (SQLite) is fully feasible.
 
 - The issue body §2 explicitly chooses "SQLite via existing
-  `aeat.storage`". The issue is the authoritative scope; the
+  `aeat.adapters.persistence.storage`". The issue is the authoritative scope; the
   handover prompt's Path-A preference (JSON file) was a hedge
   against the #216 branch not yet being merged into the rental
   branch. With #216 merged in this worktree, the scope can land
@@ -121,14 +121,14 @@ basis cap.
   bare `dict[str, Any]` at boundary surfaces.
 
 - **`AeatError` discipline + #398 registration** — every new
-  exception subclasses `aeat.errors.AeatError` and registers an
+  exception subclasses `aeat.core.errors.AeatError` and registers an
   `ErrorCode` row in `_DECLARED_ERROR_CODES`. The `bind_error_code`
   hook in `__init_subclass__` rejects any class without a
   registry entry.
 
-- **Logging via `aeat.logging.get_logger(__name__)`** only.
+- **Logging via `aeat.core.logging.get_logger(__name__)`** only.
 
-- **Public API** — callers outside `aeat.rental` import only from
+- **Public API** — callers outside `aeat.domain.rental` import only from
   the package root. Internal modules carry an underscore prefix.
 
 - **Trilingual contract** — every Translatable on the user-visible
@@ -141,8 +141,8 @@ basis cap.
 
 - **Module-level pytest markers** —
   `pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]`
-  for unit tests under `aeat.rental`. M100 wiring tests under
-  `aeat.formulas._rulesets.modelo_100` retain the existing
+  for unit tests under `aeat.domain.rental`. M100 wiring tests under
+  `aeat.domain.formulas._rulesets.modelo_100` retain the existing
   `domain_submission` marker pair.
 
 - **NO wave / phase numbering in source code or docstrings** —
@@ -159,10 +159,10 @@ basis cap.
 
 ### Subpackage layout
 
-`src/aeat/rental/` is a new top-level subpackage. Public API is the
+`src/aeat/domain/rental/` is a new top-level subpackage. Public API is the
 package `__init__.py`; private modules carry underscore prefixes.
 
-- `aeat.rental._models` — Pydantic v2 records:
+- `aeat.domain.rental._models` — Pydantic v2 records:
   - `RentalFinca` — finca registration. Fields: `id`, `identifier`,
     `address` (encrypted at rest), `valor_catastral_total`,
     `valor_catastral_construccion`, `valor_catastral_revision_year`,
@@ -205,7 +205,7 @@ package `__init__.py`; private modules carry underscore prefixes.
     `cumulative_amortization_through_year`,
     `schema_version: str = "1"`.
 
-- `aeat.rental._enums`:
+- `aeat.domain.rental._enums`:
   - `UseType` (StrEnum, see above)
   - `ExpenseCategory` (StrEnum, see above)
   - `ReduccionTier` (StrEnum: `TIER_50`, `TIER_60_REHAB`,
@@ -215,7 +215,7 @@ package `__init__.py`; private modules carry underscore prefixes.
     traceability — DT 38ª vs art. 23.2.c — even though the
     numeric reducción is the same.
 
-- `aeat.rental._tier_resolver`:
+- `aeat.domain.rental._tier_resolver`:
   - `resolve_reduccion(contract: RentalContract, finca:
     RentalFinca, period_year: int, ejercicio_amendment_year:
     int = 2024) -> TierResolution` where `TierResolution` is a
@@ -233,7 +233,7 @@ package `__init__.py`; private modules carry underscore prefixes.
     5. Tier 70-b-1 multi-tenant case computes `qualifying_share =
        qualifying_co_tenant_count / tenant_count`.
 
-- `aeat.rental._amortization_ledger`:
+- `aeat.domain.rental._amortization_ledger`:
   - `compute_amortization_for_year(finca: RentalFinca, contract:
     RentalContract, income: RentalIncomeRecord, ledger:
     AmortizationLedger) -> Decimal` — applies LIRPF art. 23.1.f
@@ -244,20 +244,20 @@ package `__init__.py`; private modules carry underscore prefixes.
     the year-N amortización to `coste_adquisicion_construccion -
     cumulative_through_year_N_minus_1`.
 
-- `aeat.rental._expense_rollup`:
+- `aeat.domain.rental._expense_rollup`:
   - `compute_gastos_for_year(finca, expenses, prior_year_carry) ->
     GastosForYear` — rolls up per-category expenses, applies the
     art. 23.1.a) cap (financiación + reparación capped at
     ingresos; excess returns as a 4-year carry-forward).
 
-- `aeat.rental._anexo_c_aggregator`:
+- `aeat.domain.rental._anexo_c_aggregator`:
   - `compute_anexo_c_aggregates(period_year: int, store:
     RentalRegisterRepository) -> AnexoCAggregates` — emits a frozen
     Pydantic record carrying derived 0061, 0066, 0072, 0078, 0085
     decimals plus per-finca / per-contract attribution maps for
     audit traceability.
 
-- `aeat.rental._repository`:
+- `aeat.domain.rental._repository`:
   - `RentalFincaRepository(Repository[RentalFinca])`,
     `RentalContractRepository(Repository[RentalContract])`,
     `RentalIncomeRepository(Repository[RentalIncomeRecord])`,
@@ -265,18 +265,18 @@ package `__init__.py`; private modules carry underscore prefixes.
     `RentalAmortizationLedgerRepository(Repository[
     RentalAmortizationLedgerEntry])`.
 
-- `aeat.rental._errors`:
+- `aeat.domain.rental._errors`:
   - `RentalRegisterError(AeatError)` — base.
   - `FincaNotFoundError`, `ContractNotFoundError`,
     `TierResolutionError` (raised when contract metadata is
     inconsistent — e.g. tenant_min_age > tenant_max_age),
     `AmortizationLedgerCapExceededError`,
     `AnexoCAggregationError`. Each gets an `ErrorCode` row in
-    `aeat.errors._registry._DECLARED_ERROR_CODES` per #398.
+    `aeat.core.errors._registry._DECLARED_ERROR_CODES` per #398.
 
 ### Storage layer additions
 
-- New ORM tables in `src/aeat/storage/_orm.py`:
+- New ORM tables in `src/aeat/adapters/persistence/storage/_orm.py`:
   - `rental_fincas` (id, identifier UNIQUE, address ENCRYPTED,
     valor_catastral_total, valor_catastral_construccion,
     valor_catastral_revision_year, coste_adquisicion,
@@ -314,7 +314,7 @@ The existing `anexo_c_2024.py / 2025.py / 2026.py` keep their
 caller-supplied casilla declarations and FORMULAS unchanged. The
 backwards-compat shim is a thin import-side helper:
 
-- `aeat.rental.anexo_c_provider.compute_or_passthrough(period_year,
+- `aeat.domain.rental.anexo_c_provider.compute_or_passthrough(period_year,
   provided_casillas: Mapping[str, Decimal], store:
   RentalRegisterRepository | None) -> dict[str, Decimal]` — when
   `store` is None or empty (no fincas registered for the period),
@@ -332,7 +332,7 @@ backwards-compat shim is a thin import-side helper:
 
 ### CLI surface
 
-A new `src/aeat/cli/rental/` sub-app with five command groups:
+A new `src/aeat/entrypoints/cli/rental/` sub-app with five command groups:
 
 - `aeat rental finca {add, list, show, update, dispose}`
 - `aeat rental contract {add, list, show, update, terminate}`
@@ -340,7 +340,7 @@ A new `src/aeat/cli/rental/` sub-app with five command groups:
 - `aeat rental amortization {recompute, show}`
 - `aeat rental anexo-c {compute, verify}`
 
-The sub-app is registered in `src/aeat/cli/__init__.py` via
+The sub-app is registered in `src/aeat/entrypoints/cli/__init__.py` via
 `app.add_typer(rental_module.app, name="rental", help="Per-finca
 rental register, Ley 12/2023 tier auto-resolver, art. 23.1.f
 amortización ledger (#454).")`. `decorate_typer_app(app)` at the
@@ -426,9 +426,9 @@ rental income tier per Ley 12/2023" → ✅ via #454.
   (`_test_migrations.py`) automatically picks them up; no test
   surface change there.
 
-- **`aeat.rental` adds ~15 new error classes** to the registry; each
+- **`aeat.domain.rental` adds ~15 new error classes** to the registry; each
   needs an `ErrorCode` row in `_DECLARED_ERROR_CODES`. The
-  `bind_error_code` test (`aeat.errors.test_registry_enforcement`)
+  `bind_error_code` test (`aeat.core.errors.test_registry_enforcement`)
   enforces this at import time.
 
 - **Backwards-compat is structural, not testimonial** — the existing

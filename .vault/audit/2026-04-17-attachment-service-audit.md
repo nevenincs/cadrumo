@@ -20,10 +20,10 @@ Every finding records a severity, a concrete location, a disposition
 
 ## Scope
 
-- `src/aeat/financial/attachments/{__init__,_enums,_errors,_models,_store,_service,_stubs}.py`
-- `src/aeat/financial/attachments/{test_models,test_catalogue,test_store,test_cli,test_integration}.py`
-- `src/aeat/cli/attachments.py`
-- `src/aeat/cli/__init__.py` (integration point)
+- `src/aeat/domain/financial/attachments/{__init__,_enums,_errors,_models,_store,_service,_stubs}.py`
+- `src/aeat/domain/financial/attachments/{test_models,test_catalogue,test_store,test_cli,test_integration}.py`
+- `src/aeat/entrypoints/cli/attachments.py`
+- `src/aeat/entrypoints/cli/__init__.py` (integration point)
 - `src/aeat/config.py` (additive setting)
 - `env/.env.example` (additive line)
 - Vaultspec artefacts under `.vault/{research,adr,plan,exec,audit}/`
@@ -51,7 +51,7 @@ Every finding records a severity, a concrete location, a disposition
   - *Disposition:* **fixed** in `1de3bd0`. Added `AttachmentStore.verify_blob(attachment_id)` that streams the on-disk blob through `hashlib.sha256` and raises `AttachmentValidationError` on drift. Covered by `test_integration.py::test_verify_blob_detects_tampered_bytes` and `test_verify_blob_passes_for_untouched_bytes`.
 
 - **H2 — Rolling audit doc claimed integration tests that did not exist.** The earlier audit revision listed `test_integration.py` and a half-dozen scenarios that had never been authored. This was a vaultspec trail-integrity violation.
-  - *Disposition:* **fixed** in `1de3bd0`. Authored `src/aeat/financial/attachments/test_integration.py` with 18 real tests (zero mocks, real filesystem): end-to-end CLI round-trip with UTF-8 source path, empty-file ingest, corrupt manifest → `AttachmentValidationError`, filename-vs-payload mismatch, tampered-blob detection via `verify_blob`, path-traversal rejection, NTFS-case rejection, concurrent `put_bytes` and `put_file`, orphan-filename skipping, blank-metadata CLI rejection, typed-error exit codes. Audit doc rewritten (this revision) to describe only tests that exist.
+  - *Disposition:* **fixed** in `1de3bd0`. Authored `src/aeat/domain/financial/attachments/test_integration.py` with 18 real tests (zero mocks, real filesystem): end-to-end CLI round-trip with UTF-8 source path, empty-file ingest, corrupt manifest → `AttachmentValidationError`, filename-vs-payload mismatch, tampered-blob detection via `verify_blob`, path-traversal rejection, NTFS-case rejection, concurrent `put_bytes` and `put_file`, orphan-filename skipping, blank-metadata CLI rejection, typed-error exit codes. Audit doc rewritten (this revision) to describe only tests that exist.
 
 - **H3 — Path traversal via untrusted `attachment_id` / `sha256`.** `blob_path`, `manifest_path`, `read_bytes`, and `load_manifest` composed filesystem paths from caller-supplied digest strings without validating their shape. `aeat attachments show ../../../etc/passwd.json` would therefore read arbitrary `.json` files under the host filesystem (returning a misleading not-found or validation error but leaking path information via the error message). On NTFS the lack of a lowercase check allowed `DEADBEEF...` vs `deadbeef...` to alias the same blob.
   - *Disposition:* **fixed** in `1de3bd0`. Added a module-level `_require_digest(value, *, field_name)` guard that enforces exactly 64 lowercase hex characters and raises `AttachmentValidationError` on any deviation. Every path-composing public method (`blob_path`, `manifest_path`, `read_bytes`, `open_bytes`, `verify_blob`, `load_manifest`) routes through it before touching the filesystem. Covered by `test_path_traversal_attempt_on_load_manifest_is_rejected`, `test_path_traversal_attempt_on_read_bytes_is_rejected`, `test_uppercase_hex_digest_is_rejected_for_ntfs_case_safety`, and `test_cli_show_on_malformed_attachment_id_surfaces_typed_error`.

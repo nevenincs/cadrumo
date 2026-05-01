@@ -20,10 +20,10 @@ The Modelo 130 runtime schema now enumerates **all 19 casillas** the formula eng
 
 ## Files landed
 
-- `src/aeat/filing/_builders/_modelo_130_schema.py` — 12 new `StaticCasillaSchema` entries (08-19) across Apartado II (agrícola), III (suma parcial + minoración), IV (deducciones + arrastre), V (ingreso previo + resultado final). Each carries the AEAT Manual práctico description.
-- `src/aeat/filing/_builders/modelo_130.py` — 6 new `_compute` branches for computed casillas 09, 11, 12, 14, 17, 19. New `_PAGO_AGRARIA_RATE = 0.02` mirrors the ruleset's `agraria.trimestral_rate` parameter.
-- `src/aeat/filing/test_schema_completeness.py` — xfail markers for Modelo 130 2024 + 2025 removed; all 4 parametrised cases now pass.
-- `src/aeat/submission/_submitters/test_modelo130.py` — `_Catalogue` fixture widened from 7 to 19 casillas so submission smoke tests reflect the real form.
+- `src/aeat/application/filing/_builders/_modelo_130_schema.py` — 12 new `StaticCasillaSchema` entries (08-19) across Apartado II (agrícola), III (suma parcial + minoración), IV (deducciones + arrastre), V (ingreso previo + resultado final). Each carries the AEAT Manual práctico description.
+- `src/aeat/application/filing/_builders/modelo_130.py` — 6 new `_compute` branches for computed casillas 09, 11, 12, 14, 17, 19. New `_PAGO_AGRARIA_RATE = 0.02` mirrors the ruleset's `agraria.trimestral_rate` parameter.
+- `src/aeat/application/filing/test_schema_completeness.py` — xfail markers for Modelo 130 2024 + 2025 removed; all 4 parametrised cases now pass.
+- `src/aeat/adapters/outbound/aeat/export/_submitters/test_modelo130.py` — `_Catalogue` fixture widened from 7 to 19 casillas so submission smoke tests reflect the real form.
 
 ## Kent UX roleplay
 
@@ -36,7 +36,7 @@ The Modelo 130 runtime schema now enumerates **all 19 casillas** the formula eng
 
 - `uv run pytest -m unit` — 1966 passed, **0 xfails**, 1 skipped. Cluster B phase 2 is complete — the xfail debt from phase 1 is fully discharged.
 - `uv run ruff check src tests` + `uv run ty check src tests` — clean.
-- New hand-calculated apartado-II/III/IV/V assertions in `src/aeat/filing/test_filing.py::TestModelo130Builder::test_apartado_ii_to_v_casillas_match_hand_calculations`: six computed casillas with deterministic inputs (01=12500, 02=3500, 05=400, 08=5000, 10=30, 13=0, 15=100) verify every new handler.
+- New hand-calculated apartado-II/III/IV/V assertions in `src/aeat/application/filing/test_filing.py::TestModelo130Builder::test_apartado_ii_to_v_casillas_match_hand_calculations`: six computed casillas with deterministic inputs (01=12500, 02=3500, 05=400, 08=5000, 10=30, 13=0, 15=100) verify every new handler.
 
 ## Follow-up
 

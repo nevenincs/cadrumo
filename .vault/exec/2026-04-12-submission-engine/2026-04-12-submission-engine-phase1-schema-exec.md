@@ -14,15 +14,15 @@ issue: wgergely/aeat#42
 
 ## artefacts produced
 
-- `src/aeat/submission/_errors.py` — `SubmissionError` hierarchy with
+- `src/aeat/adapters/outbound/aeat/export/_errors.py` — `SubmissionError` hierarchy with
   `Translatable` payloads.
-- `src/aeat/submission/_protocols.py` — Protocol + pydantic stubs for
+- `src/aeat/adapters/outbound/aeat/export/_protocols.py` — Protocol + pydantic stubs for
   #6 / #7 / #8 / #23 / #38 / #39 / #44.
-- `src/aeat/submission/_models.py` — `SubmissionStatus`,
+- `src/aeat/adapters/outbound/aeat/export/_models.py` — `SubmissionStatus`,
   `SubmissionAttempt`, `SubmittedFiling`, `make_submission_id`
   (strict+frozen pydantic v2, model-validator invariants for time
   ordering and `ACKNOWLEDGED` state consistency).
 
 ## verification
 
-- `uv run pytest src/aeat/submission/test_models.py src/aeat/submission/test_errors.py -q` — passed.
+- `uv run pytest src/aeat/adapters/outbound/aeat/export/test_models.py src/aeat/adapters/outbound/aeat/export/test_errors.py -q` — passed.

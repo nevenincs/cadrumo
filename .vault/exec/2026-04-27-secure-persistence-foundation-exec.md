@@ -35,39 +35,39 @@ commit gated by `just lint && just typecheck && just test && just hooks`
 before push. Total surface: ten new persistence modules plus their
 unit tests, one substrate-level smoke test, thirteen new error
 classes registered in the central error registry, four new settings
-in `aeat.config`, three audit-flagged path settings normalised, and
+in `aeat.core.config`, three audit-flagged path settings normalised, and
 the four-line documentation-drift fix opportunistically corrected
 in `env/.env.example`.
 
 ## Files created
 
-- `src/aeat/storage/_classification.py`
-- `src/aeat/storage/_test_classification.py`
-- `src/aeat/storage/_crypto.py`
-- `src/aeat/storage/_test_crypto.py`
-- `src/aeat/storage/_master_key.py`
-- `src/aeat/storage/_test_master_key.py`
-- `src/aeat/storage/_lock.py`
-- `src/aeat/storage/_test_lock.py`
-- `src/aeat/storage/_encrypted_columns.py`
-- `src/aeat/storage/_test_encrypted_columns.py`
-- `src/aeat/storage/_envelope.py`
-- `src/aeat/storage/_test_envelope.py`
-- `src/aeat/storage/_blob_store.py`
-- `src/aeat/storage/_test_blob_store.py`
-- `src/aeat/storage/_path_safety.py`
-- `src/aeat/storage/_test_path_safety.py`
-- `src/aeat/storage/_redaction.py`
-- `src/aeat/storage/_test_redaction.py`
-- `src/aeat/storage/_secret_store.py`
-- `src/aeat/storage/_test_secret_store.py`
-- `src/aeat/storage/test_substrate_smoke.py`
+- `src/aeat/adapters/persistence/storage/_classification.py`
+- `src/aeat/adapters/persistence/storage/_test_classification.py`
+- `src/aeat/adapters/persistence/storage/_crypto.py`
+- `src/aeat/adapters/persistence/storage/_test_crypto.py`
+- `src/aeat/adapters/persistence/storage/_master_key.py`
+- `src/aeat/adapters/persistence/storage/_test_master_key.py`
+- `src/aeat/adapters/persistence/storage/_lock.py`
+- `src/aeat/adapters/persistence/storage/_test_lock.py`
+- `src/aeat/adapters/persistence/storage/_encrypted_columns.py`
+- `src/aeat/adapters/persistence/storage/_test_encrypted_columns.py`
+- `src/aeat/adapters/persistence/storage/_envelope.py`
+- `src/aeat/adapters/persistence/storage/_test_envelope.py`
+- `src/aeat/adapters/persistence/storage/_blob_store.py`
+- `src/aeat/adapters/persistence/storage/_test_blob_store.py`
+- `src/aeat/adapters/persistence/storage/_path_safety.py`
+- `src/aeat/adapters/persistence/storage/_test_path_safety.py`
+- `src/aeat/adapters/persistence/storage/_redaction.py`
+- `src/aeat/adapters/persistence/storage/_test_redaction.py`
+- `src/aeat/adapters/persistence/storage/_secret_store.py`
+- `src/aeat/adapters/persistence/storage/_test_secret_store.py`
+- `src/aeat/adapters/persistence/storage/test_substrate_smoke.py`
 
 ## Files modified
 
-- `src/aeat/storage/__init__.py` — substrate public surface; sorted
+- `src/aeat/adapters/persistence/storage/__init__.py` — substrate public surface; sorted
   `__all__` covers every new export.
-- `src/aeat/storage/errors.py` — adds `PersistenceError` (base for
+- `src/aeat/adapters/persistence/storage/errors.py` — adds `PersistenceError` (base for
   the new tree, subclass of `StorageError`), `EncryptionError`,
   `DecryptionError`, `KeyDerivationError`, `NonceCollisionError`,
   `SecretStoreError`, `KeyringUnavailableError`,
@@ -76,7 +76,7 @@ in `env/.env.example`.
   `PathContainmentError` (also inherits from `ValueError`),
   `BlobNotFoundError`, `BlobIntegrityError`, `SecretNotFoundError`,
   `SecretAlreadyExistsError`, `RetentionPolicyError`.
-- `src/aeat/errors/_registry.py` — registers a stable
+- `src/aeat/core/errors/_registry.py` — registers a stable
   `ErrorCode` for each new class with es / en / hu default
   messages and the appropriate `ErrorCategory` (INTEGRITY for
   cryptographic / classification / version errors; FAIL for
@@ -186,7 +186,7 @@ chain in declared order to advance older versions to the
 consumer's `max_supported_version`.
 
 The path-safety helpers (`_path_safety.py`) wrap the existing
-`aeat._paths.resolve_relative_subpath` and
+`aeat.core.paths.resolve_relative_subpath` and
 `resolve_record_json_path` and re-raise their `ValueError` as
 the typed `PathContainmentError`. `PathContainmentError`
 multi-inherits from `PersistenceError` and `ValueError` so

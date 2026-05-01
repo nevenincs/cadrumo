@@ -10,12 +10,12 @@ related:
 # phase1 summary - errors and models
 
 Phase 1 landed the typed foundation: `SiteHealthError` in
-`aeat.errors`, the `SiteHealthState` / `SiteHealthEvidence` /
+`aeat.core.errors`, the `SiteHealthState` / `SiteHealthEvidence` /
 `SiteHealthStatus` / `SiteHealthAlert` pydantic v2 records in
 `aeat.status._site_health`, and their public re-exports from
 `aeat.status`. The circular import between `aeat.status` and
-`aeat.workflow` is broken by a `TYPE_CHECKING` forward reference on
-`SiteHealthAlert.stage`, rebuilt from `aeat.workflow.__init__` once
+`aeat.application.workflow` is broken by a `TYPE_CHECKING` forward reference on
+`SiteHealthAlert.stage`, rebuilt from `aeat.application.workflow.__init__` once
 `WorkflowStage` is importable.
 
 Steps: 1-1, 1-2, 1-3. All acceptance criteria met.

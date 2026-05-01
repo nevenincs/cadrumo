@@ -25,10 +25,10 @@ the live-write charter, or any file outside the scope listed below.
    environment and is validated by the enum.
 2. Add the `AEAT_AUTH_PROVIDER=` line to `.env.example` with a comment
    enumerating the valid values.
-3. Create the empty module tree `src/aeat/cli/auth/__init__.py`,
+3. Create the empty module tree `src/aeat/entrypoints/cli/auth/__init__.py`,
    `_registry.py`, `_paths.py`, `_render.py`, `_session.py` plus the
    colocated `test_auth_cli.py` file. Wire the sub-app into
-   `src/aeat/cli/__init__.py` with the help string from the ADR.
+   `src/aeat/entrypoints/cli/__init__.py` with the help string from the ADR.
 
 ## Phase 2 — Registry + path helpers
 
@@ -39,7 +39,7 @@ the live-write charter, or any file outside the scope listed below.
      all four `AuthProviderKind` values.
    - `get_entry(kind)` / `iter_entries()` helpers.
    - `build_provider(kind, settings)` delegates to
-     :func:`aeat.auth.select_provider` for implemented kinds; raises
+     :func:`aeat.adapters.outbound.aeat.auth.select_provider` for implemented kinds; raises
      `ProviderNotImplementedError` otherwise.
    - `describe(kind, settings)` returns `AuthProviderDescription`.
      For implemented kinds it delegates to the provider's
@@ -113,7 +113,7 @@ the live-write charter, or any file outside the scope listed below.
 
 ## Phase 5 — Tests and verification
 
-12. Colocated unit tests in `src/aeat/cli/auth/test_auth_cli.py`:
+12. Colocated unit tests in `src/aeat/entrypoints/cli/auth/test_auth_cli.py`:
     - `pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]`.
     - Cases cover list-providers table + JSON, registry default
       resolution, login error paths, status (fresh / expired / no

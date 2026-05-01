@@ -75,6 +75,6 @@ This research grounds issue `#153`, a fresh-clone bug in the committed `google-w
 
 ## Outcome
 
-- The repo already has the right canonical secret source: `env/.env` through `aeat.config.Settings`.
+- The repo already has the right canonical secret source: `env/.env` through `aeat.core.config.Settings`.
 - The missing piece is a project-owned launcher that loads `Settings`, validates one of the supported auth paths, maps the repo's service-account variable to upstream's expected variable, and then `exec`s the real `workspace-mcp` process.
 - The same launcher should hard-pin `WORKSPACE_MCP_CREDENTIALS_DIR` to a gitignored project-local directory so refresh tokens never default to a shared home-directory cache.

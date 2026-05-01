@@ -14,12 +14,12 @@ related:
 
 ## Scope
 
-Audit gate for **wave-13**: consolidation of five byte-identical (modulo parameter name) repository-id validators into one substrate helper at `aeat.storage._path_safety.safe_repository_id`. Pure code-quality refactor with zero security regression.
+Audit gate for **wave-13**: consolidation of five byte-identical (modulo parameter name) repository-id validators into one substrate helper at `aeat.adapters.persistence.storage._path_safety.safe_repository_id`. Pure code-quality refactor with zero security regression.
 
 In scope:
 
 - Substrate helper `safe_repository_id(token, *, context)` in `_path_safety.py`.
-- Public re-export through `aeat.storage.__init__`.
+- Public re-export through `aeat.adapters.persistence.storage.__init__`.
 - Five repositories updated: `submission/_repository.py`, `filing/_repository.py`, `filing/_complementaria_repository.py`, `filing/_history_repository.py`, `justificante/_repository.py`. Five `_validate_*` definitions deleted; 12 call sites updated.
 - 9 new substrate tests in `_test_path_safety.py`. 5 pre-existing repository tests pass unchanged via the `ValueError` inheritance chain.
 

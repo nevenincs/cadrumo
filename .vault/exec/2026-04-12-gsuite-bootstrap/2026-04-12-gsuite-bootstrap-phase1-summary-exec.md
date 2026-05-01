@@ -22,7 +22,7 @@ opt-in via `just test-live`.
   `aeat_scratch_folder_id`, `aeat_scratch_sheet_id`,
   `aeat_scratch_doc_id`, `aeat_live_tests_enabled`. Added
   `env/.env.example` placeholders and a comment-preserving
-  `aeat.env_io` writer with full unit coverage. Configured pytest
+  `aeat.core.env_io` writer with full unit coverage. Configured pytest
   markers and the default `not live` filter.
 - **phase-2 — auth module extensions**: added `DOCS_SCOPE`,
   `USERINFO_EMAIL_SCOPE`, `OPENID_SCOPE`, `STORAGE_FULL_CONTROL_SCOPE`;
@@ -59,7 +59,7 @@ opt-in via `just test-live`.
   / new / tabs. Docs: get (json or plaintext) / new / append /
   replaceAllText. Pure helpers in private `_drive_helpers`,
   `_sheets_helpers`, `_docs_helpers` modules with full unit coverage.
-  Added `B008` per-file ignore for `src/aeat/cli/` so Typer's
+  Added `B008` per-file ignore for `src/aeat/entrypoints/cli/` so Typer's
   documented function-call-in-default idiom is allowed.
 - **phase-7 — Cloud Functions / Run / Storage CLI**: list +
   describe verbs across the three product surfaces using the dedicated

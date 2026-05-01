@@ -25,32 +25,32 @@ five colocated regression tests pinning the closure.
 
 Files under review:
 
-- modified: `src/aeat/cli/workflow/run.py`,
-  `src/aeat/cli/workflow/next.py`,
-  `src/aeat/cli/workflow/__init__.py` (docstring only),
-  `src/aeat/cli/workflow/test_cli.py` (two stale tests removed)
-- new: `src/aeat/cli/workflow/test_run_help_ascii_safe.py`,
-  `src/aeat/cli/workflow/test_next_help_ascii_safe.py`,
-  `src/aeat/cli/workflow/test_run_refuses_live_flags.py`,
-  `src/aeat/cli/workflow/test_next_refuses_live_flags.py`,
-  `src/aeat/submission/test_access_gate_workflow_untouched.py`
+- modified: `src/aeat/entrypoints/cli/workflow/run.py`,
+  `src/aeat/entrypoints/cli/workflow/next.py`,
+  `src/aeat/entrypoints/cli/workflow/__init__.py` (docstring only),
+  `src/aeat/entrypoints/cli/workflow/test_cli.py` (two stale tests removed)
+- new: `src/aeat/entrypoints/cli/workflow/test_run_help_ascii_safe.py`,
+  `src/aeat/entrypoints/cli/workflow/test_next_help_ascii_safe.py`,
+  `src/aeat/entrypoints/cli/workflow/test_run_refuses_live_flags.py`,
+  `src/aeat/entrypoints/cli/workflow/test_next_refuses_live_flags.py`,
+  `src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py`
 
 ## Findings
 
 INVARIANT-001 | LOW | engine constructor default `live_transport_supported=False` confirmed
-The constructor default at `src/aeat/submission/_engine.py` line 69 is
+The constructor default at `src/aeat/adapters/outbound/aeat/export/_engine.py` line 69 is
 unchanged. Verified via `inspect.signature` in the new pin test.
 
 INVARIANT-002 | LOW | `AeatLiveTransportUnavailableError` raise intact
-The inline guard at `src/aeat/submission/_engine.py` lines 211-214 is
+The inline guard at `src/aeat/adapters/outbound/aeat/export/_engine.py` lines 211-214 is
 unchanged. The engine still raises when `dry_run=False` is requested
 on an inert engine.
 
 INVARIANT-003 | LOW | `AeatAccessGate.require_live_write` posture intact
 Both refusal branches (`AEAT_LIVE_SUBMIT_ENABLED` unset,
-`PYTEST_CURRENT_TEST` set) are unchanged at `src/aeat/auth/_gate.py`
+`PYTEST_CURRENT_TEST` set) are unchanged at `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py`
 lines 108-130. Both branches are pinned by
-`src/aeat/submission/test_access_gate_workflow_untouched.py`.
+`src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py`.
 
 INVARIANT-004 | LOW | help output omits both flag literals
 `aeat workflow run --help` and `aeat workflow next --help` exit 0
@@ -63,9 +63,9 @@ fixtures and one prose docstring; no production caller re-introduces
 True.
 
 INTENT-001 | LOW | production scope honoured
-Only `src/aeat/cli/workflow/run.py` and `src/aeat/cli/workflow/next.py`
+Only `src/aeat/entrypoints/cli/workflow/run.py` and `src/aeat/entrypoints/cli/workflow/next.py`
 are modified in production code; the docstring change in
-`src/aeat/cli/workflow/__init__.py` is a non-code metadata fix that
+`src/aeat/entrypoints/cli/workflow/__init__.py` is a non-code metadata fix that
 removes a now-false claim.
 
 INTENT-002 | LOW | helper signatures preserved
@@ -92,18 +92,18 @@ the handover prompt's authoritative axis assignment for this issue.
 
 INTENT-006 | LOW | public-API discipline preserved
 `test_access_gate_workflow_untouched.py` imports `AeatAccessGate`
-from `aeat.auth`, the typed errors from `aeat.submission`, and
-`Settings` from `aeat.config` - all public namespaces. No
+from `aeat.adapters.outbound.aeat.auth`, the typed errors from `aeat.adapters.outbound.aeat.export`, and
+`Settings` from `aeat.core.config` - all public namespaces. No
 underscored-module imports are introduced.
 
 INTENT-007 | LOW | sibling-branch boundaries respected
-No file under `src/aeat/sede/` or `src/aeat/auth/_clave_movil.py` is
+No file under `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/` or `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py` is
 touched; `feature/239-aeat-verify` territory is untouched.
 
 QUALITY-001 | LOW | no new pydantic / error / log surface
 This issue introduces no new data records, no new error classes, no
 new log sites; the pydantic v2 mandate, `AeatError` inheritance
-mandate, and `aeat.logging.get_logger(__name__)` mandate are all
+mandate, and `aeat.core.logging.get_logger(__name__)` mandate are all
 N/A.
 
 QUALITY-002 | LOW | typed signatures and Google-style docstrings
@@ -120,7 +120,7 @@ None of the new test modules import `unittest.mock`, `pytest_mock`,
 `inspect.signature`.
 
 QUALITY-004 | LOW | targeted test run green
-`uv run pytest src/aeat/cli/workflow/ src/aeat/submission/test_access_gate_workflow_untouched.py`
+`uv run pytest src/aeat/entrypoints/cli/workflow/ src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py`
 reports 19 passed; the broader gate
 (`just lint && just typecheck && just test && just hooks`) is run
 before commit per the plan.
@@ -136,7 +136,7 @@ HONESTY-001 | LOW | engine end-to-end intentionally not re-validated
 The new pin test exercises the constructor signature and the gate
 helper rather than building a full engine with browser sessions and
 submitters. The full engine path is covered by existing tests in
-`src/aeat/submission/`. This caveat is recorded in the plan's
+`src/aeat/adapters/outbound/aeat/export/`. This caveat is recorded in the plan's
 "Verification" section.
 
 ## Recommendations
@@ -170,15 +170,15 @@ are applied in a follow-up commit:
   text is `"No such option"` today but a future minor version could
   change the casing without breaking the contract.
 
-The change touches `src/aeat/cli/workflow/test_run_refuses_live_flags.py`
-and `src/aeat/cli/workflow/test_next_refuses_live_flags.py` only;
+The change touches `src/aeat/entrypoints/cli/workflow/test_run_refuses_live_flags.py`
+and `src/aeat/entrypoints/cli/workflow/test_next_refuses_live_flags.py` only;
 six lines total. The six tests still pass after the tightening.
 
 COVERAGE-001 | LOW | scoped coverage at 100% across the workflow cli package
 After the user accepted scope creep ("well-rounded terminated code
 that is healthy rather than leaving feature fragments"), pre-existing
 gaps in `_helpers.py`, `list_cmd.py`, and `show.py` were closed in
-this same PR via `src/aeat/cli/workflow/test_cli_coverage_completion.py`
+this same PR via `src/aeat/entrypoints/cli/workflow/test_cli_coverage_completion.py`
 (eight new tests targeting the exact uncovered lines: the
 `_build_profile` `WorkflowError` wrap, the `WorkflowError` catch in
 both `run_engine_*` helpers, the rich-render branch in `_emit`, the
@@ -186,7 +186,7 @@ invalid-since exit-2 branch in `list_cmd`, the rich-table branch in
 `list_cmd`, the missing-run exit-1 branch in `show`, and the
 rich-render branch in `show`).
 
-Final coverage on `src/aeat/cli/workflow/`: `__init__.py` 100%,
+Final coverage on `src/aeat/entrypoints/cli/workflow/`: `__init__.py` 100%,
 `_helpers.py` 100%, `list_cmd.py` 100%, `next.py` 100%, `run.py`
 100%, `show.py` 100%; total 100.00%.
 
@@ -196,7 +196,7 @@ The first cut of `test_cli_coverage_completion.py` duplicated the
 `InputsProvider`, `profile()`, and `engine()` stand-ins already
 defined in `test_cli.py`. Per project mandate against duplication,
 fakes, and shadow code, those stubs were extracted to
-`src/aeat/cli/workflow/_test_doubles.py` and both test modules now
+`src/aeat/entrypoints/cli/workflow/_test_doubles.py` and both test modules now
 import from the shared source. The new module is a real
 deterministic-stand-in module - no mocks, no patches, no fakes -
 matching the existing test-double pattern in the repo.

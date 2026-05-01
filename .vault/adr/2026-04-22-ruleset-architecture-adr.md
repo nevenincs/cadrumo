@@ -15,7 +15,7 @@ related:
 ## status
 
 Proposed — 2026-04-22. Establishes the canonical architecture for the
-`src/aeat/formulas/_rulesets/` subpackage as it scales from the
+`src/aeat/domain/formulas/_rulesets/` subpackage as it scales from the
 original Modelo 130/303 pair (2 rulesets) through the EPIC #305 wave 12-45
 expansion (18 rulesets across 13 modelos) and beyond (regional
 variants, per-year backfills, full-form upgrades).

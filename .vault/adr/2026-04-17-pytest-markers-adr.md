@@ -125,7 +125,7 @@ High-level, sequenced in one mechanical refactor PR:
 
 Verification after the refactor:
 
-- `uv run pytest --collect-only src/aeat/submission/ -m live_write` must collect zero items by default and continue to collect zero even with `AEAT_LIVE_WRITE_UNSAFE_BYPASS=1` alone or `AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM` alone.
+- `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/ -m live_write` must collect zero items by default and continue to collect zero even with `AEAT_LIVE_WRITE_UNSAFE_BYPASS=1` alone or `AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM` alone.
 - `tests/test_marker_integrity.py` must pass.
 - `just test` must be unit-only. `just test-live` must union unit and live_read.
 - `tests/test_config.py` must pass with the two new env vars.

@@ -11,19 +11,19 @@ related:
 
 # `modelo-180-calc-verify` summary
 
-- Modified: `src/aeat/formulas/_rulesets/__init__.py`
-- Modified: `src/aeat/formulas/_rulesets/test_modelo_180_2025.py`
-- Modified: `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py`
-- Modified: `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`
-- Modified: `src/aeat/declaracion/_extractors/__init__.py`
-- Modified: `src/aeat/declaracion/_extractors/modelo_180_v2025.py`
+- Modified: `src/aeat/domain/formulas/_rulesets/__init__.py`
+- Modified: `src/aeat/domain/formulas/_rulesets/test_modelo_180_2025.py`
+- Modified: `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py`
+- Modified: `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`
+- Modified: `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py`
+- Modified: `src/aeat/adapters/inbound/declaracion/_extractors/modelo_180_v2025.py`
 - Modified: `tests/integration/test_kent_workflows.py`
 - Modified: `docs/coverage/modelos.md`
 - Modified: `uv.lock`
-- Created: `src/aeat/formulas/_rulesets/modelo_180_2026.py`
-- Created: `src/aeat/formulas/_rulesets/_modelo_180_cumulation.py`
-- Created: `src/aeat/formulas/_rulesets/test_modelo_180_2024.py`
-- Created: `src/aeat/formulas/_rulesets/test_modelo_180_2026.py`
+- Created: `src/aeat/domain/formulas/_rulesets/modelo_180_2026.py`
+- Created: `src/aeat/domain/formulas/_rulesets/_modelo_180_cumulation.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_modelo_180_2024.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_modelo_180_2026.py`
 - Created: `.vault/reference/2026-04-28-modelo-180-calc-verify-reference.md`
 
 ## Description
@@ -54,10 +54,10 @@ L1 anchor decision: waiver. No public taxpayer-free Modelo 180 declaration PDF w
 
 ## Tests
 
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_180_2024.py src/aeat/formulas/_rulesets/test_modelo_180_2025.py src/aeat/formulas/_rulesets/test_modelo_180_2026.py -q` passed: 25 tests.
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_180_2024.py src/aeat/domain/formulas/_rulesets/test_modelo_180_2025.py src/aeat/domain/formulas/_rulesets/test_modelo_180_2026.py -q` passed: 25 tests.
 - `uv run pytest tests/integration/test_kent_workflows.py::TestKentImportsModelo180Declaracion -q` passed: 7 tests.
-- `uv run pytest src/aeat/formulas/_rulesets/test_percent_rate_mutation.py src/aeat/formulas/_rulesets/test_mutator_kill_rate.py -q` passed: 99 tests.
-- `uv run pytest src/aeat/formulas/test_cli.py::test_list_subcommand src/aeat/formulas/test_registry.py::test_registry_ships_modelo_130_and_303_rulesets src/aeat/formulas/test_smoke.py::test_registry_has_shipped_rulesets -q` passed: 3 tests.
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py -q` passed: 99 tests.
+- `uv run pytest src/aeat/domain/formulas/test_cli.py::test_list_subcommand src/aeat/domain/formulas/test_registry.py::test_registry_ships_modelo_130_and_303_rulesets src/aeat/domain/formulas/test_smoke.py::test_registry_has_shipped_rulesets -q` passed: 3 tests.
 - `uv run aeat audit rulesets citations` passed: M180 2024/2025/2026 each 1 of 1 computed casillas cited; aggregate 127 of 127 cited.
 - `just lint` passed.
 - `just typecheck` passed.

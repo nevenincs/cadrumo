@@ -34,10 +34,10 @@ surfaces.
 
 ## Considerations
 
-- `aeat.auth.load_certificate()` and `verify_handshake()` already provide real
+- `aeat.adapters.outbound.aeat.auth.load_certificate()` and `verify_handshake()` already provide real
   PKCS#12 and mTLS behavior, so replacing that layer would be unnecessary
   churn.
-- `aeat.browser.session.BrowserSession.create_context()` already owns the
+- `aeat.adapters.outbound.aeat.browser.session.BrowserSession.create_context()` already owns the
   `browser.new_context(...)` call site, which is the only place Playwright can
   accept `client_certificates`.
 - `aeat.status.StatusReader.fetch_expedientes()` is the only fully wired
@@ -52,8 +52,8 @@ surfaces.
 
 ## Constraints
 
-- The change must remain additive inside the existing `aeat.auth`,
-  `aeat.browser`, `aeat.status`, and CLI package boundaries.
+- The change must remain additive inside the existing `aeat.adapters.outbound.aeat.auth`,
+  `aeat.adapters.outbound.aeat.browser`, `aeat.status`, and CLI package boundaries.
 - No new write path to AEAT may be introduced.
 - Only the `expedientes` status surface may be exposed as live-ready in this
   slice; the other status surfaces must stay hidden or stubbed until their
@@ -68,7 +68,7 @@ surfaces.
   `client_certificates=[...]` into `browser.new_context(...)`, and tag the
   resulting context with the expected thumbprint marker so later validation
   stays explicit.
-- The concrete certificate behavior will stay in `aeat.auth`, not move into
+- The concrete certificate behavior will stay in `aeat.adapters.outbound.aeat.auth`, not move into
   `aeat.status`. The loaded certificate object will expose the
   `preload_into_browser_context(...)` behavior the status-reader seam already
   expects, so the existing reader Protocol can consume the real auth object
