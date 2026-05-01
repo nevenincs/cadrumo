@@ -9,8 +9,8 @@ import typer
 
 from ....domain.financial import CsvProvider, OfxProvider, XlsxProvider, detect_provider
 from ....domain.financial._decimal import canonical_decimal
-from ....domain.financial.categories import CATEGORY_PROFILES_2025, SpendingCategory
-from ....domain.financial.categories._proportionality import ProportionalityKind
+from ....domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
+from ....domain.categories._proportionality import ProportionalityKind
 from ....domain.financial.providers import RawTransaction
 from ....domain.financial.transactions import (
     BusinessClassification,

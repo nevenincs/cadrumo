@@ -1,7 +1,7 @@
-"""Unit tests for :mod:`aeat.cli.schema`.
+"""Unit tests for :mod:`aeat.entrypoints.cli.schema`.
 
 Every test exercises the real Typer app (no mocks). Network fetches
-go through :func:`aeat.schema.fetch_boe_pdf` whose unit tests rely
+go through :func:`aeat.domain.schema.fetch_boe_pdf` whose unit tests rely
 on ``file://`` URLs served from ``tmp_path``.
 """
 

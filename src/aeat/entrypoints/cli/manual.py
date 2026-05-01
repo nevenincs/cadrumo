@@ -4,7 +4,7 @@ Provides the full seven-subcommand shape from issue ``#25``. Four
 commands (``fetch``, ``verify``, ``list``, ``show``) are fully
 functional in v1. Three commands (``structure``, ``extract-rules``,
 ``translate``) are defined to lock the public CLI surface but raise
-:class:`RuleExtractionError` until ``aeat.llm`` (``#21``) lands. The
+:class:`RuleExtractionError` until ``aeat.adapters.outbound.llm`` (``#21``) lands. The
 exact error message names ``#21`` so callers know exactly which
 sibling issue unblocks them.
 """
@@ -36,7 +36,7 @@ app = typer.Typer(name="manual", no_args_is_help=True, help="AEAT Manual prácti
 _console = Console()
 
 _PENDING_21_MESSAGE = (
-    "pending #21 (aeat.llm): LLM-assisted extraction is not yet implemented on this branch. "
+    "pending #21 (aeat.adapters.outbound.llm): LLM-assisted extraction is not yet implemented on this branch. "
     "Re-run this command after #21 merges and the LLM client + translator surfaces land."
 )
 

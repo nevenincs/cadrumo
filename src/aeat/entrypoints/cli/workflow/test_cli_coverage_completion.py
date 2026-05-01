@@ -10,27 +10,150 @@ production paths through the CLI surface and one direct unit-level
 call into ``_helpers._build_profile`` for the bare-fallback branch
 that the CLI cannot otherwise reach without test hooks installed.
 
-Test stand-ins are imported from the shared ``_test_doubles`` module so
-the stubs cannot drift between this file and ``test_cli.py``.
+Deterministic stand-ins for the engine collaborators live inline below.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass, field
+from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import cast
 
 import pytest
 from typer.testing import CliRunner
 
-from ....application.workflow import WorkflowError
+from ....adapters.outbound.aeat.export import DraftStatus, FilingFinding
+from ....application.workflow import (
+    FilingDraftBuilderProtocol,
+    SubmissionEngineProtocol,
+    WorkflowEngine,
+    WorkflowError,
+)
+from ....core.config import Settings
 from ....core.errors import ErrorCategory, get_error_exit_code
+from ....domain.deadlines import (
+    AutonomoProfile,
+    FilingObligation,
+    IVARegime,
+    ObligationStatus,
+    Schedule,
+)
 from .. import app as root_app
 from . import _helpers
 from ._helpers import clear_test_hooks, set_test_hooks
-from ._test_doubles import make_engine, make_failing_engine, make_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@dataclass
+class _Draft:
+    """Deterministic test draft."""
+
+    draft_id: str = "draft-x"
+    modelo: str = "130"
+    period: str = "2026Q1"
+    profile_tax_id: str = "X1234567L"
+    status: DraftStatus = DraftStatus.APPROVED
+    values: Mapping[str, str] = field(default_factory=lambda: {"01": "1000"})
+    findings: tuple[FilingFinding, ...] = ()
+
+
+class _DeadlineEngine:
+    """Deadline engine stand-in returning one fixed UPCOMING obligation."""
+
+    def compute(
+        self,
+        profile: AutonomoProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ) -> Schedule:
+        return Schedule(
+            profile=profile,
+            year=year,
+            obligations=(
+                FilingObligation(
+                    modelo="130",
+                    period="2026Q1",
+                    opens_on=date(2026, 4, 1),
+                    closes_on=date(2099, 12, 31),
+                    status=ObligationStatus.UPCOMING,
+                    applies_because="test",
+                ),
+            ),
+            generated_at=datetime(2026, 4, 12, tzinfo=UTC),
+        )
+
+
+class _DraftBuilder:
+    """Draft builder stand-in returning a deterministic ``_Draft``."""
+
+    def build(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+        inputs: Mapping[str, object],
+        fail_on_warning: bool = False,
+    ) -> _Draft:
+        return _Draft(modelo=modelo, period=period, profile_tax_id=profile.tax_id)
+
+
+class _SubmissionEngine:
+    """Submission engine stand-in for read-only preflight paths."""
+
+    def preflight(self, draft: _Draft, *, today: date) -> None:
+        return None
+
+
+class _InputsProvider:
+    """Inputs provider stand-in returning a single casilla."""
+
+    def load_inputs(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+    ) -> Mapping[str, object]:
+        return {"01": "1000"}
+
+
+def make_profile() -> AutonomoProfile:
+    """Return the canonical test :class:`AutonomoProfile`."""
+    return AutonomoProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+    )
+
+
+def make_engine() -> WorkflowEngine:
+    """Return a fully wired :class:`WorkflowEngine` using the stand-ins."""
+    return WorkflowEngine(
+        deadline_engine=_DeadlineEngine(),
+        filing_draft_builder=cast(FilingDraftBuilderProtocol, _DraftBuilder()),
+        submission_engine=cast(SubmissionEngineProtocol, _SubmissionEngine()),
+        sync_runner=None,
+        session=None,
+        certificate_bundle=None,
+        inputs_provider=_InputsProvider(),
+        settings=Settings(),
+    )
+
+
+def make_failing_engine() -> WorkflowEngine:
+    """Engine factory that raises :class:`WorkflowError` to drive the
+    helpers' catch-and-exit-1 path under test.
+    """
+    raise WorkflowError("simulated wiring failure")
 
 
 def _unwrap_result(output: str):

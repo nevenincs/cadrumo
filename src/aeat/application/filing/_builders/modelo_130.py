@@ -1,9 +1,9 @@
-"""Modelo 130 builder for :mod:`aeat.filing`.
+"""Modelo 130 builder for :mod:`aeat.application.filing`.
 
 Modelo 130 is the quarterly *pago fraccionado IRPF* form filed
 by Spanish autónomos in régimen de estimación directa. Its
 casilla shape is small enough to exercise every
-:class:`aeat.filing._schema.FilingValueKind` while remaining
+:class:`aeat.application.filing._schema.FilingValueKind` while remaining
 hand-verifiable in unit tests while remaining compatible with the
 runtime schema provider backed by the canonical casilla corpus.
 """

@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.filing._import` (issue #271).
+"""Unit tests for :mod:`aeat.application.filing._import` (issue #271).
 
 The suite exercises :func:`import_filing_from_justificante` against the
 committed synthetic fixture PDFs under ``tests/fixtures/justificantes/``

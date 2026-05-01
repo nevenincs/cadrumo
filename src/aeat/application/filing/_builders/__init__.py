@@ -1,7 +1,7 @@
-"""Private builder implementations for :mod:`aeat.filing`.
+"""Private builder implementations for :mod:`aeat.application.filing`.
 
-Callers from outside :mod:`aeat.filing` MUST NOT import from this
-package. Use :func:`aeat.filing.build_draft` instead.
+Callers from outside :mod:`aeat.application.filing` MUST NOT import from this
+package. Use :func:`aeat.application.filing.build_draft` instead.
 """
 
 from __future__ import annotations

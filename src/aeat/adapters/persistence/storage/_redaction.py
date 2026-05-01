@@ -1,6 +1,6 @@
 """Redaction-rule registry and the ``redact`` helper.
 
-The rule shape is defined in :mod:`aeat.storage._classification` (so the
+The rule shape is defined in :mod:`aeat.adapters.persistence.storage._classification` (so the
 classification policy table can reference rule names without a circular
 import). This module ships:
 

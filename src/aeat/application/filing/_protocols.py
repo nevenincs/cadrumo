@@ -1,14 +1,14 @@
-"""Cross-module Protocols consumed by :mod:`aeat.filing`.
+"""Cross-module Protocols consumed by :mod:`aeat.application.filing`.
 
 Every upstream collaborator (modelos #6, casilla schemas #9 / #23,
 deadline engine #38) is represented by a runtime-checkable
-Protocol so :mod:`aeat.filing` does not take a hard import on any
+Protocol so :mod:`aeat.application.filing` does not take a hard import on any
 in-flight sibling subpackage. Concrete implementations live in
 the test suite for now and will be replaced on rebase once the
 upstream subpackages land.
 
 These Protocols are intentionally minimal: they describe only the
-attributes :mod:`aeat.filing` actually consumes. They are not
+attributes :mod:`aeat.application.filing` actually consumes. They are not
 attempting to model the full surface of the upstream subpackages.
 """
 
@@ -114,7 +114,7 @@ class DeadlineChecker(Protocol):
 class FilingProfile(Protocol):
     """The taxpayer profile a draft is built for.
 
-    Only the attributes :mod:`aeat.filing` actually consumes are
+    Only the attributes :mod:`aeat.application.filing` actually consumes are
     declared here; downstream callers may use richer profile
     objects as long as they expose these attributes.
     """

@@ -1,7 +1,7 @@
 """Error hierarchy for the unified review queue.
 
 All review-layer errors inherit from :class:`ReviewError` which in
-turn inherits from :class:`aeat.errors.AeatError` per the project
+turn inherits from :class:`aeat.core.errors.AeatError` per the project
 mandate.
 """
 
@@ -11,7 +11,7 @@ from ...core.errors import AeatError
 
 
 class ReviewError(AeatError):
-    """Base class for every error raised by :mod:`aeat.review`."""
+    """Base class for every error raised by :mod:`aeat.application.review`."""
 
 
 class ReviewSourceLoadError(ReviewError):
@@ -22,7 +22,7 @@ class ReviewKindReservedError(ReviewError):
     """Raised when the CLI receives a reserved-but-not-implemented kind token.
 
     Carries the blocking reason returned by
-    :func:`aeat.review._enums.reserved_kind_reason`.
+    :func:`aeat.application.review._enums.reserved_kind_reason`.
     """
 
     def __init__(self, token: str, reason: str) -> None:

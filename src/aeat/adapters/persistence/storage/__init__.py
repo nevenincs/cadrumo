@@ -1,6 +1,6 @@
 """Persistence layer and migrations entry point.
 
-Public API of the storage subpackage. Callers outside :mod:`aeat.storage` MUST
+Public API of the storage subpackage. Callers outside :mod:`aeat.adapters.persistence.storage` MUST
 import only from here — internal modules (``_orm``, ``engine``, ``session``,
 ``repository``, ``migrations_api``) are implementation details.
 

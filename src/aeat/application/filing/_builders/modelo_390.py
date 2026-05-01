@@ -4,7 +4,7 @@ Modelo 390 is the annual summary filed once per ejercicio by
 Spanish autónomos and businesses in the general IVA regime. It
 reconciles every quarterly Modelo 303 filed during the year and
 exposes the annual totals in a single declarative form. v1
-coverage per :mod:`aeat.filing._builders._modelo_390_schema`
+coverage per :mod:`aeat.application.filing._builders._modelo_390_schema`
 comprises the arithmetic backbone of the régimen general annual
 totals plus reconciliation findings against the four quarterly
 303 drafts.
@@ -13,7 +13,7 @@ The builder reads the four quarterly drafts out of a reserved
 ``_quarterly_303`` key on the :class:`FilingInputs` mapping — the
 ``FilingBuilder`` ABC's signature is fixed on ``main`` and this
 is the least invasive way to thread the tuple through
-:func:`aeat.filing.build_draft` without changing public API
+:func:`aeat.application.filing.build_draft` without changing public API
 shape. See the ADR ``2026-04-12-modelo-303-390-adr`` for the
 trade-off discussion.
 """

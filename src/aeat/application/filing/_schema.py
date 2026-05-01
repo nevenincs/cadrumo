@@ -1,4 +1,4 @@
-"""Pydantic v2 schema for the :mod:`aeat.filing` subpackage.
+"""Pydantic v2 schema for the :mod:`aeat.application.filing` subpackage.
 
 Every type in this module is a strict, frozen pydantic v2 model
 or a closed :class:`enum.StrEnum`. These are the boundary-crossing
@@ -108,7 +108,7 @@ class FilingValidationFinding(BaseModel):
         message: A trilingual :class:`Translatable` describing the
             finding.
         references_rules: Tuple of Manual práctico Rule IDs that
-            justify the finding (see :class:`aeat.manuals.Rule`).
+            justify the finding (see :class:`aeat.domain.manuals.Rule`).
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")

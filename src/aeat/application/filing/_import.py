@@ -1,7 +1,7 @@
 """Reconstruct a :class:`FilingDraft` from an AEAT justificante PDF (#271).
 
 Kent keeps the justificante PDF of a past filing on disk. This module
-parses the PDF via :mod:`aeat.justificante`, materialises an empty draft
+parses the PDF via :mod:`aeat.domain.justificante`, materialises an empty draft
 scaffold (every casilla ``EMPTY``) via the registered builder for the
 modelo, and co-produces a ``SubmittedFiling`` record so the import is
 usable as the baseline for amendment flows (#93, #234, #235).
@@ -66,12 +66,12 @@ class JustificanteImportResult:
     The container is deliberately a frozen dataclass rather than a
     pydantic model because it wraps two already-validated pydantic
     records and defers the ``SubmittedFiling`` type to runtime (the
-    ``aeat.submission`` package itself imports :mod:`aeat.filing`, so
+    ``aeat.adapters.outbound.aeat.export`` package itself imports :mod:`aeat.application.filing`, so
     pulling ``SubmittedFiling`` in at module scope would cycle).
 
     Attributes:
         draft: The freshly built scaffold with every casilla empty.
-        submission: The companion :class:`aeat.submission._models.SubmittedFiling`
+        submission: The companion :class:`aeat.adapters.outbound.aeat.export._models.SubmittedFiling`
             that lets the amendment engine treat the imported draft as a
             baseline.
         warnings: Trilingual advisory messages. The CLI renders these so
@@ -118,7 +118,7 @@ def import_filing_from_justificante(
         applicable_modelos=(justificante.modelo,),
     )
 
-    # Deferred import: `aeat.filing` imports this module, so top-level
+    # Deferred import: `aeat.application.filing` imports this module, so top-level
     # resolution of ``build_draft`` would form a cycle.
     from . import build_draft
 
@@ -209,10 +209,10 @@ def _build_submission_record(
     stays stable across re-imports of the same PDF and remains distinct
     from legacy local attempt ids.
     """
-    # Deferred import: :mod:`aeat.submission._models` imports
-    # ``FilingAmendment`` from :mod:`aeat.filing`, so pulling it in at
+    # Deferred import: :mod:`aeat.adapters.outbound.aeat.export._models` imports
+    # ``FilingAmendment`` from :mod:`aeat.application.filing`, so pulling it in at
     # module scope would cycle through this module while
-    # :mod:`aeat.filing` is still loading.
+    # :mod:`aeat.application.filing` is still loading.
     from ...adapters.outbound.aeat.export._models import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 
     submitted_at = justificante.presented_at.replace(tzinfo=_MADRID_TZ).astimezone(UTC)

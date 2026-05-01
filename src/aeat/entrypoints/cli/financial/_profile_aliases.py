@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from ....domain.financial.categories import (
+from ....domain.categories import (
     CATEGORY_PROFILES_2025,
     ProportionalityKind,
     SpendingCategory,

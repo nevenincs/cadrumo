@@ -2,12 +2,12 @@
 
 Walks every together against real on-disk persistence:
 
-- :class:`aeat.filing._repository.FilingDraftRepository` (FINANCIAL)
-- :class:`aeat.submission._repository.SubmissionRepository` (AUDIT)
-- :class:`aeat.filing._complementaria_repository.FilingAmendmentRepository`
+- :class:`aeat.application.filing._repository.FilingDraftRepository` (FINANCIAL)
+- :class:`aeat.adapters.outbound.aeat.export._repository.SubmissionRepository` (AUDIT)
+- :class:`aeat.application.filing._complementaria_repository.FilingAmendmentRepository`
   (AUDIT)
-- :class:`aeat.justificante._repository.JustificanteRepository` (AUDIT)
-- :class:`aeat.filing._history_repository.FilingHistoryRepository`
+- :class:`aeat.domain.justificante._repository.JustificanteRepository` (AUDIT)
+- :class:`aeat.application.filing._history_repository.FilingHistoryRepository`
   (AUDIT)
 
 NOTE: (live-submit governed audit sink) has been excised

@@ -12,7 +12,7 @@ from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 
-from ...domain.financial.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
+from ...domain.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
 from ...domain.financial.transactions import Transaction, TransactionCatalogue
 from ...domain.formulas import FiscalPeriod, MissingRulesetError, Quarter, get_registry
 from ...domain.modelos import ModeloCode

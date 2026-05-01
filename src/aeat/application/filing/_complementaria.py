@@ -1,4 +1,4 @@
-"""Strict amendment models and builder helpers for :mod:`aeat.filing`."""
+"""Strict amendment models and builder helpers for :mod:`aeat.application.filing`."""
 
 from __future__ import annotations
 

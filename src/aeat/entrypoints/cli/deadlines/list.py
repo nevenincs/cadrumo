@@ -21,7 +21,7 @@ def list_schedule(
         help="Path to a JSON AutonomoProfile (defaults to AEAT_DEFAULT_PROFILE_PATH).",
     ),
 ) -> None:
-    """Print the full :class:`aeat.deadlines.Schedule` for the given year."""
+    """Print the full :class:`aeat.domain.deadlines.Schedule` for the given year."""
     profile_path = resolve_profile_path(profile)
     loaded_profile = load_profile(profile_path)
     engine = build_engine()

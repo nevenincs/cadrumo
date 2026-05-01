@@ -140,7 +140,7 @@ class RedactionStrategy(StrEnum):
 class RedactionRule(BaseModel):
     """One rule applied at write time by the audit sink and run-trace path.
 
-    The rule shape is stable; the matching :func:`aeat.storage.redact`
+    The rule shape is stable; the matching :func:`aeat.adapters.persistence.storage.redact`
     helper consumes a tuple of rules and applies them in order.
 
     Attributes:

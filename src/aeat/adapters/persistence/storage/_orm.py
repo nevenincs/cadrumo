@@ -1,8 +1,8 @@
 """Internal SQLAlchemy ORM mapper classes.
 
 These classes back the declarative schema consumed by Alembic autogenerate.
-They are intentionally kept out of the :mod:`aeat.storage` public API — the
-public surface exposes pydantic v2 records (see :mod:`aeat.storage.records`)
+They are intentionally kept out of the :mod:`aeat.adapters.persistence.storage` public API — the
+public surface exposes pydantic v2 records (see :mod:`aeat.adapters.persistence.storage.records`)
 and repositories bridge between the two.
 
 Note:

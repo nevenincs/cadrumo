@@ -1,4 +1,4 @@
-"""Closed taxonomies exposed by :mod:`aeat.schema`.
+"""Closed taxonomies exposed by :mod:`aeat.domain.schema`.
 
 Every enum is a :class:`str.StrEnum` so members compare equal to
 their canonical string representation across JSON boundaries.
@@ -10,7 +10,7 @@ from enum import StrEnum
 
 
 class SchemaSource(StrEnum):
-    """Provenance class of an extracted :class:`aeat.schema.Modelo`.
+    """Provenance class of an extracted :class:`aeat.domain.schema.Modelo`.
 
     ``BOE_ORDEN`` is the only member implemented in the v1 PoC. Three
     reserved follow-up extractor slots (``PORTAL_HTML_PROBE``,
@@ -26,8 +26,8 @@ class SchemaSource(StrEnum):
 class CasillaDataType(StrEnum):
     """Closed catalogue of casilla data types.
 
-    Owned by :mod:`aeat.schema`. The adjacent
-    :class:`aeat.casillas.models.CasillaDataType` carries the same
+    Owned by :mod:`aeat.domain.schema`. The adjacent
+    :class:`aeat.domain.casillas.models.CasillaDataType` carries the same
     member values for the curated reviewer corpus; the two enums are
     bridged by string-value round-trip (see the 2026-04-17 schema
     extraction ADR §7). ``isinstance`` comparisons across the two

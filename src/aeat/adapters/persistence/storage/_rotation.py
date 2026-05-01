@@ -99,7 +99,7 @@ class RotationPlanEntry(BaseModel):
 
         The lock file ``exclusive_file_lock`` actually opens is the
         returned path with an additional ``.lock`` suffix appended
-        (see :func:`aeat.storage._lock._lock_path_for`); the
+        (see :func:`aeat.adapters.persistence.storage._lock._lock_path_for`); the
         rotation and writer therefore land on the same lock-byte
         target.
         """
@@ -476,7 +476,7 @@ def default_blob_store_roots(settings: Any) -> tuple[Path, ...]:
       by :func:`get_secret_store` for opaque-bearer credentials, OAuth
       refresh tokens, and identity records.
     - The financial-attachments store (``aeat_attachments_dir``), wired
-      up by :class:`aeat.financial.attachments.AttachmentStore` for
+      up by :class:`aeat.domain.financial.attachments.AttachmentStore` for
       receipts, invoices, and bank statements.
 
     Each root is a directory whose ``blobs/<hex[:2]>/<hex>.manifest.json``
