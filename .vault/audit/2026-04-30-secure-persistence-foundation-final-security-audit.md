@@ -167,7 +167,7 @@ patterns BEFORE composition into filenames:
 - `_validate_modelo` in filing-history repository.
 - `_validate_run_id` rejects non-`[0-9a-f]{16}` shapes
   (`src/aeat/observability/_store.py`).
-- `resolve_record_json_path` (`src/aeat/_paths.py`) is the
+- `resolve_record_json_path` (`src/aeat/core/paths.py`) is the
   centralised path-containment guard used by workflow and divergence
   repositories.
 
