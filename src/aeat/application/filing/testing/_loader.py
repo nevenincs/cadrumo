@@ -1,8 +1,7 @@
 """Filesystem loader for synthetic filing-history fixtures.
 
 This module is the implementation for
-:func:`aeat.domain.testing.load_filing_history`. External callers should
-import exclusively from :mod:`aeat.testing`.
+:func:`aeat.application.filing.testing.load_filing_history`.
 """
 
 from __future__ import annotations
@@ -13,8 +12,8 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...core.errors import FilingFixtureError
-from ...core.logging import get_logger
+from ....core.errors import FilingFixtureError
+from ....core.logging import get_logger
 from ._schema import FilingRecord
 
 _logger = get_logger(__name__)

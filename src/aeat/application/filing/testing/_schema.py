@@ -1,10 +1,10 @@
-"""Pydantic v2 schema for :mod:`aeat.domain.testing` synthetic filing fixtures.
+"""Pydantic v2 schema for :mod:`aeat.application.filing.testing` synthetic filing fixtures.
 
 Every type in this module is a strict, frozen pydantic v2 model or a
 closed :class:`enum.StrEnum`. The :class:`FilingRecord` shape is the
 boundary-crossing record persisted to
 ``tests/fixtures/filing_history/<modelo>/<period>-<scenario>.json``
-and re-loaded by :func:`aeat.domain.testing.load_filing_history`.
+and re-loaded by :func:`aeat.application.filing.testing.load_filing_history`.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...application.filing import FilingDraftStatus
+from .. import FilingDraftStatus
 
 SYNTHETIC_COMMENT_REQUIRED_SUBSTRING = "SYNTHETIC"
 

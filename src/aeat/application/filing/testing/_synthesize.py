@@ -15,7 +15,7 @@ remains intact.
 
 Public API:
 
-    from aeat.domain.testing import synthesize_filing_draft
+    from aeat.application.filing.testing import synthesize_filing_draft
 
     draft = synthesize_filing_draft(
         modelo="100",
@@ -32,7 +32,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from ...application.filing._schema import (
+from .._schema import (
     SCHEMA_VERSION_DEFAULT,
     FilingDraft,
     FilingDraftStatus,
