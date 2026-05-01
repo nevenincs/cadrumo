@@ -20,7 +20,7 @@ Vault refs: research `[[2026-04-12-setup-wizard-research]]`, ADR
 
 ## summary
 
-Shipped `aeat.setup` end-to-end: pydantic v2 strict records, typed
+Shipped `aeat.application.setup` end-to-end: pydantic v2 strict records, typed
 `SetupWizard` orchestrator, pure verifier, env-file writer,
 `QueuedPrompter` + `TyperPrompter`, and four Typer subcommands
 (`aeat setup`, `aeat setup verify`, `aeat setup show`, and the
@@ -28,30 +28,30 @@ non-interactive path via `--non-interactive --from <path>`).
 
 ## deliverables
 
-- `src/aeat/setup/__init__.py` — public API surface
-- `src/aeat/setup/_models.py` — `SetupStep`, `SetupOutcome`,
+- `src/aeat/application/setup/__init__.py` — public API surface
+- `src/aeat/application/setup/_models.py` — `SetupStep`, `SetupOutcome`,
   `VerifySeverity`, `SetupAnswers`, `SetupResult`, `VerifyFinding`,
   all strict, frozen, `extra="forbid"`
-- `src/aeat/setup/_errors.py` — `SetupError`, `SetupAbortedError`,
+- `src/aeat/application/setup/_errors.py` — `SetupError`, `SetupAbortedError`,
   `SetupVerifyError`, `SetupAnswersError`, all inheriting from
-  `aeat.errors.AeatError`
-- `src/aeat/setup/_protocols.py` — `Prompter`, `FirstRunRunner`
-- `src/aeat/setup/_prompter.py` — `QueuedPrompter`, `TyperPrompter`
-- `src/aeat/setup/_env_writer.py` — `write_env_file`,
+  `aeat.core.errors.AeatError`
+- `src/aeat/application/setup/_protocols.py` — `Prompter`, `FirstRunRunner`
+- `src/aeat/application/setup/_prompter.py` — `QueuedPrompter`, `TyperPrompter`
+- `src/aeat/application/setup/_env_writer.py` — `write_env_file`,
   `write_profile_file`, `owned_env_keys`
-- `src/aeat/setup/_verifier.py` — `Verifier`, `load_answers_from_file`
-- `src/aeat/setup/_wizard.py` — `SetupWizard`
-- `src/aeat/cli/setup.py` — Typer sub-app
-- `src/aeat/cli/__init__.py` — registered sub-app via
+- `src/aeat/application/setup/_verifier.py` — `Verifier`, `load_answers_from_file`
+- `src/aeat/application/setup/_wizard.py` — `SetupWizard`
+- `src/aeat/entrypoints/cli/setup.py` — Typer sub-app
+- `src/aeat/entrypoints/cli/__init__.py` — registered sub-app via
   `setup_wizard_module` alias (avoids a pytest `setup_module` hook
-  collision inside the `aeat.cli` package namespace)
+  collision inside the `aeat.entrypoints.cli` package namespace)
 - `pyproject.toml` — per-file S105/S106 ignores for the setup tests
   (false positives on the `*_var_name` / prefix-comment pattern)
 
 ## tests
 
 41 new unit tests, all `@pytest.mark.unit`, colocated under
-`src/aeat/setup/`:
+`src/aeat/application/setup/`:
 
 - `test_models.py` — round-trip, frozen, extra-fields rejected,
   never-carries-password-field, enum catalogues closed
@@ -83,7 +83,7 @@ skipped, 18 deselected (live, not opted in). No Actions CI touched.
   `write_env_file` never reads `os.environ`. A dedicated test sets
   a distinctive sentinel in `os.environ`, runs the writer, and
   asserts the sentinel is absent from the written file.
-- **idempotent-rerun.** Delegated to `aeat.env_io.write_env_vars`,
+- **idempotent-rerun.** Delegated to `aeat.core.env_io.write_env_vars`,
   verified by a byte-equal comparison after two consecutive runs.
 - **unrelated-keys-preserved.** Pre-seeded env file with comments
   and unrelated keys; post-run assertion that every unrelated key
@@ -91,10 +91,10 @@ skipped, 18 deselected (live, not opted in). No Actions CI touched.
 - **pydantic v2 strict.** Every boundary record is
   `strict=True, frozen=True, extra="forbid"`, including
   `VerifyFinding` and `SetupResult`.
-- **public API discipline.** Callers import only from `aeat.setup`.
+- **public API discipline.** Callers import only from `aeat.application.setup`.
 - **errors inherit from `AeatError`.** Verified by the type
   hierarchy.
-- **logging via `aeat.logging.get_logger(__name__)`** throughout.
+- **logging via `aeat.core.logging.get_logger(__name__)`** throughout.
 
 ## notes
 
@@ -107,5 +107,5 @@ skipped, 18 deselected (live, not opted in). No Actions CI touched.
   change.
 - `AEAT_CERTIFICATE_PASSWORD_SECRET` is the suggested default env
   var name for the PKCS#12 passphrase, matching the pattern used by
-  `aeat.auth.CertificateBundle.password_env_var`. The wizard never
+  `aeat.adapters.outbound.aeat.auth.CertificateBundle.password_env_var`. The wizard never
   reads or writes the value itself.

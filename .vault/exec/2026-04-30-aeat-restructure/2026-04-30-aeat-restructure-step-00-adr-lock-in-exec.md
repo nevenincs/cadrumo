@@ -36,9 +36,9 @@ Both decisions are resolved autonomously via the audit-grounded decision rules i
 
 Source-code references — 3 files in `src/aeat/`:
 
-- `src/aeat/schema/_enums.py` lines 21–23 — slot definitions (`PORTAL_HTML_PROBE`, `MANUAL_LLM_DRAFT`, `XSD_WIRE`).
-- `src/aeat/schema/_models.py` lines 112–113 — docstring documenting them as "reserved enum slots for follow-up extractors".
-- `src/aeat/schema/test_models.py` lines 351–353 — test exercising the reserved values.
+- `src/aeat/domain/schema/_enums.py` lines 21–23 — slot definitions (`PORTAL_HTML_PROBE`, `MANUAL_LLM_DRAFT`, `XSD_WIRE`).
+- `src/aeat/domain/schema/_models.py` lines 112–113 — docstring documenting them as "reserved enum slots for follow-up extractors".
+- `src/aeat/domain/schema/test_models.py` lines 351–353 — test exercising the reserved values.
 
 Vault-doc references — 3 historical docs:
 
@@ -66,9 +66,9 @@ ADR rule: *any active branch / open issue references the slot → KEEP. Otherwis
 
 The deletion rides into Step 7's keystone PR with the schema module's move. Concrete edits:
 
-- `src/aeat/schema/_enums.py` lines 21–23 — remove the three enum members.
-- `src/aeat/schema/_models.py` lines 112–113 — remove the reserved-slots docstring sentence.
-- `src/aeat/schema/test_models.py` lines 351–353 — remove the test references (verify whether the entire iteration target should go at edit time).
+- `src/aeat/domain/schema/_enums.py` lines 21–23 — remove the three enum members.
+- `src/aeat/domain/schema/_models.py` lines 112–113 — remove the reserved-slots docstring sentence.
+- `src/aeat/domain/schema/test_models.py` lines 351–353 — remove the test references (verify whether the entire iteration target should go at edit time).
 - The 3 schema-extraction vault docs (research/plan/ADR from 2026-04-17) get Tier-3 inline-updates in Step 12 to drop the "reserved future extractors" mention.
 
 This deletion lands on the dead-code workstream Phase 2 list (rides with the `domain/schema/` move at Step 7), not on the Phase 1 list.
@@ -91,11 +91,11 @@ Helper inventory — 5 helpers (the EPIC `#475` body / plan / `#476` checkbox te
 
 | Helper | File | Landed | Production callers | Test fixtures |
 |---|---|---|---|---|
-| `migrate_legacy_submissions_to_repository` | `src/aeat/submission/_repository.py:194` | 2026-04-27 (`0bb4ca6`) | 0 | yes (`_test_repository.py`) |
-| `migrate_legacy_amendments_to_repository` | `src/aeat/filing/_complementaria_repository.py:181` | 2026-04-27 (`430627d`) | 0 | yes (`_test_complementaria_repository.py`) |
-| `migrate_legacy_filing_history_to_repository` | `src/aeat/filing/_history_repository.py:179` | 2026-04-27 (`a7bb565`) | 0 | yes (`_test_history_repository.py`) |
-| `migrate_legacy_drafts_to_repository` | `src/aeat/filing/_repository.py:205` | 2026-04-27 (`00d7a5b`) | 0 | yes (`_test_repository.py`) |
-| `migrate_legacy_justificantes_to_repository` | `src/aeat/justificante/_repository.py:178` | 2026-04-27 (`ad49cbb`) | 0 | yes (`_test_repository.py`) |
+| `migrate_legacy_submissions_to_repository` | `src/aeat/adapters/outbound/aeat/export/_repository.py:194` | 2026-04-27 (`0bb4ca6`) | 0 | yes (`_test_repository.py`) |
+| `migrate_legacy_amendments_to_repository` | `src/aeat/application/filing/_complementaria_repository.py:181` | 2026-04-27 (`430627d`) | 0 | yes (`_test_complementaria_repository.py`) |
+| `migrate_legacy_filing_history_to_repository` | `src/aeat/application/filing/_history_repository.py:179` | 2026-04-27 (`a7bb565`) | 0 | yes (`_test_history_repository.py`) |
+| `migrate_legacy_drafts_to_repository` | `src/aeat/application/filing/_repository.py:205` | 2026-04-27 (`00d7a5b`) | 0 | yes (`_test_repository.py`) |
+| `migrate_legacy_justificantes_to_repository` | `src/aeat/domain/justificante/_repository.py:178` | 2026-04-27 (`ad49cbb`) | 0 | yes (`_test_repository.py`) |
 
 Cross-file caller scan: zero non-test, non-defining-file callers in production code. The only adjacent match (`migrate_legacy_to_secret_store` in `auth/_secret_adapters.py`) is a separate symbol on the Phase-1 dead-code list and not part of this rule.
 

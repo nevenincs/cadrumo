@@ -54,7 +54,7 @@ supplied path through a backwards-compat shim.
   groups, 12 commands, --json schemas).
 - `99334a0` — `docs(concepts)`: rental-income concept doc + Kent
   capability matrix row.
-- `367d4e5` — `fix(rental,cli/rental)`: defer aeat.storage imports
+- `367d4e5` — `fix(rental,cli/rental)`: defer aeat.adapters.persistence.storage imports
   for json-pipe-safety contract; register schemas in conformance
   test.
 
@@ -69,7 +69,7 @@ new tests); CLI sub-app (`__init__`, `_helpers`, `finca`, `contract`,
 docs/concepts/rental-income.md; vault research + ADR + plan + index.
 
 Modified: storage `_orm.py` (5 new ORM Row classes + EncryptedString
-import); `aeat.errors._registry` (6 new ErrorCode rows); CLI
+import); `aeat.core.errors._registry` (6 new ErrorCode rows); CLI
 `__init__.py` (sub-app registration);
 `test_json_schema_conformance.py` (12 new command paths in expected
 set); `kent-capabilities.md` (capability row).

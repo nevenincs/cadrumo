@@ -12,7 +12,7 @@ related:
 Phase 5 grew `WorkflowAbortReason` with `SITE_UNAVAILABLE`,
 attached an optional typed `SiteHealthAlert` field to
 `WorkflowStep`, and added a typed `except SiteHealthError` arm to
-every stage method in `aeat.workflow._engine` strictly before the
+every stage method in `aeat.application.workflow._engine` strictly before the
 generic `except Exception`. The helper
 `_record_site_unavailable` composes a `SiteHealthAlert` carrying
 the current run identifier, appends a failed `WorkflowStep`, and

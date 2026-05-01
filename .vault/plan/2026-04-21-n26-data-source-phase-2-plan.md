@@ -30,9 +30,9 @@ Execute the real N26 PDF statement feature as issue `#308`: source a real statem
   1. Commit the resulting fixture PDFs under `tests/fixtures/financial/n26/`.
   1. Hand-read every committed fixture and record the expected rows, dates, amounts, currencies, balances, and continuation semantics in golden expectation files.
 - `Phase 2: implement the provider surface`
-  1. Add `SourceFormat.PDF` in `aeat.financial._raw_transaction`.
+  1. Add `SourceFormat.PDF` in `aeat.domain.financial._raw_transaction`.
   1. Implement `PdfN26Provider` with header-derived table geometry, locale-aware date parsing, statement-derived currency, and continuation-row handling.
-  1. Register the provider in `aeat.financial.providers`, extend `detect_provider()`, and update `aeat financial ingest` provider resolution.
+  1. Register the provider in `aeat.domain.financial.providers`, extend `detect_provider()`, and update `aeat financial ingest` provider resolution.
 - `Phase 3: prove behavior with fixture-backed tests`
   1. Add unit tests that ingest the committed fixtures and compare emitted `RawTransaction` records against the hand-derived goldens.
   1. Add CLI coverage proving `aeat financial ingest <fixture.pdf>` succeeds under auto-detection and surfaces clear validation failures for non-N26 PDFs.

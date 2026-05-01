@@ -19,7 +19,7 @@ Audit gate for **wave-12**: hard-cutover migration of the file-fallback master-k
 
 Wave-12 in scope:
 
-- Substrate changes in `src/aeat/storage/_master_key.py`: v2 `_KdfParameters`, `_LegacyKdfParameters`, `_derive_kek` swap, version-gating loader, atomic `migrate_master_key_kdf` helper, `MigrationResult` record.
+- Substrate changes in `src/aeat/adapters/persistence/storage/_master_key.py`: v2 `_KdfParameters`, `_LegacyKdfParameters`, `_derive_kek` swap, version-gating loader, atomic `migrate_master_key_kdf` helper, `MigrationResult` record.
 - New error class `MasterKeyKdfVersionError(MasterKeyUnavailableError)` + trilingual registry registration `AUTH_STORAGE_MASTER_KEY_KDF_VERSION`.
 - CLI command `aeat security migrate-master-key-kdf [--store-dir]`.
 - 10 new tests (6 substrate + 4 CLI). Pre-existing `test_kdf_params_are_human_readable` updated to assert v2 shape.

@@ -47,7 +47,7 @@ Auto-generated index of all documents tagged with `#modelo-inventory`.
 ### exec
 
 - `2026-04-13-modelo-inventory-phase-all-summary-exec` - phase-all summary — modelo inventory (#108)
-- `2026-04-13-modelo-inventory-phase1-scaffold-exec` - phase 1 — scaffold aeat.models module skeleton
+- `2026-04-13-modelo-inventory-phase1-scaffold-exec` - phase 1 — scaffold aeat.domain.modelos module skeleton
 - `2026-04-13-modelo-inventory-phase2-enums-models-exec` - phase 2 — enums + primitive pydantic models
 - `2026-04-13-modelo-inventory-phase3-errors-exec` - phase 3 — error hierarchy
 - `2026-04-13-modelo-inventory-phase4-entries-exec` - phase 4 — populate registry entries

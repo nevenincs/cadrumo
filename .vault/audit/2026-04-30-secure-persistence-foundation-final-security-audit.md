@@ -36,14 +36,14 @@ Verification commands:
 
 - `uv run --no-sync ruff check src/aeat`: **all checks passed**.
 - `uv run --no-sync ty check src/aeat`: **all checks passed**.
-- `uv run --no-sync python -m pytest src/aeat/storage src/aeat/cli/test_security.py src/aeat/cli/test_json_pipe_safety.py src/aeat/observability src/aeat/llm src/aeat/financial src/aeat/filing src/aeat/submission src/aeat/justificante src/aeat/workflow -q`: **1463 passed, 9 skipped, 5 deselected, 26 warnings**.
+- `uv run --no-sync python -m pytest src/aeat/storage src/aeat/entrypoints/cli/test_security.py src/aeat/entrypoints/cli/test_json_pipe_safety.py src/aeat/observability src/aeat/llm src/aeat/financial src/aeat/filing src/aeat/submission src/aeat/justificante src/aeat/workflow -q`: **1463 passed, 9 skipped, 5 deselected, 26 warnings**.
 
 ## Findings
 
 ### CRYPTO-CORRECTNESS - PASS
 
-The substrate primitives (`src/aeat/storage/_crypto.py`,
-`src/aeat/storage/_envelope.py`, `src/aeat/storage/_master_key.py`)
+The substrate primitives (`src/aeat/adapters/persistence/storage/_crypto.py`,
+`src/aeat/adapters/persistence/storage/_envelope.py`, `src/aeat/adapters/persistence/storage/_master_key.py`)
 implement AES-256-GCM with 12-byte random nonces and 16-byte tags via
 `cryptography.hazmat.primitives.ciphers.aead.AESGCM`. HKDF-SHA256
 derives per-consumer keys from the project master key. `encrypt_record`
@@ -74,7 +74,7 @@ the no-op `fail.Keyring` / `null.Keyring` backends.
 
 ### MASTER-KEY ROTATION - PASS
 
-`src/aeat/storage/_rotation.py` and the `aeat security
+`src/aeat/adapters/persistence/storage/_rotation.py` and the `aeat security
 rotate-master-key` CLI implement a content-preserving rotation:
 
 - The rotation operates at the bytes level - it never parses the
@@ -106,13 +106,13 @@ Catalogued every consumer's HKDF context byte-string:
 
 | Consumer | HKDF context |
 | --- | --- |
-| Transaction catalogue (Wave 3 repo) | `aeat.financial.transactions.catalogue.v1` |
-| Filing draft (Wave 4 repo) | `aeat.filing.draft.v1` |
-| Filing amendment (Wave 4 repo) | `aeat.filing.amendment.v1` |
-| Filing history (Wave 4 repo) | `aeat.filing.history.v1` |
-| Justificante metadata (Wave 4 repo) | `aeat.justificante.metadata.v1` |
-| Submission (Wave 4 repo) | `aeat.submission.filing.v1` |
-| Workflow run (Wave 7) | `aeat.workflow.run.v1` |
+| Transaction catalogue (Wave 3 repo) | `aeat.domain.financial.transactions.catalogue.v1` |
+| Filing draft (Wave 4 repo) | `aeat.application.filing.draft.v1` |
+| Filing amendment (Wave 4 repo) | `aeat.application.filing.amendment.v1` |
+| Filing history (Wave 4 repo) | `aeat.application.filing.history.v1` |
+| Justificante metadata (Wave 4 repo) | `aeat.domain.justificante.metadata.v1` |
+| Submission (Wave 4 repo) | `aeat.adapters.outbound.aeat.export.filing.v1` |
+| Workflow run (Wave 7) | `aeat.application.workflow.run.v1` |
 | Envelope-payload HKDF salt | `aeat.envelope.payload.v1` |
 | Cipher-envelope AAD prefix | `aeat.envelope.cipher.v1::` |
 | Encrypted columns lookup | `aeat.column.hashed_lookup.v1` |
@@ -126,7 +126,7 @@ No collisions; all `*.v1`-versioned for clean future migrations.
 `default_rotation_plan(settings)` lists eight `RotationPlanEntry`
 records covering every governance consumer. The `amendment-results/`
 subdirectory of `aeat_submissions_dir` and the `amendments/`
-subdirectory share the `aeat.filing.amendment.v1` HKDF context -
+subdirectory share the `aeat.application.filing.amendment.v1` HKDF context -
 this is correct because both directories are bound to the same
 `FilingAmendmentRepository` consumer identity (the engine binds
 the amendment-results store to the same repository class via
@@ -151,7 +151,7 @@ the alternative is plaintext-on-disk leak.
 
 See finding TRACE-001 below for `save_trace` /
 `save_events_append` plaintext writers under
-`src/aeat/observability/_store.py`.
+`src/aeat/core/observability/_store.py`.
 
 ### CLI INPUT VALIDATION - PASS
 
@@ -159,14 +159,14 @@ Every id-shaped CLI argument is validated against path-traversal
 patterns BEFORE composition into filenames:
 
 - `_validate_draft_id` rejects empty, slash, backslash, dot, and
-  leading-dot tokens (`src/aeat/filing/_repository.py`).
+  leading-dot tokens (`src/aeat/application/filing/_repository.py`).
 - `_validate_amendment_id`
-  (`src/aeat/filing/_complementaria_repository.py`).
-- `_validate_csv` (`src/aeat/justificante/_repository.py`).
-- `_validate_submission_id` (`src/aeat/submission/_repository.py`).
+  (`src/aeat/application/filing/_complementaria_repository.py`).
+- `_validate_csv` (`src/aeat/domain/justificante/_repository.py`).
+- `_validate_submission_id` (`src/aeat/adapters/outbound/aeat/export/_repository.py`).
 - `_validate_modelo` in filing-history repository.
 - `_validate_run_id` rejects non-`[0-9a-f]{16}` shapes
-  (`src/aeat/observability/_store.py`).
+  (`src/aeat/core/observability/_store.py`).
 - `resolve_record_json_path` (`src/aeat/core/paths.py`) is the
   centralised path-containment guard used by workflow and divergence
   repositories.
@@ -178,7 +178,7 @@ Storage tests use real on-disk persistence with
 wrong key, wrong AAD, malformed input, version gate, classification
 gate, foreign-class refusal, foreign-hkdf-context refusal, torn-write
 recovery, resume-idempotency. Tests in
-`src/aeat/storage/_test_master_key.py` use `monkeypatch` to
+`src/aeat/adapters/persistence/storage/_test_master_key.py` use `monkeypatch` to
 swap out the third-party `keyring` package's `get_password` /
 `set_password` - the only sanctioned mock surface (the OS keychain
 is not testable on CI).
@@ -191,7 +191,7 @@ exercise the full crypto stack on real disk.
 
 ### JSON-PIPE-SAFETY - PASS
 
-`uv run --no-sync python -m pytest src/aeat/cli/test_json_pipe_safety.py`
+`uv run --no-sync python -m pytest src/aeat/entrypoints/cli/test_json_pipe_safety.py`
 passes 7/7. Storage imports remain deferred behind subcommand bodies
 in `cli/secrets.py`, `cli/security.py`,
 `observability/_sink.py`, `llm/_cache.py`, `llm/_usage.py`,
@@ -201,7 +201,7 @@ cost.
 
 ### LIVE-SUBMIT FORBIDDEN DISCIPLINE - PASS
 
-`src/aeat/submission/test_live_submit_permanently_forbidden.py`
+`src/aeat/adapters/outbound/aeat/export/test_live_submit_permanently_forbidden.py`
 passes 7/7. The wave-7 merge from main excised the now-obsolete
 `GovernedLiveSubmitAuditSink` and the legacy `_audit`
 deprecation wrapper as the wave-7 audit gate noted. No active code
@@ -231,17 +231,17 @@ path performs a live AEAT write.
 
 The `aeat financial txs build`, `aeat financial txs classify`,
 and `aeat financial txs classify-llm` subcommands in
-`src/aeat/cli/financial/txs.py` (lines 139, 261, 453) all call
+`src/aeat/entrypoints/cli/financial/txs.py` (lines 139, 261, 453) all call
 `save_transactions(catalogue, target)` from
-`src/aeat/financial/transactions/_service.py:51`, which atomically
+`src/aeat/domain/financial/transactions/_service.py:51`, which atomically
 writes `catalogue.model_dump_json(indent=2)` to PLAINTEXT on disk
 at `aeat_financial_txs_dir/transactions.json` (the
 `DEFAULT_CATALOGUE_FILENAME` resolved by
-`src/aeat/cli/financial/_catalogue.py:21`).
+`src/aeat/entrypoints/cli/financial/_catalogue.py:21`).
 
 The catalogue is the wave-3-defined consumer of
 `TransactionCatalogueRepository` - at FINANCIAL classification,
-with HKDF context `aeat.financial.transactions.catalogue.v1`.
+with HKDF context `aeat.domain.financial.transactions.catalogue.v1`.
 Wave 9 (commit `822154e`) claims hard cutover with no legacy
 plaintext fallback, but only filing / submission / amendment /
 justificante / workflow were closed. The transaction CLI was never
@@ -269,14 +269,14 @@ financial txs` subcommand through
 `TransactionCatalogueRepository`; (c) deleting the
 `DEFAULT_CATALOGUE_FILENAME` constant; (d) removing the legacy
 fallback in the wave-3 docstring at
-`src/aeat/financial/transactions/_repository.py:10-16`. This is a
+`src/aeat/domain/financial/transactions/_repository.py:10-16`. This is a
 non-trivial refactor (the CLI surface for txs has many subcommands
 and downstream review/invoice consumers), so flagging for user
 judgement rather than mechanical fix.
 
 ### LEAK-002 | HIGH | `aeat financial invoices` writes plaintext catalogue
 
-`src/aeat/financial/invoices/_service.py:97` `save_invoices`
+`src/aeat/domain/financial/invoices/_service.py:97` `save_invoices`
 is the mirror image of `save_transactions`: writes plaintext
 `InvoiceCatalogue.model_dump_json(indent=2)` to disk via
 `tempfile + os.replace`. Invoice records carry counter-party
@@ -291,7 +291,7 @@ deferred). Worth opening as the next backlog item.
 
 ### LEAK-003 | HIGH | `aeat financial attachments` manifest writer plaintext
 
-`src/aeat/financial/attachments/_store.py:281` `write_manifest`
+`src/aeat/domain/financial/attachments/_store.py:281` `write_manifest`
 writes `attachment.model_dump_json(indent=2)` plaintext via
 `_atomic_write_text`. The `Attachment` manifest model carries
 `source_reference`, `linked_transaction_ids`,
@@ -306,7 +306,7 @@ follow-on track.
 
 ### LEAK-004 | HIGH | Setup wizard writes operator NIF plaintext
 
-`src/aeat/setup/_env_writer.py:152` `write_profile_file`
+`src/aeat/application/setup/_env_writer.py:152` `write_profile_file`
 writes `profile.model_dump_json(indent=2)` to disk without
 encryption. `AutonomoProfile.tax_id` is the operator's NIF. The
 first-run setup wizard runs ahead of the secret store, so the profile
@@ -323,7 +323,7 @@ profile output is intended to be a long-lived identity record.
 
 ### TRACE-001 | MEDIUM | `save_trace` / `save_events_append` write `RunTrace` plaintext
 
-`src/aeat/observability/_store.py:70-114` exposes `save_trace`
+`src/aeat/core/observability/_store.py:70-114` exposes `save_trace`
 and `save_events_append`, both of which write
 `RunTrace.model_dump_json` and `RunEvent.model_dump_json`
 directly to disk with no redaction. `save_trace` is invoked at
@@ -356,7 +356,7 @@ Flagging for user judgement on the migration scope.
 
 ### LEAK-005 | MEDIUM | Sync divergence repository writes plaintext JSON
 
-`src/aeat/sync/_repository.py:69`
+`src/aeat/application/sync/_repository.py:69`
 `JsonFileDivergenceRepository.save` writes
 `record.model_dump_json(indent=2)` plaintext for each
 `DivergenceRecord`. Per the default policy table, divergence
@@ -374,7 +374,7 @@ judgement.
 
 ### USAGE-001 | MEDIUM | `UsageRatioProfile` writer plaintext
 
-`src/aeat/financial/usage_ratios/_service.py:97` writes
+`src/aeat/domain/financial/usage_ratios/_service.py:97` writes
 `profile.model_dump_json(indent=2)` plaintext.
 `UsageRatioProfile` carries business / personal split percentages
 - less identity-bearing than transaction descriptions but still
@@ -383,8 +383,8 @@ FINANCIAL classification per default policy. Out of scope for waves
 
 ### DOCSTRING-001 | MEDIUM | Stale legacy-fallback docstring after wave-9 hard cutover
 
-`src/aeat/financial/transactions/_repository.py:10-16` and
-`src/aeat/filing/_repository.py:9-13` both still describe a legacy
+`src/aeat/domain/financial/transactions/_repository.py:10-16` and
+`src/aeat/application/filing/_repository.py:9-13` both still describe a legacy
 entry point and a read-through-and-fallback adapter. Wave-9 hard
 cutover commit `822154e` removed the fallback in filing,
 submission, amendment, etc. but left the docstrings stale. For the
@@ -407,11 +407,11 @@ version used by workflow and divergence; consider migrating every
 repository to call it instead. Pure code-quality concern; no security
 impact.
 
-### LOW-002 | LOW | Rotation plan duplicates `aeat.filing.amendment.v1` for two store dirs
+### LOW-002 | LOW | Rotation plan duplicates `aeat.application.filing.amendment.v1` for two store dirs
 
-`src/aeat/storage/_rotation.py:283,287` lists two distinct
+`src/aeat/adapters/persistence/storage/_rotation.py:283,287` lists two distinct
 `RotationPlanEntry` records both bound to the same HKDF context
-(`aeat.filing.amendment.v1`), one for
+(`aeat.application.filing.amendment.v1`), one for
 `aeat_submissions_dir/amendment-results` and one for
 `aeat_submissions_dir/amendments`. This is correct per design
 (one `FilingAmendmentRepository` consumer identity, two store

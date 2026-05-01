@@ -21,7 +21,7 @@ dimensions. Summary:
 - **Credential / secret discipline** — PASS.
 - **Public API discipline** — **FAIL (Block-A)**. `browser/session.py`
   imported `build_client_certificates_kwarg` directly from
-  `aeat.auth._certificate_backends._playwright_context`, crossing
+  `aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context`, crossing
   a subpackage boundary into a private module.
 - **Type safety** — PASS. Zero new `# type: ignore` that mask bugs.
 - **Test posture** — PASS. `@pytest.mark.unit` / `@pytest.mark.live`
@@ -45,8 +45,8 @@ misleading since it held seconds not nanoseconds).
 ## Round 2 — Remediation
 
 - **A1 fixed**: `build_client_certificates_kwarg` is now re-exported
-  from `aeat.auth.__init__` and `browser/session.py` imports it
-  through the subpackage root (`from aeat.auth import
+  from `aeat.adapters.outbound.aeat.auth.__init__` and `browser/session.py` imports it
+  through the subpackage root (`from aeat.adapters.outbound.aeat.auth import
   build_client_certificates_kwarg`).
 - **B1 fixed**: removed the inert scaffolding line from
   `test_access_gate_is_frozen`.
@@ -78,4 +78,4 @@ remediation; the nine-point write gate is byte-identical; the new
 public surface (`AeatAuthenticator`, `AeatSession`,
 `AeatLoginAssertion`, `AeatAccessGate`, `AeatGateEnvSnapshot`,
 `extract_nif_from_subject`, four new errors) is cohesively re-
-exported from `aeat.auth` with no private-module leakage.
+exported from `aeat.adapters.outbound.aeat.auth` with no private-module leakage.

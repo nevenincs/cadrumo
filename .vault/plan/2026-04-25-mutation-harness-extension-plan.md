@@ -17,14 +17,14 @@ mutator taxonomy and AST-walking strategy.
 
 ## Proposed Changes
 
-Eight files are added under `src/aeat/formulas/_rulesets/`. No existing
+Eight files are added under `src/aeat/domain/formulas/_rulesets/`. No existing
 file is modified except `docs/coverage/pipeline.md` (one new row in the
 cross-cutting observables table). The existing operand-swap mutator
 test module is left untouched.
 
 ### New private helper
 
-- `src/aeat/formulas/_rulesets/_mutators.py` — recursive AST walker,
+- `src/aeat/domain/formulas/_rulesets/_mutators.py` — recursive AST walker,
   per-class mutators, `MutationCase` and `MutationCatalogueEntry`
   pydantic v2 models, the `_MUTATOR_REGISTRY` mapping, the
   `_NOT_MUTABLE_NODE_TYPES` allow-list, and the per-(ruleset × node)
@@ -32,25 +32,25 @@ test module is left untouched.
 
 ### New test modules
 
-- `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py` —
+- `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py` —
   parametrised harness over every `PercentFormula` node in every
   landed ruleset variant. Mutates rate by `±1 pp`, asserts baseline
   clean + mutated discrepancy `≥ 0.02 €` on a casilla downstream of
   the mutated node.
-- `src/aeat/formulas/_rulesets/test_brackets_threshold_mutation.py` —
+- `src/aeat/domain/formulas/_rulesets/test_brackets_threshold_mutation.py` —
   synthetic ruleset (Modelo-130-style step function), parametrised
   over each non-terminal bracket. Fixtures straddle each boundary by
   `≤ 5 €`. Mutates `upper_inclusive` by `±1 €`; asserts the straddled
   fixture surfaces a discrepancy.
-- `src/aeat/formulas/_rulesets/test_scalar_mutation.py` — parametrised
+- `src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py` — parametrised
   harness over every `MulFormula` / `DivFormula` leaf scalar
   `Literal` in every landed ruleset variant. Mutates by `±1 %`;
   asserts discrepancy.
-- `src/aeat/formulas/_rulesets/test_mutator_exhaustiveness.py` — the
-  orphan-node defense. Imports `aeat.formulas.Formula`, asserts every
+- `src/aeat/domain/formulas/_rulesets/test_mutator_exhaustiveness.py` — the
+  orphan-node defense. Imports `aeat.domain.formulas.Formula`, asserts every
   concrete subclass is in the registry or in the allow-list with a
   documented reason.
-- `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py` — aggregates
+- `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py` — aggregates
   per-mutator results across all eighteen ruleset variants; asserts
   kill-rate `≥ 90 %`; emits the markdown summary table consumed by
   the exec summary.
@@ -183,4 +183,4 @@ This section records the explicit review against:
 
 Self-review outcome: **approved for execution**. No deviations from
 the ADR. No scope creep. The test surface is constrained to
-`src/aeat/formulas/_rulesets/` plus a single doc-table touch.
+`src/aeat/domain/formulas/_rulesets/` plus a single doc-table touch.

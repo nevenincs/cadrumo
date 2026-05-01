@@ -17,8 +17,8 @@ typed `SiteHealthAlert` on the failed `WorkflowStep`.
 
 ## Changes
 
-- `src/aeat/workflow/_engine.py`:
-  - New imports: `SiteHealthError` from `aeat.errors`,
+- `src/aeat/application/workflow/_engine.py`:
+  - New imports: `SiteHealthError` from `aeat.core.errors`,
     `SiteHealthAlert` from `aeat.status`.
   - `WorkflowEngine.__init__` stores a `_current_run_id` field.
   - `_drive` computes a provisional `run_id` from the caller

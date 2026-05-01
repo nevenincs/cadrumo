@@ -46,7 +46,7 @@ Documentation-only rewrite per `[[2026-04-12-docs-rewrite-adr]]`.
 - Any change to `RELEASING.md` (already authoritative from #60).
 - Any change to sibling in-flight branches' territory
   (`pyproject.toml [tool.pytest]`, `conftest.py`, `tests/README/`,
-  `src/aeat/workflow/`, `src/aeat/setup/`, `src/aeat/casillas/` if
+  `src/aeat/application/workflow/`, `src/aeat/application/setup/`, `src/aeat/domain/casillas/` if
   added later).
 - Any new file under `.github/workflows/`.
 - Auto-generated API docs, docs site, translations, screenshots,

@@ -22,7 +22,7 @@ branch ``feature/46-notifications-inbox``.
 
 - `__init__.py` — package docstring, public re-exports.
 - `_errors.py` — `InboxError`, `InboxFetchError`,
-  `InboxAcknowledgeError` (all under `aeat.errors.AeatError`).
+  `InboxAcknowledgeError` (all under `aeat.core.errors.AeatError`).
 - `_models.py` — strict+frozen pydantic v2:
   `NotificacionKind(StrEnum)`, `NotificacionPriority(StrEnum)`,
   `Notificacion(BaseModel)`, `Inbox(BaseModel)` with unique-id
@@ -39,14 +39,14 @@ branch ``feature/46-notifications-inbox``.
 - Colocated tests: `test_models.py`, `test_classifier.py`,
   `test_deadline.py`, `test_fetcher.py`, `test_live_inbox.py`.
 
-### `src/aeat/cli/inbox/` — new CLI sub-app
+### `src/aeat/entrypoints/cli/inbox/` — new CLI sub-app
 
 - `__init__.py` wires `fetch`, `list`, `show`, `ack`, `next-deadline`
   into the root `aeat` typer app.
 - `_helpers.py` with a real file-backed `_FileBackedNotificacionSource`
   (not a mock — a concrete Protocol-conforming class).
 - One file per subcommand + `test_cli.py`.
-- Wired into `src/aeat/cli/__init__.py`.
+- Wired into `src/aeat/entrypoints/cli/__init__.py`.
 
 ### `src/aeat/config.py` + `env/.env.example`
 
@@ -85,7 +85,7 @@ branch ``feature/46-notifications-inbox``.
 | Unit tests colocated; live test opt-in | ✔ |
 | No mocks/patches/fakes — real Protocol-conforming doubles | ✔ |
 | Errors inherit from `AeatError` | ✔ |
-| Logging via `aeat.logging.get_logger` | ✔ |
+| Logging via `aeat.core.logging.get_logger` | ✔ |
 | Protocol stubs for #43, #8, #45 (no hard imports) | ✔ |
 | `just lint && just typecheck && just test && just hooks` green | ✔ |
 

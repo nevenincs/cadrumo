@@ -13,12 +13,12 @@ Implemented the new T1 financial ingest package and provider surface.
 
 - Modified: `pyproject.toml`
 - Modified: `src/aeat/config.py`
-- Created: `src/aeat/financial/`
-- Created: `src/aeat/financial/providers/`
+- Created: `src/aeat/domain/financial/`
+- Created: `src/aeat/domain/financial/providers/`
 
 ## Description
 
-Created the public `aeat.financial` package, the strict frozen `RawTransaction` and `RawProvenance` models, the `FinancialProvider` ABC, typed provider validation records, CSV/XLSX/OFX providers, and provider auto-detection. The implementation keeps the T1 contract file-based and provenance-first, uses deterministic synthetic transaction identifiers when no external ID exists, and keeps the public import surface rooted at `aeat.financial` and `aeat.financial.providers`.
+Created the public `aeat.domain.financial` package, the strict frozen `RawTransaction` and `RawProvenance` models, the `FinancialProvider` ABC, typed provider validation records, CSV/XLSX/OFX providers, and provider auto-detection. The implementation keeps the T1 contract file-based and provenance-first, uses deterministic synthetic transaction identifiers when no external ID exists, and keeps the public import surface rooted at `aeat.domain.financial` and `aeat.domain.financial.providers`.
 
 ## Tests
 

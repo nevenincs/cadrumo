@@ -222,7 +222,7 @@ this issue adds explicit threshold-edge cases at 8 999,99 / 9 000,01 /
 
 `tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_130_generator.py`
 renders only **7** casillas (01 – 07). The corresponding
-`src/aeat/declaracion/_extractors/modelo_130_v2025.py` parses the same
+`src/aeat/adapters/inbound/declaracion/_extractors/modelo_130_v2025.py` parses the same
 **7** casillas; `_REQUIRED_FOR_COMPLETE = frozenset({01..07})` so a PDF
 with all seven hits returns `ExtractionStatus.COMPLETE`.
 
@@ -337,7 +337,7 @@ discipline tracked elsewhere.
 ## Implementation surface — files this issue touches
 
 ```
-src/aeat/formulas/_rulesets/
+src/aeat/domain/formulas/_rulesets/
   modelo_130_2024.py           — back-fill audit (no functional changes expected)
   modelo_130_2025.py           — back-fill audit (no functional changes expected)
   modelo_130_2026.py           — NEW (clone of 2025 with new effective dates)
@@ -349,7 +349,7 @@ src/aeat/formulas/_rulesets/
   test_percent_rate_mutation.py — add 2 × 2026 cases
   test_mutator_kill_rate.py    — add modelo_130.2026 row to EXPECTED_COUNTS
 
-src/aeat/declaracion/_extractors/
+src/aeat/adapters/inbound/declaracion/_extractors/
   modelo_130_v2025.py          — extend label regex map to all 19 casillas;
                                  keep _REQUIRED_FOR_COMPLETE at 7
 
@@ -371,5 +371,5 @@ docs/coverage/
 ```
 
 This file list is exhaustive — any additional surface (e.g.
-`src/aeat/cli/audit/__init__.py`, `src/aeat/cli/__init__.py`) is out
+`src/aeat/entrypoints/cli/audit/__init__.py`, `src/aeat/entrypoints/cli/__init__.py`) is out
 of scope and explicitly forbidden by the handover STEP 5.

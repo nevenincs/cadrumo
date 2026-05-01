@@ -49,14 +49,14 @@ that route writes through the substrate's
 
 Architectural drivers:
 
-- The existing `aeat.financial.transactions.TransactionCatalogue`
+- The existing `aeat.domain.financial.transactions.TransactionCatalogue`
   is a strict frozen pydantic v2 model keyed by
   `derive_transaction_id`'s SHA-256 hash. The hash gives us
   idempotency for free: re-importing the same file emits the same
   transaction IDs, and a merge-on-write helper that skips
   duplicates is straightforward.
 - The existing `load_transactions` / `save_transactions` helpers
-  in `aeat.financial.transactions._service` use atomic write via
+  in `aeat.domain.financial.transactions._service` use atomic write via
   tempfile + `os.replace`. The substrate's `save_envelope` does
   the same. The migration is a thin wrapper, not a rewrite.
 - The bank-import command (`aeat financial ingest`) currently
@@ -69,7 +69,7 @@ Architectural drivers:
   `exclusive_file_lock` is the natural primitive; the catalogue
   path drives the lock-file location.
 - Public API discipline: callers continue to import from
-  `aeat.financial.transactions`; the new repository is internal
+  `aeat.domain.financial.transactions`; the new repository is internal
   (`_repository`).
 - Read-through pattern: legacy `transactions.json` files remain
   readable; the adapter consults the substrate first and falls
@@ -107,7 +107,7 @@ as Wave-2 Phase 0/1.
 
 ### Phase 1 — TransactionCatalogue repository adapter
 
-New module `aeat.financial.transactions._repository` with:
+New module `aeat.domain.financial.transactions._repository` with:
 
 - `TransactionCatalogueRepository(*, store_dir, master_key_provider=None)`
   — wraps the substrate's envelope helpers.
@@ -124,7 +124,7 @@ New module `aeat.financial.transactions._repository` with:
   builds `Transaction` records for new rows, persists the merged
   catalogue. Returns `ImportSummary(imported=N, skipped=M, errors=0)`.
 
-The existing `aeat.financial.transactions._service.load_transactions`
+The existing `aeat.domain.financial.transactions._service.load_transactions`
 and `save_transactions` become read-through wrappers: they consult
 the repository first; on `EnvelopeFileMissingError` (or simply
 "no envelope yet") they fall back to the legacy
@@ -135,18 +135,18 @@ store_dir)` reads the legacy catalogue and writes the envelope.
 
 ### Phase 2 — invoice catalogue adapter
 
-`aeat.financial.invoices._repository` mirrors Phase 1's shape for
+`aeat.domain.financial.invoices._repository` mirrors Phase 1's shape for
 the invoice catalogue. FINANCIAL class. Same read-through and
 migration helper pattern.
 
 ### Phase 3 — usage-ratio adapter
 
-`aeat.financial.usage_ratios._repository` mirrors the same
+`aeat.domain.financial.usage_ratios._repository` mirrors the same
 pattern. FINANCIAL class. Smaller scope.
 
 ### Phase 4 — attachment store migration
 
-The existing `aeat.financial.attachments._store` is already
+The existing `aeat.domain.financial.attachments._store` is already
 content-addressable (`blobs/{sha256}` + manifest JSON). Wave 4
 migrates it to the substrate's `EncryptedBlobStore`. The blob
 store's manifest layout is a superset of the existing one; the
@@ -286,7 +286,7 @@ Neutral:
 - No new runtime dependencies.
 - No Alembic migration.
 - Wave 3 does not yet rewire the pre-Wave-2 consumer call sites
-  in `aeat.cli.financial.txs` etc. — the Wave-2 read-through
+  in `aeat.entrypoints.cli.financial.txs` etc. — the Wave-2 read-through
   adapter pattern is the bridge. The rewires land opportunistically
   alongside the per-domain adapter wiring.
 

@@ -12,7 +12,7 @@ related:
 
 ## What
 
-`src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`:
+`src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`:
 
 - Replaced the `killed = populated` tautology in
   `test_aggregate_kill_rate_floor_is_satisfied` with empirical
@@ -49,6 +49,6 @@ per-class harness). The empirical computation + deferred catalogue
 
 ## Verification
 
-`uv run pytest src/aeat/formulas/_rulesets/test_mutator_kill_rate.py -q`
+`uv run pytest src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py -q`
 → 38 passed (was 35 pre-#457). The kill-rate floor is now computed
 on the claimed-covered surface (16 of 16 covered = 100 %).

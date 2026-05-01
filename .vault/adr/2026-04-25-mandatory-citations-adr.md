@@ -69,15 +69,15 @@ import-time invariant.
 - Markers: `pytestmark = [pytest.mark.unit,
   pytest.mark.domain_submission]` at module level for every new test
   module.
-- Errors inherit from `aeat.errors.AeatError`. `RulesetValidationError`
+- Errors inherit from `aeat.core.errors.AeatError`. `RulesetValidationError`
   already does (`RulesetValidationError -> FormulasError -> AeatError`)
   — reuse, don't add a sibling class.
 - Trilingual + Windows-encoding. Audit-CLI output goes through
   `Translatable` at emission with `AEAT_OUTPUT_LANGUAGE` honored.
   Stdout/stderr reconfigured to UTF-8 explicitly to avoid the cp1252
   crash that bit `#389`.
-- Public API discipline: callers import from `aeat.formulas`,
-  `aeat.models`, `aeat.cli.audit` only — never from internal `_modules`.
+- Public API discipline: callers import from `aeat.domain.formulas`,
+  `aeat.domain.modelos`, `aeat.entrypoints.cli.audit` only — never from internal `_modules`.
 
 ## Implementation
 
@@ -120,7 +120,7 @@ constraint is in place.
 ### Audit subpackage
 
 ```text
-src/aeat/cli/audit/
+src/aeat/entrypoints/cli/audit/
 ├── __init__.py           # audit_app + rulesets_app + citations command
 ├── _helpers.py           # validate_citation_coverage + CitationCoverageReport
 └── test_citations_cmd.py # CliRunner-driven happy/sad/UTF-8 path
@@ -146,8 +146,8 @@ A `# TODO post-#399` comment near the report model flags the future
 ### Phase 1 vs Phase 2 split
 
 Phase 1 (this ADR's scope): everything above, **without** modifying
-`src/aeat/cli/__init__.py`. The audit subpackage is fully testable in
-isolation via `from aeat.cli.audit import audit_app;
+`src/aeat/entrypoints/cli/__init__.py`. The audit subpackage is fully testable in
+isolation via `from aeat.entrypoints.cli.audit import audit_app;
 CliRunner(audit_app)`.
 
 Phase 2 (deferred, single follow-up commit, post-merge of `#398` or
@@ -166,7 +166,7 @@ app.add_typer(
 
 ### Regression guard
 
-`src/aeat/formulas/_rulesets/test_all_rulesets_have_citations.py`
+`src/aeat/domain/formulas/_rulesets/test_all_rulesets_have_citations.py`
 imports `ALL_RULESETS` and asserts coverage percentage = 1.0 on every
 ruleset. The validator already raises at import time, so this test is
 defense-in-depth against any future ruleset that bypasses the validator
@@ -210,7 +210,7 @@ enum addition with no further architectural commitment.
   `computed=True` casilla without `legal_basis`. The 18 landed rulesets
   pass unchanged.
 - The `aeat audit rulesets citations` command is importable from
-  `aeat.cli.audit` but not yet on the root Typer.
+  `aeat.entrypoints.cli.audit` but not yet on the root Typer.
 - `#338`'s mutation harness and `#340`'s integration tests stay green
   (no behavioural change to existing computed casillas).
 - The dependency edge for `#317`-`#327` (eleven Tier-L per-modelo

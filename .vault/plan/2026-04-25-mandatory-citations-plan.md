@@ -26,13 +26,13 @@ collision with `feature/398` and `feature/399`.
    when `computed=True` and `legal_basis == ()`.
 2. **No source-enum change** — existing `LegalCitationSource` StrEnum
    already closed; documented via a new explicit unit test.
-3. **Audit subpackage** — new `aeat.cli.audit` with
+3. **Audit subpackage** — new `aeat.entrypoints.cli.audit` with
    `validate_citation_coverage` helper, `CitationCoverageReport`
    strict pydantic model, and `aeat audit rulesets citations` Typer
    command. Phase 1 ships subpackage + tests; **does not** modify
-   `src/aeat/cli/__init__.py`.
+   `src/aeat/entrypoints/cli/__init__.py`.
 4. **Regression guard** —
-   `src/aeat/formulas/_rulesets/test_all_rulesets_have_citations.py`
+   `src/aeat/domain/formulas/_rulesets/test_all_rulesets_have_citations.py`
    imports `ALL_RULESETS` and asserts 100% coverage on every
    `computed=True` casilla.
 5. **Pipeline doc** — `docs/coverage/pipeline.md` cross-cutting row
@@ -45,23 +45,23 @@ collision with `feature/398` and `feature/399`.
 
 - **Phase 1 — Validator + audit subpackage + tests + docs (this PR)**
   1. Add `_require_legal_basis_for_computed` validator on
-     `CasillaDefinition` in `src/aeat/formulas/_casilla.py`. Import
+     `CasillaDefinition` in `src/aeat/domain/formulas/_casilla.py`. Import
      `RulesetValidationError`. Add `# TODO post-#398` marker for the
      future error-code registration.
-  2. Add `src/aeat/formulas/test_casilla_validator.py` covering: pass
+  2. Add `src/aeat/domain/formulas/test_casilla_validator.py` covering: pass
      case (computed + ≥1 citation), fail case (computed + empty),
      informational-skip case (computed=False + empty).
-  3. Add `src/aeat/models/test_citations_source_enum.py` covering:
+  3. Add `src/aeat/domain/modelos/test_citations_source_enum.py` covering:
      every `LegalCitationSource` member accepted; freeform string
      rejected.
-  4. Create `src/aeat/cli/audit/__init__.py` with `audit_app`,
+  4. Create `src/aeat/entrypoints/cli/audit/__init__.py` with `audit_app`,
      `rulesets_app`, and the `citations` command. Reconfigure
      stdout/stderr to UTF-8 at command entry. Add `# TODO post-#399`
      marker for the future `--json` schema.
-  5. Create `src/aeat/cli/audit/_helpers.py` with
+  5. Create `src/aeat/entrypoints/cli/audit/_helpers.py` with
      `CitationCoverageReport` (frozen + strict pydantic) and
      `validate_citation_coverage(ruleset)` pure function.
-  6. Add `src/aeat/cli/audit/test_citations_cmd.py`:
+  6. Add `src/aeat/entrypoints/cli/audit/test_citations_cmd.py`:
      - happy-path: `CliRunner(audit_app)` invokes `audit rulesets
        citations`; exit 0; output contains every ruleset id;
      - sad-path: build a partial ruleset via `model_construct` with a
@@ -71,7 +71,7 @@ collision with `feature/398` and `feature/399`.
      - UTF-8 regression: confirm the output stream survives Spanish
        diacritics on Windows-style stdout.
   7. Add
-     `src/aeat/formulas/_rulesets/test_all_rulesets_have_citations.py`
+     `src/aeat/domain/formulas/_rulesets/test_all_rulesets_have_citations.py`
      — imports `ALL_RULESETS`, asserts every ruleset's coverage is
      1.0 on `computed=True` casillas.
   8. Update `docs/coverage/pipeline.md` cross-cutting observables
@@ -92,7 +92,7 @@ collision with `feature/398` and `feature/399`.
   1. After `#398` (PR `#428`) or `#399` lands on main, rebase
      `chore/339-mandatory-citations` onto fresh main.
   2. Add `from . import audit as audit_module` to
-     `src/aeat/cli/__init__.py` and one `app.add_typer(audit_module
+     `src/aeat/entrypoints/cli/__init__.py` and one `app.add_typer(audit_module
      .audit_app, name="audit", hidden=True, help="Audit helpers
      (dev-only).")` line.
   3. Re-run gates; push; merge.
@@ -121,7 +121,7 @@ Each commit independently green under the four gates.
 ## Self-review (against `CLAUDE.md`, project mandates, sibling-branch territory, audit finding)
 
 - ✅ All Python modules under `src/aeat/` — confirmed for new files
-  (`src/aeat/cli/audit/__init__.py`, `_helpers.py`,
+  (`src/aeat/entrypoints/cli/audit/__init__.py`, `_helpers.py`,
   `test_citations_cmd.py`; new test modules colocated).
 - ✅ Pydantic v2 strict — `CitationCoverageReport` declared
   `frozen=True, strict=True, extra="forbid"`; the new validator on
@@ -129,22 +129,22 @@ Each commit independently green under the four gates.
 - ✅ No mocks / patches / fakes / stubs — fixture for the audit-CLI
   sad-path uses pydantic's `model_construct` (documented v2 API for
   validator-skipping construction); not a mock or patch.
-- ✅ Public API discipline — callers import from `aeat.formulas`,
-  `aeat.models`, `aeat.cli.audit`. Internal helpers stay
+- ✅ Public API discipline — callers import from `aeat.domain.formulas`,
+  `aeat.domain.modelos`, `aeat.entrypoints.cli.audit`. Internal helpers stay
   underscore-prefixed.
-- ✅ Errors inherit from `aeat.errors.AeatError` — reuses existing
+- ✅ Errors inherit from `aeat.core.errors.AeatError` — reuses existing
   `RulesetValidationError`.
 - ✅ Test markers — every new test module sets `pytestmark =
   [pytest.mark.unit, pytest.mark.domain_submission]` at module level.
 - ✅ Trilingual + UTF-8 — audit-CLI reconfigures stdout/stderr to
   UTF-8 at entry; user-facing strings flow through `Translatable` at
   emission with `AEAT_OUTPUT_LANGUAGE` honored.
-- ✅ Sibling-branch territory — no edits to `aeat.sede`,
-  `aeat.auth._clave_movil`, `aeat.errors._registry`,
-  `aeat.cli._schemas`, `aeat.cli._exit_codes`, `aeat.cli._tty`,
-  `aeat.cli._log_levels`, `aeat.logging`.
+- ✅ Sibling-branch territory — no edits to `aeat.adapters.outbound.aeat.sede`,
+  `aeat.adapters.outbound.aeat.auth._clave_movil`, `aeat.core.errors._registry`,
+  `aeat.entrypoints.cli._schemas`, `aeat.entrypoints.cli._exit_codes`, `aeat.entrypoints.cli._tty`,
+  `aeat.entrypoints.cli._log_levels`, `aeat.core.logging`.
 - ✅ `cli/__init__.py` UNCHANGED in Phase 1 — verified by `git diff
-  origin/main..HEAD -- src/aeat/cli/__init__.py` returning empty
+  origin/main..HEAD -- src/aeat/entrypoints/cli/__init__.py` returning empty
   before the Phase 2 step.
 - ✅ `#338` + `#340` green — validator merely codifies the existing
   convention; the back-fill sweep confirmed every existing computed
@@ -164,17 +164,17 @@ Phase 1 / Phase 2 split.
 - All four gates green on Windows: `just lint`, `just typecheck`,
   `just test`, `just hooks`.
 - `#338` mutation suite green:
-  `just test src/aeat/formulas/_rulesets/test_*_mutation.py
-  src/aeat/formulas/_rulesets/test_mutator_exhaustiveness.py
-  src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`.
+  `just test src/aeat/domain/formulas/_rulesets/test_*_mutation.py
+  src/aeat/domain/formulas/_rulesets/test_mutator_exhaustiveness.py
+  src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`.
 - `#340` integration suite green: `just test
   tests/integration/test_kent_workflows.py`.
 - New regression guard green:
   `test_all_rulesets_have_citations.py`.
 - Coverage floor 60% on `src/aeat` preserved.
-- `git diff origin/main..HEAD -- src/aeat/cli/__init__.py` returns
+- `git diff origin/main..HEAD -- src/aeat/entrypoints/cli/__init__.py` returns
   empty in Phase 1.
-- `aeat.cli.audit.audit_app` is importable; `CliRunner(audit_app)`
+- `aeat.entrypoints.cli.audit.audit_app` is importable; `CliRunner(audit_app)`
   invokes `audit rulesets citations` and renders 100% coverage in
   the happy path.
 

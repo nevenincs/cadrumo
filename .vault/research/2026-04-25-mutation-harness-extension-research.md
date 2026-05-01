@@ -8,7 +8,7 @@ related: []
 
 # `mutation-harness-extension` research: prior-art mutator catalogues + tax-correctness gap
 
-The current mutation harness in `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`
+The current mutation harness in `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py`
 catches one class of silent ruleset regression — the swap of a
 `SubFormula`'s two operands at the outermost layer of a computed casilla.
 The audit finding from 2026-04-22 (cited in EPIC #316) flagged three
@@ -192,17 +192,17 @@ This approach has two advantages:
 
 ### Sources
 
-- `src/aeat/formulas/_formula.py` — discriminated-union AST for every
+- `src/aeat/domain/formulas/_formula.py` — discriminated-union AST for every
   formula node, including the `Bracket` validation in
   `BracketsFormula._validate_brackets`.
-- `src/aeat/formulas/_engine.py` — `audit_against` semantics + `0.01 €`
+- `src/aeat/domain/formulas/_engine.py` — `audit_against` semantics + `0.01 €`
   default tolerance.
-- `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py` — the
+- `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py` — the
   existing harness; the wave-67e detection-floor enforcement comment
   is the prior art for `|delta| ≥ 0.02 €`.
-- `src/aeat/formulas/_rulesets/_common.py` — shared helpers
+- `src/aeat/domain/formulas/_rulesets/_common.py` — shared helpers
   (`formula`, `percent`, `brackets`, `mul_op`, `div_op`).
-- The eleven landed rulesets under `src/aeat/formulas/_rulesets/` —
+- The eleven landed rulesets under `src/aeat/domain/formulas/_rulesets/` —
   surveyed via grep for `PercentFormula`, `BracketsFormula`,
   `MulFormula`, `DivFormula`, `mul_op`, `div_op` to count the
   in-formula node population per class.

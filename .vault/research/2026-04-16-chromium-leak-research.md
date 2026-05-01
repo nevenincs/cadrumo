@@ -11,15 +11,15 @@ related:
 
 ## Scope
 
-Investigate why `aeat.browser.BrowserSession` leaks Chromium OS processes, identify the exact ownership gap in the current tree, and record the forward-compatibility requirements imposed by the open AEAT access-gate work in PR `#181`.
+Investigate why `aeat.adapters.outbound.aeat.browser.BrowserSession` leaks Chromium OS processes, identify the exact ownership gap in the current tree, and record the forward-compatibility requirements imposed by the open AEAT access-gate work in PR `#181`.
 
 ## Findings
 
-- The current `src/aeat/browser/session.py` launches a fresh Chromium `Browser` inside `create_context()` and immediately discards the handle after calling `browser.new_context(...)`.
+- The current `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py` launches a fresh Chromium `Browser` inside `create_context()` and immediately discards the handle after calling `browser.new_context(...)`.
 - `BrowserSession` has no `close()` coroutine, no `__aenter__` / `__aexit__`, and no retained `self._browser` field, so the launched browser process has no explicit teardown path once the caller closes the returned `BrowserContext`.
 - Closing a Playwright `BrowserContext` does not give project code a way to later close the owning `Browser`; once the local `browser` variable is gone, the Chromium child process lifetime is effectively delegated to Playwright/Python internals instead of an explicit project-owned contract.
-- The current tree already contains one explicit cleanup contract that treats this as a distinct responsibility: `src/aeat/cli/browser/health.py::_RealProbe.probe()` always runs `context.close()` and `playwright.stop()` in `finally`. `BrowserSession` lacks the analogous browser-level cleanup responsibility.
-- The issue is forward-relevant to the open auth-gate PR `#181` (`feature/167-aeat-access-gate`), whose `src/aeat/auth/_authenticator.py` already contains `_close_browser_session()` and comments explicitly stating that the Chromium process leaks unless the browser session exposes a real `close()` path.
+- The current tree already contains one explicit cleanup contract that treats this as a distinct responsibility: `src/aeat/entrypoints/cli/browser/health.py::_RealProbe.probe()` always runs `context.close()` and `playwright.stop()` in `finally`. `BrowserSession` lacks the analogous browser-level cleanup responsibility.
+- The issue is forward-relevant to the open auth-gate PR `#181` (`feature/167-aeat-access-gate`), whose `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` already contains `_close_browser_session()` and comments explicitly stating that the Chromium process leaks unless the browser session exposes a real `close()` path.
 - PR `#181`'s `BrowserSessionLike` protocol still only declares `create_context(...)`; the issue scope correctly identifies that this protocol must grow a first-class async `close()` contract once `BrowserSession` owns browser teardown.
 - Repeated `create_context()` calls on the same `BrowserSession` instance are currently unbounded: each call launches a new Chromium instance, returns a context, and forgets the corresponding browser. Even if the immediate caller closes the context correctly, the session object itself never proves that the browser process was reaped.
 - Failure handling is asymmetric today:
@@ -41,6 +41,6 @@ Investigate why `aeat.browser.BrowserSession` leaks Chromium OS processes, ident
 
 ## Constraints
 
-- The current main branch does not contain `src/aeat/auth/_authenticator.py`; that code is only present on open PR `#181`. The fix therefore has to land in `aeat.browser` with forward-compatible semantics rather than by patching the auth module directly in this worktree.
+- The current main branch does not contain `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`; that code is only present on open PR `#181`. The fix therefore has to land in `aeat.adapters.outbound.aeat.browser` with forward-compatible semantics rather than by patching the auth module directly in this worktree.
 - Tests must follow the repo mandate: real-behaviour class doubles only, no `unittest.mock`, monkeypatch-driven behavioural substitution, `skip`, or tautological assertions.
 - The issue is specifically about browser-process cleanup, not about redesigning `BrowserSession` into a browser pool or changing the single-browser-per-session assumption.

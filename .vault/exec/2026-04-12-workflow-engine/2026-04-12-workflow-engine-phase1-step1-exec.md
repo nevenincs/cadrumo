@@ -1,6 +1,6 @@
 ---
 name: workflow-engine-phase1-step1
-description: Land the strict pydantic v2 schema, Protocols, errors, persistence, and orchestrator for `aeat.workflow` with full unit coverage of the bailout matrix and CLI wiring for issue #59.
+description: Land the strict pydantic v2 schema, Protocols, errors, persistence, and orchestrator for `aeat.application.workflow` with full unit coverage of the bailout matrix and CLI wiring for issue #59.
 tags:
   - "#exec"
   - "#workflow-engine"
@@ -23,12 +23,12 @@ exception on `WorkflowStep.details`.
 
 ## outputs
 
-- `src/aeat/workflow/` subpackage
+- `src/aeat/application/workflow/` subpackage
   - `_models.py` — strict pydantic v2 `WorkflowStep`, `WorkflowResult`,
     `WorkflowStage` (10-value StrEnum), `WorkflowAbortReason`
     (9-value StrEnum), `compute_run_id` stable hash.
   - `_errors.py` — `WorkflowError`, `WorkflowAbortedError`,
-    `WorkflowComponentError`, all subclasses of `aeat.errors.AeatError`.
+    `WorkflowComponentError`, all subclasses of `aeat.core.errors.AeatError`.
   - `_protocols.py` — 8 `typing.Protocol` handles + narrow pydantic
     stubs for in-flight sibling types (`SubmittedFilingLike`,
     `SyncRunSummary`, `ExpedienteLike`, `RequerimientoLike`).
@@ -44,11 +44,11 @@ exception on `WorkflowStep.details`.
     `JsonFileInputsProvider`; `default_engine(...)` factory.
   - `__init__.py` — public facade re-exporting only the symbols
     above.
-- `src/aeat/workflow/test_models.py`,
-  `src/aeat/workflow/test_engine.py`,
-  `src/aeat/workflow/test_persistence.py`,
-  `src/aeat/workflow/test_live.py` — unit + opt-in live coverage.
-- `src/aeat/cli/workflow/` — `aeat workflow {next,run,show,list}`
+- `src/aeat/application/workflow/test_models.py`,
+  `src/aeat/application/workflow/test_engine.py`,
+  `src/aeat/application/workflow/test_persistence.py`,
+  `src/aeat/application/workflow/test_live.py` — unit + opt-in live coverage.
+- `src/aeat/entrypoints/cli/workflow/` — `aeat workflow {next,run,show,list}`
   subcommands wired through `app.add_typer`, plus
   `test_cli.py` exercising the typer surface via `CliRunner`.
 - `src/aeat/config.py` + `env/.env.example` — three additive
@@ -96,8 +96,8 @@ or fakes.
   `default_engine` factory is intentionally structured so those
   slots become required adapter arguments on rebase without a
   public-API break.
-- `_adapters.py` hard-imports `aeat.filing.FilingDraft` and
-  `aeat.sync.LiveSyncRunner` and will need a one-line narrowing
+- `_adapters.py` hard-imports `aeat.application.filing.FilingDraft` and
+  `aeat.application.sync.LiveSyncRunner` and will need a one-line narrowing
   pass when sibling branches rebase (type-ignore comments flag
   the exact spots).
 - Persisting runs through the storage layer (#10) is out of scope;

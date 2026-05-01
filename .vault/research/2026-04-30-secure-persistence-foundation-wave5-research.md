@@ -26,7 +26,7 @@ landed the filing-domain consumer adapters. Wave 5 must extend the
 redaction discipline to the *other* on-disk consumers that today
 write identity-bearing data verbatim:
 
-- The run-trace JSONL sink (`aeat.observability._sink.JsonlRunSink`)
+- The run-trace JSONL sink (`aeat.core.observability._sink.JsonlRunSink`)
   writes `RunEvent` records that carry casilla form-fill values, AEAT
   navigation URLs, and free-form error messages. The model docstring
   is explicit that callers must trust themselves not to feed secrets
@@ -36,7 +36,7 @@ write identity-bearing data verbatim:
   `aeat_submissions_dir`. The new `SubmissionRepository` and
   `FilingAmendmentRepository` exist as governance gates — the engine
   must now route through them.
-- The legacy `aeat.submission._audit.append_live_submit_audit` writer
+- The legacy `aeat.adapters.outbound.aeat.export._audit.append_live_submit_audit` writer
   is preserved for backward compatibility with engine call sites; the
   governed `GovernedLiveSubmitAuditSink` exists as the relocation.
   The engine must migrate.
@@ -81,7 +81,7 @@ wave 4 already drains the old path forward.
 
 ### Legacy audit writer is preserved for engine compatibility
 
-`aeat.submission._engine.SubmissionEngine` calls
+`aeat.adapters.outbound.aeat.export._engine.SubmissionEngine` calls
 `append_live_submit_audit(build_live_submit_audit_record(...))` at
 three call sites: post-submit, post-failure, post-amendment. The
 governed sink from wave-4 phase 5 has the same input contract

@@ -67,7 +67,7 @@ Focused mutation tests passed for scalar mutation, operand-swap mutation, kill-r
 
 Passed:
 
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_200_2024.py src/aeat/formulas/_rulesets/test_modelo_200_2025.py src/aeat/formulas/_rulesets/test_modelo_200_2026.py src/aeat/formulas/test_registry.py src/aeat/formulas/test_cli.py src/aeat/formulas/test_smoke.py tests/integration/test_kent_workflows.py::TestKentImportsModelo200Declaracion -q`
-- `uv run pytest src/aeat/formulas/_rulesets/test_scalar_mutation.py src/aeat/formulas/_rulesets/test_operand_swap_mutation.py src/aeat/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/formulas/_rulesets/test_mutator_exhaustiveness.py src/aeat/formulas/_rulesets/test_zero_boundary_coverage.py -q`
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_200_corporate_tax.py -q`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_200_2024.py src/aeat/domain/formulas/_rulesets/test_modelo_200_2025.py src/aeat/domain/formulas/_rulesets/test_modelo_200_2026.py src/aeat/domain/formulas/test_registry.py src/aeat/domain/formulas/test_cli.py src/aeat/domain/formulas/test_smoke.py tests/integration/test_kent_workflows.py::TestKentImportsModelo200Declaracion -q`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/domain/formulas/_rulesets/test_mutator_exhaustiveness.py src/aeat/domain/formulas/_rulesets/test_zero_boundary_coverage.py -q`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_200_corporate_tax.py -q`
 - `uv run aeat audit rulesets citations`

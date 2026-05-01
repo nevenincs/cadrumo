@@ -9,7 +9,7 @@ related:
   - "[[2026-04-12-manual-practico-plan]]"
 ---
 
-# normatives plan: phased delivery of `aeat.normatives` v1
+# normatives plan: phased delivery of `aeat.domain.normatives` v1
 
 **Plan review:** auto-approved by the executing agent after cross-checking
 against the approved ADR and issue `#45`. Every scope item is either
@@ -18,11 +18,11 @@ questions remain blocking execution. Execution proceeds directly.
 
 ## Phase 1 — schema, errors, loader
 
-Deliverables inside `src/aeat/normatives/`:
+Deliverables inside `src/aeat/domain/normatives/`:
 
 - `errors.py` — `NormativeError`, `NormativeParseError`,
   `NormativeNotFoundError`, all inheriting from
-  `aeat.errors.AeatError`.
+  `aeat.core.errors.AeatError`.
 - `_schema.py` — strict pydantic v2 types:
   - `NormativeKind(StrEnum)`: `LEY`, `REAL_DECRETO`,
     `ORDEN_MINISTERIAL`, `REAL_DECRETO_LEY`.
@@ -98,13 +98,13 @@ Every article permalink uses the fragment form
 
 ## Phase 4 — CLI wiring
 
-- `src/aeat/cli/normatives.py` — typer sub-app with three commands:
+- `src/aeat/entrypoints/cli/normatives.py` — typer sub-app with three commands:
   - `list [--tag TAG]` — renders a `rich.table.Table` of id / kind /
     number / tags / reviewer.
   - `show ID` — prints the full metadata of one reference plus its
     article index.
   - `verify` — runs `verify_catalogue` and exits non-zero on errors.
-- `src/aeat/cli/__init__.py` — register the sub-app under
+- `src/aeat/entrypoints/cli/__init__.py` — register the sub-app under
   `aeat normatives`.
 
 ## Phase 5 — tests (colocated, unit only)
@@ -142,6 +142,6 @@ All tests carry `@pytest.mark.unit`. No mocks, patches, fakes.
 - No full-text mirroring of any article body.
 - No historical-revision tracking.
 - No autonomic (Catalonian / Basque / Galician) normatives.
-- No rewire of `aeat.manuals`, `aeat.models`, or `aeat.casillas` to
+- No rewire of `aeat.domain.manuals`, `aeat.domain.modelos`, or `aeat.domain.casillas` to
   cite normatives by id.
 - No live network tests against BOE.

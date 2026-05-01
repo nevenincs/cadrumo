@@ -14,7 +14,7 @@ related:
 ## status
 
 Accepted — 2026-04-22. Wave 75d opens the EPIC #201 execution
-thread with this ADR + the `src/aeat/submission/_formats/`
+thread with this ADR + the `src/aeat/adapters/outbound/aeat/export/_formats/`
 module scaffold. Per-modelo schema implementation lands in
 wave 76+ research sub-waves. Modelo 130 is the first target.
 
@@ -30,7 +30,7 @@ The last three waves of EPIC #305 fixed the *produce* surface
 (rulesets + external-anchor tests + citation blocklist at
 waves 57b-75c). Every autónomo-core modelo (130/303/390) now has:
 
-- ✅ Schema defined in `src/aeat/formulas/_rulesets/`
+- ✅ Schema defined in `src/aeat/domain/formulas/_rulesets/`
 - ✅ Formula ruleset with 2024+2025 variants
 - ✅ Audit-against-provided tests
 - ✅ Filing builder (130 + 303 only)
@@ -46,11 +46,11 @@ C3h (docs), C3i (approval gate) are separate follow-on scope.
 
 ## decision
 
-### 1. Module layout — `src/aeat/submission/_formats/`
+### 1. Module layout — `src/aeat/adapters/outbound/aeat/export/_formats/`
 
 One Python submodule per modelo-year pairing:
 
-    src/aeat/submission/_formats/
+    src/aeat/adapters/outbound/aeat/export/_formats/
         __init__.py            # exports per-modelo serialisers by (modelo, año, template)
         _record_spec.py        # shared Pydantic model for fixed-width field specs
         modelo_130_2024.py     # Q3 2024+ rectificativa-capable schema
@@ -131,7 +131,7 @@ accidentally mix encodings.
 ### 5. Draft-lifecycle gate (C3i dependency)
 
 Not implemented in wave 75d. When C4 (`FilingDraftStatus.APPROVED`)
-lands, `aeat.submission.export.serialise(draft)` will refuse
+lands, `aeat.adapters.outbound.aeat.export.export.serialise(draft)` will refuse
 unless `draft.status is FilingDraftStatus.APPROVED`. Until then
 the serialiser is unguarded — safe because there's no CLI wiring
 yet; it's pure library code with no side-effects.
@@ -196,5 +196,5 @@ yet; it's pure library code with no side-effects.
 - EPIC: #201 (this ADR's parent)
 - `.vault/adr/2026-04-17-export-first-adr.md` — charter-level
   decision that import is always Kent-uploads-file
-- `src/aeat/submission/_engine.py` — preflight path (pre-export)
-- `src/aeat/submission/_models.py` — `FilingDraft` shape
+- `src/aeat/adapters/outbound/aeat/export/_engine.py` — preflight path (pre-export)
+- `src/aeat/adapters/outbound/aeat/export/_models.py` — `FilingDraft` shape

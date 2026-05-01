@@ -9,6 +9,6 @@ related:
 
 # Add unit tests for i18n primitives
 
-Added tests in `src/aeat/i18n/test_i18n.py`.
+Added tests in `src/aeat/core/i18n/test_i18n.py`.
 Tested exact matches, strict fallbacks, and dictionary injections.
 Ensured no mocks, patches, fakes, or stubs were used. Tests run against the actual pure primitives.

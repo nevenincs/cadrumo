@@ -79,7 +79,7 @@ Modelo 390 is structurally an annual aggregator of the four quarterly Modelo 303
 
 | Approach | Shape | Cost | Fits today? |
 | :--- | :--- | :--- | :--- |
-| A — DSL aggregator primitive | Add a new formula primitive to `aeat.formulas` that references four sibling rulesets and aggregates per-rate-bucket totals | High: invents a new DSL primitive, cross-ruleset references | No |
+| A — DSL aggregator primitive | Add a new formula primitive to `aeat.domain.formulas` that references four sibling rulesets and aggregates per-rate-bucket totals | High: invents a new DSL primitive, cross-ruleset references | No |
 | B — Live-AEAT-driven cumulation | Read four real M303 filings from AEAT and verify M390 against them | Out of scope | No |
 | C — User-supplied annual aggregates | Treat the cumulated casillas (95, 96, 100, 101, 108, 109, 662) as user-supplied; derive only the algebraic relationships among them inside the M390 ruleset | Low: matches the existing M180 annual-summary pattern | Yes |
 

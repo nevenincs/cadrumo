@@ -1,6 +1,6 @@
 ---
 name: schema-extraction-plan
-description: Implementation plan for the aeat.schema subpackage (pydantic models, Extractor interface, BOE-Orden PoC extractor for Modelo 130), wgergely/aeat#9
+description: Implementation plan for the aeat.domain.schema subpackage (pydantic models, Extractor interface, BOE-Orden PoC extractor for Modelo 130), wgergely/aeat#9
 type: plan
 tags:
   - "#plan"
@@ -13,7 +13,7 @@ related:
   - "[[2026-04-13-modelo-inventory-adr]]"
 ---
 
-# Implementation plan: `aeat.schema` subpackage (#9)
+# Implementation plan: `aeat.domain.schema` subpackage (#9)
 
 Single-phase, single-PR plan. Branch
 `feature/9-schema-extraction`. Every step is scoped so a strict
@@ -23,7 +23,7 @@ reviewer can diff it independently.
 
 - Pydantic v2 strict + frozen on every boundary type. No
   dataclasses, no bare `dict[str, Any]`.
-- **Single documented exception**: `aeat.i18n.Translatable` is a
+- **Single documented exception**: `aeat.core.i18n.Translatable` is a
   TypedDict by project convention (`CLAUDE.md`, trilingual
   contract); `Casilla.label` / `Casilla.block` use it as
   declared in the ADR §2. This is the only blessed non-pydantic
@@ -32,7 +32,7 @@ reviewer can diff it independently.
   No mocks / patches / stubs. Use real inputs (real `pdfplumber`
   over real synthetic PDFs generated with `reportlab`).
 - **Test library ban (global)**: every `test_*.py` file under
-  `src/aeat/schema/` MUST NOT import `unittest`, `unittest.mock`,
+  `src/aeat/domain/schema/` MUST NOT import `unittest`, `unittest.mock`,
   `mock`, `pytest_mock`, `pytest_httpx`, `responses`,
   `httpx_mock`, `time_machine`, `freezegun`, `vcr`. `httpx`
   handles `file://` URLs natively — local PDF fetches are tested
@@ -41,12 +41,12 @@ reviewer can diff it independently.
 - `from __future__ import annotations` at the top of every new
   `.py` file.
 - Google-style docstrings on every public symbol.
-- `aeat.logging.get_logger(__name__)` for any module that emits
-  logs. Domain errors inherit from `aeat.errors.AeatError`.
-- Public API discipline: `aeat.schema`'s public surface is the
-  `__all__` tuple in `src/aeat/schema/__init__.py`. Consumers
+- `aeat.core.logging.get_logger(__name__)` for any module that emits
+  logs. Domain errors inherit from `aeat.core.errors.AeatError`.
+- Public API discipline: `aeat.domain.schema`'s public surface is the
+  `__all__` tuple in `src/aeat/domain/schema/__init__.py`. Consumers
   MUST NOT import from underscore-prefixed submodules.
-- `aeat.schema` MUST NOT import from `aeat.casillas`. The
+- `aeat.domain.schema` MUST NOT import from `aeat.domain.casillas`. The
   reverse is already the case (#23 uses Protocol stubs pointing
   at #9). Smoke-test enforces.
 - Conventional commits. The squash commit for this PR is
@@ -54,7 +54,7 @@ reviewer can diff it independently.
 
 ## Step 1 — scaffold subpackage structure
 
-Create the following files under `src/aeat/schema/`:
+Create the following files under `src/aeat/domain/schema/`:
 
 - `__init__.py` — module docstring, `__all__` tuple re-exporting
   every public name, smoke-import wiring. Replaces the current
@@ -78,7 +78,7 @@ Create the following files under `src/aeat/schema/`:
     `SchemaValidationError`
   - `load_modelo_from_cache`, `save_modelo_to_cache`,
     `resolve_schema_cache_file`
-- `_errors.py` — error hierarchy rooted on `aeat.errors.AeatError`.
+- `_errors.py` — error hierarchy rooted on `aeat.core.errors.AeatError`.
 - `_enums.py` — `SchemaSource`, `CasillaDataType`,
   `BinaryFormulaOp`, `CompareOp`. All StrEnum.
 - `_models.py` — all pydantic models
@@ -98,15 +98,15 @@ Create the following files under `src/aeat/schema/`:
 - `_fetch.py` — `BOE_ORDEN_SOURCES` table, `FetchedSchemaSource`
   model, `fetch_boe_pdf(boe_ref, origin_url, cache_dir,
   settings) -> FetchedSchemaSource`. Mirrors
-  `aeat.manuals._fetch` patterns: streams via `httpx`, hashes
+  `aeat.domain.manuals._fetch` patterns: streams via `httpx`, hashes
   while streaming, returns a typed record, never mocks.
 - `_cache.py` — `load_modelo_from_cache`, `save_modelo_to_cache`,
   `resolve_schema_cache_file(code: ModeloCode, boe_ref: str,
   root: Path) -> Path`.
 - **(removed)** `_cli.py` — the Typer sub-app lives in
-  `src/aeat/cli/schema.py` instead. This keeps `aeat.schema`
+  `src/aeat/entrypoints/cli/schema.py` instead. This keeps `aeat.domain.schema`
   free of Typer as a runtime dependency of the domain code and
-  matches the `aeat.cli.casillas` precedent.
+  matches the `aeat.entrypoints.cli.casillas` precedent.
 - `testing.py` — re-exports `build_fake_boe_pdf` fixture-builder
   (uses `reportlab`) and `EXPECTED_MODELO_130_CASILLAS` golden
   data used by unit tests. Not imported by the production
@@ -116,11 +116,11 @@ Create the following files under `src/aeat/schema/`:
   generated PDF.
 - `test_cache.py` — round-trip persistence.
 - `test_cli.py` — Typer CLI exercises with `CliRunner`.
-- `test_smoke.py` — `__all__` completeness, `aeat.casillas`
+- `test_smoke.py` — `__all__` completeness, `aeat.domain.casillas`
   non-import assertion, docstring presence.
 
-Why colocated tests: matches `aeat.casillas`, `aeat.manuals`,
-`aeat.models`, `aeat.portals` conventions (Rust-style colocated
+Why colocated tests: matches `aeat.domain.casillas`, `aeat.domain.manuals`,
+`aeat.domain.modelos`, `aeat.domain.portals` conventions (Rust-style colocated
 tests) and the `conftest.py` banned-import enforcement.
 
 ## Step 2 — enums and errors
@@ -131,7 +131,7 @@ so subsequent modules import only from earlier-numbered ones.
 Module dependency DAG (strictly top-down):
 `_errors` ← `_enums` ← `_models` ← `_fetch`, `_cache`,
 `_extractor`, `_boe_extractor` ← `__init__` (re-exports).
-`src/aeat/cli/schema.py` consumes the public surface only.
+`src/aeat/entrypoints/cli/schema.py` consumes the public surface only.
 
 ## Step 3 — pydantic models and formula evaluator
 
@@ -141,7 +141,7 @@ Module dependency DAG (strictly top-down):
    `CasillaDataType` are imported from `_enums`.
 2. `_StrictFrozenModel` private base:
    `ConfigDict(strict=True, frozen=True, extra="forbid")`.
-   Copied pattern from `aeat.casillas.models._StrictFrozenModel`
+   Copied pattern from `aeat.domain.casillas.models._StrictFrozenModel`
    so reviewers recognise the shape.
 3. `SchemaProvenance` (`source`, `origin_url`,
    `document_ref`, `sha256` with regex, `content_length` ≥ 1,
@@ -162,7 +162,7 @@ Module dependency DAG (strictly top-down):
      `FormulaNode` field, in declaration order:
      `BinaryOp`, `SumFormula`, `CrossCasillaRule`,
      `Casilla`, `Modelo`. Matches the pattern proven in
-     `aeat.casillas.models`.
+     `aeat.domain.casillas.models`.
 6. `evaluate(node, values) -> Decimal`:
    - `LiteralFormula` → `node.value`.
    - `CasillaRef` → `values[node.casilla_id]` with
@@ -213,7 +213,7 @@ Module dependency DAG (strictly top-down):
      `validate_period_for_modelo(modelo_code, period)`.
 10. `validate_period_for_modelo(code, period) -> None`:
     - Resolve `cadence = get_modelo(code).cadence` (public
-      `aeat.models` API).
+      `aeat.domain.modelos` API).
     - For `QUARTERLY`: regex `^\d{4}Q[1-4]$`.
     - For `ANNUAL`: regex `^\d{4}$`.
     - For `MONTHLY`: regex `^\d{4}-(0[1-9]|1[0-2])$`.
@@ -256,7 +256,7 @@ mapping table.
      settings.aeat_schema_cache_dir).with_suffix(".pdf")`.
   3. Stream via `httpx.stream("GET", url,
      follow_redirects=True, timeout=60.0)` — identical pattern
-     to `aeat.manuals._fetch._stream_to_file`. Hash while
+     to `aeat.domain.manuals._fetch._stream_to_file`. Hash while
      streaming.
   4. Build and return `FetchedSchemaSource`.
   5. Wrap `httpx.HTTPError` as `SchemaCacheError`.
@@ -316,7 +316,7 @@ class Extractor(typing.Protocol):
        `_parse_formula_prose(label, row_text)`.
   4. Build a list of `Casilla` objects (Spanish label only in
      v1; English/Hungarian intentionally absent — downstream
-     translation is `aeat.casillas`' concern).
+     translation is `aeat.domain.casillas`' concern).
   5. Detect each casilla's `data_type` heuristically:
      - Labels containing "Cuota", "Importe", "Base imponible",
        "Resultado" → `CURRENCY_EUR`.
@@ -359,7 +359,7 @@ via subclass + additional `_FORMULA_*_RE` patterns.
 `src/aeat/config.py`:
 
 - Add new section header comment
-  `# ── Schema extraction (aeat.schema, #9) ────────────────`.
+  `# ── Schema extraction (aeat.domain.schema, #9) ────────────────`.
 - Add fields:
   ```python
   aeat_schema_cache_dir: Path = Field(
@@ -385,7 +385,7 @@ via subclass + additional `_FORMULA_*_RE` patterns.
 
 - Append section:
   ```
-  # -- Schema extraction (aeat.schema, #9) --------------------------------
+  # -- Schema extraction (aeat.domain.schema, #9) --------------------------------
   # Directory where extracted Modelo schemas and provenance manifests live.
   AEAT_SCHEMA_CACHE_DIR=var/schema-cache
   # Optional JSON-encoded {modelo_code: {boe_ref: url}} override for offline CI.
@@ -399,8 +399,8 @@ via subclass + additional `_FORMULA_*_RE` patterns.
 
 ## Step 7 — CLI wiring
 
-`src/aeat/cli/schema.py` (the file that owns the Typer app in the
-final implementation; `aeat.schema._cli` does not exist per the
+`src/aeat/entrypoints/cli/schema.py` (the file that owns the Typer app in the
+final implementation; `aeat.domain.schema._cli` does not exist per the
 plan's own §1 resolution):
 
 - `app = typer.Typer(name="schema", help="Extract AEAT modelo
@@ -420,21 +420,21 @@ plan's own §1 resolution):
   - `--modelo`, `--boe-ref`.
   - Body: `load_modelo_from_cache(...)`, pretty-print JSON.
 
-`src/aeat/cli/schema.py` — **authored in full** like
-`src/aeat/cli/casillas.py`. It imports domain helpers only from
-the public `aeat.schema` surface (`fetch_boe_pdf`,
+`src/aeat/entrypoints/cli/schema.py` — **authored in full** like
+`src/aeat/entrypoints/cli/casillas.py`. It imports domain helpers only from
+the public `aeat.domain.schema` surface (`fetch_boe_pdf`,
 `BoeOrdenExtractor`, `save_modelo_to_cache`,
 `load_modelo_from_cache`, `BOE_ORDEN_SOURCES`, error classes,
-`ModeloCode` via `aeat.models`). The package-internal
-`aeat.schema._cli` module referenced elsewhere in this plan is
-renamed to **live in `aeat.cli.schema` directly** — there is no
-`aeat.schema._cli` module. This collapses the wiring to the
+`ModeloCode` via `aeat.domain.modelos`). The package-internal
+`aeat.domain.schema._cli` module referenced elsewhere in this plan is
+renamed to **live in `aeat.entrypoints.cli.schema` directly** — there is no
+`aeat.domain.schema._cli` module. This collapses the wiring to the
 existing casillas precedent and preserves the "no underscore
 imports" public-API discipline.
 
-`src/aeat/cli/__init__.py`:
+`src/aeat/entrypoints/cli/__init__.py`:
 
-- Import: `from aeat.cli import schema as schema_module`.
+- Import: `from aeat.entrypoints.cli import schema as schema_module`.
 - Register: `app.add_typer(schema_module.app, name="schema",
   help="Programmatic AEAT modelo schema extraction.")`.
 
@@ -462,9 +462,9 @@ no network, no authentication, no mocks.
   - `Modelo(provenance.source=BOE_ORDEN)` with `Casilla.source_page=None`
     → `ValidationError`.
   - `Portal` whose `related_modelo` mismatches →
-    `ValidationError` (imports `aeat.portals` lazily inside
-    the test via `aeat.schema._models` — we test the validator,
-    not `aeat.portals`).
+    `ValidationError` (imports `aeat.domain.portals` lazily inside
+    the test via `aeat.domain.schema._models` — we test the validator,
+    not `aeat.domain.portals`).
 - `validate_period_for_modelo`:
   - `MODELO_130` + `"2025Q4"` passes.
   - `MODELO_130` + `"2025"` fails.
@@ -474,8 +474,8 @@ no network, no authentication, no mocks.
 ### `test_boe_extractor.py`
 
 - Top of file: a helper `build_fake_boe_pdf(path: Path) -> None`
-  (imported from `aeat.schema.testing`) that uses `reportlab`
-  — same technique as `src/aeat/justificante/test_parser.py`.
+  (imported from `aeat.domain.schema.testing`) that uses `reportlab`
+  — same technique as `src/aeat/domain/justificante/test_parser.py`.
   The synthetic PDF contains:
   - Page 1: preamble text, then `"ANEXO I"`.
   - Page 2+: a table with five rows:
@@ -530,12 +530,12 @@ no network, no authentication, no mocks.
 
 ### `test_smoke.py` (new content replaces current stub)
 
-- `aeat.schema.__doc__` present.
+- `aeat.domain.schema.__doc__` present.
 - Every name in `__all__` is actually importable.
-- `aeat.casillas` is NOT imported by any `aeat.schema`
+- `aeat.domain.casillas` is NOT imported by any `aeat.domain.schema`
   submodule — enforced by AST-scanning every `.py` file under
-  `src/aeat/schema/` for `Import` / `ImportFrom` nodes whose
-  module starts with `aeat.casillas`. The scan mirrors the
+  `src/aeat/domain/schema/` for `Import` / `ImportFrom` nodes whose
+  module starts with `aeat.domain.casillas`. The scan mirrors the
   proven pattern in `tests/conftest.py` for banned-import
   enforcement. `sys.modules` inspection is NOT used (it is
   globally polluted by sibling tests).
@@ -585,8 +585,8 @@ root-cause, never suppressed with `# type: ignore` /
 - Extractor pattern extensions for 303's rate-table rows and
   390's quarterly-sum rows.
 - `aeat schema diff` CLI.
-- `aeat.casillas` ↔ `aeat.schema` adapter PR.
-- Removal of the duplicate `aeat.casillas.models.ModeloCode`.
+- `aeat.domain.casillas` ↔ `aeat.domain.schema` adapter PR.
+- Removal of the duplicate `aeat.domain.casillas.models.ModeloCode`.
 - Live-portal probe (`SchemaSource.PORTAL_HTML_PROBE`).
 - LLM-assisted validation rule extraction
   (`SchemaSource.MANUAL_LLM_DRAFT`).
@@ -599,4 +599,4 @@ root-cause, never suppressed with `# type: ignore` /
 | `pdfplumber` behaviour differs between the synthetic reportlab PDF and a real BOE PDF. | The regex library is intentionally tolerant of whitespace and hyphen / minus-sign variants. A follow-up issue adds a live `@pytest.mark.live` probe that fetches the real BOE PDF. |
 | Two `CasillaDataType` enums live briefly. | ADR §7 pins the string-value round-trip contract; `isinstance` cross-comparison is forbidden. Adapter PR removes the duplicate. |
 | `typer` + `StrEnum` decoding quirk for `--modelo MODELO_130`. | Accept the raw string, call `ModeloCode(value_or_name_resolved)` with a helper that accepts both the value (`"130"`) and the member name (`"MODELO_130"`). |
-| Mypy strict on pydantic discriminated unions. | Pattern proven in `aeat.casillas`, `aeat.filing`, and `aeat.justificante`; cross-check `model_rebuild()` order matches those modules. |
+| Mypy strict on pydantic discriminated unions. | Pattern proven in `aeat.domain.casillas`, `aeat.application.filing`, and `aeat.domain.justificante`; cross-check `model_rebuild()` order matches those modules. |

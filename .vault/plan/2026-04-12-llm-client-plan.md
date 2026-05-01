@@ -10,7 +10,7 @@ related:
 
 # `llm-client` `phase-1` plan
 
-Implement the `src/aeat/llm/` subpackage, its CLI integration, additive
+Implement the `src/aeat/adapters/outbound/llm/` subpackage, its CLI integration, additive
 settings, and the required tests so downstream translation and extraction work
 can rely on a single typed LLM surface.
 
@@ -29,7 +29,7 @@ can rely on a single typed LLM surface.
 ## Tasks
 
 - `Phase 1: package and provider foundation`
-  1. Create `src/aeat/llm/` public exports, internal module layout, error types,
+  1. Create `src/aeat/adapters/outbound/llm/` public exports, internal module layout, error types,
      provider enum, request/response models, and the issue `#20` compatibility
      shim.
   2. Implement the provider adapter contract, the Anthropic adapter, the local
@@ -58,12 +58,12 @@ can rely on a single typed LLM surface.
 
 ## Verification
 
-- `aeat.llm` exports the required public API and no external code imports a
+- `aeat.adapters.outbound.llm` exports the required public API and no external code imports a
   provider SDK directly.
 - All boundary types are strict pydantic v2 models and API keys are `SecretStr`.
 - Cache hits bypass provider calls and usage files round-trip cleanly.
 - `Translator` uses the seeded `translation_v1` prompt and always caches.
-- CLI commands are wired into `aeat.cli:app`.
+- CLI commands are wired into `aeat.entrypoints.cli:app`.
 - `just lint && just typecheck && just test && just hooks` pass on Windows.
 - Mandatory code review confirms the single-chokepoint rule, strict pydantic
   usage, public API discipline, logging discipline, and green verification.

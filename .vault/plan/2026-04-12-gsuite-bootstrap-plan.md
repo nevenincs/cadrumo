@@ -71,9 +71,9 @@ the merge conversation.
   1. Add `typer`, `rich`, `google-cloud-functions`, `google-cloud-run`,
      `google-cloud-storage` to `[project] dependencies` in
      `pyproject.toml`. Run `uv lock` and commit the lockfile churn.
-  2. Add `[project.scripts] aeat = "aeat.cli.__main__:app"`.
-  3. Create `src/aeat/cli/__init__.py` and
-     `src/aeat/cli/__main__.py` with a `Typer` app that wires
+  2. Add `[project.scripts] aeat = "aeat.entrypoints.cli.__main__:app"`.
+  3. Create `src/aeat/entrypoints/cli/__init__.py` and
+     `src/aeat/entrypoints/cli/__main__.py` with a `Typer` app that wires
      placeholder sub-apps for `doctor`, `bootstrap`, `drive`, `sheets`,
      `docs`, `cloud`, `oauth`. Each sub-app initially exposes one stub
      command that prints "not yet implemented" and exits 1, so the
@@ -83,7 +83,7 @@ the merge conversation.
      `uv run aeat --help`.
 
 - **Phase 4 — doctor command**
-  1. Implement `src/aeat/cli/doctor.py` against the doctor decision
+  1. Implement `src/aeat/entrypoints/cli/doctor.py` against the doctor decision
      matrix in the ADR. Use `rich.table.Table` for output. Each row
      records `section`, `required` (bool), `state` (`OK | MISSING |
      WARN | SKIP`), and `detail` (one-line remediation hint).
@@ -92,7 +92,7 @@ the merge conversation.
      scopes, scratch resources presence, API enablement via Service
      Usage, per-surface round-trip checks, advisory rows for SA/OAuth.
   3. Exit non-zero on any required `MISSING`.
-  4. Co-located unit tests `src/aeat/cli/_test_doctor.py` covering the
+  4. Co-located unit tests `src/aeat/entrypoints/cli/_test_doctor.py` covering the
      pure helpers (env file checking, scope subset checking) under
      `@pytest.mark.unit`. Real auth + API checks are exercised by the
      doctor itself in Phase 9.
@@ -101,7 +101,7 @@ the merge conversation.
      to confirm the table renders and current state is reported truthfully.
 
 - **Phase 5 — bootstrap command**
-  1. Implement `src/aeat/cli/bootstrap.py`:
+  1. Implement `src/aeat/entrypoints/cli/bootstrap.py`:
      - Validate ADC presence and scope set; fail with a clear message
        if missing.
      - Validate API enablement target set; fail with a clear message if
@@ -113,7 +113,7 @@ the merge conversation.
        `mimeType=application/vnd.google-apps.{folder,spreadsheet,document}`.
      - Persist their IDs to `env/.env` via `env_io.write_env_vars`.
      - Print a final summary table.
-  2. Co-located unit tests `src/aeat/cli/_test_bootstrap.py` covering
+  2. Co-located unit tests `src/aeat/entrypoints/cli/_test_bootstrap.py` covering
      pure decision logic (e.g. `dedup_existing_resource(name, mime,
      listing)`), under `@pytest.mark.unit`. Anything that touches Google
      APIs is exercised by Phase 9 live tests.
@@ -121,7 +121,7 @@ the merge conversation.
      `uv run aeat bootstrap` against live credentials.
 
 - **Phase 6 — Drive / Sheets / Docs CLI surfaces**
-  1. `src/aeat/cli/drive.py`:
+  1. `src/aeat/entrypoints/cli/drive.py`:
      - `aeat drive ls [--folder ID]` — list with `name, id, mimeType,
        size, modifiedTime`.
      - `aeat drive find QUERY` — pass through Drive `q=` syntax.
@@ -132,13 +132,13 @@ the merge conversation.
      - `aeat drive mkdir NAME [--parent ID]`.
      - `aeat drive rm FILE_ID [--permanent]` — trash by default,
        `--permanent` calls `delete`.
-  2. `src/aeat/cli/sheets.py`:
+  2. `src/aeat/entrypoints/cli/sheets.py`:
      - `aeat sheets get SPREADSHEET RANGE`.
      - `aeat sheets set SPREADSHEET RANGE VALUES_JSON [--raw]`.
      - `aeat sheets append SPREADSHEET RANGE VALUES_JSON`.
      - `aeat sheets new TITLE` — creates a new sheet, prints ID.
      - `aeat sheets tabs SPREADSHEET` — list tab titles.
-  3. `src/aeat/cli/docs.py`:
+  3. `src/aeat/entrypoints/cli/docs.py`:
      - `aeat docs get DOC_ID [--plaintext]`.
      - `aeat docs new TITLE`.
      - `aeat docs append DOC_ID TEXT` — uses the reverse-document-order
@@ -146,11 +146,11 @@ the merge conversation.
      - `aeat docs replace DOC_ID OLD NEW` — find/replace via
        batchUpdate.
   4. Helper modules:
-     - `src/aeat/cli/_drive_helpers.py` — query escaping, mime detection,
+     - `src/aeat/entrypoints/cli/_drive_helpers.py` — query escaping, mime detection,
        resumable upload wrapper.
-     - `src/aeat/cli/_sheets_helpers.py` — A1 range parsing, JSON value
+     - `src/aeat/entrypoints/cli/_sheets_helpers.py` — A1 range parsing, JSON value
        coercion.
-     - `src/aeat/cli/_docs_helpers.py` — reverse-order batch builder
+     - `src/aeat/entrypoints/cli/_docs_helpers.py` — reverse-order batch builder
        helper.
   5. Co-located unit tests for every helper (`_test_drive_helpers.py`,
      `_test_sheets_helpers.py`, `_test_docs_helpers.py`) under
@@ -160,7 +160,7 @@ the merge conversation.
   6. Phase 6 audit: `just lint`, `just typecheck`, `just test`.
 
 - **Phase 7 — Cloud Functions / Run / Storage CLI**
-  1. `src/aeat/cli/cloud.py`:
+  1. `src/aeat/entrypoints/cli/cloud.py`:
      - `aeat cloud functions list [--region REGION]`.
      - `aeat cloud functions describe NAME`.
      - `aeat cloud run list [--region REGION]`.
@@ -174,7 +174,7 @@ the merge conversation.
   4. Phase 7 audit: `just lint`, `just typecheck`, `just test`.
 
 - **Phase 8 — OAuth Desktop helper and justfile rewiring**
-  1. Implement `src/aeat/cli/oauth.py` — `aeat oauth-client init`:
+  1. Implement `src/aeat/entrypoints/cli/oauth.py` — `aeat oauth-client init`:
      - Print the deep-link Console URL for the active project's
        credentials page.
      - Print the required redirect URI and scope set.
@@ -205,18 +205,18 @@ the merge conversation.
      credentials.
 
 - **Phase 9 — live smoke tests**
-  1. `src/aeat/cli/_live.py` — shared fixtures: `scratch_folder_id`,
+  1. `src/aeat/entrypoints/cli/_live.py` — shared fixtures: `scratch_folder_id`,
      `scratch_sheet_id`, `scratch_doc_id`, `unique_prefix`, plus a
      `requires_live` skip decorator that checks
      `Settings.aeat_live_tests_enabled` and the relevant scratch ID.
-  2. `src/aeat/cli/_test_drive_live.py`:
+  2. `src/aeat/entrypoints/cli/_test_drive_live.py`:
      - Create temp file with UUID prefix, list, fetch metadata, download
        content, delete. Assert content matches.
-  3. `src/aeat/cli/_test_sheets_live.py`:
+  3. `src/aeat/entrypoints/cli/_test_sheets_live.py`:
      - Set range, append, get, clear. Assert round-trip equality.
-  4. `src/aeat/cli/_test_docs_live.py`:
+  4. `src/aeat/entrypoints/cli/_test_docs_live.py`:
      - Append text, get, verify presence, delete inserted range.
-  5. `src/aeat/cli/_test_cloud_live.py`:
+  5. `src/aeat/entrypoints/cli/_test_cloud_live.py`:
      - List Cloud Functions, list Cloud Run services, list Storage
        buckets. Each call must succeed (empty list is success).
   6. Phase 9 audit: `just test` (default skip-live, must stay green),

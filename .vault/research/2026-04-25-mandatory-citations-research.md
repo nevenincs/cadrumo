@@ -20,7 +20,7 @@ verify-roundtrip issues (`#317`-`#327`) under EPIC `#316`.
 ### 1. Source-of-truth for citation grammar
 
 `LegalCitation` is a strict, frozen pydantic-v2 model declared in
-`src/aeat/models/_citations.py`. Its current shape:
+`src/aeat/domain/modelos/_citations.py`. Its current shape:
 
 | field | type | constraint |
 |---|---|---|
@@ -32,7 +32,7 @@ verify-roundtrip issues (`#317`-`#327`) under EPIC `#316`.
 | `is_curated_summary` | `bool` | `True` for v1 citations |
 
 `LegalCitationSource` enum members (defined in
-`src/aeat/models/_categories.py`):
+`src/aeat/domain/modelos/_categories.py`):
 
 - `LEY` — primary statutory law (Ley 35/2006 LIRPF, Ley 37/1992 LIVA, Ley
   27/2014 LIS, Ley 58/2003 LGT, etc.)
@@ -90,7 +90,7 @@ scenario.
 Sweep at `chore/339-mandatory-citations` HEAD (post-`dae0ff2`):
 
 ```text
-import aeat.formulas._rulesets — ALL_RULESETS = 18 entries
+import aeat.domain.formulas._rulesets — ALL_RULESETS = 18 entries
 
 | ruleset_id              | casillas | computed | missing-citation-on-computed |
 |-------------------------|----------|----------|------------------------------|
@@ -156,7 +156,7 @@ idiomatic and keeps responsibilities sharp.
 
 ### 5. `RulesetValidationError` reuse
 
-`src/aeat/errors/_*` declares `RulesetValidationError` with MRO
+`src/aeat/core/errors/_*` declares `RulesetValidationError` with MRO
 `RulesetValidationError -> FormulasError -> AeatError -> Exception`.
 Reusing this class is the only correct choice — it is the established
 exception type for "structural invariant violated by a ruleset" and the
@@ -174,7 +174,7 @@ is sufficient.
 The handover mandates a non-default, dev-only `aeat audit rulesets
 citations` command that:
 
-- iterates `aeat.formulas._rulesets.ALL_RULESETS`;
+- iterates `aeat.domain.formulas._rulesets.ALL_RULESETS`;
 - per ruleset, computes a `CitationCoverageReport` (`computed`,
   `with_citation`, `coverage_percent`, `missing_casillas`);
 - emits a per-modelo + ejercicio summary, terminated by an aggregate
@@ -184,11 +184,11 @@ citations` command that:
 - handles UTF-8 on Windows (Spanish article references include
   diacritics: "actividades agrícolas", "régimen de estimación", etc.).
 
-A dedicated `aeat.cli.audit` subpackage is the natural home — and aligns
+A dedicated `aeat.entrypoints.cli.audit` subpackage is the natural home — and aligns
 with the future `#394` 13-root tree where `audit` is a Kent-first root.
 Phase 1 ships the subpackage and command; Phase 2 (a single follow-up
 commit after `#398` or `#399` lands) wires `app.add_typer(audit_app, …,
-hidden=True)` onto `src/aeat/cli/__init__.py`.
+hidden=True)` onto `src/aeat/entrypoints/cli/__init__.py`.
 
 The CLI's helper `validate_citation_coverage(ruleset)` is a pure function
 returning a strict pydantic model (`CitationCoverageReport`,
@@ -200,15 +200,15 @@ already serialises cleanly through `model_dump_json`.
 
 | branch                          | territory                                                   | collision  | mitigation                                                                   |
 |---------------------------------|-------------------------------------------------------------|------------|------------------------------------------------------------------------------|
-| `feature/239-aeat-verify`       | `aeat.sede`, `aeat.auth._clave_movil`                      | none       | n/a                                                                          |
-| `feature/398-error-code-registry` | `aeat.errors._registry`, `cli/__init__.py` decorator     | indirect   | TODO marker on `RulesetValidationError`; defer cli/__init__.py to Phase 2    |
-| `feature/399-json-output-contract` | `aeat.cli._schemas`, `_exit_codes`, `_log_levels`, `cli/__init__.py` | indirect | TODO marker on audit-CLI `--json`; defer cli/__init__.py to Phase 2          |
+| `feature/239-aeat-verify`       | `aeat.adapters.outbound.aeat.sede`, `aeat.adapters.outbound.aeat.auth._clave_movil`                      | none       | n/a                                                                          |
+| `feature/398-error-code-registry` | `aeat.core.errors._registry`, `cli/__init__.py` decorator     | indirect   | TODO marker on `RulesetValidationError`; defer cli/__init__.py to Phase 2    |
+| `feature/399-json-output-contract` | `aeat.entrypoints.cli._schemas`, `_exit_codes`, `_log_levels`, `cli/__init__.py` | indirect | TODO marker on audit-CLI `--json`; defer cli/__init__.py to Phase 2          |
 | `feature-338-mutation-harness-extension` (landed via PR #429) | mutation tests | none       | tests must stay green — verify on every commit                              |
 | `feature-340-kent-workflows-expansion` (landed via PR #430) | integration tests | none      | tests must stay green — verify on every commit                              |
 
 The Phase 1 / Phase 2 split is the canonical mechanism for avoiding the
 3-way `cli/__init__.py` collision (own + #398 + #399). Phase 1 makes the
-subpackage importable in isolation (`from aeat.cli.audit import
+subpackage importable in isolation (`from aeat.entrypoints.cli.audit import
 audit_app; CliRunner(audit_app)` — works without root registration);
 Phase 2 is one line plus an import, deferred until whichever sibling
 lands first.
@@ -233,17 +233,17 @@ output.
 
 Four new test modules:
 
-- `src/aeat/formulas/test_casilla_validator.py` — unit tests for the
+- `src/aeat/domain/formulas/test_casilla_validator.py` — unit tests for the
   CasillaDefinition validator (passing case, failing case for
   `computed=True` + empty `legal_basis`, informational-casilla skip).
-- `src/aeat/models/test_citations_source_enum.py` — confirms the
+- `src/aeat/domain/modelos/test_citations_source_enum.py` — confirms the
   closed-enum constraint (every member accepted; freeform strings
   rejected). Documents that the enum is already closed.
-- `src/aeat/cli/audit/test_citations_cmd.py` — `CliRunner(audit_app)`
+- `src/aeat/entrypoints/cli/audit/test_citations_cmd.py` — `CliRunner(audit_app)`
   invocation; happy-path 100% coverage; failure exit-code on simulated
   gap (via a fixture ruleset built in-test); UTF-8 regression for the
   Windows path.
-- `src/aeat/formulas/_rulesets/test_all_rulesets_have_citations.py` —
+- `src/aeat/domain/formulas/_rulesets/test_all_rulesets_have_citations.py` —
   hard regression guard. Imports `ALL_RULESETS`, asserts 100% coverage on
   every `computed=True` casilla.
 
@@ -271,7 +271,7 @@ the gap-path is a fixture for the audit reporter, not a real ruleset.
   is already a closed StrEnum.
 - **Back-fill:** zero work — every existing computed casilla already
   carries a citation.
-- **Audit CLI:** new `aeat.cli.audit` subpackage; `audit rulesets
+- **Audit CLI:** new `aeat.entrypoints.cli.audit` subpackage; `audit rulesets
   citations` command; not registered on root in Phase 1.
 - **Regression guard:** `test_all_rulesets_have_citations.py` imports
   `ALL_RULESETS` and asserts 100% coverage; future drift fails CI.

@@ -42,14 +42,14 @@ clear LIS art. 17 citation before persistence.
 
 ## Implementation
 
-Add `aeat.profile.assets` with `AssetRecord`, `AmortizationLedger`,
+Add `aeat.domain.profile.assets` with `AssetRecord`, `AmortizationLedger`,
 load/save helpers, per-year amortization computation, cost-basis cap
 enforcement, and Anexo D aggregate helpers. Asset records carry stable ids,
 descriptions, `AssetClass`, acquisition date, cost basis, optional useful-life
 override, opt-in libertad flag, optional activity allocation, and schema
 version.
 
-Add `aeat.profile.inventory` with `InventoryLedger`, `MovementRecord`,
+Add `aeat.domain.profile.inventory` with `InventoryLedger`, `MovementRecord`,
 load/save helpers, movement recording, explicit LIFO parsing refusal, and
 inventory variation computation. Ledgers are keyed by activity id and year.
 The accepted v1 movement model derives variation from explicit closing stock

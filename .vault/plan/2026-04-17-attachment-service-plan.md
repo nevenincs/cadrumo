@@ -11,16 +11,16 @@ related:
 
 # `attachment-service` `phase-1` plan
 
-Deliver issue `#76` as the content-addressed **Attachment** service at TDP step T3 (Enrich, see `#104`): new `aeat.financial.attachments` subpackage with strict pydantic v2 models, a two-layer byte/manifest store, a root-level `aeat attachments` Typer CLI, additive settings wiring, Protocol-only stubs for invoice linking (`#75` is not on `main`), colocated tests, and mandatory verification/review artefacts.
+Deliver issue `#76` as the content-addressed **Attachment** service at TDP step T3 (Enrich, see `#104`): new `aeat.domain.financial.attachments` subpackage with strict pydantic v2 models, a two-layer byte/manifest store, a root-level `aeat attachments` Typer CLI, additive settings wiring, Protocol-only stubs for invoice linking (`#75` is not on `main`), colocated tests, and mandatory verification/review artefacts.
 
 ## Proposed Changes
 
-- Create the `aeat.financial.attachments` subpackage with a public `__init__.py`, underscored private modules for enums, errors, models, store, service helpers, and typing stubs.
+- Create the `aeat.domain.financial.attachments` subpackage with a public `__init__.py`, underscored private modules for enums, errors, models, store, service helpers, and typing stubs.
 - Implement an `Attachment` pydantic model whose `attachment_id` equals the SHA-256 of the attachment bytes and whose `sha256`, `captured_at`, and linked-ID invariants mirror the existing `RawProvenance` discipline.
 - Implement `AttachmentCatalogue` as an internal immutable container keyed by `attachment_id` for in-memory and round-trip convenience; persistence is per-attachment manifest, not a single catalogue blob.
 - Implement an `AttachmentStore` that separates raw bytes (`<AEAT_ATTACHMENTS_DIR>/blobs/<sha256>`, write-once) from JSON manifests (`<AEAT_ATTACHMENTS_DIR>/manifests/<sha256>.json`, mutable as links are recorded).
 - Implement service-level helpers (`add_attachment`, `load_attachment`, `list_attachments`) that hash bytes once, upsert the blob idempotently, merge any pre-existing links into the manifest, and return validated `Attachment` instances.
-- Add an `AEAT_ATTACHMENTS_DIR` setting to `aeat.config.Settings` with the matching entry in `env/.env.example`.
+- Add an `AEAT_ATTACHMENTS_DIR` setting to `aeat.core.config.Settings` with the matching entry in `env/.env.example`.
 - Mount the CLI at the root as `aeat attachments` (`add`, `list`, `show`), not nested under `aeat financial`, matching the issue's explicit wording.
 - Keep invoice/transaction interoperability at typing level only through `_stubs.py` Protocols.
 - Add colocated unit tests for models, catalogue, store (dedup + write-once + link merge + bytes/manifest separation), and CLI smoke coverage.
@@ -28,9 +28,9 @@ Deliver issue `#76` as the content-addressed **Attachment** service at TDP step 
 ## Tasks
 
 - `Phase 1: establish the attachment package surface`
-  1. Create `aeat.financial.attachments` with public `__init__.py` and private underscored modules.
+  1. Create `aeat.domain.financial.attachments` with public `__init__.py` and private underscored modules.
   1. Define `AttachmentKind` and `AttachmentSource` as `StrEnum` values using the uppercase identifiers from issue `#76`.
-  1. Define `AttachmentError` hierarchy inheriting from `aeat.errors.AeatError` (`AttachmentError`, `AttachmentValidationError`, `AttachmentPersistenceError`, `AttachmentNotFoundError`).
+  1. Define `AttachmentError` hierarchy inheriting from `aeat.core.errors.AeatError` (`AttachmentError`, `AttachmentValidationError`, `AttachmentPersistenceError`, `AttachmentNotFoundError`).
   1. Define `Attachment` as a strict frozen pydantic v2 model with:
      - 64-char lowercase hex validators on `attachment_id` and `sha256`.
      - A `model_validator` that enforces `attachment_id == sha256`.
@@ -61,15 +61,15 @@ Deliver issue `#76` as the content-addressed **Attachment** service at TDP step 
   1. Implement `load_attachment(store, attachment_id) -> Attachment` as a typed wrapper raising `AttachmentNotFoundError` when missing.
   1. Implement `list_attachments(store, *, linked_to: str | None = None) -> tuple[Attachment, ...]` iterating manifests and filtering by presence in either `linked_transaction_ids` or `linked_invoice_ids` when `linked_to` is supplied.
 - `Phase 4: wire settings and CLI`
-  1. Add `aeat_attachments_dir: Path = Field(default=PROJECT_ROOT / "var" / "financial" / "attachments", ...)` to `aeat.config.Settings`.
+  1. Add `aeat_attachments_dir: Path = Field(default=PROJECT_ROOT / "var" / "financial" / "attachments", ...)` to `aeat.core.config.Settings`.
   1. Mirror the entry in `env/.env.example`.
-  1. Add `src/aeat/cli/attachments.py` exposing a Typer `app` with three commands:
+  1. Add `src/aeat/entrypoints/cli/attachments.py` exposing a Typer `app` with three commands:
      - `add <path> [--kind] [--source] [--source-reference] [--mime-type] [--link-tx ...] [--link-invoice ...] [--metadata k=v ...] [--notes]` — infers sensible defaults (`source=LOCAL_FILE`, `source_reference=str(path)` when omitted, `mime_type` via `mimetypes.guess_type`), uses `datetime.now(UTC)` for `captured_at`, and prints the persisted manifest JSON on success. `--metadata` parsing rules: each value must contain exactly one `=` separator; the key is the left side (trimmed, non-empty) and the value is the right side (kept verbatim, may contain `=`); duplicate keys within one invocation exit with code 2.
      - `list [--linked-to <id>] [--kind <kind>]` — tab-separated tabular listing sorted by `captured_at` then `attachment_id`.
      - `show <attachment_id>` — prints the manifest JSON.
-  1. Register the sub-app in `src/aeat/cli/__init__.py` as `aeat attachments`.
+  1. Register the sub-app in `src/aeat/entrypoints/cli/__init__.py` as `aeat attachments`.
 - `Phase 5: verify and document execution`
-  1. Add colocated `@pytest.mark.unit` tests under `src/aeat/financial/attachments/`:
+  1. Add colocated `@pytest.mark.unit` tests under `src/aeat/domain/financial/attachments/`:
      - `test_models.py` — hash mismatch rejection, invalid sha256, naive `captured_at`, empty linked IDs, duplicate linked IDs dedup, invalid metadata shapes (empty key, non-string value).
      - `test_catalogue.py` — construction, duplicate detection, JSON round-trip.
      - `test_store.py` — dedup (same bytes → same id), write-once (pre-existing blob not overwritten), manifest round-trip, link merging on re-ingest.
@@ -102,9 +102,9 @@ Sequential execution is safest here because the package surface, store, service 
 
 ## Explicit Plan Review
 
-- **Scope check against issue `#76`:** The plan covers the new `aeat.financial.attachments` subpackage, the content-addressed byte/manifest store, the `aeat attachments` CLI, the `AEAT_ATTACHMENTS_DIR` setting, Protocol stubs for the invoice link, and colocated tests. It excludes Gmail/Drive ingestion (`#80`), receipt extraction (`#86`), matching (`#89`), unlinking/deletion, and any submission-layer work.
+- **Scope check against issue `#76`:** The plan covers the new `aeat.domain.financial.attachments` subpackage, the content-addressed byte/manifest store, the `aeat attachments` CLI, the `AEAT_ATTACHMENTS_DIR` setting, Protocol stubs for the invoice link, and colocated tests. It excludes Gmail/Drive ingestion (`#80`), receipt extraction (`#86`), matching (`#89`), unlinking/deletion, and any submission-layer work.
 - **TDP check against issue `#104`:** The plan keeps the work at T3 Enrich, preserves content-addressed provenance invariants (byte-level `sha256` = `attachment_id`, write-once blobs, mutable manifests), and avoids reaching into T4/T5 classification/persistence ownership.
-- **Sibling-branch check:** The plan does not import from `src/aeat/financial/invoices/` (not on `main`), does not touch `src/aeat/submission/`, and only adds one additive setting to `src/aeat/config.py`. Transaction linking is kept to opaque `str` identifiers.
+- **Sibling-branch check:** The plan does not import from `src/aeat/domain/financial/invoices/` (not on `main`), does not touch `src/aeat/adapters/outbound/aeat/export/`, and only adds one additive setting to `src/aeat/config.py`. Transaction linking is kept to opaque `str` identifiers.
 - **Convention check against active repo instructions:** The plan stays inside `src/aeat/`, uses strict pydantic v2, `StrEnum`, pytest-only tests (`@pytest.mark.unit`), additive settings changes, and the canonical `AEAT_LIVE_TESTS_ENABLED` contract (live tests not required for this slice).
 - **Repository policy check:** No GitHub Actions work is introduced; no `.github/workflows/release-please.yml` file is added. Local gates remain authoritative.
 - **`metadata` escape hatch:** The plan enforces `dict[str, str]` with empty-key rejection and is internally consistent with the ADR's narrow justification.

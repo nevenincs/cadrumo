@@ -26,11 +26,11 @@ provider-tagging layers can run. The substrate has to be importable
 by peer subpackages (financial/providers, financial/categories)
 without creating cycles, and must fit the project's pydantic-first,
 trilingual, citation-backed corpus-as-code pattern already used by
-`aeat.normatives` and `aeat.manuals`.
+`aeat.domain.normatives` and `aeat.domain.manuals`.
 
 ## decision
 
-Introduce `src/aeat/financial/vat/` as a new subpackage that exposes:
+Introduce `src/aeat/domain/financial/vat/` as a new subpackage that exposes:
 
 - `VATCategory: StrEnum` — 16-member closed catalogue of the VAT
   situations the TDP classifier distinguishes (domestic rates,
@@ -84,8 +84,8 @@ the fallback at INFO.
 - **Enums only, no per-regulation metadata.** Rejected — downstream
   categorisation needs the `declares_in_modelos`, `requires_*` flags,
   and the citation audit trail. A bare enum cannot carry those.
-- **Extend `aeat.normatives` directly with VAT records.** Rejected —
-  `aeat.normatives` codifies the *act* (Ley 37/1992 with article
+- **Extend `aeat.domain.normatives` directly with VAT records.** Rejected —
+  `aeat.domain.normatives` codifies the *act* (Ley 37/1992 with article
   metadata). The R-1 substrate codifies *rules about transactions*
   that happen to cite articles of that act. Collapsing the two
   conflates axes (normative reference vs. transaction classifier)
@@ -112,8 +112,8 @@ the fallback at INFO.
   without any further code changes.
 - `tests/test_config.py` gains one new variable (`AEAT_VAT_CATALOGUE_ROOT`);
   `.env.example` and `Settings` stay aligned by construction.
-- No regressions in Track A (`aeat.normatives`, `aeat.manuals`,
-  `aeat.submission`) — the substrate is additive and untouched.
+- No regressions in Track A (`aeat.domain.normatives`, `aeat.domain.manuals`,
+  `aeat.adapters.outbound.aeat.export`) — the substrate is additive and untouched.
 
 ## related
 

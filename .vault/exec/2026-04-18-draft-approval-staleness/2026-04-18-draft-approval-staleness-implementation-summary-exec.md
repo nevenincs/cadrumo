@@ -12,11 +12,11 @@ related:
 Implemented persisted draft approval and deterministic stale detection for issue
 #230.
 
-- Modified: `src/aeat/filing/_schema.py`
-- Modified: `src/aeat/filing/_validator.py`
-- Created: `src/aeat/filing/_review.py`
-- Created: `src/aeat/cli/review/__init__.py`
-- Modified: `src/aeat/cli/filing/__init__.py`
+- Modified: `src/aeat/application/filing/_schema.py`
+- Modified: `src/aeat/application/filing/_validator.py`
+- Created: `src/aeat/application/filing/_review.py`
+- Created: `src/aeat/entrypoints/cli/review/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/filing/__init__.py`
 
 ## Description
 
@@ -42,13 +42,13 @@ the filing/review identifier model end to end.
 
 Verified with targeted unit and CLI coverage:
 
-- `uv run pytest src/aeat/filing/test_filing.py src/aeat/cli/review/test_review_cli.py src/aeat/cli/filing/test_filing_cli.py src/aeat/submission/test_preflight.py src/aeat/cli/submission/test_cli.py`
-- `uv run pytest src/aeat/filing/test_filing.py src/aeat/cli/filing/test_filing_cli.py src/aeat/cli/review/test_review_cli.py src/aeat/cli/submission/test_cli.py src/aeat/submission/test_preflight.py src/aeat/workflow/test_engine.py src/aeat/cli/workflow/test_cli.py src/aeat/cli/workflow/test_cli_runtime.py src/aeat/submission/test_engine.py src/aeat/submission/test_live_submission.py src/aeat/submission/_submitters/test_modelo130.py src/aeat/submission/test_safety_helpers.py`
-- `uv run ruff check src/aeat/cli/filing/__init__.py src/aeat/cli/review/__init__.py src/aeat/cli/filing/test_filing_cli.py src/aeat/cli/review/test_review_cli.py`
-- `uv run pytest src/aeat/cli/browser/test_health.py src/aeat/schema/test_fetch.py src/aeat/financial/invoices/test_reconciliation.py`
-- `uv run pytest src/aeat/cli/submission/test_cli.py src/aeat/submission/test_preflight.py src/aeat/filing/test_filing.py src/aeat/cli/filing/test_filing_cli.py src/aeat/cli/review/test_review_cli.py`
-- `uv run ruff check src/aeat/cli/browser/health.py src/aeat/cli/browser/test_health.py src/aeat/schema/test_fetch.py src/aeat/financial/invoices/_service.py src/aeat/financial/invoices/test_reconciliation.py src/aeat/cli/submission/_helpers.py src/aeat/cli/submission/preflight.py src/aeat/cli/submission/dry_run.py src/aeat/cli/submission/__init__.py`
-- `uv run ty check src/aeat/cli/browser/health.py src/aeat/financial/invoices/_service.py src/aeat/cli/submission/_helpers.py`
+- `uv run pytest src/aeat/application/filing/test_filing.py src/aeat/entrypoints/cli/review/test_review_cli.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/adapters/outbound/aeat/export/test_preflight.py src/aeat/entrypoints/cli/submission/test_cli.py`
+- `uv run pytest src/aeat/application/filing/test_filing.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/review/test_review_cli.py src/aeat/entrypoints/cli/submission/test_cli.py src/aeat/adapters/outbound/aeat/export/test_preflight.py src/aeat/application/workflow/test_engine.py src/aeat/entrypoints/cli/workflow/test_cli.py src/aeat/entrypoints/cli/workflow/test_cli_runtime.py src/aeat/adapters/outbound/aeat/export/test_engine.py src/aeat/adapters/outbound/aeat/export/test_live_submission.py src/aeat/adapters/outbound/aeat/export/_submitters/test_modelo130.py src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py`
+- `uv run ruff check src/aeat/entrypoints/cli/filing/__init__.py src/aeat/entrypoints/cli/review/__init__.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/review/test_review_cli.py`
+- `uv run pytest src/aeat/entrypoints/cli/browser/test_health.py src/aeat/domain/schema/test_fetch.py src/aeat/domain/financial/invoices/test_reconciliation.py`
+- `uv run pytest src/aeat/entrypoints/cli/submission/test_cli.py src/aeat/adapters/outbound/aeat/export/test_preflight.py src/aeat/application/filing/test_filing.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/review/test_review_cli.py`
+- `uv run ruff check src/aeat/entrypoints/cli/browser/health.py src/aeat/entrypoints/cli/browser/test_health.py src/aeat/domain/schema/test_fetch.py src/aeat/domain/financial/invoices/_service.py src/aeat/domain/financial/invoices/test_reconciliation.py src/aeat/entrypoints/cli/submission/_helpers.py src/aeat/entrypoints/cli/submission/preflight.py src/aeat/entrypoints/cli/submission/dry_run.py src/aeat/entrypoints/cli/submission/__init__.py`
+- `uv run ty check src/aeat/entrypoints/cli/browser/health.py src/aeat/domain/financial/invoices/_service.py src/aeat/entrypoints/cli/submission/_helpers.py`
 - Manual CLI flow covering `aeat filing build` -> `aeat review approve` -> `aeat filing validate` -> transaction-catalogue drift -> `aeat review show` -> `aeat review stale` -> `aeat submission preflight`
 
 Related audit records: `2026-04-18-draft-approval-staleness-adr-audit`,

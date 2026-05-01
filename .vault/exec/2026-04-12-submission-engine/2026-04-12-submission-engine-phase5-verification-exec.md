@@ -13,7 +13,7 @@ issue: wgergely/aeat#42
 
 ## artefacts produced
 
-- `src/aeat/submission/test_live_submission.py` — one
+- `src/aeat/adapters/outbound/aeat/export/test_live_submission.py` — one
   `@pytest.mark.live` test gated on `AEAT_LIVE_TESTS=1`, performs a
   dry-run only (the `_NoopSubmitter.submit` method asserts it is
   never called).
@@ -23,7 +23,7 @@ issue: wgergely/aeat#42
 | Gate                                          | Status |
 | :-------------------------------------------- | :----- |
 | `uv run pytest src/aeat/submission -q`        | PASS   |
-| `uv run pytest src/aeat/cli/submission -q`    | PASS   |
+| `uv run pytest src/aeat/entrypoints/cli/submission -q`    | PASS   |
 | `uv run pytest tests/test_config.py -q`       | PASS   |
 | `just lint`                                   | PASS   |
 | `just typecheck`                              | PASS   |

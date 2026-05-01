@@ -22,28 +22,28 @@ future user-filing approval metadata.
 
 ### Casillas surface facts
 
-- `src/aeat/casillas/models.py:111-112` defines `CasillaRecord.reviewed_by`
+- `src/aeat/domain/casillas/models.py:111-112` defines `CasillaRecord.reviewed_by`
   and `CasillaRecord.reviewed_at` as persisted boundary fields.
-- `src/aeat/casillas/catalogue.py:77-92` enforces those fields when
+- `src/aeat/domain/casillas/catalogue.py:77-92` enforces those fields when
   `AEAT_CASILLAS_REVIEW_REQUIRED` is enabled and emits user-facing verification
   messages that currently name `reviewed_by` and `reviewed_at`.
-- `src/aeat/casillas/catalogue.py:126` persists canonical JSON through
+- `src/aeat/domain/casillas/catalogue.py:126` persists canonical JSON through
   `catalogue.model_dump(mode="json")`, so the field names on the Pydantic model
   directly control the on-disk key names.
-- `src/aeat/casillas/_test_catalogue.py:30-54` and
-  `src/aeat/casillas/_test_cli.py:18-61` build test fixtures with the old keys
+- `src/aeat/domain/casillas/_test_catalogue.py:30-54` and
+  `src/aeat/domain/casillas/_test_cli.py:18-61` build test fixtures with the old keys
   and assert the current review gate behavior.
 
 ### Manuals surface facts
 
-- `src/aeat/manuals/_schema.py:191-192`, `:238-239`, and `:274-275` define
+- `src/aeat/domain/manuals/_schema.py:191-192`, `:238-239`, and `:274-275` define
   `reviewed_by` / `reviewed_at` on `Rule`, `Section`, and `Manual`.
-- `src/aeat/manuals/_loader.py:120-124` reconstructs `Manual` objects from raw
+- `src/aeat/domain/manuals/_loader.py:120-124` reconstructs `Manual` objects from raw
   JSON payloads, so schema field names also control the accepted and emitted
   manual JSON contract.
-- `src/aeat/manuals/errors.py:26-31` bakes the old field names into the review
+- `src/aeat/domain/manuals/errors.py:26-31` bakes the old field names into the review
   error description.
-- `src/aeat/manuals/test_schema.py`, `test_loader.py`, and `test_verify.py`
+- `src/aeat/domain/manuals/test_schema.py`, `test_loader.py`, and `test_verify.py`
   all encode the old keys in model constructors and committed JSON fixtures.
 
 ### Persisted JSON and contributor docs still use the old keys
@@ -55,7 +55,7 @@ future user-filing approval metadata.
   `corpus/casillas/modelo_390/2025.json`.
 - `docs/casillas.md:109-127`, `:157-158`, and `:220` still documents
   `reviewed_by` / `reviewed_at` as the canonical contributor contract.
-- `src/aeat/cli/manual.py:237-238` prints the old names in the `aeat manual`
+- `src/aeat/entrypoints/cli/manual.py:237-238` prints the old names in the `aeat manual`
   CLI output, so the public presentation layer also needs the rename.
 
 ### Compatibility and migration implications

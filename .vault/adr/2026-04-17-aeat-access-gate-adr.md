@@ -47,11 +47,11 @@ wiring side.
 
 ## Decision
 
-### D1 — `AeatAuthenticator` facade in `aeat.auth`
+### D1 — `AeatAuthenticator` facade in `aeat.adapters.outbound.aeat.auth`
 
 New class `AeatAuthenticator` lives in
-`src/aeat/auth/_authenticator.py` and is re-exported from
-`aeat.auth.__init__`. It owns the composition of:
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` and is re-exported from
+`aeat.adapters.outbound.aeat.auth.__init__`. It owns the composition of:
 
 - `Settings` (the sole input; no per-call args).
 - `CertificateBundle` / `LoadedCertificate` (via the existing
@@ -141,7 +141,7 @@ Behavioural contract:
 
 ### D2 — `AeatSession` pydantic record
 
-New record in `src/aeat/auth/_authenticator.py`:
+New record in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`:
 
 ```python
 class AeatSession(BaseModel):
@@ -172,7 +172,7 @@ Fields:
 - `idle_deadline` — timezone-aware UTC timestamp beyond which the
   session MUST be re-authenticated before further use. Derived as
   `authenticated_at + AEAT_SESSION_IDLE_TTL`. The TTL is a
-  module-level constant in `aeat.auth._authenticator`
+  module-level constant in `aeat.adapters.outbound.aeat.auth._authenticator`
   (`AEAT_SESSION_IDLE_TTL = timedelta(minutes=18)`); **not a new env
   var** (per the anti-fragmentation mandate — AEAT's observed idle
   window is ~20 minutes and 18 minutes gives a safety margin, but
@@ -247,8 +247,8 @@ fragile HTML scraper.
 
 ### D4 — `AeatAccessGate` unified read+write precondition
 
-New callable in `src/aeat/auth/_gate.py`, re-exported from
-`aeat.auth`:
+New callable in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py`, re-exported from
+`aeat.adapters.outbound.aeat.auth`:
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -290,12 +290,12 @@ never injected via `SubmissionEngine.__init__`, never stored on
 cannot swap the gate for a no-op because there is no seam to swap
 through.
 
-**Cross-cutting home rationale:** `aeat.auth._gate` lives in
-`aeat.auth` rather than `aeat.submission` because the gate is
+**Cross-cutting home rationale:** `aeat.adapters.outbound.aeat.auth._gate` lives in
+`aeat.adapters.outbound.aeat.auth` rather than `aeat.adapters.outbound.aeat.export` because the gate is
 cross-cutting (it serves both live-reads via
 `require_live_read()` and live-writes via `require_live_write()`).
-`aeat.submission` imports from `aeat.auth` via the subpackage root
-(`from aeat.auth import AeatAccessGate`) per the project's public-
+`aeat.adapters.outbound.aeat.export` imports from `aeat.adapters.outbound.aeat.auth` via the subpackage root
+(`from aeat.adapters.outbound.aeat.auth import AeatAccessGate`) per the project's public-
 API discipline.
 
 ### D5 — NIF extraction from FNMT cert subject
@@ -335,7 +335,7 @@ CIF (rejected), empty subject (rejected), missing `serialNumber` OID
 
 ### D6 — Fix the BrowserSession cert-propagation regression
 
-`src/aeat/browser/session.py:BrowserSession.create_context()`:
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py:BrowserSession.create_context()`:
 
 - The `auth_backend: object | None` parameter is renamed to
   `cert: LoadedCertificate | None` (typed, not `object`). Type is
@@ -395,7 +395,7 @@ the comment to the charter.
 
 ### D9 — Live test: single `@pytest.mark.live` item
 
-A new live test `src/aeat/auth/test_authenticator_live.py`:
+A new live test `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator_live.py`:
 
 - Marker: `@pytest.mark.live` (the only registered marker; the
   handover prompt's `live_read` / `domain_aeat_remote` are **not**
@@ -438,7 +438,7 @@ The nine-point gate stays as-is; we only change:
 
 ### D11 — Error surface additions
 
-All added to `aeat.errors`-rooted hierarchy via `aeat.auth`:
+All added to `aeat.core.errors`-rooted hierarchy via `aeat.adapters.outbound.aeat.auth`:
 
 - `AeatLiveReadNotEnabledError(AeatError)` — raised by
   `AeatAccessGate.require_live_read()` when `AEAT_LIVE_TESTS_ENABLED`
@@ -497,7 +497,7 @@ Existing errors are not renamed or re-homed.
 
 - No re-home of the certificate loader.
 - No new subpackage (per user's anti-fragmentation mandate;
-  everything lands inside `aeat.auth`).
+  everything lands inside `aeat.adapters.outbound.aeat.auth`).
 - No new env vars.
 - No changes to the R1–R6 write-gate semantics; only the env
   snapshot re-read is consolidated.

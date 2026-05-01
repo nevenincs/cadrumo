@@ -27,19 +27,19 @@ the CLI is touched.
 
 Production scope:
 
-- `src/aeat/cli/workflow/run.py`: drop `--no-dry-run`,
+- `src/aeat/entrypoints/cli/workflow/run.py`: drop `--no-dry-run`,
   `--i-understand-this-is-real`, the matching parameters, the inline
   refuse-branch, the `Console` import (now unused), and force
   `dry_run=True` at the helper call site. Update docstrings.
-- `src/aeat/cli/workflow/next.py`: same shape.
+- `src/aeat/entrypoints/cli/workflow/next.py`: same shape.
 
 Test scope (all colocated, all new):
 
-- `src/aeat/cli/workflow/test_run_help_ascii_safe.py`
-- `src/aeat/cli/workflow/test_next_help_ascii_safe.py`
-- `src/aeat/cli/workflow/test_run_refuses_live_flags.py`
-- `src/aeat/cli/workflow/test_next_refuses_live_flags.py`
-- `src/aeat/submission/test_access_gate_workflow_untouched.py`
+- `src/aeat/entrypoints/cli/workflow/test_run_help_ascii_safe.py`
+- `src/aeat/entrypoints/cli/workflow/test_next_help_ascii_safe.py`
+- `src/aeat/entrypoints/cli/workflow/test_run_refuses_live_flags.py`
+- `src/aeat/entrypoints/cli/workflow/test_next_refuses_live_flags.py`
+- `src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py`
 
 All five tests carry `pytestmark = [pytest.mark.unit,
 pytest.mark.domain_submission]`.
@@ -47,27 +47,27 @@ pytest.mark.domain_submission]`.
 ## Tasks
 
 - Phase 1 - production code excision
-  1. Edit `src/aeat/cli/workflow/run.py`: remove flags, parameters,
+  1. Edit `src/aeat/entrypoints/cli/workflow/run.py`: remove flags, parameters,
      refuse-branch, `Console` import / `_CONSOLE` initialiser, the two
      `arguments` keys; force `dry_run=True`; update docstrings.
-  2. Edit `src/aeat/cli/workflow/next.py`: same shape as `run.py`.
+  2. Edit `src/aeat/entrypoints/cli/workflow/next.py`: same shape as `run.py`.
   3. Sanity-grep `rg -n "no_dry_run|i_understand_this_is_real"
-     src/aeat/cli/workflow` and confirm zero matches.
+     src/aeat/entrypoints/cli/workflow` and confirm zero matches.
   4. Sanity-grep `rg -n "live_transport_supported=True" src/aeat/` and
      confirm only test sites remain.
 
 - Phase 2 - regression tests
-  1. Add `src/aeat/cli/workflow/test_run_help_ascii_safe.py`. Use
-     `typer.testing.CliRunner` against `aeat.cli.app`. Assert exit code
+  1. Add `src/aeat/entrypoints/cli/workflow/test_run_help_ascii_safe.py`. Use
+     `typer.testing.CliRunner` against `aeat.entrypoints.cli.app`. Assert exit code
      0; assert the literal substrings `"--no-dry-run"` and
      `"--i-understand-this-is-real"` are absent from `result.output`.
-  2. Add `src/aeat/cli/workflow/test_next_help_ascii_safe.py`. Mirror.
-  3. Add `src/aeat/cli/workflow/test_run_refuses_live_flags.py`. Invoke
+  2. Add `src/aeat/entrypoints/cli/workflow/test_next_help_ascii_safe.py`. Mirror.
+  3. Add `src/aeat/entrypoints/cli/workflow/test_run_refuses_live_flags.py`. Invoke
      `aeat workflow run --modelo 130 --period 2026Q1 --no-dry-run
      --i-understand-this-is-real`; assert non-zero exit; assert
      "no such option" or equivalent typer text in the output.
-  4. Add `src/aeat/cli/workflow/test_next_refuses_live_flags.py`. Mirror.
-  5. Add `src/aeat/submission/test_access_gate_workflow_untouched.py`.
+  4. Add `src/aeat/entrypoints/cli/workflow/test_next_refuses_live_flags.py`. Mirror.
+  5. Add `src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py`.
      Three pins:
      - default `live_transport_supported=False` via
        `inspect.signature(SubmissionEngine.__init__)`.
@@ -107,17 +107,17 @@ and the outcome.
 
 | Check | Authority | Outcome |
 | --- | --- | --- |
-| Modules live under `src/aeat/<subpackage>/` only | CLAUDE.md src-layout mandate | Pass - all new files are under `src/aeat/cli/workflow/` or `src/aeat/submission/`. |
+| Modules live under `src/aeat/<subpackage>/` only | CLAUDE.md src-layout mandate | Pass - all new files are under `src/aeat/entrypoints/cli/workflow/` or `src/aeat/adapters/outbound/aeat/export/`. |
 | Errors derive from `AeatError` | CLAUDE.md project mandates | N/A - this issue raises no new errors. The existing `typer.Exit` removal is the only error-path change. |
-| Logging via `aeat.logging.get_logger(__name__)` | CLAUDE.md project mandates | N/A - no new log sites. |
+| Logging via `aeat.core.logging.get_logger(__name__)` | CLAUDE.md project mandates | N/A - no new log sites. |
 | Pydantic v2 strict for new data records | CLAUDE.md pydantic mandate | N/A - this issue introduces no new data models. |
 | Pytest markers (Axis A access, Axis B domain) at module level | CLAUDE.md marker mandate | Pass - every new test file is `[pytest.mark.unit, pytest.mark.domain_submission]`. |
 | No mocks / patches / stubs / fakes | CLAUDE.md test mandate | Pass - tests use `typer.testing.CliRunner`, `monkeypatch.delenv` / `setenv`, and `inspect.signature`. No `unittest.mock`, no `pytest_mock`. |
-| Public-API discipline (callers import from `aeat.<subpkg>` only) | CLAUDE.md API mandate | Pass - the access-gate pin imports `AeatAccessGate` from `aeat.auth` and the typed errors from `aeat.submission`, both public namespaces. |
+| Public-API discipline (callers import from `aeat.<subpkg>` only) | CLAUDE.md API mandate | Pass - the access-gate pin imports `AeatAccessGate` from `aeat.adapters.outbound.aeat.auth` and the typed errors from `aeat.adapters.outbound.aeat.export`, both public namespaces. |
 | Trilingual copy via `Translatable` TypedDict | CLAUDE.md i18n mandate | N/A - no new user-facing strings. The removed `refusing:` line was English-only and goes away. |
 | Conventional commits | CLAUDE.md VCS mandate | Pass - planned title `fix(cli/workflow): ...`. |
 | Live-test env var name `AEAT_LIVE_TESTS_ENABLED` (not `AEAT_LIVE_TESTS`) | Memory: canonical live-test env var | Pass - the access-gate pin tests use `AEAT_LIVE_SUBMIT_ENABLED` (the write gate) per the four-factor contract. The read-side env var is irrelevant to this issue. |
-| Sibling branch boundaries | Handover prompt + memory: feature/239-aeat-verify | Pass - this issue does not touch `src/aeat/sede/*` or `src/aeat/auth/_clave_movil.py`. |
+| Sibling branch boundaries | Handover prompt + memory: feature/239-aeat-verify | Pass - this issue does not touch `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/*` or `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`. |
 | Engine `_engine.py` not modified | Handover prompt + ADR | Pass - the new `test_access_gate_workflow_untouched.py` pins the default via constructor introspection without modifying the file. |
 | `cli/workflow/__init__.py` not modified | Handover prompt + ADR iteration 5 | Pass - the visibility / `hidden=` flip belongs to `#397`. |
 | Controlling CLI wireframe ADR not modified | Handover prompt | Pass - the implementation ADR is a child document with its own slug. |
@@ -158,7 +158,7 @@ review -> exec records).
 
 Honesty caveat: the regression tests do not exercise the engine end-to-end
 (no real browser session, no real submitter dispatch). The engine path
-is already covered by existing tests in `src/aeat/submission/`. This
+is already covered by existing tests in `src/aeat/adapters/outbound/aeat/export/`. This
 issue's tests pin the CLI surface and the engine constructor / gate
 contract; they do not re-validate the full submission flow because that
 would expand scope beyond the controlling ADR's iteration-5 prescription.

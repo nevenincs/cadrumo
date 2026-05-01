@@ -26,7 +26,7 @@ back-fill was required for citation completeness.
 
 ## Files modified
 
-- `src/aeat/formulas/_rulesets/test_modelo_130_2024.py` — added 11
+- `src/aeat/domain/formulas/_rulesets/test_modelo_130_2024.py` — added 11
   parametrised threshold-edge cases for the casilla-13 minoración
   helper (`compute_casilla_13_minoracion`). Cases enumerate the four
   RIRPF art. 110.3.c bracket boundaries (9 000 / 10 000 / 11 000 /
@@ -35,7 +35,7 @@ back-fill was required for citation completeness.
   verbatim (100 / 75 / 50 / 25 / 0 €), not from the helper's
   `_CASILLA_13_BRACKETS` table — a typo in the table would fail one
   of these cases.
-- `src/aeat/formulas/_rulesets/test_modelo_130_2025.py` — same
+- `src/aeat/domain/formulas/_rulesets/test_modelo_130_2025.py` — same
   parametrised case-set wired via the 2025 import path. Confirms the
   no-drift invariant the 2025 ruleset relies on.
 

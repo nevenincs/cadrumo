@@ -15,15 +15,15 @@ the project's no-shortcuts policy instead of only proving #230 locally.
 - Modified: `.vault/plan/2026-04-18-draft-approval-staleness-plan.md`
 - Modified: `.vault/audit/2026-04-18-draft-approval-staleness-audit.md`
 - Modified: `.vault/exec/2026-04-18-draft-approval-staleness/2026-04-18-draft-approval-staleness-implementation-summary-exec.md`
-- Modified: `src/aeat/cli/browser/health.py`
-- Modified: `src/aeat/cli/browser/test_health.py`
-- Modified: `src/aeat/schema/test_fetch.py`
-- Modified: `src/aeat/financial/invoices/_service.py`
-- Modified: `src/aeat/financial/invoices/test_reconciliation.py`
-- Modified: `src/aeat/cli/submission/_helpers.py`
-- Modified: `src/aeat/cli/submission/preflight.py`
-- Modified: `src/aeat/cli/submission/dry_run.py`
-- Modified: `src/aeat/cli/submission/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/browser/health.py`
+- Modified: `src/aeat/entrypoints/cli/browser/test_health.py`
+- Modified: `src/aeat/domain/schema/test_fetch.py`
+- Modified: `src/aeat/domain/financial/invoices/_service.py`
+- Modified: `src/aeat/domain/financial/invoices/test_reconciliation.py`
+- Modified: `src/aeat/entrypoints/cli/submission/_helpers.py`
+- Modified: `src/aeat/entrypoints/cli/submission/preflight.py`
+- Modified: `src/aeat/entrypoints/cli/submission/dry_run.py`
+- Modified: `src/aeat/entrypoints/cli/submission/__init__.py`
 
 ## Description
 
@@ -41,13 +41,13 @@ live/deferred tests rather than unit-test doubles.
 
 ## Tests
 
-- `uv run ruff check src/aeat/cli/browser/health.py src/aeat/cli/browser/test_health.py src/aeat/schema/test_fetch.py src/aeat/financial/invoices/_service.py src/aeat/financial/invoices/test_reconciliation.py src/aeat/cli/submission/_helpers.py src/aeat/cli/submission/preflight.py src/aeat/cli/submission/dry_run.py src/aeat/cli/submission/__init__.py`
-- `uv run ty check src/aeat/cli/browser/health.py src/aeat/financial/invoices/_service.py src/aeat/cli/submission/_helpers.py`
-- `uv run pytest src/aeat/cli/browser/test_health.py src/aeat/schema/test_fetch.py src/aeat/financial/invoices/test_reconciliation.py`
-- `uv run pytest src/aeat/cli/submission/test_cli.py src/aeat/submission/test_preflight.py src/aeat/filing/test_filing.py src/aeat/cli/filing/test_filing_cli.py src/aeat/cli/review/test_review_cli.py`
+- `uv run ruff check src/aeat/entrypoints/cli/browser/health.py src/aeat/entrypoints/cli/browser/test_health.py src/aeat/domain/schema/test_fetch.py src/aeat/domain/financial/invoices/_service.py src/aeat/domain/financial/invoices/test_reconciliation.py src/aeat/entrypoints/cli/submission/_helpers.py src/aeat/entrypoints/cli/submission/preflight.py src/aeat/entrypoints/cli/submission/dry_run.py src/aeat/entrypoints/cli/submission/__init__.py`
+- `uv run ty check src/aeat/entrypoints/cli/browser/health.py src/aeat/domain/financial/invoices/_service.py src/aeat/entrypoints/cli/submission/_helpers.py`
+- `uv run pytest src/aeat/entrypoints/cli/browser/test_health.py src/aeat/domain/schema/test_fetch.py src/aeat/domain/financial/invoices/test_reconciliation.py`
+- `uv run pytest src/aeat/entrypoints/cli/submission/test_cli.py src/aeat/adapters/outbound/aeat/export/test_preflight.py src/aeat/application/filing/test_filing.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/review/test_review_cli.py`
 - `uv run python -m playwright install chromium`
-- `uv run pytest src/aeat/browser/test_session.py src/aeat/browser/test_evasion.py`
-- `uv run pytest src/aeat/schema/test_cli.py src/aeat/schema/test_boe_extractor.py`
-- `uv run ruff check src/aeat/browser/test_session.py src/aeat/browser/test_evasion.py src/aeat/schema/test_cli.py src/aeat/schema/test_boe_extractor.py`
+- `uv run pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_evasion.py`
+- `uv run pytest src/aeat/domain/schema/test_cli.py src/aeat/domain/schema/test_boe_extractor.py`
+- `uv run ruff check src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_evasion.py src/aeat/domain/schema/test_cli.py src/aeat/domain/schema/test_boe_extractor.py`
 
 Related audit state is recorded in `2026-04-18-draft-approval-staleness-audit`.

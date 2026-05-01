@@ -10,11 +10,11 @@ related:
 
 # `modelo-100-renta` plan (summary-block MVP)
 
-## Phase 1 — `aeat.borrador` module skeleton
+## Phase 1 — `aeat.adapters.inbound.borrador` module skeleton
 
 ### Step 1.1 — Package + schema
 
-Create `src/aeat/borrador/` per ADR §1. `BorradorFiling` extends `DeclaracionFiling` with `artefact_kind`.
+Create `src/aeat/adapters/inbound/borrador/` per ADR §1. `BorradorFiling` extends `DeclaracionFiling` with `artefact_kind`.
 
 ### Step 1.2 — Detection + extractor ABC
 
@@ -78,9 +78,9 @@ Subagent code review per phase. `docs/concepts/aeat-pdfs.md` Renta section expan
 
 ## Exit criteria per phase
 
-- `uv run ruff check src/aeat/borrador/ src/aeat/formulas/_rulesets/modelo_100_summary_2025.py` — clean.
+- `uv run ruff check src/aeat/adapters/inbound/borrador/ src/aeat/domain/formulas/_rulesets/modelo_100_summary_2025.py` — clean.
 - `uv run ty check` — clean.
-- `uv run pytest -m unit src/aeat/borrador/ src/aeat/formulas/_rulesets/` — green.
+- `uv run pytest -m unit src/aeat/adapters/inbound/borrador/ src/aeat/domain/formulas/_rulesets/` — green.
 - Code-review audit: zero severity-high findings.
 
 ## Kent UX roleplay

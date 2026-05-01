@@ -18,43 +18,43 @@ Research for issue `#281` on generalising the current certificate-only AEAT auth
 
 ### current auth shape is centered on a certificate session, not on a provider contract
 
-- `src/aeat/auth/_authenticator.py` is both the auth facade and the home of the boundary records. `AeatAuthenticator` loads a certificate, verifies the handshake, constructs a browser context, and returns `AeatSession`.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` is both the auth facade and the home of the boundary records. `AeatAuthenticator` loads a certificate, verifies the handshake, constructs a browser context, and returns `AeatSession`.
 - `AeatSession` currently hard-codes certificate details into the public contract: `certificate_thumbprint`, `certificate_subject`, `certificate_nif`, and `handshake`.
 - `AeatLoginAssertion` is similarly certificate-shaped: `handshake_success`, `certificate_recognised`, `parsed_nif`, and `parsed_subject`.
 - `AeatAuthenticator.authenticate()` always calls `load_certificate()` and `verify_handshake()` before it can create a context, which means the top-level auth surface cannot represent a provider that authenticates post-context via a form flow.
 
 ### browser context creation is coupled to a certificate object
 
-- `BrowserSessionLike.create_context()` in `src/aeat/auth/_authenticator.py` and `BrowserSession.create_context()` in `src/aeat/browser/session.py` both accept `cert: LoadedCertificate | None`.
-- `src/aeat/browser/session.py` injects `client_certificates` directly into `browser.new_context()` and stamps `_aeat_certificate_thumbprint` on the returned context.
-- `src/aeat/auth/_certificate_backends/_playwright_context.py` validates that marker and exposes `build_client_certificates_kwarg()`, which makes the browser seam certificate-specific even though only the context-construction phase truly needs provider-specific decoration.
+- `BrowserSessionLike.create_context()` in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` and `BrowserSession.create_context()` in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py` both accept `cert: LoadedCertificate | None`.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py` injects `client_certificates` directly into `browser.new_context()` and stamps `_aeat_certificate_thumbprint` on the returned context.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_playwright_context.py` validates that marker and exposes `build_client_certificates_kwarg()`, which makes the browser seam certificate-specific even though only the context-construction phase truly needs provider-specific decoration.
 - The existing contract shape points toward a more general `BrowserContextProvisioner` boundary: a certificate provider would supply context kwargs and marker metadata, while non-certificate providers would supply a no-op provisioner and perform the login inside the created context.
 
 ### the live-read and live-write policy gate is already provider-agnostic
 
-- `src/aeat/auth/_gate.py` only models env policy and pytest refusal. It does not depend on certificate fields.
-- The only production consumers are `src/aeat/cli/doctor.py` and `src/aeat/submission/_engine.py`, both of which use the gate for environment state reporting rather than for certificate transport.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py` only models env policy and pytest refusal. It does not depend on certificate fields.
+- The only production consumers are `src/aeat/entrypoints/cli/doctor.py` and `src/aeat/adapters/outbound/aeat/export/_engine.py`, both of which use the gate for environment state reporting rather than for certificate transport.
 - The issue requirement to eradicate legacy env logic applies to modernized auth paths, but the current gate itself is not the wrong abstraction. The coupling problem is that downstream code still treats certificate loading as synonymous with “AEAT auth,” while the gate should remain orthogonal to provider selection.
 
 ### downstream protocols still depend on certificate-specific stubs
 
-- `src/aeat/submission/_protocols.py` defines `LoadedCertificate` and `CertificateBackend` stubs, then uses them in `SubmissionEngine` dependencies.
-- `src/aeat/workflow/_protocols.py` imports `LoadedCertificate` from `aeat.submission` and exposes `CertificateBundleProtocol.load() -> LoadedCertificate`.
+- `src/aeat/adapters/outbound/aeat/export/_protocols.py` defines `LoadedCertificate` and `CertificateBackend` stubs, then uses them in `SubmissionEngine` dependencies.
+- `src/aeat/application/workflow/_protocols.py` imports `LoadedCertificate` from `aeat.adapters.outbound.aeat.export` and exposes `CertificateBundleProtocol.load() -> LoadedCertificate`.
 - `src/aeat/status/_protocols.py` defines a `CertificateBackend` with `preload_into_browser_context()`, and `src/aeat/status/_reader.py` assumes authenticated access is obtained by preloading a context rather than by a provider login flow.
-- `src/aeat/cli/submission/_helpers.py` and test modules across `submission`, `workflow`, and `status` build stub certificates directly, so the stub surface needs to move to provider-agnostic session/auth constructs without breaking current certificate behavior.
+- `src/aeat/entrypoints/cli/submission/_helpers.py` and test modules across `submission`, `workflow`, and `status` build stub certificates directly, so the stub surface needs to move to provider-agnostic session/auth constructs without breaking current certificate behavior.
 
 ### direct `AEAT_LIVE_SUBMIT_ENABLED` handling is now small but still isolated from auth abstraction
 
-- `src/aeat/submission/_engine.py` still performs the authoritative inline live-write checks against `settings.aeat_live_submit_enabled` and `PYTEST_CURRENT_TEST`.
-- `src/aeat/auth/_gate.py` snapshots `AEAT_LIVE_SUBMIT_ENABLED` for audit state and exposes a defensive `require_live_write()`.
-- `src/aeat/cli/doctor.py` reports `AEAT_LIVE_SUBMIT_ENABLED` through the gate snapshot.
+- `src/aeat/adapters/outbound/aeat/export/_engine.py` still performs the authoritative inline live-write checks against `settings.aeat_live_submit_enabled` and `PYTEST_CURRENT_TEST`.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py` snapshots `AEAT_LIVE_SUBMIT_ENABLED` for audit state and exposes a defensive `require_live_write()`.
+- `src/aeat/entrypoints/cli/doctor.py` reports `AEAT_LIVE_SUBMIT_ENABLED` through the gate snapshot.
 - No other modernized auth path currently reads `AEAT_LIVE_SUBMIT_ENABLED`, which means the refactor should preserve the submission safety gate while ensuring provider selection and session modeling do not depend on that env var.
 
 ### tests will need contract-level updates, not behavioral rewrites
 
-- `src/aeat/auth/test_authenticator.py` asserts directly against `AeatSession` certificate fields and `AeatLoginAssertion` certificate-shaped fields.
-- `src/aeat/browser/test_session.py` asserts `client_certificates` wiring and the certificate thumbprint marker on the context.
-- `src/aeat/submission/test_engine.py`, `src/aeat/submission/test_preflight.py`, `src/aeat/submission/test_live_submission.py`, and `src/aeat/workflow/test_engine.py` each construct stub `LoadedCertificate` records or certificate backend stand-ins.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py` asserts directly against `AeatSession` certificate fields and `AeatLoginAssertion` certificate-shaped fields.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py` asserts `client_certificates` wiring and the certificate thumbprint marker on the context.
+- `src/aeat/adapters/outbound/aeat/export/test_engine.py`, `src/aeat/adapters/outbound/aeat/export/test_preflight.py`, `src/aeat/adapters/outbound/aeat/export/test_live_submission.py`, and `src/aeat/application/workflow/test_engine.py` each construct stub `LoadedCertificate` records or certificate backend stand-ins.
 - The issue acceptance criteria imply two new test obligations on top of preserving the existing certificate behavior: a provider-protocol conformance test using a `NullAuthProvider`, and JSON round-trips for the provider-detail variants on the new session shape.
 
 ### direct implications for the prerequisite refactor

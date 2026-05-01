@@ -28,19 +28,19 @@ Electrónica.
 - Exec steps: this folder (step1 → step5, summary, code-review).
 
 ## Code produced
-- `src/aeat/auth/certificate.py` — public surface
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` — public surface
   (`CertificateBackend`, `CertificateBundle`, `LoadedCertificate`,
   `HandshakeResult`, error hierarchy, `load_certificate`,
   `preload_into_browser_context`, `verify_handshake`).
-- `src/aeat/auth/_certificate_backends/` — private package with the
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/` — private package with the
   ABC, Playwright primary backend, httpx verify-only backend, and
   two deferred stub backends.
-- `src/aeat/auth/__init__.py` — additive re-exports. Existing Google
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py` — additive re-exports. Existing Google
   auth API untouched.
 - `src/aeat/config.py` + `env/.env.example` — five additive cert
   settings fields.
 - `pyproject.toml` — explicit `cryptography>=46.0.7` dep.
-- `src/aeat/auth/test_certificate.py` + `test_certificate_live.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py` + `test_certificate_live.py`
   — 22 unit tests + 1 gated live test.
 
 ## Verification
@@ -54,7 +54,7 @@ Electrónica.
 ## Out of scope (deferred follow-ups)
 - `USER_DATA_DIR` and `MTLS_PROXY` backends remain stubs.
 - Wiring a `CertificateBundle` through
-  `aeat.browser.session.BrowserSession` to Playwright's
+  `aeat.adapters.outbound.aeat.browser.session.BrowserSession` to Playwright's
   `browser.new_context(client_certificates=[...])` — enabled by the
   `build_client_certificates_kwarg` helper shipped here, but the
   actual `BrowserSession` edit is a separate issue.

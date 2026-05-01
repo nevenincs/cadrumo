@@ -31,10 +31,10 @@ CLI and agentic / LLM-assisted classification flows will consume.
 - Topic: harmonize the financial classification backend so business
   classification, spending-category assignment, personal-income / expense
   classification, and VAT treatment can share one decision surface.
-- Audit surface: `src/aeat/financial/transactions`, `src/aeat/financial/invoices`,
-  `src/aeat/financial/vat`, `src/aeat/financial/categories`,
-  `src/aeat/cli/financial/txs.py`, `src/aeat/cli/financial/invoices.py`,
-  `src/aeat/cli/vat.py`, the current coverage matrices, and GitHub issues /
+- Audit surface: `src/aeat/domain/financial/transactions`, `src/aeat/domain/financial/invoices`,
+  `src/aeat/domain/financial/vat`, `src/aeat/domain/financial/categories`,
+  `src/aeat/entrypoints/cli/financial/txs.py`, `src/aeat/entrypoints/cli/financial/invoices.py`,
+  `src/aeat/entrypoints/cli/vat.py`, the current coverage matrices, and GitHub issues /
   PRs `#236`, `#253`, `#254`, `#255`.
 - Rewrite scope: groundwork artifacts only for this blocked phase. No runtime
   code is changed until the unstable decision-provenance contract is settled.
@@ -49,7 +49,7 @@ CLI and agentic / LLM-assisted classification flows will consume.
 - Invoice persistence is structurally separate. `Invoice` and `InvoiceLine`
   currently expose no VAT verdict fields such as `vat_category`,
   `vat_rule_fired`, decision provenance, or confidence.
-- VAT classification is a pure engine in `aeat.financial.vat.classify_vat`
+- VAT classification is a pure engine in `aeat.domain.financial.vat.classify_vat`
   driven by `VATClassificationCriteria`, but it is not wired into invoice
   persistence or the mutable catalogue services.
 

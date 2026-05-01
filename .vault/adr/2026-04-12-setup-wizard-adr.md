@@ -25,13 +25,13 @@ primitives into a configured environment.
 
 ## decision
 
-Ship `aeat.setup` as a new subpackage with strict pydantic v2 models,
+Ship `aeat.application.setup` as a new subpackage with strict pydantic v2 models,
 a typed `SetupWizard` orchestrator, a pure verifier, and a dedicated
 env-file writer. Wire four Typer subcommands (`setup`, `setup verify`,
 `setup show`, `setup --non-interactive --from <path>`) through the
 existing CLI. No new Settings fields. No live tests in this slice.
 
-### public surface (exported from `aeat.setup`)
+### public surface (exported from `aeat.application.setup`)
 
 - Enums (`StrEnum`):
   `SetupStep`, `SetupOutcome`, `VerifySeverity`.
@@ -67,14 +67,14 @@ wizard records the completed vs skipped set in `SetupResult`.
    password value never reaches the filesystem.
 2. **idempotent-rerun.** Running the wizard twice on the same env
    file with the same answers produces a byte-equal result. Delegated
-   to `aeat.env_io.write_env_vars`, re-verified by a unit test.
+   to `aeat.core.env_io.write_env_vars`, re-verified by a unit test.
 3. **unrelated-keys-preserved.** The wizard only rewrites keys in its
    owned set (enumerated in the research doc). A unit test seeds the
    env file with extra keys and asserts they round-trip untouched.
 4. **typed prompter.** No direct `typer.prompt` calls from the wizard
    body. A `Prompter` Protocol sits between the state machine and
    the I/O layer; the Typer-backed implementation lives in
-   `aeat/cli/setup.py`, and tests use a tiny in-process prompter that
+   `aeat/entrypoints/cli/setup.py`, and tests use a tiny in-process prompter that
    yields canned answers from a queue.
 5. **verifier is pure.** Each check is a small function returning a
    `VerifyFinding`. Checks: certificate path exists and is readable;
@@ -197,7 +197,7 @@ byte-identical to the interactive path.
 - A web UI.
 - Multi-profile management (single profile per env file for v1).
 - Cl@ve auth setup.
-- Hard imports from `aeat.workflow` (#59); `FirstRunRunner` Protocol
+- Hard imports from `aeat.application.workflow` (#59); `FirstRunRunner` Protocol
   stub only.
 - Persisting setup runs to the storage layer.
 - Modifying any in-flight sibling branch's territory (pytest
@@ -214,6 +214,6 @@ byte-identical to the interactive path.
   the Prompter Protocol adds a small indirection over `typer.prompt`.
   Both are worth it for the testability payoff.
 - **Neutral.** The wizard is a client of existing subpackages — it
-  never extends them. Future additions to `aeat.deadlines`,
-  `aeat.auth`, etc. are additive; the wizard picks them up on its
+  never extends them. Future additions to `aeat.domain.deadlines`,
+  `aeat.adapters.outbound.aeat.auth`, etc. are additive; the wizard picks them up on its
   next revision.

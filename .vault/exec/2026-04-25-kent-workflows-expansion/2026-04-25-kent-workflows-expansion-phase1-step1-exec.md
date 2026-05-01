@@ -62,7 +62,7 @@ preserved per ADR D8).
 No new generators authored. All ten classes consume the existing
 `_generic_quarterly_generator.py`, `modelo_100_generator.py`, and
 `modelo_303_generator.py`. Per-modelo label maps were inlined in the
-test file (mirroring `aeat.declaracion.test_quarterly_extractors`).
+test file (mirroring `aeat.adapters.inbound.declaracion.test_quarterly_extractors`).
 
 ## Local gates
 

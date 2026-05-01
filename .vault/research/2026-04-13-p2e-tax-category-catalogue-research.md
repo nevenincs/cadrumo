@@ -19,10 +19,10 @@ Topic: AEAT-aligned spending categories and proportionality rules for autónomo
 activity expenses in 2025.
 
 Audit surface: `#77`, `#104`, `#78`, `#79`, `#91`, `#85`, `#71`,
-`aeat.casillas`, `aeat.manuals`, `aeat.normatives`, `aeat.i18n`, and the root
+`aeat.domain.casillas`, `aeat.domain.manuals`, `aeat.domain.normatives`, `aeat.core.i18n`, and the root
 Typer CLI.
 
-Rewrite scope: new feature artifacts and new `aeat.financial.categories`
+Rewrite scope: new feature artifacts and new `aeat.domain.financial.categories`
 implementation only.
 
 ## Findings
@@ -31,14 +31,14 @@ implementation only.
 
 - `#77` is a pure data substrate. It does not evaluate proportionality, classify
   transactions, or assign VAT regimes at runtime.
-- The public API should live under `aeat.financial.categories`.
-- `src/aeat/financial/providers/` remains owned by `#73` and stays untouched.
-- `src/aeat/financial/vat/` remains owned by `#85` and stays untouched.
+- The public API should live under `aeat.domain.financial.categories`.
+- `src/aeat/domain/financial/providers/` remains owned by `#73` and stays untouched.
+- `src/aeat/domain/financial/vat/` remains owned by `#85` and stays untouched.
 - `#78` and `#79` are direct consumers of the catalogue and its rule profiles.
 
 ### 2. Current-main casilla limits
 
-- Current `aeat.casillas` exposes `MODELO_130` `{01, 02, 03, 18}` and
+- Current `aeat.domain.casillas` exposes `MODELO_130` `{01, 02, 03, 18}` and
   `MODELO_303` `{01, 03, 27, 71}` only.
 - On current main, `MODELO_130:01` is the only direct expense-sensitive box.
 - `MODELO_130:02` and `MODELO_130:18` are derived/result boxes.

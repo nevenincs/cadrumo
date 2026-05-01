@@ -27,21 +27,21 @@ SDK imports outside the LLM provider chokepoint.
 - The package must stay buildable before issue `#20` merges.
 - The project wants one real provider adapter now, not a sprawling matrix of
   partially-tested SDK integrations.
-- The public surface must remain importable from `aeat.llm` only.
+- The public surface must remain importable from `aeat.adapters.outbound.llm` only.
 
 ## Constraints
 
 - All boundary-crossing types must be strict pydantic v2 models.
 - API keys must use `SecretStr` and must never be logged or serialized in the
   public models.
-- Provider SDK imports are allowed only under `src/aeat/llm/_providers/`.
+- Provider SDK imports are allowed only under `src/aeat/adapters/outbound/llm/_providers/`.
 - Settings changes must stay additive in `src/aeat/config.py`.
-- The branch must not hard-import `aeat.i18n` because issue `#20` is still in
+- The branch must not hard-import `aeat.core.i18n` because issue `#20` is still in
   flight.
 
 ## Implementation
 
-- Create a new `src/aeat/llm/` subpackage with:
+- Create a new `src/aeat/adapters/outbound/llm/` subpackage with:
   - public typed exports in `__init__.py`,
   - strict pydantic request / response / cache / usage / translation models,
   - a single async-first `LLMClient.complete()` entry point,
@@ -83,4 +83,4 @@ SDK imports outside the LLM provider chokepoint.
 - The package intentionally does not expose streaming, fine-tuning, or UI-level
   usage browsing in v1.
 - A follow-up after issue `#20` merges must replace the local compatibility shim
-  with the real `aeat.i18n` imports.
+  with the real `aeat.core.i18n` imports.

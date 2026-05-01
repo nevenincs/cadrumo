@@ -11,7 +11,7 @@ related:
 
 Phase 7 added `site_health_probe_url` and
 `site_health_rate_limit_retry_after_default` to
-`aeat.config.Settings` and mirrored them into
+`aeat.core.config.Settings` and mirrored them into
 `env/.env.example`. `tests/test_config.py` is green, enforcing
 alignment automatically.
 

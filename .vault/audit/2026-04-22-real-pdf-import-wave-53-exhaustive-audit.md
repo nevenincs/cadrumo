@@ -51,7 +51,7 @@ The synthetic PDF generator (`tests/fixtures/pdf_corpus/l3_synthetic/
 _generators/_generator_shared.py::format_amount`) only emits `.`
 thousands. Grep confirms zero `\xa0` / ` ` token anywhere in the
 `_generators/` tree. Wave 51's fix is exercised only by the module-
-level primitive test at `src/aeat/_pdf_import/test_label_regex.py:57`;
+level primitive test at `src/aeat/adapters/inbound/pdf/test_label_regex.py:57`;
 the round-trip corpus never sees it.
 
 **Fix**: opt-in `thousands_sep` parameter to `format_amount`, thread

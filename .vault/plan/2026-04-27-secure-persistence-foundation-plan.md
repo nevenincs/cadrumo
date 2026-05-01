@@ -37,7 +37,7 @@ Wave 1 or open Wave 2.
 ## Proposed Changes
 
 Wave 1 lands the governed persistence boundary inside the existing
-`aeat.storage` subpackage. No domain consumer is migrated; every
+`aeat.adapters.persistence.storage` subpackage. No domain consumer is migrated; every
 existing caller (`modelos`, `portals`, `corpus_artifacts`) continues
 to work without modification. Public API additions are documented in
 the ADR's Implementation section. The plan tracks the build order
@@ -62,11 +62,11 @@ verification criteria at every phase boundary.
 
 ### Phase 1 — Sensitivity classification primitive
 
-1. Add `aeat/storage/_classification.py` with `SensitivityClass`
+1. Add `aeat/adapters/persistence/storage/_classification.py` with `SensitivityClass`
    `StrEnum`, `RetentionPolicy` and `RedactionRule` frozen pydantic
    v2 records, `ClassificationPolicy` aggregator, and the default
    policy table as `MappingProxyType`. Public exports added to
-   `aeat/storage/__init__.py`.
+   `aeat/adapters/persistence/storage/__init__.py`.
 2. Tests: every class member has a default policy; default policy
    is immutable at runtime; `default_policy_for` returns the
    expected record per class.
@@ -74,14 +74,14 @@ verification criteria at every phase boundary.
 
 ### Phase 2 — AEAD primitives and HKDF
 
-1. Add `aeat/storage/_crypto.py` with `EncryptedBlob` frozen
+1. Add `aeat/adapters/persistence/storage/_crypto.py` with `EncryptedBlob` frozen
    pydantic record, `encrypt_record`, `decrypt_record`, and
    `derive_key`. Wraps `cryptography.hazmat.primitives.ciphers.aead.AESGCM`.
    Public exports added.
-2. Add `aeat/storage/errors.py` extensions: `PersistenceError`,
+2. Add `aeat/adapters/persistence/storage/errors.py` extensions: `PersistenceError`,
    `EncryptionError`, `DecryptionError`, `KeyDerivationError`,
    `NonceCollisionError`. Each is registered in
-   `aeat/errors/_registry.py` with es / en / hu default messages,
+   `aeat/core/errors/_registry.py` with es / en / hu default messages,
    the appropriate `ErrorCategory`, and `runbook_id=None`.
 3. Tests: round-trip encrypt-then-decrypt for binary, ASCII, and
    unicode plaintext (Spanish accented characters); tag-mismatch
@@ -91,7 +91,7 @@ verification criteria at every phase boundary.
 
 ### Phase 3 — Master-key provider
 
-1. Add `aeat/storage/_master_key.py` with `MasterKeyProvider`
+1. Add `aeat/adapters/persistence/storage/_master_key.py` with `MasterKeyProvider`
    protocol, `KeyringMasterKeyProvider` (lazy import of `keyring`),
    `FileFallbackMasterKeyProvider` (scrypt KDF + AES-GCM-wrapped
    master key file), and `EphemeralMasterKeyProvider` for tests.
@@ -99,7 +99,7 @@ verification criteria at every phase boundary.
    `aeat_secret_store_backend` setting (default `auto`).
 2. Add `aeat_secret_store_dir` setting (default `var/secrets`),
    path-normalised. Document it in `env/.env.example`.
-3. Add `aeat/storage/errors.py` extensions: `SecretStoreError`,
+3. Add `aeat/adapters/persistence/storage/errors.py` extensions: `SecretStoreError`,
    `KeyringUnavailableError`, `MasterKeyUnavailableError`. Register
    error codes (categories `INTEGRITY` and `AUTH`).
 4. Add `keyring` to `pyproject.toml` `optional-dependencies`
@@ -114,7 +114,7 @@ verification criteria at every phase boundary.
 
 ### Phase 4 — File-lock helper
 
-1. Add `aeat/storage/_lock.py` with `exclusive_file_lock(path,
+1. Add `aeat/adapters/persistence/storage/_lock.py` with `exclusive_file_lock(path,
    timeout)` context manager. Stdlib only (`fcntl` on POSIX,
    `msvcrt` on Windows). Add `LockAcquisitionError` to errors and
    register the code (category `LOCKED`, retryable `True`).
@@ -126,7 +126,7 @@ verification criteria at every phase boundary.
 
 ### Phase 5 — Encrypted column TypeDecorators
 
-1. Add `aeat/storage/_encrypted_columns.py` with `EncryptedString`,
+1. Add `aeat/adapters/persistence/storage/_encrypted_columns.py` with `EncryptedString`,
    `EncryptedBytes`, `EncryptedJSON`, `HashedLookup`. Each
    `TypeDecorator` consults the active master key provider via the
    process-singleton factory. Public exports added.
@@ -139,7 +139,7 @@ verification criteria at every phase boundary.
 
 ### Phase 6 — Encrypted blob store
 
-1. Add `aeat/storage/_blob_store.py` with `EncryptedBlobStore`
+1. Add `aeat/adapters/persistence/storage/_blob_store.py` with `EncryptedBlobStore`
    repository. Public records: `BlobManifest` (frozen pydantic v2)
    and `BlobReference`. Configuration via `aeat_blob_store_dir`
    (new setting, path-normalised, default `var/blobs`).
@@ -158,7 +158,7 @@ verification criteria at every phase boundary.
 
 ### Phase 7 — Schema-version envelope
 
-1. Add `aeat/storage/_envelope.py` with generic `Envelope[PayloadT]`
+1. Add `aeat/adapters/persistence/storage/_envelope.py` with generic `Envelope[PayloadT]`
    pydantic v2 frozen model, `EncryptionMetadata` frozen record,
    `load_envelope`, `save_envelope`, and a stub `migrate_envelope`
    protocol for future per-domain migrators (no concrete migrator in
@@ -186,7 +186,7 @@ verification criteria at every phase boundary.
 
 ### Phase 9 — Secret store
 
-1. Add `aeat/storage/_secret_store.py` with `SecretRecord` frozen
+1. Add `aeat/adapters/persistence/storage/_secret_store.py` with `SecretRecord` frozen
    pydantic v2 model, `SecretStore` repository (`put`, `get`,
    `delete`, `list`, `rotate`), and an SQLite-backed lookup index
    (`secret_index` table with `HashedLookup` PK and a digest pointer
@@ -210,7 +210,7 @@ verification criteria at every phase boundary.
 
 ### Phase 10 — Audit-sink redaction contract
 
-1. Add `aeat/storage/_redaction.py` with `RedactionRule` frozen
+1. Add `aeat/adapters/persistence/storage/_redaction.py` with `RedactionRule` frozen
    pydantic v2 record (regex pattern, replacement strategy:
    `SHA256_PREFIX` | `HOST_ONLY` | `FINGERPRINT` | `ELLIPSIS`),
    `redact(value, *, rules)` helper, and a default rule set as
@@ -225,7 +225,7 @@ verification criteria at every phase boundary.
 
 ### Phase 11 — Public surface, docs, and substrate-level smoke
 
-1. Update `aeat/storage/__init__.py` to export every new public
+1. Update `aeat/adapters/persistence/storage/__init__.py` to export every new public
    symbol per the ADR. Sort `__all__` alphabetically.
 2. Add a substrate-level smoke test that exercises the full chain
    end-to-end: master-key provider (file backend) → encrypted
@@ -241,8 +241,8 @@ verification criteria at every phase boundary.
 1. Run `vaultspec-code-review` over every file changed by Wave 1.
    Address every CRITICAL and HIGH finding before proceeding.
 2. Run a fresh Codex security audit narrowed to Wave-1 surface
-   (the new `aeat.storage` modules + `aeat.config` extensions +
-   `aeat.errors._registry` extensions). Address every CRITICAL
+   (the new `aeat.adapters.persistence.storage` modules + `aeat.core.config` extensions +
+   `aeat.core.errors._registry` extensions). Address every CRITICAL
    and HIGH finding before proceeding.
 3. Update the PR description body with the Wave-1 summary, the
    gate's findings, and the Wave-2 entry-point research seed.
@@ -278,7 +278,7 @@ substrate is verified by:
   pytest-mock, no time-machine, no vcr.
 - Every new public symbol is documented with a Google-style
   docstring, has full type hints, and is exported from
-  `aeat/storage/__init__.py` with a sorted `__all__` entry.
+  `aeat/adapters/persistence/storage/__init__.py` with a sorted `__all__` entry.
 - Every new error class registers an `ErrorCode` row with es / en /
   hu default messages.
 - The four `just` gates (`lint`, `typecheck`, `test`, `hooks`) are
@@ -308,7 +308,7 @@ constraints:
   `EncryptionMetadata`, `Envelope`, `SecretRecord`,
   `SecretStoreBackend` enum) is frozen and strict. Confirmed.
 - Public API discipline: callers continue to import only from
-  `aeat.storage`. Internal modules remain underscore-prefixed.
+  `aeat.adapters.persistence.storage`. Internal modules remain underscore-prefixed.
   Confirmed.
 - No mocks: every test uses real I/O against `tmp_path`, real
   in-memory SQLAlchemy session, real `cryptography` primitives,
@@ -334,8 +334,8 @@ constraints:
 - Cross-feature collisions: in-flight branches (#321 modelo-130,
   the held #432 live-submit-forbidden, #395 kind-registry,
   the merged #239 aeat-verify) own disjoint subpackages. Wave 1's
-  surface (`aeat.storage`, `aeat.config`, `aeat.errors`,
-  `aeat._paths`, `env/.env.example`) does not overlap with any of
+  surface (`aeat.adapters.persistence.storage`, `aeat.core.config`, `aeat.core.errors`,
+  `aeat.core.paths`, `env/.env.example`) does not overlap with any of
   them. Confirmed.
 
 The plan is approved for execution. The next vault artifact is the

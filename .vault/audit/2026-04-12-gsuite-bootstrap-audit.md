@@ -31,7 +31,7 @@ catches drift. No action.
 
 ### CONFIG-002 | INFO | env_io is comment-preserving and append-stable
 
-The writer in `aeat.env_io` walks the existing file line-by-line,
+The writer in `aeat.core.env_io` walks the existing file line-by-line,
 rewrites only the keys it owns, appends unknown keys at the end, and
 preserves blank lines and comments verbatim. Single-process bootstrap
 flow means we accept the small race window where two parallel
@@ -82,7 +82,7 @@ touches Google libraries). No action.
 Typer requires `typer.Argument(...)` and `typer.Option(...)` literally
 inside parameter defaults; ruff B008 flags this as a function call in
 an argument default. Suppressed via per-file ignore for
-`src/aeat/cli/**/*.py` rather than scattering noqa comments. No
+`src/aeat/entrypoints/cli/**/*.py` rather than scattering noqa comments. No
 action.
 
 ### CLI-003 | INFO | Doctor never crashes on per-row failures
@@ -172,7 +172,7 @@ verifies the final state.
 
 ### TEST-001 | INFO | All tests carry markers per CLAUDE.md
 
-Every test file in `src/aeat/cli/` and `src/aeat/` carries either
+Every test file in `src/aeat/entrypoints/cli/` and `src/aeat/` carries either
 `@pytest.mark.unit` or `@pytest.mark.live`. The pre-existing
 `tests/test_config.py` does not, but it pre-dates this feature and is
 out of scope for this audit.

@@ -21,7 +21,7 @@ per-modelo builders) have nothing concrete to integrate against.
 
 ## Decision
 
-Introduce `aeat.filing` — a new subpackage that owns the typed
+Introduce `aeat.application.filing` — a new subpackage that owns the typed
 public API for building, validating, and inspecting `FilingDraft`
 records.
 
@@ -54,7 +54,7 @@ All boundary-crossing records are strict pydantic v2 models with
 
 `FilingBuilder` is an abstract base class with a single
 `build(period, profile, inputs) -> FilingDraft` method.
-Implementations live under `src/aeat/filing/_builders/` and are
+Implementations live under `src/aeat/application/filing/_builders/` and are
 registered via a private `_BUILDER_REGISTRY` keyed by modelo
 string ID. The PoC ships `Modelo130Builder` only.
 
@@ -78,7 +78,7 @@ is invoked once by `build_draft` and again by `validate_draft`.
 
 ### Cross-module Protocols
 
-`aeat.filing._protocols` declares Protocols for every upstream
+`aeat.application.filing._protocols` declares Protocols for every upstream
 collaborator (`ModeloIdentity`, `CasillaSchema`, `CasillaCollection`,
 `CasillaSchemaProvider`, `DeadlineStatus`, `DeadlineChecker`). The
 PoC ships hand-written concrete implementations under
@@ -88,7 +88,7 @@ once the upstream subpackages land.
 
 ### Errors
 
-A small hierarchy under `aeat.errors.AeatError`:
+A small hierarchy under `aeat.core.errors.AeatError`:
 
 - `FilingDraftError` — base for the subpackage.
 - `FilingBuilderError` — builder selection / execution failure.
@@ -100,13 +100,13 @@ A small hierarchy under `aeat.errors.AeatError`:
 
 ### CLI
 
-A new `aeat.cli.filing` Typer sub-app wires four commands into the
+A new `aeat.entrypoints.cli.filing` Typer sub-app wires four commands into the
 root `aeat` CLI: `build`, `validate`, `show`, `list`. Drafts are
 written as JSON files under `AEAT_DRAFTS_DIR`.
 
 ### Settings
 
-Two additive settings on `aeat.config.Settings`:
+Two additive settings on `aeat.core.config.Settings`:
 
 - `aeat_drafts_dir: Path` — default `<PROJECT_ROOT>/var/drafts`.
 - `aeat_draft_fail_on_warning: bool` — default `False`.
@@ -119,8 +119,8 @@ Both are documented in `env/.env.example`; the alignment test in
 - Downstream issues (per-modelo builders, submission engine,
   storage integration) inherit a stable, frozen API surface and
   can pin the enum/model imports today.
-- The Protocol stubs for `aeat.casillas`, `aeat.schema`,
-  `aeat.deadlines`, `aeat.models` create a small rebase cost when
+- The Protocol stubs for `aeat.domain.casillas`, `aeat.domain.schema`,
+  `aeat.domain.deadlines`, `aeat.domain.modelos` create a small rebase cost when
   those subpackages land — explicitly accepted.
 - The `FilingDraft.draft_id` is content-addressed and stable; the
   same `(modelo, period, profile, inputs)` tuple always produces

@@ -51,7 +51,7 @@ workflow engine (#59, Protocol-stubbed until it lands).
    `aeat setup show` / `aeat setup --non-interactive --from <path>`.
 7. **No new Settings fields.** The wizard reads existing Settings and
    writes the existing env var names — its job is UX, not surface.
-8. **No hard import from `aeat.workflow`.** #59 is in flight. A
+8. **No hard import from `aeat.application.workflow`.** #59 is in flight. A
    Protocol stub (`FirstRunRunner`) keeps the wizard honest about the
    dependency without pinning the implementation.
 
@@ -59,16 +59,16 @@ workflow engine (#59, Protocol-stubbed until it lands).
 
 | Surface                | Subpackage            | Relevant type / env var                         |
 |------------------------|-----------------------|--------------------------------------------------|
-| Profile                | `aeat.deadlines`      | `AutonomoProfile`, `IVARegime`                   |
-| Certificate            | `aeat.auth`           | `CertificateBundle`, `CertificateBackend`        |
-| Language               | `aeat.i18n`           | `Language` (`es`/`en`/`hu`)                      |
-| Output dirs            | `aeat.config`         | `aeat_drafts_dir`, `aeat_submissions_dir`, etc.  |
-| Manuals corpus         | `aeat.manuals`        | `aeat_manuals_root`                              |
-| Live tests opt-in      | `aeat.config`         | `aeat_live_tests_enabled`                        |
-| Env-file rewrite       | `aeat.env_io`         | `read_env_file`, `write_env_vars`                |
-| Workflow (stub)        | `aeat.workflow` (#59) | `FirstRunRunner` Protocol — to be wired later    |
+| Profile                | `aeat.domain.deadlines`      | `AutonomoProfile`, `IVARegime`                   |
+| Certificate            | `aeat.adapters.outbound.aeat.auth`           | `CertificateBundle`, `CertificateBackend`        |
+| Language               | `aeat.core.i18n`           | `Language` (`es`/`en`/`hu`)                      |
+| Output dirs            | `aeat.core.config`         | `aeat_drafts_dir`, `aeat_submissions_dir`, etc.  |
+| Manuals corpus         | `aeat.domain.manuals`        | `aeat_manuals_root`                              |
+| Live tests opt-in      | `aeat.core.config`         | `aeat_live_tests_enabled`                        |
+| Env-file rewrite       | `aeat.core.env_io`         | `read_env_file`, `write_env_vars`                |
+| Workflow (stub)        | `aeat.application.workflow` (#59) | `FirstRunRunner` Protocol — to be wired later    |
 
-The env-file writer in `aeat.env_io.write_env_vars` already
+The env-file writer in `aeat.core.env_io.write_env_vars` already
 (a) preserves comments and blank lines, (b) rewrites existing keys in
 place, and (c) appends new keys in insertion order. That gives us
 idempotency and unrelated-key preservation for free — we just need to
@@ -134,11 +134,11 @@ second side effect of `SetupWizard.run()`.
 
 ## decisions surfaced for the plan
 
-- Subpackage layout mirrors `aeat.status` / `aeat.deadlines`:
+- Subpackage layout mirrors `aeat.status` / `aeat.domain.deadlines`:
   `_models.py`, `_errors.py`, `_env_writer.py`, `_verifier.py`,
   `_wizard.py`, `_protocols.py`, `_prompter.py`, `__init__.py`.
-- CLI lives at `src/aeat/cli/setup.py` and is registered in
-  `src/aeat/cli/__init__.py` via `app.add_typer(setup_module.app, ...)`.
+- CLI lives at `src/aeat/entrypoints/cli/setup.py` and is registered in
+  `src/aeat/entrypoints/cli/__init__.py` via `app.add_typer(setup_module.app, ...)`.
 - Unit tests are colocated: `test_models.py`, `test_env_writer.py`,
   `test_verifier.py`, `test_wizard.py`.
 - No live tests. No new Settings. No `.env.example` edits.

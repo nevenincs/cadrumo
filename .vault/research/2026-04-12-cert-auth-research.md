@@ -18,7 +18,7 @@ Issue #8 asks for a programmatic path that:
 
 1. Parses the PKCS#12 bundle.
 2. Presents the client certificate during the TLS handshake with AEAT.
-3. Integrates with the existing Playwright-driven `aeat.browser` subpackage.
+3. Integrates with the existing Playwright-driven `aeat.adapters.outbound.aeat.browser` subpackage.
 
 Cl@ve and DNIe are explicitly out of scope.
 
@@ -136,7 +136,7 @@ cert-binding evidence.
 none of them expose a `client_certificates` kwarg — the MCP surface is a
 high-level navigator, not a context factory. Our programmatic path cannot
 rely on it for cert auth; we must use the in-process `playwright.async_api`
-directly, which is already how `aeat.browser.session` operates.
+directly, which is already how `aeat.adapters.outbound.aeat.browser.session` operates.
 
 ## 7. Pydantic v2 Strict / SecretStr Discipline
 The issue's pinned pydantic mandate forces:

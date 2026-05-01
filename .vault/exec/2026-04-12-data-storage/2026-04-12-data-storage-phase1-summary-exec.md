@@ -26,7 +26,7 @@ landed in one commit on branch `feature/10-data-storage`.
 - `env/.env.example`: mirrored the three new fields with commented defaults.
 - `tests/test_config.py` alignment stayed green without edit.
 
-### storage subpackage (`src/aeat/storage/`)
+### storage subpackage (`src/aeat/adapters/persistence/storage/`)
 
 - `errors.py` — `StorageError(AeatError)`, `MigrationError`, `RepositoryError`.
 - `_orm.py` — internal SQLAlchemy 2.x declarative base and mappers for
@@ -49,7 +49,7 @@ landed in one commit on branch `feature/10-data-storage`.
 - `alembic.ini` at the repo root with `path_separator = os` and a blank
   `sqlalchemy.url` (injected at runtime).
 - `migrations/env.py` — pulls URL from `Settings` when not injected; uses
-  `aeat.logging.get_logger`.
+  `aeat.core.logging.get_logger`.
 - `migrations/script.py.mako` — SQLAlchemy 2.x-style template.
 - `migrations/versions/0001_initial.py` — hand-written initial revision
   creating the three tables with symmetric upgrade/downgrade.

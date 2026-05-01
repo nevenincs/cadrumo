@@ -19,10 +19,10 @@ Comprehensive audit and research of the `AuthProvider` ecosystem following the m
 
 The audit confirms that the `AuthProvider` implementation and its supporting models strictly adhere to the "no-leak" mandate:
 
-*   **Secret Protection**: `LoadedCertificate` (in `src/aeat/auth/_providers/_certificate/certificate.py`) utilizes `pydantic.PrivateAttr` for `_pkcs12_bytes`, `_password`, and `_private_key_handle`. These fields are excluded from `model_dump()`, `model_dump_json()`, and `repr()`.
+*   **Secret Protection**: `LoadedCertificate` (in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers/_certificate/certificate.py`) utilizes `pydantic.PrivateAttr` for `_pkcs12_bytes`, `_password`, and `_private_key_handle`. These fields are excluded from `model_dump()`, `model_dump_json()`, and `repr()`.
 *   **Metadata Safety**: The `AeatAuthenticator._capture_storage_state_locked` method persists a `.meta.json` sidecar. Audit confirms this sidecar only contains the certificate thumbprint, subject, NIF, and handshake timestamps/results. No private key material or passphrases are persisted.
 *   **Logging**: Review of `load_certificate` and `authenticate` logs shows only public identifiers (thumbprint, subject, NIF) are recorded.
-*   **File Hardening**: The `_restrict_file_permissions` utility in `src/aeat/auth/_authenticator.py` implements OS-specific hardening:
+*   **File Hardening**: The `_restrict_file_permissions` utility in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` implements OS-specific hardening:
     *   **Windows**: Uses `icacls.exe` to strip inheritance and grant full control only to the current user (via `getpass.getuser()` and `USERDOMAIN` environment variables).
     *   **POSIX**: Uses `os.chmod(path, 0o600)`.
     *   **Edge Case**: If `icacls` fails or is unavailable, the system logs a warning but continues. This is acceptable as a best-effort hardening, but could be elevated to a failure in high-security environments.

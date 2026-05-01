@@ -13,7 +13,7 @@ related:
 ## Scope
 
 - **Wave 9** (`0c09bf7`) — cluster D phase 2: Modelo 303 v2025 extractor, synthetic generator, registry extension, 3 round-trip tests.
-- **Wave 10** (`9c0f1b2`) — cluster F MVP: new `aeat.borrador` module family, Modelo 100 summary-block extractor (27 casillas), partial `modelo_100.summary.2025` ruleset (12 casillas, 4 formulas), `--from-borrador` CLI flag, synthetic Modelo 100 generator, 5 initial unit tests.
+- **Wave 10** (`9c0f1b2`) — cluster F MVP: new `aeat.adapters.inbound.borrador` module family, Modelo 100 summary-block extractor (27 casillas), partial `modelo_100.summary.2025` ruleset (12 casillas, 4 formulas), `--from-borrador` CLI flag, synthetic Modelo 100 generator, 5 initial unit tests.
 
 `vaultspec-code-reviewer` ran over both waves; the report surfaced two HIGH (docs-only), four MEDIUM (test coverage + primitive duplication), three LOW (correctness confirmations).
 
@@ -55,7 +55,7 @@ New `TestSparseExtraction::test_sparse_predeclaracion_yields_fewer_values` — e
 
 ### MEDIUM-5 — `apply_label_regex` duplicated (**deferred**)
 
-Borrador + declaración carry separate primitives with subtly different return shapes. Refactor to `src/aeat/_pdf_import/_shared.py` scheduled for cluster D phase 3 when a third declaración extractor is added.
+Borrador + declaración carry separate primitives with subtly different return shapes. Refactor to `src/aeat/adapters/inbound/pdf/_shared.py` scheduled for cluster D phase 3 when a third declaración extractor is added.
 
 ### LOW-1 — `_BORRADOR_RE` liberal regex (**accepted**)
 

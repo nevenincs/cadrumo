@@ -17,7 +17,7 @@ Worktree: `Y:/code/aeat-worktrees/feature-183-modelo-303-formulas`
 
 ## Goal
 
-Ship the Modelo 303 ruleset on the `aeat.formulas` engine for fiscal
+Ship the Modelo 303 ruleset on the `aeat.domain.formulas` engine for fiscal
 years 2024 and 2025, plus the VAT classification substrate
 extensions (issuer/customer residence, customer tax status,
 transaction kind axes; period-keyed catalogue mapping infrastructure;
@@ -45,7 +45,7 @@ member, and the bridge types (`CasillaRole`,
 
 ### Step 1.1 — Extend `VATCategory` enum
 
-File: `src/aeat/financial/vat/_schema.py`
+File: `src/aeat/domain/financial/vat/_schema.py`
 
 - Append `DOMESTIC_REVERSE_CHARGE = "domestic_reverse_charge"` to
   `VATCategory`. Place it after `DOMESTIC_NOT_SUBJECT` to keep
@@ -54,14 +54,14 @@ File: `src/aeat/financial/vat/_schema.py`
 
 ### Step 1.2 — Update `test_categories.py`
 
-File: `src/aeat/financial/vat/test_categories.py`
+File: `src/aeat/domain/financial/vat/test_categories.py`
 
 - Bump `expected_members` to 17, including
   `DOMESTIC_REVERSE_CHARGE`.
 
 ### Step 1.3 — Add classification module
 
-New file: `src/aeat/financial/vat/_classification.py`
+New file: `src/aeat/domain/financial/vat/_classification.py`
 
 - Imports: `date`, `StrEnum`, pydantic v2, relative imports of
   `EUMemberState`, `VATCategory`, `VATRate`, `VATRateKind`,
@@ -96,7 +96,7 @@ New file: `src/aeat/financial/vat/_classification.py`
 
 ### Step 1.4 — Add Modelo 303 casilla bridge module
 
-New file: `src/aeat/financial/vat/_modelo_303_mapping.py`
+New file: `src/aeat/domain/financial/vat/_modelo_303_mapping.py`
 
 - Imports per ADR §10.
 - `MODELO_303_CASILLA_MAPPING` as a `MappingProxyType` over a
@@ -114,13 +114,13 @@ New file: `src/aeat/financial/vat/_modelo_303_mapping.py`
 
 ### Step 1.5 — Update package `__init__.py`
 
-File: `src/aeat/financial/vat/__init__.py`
+File: `src/aeat/domain/financial/vat/__init__.py`
 
 - Re-export everything per ADR §11. Update `__all__`.
 
 ### Step 1.6 — Tests
 
-New file: `src/aeat/financial/vat/test_classification.py`
+New file: `src/aeat/domain/financial/vat/test_classification.py`
 
 - `@pytest.mark.unit`-marked tests for every rule + boundary
   miss + UNKNOWN fall-through (≥30 cases).
@@ -128,7 +128,7 @@ New file: `src/aeat/financial/vat/test_classification.py`
   return the same `matched_rule_id` and `category` across N
   invocations.
 
-New file: `src/aeat/financial/vat/test_modelo_303_mapping.py`
+New file: `src/aeat/domain/financial/vat/test_modelo_303_mapping.py`
 
 - Asserts every `VATCategory` member is either mapped or
   explicitly out-of-scope.
@@ -139,7 +139,7 @@ New file: `src/aeat/financial/vat/test_modelo_303_mapping.py`
 
 ### Step 1.7 — Update existing `_catalogue.py` for the new member
 
-File: `src/aeat/financial/vat/_catalogue.py`
+File: `src/aeat/domain/financial/vat/_catalogue.py`
 
 - Add a `_DOMESTIC_REVERSE_CHARGE` `VATRegulation` record with
   trilingual labels, `triggers_when` referencing Art. 84.Uno.2º,
@@ -154,7 +154,7 @@ File: `src/aeat/financial/vat/_catalogue.py`
 
 ```
 just lint
-uv run pytest src/aeat/financial/vat -m unit
+uv run pytest src/aeat/domain/financial/vat -m unit
 ```
 
 Both must pass. Coverage on the new code ≥80 %.
@@ -163,7 +163,7 @@ Both must pass. Coverage on the new code ≥80 %.
 
 ### Step 2.1 — Add `VAT_CATALOGUES_BY_YEAR` + `resolve_catalogue`
 
-File: `src/aeat/financial/vat/_catalogue.py`
+File: `src/aeat/domain/financial/vat/_catalogue.py`
 
 - Below `VAT_CATALOGUE_2025`:
 
@@ -180,12 +180,12 @@ def resolve_catalogue(*, on: date) -> VATCatalogue:
     """
 ```
 
-- Logging: `aeat.logging.get_logger(__name__).debug(...)` on
+- Logging: `aeat.core.logging.get_logger(__name__).debug(...)` on
   fallback. No `print`.
 
 ### Step 2.2 — Tests
 
-File: `src/aeat/financial/vat/test_catalogue.py` (extend
+File: `src/aeat/domain/financial/vat/test_catalogue.py` (extend
 existing).
 
 - Test `resolve_catalogue(on=date(2025, 6, 1))` returns the 2025
@@ -198,7 +198,7 @@ existing).
 
 ### Step 3.1 — Refactor ES rate definitions
 
-File: `src/aeat/financial/vat/_rates.py`
+File: `src/aeat/domain/financial/vat/_rates.py`
 
 - Add `_EFFECTIVE_FROM_2024 = date(2024, 1, 1)` and
   `_EFFECTIVE_UNTIL_2024 = date(2024, 12, 31)`.
@@ -215,14 +215,14 @@ File: `src/aeat/financial/vat/_rates.py`
 
 ### Step 3.2 — Add `VatRateOverlapError`
 
-File: `src/aeat/financial/vat/errors.py`
+File: `src/aeat/domain/financial/vat/errors.py`
 
 - `class VatRateOverlapError(VatError):` with a docstring
   citing the ADR.
 
 ### Step 3.3 — Tests
 
-New file: `src/aeat/financial/vat/test_rates_temporal.py`
+New file: `src/aeat/domain/financial/vat/test_rates_temporal.py`
 
 - `lookup_rate(EUMemberState.ES, VATRateKind.GENERAL,
   date(2024, 6, 15)).pct == Decimal("21")` (2024 baseline).
@@ -236,7 +236,7 @@ New file: `src/aeat/financial/vat/test_rates_temporal.py`
 
 ### Step 3.4 — Update existing rate tests
 
-File: `src/aeat/financial/vat/test_rates.py`
+File: `src/aeat/domain/financial/vat/test_rates.py`
 
 - The existing assertion that `lookup_rate(ES, GENERAL,
   date(2025, 6, 1)).pct == 21` continues to pass.
@@ -246,7 +246,7 @@ File: `src/aeat/financial/vat/test_rates.py`
 
 ### Step 4.1 — `modelo_303_2025.py`
 
-New file: `src/aeat/formulas/_rulesets/modelo_303_2025.py`
+New file: `src/aeat/domain/formulas/_rulesets/modelo_303_2025.py`
 
 - Pattern: copy structure from `modelo_130_2025.py`.
 - Imports: `date`, `Decimal`, `ModeloCode` from `...models`,
@@ -289,7 +289,7 @@ New file: `src/aeat/formulas/_rulesets/modelo_303_2025.py`
 
 ### Step 4.2 — `modelo_303_2024.py`
 
-New file: `src/aeat/formulas/_rulesets/modelo_303_2024.py`
+New file: `src/aeat/domain/formulas/_rulesets/modelo_303_2024.py`
 
 - Mirror of 2025 module with `_EFFECTIVE_FROM = date(2024, 1, 1)`
   and `_EFFECTIVE_TO = date(2024, 12, 31)`.
@@ -302,7 +302,7 @@ New file: `src/aeat/formulas/_rulesets/modelo_303_2024.py`
 
 ### Step 4.3 — Register both rulesets
 
-File: `src/aeat/formulas/_rulesets/__init__.py`
+File: `src/aeat/domain/formulas/_rulesets/__init__.py`
 
 - Import `MODELO_303_2024` and `MODELO_303_2025` and add to
   `ALL_RULESETS`.
@@ -310,7 +310,7 @@ File: `src/aeat/formulas/_rulesets/__init__.py`
 
 ### Step 4.4 — Unit tests for ruleset loading
 
-New file: `src/aeat/formulas/_rulesets/test_modelo_303_ruleset.py`
+New file: `src/aeat/domain/formulas/_rulesets/test_modelo_303_ruleset.py`
 
 - Round-trip: both rulesets validate at import time.
 - Period bounds match the file constants.
@@ -333,7 +333,7 @@ New file: `src/aeat/formulas/_rulesets/test_modelo_303_ruleset.py`
 
 ### Step 4.5 — Engine derivation tests
 
-New file: `src/aeat/formulas/_rulesets/test_modelo_303_2025.py`
+New file: `src/aeat/domain/formulas/_rulesets/test_modelo_303_2025.py`
 
 - ≥10 worked-example scenarios, each `Engine.derive(ruleset=
   MODELO_303_2025, inputs={...}).entries` asserted at the
@@ -372,7 +372,7 @@ New file: `src/aeat/formulas/_rulesets/test_modelo_303_2025.py`
 
 ### Step 4.6 — Engine derivation tests (2024)
 
-New file: `src/aeat/formulas/_rulesets/test_modelo_303_2024.py`
+New file: `src/aeat/domain/formulas/_rulesets/test_modelo_303_2024.py`
 
 - A subset of the 2025 scenarios re-targeted at the 2024
   ruleset (since rates are identical, expected values match).
@@ -383,7 +383,7 @@ New file: `src/aeat/formulas/_rulesets/test_modelo_303_2024.py`
 ### Step 4.7 — Filing-builder cross-check (sanity)
 
 Optional but inexpensive: a colocated test under
-`src/aeat/formulas/_rulesets/test_modelo_303_vs_filing.py` that
+`src/aeat/domain/formulas/_rulesets/test_modelo_303_vs_filing.py` that
 materialises one input set, runs `Engine.derive` AND the
 existing `Modelo303Builder.build`, and asserts the engine's
 ledger value matches the builder's `FilingValue` for every
@@ -427,11 +427,11 @@ offender and re-run; do NOT use `--no-verify`.
 Conventional commit:
 
 ```
-feat(formulas): Modelo 303 (VAT trimestral) ruleset on aeat.formulas (#183)
+feat(formulas): Modelo 303 (VAT trimestral) ruleset on aeat.domain.formulas (#183)
 
 Adds period-versioned rulesets for fiscal years 2024 and 2025 covering
 the régimen general casillas (01-09, 28-45, 64-71). Extends
-aeat.financial.vat with classification axes (issuer/customer
+aeat.domain.financial.vat with classification axes (issuer/customer
 residence, customer tax status, transaction kind), period-keyed
 catalogue mapping infrastructure, ES 2024 baseline rate table
 records, and a deterministic VATCategory→Modelo303 casilla bridge.
@@ -442,7 +442,7 @@ Refs: #183, #182 (parent engine PR).
 ### Step 6.3 — PR
 
 ```
-gh pr create --title "feat(formulas): Modelo 303 (VAT trimestral) ruleset on aeat.formulas (#183)" --body "..."
+gh pr create --title "feat(formulas): Modelo 303 (VAT trimestral) ruleset on aeat.domain.formulas (#183)" --body "..."
 ```
 
 PR body:
@@ -457,7 +457,7 @@ PR body:
 | ---- | ---------- |
 | Adding `DOMESTIC_REVERSE_CHARGE` breaks downstream consumers (exhaustive matches). | Audited via grep — no exhaustive `match` exists. The two consumers (`test_categories.py`, `_catalogue.py` `_REGULATIONS` enumeration) are updated in the same PR. |
 | `add_op(ref, lit("0"))` workaround for casillas 64/71 (pass-through) is ugly. | Documented in the file's docstring; the engine's terminal `ROUND` makes the value semantically equivalent to a bare ref. Alternative is to extend the engine with a `PassthroughFormula` operator — explicitly out of scope per the engine ADR's minimal-surface discipline. |
-| Cross-substrate rate consistency test ties the ruleset to `aeat.financial.vat` import (creates a module-level dependency). | The test imports both modules; runtime ruleset code uses only `param("iva.rate_*")` references. No production cycle is introduced. |
+| Cross-substrate rate consistency test ties the ruleset to `aeat.domain.financial.vat` import (creates a module-level dependency). | The test imports both modules; runtime ruleset code uses only `param("iva.rate_*")` references. No production cycle is introduced. |
 | 2024 rate window boundaries (Dec 31 → Jan 1) might trip a leap-year edge case (2024 was a leap year). | All windows use explicit ISO-8601 dates; the date arithmetic in the engine and `lookup_rate` uses `<=` / `>=` against `date` objects, no day-of-year math involved. |
 | Casillas 28-43 are mostly-input bases that get defaulted to 0; consumers might expect them to surface validation errors. | The wave-1 engine applies the missing-input contract uniformly; surfacing per-casilla `required` validation belongs to the filing builder layer (already implemented for the existing builder). Out of scope for #183. |
 
@@ -465,8 +465,8 @@ PR body:
 
 After Phase 4:
 ```
-uv run pytest src/aeat/formulas/_rulesets -m unit
-uv run pytest src/aeat/financial/vat -m unit
+uv run pytest src/aeat/domain/formulas/_rulesets -m unit
+uv run pytest src/aeat/domain/financial/vat -m unit
 ```
 
 After Phase 6:
@@ -482,10 +482,10 @@ project floor is 60 %, so the new modules cushion that.
 
 ## Out-of-scope reminders
 
-- No edits to `aeat.formulas/_engine.py`, `_formula.py`,
+- No edits to `aeat.domain.formulas/_engine.py`, `_formula.py`,
   `_ruleset.py`, `_codes.py`, `_registry.py`, `_period.py`,
   `_ledger.py`. Wave-1 engine is frozen.
-- No edits to `aeat.filing._builders.modelo_303` (the existing
+- No edits to `aeat.application.filing._builders.modelo_303` (the existing
   hand-curated builder). Replacement is a separate issue.
 - No new operator (`RATIO`, `ACCUMULATED_SUM`) added to
   `FormulaOp`.

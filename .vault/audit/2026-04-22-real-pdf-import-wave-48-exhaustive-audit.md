@@ -60,7 +60,7 @@ for the follow-up audit findings that remain open.
 
 ### H1 (stream 4) — Decimal primitive silently loses intra-number whitespace
 
-`src/aeat/_pdf_import/_label_regex.py:23` — `SPANISH_AMOUNT_GROUP`
+`src/aeat/adapters/inbound/pdf/_label_regex.py:23` — `SPANISH_AMOUNT_GROUP`
 does not tolerate thousands-separator whitespace (`1 234,56` collapses
 to `234,56`, 1000× underreport). pdfplumber occasionally emits
 kerned-glyph space-separated numerics on AEAT PDFs.

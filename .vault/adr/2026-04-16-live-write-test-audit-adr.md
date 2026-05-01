@@ -20,7 +20,7 @@ Issue `#119` must verify that the AEAT test suite cannot cross into a live write
 - The default pytest invocation already excludes `live` tests.
 - The live AEAT-facing tests that do exist are dry-run or read-only.
 - Marker integrity is therefore the first and most brittle boundary: an unmarked test can bypass the intended suite partitioning.
-- The submission and workflow unit suites still depend on test doubles around `aeat.submission`, which is a quality problem but not evidence of a reachable live AEAT write path.
+- The submission and workflow unit suites still depend on test doubles around `aeat.adapters.outbound.aeat.export`, which is a quality problem but not evidence of a reachable live AEAT write path.
 
 ## Decision
 

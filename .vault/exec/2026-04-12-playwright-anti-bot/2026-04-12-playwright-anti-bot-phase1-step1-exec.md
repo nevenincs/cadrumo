@@ -10,7 +10,7 @@ related:
 
 # Execution Step 1: Core Scaffolding and Tests
 
-- Scaffolding the `src/aeat/browser/` subpackage.
+- Scaffolding the `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/` subpackage.
 - Added `Profile` dataclass.
 - Added `EvasionStrategy` protocol and `PlaywrightStealthEvasion` implementation.
 - Built `BrowserSession` factory managing proxy configuration and profile storage.

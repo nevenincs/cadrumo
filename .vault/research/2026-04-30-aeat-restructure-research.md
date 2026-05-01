@@ -154,9 +154,9 @@ Direct interaction with the AEAT portal / external AEAT surface.
 
 | Module | Functionality (1 line) | LOC | Conf | Destination | Rename | Flags |
 | --- | --- | --- | --- | --- | --- | --- |
-| `sede` | Read-only Playwright driver: 3 sub-surfaces (Expedientes walker + Declarations register + Notifications inbox). | 2,024 | high | `adapters/outbound/aeat/sede/` (stays — single dest, audit 12 — internal sub-packaging optional) | — | `[MONO]` (CONFIRMED). 1 new dead-code candidate (`fetch_justificante_pdf` raises NotImplementedError). |
+| `sede` | Read-only Playwright driver: 3 sub-surfaces (Expedientes walker + Declarations register + Notifications inbox). | 2,024 | high | `adapters/outbound/aeat/adapters/outbound/aeat/sede/` (stays — single dest, audit 12 — internal sub-packaging optional) | — | `[MONO]` (CONFIRMED). 1 new dead-code candidate (`fetch_justificante_pdf` raises NotImplementedError). |
 | `submission` | Two completely independent halves: (A) submission-lifecycle domain (engine + preflight + models + repository) (B) fichero-BOE format library (`_formats/`). | 1,264 (Half A ~700 + Half B ~3,400 — `_formats/` is large) | high | **2-destination split per audit 16**: `adapters/outbound/aeat/export/` (`_formats/` — the actual export functionality) + `domain/submission/` (Half A — lifecycle + preflight + repository). | `export/` for `_formats`; `submission/` (domain) stays | `[MONO]` (CONFIRMED). 4 NEW dead-code candidates (`_submitters/` tombstone directory, `browser_trace_path` field, `IN_PROGRESS`/`PENDING` enum tombstones, possibly the 2025 modelo stubs). `LiveSubmitForbiddenError` relocation (audit 3) NOT yet done. |
-| `browser` | Playwright adapter: session/evasion/profile + site-health classification + smoke-health binary. | 1,196 | high | `adapters/outbound/aeat/browser/` (stays — single dest). Audit 17 recommends MOVING `SiteHealthAlert` to `workflow._models` to eliminate circular-dep + model_rebuild ritual. | — | `[MONO]` (CONFIRMED). 3 NEW dead-code candidates (`EvasionStrategy` exported but no external consumers, possibly `health.py` orphan, dead `evaluate_response` re-export). |
+| `browser` | Playwright adapter: session/evasion/profile + site-health classification + smoke-health binary. | 1,196 | high | `adapters/outbound/aeat/adapters/outbound/aeat/browser/` (stays — single dest). Audit 17 recommends MOVING `SiteHealthAlert` to `workflow._models` to eliminate circular-dep + model_rebuild ritual. | — | `[MONO]` (CONFIRMED). 3 NEW dead-code candidates (`EvasionStrategy` exported but no external consumers, possibly `health.py` orphan, dead `evaluate_response` re-export). |
 
 ### Table 4 — connectors → `application/` (with `cli` routed to `entrypoints/`)
 
@@ -166,8 +166,8 @@ because its import surface or stated purpose spans multiple domains.
 | Module | Bridges | LOC | Conf | Destination | Rename | Flags |
 | --- | --- | --- | --- | --- | --- | --- |
 | `cli` | inbound + state + remote + infra (pure dispatch / presentation layer) | ~16,000 (flat ~4,100 + nested ~10,800; corrected from earlier 7,625) | high | `entrypoints/cli/` with internal reorganisation per audit 6: new `cli/setup/`, `cli/doctor/`, `cli/security/`, `cli/gsuite/` sub-dirs; flat-level financial files migrate INTO existing `cli/financial/`; `_live.py` moves OUT of cli to `tests/_helpers/`. | — | `[MONO]` `[CONFLATE]` (both **CONFIRMED** by audit 6, 2026-04-30; full reorganisation plan — see "Modules audited") `[OUTLIER]`: `doctor.py` (1,140 LOC) needs its own internal split. `[MISPLACEMENT]`: `_live.py` is cross-package test fixture, not CLI. `[INCONSISTENCY]`: 3 financial files at flat level despite `cli/financial/` sub-dir existing. `[INCONSISTENCY]`: test files split between `_test_*.py` and `test_*.py` at flat level — project-wide cleanup. |
-| `auth` | 4 conflated concerns (Google + AEAT + gate-policy + dead secret-storage) | 4,782 | high | **5-destination split** (per audit 3): `adapters/outbound/google/` (Google) + `adapters/outbound/aeat/auth/` (concrete AEAT providers) + `application/auth/` (slim — provider-selection only) + `core/access_gate/` (gate + policy errors) + `core/file_permissions.py` (OS primitive). Plus `_secret_adapters.py` deletion candidate. | — | `[MONO]` `[CONFLATE]` (both **CONFIRMED** by audit 3, 2026-04-30; full split design — see "Modules audited") `[CORE-LEAK]` upgraded: `_file_permissions.py` (confirmed) + Browser Playwright protocols (new finding). `[DEAD]`: `_secret_adapters.py` no production callers. |
-| `filing` | inbound (justificante) + state (storage, formulas, models, deadlines) + remote (submission, sync) — **plus a misplaced sync-domain repository** | 4,465 | high | **2-domain split + 1 out-of-package move** (per audit 5): `domain/filing/` (records, protocols, builders, validator, reconciliation, repositories — pending layering decision) + `application/filing/` (orchestration, use cases, glue) + `_history_repository.py` MOVES to `aeat.sync`. | — | `[MONO]` `[CONFLATE]` (both **CONFIRMED** by audit 5, 2026-04-30 — full split design see "Modules audited") `[MISPLACEMENT]`: `_history_repository.py` persists sync-domain type. `[DEAD]`: 4 candidates (FilingHistoryRepository ext usage, utc_now, duplicate default_schema_provider, 3 migrate helpers). `[LAYERING-TENSION]`: per-domain repositories conflict with ADR's `domain/`-must-not-import-`adapters/` rule — see "Open questions / themes". |
+| `auth` | 4 conflated concerns (Google + AEAT + gate-policy + dead secret-storage) | 4,782 | high | **5-destination split** (per audit 3): `adapters/outbound/google/` (Google) + `adapters/outbound/aeat/adapters/outbound/aeat/auth/` (concrete AEAT providers) + `application/auth/` (slim — provider-selection only) + `core/access_gate/` (gate + policy errors) + `core/file_permissions.py` (OS primitive). Plus `_secret_adapters.py` deletion candidate. | — | `[MONO]` `[CONFLATE]` (both **CONFIRMED** by audit 3, 2026-04-30; full split design — see "Modules audited") `[CORE-LEAK]` upgraded: `_file_permissions.py` (confirmed) + Browser Playwright protocols (new finding). `[DEAD]`: `_secret_adapters.py` no production callers. |
+| `filing` | inbound (justificante) + state (storage, formulas, models, deadlines) + remote (submission, sync) — **plus a misplaced sync-domain repository** | 4,465 | high | **2-domain split + 1 out-of-package move** (per audit 5): `domain/filing/` (records, protocols, builders, validator, reconciliation, repositories — pending layering decision) + `application/filing/` (orchestration, use cases, glue) + `_history_repository.py` MOVES to `aeat.application.sync`. | — | `[MONO]` `[CONFLATE]` (both **CONFIRMED** by audit 5, 2026-04-30 — full split design see "Modules audited") `[MISPLACEMENT]`: `_history_repository.py` persists sync-domain type. `[DEAD]`: 4 candidates (FilingHistoryRepository ext usage, utc_now, duplicate default_schema_provider, 3 migrate helpers). `[LAYERING-TENSION]`: per-domain repositories conflict with ADR's `domain/`-must-not-import-`adapters/` rule — see "Open questions / themes". |
 | `workflow` | Single linear preflight orchestrator (sync → next-obligation → inbox → already-filed-probe → build-draft → validate → preflight). Permanently read-only. | 2,028 | high | `application/workflow/` (single — already axis-clean internally) | — | `[MONO]` (CONFIRMED) `[CONFLATE]` **DOWNGRADED to MONO only** by audit 10, 2026-04-30 — the high in-degree is structural (composition root), not multiple use cases. 3 dead-code candidates. Forward-ref circular dep with browser._site_health flagged. |
 | `sync` | Live-to-local cross-validation engine: wire schemas + divergence taxonomy + classifier + dispatcher + strategies + repository. 3 internal architectural layers. | 1,499 | high | **2-destination split per audit 13**: `domain/sync/` (taxonomy + classifier ~425 LOC pure domain) + `application/sync/` (everything else). | — | `[MONO]` (CONFIRMED). NOT CONFLATE (single use case, 3 layers). 4 NEW dead-code candidates (4 hollow Protocol stubs on LiveSyncRunner that are stored but never invoked). |
 | `setup` | First-run onboarding — collects identity + certificate + prefs, writes env file + encrypted AutonomoProfile, verifies result. | 1,312 | high | `application/setup/` (stays — single use case, clean internal axis split per audit 14) | — | `[MONO]` (CONFIRMED). 3 NEW dead-code candidates (SetupOutcome.SKIPPED, ABORTED_BY_USER, vestigial i18n helper). |
@@ -240,7 +240,7 @@ the audit work. Each ambiguity is also flagged on its row above.
   `domain/profile/identity/` (profile-adjacent)?
 - **`auth`** — **RESOLVED by audit 3 (2026-04-30)**. Splits into 5
   destinations: `adapters/outbound/google/` (Google auth + service
-  builders), `adapters/outbound/aeat/auth/` (concrete AEAT providers
+  builders), `adapters/outbound/aeat/adapters/outbound/aeat/auth/` (concrete AEAT providers
   including cert + Cl@ve Móvil + provider catalogue), `application/auth/`
   (slim — `select_provider` factory + provider-agnostic types only),
   `core/access_gate/` (`AeatAccessGate` + policy errors including the
@@ -256,7 +256,7 @@ the audit work. Each ambiguity is also flagged on its row above.
   `core/` (`classification/`, `redaction/`, `corpus_manifest/`,
   `locks.py`, `path_safety.py`). The encrypted-record contract
   (10-symbol bundle imported by every per-domain repository) is
-  preserved via the `aeat.storage` re-export shim. Per-sub-module
+  preserved via the `aeat.adapters.persistence.storage` re-export shim. Per-sub-module
   deep audits follow. See "Modules audited" for the full split
   design and 3 boundary-violation findings (NIF canary cross-domain
   leak, rotation private-helper coupling, fsync_parent_dir
@@ -266,7 +266,7 @@ the audit work. Each ambiguity is also flagged on its row above.
   firewall types + alias notices stay in `core/errors/`; 11 domain-
   specific exception classes redistribute (8 → `domain/formulas/`, 1
   → `entrypoints/mcp/`, 2 → `domain/testing/`). Re-export shim
-  preserves the `aeat.errors` public-API contract. See "Modules
+  preserves the `aeat.core.errors` public-API contract. See "Modules
   audited" for the full split design.
 - **`config.py` imports `auth` + `justificante`** — possible domain
   leakage into the infra layer; verify whether settings genuinely need
@@ -289,7 +289,7 @@ audit reveals.
 
 ### Required sections
 
-- **Module**: dotted path (e.g. `aeat.errors`).
+- **Module**: dotted path (e.g. `aeat.core.errors`).
 - **Functional one-liner**: what does this module fundamentally do for
   Kent? Stated in plain English without referring to its current
   shape (e.g. "exposes a registry of every error code the system can
@@ -453,7 +453,7 @@ rollout. Do not edit body — they are historical anchors.
   the new layout.**
 - `reference/2026-04-12-base-module-structure-reference.md` —
   onboarding reference for the old conventions; shows
-  `from aeat.models import ...` as the canonical import; pre-dates
+  `from aeat.domain.modelos import ...` as the canonical import; pre-dates
   the nine-marker taxonomy. Replace with a new reference scaffolded
   from this restructure ADR at rollout.
 
@@ -497,7 +497,7 @@ subpackage list AND the issue-label taxonomy.
 
 **Submission cluster (rename to `export`)**:
 
-- `adr/2026-04-12-submission-engine-adr.md` — `aeat.submission` engine.
+- `adr/2026-04-12-submission-engine-adr.md` — `aeat.adapters.outbound.aeat.export` engine.
 - `adr/2026-04-22-aeat-fichero-boe-export-adr.md` —
   `submission/_formats/` layout block; `_engine.py`, `_models.py` paths.
 - `adr/2026-04-18-live-submit-cli-excision-adr.md` — `submission/`
@@ -505,8 +505,8 @@ subpackage list AND the issue-label taxonomy.
   paths only need inline-update).
 - `adr/2026-04-25-workflow-live-flag-excision-adr.md` — `submission/`
   paths in non-modification rules.
-- `adr/2026-04-17-aeat-access-gate-adr.md` — `aeat.submission` import
-  from `aeat.auth`; old marker reference.
+- `adr/2026-04-17-aeat-access-gate-adr.md` — `aeat.adapters.outbound.aeat.export` import
+  from `aeat.adapters.outbound.aeat.auth`; old marker reference.
 - `adr/2026-04-18-auth-protocol-adr.md` — `submission/_protocols.py`.
 - `adr/2026-04-18-draft-approval-staleness-adr.md` —
   `submission/_confirm.py`.
@@ -514,21 +514,21 @@ subpackage list AND the issue-label taxonomy.
   test paths AND `domain:aeat-remote, domain:submission` issue-label
   references.
 - `reference/2026-04-16-submission-safety-sweep-reference.md` —
-  `aeat.submission` placement decisions, multiple paths.
+  `aeat.adapters.outbound.aeat.export` placement decisions, multiple paths.
 - `reference/2026-04-22-submission-pipeline-hardening-reference.md` —
   whole document describes / locks `submission/` structure.
 
 **Models cluster (rename to `modelos`)**:
 
-- `adr/2026-04-13-modelo-inventory-adr.md` — `src/aeat/models/`
+- `adr/2026-04-13-modelo-inventory-adr.md` — `src/aeat/domain/modelos/`
   multiple paths; canonicalises `models` as the home.
 - `adr/2026-04-22-citation-blocklist-adr.md` —
-  `src/aeat/models/_citation_registry.py`.
+  `src/aeat/domain/modelos/_citation_registry.py`.
 
 **Errors cluster (move to `core/errors/`)**:
 
-- `adr/2026-04-25-error-code-registry-adr.md` — `aeat.errors` public
-  import contract. Critical: the contract `from aeat.errors import ...`
+- `adr/2026-04-25-error-code-registry-adr.md` — `aeat.core.errors` public
+  import contract. Critical: the contract `from aeat.core.errors import ...`
   must keep working through the restructure (re-export shim at
   `aeat/errors.py` if needed, or document the breaking change).
 
@@ -539,8 +539,8 @@ subpackage list AND the issue-label taxonomy.
 
 **MCP cluster (move to `entrypoints/mcp/`)**:
 
-- `adr/2026-04-16-google-workspace-mcp-auth-adr.md` — `aeat.mcp`
-  package placement; `.mcp.json` rewires `python -m aeat.mcp.launch_*`
+- `adr/2026-04-16-google-workspace-mcp-auth-adr.md` — `aeat.entrypoints.mcp`
+  package placement; `.mcp.json` rewires `python -m aeat.entrypoints.mcp.launch_*`
   (script-entry contract; will break unless inline-updated and
   `.mcp.json` regenerated as part of the rollout PR).
 
@@ -577,13 +577,13 @@ edited.
   plan; `submission/` paths.
 - `plan/2026-04-17-export-first-roadmap-plan.md` — issue-label
   references (`domain:aeat-remote, area:submission`,
-  `domain:mediation`) and the `aeat.submission.live_submit` module
+  `domain:mediation`) and the `aeat.adapters.outbound.aeat.export.live_submit` module
   reference.
 
 #### Cross-cutting load-bearing constraints surfaced by the audit
 
 - **Public-import contracts must survive the move.** At minimum
-  `aeat.errors` (per `error-code-registry-adr`) is documented as a
+  `aeat.core.errors` (per `error-code-registry-adr`) is documented as a
   stable public surface; relocating to `aeat.core.errors` requires
   either a re-export shim or a documented breaking change with a
   migration window.
@@ -593,7 +593,7 @@ edited.
   as GitHub-issue labels. The label rename ships in lockstep with the
   marker rename, with the same naming.
 - **`.mcp.json` is a runtime-config contract**: the script-entry
-  string `uv run python -m aeat.mcp.launch_google_workspace` will
+  string `uv run python -m aeat.entrypoints.mcp.launch_google_workspace` will
   break when `mcp/` moves; the file is regenerated as part of the
   rollout PR.
 - **Security audits anchor `_paths.py`** — the path-resolution
@@ -724,7 +724,7 @@ generic noise. Triage below uses three buckets:
 | 7 | R2 | No rollback / abort criteria | ACCEPT | Add abort triggers: (a) post-move CI failure rate > X% across 3 consecutive runs, (b) unresolvable circular import surfaces, (c) marker-realignment leaves any test in a state where collection-ban could mis-fire. Action: revert the layout PR; the rename PRs are decoupled. |
 | 8 | R2 | No definition of done / acceptance criteria | ACCEPT | Add checklist: imports resolve under new layout; coverage floor (60% per project mandate) maintained; import-boundary rule shipped (or named follow-up issue); vault contradiction list fully resolved per tier; all marker renames complete; security-audit guardrails validated at new locations. |
 | 9 | R2 | Import-boundary enforcement deferred to visual review | ACCEPT (clarify) | Name the tool decision explicitly. Default candidate: `import-linter` (lightweight, contract-driven). The choice itself can be deferred to an execution decision but the requirement to ship a static enforcement is a hard constraint. |
-| 10 | R2 | Public / external API surface not enumerated | ACCEPT | Add a "Public surface" subsection: minimum, `aeat.errors` (per `error-code-registry-adr`); confirm whether anything else is documented as public. Each entry gets shim-or-break decision. Semver: at least minor bump if shims; major if explicit break. |
+| 10 | R2 | Public / external API surface not enumerated | ACCEPT | Add a "Public surface" subsection: minimum, `aeat.core.errors` (per `error-code-registry-adr`); confirm whether anything else is documented as public. Each entry gets shim-or-break decision. Semver: at least minor bump if shims; major if explicit break. |
 | 11 | R2 | Tooling / IDE / type-checker config impacts | ACCEPT | Add a "Configuration files affected" subsection enumerating: `pyproject.toml` (`tool.coverage.run.source`, `tool.mypy.exclude`, `tool.pytest.ini_options.testpaths`, `tool.pyright.include`); pre-commit configs; `.mcp.json`; `justfile` / `Makefile` paths. |
 | 12 | R2 | `domain_submission` successor decision is deferred and load-bearing | **HARD ACCEPT** — safety regression risk. ADR must REMOVE the deferral. Decide before the move: either (a) `domain_outbound` carries the live-write collection-ban semantics with no finer grain, OR (b) `domain_export` is created as a sub-marker. The four-factor gate is defense-in-depth but the marker is the first line. No deferral. |
 | 13 | R2 | Parallel agent slot / pre-move branch impact | ACCEPT | Add a "Transition mechanic" subsection: layout PR lands in a coordinated freeze window (no new branches off pre-move main during the freeze); existing pre-move branches receive a one-shot mechanical rebase that rewrites import paths; agent-slot orchestration pauses for the freeze duration. |
@@ -779,11 +779,11 @@ resolution depends on actual code).
 > Appended one at a time. Each entry follows the per-module audit
 > schema (functionality-first).
 
-### `aeat.errors` (audit 1, 2026-04-30)
+### `aeat.core.errors` (audit 1, 2026-04-30)
 
 #### Functional one-liner
 
-`aeat.errors` is the system-wide error identity and rendering layer.
+`aeat.core.errors` is the system-wide error identity and rendering layer.
 It does three things as a single unit: it defines the `AeatError` base
 class that every subpackage's exceptions must inherit from; it
 maintains the authoritative compile-time table
@@ -825,13 +825,13 @@ classification:)
   `build_error_envelope`, `render_error_text`, `render_error_json`,
   `get_error_exit_code`, `resolve_error_message`,
   `scrub_error_context` (17 — recount).
-- **glue** (1): `resolve_output_language` (bridges `aeat.config`
+- **glue** (1): `resolve_output_language` (bridges `aeat.core.config`
   into the rendering pipeline).
 - **domain-formulas** (8): `FormulasError`, `RulesetValidationError`,
   `FormulaCycleError`, `CasillaNotDefinedError`,
   `AmbiguousPeriodError`, `MissingRulesetError`, `EvaluationError`,
   `AuditDiscrepancyError`. **Tight cluster — imported as a unit by
-  `aeat.formulas.__init__`.**
+  `aeat.domain.formulas.__init__`.**
 - **domain-browser** (1): `SiteHealthError` — held here as firewall.
 - **domain-observability** (1): `AeatObservabilityError` — firewall.
 - **domain-mcp** (1): `McpLaunchError`.
@@ -866,31 +866,31 @@ binds. Rendering functions are stateless given a populated registry.
 
 Consumer cluster signals (load-bearing for split design):
 
-- **`aeat.formulas.__init__`** imports the 8 formulas exceptions as a
+- **`aeat.domain.formulas.__init__`** imports the 8 formulas exceptions as a
   single tight cluster — strong signal these symbols belong with
-  `aeat.formulas`, not with `aeat.errors`.
-- **`aeat.cli._errors`** imports the rendering pipeline as a single
+  `aeat.domain.formulas`, not with `aeat.core.errors`.
+- **`aeat.entrypoints.cli._errors`** imports the rendering pipeline as a single
   tight cluster (`AeatError`, `build_error_envelope`,
   `get_error_exit_code`, `get_registered_error_code`,
   `render_error_json`, `render_error_text`) — strong signal these
   must move together.
-- **`aeat.browser.session`** + **`aeat.workflow._engine`** both
+- **`aeat.adapters.outbound.aeat.browser.session`** + **`aeat.application.workflow._engine`** both
   import `SiteHealthError` — confirms firewall reason.
-- **`aeat.observability._errors`** imports `AeatObservabilityError`
+- **`aeat.core.observability._errors`** imports `AeatObservabilityError`
   — confirms firewall reason.
 - ~25 leaf `_errors.py` modules import `AeatError` only — base-class
   contract.
-- `aeat.profile.test_errors` imports `ErrorCategory` +
+- `aeat.domain.profile.test_errors` imports `ErrorCategory` +
   `get_registered_error_code` — infra-only.
 
 #### Imports OUT
 
 - `__init__.py`: TYPE_CHECKING imports of `SiteHealthStatus` (from
-  `aeat.browser._site_health`) and `Translatable` (from
-  `aeat.i18n`); deferred runtime import of `bind_error_code` from
+  `aeat.adapters.outbound.aeat.browser._site_health`) and `Translatable` (from
+  `aeat.core.i18n`); deferred runtime import of `bind_error_code` from
   `_registry`.
-- `_registry.py`: deferred runtime imports of `aeat.config` and
-  `aeat.i18n` inside functions (wrapped in try/except —
+- `_registry.py`: deferred runtime imports of `aeat.core.config` and
+  `aeat.core.i18n` inside functions (wrapped in try/except —
   `resolve_output_language` swallows ALL exceptions silently and
   falls back to `es`, which is a quiet failure mode worth noting).
 
@@ -917,7 +917,7 @@ dependencies.
    must have a corresponding `_DECLARED_ERROR_CODES` entry. The lock
    is intentional and load-bearing.
 4. **`SiteHealthError.__init__` holds a `SiteHealthStatus`** reference
-   from `aeat.browser`. The private `_merge_error_context` and
+   from `aeat.adapters.outbound.aeat.browser`. The private `_merge_error_context` and
    `scrub_error_context` in `_registry.py` are implicitly coupled
    to this attribute shape.
 
@@ -932,7 +932,7 @@ Conflates THREE destinations:
   `AeatObservabilityError` (declared here for circular-import
   reasons, even though semantically they belong to their domains).
 - **Per-domain `_errors.py` modules** — the 8 formulas exceptions
-  belong with `aeat.formulas`; `McpLaunchError` belongs with
+  belong with `aeat.domain.formulas`; `McpLaunchError` belongs with
   `entrypoints/mcp/`; `FilingFixtureError` /
   `FixtureProvisioningError` belong with `domain/testing/`;
   `DeprecatedAliasError` / `MovedAliasError` arguably belong with
@@ -958,32 +958,32 @@ Conflates THREE destinations:
 #### Boundary violations
 
 - The 8 formulas exceptions are **declared in `errors/__init__.py`
-  but raised in `aeat.formulas/_engine`, `_registry`, `_ruleset`,
+  but raised in `aeat.domain.formulas/_engine`, `_registry`, `_ruleset`,
   `_casilla`, `_ledger`** — and re-exported from
-  `aeat.formulas.__init__`. The exceptions themselves live in the
+  `aeat.domain.formulas.__init__`. The exceptions themselves live in the
   wrong package; they're imported back into formulas where they're
   raised.
 - `McpLaunchError` declared in `errors/__init__.py` and re-imported
-  by `aeat.mcp._errors` — same pattern, smaller scale.
+  by `aeat.entrypoints.mcp._errors` — same pattern, smaller scale.
 - `FilingFixtureError` declared in `errors/__init__.py` and consumed
-  back by `aeat.testing.__init__` and `aeat.testing._loader`.
+  back by `aeat.domain.testing.__init__` and `aeat.domain.testing._loader`.
 
 #### Internal split design
 
-`aeat.errors` splits into 5 destinations:
+`aeat.core.errors` splits into 5 destinations:
 
 | Sub-module | Contents | Destination | Functional reason |
 | --- | --- | --- | --- |
 | `core/errors/_registry.py` | `ErrorCode`, `ErrorEnvelope`, `ErrorCategory`, `ERROR_REGISTRY`, registry functions, rendering pipeline (`build_error_envelope`, `render_*`), context scrubbing, exit-code mapping. **Plus** the `_DECLARED_ERROR_CODES` table (kept centralised; see open question). | `core/errors/` | Pure infrastructure; one cohesive responsibility (error identity + rendering). |
 | `core/errors/__init__.py` | `AeatError` base class with `__init_subclass__` hook; firewall exceptions (`SiteHealthError`, `AeatObservabilityError`); generic infra exceptions (`WorkspaceLockedError`, `DeprecatedAliasError`, `MovedAliasError`). Re-export shim for the public-surface contract. | `core/errors/` | Base class + firewall + generic infra exceptions; ~80 LOC. |
-| Move 1 | `FormulasError`, `RulesetValidationError`, `FormulaCycleError`, `CasillaNotDefinedError`, `AmbiguousPeriodError`, `MissingRulesetError`, `EvaluationError`, `AuditDiscrepancyError`. | `domain/formulas/_errors.py` | Already imported as a tight cluster by `aeat.formulas.__init__`; ride home with the domain. |
-| Move 2 | `McpLaunchError`. | `entrypoints/mcp/_errors.py` | Already re-imported by `aeat.mcp._errors`. |
-| Move 3 | `FilingFixtureError`, `FixtureProvisioningError`. | `domain/testing/_errors.py` | Raised exclusively from `aeat.testing` (and provisioning scripts under `scripts/`). |
+| Move 1 | `FormulasError`, `RulesetValidationError`, `FormulaCycleError`, `CasillaNotDefinedError`, `AmbiguousPeriodError`, `MissingRulesetError`, `EvaluationError`, `AuditDiscrepancyError`. | `domain/formulas/_errors.py` | Already imported as a tight cluster by `aeat.domain.formulas.__init__`; ride home with the domain. |
+| Move 2 | `McpLaunchError`. | `entrypoints/mcp/_errors.py` | Already re-imported by `aeat.entrypoints.mcp._errors`. |
+| Move 3 | `FilingFixtureError`, `FixtureProvisioningError`. | `domain/testing/_errors.py` | Raised exclusively from `aeat.domain.testing` (and provisioning scripts under `scripts/`). |
 
 **Open**: `DeprecatedAliasError` / `MovedAliasError` placement —
 either stay in `core/errors/` (CLI infrastructure) or move to
 `entrypoints/cli/_errors.py`. Audit recommendation: **stay in
-`core/errors/`** because they're consumed by `aeat.cli._errors`'s
+`core/errors/`** because they're consumed by `aeat.entrypoints.cli._errors`'s
 rendering chain alongside `AeatError`, and they don't carry a
 business domain payload.
 
@@ -994,28 +994,28 @@ modules (the formulas hierarchy alone is ~120 LOC declared in
 #### Public-API contract impact
 
 Per the existing `error-code-registry-adr`,
-`from aeat.errors import ...` is a documented public surface.
+`from aeat.core.errors import ...` is a documented public surface.
 Treatment:
 
 - **Re-export shim at `aeat/errors.py`** (or
-  `aeat/errors/__init__.py`) re-exports every public symbol from
+  `aeat/core/errors/__init__.py`) re-exports every public symbol from
   its new home. Existing consumers continue to work unchanged.
 - The 8 formulas exceptions ALREADY have a canonical alternative
-  home: `aeat.formulas` re-exports them via `aeat.formulas.__init__`.
+  home: `aeat.domain.formulas` re-exports them via `aeat.domain.formulas.__init__`.
   The shim adds redundancy but is justified by the public-API
   contract.
 - Shim removal is a **separate downstream decision** after a
   documented deprecation window.
 
 Feeds the ADR public-surface table:
-- `from aeat.errors import AeatError` — preserve via shim.
-- `from aeat.errors import FormulasError` (and the other 7) —
-  preserve via shim; canonical home becomes `aeat.formulas`.
-- `from aeat.errors import McpLaunchError` — preserve via shim;
-  canonical home becomes `aeat.mcp` (or `entrypoints/mcp`).
-- `from aeat.errors import FilingFixtureError` — preserve via shim;
-  canonical home becomes `aeat.testing`.
-- `from aeat.errors import (rendering pipeline)` — direct, no
+- `from aeat.core.errors import AeatError` — preserve via shim.
+- `from aeat.core.errors import FormulasError` (and the other 7) —
+  preserve via shim; canonical home becomes `aeat.domain.formulas`.
+- `from aeat.core.errors import McpLaunchError` — preserve via shim;
+  canonical home becomes `aeat.entrypoints.mcp` (or `entrypoints/mcp`).
+- `from aeat.core.errors import FilingFixtureError` — preserve via shim;
+  canonical home becomes `aeat.domain.testing`.
+- `from aeat.core.errors import (rendering pipeline)` — direct, no
   rename.
 
 #### Naming clarity
@@ -1023,11 +1023,11 @@ Feeds the ADR public-surface table:
 - Module name `errors` is **clear** — no rename needed.
 - Symbol names are **clear** at module level (`FormulasError`,
   `McpLaunchError`, etc. read well).
-- One naming concern: after the move, `from aeat.formulas._errors
+- One naming concern: after the move, `from aeat.domain.formulas._errors
   import FormulasError` is a slight misnomer — the file is `_errors`
   but the class IS the formulas error base. Consider renaming the
   destination file to `_exceptions.py` or just folding them into
-  `aeat.formulas/__init__.py` (already there as re-exports).
+  `aeat.domain.formulas/__init__.py` (already there as re-exports).
 
 #### Dead code candidates
 
@@ -1064,20 +1064,20 @@ produces a concrete 5-destination split. The pure-infra rendering
 machinery + catalogue table + base class + firewall declarations
 stay in `core/errors/` (~2,400 LOC). 11 domain-specific exception
 classes redistribute to 3 domain `_errors.py` files (~120 LOC). A
-re-export shim preserves the `aeat.errors` public-API contract.
+re-export shim preserves the `aeat.core.errors` public-API contract.
 
 #### Inventory drift discovered
 
 The `_DECLARED_ERROR_CODES` table includes entries for an
-`aeat.rental` subpackage with 6 exception classes. This subpackage
+`aeat.domain.rental` subpackage with 6 exception classes. This subpackage
 **was missing from the original heat-map inventory** — flagged for
 follow-up audit (audit 2, below).
 
-### `aeat.rental` (audit 2, 2026-04-30)
+### `aeat.domain.rental` (audit 2, 2026-04-30)
 
 #### Functional one-liner
 
-`aeat.rental` is a per-property rental register that computes the
+`aeat.domain.rental` is a per-property rental register that computes the
 five M100 Anexo C casillas (0061 gross rent, 0066 deductible
 expenses, 0072 building amortisation, 0078 reducción, 0085 imputed
 income) Kent must file as a Spanish autónomo landlord under IRPF.
@@ -1099,7 +1099,7 @@ Functional roles:
   `_tier_resolver`, `_amortization_ledger`, `_expense_rollup` (5 BOE-
   citation-carrying domain primitives).
 - **Persistence**: `_repository.py` — 5 SQLAlchemy session-scoped
-  repository classes wrapping `aeat.storage._orm` rows.
+  repository classes wrapping `aeat.adapters.persistence.storage._orm` rows.
 - **Mixed (orchestrator + integration)**: `_anexo_c_aggregator.py`
   reads from all 5 repositories, dispatches to the 3 pure
   computation functions, returns aggregates with full audit
@@ -1142,7 +1142,7 @@ the project's existing pattern (`filing/_repository.py`,
 Hybrid pipeline:
 
 1. CLI `aeat rental finca/contract/income/expense add|record|...` →
-   repository CRUD → SQLite via `aeat.storage._orm`.
+   repository CRUD → SQLite via `aeat.adapters.persistence.storage._orm`.
 2. CLI `aeat rental anexo-c compute --year YYYY` →
    `compute_anexo_c_aggregates` reads all 5 tables → calls 3 pure
    computation functions → returns `AnexoCAggregates` with full
@@ -1167,7 +1167,7 @@ returning `()`. Multi-year carry-forward silently resets each run.
 #### Imports IN (consumers)
 
 Initial inventory grep (`from ..rental | from .rental | from
-aeat.rental`) returned EMPTY — that was a methodology miss. The
+aeat.domain.rental`) returned EMPTY — that was a methodology miss. The
 audit ran a broader scan and found the imports are all at 3-dot
 depth (`from ...rental`) navigating from `cli/rental/<file>.py` up
 to `rental/`. Actual consumers:
@@ -1195,12 +1195,12 @@ hasn't landed.
   startup).
 - `..storage.errors.RepositoryError`.
 
-No imports from any other domain (no `aeat.declaracion`,
-`aeat.models`, `aeat.formulas`, etc.).
+No imports from any other domain (no `aeat.adapters.inbound.declaracion`,
+`aeat.domain.modelos`, `aeat.domain.formulas`, etc.).
 
 #### Hidden coupling
 
-1. **`_repository.py` ↔ `aeat.storage._orm`**: 5 ORM row types must
+1. **`_repository.py` ↔ `aeat.adapters.persistence.storage._orm`**: 5 ORM row types must
    exist in `_orm.py` with matching column names; runtime breakage
    only (no compile-time check beyond TYPE_CHECKING stubs). Tightest
    coupling in the subpackage.
@@ -1254,11 +1254,11 @@ home with their domain and import from storage.
 
 #### Public-API contract impact
 
-The `aeat.rental` import is consumed only by `aeat.cli.rental.*`
+The `aeat.domain.rental` import is consumed only by `aeat.entrypoints.cli.rental.*`
 modules. No external (non-CLI, non-error-registry) consumers exist
 in source. The move to `aeat.domain.rental` updates 5 CLI files'
 relative imports — mechanical. No re-export shim required (no
-documented public-API contract on `aeat.rental` itself).
+documented public-API contract on `aeat.domain.rental` itself).
 
 #### Naming clarity
 
@@ -1298,18 +1298,18 @@ and no internal split is needed. Destination: `domain/rental/`.
 #### Methodology lesson
 
 The initial inventory grep used `from .rental | from ..rental |
-from aeat.rental` which missed the 3-dot relative imports
+from aeat.domain.rental` which missed the 3-dot relative imports
 (`from ...rental`) used by CLI sub-package consumers. The lesson is
 recorded for future audits: **subpackages with consumers nested 2
 levels deep (e.g. `cli/<sub>/<file>.py`) need a depth-aware grep
 including `from ...<name>` patterns.** The original inventory's
 "zero-importers" flag was a methodology miss, not a real orphan.
 
-### `aeat.auth` (audit 3, 2026-04-30)
+### `aeat.adapters.outbound.aeat.auth` (audit 3, 2026-04-30)
 
 #### Functional one-liner
 
-`aeat.auth` is a multi-domain authentication umbrella serving FOUR
+`aeat.adapters.outbound.aeat.auth` is a multi-domain authentication umbrella serving FOUR
 distinct concerns under one home: (1) Google OAuth + service-account
 auth for Drive / Sheets / GCP API access, (2) AEAT Sede Electrónica
 auth via X.509 PKCS#12 certificate (mTLS + Playwright) and Cl@ve Móvil
@@ -1454,7 +1454,7 @@ import**:
   with the gate.
 - **`BrowserPageLike` / `BrowserResponseLike` / `BrowserContextLike`
   / `BrowserSessionLike` defined in `_authenticator.py`** — these
-  are pure Playwright structural protocols used by `aeat.browser`.
+  are pure Playwright structural protocols used by `aeat.adapters.outbound.aeat.browser`.
   CORE-LEAK candidate.
 
 #### Gate-policy preservation invariants (5)
@@ -1483,7 +1483,7 @@ should not live in `application/` is **upheld**. The split:
 | Sub-cluster | Symbols | Destination |
 | --- | --- | --- |
 | Google OAuth + GCP service builders | All `__init__.py` Google content + `_google_paths.py` | `adapters/outbound/google/` |
-| AEAT auth providers (cert + Cl@ve) | `_authenticator.py`, `_clave_movil.py`, `_providers.py`, `certificate.py`, `_certificate_backends/` | `adapters/outbound/aeat/auth/` (new sub-cluster) |
+| AEAT auth providers (cert + Cl@ve) | `_authenticator.py`, `_clave_movil.py`, `_providers.py`, `certificate.py`, `_certificate_backends/` | `adapters/outbound/aeat/adapters/outbound/aeat/auth/` (new sub-cluster) |
 | Live-access gate + policy errors | `_gate.py` + `AeatLiveReadNotEnabledError` (moved from `certificate.py`) + `LiveSubmitForbiddenError` (moved from `submission/`) | `core/access_gate/` |
 | File-permission primitive | `_file_permissions.py` | `core/file_permissions.py` |
 | Browser Playwright protocols | `BrowserContextLike`, `BrowserPageLike`, `BrowserResponseLike`, `BrowserSessionLike`, `BrowserSessionFactory` | `adapters/outbound/browser/_protocols.py` (CORE-LEAK upgrade — these belong to browser, not auth) |
@@ -1518,8 +1518,8 @@ restructure ADR layout block needs updating to add this nesting.
 
 #### Public-API contract impact
 
-- The `aeat.auth` import surface is **massive** (~98 symbols).
-- **Per-axis re-export shim** is the right pattern: `aeat.auth`
+- The `aeat.adapters.outbound.aeat.auth` import surface is **massive** (~98 symbols).
+- **Per-axis re-export shim** is the right pattern: `aeat.adapters.outbound.aeat.auth`
   becomes a compatibility re-export from the 5 new homes.
 - Most consumers import a single-axis tight cluster — verified by
   the consumer breakdown. Each consumer's imports rewrite to a
@@ -1536,7 +1536,7 @@ Feeds the ADR public-surface table.
   live-access gate (a policy concern) and dead secret-storage code.
   After the split, no single destination is called `auth/`; the
   AEAT auth provider cluster lives at
-  `adapters/outbound/aeat/auth/` (clear from path), and Google auth
+  `adapters/outbound/aeat/adapters/outbound/aeat/auth/` (clear from path), and Google auth
   at `adapters/outbound/google/`.
 - `select_provider` and `AuthProvider` are clear. The provider
   protocols (`BrowserContextProvisioner`, `CertificateContextProvisioner`)
@@ -1571,7 +1571,7 @@ Feeds the ADR public-surface table.
   while the concrete `AeatAuthenticator` / `ClaveMovilAuthProvider`
   are adapter implementations. Could split provider-selection into
   `application/auth/` (slim, just the selection logic) with
-  concrete providers in `adapters/outbound/aeat/auth/`. Keeps
+  concrete providers in `adapters/outbound/aeat/adapters/outbound/aeat/auth/`. Keeps
   hexagonal clean. **Recommendation**: yes, split provider-selection
   to application; keeps the layered model honest.
 
@@ -1588,11 +1588,11 @@ surfaces a layered-import-boundary issue around
 `LiveSubmitForbiddenError` that must be coordinated with the
 submission → export rename.
 
-### `aeat.storage` (audit 4, 2026-04-30) — structural-survey pass
+### `aeat.adapters.persistence.storage` (audit 4, 2026-04-30) — structural-survey pass
 
 #### Functional one-liner
 
-`aeat.storage` is the monolithic governed-persistence substrate for
+`aeat.adapters.persistence.storage` is the monolithic governed-persistence substrate for
 the entire system. It bundles five distinct concerns under one
 package: SQL persistence (SQLAlchemy ORM + engine + session +
 repositories + Alembic migrations), at-rest encryption (AES-256-GCM
@@ -1669,7 +1669,7 @@ The consumer graph confirms cluster boundaries:
 2. **`_encrypted_columns._resolve_master_key_provider`** is `_`-
    prefixed but used by 12+ external consumers — de-facto public.
 3. **`_master_key.py:907` deferred import from
-   `aeat.financial.invoices._validators`** (NIF canary). Storage
+   `aeat.domain.financial.invoices._validators`** (NIF canary). Storage
    has an upward dependency on financial — cross-domain leak.
 4. **`fsync_parent_dir` lives in `_lock.py`** but used cross-domain
    beyond locking. Logical home is durable-write utility.
@@ -1705,7 +1705,7 @@ shim).
 | `core/redaction/` | `_redaction.py` | Cross-cutting PII redaction (observability, llm) |
 | `core/corpus_manifest/` | `_corpus_manifest.py` | Self-attesting integrity primitive, not storage-specific |
 | `core/locks.py` | `_lock.py` | OS-level file locking + `fsync_parent_dir`, used cross-domain |
-| `core/path_safety.py` | `_path_safety.py` | Already a thin wrapper over `aeat._paths` (which becomes `core/paths.py`) — fold into or sibling of `core/paths.py` |
+| `core/path_safety.py` | `_path_safety.py` | Already a thin wrapper over `aeat.core.paths` (which becomes `core/paths.py`) — fold into or sibling of `core/paths.py` |
 
 #### Destination validation
 
@@ -1727,7 +1727,7 @@ shim).
 #### Boundary violations
 
 - **`_master_key.py:907` cross-domain leak** to
-  `aeat.financial.invoices`. Resolution candidates: (a) move
+  `aeat.domain.financial.invoices`. Resolution candidates: (a) move
   `validate_spanish_tax_id` to `core/identity/`, (b) inject the
   validator as a callback into the master-key provider, or (c)
   inline a copy. **Recommendation**: (a) or (b); inlining
@@ -1740,10 +1740,10 @@ shim).
 
 #### Public-API contract impact
 
-- `aeat.storage.__init__.__all__` re-exports 130 symbols.
-- After split: re-export shim preserves the `aeat.storage` import.
+- `aeat.adapters.persistence.storage.__init__.__all__` re-exports 130 symbols.
+- After split: re-export shim preserves the `aeat.adapters.persistence.storage` import.
 - 5 CORE-LEAK promotions create new `aeat.core.*` public surfaces;
-  re-export shims at old `aeat.storage` paths during deprecation
+  re-export shims at old `aeat.adapters.persistence.storage` paths during deprecation
   window.
 - `_resolve_master_key_provider` is de-facto public (12+ external
   consumers). **Recommendation**: rename to
@@ -1787,7 +1787,7 @@ distinct cluster boundaries (1 cross-cluster). The split is
 concrete and consumer-graph-validated. Per-sub-module deep audits
 follow.
 
-### `aeat.filing` (audit 5, 2026-04-30)
+### `aeat.application.filing` (audit 5, 2026-04-30)
 
 #### Functional one-liner
 
@@ -1818,7 +1818,7 @@ and remote filing-history blobs.
 | `testing.py` | 93 | test-double helpers |
 | `_repository.py` | 299 | `FilingDraftRepository` — FINANCIAL-class encrypted store |
 | `_complementaria_repository.py` | 270 | `FilingAmendmentRepository` — AUDIT-class store |
-| `_history_repository.py` | 282 | `FilingHistoryRepository` — **misplaced**: persists `WireFilingHistory` (owned by `aeat.sync`) |
+| `_history_repository.py` | 282 | `FilingHistoryRepository` — **misplaced**: persists `WireFilingHistory` (owned by `aeat.application.sync`) |
 | `_builders/__init__.py` | 51 | builder registry + dispatcher |
 | `_builders/modelo_130.py` | 296 | M130 IRPF advance-payment builder |
 | `_builders/modelo_303.py` | 308 | M303 IVA quarterly builder |
@@ -1873,7 +1873,7 @@ canonical schema implementation.
 
 **`reconciliation/`** is the most cohesive part of the package —
 zero persistence, zero orchestration, only TYPE_CHECKING imports of
-filing's own records and `aeat.justificante`. Its subdirectory
+filing's own records and `aeat.domain.justificante`. Its subdirectory
 status indicates filing already started lifting it out of the main
 namespace.
 
@@ -1953,7 +1953,7 @@ domain orchestration in one file.
    level cache keyed on file mtime; tests must invalidate by file
    touch.
 4. **All 3 repositories import `_resolve_master_key_provider`
-   privately** from `aeat.storage._encrypted_columns` — known de-
+   privately** from `aeat.adapters.persistence.storage._encrypted_columns` — known de-
    facto public per audit 4; renamed during storage move.
 5. **Deferred-import cycle pattern** between `__init__.py`,
    `_import.py`, `_complementaria.py`. Intentional but ordering-
@@ -1966,7 +1966,7 @@ type). Stays with filing. ✓
 **`FilingAmendmentRepository`**: persists `FilingAmendment` (filing-
 owned type). Stays with filing. ✓
 **`FilingHistoryRepository`**: persists `WireFilingHistory` — type
-owned by `aeat.sync`. **Should move to `aeat.sync`**.
+owned by `aeat.application.sync`. **Should move to `aeat.application.sync`**.
 
 #### Domain mapping (multi-destination split)
 
@@ -2008,7 +2008,7 @@ WITH its domain. But:
 - The ADR's import-boundary contract says `domain/` must NOT import
   from `adapters/`.
 - Filing's `_repository.py`, `_complementaria_repository.py` import
-  heavily from `aeat.storage` (envelope I/O, encrypted columns,
+  heavily from `aeat.adapters.persistence.storage` (envelope I/O, encrypted columns,
   errors, lock).
 - Placing them in `domain/filing/` violates the layered contract.
 - Placing them in `adapters/persistence/filing/` breaks the project
@@ -2043,7 +2043,7 @@ domain needs the same caveat.
 #### Boundary violations
 
 - **`_review.py` imports `TransactionCatalogueRepository` from
-  `aeat.financial.transactions._repository`** — subpackage-private
+  `aeat.domain.financial.transactions._repository`** — subpackage-private
   import, not via the public `__init__.py`. Boundary violation;
   fix during the financial.transactions audit.
 - **`FilingHistoryRepository` lives in filing but persists sync-
@@ -2051,14 +2051,14 @@ domain needs the same caveat.
 
 #### Public-API contract impact
 
-- `aeat.filing` re-exports a substantial public surface (~25
+- `aeat.application.filing` re-exports a substantial public surface (~25
   symbols). Re-export shim preserves the contract.
 - `FilingDraftRepository`, `FilingAmendmentRepository` — currently
   consumed via deferred imports from outside; not in `__init__.py`
   `__all__`. After move, the public-import path becomes
   `aeat.domain.filing.FilingDraftRepository` (or whatever
   destination wins per layering tension).
-- `FilingHistoryRepository` — moves to `aeat.sync`; consumers (only
+- `FilingHistoryRepository` — moves to `aeat.application.sync`; consumers (only
   tests today) update accordingly.
 
 Feeds the ADR public-surface table.
@@ -2095,7 +2095,7 @@ Verify each before removal during execution.
   `_builders/_modelo_130_schema.py`. Promote to a top-level
   domain module or accept the misnomer until the real casilla DB
   (#23) lands.
-- **`_history_repository.py` move target** — `aeat.sync` is the
+- **`_history_repository.py` move target** — `aeat.application.sync` is the
   correct domain, but does the move happen now or in a follow-up?
   Recommendation: in this restructure, since it's a 282-LOC file
   consumed only by tests.
@@ -2111,7 +2111,7 @@ misplacement fix moving `_history_repository.py` to sync.
 Surfaces a project-wide layering tension that affects multiple
 prior audits and needs a single decision before execution.
 
-### `aeat.cli` (audit 6, 2026-04-30) — structural-survey pass
+### `aeat.entrypoints.cli` (audit 6, 2026-04-30) — structural-survey pass
 
 #### Functional one-liner
 
@@ -2120,7 +2120,7 @@ entire `aeat` package: it composes every sub-domain's Typer app
 into one root `app` object, enforces shared transport conventions
 (JSON output contract, log-level routing, exit codes, TTY
 detection, error decoration), and wires the entry point
-`aeat = "aeat.cli:app"` declared in `pyproject.toml`. It is a
+`aeat = "aeat.entrypoints.cli:app"` declared in `pyproject.toml`. It is a
 pure dispatch / presentation layer with no business logic of its
 own; all logic lives in domain packages.
 
@@ -2230,7 +2230,7 @@ intentional for "operator-utility" commands.
 
 CLI is consumed by:
 
-- `aeat.observability._replay.py` — `from ..cli import app`
+- `aeat.core.observability._replay.py` — `from ..cli import app`
   (deferred); the only production consumer of the root app outside
   cli.
 - ~15 test files across multiple sub-packages — most pull
@@ -2283,9 +2283,9 @@ moves to `entrypoints/cli/` (per ADR). Within `cli/`:
 
 #### Public-API contract impact
 
-`aeat.cli:app` is the single public entry point per `pyproject.toml`.
+`aeat.entrypoints.cli:app` is the single public entry point per `pyproject.toml`.
 Internal reorganisation does NOT change this — the `app` symbol
-keeps its location at `aeat.cli:app`. Internal moves change only
+keeps its location at `aeat.entrypoints.cli:app`. Internal moves change only
 how `__init__.py` composes the sub-apps, not the public surface.
 
 `_live.py` move OUT of cli/ would require updating ~6 test files
@@ -2335,7 +2335,7 @@ its own internal split design as part of the move. Empty
 placeholders confirmed for DELETE. Project-conventions issues
 (test naming, registration mechanic) flagged separately.
 
-### `aeat.llm` (audit 7, 2026-04-30)
+### `aeat.adapters.outbound.llm` (audit 7, 2026-04-30)
 
 #### Functional one-liner
 
@@ -2423,7 +2423,7 @@ imports become `from ..core.redaction import ...` and
 `LLMCache`, `LLMClient`, `LLMRequest`, `PromptRegistry`,
 `Translator`, `UsageRecorder`. Binds to ALL four axes
 simultaneously. No other module in `src/aeat/` imports from
-`aeat.llm`.
+`aeat.adapters.outbound.llm`.
 
 This is a key signal: **no consumer pulls the outbound side
 without the cache/usage side or vice versa**. The CLI is the only
@@ -2476,8 +2476,8 @@ internal cohesion, not external surface separation.
 
 #### Public-API contract impact
 
-- `aeat.llm` `__all__` exports 23 symbols. Re-export shim
-  preserves the `from aeat.llm import ...` contract.
+- `aeat.adapters.outbound.llm` `__all__` exports 23 symbols. Re-export shim
+  preserves the `from aeat.adapters.outbound.llm import ...` contract.
 - The single consumer (`cli/llm/__init__.py`) updates its relative
   imports from `..llm` to `..adapters.outbound.llm` — mechanical.
 
@@ -2534,7 +2534,7 @@ because the only consumer binds to all axes together. 3 dead-code
 candidates surfaced. 5 hidden-coupling findings logged for future
 deep audit.
 
-### `aeat.sanitizer` (audit 8, 2026-04-30)
+### `aeat.adapters.inbound.sanitizer` (audit 8, 2026-04-30)
 
 #### Functional one-liner
 
@@ -2594,12 +2594,12 @@ return-result. Stateless, no network, no DB.
 **Audit verdict**: NO. The flag traced the wrong layer. The audit
 confirms:
 
-- `sanitizer/` **does NOT import `aeat.justificante` anywhere in
+- `sanitizer/` **does NOT import `aeat.domain.justificante` anywhere in
   source**. Zero source-file references. The flag was tripped
-  because the CLI layer (`aeat.cli.sanitize`) imports both
-  `aeat.sanitizer` AND `aeat.justificante` — which is correct CLI
+  because the CLI layer (`aeat.entrypoints.cli.sanitize`) imports both
+  `aeat.adapters.inbound.sanitizer` AND `aeat.domain.justificante` — which is correct CLI
   behaviour (CLI orchestrates the two).
-- `sanitizer/` **DOES import `aeat.financial.invoices._validators
+- `sanitizer/` **DOES import `aeat.domain.financial.invoices._validators
   .validate_spanish_tax_id`** (single function, used by
   `NifReplacement._validate_synthetic_nif` to enforce the same
   checksum rule as production parsers). This is **utility reuse**,
@@ -2708,7 +2708,7 @@ recommendation to relocate `validate_spanish_tax_id` to
 
 #### Public-API contract impact
 
-- `aeat.sanitizer` `__all__` exports 22 symbols.
+- `aeat.adapters.inbound.sanitizer` `__all__` exports 22 symbols.
 - Single consumer (`cli/sanitize`) updates relative imports —
   mechanical.
 - No documented public-API contract beyond what CLI consumes.
@@ -2727,8 +2727,8 @@ cleanest modules audited so far.
 #### Open questions surfaced
 
 - **`validate_spanish_tax_id` placement** (cross-cutting utility,
-  imported by both `aeat.storage._master_key` and
-  `aeat.sanitizer._records`): move to `core/identity/` or similar.
+  imported by both `aeat.adapters.persistence.storage._master_key` and
+  `aeat.adapters.inbound.sanitizer._records`): move to `core/identity/` or similar.
   Already flagged in audit 4; this audit reinforces.
 - **Destination question** (sanitizer as inbound vs tool vs
   core): user judgment call between pragmatic alignment and
@@ -2752,13 +2752,13 @@ keep at `adapters/inbound/sanitizer/` for pragmatic alignment.
 #### Methodology lesson
 
 The `[CONFLATE?]` flag fired because the initial inventory's
-import-graph heuristic counted `aeat.cli.sanitize.__init__.py`'s
-imports of both `aeat.sanitizer` AND `aeat.justificante` as a
+import-graph heuristic counted `aeat.entrypoints.cli.sanitize.__init__.py`'s
+imports of both `aeat.adapters.inbound.sanitizer` AND `aeat.domain.justificante` as a
 sanitizer-side conflation. Future inventories using import-graph
 signals to flag CONFLATE must verify the import lives in the
 flagged module, not in a downstream consumer.
 
-### `aeat.schema` (audit 9, 2026-04-30)
+### `aeat.domain.schema` (audit 9, 2026-04-30)
 
 #### Functional one-liner
 
@@ -2844,8 +2844,8 @@ other consumer reads the IR cache.
 - third-party: `pdfplumber` (lazy-imported inside method),
   `httpx`, `reportlab` (testing only), `pydantic`
 
-No dependencies on `aeat.casillas`, `aeat.financial`,
-`aeat.justificante`, etc. Cleanly upward-only.
+No dependencies on `aeat.domain.casillas`, `aeat.domain.financial`,
+`aeat.domain.justificante`, etc. Cleanly upward-only.
 
 #### Domain mapping (split into 2 destinations + infra)
 
@@ -2880,8 +2880,8 @@ goes to inbound and IR goes to domain.
 
 #### Public-API contract impact
 
-- `aeat.schema` `__all__` exports 33 symbols.
-- After split: `aeat.schema` becomes a re-export shim that pulls
+- `aeat.domain.schema` `__all__` exports 33 symbols.
+- After split: `aeat.domain.schema` becomes a re-export shim that pulls
   extraction symbols from `aeat.adapters.inbound.schema` and IR
   symbols from `aeat.domain.schema`.
 - Single CLI consumer updates relative imports — mechanical.
@@ -2946,7 +2946,7 @@ mechanically simple — move 2 files to inbound, keep 4 in domain,
 update `__init__.py` re-export shim. The CONFLATE? flag is
 RESOLVED with concrete split design.
 
-### `aeat.workflow` (audit 10, 2026-04-30)
+### `aeat.application.workflow` (audit 10, 2026-04-30)
 
 **One-liner**: single linear orchestrator driving Kent's end-to-end
 preflight pipeline (sync → next-obligation → inbox → already-filed-
@@ -2989,7 +2989,7 @@ destination).
   writes `None`. Schema-migration compatibility only.
 - `SubmissionPreflightError` re-export inconsistency — listed in
   `_adapters.__all__` but NOT in `__init__.__all__`. Effectively
-  unreachable from `aeat.workflow.<symbol>`.
+  unreachable from `aeat.application.workflow.<symbol>`.
 - `_FinancialInputsProvider` Protocol inside `_adapters.py` —
   internal-only; could be inlined or moved to `_protocols.py` for
   consistency.
@@ -3003,7 +3003,7 @@ destination).
 - `FinancialThenJsonInputsProvider` placement — workflow adapter
   or filing/financial-side?
 
-### `aeat.justificante` (audit 11, 2026-04-30)
+### `aeat.domain.justificante` (audit 11, 2026-04-30)
 
 **One-liner**: parses AEAT justificante PDFs into a frozen domain
 record, persists records in an encrypted store, and makes one
@@ -3040,10 +3040,10 @@ distinct architectural concerns bundled**.
   pattern as audits 4/5. De-facto public API.
 - **`JustificanteRepository` is not in public `__all__`** but is
   imported via the private path
-  `aeat.justificante._repository.JustificanteRepository` by
+  `aeat.domain.justificante._repository.JustificanteRepository` by
   `filing._test_integration_wave4`. Public-API contract leak.
 - **Deferred `load_settings` import in `_parser.py`** is motivated
-  by a circular import (`aeat.config` imports
+  by a circular import (`aeat.core.config` imports
   `JustificanteParserBackend`). The domain record is entangled
   with config at package boundary.
 - **`PYMUPDF` backend is a stub that raises** — listed in public
@@ -3065,7 +3065,7 @@ distinct architectural concerns bundled**.
 - The `domain/justificante/` placement vs persistence depends on
   the LAYERING TENSION decision (audit 5).
 
-### `aeat.sede` (audit 12, 2026-04-30)
+### `aeat.adapters.outbound.aeat.sede` (audit 12, 2026-04-30)
 
 **One-liner**: read-only Playwright driver for the authenticated
 AEAT sede; walks two filing-listing surfaces (Mis Expedientes tree
@@ -3090,7 +3090,7 @@ LOC); future-readiness sub-packaging if surfaces grow:
 - `shared_playwright` lives in `_declarations.py` but is a cross-
   surface concern.
 
-**Destination**: `adapters/outbound/aeat/sede/` (stays).
+**Destination**: `adapters/outbound/aeat/adapters/outbound/aeat/sede/` (stays).
 
 **Dead-code candidates (1 new)**:
 - `_walker.fetch_justificante_pdf` — listed in `__all__` but
@@ -3100,7 +3100,7 @@ LOC); future-readiness sub-packaging if surfaces grow:
 **Open**: timezone correctness (`_parse_presented_at` documents
 AEAT timestamps are Europe/Madrid but tags them UTC verbatim).
 
-### `aeat.sync` (audit 13, 2026-04-30)
+### `aeat.application.sync` (audit 13, 2026-04-30)
 
 **One-liner**: live-to-local cross-validation engine — fetches AEAT
 browser payloads, validates against pydantic wire schemas,
@@ -3116,8 +3116,8 @@ one flat package. Split warranted:
   boundary).
 
 **Findings**:
-- `aeat.filing._history_repository` imports `WireFilingHistory`
-  from `aeat.sync` (audit 5's misplacement). Coordinate when
+- `aeat.application.filing._history_repository` imports `WireFilingHistory`
+  from `aeat.application.sync` (audit 5's misplacement). Coordinate when
   `_history_repository.py` moves to sync.
 - `BenignRecordStrategy` sets `resolution_state=AUTO_HEALED` on
   BENIGN records despite using `StrategyAction.RECORDED` — naming
@@ -3139,7 +3139,7 @@ one flat package. Split warranted:
 **Open**: 4 hollow Protocol stubs (LLMClient + 3 others) —
 intentional forward-compat or wiring oversight?
 
-### `aeat.setup` (audit 14, 2026-04-30)
+### `aeat.application.setup` (audit 14, 2026-04-30)
 
 **One-liner**: tightly-scoped first-run onboarding pipeline —
 collects identity + certificate + filesystem preferences, writes
@@ -3164,7 +3164,7 @@ Stays at `application/setup/` (single destination).
 - `_setup_text()` + `_t()` — vestigial i18n helper used only for
   one prompt.
 
-### `aeat.observability` (audit 15, 2026-04-30)
+### `aeat.core.observability` (audit 15, 2026-04-30)
 
 **One-liner**: cross-cutting run-trace instrumentation — mints
 contextvar-scoped `run_id`, emits typed JSONL events via logging
@@ -3209,7 +3209,7 @@ The audit recommends **`core/observability/`** (NOT persistence).
 import); thread-safety of `run_context` (contextvars don't
 propagate across `threading.Thread`).
 
-### `aeat.submission` (audit 16, 2026-04-30)
+### `aeat.adapters.outbound.aeat.export` (audit 16, 2026-04-30)
 
 **One-liner**: post-excision read-only audit-record store +
 preflight gate + fichero-BOE format library. Two completely
@@ -3237,7 +3237,7 @@ needs its own home.
 **Findings**:
 - `LiveSubmitForbiddenError` relocation (audit 3 planned to move
   to `core/access_gate/_errors.py`) **NOT yet done** —
-  `aeat.auth._gate` still imports it lazily from `aeat.submission`.
+  `aeat.adapters.outbound.aeat.auth._gate` still imports it lazily from `aeat.adapters.outbound.aeat.export`.
   The relocation must be coordinated with the rename.
 - `SubmissionEngine` still uses legacy `glob("*.json")` reader
   instead of `SubmissionRepository` — two active read paths.
@@ -3265,7 +3265,7 @@ needs its own home.
 - `SubmissionEngine` legacy reader vs `SubmissionRepository` —
   which survives the move? Migration wiring missing.
 
-### `aeat.browser` (audit 17, 2026-04-30)
+### `aeat.adapters.outbound.aeat.browser` (audit 17, 2026-04-30)
 
 **One-liner**: AEAT Playwright adapter — session/evasion/profile +
 site-health classification + smoke-health binary entry point.
@@ -3278,10 +3278,10 @@ extractable.
 **Findings**:
 - **Circular-dep with workflow CONFIRMED** (audit 10). Resolution:
   **move `SiteHealthAlert` from `_site_health.py` to
-  `aeat.workflow._models`**. The class carries `run_id` and
+  `aeat.application.workflow._models`**. The class carries `run_id` and
   `stage: WorkflowStage` fields — semantically a workflow type
   that incidentally references browser-detected health. The
-  `model_rebuild()` ritual in `aeat.workflow.__init__` is then
+  `model_rebuild()` ritual in `aeat.application.workflow.__init__` is then
   unnecessary.
 - After SiteHealthAlert relocates, the `_site_health*` trio
   (`_site_health.py`, `_site_health_parsers.py`,
@@ -3291,7 +3291,7 @@ extractable.
   consumers bypass it and import directly from
   `_site_health_parsers`.
 
-**Destination**: `adapters/outbound/aeat/browser/` (stays).
+**Destination**: `adapters/outbound/aeat/adapters/outbound/aeat/browser/` (stays).
 Internal optional sub-packaging deferred.
 
 **Dead-code candidates (3 new)**:
@@ -3344,9 +3344,9 @@ heat-map LOC values are LOWER BOUNDS, not exact.
 These are upward dependencies that violate the ADR's import-
 boundary contract. They must be untangled before the layout move:
 
-1. **`casillas` → `aeat.cli`** — domain module imports from CLI
+1. **`casillas` → `aeat.entrypoints.cli`** — domain module imports from CLI
    entrypoint layer. Inversion.
-2. **`financial` → `aeat.cli`** — same pattern.
+2. **`financial` → `aeat.entrypoints.cli`** — same pattern.
 3. **`profile.assets` and `profile.inventory` → private internals
    of `formulas._rulesets.modelo_100`** (`_amortization`,
    `_inventario`, `_ccaa`). Cross-domain import of PRIVATE
@@ -3366,7 +3366,7 @@ layered-architecture violations** flagged across audits.
 - `models` (33 files, ~2,660 LOC) — rename `models` → `modelos`.
 - `deadlines` (7 files, 997 LOC) — self-contained.
 - `casillas` (4 files, ~494 LOC, smaller than heat-map). **Surprise**:
-  imports `aeat.cli` (upward inversion).
+  imports `aeat.entrypoints.cli` (upward inversion).
 - `normatives` (7 files, 656 LOC) — no surprises.
 - `portals` (51 files, ~2,230 LOC).
 - `profile` (~1,614 LOC). **Surprise**: assets/inventory import
@@ -3381,7 +3381,7 @@ layered-architecture violations** flagged across audits.
 - `identity` (2 files, 212 LOC).
 - `financial` (59 files, ~11,250 LOC). **Surprise**: ~58× larger
   than initial heat-map estimate. **AUDIT 20 CORRECTION**: the
-  reported `aeat.cli` upward-inversion was a FALSE POSITIVE —
+  reported `aeat.entrypoints.cli` upward-inversion was a FALSE POSITIVE —
   exhaustive grep finds no such import in current source.
 
 **Connectors** — all destination-confirmed:
@@ -3410,7 +3410,7 @@ All 22 modules **destination-confirmed**. 3 NEW layered-
 architecture violations. 1 inventory-correction finding. No new
 dead-code candidates. No new misplacement candidates.
 
-### `aeat.formulas` (audit 19, 2026-04-30) — deep structural-survey
+### `aeat.domain.formulas` (audit 19, 2026-04-30) — deep structural-survey
 
 **One-liner**: sandboxed deterministic formula-evaluation engine
 holding official AEAT casilla arithmetic for 11 modelos × 2024–2026.
@@ -3459,7 +3459,7 @@ optional. The `_rulesets/modelo_100/` subpackage (64 files,
 - `anexo_d_ledgers.py` relocation to `profile/` or a `bridges/`
   layer.
 
-### `aeat.financial` (audit 20, 2026-04-30) — deep structural-survey
+### `aeat.domain.financial` (audit 20, 2026-04-30) — deep structural-survey
 
 **One-liner**: Track-B Transaction Data Pipeline (TDP) — ingests
 bank exports, normalises to `RawTransaction`, classifies (rule-
@@ -3475,7 +3475,7 @@ classification is **wrong**.
 
 **THREE major findings**:
 
-1. **`aeat.cli` upward-inversion was a FALSE POSITIVE** — audit
+1. **`aeat.entrypoints.cli` upward-inversion was a FALSE POSITIVE** — audit
    18 reported it but exhaustive grep finds no such import.
    The `cli` direction is correct (`cli` imports `financial`,
    not the reverse). Possibly a stale-source artefact at audit-18
@@ -3504,10 +3504,10 @@ classification is **wrong**.
 - `validate_spanish_tax_id` cross-domain leak (already known from
   audits 4, 8) — moves to `core/identity/` per decision-grounding
   audit.
-- `providers/_base.py` + `_csv.py` import `aeat.config.load_settings`
+- `providers/_base.py` + `_csv.py` import `aeat.core.config.load_settings`
   at module level — couples inbound adapter to application config.
   Better: inject settings at call time.
-- `categories/_corpus.py` imports `aeat.manuals` (PDF loader) —
+- `categories/_corpus.py` imports `aeat.domain.manuals` (PDF loader) —
   runtime I/O dependency in domain module. Should separate.
 - 4 sub-packages independently implement encrypted-storage pattern
   (transactions, invoices, attachments, usage_ratios). Possible
@@ -3741,8 +3741,8 @@ python_files = ["test_*.py", "_test_*.py"]
 
 Coverage configuration (`tool.coverage.run.omit`) and Ruff per-
 file-ignores explicitly list both patterns. Subpackages using the
-`_test_*.py` form: `aeat.rental` (5 files), `aeat.storage` (21
-files), `aeat.filing` (subset), `aeat.cli` (subset).
+`_test_*.py` form: `aeat.domain.rental` (5 files), `aeat.adapters.persistence.storage` (21
+files), `aeat.application.filing` (subset), `aeat.entrypoints.cli` (subset).
 
 The `_` prefix signals that the test file is an internal-to-package
 unit test (consistent with the project's underscore-private
@@ -3756,21 +3756,21 @@ patterns; no test file gets renamed by the layout change.
 Per-domain `_repository.py` modules sit alongside their domain (not
 under `storage/`):
 
-- `aeat.rental._repository` (5 repository classes).
-- `aeat.filing._repository` + `aeat.filing._complementaria_repository`
-  + `aeat.filing._history_repository`.
-- `aeat.justificante._repository`.
-- `aeat.submission._repository`.
-- `aeat.sync._repository`.
+- `aeat.domain.rental._repository` (5 repository classes).
+- `aeat.application.filing._repository` + `aeat.application.filing._complementaria_repository`
+  + `aeat.application.filing._history_repository`.
+- `aeat.domain.justificante._repository`.
+- `aeat.adapters.outbound.aeat.export._repository`.
+- `aeat.application.sync._repository`.
 
-`aeat.storage/` provides the ORM, blob store, crypto, classification,
+`aeat.adapters.persistence.storage/` provides the ORM, blob store, crypto, classification,
 recovery, redaction, rotation, and secret-store underlying layer.
-Domain repositories import from `aeat.storage._orm` for row types
-and `aeat.storage.errors.RepositoryError` for error wrapping.
+Domain repositories import from `aeat.adapters.persistence.storage._orm` for row types
+and `aeat.adapters.persistence.storage.errors.RepositoryError` for error wrapping.
 
 **Implication for the restructure**: per-domain repositories ride
 home with their domain (under `domain/<name>/_repository.py`), not
-under `adapters/persistence/`. Only `aeat.storage` itself moves to
+under `adapters/persistence/`. Only `aeat.adapters.persistence.storage` itself moves to
 `adapters/persistence/storage/`.
 
 ### CLI sub-package import depth
@@ -3873,7 +3873,7 @@ placeholders that are visual noise in the tree.
   audit 4) are part of the restructure proper, not the dead-code
   workstream.
 - **Subpackage-private import boundary violations** (e.g.
-  `_review.py` importing `aeat.financial.transactions._repository`
+  `_review.py` importing `aeat.domain.financial.transactions._repository`
   per audit 5) are layering violations, not dead code.
 - **Misplaced files** (e.g. `filing._history_repository.py`
   moving to sync, `cli/_live.py` moving to test infrastructure) are
@@ -3976,7 +3976,7 @@ above.
 - 11 errors-domain exception classes to their domain
   `_errors.py` files (per audit 1).
 - Browser Playwright protocols from `auth/_authenticator.py` to
-  `outbound/aeat/browser/_protocols.py`.
+  `outbound/aeat/adapters/outbound/aeat/browser/_protocols.py`.
 - `StaticCasillaSchema` / `CasillaSource` from
   `filing/_builders/_modelo_130_schema.py` to a shared kernel.
 
@@ -4195,11 +4195,11 @@ are imminent (#23 / #25 references in the audit).
 | Lens | Keep in browser (current) | Move to workflow |
 | --- | --- | --- |
 | Kent UX | Zero. | Zero. |
-| Contributor legibility | **NEGATIVE**: `aeat.workflow.__init__` does monkey-patch + `model_rebuild()` ritual to break a circular forward-ref. A new contributor opening this file sees magic and wonders "what's this?". | **POSITIVE**: `SiteHealthAlert.stage: WorkflowStage` is semantically a workflow concept; moving it home eliminates the magic ritual entirely. The class lives where its concept lives. |
+| Contributor legibility | **NEGATIVE**: `aeat.application.workflow.__init__` does monkey-patch + `model_rebuild()` ritual to break a circular forward-ref. A new contributor opening this file sees magic and wonders "what's this?". | **POSITIVE**: `SiteHealthAlert.stage: WorkflowStage` is semantically a workflow concept; moving it home eliminates the magic ritual entirely. The class lives where its concept lives. |
 | Coding standards | Working but fragile (import-order-sensitive). | Architecturally clean. |
 
 **Audit-grounded recommendation**: **MOVE TO WORKFLOW**
-(`aeat.workflow._models.SiteHealthAlert`). `aeat.browser` keeps
+(`aeat.application.workflow._models.SiteHealthAlert`). `aeat.adapters.outbound.aeat.browser` keeps
 the parsers and probe; the alert TYPE goes to the domain that owns
 the WorkflowStage concept.
 
@@ -4214,7 +4214,7 @@ benefit: zero magic.
 | Lens | Outcome |
 | --- | --- |
 | Kent UX | Zero. |
-| Contributor legibility | **POSITIVE**: a leading-underscore symbol on a public surface is contradictory. `_FakeAdapter` is clearly intended as a test fixture; advertising it on `aeat.llm.__all__` invites accidental dependency. |
+| Contributor legibility | **POSITIVE**: a leading-underscore symbol on a public surface is contradictory. `_FakeAdapter` is clearly intended as a test fixture; advertising it on `aeat.adapters.outbound.llm.__all__` invites accidental dependency. |
 | Coding standards | Standard practice — private symbols stay private. |
 | Risk | LOW (zero external consumers verified by grep). |
 
@@ -4265,8 +4265,8 @@ all converge):
 
 - **DELETE** (Phase 1 standalone PRs):
   - `auth/_secret_adapters.py` (whole module + test)
-  - `_FakeAdapter` from `aeat.llm.__all__`
-  - `ProviderRequest` from `aeat.llm.__all__`
+  - `_FakeAdapter` from `aeat.adapters.outbound.llm.__all__`
+  - `ProviderRequest` from `aeat.adapters.outbound.llm.__all__`
   - `auth._providers.describe_certificate_provider` from
     `_providers.__all__`
   - `filing.utc_now` from `filing.__init__.__all__`
@@ -4279,7 +4279,7 @@ all converge):
   - 4 hollow Protocol stubs in `sync` (`LLMClient`, `LLMRequest`,
     `ManualRulesLoader`, `SchemaLoader`)
 - **RELOCATE** (Phase 2 with restructure):
-  - `SiteHealthAlert` → `aeat.workflow._models`
+  - `SiteHealthAlert` → `aeat.application.workflow._models`
   - `LiveSubmitForbiddenError` → `core/access_gate/_errors.py`
   - `AeatLiveReadNotEnabledError` → `core/access_gate/`
   - `validate_spanish_tax_id` → `core/identity/`
@@ -4308,7 +4308,7 @@ financial.*).
   `_repository.py` lives WITH its domain.
 - The ADR's import-boundary contract says `domain/` MUST NOT import
   from `adapters/` (`core/` allowed only for foundational types).
-- Repositories import heavily from `aeat.storage` (envelope I/O,
+- Repositories import heavily from `aeat.adapters.persistence.storage` (envelope I/O,
   encrypted columns, errors, lock).
 - Placing repositories in `domain/<name>/` violates the layered
   contract.
@@ -4344,11 +4344,11 @@ the user has final say.
 - Future audits (justificante, sync, submission, workflow,
   financial.*) all touch this question.
 
-### Misplacement: `aeat.filing._history_repository`
+### Misplacement: `aeat.application.filing._history_repository`
 
 **Surfaced**: audit 5 (filing). **Resolution**: file moves out of
 `filing/` into the sync domain. Persists `WireFilingHistory` —
-type owned by `aeat.sync`. No production consumer outside `filing/`
+type owned by `aeat.application.sync`. No production consumer outside `filing/`
 itself today; safe to relocate. To be folded into the sync audit
 when that lands.
 
@@ -4369,14 +4369,14 @@ time — the misnomer is a footgun for new contributors.
 Pre-execution untangling required. Each violates the ADR's import-
 boundary contract.
 
-1. **`casillas` → `aeat.cli`** (audit 18) — domain → entrypoint.
+1. **`casillas` → `aeat.entrypoints.cli`** (audit 18) — domain → entrypoint.
    Specific file:line not yet located; verify during execution.
-2. ~~`financial` → `aeat.cli`~~ — **FALSE POSITIVE** (audit 20
+2. ~~`financial` → `aeat.entrypoints.cli`~~ — **FALSE POSITIVE** (audit 20
    corrected; no such import in current source).
 3. **`profile.assets` + `profile.inventory` → `formulas._rulesets.modelo_100._amortization` / `_inventario` / `_ccaa`** (audit 18) — cross-domain private import.
-4. **`filing._review` → `aeat.financial.transactions._repository`** (audit 5) — subpackage-private import.
-5. **`storage._master_key` → `aeat.financial.invoices._validators`** (audit 4) — `core/`-bound code → `adapters/`. NIF canary.
-6. **`sanitizer._records` → `aeat.financial.invoices._validators`** (audit 8) — same target as #5.
+4. **`filing._review` → `aeat.domain.financial.transactions._repository`** (audit 5) — subpackage-private import.
+5. **`storage._master_key` → `aeat.domain.financial.invoices._validators`** (audit 4) — `core/`-bound code → `adapters/`. NIF canary.
+6. **`sanitizer._records` → `aeat.domain.financial.invoices._validators`** (audit 8) — same target as #5.
 7. **`verification._verify` → `formulas._ledger.Discrepancy` + `formulas._ruleset.Ruleset`** (audit 19) — private bypass; resolve by promoting to public formulas surface.
 8. **`cli/filing/__init__.py` → `formulas._period`, `formulas._registry`, `formulas._rulesets`, `formulas._rulesets.modelo_100._ccaa.compute_cuota_autonomica_general`** (audit 19) — 4-level deep private bypass into ruleset implementation.
 
@@ -4388,16 +4388,16 @@ boundary contract.
 - **#3** (profile → formulas private): extract a public API in
   `domain/formulas/` for amortization tables + CCAA registry.
 - **#4** (filing → financial private repo): rewrite to use
-  `aeat.financial.transactions` public surface, OR document and
+  `aeat.domain.financial.transactions` public surface, OR document and
   promote the symbol.
 - **#5, #6** (NIF canary): move `validate_spanish_tax_id` to
   `core/identity/` (option A) — eliminates BOTH violations in
   one move. Already flagged in audit 4 and confirmed in audit 8.
 
-### Subpackage-private import boundary violation: `aeat.financial.transactions._repository`
+### Subpackage-private import boundary violation: `aeat.domain.financial.transactions._repository`
 
 **Surfaced**: audit 5 (filing). `filing/_review.py` imports
 `TransactionCatalogueRepository` from
-`aeat.financial.transactions._repository` (private path), not via
+`aeat.domain.financial.transactions._repository` (private path), not via
 the subpackage's public `__init__.py`. To be flagged in the
 financial.transactions audit.

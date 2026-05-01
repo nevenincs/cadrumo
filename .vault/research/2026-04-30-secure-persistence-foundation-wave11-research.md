@@ -29,13 +29,13 @@ project's two CORPUS-class on-disk roots
 integrity coverage:
 
 - Manuals tracks per-record SHA-256 via `FetchedManualPart` in
-  `src/aeat/manuals/_schema.py:296`. Each fetched PDF carries a
+  `src/aeat/domain/manuals/_schema.py:296`. Each fetched PDF carries a
   64-char hex digest, content length, fetched timestamp, and
   source URL.
 - Casillas catalogue files at
   `corpus/casillas/<modelo>/<period>.json` have NO file-level
   integrity record. The file is loaded via
-  `src/aeat/casillas/catalogue.py:110:load_casillas` which only
+  `src/aeat/domain/casillas/catalogue.py:110:load_casillas` which only
   validates the pydantic shape; a corrupted or tampered casilla
   table parses as long as the JSON shape is valid.
 
@@ -53,7 +53,7 @@ The manual fetcher writes a `manifest.json` next to each
 the fetched-bytes integrity for the PDF blob but not:
 
 - The structured-record JSON files (Sections, Rules) that downstream
-  code consumes via `aeat.manuals.load_manual`. These are the
+  code consumes via `aeat.domain.manuals.load_manual`. These are the
   product of an extraction pipeline; their integrity today rests on
   the pydantic schema parse and on the `manuals_review_required`
   flag.
@@ -86,18 +86,18 @@ is intentionally out of scope.
 
 ### Substrate primitives that already exist
 
-- `aeat.storage.derive_key` / `encrypt_record` are not relevant
+- `aeat.adapters.persistence.storage.derive_key` / `encrypt_record` are not relevant
   here — corpus material is plaintext at rest.
 - `hashlib.sha256` is the project's stable digest primitive (used
-  by `aeat.financial.transactions.derive_transaction_id`,
-  `aeat.justificante`'s `source_pdf_sha256`, etc.).
-- `aeat._paths.resolve_record_json_path` is the existing path-
+  by `aeat.domain.financial.transactions.derive_transaction_id`,
+  `aeat.domain.justificante`'s `source_pdf_sha256`, etc.).
+- `aeat.core.paths.resolve_record_json_path` is the existing path-
   containment validator — relevant when an operator passes a
   corpus name on the CLI.
 
 ## Recommended scope
 
-1. **Substrate**: a single `aeat.storage._corpus_manifest` module
+1. **Substrate**: a single `aeat.adapters.persistence.storage._corpus_manifest` module
    defining `CorpusEntry`, `CorpusManifest`, and helpers
    `build_corpus_manifest(corpus_root)`,
    `verify_corpus_manifest(corpus_root, manifest)`,

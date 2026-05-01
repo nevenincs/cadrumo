@@ -13,23 +13,23 @@ Implemented the new LLM client package, additive settings, CLI surface, and the
 required verification suite for issue `#21`.
 
 - Modified: `src/aeat/config.py`
-- Modified: `src/aeat/cli/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/__init__.py`
 - Modified: `env/.env.example`
 - Modified: `pyproject.toml`
-- Created: `src/aeat/llm/`
-- Created: `src/aeat/cli/llm/`
+- Created: `src/aeat/adapters/outbound/llm/`
+- Created: `src/aeat/entrypoints/cli/llm/`
 
 ## Description
 
-Added a new `aeat.llm` public package that centralizes provider selection,
+Added a new `aeat.adapters.outbound.llm` public package that centralizes provider selection,
 prompt lookup, caching, usage recording, translation, and bulk translation
 behind `LLMClient`.
 
 Implemented strict pydantic request, response, prompt, cache, usage, and
 translation records together with an `LLMError` hierarchy rooted in
-`aeat.errors.AeatError`.
+`aeat.core.errors.AeatError`.
 
-Implemented provider adapters under `src/aeat/llm/_providers/`, including a
+Implemented provider adapters under `src/aeat/adapters/outbound/llm/_providers/`, including a
 real Anthropic adapter, hosted-provider HTTP adapters for OpenAI and Gemini, a
 local fallback adapter, and a deterministic `_FakeAdapter` used by unit tests.
 

@@ -25,20 +25,20 @@ draft → **submit** → archive.
 
 The submission engine must compile and ship before these siblings merge:
 
-- **#6 modelo enum** — `aeat.models.ModeloIdentifier`.
-- **#7 portal catalogue** — `aeat.portals.PortalCatalogue`, `Portal`.
-- **#8 certificate auth** — `aeat.auth.certificate.CertificateBackend`.
-- **#23 casilla DB** — `aeat.casillas.CasillaCatalogue`, `CasillaRecord`.
-- **#38 deadline engine** — already on main as `aeat.deadlines`, but
+- **#6 modelo enum** — `aeat.domain.modelos.ModeloIdentifier`.
+- **#7 portal catalogue** — `aeat.domain.portals.PortalCatalogue`, `Portal`.
+- **#8 certificate auth** — `aeat.adapters.outbound.aeat.auth.certificate.CertificateBackend`.
+- **#23 casilla DB** — `aeat.domain.casillas.CasillaCatalogue`, `CasillaRecord`.
+- **#38 deadline engine** — already on main as `aeat.domain.deadlines`, but
   we still rebase-decouple via a narrow `DeadlineWindowChecker` Protocol.
-- **#39 filing draft engine** — `aeat.filing.FilingDraft`, `DraftLoader`,
+- **#39 filing draft engine** — `aeat.application.filing.FilingDraft`, `DraftLoader`,
   `FilingFinding`.
-- **#44 justificante parser** — `aeat.justificante.JustificanteParser`,
+- **#44 justificante parser** — `aeat.domain.justificante.JustificanteParser`,
   `Justificante`.
 
 Every one of these is stubbed as a `Protocol` inside
-`src/aeat/submission/_protocols.py`, mirroring the pattern from
-`aeat.deadlines._protocols` (see `[[2026-04-12-deadline-engine-research]]`).
+`src/aeat/adapters/outbound/aeat/export/_protocols.py`, mirroring the pattern from
+`aeat.domain.deadlines._protocols` (see `[[2026-04-12-deadline-engine-research]]`).
 Rebase-swap is mechanical: delete stub, import from the real package.
 
 ## architecture overview
@@ -64,7 +64,7 @@ The submitter consumes a narrow `BrowserSessionLike` Protocol defined
 in `_submitters/_contract.py`. It lists exactly the methods the
 submitter needs (`navigate`, `fill`, `screenshot`, `trace_start`,
 `trace_stop`, `click`, `snapshot_form_state`). The production
-`aeat.browser.BrowserSession` structurally conforms; unit tests pass a
+`aeat.adapters.outbound.aeat.browser.BrowserSession` structurally conforms; unit tests pass a
 deterministic Python class that records calls into a list. This avoids
 Playwright startup in unit tests **and** respects the project "no
 mocks" rule — the test double is a real Protocol implementation, not a

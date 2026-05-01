@@ -75,7 +75,7 @@ first paragraph — the rate clause). We retain that convention.
 ## 2024 → 2025 diff narrative
 
 **No amendment.** The existing 2024 ruleset
-(`src/aeat/formulas/_rulesets/modelo_115_2024.py`) re-imports
+(`src/aeat/domain/formulas/_rulesets/modelo_115_2024.py`) re-imports
 `_CASILLAS`, `_FORMULAS`, and `_CITATIONS` from the 2025 module and
 declares only its own `_PARAMETERS` with the 2024 effective range.
 The numerical content is identical: `irpf.arrendamientos_rate =
@@ -162,7 +162,7 @@ on the M115 baseline:
 - **Ruleset 2025** — `modelo_115_2025.py`. Canonical surface; ships
   `_CASILLAS`, `_FORMULAS`, `_CITATIONS`. Citation coverage 100 %.
 - **Extractor** — `Modelo115V2025Extractor` in
-  `src/aeat/declaracion/_extractors/modelo_115_v2025.py`. Six
+  `src/aeat/adapters/inbound/declaracion/_extractors/modelo_115_v2025.py`. Six
   casillas (`01..06`). Subclass of `GenericDeclaracionExtractor`.
 - **Per-ruleset tests** — `test_modelo_115_2025.py` ships the canonical
   five test cases (clean audit, percent mismatch, resultado-formula,
@@ -183,7 +183,7 @@ on the M115 baseline:
   attaches to the 2025 ruleset).
 - **Synthetic generator** — quarterly PDFs are rendered by the
   shared `QuarterlyGenParams` / `generate_quarterly` helpers under
-  `aeat.testing`. M115 is exercised through the
+  `aeat.domain.testing`. M115 is exercised through the
   `_synth_quarterly_pdf` integration helper. No bespoke generator
   needed (M115 fits the generic 6-casilla quarterly shape).
 

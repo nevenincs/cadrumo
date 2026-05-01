@@ -11,7 +11,7 @@ related:
 
 # `google-auth-ux` research: `kent-first-google-authentication-ux-for-cli-mcp-bootstrap`
 
-This research audits the current Google authentication journey across `justfile`, `src/aeat/auth/__init__.py`, `src/aeat/cli/oauth.py`, `src/aeat/cli/doctor.py`, `src/aeat/cli/bootstrap.py`, `src/aeat/mcp/launch_google_workspace.py`, `README.md`, `CONTRIBUTING.md`, `env/.env.example`, and the live operator journey executed on 2026-04-21. The goal is to define a Kent-first UX contract for CLI, bootstrap, and MCP readiness, not an implementation patch sequence.
+This research audits the current Google authentication journey across `justfile`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py`, `src/aeat/entrypoints/cli/oauth.py`, `src/aeat/entrypoints/cli/doctor.py`, `src/aeat/entrypoints/cli/bootstrap.py`, `src/aeat/entrypoints/mcp/launch_google_workspace.py`, `README.md`, `CONTRIBUTING.md`, `env/.env.example`, and the live operator journey executed on 2026-04-21. The goal is to define a Kent-first UX contract for CLI, bootstrap, and MCP readiness, not an implementation patch sequence.
 
 ## Findings
 
@@ -23,7 +23,7 @@ This is not a copy bug. `just gsuite-bootstrap` calls `just gcloud-auth`, and `g
 
 ### 2. The docs say ADC-first, but the runtime becomes OAuth-first once OAuth vars exist
 
-`README.md` still frames Application Default Credentials as the default local-development path and Desktop OAuth as optional. The resolver in `aeat.auth.get_credentials()` does not match that story. Its order is service account, then OAuth desktop, then ADC. Once `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` are present in `env/.env`, the CLI stops behaving like an ADC-first product.
+`README.md` still frames Application Default Credentials as the default local-development path and Desktop OAuth as optional. The resolver in `aeat.adapters.outbound.aeat.auth.get_credentials()` does not match that story. Its order is service account, then OAuth desktop, then ADC. Once `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` are present in `env/.env`, the CLI stops behaving like an ADC-first product.
 
 The operator is therefore given two different truths:
 - docs truth: ADC is the default path
@@ -38,7 +38,7 @@ The repo currently exposes three separate Google auth surfaces:
 - repo-local CLI OAuth tokens in `.tokens/google_oauth_token.json`
 - repo-local MCP credentials in `env/workspace-mcp-credentials`
 
-These surfaces are not interchangeable. `aeat bootstrap` and `aeat doctor` validate the CLI path selected by `aeat.auth`, while `aeat.mcp.launch_google_workspace` uses a different upstream contract and a different credential cache. A successful CLI bootstrap does not prove MCP readiness. A healthy ADC file does not prove the repo-local OAuth token exists. A working MCP cache does not prove the CLI is using the same path.
+These surfaces are not interchangeable. `aeat bootstrap` and `aeat doctor` validate the CLI path selected by `aeat.adapters.outbound.aeat.auth`, while `aeat.entrypoints.mcp.launch_google_workspace` uses a different upstream contract and a different credential cache. A successful CLI bootstrap does not prove MCP readiness. A healthy ADC file does not prove the repo-local OAuth token exists. A working MCP cache does not prove the CLI is using the same path.
 
 ### 4. `just gsuite-oauth-client` is an instruction printer, not an end-to-end setup path
 
@@ -60,7 +60,7 @@ The result is a table that can be technically correct and still operationally co
 
 ### 7. MCP readiness is a separate contract that the current UX does not name clearly
 
-`aeat.mcp.launch_google_workspace` supports only a complete Desktop OAuth configuration or a service-account key path. It does not expose ADC as a supported MCP launch path. It also writes refresh-token state to `env/workspace-mcp-credentials`, which is distinct from both ADC and the CLI OAuth token cache.
+`aeat.entrypoints.mcp.launch_google_workspace` supports only a complete Desktop OAuth configuration or a service-account key path. It does not expose ADC as a supported MCP launch path. It also writes refresh-token state to `env/workspace-mcp-credentials`, which is distinct from both ADC and the CLI OAuth token cache.
 
 The already-recorded execution evidence shows the consequence: CLI bootstrap and `aeat doctor` can pass while a real `workspace-mcp` Drive tool call still needs the OAuth client path. The current UX therefore allows the operator to believe "Google auth is done" when only the CLI half is done.
 

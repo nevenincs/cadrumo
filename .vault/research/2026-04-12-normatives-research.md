@@ -161,9 +161,9 @@ follow-ups without a schema change.
 
 - **id shape**: kebab-case `ley-35-2006`, `rd-439-2007`,
   `orden-hac-242-2025`. Matches the `_StableId` shape already used by
-  `aeat.manuals` and other sibling subpackages.
+  `aeat.domain.manuals` and other sibling subpackages.
 - **Title / summary / article summary**: `Translatable` nested dicts
-  imported directly from `aeat.i18n` (already on `main` via `#20`).
+  imported directly from `aeat.core.i18n` (already on `main` via `#20`).
   Authoritative language is Spanish; Hungarian summaries are the
   user-facing target; English is the authoritative engineering
   language.
@@ -172,7 +172,7 @@ follow-ups without a schema change.
 - **Review metadata**: every persisted record carries
   `reviewed_by` + `last_reviewed_at`. Hand-review is mandatory and
   enforced by `aeat normatives verify` — mirrors the review gate the
-  `aeat.manuals` subpackage ships under `#25`.
+  `aeat.domain.manuals` subpackage ships under `#25`.
 
 ## Non-decisions (deferred)
 
@@ -184,8 +184,8 @@ follow-ups without a schema change.
 - **LLM-assisted summary drafting** — deferred; v1 summaries are
   hand-written by the reviewer and committed as authoritative
   content.
-- **Cross-reference rewire** — `aeat.manuals`, `aeat.models`, and
-  `aeat.casillas` will eventually cite normatives by id. Those
+- **Cross-reference rewire** — `aeat.domain.manuals`, `aeat.domain.modelos`, and
+  `aeat.domain.casillas` will eventually cite normatives by id. Those
   rewires are pure additions to the consuming subpackages and are
   not v1 normatives work.
 
@@ -194,7 +194,7 @@ follow-ups without a schema change.
 - BOE portal: https://www.boe.es/
 - BOE consolidated-text index:
   https://www.boe.es/legislacion/legislacion.php
-- `aeat.manuals` schema: `src/aeat/manuals/_schema.py` on `main` —
+- `aeat.domain.manuals` schema: `src/aeat/domain/manuals/_schema.py` on `main` —
   the review-gate and trilingual-field idiom this subpackage mirrors.
-- `aeat.i18n` public surface: `src/aeat/i18n/__init__.py` — provides
+- `aeat.core.i18n` public surface: `src/aeat/core/i18n/__init__.py` — provides
   `Translatable` and `Language`.

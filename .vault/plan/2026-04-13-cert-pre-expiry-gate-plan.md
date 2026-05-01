@@ -15,10 +15,10 @@ related:
 
 Issue: wgergely/aeat#94. Branch: `feature/94-cert-pre-expiry-gate`.
 
-## Phase 1 — Model + evaluator in `aeat.auth`
+## Phase 1 — Model + evaluator in `aeat.adapters.outbound.aeat.auth`
 
 1. Add `CertificateHealthSeverity(StrEnum)` to
-   `src/aeat/auth/certificate.py`.
+   `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py`.
 2. Add `CertificateHealth(BaseModel)` — strict, frozen, extra=forbid;
    fields per ADR section 1.
 3. Add `CertificatePreExpiryError(CertificateError)`.
@@ -29,7 +29,7 @@ Issue: wgergely/aeat#94. Branch: `feature/94-cert-pre-expiry-gate`.
    `load_certificate` with a transient `CertificateBundle`, catching
    `CertificateExpiredError` and producing an EXPIRED severity record
    instead of raising.
-6. Export new symbols from `src/aeat/auth/__init__.py` + update
+6. Export new symbols from `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py` + update
    `__all__` in `certificate.py`.
 
 ## Phase 2 — Settings + env example
@@ -44,16 +44,16 @@ Issue: wgergely/aeat#94. Branch: `feature/94-cert-pre-expiry-gate`.
 
 ## Phase 3 — Unit tests for health
 
-Add `src/aeat/auth/test_health.py`, `@pytest.mark.unit`, reusing the
+Add `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_health.py`, `@pytest.mark.unit`, reusing the
 `_build_pkcs12_bundle` helper from `test_certificate.py` (imported via
 the module's absolute path, not duplicated — but colocated tests
 module can't import from a sibling test module, so copy the helper
-into a new `src/aeat/auth/_test_pkcs12.py` private utility and have
+into a new `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_test_pkcs12.py` private utility and have
 **both** test files use it).
 
 - On second thought: keep the helper colocated inside `test_health.py`
   as a local function; duplication is cheap and avoids a
-  non-test private module under `src/aeat/auth/`.
+  non-test private module under `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/`.
 
 Scenarios covered:
 - `OK` — not_after = now + 200 days.
@@ -70,7 +70,7 @@ Scenarios covered:
 
 ## Phase 4 — Workflow gate
 
-1. In `src/aeat/workflow/_engine.py::_stage_running_preflight`, after
+1. In `src/aeat/application/workflow/_engine.py::_stage_running_preflight`, after
    the existing `self._certificate_bundle.load()` call, invoke
    `evaluate_loaded_certificate_health(loaded, warn_days=...,
    critical_days=...)` using `self._settings.aeat_cert_warn_days` and
@@ -93,7 +93,7 @@ Scenarios covered:
 ## Phase 5 — `aeat doctor` cert row
 
 1. Add `check_certificate_health(settings)` in
-   `src/aeat/cli/doctor.py` following the `Row` pattern already used.
+   `src/aeat/entrypoints/cli/doctor.py` following the `Row` pattern already used.
 2. Skip when `settings.aeat_certificate_path` is None.
 3. On load failure return `State.WARN`, detail = exception class name.
 4. On OK severity → `State.OK` with `Nd left` detail.
@@ -104,15 +104,15 @@ Scenarios covered:
 ## Phase 6 — Submission CLI gate
 
 1. Add `--force-expiring-cert` option to `submit_cmd` in
-   `src/aeat/cli/submission/submit.py`.
+   `src/aeat/entrypoints/cli/submission/submit.py`.
 2. Before constructing the engine, compute `CertificateHealth` via
-   `aeat.auth.health(path=settings.aeat_certificate_path, ...)` only
+   `aeat.adapters.outbound.aeat.auth.health(path=settings.aeat_certificate_path, ...)` only
    if the cert path is configured; otherwise skip.
 3. On CRITICAL/EXPIRED with `--force-expiring-cert` **not** set, print
    a red message and exit code 2.
 4. On WARN print a yellow warning line; continue.
 5. Update `submit.py` tests only if present; otherwise rely on a new
-   focused unit test colocated under `src/aeat/cli/submission/test_submit.py`
+   focused unit test colocated under `src/aeat/entrypoints/cli/submission/test_submit.py`
    if one doesn't yet exist — guard with `@pytest.mark.unit`.
 
 ## Phase 7 — Quality gates + commit
@@ -132,18 +132,18 @@ Exec records land under
 
 - ✅ Strict pydantic v2 frozen + extra=forbid on all new records.
 - ✅ `StrEnum` for the severity catalogue.
-- ✅ Errors inherit from `aeat.errors.AeatError` via
+- ✅ Errors inherit from `aeat.core.errors.AeatError` via
   `CertificateError`.
-- ✅ Logging via `aeat.logging.get_logger(__name__)` (already imported
+- ✅ Logging via `aeat.core.logging.get_logger(__name__)` (already imported
   in `certificate.py` and `_engine.py`).
 - ✅ Google-style docstrings + type hints on every public symbol.
 - ✅ Tests colocated under `src/aeat/...` with
   `@pytest.mark.unit`, real PKCS#12 generation, no mocks.
-- ✅ Public API discipline: callers import from `aeat.auth` only;
-  `_engine.py` imports the helper off `aeat.auth` (not
-  `aeat.auth.certificate`).
-- ✅ Sibling-branch territory untouched (`aeat.browser`,
-  `aeat.status`, `aeat.filing`, `src/aeat/financial/*`).
+- ✅ Public API discipline: callers import from `aeat.adapters.outbound.aeat.auth` only;
+  `_engine.py` imports the helper off `aeat.adapters.outbound.aeat.auth` (not
+  `aeat.adapters.outbound.aeat.auth.certificate`).
+- ✅ Sibling-branch territory untouched (`aeat.adapters.outbound.aeat.browser`,
+  `aeat.status`, `aeat.application.filing`, `src/aeat/domain/financial/*`).
 - ✅ No workflow file under `.github/workflows/`.
 - ✅ `aeat_cert_warn_days` / `aeat_cert_critical_days` follow the
   existing `aeat_deadline_due_soon_days` shape in Settings.

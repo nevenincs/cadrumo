@@ -39,14 +39,14 @@ audit) flagged Modelo 111 as a Tier-L modelo (full per-annum coverage
    `OK modelo_111.2025 ... coverage=100.00%`).
 3. The wave-67a citation audit corrected the prior premios + the
    prior arrendamientos mappings; both are now in
-   `src/aeat/models/_citation_registry.py` as `KnownBadCitation`
+   `src/aeat/domain/modelos/_citation_registry.py` as `KnownBadCitation`
    blocklist rows.
 4. The existing harness coverage exercises M111 2024 + 2025 at
    `sub_op = 1, percent_rate_param = 2`. The 2026 ruleset inherits
    the same fingerprint — single new row per harness table.
 5. M111 has the **same post-PR-440 extractor-registry gap** M130 had
    pre-`#321` post-fix: only the 2025 template revision is registered
-   in `src/aeat/declaracion/_extractors/__init__.py`. The 2024 and
+   in `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py`. The 2024 and
    2026 sibling extractor classes need to land in this PR so the
    registry resolves all three years.
 
@@ -88,7 +88,7 @@ formula-ids).
   required, mirroring M130.
 - **Soft collisions** with three sibling Tier-L branches in flight on
   three shared files (`tests/integration/test_kent_workflows.py`,
-  `docs/coverage/modelos.md`, `src/aeat/formulas/_rulesets/__init__.py`).
+  `docs/coverage/modelos.md`, `src/aeat/domain/formulas/_rulesets/__init__.py`).
 
 ## Constraints
 
@@ -106,7 +106,7 @@ formula-ids).
 
 ### D1. 2026 ruleset is a structural clone of 2024 / 2025
 
-Author `src/aeat/formulas/_rulesets/modelo_111_2026.py` as a clone of
+Author `src/aeat/domain/formulas/_rulesets/modelo_111_2026.py` as a clone of
 the 2024 module: it imports `_CASILLAS`, `_CITATIONS`, `_FORMULAS`
 from `modelo_111_2025` (the canonical year), declares its own
 `ParameterTable` with `effective_from=2026-01-01` /
@@ -126,13 +126,13 @@ the M130 year-scoped pattern is documented as a deliberate per-modelo
 divergence, not drift. A future cohort sweep can align them; not in
 scope here.
 
-Register `MODELO_111_2026` in `src/aeat/formulas/_rulesets/__init__.py`
+Register `MODELO_111_2026` in `src/aeat/domain/formulas/_rulesets/__init__.py`
 and add it to `ALL_RULESETS`.
 
 ### D2. Sibling 2024 + 2026 extractor classes — post-PR-440 fix
 
 Author two thin subclasses inside
-`src/aeat/declaracion/_extractors/modelo_111_v2025.py`:
+`src/aeat/adapters/inbound/declaracion/_extractors/modelo_111_v2025.py`:
 
 - `Modelo111V2024Extractor(Modelo111V2025Extractor)` —
   `template_revision = ("111", 2024, "2024.01")`.
@@ -144,7 +144,7 @@ form layout is unchanged across 2024 → 2025 → 2026 (Orden
 HAP/2194/2013 is the latest M111 form-layout amendment; no 2025 /
 2026 BOE amendment to the M111 form layout has been published).
 
-Register both classes in `src/aeat/declaracion/_extractors/__init__.py`
+Register both classes in `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py`
 (import + `_REGISTERED_CLASSES` tuple).
 
 This is the **direct lesson from PR-440 review**: the M130 reference
@@ -204,7 +204,7 @@ identical to 2024 / 2025.
 
 ### D6. 2024 colocated test file — close the M130-equivalent gap
 
-Author `src/aeat/formulas/_rulesets/test_modelo_111_2024.py` mirroring
+Author `src/aeat/domain/formulas/_rulesets/test_modelo_111_2024.py` mirroring
 the 2025 file's structure with a 2024-distinct fixture (different
 basal amounts to avoid mirror-fixture coupling against 2025). Tests:
 happy path + external-anchored worked example + 2024-vs-2025 no-drift
@@ -213,7 +213,7 @@ ruleset-id-and-effective-range.
 
 ### D7. 2026 colocated test file
 
-Author `src/aeat/formulas/_rulesets/test_modelo_111_2026.py` mirroring
+Author `src/aeat/domain/formulas/_rulesets/test_modelo_111_2026.py` mirroring
 the M130 2026 reference (`test_modelo_130_2026.py`): happy path +
 2026-vs-2025 no-drift + external-anchored worked example +
 premios-typical + zero-boundary + premios-typo + ruleset-id-and-

@@ -9,7 +9,7 @@ related:
 
 # phase4 summary - browser session hook
 
-Phase 4 added `aeat.browser._site_health_probe` and a new
+Phase 4 added `aeat.adapters.outbound.aeat.browser._site_health_probe` and a new
 `BrowserSession.navigate(page, url)` async method. `navigate` runs
 `page.goto`, collects `http_status`/headers/`page.content()`, then
 calls `probe_response` and raises `SiteHealthError(status=...)`

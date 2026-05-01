@@ -37,8 +37,8 @@ without re-reading 10 wave audit-gate reports.
 Closed by **Wave 2** (commits up to `1690039`). Operator credentials
 - OAuth client secrets, service-account private keys, OAuth refresh
 tokens, MCP credentials, operator-profile records - all migrated
-to the `aeat.storage.SecretStore` ciphertext-at-rest substrate via
-the per-consumer adapters in `src/aeat/auth/_secret_adapters.py`.
+to the `aeat.adapters.persistence.storage.SecretStore` ciphertext-at-rest substrate via
+the per-consumer adapters in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_secret_adapters.py`.
 The `aeat secrets` CLI (`aeat secrets list/put/rm/rotate`) provides
 the operator-facing surface.
 

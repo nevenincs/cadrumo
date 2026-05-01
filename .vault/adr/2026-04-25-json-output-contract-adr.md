@@ -46,11 +46,11 @@ CLI files that will eventually need the root-level `--json` flag.
   - Phase 1: standalone foundations only
   - Phase 2: consume `#398` and wire `--json` across non-workflow commands
   - Phase 3: after `#393`, wire workflow `run` / `next`
-- The branch must not touch `src/aeat/sede/`,
-  `src/aeat/auth/_clave_movil.py`, `src/aeat/cli/workflow/run.py`,
-  `src/aeat/cli/workflow/next.py`, or any `#398` registry/decorator code.
+- The branch must not touch `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`, `src/aeat/entrypoints/cli/workflow/run.py`,
+  `src/aeat/entrypoints/cli/workflow/next.py`, or any `#398` registry/decorator code.
 - The project mandates strict pydantic v2 models, stable exit-code behavior,
-  `aeat.errors.AeatError` inheritance, and stdout/stderr discipline that is
+  `aeat.core.errors.AeatError` inheritance, and stdout/stderr discipline that is
   safe on Windows and in pipelines.
 - External CLI references support keeping the first machine contract narrow:
   `gh` uses explicit `--json`, `kubectl`/AWS/Docker show that additional
@@ -71,25 +71,25 @@ CLI files that will eventually need the root-level `--json` flag.
 
 ## Implementation
 
-- Add `src/aeat/cli/_schemas.py` as the single Phase 1 registry surface:
+- Add `src/aeat/entrypoints/cli/_schemas.py` as the single Phase 1 registry surface:
   `OutputSchema`, `SchemaEnvelope`, `SCHEMA_REGISTRY`, and a duplicate-safe
   `register_schema()` decorator. Phase 1 registers no command bindings yet;
   it defines the schema contract and public import surface only.
-- Add `src/aeat/cli/_exit_codes.py` with the eleven-code table required by
+- Add `src/aeat/entrypoints/cli/_exit_codes.py` with the eleven-code table required by
   issue `#399`. This branch treats the table as authoritative for success,
   refusal, auth, integrity, failure, internal, locking, no-network, and
   usage/programming exits. The helper emits plain stderr until `#398` lands.
-- Add `src/aeat/cli/_tty.py` with probes for stdin/stdout/stderr TTY state,
+- Add `src/aeat/entrypoints/cli/_tty.py` with probes for stdin/stdout/stderr TTY state,
   colour resolution that honors `AEAT_FORCE_COLOR` and `NO_COLOR`, progress
   gating, and a typed non-TTY stdin refusal error.
-- Add `src/aeat/cli/_log_levels.py` with the four named levels
+- Add `src/aeat/entrypoints/cli/_log_levels.py` with the four named levels
   (`quiet`, `default`, `verbose`, `debug`), CLI/env precedence resolution,
   and a root-logger application helper.
 - Extend `src/aeat/logging.py` with a record-level `SecretScrubbingFilter`
   and a shared `SCRUB_FIELD_PATTERNS` constant. The scrubber runs before
   formatting and protects message text, args, extra fields, and exception
   rendering.
-- Re-export the public foundation symbols from `aeat.cli` so callers do not
+- Re-export the public foundation symbols from `aeat.entrypoints.cli` so callers do not
   import private underscore modules directly.
 - Defer command bindings, root `--json` callbacks, and error-envelope imports
   until the Phase 2 rebase onto `#398`, then defer workflow CLI bindings until

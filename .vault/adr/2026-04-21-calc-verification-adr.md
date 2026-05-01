@@ -35,7 +35,7 @@ Calc-verification must turn the formula-engine's raw `AuditReport` into a Kent-r
 ### 1. Module layout
 
 ```
-src/aeat/verification/
+src/aeat/application/verification/
     __init__.py       # public API: verify_declaracion, VerificationVerdict,
                       # DiscrepancyCause, ClassifiedDiscrepancy, VerificationError
     _schema.py        # records

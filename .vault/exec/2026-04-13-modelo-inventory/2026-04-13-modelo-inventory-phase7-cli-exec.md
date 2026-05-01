@@ -14,14 +14,14 @@ related:
 
 ## delivered
 
-- `src/aeat/models/_cli.py` — Typer `app` with four commands:
+- `src/aeat/domain/modelos/_cli.py` — Typer `app` with four commands:
   `list`, `show`, `applicable-to`, `year-plan`. Every command
   supports `--json` and routes through the real registry /
   deadline engine with no test doubles.
-- `src/aeat/cli/modelos/__init__.py` — thin re-export of the Typer
-  app from `aeat.models._cli`, matching the pattern used by
-  `aeat.cli.deadlines`.
-- `src/aeat/cli/__init__.py` — adds `from aeat.cli import modelos
+- `src/aeat/entrypoints/cli/modelos/__init__.py` — thin re-export of the Typer
+  app from `aeat.domain.modelos._cli`, matching the pattern used by
+  `aeat.entrypoints.cli.deadlines`.
+- `src/aeat/entrypoints/cli/__init__.py` — adds `from aeat.entrypoints.cli import modelos
   as modelos_module` and wires the sub-app into the root Typer
   instance in alphabetical position between `manual` and
   `normatives`.
@@ -32,8 +32,8 @@ related:
   year-plan (JSON). Every test hits the real registry and real
   deadline engine.
 - `pyproject.toml` — extends the existing Typer-B008 per-file ignore
-  to cover `src/aeat/models/_cli.py`, matching the documented
-  treatment of `src/aeat/cli/**`.
+  to cover `src/aeat/domain/modelos/_cli.py`, matching the documented
+  treatment of `src/aeat/entrypoints/cli/**`.
 
 ## gate outcomes
 

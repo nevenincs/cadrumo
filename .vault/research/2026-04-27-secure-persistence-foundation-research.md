@@ -100,7 +100,7 @@ class, and current redaction posture.
 
 ### Centralised SQL storage (the existing governed surface)
 
-- Writers: `src/aeat/storage/engine.py`, `session.py`, `repository.py`,
+- Writers: `src/aeat/adapters/persistence/storage/engine.py`, `session.py`, `repository.py`,
   `migrations_api.py`, `_orm.py`, `records.py`.
 - Root: `aeat_database_url` (default `sqlite:///<project>/var/aeat.db`).
 - Format: SQLite via SQLAlchemy 2.x; Alembic migrations under
@@ -114,9 +114,9 @@ class, and current redaction posture.
 
 ### Secret material and session-bearing state (CRITICAL)
 
-- Writers: `src/aeat/setup/_env_writer.py`, `src/aeat/cli/oauth.py`,
-  `src/aeat/cli/auth/__init__.py`, `src/aeat/auth/__init__.py`,
-  `src/aeat/auth/_authenticator.py`, `src/aeat/auth/_clave_movil.py`.
+- Writers: `src/aeat/application/setup/_env_writer.py`, `src/aeat/entrypoints/cli/oauth.py`,
+  `src/aeat/entrypoints/cli/auth/__init__.py`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
 - Roots: `env/.env` (KEY=VALUE plaintext including Cl@ve identity and
   Google resource IDs), `env/oauth-client.json` (OAuth client credentials,
   hardcoded `PROJECT_ROOT / "env"`), `env/service-account.json` (Google
@@ -141,10 +141,10 @@ class, and current redaction posture.
 
 ### Financial / accounting state (CRITICAL)
 
-- Writers: `src/aeat/financial/transactions/_service.py`,
-  `src/aeat/financial/invoices/_service.py`,
-  `src/aeat/financial/usage_ratios/_service.py`,
-  `src/aeat/financial/attachments/_store.py`.
+- Writers: `src/aeat/domain/financial/transactions/_service.py`,
+  `src/aeat/domain/financial/invoices/_service.py`,
+  `src/aeat/domain/financial/usage_ratios/_service.py`,
+  `src/aeat/domain/financial/attachments/_store.py`.
 - Roots: `aeat_financial_txs_dir` (transactions catalogue JSON),
   `aeat_invoices_dir` (invoice catalogue JSON, NOT path-normalised),
   `aeat_usage_ratios_path`, `aeat_attachments_dir` (NOT path-normalised;
@@ -161,12 +161,12 @@ class, and current redaction posture.
 
 ### Filing / submission / amendment / justificante state (CRITICAL)
 
-- Writers: `src/aeat/cli/filing/__init__.py`,
-  `src/aeat/cli/review/__init__.py`,
-  `src/aeat/filing/_complementaria.py`,
-  `src/aeat/submission/_engine.py`,
-  `src/aeat/submission/_audit.py`,
-  `src/aeat/submission/_submitters/modelo130.py`.
+- Writers: `src/aeat/entrypoints/cli/filing/__init__.py`,
+  `src/aeat/entrypoints/cli/review/__init__.py`,
+  `src/aeat/application/filing/_complementaria.py`,
+  `src/aeat/adapters/outbound/aeat/export/_engine.py`,
+  `src/aeat/adapters/outbound/aeat/export/_audit.py`,
+  `src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py`.
 - Roots: `aeat_drafts_dir`, `aeat_submissions_dir`,
   `aeat_filing_history_dir`, `aeat_justificantes_dir`,
   `aeat_submission_browser_trace_dir`, plus the hard-coded
@@ -181,9 +181,9 @@ class, and current redaction posture.
 
 ### Workflow / sync / observability (HIGH)
 
-- Writers: `src/aeat/workflow/_persistence.py`,
-  `src/aeat/sync/_repository.py`,
-  `src/aeat/observability/_store.py`, `_sink.py`, `_context.py`,
+- Writers: `src/aeat/application/workflow/_persistence.py`,
+  `src/aeat/application/sync/_repository.py`,
+  `src/aeat/core/observability/_store.py`, `_sink.py`, `_context.py`,
   `_fingerprint.py`, `_replay.py`.
 - Roots: `aeat_workflow_runs_dir`, `aeat_sync_divergence_file_dir`,
   `aeat_runs_dir` (per-run subdirectories with `trace.json` and
@@ -203,11 +203,11 @@ class, and current redaction posture.
 
 ### Caches and corpora (MEDIUM)
 
-- Writers: `src/aeat/llm/_cache.py`, `src/aeat/llm/_usage.py`,
-  `src/aeat/schema/_fetch.py`, `src/aeat/schema/_cache.py`,
-  `src/aeat/status/_cache.py`, `src/aeat/manuals/_fetch.py`,
-  `src/aeat/manuals/_loader.py`, `src/aeat/normatives/_loader.py`,
-  `src/aeat/casillas/catalogue.py`, `src/aeat/inbox/`.
+- Writers: `src/aeat/adapters/outbound/llm/_cache.py`, `src/aeat/adapters/outbound/llm/_usage.py`,
+  `src/aeat/domain/schema/_fetch.py`, `src/aeat/domain/schema/_cache.py`,
+  `src/aeat/status/_cache.py`, `src/aeat/domain/manuals/_fetch.py`,
+  `src/aeat/domain/manuals/_loader.py`, `src/aeat/domain/normatives/_loader.py`,
+  `src/aeat/domain/casillas/catalogue.py`, `src/aeat/inbox/`.
 - Roots: `aeat_llm_cache_dir`, `aeat_llm_usage_dir`,
   `aeat_schema_cache_dir`, `aeat_status_cache_dir`,
   `aeat_manuals_root`, `aeat_normatives_root`, `aeat_casillas_root`,
@@ -220,9 +220,9 @@ class, and current redaction posture.
 
 ### Connectors and exports (MEDIUM)
 
-- Writers: `src/aeat/cli/bootstrap.py`, `src/aeat/cli/drive.py`,
-  `src/aeat/cli/docs.py`, `src/aeat/cli/sheets.py`,
-  `src/aeat/mcp/launch_google_workspace.py`, `src/aeat/cli/sede/`,
+- Writers: `src/aeat/entrypoints/cli/bootstrap.py`, `src/aeat/entrypoints/cli/drive.py`,
+  `src/aeat/entrypoints/cli/docs.py`, `src/aeat/entrypoints/cli/sheets.py`,
+  `src/aeat/entrypoints/mcp/launch_google_workspace.py`, `src/aeat/entrypoints/cli/sede/`,
   `scratch/` family (sede-discovery, clave-diag, recon-* outputs from
   ad-hoc diagnostic CLIs).
 - Format: heterogeneous (PDF, PNG, HTML, JSON, ZIP, depending on
@@ -410,13 +410,13 @@ current roadmap.
 
 - Wave 1 — substrate, no domain migration. Deliver the governed
   persistence boundary (the `aeat.persistence` public surface or
-  generalisation of `aeat.storage`), the classification and retention
+  generalisation of `aeat.adapters.persistence.storage`), the classification and retention
   contract, the secret store with two backends (OS keychain + encrypted-
   file fallback), the at-rest crypto primitives (column-level
   `TypeDecorator` set; envelope helper for file-backed domains), the
   cross-platform file-lock helper, the schema-version envelope helper,
   the path-normalisation fix for the three skipped settings, and the new
-  error codes registered in `aeat.errors._registry`. Substrate ships with
+  error codes registered in `aeat.core.errors._registry`. Substrate ships with
   exhaustive unit + integration tests. No domain consumer is migrated.
   The audit gate's output extends Wave 2 or opens new waves.
 - Wave 2 — secret canary consumer. Migrate `env/oauth-client.json`,
@@ -448,8 +448,8 @@ reflects the live state.
 The ADR resolves at minimum:
 
 - The public name and import path of the substrate (`aeat.persistence`
-  as a new subpackage that absorbs `aeat.storage`, or extension of
-  `aeat.storage` itself; the practical difference is the migration
+  as a new subpackage that absorbs `aeat.adapters.persistence.storage`, or extension of
+  `aeat.adapters.persistence.storage` itself; the practical difference is the migration
   burden on existing callers vs the conceptual cleanliness of a new
   name).
 - Final selection between keyring-only, file-fallback-only, and hybrid

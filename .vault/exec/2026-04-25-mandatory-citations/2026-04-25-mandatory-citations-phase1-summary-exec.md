@@ -27,7 +27,7 @@ phase, per the agreed Phase 2 deferral.
   `CasillaDefinition` — raises `RulesetValidationError` on
   `computed=True` + empty `legal_basis`.
 - `LegalCitationSource` closed-catalogue regression test.
-- `aeat.cli.audit` subpackage with `audit_app` + `rulesets_app` +
+- `aeat.entrypoints.cli.audit` subpackage with `audit_app` + `rulesets_app` +
   `citations_cmd`; pure-function `validate_citation_coverage` and
   `aggregate_reports` helpers; strict + frozen
   `CitationCoverageReport` pydantic model.
@@ -35,8 +35,8 @@ phase, per the agreed Phase 2 deferral.
   (`test_all_rulesets_have_citations.py`) over 18 landed rulesets.
 - `docs/coverage/pipeline.md` cross-cutting row.
 - Two pre-existing test files
-  (`src/aeat/formulas/test_engine.py` and
-  `src/aeat/formulas/test_ruleset.py`) updated with fixture citations
+  (`src/aeat/domain/formulas/test_engine.py` and
+  `src/aeat/domain/formulas/test_ruleset.py`) updated with fixture citations
   so their synthetic computed casillas satisfy the new validator.
 
 ## Back-fill inventory (per safety invariant 4)
@@ -64,7 +64,7 @@ deferral. No existing citations needed normalisation.
 - `#340` Kent-workflow integration suite ✅ — 44 / 44 passed
 - `aeat audit rulesets citations` exits 0 (every ruleset 100%
   covered); UTF-8 safe on Windows
-- `git diff origin/main..HEAD -- src/aeat/cli/__init__.py` returns
+- `git diff origin/main..HEAD -- src/aeat/entrypoints/cli/__init__.py` returns
   empty (Phase 1 invariant)
 
 ## Phase 2 deferred work
@@ -76,9 +76,9 @@ deferral. No existing citations needed normalisation.
   rebase.
 - Post-`#398` rebase additionally registers an `ErrorCode` for
   `RulesetValidationError` under `INTEGRITY` (TODO marker present in
-  `src/aeat/formulas/_casilla.py`).
+  `src/aeat/domain/formulas/_casilla.py`).
 - Post-`#399` rebase wires the `--json` `OutputSchema` for the audit
-  CLI (TODO marker present in `src/aeat/cli/audit/_helpers.py`).
+  CLI (TODO marker present in `src/aeat/entrypoints/cli/audit/_helpers.py`).
 
 ## EPIC-level consequence
 

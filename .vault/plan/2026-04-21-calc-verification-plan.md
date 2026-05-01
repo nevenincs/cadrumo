@@ -10,7 +10,7 @@ related:
 
 # `calc-verification` plan
 
-## Phase 1 — `src/aeat/verification/` module
+## Phase 1 — `src/aeat/application/verification/` module
 
 ### Step 1.1 — Package scaffolding
 
@@ -18,7 +18,7 @@ Create the six files per ADR §1. Imports are relative (per project mandate). Ev
 
 ### Step 1.2 — `verify_declaracion` implementation
 
-Follow ADR §2 flow. Use `src/aeat/formulas/_engine.py`'s `Engine` directly; no wrapper.
+Follow ADR §2 flow. Use `src/aeat/domain/formulas/_engine.py`'s `Engine` directly; no wrapper.
 
 ### Step 1.3 — Classifier
 
@@ -36,7 +36,7 @@ Per ADR §6. Synthetic `(draft, declaracion, ruleset)` fixtures built in-test; n
 
 ### Step 2.1 — Command definition
 
-`src/aeat/cli/filing/__init__.py` adds `@app.command("verify")`. Accepts a draft ID or path; finds the companion `_declaracion.json`; runs `verify_declaracion`.
+`src/aeat/entrypoints/cli/filing/__init__.py` adds `@app.command("verify")`. Accepts a draft ID or path; finds the companion `_declaracion.json`; runs `verify_declaracion`.
 
 ### Step 2.2 — Import-chaining
 
@@ -57,9 +57,9 @@ Subagent code review over the phase-1 diff; any severity-high finding blocks pha
 
 ## Exit criteria per phase
 
-- `uv run ruff check src/aeat/verification/ src/aeat/cli/filing/` — clean.
-- `uv run ty check src/aeat/verification/ src/aeat/cli/filing/` — clean.
-- `uv run pytest -m unit src/aeat/verification/ src/aeat/cli/filing/` — green.
+- `uv run ruff check src/aeat/application/verification/ src/aeat/entrypoints/cli/filing/` — clean.
+- `uv run ty check src/aeat/application/verification/ src/aeat/entrypoints/cli/filing/` — clean.
+- `uv run pytest -m unit src/aeat/application/verification/ src/aeat/entrypoints/cli/filing/` — green.
 - Code-review audit: zero severity-high findings.
 
 ## Kent UX roleplay

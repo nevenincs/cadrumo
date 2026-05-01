@@ -26,7 +26,7 @@ We will extend the `aeat financial txs classify` command to support two new opti
 - `--category`: Validated against the `SpendingCategory` enum (which represents the 39-category catalogue).
 - `--reason`: A string to capture the user's reasoning for the classification, mapped to the `notes` field.
 
-The `set_classification` service function in `src/aeat/financial/transactions/_service.py` will be modified to accept these two optional arguments and apply them when creating the updated `Transaction` instance.
+The `set_classification` service function in `src/aeat/domain/financial/transactions/_service.py` will be modified to accept these two optional arguments and apply them when creating the updated `Transaction` instance.
 
 ## consequences
 
@@ -39,4 +39,4 @@ The `set_classification` service function in `src/aeat/financial/transactions/_s
 - The CLI command signature grows, but since the new flags are optional, it remains backward compatible for simpler classifications.
 
 **Neutral:**
-- Will require updating the unit tests in `src/aeat/financial/transactions/test_cli.py` to ensure the new flags are properly parsed and persisted.
+- Will require updating the unit tests in `src/aeat/domain/financial/transactions/test_cli.py` to ensure the new flags are properly parsed and persisted.

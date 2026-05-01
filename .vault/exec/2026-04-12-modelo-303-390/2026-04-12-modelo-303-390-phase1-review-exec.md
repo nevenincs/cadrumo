@@ -20,22 +20,22 @@ Review scope: every file changed in phase 1 task 1.
 
 ## Files reviewed
 
-- `src/aeat/filing/__init__.py` — public API additions,
+- `src/aeat/application/filing/__init__.py` — public API additions,
   `build_draft` threading of quarterly 303 drafts to the
   validator, `_extract_quarterly_303` helper.
-- `src/aeat/filing/_builders/__init__.py` — registry growth.
-- `src/aeat/filing/_builders/_modelo_303_schema.py` — static
+- `src/aeat/application/filing/_builders/__init__.py` — registry growth.
+- `src/aeat/application/filing/_builders/_modelo_303_schema.py` — static
   casilla collection for 303 v1 coverage.
-- `src/aeat/filing/_builders/_modelo_390_schema.py` — static
+- `src/aeat/application/filing/_builders/_modelo_390_schema.py` — static
   casilla collection for 390 v1 coverage.
-- `src/aeat/filing/_builders/modelo_303.py` — `Modelo303Builder`.
-- `src/aeat/filing/_builders/modelo_390.py` — `Modelo390Builder`.
-- `src/aeat/filing/_validator.py` — `quarterly_303_drafts`
+- `src/aeat/application/filing/_builders/modelo_303.py` — `Modelo303Builder`.
+- `src/aeat/application/filing/_builders/modelo_390.py` — `Modelo390Builder`.
+- `src/aeat/application/filing/_validator.py` — `quarterly_303_drafts`
   kwarg, `_validate_quarterly_reconciliation` rule, supporting
   constants and helpers.
-- `src/aeat/filing/testing.py` — `default_schema_provider`
+- `src/aeat/application/filing/testing.py` — `default_schema_provider`
   registers 130/303/390.
-- `src/aeat/filing/test_modelo_303_390.py` — 21 unit tests.
+- `src/aeat/application/filing/test_modelo_303_390.py` — 21 unit tests.
 
 ## Review dimensions
 
@@ -121,16 +121,16 @@ which inherits from `FilingDraftError` → `AeatError`.
 ✔ No new exception classes were introduced — the existing
 `FilingComputationError` covers every failure mode.
 
-✔ Every new module uses `aeat.logging.get_logger(__name__)`.
+✔ Every new module uses `aeat.core.logging.get_logger(__name__)`.
 
 ### Public API discipline
 
 ✔ Callers reach the new builders via
-`aeat.filing.build_draft(modelo="303"|"390", ...)`. The public
+`aeat.application.filing.build_draft(modelo="303"|"390", ...)`. The public
 API adds three symbols to `__all__` — `Modelo303Builder`,
 `Modelo390Builder`, `QUARTERLY_303_INPUT_KEY` — symmetric
 with the existing `Modelo130Builder` export. No consumer
-needs to reach into `aeat.filing._builders`.
+needs to reach into `aeat.application.filing._builders`.
 
 ### Testing discipline
 
@@ -138,7 +138,7 @@ needs to reach into `aeat.filing._builders`.
 ✔ Zero mocks, patches, fakes, stubs, or shadows — every
 double is a frozen pydantic model conforming to the relevant
 Protocol, or a real FilingDraft built by the real 303 builder.
-✔ Tests are colocated in `src/aeat/filing/` per the Rust-style
+✔ Tests are colocated in `src/aeat/application/filing/` per the Rust-style
 convention.
 ✔ No live tests were added.
 
@@ -154,11 +154,11 @@ convention.
 
 ### In-flight sibling branch boundaries
 
-✔ No changes under `src/aeat/casillas/` (#23 territory).
+✔ No changes under `src/aeat/domain/casillas/` (#23 territory).
 ✔ No changes to `pyproject.toml [tool.pytest]` or
   `conftest.py` (#15 territory).
-✔ No changes to `src/aeat/i18n/` (#20 territory) — the
-  `Translatable` type is consumed via `aeat.i18n.Translatable`
+✔ No changes to `src/aeat/core/i18n/` (#20 territory) — the
+  `Translatable` type is consumed via `aeat.core.i18n.Translatable`
   as already imported by the filing schema.
 ✔ No new workflow files in `.github/workflows/` (GitHub
   Actions is permanently disabled on the repo per project

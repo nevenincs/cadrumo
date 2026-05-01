@@ -18,8 +18,8 @@ Implements `[[2026-04-17-invoice-catalogue-adr]]` for issue `#75`
 
 - Branch: `feature/75-invoice-catalogue` already rebased onto
   `origin/main` (completed).
-- Upstream on main: `aeat.financial.RawTransaction` (#73),
-  `aeat.financial.transactions.TransactionCatalogue` (#74).
+- Upstream on main: `aeat.domain.financial.RawTransaction` (#73),
+  `aeat.domain.financial.transactions.TransactionCatalogue` (#74).
 
 ## Phase 1 — Package skeleton + settings
 
@@ -29,7 +29,7 @@ Implements `[[2026-04-17-invoice-catalogue-adr]]` for issue `#75`
    the Financial ingest block alongside `aeat_financial_txs_dir`.
 2. Add corresponding line in `env/.env.example`:
    `AEAT_INVOICES_DIR=var/financial/invoices`.
-3. Create directory `src/aeat/financial/invoices/` with an empty
+3. Create directory `src/aeat/domain/financial/invoices/` with an empty
    `__init__.py` plus empty private modules:
    `_enums.py`, `_errors.py`, `_validators.py`, `_models.py`,
    `_service.py`, `_stubs.py`.
@@ -158,16 +158,16 @@ Implements `[[2026-04-17-invoice-catalogue-adr]]` for issue `#75`
 
 ## Phase 6 — CLI integration
 
-23. Create `src/aeat/cli/financial/invoices.py` hosting a Typer
+23. Create `src/aeat/entrypoints/cli/financial/invoices.py` hosting a Typer
     app named `invoices` with commands `list`, `show`, `link`,
     `reconcile`, `verify`. Commands follow the pattern used by
-    `src/aeat/cli/financial/txs.py`.
+    `src/aeat/entrypoints/cli/financial/txs.py`.
 24. Register the app under `aeat financial invoices` in
-    `src/aeat/cli/financial/__init__.py`.
-25. Register a top-level alias `aeat invoices` in `src/aeat/cli/
+    `src/aeat/entrypoints/cli/financial/__init__.py`.
+25. Register a top-level alias `aeat invoices` in `src/aeat/entrypoints/cli/
     __init__.py` by adding the same Typer app as a sub-app.
 26. Author CLI smoke tests in
-    `src/aeat/financial/invoices/test_cli.py` using Typer's
+    `src/aeat/domain/financial/invoices/test_cli.py` using Typer's
     `CliRunner`, exercising both the nested and aliased paths.
 
 ## Phase 7 — Tests

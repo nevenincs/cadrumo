@@ -32,7 +32,7 @@ Add a new financial aggregation package, wire it into `aeat financial aggregate`
   1. Verify `Engine.derive()` consumes the returned Decimal mapping.
 - `CLI and JSON`
   1. Add `aeat financial aggregate --modelo --period [--json]`.
-  1. Register `financial aggregate` in `aeat.cli._schemas`.
+  1. Register `financial aggregate` in `aeat.entrypoints.cli._schemas`.
   1. Render human output through trilingual messages and `AEAT_OUTPUT_LANGUAGE`.
 - `Coverage docs`
   1. Update the T6 row in `docs/coverage/pipeline.md`.

@@ -36,7 +36,7 @@ in the companion ADR.
 
 ## Proposed Changes
 
-Author a sub-package `src/aeat/formulas/_rulesets/modelo_100/` hosting
+Author a sub-package `src/aeat/domain/formulas/_rulesets/modelo_100/` hosting
 per-anexo per-año modules covering the full RENTA universe: anexos A,
 B1, B2, C, D (three régimenes), E, F, G, Ñ; tax years 2024, 2025, 2026;
 15 ordinary CCAAs + Ceuta/Melilla art. 68.4 60%. Aggregate per-año
@@ -59,7 +59,7 @@ pass.
 
 ### Wave 5 — sub-package scaffolding + Anexo A + Anexo B1 (rendimientos del trabajo)
 
-5.1. Create `src/aeat/formulas/_rulesets/modelo_100/` sub-package skeleton:
+5.1. Create `src/aeat/domain/formulas/_rulesets/modelo_100/` sub-package skeleton:
      `__init__.py` (exports), `_common.py` (`_label`, shared citation
      helpers), `_ccaa.py` (`CCAA` closed `StrEnum`, per-CCAA tarifa
      placeholders for Madrid + Cataluña + Andalucía + Comunitat
@@ -81,7 +81,7 @@ pass.
      2026 — composes Anexo A + B1 into `RULESET` constants. (The
      aggregator grows as later waves land more anexos.)
 5.7. Register `MODELO_100_2024 / _2025 / _2026` in
-     `src/aeat/formulas/_rulesets/__init__.py` (default variant).
+     `src/aeat/domain/formulas/_rulesets/__init__.py` (default variant).
 5.8. Author co-located tests `modelo_100/test_anexo_b1_<año>.py` —
      module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]`;
      external-anchored worked example per LIRPF art. 20; threshold-edge
@@ -98,7 +98,7 @@ pass.
      trailer (effective when promoted to ready).
 5.11. Audit checkpoint: `aeat audit rulesets citations` 100% on M100
       WIP; `just lint && just typecheck && just hooks` green;
-      `just test src/aeat/formulas/_rulesets/modelo_100/` green;
+      `just test src/aeat/domain/formulas/_rulesets/modelo_100/` green;
       mutation kill-rate ≥ 90% on new M100 nodes.
 5.12. Per-wave exec record under
       `.vault/exec/2026-04-27-modelo-100-renta-full-calc/wave-5-anexo-a-b1-exec.md`.
@@ -220,7 +220,7 @@ pass.
       G + Ñ casillas.
 11.2. Author 3 new borrador extractors: `Modelo100V2024Extractor`,
       `Modelo100V2025Extractor`, `Modelo100V2026Extractor` in
-      `src/aeat/borrador/_extractors/`. Existing
+      `src/aeat/adapters/inbound/borrador/_extractors/`. Existing
       `Modelo100SummaryV2025Extractor` retained for the summary path.
 11.3. Round-trip: `generator(params) → PDF → borrador extractor →
       casilla map == expected_casillas` for at least one full-form
@@ -347,8 +347,8 @@ The plan self-review checks the plan against:
 
 - **CLAUDE.md mandates** — pydantic v2 universal, no mocks, marker
   module-level, conventional commits, no wave/phase in code,
-  trilingual labels, `aeat.errors.AeatError` inheritance,
-  `aeat.logging.get_logger`, src/aeat/ layout. **PLAN STATUS: covered.**
+  trilingual labels, `aeat.core.errors.AeatError` inheritance,
+  `aeat.core.logging.get_logger`, src/aeat/ layout. **PLAN STATUS: covered.**
 - **ADR architectural decisions D1-D13** — sub-package layout, per-CCAA
   aggregate casillas, Pydantic amortización + inventario, three Anexo
   D régimen sub-modules, per-año re-author, borrador dispatch

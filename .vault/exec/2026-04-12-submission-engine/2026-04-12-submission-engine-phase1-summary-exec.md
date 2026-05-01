@@ -15,16 +15,16 @@ issue: wgergely/aeat#42
 
 ## scope delivered
 
-- `src/aeat/submission/` subpackage: strict pydantic v2 schema
+- `src/aeat/adapters/outbound/aeat/export/` subpackage: strict pydantic v2 schema
   (`SubmissionStatus`, `SubmissionAttempt`, `SubmittedFiling`,
   `make_submission_id`), error hierarchy (`SubmissionError` +
   `SubmissionPreflightError` + `SubmissionFormFillError` +
-  `SubmissionRejectionError`, all rooted at `aeat.errors.AeatError`),
+  `SubmissionRejectionError`, all rooted at `aeat.core.errors.AeatError`),
   `_protocols.py` stubs for every in-flight sibling (#6/#7/#8/#23/
   #38/#39/#44), four-gate `Preflight` validator, `SubmissionEngine`
   orchestrator with dry-run default and double-gate live submission,
   `Submitter` ABC, and the `Modelo130Submitter` PoC.
-- `src/aeat/cli/submission/` Typer sub-app wired as
+- `src/aeat/entrypoints/cli/submission/` Typer sub-app wired as
   `aeat submission {preflight,dry-run,submit,show,list}`. The
   `submit` command requires the explicit
   `--i-understand-this-is-real` flag; without it the command exits 2.
@@ -39,7 +39,7 @@ issue: wgergely/aeat#42
   double-gate live refusal, persistence round-trip, list filtering,
   Typer sub-app (preflight / dry-run / submit refusal / show / list).
 - Opt-in live rehearsal test
-  `src/aeat/submission/test_live_submission.py` marked
+  `src/aeat/adapters/outbound/aeat/export/test_live_submission.py` marked
   `@pytest.mark.live` and gated on `AEAT_LIVE_TESTS=1`. Always runs
   dry-run; never submits.
 
@@ -47,22 +47,22 @@ issue: wgergely/aeat#42
 
 - All code under `src/aeat/`.
 - Public API discipline: every cross-module import of submission
-  types goes through the `aeat.submission` package root.
+  types goes through the `aeat.adapters.outbound.aeat.export` package root.
 - Pydantic v2 strict+frozen for every boundary-crossing record; no
   dataclasses for public types; no bare `dict[str, Any]` on public
   signatures or persisted artefacts.
-- Errors inherit from `aeat.errors.AeatError`; logging via
-  `aeat.logging.get_logger(__name__)` only.
+- Errors inherit from `aeat.core.errors.AeatError`; logging via
+  `aeat.core.logging.get_logger(__name__)` only.
 - Tests are pytest-only with exactly one of `@pytest.mark.unit` /
   `@pytest.mark.live`. The unit tests use real Protocol-conforming
   hand-written doubles, never mocks/patches/fakes.
 - The dry-run default and the double-gate rule are enforced at the
   API level (`SubmissionEngine.submit_draft`) AND surfaced to the
   CLI (`--i-understand-this-is-real`).
-- No hard imports from `aeat.filing`, `aeat.deadlines`, `aeat.models`,
-  `aeat.portals`, `aeat.auth.certificate`, `aeat.casillas`, or
-  `aeat.justificante` — every cross-package dependency is a narrow
-  Protocol stub in `aeat.submission._protocols` ready for rebase-swap.
+- No hard imports from `aeat.application.filing`, `aeat.domain.deadlines`, `aeat.domain.modelos`,
+  `aeat.domain.portals`, `aeat.adapters.outbound.aeat.auth.certificate`, `aeat.domain.casillas`, or
+  `aeat.domain.justificante` — every cross-package dependency is a narrow
+  Protocol stub in `aeat.adapters.outbound.aeat.export._protocols` ready for rebase-swap.
 
 ## verification
 

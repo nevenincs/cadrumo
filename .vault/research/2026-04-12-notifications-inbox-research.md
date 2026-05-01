@@ -157,10 +157,10 @@ Three sibling branches are in flight and cannot be hard-imported:
   tuple[Notificacion, ...]`. We stub a `NotificacionSource` Protocol
   matching that surface. Rebase swap on merge is a one-line import
   change.
-- **#8 (`aeat.auth.certificate`)**: the cert backend. We do **not**
+- **#8 (`aeat.adapters.outbound.aeat.auth.certificate`)**: the cert backend. We do **not**
   consume it directly — the source reader (#43) is responsible for
   preloading the cert into the browser context. We do not stub it.
-- **#45 (`aeat.normatives`)**: future normatives catalogue. Appeal
+- **#45 (`aeat.domain.normatives`)**: future normatives catalogue. Appeal
   deadlines reference LGT article numbers — we store them as bare
   strings (`"LGT art. 99"`), never as hard imports.
 
@@ -200,8 +200,8 @@ the Protocol. No `unittest.mock`, no patches, no stubs, no fakes.
 - Web UI.
 - Email / SMS notification routing — structured log + CLI only.
 - Persisting to the storage layer (#10) — files only for v1.
-- Hard imports from `aeat.status` (#43), `aeat.auth.certificate`
-  (#8), `aeat.normatives` (#45).
+- Hard imports from `aeat.status` (#43), `aeat.adapters.outbound.aeat.auth.certificate`
+  (#8), `aeat.domain.normatives` (#45).
 - DEHú integration (future).
 
 ## open questions

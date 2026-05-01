@@ -17,7 +17,7 @@ issue: wgergely/aeat#93
 Deliver the amendment engine for issue #93 as an additive extension to the
 existing filing and submission stack:
 
-- strict amendment models in `aeat.filing`
+- strict amendment models in `aeat.application.filing`
 - delta computation against a prior submitted filing
 - legality gates for complementaria vs sustitutiva vs post-2024 IVA
   rectificativa
@@ -26,17 +26,17 @@ existing filing and submission stack:
 - unit coverage plus one live-gated dry-run amendment submission path
 - mandatory execution records and final code review artifacts
 
-No changes to `aeat.auth`, `aeat.browser`, `aeat.status`, or Track B audit
+No changes to `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.browser`, `aeat.status`, or Track B audit
 internals.
 
 ## phases
 
 ### phase-1 — amendment schema and builder
 
-- Add `src/aeat/filing/_complementaria.py` with:
+- Add `src/aeat/application/filing/_complementaria.py` with:
   `AmendmentKind`, `CasillaChange`, `CasillaDelta`, `FilingAmendment`, and the
   builder helpers.
-- Export the public amendment surface from `src/aeat/filing/__init__.py`.
+- Export the public amendment surface from `src/aeat/application/filing/__init__.py`.
 - Reuse the existing original-draft builders to recompute new absolute casilla
   values, then derive the delta against a prior filing.
 - Encode the per-model legality rules:
@@ -56,7 +56,7 @@ internals.
 
 ### phase-3 — submission engine extension
 
-- Extend `aeat.submission` with:
+- Extend `aeat.adapters.outbound.aeat.export` with:
   `AmendmentSubmissionResult` and
   `SubmissionEngine.submit_amendment(amendment, dry_run=True)`.
 - Route amendment submission through the existing `Modelo130Submitter` transport
@@ -78,15 +78,15 @@ internals.
 
 ### phase-5 — tests and verification
 
-- Add `src/aeat/filing/test_complementaria.py` for:
+- Add `src/aeat/application/filing/test_complementaria.py` for:
   delta computation,
   legal monotonicity,
   synthetic `130` / `303` / `390` fixtures,
   persistence round-trips.
 - Add or extend submission tests for the amendment path and the typed transport
   gap outcome.
-- Add `src/aeat/filing/test_live_complementaria.py` with
-  `@pytest.mark.live`, gated by `aeat.cli._live.requires_live_enabled()`, and
+- Add `src/aeat/application/filing/test_live_complementaria.py` with
+  `@pytest.mark.live`, gated by `aeat.entrypoints.cli._live.requires_live_enabled()`, and
   keep it dry-run only unless the repo's live gate is explicitly opened.
 - Run `just lint`, `just typecheck`, `just test`, and `just hooks`.
 

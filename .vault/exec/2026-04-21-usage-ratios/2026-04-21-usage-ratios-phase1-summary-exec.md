@@ -19,7 +19,7 @@ The #259 feature — Kent persists his own per-category usage-ratio coefficients
 ## Shipped package layout
 
 ```
-src/aeat/financial/usage_ratios/
+src/aeat/domain/financial/usage_ratios/
 ├── __init__.py                 # public API (7 names)
 ├── _errors.py                  # UsageRatioError + UsageRatioPersistenceError
 ├── _model.py                   # UsageRatioProfile, ELIGIBLE_USAGE_RATIO_CATEGORIES, resolve_user_ratio
@@ -27,7 +27,7 @@ src/aeat/financial/usage_ratios/
 ├── test_model.py
 └── test_service.py
 
-src/aeat/cli/financial/
+src/aeat/entrypoints/cli/financial/
 ├── profile.py                  # `aeat financial profile` Typer surface
 ├── _profile_aliases.py         # CLI-private FAMILY_ALIASES (disjoint, ratio-stable)
 ├── test_profile.py
@@ -50,8 +50,8 @@ Settings field `aeat_usage_ratios_path` in `src/aeat/config.py`; default `var/fi
 ## Test and coverage footprint
 
 - 70 tests total (44 baseline + 26 added across rounds).
-- 100% coverage on `src/aeat/financial/usage_ratios/`.
-- ≥ 93% coverage on `src/aeat/cli/financial/profile.py` + `_profile_aliases.py`.
+- 100% coverage on `src/aeat/domain/financial/usage_ratios/`.
+- ≥ 93% coverage on `src/aeat/entrypoints/cli/financial/profile.py` + `_profile_aliases.py`.
 - Zero mocks, zero patches, zero stubs (pytest-only mandate honoured).
 - All tests are Rust-style colocated; module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]`.
 
@@ -66,7 +66,7 @@ Settings field `aeat_usage_ratios_path` in `src/aeat/config.py`; default `var/fi
 
 - **Concurrent-writer data loss** → [issue #310](https://github.com/wgergely/aeat/issues/310). The ADR originally documented this as "last writer wins", but the rolling audit showed whole keys can vanish under parallel `set-ratio` invocations. Not in scope for #259; will block #214 (setup wizard) work if Kent scripts parallel sets.
 - **Multi-year registries** — `ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived from `CATEGORY_PROFILES_2025` at module load. A future multi-year refactor must re-derive per-year.
-- **i18n wiring** — the entire `src/aeat/cli/` tree is English-only; `AEAT_OUTPUT_LANGUAGE` has zero readers project-wide. #259 matches the sibling convention. A dedicated EPIC should localise the CLI layer as a coordinated effort.
+- **i18n wiring** — the entire `src/aeat/entrypoints/cli/` tree is English-only; `AEAT_OUTPUT_LANGUAGE` has zero readers project-wide. #259 matches the sibling convention. A dedicated EPIC should localise the CLI layer as a coordinated effort.
 - **Shared atomic-save helper** — `save_usage_ratios` mirrors `invoices/_service.py` and `transactions/_service.py`. Three near-identical implementations; extraction was below the threshold for #259 and deliberately declined by the ADR.
 
 ## Next Steps

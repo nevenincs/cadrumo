@@ -73,7 +73,7 @@ dashboard) get a stable contract.
 The audit's CRITICAL-2 finding called out broad plaintext financial
 persistence. Wave 3's migration targets:
 
-- `aeat.financial.transactions` — the existing
+- `aeat.domain.financial.transactions` — the existing
   `TransactionCatalogue` (JSON-on-disk, atomic write via tempfile +
   `os.replace`, content-keyed by `derive_transaction_id`'s SHA-256
   hash). This is the load-bearing migration: the bank-import Kent
@@ -82,16 +82,16 @@ persistence. Wave 3's migration targets:
   class; payload is the existing pydantic-v2 frozen
   `TransactionCatalogue` shape (no breaking change at the public
   surface).
-- `aeat.financial.invoices` — the invoice catalogue. Similar
+- `aeat.domain.financial.invoices` — the invoice catalogue. Similar
   shape; FINANCIAL class.
-- `aeat.financial.attachments` — already content-addressable
+- `aeat.domain.financial.attachments` — already content-addressable
   (`blobs/{sha256}` + manifest JSON). The substrate's
   `EncryptedBlobStore` is the natural home; migrate the existing
   blob layout under the substrate's blob-store API. FINANCIAL
   class for sensitive operator attachments; CORPUS for
   attachments backed by a public source (none today, but the
   classification primitive supports the distinction).
-- `aeat.financial.usage_ratios` — usage-ratio catalogue. Smaller;
+- `aeat.domain.financial.usage_ratios` — usage-ratio catalogue. Smaller;
   FINANCIAL class. Co-migrates with the invoices wave.
 
 The substrate's existing primitives cover this surface without
@@ -105,9 +105,9 @@ The Wave-3 plan will run in approximately the following phases:
 - Phase 0 — action any Wave-2 audit-gate findings that the
   reviewers raise and that have not yet been actioned. Inherits
   the standard Wave-N pattern of wave-entry-finding cleanup.
-- Phase 1 — `aeat.financial.transactions` migration adapter.
+- Phase 1 — `aeat.domain.financial.transactions` migration adapter.
   - New `TransactionCatalogueRepository` under
-    `aeat.financial.transactions._repository` consuming the
+    `aeat.domain.financial.transactions._repository` consuming the
     substrate's envelope + classification primitives.
   - The existing `load_transactions` / `save_transactions`
     helpers become read-through wrappers that consult the
@@ -117,10 +117,10 @@ The Wave-3 plan will run in approximately the following phases:
     `migrate_transactions_to_governed_persistence(legacy_path)`
     reads the legacy catalogue and writes it via the
     repository.
-- Phase 2 — `aeat.financial.invoices` migration adapter; same
+- Phase 2 — `aeat.domain.financial.invoices` migration adapter; same
   pattern.
-- Phase 3 — `aeat.financial.usage_ratios` migration adapter.
-- Phase 4 — `aeat.financial.attachments` migration to the
+- Phase 3 — `aeat.domain.financial.usage_ratios` migration adapter.
+- Phase 4 — `aeat.domain.financial.attachments` migration to the
   substrate's `EncryptedBlobStore`. The existing manifest layout
   is preserved (the substrate's manifest already carries the
   superset of fields).
@@ -149,7 +149,7 @@ The Wave-3 plan will run in approximately the following phases:
 
 ## Standing constraints inherited from Waves 1 and 2
 
-- The substrate's public API is `aeat.storage` only. Adapters
+- The substrate's public API is `aeat.adapters.persistence.storage` only. Adapters
   consume the public surface; no internal-module access.
 - Pydantic v2 strict frozen at every boundary.
 - No mocks; tests use real cryptography, real on-disk

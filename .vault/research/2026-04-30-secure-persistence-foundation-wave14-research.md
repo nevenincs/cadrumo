@@ -62,8 +62,8 @@ The only delta is "structure leakage". The substrate's classification policy exp
 
 **Existing surface review.** The substrate's IDENTITY-class storage path is **already wired via the envelope path**:
 
-- `aeat.setup._env_writer.write_profile_file` persists the operator's `AutonomoProfile` via `save_encrypted_envelope` at IDENTITY class with HKDF context `aeat.setup.profile.v1`.
-- `aeat.setup._env_writer.load_profile_envelope` reads the profile back via `load_encrypted_envelope` at IDENTITY class.
+- `aeat.application.setup._env_writer.write_profile_file` persists the operator's `AutonomoProfile` via `save_encrypted_envelope` at IDENTITY class with HKDF context `aeat.application.setup.profile.v1`.
+- `aeat.application.setup._env_writer.load_profile_envelope` reads the profile back via `load_encrypted_envelope` at IDENTITY class.
 - Master-key rotation includes the IDENTITY profile path (`_rotation.py:338`).
 - Path: `Settings.aeat_default_profile_path` (one-per-installation, content-addressed by file path).
 
@@ -100,7 +100,7 @@ A grep for "export bundle" / "connector" handlers across the codebase: no implem
 
 **Existing surface review.** A grep for status-cache writers at HEAD: zero implementations. The settings field `aeat_status_cache_dir` is registered but no code currently writes to it. Wave-6 documented this as "deferred until status reader writer lands".
 
-The redaction registry (`aeat.storage._redaction`) already provides `default_rules_for_class(SensitivityClass.CACHE)` and `redact_structured`; the **substrate is ready** for any future status-cache writer to call into. There is no production code-path consuming the redaction wire that exists at HEAD.
+The redaction registry (`aeat.adapters.persistence.storage._redaction`) already provides `default_rules_for_class(SensitivityClass.CACHE)` and `redact_structured`; the **substrate is ready** for any future status-cache writer to call into. There is no production code-path consuming the redaction wire that exists at HEAD.
 
 **Decision-research conclusion.** Same as D3 — substrate primitives are complete; the missing piece is the status-cache writer, which is a new feature. **Recommend: close as "substrate-ready; consumer-pending" — block on the future status-reader-writer feature, not a substrate issue.**
 

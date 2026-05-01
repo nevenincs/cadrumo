@@ -41,7 +41,7 @@ the surfaces v1 missed.
 
 - **Library:** `pikepdf` (MPL-2.0, QPDF-bundled, cp313 wheels on Win/macOS/Linux). Fallback: `pypdf` (BSD-3, pure-Python, weaker content-stream API). Hard-rule-out: `PyMuPDF` (AGPL — license-incompatible with the project's Apache-2.0 unless commercially relicensed). Hard-rule-out: `pdfrw` (MIT but unmaintained since 2017, no compressed-stream support).
 - **Strategy:** token replacement via `pikepdf.parse_content_stream` / `unparse_content_stream` over `Tj` operands. Blackout-rectangle (PyMuPDF `apply_redactions`) is wrong for our use case — it strips text from extraction, breaking the deep extractor's regression contract. Synthetic re-render is overkill and loses layout cues.
-- **Subpackage:** `aeat.sanitizer`. Single-word, lowercase, domain-noun. Matches existing `aeat.justificante`, `aeat.declaracion`, `aeat.verification` cadence. Public CLI noun: `aeat sanitize`. The noun is unused (verified against `src/aeat/cli/`).
+- **Subpackage:** `aeat.adapters.inbound.sanitizer`. Single-word, lowercase, domain-noun. Matches existing `aeat.domain.justificante`, `aeat.adapters.inbound.declaracion`, `aeat.application.verification` cadence. Public CLI noun: `aeat sanitize`. The noun is unused (verified against `src/aeat/entrypoints/cli/`).
 - **Threat model:** the attacker is a future contributor cloning the repo, a code-review viewer reading a fixture diff, or a downstream consumer reusing a fixture in a public demo. Real PII surfaces at 17 distinct PDF locations beyond the body Tj operands. The parent ADR's v1 plan touches 3 of them.
 - **Determinism:** `pikepdf.Pdf.save(deterministic_id=True, compress_streams=True, object_stream_mode=ObjectStreamMode.preserve, linearize=False, recompress_flate=False)` produces byte-stable output for byte-stable input. The parent ADR claims "deterministic pure function" without naming the flags; this research names them.
 
@@ -51,9 +51,9 @@ Phase 4 of the per-modelo verify loop captures a real AEAT
 justificante PDF, strips PII, and commits the result as a test
 fixture under `tests/fixtures/justificantes/<modelo>/<period>.pdf`.
 The fixture must remain parseable by
-`aeat.justificante.parse_justificante` and (for modelos with a body)
+`aeat.domain.justificante.parse_justificante` and (for modelos with a body)
 by the per-modelo casilla extractor under
-`aeat.declaracion._parsers/<modelo>/`. The sanitiser is therefore a
+`aeat.adapters.inbound.declaracion._parsers/<modelo>/`. The sanitiser is therefore a
 *rewrite-in-place* operation, not a redaction-blackout.
 
 The captured corpus (2026-04-24, recovered 2026-04-25) is three real
@@ -94,7 +94,7 @@ Critical implications:
 Verified by reading `pyproject.toml` at the worktree root:
 
 - `pdfplumber>=0.11.9` is pinned (PDF text extraction for the existing parser).
-- `pikepdf` is **not** pinned. Despite the parent plan PR2 saying "existing pikepdf likely already pinned via aeat.justificante", a grep across `src/` returns zero hits in production code. Adding `pikepdf` is therefore a real new dependency, not a piggyback.
+- `pikepdf` is **not** pinned. Despite the parent plan PR2 saying "existing pikepdf likely already pinned via aeat.domain.justificante", a grep across `src/` returns zero hits in production code. Adding `pikepdf` is therefore a real new dependency, not a piggyback.
 - No `pypdf` / `pdfrw` / `pymupdf` / `fitz` anywhere in the tree.
 - License posture: project is Apache-2.0. Any sanitiser dep must be permissively licensed (MPL-2.0 / MIT / BSD / Apache / PSF). AGPL is a non-starter without explicit user sign-off.
 
@@ -255,9 +255,9 @@ Tests assert byte-equality across two runs.
 
 ## api surface proposal
 
-Subpackage: `aeat.sanitizer`. Single-word, lowercase, domain-noun.
-Matches `aeat.justificante`, `aeat.declaracion`, `aeat.verification`,
-`aeat.filing`. Other candidates considered: `aeat.redact` (wrong
+Subpackage: `aeat.adapters.inbound.sanitizer`. Single-word, lowercase, domain-noun.
+Matches `aeat.domain.justificante`, `aeat.adapters.inbound.declaracion`, `aeat.application.verification`,
+`aeat.application.filing`. Other candidates considered: `aeat.redact` (wrong
 semantics), `aeat.privacy` (too broad), `aeat.scrub` (verb-y),
 `aeat.pdf` (too broad).
 
@@ -326,7 +326,7 @@ Notes:
 Two viable shapes:
 
 - **Per-fixture mapping committed alongside the captured PDF.** A YAML at `scratch/sede-discovery/<utc-ts>/<modelo>/<exp>/sanitizer-mapping.yaml`, scaffolded by `aeat sanitize prepare-map <pdf>`.
-- **Default project-level mapping** at `aeat.sanitizer.fixtures.DEFAULT_MAPPING` — couples the sanitiser to one user's identity.
+- **Default project-level mapping** at `aeat.adapters.inbound.sanitizer.fixtures.DEFAULT_MAPPING` — couples the sanitiser to one user's identity.
 
 Recommendation: per-capture mapping. (a) Different captures have different real values; (b) keeps the sanitiser pure; (c) the mapping never gets committed, structurally preventing accidental NIF commits.
 
@@ -364,8 +364,8 @@ The sanitiser does **not**:
 ## open questions for the adr
 
 1. **`pikepdf` as hard runtime dep, or extras?** Hard dep means every CI run + every dev install pulls the wheel (~6 MB Linux, larger Windows). An `extras_require[sanitizer]` shape gates it behind `pip install aeat[sanitizer]`. **Recommendation:** hard dep — sanitiser is part of the test-data pipeline; CI needs it.
-2. **Default mapping in `aeat.sanitizer.fixtures` or per-fixture?** Per-capture YAML at `scratch/.../sanitizer-mapping.yaml` is more flexible; project-level default couples to one user's identity. **Recommendation:** per-capture, scaffolded by `aeat sanitize prepare-map`.
-3. **Refuse to re-sanitise an already-sanitised PDF?** Hash the input; if SHA matches a known-sanitised SHA in `aeat.sanitizer.fixtures.SANITIZED_SHAS`, refuse. **Recommendation:** yes — makes accidental "sanitise the fixture again" a hard error.
+2. **Default mapping in `aeat.adapters.inbound.sanitizer.fixtures` or per-fixture?** Per-capture YAML at `scratch/.../sanitizer-mapping.yaml` is more flexible; project-level default couples to one user's identity. **Recommendation:** per-capture, scaffolded by `aeat sanitize prepare-map`.
+3. **Refuse to re-sanitise an already-sanitised PDF?** Hash the input; if SHA matches a known-sanitised SHA in `aeat.adapters.inbound.sanitizer.fixtures.SANITIZED_SHAS`, refuse. **Recommendation:** yes — makes accidental "sanitise the fixture again" a hard error.
 4. **Drop annotations entirely, or only PII-bearing?** Captures have zero annotations. **Recommendation:** drop entirely when present.
 5. **AcroForm strategy when present.** Modelo 100 has none; other modelos may. **Recommendation:** scrub field values, preserve form structure.
 

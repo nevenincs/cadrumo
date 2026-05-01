@@ -55,17 +55,17 @@ optional `related_modelo` cross-reference.
   `ConfigDict(strict=True, frozen=True, extra="forbid")`. No bare
   dataclasses, no TypedDicts for records. `PortalMetadata` is the only
   record type this ADR introduces.
-- **Trilingual contract**: labels use `Translatable` from `aeat.i18n`;
+- **Trilingual contract**: labels use `Translatable` from `aeat.core.i18n`;
   Spanish authoritative for AEAT terminology; English authoritative for
   internal/docs; Hungarian target user-facing.
 - **#108 alignment**: same registry shape (one file per entry, import-
   time integrity check, frozen `MappingProxyType`, CLI mirror). Code
   reviewers already trust this pattern; diverging would be pure churn.
-- **Subpackage boundary**: `aeat.portals` imports `aeat.models._codes.ModeloCode`
-  (one-way, leaf module). `aeat.models` in turn gains a typed
+- **Subpackage boundary**: `aeat.domain.portals` imports `aeat.domain.modelos._codes.ModeloCode`
+  (one-way, leaf module). `aeat.domain.modelos` in turn gains a typed
   `submission_portal: Portal | None` field on `ModeloMetadata` — this
   creates a bidirectional subpackage coupling but no module cycle because
-  `_codes.py` imports nothing from `aeat.portals`.
+  `_codes.py` imports nothing from `aeat.domain.portals`.
 - **URL validation strictness**: pydantic's `HttpUrl` gives scheme +
   netloc parsing; custom `field_validator` asserts the host matches the
   declared `Subdomain` and that FILING portals' paths match the Sede
@@ -92,13 +92,13 @@ optional `related_modelo` cross-reference.
 ## Constraints
 
 - Python 3.13, pydantic v2, uv, src layout; all code under
-  `src/aeat/portals/`.
+  `src/aeat/domain/portals/`.
 - Unit tests only (`@pytest.mark.unit`) — no live AEAT calls. Tests
   cover URL validity, registry completeness, modelo cross-reference,
   subdomain/auth invariants, and CLI determinism.
 - Google-style docstrings and type hints on every public signature.
-- Must not reach `aeat.deadlines`, `aeat.casillas`, or the filing
-  subpackage. Portal metadata is a leaf catalogue like `aeat.models`
+- Must not reach `aeat.domain.deadlines`, `aeat.domain.casillas`, or the filing
+  subpackage. Portal metadata is a leaf catalogue like `aeat.domain.modelos`
   (sans the deadline-engine coupling).
 - Must respect the repo's conventional-commit mandate and pass the
   pre-commit hook (ruff, mypy, etc.).
@@ -112,8 +112,8 @@ optional `related_modelo` cross-reference.
 
 ### 1. Module layout
 
-All new code lives under `src/aeat/portals/`. Split by concern, one
-file per portal entry — identical to `aeat.models`:
+All new code lives under `src/aeat/domain/portals/`. Split by concern, one
+file per portal entry — identical to `aeat.domain.modelos`:
 
 - `__init__.py` — public API, `__all__`.
 - `_codes.py` — `Portal` `StrEnum` listing every member.
@@ -126,7 +126,7 @@ file per portal entry — identical to `aeat.models`:
 - `_entries/` — package with one file per portal
   (`portal_sede_root.py`, `portal_m303_iva_autoliquidacion.py`, ...).
   Each file exposes a module-level `ENTRY: PortalMetadata`.
-- `_cli.py` — Typer subcommand wired into `aeat.cli`.
+- `_cli.py` — Typer subcommand wired into `aeat.entrypoints.cli`.
 - `_errors.py` — `PortalRegistryError`, `UnknownPortalError`,
   `PortalIntegrityError`.
 - Colocated tests: `test_codes.py`, `test_categories.py`,
@@ -239,20 +239,20 @@ package import):
 
 ### 6. Helpers
 
-Public functions on `aeat.portals`:
+Public functions on `aeat.domain.portals`:
 
 - `get_portal(portal: Portal | str) -> PortalMetadata` — lookup by
   member or value; raises `UnknownPortalError` on miss or bad string.
 - `portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]`
   — return every `FILING` or `BORRADOR` portal whose `related_modelo`
   matches. Sorted by `Portal` value for determinism. Raises
-  `UnknownModeloError` (re-exported from `aeat.models`) on unknown code.
+  `UnknownModeloError` (re-exported from `aeat.domain.modelos`) on unknown code.
 - `portals_by_category(category: PortalCategory) -> tuple[PortalMetadata, ...]`
   — sorted by `Portal` value.
 
 ### 7. CLI
 
-Typer subcommand `aeat portals` in `_cli.py`, wired into `aeat.cli`:
+Typer subcommand `aeat portals` in `_cli.py`, wired into `aeat.entrypoints.cli`:
 
 - `aeat portals list [--category CAT] [--modelo CODE] [--active-only]` —
   JSON list of portal summaries.
@@ -275,7 +275,7 @@ free-form string:
 - ... through all 20. Every modelo maps to exactly one `Portal` member;
   there is no `None` in v1.
 
-The `_registry.py` integrity check on `aeat.models` gains a new
+The `_registry.py` integrity check on `aeat.domain.modelos` gains a new
 invariant: `submission_portal` must resolve in `PORTAL_REGISTRY` and
 the portal's `related_modelo` must equal the modelo's `code`. This
 closes the cross-reference round-trip at import time. The field type
@@ -283,7 +283,7 @@ is `Portal | None` (not `Portal`) to keep the schema open for future
 modelos that may not have a dedicated portal, but every v1 entry is
 non-`None`.
 
-A new test `aeat/models/test_portal_cross_reference.py` asserts the
+A new test `aeat/domain/modelos/test_portal_cross_reference.py` asserts the
 round-trip for every modelo.
 
 ### 9. Errors
@@ -297,7 +297,7 @@ All subclass `AeatError`:
 
 ### 10. Logging
 
-`aeat.logging.get_logger(__name__)` at module scope in `_registry.py`.
+`aeat.core.logging.get_logger(__name__)` at module scope in `_registry.py`.
 A single `info` line on successful import recording the count. No
 `print`. No other log calls in v1.
 
@@ -345,11 +345,11 @@ A single `info` line on successful import recording the count. No
 
 ### Negative / open follow-ups
 
-- `aeat.models` now imports `aeat.portals.Portal`, introducing a
+- `aeat.domain.modelos` now imports `aeat.domain.portals.Portal`, introducing a
   bidirectional subpackage coupling. The module-level import graph
-  stays acyclic (`aeat.portals._codes` and `aeat.models._codes` are
+  stays acyclic (`aeat.domain.portals._codes` and `aeat.domain.modelos._codes` are
   both leaves) but maintainers must not introduce a direct import
-  from `aeat.portals._metadata` into `aeat.models._codes` or vice versa.
+  from `aeat.domain.portals._metadata` into `aeat.domain.modelos._codes` or vice versa.
 - The submission engine must adopt `Portal` in a follow-up PR; until
   then, `submission_portal` exists but is not driving navigation.
 - Retired portals remain in the enum forever once recorded. Removing a

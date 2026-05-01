@@ -22,9 +22,9 @@ already landed by `#73` and `#74` on `main`.
 
 ### Upstream contracts already on main
 
-- `aeat.financial.RawTransaction` and `aeat.financial.providers.RawTransaction`
+- `aeat.domain.financial.RawTransaction` and `aeat.domain.financial.providers.RawTransaction`
   are the T1 public boundary; already strict, frozen, provenance-rich.
-- `aeat.financial.transactions.TransactionCatalogue` is the T1/T2 wrapper
+- `aeat.domain.financial.transactions.TransactionCatalogue` is the T1/T2 wrapper
   landed by `#74`. It stores `invoice_id: str | None` as a foreign-key slot
   and exposes `link_invoice(catalogue, transaction_id, invoice_id)` to mutate
   that slot via an immutable-return helper.
@@ -41,7 +41,7 @@ already landed by `#73` and `#74` on `main`.
   `Invoice.linked_transaction_ids: tuple[str, ...]`.
 - Linking must be bidirectional by design: `link_transaction(invoice_id,
   transaction_id)` should update the invoice side **and** call the existing
-  `aeat.financial.transactions.link_invoice` on the transaction catalogue so
+  `aeat.domain.financial.transactions.link_invoice` on the transaction catalogue so
   the two catalogues never drift.
 
 ### IVA totals invariants
@@ -86,7 +86,7 @@ already landed by `#73` and `#74` on `main`.
 - Repo precedent for immutable catalogues is one JSON file per catalogue,
   loaded via `model_validate_json` and written with
   `model_dump_json(indent=2)` through an atomic `os.replace` temp-file swap
-  (see `aeat.financial.transactions._service`).
+  (see `aeat.domain.financial.transactions._service`).
 - Apply the same pattern under `AEAT_INVOICES_DIR` with a default filename
   `invoices.json`.
 - The catalogue must reject duplicate `invoice_id` values when constructed
@@ -137,7 +137,7 @@ already landed by `#73` and `#74` on `main`.
 
 ### Sibling-branch boundary constraints
 
-- `src/aeat/financial/categories/` already exists on `main` and is the
+- `src/aeat/domain/financial/categories/` already exists on `main` and is the
   spending-category catalogue, NOT the future tax-category catalogue from
   issue `#77`. The invoice package must not couple to it.
 - Attachment service `#76` is not yet on main; typing stubs only.
@@ -146,7 +146,7 @@ already landed by `#73` and `#74` on `main`.
 
 ### Verification strategy
 
-- Colocated unit tests under `src/aeat/financial/invoices/` match repo style.
+- Colocated unit tests under `src/aeat/domain/financial/invoices/` match repo style.
 - Each `@pytest.mark.unit` test must cover: IVA line totals, invoice totals
   round-trip, duplicate-invoice rejection, NIF/CIF/VAT validation, linking
   semantics (many-to-one, bidirectional with transactions), reconciliation

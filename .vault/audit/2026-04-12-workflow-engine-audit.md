@@ -16,9 +16,9 @@ Scope: feature/59-workflow-engine on worktree Y:\codeeat-worktreeseature-59-wo
 
 ### 1. ten WorkflowStage values, in order, linear walk - PASS
 
-- src/aeat/workflow/_models.py:24-41 declares the WorkflowStage StrEnum exactly once per value in the documented order: LOADING_PROFILE, SYNCING_CATALOGUES, COMPUTING_DEADLINES, CHECKING_INBOX, BUILDING_DRAFT, VALIDATING_DRAFT, RUNNING_PREFLIGHT, DRY_RUN_SUBMIT, DONE, ABORTED.
-- src/aeat/workflow/_engine.py:248-287 walks the eight work stages sequentially in _drive; each stage has its own _stage_* method and the next is only entered after the prior returned without raising _AbortError.
-- src/aeat/workflow/test_models.py:24-38 locks the enum shape with a tuple-equality assertion; test_engine.py:311-331 asserts the exact executed stage tuple on the happy path.
+- src/aeat/application/workflow/_models.py:24-41 declares the WorkflowStage StrEnum exactly once per value in the documented order: LOADING_PROFILE, SYNCING_CATALOGUES, COMPUTING_DEADLINES, CHECKING_INBOX, BUILDING_DRAFT, VALIDATING_DRAFT, RUNNING_PREFLIGHT, DRY_RUN_SUBMIT, DONE, ABORTED.
+- src/aeat/application/workflow/_engine.py:248-287 walks the eight work stages sequentially in _drive; each stage has its own _stage_* method and the next is only entered after the prior returned without raising _AbortError.
+- src/aeat/application/workflow/test_models.py:24-38 locks the enum shape with a tuple-equality assertion; test_engine.py:311-331 asserts the exact executed stage tuple on the happy path.
 
 ### 2. bailout matrix coverage - PASS
 
@@ -42,7 +42,7 @@ test_models.py:45-58 additionally pins the closed set of nine reasons.
 - API default: WorkflowEngine.run_next(..., dry_run: bool = True, ...) at _engine.py:140-149; same default on run_for_period at _engine.py:181-192.
 - Double gate: _engine.py:827-842 - the guard "if not dry_run and not override_confirmation:" records the step and raises _AbortError(USER_CANCELLED) BEFORE any call to submit_draft. Verified by test_engine.py:460-467 asserting submit_calls == [].
 - Live-with-confirmation happy path: test_engine.py:469-481 asserts submit_calls == [(False, True)].
-- CLI enforcement: src/aeat/cli/workflow/next.py:52-56 and run.py:47-51 both reject --no-dry-run without --i-understand-this-is-real via typer.Exit(code=2); covered by test_cli.py:173-177. Flag names match the submission-engine CLI verbatim.
+- CLI enforcement: src/aeat/entrypoints/cli/workflow/next.py:52-56 and run.py:47-51 both reject --no-dry-run without --i-understand-this-is-real via typer.Exit(code=2); covered by test_cli.py:173-177. Flag names match the submission-engine CLI verbatim.
 
 ### 4. pydantic v2 strict + frozen + extra=forbid - PASS
 
@@ -52,14 +52,14 @@ test_models.py:45-58 additionally pins the closed set of nine reasons.
 
 ### 5. public API discipline - PASS
 
-- All cross-subpackage callers import only from aeat.workflow (test_engine.py:38-55, test_cli.py:31-35, cli/workflow/_helpers.py:25-30, cli/workflow/list_cmd.py:13, show.py:10).
-- Underscored modules are only imported from within aeat/workflow/**; a ripgrep for aeat.workflow._ confirms no external deep-path imports.
-- src/aeat/cli/__init__.py:33,65 wires the sub-typer via "from aeat.cli import workflow as workflow_module"; no reach into aeat.cli.workflow._helpers from outside the subpackage.
+- All cross-subpackage callers import only from aeat.application.workflow (test_engine.py:38-55, test_cli.py:31-35, cli/workflow/_helpers.py:25-30, cli/workflow/list_cmd.py:13, show.py:10).
+- Underscored modules are only imported from within aeat/application/workflow/**; a ripgrep for aeat.application.workflow._ confirms no external deep-path imports.
+- src/aeat/entrypoints/cli/__init__.py:33,65 wires the sub-typer via "from aeat.entrypoints.cli import workflow as workflow_module"; no reach into aeat.entrypoints.cli.workflow._helpers from outside the subpackage.
 
 ### 6. errors / logging / typing / docstrings - PASS
 
 - Error hierarchy: _errors.py:16-39 - WorkflowError(AeatError), WorkflowComponentError(WorkflowError), WorkflowAbortedError(WorkflowError).
-- Logging: _engine.py:29,56 and _persistence.py:15,19 both use aeat.logging.get_logger(__name__). No bare logging.getLogger anywhere in the subpackage.
+- Logging: _engine.py:29,56 and _persistence.py:15,19 both use aeat.core.logging.get_logger(__name__). No bare logging.getLogger anywhere in the subpackage.
 - Typing plus Google-style docstrings: every public symbol carries explicit annotations and Args/Returns/Raises blocks where applicable.
 
 ### 7. no mocks; Protocol-conforming doubles; markers; colocation - PASS
@@ -67,18 +67,18 @@ test_models.py:45-58 additionally pins the closed set of nine reasons.
 - A ripgrep for unittest.mock, mock., MagicMock, or patch( under src/aeat/workflow returns only a docstring mention in test_engine.py:4. No imports.
 - All CLI tests use real hand-rolled classes (_DeadlineEngine, _DraftBuilder, _SubmissionEngine, _InputsProvider at test_cli.py:49-118) wired via the set_test_hooks seam (_helpers.py:44-67). monkeypatch is only used to set AEAT_WORKFLOW_RUNS_DIR (test_cli.py:135), not to attribute-patch code under test.
 - Every test class/function carries @pytest.mark.unit (test_models.py:20,41,61,82,126; test_engine.py:310,372; test_cli.py:161; test_persistence.py:40) or @pytest.mark.live (test_live.py:26).
-- Tests are colocated under src/aeat/workflow/ and src/aeat/cli/workflow/ per the Rust-style mandate.
+- Tests are colocated under src/aeat/application/workflow/ and src/aeat/entrypoints/cli/workflow/ per the Rust-style mandate.
 
 ### 8. live-test gating + tooling - PASS
 
-- test_live.py:22,29 imports "from aeat.cli._live import requires_live_enabled" and calls it at the top of the test body. No os.getenv / AEAT_LIVE lookup anywhere in the subpackage.
+- test_live.py:22,29 imports "from aeat.entrypoints.cli._live import requires_live_enabled" and calls it at the top of the test body. No os.getenv / AEAT_LIVE lookup anywhere in the subpackage.
 - Settings alignment: config.py:339-353 declares aeat_workflow_runs_dir, aeat_workflow_sync_first_default, and aeat_workflow_draft_inputs_path; env/.env.example:168-175 documents the matching env vars. The pairing is symmetric and will satisfy tests/test_config.py alignment.
 - just lint/typecheck/test/hooks were not re-run in this audit per the read-only scope; no static-inspection blockers were found.
 
 ### 9. Protocol injection, no hard sibling-branch imports - PASS
 
 - _protocols.py defines all seven Protocols as @runtime_checkable typing.Protocol and ships narrow pydantic v2 stubs for the in-flight types (SubmittedFilingLike, SyncRunSummary, ExpedienteLike, RequerimientoLike).
-- _engine.py imports only aeat.config, aeat.deadlines, aeat.i18n, aeat.logging, aeat.submission, and aeat.workflow._* - no import from aeat.sync, aeat.inbox, aeat.status, or aeat.certificates.
+- _engine.py imports only aeat.core.config, aeat.domain.deadlines, aeat.core.i18n, aeat.core.logging, aeat.adapters.outbound.aeat.export, and aeat.application.workflow._* - no import from aeat.application.sync, aeat.inbox, aeat.status, or aeat.certificates.
 - _adapters.py imports LiveSyncRunner / DeadlineEngine / SubmissionEngine / build_draft (all on main). The sibling-branch slots (status_reader, inbox, certificate_bundle) default to None and their stage methods degrade gracefully with "not wired" diagnostics (_engine.py:375-386, 521-532, 744-771). The CLI _helpers._build_engine raises WorkflowError pointing at #43/#46/#8 so production invocation fails fast while the engine still compiles and tests independently.
 
 ## Advisory findings (non-blocking)

@@ -11,7 +11,7 @@ related:
 
 ## Problem Statement
 
-`src/aeat/auth/test_clave_movil.py` uses hand-written browser-session stand-ins to drive `ClaveMovilAuthProvider` through login, persistence, probe, and resume paths. Earlier review incorrectly treated those tests as proof of live AEAT/Cl@ve authentication. They are protocol-level unit tests and must not be described as live-auth success.
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py` uses hand-written browser-session stand-ins to drive `ClaveMovilAuthProvider` through login, persistence, probe, and resume paths. Earlier review incorrectly treated those tests as proof of live AEAT/Cl@ve authentication. They are protocol-level unit tests and must not be described as live-auth success.
 
 ## Considerations
 
@@ -21,7 +21,7 @@ The provider path under those tests reaches `_fresh_login_locked()`, where the b
 
 The project marker convention requires module-level access and domain markers. Keeping the whole file as `unit` preserves that rule while accurately describing the execution boundary. The domain remains `domain_aeat_remote` because the provider contract models AEAT Sede behavior.
 
-The searched repository surfaces no longer contain `--ignore=src/aeat/auth/test_clave_movil.py`, so there is no code or documentation workaround to delete in this checkout.
+The searched repository surfaces no longer contain `--ignore=src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`, so there is no code or documentation workaround to delete in this checkout.
 
 ## Constraints
 

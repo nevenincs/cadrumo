@@ -30,7 +30,7 @@ related:
 
 # `pdf-sanitizer` `pdf-sanitizer-phased-delivery` plan
 
-Phased delivery plan for `aeat.sanitizer` — the first-class PDF
+Phased delivery plan for `aeat.adapters.inbound.sanitizer` — the first-class PDF
 sanitiser that the parent `aeat-verify` ADR's W1 phase 4 now depends
 on. Phases run sequentially. Each phase ends with a focused commit.
 Code review runs after every phase; the final phase gates on
@@ -71,9 +71,9 @@ skeleton. No PDF logic yet.
 
 1. Add `pikepdf>=10.0.0` to `pyproject.toml` `dependencies`. Run
    `uv lock --upgrade-package pikepdf` to refresh the lockfile.
-2. Create `src/aeat/sanitizer/__init__.py` with public re-exports
+2. Create `src/aeat/adapters/inbound/sanitizer/__init__.py` with public re-exports
    (currently bare; populated phase-by-phase).
-3. Create `src/aeat/sanitizer/_records.py` with:
+3. Create `src/aeat/adapters/inbound/sanitizer/_records.py` with:
    - `_ReplacementBase` (`SecretStr` real, `str` synthetic,
      `surface_label`).
    - `NifReplacement`, `NameReplacement`, `AddressReplacement`,
@@ -85,32 +85,32 @@ skeleton. No PDF logic yet.
    - `TokenMap` aggregating all replacement tuples.
    - `Replacement`, `ScrubbedSurface`, `SanitizationWarning`,
      `DeterminismFlags`, `SanitizationResult`.
-4. Create `src/aeat/sanitizer/_errors.py` — `SanitizationError`,
+4. Create `src/aeat/adapters/inbound/sanitizer/_errors.py` — `SanitizationError`,
    `SanitizerSourceParseError`, `SignaturePresentError`,
    `AlreadySanitizedError`, `UnknownSurfaceError`, all inheriting
-   `aeat.errors.AeatError`.
-5. Create `src/aeat/sanitizer/test_records.py`:
+   `aeat.core.errors.AeatError`.
+5. Create `src/aeat/adapters/inbound/sanitizer/test_records.py`:
    - `model_config` correctness (frozen, extra=forbid, strict).
    - `SecretStr` repr-leak guard (`repr(token_map)` does NOT
      contain any cleartext NIF / name / etc.).
    - Each `*Replacement` synthetic validator round-trips a known-
      valid synthetic and rejects a known-invalid one.
    - `TokenMap` accepts empty tuples for every category.
-6. Run `uv run pytest src/aeat/sanitizer/test_records.py -m unit`.
+6. Run `uv run pytest src/aeat/adapters/inbound/sanitizer/test_records.py -m unit`.
 7. Commit: `feat(sanitizer): records skeleton + token-map (#239)`.
 
 ### Phase 2 — Determinism flags + save helper
 
 Lock byte-stable output before any rewrite logic.
 
-1. Create `src/aeat/sanitizer/_determinism.py` with
+1. Create `src/aeat/adapters/inbound/sanitizer/_determinism.py` with
    `apply_save_flags(pdf: pikepdf.Pdf, target: BinaryIO) ->
    DeterminismFlags`. Wraps `pdf.save(target, deterministic_id=
    True, compress_streams=True, object_stream_mode=ObjectStream
    Mode.preserve, linearize=False, recompress_flate=False,
    static_id=False)`. Returns the flags applied for capture into
    `SanitizationResult`.
-2. Create `src/aeat/sanitizer/test_determinism.py`:
+2. Create `src/aeat/adapters/inbound/sanitizer/test_determinism.py`:
    - Synthesise a tiny PDF in-test with `pikepdf` (no fixture
      dep). Sanitise it through `apply_save_flags` twice. Assert
      `output_a == output_b` byte-for-byte.
@@ -125,12 +125,12 @@ Lock byte-stable output before any rewrite logic.
 
 DocInfo + XMP wipe.
 
-1. Create `src/aeat/sanitizer/_metadata.py` with
+1. Create `src/aeat/adapters/inbound/sanitizer/_metadata.py` with
    `scrub_docinfo(pdf: pikepdf.Pdf) -> ScrubbedSurface` and
    `scrub_xmp(pdf: pikepdf.Pdf, *, strategy: Literal["delete",
    "rewrite"]) -> tuple[ScrubbedSurface, tuple[
    SanitizationWarning, ...]]`.
-2. Create `src/aeat/sanitizer/test_metadata.py`:
+2. Create `src/aeat/adapters/inbound/sanitizer/test_metadata.py`:
    - Synthesise an in-test PDF with `Title`, `Subject`, `Author`,
      `Keywords`, `Creator`, `Producer`, `CreationDate`, `ModDate`
      populated. Run `scrub_docinfo`. Assert all keys absent on
@@ -148,13 +148,13 @@ DocInfo + XMP wipe.
 Attachments, JS, annotations, OpenAction, AA, OCG, AcroForm,
 thumbnails, outlines, page labels, structtree.
 
-1. Create `src/aeat/sanitizer/_dynamic.py`. One function per
+1. Create `src/aeat/adapters/inbound/sanitizer/_dynamic.py`. One function per
    surface. Each returns a `ScrubbedSurface` with a count.
-2. Create `src/aeat/sanitizer/_structtree.py` with
+2. Create `src/aeat/adapters/inbound/sanitizer/_structtree.py` with
    `drop_struct_tree(pdf: pikepdf.Pdf) -> tuple[ScrubbedSurface,
    tuple[SanitizationWarning, ...]]` — drops the entire tree and
    emits a `structtree_dropped_lossy` warning.
-3. Create `src/aeat/sanitizer/test_dynamic.py`:
+3. Create `src/aeat/adapters/inbound/sanitizer/test_dynamic.py`:
    - In-test PDF with one embedded file, one JS action on
      `OpenAction`, one annotation, one OCG. Run each scrub
      function in turn. Assert each surface absent on reload.
@@ -166,7 +166,7 @@ thumbnails, outlines, page labels, structtree.
 
 The token-replace engine.
 
-1. Create `src/aeat/sanitizer/_streams.py` with:
+1. Create `src/aeat/adapters/inbound/sanitizer/_streams.py` with:
    - `_decode_string_operand(operand: pikepdf.String) ->
      tuple[str, Literal["literal", "hex"]]` — encoding-aware
      decode (PDFDocEncoding for literals, cp1252 for hex).
@@ -178,7 +178,7 @@ The token-replace engine.
      stream`, walk for `Tj` / `TJ` / `'` / `"` operators, replace
      operands, `unparse_content_stream`, replace the page's
      content stream via `Pdf.make_stream`.
-2. Create `src/aeat/sanitizer/test_streams.py`:
+2. Create `src/aeat/adapters/inbound/sanitizer/test_streams.py`:
    - Synthesise three in-test PDFs (literal-only, hex-only,
      mixed) with known cleartext. Define a `TokenMap` with one
      `arbitrary` entry. Run `apply_token_map_to_page`. Assert
@@ -197,14 +197,14 @@ The token-replace engine.
 
 Wire phases 2-5 together with the order of operations from the ADR.
 
-1. Create `src/aeat/sanitizer/_pipeline.py` with `sanitize_pdf` —
+1. Create `src/aeat/adapters/inbound/sanitizer/_pipeline.py` with `sanitize_pdf` —
    the public entry point. Implements the 8-step order from the
    ADR. Carries `refuse_if_already_sanitized` and the
    `drop_*` / `scrub_*` flags through.
-2. Create `src/aeat/sanitizer/fixtures.py` (stub) with
+2. Create `src/aeat/adapters/inbound/sanitizer/fixtures.py` (stub) with
    `SANITIZED_SHAS: frozenset[str] = frozenset()`. Populated
    later as fixtures land.
-3. Create `src/aeat/sanitizer/test_pipeline.py`:
+3. Create `src/aeat/adapters/inbound/sanitizer/test_pipeline.py`:
    - Happy path on a synthesised PDF: assert
      `SanitizationResult.replacements_applied` non-empty and the
      output is byte-stable across two calls.
@@ -216,8 +216,8 @@ Wire phases 2-5 together with the order of operations from the ADR.
      `refuse_if_already_sanitized=False`, assert the call
      succeeds.
    - Public re-exports test: import every public symbol via
-     `from aeat.sanitizer import ...`.
-4. Update `src/aeat/sanitizer/__init__.py` to re-export the
+     `from aeat.adapters.inbound.sanitizer import ...`.
+4. Update `src/aeat/adapters/inbound/sanitizer/__init__.py` to re-export the
    public surface.
 5. Run the test.
 6. Commit: `feat(sanitizer): pipeline orchestrator + refuse guards
@@ -228,14 +228,14 @@ Wire phases 2-5 together with the order of operations from the ADR.
 `aeat sanitize` group with `pdf`, `prepare-map`, `verify`, `check`
 verbs.
 
-1. Create `src/aeat/cli/sanitize/__init__.py` registering the
+1. Create `src/aeat/entrypoints/cli/sanitize/__init__.py` registering the
    group on the root CLI.
 2. Verb implementations under `_pdf.py`, `_prepare_map.py`,
    `_verify.py`, `_check.py`.
 3. Forbidden-flag guard: reject any flag literally named
    `--write`, `--submit`, `--send`, `--enviar`, `--presentar`
    etc. Same pattern as `aeat filing reconcile`.
-4. Create `src/aeat/cli/sanitize/test_cli.py`:
+4. Create `src/aeat/entrypoints/cli/sanitize/test_cli.py`:
    - `aeat sanitize pdf --help` lists the four verbs.
    - `aeat sanitize verify` against a fixture with a known
      `real:` value the operator forgot to add to the mapping
@@ -252,21 +252,21 @@ verbs.
 
 The load-bearing security gates.
 
-1. Create `src/aeat/sanitizer/test_adversarial_absence.py`:
+1. Create `src/aeat/adapters/inbound/sanitizer/test_adversarial_absence.py`:
    - Iterates every committed fixture under
      `tests/fixtures/justificantes/`. For each, loads the
      committed mapping (the fixture sidecar JSON). For every
      `real:` value, asserts `real_value not in raw_pdf_bytes
      (fixture)` AND `real_value not in pdftotext_output
      (fixture)`. Skips cleanly if no fixtures yet committed.
-2. Create `src/aeat/sanitizer/test_round_trip.py`:
+2. Create `src/aeat/adapters/inbound/sanitizer/test_round_trip.py`:
    - Iterates every committed fixture. Asserts
      `parse_justificante(fixture)` returns a valid
      `Justificante` whose `nif`, `csv`, `presented_at` match
      the synthetic mapping. Skips cleanly if no fixtures.
-3. Create `src/aeat/sanitizer/test_no_write_surface.py`:
-   - Greps every `.py` under `src/aeat/sanitizer/` and
-     `src/aeat/cli/sanitize/` for the forbidden mutation verbs
+3. Create `src/aeat/adapters/inbound/sanitizer/test_no_write_surface.py`:
+   - Greps every `.py` under `src/aeat/adapters/inbound/sanitizer/` and
+     `src/aeat/entrypoints/cli/sanitize/` for the forbidden mutation verbs
      (`submit`, `send`, `commit`, `enviar`, `presentar`,
      `firmar`, `radicar`, `remitir`, `modificar`, `anular`,
      `cancelar`, `rechazar`). Whitelist needed for `commit_id`
@@ -287,7 +287,7 @@ as the first project fixtures.
 2. Run `aeat sanitize pdf` against each capture, producing
    `tests/fixtures/justificantes/100/2021-A.pdf` plus the
    sidecar report JSON. Repeat 2022, 2023.
-3. Update `src/aeat/sanitizer/fixtures.py`'s `SANITIZED_SHAS`
+3. Update `src/aeat/adapters/inbound/sanitizer/fixtures.py`'s `SANITIZED_SHAS`
    with the SHA-256 of each committed sanitised PDF.
 4. Run the full sanitiser test suite. Expect:
    - `test_adversarial_absence.py` green (no real value leaks).
@@ -321,14 +321,14 @@ as the first project fixtures.
 
 The plan succeeds when, after phase 9 commits:
 
-- `uv run pytest src/aeat/sanitizer/ -m unit` is green
+- `uv run pytest src/aeat/adapters/inbound/sanitizer/ -m unit` is green
   end-to-end.
-- `uv run pytest src/aeat/cli/sanitize/ -m unit` is green
+- `uv run pytest src/aeat/entrypoints/cli/sanitize/ -m unit` is green
   end-to-end.
 - The three Modelo 100 IRPF fixtures live under
   `tests/fixtures/justificantes/100/` with their sidecar JSON,
   and their SHA-256 hashes appear in
-  `aeat.sanitizer.fixtures.SANITIZED_SHAS`.
+  `aeat.adapters.inbound.sanitizer.fixtures.SANITIZED_SHAS`.
 - The parent `aeat-verify` plan's W1 P4 row reads `done` and
   PR2 reads `done`.
 - `aeat sanitize verify` exits 0 against every committed fixture

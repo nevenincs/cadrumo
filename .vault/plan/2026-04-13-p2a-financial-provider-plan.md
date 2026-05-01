@@ -14,7 +14,7 @@ Deliver the T1 ingest substrate for issue `#73`: strict file-backed `RawTransact
 
 ## Proposed Changes
 
-- Create the new `aeat.financial` subpackage and expose the public ingest API exclusively through package roots.
+- Create the new `aeat.domain.financial` subpackage and expose the public ingest API exclusively through package roots.
 - Define the strict frozen pydantic boundary models for raw transactions, provenance, source format, and provider validation.
 - Implement the provider ABC, CSV/XLSX/OFX providers, and provider auto-detection.
 - Wire `aeat financial ingest` into the root CLI and extend settings / `.env.example`.
@@ -23,7 +23,7 @@ Deliver the T1 ingest substrate for issue `#73`: strict file-backed `RawTransact
 ## Tasks
 
 - `Phase 1: establish the T1 boundary types and provider surface`
-  1. Create `aeat.financial` public exports plus `_raw_transaction.py` and provider base models/exceptions.
+  1. Create `aeat.domain.financial` public exports plus `_raw_transaction.py` and provider base models/exceptions.
   1. Add provider detection and root-package exports consistent with the repo's public API discipline.
 - `Phase 2: implement file providers`
   1. Implement `CsvProvider` with bank-layout mappings, encoding/dialect detection, and deterministic ID synthesis.

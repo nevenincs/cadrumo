@@ -20,7 +20,7 @@ the current corpus metadata read like Kent already approved his own filing.
 
 ## Considerations
 
-- `src/aeat/casillas/` and `src/aeat/manuals/` both parse raw JSON directly
+- `src/aeat/domain/casillas/` and `src/aeat/domain/manuals/` both parse raw JSON directly
   into strict Pydantic models, so any rename changes both constructors and the
   on-disk JSON contract.
 - `save_casillas()` serializes through `model_dump(mode="json")`, which means
@@ -38,15 +38,15 @@ the current corpus metadata read like Kent already approved his own filing.
   corpus, tests, CLI output, and contributor docs.
 - The issue is scoped to the repository-owned corpus and test fixtures, not to
   preserving stale local JSON files created before the rename.
-- `aeat.manuals` has no production writer for structured `Manual` / `Section` /
+- `aeat.domain.manuals` has no production writer for structured `Manual` / `Section` /
   `Rule` JSON, so the implementation cannot rely on automatic rewrite for any
   local manual structures outside the repository.
 
 ## Implementation
 
 - Rename the affected model fields to `definition_reviewed_by` and
-  `definition_reviewed_at` in `src/aeat/casillas/models.py` and
-  `src/aeat/manuals/_schema.py`.
+  `definition_reviewed_at` in `src/aeat/domain/casillas/models.py` and
+  `src/aeat/domain/manuals/_schema.py`.
 - Update verification messages, CLI output, tests, and contributor docs to use
   the definition-scoped names consistently.
 - Rewrite the checked-in `corpus/casillas/*.json` files in this branch so the
@@ -61,7 +61,7 @@ This keeps the rename honest. The issue exists to clear the namespace, not to
 carry an indefinite backwards-compatibility layer for development-only corpus
 artifacts. Rewriting the checked-in casilla corpus and tests is enough to move
 the canonical repository state onto the new contract. Stale local JSON is an
-acceptable break because `aeat.manuals` has no production rewrite surface for
+acceptable break because `aeat.domain.manuals` has no production rewrite surface for
 structured records, and carrying parser aliases would preserve the ambiguity the
 issue is trying to remove.
 

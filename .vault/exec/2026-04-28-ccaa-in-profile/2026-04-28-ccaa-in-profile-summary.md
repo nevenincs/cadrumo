@@ -34,7 +34,7 @@ The profile is local-state Path A JSON. The file payload is schema-versioned:
 
 Default path resolution uses `AEAT_TAX_RESIDENCE_PROFILE_PATH` when set; otherwise `%APPDATA%\aeat\tax-residence.json` on Windows, `$XDG_CONFIG_HOME/aeat/tax-residence.json` when present, and `~/.config/aeat/tax-residence.json` as the POSIX fallback. Writes are atomic via same-directory temporary file plus `os.replace`.
 
-No dependency on `aeat.storage`, SQLAlchemy, Alembic, or the in-flight `#216` database branch was introduced.
+No dependency on `aeat.adapters.persistence.storage`, SQLAlchemy, Alembic, or the in-flight `#216` database branch was introduced.
 
 ## CLI surface
 

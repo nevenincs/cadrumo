@@ -27,6 +27,6 @@ The future issues necessitate the following empty subpackages:
 - `logging.py`: Consistent configured logging factory
 
 ## Conventions
-- **API Surface**: Explicitly re-exported symbols via `__init__.py`. Other modules must not `import aeat.auth.internal`, but instead `from aeat.auth import Authenticatable`.
+- **API Surface**: Explicitly re-exported symbols via `__init__.py`. Other modules must not `import aeat.adapters.outbound.aeat.auth.internal`, but instead `from aeat.adapters.outbound.aeat.auth import Authenticatable`.
 - **Testing**: Rust-style colocated tests with explicit `@pytest.mark.unit` markers. No mocks allowed in live tests.
 - **Tools**: Typer is present in the dependency tree (from issue 12 dependencies), whereas Click is foundational but Typer offers pydantic integration. `stdlib` vs `structlog` for logging: sticking to standard library logging to keep dependencies thin unless a structlog install is necessary.

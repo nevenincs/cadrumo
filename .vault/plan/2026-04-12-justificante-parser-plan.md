@@ -17,13 +17,13 @@ unit + live test suites.
 
 ## Proposed Changes
 
-New subpackage ``src/aeat/justificante/`` with:
+New subpackage ``src/aeat/domain/justificante/`` with:
 
 - ``__init__.py`` exposing the public API (``Justificante``,
   ``JustificanteParserBackend``, the error hierarchy,
   ``parse_justificante``, ``verify_csv``).
 - ``_schema.py`` — strict frozen pydantic v2 ``Justificante`` + enum.
-- ``_errors.py`` — four error classes under ``aeat.errors.AeatError``.
+- ``_errors.py`` — four error classes under ``aeat.core.errors.AeatError``.
 - ``_extract.py`` — regex-driven field extractor.
 - ``_parser.py`` — public ``parse_justificante`` entry point.
 - ``_verify.py`` — async ``verify_csv`` against the Sede electrónica.
@@ -32,8 +32,8 @@ New subpackage ``src/aeat/justificante/`` with:
 - ``test_parser.py`` — 12 colocated unit tests (@pytest.mark.unit).
 - ``test_verify_live.py`` — 1 opt-in live test (@pytest.mark.live).
 
-New CLI subgroup ``src/aeat/cli/justificante/__init__.py`` with ``parse``
-and ``verify`` subcommands, wired into ``aeat.cli.app``.
+New CLI subgroup ``src/aeat/entrypoints/cli/justificante/__init__.py`` with ``parse``
+and ``verify`` subcommands, wired into ``aeat.entrypoints.cli.app``.
 
 Additive settings in ``src/aeat/config.py``:
 
@@ -62,8 +62,8 @@ Vault artefacts:
 - ``.vault/plan/2026-04-12-justificante-parser-plan.md`` (this file)
 - ``.vault/exec/2026-04-12-justificante-parser/…`` — execution log.
 
-No modifications to sibling branch territory: ``src/aeat/submission/``
-(`#42`), ``src/aeat/status/`` (`#43`), ``src/aeat/models/`` (`#6`),
+No modifications to sibling branch territory: ``src/aeat/adapters/outbound/aeat/export/``
+(`#42`), ``src/aeat/status/`` (`#43`), ``src/aeat/domain/modelos/`` (`#6`),
 ``pyproject.toml [tool.pytest]`` (`#15`), or root ``conftest.py``.
 
 ## Plan review
@@ -80,18 +80,18 @@ Checks performed:
 - All boundary-crossing types are strict pydantic v2 (`Justificante`);
   all closed enumerations are ``StrEnum`` (`JustificanteParserBackend`);
   no bare ``dict[str, Any]`` in the public surface.
-- Unit tests are colocated (``src/aeat/justificante/test_parser.py``)
+- Unit tests are colocated (``src/aeat/domain/justificante/test_parser.py``)
   per the Rust-style convention.
-- Every error class inherits from ``aeat.errors.AeatError``.
+- Every error class inherits from ``aeat.core.errors.AeatError``.
 - ``verify_csv`` takes a **string** CSV (not a typed ``Expediente``) so
-  `#43` does not need to import from ``aeat.justificante``.
+  `#43` does not need to import from ``aeat.domain.justificante``.
 - The live test ``pytest.skip``s on ``JustificanteVerificationError``
   so the known `#41` ``playwright_stealth`` bug cannot red-line the
   suite.
-- Public API imports only from ``aeat.justificante`` — all
+- Public API imports only from ``aeat.domain.justificante`` — all
   private ``_*`` modules are hidden.
-- No hard imports from ``aeat.submission``, ``aeat.status``,
-  ``aeat.models``, ``aeat.auth.certificate``.
+- No hard imports from ``aeat.adapters.outbound.aeat.export``, ``aeat.status``,
+  ``aeat.domain.modelos``, ``aeat.adapters.outbound.aeat.auth.certificate``.
 
 ## Tasks
 
@@ -99,12 +99,12 @@ Checks performed:
 2. Create the synthetic fixture generator under
    ``tests/fixtures/justificantes/_generate.py`` and run it once to
    commit three fixture PDFs (Modelo 130, 303, 100).
-3. Create ``src/aeat/justificante/`` subpackage with the schema, errors,
+3. Create ``src/aeat/domain/justificante/`` subpackage with the schema, errors,
    extractor, public parse entry point, pdfplumber backend, and the
    async ``verify_csv`` helper.
-4. Create the ``src/aeat/cli/justificante/`` sub-app and wire it into
-   ``aeat.cli.app``.
-5. Add the two settings fields to ``aeat.config.Settings`` and to
+4. Create the ``src/aeat/entrypoints/cli/justificante/`` sub-app and wire it into
+   ``aeat.entrypoints.cli.app``.
+5. Add the two settings fields to ``aeat.core.config.Settings`` and to
    ``env/.env.example`` so ``tests/test_config.py`` stays green.
 6. Write ``test_parser.py`` (12 unit tests) covering: per-modelo parse,
    sha-256 capture, determinism, both backends (one raises), missing

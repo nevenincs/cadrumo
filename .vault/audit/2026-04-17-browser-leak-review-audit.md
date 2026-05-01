@@ -18,4 +18,4 @@ REVIEW-002 | VERIFIED | regression coverage is sufficient for issue `#190`
 Targeted unit coverage now proves idempotent close, cleanup after `new_context()` failure, flat browser-count behavior across repeated construct/create/close cycles, browser-health cleanup on early failures, and own-session versus borrowed-session behavior in `verify_csv()`.
 
 REVIEW-003 | RESIDUAL | live browser verification remains gated
-`src/aeat/browser/test_live_evasion.py` was updated to close the session, and a targeted live-marker run collected successfully but skipped because live execution is gated in this environment. This is a residual live-only gap, not a blocker for the issue fix.
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_live_evasion.py` was updated to close the session, and a targeted live-marker run collected successfully but skipped because live execution is gated in this environment. This is a residual live-only gap, not a blocker for the issue fix.

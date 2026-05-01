@@ -9,20 +9,20 @@ related:
 
 # casilla-db phase1 step1
 
-Scaffolded the new `aeat.casillas` package to avoid the in-flight `aeat.schema`
+Scaffolded the new `aeat.domain.casillas` package to avoid the in-flight `aeat.domain.schema`
 ownership boundary from issue #9.
 
-- Created: `src/aeat/casillas/__init__.py`
-- Created: `src/aeat/casillas/_protocols.py`
-- Created: `src/aeat/casillas/errors.py`
-- Created: `src/aeat/casillas/models.py`
-- Created: `src/aeat/casillas/catalogue.py`
+- Created: `src/aeat/domain/casillas/__init__.py`
+- Created: `src/aeat/domain/casillas/_protocols.py`
+- Created: `src/aeat/domain/casillas/errors.py`
+- Created: `src/aeat/domain/casillas/models.py`
+- Created: `src/aeat/domain/casillas/catalogue.py`
 
 ## Description
 
 The new package owns the strict pydantic casilla models, catalogue loader,
 verification helpers, protocol stubs for sibling workstreams, and the public
-`aeat.casillas` import surface.
+`aeat.domain.casillas` import surface.
 
 ## Tests
 

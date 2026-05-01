@@ -18,7 +18,7 @@ P2E-TAX-CATEGORY-CATALOGUE-002 | LOW | Incomplete `MODELO_303` coverage kept as 
 Review raised that some profiles do not carry `MODELO_303` mappings. This branch keeps `303` mappings only where the current-main public VAT surface can be represented honestly; forcing VAT-exempt or non-VAT categories into `303` would fabricate behavior that the committed corpus does not support.
 
 P2E-TAX-CATEGORY-CATALOGUE-003 | LOW | Manual loader remains a readiness gate in phase 1
-`load_category_profiles_from_manual()` currently uses `aeat.manuals` as an availability check and then returns the curated registry. This is intentional for the phase-1 taxonomy substrate because the structured manual corpus does not yet expose category-profile extraction. The public API stays stable and later corpus-backed derivation can replace the fallback without changing downstream callers.
+`load_category_profiles_from_manual()` currently uses `aeat.domain.manuals` as an availability check and then returns the curated registry. This is intentional for the phase-1 taxonomy substrate because the structured manual corpus does not yet expose category-profile extraction. The public API stays stable and later corpus-backed derivation can replace the fallback without changing downstream callers.
 
 P2E-TAX-CATEGORY-CATALOGUE-004 | INFO | Final review status
 No open code defects remain after the corrective registry patch. Final verification on the reviewed tree: `just lint`, `just typecheck`, `just test`, and `just hooks` all passed.

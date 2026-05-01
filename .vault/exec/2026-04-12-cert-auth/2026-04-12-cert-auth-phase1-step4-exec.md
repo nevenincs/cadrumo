@@ -23,9 +23,9 @@ related:
   because both sides gain the same five entries.
 
 ## Import-cycle note
-`aeat.config` imports `CertificateBackend` from
-`aeat.auth.certificate`. To keep that import safe, the existing
-`from aeat.config import Settings` line at the top of
-`aeat.auth.__init__` was moved under `TYPE_CHECKING` (it is used only
+`aeat.core.config` imports `CertificateBackend` from
+`aeat.adapters.outbound.aeat.auth.certificate`. To keep that import safe, the existing
+`from aeat.core.config import Settings` line at the top of
+`aeat.adapters.outbound.aeat.auth.__init__` was moved under `TYPE_CHECKING` (it is used only
 in annotations — runtime consumers already re-import inside their
 functions). No behavioural change.

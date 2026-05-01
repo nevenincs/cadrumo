@@ -13,9 +13,9 @@ related:
 No findings.
 
 Plan audit result: the plan covers every corpus-loading surface that currently
-hard-codes `reviewed_by` / `reviewed_at`, including `src/aeat/casillas/_test_catalogue.py`,
-`src/aeat/casillas/_test_cli.py`, `src/aeat/manuals/test_loader.py`,
-`src/aeat/manuals/test_schema.py`, and `src/aeat/manuals/test_verify.py`. The
+hard-codes `reviewed_by` / `reviewed_at`, including `src/aeat/domain/casillas/_test_catalogue.py`,
+`src/aeat/domain/casillas/_test_cli.py`, `src/aeat/domain/manuals/test_loader.py`,
+`src/aeat/domain/manuals/test_schema.py`, and `src/aeat/domain/manuals/test_verify.py`. The
 verification scope also matches the revised ADR: assert the repository emits and
 tests only `definition_reviewed_*`, with no lingering old-key fixtures in the
 committed corpus.

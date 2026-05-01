@@ -16,20 +16,20 @@ Issue `#73` must establish the T1 ingest boundary for the entire financial pipel
 
 ## Considerations
 
-- The implementation must conform to current repo conventions instead of the older issue body, which still refers to `src/aeat/financial/sources/` and an async fetch surface.
+- The implementation must conform to current repo conventions instead of the older issue body, which still refers to `src/aeat/domain/financial/sources/` and an async fetch surface.
 - `#74` is not on `main`, so this issue cannot depend on a sibling transaction catalogue type.
 - Spanish bank CSV exports are layout-variant but structurally similar; Revolut is structurally distinct and should still be supported by the same CSV provider through bank-specific column maps.
 - Validation must be explicit and user-visible because file ingest errors are common: wrong encoding, wrong delimiter, wrong worksheet, wrong extension, or non-bank CSVs.
 
 ## Constraints
 
-- Public API must be exposed from `aeat.financial` and `aeat.financial.providers` only.
+- Public API must be exposed from `aeat.domain.financial` and `aeat.domain.financial.providers` only.
 - Boundary-crossing types must be strict frozen pydantic v2 models with `enum.StrEnum` closed sets and no bare `dict[...]` signatures.
 - T1 ingest stays file-based only. No persistence, normalization, FX conversion, VAT logic, or Google Workspace behavior belongs in this issue.
 
 ## Implementation
 
-- Create `src/aeat/financial/` with a public `__init__.py`, a concrete `_raw_transaction.py`, and a `providers/` package containing the ABC, concrete providers, and provider auto-detection.
+- Create `src/aeat/domain/financial/` with a public `__init__.py`, a concrete `_raw_transaction.py`, and a `providers/` package containing the ABC, concrete providers, and provider auto-detection.
 - Use a strict frozen `RawTransaction` model with a nested strict frozen `RawProvenance` model containing `source_path`, `source_sha256`, `source_row_index`, `source_format`, `ingested_at`, and `provider_name`.
 - Adopt a strict frozen `ProviderValidation` model as the validation contract returned by every provider.
 - Implement CSV ingestion through a configurable set of bank layouts expressed as pydantic models that define header aliases and date/number parsing strategies.

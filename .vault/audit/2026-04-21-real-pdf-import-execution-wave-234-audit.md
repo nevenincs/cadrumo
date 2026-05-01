@@ -16,9 +16,9 @@ related:
 
 Three consecutive execution waves of EPIC #305, reviewed together:
 
-- **Wave 2** (`fbde5d2`) — cluster C scaffolding: `src/aeat/_pdf_import/_scrub.py`, synthetic generator primitives, L1 manifest fetcher, pytest marker registration.
-- **Wave 3** (`398ef82`) — cluster D phase 1: `src/aeat/declaracion/` module family + Modelo 130 v2025 extractor + synthetic L3 generator + `aeat filing import --from-declaracion` CLI.
-- **Wave 4** (`1723119`) — cluster E: `src/aeat/verification/` module + discrepancy classifier + verification chaining from the import CLI.
+- **Wave 2** (`fbde5d2`) — cluster C scaffolding: `src/aeat/adapters/inbound/pdf/_scrub.py`, synthetic generator primitives, L1 manifest fetcher, pytest marker registration.
+- **Wave 3** (`398ef82`) — cluster D phase 1: `src/aeat/adapters/inbound/declaracion/` module family + Modelo 130 v2025 extractor + synthetic L3 generator + `aeat filing import --from-declaracion` CLI.
+- **Wave 4** (`1723119`) — cluster E: `src/aeat/application/verification/` module + discrepancy classifier + verification chaining from the import CLI.
 
 The reviewer persona (`vaultspec-code-reviewer`) returned a structured inline report; findings distilled below with resolutions recorded per project policy.
 
@@ -32,7 +32,7 @@ The reviewer persona (`vaultspec-code-reviewer`) returned a structured inline re
 
 - The extractor now runs `pattern.findall(text)` per casilla; hits > 1 drop confidence to `0.5` + emit `ambiguous-label`.
 - New `_structural_integrity_check_01_minus_02` helper asserts the Modelo 130 identity `03 = 01 - 02` within 0.02 €; violations downgrade casilla 03's confidence to `0.3` + emit `ambiguous-label` so the verification classifier flags EXTRACTION_UNRELIABLE.
-- `_UNRELIABLE_WARNING_CODES` in `src/aeat/verification/_verify.py` gains `"casilla-not-found"` so partial extractions downgrade to `NEEDS_REVIEW`.
+- `_UNRELIABLE_WARNING_CODES` in `src/aeat/application/verification/_verify.py` gains `"casilla-not-found"` so partial extractions downgrade to `NEEDS_REVIEW`.
 
 ### H2 — Template-revision detector fabricates an unsupported revision (HIGH, **fixed**)
 
@@ -93,7 +93,7 @@ Kent narration reads coherent in all three paths (happy / partial / unverifiable
 
 ## Test + lint results post-fix
 
-- `uv run pytest -m unit src/aeat/_pdf_import/ src/aeat/declaracion/ src/aeat/verification/ src/aeat/cli/filing/` → 54 passed (47 prior + 7 new scrub tests).
+- `uv run pytest -m unit src/aeat/adapters/inbound/pdf/ src/aeat/adapters/inbound/declaracion/ src/aeat/application/verification/ src/aeat/entrypoints/cli/filing/` → 54 passed (47 prior + 7 new scrub tests).
 - `uv run ruff check` + `uv run ty check` on every touched module — clean.
 - Kent UX smoke: `AEAT_OUTPUT_LANGUAGE=es` now produces Spanish verdict; default language path covered.
 

@@ -76,7 +76,7 @@ parser fixture tests cover the new path end-to-end.
 
 ### 4. workflow engine provisional `run_id` mismatch
 
-`src/aeat/workflow/_engine.py::WorkflowEngine` previously stored a
+`src/aeat/application/workflow/_engine.py::WorkflowEngine` previously stored a
 provisional `run_id` containing `-` placeholders on `_current_run_id`
 and attached that to any `SiteHealthAlert`. When a site-health error
 fired *after* `_stage_computing_deadlines` resolved an obligation,
@@ -106,7 +106,7 @@ been resolved) and asserts:
 
 ### 5. `_RealProbe` Playwright leak
 
-`src/aeat/cli/browser/health.py::_default_probe_factory` previously
+`src/aeat/entrypoints/cli/browser/health.py::_default_probe_factory` previously
 defined `_RealProbe` inline where the `try/finally` began *after*
 `create_context()` and `new_page()` had already been awaited. If
 either raised, `playwright.stop()` was never called and the Playwright
@@ -141,8 +141,8 @@ All test doubles are concrete classes recording real method calls; no
 
 - `src/aeat/status/_site_health_parsers.py`
 - `src/aeat/status/test_site_health.py`
-- `src/aeat/workflow/_engine.py`
-- `src/aeat/workflow/test_engine.py`
-- `src/aeat/cli/browser/health.py`
-- `src/aeat/cli/browser/test_health.py`
+- `src/aeat/application/workflow/_engine.py`
+- `src/aeat/application/workflow/test_engine.py`
+- `src/aeat/entrypoints/cli/browser/health.py`
+- `src/aeat/entrypoints/cli/browser/test_health.py`
 - `.vault/exec/2026-04-13-aeat-mantenimiento-detection/2026-04-13-aeat-mantenimiento-detection-phase9-review-followup.md`

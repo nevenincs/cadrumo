@@ -21,23 +21,23 @@ GitHub issue [#232](https://github.com/wgergely/aeat/issues/232) under EPIC umbr
 
 Five distinct decision-bearing records carry "needs my attention" semantics today. Each lives in its own subpackage with its own state machine, repository, and CLI. None share a common abstraction.
 
-### 1 — sync divergences (`src/aeat/sync/`)
+### 1 — sync divergences (`src/aeat/application/sync/`)
 
 Canonical pattern. Every other source should align to this shape.
 
-- `DivergenceRecord` (`src/aeat/sync/_divergence.py:210`) — strict frozen pydantic v2 record with `record_id`, `detected_at`, `modelo`, `classification` (ADDITIVE | BREAKING | BENIGN | SUSPICIOUS), `payload` (discriminated union of nine concrete kinds), `resolution_state`, `notes`.
-- `ResolutionState` (`src/aeat/sync/_divergence.py:66`) — closed `StrEnum` with PENDING / AUTO_HEALED / HUMAN_APPROVED / REJECTED.
-- `JsonFileDivergenceRepository` (`src/aeat/sync/_repository.py:54`) — one JSON file per record under `AEAT_SYNC_DIVERGENCE_FILE_DIR` (default `var/divergences`). Atomic writes via `tempfile` + `os.replace`.
-- CLI surface: `aeat sync list-divergences --state pending` (`src/aeat/cli/sync/list.py:15`) renders a `rich.table.Table` with id, modelo, classification, kind, state.
+- `DivergenceRecord` (`src/aeat/application/sync/_divergence.py:210`) — strict frozen pydantic v2 record with `record_id`, `detected_at`, `modelo`, `classification` (ADDITIVE | BREAKING | BENIGN | SUSPICIOUS), `payload` (discriminated union of nine concrete kinds), `resolution_state`, `notes`.
+- `ResolutionState` (`src/aeat/application/sync/_divergence.py:66`) — closed `StrEnum` with PENDING / AUTO_HEALED / HUMAN_APPROVED / REJECTED.
+- `JsonFileDivergenceRepository` (`src/aeat/application/sync/_repository.py:54`) — one JSON file per record under `AEAT_SYNC_DIVERGENCE_FILE_DIR` (default `var/divergences`). Atomic writes via `tempfile` + `os.replace`.
+- CLI surface: `aeat sync list-divergences --state pending` (`src/aeat/entrypoints/cli/sync/list.py:15`) renders a `rich.table.Table` with id, modelo, classification, kind, state.
 
 This is the only working "review queue" today, and it is scoped to sync deltas.
 
-### 2 — transactions (`src/aeat/financial/transactions/`)
+### 2 — transactions (`src/aeat/domain/financial/transactions/`)
 
 > **Post-#237 update (2026-04-18):** PR #252 split the legacy `UNCLASSIFIED` value into `NOT_YET_PROCESSED`, `PROCESSED_UNCLASSIFIED`, `SKIPPED_BY_RULE`, and `FAILED_VALIDATION`, plus added the `is_classified()` helper. The adapter described below now uses `not is_classified(state)` AND `state is not SKIPPED_BY_RULE`, with first-match-wins severity per the four pending states (see ADR D5 transactions table).
 
-- `Transaction` (`src/aeat/financial/transactions/_models.py`) carries `business_classification`, `business_pct`, `classified_by` (`auto` | `manual` | `rule:<rule-id>`), `classified_at`, `notes`, plus links to `invoice_id` and `category_id`.
-- `BusinessClassification` (`src/aeat/financial/transactions/_enums.py`) — post-#237 closed enum: BUSINESS / PERSONAL / MIXED / NOT_YET_PROCESSED / PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION. The `is_classified()` helper returns True only for the first three.
+- `Transaction` (`src/aeat/domain/financial/transactions/_models.py`) carries `business_classification`, `business_pct`, `classified_by` (`auto` | `manual` | `rule:<rule-id>`), `classified_at`, `notes`, plus links to `invoice_id` and `category_id`.
+- `BusinessClassification` (`src/aeat/domain/financial/transactions/_enums.py`) — post-#237 closed enum: BUSINESS / PERSONAL / MIXED / NOT_YET_PROCESSED / PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION. The `is_classified()` helper returns True only for the first three.
 - `TransactionCatalogue` — frozen mapping keyed by `transaction_id`. Loaded via `load_transactions(path)` from `<aeat_financial_txs_dir>/transactions.json`.
 - CLI surface: `aeat financial txs list --unclassified` filters to non-classified rows. No needs-review queue prior to this PR.
 
@@ -45,20 +45,20 @@ Pending = `not is_classified(state)` AND `state is not BusinessClassification.SK
 
 The audit (kent-revise-review wall 28) noted that the pre-#237 `UNCLASSIFIED` value conflated four states. PR #252 (#237) resolved that conflation; this queue consumes the new state model directly. The further `REVIEWED_EXCLUDED` (Kent's manual-exclusion) state remains scoped to [#224](https://github.com/wgergely/aeat/issues/224) and will be added to the early-return branch alongside `SKIPPED_BY_RULE` when it lands.
 
-### 3 — invoices (`src/aeat/financial/invoices/`)
+### 3 — invoices (`src/aeat/domain/financial/invoices/`)
 
-- `Invoice` (`src/aeat/financial/invoices/_models.py:174`) carries `invoice_id` (64-char SHA-256), `kind`, `payment_status` (`PaymentStatus` enum: PENDING / PAID / PARTIAL / VOID / DISPUTED — `_enums.py:34`), `linked_transaction_ids: tuple[str, ...]`.
+- `Invoice` (`src/aeat/domain/financial/invoices/_models.py:174`) carries `invoice_id` (64-char SHA-256), `kind`, `payment_status` (`PaymentStatus` enum: PENDING / PAID / PARTIAL / VOID / DISPUTED — `_enums.py:34`), `linked_transaction_ids: tuple[str, ...]`.
 - `InvoiceCatalogue` — frozen mapping. Loaded from `<aeat_invoices_dir>/...` via `_service.py`.
 - Pending review semantics:
   - **Unmatched invoice** → `linked_transaction_ids == ()` (no bank transaction reconciles to it).
   - **Payment uncertain** → `payment_status` ∈ {`PaymentStatus.PENDING`, `PaymentStatus.DISPUTED`}.
 
-### 4 — filing drafts (`src/aeat/filing/`)
+### 4 — filing drafts (`src/aeat/application/filing/`)
 
-- `FilingDraft` (`src/aeat/filing/_schema.py:120`) carries `findings: tuple[FilingValidationFinding, ...]`, `status: FilingDraftStatus`.
+- `FilingDraft` (`src/aeat/application/filing/_schema.py:120`) carries `findings: tuple[FilingValidationFinding, ...]`, `status: FilingDraftStatus`.
 - `FilingValidationFinding` (`_schema.py:96`) — strict frozen, has `casilla_id`, `severity` (ERROR / WARNING / INFO), `code`, trilingual `Translatable` `message`, `references_rules`.
 - `FilingDraftStatus` (`_schema.py:26`) — DRAFT / VALIDATED / READY_TO_SUBMIT / SUBMITTED / ACKNOWLEDGED / REJECTED / AMENDED / CANCELLED.
-- Persistence: drafts live as JSON files under `<aeat_drafts_dir>` (default `var/drafts`); naming `<modelo>_<period>_<draft_id>.json` (`src/aeat/cli/filing/__init__.py:77`).
+- Persistence: drafts live as JSON files under `<aeat_drafts_dir>` (default `var/drafts`); naming `<modelo>_<period>_<draft_id>.json` (`src/aeat/entrypoints/cli/filing/__init__.py:77`).
 - Pending review semantics:
   - draft has any `ERROR`/`WARNING` finding, or
   - draft is in `DRAFT` or `VALIDATED` status (i.e. has not yet reached READY_TO_SUBMIT, blocking export).
@@ -69,7 +69,7 @@ When the planned `APPROVED` state (C4a, [#230](https://github.com/wgergely/aeat/
 
 - `Notificacion` (`src/aeat/inbox/_models.py:54`) — `notificacion_id`, `kind` (NotificacionKind), `priority` (NotificacionPriority), `effective_at`, optional `appeal_deadline: date`, `acknowledged_at`, `acknowledged_by`, `notes`.
 - `Inbox` container — `dict[str, Notificacion]`, persisted to `<aeat_inbox_dir>` (default `var/inbox`).
-- CLI surface: `aeat inbox list --unread` (`src/aeat/cli/inbox/list.py:15`) filters to `acknowledged_at is None`.
+- CLI surface: `aeat inbox list --unread` (`src/aeat/entrypoints/cli/inbox/list.py:15`) filters to `acknowledged_at is None`.
 - Pending review semantics: `acknowledged_at is None` (Kent has not signed off) — esp. CRITICAL/HIGH priority records and any record with an `appeal_deadline` in the next `AEAT_INBOX_ALERT_LEAD_DAYS` window.
 
 ## pattern observations
@@ -106,7 +106,7 @@ Six command-discovery surfaces, six output formats, no cross-reference, no overa
 
 The handover mandates `parallel-safe` — i.e. a sibling agent might be editing one of the underlying subpackages right now. The aggregator therefore must:
 
-- Be **purely additive** — a new `src/aeat/review/` subpackage and CLI sub-app; no edits to existing models, enums, or repositories.
+- Be **purely additive** — a new `src/aeat/application/review/` subpackage and CLI sub-app; no edits to existing models, enums, or repositories.
 - Be **read-only** — depend on the public load/list surfaces (`load_transactions`, `JsonFileDivergenceRepository.list`, `InboxFetcher.load_inbox`, draft-dir glob), never mutating them.
 - Tolerate **missing sources** — every adapter must degrade to "no items" when its disk source does not exist (Kent might not have run `aeat sync run` yet).
 
@@ -182,10 +182,10 @@ Each adapter returns its native record (e.g. `DivergenceRecord`) which structura
 ## proposed module shape
 
 ```
-src/aeat/review/
+src/aeat/application/review/
   __init__.py          # public API re-exports
   _enums.py            # ReviewItemKind, ReviewSeverity, ReviewState
-  _errors.py           # ReviewError (inherits aeat.errors.AeatError)
+  _errors.py           # ReviewError (inherits aeat.core.errors.AeatError)
   _models.py           # ReviewItem discriminated union + per-kind models
   _adapters.py         # five source adapters, each returning tuple[ReviewItem, ...]
   _aggregator.py       # ReviewQueue.collect(...)
@@ -193,13 +193,13 @@ src/aeat/review/
   test_adapters.py     # per-adapter happy-path + missing-source path
   test_aggregator.py   # end-to-end with five synthetic sources
 
-src/aeat/cli/review/
+src/aeat/entrypoints/cli/review/
   __init__.py          # typer sub-app
   queue.py             # `aeat review queue` command
   test_cli.py          # CliRunner happy-path
 ```
 
-Wired into `src/aeat/cli/__init__.py` as a single `app.add_typer(review_module.app, name="review", ...)`.
+Wired into `src/aeat/entrypoints/cli/__init__.py` as a single `app.add_typer(review_module.app, name="review", ...)`.
 
 ## open questions answered
 

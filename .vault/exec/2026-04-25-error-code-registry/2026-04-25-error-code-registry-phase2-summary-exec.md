@@ -19,8 +19,8 @@ related:
   `test_registry_enforcement`, `test_registry`, `test_envelope`,
   `test_windows_encoding`, and `test_error_decorator`.
 - Updated adjacent tests that depended on pre-registry behavior:
-  `aeat.auth.test_clave_movil`, `aeat.cli.test_manual_cli`, and
-  `aeat.casillas.errors`.
+  `aeat.adapters.outbound.aeat.auth.test_clave_movil`, `aeat.entrypoints.cli.test_manual_cli`, and
+  `aeat.domain.casillas.errors`.
 - Added the generator `scripts/generate_error_codes_doc.py` and committed the
   generated `docs/error-codes.md`.
 - Updated `docs/coverage/kent-capabilities.md` to mark the Kent error-message
@@ -42,9 +42,9 @@ All four gates passed on the Windows worktree. Full `pytest` completed with
 ## Notes
 
 - The Cl@ve Móvil changes in this branch are test-only. The fake page in
-  `aeat.auth.test_clave_movil` was updated so it reflects the current polling
-  implementation in `aeat.auth._clave_movil` without modifying sibling-branch
+  `aeat.adapters.outbound.aeat.auth.test_clave_movil` was updated so it reflects the current polling
+  implementation in `aeat.adapters.outbound.aeat.auth._clave_movil` without modifying sibling-branch
   production code.
-- `aeat.casillas.errors` keeps its historical per-instance short codes for
+- `aeat.domain.casillas.errors` keeps its historical per-instance short codes for
   verifier output while the class-level registry binding remains available on
   the exception type.

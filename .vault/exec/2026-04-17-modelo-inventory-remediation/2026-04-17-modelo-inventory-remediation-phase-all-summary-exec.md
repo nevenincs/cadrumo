@@ -19,10 +19,10 @@ related:
 
 Remediation completed for the audited post-#108 parity gaps between the modelo registry, the deadline engine, and the setup/profile-authoring path.
 
-- Modified: `src/aeat/models/*`
-- Modified: `src/aeat/deadlines/*`
-- Modified: `src/aeat/setup/*`
-- Created: `src/aeat/models/_entries/modelo_193.py`
+- Modified: `src/aeat/domain/modelos/*`
+- Modified: `src/aeat/domain/deadlines/*`
+- Modified: `src/aeat/application/setup/*`
+- Created: `src/aeat/domain/modelos/_entries/modelo_193.py`
 
 ## Description
 

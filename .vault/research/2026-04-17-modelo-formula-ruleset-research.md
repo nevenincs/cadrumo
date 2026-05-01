@@ -19,7 +19,7 @@ Foundational research for Issue #173 (domain: `local-state` + `mediation`).
 Codifies the mathematical relationships between casillas (boxes) for AEAT
 modelos. The proof-of-concept modelo is **Modelo 130** (IRPF pago fraccionado,
 estimación directa). The research also specifies the engine-design space so
-that the resulting `aeat.formulas` subpackage extends cleanly to Modelo 303,
+that the resulting `aeat.domain.formulas` subpackage extends cleanly to Modelo 303,
 Modelo 100, and beyond.
 
 Two research strands are captured here:
@@ -81,7 +81,7 @@ without AEAT-primary backing.
 The engine must integrate with three existing subpackages already
 merged on `main`:
 
-- **`aeat.casillas`** — ships `CasillaCatalogue` (pydantic v2, frozen,
+- **`aeat.domain.casillas`** — ships `CasillaCatalogue` (pydantic v2, frozen,
   strict), `CasillaRecord`, and a `FormulaReference` stub
   (`expression: str`, `references_casillas: tuple[str, ...]`). The
   `FormulaReference` was deliberately left as a placeholder for the
@@ -94,12 +94,12 @@ merged on `main`:
   `"0.20 * 01"` and `"max(0, 02 - 03)"`. These strings are
   **not executable anywhere today** — they exist to document intent
   and will be replaced by structured formula nodes.
-- **`aeat.models`** — ships the completed `ModeloCode` enum,
+- **`aeat.domain.modelos`** — ships the completed `ModeloCode` enum,
   `ModeloMetadata`, `MODELO_REGISTRY`, and `ModeloCadence` /
   `ModeloCategory` enums. Issue #108 landed on main via PR #135;
   the inventory is authoritative. The engine binds to `ModeloCode`
   and will never introduce its own modelo identifier.
-- **`aeat.filing._builders.modelo_130`** — ships a **hardcoded**
+- **`aeat.application.filing._builders.modelo_130`** — ships a **hardcoded**
   computation of Modelo 130 casillas (01–07) inside `Modelo130Builder`,
   explicitly described in its docstring as a stand-in until #9 lands
   a real formula AST. The hardcoded ids (01=ingresos, 02=gastos,
@@ -111,7 +111,7 @@ merged on `main`:
   replace this builder with a ruleset-driven equivalent and publish
   **the real 19-casilla Modelo 130**.
 
-No change to `aeat.portals` or `aeat.deadlines` is in scope for #173.
+No change to `aeat.domain.portals` or `aeat.domain.deadlines` is in scope for #173.
 
 ## Modelo 130 — per-casilla formula reference (2024 and 2025)
 
@@ -561,7 +561,7 @@ Python's stdlib `graphlib.TopologicalSorter` is sufficient:
 - `ts.add(node, *predecessors)` builds the graph.
 - `ts.prepare()` raises `CycleError` (subclass of `ValueError`)
   if any cycle is detected; the engine wraps this into
-  `aeat.errors.FormulaCycleError` carrying the cycle and the
+  `aeat.core.errors.FormulaCycleError` carrying the cycle and the
   offending ruleset id.
 - `ts.static_order()` returns the evaluation order as an iterator.
 - No `networkx` dependency — Modelo-scale DAGs are at most low
@@ -590,10 +590,10 @@ either (a) an input the user supplied with a source reference, or
 
 ## Subpackage layout
 
-Recommended layout for `src/aeat/formulas/`:
+Recommended layout for `src/aeat/domain/formulas/`:
 
 ```
-src/aeat/formulas/
+src/aeat/domain/formulas/
   __init__.py        # public API re-exports
   _codes.py          # FormulaOp StrEnum
   _casilla.py        # CasillaDefinition, CasillaRef
@@ -612,7 +612,7 @@ src/aeat/formulas/
   test_*.py          # colocated @pytest.mark.unit tests
 ```
 
-All symbols are re-exported from `aeat.formulas` (public-API
+All symbols are re-exported from `aeat.domain.formulas` (public-API
 discipline mandate).
 
 ## Sources cited

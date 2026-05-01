@@ -31,13 +31,13 @@ class explicit input axis. Re-audited self-pass: APPROVED.
 ## Problem Statement
 
 Issue #183 ("Wave 2 — Modelo 303 (VAT quarterly) ruleset on
-`aeat.formulas`") asks for the deterministic ruleset that codifies
+`aeat.domain.formulas`") asks for the deterministic ruleset that codifies
 the IVA trimestral autoliquidación arithmetic, layered on the
 period-versioned formula engine that landed in #173 / PR #182.
 
 A user-driven scope expansion adds a second goal: verify that the
 downstream Spanish VAT classification substrate
-(`aeat.financial.vat`) carries the **full classification taxonomy**
+(`aeat.domain.financial.vat`) carries the **full classification taxonomy**
 needed to feed the Modelo 303 ruleset (issuer residence, customer
 residence, customer tax status, transaction kind), with proper
 **period-versioning** to handle the shifting, non-rigid Spanish
@@ -50,12 +50,12 @@ backbone is not solid.
 
 - **#173 engine is fixed.** Wave 1 froze the operator surface and
   the registry/parameters DSL. The wave-2 work must not touch
-  `aeat.formulas/_engine.py`, `_formula.py`, `_ruleset.py`,
+  `aeat.domain.formulas/_engine.py`, `_formula.py`, `_ruleset.py`,
   `_registry.py`, `_codes.py`, `_period.py`, or `_ledger.py`. This
   ADR confirms the wave-2 ruleset can be expressed entirely in the
   existing operator set; no new `FormulaOp` member is needed.
 - **#85 substrate is mostly already there.** The
-  `aeat.financial.vat` subpackage codifies 16 `VATCategory` members,
+  `aeat.domain.financial.vat` subpackage codifies 16 `VATCategory` members,
   27 `EUMemberState`s, period-aware `VATRate` records, and a
   citation-backed `VATRegulation` catalogue for 2025. The
   classification axes (issuer/customer residence, customer tax
@@ -65,7 +65,7 @@ backbone is not solid.
   discipline, relative imports** — all enforced by repo-wide
   invariants and inherited from the engine ADR.
 - **Filing builder is untouched.** The hand-curated
-  `src/aeat/filing/_builders/modelo_303.py` continues to satisfy
+  `src/aeat/application/filing/_builders/modelo_303.py` continues to satisfy
   its own tests; replacing it with an engine-driven equivalent is
   a follow-up issue, exactly as Modelo 130 wave 1 deferred its
   filing-builder rewrite.
@@ -84,14 +84,14 @@ backbone is not solid.
 
 ### 1. Modelo 303 rulesets — shape and location
 
-Two new modules under `src/aeat/formulas/_rulesets/`:
+Two new modules under `src/aeat/domain/formulas/_rulesets/`:
 
 - `modelo_303_2024.py` — `RULESET` covering 2024-01-01 → 2024-12-31.
 - `modelo_303_2025.py` — `RULESET` covering 2025-01-01 → 2025-12-31.
 
 Both modules expose a single `RULESET: Ruleset` constant
 following the existing Modelo 130 file pattern. They register in
-`src/aeat/formulas/_rulesets/__init__.py::ALL_RULESETS`.
+`src/aeat/domain/formulas/_rulesets/__init__.py::ALL_RULESETS`.
 
 Casilla coverage matches the existing filing schema
 (`_modelo_303_schema.py`): 01-09, 28-45, 64-71. Computed
@@ -125,7 +125,7 @@ ever diverge.
 Each ruleset carries a tuple of `LegalCitation` records covering
 the operative LIVA articles (Art. 90/91 for rates, Art. 92-114
 for deducciones, Art. 164 for autoliquidación). Citations match
-the project's existing `aeat.models.LegalCitation` model and use
+the project's existing `aeat.domain.modelos.LegalCitation` model and use
 `make_citation()` from `_rulesets/_common.py`.
 
 ### 4. Casilla 02 / 05 / 08 (declared rates) — computed literals
@@ -228,7 +228,7 @@ intake (Manual práctico IVA PDF parser) is scoped.
 
 ### 9. Classification axes — new `_classification.py` module
 
-A new module `src/aeat/financial/vat/_classification.py` ships:
+A new module `src/aeat/domain/financial/vat/_classification.py` ships:
 
 ```python
 class IssuerResidency(StrEnum): ...
@@ -280,7 +280,7 @@ miss).
 
 ### 10. `_modelo_303_mapping.py` — classification → casilla bridge
 
-A new module `src/aeat/financial/vat/_modelo_303_mapping.py`
+A new module `src/aeat/domain/financial/vat/_modelo_303_mapping.py`
 exposes:
 
 ```python
@@ -315,7 +315,7 @@ casilla does an X-classified invoice contribute to". Both the
 filing builder (eventually) and any draft-builder downstream will
 consume this table, so divergence is impossible by construction.
 
-### 11. Public API additions in `aeat.financial.vat.__init__`
+### 11. Public API additions in `aeat.domain.financial.vat.__init__`
 
 Re-exports added (alphabetical order in `__all__`):
 
@@ -333,7 +333,7 @@ Re-exports added (alphabetical order in `__all__`):
 - `resolve_catalogue`
 
 All underscored modules remain implementation-private. External
-callers always import from `aeat.financial.vat`.
+callers always import from `aeat.domain.financial.vat`.
 
 ### 12. CLI surface — out of scope this wave
 
@@ -366,7 +366,7 @@ mapping show up in `aeat vat categories list`. Adding a
 - The existing 2025 singleton (`VAT_CATALOGUE_2025`) remains
   importable for backward compatibility; new code is encouraged
   to use `resolve_catalogue(on=date)` instead.
-- The `aeat.filing._builders.modelo_303` builder is untouched;
+- The `aeat.application.filing._builders.modelo_303` builder is untouched;
   swapping it onto the engine + classification substrate is a
   follow-up.
 - Adding a new `VATCategory` member is a public-API change;
@@ -405,7 +405,7 @@ mapping show up in `aeat vat categories list`. Adding a
   are illustrative of the period-versioning pattern that the
   user wants verified and codified now.
 - **Replace the existing `IvaRate` enum in
-  `aeat.financial.invoices._enums` with `VATRateKind`.**
+  `aeat.domain.financial.invoices._enums` with `VATRateKind`.**
   Rejected for this PR — `IvaRate` is consumed by invoice
   records and is structurally a different model (closed-set of
   literal rates, not classifier inputs). Unifying them belongs
@@ -416,19 +416,19 @@ mapping show up in `aeat vat categories list`. Adding a
 - Adding `VATCategory.DOMESTIC_REVERSE_CHARGE` is the only
   behaviour-changing public-API edit. Audited consumers that
   must update in this PR:
-  - `src/aeat/financial/vat/_catalogue.py::_REGULATIONS` —
+  - `src/aeat/domain/financial/vat/_catalogue.py::_REGULATIONS` —
     one new `VATRegulation` record for the new member.
-  - `src/aeat/financial/vat/test_categories.py` — the explicit
+  - `src/aeat/domain/financial/vat/test_categories.py` — the explicit
     expected-set assertion (`expected_members`) is bumped from
     16 to 17 names.
-  - `src/aeat/financial/vat/_verify.py` and its test
+  - `src/aeat/domain/financial/vat/_verify.py` and its test
     (`test_verify.py::test_full_catalogue_returns_clean_report`)
     — `verify_catalogue` walks every enum member; the 2025
     catalogue must include the new regulation or the verifier
     will surface a `missing_regulation` issue. The new bridge
     table `MODELO_303_CASILLA_MAPPING` declares an entry for
     `(DOMESTIC_REVERSE_CHARGE, ISSUED)` and `(...RECEIVED)`.
-  - `src/aeat/financial/vat/_modelo_303_mapping.py` — new
+  - `src/aeat/domain/financial/vat/_modelo_303_mapping.py` — new
     bridge module declares the casilla mapping for every
     `VATCategory`, including the new member; a test asserts
     every enum member has a declared mapping (or is explicitly

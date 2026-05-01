@@ -12,10 +12,10 @@ related:
 Closed the manual-testing regressions and operator-guidance gaps discovered
 while verifying the approval/staleness rollout.
 
-- Modified: `src/aeat/cli/filing/__init__.py`
-- Modified: `src/aeat/cli/review/__init__.py`
-- Modified: `src/aeat/cli/filing/test_filing_cli.py`
-- Modified: `src/aeat/cli/review/test_review_cli.py`
+- Modified: `src/aeat/entrypoints/cli/filing/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/review/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/filing/test_filing_cli.py`
+- Modified: `src/aeat/entrypoints/cli/review/test_review_cli.py`
 
 ## Description
 
@@ -32,6 +32,6 @@ pushes draft-ID driven usage consistently.
 
 Validated with:
 
-- `uv run ruff check src/aeat/cli/filing/__init__.py src/aeat/cli/review/__init__.py src/aeat/cli/filing/test_filing_cli.py src/aeat/cli/review/test_review_cli.py`
-- `uv run pytest src/aeat/cli/filing/test_filing_cli.py src/aeat/cli/review/test_review_cli.py`
+- `uv run ruff check src/aeat/entrypoints/cli/filing/__init__.py src/aeat/entrypoints/cli/review/__init__.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/review/test_review_cli.py`
+- `uv run pytest src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/review/test_review_cli.py`
 - Manual CLI flow covering `aeat filing build` -> `aeat review approve` -> `aeat filing validate` -> transaction-catalogue drift -> `aeat review show` -> `aeat review stale` -> `aeat submission preflight`

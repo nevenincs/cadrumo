@@ -11,25 +11,25 @@ related:
 
 # unified-review-queue plan
 
-Implement the read-only `aeat.review` aggregator + `aeat review queue` CLI per `[[2026-04-18-unified-review-queue-adr]]`. Closes Kent's wall 32.
+Implement the read-only `aeat.application.review` aggregator + `aeat review queue` CLI per `[[2026-04-18-unified-review-queue-adr]]`. Closes Kent's wall 32.
 
 ## guiding constraints
 
-- **Parallel-safe.** New subpackage + new CLI sub-app + one wiring line in `src/aeat/cli/__init__.py`. Zero edits to existing models, enums, repositories, or CLIs in `src/aeat/{financial,sync,inbox,filing}/`.
+- **Parallel-safe.** New subpackage + new CLI sub-app + one wiring line in `src/aeat/entrypoints/cli/__init__.py`. Zero edits to existing models, enums, repositories, or CLIs in `src/aeat/{financial,sync,inbox,filing}/`.
 - **Read-only.** Every adapter loads from disk and emits `tuple[ReviewItem, ...]`; no mutation of source state.
 - **Pydantic v2 boundary discipline.** `ReviewItem` is a `Annotated[..., Field(discriminator="kind")]` strict frozen union; per-kind models are `ConfigDict(strict=True, frozen=True, extra="forbid")`.
 - **Closed enums everywhere** for `--kind`, `--state`, `--format`, `severity`.
 - **Trilingual `Translatable`** for `summary` content. English authoritative for the dev-facing summaries we author here.
 - **Pytest-only.** Markers per `[[2026-04-17-pytest-markers-adr]]`: model / adapter / aggregator tests carry `[pytest.mark.unit, pytest.mark.domain_local_state]`; CLI tests carry `[pytest.mark.unit, pytest.mark.domain_infra]` (matches `cli/sync/test_cli.py` precedent and the marker description in `pyproject.toml`). Tests colocate with the module (Rust style).
 - **Relative imports** inside `src/aeat/`. **Cross-subpackage imports use the subpackage root only** — never `._service` or other underscored modules. Concretely: `from ..financial.transactions import load_transactions, TransactionCatalogue, BusinessClassification`, `from ..financial.invoices import load_invoices, InvoiceCatalogue, PaymentStatus`, `from ..sync import JsonFileDivergenceRepository, DivergenceRecord, DivergenceClassification, ResolutionState`, `from ..inbox import Inbox, NotificacionPriority`, `from ..filing import FilingDraft, FilingDraftStatus, FilingFindingSeverity, FilingValidationFinding`.
-- **No `aeat.errors.AeatError` skipping** — all domain errors inherit from it.
+- **No `aeat.core.errors.AeatError` skipping** — all domain errors inherit from it.
 
 ## file layout
 
 New files (all under `src/aeat/`):
 
 ```
-src/aeat/review/
+src/aeat/application/review/
   __init__.py            # public re-exports
   _enums.py              # ReviewItemKind, ReviewSeverity, ReviewState, ReviewFormat
   _errors.py             # ReviewError(AeatError)
@@ -40,7 +40,7 @@ src/aeat/review/
   test_adapters.py       # per-adapter pending-predicate + missing-source paths
   test_aggregator.py     # end-to-end across all five sources
 
-src/aeat/cli/review/
+src/aeat/entrypoints/cli/review/
   __init__.py            # typer sub-app
   queue.py               # `aeat review queue` command
   test_cli.py            # CliRunner happy path + flag combinations
@@ -49,7 +49,7 @@ src/aeat/cli/review/
 Modified files:
 
 ```
-src/aeat/cli/__init__.py     # one import + one app.add_typer line
+src/aeat/entrypoints/cli/__init__.py     # one import + one app.add_typer line
 ```
 
 Documentation:
@@ -64,20 +64,20 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
 
 ### Phase 1 — module skeleton + enums + errors
 
-1.  Create `src/aeat/review/_enums.py`:
+1.  Create `src/aeat/application/review/_enums.py`:
     -   `ReviewItemKind(StrEnum)`: `TRANSACTION`, `INVOICE`, `DIVERGENCE`, `FINDING`, `INBOX`. Future-only members (`CLASSIFICATION`, `APPROVAL_STALE`) are documented in the module docstring as reserved per ADR D5 but **not** added until their source records exist.
     -   `ReviewSeverity(StrEnum)`: `CRITICAL`, `HIGH`, `NORMAL`, `INFO`. Add `__lt__` + `__le__` to support `sorted()` with `reverse=True` so CRITICAL is "greatest" — implement via a static rank table.
     -   `ReviewState(StrEnum)`: `PENDING`, `ALL`.
     -   `ReviewFormat(StrEnum)`: `TABLE`, `JSON`.
-2.  Create `src/aeat/review/_errors.py`:
-    -   `ReviewError(AeatError)` (inherits from `aeat.errors.AeatError`).
+2.  Create `src/aeat/application/review/_errors.py`:
+    -   `ReviewError(AeatError)` (inherits from `aeat.core.errors.AeatError`).
     -   `ReviewSourceLoadError(ReviewError)` raised when a source file is present but unparseable.
     -   `ReviewKindReservedError(ReviewError)` raised when the CLI sees a reserved-but-not-implemented kind token (`classification`, `approval-stale`).
-3.  Create `src/aeat/review/__init__.py`: re-export the public surface listed in `__all__`.
+3.  Create `src/aeat/application/review/__init__.py`: re-export the public surface listed in `__all__`.
 
 ### Phase 2 — `ReviewItem` discriminated union
 
-4.  Create `src/aeat/review/_models.py`. Per-kind models, each strict frozen, all sharing the unified field set:
+4.  Create `src/aeat/application/review/_models.py`. Per-kind models, each strict frozen, all sharing the unified field set:
     ```python
     class _ReviewItemBase(BaseModel):
         model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -100,7 +100,7 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
 
 ### Phase 3 — five source adapters
 
-6.  Create `src/aeat/review/_adapters.py`. Pure functions; each takes a `Settings` and returns `tuple[ReviewItem, ...]`. Pre-load helpers accept already-loaded sources for testability.
+6.  Create `src/aeat/application/review/_adapters.py`. Pure functions; each takes a `Settings` and returns `tuple[ReviewItem, ...]`. Pre-load helpers accept already-loaded sources for testability.
 
     Implementation order (lowest dependency first):
 
@@ -192,7 +192,7 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
 
 ### Phase 4 — aggregator
 
-8.  Create `src/aeat/review/_aggregator.py`:
+8.  Create `src/aeat/application/review/_aggregator.py`:
     ```python
     class ReviewQueue:
         @staticmethod
@@ -212,12 +212,12 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
 
 ### Phase 5 — CLI surface
 
-10. Create `src/aeat/cli/review/__init__.py`:
+10. Create `src/aeat/entrypoints/cli/review/__init__.py`:
     ```python
     app = typer.Typer(name="review", no_args_is_help=True, help="Unified review queue (#232).")
     app.command(name="queue", help="...")(queue_cmd)
     ```
-11. Create `src/aeat/cli/review/queue.py` implementing `queue_cmd`:
+11. Create `src/aeat/entrypoints/cli/review/queue.py` implementing `queue_cmd`:
     -   Flags:
         -   `--kind` (`list[str] | None`, repeatable): translate each token to `ReviewItemKind`. Reject `classification` and `approval-stale` with `ReviewKindReservedError` and a one-line stderr message naming the blocking issue. Reject any other unknown token with `typer.BadParameter`.
         -   `--state` (`ReviewState = ReviewState.PENDING`).
@@ -227,7 +227,7 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
     -   `TABLE` mode: `rich.table.Table(title="review queue", header_style="bold")` with columns `kind`, `id`, `modelo`, `severity` (color-coded: CRITICAL red, HIGH yellow, NORMAL default, INFO dim), `summary`, `since` (relative: "3d ago"), `drill →`. Footer line: `[{N} item(s) — {K} kind(s)]`.
     -   `JSON` mode: `typer.echo(json.dumps([item.model_dump(mode="json") for item in items], indent=2, default=str))`.
     -   Empty result: a single `[dim]No pending review items.[/dim]` line for TABLE; `[]` for JSON.
-12. Wire the sub-app into `src/aeat/cli/__init__.py`:
+12. Wire the sub-app into `src/aeat/entrypoints/cli/__init__.py`:
     ```python
     from . import review as review_module    # alongside existing imports
     ...
@@ -251,17 +251,17 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
 ### Phase 7 — verification
 
 15. Run the local quality gates:
-    -   `uv run pytest src/aeat/review src/aeat/cli/review -v` → all pass.
+    -   `uv run pytest src/aeat/review src/aeat/entrypoints/cli/review -v` → all pass.
     -   `uv run pytest -m unit` → all pass (cross-check no regressions elsewhere).
-    -   `uv run ruff check src/aeat/review src/aeat/cli/review` → clean.
-    -   `uv run ruff format src/aeat/review src/aeat/cli/review --check` → clean.
-    -   `uv run mypy src/aeat/review src/aeat/cli/review` → clean.
+    -   `uv run ruff check src/aeat/review src/aeat/entrypoints/cli/review` → clean.
+    -   `uv run ruff format src/aeat/review src/aeat/entrypoints/cli/review --check` → clean.
+    -   `uv run mypy src/aeat/review src/aeat/entrypoints/cli/review` → clean.
     -   `uv run aeat review queue --help` → renders the documented flags.
     -   `uv run aeat review queue` against an empty `var/` → "No pending review items.".
 16. `git diff --stat HEAD` confirms changes are confined to:
-    -   `src/aeat/review/**`
-    -   `src/aeat/cli/review/**`
-    -   `src/aeat/cli/__init__.py` (one import + one `add_typer` line)
+    -   `src/aeat/application/review/**`
+    -   `src/aeat/entrypoints/cli/review/**`
+    -   `src/aeat/entrypoints/cli/__init__.py` (one import + one `add_typer` line)
     -   `docs/coverage/kent-capabilities.md` (one row)
     -   `.vault/research/2026-04-18-unified-review-queue-research.md`
     -   `.vault/adr/2026-04-18-unified-review-queue-adr.md`
@@ -269,7 +269,7 @@ docs/coverage/kent-capabilities.md   # mark "Kent can see everything pending in 
     -   `.vault/exec/2026-04-18-unified-review-queue/**`
 17. Commit history follows conventional commits:
     -   `docs(review): research, ADR, and plan for unified review queue (#232)` — vault artifacts.
-    -   `feat(review): add aeat.review aggregator + CLI (#232)` — production code + tests.
+    -   `feat(review): add aeat.application.review aggregator + CLI (#232)` — production code + tests.
     -   `docs(coverage): mark unified-review-queue capability done (#232)` — coverage matrix.
 
 ## parallelization
@@ -278,7 +278,7 @@ This work is single-track because Phases 2 → 3 → 4 → 5 are strict dependen
 
 The whole feature is **parallel-safe** with respect to **other agents** because:
 
--   No file outside `src/aeat/review/`, `src/aeat/cli/review/`, and the single CLI registration line is touched.
+-   No file outside `src/aeat/application/review/`, `src/aeat/entrypoints/cli/review/`, and the single CLI registration line is touched.
 -   Every adapter is read-only on a stable public surface in another subpackage.
 -   No new env vars; no `pyproject.toml` changes; no new dependencies.
 
@@ -286,15 +286,15 @@ The whole feature is **parallel-safe** with respect to **other agents** because:
 
 Mission success requires all of the following:
 
--   `uv run pytest src/aeat/review src/aeat/cli/review -v` — every test passes.
+-   `uv run pytest src/aeat/review src/aeat/entrypoints/cli/review -v` — every test passes.
 -   `uv run pytest -m unit` — no regressions across the project.
--   `uv run ruff check src/aeat/review src/aeat/cli/review` — clean.
--   `uv run ruff format src/aeat/review src/aeat/cli/review --check` — clean.
--   `uv run mypy src/aeat/review src/aeat/cli/review` — clean.
+-   `uv run ruff check src/aeat/review src/aeat/entrypoints/cli/review` — clean.
+-   `uv run ruff format src/aeat/review src/aeat/entrypoints/cli/review --check` — clean.
+-   `uv run mypy src/aeat/review src/aeat/entrypoints/cli/review` — clean.
 -   `uv run aeat review queue --help` renders flags `--kind`, `--state`, `--modelo`, `--format`.
 -   Manual smoke: build one synthetic instance of every source under `var/` and confirm `uv run aeat review queue` lists all five with correct severity ordering.
 -   PR #232 references this plan, the ADR, the research doc, and at least one exec step.
--   No edits land in `src/aeat/sync/`, `src/aeat/financial/`, `src/aeat/inbox/`, or `src/aeat/filing/`.
+-   No edits land in `src/aeat/application/sync/`, `src/aeat/domain/financial/`, `src/aeat/inbox/`, or `src/aeat/application/filing/`.
 
 ## risk register
 

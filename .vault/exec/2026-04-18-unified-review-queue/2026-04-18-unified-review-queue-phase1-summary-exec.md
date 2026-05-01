@@ -15,7 +15,7 @@ Single-pass execution of the `[[2026-04-18-unified-review-queue-plan]]` for issu
 
 ## what landed
 
-### new code — `src/aeat/review/`
+### new code — `src/aeat/application/review/`
 
 - `_enums.py` — `ReviewItemKind`, `ReviewSeverity`, `ReviewState`, `ReviewFormat`, plus `severity_rank()` helper and `_RESERVED_KINDS` table for the reserved-but-unimplemented `classification` and `approval-stale` tokens (per ADR D5 namespace reservations).
 - `_errors.py` — `ReviewError(AeatError)`, `ReviewSourceLoadError`, `ReviewKindReservedError(token, reason)`.
@@ -25,7 +25,7 @@ Single-pass execution of the `[[2026-04-18-unified-review-queue-plan]]` for issu
 - `__init__.py` — public re-exports.
 - Tests (Rust-style colocated) — `test_models.py`, `test_adapters.py`, `test_aggregator.py`. All carry `[pytest.mark.unit, pytest.mark.domain_local_state]`.
 
-### new code — `src/aeat/cli/review/`
+### new code — `src/aeat/entrypoints/cli/review/`
 
 - `__init__.py` — Typer sub-app.
 - `queue.py` — `aeat review queue` command with `--kind` (repeatable), `--state`, `--modelo`, `--format` (table/json) flags. Reserved-kind tokens emit a `typer.BadParameter` naming the blocking issue.
@@ -33,7 +33,7 @@ Single-pass execution of the `[[2026-04-18-unified-review-queue-plan]]` for issu
 
 ### modified
 
-- `src/aeat/cli/__init__.py` — one import + one `app.add_typer(...)` line wiring the sub-app at `aeat review`.
+- `src/aeat/entrypoints/cli/__init__.py` — one import + one `app.add_typer(...)` line wiring the sub-app at `aeat review`.
 - `docs/coverage/kent-capabilities.md` — updated existing row at line 26 ("See pending reviews in one dashboard") from `❌ ❌ ❌ ❌` to `❌ ✅ ✅ ❌`.
 
 ### vault artifacts
@@ -45,11 +45,11 @@ Single-pass execution of the `[[2026-04-18-unified-review-queue-plan]]` for issu
 
 ## verification results
 
-- `uv run pytest src/aeat/review src/aeat/cli/review` — **49 passed in 2.82s**.
+- `uv run pytest src/aeat/review src/aeat/entrypoints/cli/review` — **49 passed in 2.82s**.
 - `uv run pytest -m unit` — **1756 passed, 1 skipped, 27 deselected** (no regressions).
-- `uv run ruff check src/aeat/review src/aeat/cli/review src/aeat/cli/__init__.py` — clean.
-- `uv run ruff format src/aeat/review src/aeat/cli/review --check` — clean.
-- `uv run ty check src/aeat/review src/aeat/cli/review` — clean.
+- `uv run ruff check src/aeat/review src/aeat/entrypoints/cli/review src/aeat/entrypoints/cli/__init__.py` — clean.
+- `uv run ruff format src/aeat/review src/aeat/entrypoints/cli/review --check` — clean.
+- `uv run ty check src/aeat/review src/aeat/entrypoints/cli/review` — clean.
 - `uv run ty check src tests` — clean (project-wide).
 - `uv run aeat review queue --help` — renders the documented flags.
 - `uv run aeat review queue` against an empty `var/` — prints `No pending review items.`.
@@ -73,7 +73,7 @@ The aggregator is forward-compatible with all four — when each lands, one new 
 
 ## drift caught during execution
 
-- `PaymentStatus` enum in `aeat.financial.invoices` exposes `PAID / PENDING / PARTIALLY_PAID / OVERDUE / CANCELLED` — the original ADR draft incorrectly referenced a non-existent `DISPUTED` member. Both ADR D5 and the plan's invoice severity table were corrected to use the live enum.
+- `PaymentStatus` enum in `aeat.domain.financial.invoices` exposes `PAID / PENDING / PARTIALLY_PAID / OVERDUE / CANCELLED` — the original ADR draft incorrectly referenced a non-existent `DISPUTED` member. Both ADR D5 and the plan's invoice severity table were corrected to use the live enum.
 - `ModeloIdentifier` is a typed `str` subclass that the project's `ty` type-checker enforces strictly. Test fixtures wrap modelo strings via `ModeloIdentifier("130")`.
 - `Inbox` does not need an `InboxFetcher` for read-only loading — the adapter validates the persisted JSON directly via `Inbox.model_validate_json`. ADR D2 documents this choice.
 

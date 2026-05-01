@@ -67,7 +67,7 @@ shape, the wave ordering, and the gates that make a wave "done".
 
 Inherited and explicitly re-affirmed:
 
-- **Zero writes to AEAT.** Every navigation goes through `aeat.sede`
+- **Zero writes to AEAT.** Every navigation goes through `aeat.adapters.outbound.aeat.sede`
   whose grep guard bans `submit/send/commit/POST/enviar/presentar/
   firmar/radicar/remitir/modificar/anular/cancelar/rechazar`. No
   exceptions per wave; the guard runs unchanged.
@@ -95,15 +95,15 @@ with a typed reason, or fails. Failure stops the wave; skips do not.
   empty or non-empty. **Skip rule**: empty → wave is "not
   applicable to this account"; mark in the audit record and stop.
 - **P2 - Capture.** For each expediente, call
-  `aeat.sede.capture_justificante`. Output: raw PDF bytes +
+  `aeat.adapters.outbound.aeat.sede.capture_justificante`. Output: raw PDF bytes +
   sha256 + the expediente detail HTML, written to
   `scratch/sede-discovery/<utc-timestamp>/<modelo>/<expediente_id>/`.
   **Skip rule**: P1 was empty.
 - **P3 - Justificante metadata parse.** Run
-  `aeat.justificante.parse_justificante` on every captured PDF.
+  `aeat.domain.justificante.parse_justificante` on every captured PDF.
   Output: a parsed `Justificante` per capture. **Skip rule**:
   P2 produced no PDFs. **Failure mode**: parser misses a field
-  → land regex extension under `aeat.justificante._extract`,
+  → land regex extension under `aeat.domain.justificante._extract`,
   retry. Loop until green.
 - **P4 - Sanitise to fixture.** For every captured PDF, run the
   per-wave sanitiser to strip PII. Output: a fixture PDF + its
@@ -114,7 +114,7 @@ with a typed reason, or fails. Failure stops the wave; skips do not.
   JSON-only fixture (the parsed Justificante record with PII
   stripped). The wave still progresses.
 - **P5 - Declaración deep parse.** Build or extend a per-modelo
-  body extractor under `aeat.declaracion._parsers/<modelo>/`.
+  body extractor under `aeat.adapters.inbound.declaracion._parsers/<modelo>/`.
   Output: a strict-typed casilla map per fixture, with regression
   tests asserting field counts and known-value spot-checks.
   **Skip rule**: the modelo's PDF is metadata-only (some
@@ -126,7 +126,7 @@ with a typed reason, or fails. Failure stops the wave; skips do not.
   aggregator's inputs (other waves) are not yet fixtured.
 - **P7 - Live reconcile dry-run.** Build a synthetic APPROVED
   `FilingDraft` from the sanitised fixture's casilla values
-  using the existing `aeat.filing.testing` helpers. Run
+  using the existing `aeat.application.filing.testing` helpers. Run
   `aeat filing reconcile --last` against live AEAT (which the
   wave already authenticated). Assert MATCH. Output: one live
   test marked `@pytest.mark.live` per wave. **Skip rule**:
@@ -183,7 +183,7 @@ sanitisation.
 
 `Decimal("0.01")` per Kent-visible figure, the same tolerance the
 existing reconciliation comparator uses. Imported as
-`aeat.filing.reconciliation.RECONCILIATION_TOLERANCE` (or the
+`aeat.application.filing.reconciliation.RECONCILIATION_TOLERANCE` (or the
 local `_TOLERANCE` constant; the ADR is indifferent so long as
 the value is one-cent and shared).
 

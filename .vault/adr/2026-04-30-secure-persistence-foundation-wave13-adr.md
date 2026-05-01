@@ -24,7 +24,7 @@ Surveyed in the wave-13 research artefact:
 - **Five identical validators**: `_validate_submission_id`, `_validate_draft_id`, `_validate_amendment_id`, `_validate_csv` (justificante), `_validate_modelo` (filing-history).
 - **Three checks per validator**: non-empty, no path separators (`/` or `\`), no dot-tokens (`.`, `..`, dot-prefix).
 - **Existing test surface**: five tests catch `ValueError`. `PathContainmentError` inherits from `ValueError`, so the inheritance chain keeps every test passing without churn.
-- **Substrate already houses path-safety helpers** at `aeat.storage._path_safety` (`safe_subpath`, `safe_record_path`). The new `safe_repository_id` is a natural sibling.
+- **Substrate already houses path-safety helpers** at `aeat.adapters.persistence.storage._path_safety` (`safe_subpath`, `safe_record_path`). The new `safe_repository_id` is a natural sibling.
 - **Domain-specific validators stay**: `_validate_run_id` (regex hex), `_validate_casilla_id`, `_validate_category_id`, `_validate_invoice_id_shape`, `_validate_optional_ids`. These have different semantics and are not consolidatable.
 
 ## Constraints
@@ -40,7 +40,7 @@ Three phases. All land in this PR.
 
 ### Phase 1 — Substrate: `safe_repository_id`
 
-In `src/aeat/storage/_path_safety.py`:
+In `src/aeat/adapters/persistence/storage/_path_safety.py`:
 
 ```python
 def safe_repository_id(token: str, *, context: str) -> str:
@@ -80,7 +80,7 @@ def safe_repository_id(token: str, *, context: str) -> str:
     return token
 ```
 
-Add to `__all__` of `_path_safety.py` and re-export through `aeat.storage.__init__.py` (alongside `safe_record_path`, `safe_subpath`).
+Add to `__all__` of `_path_safety.py` and re-export through `aeat.adapters.persistence.storage.__init__.py` (alongside `safe_record_path`, `safe_subpath`).
 
 ### Phase 2 — Repositories: collapse the five validators
 
@@ -103,7 +103,7 @@ The 5 modules and their call counts:
 
 ### Phase 3 — Tests: substrate coverage + regression sweep
 
-Substrate level (in `src/aeat/storage/_test_path_safety.py`, extending the existing tests):
+Substrate level (in `src/aeat/adapters/persistence/storage/_test_path_safety.py`, extending the existing tests):
 
 - `test_safe_repository_id_returns_clean_token`: happy path.
 - `test_safe_repository_id_rejects_empty`: empty string → `PathContainmentError`.

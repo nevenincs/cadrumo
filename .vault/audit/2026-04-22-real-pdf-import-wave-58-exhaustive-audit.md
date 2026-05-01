@@ -45,7 +45,7 @@ gaps that waves 54-57b did not fully close.
 
 ### H1 (stream 4) — `_normalise_pdf_text` stitches digit-boundary `-\n` pairs
 
-`src/aeat/declaracion/_generic_extractor.py:274` regex
+`src/aeat/adapters/inbound/declaracion/_generic_extractor.py:274` regex
 `(?<=\w)[-­]\n(?=\w)` uses `\w` which matches digits + underscore
 in addition to letters. An adversarial PDF like
 ``importe de 9-\n10 euros`` collapses to ``910``. Real AEAT

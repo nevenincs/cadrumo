@@ -85,7 +85,7 @@ The form accepts a CSV and responds with either the original document
 never mutates AEAT-side state — which makes it safe to hit from automated
 tests.
 
-The `aeat.browser` subpackage (merged from `#16`) already provides a
+The `aeat.adapters.outbound.aeat.browser` subpackage (merged from `#16`) already provides a
 Playwright-backed :class:`BrowserSession` with evasion support. Known bug:
 the ``playwright_stealth`` initialiser sometimes raises at browser launch
 (tracked in `#41`); the live verify test therefore ``pytest.skip``s on

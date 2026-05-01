@@ -109,9 +109,9 @@ to the user `X1234567L` / `A12345678` test identifiers.
 
 - **#8 (cert auth)** — cert backend accessed through a Protocol stub
   matching the planned `LoadedCertificate` + `preload_into_browser_context`
-  surface. No hard import from `aeat.auth`.
+  surface. No hard import from `aeat.adapters.outbound.aeat.auth`.
 - **#42 (submission engine)** — no overlap. Both compose
-  `aeat.browser.BrowserSession` and both add fields to
+  `aeat.adapters.outbound.aeat.browser.BrowserSession` and both add fields to
   `src/aeat/config.py`; we therefore keep additions grouped under a
   single, clearly named block at the bottom.
 - **#11 (sync)** — the sync runner's `WireFilingEntry` etc. are

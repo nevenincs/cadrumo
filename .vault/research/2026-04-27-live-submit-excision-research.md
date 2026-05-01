@@ -48,10 +48,10 @@ The following documents form the evidence base consolidated here:
 
 - `2026-04-16-live-write-static-audit` — static code audit that located the three
   reachability gaps: (1) `aeat submission submit` registered at the default CLI surface
-  in `src/aeat/cli/submission/__init__.py`; (2) `SubmissionEngine.live_transport_supported`
-  defaulting to `True` in `src/aeat/submission/_engine.py`; and (3) the literal
+  in `src/aeat/entrypoints/cli/submission/__init__.py`; (2) `SubmissionEngine.live_transport_supported`
+  defaulting to `True` in `src/aeat/adapters/outbound/aeat/export/_engine.py`; and (3) the literal
   `await session.click("button#firmar-y-enviar")` sign-and-send click present in
-  `src/aeat/submission/_submitters/modelo130.py`. Multi-layer runtime gates existed but
+  `src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py`. Multi-layer runtime gates existed but
   the code path was discoverable, contradicting the "no reachable mechanism" posture.
 
 - `2026-04-16-live-write-test-audit` — companion audit to the static audit, confirming

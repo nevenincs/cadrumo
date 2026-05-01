@@ -177,15 +177,15 @@ mutated by ±1 pp and the audit surfaces a discrepancy.
 - Tier-S (`#328`-`#331`) and Tier-R (`#332`-`#337`) modelos.
 - Sub-umbrellas `#341` (RENTA M100 deep dive), `#345` (IVA
   complexity).
-- `src/aeat/sede/`, `src/aeat/auth/_clave_movil.py`,
-  `src/aeat/cli/sede/`, `src/aeat/cli/sanitize/`,
-  `src/aeat/cli/filing/_reconcile.py`,
-  `src/aeat/justificante/_extract.py` (#239 territory; PR #434
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`,
+  `src/aeat/entrypoints/cli/sede/`, `src/aeat/entrypoints/cli/sanitize/`,
+  `src/aeat/entrypoints/cli/filing/_reconcile.py`,
+  `src/aeat/domain/justificante/_extract.py` (#239 territory; PR #434
   landed during this issue's work and was merged in cleanly with no
   test verdict shifts).
 - Error-registry / decorator infrastructure (#398, landed; consume).
 - `--json` schemas / exit-code table (#399, landed; consume).
-- `aeat.cli.audit` / `aeat.cli.__init__.py` (#339, landed; consume).
+- `aeat.entrypoints.cli.audit` / `aeat.entrypoints.cli.__init__.py` (#339, landed; consume).
 - Live-submit forbidden enforcement sweep (#432, held).
 - Any new CLI commands or root-level Typer changes.
 

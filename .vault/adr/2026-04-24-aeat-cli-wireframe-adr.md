@@ -653,7 +653,7 @@ Hardening rules:
 ### Revise semantics (hardening)
 
 Discovery facts: `FilingAmendment` exists in
-`src/aeat/filing/_complementaria.py` with an `amendment_kind` field, persisted
+`src/aeat/application/filing/_complementaria.py` with an `amendment_kind` field, persisted
 as JSON under `aeat_submissions_dir/amendments/`. `SubmittedFiling` carries
 `profile_tax_id` and acts as the baseline. Import from a justificante PDF is
 implemented; live AEAT baseline import is not. There is no modelo-level
@@ -1829,26 +1829,26 @@ labels. The decision framework is primary-agent work.
 
 The blocker is not closed.
 
-- `src/aeat/cli/workflow/run.py`: `--no-dry-run` registered on lines 23 to 27,
+- `src/aeat/entrypoints/cli/workflow/run.py`: `--no-dry-run` registered on lines 23 to 27,
   `--i-understand-this-is-real` registered on lines 28 to 32. Neither the
   command nor the hosting group is marked `hidden=True`. Both flags are
   discoverable through `aeat workflow run --help`.
-- `src/aeat/cli/workflow/next.py`: `--no-dry-run` registered on lines 28 to
+- `src/aeat/entrypoints/cli/workflow/next.py`: `--no-dry-run` registered on lines 28 to
   32, `--i-understand-this-is-real` registered on lines 33 to 37. Not
   hidden. Discoverable through `aeat workflow next --help`.
-- `src/aeat/cli/workflow/__init__.py`: registers both commands via
+- `src/aeat/entrypoints/cli/workflow/__init__.py`: registers both commands via
   `app.command()` on lines 33 to 40 without `hidden=True`.
 - Inline guard: both command bodies reject `--no-dry-run` without the
   companion flag at exit code 2, which is defence in depth, but the flags
   themselves remain first-contact discoverable.
 - Engine-level four-factor gate:
-  `src/aeat/submission/_engine.py` lines 210 to 224 respect
+  `src/aeat/adapters/outbound/aeat/export/_engine.py` lines 210 to 224 respect
   `AEAT_LIVE_SUBMIT_ENABLED` through `AeatAccessGate.require_live_write()`
   plus the `live_transport_supported` default. This is correct and intact.
 - `live_transport_supported=True` audit: no production code site sets this
   True. Only test fixtures at
-  `src/aeat/submission/test_safety_helpers.py` line 238 and the visibility
-  test at `src/aeat/cli/submission/test_live_submit_defer_visibility.py`
+  `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py` line 238 and the visibility
+  test at `src/aeat/entrypoints/cli/submission/test_live_submit_defer_visibility.py`
   lines 66 and 80 set it. This complies with the excision ADR mandate.
 - Issue tracking: the live-write safety charter (#116) and the static-audit
   enumeration task (#118) are both open. The architectural hardening work
@@ -1892,7 +1892,7 @@ follow-through but is not a prerequisite for closing the leak.
 Scope: three files. All changes are dry-run-preserving. No engine changes.
 No default behaviour change for scripts that did not invoke the live flags.
 
-Change 1: `src/aeat/cli/workflow/run.py`.
+Change 1: `src/aeat/entrypoints/cli/workflow/run.py`.
 
 - Remove the `--no-dry-run` Click option at lines 23 to 27.
 - Remove the `--i-understand-this-is-real` Click option at lines 28 to 32.
@@ -1906,7 +1906,7 @@ Change 1: `src/aeat/cli/workflow/run.py`.
   `Runs the workflow in dry-run mode. Live execution is not available from
   this command; see release notes for planned 1.0.0 reintroduction.`
 
-Change 2: `src/aeat/cli/workflow/next.py`.
+Change 2: `src/aeat/entrypoints/cli/workflow/next.py`.
 
 - Remove `--no-dry-run` at lines 28 to 32.
 - Remove `--i-understand-this-is-real` at lines 33 to 37.
@@ -1916,7 +1916,7 @@ Change 2: `src/aeat/cli/workflow/next.py`.
 - Force `dry_run=True` downstream.
 - Help text: identical one-sentence addition as Change 1.
 
-Change 3: `src/aeat/cli/workflow/__init__.py`.
+Change 3: `src/aeat/entrypoints/cli/workflow/__init__.py`.
 
 - At the `app.command()` registrations on lines 33 to 40, decide between
   two sub-options:
@@ -1931,24 +1931,24 @@ Change 3: `src/aeat/cli/workflow/__init__.py`.
 
 Regression tests (new, colocated per project conventions):
 
-- `src/aeat/cli/workflow/test_run_help_ascii_safe.py`:
+- `src/aeat/entrypoints/cli/workflow/test_run_help_ascii_safe.py`:
   - Invoke the Click command's `--help` under a Click test runner.
   - Assert that `--no-dry-run` does not appear in the rendered help.
   - Assert that `--i-understand-this-is-real` does not appear.
   - Assert the help text is ASCII-only (Windows-terminal-safe).
-- `src/aeat/cli/workflow/test_next_help_ascii_safe.py`: equivalent for
+- `src/aeat/entrypoints/cli/workflow/test_next_help_ascii_safe.py`: equivalent for
   `next_cmd`.
-- `src/aeat/cli/workflow/test_run_refuses_live_flags.py`:
+- `src/aeat/entrypoints/cli/workflow/test_run_refuses_live_flags.py`:
   - Invoke the Click command with `--no-dry-run --i-understand-this-is-real`.
   - Assert exit code is non-zero (Click unknown-option error).
   - Assert stderr describes the flag as unknown, not as rejected.
-- `src/aeat/cli/workflow/test_next_refuses_live_flags.py`: equivalent for
+- `src/aeat/entrypoints/cli/workflow/test_next_refuses_live_flags.py`: equivalent for
   `next_cmd`.
 
 Access-gate assertions (ensure excision does not weaken the four-factor
 gate at the engine layer):
 
-- `src/aeat/submission/test_access_gate_workflow_untouched.py`:
+- `src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py`:
   - Verify `AeatAccessGate.require_live_write()` still refuses when
     `AEAT_LIVE_SUBMIT_ENABLED` is unset.
   - Verify `SubmissionEngine` default `live_transport_supported=False`
@@ -2004,11 +2004,11 @@ iteration 1 (2026-04-24).
 
 ## Scope
 
-- `src/aeat/cli/workflow/run.py`: remove `--no-dry-run` and
+- `src/aeat/entrypoints/cli/workflow/run.py`: remove `--no-dry-run` and
   `--i-understand-this-is-real` options; remove the refuse-branch; force
   `dry_run=True` at the engine call site.
-- `src/aeat/cli/workflow/next.py`: same.
-- `src/aeat/cli/workflow/__init__.py`: no visibility change in this issue.
+- `src/aeat/entrypoints/cli/workflow/next.py`: same.
+- `src/aeat/entrypoints/cli/workflow/__init__.py`: no visibility change in this issue.
   The advanced-quarantine migration from the CLI wireframe ADR handles
   visibility separately.
 - Regression tests: help-rendering assertions, flag-rejection assertions,
@@ -2056,7 +2056,7 @@ iteration 1 (2026-04-24).
 - Iteration 5 findings are appended, not retrofitted. Future iterations may
   flip the blocker once closure is verified; iteration 5 itself is immutable
   discovery.
-- A help-rendering regression test in `src/aeat/cli/workflow/` is the
+- A help-rendering regression test in `src/aeat/entrypoints/cli/workflow/` is the
   primary gate for re-closure of this leak. Without that test, the leak can
   silently return under future refactors.
 - The excision does not touch the engine-level gate. That layer is correct

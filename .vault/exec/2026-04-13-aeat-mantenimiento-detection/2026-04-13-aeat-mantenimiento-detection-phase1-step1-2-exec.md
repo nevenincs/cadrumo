@@ -26,8 +26,8 @@ Land the strict-frozen-forbid pydantic v2 records and the closed
 ## Circular-import note
 
 `SiteHealthAlert.stage` is typed `WorkflowStage`. The module imports
-`WorkflowStage` directly from `aeat.workflow._models` (not
-`aeat.workflow`) so the status subpackage does not trigger the
+`WorkflowStage` directly from `aeat.application.workflow._models` (not
+`aeat.application.workflow`) so the status subpackage does not trigger the
 workflow `__init__`. `_models.py` has no runtime dependency on
 `aeat.status`, so the cycle is broken at import time.
 

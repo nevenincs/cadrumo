@@ -28,7 +28,7 @@ It is May 2026. Kent is reconciling last year's filings and notices that his Q4 
 
 ### what the tool can do today
 
-- `AmendmentKind.COMPLEMENTARIA` and `AmendmentKind.SUSTITUTIVA` are defined (`src/aeat/filing/_complementaria.py:30`). Only Modelos 130, 390, and pre-2024Q3 303 are routed.
+- `AmendmentKind.COMPLEMENTARIA` and `AmendmentKind.SUSTITUTIVA` are defined (`src/aeat/application/filing/_complementaria.py:30`). Only Modelos 130, 390, and pre-2024Q3 303 are routed.
 - `FilingAmendment` is a pydantic frozen record carrying `amendment_id`, `submission_id`, `original_csv`, `original_model`, `original_period`, `amendment_kind`, `delta` (tuple of `CasillaChange`), `amended_draft`, `created_at`.
 - `CasillaChange.reason` is a required, non-empty string per changed casilla. This is genuinely good — every delta carries a justification.
 - `_validate_complementaria_liability` enforces that a complementaria may **only increase** liability (amended ≥ original), which matches Spanish tax law.

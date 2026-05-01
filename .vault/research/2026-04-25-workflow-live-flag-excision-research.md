@@ -26,14 +26,14 @@ exec records can rely on a single shared snapshot.
 
 ### live-flag visibility on the default cli surface
 
-`src/aeat/cli/workflow/run.py` registers two live-write flags on the default
+`src/aeat/entrypoints/cli/workflow/run.py` registers two live-write flags on the default
 public CLI:
 
 - `--no-dry-run` (lines 23-27, `no_dry_run: bool` parameter on `run_cmd`).
 - `--i-understand-this-is-real` (lines 28-32, `i_understand_this_is_real: bool`
   parameter on `run_cmd`).
 
-`src/aeat/cli/workflow/next.py` registers the same two flags:
+`src/aeat/entrypoints/cli/workflow/next.py` registers the same two flags:
 
 - `--no-dry-run` (lines 28-32, `no_dry_run: bool` parameter on `next_cmd`).
 - `--i-understand-this-is-real` (lines 33-37, `i_understand_this_is_real: bool`
@@ -44,11 +44,11 @@ lines 58-62) that prints `refusing: --no-dry-run requires
 --i-understand-this-is-real` and exits with code 2 when only one flag is
 passed. The refuse-branch is defence in depth, but the flags themselves are
 first-contact discoverable because neither command nor the hosting Typer
-group is marked `hidden=True` in `src/aeat/cli/workflow/__init__.py`.
+group is marked `hidden=True` in `src/aeat/entrypoints/cli/workflow/__init__.py`.
 
 The CLI then forwards `dry_run=not no_dry_run` into the helper functions
 `run_engine_for_period` and `run_engine_next` in
-`src/aeat/cli/workflow/_helpers.py` (lines 124, 154). The helper itself does
+`src/aeat/entrypoints/cli/workflow/_helpers.py` (lines 124, 154). The helper itself does
 not re-gate; it trusts the caller, then calls
 `engine.run_for_period(..., dry_run=dry_run)` and
 `engine.run_next(..., dry_run=dry_run)` respectively.
@@ -59,22 +59,22 @@ The four-factor gate at the engine layer is independent of the CLI flag
 plumbing and must not be touched by this change:
 
 1. `SubmissionEngine.__init__` defaults `live_transport_supported=False`
-   (`src/aeat/submission/_engine.py` line 69). Any caller that omits the
+   (`src/aeat/adapters/outbound/aeat/export/_engine.py` line 69). Any caller that omits the
    keyword inherits the inert engine.
 2. The inline pre-transport check in `_submit_with_transport` raises
    `AeatLiveTransportUnavailableError` when a non-dry-run submission is
    requested and `self.live_transport_supported` is False
-   (`src/aeat/submission/_engine.py` lines 211-214).
-3. `AeatAccessGate.require_live_write()` (`src/aeat/auth/_gate.py` lines
+   (`src/aeat/adapters/outbound/aeat/export/_engine.py` lines 211-214).
+3. `AeatAccessGate.require_live_write()` (`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py` lines
    108-130) refuses unless `AEAT_LIVE_SUBMIT_ENABLED` is true *and* the
    process is not running under pytest (`PYTEST_CURRENT_TEST` absent).
-4. `confirm_live_submission` in `src/aeat/submission/_confirm.py` requires an
+4. `confirm_live_submission` in `src/aeat/adapters/outbound/aeat/export/_confirm.py` requires an
    interactive typed confirmation phrase before any submitter dispatch.
 
 The handover prompt names the gate file as
-`src/aeat/submission/_access_gate.py`. That path does not exist on this
-branch. The actual implementation lives at `src/aeat/auth/_gate.py` and is
-re-exported through `aeat.auth` (`AeatAccessGate`, `AeatGateEnvSnapshot`).
+`src/aeat/adapters/outbound/aeat/export/_access_gate.py`. That path does not exist on this
+branch. The actual implementation lives at `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py` and is
+re-exported through `aeat.adapters.outbound.aeat.auth` (`AeatAccessGate`, `AeatGateEnvSnapshot`).
 The gate is consumed by `SubmissionEngine._submit_with_transport` via an
 inline construction (`AeatAccessGate(self.settings)`); it is never
 injected as a constructor seam (R5 of safety charter `#116`).
@@ -84,8 +84,8 @@ injected as a constructor seam (R5 of safety charter `#116`).
 `grep -n "live_transport_supported=True" src/aeat/` matches only test sites
 on this branch:
 
-- `src/aeat/submission/test_safety_helpers.py` line 238 (test fixture).
-- `src/aeat/cli/submission/test_live_submit_defer_visibility.py` lines 66
+- `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py` line 238 (test fixture).
+- `src/aeat/entrypoints/cli/submission/test_live_submit_defer_visibility.py` lines 66
   and 80 (visibility regression tests).
 
 No production caller sets it `True`. This invariant is what the new
@@ -93,10 +93,10 @@ regression test `test_access_gate_workflow_untouched.py` will pin.
 
 ### sibling branches in flight
 
-- `feature/239-aeat-verify` owns `src/aeat/sede/` and extends
-  `src/aeat/auth/_clave_movil.py`. No collision with this issue's scope
-  (`src/aeat/cli/workflow/` plus a single new test under
-  `src/aeat/submission/`).
+- `feature/239-aeat-verify` owns `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/` and extends
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`. No collision with this issue's scope
+  (`src/aeat/entrypoints/cli/workflow/` plus a single new test under
+  `src/aeat/adapters/outbound/aeat/export/`).
 - `chore/356-followup-vault-records` is vault-only, no code overlap.
 - The CLI wireframe authoring agent's vault docs are now on `main` at commit
   `e2b787f`; the controlling ADR is read-only for this issue. The authoring
@@ -112,7 +112,7 @@ CLI entirely) as the minimum-intrusion closure for this blocker. The ADR's
 - remove the two flags and their parameters from `run_cmd` and `next_cmd`
 - remove both refuse-branches
 - force `dry_run=True` at every downstream call site
-- leave `src/aeat/cli/workflow/__init__.py` unchanged (the
+- leave `src/aeat/entrypoints/cli/workflow/__init__.py` unchanged (the
   advanced-quarantine migration is iteration 4 / a separate issue)
 - ship colocated regression tests for help rendering and unknown-option
   refusal
@@ -139,9 +139,9 @@ surface must be incapable of triggering an AEAT submission.
 
 ### existing test patterns
 
-Existing workflow CLI tests (`src/aeat/cli/workflow/test_cli.py`,
+Existing workflow CLI tests (`src/aeat/entrypoints/cli/workflow/test_cli.py`,
 `test_cli_runtime.py`) drive the typer surface via
-`typer.testing.CliRunner` and import the root app from `aeat.cli`. They use
+`typer.testing.CliRunner` and import the root app from `aeat.entrypoints.cli`. They use
 the module-level marker pattern `pytestmark = [pytest.mark.unit,
 pytest.mark.<domain>]`. The new colocated regression tests must follow the
 same shape so the test discovery and marker selection stay coherent.
@@ -170,18 +170,18 @@ than full-output normalisation - that is the spirit behind the
 ## scope decisions consumed by the implementation adr
 
 - The implementation hits exactly two production files:
-  `src/aeat/cli/workflow/run.py` and `src/aeat/cli/workflow/next.py`.
-- `src/aeat/cli/workflow/__init__.py` is not modified; the
+  `src/aeat/entrypoints/cli/workflow/run.py` and `src/aeat/entrypoints/cli/workflow/next.py`.
+- `src/aeat/entrypoints/cli/workflow/__init__.py` is not modified; the
   advanced-quarantine migration (iteration 4 / `#397`) is out of scope.
 - Five new test files, all colocated:
-  - `src/aeat/cli/workflow/test_run_help_ascii_safe.py`
-  - `src/aeat/cli/workflow/test_next_help_ascii_safe.py`
-  - `src/aeat/cli/workflow/test_run_refuses_live_flags.py`
-  - `src/aeat/cli/workflow/test_next_refuses_live_flags.py` (symmetry
+  - `src/aeat/entrypoints/cli/workflow/test_run_help_ascii_safe.py`
+  - `src/aeat/entrypoints/cli/workflow/test_next_help_ascii_safe.py`
+  - `src/aeat/entrypoints/cli/workflow/test_run_refuses_live_flags.py`
+  - `src/aeat/entrypoints/cli/workflow/test_next_refuses_live_flags.py` (symmetry
     completion mandated by iteration 5; the handover prompt enumerates
     four tests but the controlling ADR explicitly prescribes the
     `next` mirror to avoid an asymmetric regression surface)
-  - `src/aeat/submission/test_access_gate_workflow_untouched.py`
+  - `src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py`
 - All five tests carry `pytestmark = [pytest.mark.unit,
   pytest.mark.domain_submission]` per the handover prompt's authoritative
   marker assignment for this issue.
@@ -200,13 +200,13 @@ than full-output normalisation - that is the spirit behind the
   - **Mitigation:** there are no production callers of `run_cmd` /
     `next_cmd` outside the typer registration; the only callers are
     `app.command(...)(run_cmd)` and `app.command(...)(next_cmd)` in
-    `src/aeat/cli/workflow/__init__.py`, which take the function by
+    `src/aeat/entrypoints/cli/workflow/__init__.py`, which take the function by
     reference. A grep across `src/aeat/` confirms no imports of these
     symbols.
 - **Risk:** the engine-level four-factor gate is silently weakened in a
   later refactor.
   - **Mitigation:** the new
-    `src/aeat/submission/test_access_gate_workflow_untouched.py` pins
+    `src/aeat/adapters/outbound/aeat/export/test_access_gate_workflow_untouched.py` pins
     the four invariants (default `live_transport_supported=False`,
     inline `AeatLiveTransportUnavailableError` raise, gate refusal
     without env var, gate refusal under pytest).

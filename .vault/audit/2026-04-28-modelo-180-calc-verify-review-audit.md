@@ -13,7 +13,7 @@ related:
 
 MODEL180-001 | HIGH | Registry smoke tests omitted `modelo_180.2026`
 
-Reviewer confirmed `modelo_180.2026` was registered but `src/aeat/formulas/test_registry.py` and `src/aeat/formulas/test_smoke.py` still expected the old ruleset set. Resolution: both tests now include `modelo_180.2026`, and registry coverage adds an explicit 2026 annual resolve assertion.
+Reviewer confirmed `modelo_180.2026` was registered but `src/aeat/domain/formulas/test_registry.py` and `src/aeat/domain/formulas/test_smoke.py` still expected the old ruleset set. Resolution: both tests now include `modelo_180.2026`, and registry coverage adds an explicit 2026 annual resolve assertion.
 
 MODEL180-002 | HIGH | Cumulation rounding disagreed with the annual ruleset
 

@@ -17,8 +17,8 @@ Issue `#76` must introduce a typed, content-addressed **Attachment** service tha
 
 ## Considerations
 
-- `aeat.financial.transactions` is the already-merged downstream consumer of attachment links. Attachments must hold `transaction_id` references as opaque strings and avoid coupling to the transaction runtime type beyond a typing-level Protocol.
-- `aeat.financial.invoices/` is still in flight on `#75`, so the attachment package cannot hard-import invoice types. Invoice foreign keys must be plain `str` at runtime with a typing-only `Protocol` placeholder for documentation and IDE help.
+- `aeat.domain.financial.transactions` is the already-merged downstream consumer of attachment links. Attachments must hold `transaction_id` references as opaque strings and avoid coupling to the transaction runtime type beyond a typing-level Protocol.
+- `aeat.domain.financial.invoices/` is still in flight on `#75`, so the attachment package cannot hard-import invoice types. Invoice foreign keys must be plain `str` at runtime with a typing-only `Protocol` placeholder for documentation and IDE help.
 - The issue mandates content-addressed storage keyed by the SHA-256 of the stored bytes. Two separate stores are required: raw bytes under `var/financial/attachments/blobs/<sha256>` (extensionless, write-once) and JSON manifests under `var/financial/attachments/manifests/<sha256>.json` (mutable as new links are recorded).
 - Deduplication is a natural consequence of content addressing: re-ingesting the same file produces the same `attachment_id`. The ingest path must therefore merge new links into the existing manifest rather than overwrite it.
 - The issue carves out `metadata: dict[str, str]` as an explicit escape hatch from the project's Pydantic mandate. It exists for heterogeneous provider-specific metadata (Gmail headers, Drive revision IDs, EXIF dumps) and must be justified here, constrained to `str` values, and kept narrow.
@@ -26,9 +26,9 @@ Issue `#76` must introduce a typed, content-addressed **Attachment** service tha
 
 ## Constraints
 
-- The public API must be importable only from `aeat.financial.attachments`; callers must not reach into underscored submodules.
+- The public API must be importable only from `aeat.domain.financial.attachments`; callers must not reach into underscored submodules.
 - Every persisted and boundary-crossing structure must be strict pydantic v2; closed sets must use `enum.StrEnum`.
-- All domain errors must inherit from `aeat.errors.AeatError`; logging must use `aeat.logging.get_logger(__name__)`.
+- All domain errors must inherit from `aeat.core.errors.AeatError`; logging must use `aeat.core.logging.get_logger(__name__)`.
 - Byte files are **write-once**: once a `<sha256>` blob exists under `blobs/`, the service must not overwrite it. A re-ingest of the same bytes becomes a manifest update only.
 - `attachment_id` must equal the SHA-256 digest of the stored bytes; the model must reject any payload where the two disagree.
 - `sha256` values must be 64-character lowercase hex digests (same discipline as `RawProvenance.source_sha256`).
@@ -39,7 +39,7 @@ Issue `#76` must introduce a typed, content-addressed **Attachment** service tha
 
 ## Implementation
 
-- Create `src/aeat/financial/attachments/` with a public `__init__.py` and private underscored modules for enums (`_enums.py`), errors (`_errors.py`), models (`_models.py`), the byte/manifest store (`_store.py`), service helpers (`_service.py`), and typing stubs (`_stubs.py`).
+- Create `src/aeat/domain/financial/attachments/` with a public `__init__.py` and private underscored modules for enums (`_enums.py`), errors (`_errors.py`), models (`_models.py`), the byte/manifest store (`_store.py`), service helpers (`_service.py`), and typing stubs (`_stubs.py`).
 - Define `AttachmentKind` and `AttachmentSource` as `StrEnum` values using the uppercase identifiers listed in the issue.
 - Define `Attachment` as a strict frozen pydantic v2 model with:
   - `attachment_id: str` (64-char lowercase hex, equal to `sha256`).
@@ -62,10 +62,10 @@ Issue `#76` must introduce a typed, content-addressed **Attachment** service tha
   - `add_attachment(store, *, path, kind, source, source_reference, mime_type, captured_at, link_transaction_ids, link_invoice_ids, metadata, notes) -> Attachment` — hashes bytes once, writes the blob (idempotent), merges any existing manifest's links with the new links, writes the merged manifest, returns the saved attachment.
   - `load_attachment(store, attachment_id) -> Attachment` — thin typed wrapper.
   - `list_attachments(store, *, linked_to: str | None = None) -> tuple[Attachment, ...]` — filters by linked transaction/invoice identifier when provided.
-- Add an `AEAT_ATTACHMENTS_DIR` setting to `aeat.config.Settings` defaulting to `PROJECT_ROOT / "var" / "financial" / "attachments"`, and mirror the entry in `env/.env.example`.
-- Mount the CLI at the root as `aeat attachments`: a Typer sub-app in `src/aeat/cli/attachments.py` exposing `add`, `list`, and `show` that resolve the store directory from the configured setting.
+- Add an `AEAT_ATTACHMENTS_DIR` setting to `aeat.core.config.Settings` defaulting to `PROJECT_ROOT / "var" / "financial" / "attachments"`, and mirror the entry in `env/.env.example`.
+- Mount the CLI at the root as `aeat attachments`: a Typer sub-app in `src/aeat/entrypoints/cli/attachments.py` exposing `add`, `list`, and `show` that resolve the store directory from the configured setting.
 - Keep invoice/transaction interoperability at typing level via `_stubs.py` Protocols (`SupportsTransactionId`, `SupportsInvoiceId`); runtime foreign-key fields stay `str`.
-- Colocated unit tests under `src/aeat/financial/attachments/`:
+- Colocated unit tests under `src/aeat/domain/financial/attachments/`:
   - `test_models.py` — validator coverage for hash mismatch, invalid sha256, naive timestamps, empty linked IDs, duplicate linked IDs, invalid metadata shapes.
   - `test_catalogue.py` — catalogue construction, duplicate detection, round-trip via `model_dump_json`.
   - `test_store.py` — dedup semantics, write-once blob invariant, manifest round-trip, link merging on re-ingest, bytes/manifests separation.
@@ -76,8 +76,8 @@ Issue `#76` must introduce a typed, content-addressed **Attachment** service tha
 - Making `attachment_id == sha256(bytes)` collapses identity and content addressing into a single invariant that is trivially verifiable by re-hashing any blob. Cross-store validation becomes a one-line equality check in the model.
 - Separating `blobs/` and `manifests/` under the configured root gives the audit-trail guarantee the project's tax-inspector discipline requires: bytes are never rewritten, so recomputing `sha256(blobs/<id>)` at any time can prove an attachment was not tampered with.
 - Write-once byte storage and merge-on-re-ingest manifest semantics give additive, idempotent capture. Callers can safely re-issue `aeat attachments add <same-path>` with new links and the service will merge without double-counting.
-- Tuple-typed linked IDs match the issue's stated types and align with the immutability discipline already used in `aeat.financial.transactions`.
-- Typing-only `Protocol` stubs for invoice/transaction references keep the attachment package from creating hard imports into sibling branches that are still in flight, mirroring the pattern established by `aeat.financial.transactions._stubs`.
+- Tuple-typed linked IDs match the issue's stated types and align with the immutability discipline already used in `aeat.domain.financial.transactions`.
+- Typing-only `Protocol` stubs for invoice/transaction references keep the attachment package from creating hard imports into sibling branches that are still in flight, mirroring the pattern established by `aeat.domain.financial.transactions._stubs`.
 - Mounting at `aeat attachments` rather than `aeat financial attachments` matches the issue's explicit CLI wording and reflects the broader document-evidence scope (Gmail, Drive, contracts) that is not purely financial.
 - Constraining the `metadata` escape hatch to `dict[str, str]` with non-empty keys preserves JSON round-trip safety and keeps the model a strict boundary even with the relaxation.
 

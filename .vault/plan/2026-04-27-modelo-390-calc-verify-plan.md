@@ -78,7 +78,7 @@ Per the ADR `[[2026-04-27-modelo-390-calc-verify-adr]]`, ship a structurally clo
 
 Phases 2 / 3 (ruleset structure + casilla expansion) must run sequentially because they touch the same files. Phase 4 (extractor) and Phase 8 (reference manifest) can run in parallel with Phase 6 (per-year tests). Phase 7 (cumulation tests) depends on Phase 3 (formulas in place) and Phase 4 (M390 extractor variants registered for 2024 / 2026 if those years are exercised). Phase 9 (integration verification) depends on Phases 2-7. Phase 10 (coverage docs) depends on everything else.
 
-In practice the work is single-file editing per phase, so parallelism is a red herring inside this issue's scope. The shared-file textual unions with sibling branch `feature/317-modelo-100-renta-full-calc` (for `tests/integration/test_kent_workflows.py`, `docs/coverage/modelos.md`, `src/aeat/formulas/_rulesets/__init__.py`) resolve at PR-open time as mechanical merges.
+In practice the work is single-file editing per phase, so parallelism is a red herring inside this issue's scope. The shared-file textual unions with sibling branch `feature/317-modelo-100-renta-full-calc` (for `tests/integration/test_kent_workflows.py`, `docs/coverage/modelos.md`, `src/aeat/domain/formulas/_rulesets/__init__.py`) resolve at PR-open time as mechanical merges.
 
 ## Self-review against project mandates and the DoD
 
@@ -99,8 +99,8 @@ Project-mandate compliance:
 
 - All Python modules under `src/aeat/`. ✓
 - Pydantic v2 strict for boundary models (the helpers in `_common.py` already produce strict models). ✓
-- Errors inherit from `aeat.errors.AeatError`. No new error subclasses needed. ✓
-- Logging via `aeat.logging.get_logger`. No new log surfaces. ✓
+- Errors inherit from `aeat.core.errors.AeatError`. No new error subclasses needed. ✓
+- Logging via `aeat.core.logging.get_logger`. No new log surfaces. ✓
 - Tests `[pytest.mark.unit, pytest.mark.domain_local_state]` at module level (per existing per-modelo pattern). ✓
 - No mocks / fakes / stubs / skips. ✓
 - No wave / phase numbering in source code or docstrings. The existing `modelo_390_2025.py` wave-numbered comments are scrubbed. ✓
@@ -109,7 +109,7 @@ Project-mandate compliance:
 
 Cross-reference siblings:
 
-- `#317` Modelo 100 RENTA megaproject — different modelo files, soft-collisions on three shared files (`tests/integration/test_kent_workflows.py`, `docs/coverage/modelos.md`, `src/aeat/formulas/_rulesets/__init__.py`) that resolve as additive textual unions. Plan accommodates by keeping changes additive and never deleting M100-specific rows.
+- `#317` Modelo 100 RENTA megaproject — different modelo files, soft-collisions on three shared files (`tests/integration/test_kent_workflows.py`, `docs/coverage/modelos.md`, `src/aeat/domain/formulas/_rulesets/__init__.py`) that resolve as additive textual unions. Plan accommodates by keeping changes additive and never deleting M100-specific rows.
 - `#321 / #326 / #319 / #322 / #318 / #320` — already landed; consume their patterns directly.
 - `#338 / #339 / #340` — landed foundations; consume their invariants.
 - `#345` IVA complexity sub-EPIC — out of scope; rule-delta manifest documents deferrals.

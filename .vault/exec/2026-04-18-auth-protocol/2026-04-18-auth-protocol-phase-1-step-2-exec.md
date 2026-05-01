@@ -11,9 +11,9 @@ related:
 
 Moved browser-context construction behind a provider provisioner seam.
 
-- Modified: `src/aeat/auth/_authenticator.py`
-- Modified: `src/aeat/browser/session.py`
-- Modified: `src/aeat/browser/test_session.py`
+- Modified: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`
+- Modified: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py`
+- Modified: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py`
 
 ## Description
 
@@ -21,4 +21,4 @@ Replaced the certificate-shaped `create_context(cert=...)` contract with `create
 
 ## Tests
 
-Validated the browser seam with `uv run pytest src/aeat/browser/test_session.py -q`. The tests confirm the context marker remains present for certificate-backed contexts and absent when no provisioner is supplied.
+Validated the browser seam with `uv run pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py -q`. The tests confirm the context marker remains present for certificate-backed contexts and absent when no provisioner is supplied.

@@ -17,11 +17,11 @@ response and raises `SiteHealthError` on non-OK states.
 
 ## Changes
 
-- `src/aeat/browser/_site_health_probe.py` — new private helper
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/_site_health_probe.py` — new private helper
   re-exporting `evaluate_response` under a `probe_response` shim.
-  The module forbids imports from `aeat.auth`, `aeat.filing`, and
-  `aeat.financial`.
-- `src/aeat/browser/session.py` — new `navigate` async method that
+  The module forbids imports from `aeat.adapters.outbound.aeat.auth`, `aeat.application.filing`, and
+  `aeat.domain.financial`.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py` — new `navigate` async method that
   captures the response / headers / body, calls `probe_response`,
   and raises `SiteHealthError(status=...)` when non-OK. Transport
   failures (timeouts, generic transport errors) are wrapped in a

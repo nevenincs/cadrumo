@@ -37,7 +37,7 @@ The legal surface is not uniform:
 
 The feature introduces a separate strict schema rooted in
 `FilingAmendment`, `CasillaDelta`, and `CasillaChange` under
-`src/aeat/filing/_complementaria.py`. The amendment record references the
+`src/aeat/application/filing/_complementaria.py`. The amendment record references the
 original filing and stores the delta as an audit-focused object, while the
 existing `FilingDraft` remains the absolute-value representation used by the
 builder and validator stack.

@@ -18,7 +18,7 @@ Step 5 PR 3 of N. Lands the mechanical import-path rebaser per ADR Transition me
 ## scope
 
 - `scripts/restructure_rewrite_map.json` — flat OLD→NEW dotted-path dict for every relocating module per the ADR Implementation section. 39 entries covering core/, adapters/inbound/, adapters/outbound/, adapters/persistence/, application/, entrypoints/, and the modelos rename.
-- `scripts/rebase_imports.py` — pure-regex rewriter handling the four import shapes ADR Acceptance criteria mandates: absolute, relative (re-anchored against the file's new package location at run time), `TYPE_CHECKING` blocks, star imports, and dynamic `importlib.import_module` quoted-string forms. Longest-prefix-first ordering ensures sub-tree carve-outs (e.g. `aeat.cli.financial`) rewrite before their parent (`aeat.cli`).
+- `scripts/rebase_imports.py` — pure-regex rewriter handling the four import shapes ADR Acceptance criteria mandates: absolute, relative (re-anchored against the file's new package location at run time), `TYPE_CHECKING` blocks, star imports, and dynamic `importlib.import_module` quoted-string forms. Longest-prefix-first ordering ensures sub-tree carve-outs (e.g. `aeat.entrypoints.cli.financial`) rewrite before their parent (`aeat.entrypoints.cli`).
 - `scripts/test_rebase_imports.py` — 11-case test fixture covering every shape. Includes the round-trip identity test (forward → reverse returns the original input), satisfying the ADR Post-Step-8 rollback paths section's reverse-rewrite-map requirement.
 
 ## verification

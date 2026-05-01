@@ -12,19 +12,19 @@ related:
 # Implementation Plan: PKCS#12 Certificate Authentication
 
 ## Phase 1 — Schema + error hierarchy
-- **Files**: `src/aeat/auth/certificate.py` (NEW),
-  `src/aeat/auth/__init__.py` (additive re-exports).
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` (NEW),
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py` (additive re-exports).
 - **Content**: `CertificateBackend(StrEnum)`, `CertificateBundle`,
   `LoadedCertificate` (with `PrivateAttr` for secret material),
   `HandshakeResult`, `CertificateError` hierarchy. No behaviour.
 - **Commit**: `feat(auth): pydantic schema + error hierarchy for cert auth (#8)`
 
 ## Phase 2 — Loader + backend dispatch
-- **Files**: `src/aeat/auth/certificate.py` (extend),
-  `src/aeat/auth/_certificate_backends/__init__.py`,
-  `src/aeat/auth/_certificate_backends/_base.py`,
-  `src/aeat/auth/_certificate_backends/_user_data_dir.py`,
-  `src/aeat/auth/_certificate_backends/_mtls_proxy.py`.
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` (extend),
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/__init__.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_base.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_user_data_dir.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_mtls_proxy.py`.
 - **Content**: `load_certificate()` that reads the .p12, reads the
   passphrase from env, parses via `cryptography.pkcs12.load_pkcs12`,
   derives public metadata, stores secrets in `PrivateAttr`, raises
@@ -33,9 +33,9 @@ related:
 - **Commit**: `feat(auth): certificate loader + backend dispatch (#8)`
 
 ## Phase 3 — Playwright + httpx backends
-- **Files**: `src/aeat/auth/_certificate_backends/_playwright_context.py`,
-  `src/aeat/auth/_certificate_backends/_httpx_fallback.py`,
-  `src/aeat/auth/certificate.py` (wire `preload_into_browser_context`
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_playwright_context.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/_httpx_fallback.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` (wire `preload_into_browser_context`
   and `verify_handshake`).
 - **Content**: Playwright backend validates context construction
   (documents that client certs must be passed at `new_context()` time).
@@ -51,9 +51,9 @@ related:
 - **Commit**: `feat(auth): settings + env example for cert config (#8)`
 
 ## Phase 5 — Tests
-- **Files**: `src/aeat/auth/test_certificate.py`,
-  `src/aeat/auth/_certificate_backends/test_backends.py`,
-  `src/aeat/auth/test_certificate_live.py`.
+- **Files**: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/test_backends.py`,
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py`.
 - **Content**: Unit tests that generate real self-signed PKCS#12
   bundles in tmp dirs (no mocks), cover happy path, password errors,
   expired cert, malformed bytes, SecretStr non-leakage, `model_dump`
@@ -89,7 +89,7 @@ related:
    pinning `playwright>=1.58.0` and documenting the exact call signature
    in the backend module. Also mitigated by the fact that the
    Playwright backend only constructs the kwarg dict; the actual
-   `new_context()` call stays in `aeat.browser.session`.
+   `new_context()` call stays in `aeat.adapters.outbound.aeat.browser.session`.
 2. **Temp-file PEM leak** — mitigated by `tempfile.mkstemp(mode=0o600)`
    on POSIX + equivalent ACL on Windows, wrapped in a try/finally that
    unlinks on exit; unit test asserts cleanup occurs even on exception.
@@ -100,7 +100,7 @@ related:
    generating in-process per-test rather than relying on a checked-in
    fixture.
 5. **Public-API discipline drift** — mitigated by `__all__` export list
-   in `aeat.auth` and a unit test that imports exclusively via the
+   in `aeat.adapters.outbound.aeat.auth` and a unit test that imports exclusively via the
    subpackage root.
 
 ### Alternatives considered and rejected

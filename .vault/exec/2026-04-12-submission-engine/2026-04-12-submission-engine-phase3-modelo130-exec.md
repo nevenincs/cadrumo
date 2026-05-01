@@ -13,16 +13,16 @@ issue: wgergely/aeat#42
 
 ## artefacts produced
 
-- `src/aeat/submission/_submitters/__init__.py` — `Submitter` ABC
+- `src/aeat/adapters/outbound/aeat/export/_submitters/__init__.py` — `Submitter` ABC
   exposing `dry_run` / `submit` coroutines.
-- `src/aeat/submission/_submitters/_contract.py` — narrow
+- `src/aeat/adapters/outbound/aeat/export/_submitters/_contract.py` — narrow
   `BrowserSessionLike` Protocol.
-- `src/aeat/submission/_submitters/modelo130.py` — `Modelo130Submitter`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py` — `Modelo130Submitter`
   walking the portal with screenshots, trace start/stop, and a
   pre-submit abort in dry-run mode.
-- `src/aeat/submission/_submitters/test_modelo130.py` — unit tests
+- `src/aeat/adapters/outbound/aeat/export/_submitters/test_modelo130.py` — unit tests
   using a `RecordingSession` Protocol implementation (no mocks).
 
 ## verification
 
-- `uv run pytest src/aeat/submission/_submitters -q` — passed.
+- `uv run pytest src/aeat/adapters/outbound/aeat/export/_submitters -q` — passed.

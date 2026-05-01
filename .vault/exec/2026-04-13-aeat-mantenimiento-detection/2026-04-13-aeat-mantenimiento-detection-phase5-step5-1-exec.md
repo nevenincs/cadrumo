@@ -16,12 +16,12 @@ site-health alert to `WorkflowStep`.
 
 ## Changes
 
-- `src/aeat/workflow/_models.py`:
+- `src/aeat/application/workflow/_models.py`:
   - Added `WorkflowAbortReason.SITE_UNAVAILABLE` strictly before
     `UNHANDLED_EXCEPTION`.
   - Added `WorkflowStep.site_health_alert: SiteHealthAlert | None`
     via a forward reference + `TYPE_CHECKING` import.
-- `src/aeat/workflow/__init__.py` — imports `SiteHealthAlert` at the
+- `src/aeat/application/workflow/__init__.py` — imports `SiteHealthAlert` at the
   subpackage boundary (safe site), assigns it into `_models` module
   globals, and calls `WorkflowStep.model_rebuild()` so the forward
   reference resolves. This preserves the circular-import break

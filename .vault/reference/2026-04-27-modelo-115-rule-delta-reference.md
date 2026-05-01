@@ -17,10 +17,10 @@ of Modelo 115 (retención IRPF sobre arrendamientos urbanos,
 trimestral) for tax years 2024, 2025, and 2026. It is the
 authoritative reference cited by:
 
-- `src/aeat/formulas/_rulesets/modelo_115_2024.py`
-- `src/aeat/formulas/_rulesets/modelo_115_2025.py`
-- `src/aeat/formulas/_rulesets/modelo_115_2026.py`
-- `src/aeat/declaracion/_extractors/modelo_115_v2025.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_115_2024.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_115_2025.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_115_2026.py`
+- `src/aeat/adapters/inbound/declaracion/_extractors/modelo_115_v2025.py`
 - the `#319` ADR / plan / research / exec records.
 
 ## Statutory grounding
@@ -81,7 +81,7 @@ preserved across 2024 / 2026.
 
 **No amendment.** The 2024 and 2025 rulesets are mechanically
 and numerically identical. The 2024 ruleset file
-(`src/aeat/formulas/_rulesets/modelo_115_2024.py`) re-imports
+(`src/aeat/domain/formulas/_rulesets/modelo_115_2024.py`) re-imports
 `_CASILLAS`, `_FORMULAS`, and `_CITATIONS` from the 2025 module
 and declares only its own `ParameterTable` with the 2024
 effective range and `irpf.arrendamientos_rate = Decimal("0.19")`.
@@ -104,14 +104,14 @@ post-consolidation surface and has no modification footnote
 attached.
 
 The 2026 ruleset file
-(`src/aeat/formulas/_rulesets/modelo_115_2026.py`) re-imports
+(`src/aeat/domain/formulas/_rulesets/modelo_115_2026.py`) re-imports
 `_CASILLAS`, `_FORMULAS`, and `_CITATIONS` from the 2025 module
 and declares its own `ParameterTable` with the same numerical
 value bound to the 2026 effective range of 2026-01-01 to
 2026-12-31.
 
 The `test_2026_no_drift_from_2025` regression in
-`src/aeat/formulas/_rulesets/test_modelo_115_2026.py` asserts
+`src/aeat/domain/formulas/_rulesets/test_modelo_115_2026.py` asserts
 the no-drift invariant: an `Engine().audit_against(...)` pass
 over both the 2025 and 2026 rulesets with the same fixture must
 produce identical ledger entries.

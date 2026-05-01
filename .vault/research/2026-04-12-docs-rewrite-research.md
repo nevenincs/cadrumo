@@ -39,9 +39,9 @@ specifies the rewrite scope.
   - `feature-15-pytest-only-testing` — owns `pyproject.toml [tool.pytest]`,
     `conftest.py`, `tests/README/`. The new project-meta test goes at
     `tests/test_docs.py` (repo-root level).
-  - `feature-59-workflow-engine` — owns `src/aeat/workflow/`. README
+  - `feature-59-workflow-engine` — owns `src/aeat/application/workflow/`. README
     references `aeat workflow next` annotated as "(merging in #59)".
-  - `feature-61-setup-wizard` — owns `src/aeat/setup/`. README
+  - `feature-61-setup-wizard` — owns `src/aeat/application/setup/`. README
     references `aeat setup` annotated as "(merging in #61)".
   - `feature-62-modelo-303-390` — README "supported modelos" lists
     130, 303, 390 with a note that 303/390 land in #62.

@@ -16,23 +16,23 @@ related:
 
 Applied the core remediation patch set across the registry, deadline engine, and CLI parity surface.
 
-- Modified: `src/aeat/models/_entries/modelo_036.py`
-- Modified: `src/aeat/models/_entries/modelo_037.py`
-- Modified: `src/aeat/models/_entries/modelo_111.py`
-- Modified: `src/aeat/models/_entries/modelo_123.py`
-- Modified: `src/aeat/models/_entries/modelo_130.py`
-- Modified: `src/aeat/models/_entries/modelo_347.py`
-- Created: `src/aeat/models/_entries/modelo_193.py`
-- Modified: `src/aeat/models/_codes.py`
-- Modified: `src/aeat/models/_registry.py`
-- Modified: `src/aeat/models/_cli.py`
-- Modified: `src/aeat/deadlines/_models.py`
-- Modified: `src/aeat/deadlines/_applies.py`
-- Modified: `src/aeat/deadlines/_calendar.py`
+- Modified: `src/aeat/domain/modelos/_entries/modelo_036.py`
+- Modified: `src/aeat/domain/modelos/_entries/modelo_037.py`
+- Modified: `src/aeat/domain/modelos/_entries/modelo_111.py`
+- Modified: `src/aeat/domain/modelos/_entries/modelo_123.py`
+- Modified: `src/aeat/domain/modelos/_entries/modelo_130.py`
+- Modified: `src/aeat/domain/modelos/_entries/modelo_347.py`
+- Created: `src/aeat/domain/modelos/_entries/modelo_193.py`
+- Modified: `src/aeat/domain/modelos/_codes.py`
+- Modified: `src/aeat/domain/modelos/_registry.py`
+- Modified: `src/aeat/domain/modelos/_cli.py`
+- Modified: `src/aeat/domain/deadlines/_models.py`
+- Modified: `src/aeat/domain/deadlines/_applies.py`
+- Modified: `src/aeat/domain/deadlines/_calendar.py`
 
 ## Description
 
-The remediation closed the audited contract split between `aeat.models` and `aeat.deadlines`.
+The remediation closed the audited contract split between `aeat.domain.modelos` and `aeat.domain.deadlines`.
 
 - `modelo 037` is now retained as historical-only metadata and no longer appears as a current censal path for active profile applicability.
 - `modelo 036` now documents the post-`2025-02-03` censal path after the legal suppression of `037`.
@@ -45,5 +45,5 @@ The remediation closed the audited contract split between `aeat.models` and `aea
 
 Focused unit verification passed after the runtime patch:
 
-- `uv run pytest src/aeat/models/test_codes.py src/aeat/models/test_registry.py src/aeat/models/test_cli.py src/aeat/deadlines/test_models.py src/aeat/deadlines/test_calendar.py src/aeat/deadlines/test_applies.py src/aeat/deadlines/test_engine.py -q`
+- `uv run pytest src/aeat/domain/modelos/test_codes.py src/aeat/domain/modelos/test_registry.py src/aeat/domain/modelos/test_cli.py src/aeat/domain/deadlines/test_models.py src/aeat/domain/deadlines/test_calendar.py src/aeat/domain/deadlines/test_applies.py src/aeat/domain/deadlines/test_engine.py -q`
 - Result: `95 passed`

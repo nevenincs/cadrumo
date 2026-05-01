@@ -10,7 +10,7 @@ related:
 
 # `llm-client` research: `provider-survey-and-package-fit`
 
-Issue `#21` requires an async-first LLM client under `src/aeat/llm/` with strict
+Issue `#21` requires an async-first LLM client under `src/aeat/adapters/outbound/llm/` with strict
 pydantic v2 records, a single public import chokepoint, on-disk caching, usage
 logging, and a translation layer that must later integrate with the trilingual
 contract from issue `#20`. This research compares provider options and captures
@@ -76,7 +76,7 @@ the repo-fit decisions that matter before implementation.
 
 ### implementation fit for this repo
 
-- The package should isolate every provider import inside `src/aeat/llm/_providers/`.
+- The package should isolate every provider import inside `src/aeat/adapters/outbound/llm/_providers/`.
   No other module should import `anthropic`, `openai`, `google`, `ollama`, or
   equivalent SDKs directly.
 - All boundary records should be strict pydantic v2 models:
@@ -94,7 +94,7 @@ the repo-fit decisions that matter before implementation.
   file per day. This satisfies the issue while staying independent of the
   future storage layer from issue `#10`.
 - The translator should depend on a local compatibility shim for issue `#20`
-  rather than importing `aeat.i18n` directly. That keeps this branch buildable
+  rather than importing `aeat.core.i18n` directly. That keeps this branch buildable
   before the i18n branch merges.
 
 ### recommended support matrix
@@ -115,7 +115,7 @@ the repo-fit decisions that matter before implementation.
 - No fine-tuning.
 - No streaming token output in v1.
 - No web UI for usage inspection.
-- No direct imports from the future `aeat.i18n` package until issue `#20`
+- No direct imports from the future `aeat.core.i18n` package until issue `#20`
   lands on this branch.
 
 ### source URLs consulted
