@@ -344,7 +344,7 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(tmp_path, resolved)
-        from ...adapters.persistence.storage._lock import fsync_parent_dir
+        from ..locks import fsync_parent_dir
 
         fsync_parent_dir(resolved)
     except OSError:

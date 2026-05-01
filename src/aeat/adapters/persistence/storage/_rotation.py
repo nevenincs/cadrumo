@@ -34,17 +34,17 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ....core.logging import get_logger
-from ._blob_store import EncryptedBlobStore
-from ._crypto import decrypt_record, encrypt_record
-from ._envelope import (
+from .blob_store._blob_store import EncryptedBlobStore
+from .crypto._crypto import decrypt_record, encrypt_record
+from .envelope._envelope import (
     CipherEnvelope,
     EncryptionMetadata,
     _build_aad,  # type: ignore[attr-defined]
     _derive_envelope_key,  # type: ignore[attr-defined]
 )
-from ....core.locks import exclusive_file_lock, fsync_parent_dir
-from ._master_key import MasterKeyProvider
+from .master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
 

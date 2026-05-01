@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....application.auth import (
+from .....application.auth import (
     AuthProvider,
     AuthProviderDescription,
     AuthProviderKind,

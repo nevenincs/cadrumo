@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import (
+from ...adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
     SecretStore,

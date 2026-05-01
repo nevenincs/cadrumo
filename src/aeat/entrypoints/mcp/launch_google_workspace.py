@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
 
-from ...adapters.outbound.aeat.auth import GoogleAuthPath, inspect_google_auth
+from ...adapters.outbound.google import GoogleAuthPath, inspect_google_auth
 from ...core.config import PROJECT_ROOT, Settings, load_settings
 from ._errors import McpLaunchError
 

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from ...adapters.outbound.aeat.auth import GoogleAuthPath
+from ...adapters.outbound.google import GoogleAuthPath
 from ...core.config import PROJECT_ROOT, Settings
 from ...core.env_io import write_env_vars
 from ...core.errors import AeatError

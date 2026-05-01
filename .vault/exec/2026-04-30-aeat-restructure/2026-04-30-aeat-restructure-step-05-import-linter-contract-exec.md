@@ -32,7 +32,7 @@ The contract activates fully when Step 7 keystone PR creates the layered destina
 
 ## next step
 
-Step 5 PR 2 — shim-verification subroutine (`scripts/verify_shims.py` per ADR Shim-verification gate). Imports each declared shim path in a clean Python subprocess and asserts re-exported symbols are reachable. Used by Step 8 acceptance gate as the deterministic semver-rule precondition.
+Step 5 PR 2 — public-surface verification subroutine (`scripts/verify_shims.py`). Note: this script was superseded by the hard-cutover approach adopted in the Step 7 keystone PR and was subsequently deleted; recorded here for historical traceability only.
 
 Subsequent Step 5 PRs:
 - PR 3: rebase script (`scripts/rebase_imports.py`) + test fixture covering relative imports / TYPE_CHECKING / star imports / dynamic importlib / forward + reverse rewrite maps.

@@ -44,4 +44,4 @@ This PR satisfies the **test** half; the **inline-update** half rides in Step 7'
 
 ## next step
 
-Step 5 — Tooling prep (multi-day net-new build): rebase script + import-linter contracts + smoke test + type-checker config + packaging tests + shim-verifier. Each artefact is independently runnable and CI-gating before Step 6's freeze trigger fires.
+Step 5 — Tooling prep (multi-day net-new build): rebase script + import-linter contracts + smoke test + type-checker config + packaging tests + public-surface verification. Each artefact is independently runnable and CI-gating before Step 6's freeze trigger fires.

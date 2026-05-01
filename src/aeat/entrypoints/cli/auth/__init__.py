@@ -21,8 +21,10 @@ from pydantic_settings import SettingsConfigDict
 from rich.console import Console
 
 from ....adapters.outbound.aeat.auth import (
-    SCOPES,
     AuthProviderKind,
+)
+from ....adapters.outbound.google import (
+    SCOPES,
     GoogleAuthPath,
     get_credentials,
     inspect_google_auth,
