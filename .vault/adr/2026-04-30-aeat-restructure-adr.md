@@ -1049,3 +1049,36 @@ Industry validation of post-audit decisions (research-doc audit 21):
 - Implementing DDD + Hexagonal with Go (eventsandstuff Substack)
   — explicit endorsement of technology-grouped adapter sub-clusters
   (validates `outbound/<provider>/` nesting).
+
+## Outcomes (rollout, 2026-05-01)
+
+The 15-step autonomous pipeline shipped end-to-end without invoking
+the abort/rollback path. Outcomes:
+
+- **Semver bump**: MINOR (0.1.0 -> 0.1.1 at the next release tag).
+  All 4 public-surface re-export shims (`aeat.errors`, `aeat.auth`,
+  `aeat.submission`, `aeat.formulas`) preserved per the shim-
+  verification subroutine; verifier exit 0 on every Step-8 run.
+- **Acceptance criteria**: 15 of 15 satisfied at Step 8 merge and
+  re-verified at Step 15 milestone close. The full set is recorded
+  in the Step 8 acceptance comment on issue #476.
+- **Dead-code totals**: Phase-1 shipped via PRs #478, #479, #480,
+  #481, #482 (5 deletions). Phase-2 shipped via PR #494
+  (`default_schema_provider` duplicate). The remaining Phase-2
+  candidates (`WorkspaceLockedError`, 4 hollow Protocol stubs)
+  were retained because they had real public-surface implications
+  beyond the audit's "test-only" classification.
+- **Step-13 issues filed**: 2 umbrella issues (#498 coverage gap;
+  #499 casilla rollup). One STRIKE issue (#500) for the empty
+  hard-gap audit, closed at filing.
+- **Sanitization**: 197 source files stripped of dev-process
+  metadata (#496); 405+ test files migrated to layered axis-B
+  markers (#495); 589 vault docs Tier-3 inline-updated (#497).
+- **Override list resolution**: The 9-entry import-linter carve-out
+  registry remained at 9 entries; no carve-out was added or removed
+  during the pipeline. The import-linter contract runs clean on
+  every PR.
+- **Shim-removal schedule**: Per the ADR's deprecation contract,
+  shim removal is eligible at the second minor release after
+  introduction. Auto-generation of the removal PR is scheduled
+  for the corresponding release window.
