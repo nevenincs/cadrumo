@@ -1,15 +1,20 @@
-"""Public surface for the content-addressed attachment domain.
+"""Content-addressed attachment domain for the transaction evidence layer.
 
-This subpackage implements the attachment evidence layer for Track B's
-Transaction Data Pipeline (TDP step T3 — see issue #76 and the EPIC at
-issue #104). Attachments wrap supporting documents — invoice PDFs, Gmail
-messages, Drive documents, receipts, contracts, metadata blobs — and link
-them to transactions and/or invoices so every casilla value the project
-eventually justifies can be traced to physical evidence.
+This subpackage owns the attachment evidence model: supporting documents
+(invoice PDFs, Gmail messages, Drive documents, receipts, contracts,
+metadata blobs) wrapped as immutable manifests linked to transactions
+and/or invoices. The link makes every casilla value the project justifies
+traceable back to physical evidence.
 
-Domain models, errors, and the repository live here. Orchestration helpers
-(``add_attachment``, ``list_attachments``, ``load_attachment``) are in
-``aeat.application.attachments``.
+Domain models, errors, and the on-disk repository live here. Orchestration
+helpers — :func:`aeat.application.attachments.add_attachment`,
+:func:`aeat.application.attachments.list_attachments`,
+:func:`aeat.application.attachments.load_attachment` — live in
+:mod:`aeat.application.attachments`.
+
+The exported surface comprises :class:`Attachment`, :class:`AttachmentCatalogue`,
+:class:`AttachmentStore`, the :class:`AttachmentKind` and :class:`AttachmentSource`
+enums, and the :exc:`AttachmentError` family.
 """
 
 from __future__ import annotations

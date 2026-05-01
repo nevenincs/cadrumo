@@ -9,9 +9,9 @@ the validator via :meth:`pydantic.BaseModel.model_construct` or any
 other escape hatch.
 
 Together with the per-validator unit tests in
-``src/aeat/formulas/test_casilla_validator.py``, this file is the CI
-guarantee that the mandatory-citation contract holds across the entire
-shipped ruleset universe.
+``aeat.domain.formulas`` tests, this file is the CI guarantee that the
+mandatory-citation contract holds across the entire shipped ruleset
+universe.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 
 from aeat.entrypoints.cli.audit import validate_citation_coverage
-from aeat.domain.formulas._ruleset import Ruleset
+from aeat.domain.formulas import Ruleset
 from aeat.domain.formulas._rulesets import ALL_RULESETS
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

@@ -1,15 +1,17 @@
 """Internal SQLAlchemy ORM mapper classes.
 
-These classes back the declarative schema consumed by Alembic autogenerate.
-They are intentionally kept out of the :mod:`aeat.adapters.persistence.storage` public API — the
-public surface exposes pydantic v2 records (see :mod:`aeat.adapters.persistence.storage.records`)
-and repositories bridge between the two.
+Backs the declarative schema consumed by Alembic autogenerate.
+Intentionally kept out of the :mod:`aeat.adapters.persistence.storage`
+public API: the public surface exposes pydantic v2 records (see
+:mod:`aeat.adapters.persistence.storage.sql.records`) and the
+per-domain repositories bridge between the ORM rows and the typed
+records.
 
 Note:
-    Translatable columns (e.g. modelo names, portal labels) are plain ``str``
-    today. Once the trilingual primitive from issue #20 lands, these columns
-    will be migrated to the shared ``Translatable`` shape. Each such column
-    carries an inline ``TODO(#20)`` marker.
+    Translatable columns (modelo names, portal labels) are plain
+    ``str`` today. They will migrate to the shared ``Translatable``
+    primitive once it lands; each such column carries an inline
+    ``TODO`` marker.
 """
 
 from __future__ import annotations
@@ -154,9 +156,32 @@ def _enum_check(values: tuple[str, ...]) -> str:
 class RentalFincaRow(Base):
     """Row in the ``rental_fincas`` table.
 
-    Models one Spanish urban property tracked under #454. Address is
-    encrypted at rest because finca addresses identify the contribuyente
-    (Catastro stable reference) and qualify as personal data under GDPR.
+    Models one Spanish urban property. The address column is encrypted
+    at rest via :class:`aeat.adapters.persistence.storage.crypto.EncryptedString`
+    because finca addresses identify the contribuyente through the
+    Catastro stable reference and qualify as personal data under GDPR.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        identifier: Stable natural key for the finca.
+        address: Encrypted street address.
+        valor_catastral_total: Total Catastro value (land + construction).
+        valor_catastral_construccion: Catastro value of the construction
+            component, used as the LIRPF art. 23.1.f amortization basis.
+        valor_catastral_revision_year: Year of the most recent Catastro
+            revision; ``None`` when unavailable.
+        coste_adquisicion: Total acquisition cost.
+        coste_adquisicion_construccion: Acquisition cost attributable to
+            the construction component (alternative amortization basis).
+        acquisition_date: Date the property was acquired.
+        disposal_date: Date the property was sold or otherwise disposed
+            of, when applicable.
+        use_type: Closed enum: ``VIVIENDA_ARRENDADA`` /
+            ``VIVIENDA_HABITUAL`` / ``OTRO_INMUEBLE_NO_AFECTO`` /
+            ``LOCAL_COMERCIAL`` / ``VIVIENDA_DESOCUPADA``.
+        is_stressed_area: Whether the finca sits in a declared
+            stressed-rent area for LIRPF art. 23.2 tier resolution.
+        schema_version: Per-row schema version; defaults to ``"1"``.
     """
 
     __tablename__ = "rental_fincas"
@@ -186,9 +211,40 @@ class RentalContractRow(Base):
     """Row in the ``rental_contracts`` table.
 
     Per-contract metadata used by the LIRPF art. 23.2 tier resolver.
-    Tenant identifying fields (when added by future schema versions)
-    will use :class:`EncryptedString`. The current schema models
-    only counts and flags so the row itself is not PII-bearing.
+    Tenant identifying fields, when added by future schema versions,
+    will use :class:`aeat.adapters.persistence.storage.crypto.EncryptedString`.
+    The current schema models only counts and flags so the row itself
+    is not PII-bearing.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        finca_id: Foreign key into :class:`RentalFincaRow`.
+        contract_celebration_date: Date the contract was signed.
+        contract_termination_date: Date the contract terminated, when
+            applicable.
+        tenant_count: Total tenants on the contract.
+        qualifying_co_tenant_count: Subset of tenants that qualify for
+            the LIRPF art. 23.2 reduction.
+        tenant_min_age: Minimum tenant age, when known.
+        tenant_max_age: Maximum tenant age, when known.
+        tenant_is_public_admin: True when the tenant is a public
+            administration body.
+        tenant_is_ley_49_2002_entity_with_social_use: Ley 49/2002 social-
+            use qualifier.
+        tenant_is_imv_beneficiary: Ingreso Mínimo Vital beneficiary flag.
+        dwelling_in_public_program: Public housing program qualifier.
+        prior_contract_last_rent: Last rent under the previous contract,
+            when known.
+        prior_contract_indexation: Indexation factor applied to the
+            previous contract.
+        initial_rent: Initial monthly rent under the new contract.
+        is_first_rental: True when the dwelling has never been rented
+            before.
+        rehabilitation_finished_date: Date a qualifying rehabilitation
+            completed, when applicable.
+        lau_17_6_compliant: True when the contract complies with the
+            Ley de Arrendamientos Urbanos art. 17.6.
+        schema_version: Per-row schema version; defaults to ``"1"``.
     """
 
     __tablename__ = "rental_contracts"
@@ -236,9 +292,18 @@ class RentalContractRow(Base):
 class RentalIncomeRecordRow(Base):
     """Row in the ``rental_income_records`` table.
 
-    Per-contract per-period gross-rent ledger. The (contract_id,
-    period_year) tuple is unique so each contract surfaces a single
-    income record per ejercicio.
+    Per-contract per-period gross-rent ledger. The
+    ``(contract_id, period_year)`` tuple is unique so each contract
+    surfaces a single income record per ejercicio.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        contract_id: Foreign key into :class:`RentalContractRow`.
+        period_year: Tax year the income belongs to.
+        gross_rent_received: Gross rent received during the period.
+        dias_alquilados: Days the property was actually rented during
+            the period (0..366).
+        schema_version: Per-row schema version; defaults to ``"1"``.
     """
 
     __tablename__ = "rental_income_records"
@@ -272,6 +337,19 @@ class RentalExpenseRow(Base):
 
     Per-finca per-period categorised expense surface for the LIRPF
     art. 23.1 deductible-gasto rollup.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        finca_id: Foreign key into :class:`RentalFincaRow`.
+        period_year: Tax year the expense belongs to.
+        category: One of the closed expense categories
+            (``FINANCIACION_INTERESES``, ``CONSERVACION_REPARACION``,
+            ``IBI_TRIBUTOS_NO_ESTATALES``, ``COMUNIDAD``, ``SEGUROS``,
+            ``SUMINISTROS``, ``ADMINISTRACION_PORTERIA_VIGILANCIA``,
+            ``FORMALIZACION_CONTRATO``, ``DEFENSA_JURIDICA``,
+            ``SALDOS_DUDOSO_COBRO``, ``OTROS``).
+        amount: Expense amount.
+        schema_version: Per-row schema version; defaults to ``"1"``.
     """
 
     __tablename__ = "rental_expenses"

@@ -1,18 +1,24 @@
-"""Name-casing preservation contract.
+"""Verify the ``--apellidos`` / ``--nombre`` preserve-case contract.
 
-``--apellidos`` and ``--nombre`` preserve Kent's casing verbatim.
-We do NOT silently upper-case: Kent's casing is his responsibility,
-and a silent transform would hide typos he'd want to catch at
-verify/diff time.
+Exercises the export-side promise that ``--apellidos`` and
+``--nombre`` reach the fichero-BOE bytes verbatim — the CLI never
+silently upper-cases the operator's input. A silent transform would
+hide typos that ``aeat submission verify`` and ``aeat submission
+diff`` would otherwise catch.
 
-the preserve-case contract so a future refactor
-(e.g. adding ``.upper()`` in ``build_130_headers`` or a typer
-callback) fails here and forces a deliberate discussion before
-changing Kent-observable behaviour.
-
-AEAT convention is upper-case — the ``--help`` text nudges Kent
-toward that — but we don't enforce it at the CLI because that
+AEAT convention is upper-case (the ``--help`` text nudges the
+operator toward it), but the CLI does not enforce it because that
 would cross into silent-data-transformation territory.
+
+The tests pin the contract so a future refactor — for example,
+adding ``.upper()`` inside ``build_130_headers`` or a Typer
+callback — trips here and forces a deliberate discussion before
+changing operator-observable behaviour.
+
+See also:
+    :mod:`aeat.entrypoints.cli.submission` for the registered Typer
+    app and :mod:`aeat.entrypoints.cli.submission.export` for the
+    surface under test.
 """
 
 from __future__ import annotations
@@ -31,6 +37,7 @@ _runner = CliRunner()
 
 
 def _write_draft(tmp_path: Path, *, modelo: str = "130") -> Path:
+    """Write a minimal draft JSON document to ``tmp_path`` and return its path."""
     payload = {
         "draft_id": "CASING-001",
         "modelo": modelo,
@@ -46,6 +53,7 @@ def _write_draft(tmp_path: Path, *, modelo: str = "130") -> Path:
 
 
 def _export(tmp_path: Path, *, modelo: str, nombre: str, apellidos: str) -> Path:
+    """Run ``aeat submission export`` with the given identity and return the output file."""
     draft = _write_draft(tmp_path, modelo=modelo)
     out = tmp_path / f"out-{nombre}-{apellidos}"
     result = _runner.invoke(
@@ -69,6 +77,8 @@ def _export(tmp_path: Path, *, modelo: str, nombre: str, apellidos: str) -> Path
 
 
 class TestModelo130CasingPreserved:
+    """Modelo 130 single-record export must keep operator-supplied casing intact."""
+
     def test_mixed_case_preserved_in_apellidos(self, tmp_path: Path) -> None:
         payload = _export(tmp_path, modelo="130", nombre="Kent", apellidos="Doe Rodriguez").read_bytes()
         # APELLIDOS = 30 bytes at position 26 (1-based) → bytes [25:55]
@@ -88,8 +98,11 @@ class TestModelo130CasingPreserved:
         assert payload[55:70] == b"Kent           "
 
     def test_differently_cased_names_produce_different_bytes(self, tmp_path: Path) -> None:
-        """Sanity check: uppercase vs mixed-case exports are NOT byte-identical,
-        proving the preserve-case contract actually holds."""
+        """Confirm uppercase and mixed-case exports yield different bytes.
+
+        Sanity check that the preserve-case contract actually holds — if
+        the bytes were identical the casing was silently normalised.
+        """
         upper = _export(tmp_path, modelo="130", nombre="KENT", apellidos="DOE").read_bytes()
         mixed = _export(tmp_path, modelo="130", nombre="Kent", apellidos="Doe").read_bytes()
         assert upper != mixed, (
@@ -100,6 +113,8 @@ class TestModelo130CasingPreserved:
 
 
 class TestModelo303CasingPreserved:
+    """Modelo 303 envelope export must keep operator-supplied casing intact."""
+
     def test_apellidos_y_nombre_combined_preserves_case(self, tmp_path: Path) -> None:
         payload = _export(tmp_path, modelo="303", nombre="Kent", apellidos="Doe Rodriguez").read_bytes()
         # DP30301_F008 (APELLIDOS_Y_NOMBRE, 80 bytes) lives at DP30301 offset 23 (1-based)

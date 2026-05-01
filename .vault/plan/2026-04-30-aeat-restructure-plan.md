@@ -29,8 +29,9 @@ related:
 
 ## Overview
 
-This plan executes the domain-aligned restructure of `src/aeat/` defined
-in the `aeat-restructure` ADR (`status: accepted — execution-ready`).
+This plan records the autonomous execution path for the domain-aligned
+restructure of `src/aeat/` defined in the `aeat-restructure` ADR
+(`status: accepted — delivered hard-cutover`).
 The ADR specifies the destination shape, the import-boundary contract,
 the carve-out registry, the 15 acceptance criteria, the abort/rollback
 mechanic, the transition mechanic, the decision authority, the public-
@@ -41,10 +42,10 @@ across them. Architectural detail defers to the ADR; per-module audit
 findings defer to the research doc.
 
 The plan is structured for autonomous execution by subagents under
-project-owner supervision at the named OWNER-GATE checkpoints.
+the ADR's deterministic decision rules.
 Subagents own the per-step code reviews, tool selection, audit depth,
 and report format. The plan binds outcomes, the disposition framework
-for findings, the import-boundary contract, the OWNER-GATE points, the
+for findings, the import-boundary contract, the autonomous decision points, the
 semver impact rules, the abort criteria, the acceptance criteria, and
 the vault-corpus tier gating — and nothing else.
 
@@ -75,7 +76,7 @@ decision that previously required human sign-off is replaced by an
 audit-grounded autonomous rule. Audits and research firm up
 everything that remains uncertain; subagents make the calls.
 
-This applies to ALL 16 steps — there are no OWNER-GATE points.
+This applies to every step — there are no owner gates.
 Specifically:
 
 - **ADR lock-in** (Step 0): the 2 outstanding boundary items are
@@ -88,9 +89,8 @@ Specifically:
 - **Abort** (any step): when a halt-trigger fires (CI > 30% failure,
   72h cumulative freeze, coverage floor breach, etc.), revert is
   automatic. No owner invocation required.
-- **Shim removal** (post-Step 14, scheduled): at the deprecation
-  eligibility window (second minor version after introduction), shim
-  removal PRs are auto-generated and submitted.
+- **Legacy re-export removal**: not applicable. The accepted rollout is
+  a major hard cut with no retained root re-export layer.
 - **Milestone close** (Step 15): pipeline closes EPIC + milestone
   autonomously when Step 14 audits clean.
 
@@ -119,7 +119,7 @@ PR/issue numbers. Every such reference is verified and addressed under
 this matrix: subagents either fix it in place, file a follow-up issue,
 or strike the stale reference. Subagents have FULL authority for
 fix-in-place + issue-filing within the per-step PR scope. They escalate
-to the project owner ONLY at OWNER-GATE points.
+under the autonomous decision rules.
 
 ### Hard invariants (the only things this plan binds)
 
@@ -137,13 +137,14 @@ Everything else is subagent judgment.
   gated decision is replaced by a deterministic rule fired from audit
   findings. Freeze trigger = Step 5 outputs verified clean. Acceptance
   declaration = 15 criteria all green. Semver bump = rule-based per
-  shim preservation. Rollback = automatic when any halt-trigger fires.
-  Shim removal = scheduled at deprecation-eligibility window. CI
-  failures and coverage drops fire halt-triggers automatically.
+  deleted public root modules. Rollback = automatic when any
+  halt-trigger fires. Legacy re-export removal is not scheduled
+  because no compatibility layer is retained. CI failures and coverage
+  drops fire halt-triggers automatically.
 - **Semver impact rules** per ADR Public-surface and semver section:
-  minor bump if all shims preserved; major bump if any public surface
-  breaks. Post-ADR shim-less breaks default to major. **No override
-  path under the autonomous model** — the rule fires deterministically.
+  deleted documented public root modules require a major bump. **No
+  override path under the autonomous model** — the rule fires
+  deterministically.
 - **Abort criteria** per ADR Abort/rollback criteria section: 5 named
   halt triggers (CI > 30% failure across 3 consecutive runs;
   unresolvable circular import beyond 1 working day; marker realignment
@@ -212,11 +213,13 @@ module. The phase summary lands at Step 14 close as
     `git log --diff-filter=A` for each `migrate_legacy_*_to_repository`
     function to find when it landed, scans test fixtures for what
     legacy data shape exists, and grep-confirms zero production
-    callers. Decision rule: helpers landed > 6 months ago AND zero
-    production callers AND test fixtures cover the migration path
-    → **DELETE** in Phase 2. Otherwise → **RETAIN with TODO(#issue)
-    annotation** and file a removal-tracking issue.
-  - **Decision 6 (reserved `SchemaSource` enum slots)** — subagent
+    callers. Original Decision 10 rule: helpers landed > 6 months ago
+    AND zero production callers AND test fixtures cover the migration
+    path → **DELETE** in Phase 2. Otherwise → annotate and file a
+    removal-tracking issue. Delivered hard-cutover outcome: all five
+    helpers were later deleted by the eliminate-shims pass after zero
+    production callers were confirmed, and `#477` was closed.
+  - **Decision 6 (former reserved `SchemaSource` enum slots)** — subagent
     greps issues + branches for `PORTAL_HTML_PROBE`, `MANUAL_LLM_DRAFT`,
     `XSD_WIRE` references. Decision rule: any active branch / open
     issue references the slot → **KEEP**. Otherwise → **DELETE**
@@ -242,7 +245,7 @@ module. The phase summary lands at Step 14 close as
   - **Sub-pass 1** — discover dynamic imports, `importlib`, `getattr`-
     based attribute resolution, and entry-point references in
     `pyproject.toml` that the layout-move script must rewrite or that
-    the import-linter contract must understand.
+    the executable import-contract gate must understand.
   - **Sub-pass 2** — discover any `__init__.py` re-exports that today
     paper over what will become a layered violation (e.g. a domain-
     package init that re-exports an adapter symbol).
@@ -302,8 +305,9 @@ module. The phase summary lands at Step 14 close as
 - **Gate type**: AUTO
 - **Precondition**: Step 2 complete.
 - **Purpose**: Eliminate the existing layered-architecture violations
-  before the layout move so the import-linter contract installed in
-  Step 5 finds zero violations on day one of the new layout.
+  before the layout move so the executable import-contract gate
+  installed in Step 5 finds zero violations on day one of the new
+  layout.
 - **Action**: Subagents ship one prep PR per violation listed in
   research doc Layered-architecture violations consolidated (7 active
   + 1 false positive already corrected). The recommended resolution
@@ -319,15 +323,15 @@ module. The phase summary lands at Step 14 close as
   - `casillas` → `aeat.entrypoints.cli` and `profile.assets` → `formulas._rulesets`
     private imports are traced to specific call sites and re-routed to
     public APIs.
-  - `filing._review` → `aeat.domain.financial.transactions._repository` is
-    rewritten through the public subpackage surface, OR the symbol is
-    promoted.
+  - Historical pre-cutover transaction-repository private bypass
+    resolved into the delivered `aeat.domain.transactions` public
+    surface.
   Each PR carries a code review under the FIX / FILE / STRIKE matrix.
 - **Output**: One exec record per violation at
   `.vault/exec/2026-04-30-aeat-restructure/step-03-violation-<n>.md`
   recording the resolution pattern chosen, the PR number, and the
   review findings.
-- **Audit**: After this step, an `import-linter`-shaped scan against
+- **Audit**: After this step, an import-contract-shaped scan against
   the **current** (pre-move) layout reports zero of the 7 named
   violations remaining. Tests pass.
 - **Source citation**: ADR Constraints (live-access gate /
@@ -380,25 +384,25 @@ module. The phase summary lands at Step 14 close as
 - **Note**: several Step-5 artefacts are **net-new build work**, not
   ports — the migration-script test fixture, the produce → verify →
   export end-to-end smoke test, the packaging verification job, the
-  import-linter contract, the type-checker baseline, and the shim-
-  verification subroutine do not currently exist. The executing
-  agent applies the autonomous decision rules itself (per ADR
-  Autonomous decision rules); no external workflows or schedulers
-  are built. Building the listed artefacts is multi-day work;
-  allocate appropriately.
+  pytest import-contract gate, and the type-checker baseline do not
+  currently exist. The executing agent applies the autonomous
+  decision rules itself (per ADR Autonomous decision rules); no
+  external workflows or schedulers are built. Building the listed
+  artefacts is multi-day work; allocate appropriately.
 - **Action**: Subagents produce, in any order they prefer:
   - **Mechanical rebase script** — walks an arbitrary diff and rewrites
     import paths from old to new per the ADR-defined rewrite map. The
     script ships with a test fixture exercising every kind of import
     the project actually uses: relative imports (`.module`,
     `..sibling`), `TYPE_CHECKING` blocks, star imports, and dynamic
-    `importlib.import_module` calls. The script also handles the
-    public-surface re-export shims.
-  - **`import-linter` contract** — committed at the project root,
+    `importlib.import_module` calls. The script also handles hard-cut
+    public-surface rewrites to canonical package paths.
+  - **Executable import-contract gate** — committed under tests,
     matching the skeleton in the ADR Implementation / Import-boundary
-    enforcement section. The contract enumerates the carve-out
-    registry per file (no wildcards). The contract is wired into CI
-    as a separate job from `pytest`.
+    enforcement section. The gate imports every canonical ADR package,
+    asserts deleted root modules stay absent, verifies representative
+    public symbols at canonical paths, and keeps the carve-out
+    registry explicit by name (no wildcards).
   - **End-to-end behavioural smoke test** — at least one CI integration
     test exercises the full `produce → verify → export` pipeline on a
     synthetic transaction set. This is a hard requirement, not a
@@ -412,14 +416,12 @@ module. The phase summary lands at Step 14 close as
     `pip install dist/*.whl`, and a post-install
     `python -c "from aeat.adapters.outbound.aeat.export import ..."`
     smoke check. Verifies the new sub-paths are exposed by the wheel.
-  - **Shim-verification subroutine** — invoked by the executing
-    agent before the semver bump rule fires (per ADR Shim-verification
-    gate). Imports each declared shim path in a clean Python
-    subprocess and asserts the re-exported symbols are reachable.
-    Any shim import failure → semver rule sees the break and fires
-    `major` instead of `minor`, fulfilling the ADR no-override rule's
-    precondition. Shippable as a Python script under `scripts/` or
-    `tests/` per project convention.
+  - **Deleted-root-module contract** — invoked by the executing agent
+    before the semver bump rule fires. Imports canonical public paths
+    in a clean Python subprocess and asserts deleted root modules
+    (`aeat.auth`, `aeat.errors`, `aeat.formulas`, `aeat.submission`)
+    are absent. Any deleted root module that remains importable is a
+    contract failure.
   - **Reverse-rewrite map** — the rebase script emits BOTH a forward
     map (old → new) AND a reverse map (new → old). The reverse map
     is the foundation of post-Step-9-merge rollback per the ADR
@@ -431,8 +433,8 @@ module. The phase summary lands at Step 14 close as
   into the layout-move PR.
 - **Audit**: Each tooling artefact is independently runnable and
   passes against a synthetic input (rebase script against a fixture
-  diff; import-linter against the pre-move layout to baseline; smoke
-  test against pre-move pipeline; type-checker against pre-move
+  diff; import-contract gate against the pre-move layout to baseline;
+  smoke test against pre-move pipeline; type-checker against pre-move
   source for baseline; packaging test against pre-move build).
 - **Source citation**: ADR Acceptance criteria (Static import-boundary
   enforcement; End-to-end behavioural smoke test; Type-checker clean
@@ -454,16 +456,16 @@ module. The phase summary lands at Step 14 close as
   - Creates a sandbox branch off `main` (named `restructure-dry-run`).
   - Runs the rebase script against the sandbox branch. Verifies the
     diff matches the ADR-defined rewrite map.
-  - Runs the import-linter contract against the sandbox state. Expects
-    zero violations.
+  - Runs the executable import-contract gate against the sandbox state.
+    Expects zero violations.
   - Runs the end-to-end produce → verify → export smoke test against
     the sandbox state. Expects green.
   - Runs the type-checker (mypy / pyright) against the sandbox state.
     Expects zero errors.
   - Runs the packaging verification against the sandbox state.
     Expects green.
-  - Runs the shim-verification subroutine. Expects every shim's
-    re-exported symbols reachable.
+  - Runs the deleted-root-module contract. Expects deleted public root
+    modules absent and canonical public symbols reachable.
   - Applies the reverse-rewrite map against the sandbox to confirm
     rollback symmetry.
   - DOES NOT merge the sandbox branch — it is verification-only.
@@ -512,7 +514,7 @@ module. The phase summary lands at Step 14 close as
 - **Precondition**: Step 6 complete; freeze is in effect.
 - **Purpose**: Execute the single mechanical PR that relocates every
   module to its destination per the ADR Implementation section, with
-  every shim, contract, configuration update, and pre-merge gate
+  every import contract, configuration update, and pre-merge gate
   attached. This PR is the layout move; nothing else rides with it
   except items the ADR explicitly couples to it (Tier-1 supersedes,
   Tier-2 inline-updates, marker rename, Phase-2 dead-code that rides
@@ -520,11 +522,10 @@ module. The phase summary lands at Step 14 close as
 - **Action**: A single subagent (or small subagent team) ships the PR.
   The mechanical rebase script from Step 5 produces the import-rewrite
   diff. The PR additionally:
-  - Adds the carve-out registry's per-file `ignore_imports` entries to
-    the `import-linter` contract.
-  - Installs every public-surface re-export shim per ADR Public
-    surface and semver section, with `DeprecationWarning` on first
-    import per process and the deprecation lifecycle documentation.
+  - Adds the carve-out registry's per-file entries to the executable
+    import-contract gate.
+  - Removes the documented public root modules and rewrites callers to
+    canonical package paths per ADR Public surface and semver section.
   - Inline-updates the configuration files cited in ADR Configuration
     files affected (`pyproject.toml` coverage / mypy / pytest paths;
     pre-commit configs; `.mcp.json`; `justfile`; `.gitignore`; CI
@@ -546,17 +547,18 @@ module. The phase summary lands at Step 14 close as
     module per ADR Dead-code workstream / Phase 2 (4 empty subpackages,
     `_submitters/` tombstone, `fetch_justificante_pdf`
     `NotImplementedError` raise, 4 hollow Protocol stubs in `sync`,
-    `WorkspaceLockedError` resolution).
+    replacement of the workspace-lock test-only exception).
   PR-time code review applies the FIX / FILE / STRIKE matrix.
 - **Output**: `.vault/exec/2026-04-30-aeat-restructure/step-07-layout-move.md`
   recording the PR number, the rewrite-map evidence, every gate's CI
   result, the marker-rename diff, the override-list resolution, the
-  shim list, and the configuration-file diffs. The PR DOES NOT merge
-  in this step — Step 8 is the OWNER-GATE that approves the merge.
+  deleted-root-module checks, and the configuration-file diffs. The PR DOES NOT merge
+  in this step — Step 8 is the autonomous acceptance gate that approves
+  the merge.
 - **Audit**: Every ADR Acceptance criteria item that applies to the
   layout-move PR has CI evidence: `python -c "import aeat"` succeeds;
   `pytest --collect-only` runs without `ImportError`; coverage floor
-  ≥ 60%; `import-linter` reports zero violations; smoke test passes;
+  ≥ 60%; import-contract tests report zero violations; smoke test passes;
   `mypy` / `pyright` reports zero errors; packaging test passes;
   Tier-2 guardrail test passes; manual-override list zero-length OR
   signed off; Tier-1 supersedes shipped; configuration files updated;
@@ -585,7 +587,8 @@ module. The phase summary lands at Step 14 close as
      shipped, T2 validated and inline-updated.
   5. Test markers fully realigned.
   6. `domain_local_state` test files reclassified by destination.
-  7. Public-surface decisions executed (shims or documented break).
+  7. Public-surface decisions executed as canonical paths with
+     documented root-module deletions.
   8. Configuration files updated.
   9. Security-audit guardrails validated at new locations.
   10. Empty placeholder subpackages deleted.
@@ -603,11 +606,10 @@ module. The phase summary lands at Step 14 close as
     merge.
   - Any criterion red → halt, surface failure in exec record, abort
     pipeline (no auto-retry; failure is signal, not noise).
-  - Semver: all shims preserved → minor bump. Any public surface
-    breaks without shim → major bump. Post-ADR shim-less break
-    defaults major. **No override path** (the ADR Decision Authority
-    section's "owner override" path is removed under the autonomous
-    model; the rule fires deterministically from audit findings).
+  - Semver: deleted documented public root modules → major bump.
+    **No override path** (the ADR Decision Authority section's "owner
+    override" path is removed under the autonomous model; the rule
+    fires deterministically from audit findings).
   CHANGELOG entry generated mechanically from the public-surface table.
 - **Output**: `.vault/exec/2026-04-30-aeat-restructure/step-08-merge-and-bump.md`
   recording the acceptance-criteria checklist with per-item status, the
@@ -656,21 +658,22 @@ module. The phase summary lands at Step 14 close as
   item (or grouped per the audit's recommendation). Items include
   any of the following not already merged: 4 hollow Protocol stubs in
   `sync` (`LLMClient`, `LLMRequest`, `ManualRulesLoader`,
-  `SchemaLoader`), the `WorkspaceLockedError` test-only fixture
-  resolution (rename to `_TestableAeatError` or replace with synthetic
-  test exception), the duplicate `default_schema_provider` in
-  `filing/_builders/_modelo_130_schema.py`, and the 3 reserved
-  `SchemaSource` enum members per Step 0 Decision 6 (`PORTAL_HTML_PROBE`,
-  `MANUAL_LLM_DRAFT`, `XSD_WIRE`). The **5 migration helpers**
+  `SchemaLoader`), replacement of the workspace-lock test-only
+  exception with local synthetic test exceptions, the duplicate
+  `default_schema_provider` in
+  `filing/_builders/_modelo_130_schema.py`, the 3 former reserved
+  `SchemaSource` enum members deleted per Step 0 Decision 6 (`PORTAL_HTML_PROBE`,
+  `MANUAL_LLM_DRAFT`, `XSD_WIRE`), and the **5 migration helpers**
   (`migrate_legacy_submissions_to_repository`,
   `migrate_legacy_amendments_to_repository`,
   `migrate_legacy_filing_history_to_repository`,
   `migrate_legacy_drafts_to_repository`,
   `migrate_legacy_justificantes_to_repository` — count corrected from
-  the prior "3" by Step 0 audit) are NOT deleted in this step per
-  Step 0 Decision 10 (`RETAIN with TODO(#477)`); they remain in tree
-  with annotations and are revisited at the 2026-10-27 retention
-  expiry tracked in `#477`. Each PR runs the unrestricted
+  the prior "3" by Step 0 audit). The Step 0 `RETAIN with TODO(#477)`
+  disposition was superseded by the delivered hard-cutover
+  eliminate-shims pass: all five helpers and companion
+  `*MigrationSummary` models were deleted after zero production callers
+  were confirmed, and `#477` was closed. Each PR runs the unrestricted
   `grep -r '<symbol>' src/` pre-merge safety check. Code review
   applies the FIX / FILE / STRIKE matrix.
 - **Output**: One exec record per PR at
@@ -862,8 +865,9 @@ module. The phase summary lands at Step 14 close as
   - **Stub gap**: an empty function body with no docstring AND no
     caller (true dead — STRIKE) versus an empty function body with a
     caller (genuine stub — FILE).
-  - **Placeholder gap**: an enum value reserved but actively rejected
-    by a validator (e.g. `SchemaSource.PORTAL_HTML_PROBE`).
+  - **Placeholder gap**: an active enum value that is still rejected
+    by a validator. The former reserved `SchemaSource` slots are not
+    examples because Step 0/Phase 1 deleted them.
 
   The disposition matrix applies: STRIKE for true dead, FIX for
   trivial cases (a missing one-line implementation that is unambiguous
@@ -899,10 +903,10 @@ module. The phase summary lands at Step 14 close as
   has a GitHub issue link recorded. The issue board reflects the
   filed issues (visible to the next milestone planner).
 - **Source citation**: User instruction on missing-implementation
-  flagging; research doc Decision-grounding audit (Decision 6 reserved
-  `SchemaSource` enum slots); project mandate (Kent-observable
-  acceptance criteria); coverage matrices cited in the project
-  mandate.
+  flagging; research doc Decision-grounding audit (Decision 6 deletion
+  of the former reserved `SchemaSource` enum slots); project mandate
+  (Kent-observable acceptance criteria); coverage matrices cited in
+  the project mandate.
 
 ### Step 14 — Final post-migration code review + ADR closure
 
@@ -916,7 +920,7 @@ module. The phase summary lands at Step 14 close as
   - A `vaultspec-code-reviewer`-class pass over the full new layout,
     looking for patterns Step 11 might have missed at the seams
     between modules — cross-module duplications, residual private-
-    bypass imports the import-linter contract did not catch, missing
+    bypass imports the import-contract gate did not catch, missing
     or misplaced public-surface declarations.
   - A vault hygiene pass via `vaultspec-core vault check all`,
     addressing any drift surfaced.
@@ -926,8 +930,9 @@ module. The phase summary lands at Step 14 close as
     the ADR, the research doc, and every Step exec record by wiki-link.
   - An ADR amendment (or a follow-up addendum entry, depending on
     project convention) recording the rollout's actual outcomes:
-    semver bump landed, shim list active, dead-code totals removed,
-    issues filed by Step 13, override list resolution.
+    semver bump landed, deleted-root-module contract active,
+    dead-code totals removed, issues filed by Step 13, override list
+    resolution.
   Findings classified under the FIX / FILE / STRIKE matrix.
 - **Output**: `.vault/exec/2026-04-30-aeat-restructure/step-14-final-review.md`
   + the phase summary at
@@ -945,25 +950,26 @@ module. The phase summary lands at Step 14 close as
 - **Gate type**: AUTO
 - **Precondition**: Step 14 complete.
 - **Purpose**: Pipeline closes the restructure milestone autonomously
-  once Step 14 audits green; enqueues follow-up work (shim removals
-  at deprecation-eligibility window per ADR Shim deprecation contract;
-  Step-13-filed issues triaged into the next milestone).
+  once Step 14 audits green; enqueues follow-up work. No legacy
+  re-export removal work is scheduled because the accepted delivery is
+  a hard cut; Step-13-filed issues are triaged into the next milestone.
 - **Action**: Subagent reads phase summary and confirms the 15
   acceptance criteria still hold (no regression since Step 8).
   Subagent posts milestone-close announcement via `gh milestone close`,
-  closes EPIC #475 via `gh issue close --reason completed`, and
-  schedules the deprecation-window shim-removal jobs. Step-13-filed
-  issues are triaged via labels into the next milestone.
+  closes EPIC #475 via `gh issue close --reason completed`, confirms
+  no legacy re-export removal window exists, and triages Step-13-filed
+  issues via labels into the next milestone.
 - **Output**: `.vault/exec/2026-04-30-aeat-restructure/step-15-milestone-close.md`
-  recording the milestone-close trigger, the EPIC closure, the shim-
-  removal schedule, and the next-milestone enqueue.
+  recording the milestone-close trigger, the EPIC closure, the
+  hard-cutover no-removal-window outcome, and the next-milestone
+  enqueue.
 - **Audit**: Step 14 audits clean → Step 15 trigger fires. Milestone
   closed in the
   project's tracking surface. No outstanding ADR Acceptance criteria
   item is in a regressed state.
 - **Source citation**: ADR Decision authority (declaring acceptance
-  criteria met); ADR Shim deprecation contract (removal eligibility +
-  removal call); ADR References section.
+  criteria met); ADR Public surface and semver section; ADR References
+  section.
 
 ## Parallelization
 
@@ -986,7 +992,8 @@ Parallelism opportunities:
 
 Sequential by design (no parallelism):
 
-- Steps 0, 6, 8, 15 are OWNER-GATE — sequential by definition.
+- Steps 0, 6, 8, 15 are autonomous decision points — sequential by
+  definition.
 - Step 4 Tier-2 prep runs strictly before Step 7 layout-move (HARD
   GATE).
 - Step 5 tooling prep runs strictly before Step 7 (the layout-move PR
@@ -1010,18 +1017,15 @@ indicate non-tautological, non-cheatable mission completion:
   in CI. Structural import-resolution alone is not proof of
   restructure correctness; the smoke test is the load-bearing
   behavioural witness.
-- The `import-linter` contract's per-file `ignore_imports` registry
-  is grep-able. Any new `_repository.py` or persistence-side service
-  in `domain/<name>/` introduced post-restructure is either added to
-  the registry by name in a follow-up ADR amendment OR moved to
+- The import-contract gate's named carve-out registry is grep-able.
+  Any new `_repository.py` or persistence-side service in
+  `domain/<name>/` introduced post-restructure is either added to the
+  registry by name in a follow-up ADR amendment OR moved to
   `application/<name>/`. The registry's escalation policy is the
   long-term safety net against silent carve-out drift.
-- The shim deprecation contract (every shim emits
-  `DeprecationWarning` on first import per process; CI does not
-  silence the warning) catches lingering shim consumers inside the
-  project. The deprecation-window milestones (every shim removable
-  at the second minor version after introduction) are the long-term
-  cleanup signal.
+- The deleted-root-module checks catch lingering references to the old
+  public root modules inside the project. There is no deprecation
+  window because no compatibility layer is retained.
 - The Step-13 missing-implementation audit produces an explicit issue
   inventory the next milestone can plan against. The audit is a
   surface for the next round of Kent-capability work, not a closure

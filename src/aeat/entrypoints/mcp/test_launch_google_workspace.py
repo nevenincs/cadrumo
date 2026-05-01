@@ -1,4 +1,13 @@
-"""Unit tests for the google-workspace MCP launcher."""
+"""Unit tests for the google-workspace MCP launcher.
+
+Covers the pure :func:`aeat.entrypoints.mcp.launch_google_workspace.build_launch_spec`
+contract — OAuth pass-through, service-account resolution, the dual-path
+selection guard, and missing-credential refusals — alongside the
+:func:`aeat.entrypoints.mcp.launch_google_workspace.ensure_credentials_dir`
+and :func:`aeat.entrypoints.mcp.launch_google_workspace.ensure_project_env_file`
+filesystem helpers, plus a subprocess-backed boundary test that drives
+the ``--dump-launch-spec`` exit path through ``uv run``.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +19,7 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from ...adapters.outbound.aeat.auth import GoogleAuthPath
+from ...adapters.outbound.google import GoogleAuthPath
 from ...core.config import PROJECT_ROOT, Settings
 from ...core.env_io import write_env_vars
 from ...core.errors import AeatError
@@ -29,13 +38,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class IsolatedSettings(Settings):
-    """Settings variant that does not read the on-disk env file."""
+    """:class:`aeat.core.config.Settings` variant that does not read the on-disk env file.
+
+    Overrides :attr:`pydantic_settings.SettingsConfigDict.env_file` to
+    ``None`` so the test isolates pure constructor behaviour from any
+    operator-local ``env/.env`` content.
+    """
 
     model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
 
 class TestBuildLaunchSpec:
-    """Behaviour of the pure launch-spec builder."""
+    """Behavioural coverage for
+    :func:`aeat.entrypoints.mcp.launch_google_workspace.build_launch_spec`.
+    """
 
     def test_oauth_env_passthrough(self) -> None:
         settings = IsolatedSettings(
@@ -166,7 +182,7 @@ class TestBuildLaunchSpec:
 
 
 class TestEnsureCredentialsDir:
-    """The credential-cache hardening path is explicit and creatable."""
+    """Coverage for the explicit, creatable credential-cache hardening path."""
 
     def test_creates_requested_directory(self, tmp_path: Path) -> None:
         target = tmp_path / "env" / "workspace-mcp-credentials"
@@ -183,7 +199,7 @@ class TestEnsureCredentialsDir:
 
 
 class TestEnsureProjectEnvFile:
-    """Fresh worktrees should self-provision ``env/.env`` from the tracked example."""
+    """Confirms fresh worktrees self-provision ``env/.env`` from the tracked example."""
 
     def test_creates_env_file_from_example(self, tmp_path: Path) -> None:
         example_path = tmp_path / "env" / ".env.example"
@@ -204,7 +220,11 @@ class TestEnsureProjectEnvFile:
 
 
 class TestLauncherBoundary:
-    """Fresh-clone boundary checks for env loading and MCP handoff."""
+    """Fresh-clone boundary checks for env loading and the MCP handoff.
+
+    Drives the launcher via a real ``uv run`` subprocess to exercise the
+    ``--dump-launch-spec`` exit path end-to-end.
+    """
 
     def test_mcp_json_points_google_workspace_to_launcher(self) -> None:
         mcp_config = json.loads((PROJECT_ROOT / ".mcp.json").read_text(encoding="utf-8"))

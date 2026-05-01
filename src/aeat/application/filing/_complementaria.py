@@ -16,6 +16,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ...adapters.inbound.justificante import parse_justificante
 from ...core.config import load_settings
 from ...core.paths import resolve_record_json_path
 from ...domain.filing._amendment import (
@@ -29,7 +30,6 @@ from ...domain.filing._amendment import (
 )
 from ...domain.filing._errors import FilingAmendmentError, FilingAmendmentValidationError
 from ...domain.filing._schema import FilingDraft, FilingScalar, FilingValue
-from ...domain.justificante import parse_justificante
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
 _REASONS_INPUT_KEY = "_reasons"

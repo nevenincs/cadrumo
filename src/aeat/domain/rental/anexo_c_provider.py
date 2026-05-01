@@ -1,4 +1,4 @@
-"""M100 Anexo C backwards-compat shim (#454).
+"""M100 Anexo C rental-register merge provider (#454).
 
 The existing M100 ruleset (`anexo_c_2024.py / 2025.py / 2026.py`)
 treats casillas 0061/0066/0072/0078/0085 as caller-supplied. This
@@ -41,7 +41,7 @@ from ._repository import (
 _log = get_logger(__name__)
 
 ANEXO_C_CASILLAS: tuple[str, ...] = ("0061", "0066", "0072", "0078", "0085")
-"""The five casillas this shim manages."""
+"""The five casillas this provider manages."""
 
 
 class AnexoCMergeReport(BaseModel):

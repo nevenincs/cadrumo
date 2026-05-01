@@ -1,15 +1,15 @@
-"""Unit tests for ``aeat sanitize`` CLI bridge.
+"""Unit tests for the ``aeat sanitize`` CLI bridge.
 
 The tests exercise:
 
-* The forbidden-flag rejection (parity with
+* Forbidden-flag rejection (parity with
   :mod:`aeat.entrypoints.cli.filing._reconcile` write guard).
 * End-to-end ``aeat sanitize pdf`` against a synthesised PDF.
 * ``aeat sanitize prepare-map`` writes a parseable scaffold.
-* ``aeat sanitize verify`` exits non-zero on a leak and zero on
-  a clean output.
-* ``aeat sanitize check`` accepts a sanitised PDF that still
-  parses through :func:`aeat.domain.justificante.parse_justificante`.
+* ``aeat sanitize verify`` exits non-zero on a leak and zero on a
+  clean output.
+* ``aeat sanitize check`` accepts a sanitised PDF that still parses
+  through :func:`aeat.adapters.inbound.justificante.parse_justificante`.
 * Help output lists the four expected verbs.
 """
 
@@ -37,12 +37,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def runner() -> CliRunner:
-    """Returns a Typer ``CliRunner`` configured to capture stderr separately."""
+    """Return a Typer :class:`CliRunner` for one test."""
     return CliRunner()
 
 
 def _write_minimal_pdf(path: Path, *, real_nif: str = "Y4113523X") -> None:
-    """Write a one-page PDF carrying ``real_nif`` in a Tj operand."""
+    """Write a one-page PDF carrying ``real_nif`` in a ``Tj`` operand."""
     pdf = pikepdf.Pdf.new()
     pdf.add_blank_page(page_size=(612, 792))
     pdf.pages[0].contents_add(

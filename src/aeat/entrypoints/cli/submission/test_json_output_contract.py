@@ -200,8 +200,8 @@ class TestDiffJsonContract:
         assert any(d["casilla"] == "01" for d in casilla_deltas)
 
     def test_unsupported_shape(self, tmp_path: Path) -> None:
-        a = tmp_path / "fake.390"
-        b = tmp_path / "fake2.390"
+        a = tmp_path / "placeholder.390"
+        b = tmp_path / "placeholder2.390"
         a.write_bytes(b"  ")
         b.write_bytes(b"  ")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "390", "--ejercicio", "2024", "--json"])

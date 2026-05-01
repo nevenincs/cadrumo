@@ -1,21 +1,23 @@
-"""ciphertext-payload-at-rest tests for the substrate envelope.
+"""Ciphertext-payload-at-rest tests for the substrate envelope.
 
-The spec promised at-rest encryption for FINANCIAL /
-AUDIT / IDENTITY payloads. Six waves deferred the wiring; lands
-it. These tests confirm:
+Exercises the ciphertext path of :mod:`aeat.adapters.persistence.storage.envelope`
+end-to-end. Each test in the module asserts one invariant of the
+at-rest encryption contract:
 
-- A FINANCIAL/AUDIT payload encrypted via ``save_encrypted_envelope``
-  carries no plaintext leaf in the on-disk JSON (NIF / Decimal / string
+- A ``FINANCIAL`` / ``AUDIT`` payload encrypted via
+  :func:`save_encrypted_envelope` leaks no plaintext leaf in the
+  on-disk JSON (NIF, Decimal-stringified amount, and arbitrary string
   canaries).
-- ``load_encrypted_envelope`` round-trips back to the typed payload.
+- :func:`load_encrypted_envelope` round-trips back to the typed payload.
 - The classification gate fires *before* the master key is consulted
-  (the wrong-class envelope is rejected up front).
+  (a wrong-class envelope is rejected up front).
 - The AAD binding makes ciphertext non-portable across consumers
-  (different HKDF context → DecryptionError).
+  (different HKDF context raises :exc:`DecryptionError`).
 - The AAD binding makes ciphertext non-portable across classes
-  (relabelled classification → DecryptionError because the AAD
-  changed).
-- A wrong master key triggers DecryptionError, never plaintext recovery.
+  (a relabelled classification raises :exc:`DecryptionError` because
+  the AAD changed).
+- A wrong master key raises :exc:`DecryptionError`, never recovers
+  plaintext.
 """
 
 from __future__ import annotations

@@ -1,22 +1,22 @@
 """Lock the submission CLI's exit-code contract.
 
-Kent scripts the CLI into pipelines (``aeat submission verify ...
+Operators script the CLI into pipelines (``aeat submission verify ...
 && aeat submission diff ...``), so every command's exit code is a
-public contract. A refactor that silently changes exit 2 to
-``typer.Exit`` default 1 — or conflates draft-refusal (3) with
-semantic-diff (1) — breaks every downstream script.
+public contract. A refactor that silently changes exit ``2`` to a
+``typer.Exit`` default of ``1`` — or conflates draft-refusal (``3``)
+with semantic-diff (``1``) — breaks every downstream script.
 
 Documented exit-code convention across the sub-app:
 
-- **0** — success / happy path.
-- **1** — semantic difference (``diff`` only; files parse but
-  differ at casilla or field level).
-- **2** — unsupported modelo, corrupt payload, filename-inference
+- ``0`` — success / happy path.
+- ``1`` — semantic difference (``diff`` only; files parse but differ at
+  casilla or field level).
+- ``2`` — unsupported modelo, corrupt payload, filename-inference
   failure, check-letter failure, or other input-validation error.
-- **3** — draft status refusal (``export`` when draft is
-  INCOMPLETE; tipo=D export without ``--iban``).
+- ``3`` — draft-status refusal (``export`` when draft is
+  ``INCOMPLETE``; ``tipo=D`` export without ``--iban``).
 
-this per command so a future scope change has to
+The locks are asserted per command so a future scope change has to
 update both the test and the command in lockstep.
 """
 
@@ -36,6 +36,7 @@ _runner = CliRunner()
 
 
 def _minimal_draft(tmp_path: Path, *, status: str = "DRAFT", modelo: str = "130") -> Path:
+    """Write a minimal CLI-format draft JSON for the exit-code probes."""
     payload = {
         "draft_id": "EXIT-001",
         "modelo": modelo,
@@ -51,6 +52,8 @@ def _minimal_draft(tmp_path: Path, *, status: str = "DRAFT", modelo: str = "130"
 
 
 class TestExportExitCodes:
+    """Exit-code lock for ``aeat submission export``."""
+
     def test_happy_path_exits_0(self, tmp_path: Path) -> None:
         draft = _minimal_draft(tmp_path)
         result = _runner.invoke(
@@ -123,6 +126,8 @@ class TestExportExitCodes:
 
 
 class TestVerifyExitCodes:
+    """Exit-code lock for ``aeat submission verify``."""
+
     def test_happy_path_exits_0(self, tmp_path: Path) -> None:
         # Run export first to generate a valid file.
         draft = _minimal_draft(tmp_path)
@@ -144,7 +149,7 @@ class TestVerifyExitCodes:
         assert result.exit_code == 0
 
     def test_unsupported_modelo_exits_2(self, tmp_path: Path) -> None:
-        bad = tmp_path / "fake.390"
+        bad = tmp_path / "placeholder.390"
         bad.write_bytes(b"  ")
         result = _runner.invoke(app, ["verify", str(bad), "--modelo", "390", "--ejercicio", "2024"])
         assert result.exit_code == 2
@@ -163,6 +168,8 @@ class TestVerifyExitCodes:
 
 
 class TestDiffExitCodes:
+    """Exit-code lock for ``aeat submission diff``."""
+
     def test_identical_exits_0(self, tmp_path: Path) -> None:
         (tmp_path / "a").mkdir()
         (tmp_path / "b").mkdir()
@@ -214,8 +221,8 @@ class TestDiffExitCodes:
         assert result.exit_code == 1
 
     def test_unsupported_modelo_exits_2(self, tmp_path: Path) -> None:
-        a = tmp_path / "fake.390"
-        b = tmp_path / "fake2.390"
+        a = tmp_path / "placeholder.390"
+        b = tmp_path / "placeholder2.390"
         a.write_bytes(b" ")
         b.write_bytes(b" ")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "390", "--ejercicio", "2024"])
@@ -223,6 +230,8 @@ class TestDiffExitCodes:
 
 
 class TestCheckNifExitCodes:
+    """Exit-code lock for ``aeat submission check-nif``."""
+
     def test_valid_exits_0(self) -> None:
         result = _runner.invoke(app, ["check-nif", "X1234567L"])
         assert result.exit_code == 0
@@ -233,8 +242,10 @@ class TestCheckNifExitCodes:
 
 
 class TestSchemasExitCodes:
+    """Exit-code lock for ``aeat submission schemas``."""
+
     def test_schemas_always_exits_0(self) -> None:
-        """schemas is a pure registry read with no failure mode."""
+        """``schemas`` is a pure registry read with no failure mode."""
         result = _runner.invoke(app, ["schemas"])
         assert result.exit_code == 0
         json_result = _runner.invoke(app, ["schemas", "--json"])

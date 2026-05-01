@@ -44,8 +44,8 @@ have no Python imports — all DDL is expressed through sqlalchemy ops. No stale
 table references. No squash candidates (each revision is self-contained and
 touches different concerns).
 
-`alembic.ini` corrected the comment reference from `aeat.config.Settings` to
-`aeat.core.config.Settings`.
+`alembic.ini` corrected the comment reference from the deleted root config
+settings path to `aeat.core.config.Settings`.
 
 ### legacy helper deletion
 

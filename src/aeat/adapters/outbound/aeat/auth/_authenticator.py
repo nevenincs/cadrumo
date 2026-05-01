@@ -1,4 +1,4 @@
-"""Unified live-AEAT authenticator facade.
+"""Unified live-AEAT authenticator.
 
 This module is the single entry point every future remote-read
 module (filing history #168, missing-filing detection #169, AEAT
@@ -21,7 +21,7 @@ Design notes — see
   operator surface is kept narrow, and AEAT's observed idle window
   is ~20 minutes (the extra 2 minutes is safety margin).
 * ``authenticate()`` accepts an optional injectable browser session
-  factory. Unit tests pass a fake factory that produces a stand-in
+  factory. Unit tests pass an in-process factory that produces a stand-in
   context honouring the ``_aeat_certificate_thumbprint`` marker
   contract. This lets the whole authenticator exercise run under
   ``@pytest.mark.unit`` without importing Playwright.
@@ -368,7 +368,7 @@ class AeatAuthenticator:
                 returning a :class:`BrowserSessionLike`. When
                 omitted, the authenticator constructs a real
                 :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` lazily at
-                :meth:`authenticate` time. Tests pass a fake here
+                :meth:`authenticate` time. Tests pass an in-process implementation here
                 to avoid the Playwright import path.
         """
         self._settings = settings
@@ -1196,7 +1196,7 @@ class AeatAuthenticator:
         The Protocol does not mandate a ``close()`` coroutine; real
         :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` wraps a Playwright
         ``Browser`` which owns a Chromium OS process. Tests supply
-        fakes that may not. We probe for the method and call it when
+        lightweight implementations that may not. We probe for the method and call it when
         present; failure to close is logged but never raised.
         """
         if session is None:
@@ -1217,7 +1217,7 @@ class BrowserSessionFactory(Protocol):
 
     The factory receives the active :class:`Settings` and is
     responsible for constructing / configuring the Playwright
-    session. Unit tests supply a fake factory; the production
+    session. Unit tests supply an in-process factory; the production
     factory lives with the caller (typically the CLI layer) so
     ``aeat.adapters.outbound.aeat.auth`` does not import ``aeat.adapters.outbound.aeat.browser`` at module load.
     """

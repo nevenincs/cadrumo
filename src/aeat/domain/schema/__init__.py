@@ -25,7 +25,6 @@ from ._cache import (
     resolve_schema_cache_file,
     save_modelo_to_cache,
 )
-from ._boe_extractor import BoeOrdenExtractor
 from ._enums import (
     BinaryFormulaOp,
     CasillaDataType,
@@ -38,12 +37,6 @@ from ._errors import (
     SchemaEvaluationError,
     SchemaExtractionError,
     SchemaValidationError,
-)
-from ._fetch import (
-    BOE_ORDEN_SOURCES,
-    BoeOrdenSource,
-    FetchedSchemaSource,
-    fetch_boe_pdf,
 )
 from ._models import (
     BinaryOp,
@@ -65,18 +58,14 @@ from ._models import (
 )
 
 __all__ = (
-    "BOE_ORDEN_SOURCES",
     "BinaryFormulaOp",
     "BinaryOp",
-    "BoeOrdenExtractor",
-    "BoeOrdenSource",
     "Casilla",
     "CasillaDataType",
     "CasillaRef",
     "CompareOp",
     "CrossCasillaRule",
     "EnumRule",
-    "FetchedSchemaSource",
     "FormulaNode",
     "LiteralFormula",
     "Modelo",
@@ -93,7 +82,6 @@ __all__ = (
     "SumFormula",
     "ValidationRule",
     "evaluate",
-    "fetch_boe_pdf",
     "load_modelo_from_cache",
     "resolve_schema_cache_file",
     "save_modelo_to_cache",

@@ -1,17 +1,21 @@
-"""Regression tests for review-feedback hardening on aeat#10.
+"""Regression tests for the SQL substrate's database-level integrity guards.
 
-Covers:
+Covers the schema and repository invariants enforced at the database
+layer rather than at the pydantic record layer:
 
-- SQLite ``PRAGMA foreign_keys=ON`` is enabled so ``ON DELETE CASCADE`` runs.
+- SQLite ``PRAGMA foreign_keys=ON`` is enabled so ``ON DELETE CASCADE``
+  runs.
 - ``portals.auth_method`` rejects unknown values at the database layer.
-- ``corpus_artifacts`` enforces ``(year, modelo_id, file_path)`` uniqueness.
+- ``corpus_artifacts`` enforces ``(year, modelo_id, file_path)``
+  uniqueness.
 - Repository ``upsert`` resolves by natural key when ``id`` is omitted.
-- Repository ``upsert`` wraps :class:`IntegrityError` as
-  :class:`RepositoryError`.
-- ``get_engine`` runs ``alembic upgrade head`` when
-  ``AEAT_STORAGE_AUTO_MIGRATE`` is true.
+- Repository ``upsert`` wraps :exc:`sqlalchemy.exc.IntegrityError` as
+  :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`.
+- :func:`aeat.adapters.persistence.storage.sql.get_engine` runs
+  ``alembic upgrade head`` when ``AEAT_STORAGE_AUTO_MIGRATE`` is true.
 - Reading a portal row with an unknown ``auth_method`` raises
-  :class:`RepositoryError`, never a bare :class:`ValueError`.
+  :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`,
+  never a bare :exc:`ValueError`.
 """
 
 from __future__ import annotations

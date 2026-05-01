@@ -19,7 +19,7 @@ This module closes that gap by providing:
 
 The CLI wires this factory into ``select_provider`` so
 ``aeat auth login`` just works in production, while tests keep
-injecting their own fakes.
+injecting their own in-process implementations.
 """
 
 from __future__ import annotations

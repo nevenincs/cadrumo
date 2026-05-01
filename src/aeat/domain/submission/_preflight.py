@@ -25,7 +25,7 @@ _logger = get_logger(__name__)
 # StrEnum value for ``AuthProviderKind.CERTIFICATE`` — duplicated as a
 # bare string so the domain layer does not import the application-layer
 # enum at runtime. Kept in sync with
-# :class:`aeat.domain.auth.AuthProviderKind` by code review.
+# :class:`aeat.application.auth.AuthProviderKind` by code review.
 _AUTH_KIND_CERTIFICATE = "certificate"
 
 
@@ -33,7 +33,7 @@ def _describe_provider_operator_impact(description: AuthProviderDescriptionLike)
     """Return Kent's operator-impact summary for ``description``.
 
     Mirror of
-    :func:`aeat.domain.auth.describe_provider_operator_impact`.
+    :func:`aeat.application.auth.describe_provider_operator_impact`.
     Duplicated here because the layered-import contract forbids
     `aeat.domain.*` from depending on `aeat.application.*` at runtime;
     the helper is pure string formatting against ``description``'s

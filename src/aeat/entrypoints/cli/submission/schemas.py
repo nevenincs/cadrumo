@@ -1,12 +1,13 @@
-"""``aeat submission schemas`` — list every (modelo, ejercicio) the CLI can export.
+"""``aeat submission schemas`` — list every ``(modelo, ejercicio)`` the CLI can export.
 
-EPIC #305 . Kent's discovery surface: rather than trial-
-and-error with ``aeat submission export --help`` and hoping his
-modelo is wired, he can run ``aeat submission schemas`` to see the
-complete registry plus per-schema size / encoding / dispatch-kind
-metadata.
+The discovery surface: rather than trial-and-error with
+``aeat submission export --help`` and hoping a modelo is wired, an
+operator can run ``aeat submission schemas`` to see the complete
+registry plus per-schema size, encoding, and dispatch-kind metadata
+sourced from :data:`._schema_registry.SCHEMA_REGISTRY`.
 
-Strictly read-only — no filesystem or network access.
+Strictly read-only — no filesystem or network access beyond the in-
+process registry lookup.
 """
 
 from __future__ import annotations
@@ -23,7 +24,19 @@ _CONSOLE = Console()
 
 
 class SubmissionSchemaRow(OutputSchema):
-    """One row from ``aeat submission schemas --json``."""
+    """One row from ``aeat submission schemas --json``.
+
+    Attributes:
+        modelo: Modelo code.
+        ejercicio: Filing year.
+        kind: ``"record"`` (single fixed-width payload) or ``"envelope"``
+            (multi-segment XML-wrapped payload).
+        encoding: The schema's character encoding (e.g. ``"latin-1"``).
+        bytes: Total payload length in bytes (excluding the ``\\r\\n``
+            terminator).
+        required_header_fields: Count of required header fields the
+            serialiser enforces.
+    """
 
     modelo: str
     ejercicio: str
@@ -35,11 +48,23 @@ class SubmissionSchemaRow(OutputSchema):
 
 @register_schema("submission schemas")
 class SubmissionSchemasJson(OutputRootSchema[list[SubmissionSchemaRow]]):
-    """Schema for ``aeat submission schemas --json``."""
+    """Top-level JSON wrapper schema for ``aeat submission schemas --json``.
+
+    Wraps a list of :class:`SubmissionSchemaRow`.
+    """
 
 
 def _schema_row(key: tuple[str, str], entry: SchemaEntry) -> dict[str, object]:
-    """Compute the public description of one registry entry."""
+    """Compute the public description of one registry entry.
+
+    Args:
+        key: ``(modelo, ejercicio)`` registry key.
+        entry: The matching :class:`._schema_registry.SchemaEntry`.
+
+    Returns:
+        A mapping shaped like :class:`SubmissionSchemaRow` (extra keys
+        forbidden).
+    """
     modelo, ejercicio = key
     module = entry.module
     total = int(module.RECORD_LENGTH) if entry.kind == "record" else sum(int(s.total_length) for s in module.ENVELOPE)
@@ -60,7 +85,12 @@ def schemas_cmd(
         help="Emit a machine-readable JSON array instead of the rich-formatted table.",
     ),
 ) -> None:
-    """List every fichero-BOE schema the CLI can produce and verify."""
+    """List every fichero-BOE schema the CLI can produce and verify.
+
+    Args:
+        as_json: When ``True``, emit a machine-readable JSON array
+            instead of the rich-formatted table.
+    """
     rows = [_schema_row(key, entry) for key, entry in sorted(SCHEMA_REGISTRY.items())]
 
     if as_json or json_output_requested():

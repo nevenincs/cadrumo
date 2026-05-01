@@ -1,6 +1,6 @@
 {
   "synthetic": true,
-  "_comment": "SYNTHETIC FIXTURE — do not confuse with real client data. See src/aeat/testing/__init__.py for invariants.",
+  "_comment": "SYNTHETIC FIXTURE — do not confuse with real client data. See aeat.application.filing.testing for invariants.",
   "record_id": "b275284d45cf9f25",
   "modelo": "130",
   "period": "2024Q4",

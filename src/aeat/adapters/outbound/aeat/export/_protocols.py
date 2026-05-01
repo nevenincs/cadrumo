@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .....domain.auth import AuthProviderDescription, AuthProviderKind
+from .....application.auth import AuthProviderDescription, AuthProviderKind
 from .....domain.submission._protocols import (
     AuthProviderProbe,
     DeadlineWindowChecker,

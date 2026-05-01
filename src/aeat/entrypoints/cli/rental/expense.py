@@ -1,4 +1,10 @@
-"""``aeat rental expense`` commands (#454)."""
+"""``aeat rental expense`` Typer commands.
+
+Record and list deductible rental expenses by finca + ejercicio,
+classified by :class:`aeat.domain.rental.ExpenseCategory` per LIRPF
+art. 23.1. Persistence flows through
+:class:`aeat.domain.rental.RentalExpenseRepository`.
+"""
 
 from __future__ import annotations
 
@@ -20,12 +26,18 @@ from ._helpers import open_session
 app = typer.Typer(
     name="expense",
     no_args_is_help=True,
-    help="Registro de gastos deducibles por finca/ejercicio (#454).",
+    help="Registro de gastos deducibles por finca/ejercicio.",
 )
 
 
 @register_schema("rental expense add")
 class ExpenseAddJson(OutputSchema):
+    """Schema for ``aeat rental expense add --json``.
+
+    Attributes:
+        expense: The newly persisted :class:`RentalExpense` record.
+    """
+
     expense: RentalExpense
 
 
@@ -41,6 +53,11 @@ def add_cmd(
     category: ExpenseCategory = typer.Option(..., "--category"),
     amount: str = typer.Option(..., "--amount"),
 ) -> None:
+    """Persist one deductible expense for a finca and ejercicio.
+
+    Raises:
+        FincaNotFoundError: When ``finca_identifier`` is unknown.
+    """
     with open_session() as session:
         finca_repo = RentalFincaRepository(session)
         finca = finca_repo.get_by_identifier(finca_identifier)
@@ -72,6 +89,11 @@ def list_cmd(
     finca_identifier: str = typer.Option(..., "--finca"),
     period_year: int = typer.Option(..., "--period"),
 ) -> None:
+    """List every expense recorded for ``finca_identifier`` in ``period_year``.
+
+    Raises:
+        FincaNotFoundError: When ``finca_identifier`` is unknown.
+    """
     with open_session() as session:
         finca_repo = RentalFincaRepository(session)
         finca = finca_repo.get_by_identifier(finca_identifier)

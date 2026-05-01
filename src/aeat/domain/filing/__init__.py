@@ -8,12 +8,14 @@ cross-cutting :class:`FilingValidator`, the FilingDraft <->
 Justificante reconciliation engine, and the governed-persistence
 repositories (FINANCIAL drafts and AUDIT amendments).
 
-The orchestration entry points (``build_draft``, ``validate_draft``,
-``approve_draft``, ``build_complementaria``,
-``import_filing_from_justificante``) live at
-:mod:`aeat.application.filing` per the audit-5 carve-out: domain
-records are stable boundary-crossing types; the use cases that
-compose them belong on the connector layer.
+The orchestration entry points (:func:`aeat.application.filing.build_draft`,
+:func:`aeat.application.filing.validate_draft`,
+:func:`aeat.application.filing.approve_draft`,
+:func:`aeat.application.filing.build_complementaria`,
+:func:`aeat.application.filing.import_filing_from_justificante`)
+live at :mod:`aeat.application.filing`: domain records are stable
+boundary-crossing types; the use cases that compose them belong on
+the connector layer.
 """
 
 from __future__ import annotations

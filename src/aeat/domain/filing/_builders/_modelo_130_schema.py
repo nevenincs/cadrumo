@@ -2,7 +2,7 @@
 
 This module exists because the real casilla DB (#23) and the
 formula AST extractor (#9) are not on ``main`` yet. The shape
-defined here matches the :class:`aeat.application.filing._protocols.CasillaSchema`
+defined here matches the :class:`aeat.domain.filing._protocols.CasillaSchema`
 Protocol so that swapping in the real upstream subpackages later
 is a search-replace on the import lines, not a rewrite of the
 builder.
@@ -47,7 +47,7 @@ class StaticCasillaSchema(BaseModel):
     """A frozen, strict pydantic record describing one casilla.
 
     Conforms structurally to
-    :class:`aeat.application.filing._protocols.CasillaSchema`. Provenance fields
+    :class:`aeat.domain.filing._protocols.CasillaSchema`. Provenance fields
     (``sources``, ``valid_from``, ``valid_to``) are optional today and
     tighten in cluster-B phase-2 as the corpus completes.
     """
@@ -71,7 +71,7 @@ class StaticCasillaCollection(BaseModel):
     """A frozen collection of :class:`StaticCasillaSchema` records.
 
     Conforms structurally to
-    :class:`aeat.application.filing._protocols.CasillaCollection`.
+    :class:`aeat.domain.filing._protocols.CasillaCollection`.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")

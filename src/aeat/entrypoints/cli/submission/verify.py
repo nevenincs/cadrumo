@@ -1,23 +1,27 @@
-"""``aeat submission verify`` — re-parse an exported fichero-BOE file.
+"""``aeat submission verify`` -- re-parse an exported fichero-BOE file.
 
-EPIC #305 . The "verify" pillar of Kent's
-produce -> verify -> export journey: he exports a filing, uploads it
-to AEAT, and wants to confirm locally that the bytes he uploaded
-decode back to the casilla values he intended. This command reads a
-``.{modelo}`` file off disk, dispatches to the matching deserialiser,
-and pretty-prints headers + non-zero casillas to the console.
+The "verify" pillar of the produce -> verify -> export journey: the
+operator exports a filing, uploads it to AEAT, and wants to confirm
+locally that the bytes uploaded decode back to the casilla values
+they intended. This command reads a ``.{modelo}`` file off disk,
+dispatches to the matching deserialiser, and pretty-prints headers
+plus non-zero casillas to the console.
 
-the command auto-detect modelo + ejercicio from the
-standard ``{NIF}{YYYY}{PERIODO}.{modelo}`` filename emitted by
-``aeat submission export`` — the flags ``--modelo`` and
-``--ejercicio`` remain available as overrides for files with
-non-standard names.
+The command auto-detects modelo and ejercicio from the standard
+``{NIF}{YYYY}{PERIODO}.{modelo}`` filename emitted by ``aeat
+submission export``. The flags ``--modelo`` and ``--ejercicio``
+remain available as overrides for files with non-standard names.
 
 The command is strictly read-only: it never mutates the file, talks
 to the AEAT portal, or modifies any persisted state. If decoding
 fails (wrong length, corrupt envelope markers, encoding mismatch),
-the original exception surfaces with an exit code of 2 so Kent can
-see what went wrong.
+the original exception surfaces with an exit code of 2.
+
+See also:
+    :mod:`aeat.entrypoints.cli.submission._schema_registry` for the
+    registry consulted at dispatch time and
+    :mod:`aeat.adapters.outbound.aeat.export._formats._deserialise`
+    for the underlying parsers.
 """
 
 from __future__ import annotations
@@ -43,15 +47,30 @@ from ._schema_registry import SCHEMA_REGISTRY, validate_ejercicio_flag, validate
 
 _CONSOLE = Console()
 
-#: Standard filename pattern: 9-char NIF + 4-digit YYYY + 2-char PERIODO + ``.{modelo}``.
-#: PERIODO is either ``[1-4]T`` (quarterly) or ``0[1-9]|1[0-2]`` (monthly).
 _FILENAME_RE = re.compile(
     r"^(?P<nif>[A-Z0-9]{9})(?P<ejercicio>\d{4})(?P<periodo>[1-4]T|0[1-9]|1[0-2])\.(?P<modelo>\d{3})$"
 )
+"""Standard fichero-BOE filename pattern.
+
+Matches a 9-character NIF, a 4-digit ``YYYY``, a 2-character periodo
+(quarterly ``[1-4]T`` or monthly ``0[1-9]|1[0-2]``), and a 3-digit
+``.{modelo}`` extension.
+"""
 
 
 class SubmissionVerifyOkRecord(OutputSchema):
-    """Successful record payload for ``aeat submission verify --json``."""
+    """Successful record payload for ``aeat submission verify --json``.
+
+    Attributes:
+        status: Always ``"ok"``.
+        kind: Always ``"record"`` -- single fixed-width record schema.
+        modelo: The 3-digit modelo code (e.g. ``"130"``).
+        ejercicio: The 4-digit fiscal year (e.g. ``"2024"``).
+        file: Filename of the parsed payload.
+        raw_length: Total bytes parsed from the payload.
+        fields: Header field values keyed by field id.
+        casillas: Casilla values keyed by casilla code.
+    """
 
     status: Literal["ok"]
     kind: Literal["record"]
@@ -64,7 +83,18 @@ class SubmissionVerifyOkRecord(OutputSchema):
 
 
 class SubmissionVerifyOkEnvelope(OutputSchema):
-    """Successful envelope payload for ``aeat submission verify --json``."""
+    """Successful envelope payload for ``aeat submission verify --json``.
+
+    Attributes:
+        status: Always ``"ok"``.
+        kind: Always ``"envelope"`` -- multi-segment schema.
+        modelo: The 3-digit modelo code (e.g. ``"303"``).
+        ejercicio: The 4-digit fiscal year.
+        file: Filename of the parsed payload.
+        segments: Sorted list of envelope segment ids encountered.
+        fields: Merged non-empty header field values across segments.
+        casillas: Merged casilla values keyed by casilla code.
+    """
 
     status: Literal["ok"]
     kind: Literal["envelope"]
@@ -77,7 +107,19 @@ class SubmissionVerifyOkEnvelope(OutputSchema):
 
 
 class SubmissionVerifyError(OutputSchema):
-    """Error payload for ``aeat submission verify --json``."""
+    """Error payload for ``aeat submission verify --json``.
+
+    Attributes:
+        status: Always ``"error"``.
+        modelo: The 3-digit modelo code that failed to verify.
+        ejercicio: The 4-digit fiscal year.
+        file: Filename of the offending payload.
+        error_type: Class name of the originating exception.
+        error_message: Operator-facing description of the failure.
+        expected_bytes: Expected payload length when the failure is a
+            length mismatch; ``None`` otherwise.
+        actual_bytes: Observed payload length when known.
+    """
 
     status: Literal["error"]
     modelo: str
@@ -93,14 +135,20 @@ class SubmissionVerifyError(OutputSchema):
 class SubmissionVerifyJson(
     OutputRootSchema[SubmissionVerifyOkRecord | SubmissionVerifyOkEnvelope | SubmissionVerifyError]
 ):
-    """Schema for ``aeat submission verify --json``."""
+    """Discriminated-union root schema for ``aeat submission verify --json``."""
 
 
 def _infer_modelo_ejercicio(file_path: Path) -> tuple[str | None, str | None]:
-    """Parse the filename for a ``{NIF}{YYYY}{PERIODO}.{modelo}`` pattern.
+    """Parse a filename for the ``{NIF}{YYYY}{PERIODO}.{modelo}`` pattern.
 
-    Returns ``(modelo, ejercicio)`` or ``(None, None)`` if the name
-    doesn't match; callers then require the explicit CLI overrides.
+    Args:
+        file_path: Path whose ``name`` is matched against
+            :data:`_FILENAME_RE`.
+
+    Returns:
+        ``(modelo, ejercicio)`` if the name matches, otherwise
+        ``(None, None)``. Callers then require the explicit
+        ``--modelo`` / ``--ejercicio`` CLI overrides.
     """
     m = _FILENAME_RE.match(file_path.name)
     if m is None:
@@ -134,10 +182,24 @@ def verify_cmd(
 ) -> None:
     """Re-parse an exported fichero-BOE file and pretty-print its contents.
 
-    Raises :class:`typer.Exit(code=2)` on unsupported modelos, on a
-    filename that can't be auto-parsed when ``--modelo``/``--ejercicio``
-    are absent, or when the payload fails to decode against the
-    selected schema.
+    Args:
+        file_path: Path to a fichero-BOE file written by ``aeat
+            submission export``.
+        modelo: Optional 3-digit modelo code; auto-detected from the
+            filename when omitted.
+        ejercicio: Optional 4-digit fiscal year; auto-detected from
+            the filename when omitted.
+        as_json: When ``True``, emit a JSON document instead of the
+            rich-formatted tables.
+
+    Raises:
+        typer.Exit: With code ``2`` on unsupported modelos, on a
+            filename that cannot be auto-parsed when ``--modelo`` or
+            ``--ejercicio`` are absent, or when the payload fails to
+            decode against the selected schema.
+        :exc:`aeat.entrypoints.cli._errors.CliRefusedBoundaryError`:
+            In JSON mode, wrapping the failure context for the
+            structured error envelope.
     """
     emit_json = as_json or json_output_requested()
     if modelo is None or ejercicio is None:
@@ -240,7 +302,7 @@ def verify_cmd(
 
 
 def _print_record(parsed: ParsedRecord, *, modelo: str, ejercicio: str, file_path: Path) -> None:
-    """Render a single-record parse (Modelo 130 shape)."""
+    """Render a single-record parse (Modelo 130 shape) to the console."""
     _CONSOLE.print(f"[green]verify OK[/green] modelo={modelo} ejercicio={ejercicio} file={file_path.name}")
     _CONSOLE.print(f"raw_length={parsed.raw_length}")
 
@@ -261,7 +323,7 @@ def _print_record(parsed: ParsedRecord, *, modelo: str, ejercicio: str, file_pat
 
 
 def _print_envelope(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file_path: Path) -> None:
-    """Render a multi-segment envelope parse (Modelo 303 shape)."""
+    """Render a multi-segment envelope parse (Modelo 303 shape) to the console."""
     _CONSOLE.print(f"[green]verify OK[/green] modelo={modelo} ejercicio={ejercicio} file={file_path.name}")
     _CONSOLE.print(f"segments={len(parsed.segments)}")
 
@@ -289,14 +351,14 @@ def _print_envelope(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file
 
 
 def _jsonable(value: Any) -> Any:
-    """Coerce Decimal / date / other non-JSON types to strings."""
+    """Coerce ``Decimal`` / date / other non-JSON-native types to strings."""
     if isinstance(value, Decimal):
         return str(value)
     return str(value)
 
 
 def _emit_record_json(parsed: ParsedRecord, *, modelo: str, ejercicio: str, file_path: Path) -> None:
-    """Print the machine-readable shape for a single-record parse."""
+    """Emit the machine-readable JSON document for a single-record parse."""
     payload = {
         "status": "ok",
         "kind": "record",
@@ -311,7 +373,7 @@ def _emit_record_json(parsed: ParsedRecord, *, modelo: str, ejercicio: str, file
 
 
 def _emit_envelope_json(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file_path: Path) -> None:
-    """Print the machine-readable shape for a multi-segment envelope parse."""
+    """Emit the machine-readable JSON document for a multi-segment envelope parse."""
     # drop empty-space filler so the JSON surface stays useful for
     # downstream scripts (the DP303DID reserved block is 617 bytes of ' ').
     fields = {fid: _jsonable(val) for fid, val in parsed.merged_field_values.items() if str(val).strip() != ""}

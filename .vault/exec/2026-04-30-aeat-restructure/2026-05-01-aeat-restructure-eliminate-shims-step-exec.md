@@ -25,7 +25,7 @@ All five hunt patterns executed against `src/aeat/adapters/`:
 | `^class (Fake\|Stub\|Dummy\|Spy\|Null\|Mock\|Shadow)\w*\b` | 0 production matches. Hits in `test_session.py` and `test_evasion.py` are test files (stem starts with `test_`) — out of scope per mandate. |
 | `raise NotImplementedError` | 4 hits — all 4 are the documented intentional refusals listed in the task exclusions (`_walker.py:204`, `_providers.py:329`, `_providers.py:333`, `_httpx_fallback.py:85`). No new sites. |
 | `^\s*\.\.\.\s*$` | 5 files matched — all `...` bodies are idiomatic `Protocol` class method stubs (`MasterKeyProvider`, `EnvelopeMigrator`, `EvasionStrategy`, `AuthProviderProbe`, `DeadlineWindowChecker`, `FilingDraftLike`, `DraftLoader`, `BrowserPageLike`, `BrowserResponseLike`, `BrowserContextLike`, `BrowserSessionLike`, `BrowserSessionFactory`, `BrowserContextProvisioner`, `AuthProvider`). Zero hollow Protocols (every Protocol has at least one concrete implementer). |
-| `^from \..* import \*` | 0 matches — no re-export shims. |
+| `^from \..* import \*` | 0 matches — no compatibility re-export modules. |
 | empty `pass` function bodies | 0 non-Protocol, non-exception-subclass, non-except-handler cases. All `pass` sites are exception hierarchy subclasses or intentional fallthrough `except` handlers. |
 | shadow constants | 0 cross-module duplications. Per-modelo `ENCODING` constants are canonical to each module by design. |
 | stale `TYPE_CHECKING` blocks | 0 stale imports found across all 20 `TYPE_CHECKING` blocks in `src/aeat/adapters/`. |

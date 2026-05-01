@@ -1,4 +1,9 @@
-"""``aeat run list`` — table of persisted run traces."""
+"""``aeat run list`` command implementation.
+
+Iterates persisted run traces via
+:func:`aeat.core.observability.iter_runs` and renders them as a Rich
+table.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +16,12 @@ _CONSOLE = Console()
 
 
 def list_cmd() -> None:
-    """List every persisted :class:`RunTrace` under the configured runs dir."""
+    """List every persisted :class:`RunTrace` under the configured runs dir.
+
+    The configured directory is read from
+    :attr:`aeat.core.config.Settings.aeat_runs_dir` via
+    :func:`aeat.core.observability.iter_runs`.
+    """
     runs = list(iter_runs())
     table = Table(title=f"runs ({len(runs)})", header_style="bold")
     table.add_column("run_id", style="cyan")

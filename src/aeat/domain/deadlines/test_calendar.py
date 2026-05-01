@@ -1,4 +1,12 @@
-"""Invariant tests for the in-code canonical calendar."""
+"""Invariant tests for the in-code canonical AEAT filing calendar.
+
+Exercises the :data:`aeat.domain.deadlines.CALENDAR` constant and its
+companion :class:`aeat.domain.deadlines.CanonicalWindow` /
+:class:`aeat.domain.deadlines.PeriodKind` types, asserting the
+calendar is non-empty, every entry references a known modelo, every
+window carries at least one BOE citation, and date ordering invariants
+hold.
+"""
 
 from __future__ import annotations
 

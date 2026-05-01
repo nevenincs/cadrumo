@@ -1,4 +1,12 @@
-"""Unit tests for the CLI output-schema registry."""
+"""Unit tests for the CLI output-schema registry.
+
+Exercises :func:`aeat.entrypoints.cli.register_schema`,
+:class:`aeat.entrypoints.cli.SchemaEnvelope`, and
+:func:`aeat.entrypoints.cli.emit_json_document`. Verifies that the
+registry rejects duplicates and non-:class:`OutputSchema` classes,
+that the public re-exports stay stable, and that set-like payloads
+are normalised to JSON arrays at emission time.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @contextmanager
 def _preserved_registry() -> Iterator[None]:
-    """Preserve the global schema registry across tests."""
+    """Snapshot and restore the global schema registry around a test body."""
 
     snapshot = dict(cli.SCHEMA_REGISTRY)
     try:
@@ -36,7 +44,7 @@ class _DemoOutput(cli.OutputSchema):
 
 
 def test_register_schema_records_strict_schema_class() -> None:
-    """The decorator should record the schema under the stable command path."""
+    """The decorator records the schema under the supplied command path."""
 
     with _preserved_registry():
         registered = cli.register_schema("status today")(_DemoOutput)
@@ -52,7 +60,7 @@ def test_register_schema_records_strict_schema_class() -> None:
 
 
 def test_register_schema_rejects_duplicate_command_path() -> None:
-    """Duplicate registration must fail loudly instead of silently overwriting."""
+    """Duplicate registration fails loudly instead of silently overwriting."""
 
     class _OtherOutput(cli.OutputSchema):
         value: str
@@ -64,7 +72,7 @@ def test_register_schema_rejects_duplicate_command_path() -> None:
 
 
 def test_register_schema_rejects_non_output_schema_classes() -> None:
-    """The registry must only accept strict ``OutputSchema`` subclasses."""
+    """The registry only accepts strict :class:`OutputSchema` subclasses."""
 
     class _NotOutput:
         value: str
@@ -76,7 +84,7 @@ def test_register_schema_rejects_non_output_schema_classes() -> None:
 
 
 def test_public_api_reexports_schema_registry_surface() -> None:
-    """Callers must import the schema surface from ``aeat.entrypoints.cli`` only."""
+    """Callers import the schema surface from :mod:`aeat.entrypoints.cli` only."""
 
     assert cli.OutputSchema.__name__ == "OutputSchema"
     assert cli.SchemaEnvelope.__name__ == "SchemaEnvelope"
@@ -85,7 +93,7 @@ def test_public_api_reexports_schema_registry_surface() -> None:
 
 
 def test_emit_json_document_normalises_set_payloads_to_json_arrays() -> None:
-    """Machine output should serialise set-like payloads as JSON arrays."""
+    """Machine output serialises set and frozenset payloads as JSON arrays."""
 
     stream = io.StringIO()
     cli.emit_json_document({"items": {"a", "b"}, "frozen": frozenset({"x"})}, stream=stream)

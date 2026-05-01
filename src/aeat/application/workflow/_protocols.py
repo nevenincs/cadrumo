@@ -1,4 +1,4 @@
-"""Protocol stubs for every component the workflow engine composes.
+"""Protocol contracts for every component the workflow engine composes.
 
 The composite workflow engine is defined against ``typing.Protocol``
 surfaces — not concrete classes — for two reasons:
@@ -72,7 +72,7 @@ class SubmissionEngineProtocol(Protocol):
 
 
 class SyncRunSummary(BaseModel):
-    """Narrow stub for a sync run outcome.
+    """Narrow contract for a sync run outcome.
 
     The workflow engine only needs to know whether the sync succeeded
     and surface a numeric summary for diagnostics; the full
@@ -104,7 +104,7 @@ class SyncRunnerProtocol(Protocol):
 
 @runtime_checkable
 class CertificateBundleProtocol(Protocol):
-    """Narrow stub for the auth-provider probe used by workflow preflight.
+    """Narrow contract for the auth-provider probe used by workflow preflight.
 
     The workflow engine calls :meth:`describe` once during the
     preflight stage to prove the configured auth provider is present

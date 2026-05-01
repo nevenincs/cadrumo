@@ -1,4 +1,9 @@
-"""Tests for ``aeat submission export`` (EPIC #201 C3c,)."""
+"""Tests for the ``aeat submission export`` Typer command.
+
+Covers Modelo 130 record-style and Modelo 303 envelope-style writes,
+SEPA devolución stamping, NIF check-letter validation, draft-status
+refusal, and the ``--nombre`` / ``--apellidos`` requirement.
+"""
 
 from __future__ import annotations
 
@@ -16,6 +21,7 @@ _runner = CliRunner()
 
 
 def _write_draft(tmp_path: Path, *, modelo: str = "130", period: str = "2024Q1", status: str = "DRAFT") -> Path:
+    """Write a fully populated Modelo 130 CLI-format draft JSON."""
     draft = {
         "draft_id": "TEST-0001",
         "modelo": modelo,
@@ -51,6 +57,8 @@ def _write_draft(tmp_path: Path, *, modelo: str = "130", period: str = "2024Q1",
 
 
 class TestExportCommand:
+    """Behavioural tests for :func:`aeat.entrypoints.cli.submission.export.export_cmd`."""
+
     def test_modelo_130_q1_2024_writes_880_byte_file(self, tmp_path: Path) -> None:
         draft = _write_draft(tmp_path)
         output_dir = tmp_path / "out"
@@ -107,7 +115,7 @@ class TestExportCommand:
         assert output_path.exists()
 
     def test_modelo_303_2024_q1_writes_envelope_file(self, tmp_path: Path) -> None:
-        """303 dispatches through the multi-segment envelope path."""
+        """Modelo 303 dispatches through the multi-segment envelope path."""
         draft = _write_draft(tmp_path, modelo="303")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -145,7 +153,7 @@ class TestExportCommand:
         assert payload.endswith(b"\r\n")
 
     def test_modelo_303_2025_routes_to_clone_schema(self, tmp_path: Path) -> None:
-        """303 2025 re-exports the 2024 envelope verbatim."""
+        """Modelo 303 (2025) re-exports the 2024 envelope verbatim."""
         draft = _write_draft(tmp_path, modelo="303", period="2025Q3")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -169,7 +177,7 @@ class TestExportCommand:
         assert payload[6:10] == b"2025"  # ejercicio stamped through to envelope header
 
     def test_unsupported_modelo_exits_2(self, tmp_path: Path) -> None:
-        """Modelo 390 is not yet registered; export must refuse with exit 2."""
+        """Modelo 390 is not yet registered; export must refuse with exit ``2``."""
         draft = _write_draft(tmp_path, modelo="390", period="2024Q4")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -207,7 +215,7 @@ class TestExportCommand:
         assert result.exit_code != 0
 
     def test_incomplete_draft_refused(self, tmp_path: Path) -> None:
-        """VALIDATED drafts have not been approved; export refuses."""
+        """``VALIDATED`` drafts have not been approved; export refuses."""
         draft = _write_draft(tmp_path, status="VALIDATED")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -227,7 +235,7 @@ class TestExportCommand:
         assert "REFUSED" in result.stdout
 
     def test_modelo_303_devolucion_stamps_iban_into_dp303did(self, tmp_path: Path) -> None:
-        """tipo=D export stamps IBAN + SEPA marker into DP303DID."""
+        """``tipo=D`` export stamps IBAN and the SEPA marker into ``DP303DID``."""
         draft = _write_draft(tmp_path, modelo="303")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -263,7 +271,7 @@ class TestExportCommand:
         assert payload[dp303did_start + 193 : dp303did_start + 194] == b"1"
 
     def test_modelo_303_devolucion_without_iban_exits_3(self, tmp_path: Path) -> None:
-        """tipo=D must refuse absent IBAN — AEAT can't refund into /dev/null."""
+        """``tipo=D`` must refuse absent IBAN — AEAT can't refund into ``/dev/null``."""
         draft = _write_draft(tmp_path, modelo="303")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -286,7 +294,7 @@ class TestExportCommand:
         assert "iban" in result.stdout.lower()
 
     def test_modelo_303_ingreso_leaves_dp303did_space_padded(self, tmp_path: Path) -> None:
-        """tipo=I must not stamp any SEPA fields — DP303DID stays filler."""
+        """``tipo=I`` must not stamp any SEPA fields — ``DP303DID`` stays filler."""
         draft = _write_draft(tmp_path, modelo="303")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -313,13 +321,17 @@ class TestExportCommand:
         assert payload[dp303did_start + 193 : dp303did_start + 194] == b"0"
 
     def _rewrite_nif(self, draft_path: Path, nif: str) -> None:
+        """Mutate ``draft_path`` in place, replacing ``profile_tax_id`` with ``nif``."""
         raw = json.loads(draft_path.read_text(encoding="utf-8"))
         raw["profile_tax_id"] = nif
         draft_path.write_text(json.dumps(raw), encoding="utf-8")
 
     def test_invalid_nif_check_letter_rejected(self, tmp_path: Path) -> None:
-        """X1234567Z fails the AEAT check-letter algorithm
-        (correct letter is L); export must refuse before any bytes land."""
+        """``X1234567Z`` fails the AEAT check-letter algorithm.
+
+        The correct letter is ``L``; export must refuse before any
+        bytes land.
+        """
         draft = _write_draft(tmp_path)
         self._rewrite_nif(draft, "X1234567Z")
         output_dir = tmp_path / "out"
@@ -332,7 +344,7 @@ class TestExportCommand:
         assert "check-letter" in out or "checksum" in out or "algorithm" in out
 
     def test_valid_alternate_nie_passes(self, tmp_path: Path) -> None:
-        """A known-valid NIE (Y0000000Z) exports cleanly."""
+        """A known-valid NIE (``Y0000000Z``) exports cleanly."""
         draft = _write_draft(tmp_path)
         self._rewrite_nif(draft, "Y0000000Z")
         output_dir = tmp_path / "out"
@@ -344,7 +356,7 @@ class TestExportCommand:
         assert (output_dir / "Y0000000Z20241T.130").exists()
 
     def test_missing_required_flag_fails(self, tmp_path: Path) -> None:
-        """--nombre and --apellidos are required."""
+        """``--nombre`` and ``--apellidos`` are required flags."""
         draft = _write_draft(tmp_path)
         output_dir = tmp_path / "out"
         result = _runner.invoke(

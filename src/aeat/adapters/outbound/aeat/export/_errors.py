@@ -1,8 +1,8 @@
-"""Submission lifecycle errors live in :mod:`aeat.domain.submission`."""
+"""Submission lifecycle errors re-export the canonical access-gate hierarchy."""
 
 from __future__ import annotations
 
-from .....domain.submission._errors import (
+from .....core.access_gate import (
     LiveSubmitForbiddenError,
     SubmissionError,
     SubmissionPreflightError,

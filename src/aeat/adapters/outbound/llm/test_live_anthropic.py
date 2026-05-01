@@ -1,4 +1,10 @@
-"""Opt-in live test for the Anthropic adapter."""
+"""Opt-in live integration test for the Anthropic provider adapter.
+
+Performs a tiny real round trip against the Anthropic API when
+``AEAT_LLM_ANTHROPIC_API_KEY`` is configured; the test self-skips
+otherwise. Tagged ``live_read`` so it is excluded from the default unit
+test selection.
+"""
 
 from __future__ import annotations
 

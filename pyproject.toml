@@ -39,13 +39,13 @@ dependencies = [
     "pydantic-settings>=2.9.1",
     # HTTP client
     "httpx>=0.28.1",
-    # HTML parsing (status reader, #43)
+    # HTML parsing for AEAT status pages.
     "beautifulsoup4>=4.12",
     # IANA tz database (bundled on Linux/macOS, missing on Windows
-    # CPython — required by aeat.status._parsers.expedientes to
+    # CPython — required by AEAT expedientes/status parsing to
     # localise AEAT timestamps to Europe/Madrid).
     "tzdata>=2026.2 ; sys_platform == 'win32'",
-    # PKCS#12 parsing for client-certificate auth (#8)
+    # PKCS#12 parsing for client-certificate auth.
     "cryptography>=47.0.0",
     # Argon2id KDF for the file-fallback master-key provider's
     # passphrase-to-KEK derivation (wave-12). OWASP-current top-tier
@@ -62,12 +62,12 @@ dependencies = [
     # Persistence
     "sqlalchemy>=2.0.36",
     "alembic>=1.14.0",
-    # PDF parsing (#44 justificante)
+    # PDF parsing for justificantes.
     "pdfplumber>=0.11.9",
-    # Financial ingest (#73)
+    # Financial ingest.
     "ofxparse>=0.21",
     "openpyxl>=3.1.5",
-    # PDF sanitiser (#239) — content-stream rewriter for PII redaction.
+    # PDF content-stream rewriting for PII redaction.
     "pikepdf>=10.0.0",
 ]
 
@@ -101,6 +101,15 @@ override-dependencies = [
     "tree-sitter-language-pack<1.6.3",
 ]
 
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
+]
 [dependency-groups]
 dev = [
     # Vault tooling — contributor-only; not imported by src/aeat/.
@@ -111,28 +120,30 @@ dev = [
     "prek>=0.2.0",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.0.0",
-    # Live browser harness — #15 ADR (live only).
+    # Live browser harness.
     "pytest-playwright>=0.6.0",
-    # httpx wire-shape assertions — #15 ADR (unit only; banned in live files).
+    # HTTP wire-shape assertions.
     "pytest-httpx>=0.35.0",
-    # Per-test retries for genuinely flaky live endpoints — #15 ADR (live only, opt-in per test).
+    # Per-test retries for genuinely flaky live endpoints.
     "pytest-rerunfailures>=15.0",
-    # Snapshot diffing for modelo schemas / casilla extractions — #15 ADR (both scopes).
+    # Snapshot diffing for modelo schemas and casilla extractions.
     "syrupy>=4.7.0",
-    # Parallel unit suite via opt-in `just test-parallel` — #15 ADR (unit only).
+    # Parallel unit suite via opt-in `just test-parallel`.
     "pytest-xdist>=3.6.0",
-    # Coverage measurement + fail-under gate — #15 ADR (unit only).
+    # Coverage measurement and fail-under gate.
     "pytest-cov>=6.0.0",
-    # Wall-clock control for deadline/expedientes tests — #15 ADR (unit only; banned in live files).
+    # Wall-clock control for deadline and expediente tests.
     "time-machine>=2.16.0",
     "playwright>=1.58.0",
     "playwright-stealth>=2.0.3",
-    # Used only to generate synthetic fixture PDFs in tests (#44).
+    # Synthetic fixture PDF generation in tests.
     "reportlab>=4.4.10",
-    # Import-linter for layered-architecture boundary enforcement (#475/#476).
-    # Contract definition lives in `.importlinter` at repo root; activated by
-    # the Step 7 keystone PR when the hexagonal layout move lands.
-    "import-linter>=2.0",
+    # Sphinx documentation pipeline.
+    "sphinx>=8.1",
+    "sphinx-autodoc-typehints>=2.5",
+    "sphinx-markdown-builder>=0.6",
+    "furo>=2024.8",
+    "myst-parser>=4.0",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
@@ -188,15 +199,13 @@ ignore = [
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # #15 ADR: lock the project into pytest-only testing. See .vault/adr/2026-04-17-pytest-only-testing-adr.md.
 "unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See tests/README.md."
-"unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See tests/README.md."
-"mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See tests/README.md."
+"mock".msg = "Third-party 'mock' is banned. Use concrete pytest fixtures and real in-process objects. See tests/README.md."
 
-# #162 — the relative-imports mandate is enforced by the custom
-# scripts/check_relative_imports.py script, not by Ruff TID251. Ruff's
-# banned-api resolves relative imports back to their absolute path
-# before matching the banned prefix, which would flag every legitimate
-# `from .module import X` inside src/aeat/ when `aeat` is banned.
-# See .vault/adr/2026-04-17-relative-imports-adr.md.
+# #162 — relative imports are reviewed through source/import-contract
+# checks, not Ruff TID251. Ruff's banned-api resolves relative imports
+# back to their absolute path before matching the banned prefix, which
+# would flag every legitimate `from .module import X` inside src/aeat/
+# when `aeat` is banned.
 
 [tool.ruff.format]
 quote-style = "double"
@@ -232,7 +241,7 @@ python_files = ["test_*.py", "_test_*.py"]
 addopts = "-v --tb=short -m 'unit' --strict-markers"
 asyncio_mode = "strict"
 markers = [
-    "unit: deterministic tests with no external I/O; mocks/stubs permitted per CLAUDE.md",
+    "unit: deterministic tests with no external I/O; use concrete implementations",
     "live_read: opt-in tests that READ from a real external service (covers Google scratch round-trips; see tests/README.md)",
     "live_write: permanently forbidden external write-shaped tests; collection-dropped with no bypass",
     "domain_outbound: exercises AEAT Sede Electronica read paths (auth, browser, casillas, inbox, justificante, portals, status, sync)",
@@ -240,7 +249,7 @@ markers = [
     "domain_inbound: exercises financial ingest (financial, cli/financial)",
     "domain_persistence: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, schema, deadlines, cli/deadlines)",
     "domain_application: exercises workflow orchestration, LLM, i18n, testing subpackages",
-    "domain_core: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
+    "domain_core: exercises project plumbing (aeat.core, non-domain entrypoints, setup, top-level tests/*.py)",
     # Hexagonal layered markers — restructure ADR (#476) Test-marker realignment.
     # Registered alongside the legacy markers for the restructure soak window;
     # legacy markers retire at the post-restructure Step 11 sanitization rollup.

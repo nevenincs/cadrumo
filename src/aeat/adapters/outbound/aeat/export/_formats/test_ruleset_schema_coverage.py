@@ -1,21 +1,20 @@
 """Cross-track invariant: ruleset casillas vs schema casillas.
 
-Stream B perpetual — every casilla_id declared in a formula ruleset
-must either have a corresponding schema field so it ends up in the
-emitted bytes, OR be explicitly listed in the per-modelo gap set
-below. A casilla in the ruleset that has no schema field is
-silently dropped at serialise time, which is exactly the kind of
-drift the continuous-cycle mandate wants caught here, not at the
-AEAT-upload failure surface.
+Every casilla_id declared in a formula ruleset must either have a
+corresponding schema field so it ends up in the emitted bytes, OR
+be explicitly listed in the per-modelo gap set below. A casilla in
+the ruleset that has no schema field is silently dropped at
+serialise time, which is exactly the kind of drift this test
+catches before it reaches the AEAT-upload failure surface.
 
 When a gap is closed (e.g. the DR303 xlsx extraction learns to
 capture casillas 45 / 64 / 67 / 71), this test fails and forces an
 update to ``_EXPECTED_GAPS`` plus a commit message explaining the
 ruleset/schema evolution.
 
-This is the sibling of ``test_reserved_literal_lengths.py`` (wave
-112) — both enforce cross-layer consistency so neither the ruleset
-nor the schema can drift alone without an audible test failure.
+Sibling of ``test_reserved_literal_lengths.py`` — both enforce
+cross-layer consistency so neither the ruleset nor the schema can
+drift alone without an audible test failure.
 """
 
 from __future__ import annotations
@@ -42,8 +41,8 @@ _EXPECTED_GAPS: dict[str, frozenset[str]] = {
     # cuota-devengada-total / diferencia / a-ingresar casillas. They live
     # in the ruleset (and therefore still compute correctly in-memory)
     # but serialise_envelope silently drops them because no RecordFieldSpec
-    # claims the casilla_id. Wave-N+ will regenerate the JSON fixture with
-    # these fields added; the gap set shrinks as each is closed.
+    # claims the casilla_id. A future regeneration of the JSON fixture
+    # will add these fields; the gap set shrinks as each is closed.
     "303.2024": frozenset({"45", "64", "67", "71"}),
     "130.2024": frozenset(),
 }

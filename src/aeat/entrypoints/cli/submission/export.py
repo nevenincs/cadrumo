@@ -1,23 +1,21 @@
 """``aeat submission export`` — produce an AEAT-importable fichero-BOE file.
 
-EPIC #201 C3c. Kent's happy path for self-filing:
+The operator's happy path for self-filing is
+``produce (ruleset engine) -> review -> approve -> export -> self-upload``.
+This command reads a draft JSON, selects the per-modelo schema via the
+:data:`._schema_registry.SCHEMA_REGISTRY`, and writes a byte-exact
+fichero-BOE file ready to upload to the AEAT portal's *importar datos*
+surface.
 
-    produce (ruleset engine) → review → approve → **export** → self-upload
+The full ``FilingDraftStatus.APPROVED`` gate is deferred until the
+draft-status lifecycle lands. Until then, the command refuses any draft
+whose CLI ``status`` field is explicitly ``"rejected"`` or
+``"superseded"``; otherwise it produces output with a prominent
+``BORRADOR`` banner in the console.
 
-This command reads a draft JSON, selects the per-modelo schema, and
-writes a byte-exact fichero-BOE file ready to upload to the AEAT
-portal's "importar datos" surface.
-
-Gating per EPIC #201 C3i (``FilingDraftStatus.APPROVED``) is deferred
-until the draft-status lifecycle lands. Until then, the command
-refuses any draft whose CLI ``status`` field is explicitly
-``"rejected"`` or ``"superseded"``; otherwise it produces output
-with a prominent BORRADOR banner in the console.
-
-Modelo 303 2024 via the multi-segment envelope path;
-the schema registry now carries a per-modelo CLI header builder and
-a dispatch tag so single-record (130) and envelope (303) filings
-share the same driver.
+Modelo 303 dispatches through the multi-segment envelope path; the
+registry carries a per-modelo CLI header builder and a dispatch tag so
+single-record (130) and envelope (303) filings share the same driver.
 """
 
 from __future__ import annotations
@@ -42,9 +40,18 @@ _CONSOLE = Console()
 def _period_token(period: str) -> str:
     """Normalise a draft's ``period`` to the fichero-BOE ``PERIODO`` token.
 
-    AEAT accepts ``"1T"..."4T"`` (quarterly) or ``"01".."12"`` (monthly).
-    The draft's period field carries an ISO-ish form like ``"2024Q1"``
-    or ``"2024-Q1"``; extract the trimester suffix.
+    AEAT accepts ``"1T"`` to ``"4T"`` (quarterly) or ``"01"`` to ``"12"``
+    (monthly). The draft's period field carries an ISO-ish form like
+    ``"2024Q1"`` or ``"2024-Q1"``; the trimester suffix is extracted.
+
+    Args:
+        period: The draft's period token.
+
+    Returns:
+        The canonical fichero-BOE period token.
+
+    Raises:
+        typer.BadParameter: When ``period`` cannot be translated.
     """
     upper = period.upper()
     m = re.search(r"Q([1-4])", upper)
@@ -57,7 +64,18 @@ def _period_token(period: str) -> str:
 
 
 def _ejercicio_token(period: str) -> str:
-    """Extract the 4-digit ejercicio from a draft period."""
+    """Extract the 4-digit ejercicio from a draft period.
+
+    Args:
+        period: The draft's period token (e.g. ``"2024Q1"``).
+
+    Returns:
+        The 4-digit year prefix.
+
+    Raises:
+        typer.BadParameter: When ``period`` does not start with 4
+            digits.
+    """
     m = re.match(r"^(\d{4})", period)
     if not m:
         raise typer.BadParameter(f"cannot extract ejercicio from period {period!r}; expected YYYY prefix")
@@ -109,9 +127,24 @@ def export_cmd(
 ) -> None:
     """Export the filing draft to an AEAT-importable fichero-BOE file.
 
-    Raises :class:`typer.Exit(code=2)` for unsupported modelos (303/390
-    still pending architectural work). Raises ``code=3`` for draft-
-    status rejection.
+    Args:
+        draft_path: Path to a CLI-format draft JSON.
+        output_dir: Directory where the exported fichero-BOE file is
+            written.
+        nombre: Declarant first name (``NOMBRE`` field).
+        apellidos: Declarant surnames (``APELLIDOS`` field).
+        tipo_declaracion: Declaration type letter (``"I"`` ingreso,
+            ``"N"`` negativa, ``"D"`` devolución, ``"U"`` domiciliación
+            única, etc.).
+        iban: IBAN for SEPA devolución (``tipo=D``); stamped into the
+            ``DP303DID`` SEPA page for envelope modelos.
+        swift: SWIFT/BIC for SEPA devolución (``tipo=D``); optional for
+            Spanish IBANs.
+
+    Raises:
+        typer.BadParameter: For invalid period, NIF, or value shapes.
+        typer.Exit: With code ``2`` for unsupported modelos and code
+            ``3`` for draft-status or SEPA-input rejections.
     """
     draft = load_draft(draft_path)
 

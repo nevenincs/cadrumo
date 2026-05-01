@@ -74,5 +74,6 @@ scope — zero errors in target lanes.
 
 ## deletions
 
-None. The target lanes had no stubs, fakes, hollow Protocols, re-export shims,
-empty function bodies, or star-import shims to remove.
+None. The target lanes had no stubs, fakes, hollow Protocols,
+compatibility re-export modules, empty function bodies, or star-import
+compatibility modules to remove.

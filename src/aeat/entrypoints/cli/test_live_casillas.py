@@ -1,4 +1,12 @@
-"""Opt-in live tests for future issue-21-backed casillas draft workflows."""
+"""Opt-in live placeholders for the LLM-backed casillas draft workflow.
+
+Holds the slot for the future provider-backed extract/translate flow
+that will exercise real LLM calls against canonical
+``MODELO_130``/``MODELO_303``/``MODELO_390`` corpora once the
+production LLM client surface lands. Each test honours the
+``AEAT_LIVE_TESTS_ENABLED`` gate and currently skips with an
+explanatory message until the dependency lands.
+"""
 
 from __future__ import annotations
 

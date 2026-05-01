@@ -1,4 +1,14 @@
-"""Unit tests for the shared CLI error boundary."""
+"""Unit tests for the shared CLI error boundary.
+
+Exercises :func:`aeat.entrypoints.cli._errors.decorate_typer_app`
+across every error category surfaced by the CLI:
+``LOCKED``/``REFUSED``/``AUTH``/``INTEGRITY``/``FAIL``/``INTERNAL``/``DEPRECATED``/``MOVED``,
+plus validation errors, unexpected runtime errors, and the
+``--json`` and JSON-alias flag plumbing. Also verifies that
+:func:`aeat.entrypoints.cli._errors.error_boundary_under_test`
+re-raises the original exception so test code can assert on the
+exact failure type.
+"""
 
 from __future__ import annotations
 
@@ -12,11 +22,11 @@ from typer.testing import CliRunner
 from ...adapters.outbound.aeat.auth.certificate import AeatSessionExpiredError
 from ...adapters.outbound.aeat.browser.session import BrowserError
 from ...application.review._errors import ReviewKindReservedError
+from ...core.access_gate import LiveSubmitForbiddenError
 from ...core.errors import (
     DeprecatedAliasError,
     ErrorCategory,
     MovedAliasError,
-    WorkspaceLockedError,
     get_error_exit_code,
 )
 from ...core.observability._errors import RunContextMissingError
@@ -32,7 +42,7 @@ app = typer.Typer(name="aeat", no_args_is_help=True)
 
 @app.command("locked")
 def locked_command(json: bool = typer.Option(False, "--json")) -> None:
-    raise WorkspaceLockedError()
+    raise LiveSubmitForbiddenError()
 
 
 @app.command("refused")
@@ -89,7 +99,7 @@ def unexpected_command() -> None:
 @app.command("json-alias")
 def json_alias_command(as_json: bool = typer.Option(False, "--json")) -> None:
     _ = as_json
-    raise WorkspaceLockedError()
+    raise LiveSubmitForbiddenError()
 
 
 @app.command("passthrough")
@@ -106,7 +116,7 @@ def test_human_readable_error_is_emitted_by_default() -> None:
     assert result.exit_code == get_error_exit_code(ErrorCategory.LOCKED)
     assert result.stdout == ""
     assert "LOCKED:" in result.stderr
-    assert "-> Run `aeat workflow list`" in result.stderr
+    assert "-> Run `aeat submission export`" in result.stderr
 
 
 def test_json_error_is_emitted_when_json_flag_is_present() -> None:
@@ -155,7 +165,7 @@ def test_exit_code_matches_placeholder_category_mapping(
 
 
 def test_boundary_re_raises_original_exception_under_test() -> None:
-    with error_boundary_under_test(), pytest.raises(WorkspaceLockedError):
+    with error_boundary_under_test(), pytest.raises(LiveSubmitForbiddenError):
         runner.invoke(app, ["locked"], catch_exceptions=False)
 
 

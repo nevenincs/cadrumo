@@ -1,4 +1,8 @@
-"""``aeat submission list`` — list persisted SubmittedFiling records."""
+"""``aeat submission list`` — list persisted SubmittedFiling records.
+
+Read-only listing surface backed by
+:meth:`aeat.adapters.outbound.aeat.export.SubmissionEngine.list_submissions`.
+"""
 
 from __future__ import annotations
 
@@ -17,7 +21,14 @@ def list_cmd(
     modelo: str | None = typer.Option(None, "--modelo", help="Filter by modelo."),
     status: SubmissionStatus | None = typer.Option(None, "--status", help="Filter by SubmissionStatus."),
 ) -> None:
-    """List every persisted :class:`SubmittedFiling`, optionally filtered."""
+    """List every persisted :class:`SubmittedFiling`, optionally filtered.
+
+    Args:
+        modelo: Optional modelo code to filter on.
+        status: Optional
+            :class:`aeat.adapters.outbound.aeat.export.SubmissionStatus`
+            to filter on.
+    """
     arguments = {"modelo": modelo, "status": status}
     with cli_run_context(entrypoint="aeat submission list", arguments=arguments):
         engine = build_engine()

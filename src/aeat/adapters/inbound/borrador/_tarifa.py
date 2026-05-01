@@ -1,18 +1,18 @@
-"""Tarifa progresiva IRPF post-validator for Modelo 100 (#305).
+"""Tarifa progresiva IRPF post-validator for Modelo 100.
 
-The summary-block ruleset covers 4 top-level derivations (cuota íntegra
-total, total deducciones, cuota líquida, cuota resultante) by treating
-each cuota íntegra component as a literal Kent fills in. The *real*
-computation of the cuota íntegra goes through Spain's progressive IRPF
-tax scale — the **tarifa progresiva** — applied separately to the base
-liquidable general and the base liquidable del ahorro, split further
-into state + autonomous halves.
+The summary-block ruleset covers four top-level derivations (cuota
+íntegra total, total deducciones, cuota líquida, cuota resultante) by
+treating each cuota íntegra component as a literal Kent fills in. The
+*real* computation of the cuota íntegra goes through Spain's progressive
+IRPF tax scale — the **tarifa progresiva** — applied separately to the
+base liquidable general and the base liquidable del ahorro, split
+further into state and autonomous halves.
 
-This module implements the state halves (common to every Kent
-regardless of CCAA) as a piecewise-linear tax calculation, and
-exposes a post-validator that Kent's verdict pipeline calls after the
-formula engine pass. Autonomous halves stay out of scope — they vary
-per comunidad autónoma and land in sub-EPIC #305-F-full.
+This module implements the state halves (common to every Kent regardless
+of CCAA) as a piecewise-linear tax calculation, and exposes
+:func:`validate_tarifa_estatal`, the post-validator that Kent's verdict
+pipeline calls after the formula engine pass. Autonomous halves stay out
+of scope — they vary per comunidad autónoma.
 """
 
 from __future__ import annotations
@@ -59,12 +59,22 @@ def apply_tarifa(
 ) -> Decimal:
     """Apply a progressive tax scale to ``base_liquidable``.
 
-    For each bracket with upper-inclusive ``U_i`` and marginal rate ``r_i``
-    (lower bound = previous upper or 0), the contribution is
-    ``r_i x max(0, min(base, U_i) - U_{i-1})``. The cuota íntegra is the
-    sum of all bracket contributions, rounded to cents (ROUND_HALF_UP).
+    For each bracket with upper-inclusive ``U_i`` and marginal rate
+    ``r_i`` (lower bound = previous upper or 0), the contribution is
+    ``r_i * max(0, min(base, U_i) - U_{i-1})``. The cuota íntegra is the
+    sum of all bracket contributions, rounded to cents using
+    :data:`decimal.ROUND_HALF_UP`.
 
-    Returns ``Decimal('0.00')`` for non-positive bases.
+    Args:
+        base_liquidable: The base liquidable to which the scale is
+            applied.
+        brackets: Tuple of ``(upper_inclusive_decimal_str_or_None,
+            marginal_rate_str)`` tuples describing the progressive
+            scale.
+
+    Returns:
+        The cuota íntegra. Returns ``Decimal('0.00')`` for non-positive
+        bases.
     """
     if base_liquidable <= Decimal("0"):
         return Decimal("0.00")
@@ -90,7 +100,20 @@ def apply_tarifa(
 
 @dataclass(frozen=True)
 class TarifaFinding:
-    """One cuota íntegra vs. tarifa mismatch surfaced by the validator."""
+    """One cuota íntegra vs. tarifa mismatch surfaced by the validator.
+
+    Attributes:
+        casilla_id: AEAT casilla id whose extracted cuota diverges from
+            the tarifa-derived value (``"0550"`` for the general scale,
+            ``"0560"`` for the savings scale).
+        base_casilla_id: AEAT casilla id of the base liquidable used as
+            the input to the tarifa (``"0545"`` for general,
+            ``"0555"`` for savings).
+        expected_cuota: The cuota the tarifa scale produces for the
+            given base.
+        actual_cuota: The cuota actually printed in the PDF.
+        delta: ``actual_cuota - expected_cuota``.
+    """
 
     casilla_id: str  # "0550" or "0560"
     base_casilla_id: str  # "0545" or "0555"
@@ -110,16 +133,32 @@ def validate_tarifa_estatal(
 ) -> tuple[TarifaFinding, ...]:
     """Compare extracted cuota íntegra estatal against the progressive tarifa.
 
-    Returns one :class:`TarifaFinding` per casilla where the extracted
-    cuota diverges from the tarifa-derived value by more than
-    ``tolerance`` euros. Missing inputs (``None``) silently skip their
-    check — a partial extraction is not a discrepancy.
+    Args:
+        ejercicio: Four-digit tax year. Must be a member of
+            :data:`_SUPPORTED_EJERCICIOS`.
+        base_liquidable_general: Extracted base liquidable general, or
+            ``None`` to skip the general check.
+        base_liquidable_ahorro: Extracted base liquidable del ahorro, or
+            ``None`` to skip the savings check.
+        cuota_estatal_general: Extracted cuota íntegra estatal general,
+            or ``None`` to skip the general check.
+        cuota_estatal_ahorro: Extracted cuota íntegra estatal del
+            ahorro, or ``None`` to skip the savings check.
+        tolerance: Absolute euro tolerance (default
+            :data:`_TWO_CENT_TOLERANCE`) between the extracted cuota and
+            the tarifa-derived value.
+
+    Returns:
+        One :class:`TarifaFinding` per casilla where the extracted cuota
+        diverges from the tarifa-derived value by more than ``tolerance``
+        euros. Missing inputs (``None``) silently skip their check — a
+        partial extraction is not a discrepancy.
 
     Raises:
         ValueError: If ``ejercicio`` is not in
             :data:`_SUPPORTED_EJERCICIOS`. Unknown ejercicios are a
-            correctness risk — silently validating a 2027 filing
-            against the 2025 scale would mask real legislative drift.
+            correctness risk — silently validating a 2027 filing against
+            the 2025 scale would mask real legislative drift.
     """
     if ejercicio not in _SUPPORTED_EJERCICIOS:
         raise ValueError(

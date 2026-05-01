@@ -1,6 +1,13 @@
-"""Envelope substrate: file-backed JSON / cipher envelope I/O.
+"""Envelope substrate: file-backed JSON and cipher envelope I/O.
 
-Bucket boundary established by audit-4 in the aeat-restructure ADR.
+Public surface for the schema-versioned envelope contract used by
+file-backed persistence consumers. Re-exports the typed
+:class:`Envelope` and :class:`CipherEnvelope` records, the
+:class:`AeadAlgorithm` catalogue, the :class:`EncryptionMetadata`
+record, the :class:`EnvelopeMigrator` extension protocol, and the
+plaintext / ciphertext save/load helpers (:func:`save_envelope`,
+:func:`load_envelope`, :func:`save_encrypted_envelope`,
+:func:`load_encrypted_envelope`, :func:`reencrypt_envelope_file`).
 """
 
 from __future__ import annotations

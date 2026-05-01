@@ -31,7 +31,7 @@ from aeat.domain.transactions import (
     set_classification,
     unregister_classifier,
 )
-from aeat.domain.transactions._repository import TransactionCatalogueRepository
+from aeat.domain.transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -921,8 +921,8 @@ class _ScriptedLLMClassifier:
     """Real LLMClassifier implementation that returns a scripted response.
 
     Used to exercise the classify-llm CLI end-to-end without shelling
-    out to a real LLM. Not a mock: it's a plain dataclass with the
-    two attributes the protocol requires.
+    out to a real LLM. It is a plain dataclass with the two attributes
+    the protocol requires.
     """
 
     response: LLMClassificationResponse

@@ -34,7 +34,7 @@ categories enumerated in the plan; findings disposition follows.
 | Coverage gap (modelo with no ruleset for required year) | Modelo 202 missing 2024 + 2026 | FILE | #498 |
 | Casilla gap (catalogue-declared casilla without formula or input-only declaration) | 4 casillas in Modelo 303/2024 already locked under `_EXPECTED_GAPS` | FILE | #499 |
 | Stub gap (empty function body + caller) | 0 found | n/a | n/a |
-| Placeholder gap (enum value reserved + actively rejected by validator) | 0 found post-Phase-1 cleanup (SchemaSource slots removed in #482) | n/a | n/a |
+| Placeholder gap (active enum value still rejected by validator) | 0 found post-Phase-1 cleanup (former `SchemaSource` slots removed in #482) | n/a | n/a |
 
 ## hard-gap detail (all STRIKE)
 

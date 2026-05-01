@@ -444,7 +444,7 @@ class TestSecurityHardening:
         """Two providers bound to distinct services do NOT share cached keys."""
         keyring = pytest.importorskip("keyring")
 
-        # Stub the live backend so the test does not depend on the host's keychain.
+        # Replace the live backend so the test does not depend on the host's keychain.
         store: dict[tuple[str, str], str] = {}
 
         def _get(service: str, username: str) -> str | None:
@@ -453,7 +453,7 @@ class TestSecurityHardening:
         def _set(service: str, username: str, password: str) -> None:
             store[(service, username)] = password
 
-        # Stub the backend probe so it does not trip on the host's
+        # Replace the backend probe so it does not trip on the host's
         # actual fail.Keyring detection.
         monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
         monkeypatch.setattr(keyring, "get_password", _get)

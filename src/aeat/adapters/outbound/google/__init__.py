@@ -26,6 +26,7 @@ Narrower scope constants are provided for least-privilege scenarios.
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -47,6 +48,7 @@ from ._paths import (
     inspect_oauth_token_cache,
     normalize_google_auth_path,
 )
+from ....core.file_permissions import restrict_file_permissions
 
 if TYPE_CHECKING:
     from ....core.config import Settings
@@ -145,6 +147,19 @@ ADC_LOGIN_SCOPE_CSV = format_scope_csv(ADC_LOGIN_SCOPES)
 # ── OAuth 2.0 ───────────────────────────────────────────────────────────────
 
 
+def _write_oauth_token_cache(token_path: Path, payload: str) -> None:
+    """Persist OAuth token JSON with operator-only permissions."""
+
+    token_path.parent.mkdir(parents=True, exist_ok=True)
+    if os.name == "posix":
+        try:
+            os.chmod(token_path.parent, 0o700)
+        except OSError:
+            log.warning("failed to restrict OAuth token directory permissions: %s", token_path.parent)
+    token_path.write_text(payload, encoding="utf-8")
+    restrict_file_permissions(token_path)
+
+
 def get_oauth_credentials(
     client_id: str,
     client_secret: str,
@@ -194,8 +209,7 @@ def get_oauth_credentials(
         creds = flow.run_local_server(port=8080)
 
     # 3. Persist the token for next time
-    token_path.parent.mkdir(parents=True, exist_ok=True)
-    token_path.write_text(creds.to_json())
+    _write_oauth_token_cache(token_path, creds.to_json())
 
     return creds
 

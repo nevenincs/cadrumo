@@ -64,7 +64,7 @@ def _make_modelo() -> Modelo:
     provenance = SchemaProvenance(
         source=SchemaSource.BOE_ORDEN,
         origin_url=TypeAdapter(AnyHttpUrl).validate_python("https://www.boe.es/example.pdf"),
-        document_ref="BOE-A-FAKE",
+        document_ref="BOE-A-SYNTHETIC",
         sha256=_SHA,
         content_length=4096,
         fetched_at=datetime(2026, 4, 17, 9, 0, tzinfo=UTC),
@@ -75,7 +75,7 @@ def _make_modelo() -> Modelo:
         casillas=casillas,
         provenance=provenance,
         extracted_at=datetime(2026, 4, 17, 9, 5, tzinfo=UTC),
-        schema_version=SchemaVersion(boe_ref="BOE-A-FAKE"),
+        schema_version=SchemaVersion(boe_ref="BOE-A-SYNTHETIC"),
     )
 
 
@@ -95,9 +95,9 @@ def test_resolve_schema_cache_file_rejects_dirty_ref(tmp_path: Path) -> None:
 
 def test_cache_round_trip(tmp_path: Path) -> None:
     modelo = _make_modelo()
-    written = save_modelo_to_cache(modelo, root=tmp_path, boe_ref="BOE-A-FAKE")
+    written = save_modelo_to_cache(modelo, root=tmp_path, boe_ref="BOE-A-SYNTHETIC")
     assert written.exists()
-    restored = load_modelo_from_cache(ModeloCode.MODELO_130, "BOE-A-FAKE", tmp_path)
+    restored = load_modelo_from_cache(ModeloCode.MODELO_130, "BOE-A-SYNTHETIC", tmp_path)
     assert restored == modelo
 
 
@@ -118,8 +118,8 @@ def test_cache_missing_file(tmp_path: Path) -> None:
 
 
 def test_cache_invalid_json(tmp_path: Path) -> None:
-    path = resolve_schema_cache_file(ModeloCode.MODELO_130, "BOE-A-FAKE", tmp_path)
+    path = resolve_schema_cache_file(ModeloCode.MODELO_130, "BOE-A-SYNTHETIC", tmp_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text('{"not": "a modelo"}', encoding="utf-8")
     with pytest.raises(SchemaValidationError):
-        load_modelo_from_cache(ModeloCode.MODELO_130, "BOE-A-FAKE", tmp_path)
+        load_modelo_from_cache(ModeloCode.MODELO_130, "BOE-A-SYNTHETIC", tmp_path)

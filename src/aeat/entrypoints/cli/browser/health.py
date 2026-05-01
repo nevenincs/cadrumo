@@ -133,7 +133,7 @@ PROBE_FACTORY = _default_probe_factory
 Tests replace this attribute with a concrete async factory that
 returns a :class:`HealthProbeLike` double built from a real fixture.
 Replacing the factory is the project-sanctioned dependency-injection
-seam for the CLI; no ``unittest.mock`` is required.
+seam for the CLI; no ``unittest`` import is required.
 """
 
 ProbeFactory = Callable[[Settings], Awaitable[HealthProbeLike]]

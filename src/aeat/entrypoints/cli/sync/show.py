@@ -1,4 +1,9 @@
-"""``aeat sync show-divergence`` — print a single divergence record."""
+"""``aeat sync show-divergence`` -- print a single divergence record as JSON.
+
+Loads a :class:`aeat.application.sync.DivergenceRecord` by id from
+:class:`aeat.application.sync.JsonFileDivergenceRepository` and
+emits its full payload via Rich's JSON pretty-printer.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +20,16 @@ _CONSOLE = Console()
 def show_divergence(
     record_id: str = typer.Argument(..., help="The divergence record id."),
 ) -> None:
-    """Print the full JSON payload of a divergence record."""
+    """Print the full JSON payload of a divergence record.
+
+    Args:
+        record_id: Identifier of the record to display.
+
+    Raises:
+        typer.Exit: With code ``1`` when the record is missing or
+            the repository raises
+            :class:`aeat.application.sync.DivergenceRepositoryError`.
+    """
     arguments = {"record_id": record_id}
     with cli_run_context(
         entrypoint="aeat sync show-divergence",

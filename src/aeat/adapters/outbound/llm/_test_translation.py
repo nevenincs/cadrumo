@@ -1,4 +1,10 @@
-"""Unit tests for translation helpers."""
+"""Unit tests for translation helpers built atop the LLM client.
+
+Exercises :class:`aeat.adapters.outbound.llm.Translator` against the
+deterministic provider adapter to verify it builds a valid translation
+request and returns a populated
+:class:`aeat.adapters.outbound.llm.Translation` model.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +16,7 @@ from pydantic_settings import SettingsConfigDict
 
 from ....core.config import LLMProviderSetting, Settings
 from . import LLMCache, LLMClient, Translator, UsageRecorder
-from ._providers import _FakeAdapter
+from ._providers import _DeterministicAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -32,7 +38,7 @@ def test_translator_uses_seeded_prompt_and_returns_translation(tmp_path: Path) -
         settings=settings,
         cache=LLMCache(root_dir=tmp_path / "cache"),
         usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
-        _adapter=_FakeAdapter(response_text="hola"),
+        _adapter=_DeterministicAdapter(response_text="hola"),
     )
     translator = Translator(client=client)
     translation = asyncio.run(translator.translate("hello", "en", "es", context="AEAT form label"))

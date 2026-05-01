@@ -19,7 +19,7 @@ related:
 
 Step 0 per the execution plan resolves the two boundary items previously deferred to project-owner sign-off:
 
-- Decision 6 — reserved `SchemaSource` enum slots (`PORTAL_HTML_PROBE`, `MANUAL_LLM_DRAFT`, `XSD_WIRE`)
+- Decision 6 — former reserved `SchemaSource` enum slots (`PORTAL_HTML_PROBE`, `MANUAL_LLM_DRAFT`, `XSD_WIRE`)
 - Decision 10 — migration-helper retention window (`migrate_legacy_*_to_repository` family)
 
 Both decisions are resolved autonomously via the audit-grounded decision rules in the ADR's Autonomous decision rules section. No subagent dispatch was required: each rule's audit method is a tightly-scoped grep + git-log + GitHub-search operation that does not benefit from agent parallelism.
@@ -37,7 +37,7 @@ Both decisions are resolved autonomously via the audit-grounded decision rules i
 Source-code references — 3 files in `src/aeat/`:
 
 - `src/aeat/domain/schema/_enums.py` lines 21–23 — slot definitions (`PORTAL_HTML_PROBE`, `MANUAL_LLM_DRAFT`, `XSD_WIRE`).
-- `src/aeat/domain/schema/_models.py` lines 112–113 — docstring documenting them as "reserved enum slots for follow-up extractors".
+- `src/aeat/domain/schema/_models.py` lines 112–113 — docstring documenting them as "reserved enum slots for follow-up extractors" before deletion.
 - `src/aeat/domain/schema/test_models.py` lines 351–353 — test exercising the reserved values.
 
 Vault-doc references — 3 historical docs:
@@ -114,6 +114,13 @@ ADR rule: *helpers landed > 6 months ago AND zero production callers AND test fi
 - Tracking issue filed: `#477`. Removal eligibility: 2026-10-27 (6 months after landing).
 - `# TODO(#477):` annotation rides into Step 2's first PR per the no-design-only-PRs rule — annotations colocate with the dead-code workstream's first PR. Annotations point at `#477` (the retention tracker) on each helper's `def` line.
 - The 5 helpers MOVE with their domain in Step 7 (`submission/` → `domain/submission/`, `filing/_*` → `domain/filing/`, `justificante/` → `domain/justificante/`). They retain their TODO annotations across the move.
+
+### supersession
+
+This Step 0 disposition is historical. The delivered hard-cutover later
+superseded the retention window: the eliminate-shims pass deleted all
+five helpers and companion `*MigrationSummary` models after confirming
+zero production callers, and closed `#477` with the deletion record.
 
 ### rationale
 

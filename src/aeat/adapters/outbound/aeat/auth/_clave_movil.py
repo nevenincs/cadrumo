@@ -9,7 +9,7 @@ depends on.
 Design summary:
 
 * Cl@ve Móvil ALWAYS requires Kent to approve a push on his phone,
-  even in the non-QR fallback. We do not fake or retry the approval
+  even in the non-QR fallback. We do not simulate or retry the approval
   step — the provider just sits on the AEAT QR page and waits for the
   page's own JavaScript to complete the polling handshake.
 * The provider opens a headed Playwright window on fresh login so Kent

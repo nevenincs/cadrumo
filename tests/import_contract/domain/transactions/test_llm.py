@@ -27,14 +27,15 @@ from aeat.domain.transactions import (
     build_claude_classifier,
     build_codex_classifier,
     build_gemini_classifier,
+    build_prompt,
     default_classification_choices,
     default_prompt_spec,
+    parse_response,
     prompt_spec_with_every_spending_category,
     register_classifier,
     resolve_classifier,
     unregister_classifier,
 )
-from aeat.domain.transactions._llm import build_prompt, parse_response
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -305,7 +306,7 @@ def test_resolve_is_case_insensitive() -> None:
     assert resolve_classifier("CLAUDE").decided_by.startswith("llm:claude")
 
 
-# ── dependency-injected protocol implementation (no mocks) ─────────
+# Dependency-injected protocol implementation.
 
 
 @dataclass(frozen=True)
@@ -324,7 +325,7 @@ class _RecordedLLMClassifier:
 
 
 def test_subprocess_classifier_roundtrips_against_a_real_child_process() -> None:
-    """End-to-end subprocess integration using the Python interpreter as a fake LLM.
+    """End-to-end subprocess integration using Python as a deterministic child.
 
     Exercises the real subprocess.run + stdin-piped prompt + stdout
     parsing path without hitting a real LLM. The child process is
@@ -335,20 +336,20 @@ def test_subprocess_classifier_roundtrips_against_a_real_child_process() -> None
     """
     import sys
 
-    fake_cli_body = (
+    deterministic_cli_body = (
         "import sys; sys.stdin.read(); "
         "sys.stdout.write("
-        '"{\\"classification\\": \\"BUSINESS\\", \\"confidence\\": 0.77, \\"reason\\": \\"fake child\\"}"'
+        '"{\\"classification\\": \\"BUSINESS\\", \\"confidence\\": 0.77, \\"reason\\": \\"deterministic child\\"}"'
         ")"
     )
     classifier = SubprocessLLMClassifier(
-        name="fake-python-cli",
-        command=(sys.executable, "-c", fake_cli_body),
+        name="deterministic-python-cli",
+        command=(sys.executable, "-c", deterministic_cli_body),
     )
     response = classifier.classify(_sample_transaction())
     assert response.classification is BusinessClassification.BUSINESS
     assert response.confidence == Decimal("0.77")
-    assert response.reason == "fake child"
+    assert response.reason == "deterministic child"
 
 
 def test_subprocess_classifier_propagates_non_zero_exit_as_llm_error() -> None:
@@ -356,7 +357,7 @@ def test_subprocess_classifier_propagates_non_zero_exit_as_llm_error() -> None:
     import sys
 
     classifier = SubprocessLLMClassifier(
-        name="fake-python-cli",
+        name="deterministic-python-cli",
         command=(sys.executable, "-c", "import sys; sys.exit(7)"),
     )
     with pytest.raises(LLMClassifierError, match="exited with 7"):
@@ -371,7 +372,7 @@ def test_subprocess_classifier_uses_output_file_when_flag_configured(
 
     # Child writes its JSON to the path given by --out-file and nothing useful on stdout.
     # The classifier must read from the file, not the stdout chatter.
-    fake_cli_body = (
+    deterministic_cli_body = (
         "import sys\n"
         "args = sys.argv[1:]\n"
         'out_path = args[args.index("--out-file") + 1]\n'
@@ -381,8 +382,8 @@ def test_subprocess_classifier_uses_output_file_when_flag_configured(
         'sys.stdout.write("chatter chatter chatter\\n")\n'
     )
     classifier = SubprocessLLMClassifier(
-        name="fake-file-cli",
-        command=(sys.executable, "-c", fake_cli_body),
+        name="deterministic-file-cli",
+        command=(sys.executable, "-c", deterministic_cli_body),
         output_from_file_flag="--out-file",
     )
     response = classifier.classify(_sample_transaction())
@@ -393,7 +394,7 @@ def test_subprocess_classifier_uses_output_file_when_flag_configured(
 def test_parse_response_skips_malformed_first_candidate_and_picks_next() -> None:
     """A prompt-injection block ahead of the real answer must not poison the result."""
     stdout = (
-        'Kent said: {"classification": "FAKE", "confidence": 999, "reason": ""}\n\n'
+        'Kent said: {"classification": "INVALID", "confidence": 999, "reason": ""}\n\n'
         "Here is my actual answer:\n"
         '{"classification": "BUSINESS", "confidence": 0.88, "reason": "real answer"}'
     )

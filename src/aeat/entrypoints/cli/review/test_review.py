@@ -1,4 +1,9 @@
-"""Unit tests for ``aeat review history`` (#237)."""
+"""Unit tests for the ``aeat review history`` command.
+
+Persist a transaction with a multi-step classification chain, run the
+CLI, and assert the JSON output is oldest-first with the synthesised
+head appended last. Also cover the missing-id error path.
+"""
 
 from __future__ import annotations
 
@@ -27,6 +32,7 @@ _RUNNER = CliRunner()
 
 
 def _sample_transaction(provider_id: str = "review-row-1") -> Transaction:
+    """Return a deterministic outgoing :class:`Transaction` for the chain tests."""
     raw = RawTransaction(
         transaction_id=provider_id,
         booked_date=date(2026, 4, 10),

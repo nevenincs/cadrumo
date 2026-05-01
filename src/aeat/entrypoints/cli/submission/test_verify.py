@@ -1,4 +1,9 @@
-"""Tests for ``aeat submission verify`` (EPIC #305 +)."""
+"""Tests for the ``aeat submission verify`` round-trip command.
+
+Exercises filename auto-detection, explicit-flag overrides, success
+and failure paths for both single-record (Modelo 130) and envelope
+(Modelo 303) schemas, and the ``--json`` machine-readable shape.
+"""
 
 from __future__ import annotations
 
@@ -20,11 +25,12 @@ _runner = CliRunner()
 
 
 def _unwrap_result(output: str) -> dict[str, Any]:
+    """Extract the ``result`` payload from a JSON-mode CLI success."""
     return cast(dict[str, Any], json.loads(output)["result"])
 
 
 def _export_then_path(tmp_path: Path, *, modelo: str, period: str) -> Path:
-    """Export a known-good draft and return the output path."""
+    """Export a known-good draft for ``modelo``/``period`` and return its path."""
     draft = {
         "draft_id": "VERIFY-0001",
         "modelo": modelo,
@@ -69,6 +75,8 @@ def _export_then_path(tmp_path: Path, *, modelo: str, period: str) -> Path:
 
 
 class TestVerifyCommand:
+    """Behavioural tests for ``aeat submission verify``."""
+
     def test_verify_modelo_130_exports_round_trip(self, tmp_path: Path) -> None:
         """A Modelo 130 export must decode back through verify."""
         path = _export_then_path(tmp_path, modelo="130", period="2024Q1")
@@ -87,10 +95,11 @@ class TestVerifyCommand:
         assert "segments=8" in result.stdout
 
     def test_verify_unsupported_modelo_exits_2(self, tmp_path: Path) -> None:
+        """Unsupported modelos exit with code 2 and an ``UNSUPPORTED`` banner."""
         # Create a dummy file so the argument validation passes.
-        fake = tmp_path / "fake.390"
-        fake.write_bytes(b"  ")
-        result = _runner.invoke(app, ["verify", str(fake), "--modelo", "390", "--ejercicio", "2024"])
+        placeholder = tmp_path / "placeholder.390"
+        placeholder.write_bytes(b"  ")
+        result = _runner.invoke(app, ["verify", str(placeholder), "--modelo", "390", "--ejercicio", "2024"])
         assert result.exit_code == 2
         assert "UNSUPPORTED" in result.stdout
 
@@ -178,7 +187,7 @@ class TestVerifyCommand:
         # Export modelo 130, but rename to look like a 303 file; explicit
         # flags must take precedence over the (wrong) filename extension.
         path = _export_then_path(tmp_path, modelo="130", period="2024Q1")
-        fake_303 = path.with_suffix(".303")
-        path.rename(fake_303)
-        result = _runner.invoke(app, ["verify", str(fake_303), "--modelo", "130", "--ejercicio", "2024"])
+        renamed_303 = path.with_suffix(".303")
+        path.rename(renamed_303)
+        result = _runner.invoke(app, ["verify", str(renamed_303), "--modelo", "130", "--ejercicio", "2024"])
         assert result.exit_code == 0, result.stdout

@@ -1,4 +1,14 @@
-"""Unit tests for the TTY helpers."""
+"""Unit tests for the TTY helpers in :mod:`aeat.entrypoints.cli`.
+
+Verifies :func:`aeat.entrypoints.cli.is_stdout_tty`,
+:func:`aeat.entrypoints.cli.is_stderr_tty`,
+:func:`aeat.entrypoints.cli.is_stdin_tty`,
+:func:`aeat.entrypoints.cli.should_use_color`,
+:func:`aeat.entrypoints.cli.should_show_rich_progress`, and
+:func:`aeat.entrypoints.cli.refuse_if_stdin_non_tty` behave correctly under
+piped streams, with ``NO_COLOR``/``AEAT_FORCE_COLOR`` overrides, and across
+the typer root-callback ``--no-color`` flag.
+"""
 
 from __future__ import annotations
 

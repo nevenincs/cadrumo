@@ -1,9 +1,10 @@
 """Unit tests for the ``aeat workflow`` CLI sub-app.
 
 The tests exercise the typer surface via :class:`typer.testing.CliRunner`.
-Real :class:`aeat.application.workflow.WorkflowEngine` instances are wired through
-the ``set_test_hooks`` module seam — no mocks, no patches. The shared
-test stand-ins live in ``_test_doubles.py``.
+Real :class:`aeat.application.workflow.WorkflowEngine` instances are wired
+through the :func:`aeat.entrypoints.cli.workflow._helpers.set_test_hooks`
+module seam — no mocks, no patches. Shared test stand-ins live in
+:mod:`aeat.entrypoints.cli.workflow._test_doubles`.
 """
 
 from __future__ import annotations

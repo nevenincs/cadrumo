@@ -1,12 +1,15 @@
-"""Protocol-level Cl@ve Movil tests for ``aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider``.
+"""Protocol-level tests for the Cl@ve Movil authentication provider.
 
-These tests use hand-written browser-session stand-ins and do not prove
-real AEAT authentication or operator Cl@ve approval.
-
-No mocks, patches, or cassettes are used. The tests drive the provider
+Exercises :class:`aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider`
 against hand-written ``BrowserSessionLike`` stand-ins that record the
-navigation + form interactions. The stand-ins honour the same Protocol
-the real :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` presents.
+navigation and form interactions performed by the provider. The
+stand-ins satisfy the same Protocol the production
+:class:`aeat.adapters.outbound.aeat.browser.BrowserSession` presents, so the
+provider's choreography (selector clicks, form fills, post-auth
+landing assertions) is verified without a real browser.
+
+These tests do not prove real AEAT authentication or operator Cl@ve
+approval; the live handshake is covered by gated probes elsewhere.
 """
 
 from __future__ import annotations
@@ -141,8 +144,11 @@ class _FakeContext:
 class _FakeBrowserSession:
     """Stand-in for :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
 
-    Only the surface the Cl@ve provider uses —
-    ``create_context(...)`` + ``close()`` — is implemented.
+    Implements only the surface the Cl@ve Movil provider uses:
+    :meth:`create_context` and :meth:`close`. Resume contexts (those
+    constructed with a ``storage_state_path``) are simulated as
+    already-authenticated; fresh-login contexts land on the selector
+    page so the provider can drive the click-through.
     """
 
     def __init__(self, *, target_path: str, verification_code: str = "YLL") -> None:
@@ -377,7 +383,7 @@ class TestPostAuthLanding:
 
 
 class TestProbePersistedSession:
-    """`probe_persisted_session` never touches the fresh-login path."""
+    """:meth:`ClaveMovilAuthProvider.probe_persisted_session` never touches the fresh-login path."""
 
     def test_probe_without_sidecar_raises(
         self,

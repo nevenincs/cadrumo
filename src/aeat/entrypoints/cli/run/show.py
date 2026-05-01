@@ -1,4 +1,10 @@
-"""``aeat run show`` — pretty-print a persisted run trace and its events."""
+"""``aeat run show`` command implementation.
+
+Pretty-prints a persisted :class:`aeat.core.observability.RunTrace`
+and incrementally streams its event log via :func:`iter_events` so a
+long-running trace's log is rendered without ever being fully held in
+memory.
+"""
 
 from __future__ import annotations
 
@@ -22,6 +28,13 @@ def show_cmd(
 
     Streams events via :func:`iter_events` so a long-running run's log
     is rendered incrementally and never materialised in memory.
+
+    Args:
+        run_id: Identifier of the persisted run trace to load.
+
+    Raises:
+        typer.Exit: Code ``1`` when the trace cannot be loaded or the
+            event log is corrupt mid-stream.
     """
     try:
         trace = load_trace(run_id)

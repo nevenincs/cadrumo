@@ -1,16 +1,17 @@
-"""Typer commands for :mod:`aeat.domain.schema`.
+"""Typer commands for :mod:`aeat.domain.schema`, mounted under ``aeat schema``.
 
-Mounted under ``aeat schema``. Commands:
+Commands:
 
-- ``refresh`` — fetch a BOE PDF, run :class:`BoeOrdenExtractor`,
-  persist the resulting :class:`Modelo` as sorted JSON under the
-  schema cache root.
-- ``show`` — pretty-print the cached JSON for a modelo / BOE ref.
+- ``refresh`` — fetch a BOE PDF, run
+  :class:`aeat.adapters.inbound.schema.BoeOrdenExtractor`, and persist
+  the resulting :class:`aeat.domain.modelos.ModeloCode`-keyed schema as
+  sorted JSON under the schema cache root.
+- ``show`` — pretty-print the cached JSON for a modelo + BOE ref.
 
 The ``refresh`` command accepts a hidden ``--_pdf-path-override``
 option used exclusively by the colocated unit tests to skip the
-network fetch. The option is not exposed through any env var and
-is not listed in ``env/.env.example``.
+network fetch. The option is not exposed through any env var and is
+not listed in ``env/.env.example``.
 """
 
 from __future__ import annotations
@@ -22,16 +23,18 @@ from pathlib import Path
 import typer
 from pydantic import AnyHttpUrl
 
-from ...adapters.inbound.schema import BoeOrdenExtractor
+from ...adapters.inbound.schema import (
+    BOE_ORDEN_SOURCES,
+    BoeOrdenExtractor,
+    FetchedSchemaSource,
+    fetch_boe_pdf,
+)
 from ...core.config import load_settings
 from ...domain.modelos import ModeloCode
 from ...domain.schema import (
-    BOE_ORDEN_SOURCES,
-    FetchedSchemaSource,
     SchemaCacheError,
     SchemaError,
     SchemaValidationError,
-    fetch_boe_pdf,
     load_modelo_from_cache,
     save_modelo_to_cache,
     validate_period_for_modelo,
@@ -46,7 +49,13 @@ app = typer.Typer(
 
 
 def _resolve_modelo_code(value: str) -> ModeloCode:
-    """Accept either the enum name (``MODELO_130``) or the value (``130``)."""
+    """Resolve ``value`` to a :class:`ModeloCode` enum member.
+
+    Accepts either the enum name (``MODELO_130``) or the value (``130``).
+
+    Raises:
+        typer.BadParameter: When ``value`` matches neither convention.
+    """
     stripped = (value or "").strip()
     if not stripped:
         raise typer.BadParameter("--modelo is required")
@@ -62,7 +71,11 @@ def _resolve_modelo_code(value: str) -> ModeloCode:
 
 
 def _resolve_origin_url(code: ModeloCode, boe_ref: str) -> AnyHttpUrl:
-    """Look up the BOE origin URL for ``(code, boe_ref)`` in the public table."""
+    """Look up the BOE origin URL for ``(code, boe_ref)`` in :data:`BOE_ORDEN_SOURCES`.
+
+    Raises:
+        typer.BadParameter: When no entry matches the pair.
+    """
     for entry in BOE_ORDEN_SOURCES:
         if entry.modelo_code == code and entry.boe_ref == boe_ref:
             return entry.origin_url
@@ -98,7 +111,19 @@ def refresh(
         help="Test-only override to skip the network fetch.",
     ),
 ) -> None:
-    """Refresh the cache for ``(modelo, boe_ref)``."""
+    """Refresh the cached schema for ``(modelo, boe_ref)``.
+
+    Args:
+        modelo: Modelo code — either the enum name or the value.
+        boe_ref: BOE-A identifier of the Orden.
+        period: Filing period string (``2025Q4``, ``2025``, ``2025-03``).
+        pdf_path_override: Test-only override that streams an
+            already-downloaded PDF instead of fetching from the network.
+
+    Raises:
+        typer.Exit: Code ``1`` when validation or extraction fails;
+            :exc:`typer.BadParameter` when the override path is missing.
+    """
     settings = load_settings()
     code = _resolve_modelo_code(modelo)
     period = period.strip()
@@ -170,7 +195,15 @@ def show(
         help="BOE-A identifier of the Orden to look up.",
     ),
 ) -> None:
-    """Load ``<cache>/modelo_<code>/<boe_ref>.json`` and emit it as JSON."""
+    """Load ``<cache>/modelo_<code>/<boe_ref>.json`` and emit it as JSON.
+
+    Args:
+        modelo: Modelo code — either the enum name or the value.
+        boe_ref: BOE-A identifier of the Orden to look up.
+
+    Raises:
+        typer.Exit: Code ``1`` when the cached schema cannot be loaded.
+    """
     settings = load_settings()
     code = _resolve_modelo_code(modelo)
     try:

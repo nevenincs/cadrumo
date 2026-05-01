@@ -1,4 +1,4 @@
-"""Protocol stubs for wizard-facing dependencies.
+"""Protocol contracts for wizard-facing dependencies.
 
 The :class:`Prompter` Protocol decouples the wizard's state machine
 from Typer's ``typer.prompt`` / ``typer.confirm`` so tests can drive

@@ -1,4 +1,9 @@
-"""CLI tests for the AEAT categories command group."""
+"""CLI tests for the ``aeat categories`` command group.
+
+Covers the ``list``, ``show``, and ``casillas`` subcommands and
+asserts that the JSON payloads expose category metadata, citation
+trails, and modelo-scoped casilla mappings.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,8 @@
-"""Unit tests for the filing complementaria / amendment engine."""
+"""Unit tests for the filing complementaria / amendment engine.
+
+Exercises :func:`aeat.application.filing.build_complementaria` and the
+companion repository surface for Modelo 130, 303, and 390 amendments.
+"""
 
 from __future__ import annotations
 
@@ -27,9 +31,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path):
-    """install an EphemeralMasterKeyProvider so the
-    FilingDraftRepository / FilingAmendmentRepository ciphertext-at-rest
-    writes work in the test sandbox without touching a real keychain."""
+    """Install an :class:`EphemeralMasterKeyProvider` for the test sandbox.
+
+    Required so the :class:`FilingDraftRepository` and
+    :class:`FilingAmendmentRepository` ciphertext-at-rest writes succeed
+    without touching a real OS keychain.
+    """
     from ...adapters.persistence.storage import (
         EncryptedBlobStore,
         EphemeralMasterKeyProvider,

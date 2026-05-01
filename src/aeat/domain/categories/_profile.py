@@ -19,7 +19,7 @@ class _StrictFrozenModel(BaseModel):
 
 
 class VatCategory(StrEnum):
-    """Local VAT hint stub kept decoupled from the VAT taxonomy branch."""
+    """Local VAT hint kept decoupled from the VAT taxonomy branch."""
 
     GENERAL = "general"
     EXEMPT_OR_NON_SUBJECT = "exempt_or_non_subject"

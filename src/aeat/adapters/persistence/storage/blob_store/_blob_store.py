@@ -497,7 +497,7 @@ class EncryptedBlobStore:
         target.parent.mkdir(parents=True, exist_ok=True)
         # Capture the tempfile path BEFORE the ``with`` so cleanup works
         # even when context entry raises (rare but possible on some
-        # filesystems / antivirus shims). NamedTemporaryFile itself
+        # filesystems / antivirus hooks). NamedTemporaryFile itself
         # raising means no file was created; the ``except OSError``
         # below re-raises cleanly.
         handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below

@@ -1,4 +1,11 @@
-"""``aeat sync resolve-divergence`` — approve or reject a PENDING record."""
+"""``aeat sync resolve-divergence`` -- approve or reject a pending record.
+
+Transitions a :class:`aeat.application.sync.DivergenceRecord`
+between :attr:`aeat.application.sync.ResolutionState.PENDING` and
+either :attr:`~aeat.application.sync.ResolutionState.HUMAN_APPROVED`
+or :attr:`~aeat.application.sync.ResolutionState.REJECTED` via the
+:class:`aeat.application.sync.JsonFileDivergenceRepository`.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +26,14 @@ _CONSOLE = Console()
 
 
 class ResolutionAction(StrEnum):
-    """Operator-facing resolution action for a divergence record."""
+    """Operator-facing resolution action for a divergence record.
+
+    Attributes:
+        APPROVE: Mark the record as
+            :attr:`aeat.application.sync.ResolutionState.HUMAN_APPROVED`.
+        REJECT: Mark the record as
+            :attr:`aeat.application.sync.ResolutionState.REJECTED`.
+    """
 
     APPROVE = "approve"
     REJECT = "reject"
@@ -44,7 +58,18 @@ def resolve_divergence(
         help="Optional operator notes describing the resolution.",
     ),
 ) -> None:
-    """Transition a divergence record to HUMAN_APPROVED or REJECTED."""
+    """Transition a divergence record to ``HUMAN_APPROVED`` or ``REJECTED``.
+
+    Args:
+        record_id: Identifier of the divergence record to transition.
+        action: :class:`ResolutionAction` selected by the operator.
+        notes: Optional free-form note describing the rationale.
+
+    Raises:
+        typer.Exit: With code ``1`` when the underlying repository
+            raises
+            :class:`aeat.application.sync.DivergenceRepositoryError`.
+    """
     arguments = {"record_id": record_id, "action": action, "notes": notes}
     with cli_run_context(
         entrypoint="aeat sync resolve-divergence",

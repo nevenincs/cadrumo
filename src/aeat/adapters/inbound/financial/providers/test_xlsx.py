@@ -1,4 +1,10 @@
-"""Unit tests for XLSX financial ingestion."""
+"""Unit tests for the XLSX financial ingestion provider.
+
+Verifies :class:`aeat.adapters.inbound.financial.providers.XlsxProvider`
+correctly auto-detects the header row of a synthetic worksheet and that
+malformed workbooks fail validation cleanly without leaking pikepdf /
+openpyxl exceptions.
+"""
 
 from __future__ import annotations
 

@@ -15,6 +15,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from ...core.i18n import get_translation
 from ...domain.manuals import (
     ManualError,
     ManualId,
@@ -30,6 +31,7 @@ from ...domain.manuals import (
     raise_on_errors,
     verify_manual_dir,
 )
+from ._i18n import output_language
 
 app = typer.Typer(name="manual", no_args_is_help=True, help="AEAT Manual práctico corpus helpers (#25).")
 
@@ -99,7 +101,7 @@ def structure(
     year: int = typer.Option(..., "--year", "-y"),
     part: str = typer.Option(ManualPart.SINGLE.value, "--part", "-p"),
 ) -> None:
-    """Stub for the LLM-assisted chapter-tree extraction workflow."""
+    """Pending LLM-assisted chapter-tree extraction workflow."""
     _ = (_parse_manual_id(manual), year, _parse_part(part))
     raise RuleExtractionError(_PENDING_21_MESSAGE)
 
@@ -111,7 +113,7 @@ def extract_rules(
     part: str = typer.Option(ManualPart.SINGLE.value, "--part", "-p"),
     section: str = typer.Option(..., "--section", "-s", help="Section identifier to extract."),
 ) -> None:
-    """Stub for the LLM-assisted rule extraction workflow."""
+    """Pending LLM-assisted rule extraction workflow."""
     _ = (_parse_manual_id(manual), year, _parse_part(part), section)
     raise RuleExtractionError(_PENDING_21_MESSAGE)
 
@@ -123,7 +125,7 @@ def translate(
     part: str = typer.Option(ManualPart.SINGLE.value, "--part", "-p"),
     section: str = typer.Option(..., "--section", "-s"),
 ) -> None:
-    """Stub for the bulk-translation workflow."""
+    """Pending bulk-translation workflow."""
     _ = (_parse_manual_id(manual), year, _parse_part(part), section)
     raise RuleExtractionError(_PENDING_21_MESSAGE)
 
@@ -230,9 +232,10 @@ def show(
             fg=typer.colors.YELLOW,
         )
         raise typer.Exit(code=0) from exc
+    lang = output_language()
     typer.echo(f"manual: {record.manual_id.value}/{record.year}/{record.part.value}")
-    typer.echo(f"title (es): {record.title.get('es', '')}")
-    typer.echo(f"summary (es): {record.summary.get('es', '')}")
+    typer.echo(f"title: {get_translation(record.title, lang) if record.title else ''}")
+    typer.echo(f"summary: {get_translation(record.summary, lang) if record.summary else ''}")
     typer.echo(f"chapters: {len(record.chapters)}")
     typer.echo(f"definition_reviewed_by: {record.definition_reviewed_by}")
     typer.echo(f"definition_reviewed_at: {record.definition_reviewed_at.isoformat()}")

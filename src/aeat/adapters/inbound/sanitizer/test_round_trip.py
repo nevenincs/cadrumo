@@ -1,7 +1,7 @@
 """Round-trip parser tests for committed sanitised fixtures (#239).
 
 Every committed fixture under ``tests/fixtures/justificantes/`` must
-remain parseable by :func:`aeat.domain.justificante.parse_justificante`
+remain parseable by :func:`aeat.adapters.inbound.justificante.parse_justificante`
 after sanitisation — the test fixture's whole point is to exercise
 the production extractor against a synthetic-but-shape-preserving
 representative of an AEAT capture.
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.justificante import parse_justificante
+from ..justificante import parse_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 

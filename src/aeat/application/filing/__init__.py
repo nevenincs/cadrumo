@@ -6,8 +6,8 @@ records — the project's single answer to *"what does the system
 actually produce?"*.
 
 Public API discipline: callers from outside this subpackage MUST
-import only from :mod:`aeat.filing`. The concrete builders under
-:mod:`aeat.application.filing._builders` are private; consumers select a
+import only from :mod:`aeat.application.filing`. The concrete builders under
+:mod:`aeat.domain.filing._builders` are private; consumers select a
 builder via :func:`build_draft` instead.
 
 Example:
@@ -170,7 +170,7 @@ def build_draft(
         inputs: Mapping of casilla ID → raw input value.
         schema_provider: Resolves the casilla collection for
             ``modelo``.
-        deadline_checker: Optional deadline check Protocol stub
+        deadline_checker: Optional deadline check Protocol implementation
             forwarded to the validator.
         fail_on_warning: When ``True``, the call raises
             :class:`FilingValidationError` if any finding is at
@@ -223,7 +223,7 @@ def validate_draft(
         draft: The draft to re-validate.
         schema_provider: Resolves the casilla collection for the
             draft's modelo.
-        deadline_checker: Optional deadline check Protocol stub.
+        deadline_checker: Optional deadline check Protocol implementation.
 
     Returns:
         A new :class:`FilingDraft` with refreshed findings, status

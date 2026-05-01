@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ....adapters.outbound.aeat.auth import AuthProviderKind
+from ....application.auth import AuthProviderKind
 
 if TYPE_CHECKING:
     from ....core.config import Settings

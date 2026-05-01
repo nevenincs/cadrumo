@@ -148,7 +148,7 @@ class TestLoadDraftFromDisk:
         from decimal import Decimal
 
         from ....core.config import Settings
-        from ....domain.testing import synthesize_filing_draft
+        from ....application.filing.testing import synthesize_filing_draft
         from ._reconcile import _load_draft
 
         drafts_dir = tmp_path / "drafts"
@@ -170,7 +170,7 @@ class TestLoadDraftFromDisk:
         from decimal import Decimal
 
         from ....core.config import Settings
-        from ....domain.testing import synthesize_filing_draft
+        from ....application.filing.testing import synthesize_filing_draft
         from ._reconcile import _load_draft
 
         drafts_dir = tmp_path / "drafts"

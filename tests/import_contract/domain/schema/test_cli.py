@@ -1,7 +1,7 @@
 """Unit tests for :mod:`aeat.entrypoints.cli.schema`.
 
 Every test exercises the real Typer app (no mocks). Network fetches
-go through :func:`aeat.domain.schema.fetch_boe_pdf` whose unit tests rely
+go through :func:`aeat.adapters.inbound.schema.fetch_boe_pdf` whose unit tests rely
 on ``file://`` URLs served from ``tmp_path``.
 """
 
@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.inbound.schema.testing import build_fake_boe_pdf
+from aeat.adapters.inbound.schema.testing import build_synthetic_boe_pdf
 from aeat.entrypoints.cli.schema import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -37,7 +37,7 @@ def runner() -> CliRunner:
 @pytest.fixture
 def sample_pdf(tmp_path: Path) -> Path:
     pdf_path = tmp_path / "boe.pdf"
-    build_fake_boe_pdf(pdf_path, annex_lines=_ANNEX_LINES)
+    build_synthetic_boe_pdf(pdf_path, annex_lines=_ANNEX_LINES)
     return pdf_path
 
 
@@ -139,7 +139,7 @@ def test_refresh_unknown_modelo_is_rejected(runner: CliRunner) -> None:
             "--modelo",
             "MODELO_NOPE",
             "--boe-ref",
-            "BOE-A-FAKE",
+            "BOE-A-SYNTHETIC",
             "--period",
             "2025Q4",
         ],

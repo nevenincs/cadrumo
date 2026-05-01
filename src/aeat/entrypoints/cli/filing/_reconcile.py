@@ -3,7 +3,7 @@
 Wires the Kent-observable triad:
 
     FilingDraft on disk  →  aeat.adapters.outbound.aeat.sede walk + CSV → PDF
-                         →  aeat.domain.justificante parse
+                         →  aeat.adapters.inbound.justificante parse
                          →  aeat.application.filing.reconciliation.reconcile
                          →  MATCH / DIVERGENT / NOT_YET_FOUND
 
@@ -25,8 +25,13 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ....adapters.outbound.aeat.auth._authenticator import AEAT_SESSION_IDLE_TTL, AeatSession
-from ....adapters.outbound.aeat.auth._providers import AuthProviderKind, ClaveMovilSessionDetail
+from ....adapters.inbound.justificante import parse_justificante
+from ....adapters.outbound.aeat.auth import (
+    AEAT_SESSION_IDLE_TTL,
+    AeatSession,
+    AuthProviderKind,
+    ClaveMovilSessionDetail,
+)
 from ....adapters.outbound.aeat.sede import (
     ExpedienteNotFoundError,
     SedeCapture,
@@ -36,7 +41,6 @@ from ....adapters.outbound.aeat.sede import (
     find_expediente,
     walk_declarations_register,
 )
-from ....domain.filing import FilingDraft, FilingDraftStatus
 from ....application.filing.reconciliation import (
     ReconciliationReport,
     ReconciliationStatus,
@@ -44,7 +48,7 @@ from ....application.filing.reconciliation import (
 )
 from ....core.config import Settings, load_settings
 from ....core.logging import get_logger
-from ....domain.justificante import parse_justificante
+from ....domain.filing import FilingDraft, FilingDraftStatus
 from .._errors import CliRefusedBoundaryError, json_output_requested
 from .._schemas import OutputRootSchema, emit_json_success, register_schema
 from ..auth import _session

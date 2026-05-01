@@ -27,8 +27,8 @@ by Steps 9-14.
 | criterion | verified Step 8 | re-verified Step 15 |
 |-----------|-----------------|---------------------|
 | Hexagonal layout in place | ✓ | ✓ |
-| Import-linter contract clean | ✓ | ✓ |
-| Public-surface shims working | ✓ (verify_shims exit 0) | ✓ |
+| Pytest import-contract gate clean | ✓ | ✓ |
+| Root public modules removed; canonical public surfaces import | ✓ | ✓ |
 | End-to-end behavioural smoke test | ✓ | ✓ |
 | Type-checker clean run | ✓ | ✓ |
 | Migration-script correctness fixture | ✓ | ✓ |
@@ -51,13 +51,10 @@ Step-13 follow-up issues are labelled and triaged:
 - #498 Modelo 202 ruleset gap → labelled `gap`, queued for backlog
 - #499 Modelo 303/2024 casilla closure → labelled `gap`, queued for backlog
 
-## shim-removal schedule
+## legacy re-export removal schedule
 
-Per ADR Shim deprecation contract: shim removal is eligible at the
-second minor release after introduction. With this milestone landing
-0.1.0 -> 0.1.1, shim removal eligibility opens at 0.1.3. An auto-
-generated removal PR is scheduled for the corresponding release
-window.
+Not applicable. The accepted delivery is a hard cut with no retained
+root compatibility layer.
 
 ## report to owner
 

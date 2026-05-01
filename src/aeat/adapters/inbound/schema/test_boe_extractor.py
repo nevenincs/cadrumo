@@ -23,14 +23,13 @@ from ....domain.schema import (
     BinaryOp,
     CasillaDataType,
     CasillaRef,
-    FetchedSchemaSource,
     LiteralFormula,
     SchemaExtractionError,
     SchemaSource,
     evaluate,
 )
-from . import BoeOrdenExtractor
-from .testing import build_fake_boe_pdf
+from . import BoeOrdenExtractor, FetchedSchemaSource
+from .testing import build_synthetic_boe_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
@@ -53,8 +52,8 @@ def _build_source(pdf_path: Path) -> FetchedSchemaSource:
     pdf_bytes = pdf_path.read_bytes()
     return FetchedSchemaSource(
         modelo_code=ModeloCode.MODELO_130,
-        boe_ref="BOE-A-FAKE",
-        origin_url=TypeAdapter(AnyHttpUrl).validate_python("https://www.boe.es/fake.pdf"),
+        boe_ref="BOE-A-SYNTHETIC",
+        origin_url=TypeAdapter(AnyHttpUrl).validate_python("https://www.boe.es/synthetic.pdf"),
         pdf_path=pdf_path,
         sha256=hashlib.sha256(pdf_bytes).hexdigest(),
         content_length=len(pdf_bytes),
@@ -66,7 +65,7 @@ def _build_source(pdf_path: Path) -> FetchedSchemaSource:
 def boe_pdf_fixture(tmp_path: Path) -> Path:
     """Write a synthetic BOE-shaped PDF under ``tmp_path`` and return its path."""
     path = tmp_path / "boe.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=_ANNEX_LINES,
         preamble_lines=_PREAMBLE_LINES,
@@ -96,7 +95,7 @@ def test_extractor_happy_path(boe_pdf_fixture: Path) -> None:
     assert modelo.modelo_code is ModeloCode.MODELO_130
     assert modelo.period == "2025Q4"
     assert modelo.provenance.source is SchemaSource.BOE_ORDEN
-    assert modelo.provenance.document_ref == "BOE-A-FAKE"
+    assert modelo.provenance.document_ref == "BOE-A-SYNTHETIC"
     assert modelo.provenance.sha256 == source.sha256
 
     by_id = {c.casilla_id: c for c in modelo.casillas}
@@ -138,7 +137,7 @@ def test_extractor_happy_path(boe_pdf_fixture: Path) -> None:
 
 
 def test_extractor_raises_on_missing_annex(tmp_path: Path) -> None:
-    # build_fake_boe_pdf always injects "ANEXO I"; to simulate a doc
+    # build_synthetic_boe_pdf always injects "ANEXO I"; to simulate a doc
     # without an annex we write a PDF directly via reportlab that
     # contains no heading and no casilla lines.
     from reportlab.lib.pagesizes import A4
@@ -163,7 +162,7 @@ def test_extractor_raises_on_missing_annex(tmp_path: Path) -> None:
 def test_extractor_collects_same_page_annex_content(tmp_path: Path) -> None:
     """Regression: lines after the ANEXO heading on the same page must be parsed."""
     path = tmp_path / "same-page.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=_ANNEX_LINES,
         preamble_lines=_PREAMBLE_LINES,
@@ -187,14 +186,14 @@ def test_extractor_mixed_plus_minus_chain(tmp_path: Path) -> None:
     from ....domain.schema import SumFormula as _SumFormula
 
     path = tmp_path / "mixed.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=(
             "01 Base imponible 1T",
             "03 Ingresos computables 1T",
             "07 Gastos deducibles 1T",
             "13 Rendimiento neto 1T",
-            "Casilla 13 = Casilla 01 + Casilla 03 − Casilla 07",
+            "Casilla 13 = Casilla 01 + Casilla 03 \u2212 Casilla 07",
         ),
     )
     source = _build_source(path)
@@ -216,7 +215,7 @@ def test_extractor_mixed_plus_minus_chain(tmp_path: Path) -> None:
 def test_guess_data_type_respects_word_boundaries(tmp_path: Path) -> None:
     """A currency label with 'ejercicios' stays currency, not integer."""
     path = tmp_path / "boundary.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=("11 Cuota a compensar de ejercicios anteriores",),
     )
@@ -232,7 +231,7 @@ def test_guess_data_type_respects_word_boundaries(tmp_path: Path) -> None:
 def test_extractor_tolerates_trailing_punctuation(tmp_path: Path) -> None:
     """Formula bodies ending in `.` or `;` (BOE prose punctuation) still parse."""
     path = tmp_path / "trailing-punct.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=(
             "01 Base imponible 1T",
@@ -255,7 +254,7 @@ def test_extractor_tolerates_trailing_punctuation(tmp_path: Path) -> None:
 def test_extractor_accepts_interrogative_and_parenthesised_labels(tmp_path: Path) -> None:
     """Labels starting with `¿` or `(` are still recognised as casilla declarations."""
     path = tmp_path / "interrogative.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=(
             "15 ¿Ha obtenido rendimientos en el extranjero?",
@@ -275,7 +274,7 @@ def test_extractor_accepts_interrogative_and_parenthesised_labels(tmp_path: Path
 def test_extractor_handles_four_digit_casilla_ids(tmp_path: Path) -> None:
     """4-digit casilla IDs (legitimate on Modelo 390) parse correctly."""
     path = tmp_path / "four-digit.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=(
             "0001 Ejercicio de referencia",
@@ -324,7 +323,7 @@ def test_extractor_handles_compact_anexo_same_line(tmp_path: Path) -> None:
 def test_extractor_tolerates_identical_duplicate_declarations(tmp_path: Path) -> None:
     """Benign repeated layouts (multilingual annex, summary page) are ignored."""
     path = tmp_path / "dup.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=(
             "01 Base imponible 1T",
@@ -347,7 +346,7 @@ def test_extractor_tolerates_identical_duplicate_declarations(tmp_path: Path) ->
 def test_extractor_rejects_conflicting_duplicate_declarations(tmp_path: Path) -> None:
     """A second declaration with a different label raises, not silently wins."""
     path = tmp_path / "conflict.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=(
             "01 Base imponible 1T",
@@ -366,7 +365,7 @@ def test_extractor_rejects_conflicting_duplicate_declarations(tmp_path: Path) ->
 def test_extractor_accepts_formula_before_declaration(tmp_path: Path) -> None:
     """Two-pass parser allows a formula to appear before its casilla declaration."""
     path = tmp_path / "out-of-order.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=(
             # Formula appears first — column-layout PDFs sometimes do this.
@@ -389,7 +388,7 @@ def test_extractor_accepts_formula_before_declaration(tmp_path: Path) -> None:
 
 def test_extractor_raises_on_unparseable_formula(tmp_path: Path) -> None:
     path = tmp_path / "bad-formula.pdf"
-    build_fake_boe_pdf(
+    build_synthetic_boe_pdf(
         path,
         annex_lines=(
             "01 Base imponible",

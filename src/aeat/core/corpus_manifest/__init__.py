@@ -28,11 +28,11 @@ import os
 import tempfile
 from collections.abc import Iterator
 from datetime import datetime
-from importlib import import_module
 from pathlib import Path, PurePosixPath
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 from ..logging import get_logger
 
 _log = get_logger(__name__)
@@ -43,15 +43,6 @@ _MANIFEST_VERSION = 1
 
 _MANIFEST_FILENAME = "corpus.manifest.json"
 """Canonical filename for the manifest sidecar inside each corpus root."""
-
-
-def _corpus_error_types() -> tuple[type[Exception], type[Exception], type[Exception]]:
-    errors = import_module("aeat.adapters.persistence.storage.errors")
-    return (
-        errors.CorpusManifestDriftError,
-        errors.CorpusManifestError,
-        errors.CorpusManifestTamperError,
-    )
 
 
 class CorpusEntry(BaseModel):
@@ -375,7 +366,6 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
     if not target.exists():
         raise FileNotFoundError(target)
     raw = target.read_text(encoding="utf-8")
-    _, CorpusManifestError, CorpusManifestTamperError = _corpus_error_types()
     try:
         manifest = CorpusManifest.model_validate_json(raw)
     except Exception as exc:
@@ -415,7 +405,6 @@ def assert_corpus_clean(corpus_root: Path) -> None:
     manifest = load_corpus_manifest(manifest_path_for(corpus_root))
     diff = verify_corpus_manifest(corpus_root, manifest=manifest)
     if not diff.is_clean:
-        CorpusManifestDriftError, _, _ = _corpus_error_types()
         raise CorpusManifestDriftError(
             f"corpus drift in {manifest.corpus_root_name!r}: "
             f"added={list(diff.added)} removed={list(diff.removed)} changed={list(diff.changed)}",
@@ -425,6 +414,9 @@ def assert_corpus_clean(corpus_root: Path) -> None:
 __all__ = [
     "CorpusEntry",
     "CorpusManifest",
+    "CorpusManifestDriftError",
+    "CorpusManifestError",
+    "CorpusManifestTamperError",
     "CorpusManifestDiff",
     "assert_corpus_clean",
     "build_corpus_manifest",

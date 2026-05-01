@@ -1,20 +1,21 @@
 """Parametrised CLI smoke test over every registered schema.
 
-For each (modelo, ejercicio) in :const:`SCHEMA_REGISTRY`, the
-produce → verify → diff-against-self loop must complete with
-zero exit codes:
+For each ``(modelo, ejercicio)`` entry in
+:data:`._schema_registry.SCHEMA_REGISTRY`, the
+produce -> verify -> diff-against-self loop must complete with zero
+exit codes:
 
-1. ``aeat submission export <draft>`` writes a byte-exact
-   fichero-BOE file.
-2. ``aeat submission verify <file> --json`` decodes the file
-   back through the matching schema without raising.
-3. ``aeat submission diff <file> <file> --json`` reports the
-   file identical to itself (status=identical).
+1. ``aeat submission export <draft>`` writes a byte-exact fichero-BOE
+   file.
+2. ``aeat submission verify <file> --json`` decodes the file back
+   through the matching schema without raising.
+3. ``aeat submission diff <file> <file> --json`` reports the file
+   identical to itself (``status == "identical"``).
 
-A registry entry whose module / build_headers / kind combination
-is internally inconsistent would slip past the unit-
-level checks but fail here — this test exercises the full command
-dispatch the same way Kent's shell does.
+A registry entry whose module, ``build_headers``, and ``kind``
+combination is internally inconsistent would slip past the unit-level
+checks but fail here. This module exercises the full command dispatch
+the same way an operator's shell does.
 """
 
 from __future__ import annotations
@@ -38,12 +39,16 @@ _REGISTRY_KEYS = sorted(SCHEMA_REGISTRY.keys())
 
 
 def _unwrap_result(output: str) -> dict[str, Any]:
+    """Return the ``result`` payload from a CLI JSON-success envelope."""
     return cast(dict[str, Any], json.loads(output)["result"])
 
 
 def _ingreso_and_negativa_cases() -> list[tuple[str, str, str]]:
-    """(modelo, ejercicio, tipo) tuples for the tipo=I and tipo=N smoke tests
-    — every registered schema is exercised in both modes."""
+    """Build ``(modelo, ejercicio, tipo)`` tuples for the ``I`` and ``N`` smokes.
+
+    Every registered schema is exercised in both ingreso and negativa
+    modes.
+    """
     out: list[tuple[str, str, str]] = []
     for modelo, ejercicio in _REGISTRY_KEYS:
         out.append((modelo, ejercicio, "I"))
@@ -52,10 +57,13 @@ def _ingreso_and_negativa_cases() -> list[tuple[str, str, str]]:
 
 
 def _devolucion_cases() -> list[tuple[str, str, str]]:
-    """tipo=D cases — only envelope schemas carry a SEPA page (DP303DID)
-    where the IBAN gets stamped. Record-style schemas (130) have no
-    SEPA slot, so tipo=D smoke there would only exercise the IBAN
-    CLI-level guard without a payload-level assertion."""
+    """Return ``tipo=D`` smoke cases for envelope schemas only.
+
+    Only envelope schemas carry a SEPA page (``DP303DID``) where the
+    IBAN gets stamped. Record-style schemas (Modelo 130) have no SEPA
+    slot, so ``tipo=D`` smoke there would only exercise the IBAN
+    CLI-level guard without a payload-level assertion.
+    """
     return [
         (modelo, ejercicio, "D")
         for (modelo, ejercicio), entry in sorted(SCHEMA_REGISTRY.items())
@@ -64,14 +72,16 @@ def _devolucion_cases() -> list[tuple[str, str, str]]:
 
 
 def _ejercicio_to_period(ejercicio: str) -> str:
-    """Q1 of the target ejercicio as a canonical ``YYYYQ1`` token."""
+    """Render Q1 of the target ejercicio as a canonical ``YYYYQ1`` token."""
     return f"{ejercicio}Q1"
 
 
 def _write_draft(tmp_path: Path, *, modelo: str, period: str) -> Path:
-    """Minimal valid draft JSON exercising casilla 01 only — enough to
-    satisfy the serialiser's required-header check without requiring
-    modelo-specific knowledge of cascade rules."""
+    """Write a minimal valid draft JSON exercising casilla 01 only.
+
+    Enough to satisfy the serialiser's required-header check without
+    requiring modelo-specific knowledge of cascade rules.
+    """
     payload = {
         "draft_id": f"SMOKE-{modelo}-{period}",
         "modelo": modelo,
@@ -150,9 +160,11 @@ _DEVOLUCION = _devolucion_cases()
     ids=[f"{m}-{e}-tipo_{t}" for m, e, t in _INGRESO_AND_NEGATIVA],
 )
 def test_tipo_i_and_n_round_trip(tmp_path: Path, modelo: str, ejercicio: str, tipo: str) -> None:
-    """every (modelo, ejercicio, tipo ∈ {I, N}) combo must
-    export + verify + self-diff clean. Catches a regression where a
-    tipo mode breaks end-to-end even if tipo=I works."""
+    """Every ``(modelo, ejercicio, tipo)`` combo must round-trip cleanly.
+
+    Catches a regression where a tipo mode breaks end-to-end even if
+    ``tipo=I`` works.
+    """
     period = _ejercicio_to_period(ejercicio)
     draft_path = _write_draft(tmp_path, modelo=modelo, period=period)
     output_dir = tmp_path / "out"
@@ -193,8 +205,10 @@ def test_tipo_i_and_n_round_trip(tmp_path: Path, modelo: str, ejercicio: str, ti
     ids=[f"{m}-{e}-tipo_{t}" for m, e, t in _DEVOLUCION],
 )
 def test_tipo_d_with_iban_round_trip(tmp_path: Path, modelo: str, ejercicio: str, tipo: str) -> None:
-    """tipo=D (devolución) must export cleanly when --iban is
-    supplied, and verify should surface the IBAN through DP303DID."""
+    """``tipo=D`` (devolución) must export cleanly when ``--iban`` is supplied.
+
+    Verify must surface the IBAN through ``DP303DID``.
+    """
     period = _ejercicio_to_period(ejercicio)
     draft_path = _write_draft(tmp_path, modelo=modelo, period=period)
     output_dir = tmp_path / "out"
@@ -231,7 +245,7 @@ def test_tipo_d_with_iban_round_trip(tmp_path: Path, modelo: str, ejercicio: str
 
 
 def test_tipo_d_without_iban_exits_3(tmp_path: Path) -> None:
-    """tipo=D must be refused when --iban is absent."""
+    """``tipo=D`` must be refused when ``--iban`` is absent."""
     period = _ejercicio_to_period("2024")
     draft_path = _write_draft(tmp_path, modelo="303", period=period)
     output_dir = tmp_path / "out"

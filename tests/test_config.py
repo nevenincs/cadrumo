@@ -297,7 +297,7 @@ class TestRepoRelativePathNormalisationCoverage:
         missing = sorted(path_typed_settings - path_validator - self._EXEMPT_PATH_FIELDS)
         assert not missing, (
             "Path-typed Settings fields missing from "
-            "_normalize_repo_relative_paths in src/aeat/config.py: "
+            "_normalize_repo_relative_paths in src/aeat/core/config.py: "
             f"{missing}. Either add each to the validator's field tuple or "
             "add it to TestRepoRelativePathNormalisationCoverage._EXEMPT_PATH_FIELDS "
             "with an ADR-grade justification."
@@ -310,7 +310,7 @@ class TestRepoRelativePathNormalisationCoverage:
             assert field_name in path_validator, (
                 f"{field_name} was flagged by the security audit as missing from "
                 "_normalize_repo_relative_paths but is still not in the validator. "
-                "Re-add it to the field tuple in src/aeat/config.py."
+                "Re-add it to the field tuple in src/aeat/core/config.py."
             )
 
     def test_string_path_normaliser_covers_known_fields(self) -> None:

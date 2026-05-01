@@ -1,10 +1,10 @@
-"""``aeat sync run`` — execute a single live-to-local sync run.
+"""``aeat sync run`` -- execute a single live-to-local sync run.
 
-The runner requires the in-flight dependencies from #8 (certificate
-backend), #17 (corpus loader), #9 (schema loader), #25 (manual rules),
-and #21 (LLM client). Until those branches merge, this command
-performs its settings validation and then refuses with a structured
-error instead of attempting to construct a half-wired runner.
+The runner depends on several adjacent subsystems -- the certificate
+backend, corpus loader, schema loader, manual-rules pipeline, and
+LLM client -- that are not yet wired in. Until those land this
+command validates settings and then refuses with a structured exit
+code rather than constructing a half-wired runner.
 """
 
 from __future__ import annotations
@@ -35,11 +35,23 @@ def run(
         help="Permit bounded auto-heal on additive+allowlisted divergences.",
     ),
 ) -> None:
-    """Validate settings and report runner prerequisites.
+    """Validate sync settings and report the missing runner prerequisites.
 
-    The command refuses to launch until the cross-branch dependencies
-    listed in the ADR ship. The bounded auto-heal invariant still
-    applies when the runner eventually wires up.
+    The command refuses to launch until the cross-cutting
+    dependencies (certificate backend, corpus loader, schema loader,
+    manual rules, LLM client) are wired in. The bounded auto-heal
+    invariant still applies once the runner is fully composed.
+
+    Args:
+        modelo: Optional modelo identifier scoping the run.
+        period: Optional filing-period filter.
+        auto_heal: When ``True``, permit bounded auto-heal on
+            additive divergences whose casilla is allowlisted via
+            :attr:`aeat.core.config.Settings.aeat_sync_auto_heal_allowlist`.
+
+    Raises:
+        typer.Exit: Always exits with code ``2`` until the runner is
+            fully wired.
     """
     arguments = {"modelo": modelo, "period": period, "auto-heal": auto_heal}
     with cli_run_context(entrypoint="aeat sync run", arguments=arguments):

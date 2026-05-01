@@ -1,27 +1,29 @@
-"""Stream B invariant: SCHEMA_REGISTRY entry shape consistency.
+"""Pin :data:`SCHEMA_REGISTRY` entry-shape consistency at collection time.
 
-Every :class:`SchemaEntry` in ``SCHEMA_REGISTRY`` pairs a schema
-module with a ``kind`` tag (``"record"`` or ``"envelope"``) and a
-header-builder function. A mis-paired entry (e.g., a record-style
-module registered with ``kind="envelope"``) would make the CLI
-dispatch attempt ``serialise_envelope`` on a module that has no
-``ENVELOPE`` attribute — crashing at call time rather than at
-registry load.
+Every :class:`SchemaEntry` in
+:data:`aeat.entrypoints.cli.submission._schema_registry.SCHEMA_REGISTRY`
+pairs a schema module with a ``kind`` tag (``"record"`` or
+``"envelope"``) and a header-builder function. A mis-paired entry —
+for example, a record-style module registered with
+``kind="envelope"`` — would make the CLI dispatch attempt
+``serialise_envelope`` on a module that has no ``ENVELOPE``
+attribute, crashing at call time rather than at registry load.
 
-the pairing at collection so the failure surface
-is the registry, not Kent's next ``aeat submission export`` run.
+The tests pin the pairing at collection so the failure surface is
+the registry itself rather than the next ``aeat submission export``
+run.
 
 Rules enforced per entry:
 
-- ``kind == "record"`` → module must expose ``RECORD_SPECS`` (tuple)
+- ``kind == "record"`` -- module must expose ``RECORD_SPECS`` (tuple)
   and ``RECORD_LENGTH`` (int), and must NOT expose ``ENVELOPE``.
-- ``kind == "envelope"`` → module must expose ``ENVELOPE`` (tuple)
+- ``kind == "envelope"`` -- module must expose ``ENVELOPE`` (tuple)
   and must NOT expose ``RECORD_SPECS``.
 - Every entry's ``build_headers`` callable must accept a
   :class:`CliInputs` and return a ``dict[str, str]``.
-- Registry keys must follow ``(modelo, ejercicio)`` string pair
-  convention, where modelo is a 3-digit numeric string and
-  ejercicio is a 4-digit numeric string.
+- Registry keys must follow the ``(modelo, ejercicio)`` string-pair
+  convention, where ``modelo`` is a 3-digit numeric string and
+  ``ejercicio`` is a 4-digit numeric string.
 """
 
 from __future__ import annotations
@@ -40,6 +42,8 @@ _EJERCICIO_RE = re.compile(r"^\d{4}$")
 
 
 class TestRegistryEntryShape:
+    """Per-entry shape rules across :data:`SCHEMA_REGISTRY`."""
+
     @pytest.mark.parametrize(
         ("key", "entry"),
         sorted(SCHEMA_REGISTRY.items()),
@@ -77,9 +81,11 @@ class TestRegistryEntryShape:
         ids=lambda v: ".".join(v) if isinstance(v, tuple) else repr(v)[:20],
     )
     def test_build_headers_returns_dict(self, key: tuple[str, str], entry: SchemaEntry) -> None:
-        """Calling build_headers with a minimal valid CliInputs must return a
-        ``dict[str, str]`` — proves the callable is shape-compatible with the
-        serialiser's expected headers mapping."""
+        """``build_headers`` with a minimal valid :class:`CliInputs` returns a ``dict[str, str]``.
+
+        Proves the callable is shape-compatible with the serialiser's
+        expected headers mapping.
+        """
         ejercicio = key[1]
         inputs = CliInputs(
             ejercicio=ejercicio,
@@ -102,10 +108,12 @@ class TestRegistryEntryShape:
         ids=lambda v: ".".join(v) if isinstance(v, tuple) else repr(v)[:20],
     )
     def test_required_headers_covered_by_build_headers(self, key: tuple[str, str], entry: SchemaEntry) -> None:
-        """Every field in the module's REQUIRED_HEADER_FIELDS must be populated
-        by the registry's build_headers — otherwise a default ``aeat submission
-        export`` call would always fail the required-header guard even though
-        the registry claimed the modelo is supported."""
+        """Every field in ``REQUIRED_HEADER_FIELDS`` must be populated by ``build_headers``.
+
+        Otherwise a default ``aeat submission export`` call would
+        always fail the required-header guard even though the registry
+        claimed the modelo is supported.
+        """
         inputs = CliInputs(
             ejercicio=key[1],
             periodo="1T",
@@ -124,12 +132,15 @@ class TestRegistryEntryShape:
 
 
 class TestRegistryKeyShape:
+    """Key-shape rules across :data:`SCHEMA_REGISTRY`."""
+
     @pytest.mark.parametrize(
         "key",
         sorted(SCHEMA_REGISTRY.keys()),
         ids=lambda k: ".".join(k),
     )
     def test_key_is_two_string_tuple(self, key: tuple[str, str]) -> None:
+        """Each registry key is a ``(modelo, ejercicio)`` numeric-string pair."""
         assert isinstance(key, tuple) and len(key) == 2
         modelo, ejercicio = key
         assert _MODELO_RE.match(modelo), f"modelo key {modelo!r} does not match ^\\d{{3}}$"

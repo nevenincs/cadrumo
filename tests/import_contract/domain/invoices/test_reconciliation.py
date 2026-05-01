@@ -23,13 +23,18 @@ from aeat.domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from aeat.domain.transactions._repository import TransactionCatalogueRepository
-from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
-from aeat.domain.invoices._errors import InvoiceLinkError, InvoiceLinkInconsistencyError
-from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
-from aeat.domain.invoices._repository import InvoiceCatalogueRepository
-from aeat.domain.invoices._service import (
+from aeat.domain.transactions import TransactionCatalogueRepository
+from aeat.domain.invoices import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceCatalogueRepository,
+    InvoiceKind,
+    InvoiceLine,
     link_transaction_bidirectional,
+    InvoiceLinkError,
+    InvoiceLinkInconsistencyError,
+    IvaRate,
+    PaymentStatus,
     suggest_reconciliations,
     verify_link_consistency,
 )

@@ -17,9 +17,15 @@ from aeat.adapters.persistence.storage import (
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
-from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
-from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
-from aeat.domain.invoices._repository import InvoiceCatalogueRepository
+from aeat.domain.invoices import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceCatalogueRepository,
+    InvoiceKind,
+    InvoiceLine,
+    IvaRate,
+    PaymentStatus,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

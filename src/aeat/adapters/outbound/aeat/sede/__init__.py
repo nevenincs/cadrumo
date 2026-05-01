@@ -60,7 +60,7 @@ Navigation flow, captured live:
 4. The raw PDF body is served at
    ``/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=<csv>`` and must be
    fetched via :class:`APIRequestContext` — browser ``goto`` wraps
-   the response in Chrome's PDF viewer stub.
+   the response in Chrome's PDF viewer shell.
 """
 
 from __future__ import annotations

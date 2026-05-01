@@ -1,7 +1,6 @@
-"""``aeat sync`` sub-app — self-healing sync runner CLI.
+"""``aeat sync`` sub-app -- self-healing sync runner CLI.
 
-Wires four subcommands under ``aeat sync`` per the feature ADR
-[[2026-04-12-self-healing-sync-adr]]:
+Wires four subcommands under ``aeat sync``:
 
 - ``aeat sync run [--modelo ID] [--period P] [--auto-heal]``
 - ``aeat sync list-divergences [--state S]``
@@ -9,8 +8,9 @@ Wires four subcommands under ``aeat sync`` per the feature ADR
 - ``aeat sync resolve-divergence <record-id> --action approve|reject
   [--notes TEXT]``
 
-The commands delegate every domain decision to :mod:`aeat.application.sync`; this
-module is pure CLI glue.
+The commands delegate every domain decision to
+:mod:`aeat.application.sync`; this module is pure CLI glue that
+binds Typer command names to the underlying handler functions.
 """
 
 from __future__ import annotations

@@ -19,7 +19,7 @@ into `src/aeat/core/access_gate/`. No shims — all importers updated directly.
 
 ## Description
 
-The `core-is-leaf` import-linter contract forbids `aeat.core` from importing
+The `core-is-leaf` import-contract rule forbids `aeat.core` from importing
 `aeat.adapters`. Moving `AeatAccessGate` to core therefore requires co-relocating
 `AeatLiveReadNotEnabledError` (previously in `certificate.py`) and the full
 `LiveSubmitForbiddenError` hierarchy (`SubmissionError`, `SubmissionPreflightError`,

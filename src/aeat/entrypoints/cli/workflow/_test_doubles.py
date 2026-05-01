@@ -1,12 +1,12 @@
 """Shared test doubles for the ``aeat workflow`` CLI test suite.
 
-Concrete, deterministic stand-ins for the deadline engine, draft
-builder, submission engine, and inputs provider that the workflow CLI
-helpers consume. Used by every test module in this package so the
-stubs stay in one place and cannot drift between callers.
+Provides concrete, deterministic stand-ins for the deadline engine, draft
+builder, submission engine, and inputs provider consumed by the workflow
+CLI helpers. Centralising them here keeps every test module in this
+package aligned and prevents drift between callers.
 
-These are real classes with deterministic behaviour - they satisfy the
-project mandate against `unittest.mock`, `pytest_mock`, patches, fakes,
+These are real classes with deterministic behaviour: they satisfy the
+project mandate against ``unittest.mock``, ``pytest-mock``, patches, fakes,
 and stubs.
 """
 
@@ -45,7 +45,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @dataclass
 class Draft:
-    """Deterministic test draft."""
+    """Deterministic test draft mirroring the production filing draft contract.
+
+    Attributes:
+        draft_id: Stable draft identifier.
+        modelo: Modelo identifier (e.g. ``"130"``).
+        period: Period identifier (e.g. ``"2026Q1"``).
+        profile_tax_id: Tax id of the owning
+            :class:`aeat.domain.deadlines.AutonomoProfile`.
+        status: Approval status; defaults to
+            :attr:`aeat.adapters.outbound.aeat.export.DraftStatus.APPROVED`.
+        values: Casilla values keyed by code.
+        findings: Optional tuple of
+            :class:`aeat.adapters.outbound.aeat.export.FilingFinding`.
+    """
 
     draft_id: str = "draft-x"
     modelo: str = "130"
@@ -66,6 +79,7 @@ class DeadlineEngine:
         *,
         today: date | None = None,
     ) -> Schedule:
+        """Return a fixed-shape :class:`aeat.domain.deadlines.Schedule`."""
         return Schedule(
             profile=profile,
             year=year,
@@ -84,7 +98,7 @@ class DeadlineEngine:
 
 
 class DraftBuilder:
-    """Draft builder stand-in returning a deterministic ``Draft``."""
+    """Draft builder stand-in returning a deterministic :class:`Draft`."""
 
     def build(
         self,
@@ -95,6 +109,7 @@ class DraftBuilder:
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
     ) -> Draft:
+        """Return a :class:`Draft` echoing ``modelo``, ``period``, and tax id."""
         return Draft(modelo=modelo, period=period, profile_tax_id=profile.tax_id)
 
 
@@ -102,6 +117,7 @@ class SubmissionEngine:
     """Submission engine stand-in for read-only preflight paths."""
 
     def preflight(self, draft: Draft, *, today: date) -> None:
+        """No-op preflight: read-only path always returns ``None``."""
         return None
 
 
@@ -115,11 +131,12 @@ class InputsProvider:
         period: str,
         profile: AutonomoProfile,
     ) -> Mapping[str, object]:
+        """Return a deterministic single-casilla inputs mapping."""
         return {"01": "1000"}
 
 
 def make_profile() -> AutonomoProfile:
-    """Return the canonical test :class:`AutonomoProfile`."""
+    """Return the canonical test :class:`aeat.domain.deadlines.AutonomoProfile`."""
     return AutonomoProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -131,7 +148,11 @@ def make_profile() -> AutonomoProfile:
 
 
 def make_engine() -> WorkflowEngine:
-    """Return a fully wired :class:`WorkflowEngine` using the stand-ins."""
+    """Return a fully wired :class:`aeat.application.workflow.WorkflowEngine`.
+
+    Composes the deterministic stand-ins from this module into a real
+    engine instance suitable for end-to-end CLI tests.
+    """
     return WorkflowEngine(
         deadline_engine=DeadlineEngine(),
         filing_draft_builder=cast(FilingDraftBuilderProtocol, DraftBuilder()),
@@ -145,8 +166,12 @@ def make_engine() -> WorkflowEngine:
 
 
 def make_failing_engine() -> WorkflowEngine:
-    """Engine factory that raises :class:`WorkflowError` to drive the
-    helpers' catch-and-exit-1 path under test.
+    """Engine factory that always raises :exc:`aeat.application.workflow.WorkflowError`.
+
+    Drives the helpers' catch-and-exit-1 path under test.
+
+    Raises:
+        :exc:`aeat.application.workflow.WorkflowError`: Always.
     """
     raise WorkflowError("simulated wiring failure")
 

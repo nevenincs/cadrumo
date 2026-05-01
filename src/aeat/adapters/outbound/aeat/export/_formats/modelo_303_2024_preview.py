@@ -14,7 +14,7 @@
    envelope architecture + inline-sign encoder END-TO-END,
    proving the primitives work for Modelo 303's shape without
    committing to specific casilla offsets. It is NOT wired into the
-   CLI schema registry (see ``src/aeat/cli/submission/export.py``).
+   CLI schema registry (see ``src/aeat/entrypoints/cli/submission/export.py``).
 
 ## Record shape (verified from DR303e25.xlsx)
 

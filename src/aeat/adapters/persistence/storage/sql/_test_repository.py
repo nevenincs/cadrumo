@@ -1,4 +1,10 @@
-"""Unit tests for the typed repositories."""
+"""Unit tests for the typed repositories in :mod:`aeat.adapters.persistence.storage.sql`.
+
+Exercises CRUD round-trips through :class:`ModeloRepository`,
+:class:`PortalRepository`, and :class:`CorpusArtifactRepository` against a
+real SQLite engine to confirm pydantic record translation, foreign-key
+integrity, and enum round-trip behaviour.
+"""
 
 from __future__ import annotations
 
@@ -33,7 +39,7 @@ def _engine(tmp_path: Path):
 
 
 def test_modelo_repository_crud_round_trip(tmp_path: Path) -> None:
-    """Insert, read, update, delete cycle returns pydantic records throughout."""
+    """Insert, read, update, and delete cycle returns pydantic records throughout."""
     engine = _engine(tmp_path)
     try:
         with session_scope(engine) as session:
@@ -57,7 +63,7 @@ def test_modelo_repository_crud_round_trip(tmp_path: Path) -> None:
 
 
 def test_portal_repository_preserves_enum(tmp_path: Path) -> None:
-    """PortalRepository must round-trip the auth_method enum."""
+    """:class:`PortalRepository` round-trips the ``auth_method`` enum without coercion."""
     engine = _engine(tmp_path)
     try:
         with session_scope(engine) as session:
@@ -81,7 +87,7 @@ def test_portal_repository_preserves_enum(tmp_path: Path) -> None:
 
 
 def test_corpus_artifact_repository_round_trip(tmp_path: Path) -> None:
-    """CorpusArtifactRepository persists and reads artifacts with FK integrity."""
+    """:class:`CorpusArtifactRepository` persists and reads artifacts with FK integrity."""
     engine = _engine(tmp_path)
     try:
         with session_scope(engine) as session:

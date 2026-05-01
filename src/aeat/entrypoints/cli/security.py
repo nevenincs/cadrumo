@@ -1,20 +1,27 @@
-"""``aeat security`` sub-app — operator key-management + integrity tooling.
+"""Expose the ``aeat security`` operator key-management and integrity sub-app.
 
-Exposes the substrate's three operator-facing security tools:
+Wires the operator-facing security commands into a Typer sub-app:
 
 - ``aeat security rotate-master-key --old-key-file <path> --new-key-file <path>``
   re-encrypts every governance envelope under the new master key.
-- ``aeat security verify-corpus --corpus <name> [--regenerate]``
-  builds or verifies the SHA-256 manifest covering every file under
-  a CORPUS-class root (casillas, manuals, normatives, vat).
-- ``aeat security migrate-master-key-kdf [--store-dir <path>]``
-  re-wraps the file-fallback master key from scrypt (v1) to Argon2id
-  (v2). Must be run once on every installation that has a v1
-  ``master.kdf`` on disk.
+- ``aeat security verify-corpus --corpus <name> [--regenerate]`` builds or
+  verifies the SHA-256 manifest covering every file under a CORPUS-class
+  root (casillas, manuals, normatives, vat).
+- ``aeat security migrate-master-key-kdf [--store-dir <path>]`` re-wraps the
+  file-fallback master key from scrypt (v1) to Argon2id (v2). Run once on
+  every installation that has a v1 ``master.kdf`` on disk.
+- ``aeat security provision`` and ``aeat security recover`` provision and
+  recover the master-key state for an installation.
+- ``aeat security key-export`` writes a portable backup of the wrapped
+  master-key state for off-site storage.
 
-Every command is read-write on local disk only — no AEAT remote
-service is touched. The configured ``aeat_*_dir`` settings drive
-where the on-disk operations land.
+Every command is read-write on local disk only — no AEAT remote service is
+touched. The configured ``aeat_*_dir`` :class:`aeat.core.config.Settings`
+attributes drive where the on-disk operations land.
+
+See Also:
+    :mod:`aeat.adapters.persistence.storage` for the master-key, envelope,
+    and corpus-manifest primitives this sub-app drives.
 """
 
 from __future__ import annotations
@@ -33,7 +40,14 @@ _console = Console()
 
 
 class _CorpusName(StrEnum):
-    """Operator-selectable corpus roots for ``verify-corpus``."""
+    """Operator-selectable corpus roots for :func:`verify_corpus_cmd`.
+
+    Attributes:
+        CASILLAS: The casillas corpus (per-modelo casilla tables).
+        MANUALS: The AEAT operator manuals corpus.
+        NORMATIVES: The AEAT normative documents corpus.
+        VAT: The VAT (IVA) catalogue corpus.
+    """
 
     CASILLAS = "casillas"
     MANUALS = "manuals"
@@ -45,9 +59,19 @@ def _read_key_file(path: Path) -> bytes:
     """Read a 32-byte raw master key from ``path``.
 
     The on-disk format is ASCII-hex (64 hex characters; ``bytes.fromhex``
-    accepts both upper- and lower-case) so operators can safely cat /
-    inspect / move the file without binary-handling concerns. The
-    trailing newline is tolerated.
+    accepts both upper- and lower-case) so operators can safely cat,
+    inspect, and move the file without binary-handling concerns. A trailing
+    newline is tolerated.
+
+    Args:
+        path: Filesystem path to the hex-encoded key file.
+
+    Returns:
+        The 32 raw key bytes decoded from ``path``.
+
+    Raises:
+        typer.BadParameter: When the file does not exist, is not valid
+            hex, or does not decode to exactly 32 bytes.
     """
     if not path.exists():
         raise typer.BadParameter(f"key file not found: {path}")
@@ -115,26 +139,47 @@ def rotate_master_key_cmd(
        ``python -c "import secrets; print(secrets.token_hex(32))" > new-key.hex``).
     2. Run ``aeat security rotate-master-key --old-key-file old.hex --new-key-file new.hex``,
        supplying EITHER ``--recovery-key "<24 words>"`` (to preserve the
-       operator's existing mnemonic) OR ``--regenerate-recovery-key``
-       (to mint a fresh one and display it). The substrate refuses to
-       run if ``master.recovery.key`` exists and neither flag is set —
-       a silent no-op on the recovery wrapping would leave it carrying
-       the OLD master-key bytes, and a later
-       ``aeat security recover`` would silently restore the substrate
-       to the old key while the data is at the new one (total
-       data loss on the canonical recovery path).
-    3. After the run reports rotated/skipped/errors, decommission the
-       old key (move ``old.hex`` to a sealed offline backup, then
-       overwrite the operating master-key source — keyring entry or
-       file-fallback — with the new key bytes).
+       operator's existing mnemonic) OR ``--regenerate-recovery-key`` (to
+       mint a fresh one and display it). The substrate refuses to run if
+       ``master.recovery.key`` exists and neither flag is set: a silent
+       no-op on the recovery wrapping would leave it carrying the old
+       master-key bytes, and a later :func:`recover_cmd` would silently
+       restore the substrate to the old key while the data is at the new
+       one (total data loss on the canonical recovery path).
+    3. After the run reports rotated, skipped, and errors counts,
+       decommission the old key (move ``old.hex`` to a sealed offline
+       backup, then overwrite the operating master-key source — keyring
+       entry or file-fallback — with the new key bytes).
 
     Resume idempotency: re-running the command with the same arguments
-    after a partial run is safe. Already-rotated envelopes decrypt
-    under ``--new-key-file`` and are skipped.
+    after a partial run is safe. Already-rotated envelopes decrypt under
+    ``--new-key-file`` and are skipped.
 
-    The command emits a summary table with per-row counts and exits
-    non-zero on the first ``errors > 0`` reading so operator
-    automation can gate on the result.
+    Emits a summary table with per-row counts and exits non-zero on the
+    first ``errors > 0`` reading so operator automation can gate on the
+    result.
+
+    Args:
+        old_key_file: Path to a 64-hex-character file containing the
+            current master key.
+        new_key_file: Path to a 64-hex-character file containing the new
+            master key.
+        recovery_key: Existing 24-word recovery mnemonic. When supplied,
+            ``master.recovery.key`` is re-wrapped under the new master
+            key while preserving the operator's printed mnemonic.
+            Mutually exclusive with ``regenerate_recovery_key``.
+        regenerate_recovery_key: When ``True``, mint a fresh recovery key
+            and 24-word mnemonic and re-wrap ``master.recovery.key``
+            under it. The new mnemonic is displayed once; the previously
+            printed mnemonic is permanently invalidated. Mutually
+            exclusive with ``recovery_key``.
+
+    Raises:
+        typer.BadParameter: For mutually-exclusive flag combinations,
+            invalid key material, or a supplied recovery mnemonic that
+            does not match the on-disk wrapping.
+        typer.Exit: With code ``1`` when rotation fails or the recovery
+            wrapping pre-flight refuses the run.
     """
     # Imports are deferred so non-rotate CLI commands don't pay the
     # storage substrate's Alembic plugin-discovery cost.
@@ -318,7 +363,18 @@ def rotate_master_key_cmd(
 
 
 def _corpus_root_for(corpus: _CorpusName, settings) -> Path:  # type: ignore[no-untyped-def]
-    """Resolve the on-disk root for ``corpus`` from ``settings``."""
+    """Resolve the on-disk root for ``corpus`` from ``settings``.
+
+    Args:
+        corpus: The selected :class:`_CorpusName` member.
+        settings: Loaded :class:`aeat.core.config.Settings` instance.
+
+    Returns:
+        The configured filesystem root for ``corpus``.
+
+    Raises:
+        typer.BadParameter: When ``corpus`` is not a recognised member.
+    """
     if corpus is _CorpusName.CASILLAS:
         return Path(settings.aeat_casillas_root)
     if corpus is _CorpusName.MANUALS:
@@ -353,21 +409,34 @@ def verify_corpus_cmd(
 ) -> None:
     """Verify the integrity manifest for a CORPUS-class root.
 
-    Default: walk the corpus, compare every file's SHA-256 + size
-    against the recorded manifest, and exit non-zero with a per-file
-    diff on drift.
+    Default behaviour walks the corpus, compares every file's SHA-256 and
+    size against the recorded manifest, and exits non-zero with a
+    per-file diff on drift.
 
-    With ``--regenerate``: skip the verify step, rebuild the manifest
-    from the live corpus contents, and overwrite the sidecar in place.
-    Use after intentional corpus updates (e.g. a manual re-fetch).
+    With ``--regenerate`` the verify step is skipped: the manifest is
+    rebuilt from the live corpus contents and the sidecar is overwritten
+    in place. Use after intentional corpus updates (e.g. a manual
+    re-fetch).
 
     Operator runbook:
 
     1. Run ``aeat security verify-corpus --corpus casillas`` before
-       tagging a release. CI gates on a clean exit (drift = exit 1).
+       tagging a release. CI gates on a clean exit (drift = exit ``1``).
     2. After an intentional corpus update (e.g. updating the casilla
        table for a new fiscal year), re-run with ``--regenerate`` to
        rewrite the manifest, then commit the new sidecar.
+
+    Args:
+        corpus: Which corpus to verify; one of the :class:`_CorpusName`
+            members (``casillas``, ``manuals``, ``normatives``, ``vat``).
+        regenerate: When ``True``, rebuild the manifest after walking
+            the corpus instead of comparing against the existing one.
+
+    Raises:
+        typer.BadParameter: When ``corpus``'s root does not exist on
+            disk.
+        typer.Exit: With code ``1`` when no sidecar exists in verify
+            mode, or when corpus drift / manifest invalidity is detected.
     """
     from ...adapters.persistence.storage import (
         assert_corpus_clean,
@@ -375,7 +444,7 @@ def verify_corpus_cmd(
         manifest_path_for,
         save_corpus_manifest,
     )
-    from ...adapters.persistence.storage.errors import CorpusManifestDriftError, CorpusManifestError
+    from ...core.corpus_manifest import CorpusManifestDriftError, CorpusManifestError
     from ...core.config import load_settings
 
     settings = load_settings()
@@ -426,17 +495,26 @@ def migrate_master_key_kdf_cmd(
 
     Operator workflow:
 
-    1. Ensure the existing master-key passphrase is reachable —
-       either set ``AEAT_SECRET_PASSPHRASE`` in the environment, or
-       be ready to type it at the interactive prompt.
+    1. Ensure the existing master-key passphrase is reachable: either
+       set ``AEAT_SECRET_PASSPHRASE`` in the environment, or be ready to
+       type it at the interactive prompt.
     2. Run ``aeat security migrate-master-key-kdf``.
-    3. Verify the substrate now loads cleanly: e.g.
-       ``aeat secrets list`` should return without prompting for the
-       passphrase a second time.
+    3. Verify the substrate now loads cleanly; e.g. ``aeat secrets list``
+       should return without prompting for the passphrase a second time.
 
-    The migration is resume-idempotent: re-running on an already-v2
-    store reports ``skipped`` and exits 0. A wrong passphrase aborts
-    cleanly without modifying the v1 store on disk.
+    The migration is resume-idempotent: re-running on an already-v2 store
+    reports ``skipped`` and exits ``0``. A wrong passphrase aborts cleanly
+    without modifying the v1 store on disk.
+
+    Args:
+        store_dir: Directory containing ``master.kdf`` + ``master.key`` +
+            ``salt``. Defaults to the configured
+            :attr:`aeat.core.config.Settings.aeat_secret_store_dir`.
+
+    Raises:
+        typer.BadParameter: When ``store_dir`` does not exist on disk.
+        typer.Exit: With code ``1`` when the migration cannot complete
+            (e.g. wrong passphrase).
     """
     from ...adapters.persistence.storage import migrate_master_key_kdf
     from ...adapters.persistence.storage.master_key._master_key import _default_passphrase_callback
@@ -504,15 +582,32 @@ def provision_cmd(
     2. For file-fallback: enter a passphrase. The substrate uses
        Argon2id (OWASP-current top tier) to derive a KEK that wraps a
        random 32-byte master key.
-    3. The substrate displays a 24-word recovery key ONCE. Print it,
+    3. The substrate displays a 24-word recovery key once. Print it,
        store it somewhere safe. Without it, a forgotten passphrase or a
        lost keychain means losing every persisted record.
-    4. The substrate round-trips a canary record under the new master
-       key to confirm provisioning succeeded.
+    4. A canary record is round-tripped under the new master key to
+       confirm provisioning succeeded.
 
-    Re-running ``aeat security provision`` on a provisioned store
-    refuses unless ``--force`` is passed; the recovery-key flow is the
-    intended remediation path for forgotten passphrases.
+    Re-running this command on a provisioned store refuses unless
+    ``--force`` is passed; the recovery-key flow (:func:`recover_cmd`)
+    is the intended remediation path for forgotten passphrases.
+
+    Args:
+        backend: Master-key backend to provision: ``keyring`` (OS
+            keychain), ``file`` (passphrase-derived Argon2id KEK), or
+            ``unsecured`` (testing only; requires
+            ``AEAT_ALLOW_UNENCRYPTED=1`` and refuses real NIFs). Defaults
+            to the configured backend on
+            :class:`aeat.core.config.Settings`.
+        force: When ``True``, overwrite any existing master-key state.
+            Default refuses if any artefact already exists.
+
+    Raises:
+        typer.BadParameter: When ``backend`` is unrecognised.
+        typer.Exit: With code ``1`` when provisioning is refused (existing
+            artefacts without ``--force``, locked keychain, missing
+            ``AEAT_ALLOW_UNENCRYPTED`` for unsecured mode, or canary
+            round-trip failure).
     """
     from ...adapters.persistence.storage import (
         FileFallbackMasterKeyProvider,
@@ -770,19 +865,28 @@ def recover_cmd(
     (forgotten passphrase, corrupted file-fallback, lost OS keychain):
 
     1. Locate the 24-word recovery key shown at the original
-       ``aeat security provision`` time.
+       :func:`provision_cmd` time.
     2. Run this command, supplying the words via ``--recovery-key``.
-    3. The substrate unwraps the master key from
-       ``master.recovery.key`` using the recovery key, then re-mints
-       a fresh ``master.key`` + ``master.kdf`` + ``salt`` triplet
-       under a file-fallback backend with the operator's new
-       passphrase. The recovery wrapping itself is preserved so
-       future recoveries remain possible.
+    3. The master key is unwrapped from ``master.recovery.key`` using
+       the recovery key, then a fresh ``master.key`` + ``master.kdf`` +
+       ``salt`` triplet is re-minted under a file-fallback backend with
+       the operator's new passphrase. The recovery wrapping itself is
+       preserved so future recoveries remain possible.
 
-    The previous master.key contents are overwritten — operators who
-    are unsure whether their original passphrase still works should
-    use ``aeat security provision --force`` instead (which generates
-    a brand-new master key and recovery key).
+    The previous ``master.key`` contents are overwritten. Operators who
+    are unsure whether their original passphrase still works should use
+    ``aeat security provision --force`` instead (which generates a
+    brand-new master key and recovery key).
+
+    Args:
+        recovery_key: The 24-word recovery mnemonic shown at provision
+            time, space-separated and quoted.
+
+    Raises:
+        typer.Exit: With code ``1`` when the recovery wrapping is
+            missing, the mnemonic is malformed, the mnemonic does not
+            unwrap the wrapping, or the post-recovery canary round-trip
+            fails.
     """
     from ...adapters.persistence.storage import (
         FileFallbackMasterKeyProvider,
@@ -865,20 +969,27 @@ def key_export_cmd(
 ) -> None:
     """Export the active master-key state as a portable backup file.
 
-    The export bundles the recovery-key wrapping
-    (``master.recovery.key``) plus, for file-fallback installations,
-    the ``master.kdf`` parameters and the per-store ``salt``. The
-    operator stores this file off-site (cloud backup, USB drive,
-    paper printout). To restore on a new machine: copy the file back
-    into ``aeat_secret_store_dir`` then run
-    ``aeat security recover --recovery-key`` to re-mint the active
-    backend state.
+    The export bundles the recovery-key wrapping (``master.recovery.key``)
+    plus, for file-fallback installations, the ``master.kdf`` parameters
+    and the per-store ``salt``. The operator stores this file off-site
+    (cloud backup, USB drive, paper printout). To restore on a new
+    machine: copy the file back into
+    :attr:`aeat.core.config.Settings.aeat_secret_store_dir` then run
+    :func:`recover_cmd` to re-mint the active backend state.
 
-    The export is itself ciphertext at rest — the
-    ``master.recovery.key`` is wrapped under the recovery KEK; the
-    file-fallback artefacts wrap the master key under the operator's
-    Argon2id-derived KEK. No new cryptography is introduced; the
-    export is a portable repackaging of the existing wrapped state.
+    The export is itself ciphertext at rest: the ``master.recovery.key``
+    is wrapped under the recovery KEK; the file-fallback artefacts wrap
+    the master key under the operator's Argon2id-derived KEK. No new
+    cryptography is introduced; the export is a portable repackaging of
+    the existing wrapped state.
+
+    Args:
+        output_path: Destination path for the exported portable JSON
+            file.
+
+    Raises:
+        typer.Exit: With code ``1`` when ``master.recovery.key`` does
+            not exist on disk.
     """
     import base64
     import json

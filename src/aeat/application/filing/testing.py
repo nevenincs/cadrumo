@@ -1,4 +1,4 @@
-"""Public test-double helpers for :mod:`aeat.application.filing`.
+"""Public synthetic-fixture helpers for :mod:`aeat.application.filing`.
 
 This module exposes the synthetic Modelo 130 casilla schema and a
 small profile / deadline-checker pair so that downstream tests can
@@ -23,6 +23,20 @@ from ...domain.filing._builders._modelo_130_schema import (
 )
 from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
 from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
+from ...core.errors import FilingFixtureError, FixtureProvisioningError
+from ._testing_loader import SYNTHETIC_FIXTURES_ROOT, load_filing_history
+from ._testing_schema import (
+    FilingRecord,
+    FilingRecordPeriodKind,
+    FilingRecordScenario,
+    FixtureCasilla,
+    FixtureScalar,
+    compute_record_id,
+)
+from ._testing_synthesize import (
+    synthesize_filing_draft,
+    synthesize_filing_draft_from_decimals,
+)
 
 
 def default_schema_provider() -> StaticCasillaSchemaProvider:
@@ -83,11 +97,23 @@ __all__ = [
     "MODELO_130_SCHEMA",
     "MODELO_303_SCHEMA",
     "MODELO_390_SCHEMA",
+    "SYNTHETIC_FIXTURES_ROOT",
+    "FilingFixtureError",
+    "FilingRecord",
+    "FilingRecordPeriodKind",
+    "FilingRecordScenario",
+    "FixtureCasilla",
+    "FixtureProvisioningError",
+    "FixtureScalar",
     "StaticCasillaCollection",
     "StaticCasillaSchema",
     "StaticCasillaSchemaProvider",
     "SyntheticDeadlineChecker",
     "SyntheticDeadlineStatus",
     "SyntheticProfile",
+    "compute_record_id",
     "default_schema_provider",
+    "load_filing_history",
+    "synthesize_filing_draft",
+    "synthesize_filing_draft_from_decimals",
 ]

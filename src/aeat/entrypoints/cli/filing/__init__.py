@@ -43,9 +43,10 @@ from ....application.filing import (
 )
 from ....application.filing.runtime import build_runtime_schema_provider, load_default_filing_profile
 from ....core.config import load_settings
-from ....core.i18n import Language, Translatable, get_translation
+from ....core.i18n import get_translation
 from ....core.logging import get_logger
 from ....domain.justificante import JustificanteError
+from .._i18n import output_language as _output_language, t as _t, tr as _msg
 from ..submission._helpers import build_engine as build_submission_engine
 from ._reconcile import register as _register_reconcile
 
@@ -285,18 +286,21 @@ def _render_draft(draft: FilingDraft, *, findings_only: bool = False) -> None:
             )
         _console.print(values_table)
 
-    findings_table = Table(title="Findings")
-    findings_table.add_column("severity")
-    findings_table.add_column("code")
-    findings_table.add_column("casilla")
-    findings_table.add_column("message (en)")
+    findings_table = Table(
+        title=_msg(_t("Hallazgos", "Findings", "Resultats", "Eredmenyek"))
+    )
+    findings_table.add_column(_msg(_t("severidad", "severity", "severitat", "sulyossag")))
+    findings_table.add_column(_msg(_t("código", "code", "codi", "kod")))
+    findings_table.add_column(_msg(_t("casilla", "casilla", "casella", "rovat")))
+    findings_table.add_column(_msg(_t("mensaje", "message", "missatge", "uzenet")))
+    lang = _output_language()
     for finding in draft.findings:
-        message_en = finding.message.get("en", "") if finding.message else ""
+        message = get_translation(finding.message, lang) if finding.message else ""
         findings_table.add_row(
             finding.severity.value,
             finding.code,
             finding.casilla_id or "-",
-            message_en,
+            message,
         )
     _console.print(findings_table)
 
@@ -557,24 +561,9 @@ def _handle_justificante_import(from_justificante: Path) -> None:
     _render_draft(result.draft)
 
 
-def _output_language() -> Language:
-    """Resolve the Kent-facing output language from settings.
-
-    Defaults to Spanish (Kent is a Spanish autónomo) per project mandate
-    ``AEAT_OUTPUT_LANGUAGE`` default = ``es``. Audit finding M5.
-    """
-    try:
-        return Language(load_settings().aeat_output_language)
-    except (KeyError, ValueError):
-        return Language.ES
-
-
-def _t(es: str, en: str, hu: str) -> Translatable:
-    return {"es": es, "en": en, "hu": hu}
-
-
-def _msg(message: Translatable) -> str:
-    return get_translation(message, _output_language())
+# Local _output_language / _t / _msg are now thin re-exports of the
+# canonical helpers from ``..._i18n`` so the rest of this module keeps
+# its existing call shape; the import-aliases above pin the names.
 
 
 def _handle_declaracion_import(
@@ -598,7 +587,7 @@ def _handle_declaracion_import(
 
     lang = _output_language()
     if filing.modelo == "100":
-        from ....domain.profile import require_tax_residence
+        from ....adapters.persistence.profile import require_tax_residence
 
         residence = require_tax_residence()
         typer.echo(
@@ -606,6 +595,7 @@ def _handle_declaracion_import(
                 _t(
                     f"CCAA de residencia fiscal: {residence.ccaa.value}",
                     f"Tax residence CCAA: {residence.ccaa.value}",
+                    f"CCAA de residència fiscal: {residence.ccaa.value}",
                     f"Adoilletosegi CCAA: {residence.ccaa.value}",
                 )
             )
@@ -683,7 +673,7 @@ def _handle_borrador_import(
     from ....adapters.inbound.borrador import BorradorParseError, parse_borrador
     from ....adapters.inbound.borrador._tarifa import validate_tarifa_estatal
     from ....domain.formulas import MODELO_100_SUMMARY_2025, compute_cuota_autonomica_general
-    from ....domain.profile import require_tax_residence
+    from ....adapters.persistence.profile import require_tax_residence
 
     residence = require_tax_residence()
 
@@ -704,6 +694,7 @@ def _handle_borrador_import(
             _t(
                 f"CCAA de residencia fiscal: {residence.ccaa.value}",
                 f"Tax residence CCAA: {residence.ccaa.value}",
+                f"CCAA de residencia fiscal: {residence.ccaa.value}",
                 f"Adoilletosegi CCAA: {residence.ccaa.value}",
             )
         )
@@ -776,6 +767,8 @@ def _handle_borrador_import(
                         f"con la escala IRPF {tarifa_ejercicio} de {residence.ccaa.value}",
                         "Tarifa autonómica: cuota íntegra general consistent "
                         f"with {residence.ccaa.value} IRPF {tarifa_ejercicio} scale",
+                        "Tarifa autonòmica: quota íntegra general coherent "
+                        f"amb l'escala IRPF {tarifa_ejercicio} de {residence.ccaa.value}",
                         "Autonom tarifa: az altalanos teljes ado osszhangban van "
                         f"a(z) {residence.ccaa.value} IRPF {tarifa_ejercicio} skalaval",
                     )
@@ -791,6 +784,9 @@ def _handle_borrador_import(
                         "Tarifa autonómica: discrepancy for casilla 0551 "
                         f"({residence.ccaa.value}): tarifa {expected_autonomica} "
                         f"vs. extracted {cuota_autonomica} (delta {delta})",
+                        "Tarifa autonòmica: discrepància a la casella 0551 "
+                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
+                        f"davant extret {cuota_autonomica} (delta {delta})",
                         "Autonom tarifa: elteres az 0551 mezonek "
                         f"({residence.ccaa.value}): tarifa {expected_autonomica} "
                         f"vs. kinyert {cuota_autonomica} (delta {delta})",

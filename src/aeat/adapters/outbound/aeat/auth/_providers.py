@@ -2,7 +2,7 @@
 
 Provider-agnostic abstractions (``AuthProviderKind``, ``AuthProviderDescription``,
 ``AuthProvider`` protocol, ``describe_provider_operator_impact``)
-live in ``aeat.domain.auth``; this module holds concrete
+live in ``aeat.application.auth``; this module holds concrete
 per-provider detail models and the certificate browser-context provisioner.
 """
 
@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....domain.auth import (
+from .....application.auth import (
     AuthProvider,
     AuthProviderDescription,
     AuthProviderKind,

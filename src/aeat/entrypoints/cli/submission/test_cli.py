@@ -1,4 +1,10 @@
-"""Unit tests for the ``aeat submission`` Typer sub-app."""
+"""Unit tests for the ``aeat submission`` Typer sub-app.
+
+Covers the preflight, show, list, and submit-removed paths against
+isolated tmp directories, persisting drafts through the real
+:class:`aeat.domain.filing.FilingDraftRepository` envelope path so the
+loader's primary code path runs.
+"""
 
 from __future__ import annotations
 
@@ -27,6 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture()
 def runner() -> CliRunner:
+    """Return a fresh :class:`typer.testing.CliRunner` per test."""
     return CliRunner()
 
 
@@ -41,14 +48,15 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture()
 def draft_path(tmp_path: Path, isolated_dirs: Path) -> Path:
-    """Persist an approved draft via the envelope path.
+    """Persist an approved draft via the envelope-repository path.
 
     The CLI's preflight loader prefers the envelope path; this fixture
-    writes the approved draft through ``FilingDraftRepository.save``
-    so the loader's primary code path runs (the legacy plaintext-JSON
-    fallback in ``_CliDraftLoader`` does not understand the +
-    ``tuple[FilingValue, ...]`` shape and is reserved for older
-    fixtures).
+    writes the approved draft through
+    :meth:`aeat.domain.filing.FilingDraftRepository.save` so the loader's
+    primary code path runs. The legacy plaintext-JSON fallback in
+    :class:`aeat.entrypoints.cli.submission._helpers._CliDraftLoader` does
+    not understand the ``tuple[FilingValue, ...]`` shape and is reserved
+    for older fixtures.
     """
     from ....adapters.persistence.storage import (
         EncryptedBlobStore,
@@ -82,6 +90,7 @@ def draft_path(tmp_path: Path, isolated_dirs: Path) -> Path:
 
 
 def _approved_draft() -> FilingDraft:
+    """Build and approve a Modelo 130 ``2026Q1`` draft for the CLI fixtures."""
     draft = build_draft(
         modelo="130",
         period="2026Q1",
@@ -102,6 +111,7 @@ def _approved_draft() -> FilingDraft:
 
 
 def _sample_transaction() -> Transaction:
+    """Build one outgoing CSV-sourced transaction for the staleness probe."""
     raw = RawTransaction(
         transaction_id="row-1",
         booked_date=date(2026, 4, 10),
@@ -130,6 +140,8 @@ def _sample_transaction() -> Transaction:
 
 
 class TestPreflightCommand:
+    """Tests for ``aeat submission preflight``."""
+
     def test_ok(self, runner: CliRunner, draft_path: Path, isolated_dirs: Path) -> None:
         result = runner.invoke(app, ["preflight", str(draft_path)])
         assert result.exit_code == 0, result.output
@@ -251,6 +263,8 @@ class TestSubmitCommandRemoved:
 
 
 class TestShowAndList:
+    """Tests for ``aeat submission show`` and ``aeat submission list``."""
+
     def test_show_existing(self, runner: CliRunner, isolated_dirs: Path) -> None:
         submission_id = _write_historical_submission(isolated_dirs)
         result = runner.invoke(app, ["show", submission_id])
@@ -274,6 +288,7 @@ class TestShowAndList:
 
 
 def _write_historical_submission(root: Path) -> str:
+    """Persist a synthetic :class:`SubmittedFiling` JSON under ``root``."""
     now = datetime.now(UTC)
     filing = SubmittedFiling(
         submission_id="sub-1",

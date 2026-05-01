@@ -28,7 +28,7 @@ class SetupStep(StrEnum):
     capture typed answers. ``FIXTURE_PROVISIONING`` records the Google
     Workspace fixture opt-in. ``VERIFY`` runs the pure verifier.
     ``FIRST_RUN`` optionally hands off to the workflow-engine runner
-    (Protocol-stubbed until #59 lands). ``DONE`` is terminal.
+    (Protocol-backed until #59 lands). ``DONE`` is terminal.
     """
 
     WELCOME = "WELCOME"

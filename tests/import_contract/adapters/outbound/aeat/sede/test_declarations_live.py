@@ -18,10 +18,14 @@ from __future__ import annotations
 
 import pytest
 
+from aeat.adapters.outbound.aeat.sede import (
+    Declaration,
+    SedeCapture,
+    SedeError,
+    capture_declaration,
+    walk_declarations_register,
+)
 from aeat.entrypoints.cli._live import requires_live_enabled
-from aeat.adapters.outbound.aeat.sede._declarations import Declaration, capture_declaration, walk_declarations_register
-from aeat.adapters.outbound.aeat.sede._errors import SedeError
-from aeat.adapters.outbound.aeat.sede._schema import SedeCapture
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

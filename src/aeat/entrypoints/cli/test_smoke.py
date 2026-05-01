@@ -1,4 +1,9 @@
-"""Smoke tests for the cli subpackage."""
+"""Smoke tests for :mod:`aeat.entrypoints.cli`.
+
+Verifies the package is importable, conventional surfaces are present
+(:class:`aeat.core.errors.AeatError`, :func:`aeat.core.logging.get_logger`),
+and the root :data:`app` registers the expected first-class command groups.
+"""
 
 import pytest
 from typer.testing import CliRunner
@@ -13,14 +18,14 @@ runner = CliRunner()
 
 
 def test_smoke_cli() -> None:
-    """Asserts the subpackage is importable and conventions hold."""
+    """Assert the subpackage is importable and conventions hold."""
     assert cli_doc is not None
     assert issubclass(errors.AeatError, Exception)
     assert logging.get_logger(__name__).name == __name__
 
 
 def test_hello_command() -> None:
-    """Asserts the hello command executes correctly."""
+    """Assert the ``hello`` command executes successfully."""
     result = runner.invoke(app, ["hello"])
     assert result.exit_code == 0
     assert "Hello from AEAT CLI" in result.stdout

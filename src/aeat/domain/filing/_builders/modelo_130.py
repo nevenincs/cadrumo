@@ -1,4 +1,4 @@
-"""Modelo 130 builder for :mod:`aeat.application.filing`.
+"""Modelo 130 builder for :mod:`aeat.domain.filing`.
 
 Modelo 130 is the quarterly *pago fraccionado IRPF* form filed
 by Spanish autónomos in régimen de estimación directa. Its

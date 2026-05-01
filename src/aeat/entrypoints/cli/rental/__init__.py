@@ -1,13 +1,14 @@
-"""``aeat rental`` sub-app: per-finca + per-contract register CLI (#454).
+"""``aeat rental`` Typer sub-app for the per-finca + per-contract register.
 
-Five command groups (finca / contract / income / amortization / anexo-c)
-back the rental hardening feature. Every command is wrapped by the
-project-wide error boundary via ``decorate_typer_app(app)`` at the
-root, so callbacks may raise :class:`AeatError` subclasses freely.
+Five command groups (``finca``, ``contract``, ``income``, ``expense``,
+``anexo-c``) back the rental register. Every command is wrapped by the
+project-wide error boundary via ``decorate_typer_app(app)`` at the root,
+so callbacks may raise :class:`aeat.core.errors.AeatError` subclasses
+freely.
 
-Trilingual surface: command help strings ship in Spanish (the
-authoritative AEAT-domain language) with English fallbacks via the
-shared :class:`Translatable` primitive in error messages.
+Help strings ship in Spanish (the authoritative AEAT-domain language)
+with English fallbacks for error messages routed through the shared
+:class:`aeat.core.i18n.Translatable` primitive.
 """
 
 from __future__ import annotations
@@ -26,7 +27,7 @@ app = typer.Typer(
     help=(
         "Registro de fincas y contratos de arrendamiento; deriva "
         "automáticamente las casillas de Anexo C del Modelo 100 a partir de "
-        "los datos por finca / contrato (#454)."
+        "los datos por finca / contrato."
     ),
 )
 

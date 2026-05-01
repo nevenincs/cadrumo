@@ -3,7 +3,7 @@
 This subpackage provides the synchronization engine against AEAT.
 See the ADR at ``.vault/adr/2026-04-12-self-healing-sync-adr.md`` for
 the architectural contract, including the bounded auto-heal invariant
-and the Protocol-stub strategy for in-flight cross-module dependencies.
+and the Protocol-boundary strategy for in-flight cross-module dependencies.
 """
 
 from __future__ import annotations

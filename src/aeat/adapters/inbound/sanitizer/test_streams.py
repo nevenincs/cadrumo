@@ -1,13 +1,13 @@
 """Unit tests for :mod:`aeat.adapters.inbound.sanitizer._streams`.
 
-The tests synthesise PDFs in-process with content streams that
-pin each text-show operator the sanitiser must rewrite (Tj, TJ,
-', "). For each, the test asserts:
-
-* The cleartext is gone from the post-rewrite content stream.
-* The synthetic value is present at the same position.
-* One :class:`Replacement` row landed per cleartext occurrence,
-  carrying the SHA-256 of the cleartext (never the cleartext).
+The tests synthesise PDFs in-process with content streams that pin each
+text-show operator the sanitiser must rewrite (``Tj``, ``TJ``, ``'``,
+``"``). For each operator the test asserts that the cleartext is gone
+from the post-rewrite content stream, the synthetic value is present at
+the same position, and one
+:class:`aeat.adapters.inbound.sanitizer._records.Replacement` row landed
+per cleartext occurrence carrying the SHA-256 of the cleartext (never
+the cleartext itself).
 """
 
 from __future__ import annotations
@@ -26,7 +26,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _pdf_with_content_stream(stream_bytes: bytes) -> pikepdf.Pdf:
-    """Constructs a one-page PDF carrying ``stream_bytes`` as its content."""
+    """Construct a one-page PDF carrying ``stream_bytes`` as its content.
+
+    Args:
+        stream_bytes: Raw PDF content stream operators to embed.
+
+    Returns:
+        A reopened :class:`pikepdf.Pdf` round-tripped through ``save``
+        so the content stream lands in its on-disk form before the
+        rewriter runs.
+    """
     pdf = pikepdf.Pdf.new()
     pdf.add_blank_page(page_size=(612, 792))
     pdf.pages[0].contents_add(stream_bytes)
@@ -39,7 +48,7 @@ def _pdf_with_content_stream(stream_bytes: bytes) -> pikepdf.Pdf:
 
 
 def _flatten_content_streams(pdf: pikepdf.Pdf) -> bytes:
-    """Returns the concatenated raw bytes of every page's content stream."""
+    """Return the concatenated raw bytes of every page's content stream."""
     chunks: list[bytes] = []
     for page in pdf.pages:
         contents = page.obj.get("/Contents")

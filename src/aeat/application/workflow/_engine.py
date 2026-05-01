@@ -1079,7 +1079,7 @@ class WorkflowEngine:
         Invoked from the ``except SiteHealthError`` arm inserted
         strictly *before* the generic ``except Exception`` catch in
         every stage method that wraps a component call. The helper
-        composes a :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthAlert`
+        composes a :class:`aeat.application.workflow.SiteHealthAlert`
         around the caught error, appends a failed :class:`WorkflowStep`
         carrying the alert, and raises
         ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``

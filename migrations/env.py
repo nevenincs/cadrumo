@@ -2,8 +2,8 @@
 
 Reads the database URL from :class:`aeat.core.config.Settings` (unless it has been
 injected into the Alembic config by a programmatic caller such as
-:mod:`aeat.storage.migrations_api`) and uses
-:data:`aeat.storage._orm.metadata` as the autogenerate target.
+:mod:`aeat.adapters.persistence.storage.sql.migrations_api`) and uses
+:data:`aeat.adapters.persistence.storage.sql._orm.metadata` as the autogenerate target.
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     """Run migrations against the injected engine when available.
 
-    :func:`aeat.storage.migrations_api._make_config` passes the caller's
+    :func:`aeat.adapters.persistence.storage.sql.migrations_api._make_config` passes the caller's
     engine via ``config.attributes['connection']`` so in-memory SQLite URLs
     and engines with connect-event listeners (e.g. ``PRAGMA foreign_keys``)
     are preserved. Falls back to building a fresh engine from the ini config

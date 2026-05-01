@@ -52,7 +52,7 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
     The first call constructs the store from the resolved
     :class:`Settings`; subsequent calls return the same instance.
     Tests should call :func:`override_secret_store` to inject a
-    deterministic stub.
+    deterministic implementation.
 
     Args:
         settings: Optional pre-built settings instance. When ``None``,

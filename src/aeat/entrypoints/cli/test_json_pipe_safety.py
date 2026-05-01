@@ -1,4 +1,14 @@
-"""Subprocess pipe-safety tests for the real ``aeat`` entrypoint."""
+"""Subprocess pipe-safety tests for the real ``aeat`` entrypoint.
+
+Spawns the installed ``aeat`` console script and pipes its
+``--json`` output through ``jq`` to confirm:
+
+* JSON success payloads land on stdout only and survive a
+  downstream pipe consumer.
+* UTF-8 / non-ASCII content is preserved end-to-end even when the
+  parent process exposes ``PYTHONIOENCODING=cp1252``.
+* JSON failure payloads land on stderr only, leaving stdout empty.
+"""
 
 from __future__ import annotations
 
@@ -21,6 +31,7 @@ _JQ_EXE = shutil.which("jq")
 
 
 def _prepare_workflow_env(tmp_path: Path) -> dict[str, str]:
+    """Seed an encrypted profile + draft inputs and return a workflow env mapping."""
     from datetime import UTC, datetime
 
     from ...adapters.persistence.storage import (
@@ -86,6 +97,17 @@ def _run_jq_pipeline(
     *,
     env: dict[str, str] | None = None,
 ) -> tuple[subprocess.CompletedProcess[str], str]:
+    """Run ``aeat <argv>`` and pipe its stdout through ``jq <jq_filter>``.
+
+    Args:
+        argv: Argument vector passed to the ``aeat`` console script.
+        jq_filter: Filter expression evaluated by ``jq``.
+        env: Optional environment mapping for both processes.
+
+    Returns:
+        A tuple of the completed ``jq`` process and the captured
+        producer stderr.
+    """
     assert _JQ_EXE is not None, "jq must be installed for pipe-safety tests"
     producer = subprocess.Popen(  # noqa: S603
         [str(_CLI_EXE), *argv],

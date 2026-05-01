@@ -1,8 +1,16 @@
-"""Structured error-code registry and rendering helpers.
+"""Structured error-code registry and CLI rendering helpers.
 
-This module centralises AEAT's stable CLI error taxonomy. Error classes
-bind to predeclared :class:`ErrorCode` rows so the public contract stays
-explicit and reviewable.
+Centralises AEAT's stable CLI error taxonomy. Every
+:class:`aeat.core.errors.AeatError` subclass binds to a predeclared
+:class:`ErrorCode` row through :func:`bind_error_code`, so the public
+contract stays explicit, reviewable, and grep-stable. Rendering helpers
+:func:`render_error_text` and :func:`render_error_json` produce the
+human-readable and machine-readable stderr payloads that downstream tools
+consume; :func:`build_error_envelope` constructs the underlying
+:class:`ErrorEnvelope`.
+
+Secret-looking context keys (matching :data:`_SECRET_FIELD_PATTERN`) are
+redacted before they ever reach stderr — see :func:`scrub_error_context`.
 """
 
 from __future__ import annotations
@@ -161,19 +169,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             default_message_es="Clave movil no esta configurado correctamente.",
             default_message_en="Raised when required Cl@ve M\xf3vil settings are missing or malformed.",
             default_message_hu="Clave movil nincs megfeleloen beallitva.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.aeat.auth.certificate.AeatLiveReadNotEnabledError",
-        ErrorCode(
-            code="AUTH_AUTH_CERTIFICATE_AEAT_LIVE_READ_NOT_ENABLED",
-            category=ErrorCategory.AUTH,
-            default_message_es="La lectura en vivo de AEAT no esta habilitada.",
-            default_message_en="Raised when live-read access is required but the gate is shut.",
-            default_message_hu="Az AEAT elo olvasasi mod nincs engedelyezve.",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -812,19 +807,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             default_message_en="Raised when AEAT site-health detection classifies a non-OK state.",
             default_message_hu="Az AEAT oldalallapota hibas.",
             default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.core.errors.WorkspaceLockedError",
-        ErrorCode(
-            code="LOCKED_WORKSPACE_LOCKED",
-            category=ErrorCategory.LOCKED,
-            default_message_es="El espacio de trabajo est\xe1 bloqueado por otra operaci\xf3n.",
-            default_message_en="The workspace is locked by another operation.",
-            default_message_hu="A munkater\xfcletet egy m\xe1sik m\u0171velet z\xe1rolja.",
-            default_suggestion="aeat workflow list",
             retryable=False,
             runbook_id=None,
         ),
@@ -2188,7 +2170,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.LockAcquisitionError",
+        "aeat.core.locks_errors.LockAcquisitionError",
         ErrorCode(
             code="LOCKED_STORAGE_LOCK_ACQUISITION",
             category=ErrorCategory.LOCKED,
@@ -2380,7 +2362,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.CorpusManifestError",
+        "aeat.core.corpus_manifest._errors.CorpusManifestError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST",
             category=ErrorCategory.INTEGRITY,
@@ -2393,7 +2375,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.CorpusManifestTamperError",
+        "aeat.core.corpus_manifest._errors.CorpusManifestTamperError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST_TAMPER",
             category=ErrorCategory.INTEGRITY,
@@ -2408,7 +2390,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.CorpusManifestDriftError",
+        "aeat.core.corpus_manifest._errors.CorpusManifestDriftError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -2520,45 +2502,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             default_message_en="Live AEAT read access is not enabled.",
             default_message_hu="Az élő AEAT olvasás nincs engedélyezve.",
             default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.submission._errors.SubmissionError",
-        ErrorCode(
-            code="ERROR_DOMAIN_SUBMISSION",
-            category=ErrorCategory.ERROR,
-            default_message_es="Error de envío de dominio.",
-            default_message_en="Base class for domain submission errors.",
-            default_message_hu="Domain beküldési hiba.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.submission._errors.SubmissionPreflightError",
-        ErrorCode(
-            code="ERROR_DOMAIN_SUBMISSION_PREFLIGHT",
-            category=ErrorCategory.ERROR,
-            default_message_es="La validación previa del envío de dominio rechazó el borrador.",
-            default_message_en="Raised when domain submission preflight rejects a draft.",
-            default_message_hu="A domain beküldés előzetes ellenőrzése elutasította a tervezetet.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.submission._errors.LiveSubmitForbiddenError",
-        ErrorCode(
-            code="LOCKED_DOMAIN_LIVE_SUBMIT_FORBIDDEN",
-            category=ErrorCategory.LOCKED,
-            default_message_es="El envío en vivo a AEAT está permanentemente prohibido.",
-            default_message_en="Live AEAT submission is permanently forbidden in the domain submission engine.",
-            default_message_hu="Az élő AEAT beküldés véglegesen tiltott a domain beküldési motorban.",
-            default_suggestion="aeat submission export",
             retryable=False,
             runbook_id=None,
         ),

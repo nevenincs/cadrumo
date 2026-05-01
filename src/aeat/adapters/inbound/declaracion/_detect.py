@@ -94,7 +94,7 @@ def _modelo_100_revision(año: int) -> str:
     Renta Web redesign inverted the shape to the modern ``label VALUE CID``
     line-oriented form used today. The revision tag drives extractor
     dispatch; see the 2021/2022+ extractors under
-    ``src/aeat/declaracion/_parsers/modelo_100/``.
+    ``src/aeat/adapters/inbound/declaracion/_parsers/modelo_100/``.
     """
     if año <= 2021:
         return "2021.legacy"

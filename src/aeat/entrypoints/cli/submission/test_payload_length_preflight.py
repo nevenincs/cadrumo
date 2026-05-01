@@ -1,11 +1,16 @@
-"""Verify/diff pre-flight on payload-length mismatch.
+"""Test the ``verify`` / ``diff`` pre-flight on payload-length mismatch.
 
-Catches Kent's common mistakes — pasting the wrong ``--modelo`` /
-``--ejercicio`` flags, feeding a truncated file — with a CLI-
-sculpted error message naming the likely causes, before the
-deserialiser surfaces a generic ValueError from deep in the
-parser. The error mentions expected vs actual byte counts so
-Kent can see at a glance which flag set is wrong.
+Catches the common operator mistakes — passing the wrong
+``--modelo`` / ``--ejercicio`` flags, feeding a truncated file —
+with a CLI-sculpted error message naming the likely causes, before
+the deserialiser surfaces a generic :class:`ValueError` from deep
+in the parser. The error reports expected and actual byte counts so
+the operator can see at a glance which flag set is wrong.
+
+See also:
+    :mod:`aeat.entrypoints.cli.submission.verify` and
+    :mod:`aeat.entrypoints.cli.submission.diff` for the commands
+    under test.
 """
 
 from __future__ import annotations
@@ -25,10 +30,13 @@ _runner = CliRunner()
 
 
 def _unwrap_error(output: str) -> dict[str, Any]:
+    """Extract the ``error`` payload from a JSON-mode CLI failure."""
     return cast(dict[str, Any], json.loads(output)["error"])
 
 
 class TestVerifyPreflightLength:
+    """Length pre-flight in ``aeat submission verify``."""
+
     def test_short_file_shows_kent_facing_message(self, tmp_path: Path) -> None:
         short = tmp_path / "short.130"
         short.write_bytes(b"SHORT")
@@ -54,13 +62,16 @@ class TestVerifyPreflightLength:
         assert context["actual_bytes"] == "5"
 
     def test_wrong_modelo_flag_surfaces_mismatch(self, tmp_path: Path) -> None:
-        """A real 130 file fed to verify with --modelo 303 --ejercicio 2024
-        must produce a length-mismatch error naming the 303 expected length
-        — not a 7-level-deep deserialiser crash."""
-        # Fabricate an 880-byte stub representing a valid 130 file.
-        stub = tmp_path / "faux130.303"
-        stub.write_bytes(b"X" * 878 + b"\r\n")
-        result = _runner.invoke(app, ["verify", str(stub), "--modelo", "303", "--ejercicio", "2024", "--json"])
+        """Mismatching modelo must surface a length error, not a deep crash.
+
+        A real 130 file fed to ``verify --modelo 303 --ejercicio 2024``
+        must produce a length-mismatch error naming the 303 expected
+        length, not a deserialiser stack trace.
+        """
+        # Write an 880-byte payload representing a valid 130 file.
+        payload = tmp_path / "synthetic130.303"
+        payload.write_bytes(b"X" * 878 + b"\r\n")
+        result = _runner.invoke(app, ["verify", str(payload), "--modelo", "303", "--ejercicio", "2024", "--json"])
         assert result.exit_code == 2
         assert result.stdout == ""
         doc = _unwrap_error(result.stderr)
@@ -70,6 +81,8 @@ class TestVerifyPreflightLength:
 
 
 class TestDiffPreflightLength:
+    """Length pre-flight in ``aeat submission diff``."""
+
     def test_short_file_a_shows_kent_facing_message(self, tmp_path: Path) -> None:
         short_a = tmp_path / "short_a.130"
         healthy_b = tmp_path / "healthy_b.130"

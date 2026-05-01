@@ -16,7 +16,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted — execution-ready`)
+# `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted — delivered hard-cutover`)
 
 > **APPROVAL-READY — 2026-04-30.** This ADR has converged through
 > 22 audit operations + 2 prior cold-eyes reviews + wave-5 gap-check
@@ -48,10 +48,9 @@ related:
 > ### Step 0/1 outcomes (recorded 2026-04-30)
 >
 > **Decision 6** (`SchemaSource` reserved enum slots): no active branch
-> nor open issue references `PORTAL_HTML_PROBE`, `MANUAL_LLM_DRAFT`, or
-> `XSD_WIRE`. Autonomous rule fires `DELETE`. Slots ride into Step 7's
-> keystone PR with the `domain/schema/` move; phase-2 dead-code (see
-> updated Phase 2 list below).
+> nor open issue referenced the reserved schema-source enum members.
+> Autonomous rule fired `DELETE`. The delivered code removes those
+> slots from `domain/schema/`.
 >
 > **Decision 10** (migration-helper retention): the actual count is
 > **5 helpers**, not the "3" appearing in the EPIC and plan bodies
@@ -63,6 +62,12 @@ related:
 > 2026-04-27 — far short of the > 6 month threshold. Autonomous rule
 > fires `RETAIN with TODO + tracking issue`. Tracking issue `#477`
 > filed; earliest removal 2026-10-27.
+>
+> **Delivered hard-cutover amendment (2026-05-01)**: Decision 10's
+> retention window was superseded by the eliminate-shims pass after
+> hard-cutover acceptance. All five helpers and companion
+> `*MigrationSummary` models were deleted after confirming zero
+> production callers; issue `#477` was closed with the deletion record.
 >
 > **Step 1 sub-pass 3 outcome**: ~37 test files marked
 > `domain_local_state` move to destination layers outside the rule's
@@ -438,69 +443,58 @@ input plan for the rollout, not standalone decisions.
 ### Public surface and semver
 
 The following imports are documented public surfaces with stability
-contracts. The restructure either preserves each contract via re-
-export shim or makes a documented breaking change:
+contracts. The delivered restructure is a major hard cut for deleted
+public root modules and enforces canonical package paths at the import
+contract boundary. There is no root `aeat.auth`, `aeat.errors`,
+`aeat.formulas`, or `aeat.submission` module in the accepted layout.
 
 | Public surface | Source | Treatment | Mechanism |
 | --- | --- | --- | --- |
-| `from aeat.core.errors import AeatError` | `error-code-registry-adr` + audit 1 | Preserve | Direct re-export shim from `aeat.core.errors`; canonical home stays in `core/errors/`. |
-| `from aeat.core.errors import (rendering pipeline)` (`build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, `get_registered_error_code`, `ErrorCategory`, `ErrorCode`, `ErrorEnvelope`, `ERROR_REGISTRY`, `register`, `bind_error_code`, `resolve_error_message`, `scrub_error_context`) | `error-code-registry-adr` + audit 1 | Preserve | Direct re-export shim from `aeat.core.errors`; tight cluster, all stay in `core/errors/`. |
-| `from aeat.core.errors import FormulasError, RulesetValidationError, FormulaCycleError, CasillaNotDefinedError, AmbiguousPeriodError, MissingRulesetError, EvaluationError, AuditDiscrepancyError` | audit 1 | Preserve via shim; canonical home **moves** | The 8 formulas exceptions move to `domain/formulas/_errors.py`. Re-export shim at `aeat.core.errors` re-imports from `aeat.domain.formulas`. Canonical home is `aeat.domain.formulas` (which already re-exports them). Shim removal is a downstream decision. |
-| `from aeat.core.errors import McpLaunchError` | audit 1 | Preserve via shim; canonical home **moves** | Moves to `entrypoints/mcp/_errors.py`. Shim re-imports. |
-| `from aeat.core.errors import FilingFixtureError, FixtureProvisioningError` | audit 1 | Preserve via shim; canonical home **moves** | Move to `domain/testing/_errors.py`. Shim re-imports. |
+| `from aeat.core.errors import AeatError` | `error-code-registry-adr` + audit 1 | Preserve canonical path | Canonical home stays in `aeat.core.errors`. |
+| `from aeat.core.errors import (rendering pipeline)` (`build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, `get_registered_error_code`, `ErrorCategory`, `ErrorCode`, `ErrorEnvelope`, `ERROR_REGISTRY`, `register`, `bind_error_code`, `resolve_error_message`, `scrub_error_context`) | `error-code-registry-adr` + audit 1 | Preserve canonical path | Tight cluster, all stay in `aeat.core.errors`. |
+| `from aeat.domain.formulas import FormulasError, RulesetValidationError, FormulaCycleError, CasillaNotDefinedError, AmbiguousPeriodError, MissingRulesetError, EvaluationError, AuditDiscrepancyError` | audit 1 | Canonical move | The 8 formulas exceptions live in `domain/formulas/_errors.py` and are imported from `aeat.domain.formulas`. Root `aeat.formulas` is deleted. |
+| `from aeat.entrypoints.mcp._errors import McpLaunchError` | audit 1 | Canonical move | MCP launch errors live with the MCP entrypoint. |
+| `from aeat.core.errors import FilingFixtureError, FixtureProvisioningError` and `from aeat.application.filing.testing import load_filing_history, synthesize_filing_draft, ...` | audit 1 + continuation audit | Canonical split | Fixture errors stay in `aeat.core.errors`; synthetic filing-history helpers live with the filing application test support. The old domain-side synthetic-fixture bucket is deleted. |
 | `from aeat.core.errors import SiteHealthError, AeatObservabilityError` | audit 1 | Preserve | Stay in `core/errors/__init__.py` as firewall declarations. The cross-domain reason for hosting them at this level (preventing import cycles between `browser`, `workflow`, and `observability`) is genuine; relocation is unsafe. |
 | `from aeat.core.errors import DeprecatedAliasError, MovedAliasError` | audit 1 | Preserve | Stay in `core/errors/__init__.py` as generic infra exceptions. |
-| `from aeat.core.errors import WorkspaceLockedError` | audit 1 + refreshed cold-review 22.11 | **DELETE + replace** | Verified production-dead (only test-file usage). Resolution: delete from `__init__.py`, replace test-file usage with a synthetic test exception (e.g. `_TestableAeatError` defined inside the affected test file). NO shim. The "rename or delete" disposition in dead-code Phase 2 is resolved as DELETE. |
-| `from aeat.adapters.outbound.aeat.auth import (Google cluster: scope constants, get_oauth_credentials, get_service_account_credentials, get_credentials, get_credentials_for_scopes, build_*_service, build_*_client, GoogleAuthPath, GoogleAuthInspection, inspect_google_auth, ...)` | audit 3 | Preserve via shim; canonical home **moves** | All Google symbols (~24) move to `aeat.adapters.outbound.google`. Re-export shim at `aeat/adapters/outbound/aeat/auth/__init__.py` re-imports. Consumers (CLI Google subcommands + MCP) all import a single-axis cluster — rewrite is mechanical. |
-| `from aeat.adapters.outbound.aeat.auth import (AEAT cluster: AeatAuthenticator, AeatSession, AeatLoginAssertion, AuthProviderKind, AuthProvider, all session-detail variants, CertificateBundle, CertificateError hierarchy, ClaveMovilAuthProvider, select_provider, ...)` | audit 3 | Preserve via shim; canonical homes **move and split** | Concrete AEAT providers + cert types → `aeat.adapters.outbound.aeat.auth`. `select_provider` factory + provider-agnostic types → `aeat.application.auth`. Browser Playwright protocols → `aeat.adapters.outbound.aeat.browser` (CORE-LEAK fix). Re-export shim preserves the `aeat.adapters.outbound.aeat.auth` import. |
-| `from aeat.adapters.outbound.aeat.auth import AeatAccessGate, AeatGateEnvSnapshot, AeatLiveReadNotEnabledError` | audit 3 | Preserve via shim; canonical home **moves** | Move to `aeat.core.access_gate`. `AeatLiveReadNotEnabledError` is also relocated from `aeat.adapters.outbound.aeat.auth.certificate` (where it was misplaced) to the gate module. Re-export shim preserves `aeat.adapters.outbound.aeat.auth` and `aeat.core.errors` imports. |
-| `from aeat.adapters.outbound.aeat.auth import restrict_file_permissions` | audit 3 | Preserve via shim; canonical home **moves** | Move to `aeat.core.file_permissions`. Re-export shim. |
-| `from aeat.adapters.outbound.aeat.export import LiveSubmitForbiddenError` | audit 3 | Preserve via shim; canonical home **moves** | Relocated from `submission/` to `core/access_gate/_errors.py` (per Constraints — eliminates `core/` ← `adapters/` layering violation). Re-export shim at the old path keeps existing consumers working. |
+| Former workspace-lock test exception in `aeat.core.errors` | audit 1 + refreshed cold-review 22.11 | **DELETE + replace** | Verified production-dead after delivered cleanup. Tests use local synthetic exceptions where needed. |
+| `from aeat.adapters.outbound.google import (Google cluster: scope constants, get_oauth_credentials, get_service_account_credentials, get_credentials, get_credentials_for_scopes, build_*_service, build_*_client, GoogleAuthPath, GoogleAuthInspection, inspect_google_auth, ...)` | audit 3 | Canonical move | All Google symbols (~24) move to `aeat.adapters.outbound.google`. Consumers (CLI Google subcommands + MCP) import the single-axis cluster directly. |
+| `from aeat.adapters.outbound.aeat.auth import (AEAT cluster: AeatAuthenticator, AeatSession, AeatLoginAssertion, concrete certificate/provider types, ...)` and `from aeat.application.auth import (AuthProviderKind, AuthProvider, select_provider, ...)` | audit 3 | Canonical split | Concrete AEAT providers + cert types stay under `aeat.adapters.outbound.aeat.auth`. Provider-agnostic selection lives in `aeat.application.auth`. Browser Playwright protocols live in `aeat.adapters.outbound.aeat.browser` (CORE-LEAK fix). |
+| `from aeat.core.access_gate import AeatAccessGate, AeatGateEnvSnapshot, AeatLiveReadNotEnabledError` | audit 3 | Canonical move | Access-gate policy and errors live in `aeat.core.access_gate`. |
+| `from aeat.core.file_permissions import restrict_file_permissions` | audit 3 | Canonical move | File-permission hardening lives in `aeat.core.file_permissions`. |
+| `from aeat.core.access_gate import LiveSubmitForbiddenError` | audit 3 | Canonical move | Relocated from `submission/` to `core/access_gate/_errors.py` (per Constraints — eliminates `core/` ← `adapters/` layering violation). Root `aeat.submission` is deleted. |
 
 Additional public surfaces are surfaced during per-module audits
 and folded into this table.
 
-**Semver impact**: the restructure ships as a minor bump if all
-public surfaces are preserved via shim; major bump if any public
-surface breaks without shim. The audit decides per-surface; the
-cumulative version-bump call is fired **deterministically by the
-pipeline at the layout-move PR merge** (Step 8). All shims preserved
-→ minor; any shim-less break → major. **No override path** under
-the autonomous model.
+**Semver impact**: the delivered restructure is a major bump because
+documented public root modules are deleted. The version-bump call is
+fired **deterministically by the pipeline at the layout-move PR merge**
+(Step 8): deleted public root modules require a major release. **No
+override path** under the autonomous model.
 
 **Post-ADR break policy**: any audit finding that surfaces AFTER
-this ADR freezes and mandates a shim-less public-surface break
-defaults to a **major bump**, recorded in the CHANGELOG entry for
-that version. The rule fires deterministically.
+this ADR freezes and mandates deletion of a documented public root
+module defaults to a **major bump**, recorded in the CHANGELOG entry
+for that version. The rule fires deterministically.
 
-**Shim deprecation contract** (per refreshed cold-review 22.5):
+**Hard-cutover import contract** (per refreshed cold-review 22.5 and
+delivered rollout):
 
-Every re-export shim listed above (and any added by future audits)
-ships with a documented deprecation lifecycle. Without this
-contract, shims accumulate indefinitely or are silently removed.
+The accepted layout has no transitional root-module re-export layer
+and no staged deprecation schedule. Import-contract guardrails assert
+canonical paths directly:
 
-- **Deprecation signal**: every shim emits a `DeprecationWarning`
-  on first import per process, citing the canonical path. Example:
-  `aeat.core.errors` shim warns "Importing from `aeat.core.errors` is
-  deprecated; use `aeat.core.errors` instead. Removal earliest
-  at version X.Y."
-- **Removal eligibility**: a shim becomes eligible for removal at
-  the **second minor version after introduction** (i.e. if shipped
-  in 0.10.0, removable in 0.12.0). This is a minimum, not a
-  maximum.
-- **Removal trigger**: at Step 14 close, the executing agent files
-  one follow-up GitHub issue per minor-version-eligibility cohort
-  describing which shims become removable when. A future agent
-  picking up that follow-up issue executes the removal PR. The
-  removal PR runs the full acceptance-criteria check; merges
-  deterministically if green. Removal PR is a major bump if the
-  shim is at a documented public surface (`aeat.core.errors`); minor
-  bump otherwise. No external scheduler is required.
-- **CHANGELOG**: every shim addition AND removal is a CHANGELOG
-  entry under the matching version.
-- **No deprecation pragma silence**: tests do NOT silence the
-  shim's `DeprecationWarning`; CI catches lingering shim consumers
-  inside the project.
+- Root `aeat.auth`, `aeat.errors`, `aeat.formulas`, and
+  `aeat.submission` modules are absent.
+- Project code and tests import from canonical packages such as
+  `aeat.core.errors`, `aeat.domain.formulas`,
+  `aeat.application.auth`, `aeat.adapters.outbound.google`,
+  `aeat.adapters.outbound.aeat.auth`, and
+  `aeat.core.access_gate`.
+- CI treats references to deleted public root modules as contract
+  failures.
+- The CHANGELOG records the hard cut and the major version bump.
 
 ### Configuration files affected
 
@@ -552,9 +546,9 @@ carve-out:
   `domain/` → `adapters/` rule (no other carve-outs).
 - Honours contributor legibility: a contributor reading
   `domain/filing/` finds all filing-domain code in one place.
-- The `import-linter` contract names this exception **explicitly
-  by file**, NOT via wildcard pattern (per refreshed cold review
-  finding 22.1).
+- The executable import-contract gate names this exception
+  **explicitly by file**, NOT via wildcard pattern (per refreshed
+  cold review finding 22.1).
 
 **Carve-out registry** (the ONLY files permitted the exception):
 
@@ -577,141 +571,56 @@ follow-up ADR amendment OR moved to `application/<name>/` (which
 permits adapters/ imports unconditionally). NO new file silently
 inherits the carve-out via wildcard pattern.
 
-**Skeleton `import-linter` contract** (illustrative; final
-contract committed with the layout-move PR):
+**Executable import-contract gate**:
 
-```toml
-[importlinter]
-root_packages = ["aeat"]
+The delivered hard-cutover uses pytest import-contract tests rather
+than an external layering plugin. `tests/import_contract/test_adr_layout_import_smoke.py`
+asserts every canonical ADR package imports, deleted root modules stay
+absent, representative public symbols live at canonical paths, and the
+known relocated/deleted surfaces do not reappear at old locations.
 
-[[importlinter.contracts]]
-name = "domain layer is innermost"
-type = "layers"
-layers = [
-    "aeat.entrypoints",
-    "aeat.application",
-    "aeat.adapters",
-    "aeat.domain",
-    "aeat.core",
-]
-ignore_imports = [
-    # Carve-out: domain repositories importing storage substrate
-    "aeat.domain.rental._repository -> aeat.adapters.persistence.storage.*",
-    "aeat.domain.filing._repository -> aeat.adapters.persistence.storage.*",
-    "aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage.*",
-    "aeat.domain.justificante._repository -> aeat.adapters.persistence.storage.*",
-    "aeat.domain.submission._repository -> aeat.adapters.persistence.storage.*",
-    # NOTE: sync._repository stays at application/sync/ per audit 13 — NOT in carve-out
-    "aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.*",
-    "aeat.domain.invoices._repository -> aeat.adapters.persistence.storage.*",
-    "aeat.domain.attachments._repository -> aeat.adapters.persistence.storage.*",
-    "aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.*",
-]
-
-[[importlinter.contracts]]
-name = "adapters do not import each other"
-type = "independence"
-modules = [
-    "aeat.adapters.inbound",
-    "aeat.adapters.outbound",
-    "aeat.adapters.persistence",
-]
-
-[[importlinter.contracts]]
-name = "core is leaf"
-type = "forbidden"
-source_modules = ["aeat.core"]
-forbidden_modules = [
-    "aeat.adapters",
-    "aeat.application",
-    "aeat.domain",
-    "aeat.entrypoints",
-]
-```
-
-The contract uses **per-file `ignore_imports`**, not wildcard
-patterns — every carve-out is explicit and grep-able.
+Domain repository carve-outs remain explicit and grep-able through the
+named registry above. The gate deliberately checks the concrete ADR
+surfaces instead of allowing wildcard carve-outs.
 
 **Intra-`adapters/persistence/storage/` cross-sub-module imports**
 (per wave-5 finding 4): `_rotation.py` is permitted to import from
 sibling sub-modules (`envelope/`, `blob_store/`, `master_key/`)
 because rotation is a cross-cluster engine by design (audit 4).
-The `independence` contract above governs ADAPTER-LEVEL isolation
+The executable import-contract gate governs ADAPTER-LEVEL isolation
 (no `inbound/` → `outbound/` etc.) — it does NOT apply inside a
 single adapter sub-package. Storage's internal sub-module
 hierarchy is permitted to compose freely; the layered contract
 applies only at the storage substrate boundary, not within it.
 
-**Default tool**: `import-linter` (contract-driven, mature, fits
-layered models). Alternatives: `tach`, `deptry`, custom AST checks.
-Tool selection is open; the **requirement** to ship static
-enforcement in the same PR as the layout move is fixed.
-
-The boundary contracts ship in the same PR as the layout move; CI
-fails if any import violates the contract.
+**Delivered tool**: pytest import-contract tests plus `ty` static
+type resolution. The requirement is that static enforcement ships
+with the layout move and fails CI when the ADR surfaces drift.
 
 ### Dead-code workstream
 
-Per-module audits surface dead-code candidates that are removable
-during the restructure window. The dead-code workstream consolidates
-findings into a phased plan persisted in the research doc:
+Per-module audits surfaced dead-code and drift candidates during the
+restructure window. The delivered state is:
 
-- **Phase 1** (standalone, before layout move): items with zero
-  cross-domain coupling — ship as small standalone deletion PRs.
-  Current candidates: `auth/_secret_adapters.py` (whole module),
-  `filing.utc_now`, `auth._providers.describe_certificate_provider`.
-- **Phase 2** (with restructure): items that ride home with their
-  domain's split or move. Current candidates:
-  `errors.WorkspaceLockedError`, 3 `migrate_legacy_*_to_repository`
-  helpers in filing, duplicate `default_schema_provider` in
-  `filing/_builders/_modelo_130_schema.py`, 4 empty subpackage
-  placeholders (`corpus/`, `history/`, `inbox/`, `status/`).
-- **Phase 3** (post-restructure): none currently.
+- Deleted/replaced: workspace-lock test exception, dead root modules,
+  obsolete domain-side auth/testing buckets, domain-side parser and
+  extraction boundaries, and empty or obsolete move scaffolding.
+- Relocated: schema extraction/fetch to `aeat.adapters.inbound.schema`,
+  justificante parsing to `aeat.adapters.inbound.justificante`,
+  provider-agnostic auth contracts to `aeat.application.auth`,
+  tax-residence persistence to `aeat.adapters.persistence.profile`,
+  and synthetic filing fixtures to `aeat.application.filing.testing`.
+- Renamed/normalized: deterministic LLM test adapter and Protocol
+  contract terminology.
+- Deleted in the delivered eliminate-shims pass: the 5
+  `migrate_legacy_*_to_repository` helpers and companion
+  `*MigrationSummary` models. Step 0 Decision 10's dated-retention
+  rule is superseded by the 2026-05-01 hard-cutover deletion record
+  after zero production callers were confirmed; issue `#477` is closed.
 
-**Verification methodology**: each candidate confirmed by
-intermediate grep of `src/aeat/` (excluding defining file +
-colocated tests). **Pre-merge safety check** is mandatory: run an
-unrestricted `grep -r '<symbol>' src/` on every Phase 1 deletion to
-catch dynamic resolution, config references, and docstring
-references that the intermediate grep does not see.
-
-**Aggregate impact** (current candidates): ~590 LOC of production
-code + ~190 LOC of obsolete test code + 4 empty directories.
-Material cohesion improvement; net LOC reduction is ~1% of
-`src/aeat/`.
-
-The candidate list lives in the research doc's "Dead-code
-workstream" section. Items pre-approved for execution via the
-**decision-grounding audit** (research doc, "Audit-grounded action
-list"):
-
-**Phase 1** (standalone PRs, before layout move):
-- `auth/_secret_adapters.py` (whole module + test) — ~470 LOC.
-- `auth._providers.describe_certificate_provider` — remove from
-  `__all__`.
-- `filing.utc_now` — remove from `__init__.__all__`.
-- `llm._FakeAdapter` — remove from `__all__`.
-- `llm.ProviderRequest` — remove from `__all__`.
-- `schema._extractor.py` — whole file (27 LOC).
-
-**Phase 2** (with restructure):
-- 4 empty subpackages (`corpus/`, `history/`, `inbox/`, `status/`).
-- `submission/_submitters/` tombstone directory.
-- `sede._walker.fetch_justificante_pdf` (raises NotImplementedError).
-- 4 hollow Protocol stubs in `sync` (`LLMClient`, `LLMRequest`,
-  `ManualRulesLoader`, `SchemaLoader`) on `LiveSyncRunner`.
-- `errors.WorkspaceLockedError` (test-only fixture; rename or
-  delete).
-- `SchemaSource.PORTAL_HTML_PROBE`, `SchemaSource.MANUAL_LLM_DRAFT`,
-  `SchemaSource.XSD_WIRE` reserved enum members and their
-  `_models.py` docstring + `test_models.py` references (per Step 0
-  Decision 6 outcome — no active branch / open issue references
-  these slots).
-- The 5 `migrate_legacy_*_to_repository` helpers are NOT in this
-  list — Step 0 Decision 10 fires `RETAIN with TODO(#477)` because
-  all 5 landed 2026-04-27, well short of the 6-month retention
-  threshold. They will be revisited at the deprecation-eligibility
-  date (2026-10-27) tracked in `#477`.
+Verification uses unrestricted `rg` over `src/`, `tests/`, docs, and
+both ADR copies for moved/deleted public names plus targeted import
+contracts and type checking.
 
 ### Transition mechanic (parallel branches and agent slots)
 
@@ -833,9 +742,10 @@ in this ADR):
   succeeds; `pytest --collect-only` runs without `ImportError`.
 - Coverage floor maintained: `just test-cov` reports ≥ 60% on
   `src/aeat` (project mandate).
-- Static import-boundary enforcement is active. The chosen tool
-  (`import-linter` by default) lints zero violations against the
-  layered contracts defined in the Implementation section.
+- Static import-boundary enforcement is active through executable
+  import-contract tests. The gate imports canonical packages, proves
+  deleted root modules stay absent, and statically checks moved
+  surfaces do not reappear in old packages.
 - Vault contradiction list (research doc) at 100% per-tier
   completion: T1 supersedes shipped, T2 security audits validated and
   inline-updated, T3 inline-updates landed in milestone, T4 archive
@@ -844,9 +754,9 @@ in this ADR):
   collection runs successfully under the new marker set.
 - `domain_local_state` test files reclassified by destination
   (`domain_model` or `domain_persistence`) per the migration mechanic.
-- Public-surface decisions executed. `aeat.core.errors` re-export shim in
-  place (or documented break with semver bump); any other public
-  surfaces surfaced by the audit treated similarly.
+- Public-surface decisions executed. Deleted public root modules are
+  documented as major-version breaks; surviving public imports use
+  canonical paths.
 - Configuration files updated: `pyproject.toml` (coverage / mypy /
   pytest paths), pre-commit configs, `.mcp.json`, `justfile`,
   `.gitignore`, CI workflow path-scoped steps.
@@ -928,11 +838,11 @@ before resuming, retrying, or firing rollback.
 
 | Decision | Autonomous rule | Mechanism |
 | --- | --- | --- |
-| Calling the freeze | Triggered when Step-5 tooling-prep audits commit clean (Step-5 = import-linter contract committed + rebase script test fixture green + smoke-test fixture green + type-checker config updated + packaging smoke check passes). | The executing agent applies the freeze when Step 5 completes — labels open PRs `needs-rebase-post-restructure` via `gh pr edit`. |
+| Calling the freeze | Triggered when Step-5 tooling-prep audits commit clean (Step-5 = executable import-contract gate committed + rebase script test fixture green + smoke-test fixture green + type-checker config updated + packaging smoke check passes). | The executing agent applies the freeze when Step 5 completes — labels open PRs `needs-rebase-post-restructure` via `gh pr edit`. |
 | Declaring acceptance criteria met | All 15 acceptance criteria evaluate green. ANY criterion red → pipeline halts. | The executing agent runs the acceptance-criteria checklist against the layout-move PR; reads CI status via `gh run view`. |
 | Invoking rollback | Fired when any abort-criterion threshold is detected (CI > 30% failure across 3 consecutive runs; > 72 h cumulative freeze; coverage floor breach; security guardrail revalidation fails; `live_write` collection-ban mis-fire risk). | The executing agent monitors CI / freeze duration / coverage as it proceeds; on threshold breach, executes `gh pr revert` + downstream-step compound rollback per the table below. |
-| Semver bump | Rule-based deterministic: all shims preserved → minor bump; any public surface breaks without shim → major bump. **No override path** — but the rule's precondition is verified (see "Shim-verification gate" below). | The executing agent runs the shim-verification subroutine, then applies the semver bump rule mechanically. |
-| Shim removal | At the second minor version after shim introduction, a follow-up GitHub issue is filed describing the shims eligible for removal. A future agent picking up that issue executes the removal PR. | At Step 14 close, the executing agent files one follow-up issue per minor-version-eligibility cohort. No external scheduler is required. |
+| Semver bump | Rule-based deterministic: deleted public root modules → major bump. **No override path**. | The executing agent verifies the canonical import contract and applies the semver bump rule mechanically. |
+| Legacy root import cleanup | No staged deprecation schedule exists for deleted public root modules. Follow-up work fixes any canonical-path drift, not delayed re-export removal. | At Step 14 close, the executing agent records any remaining canonical-path drift as issue work. No external scheduler is required. |
 | Outstanding boundary items (migration-helper retention; reserved `SchemaSource` enum slots) | Resolved at Step 0 by audit-grounded subagent decisions per the rules below. | Step-0 audit subagent dispatched by the executing agent; decisions land as ADR amendment commit. |
 
 CI failures, coverage drops, and abort-trigger thresholds are not
@@ -940,14 +850,13 @@ escalated to a human — the executing agent fires the rules
 automatically. The pipeline communicates state through exec
 records and CHANGELOG entries.
 
-**Shim-verification gate** (per refreshed cold-review BLOCKER for
-deterministic semver): before the semver bump rule fires, the
-executing agent imports each declared shim path in a clean Python
-subprocess and asserts the re-exported symbols are reachable. Any
-shim that fails the import gate → the shim is treated as broken;
-the semver rule sees that as an unintended break and fires
-`major`. This makes the no-override rule safe by verifying the
-rule's precondition rather than trusting it.
+**Canonical import-contract gate** (per refreshed cold-review BLOCKER
+for deterministic semver): before the semver bump rule fires, the
+executing agent asserts the deleted root modules are absent and imports
+each canonical path in a clean Python subprocess. Any stale root import
+or missing canonical path is treated as a contract failure; the semver
+rule remains `major`. This makes the no-override rule safe by verifying
+the rule's precondition rather than trusting it.
 
 **Bounded retry on ambiguous findings** (per refreshed cold-review
 BLOCKER for halt-loop bounding): when an audit subagent returns an
@@ -987,8 +896,8 @@ observe:
   not reflected in static `src/aeat/` analysis.
 
 The autonomous rules accept this tradeoff explicitly. Mitigation:
-helpers with `DeprecationWarning`-emitting history (per the shim
-deprecation contract) are treated as live callers even when static
+helpers with `DeprecationWarning`-emitting history (per the retained
+helper deprecation policy) are treated as live callers even when static
 analysis sees none. Helpers without a deprecation-warning history
 + no static callers + > 6 months in-tree are treated as safe-to-
 delete. This rule may produce false-positive deletes for helpers
@@ -1055,30 +964,32 @@ Industry validation of post-audit decisions (research-doc audit 21):
 The 15-step autonomous pipeline shipped end-to-end without invoking
 the abort/rollback path. Outcomes:
 
-- **Semver bump**: MINOR (0.1.0 -> 0.1.1 at the next release tag).
-  All 4 public-surface re-export shims (`aeat.errors`, `aeat.auth`,
-  `aeat.submission`, `aeat.formulas`) preserved per the shim-
-  verification subroutine; verifier exit 0 on every Step-8 run.
+- **Semver bump**: MAJOR hard cut at the next release tag. The final
+  delivered model removes the old root public modules (`aeat.errors`,
+  `aeat.auth`, `aeat.submission`, `aeat.formulas`) and requires
+  callers to use the canonical hexagonal package paths. The
+  legacy import precondition no longer applies to the accepted
+  rollout state.
 - **Acceptance criteria**: 15 of 15 satisfied at Step 8 merge and
   re-verified at Step 15 milestone close. The full set is recorded
   in the Step 8 acceptance comment on issue #476.
 - **Dead-code totals**: Phase-1 shipped via PRs #478, #479, #480,
   #481, #482 (5 deletions). Phase-2 shipped via PR #494
   (`default_schema_provider` duplicate). The remaining Phase-2
-  candidates (`WorkspaceLockedError`, 4 hollow Protocol stubs)
-  were retained because they had real public-surface implications
-  beyond the audit's "test-only" classification.
+  candidates were resolved through deterministic adapter cleanup and
+  protocol contract cleanup where they had real public-surface
+  implications beyond the audit's "test-only" classification. The
+  later eliminate-shims pass also deleted all five
+  `migrate_legacy_*_to_repository` helpers and companion
+  `*MigrationSummary` models after confirming zero production callers.
 - **Step-13 issues filed**: 2 umbrella issues (#498 coverage gap;
   #499 casilla rollup). One STRIKE issue (#500) for the empty
   hard-gap audit, closed at filing.
 - **Sanitization**: 197 source files stripped of dev-process
   metadata (#496); 405+ test files migrated to layered axis-B
   markers (#495); 589 vault docs Tier-3 inline-updated (#497).
-- **Override list resolution**: The 9-entry import-linter carve-out
-  registry remained at 9 entries; no carve-out was added or removed
-  during the pipeline. The import-linter contract runs clean on
-  every PR.
-- **Shim-removal schedule**: Per the ADR's deprecation contract,
-  shim removal is eligible at the second minor release after
-  introduction. Auto-generation of the removal PR is scheduled
-  for the corresponding release window.
+- **Override list resolution**: The 9-entry carve-out registry
+  remained explicit; no wildcard carve-out was added. The executable
+  import-contract gate verifies the accepted hard-cutover surfaces.
+- **Legacy re-export removal schedule**: Not applicable. The accepted rollout is
+  a hard cut with no backward-compatible root re-export layer.

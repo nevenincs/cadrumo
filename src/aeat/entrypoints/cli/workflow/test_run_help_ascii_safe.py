@@ -1,14 +1,14 @@
 """Regression test: ``aeat workflow run --help`` never advertises live flags.
 
-Issue ``#393`` excised ``--no-dry-run`` and ``--i-understand-this-is-real``
-from the default workflow CLI so Kent cannot accidentally discover a
-live-write surface from the first-contact ``--help`` output. This test pins
-the absence of those literals.
+The default workflow CLI excises ``--no-dry-run`` and
+``--i-understand-this-is-real`` so Kent cannot accidentally discover a
+live-write surface from the first-contact ``--help`` output. This test
+pins the absence of those literals.
 
-The assertions are restricted to ASCII-safe substrings to avoid the
-Windows ``cp1252`` precedent documented in PR ``#389``: the rendered Rich
-help output can contain non-ASCII glyphs that break full-text equality
-checks on Windows terminals.
+Assertions are restricted to ASCII-safe substrings to avoid Windows
+``cp1252`` decoding mismatches: the rendered Rich help output can contain
+non-ASCII glyphs that break full-text equality checks on Windows
+terminals.
 """
 
 from __future__ import annotations

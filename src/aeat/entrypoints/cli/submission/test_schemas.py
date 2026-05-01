@@ -1,4 +1,10 @@
-"""Tests for ``aeat submission schemas`` (EPIC #305)."""
+"""Tests for the ``aeat submission schemas`` listing command.
+
+Exercises both the human-readable and ``--json`` output of
+:mod:`aeat.entrypoints.cli.submission`'s ``schemas`` command, asserting
+that registered schemas surface with stable kind, byte-length, and
+encoding metadata.
+"""
 
 from __future__ import annotations
 
@@ -15,11 +21,15 @@ _runner = CliRunner()
 
 
 def _unwrap_result(output: str):
+    """Extract the ``result`` payload from a JSON-mode CLI success."""
     return json.loads(output)["result"]
 
 
 class TestSchemasCommand:
+    """Behavioural tests for ``aeat submission schemas``."""
+
     def test_schemas_lists_all_four_registered_modelos(self) -> None:
+        """The default text view enumerates every registered modelo and ejercicio."""
         result = _runner.invoke(app, ["schemas"])
         assert result.exit_code == 0, result.stdout
         # Registry ships 130 2024, 130 2025, 303 2024, 303 2025.
@@ -31,6 +41,7 @@ class TestSchemasCommand:
         assert "4 schema(s) registered" in result.stdout
 
     def test_schemas_json_shape(self) -> None:
+        """``--json`` exposes per-row kind, byte length, and encoding metadata."""
         result = _runner.invoke(app, ["schemas", "--json"])
         assert result.exit_code == 0, result.stdout
         rows = _unwrap_result(result.stdout)
@@ -50,13 +61,13 @@ class TestSchemasCommand:
         assert by_key[("303", "2024")]["required_header_fields"] >= 11
 
     def test_schemas_json_is_sorted_deterministically(self) -> None:
-        """JSON output must be stable across runs (no dict-insert-order surprises)."""
+        """JSON output is stable across runs with no insertion-order surprises."""
         first = _unwrap_result(_runner.invoke(app, ["schemas", "--json"]).stdout)
         second = _unwrap_result(_runner.invoke(app, ["schemas", "--json"]).stdout)
         assert first == second
 
     def test_schemas_130_and_303_clone_parity(self) -> None:
-        """2024 and 2025 clones must carry identical bytes + encoding + kind."""
+        """The 2024 and 2025 clones share identical bytes, encoding, and kind."""
         rows = _unwrap_result(_runner.invoke(app, ["schemas", "--json"]).stdout)
         by_key = {(r["modelo"], r["ejercicio"]): r for r in rows}
         for modelo in ("130", "303"):

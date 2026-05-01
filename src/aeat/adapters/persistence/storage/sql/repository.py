@@ -1,8 +1,12 @@
 """Typed repositories for the public storage records.
 
 Each repository exposes a small, explicit CRUD surface against its pydantic
-record type. The repositories translate between the public records and the
-internal :mod:`aeat.adapters.persistence.storage._orm` mapper classes on every boundary crossing.
+record type from :mod:`aeat.adapters.persistence.storage.sql.records`. The
+repositories translate between the public records and the internal
+SQLAlchemy mapper classes from :mod:`aeat.adapters.persistence.storage.sql._orm`
+on every boundary crossing, raising
+:exc:`aeat.adapters.persistence.storage.errors.RepositoryError` on integrity
+violations or missing-row lookups.
 """
 
 from __future__ import annotations
@@ -22,14 +26,15 @@ _log = get_logger(__name__)
 
 
 def _flush_or_wrap(session: Session, kind: str) -> None:
-    """Flush ``session`` and wrap ``IntegrityError`` as :class:`RepositoryError`.
+    """Flush ``session`` and wrap ``IntegrityError`` as :exc:`RepositoryError`.
 
     Args:
-        session: The active SQLAlchemy session to flush.
+        session: The active :class:`~sqlalchemy.orm.Session` to flush.
         kind: Short label describing the record type for the error message.
 
     Raises:
-        RepositoryError: If the flush raises :class:`IntegrityError`.
+        :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`: If
+            the flush raises :class:`sqlalchemy.exc.IntegrityError`.
     """
     try:
         session.flush()
@@ -54,26 +59,43 @@ class Repository[RecordT](ABC):
 
     @abstractmethod
     def list_all(self) -> list[RecordT]:
-        """Return every row as a pydantic record."""
+        """Return every row as a pydantic record, ordered by primary key."""
 
     @abstractmethod
     def get(self, record_id: int) -> RecordT:
         """Return a single row by primary key.
 
+        Args:
+            record_id: Primary-key value to fetch.
+
         Raises:
-            RepositoryError: If no row with ``record_id`` exists.
+            :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`:
+                If no row with ``record_id`` exists.
         """
 
     @abstractmethod
     def upsert(self, record: RecordT) -> RecordT:
-        """Insert or update ``record`` and return the persisted value."""
+        """Insert or update ``record`` and return the persisted value.
+
+        Args:
+            record: Pydantic record to persist. ``id`` selects update mode;
+                otherwise a natural-key lookup decides between insert and
+                update.
+
+        Returns:
+            The persisted record reflecting the on-disk state.
+        """
 
     @abstractmethod
     def delete(self, record_id: int) -> None:
         """Delete the row with ``record_id``.
 
+        Args:
+            record_id: Primary-key value to delete.
+
         Raises:
-            RepositoryError: If no row with ``record_id`` exists.
+            :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`:
+                If no row with ``record_id`` exists.
         """
 
 

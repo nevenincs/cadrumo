@@ -21,7 +21,8 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.domain.formulas._rulesets.modelo_100._ccaa import compute_cuota_autonomica_general
-from aeat.domain.profile import CCAA, KentTaxResidence, save_tax_residence
+from aeat.adapters.persistence.profile import save_tax_residence
+from aeat.domain.profile import CCAA, KentTaxResidence
 from aeat.entrypoints.cli import app
 from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
     QuarterlyGenParams,
@@ -409,7 +410,7 @@ class TestKentCliInvariants:
 # =============================================================================
 
 
-# Label maps (mirroring `aeat.declaracion.test_quarterly_extractors`) keep
+# Label maps (mirroring `aeat.adapters.inbound.declaracion` extractor tests) keep
 # integration coverage aligned with parser-test ground truth.
 _MODELO_111_LABELS: Mapping[str, str] = {
     "01": "Rendimientos del trabajo - perceptores",
@@ -534,7 +535,7 @@ _MODELO_390_LABELS: Mapping[str, str] = {
 
 
 # Happy-path values — every formula in the corresponding ruleset evaluates
-# clean (verified manually against `aeat.formulas.Engine.audit_against`).
+# clean (verified manually against `aeat.domain.formulas.Engine.audit_against`).
 _M111_HAPPY: Mapping[str, str] = {
     "01": "5",
     "02": "50000",
@@ -1926,7 +1927,7 @@ class TestKentImportsModelo100SummaryBorrador:
         """Drifted computed casilla → NEEDS_REVIEW with classified discrepancies.
 
         The borrador CLI does not expose ``Extraction status: PARTIAL`` —
-        ``aeat.borrador`` reports its own structure. The Kent-observable
+        ``aeat.adapters.inbound.borrador`` reports its own structure. The Kent-observable
         ``NEEDS_REVIEW`` outcome is reached by tampering with one of the
         four computed casillas (c0595 = c0550+c0551+c0560+c0561). A
         printed value that drifts from the engine-computed sum surfaces

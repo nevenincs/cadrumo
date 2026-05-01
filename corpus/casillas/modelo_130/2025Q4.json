@@ -6,89 +6,20 @@
       "casilla_id": "01",
       "computed": false,
       "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Enter the cumulative net income from direct-estimation activities up to the end of the quarter.",
-        "es": "Consigna el rendimiento neto acumulado de las actividades en estimación directa hasta el cierre del trimestre.",
-        "hu": "Add meg a kozvetlen becsles ala tarto tevekenysegek negyedev vegeig felhalmozott netto eredmenyet."
+        "ca": "Totalidad de los ingresos íntegros fiscalmente computables del conjunto de las actividades. Acumulado hasta el cierre del trimestre.",
+        "en": "Cumulative gross income (Apartado I)",
+        "es": "Totalidad de los ingresos íntegros fiscalmente computables del conjunto de las actividades. Acumulado hasta el cierre del trimestre.",
+        "hu": "Halmozott bruttó bevétel (I. szakasz)"
       },
       "label": {
-        "en": "Cumulative net income",
-        "es": "Rendimiento neto acumulado",
-        "hu": "Felhalmozott netto eredmeny"
-      },
-      "llm_draft_provenance": null,
-      "modelo": "MODELO_130",
-      "period": "2025Q4",
-      "references_casillas": [],
-      "references_rules": [],
-      "required": true,
-      "definition_reviewed_at": "2026-04-12",
-      "definition_reviewed_by": "codex",
-      "select_options": null,
-      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html",
-      "source_page": 1,
-      "source_section": "Liquidación. Casilla 01",
-      "synthetic": false,
-      "validation": [
-        {
-          "description": "No puede ser negativo en la liquidación ordinaria.",
-          "rule": "min",
-          "value": 0
-        }
-      ]
-    },
-    {
-      "casilla_id": "02",
-      "computed": true,
-      "data_type": "currency_eur",
-      "formula": {
-        "expression": "0.20 * 01",
-        "references_casillas": [
-          "01"
-        ]
-      },
-      "help": {
-        "en": "Calculate twenty percent of casilla 01 for the ordinary fractional payment basis.",
-        "es": "Calcula el veinte por ciento de la casilla 01 para la base ordinaria del pago fraccionado.",
-        "hu": "Szamitsd ki az 01. rovat husz szazalekat a szokasos eloleg alapjahoz."
-      },
-      "label": {
-        "en": "20 percent of casilla 01",
-        "es": "20 por ciento de la casilla 01",
-        "hu": "Az 01. rovat 20 szazaleka"
-      },
-      "llm_draft_provenance": null,
-      "modelo": "MODELO_130",
-      "period": "2025Q4",
-      "references_casillas": [
-        "01"
-      ],
-      "references_rules": [],
-      "required": true,
-      "definition_reviewed_at": "2026-04-12",
-      "definition_reviewed_by": "codex",
-      "select_options": null,
-      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html",
-      "source_page": 1,
-      "source_section": "Liquidación. Casilla 02",
-      "synthetic": false,
-      "validation": []
-    },
-    {
-      "casilla_id": "03",
-      "computed": false,
-      "data_type": "currency_eur",
-      "formula": null,
-      "help": {
-        "en": "Include the withholdings and prepayments attributable to the quarter.",
-        "es": "Incluye las retenciones e ingresos a cuenta imputables al trimestre.",
-        "hu": "Tuntesd fel a negyedevhez rendelheto levonasokat es elozeletes befizeteseket."
-      },
-      "label": {
-        "en": "Quarterly withholdings and prepayments",
-        "es": "Retenciones e ingresos a cuenta del trimestre",
-        "hu": "Negyedeves levonasok es elolegek"
+        "ca": "Ingresos",
+        "en": "Cumulative gross income (Apartado I)",
+        "es": "Ingresos",
+        "hu": "Halmozott bruttó bevétel (I. szakasz)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
@@ -96,53 +27,776 @@
       "references_casillas": [],
       "references_rules": [],
       "required": false,
-      "definition_reviewed_at": "2026-04-12",
-      "definition_reviewed_by": "codex",
       "select_options": null,
-      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html",
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
       "source_page": 1,
-      "source_section": "Liquidación. Casilla 03",
+      "source_section": "I. Actividades económicas en estimación directa",
       "synthetic": false,
       "validation": []
     },
     {
-      "casilla_id": "18",
+      "casilla_id": "02",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Gastos",
+        "en": "Cumulative deductible expenses (Apartado I)",
+        "es": "Gastos",
+        "hu": "Halmozott levonható költségek (I. szakasz)"
+      },
+      "label": {
+        "ca": "Gastos",
+        "en": "Cumulative deductible expenses (Apartado I)",
+        "es": "Gastos",
+        "hu": "Halmozott levonható költségek (I. szakasz)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Actividades económicas en estimación directa",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "03",
       "computed": true,
       "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "max(0, 02 - 03)",
+        "expression": "(01 - 02)",
         "references_casillas": [
-          "02",
-          "03"
+          "01",
+          "02"
         ]
       },
       "help": {
-        "en": "Final fractional-payment result after deducting the quarter's withholdings.",
-        "es": "Resultado final del pago fraccionado tras deducir las retenciones del trimestre.",
-        "hu": "Az elolegfizetes vegeredmenye a negyedeves levonasok levonasa utan."
+        "ca": "Rendimiento neto. Se calcula como (01 - 02).",
+        "en": "Net return (01 - 02). Computed as (01 - 02).",
+        "es": "Rendimiento neto. Se calcula como (01 - 02).",
+        "hu": "Nettó eredmény (01 - 02). Számítás: (01 - 02)."
       },
       "label": {
-        "en": "Fractional payment result",
-        "es": "Resultado del pago fraccionado",
-        "hu": "Elolegfizetes eredmenye"
+        "ca": "Rendimiento neto",
+        "en": "Net return (01 - 02)",
+        "es": "Rendimiento neto",
+        "hu": "Nettó eredmény (01 - 02)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2025Q4",
       "references_casillas": [
-        "02",
+        "01",
+        "02"
+      ],
+      "references_rules": [
+        "modelo_130.2025.rendimiento_neto"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Actividades económicas en estimación directa",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "04",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (irpf.trimestral_rate * 03))",
+        "references_casillas": [
+          "03"
+        ]
+      },
+      "help": {
+        "ca": "Import del pago fraccionado (20%). Se calcula como max(0, (irpf.trimestral_rate * 03)).",
+        "en": "Fractional payment (20% of 03, clamped ≥ 0). Computed as max(0, (irpf.trimestral_rate * 03)).",
+        "es": "Importe del pago fraccionado (20%). Se calcula como max(0, (irpf.trimestral_rate * 03)).",
+        "hu": "Részletfizetés összege (03 x 20%, nem-negatív). Számítás: max(0, (irpf.trimestral_rate * 03))."
+      },
+      "label": {
+        "ca": "Import del pago fraccionado (20%)",
+        "en": "Fractional payment (20% of 03, clamped ≥ 0)",
+        "es": "Importe del pago fraccionado (20%)",
+        "hu": "Részletfizetés összege (03 x 20%, nem-negatív)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [
         "03"
       ],
-      "references_rules": [],
-      "required": true,
-      "definition_reviewed_at": "2026-04-12",
-      "definition_reviewed_by": "codex",
+      "references_rules": [
+        "modelo_130.2025.pago_fraccionado"
+      ],
+      "required": false,
       "select_options": null,
-      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html",
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
       "source_page": 1,
-      "source_section": "Liquidación. Casilla 18",
+      "source_section": "I. Actividades económicas en estimación directa",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "casilla_id": "05",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Acumulador cross-quarter. El motor no deriva 05 dentro de una sola liquidación; el llamador mantiene la suma de cas. 07 positivas y cas. 16 de trimestres anteriores.",
+        "en": "Prior-quarter fractional payments (caller-maintained)",
+        "es": "Acumulador cross-quarter. El motor no deriva 05 dentro de una sola liquidación; el llamador mantiene la suma de cas. 07 positivas y cas. 16 de trimestres anteriores.",
+        "hu": "Korábbi részletfizetések (hívó fél tartja karban)"
+      },
+      "label": {
+        "ca": "Pagos fraccionados anteriores (Apartado I)",
+        "en": "Prior-quarter fractional payments (caller-maintained)",
+        "es": "Pagos fraccionados anteriores (Apartado I)",
+        "hu": "Korábbi részletfizetések (hívó fél tartja karban)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Actividades económicas en estimación directa",
       "synthetic": false,
       "validation": []
+    },
+    {
+      "casilla_id": "06",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retenciones e ingresos a cuenta (Apartado I)",
+        "en": "YTD withholdings (Apartado I)",
+        "es": "Retenciones e ingresos a cuenta (Apartado I)",
+        "hu": "Éves halmozott levonások (I. szakasz)"
+      },
+      "label": {
+        "ca": "Retenciones e ingresos a cuenta (Apartado I)",
+        "en": "YTD withholdings (Apartado I)",
+        "es": "Retenciones e ingresos a cuenta (Apartado I)",
+        "hu": "Éves halmozott levonások (I. szakasz)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Actividades económicas en estimación directa",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "07",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((04 - 05) - 06)",
+        "references_casillas": [
+          "04",
+          "05",
+          "06"
+        ]
+      },
+      "help": {
+        "ca": "Resultado parcial Apartado I. Se calcula como ((04 - 05) - 06).",
+        "en": "Partial Apartado I result (04 - 05 - 06). Computed as ((04 - 05) - 06).",
+        "es": "Resultado parcial Apartado I. Se calcula como ((04 - 05) - 06).",
+        "hu": "I. szakasz részösszeg (04 - 05 - 06). Számítás: ((04 - 05) - 06)."
+      },
+      "label": {
+        "ca": "Resultado parcial Apartado I",
+        "en": "Partial Apartado I result (04 - 05 - 06)",
+        "es": "Resultado parcial Apartado I",
+        "hu": "I. szakasz részösszeg (04 - 05 - 06)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [
+        "04",
+        "05",
+        "06"
+      ],
+      "references_rules": [
+        "modelo_130.2025.resultado_apartado_i"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Actividades económicas en estimación directa",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "casilla_id": "08",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Volumen de ingresos del trimestre (Apartado II)",
+        "en": "Quarterly income volume (Apartado II, per-quarter not YTD)",
+        "es": "Volumen de ingresos del trimestre (Apartado II)",
+        "hu": "Negyedéves bevétel (II. szakasz, nem halmozott)"
+      },
+      "label": {
+        "ca": "Volumen de ingresos del trimestre (Apartado II)",
+        "en": "Quarterly income volume (Apartado II, per-quarter not YTD)",
+        "es": "Volumen de ingresos del trimestre (Apartado II)",
+        "hu": "Negyedéves bevétel (II. szakasz, nem halmozott)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "II. Actividades agrícolas, ganaderas, forestales y pesqueras",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "09",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(agraria.trimestral_rate * 08)",
+        "references_casillas": [
+          "08"
+        ]
+      },
+      "help": {
+        "ca": "Import del pago fraccionado (2%). Se calcula como (agraria.trimestral_rate * 08).",
+        "en": "Fractional payment (2% of 08). Computed as (agraria.trimestral_rate * 08).",
+        "es": "Importe del pago fraccionado (2%). Se calcula como (agraria.trimestral_rate * 08).",
+        "hu": "Részletfizetés összege (08 x 2%). Számítás: (agraria.trimestral_rate * 08)."
+      },
+      "label": {
+        "ca": "Import del pago fraccionado (2%)",
+        "en": "Fractional payment (2% of 08)",
+        "es": "Importe del pago fraccionado (2%)",
+        "hu": "Részletfizetés összege (08 x 2%)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [
+        "08"
+      ],
+      "references_rules": [
+        "modelo_130.2025.pago_fraccionado_agraria"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "II. Actividades agrícolas, ganaderas, forestales y pesqueras",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "10",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retenciones e ingresos a cuenta (Apartado II)",
+        "en": "Quarterly withholdings (Apartado II)",
+        "es": "Retenciones e ingresos a cuenta (Apartado II)",
+        "hu": "Negyedéves levonások (II. szakasz)"
+      },
+      "label": {
+        "ca": "Retenciones e ingresos a cuenta (Apartado II)",
+        "en": "Quarterly withholdings (Apartado II)",
+        "es": "Retenciones e ingresos a cuenta (Apartado II)",
+        "hu": "Negyedéves levonások (II. szakasz)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "II. Actividades agrícolas, ganaderas, forestales y pesqueras",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "11",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(09 - 10)",
+        "references_casillas": [
+          "09",
+          "10"
+        ]
+      },
+      "help": {
+        "ca": "Resultado parcial Apartado II. Se calcula como (09 - 10).",
+        "en": "Partial Apartado II result (09 - 10). Computed as (09 - 10).",
+        "es": "Resultado parcial Apartado II. Se calcula como (09 - 10).",
+        "hu": "II. szakasz részösszeg (09 - 10). Számítás: (09 - 10)."
+      },
+      "label": {
+        "ca": "Resultado parcial Apartado II",
+        "en": "Partial Apartado II result (09 - 10)",
+        "es": "Resultado parcial Apartado II",
+        "hu": "II. szakasz részösszeg (09 - 10)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [
+        "09",
+        "10"
+      ],
+      "references_rules": [
+        "modelo_130.2025.resultado_apartado_ii"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "II. Actividades agrícolas, ganaderas, forestales y pesqueras",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "casilla_id": "12",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (07 + 11))",
+        "references_casillas": [
+          "07",
+          "11"
+        ]
+      },
+      "help": {
+        "ca": "Suma de resultados parciales (nunca negativa). Se calcula como max(0, (07 + 11)).",
+        "en": "Sum of Apartados I + II, clamped ≥ 0. Computed as max(0, (07 + 11)).",
+        "es": "Suma de resultados parciales (nunca negativa). Se calcula como max(0, (07 + 11)).",
+        "hu": "Részösszegek összege, nem-negatív. Számítás: max(0, (07 + 11))."
+      },
+      "label": {
+        "ca": "Suma de resultados parciales (nunca negativa)",
+        "en": "Sum of Apartados I + II, clamped ≥ 0",
+        "es": "Suma de resultados parciales (nunca negativa)",
+        "hu": "Részösszegek összege, nem-negatív"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [
+        "07",
+        "11"
+      ],
+      "references_rules": [
+        "modelo_130.2025.suma_parciales"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "III. Total liquidación trimestral (apartados I + II)",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "casilla_id": "13",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "El contribuyente introduce el importe directamente o usa el ayudante compute_casilla_13_minoracion con el rendimiento neto del ejercicio anterior. La escala 100/75/50/25 €.",
+        "en": "Low-income minoration (art. 110.3.c step function)",
+        "es": "El contribuyente introduce el importe directamente o usa el ayudante compute_casilla_13_minoracion con el rendimiento neto del ejercicio anterior. La escala 100/75/50/25 €.",
+        "hu": "Alacsony jövedelmi csökkentés (110.3.c szakasz)"
+      },
+      "label": {
+        "ca": "Minoración por rendimientos netos ≤ 12.000 € (art. 110.3.c)",
+        "en": "Low-income minoration (art. 110.3.c step function)",
+        "es": "Minoración por rendimientos netos ≤ 12.000 € (art. 110.3.c)",
+        "hu": "Alacsony jövedelmi csökkentés (110.3.c szakasz)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "III. Total liquidación trimestral (apartados I + II)",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "14",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(12 - 13)",
+        "references_casillas": [
+          "12",
+          "13"
+        ]
+      },
+      "help": {
+        "ca": "Neto tras minoración. Se calcula como (12 - 13).",
+        "en": "Net after minoration (12 - 13, signed). Computed as (12 - 13).",
+        "es": "Neto tras minoración. Se calcula como (12 - 13).",
+        "hu": "Csökkentés utáni nettó (12 - 13, előjeles). Számítás: (12 - 13)."
+      },
+      "label": {
+        "ca": "Neto tras minoración",
+        "en": "Net after minoration (12 - 13, signed)",
+        "es": "Neto tras minoración",
+        "hu": "Csökkentés utáni nettó (12 - 13, előjeles)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [
+        "12",
+        "13"
+      ],
+      "references_rules": [
+        "modelo_130.2025.neto_tras_minoracion"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "III. Total liquidación trimestral (apartados I + II)",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "casilla_id": "15",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "El motor no impone el tope 15 ≤ 14 en este ciclo; queda a cargo del llamador para la orquestación inter-trimestral.",
+        "en": "Carry-forward of prior-quarter negatives (caller-maintained)",
+        "es": "El motor no impone el tope 15 ≤ 14 en este ciclo; queda a cargo del llamador para la orquestación inter-trimestral.",
+        "hu": "Korábbi negatívok átvitele (hívó fél tartja karban)"
+      },
+      "label": {
+        "ca": "Arrastre de negativos (trimestres anteriores)",
+        "en": "Carry-forward of prior-quarter negatives (caller-maintained)",
+        "es": "Arrastre de negativos (trimestres anteriores)",
+        "hu": "Korábbi negatívok átvitele (hívó fél tartja karban)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Resultados negativos de trimestres anteriores",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "16",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Aportada por el llamador bajo su propio gating (elegibilidad, apartados mutuamente excluyentes).",
+        "en": "Primary-residence deduction (2% capped at 660.14 €)",
+        "es": "Aportada por el llamador bajo su propio gating (elegibilidad, apartados mutuamente excluyentes).",
+        "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ)"
+      },
+      "label": {
+        "ca": "Deducció por inversión en vivienda habitual",
+        "en": "Primary-residence deduction (2% capped at 660.14 €)",
+        "es": "Deducción por inversión en vivienda habitual",
+        "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Deducción por adquisición de vivienda habitual",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "17",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((14 - 15) - 16)",
+        "references_casillas": [
+          "14",
+          "15",
+          "16"
+        ]
+      },
+      "help": {
+        "ca": "Diferencia. Se calcula como ((14 - 15) - 16).",
+        "en": "Difference (14 - 15 - 16, signed). Computed as ((14 - 15) - 16).",
+        "es": "Diferencia. Se calcula como ((14 - 15) - 16).",
+        "hu": "Különbség (14 - 15 - 16, előjeles). Számítás: ((14 - 15) - 16)."
+      },
+      "label": {
+        "ca": "Diferencia",
+        "en": "Difference (14 - 15 - 16, signed)",
+        "es": "Diferencia",
+        "hu": "Különbség (14 - 15 - 16, előjeles)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [
+        "14",
+        "15",
+        "16"
+      ],
+      "references_rules": [
+        "modelo_130.2025.diferencia"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Resultado final",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "casilla_id": "18",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
+        "en": "Amount paid in earlier complementarias for the same quarter",
+        "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
+        "hu": "Korábbi kiegészítő bevallásban befizetett összeg"
+      },
+      "label": {
+        "ca": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
+        "en": "Amount paid in earlier complementarias for the same quarter",
+        "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
+        "hu": "Korábbi kiegészítő bevallásban befizetett összeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Resultado final",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "19",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(17 - 18)",
+        "references_casillas": [
+          "17",
+          "18"
+        ]
+      },
+      "help": {
+        "ca": "Resultado final. Se calcula como (17 - 18).",
+        "en": "Final result (17 - 18, signed). Computed as (17 - 18).",
+        "es": "Resultado final. Se calcula como (17 - 18).",
+        "hu": "Végeredmény (17 - 18, előjeles). Számítás: (17 - 18)."
+      },
+      "label": {
+        "ca": "Resultado final",
+        "en": "Final result (17 - 18, signed)",
+        "es": "Resultado final",
+        "hu": "Végeredmény (17 - 18, előjeles)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_130",
+      "period": "2025Q4",
+      "references_casillas": [
+        "17",
+        "18"
+      ],
+      "references_rules": [
+        "modelo_130.2025.resultado_final"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Resultado final",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
     }
   ]
 }

@@ -260,6 +260,12 @@ def configure_logging() -> None:
                 "handlers": ["default"],
                 "level": "INFO",
             },
+            "loggers": {
+                "alembic.runtime.plugins": {
+                    "level": "WARNING",
+                    "propagate": True,
+                },
+            },
         }
     )
 

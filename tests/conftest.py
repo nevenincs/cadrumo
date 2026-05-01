@@ -40,7 +40,6 @@ LIVE_ACCESS_MARKERS: frozenset[str] = frozenset({"live_read", "live_write"})
 BANNED_LIVE_IMPORTS: frozenset[str] = frozenset(
     {
         "unittest",
-        "unittest.mock",
         "mock",
         "pytest_mock",
         "responses",

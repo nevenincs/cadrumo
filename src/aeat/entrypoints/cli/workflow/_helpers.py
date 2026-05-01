@@ -1,9 +1,10 @@
 """Shared helpers for the ``aeat workflow`` CLI sub-app.
 
-Production wiring composes the on-main deadline engine, filing runtime
-schema provider, and read-only submission preflight helper into a real
-:class:`aeat.application.workflow.WorkflowEngine`. Tests can still override the
-construction seam by assigning ``_engine_factory`` / ``_profile_factory``.
+Production wiring composes the deadline engine, filing runtime schema
+provider, and read-only submission preflight helper into a real
+:class:`aeat.application.workflow.WorkflowEngine`. Tests override the
+construction seam by assigning :data:`_engine_factory` and
+:data:`_profile_factory` via :func:`set_test_hooks`.
 """
 
 from __future__ import annotations
@@ -37,13 +38,16 @@ from ..submission._helpers import build_engine as build_submission_engine
 _CONSOLE = Console()
 
 EngineFactory = Callable[[], WorkflowEngine]
-"""Type alias for a zero-argument factory that returns a ``WorkflowEngine``."""
+"""Type alias for a zero-argument factory returning a
+:class:`aeat.application.workflow.WorkflowEngine`."""
 
 _engine_factory: EngineFactory | None = None
-"""Module-level seam. Tests assign a real factory; production leaves it unset."""
+"""Construction seam for the engine factory; production leaves it ``None``
+so :func:`_build_engine` falls back to :func:`aeat.application.workflow.default_engine`."""
 
 _profile_factory: Callable[[], AutonomoProfile] | None = None
-"""Module-level seam for the profile the CLI runs against."""
+"""Construction seam for the
+:class:`aeat.domain.deadlines.AutonomoProfile` the CLI runs against."""
 
 
 def set_test_hooks(
@@ -51,13 +55,14 @@ def set_test_hooks(
     engine_factory: EngineFactory,
     profile_factory: Callable[[], AutonomoProfile],
 ) -> None:
-    """Install real factory functions (used by the CLI unit tests).
+    """Install real factory functions used by the CLI unit tests.
 
     Args:
         engine_factory: Callable returning a fully-wired
-            :class:`WorkflowEngine`.
+            :class:`aeat.application.workflow.WorkflowEngine`.
         profile_factory: Callable returning the
-            :class:`AutonomoProfile` the CLI should run for.
+            :class:`aeat.domain.deadlines.AutonomoProfile` the CLI should
+            run for.
     """
     global _engine_factory, _profile_factory
     _engine_factory = engine_factory
@@ -65,14 +70,24 @@ def set_test_hooks(
 
 
 def clear_test_hooks() -> None:
-    """Reset the module seams to their production defaults."""
+    """Reset :data:`_engine_factory` and :data:`_profile_factory` to ``None``.
+
+    Restores the production fallback path on :func:`_build_engine` and
+    :func:`_build_profile`.
+    """
     global _engine_factory, _profile_factory
     _engine_factory = None
     _profile_factory = None
 
 
 def _build_engine() -> WorkflowEngine:
-    """Return a :class:`WorkflowEngine` — test seam or production path."""
+    """Return a :class:`aeat.application.workflow.WorkflowEngine`.
+
+    Uses :data:`_engine_factory` when set; otherwise composes a default
+    engine via :func:`aeat.application.workflow.default_engine` against the
+    deadline-engine, runtime filing schema, and submission-preflight
+    helpers.
+    """
     if _engine_factory is not None:
         return _engine_factory()
     deadline_engine = build_deadline_engine()
@@ -85,7 +100,12 @@ def _build_engine() -> WorkflowEngine:
 
 
 def _build_profile() -> AutonomoProfile:
-    """Return the :class:`AutonomoProfile` — test seam or configured default."""
+    """Return the :class:`aeat.domain.deadlines.AutonomoProfile`.
+
+    Uses :data:`_profile_factory` when set; otherwise loads the default
+    profile via :func:`aeat.entrypoints.cli.deadlines._helpers.load_profile`
+    and wraps any failure in :exc:`aeat.application.workflow.WorkflowError`.
+    """
     if _profile_factory is not None:
         return _profile_factory()
     try:
@@ -95,7 +115,16 @@ def _build_profile() -> AutonomoProfile:
 
 
 def _emit(result: WorkflowResult, *, as_json: bool, command: str) -> None:
-    """Persist the run and print it in the requested format."""
+    """Persist ``result`` and render it in the requested output format.
+
+    Args:
+        result: The workflow run to persist and emit.
+        as_json: When ``True`` (or when JSON output was requested via
+            :func:`aeat.entrypoints.cli._errors.json_output_requested`),
+            emit a structured JSON envelope on stdout. Otherwise render the
+            run as Rich-formatted JSON.
+        command: Logical command name used in the JSON envelope.
+    """
     settings = load_settings()
     save_run(result, runs_dir=settings.aeat_workflow_runs_dir)
     payload = result.model_dump_json(indent=2)
@@ -111,7 +140,18 @@ def run_engine_next(
     as_json: bool,
     today: date | None = None,
 ) -> WorkflowResult:
-    """Build, run, persist, and emit a ``run_next`` invocation."""
+    """Build, run, persist, and emit a ``run_next`` invocation.
+
+    Args:
+        sync_first: Whether the self-healing sync stage runs before the
+            deadline stage.
+        as_json: Forwarded to :func:`_emit`.
+        today: Optional override for the workflow's reference date.
+
+    Returns:
+        The :class:`aeat.application.workflow.WorkflowResult` that was
+        persisted.
+    """
     engine = _build_engine()
     profile = _build_profile()
     result = asyncio.run(
@@ -133,7 +173,20 @@ def run_engine_for_period(
     as_json: bool,
     today: date | None = None,
 ) -> WorkflowResult:
-    """Build, run, persist, and emit a ``run_for_period`` invocation."""
+    """Build, run, persist, and emit a ``run_for_period`` invocation.
+
+    Args:
+        modelo: Target modelo identifier (e.g. ``"130"``).
+        period: Target period identifier (e.g. ``"2026Q1"``).
+        sync_first: Whether the self-healing sync stage runs before the
+            deadline stage.
+        as_json: Forwarded to :func:`_emit`.
+        today: Optional override for the workflow's reference date.
+
+    Returns:
+        The :class:`aeat.application.workflow.WorkflowResult` that was
+        persisted.
+    """
     engine = _build_engine()
     profile = _build_profile()
     result = asyncio.run(

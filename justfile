@@ -58,10 +58,9 @@ env-setup:
 
 # ── Dev loop ─────────────────────────────────────────────────────────────────
 
-# Lint with ruff and enforce the #162 relative-imports mandate.
+# Lint with ruff.
 lint:
     uv run ruff check .
-    uv run python scripts/check_relative_imports.py
 
 # Format with ruff.
 fmt:
@@ -81,17 +80,6 @@ test:
 # sufficient proof of restructure correctness.
 test-smoke-produce-verify-export:
     uv run pytest src/aeat/adapters/outbound/aeat/export/_formats/test_integration_kent_e2e.py src/aeat/adapters/outbound/aeat/export/_formats/test_integration_kent_303_e2e.py -v
-
-# Verify every documented re-export shim still resolves its symbols
-# (Step 8 acceptance precondition for the deterministic semver-bump rule).
-verify-shims:
-    uv run --no-sync python scripts/verify_shims.py
-
-# Run the import-linter contract against the current layout.
-# Pre-Step-7 reports "no matches" warnings for the future paths;
-# post-Step-7 enforces the layered + independence + forbidden contracts.
-lint-imports:
-    uv run --no-sync lint-imports
 
 # Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
 test-live:
@@ -147,6 +135,82 @@ test-parallel:
 # Run all pre-commit hooks via prek.
 hooks:
     uv run prek run --all-files
+
+# ── Documentation (Sphinx) ───────────────────────────────────────────────────
+
+# Build the full API + narrative documentation set in HTML and Markdown.
+# Output: docs/_build/html/ and docs/_build/markdown/.
+[unix]
+docs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run sphinx-build -b html --keep-going docs docs/_build/html
+    uv run sphinx-build -b markdown --keep-going docs docs/_build/markdown
+    echo "✔ HTML:     docs/_build/html/index.html"
+    echo "✔ Markdown: docs/_build/markdown/index.md"
+
+[windows]
+docs:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run sphinx-build -b html --keep-going docs docs/_build/html
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    uv run sphinx-build -b markdown --keep-going docs docs/_build/markdown
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "✔ HTML:     docs/_build/html/index.html"
+    Write-Host "✔ Markdown: docs/_build/markdown/index.md"
+
+# Remove the Sphinx build output.
+[unix]
+docs-clean:
+    rm -rf docs/_build
+
+[windows]
+docs-clean:
+    #!pwsh
+    if (Test-Path 'docs/_build') { Remove-Item -Recurse -Force 'docs/_build' }
+
+# Re-generate the apidoc autosummary stubs (used when adding/removing modules).
+[unix]
+docs-apidoc:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rm -rf docs/api
+    uv run sphinx-apidoc -f -e -M --no-toc -o docs/api src/aeat
+    echo "✔ Regenerated docs/api/"
+
+[windows]
+docs-apidoc:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (Test-Path 'docs/api') { Remove-Item -Recurse -Force 'docs/api' }
+    uv run sphinx-apidoc -f -e -M --no-toc -o docs/api src/aeat
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "✔ Regenerated docs/api/"
+
+# Serve the built HTML on http://localhost:8765 (uses Python's stdlib server).
+[unix]
+docs-serve:
+    cd docs/_build/html && uv run python -m http.server 8765
+
+[windows]
+docs-serve:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    Set-Location docs/_build/html
+    uv run python -m http.server 8765
+
+# Strict link / cross-reference check — surfaces every broken Sphinx ref.
+[unix]
+docs-linkcheck:
+    uv run sphinx-build -b linkcheck docs docs/_build/linkcheck
+
+[windows]
+docs-linkcheck:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run sphinx-build -b linkcheck docs docs/_build/linkcheck
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # ── Database migrations (aeat#10) ────────────────────────────────────────────
 
@@ -266,7 +330,7 @@ gcloud-auth:
         echo "GOOGLE_CLOUD_PROJECT is empty in env/.env — set it before continuing." >&2
         exit 1
     fi
-    SCOPES=$(uv run python -c "from aeat.adapters.outbound.aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)")
+    SCOPES=$(uv run python -c "from aeat.adapters.outbound.google import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)")
     echo "▶ gcloud auth login (browser will open)…"
     gcloud auth login --quiet
     echo "▶ gcloud config set project $PROJECT"
@@ -312,7 +376,7 @@ gcloud-auth:
         Write-Error "GOOGLE_CLOUD_PROJECT is empty in env/.env"
         exit 1
     }
-    $scopes = (& uv run python -c "from aeat.adapters.outbound.aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)" | Select-Object -Last 1).Trim()
+    $scopes = (& uv run python -c "from aeat.adapters.outbound.google import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)" | Select-Object -Last 1).Trim()
     Write-Host "▶ gcloud auth login (browser will open)…"
     & $gcloud.Source auth login --quiet
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -662,38 +726,3 @@ release-apply:
     Write-Host '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main --tags"
-
-# ── Google Workspace test fixtures ──────────────────────────────────────────
-#
-# Idempotent provisioning and teardown of the Drive/Sheets/Docs fixtures
-# consumed by `@pytest.mark.live_read` tests. See scripts/README.md and
-# .vault/adr/2026-04-12-google-fixtures-adr.md.
-
-# Provision (or discover) every fixture in scripts/_fixture_catalogue.py,
-# seed freshly-created ones, and persist their IDs into env/.env.
-[unix]
-google-fixtures-provision:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run python scripts/provision_google_fixtures.py
-
-[windows]
-google-fixtures-provision:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run python scripts/provision_google_fixtures.py
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# Permanently delete the fixture folder tree and clear its env footprint.
-[unix]
-google-fixtures-teardown:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run python scripts/teardown_google_fixtures.py
-
-[windows]
-google-fixtures-teardown:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run python scripts/teardown_google_fixtures.py
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -1,4 +1,9 @@
-"""``aeat workflow list`` — enumerate persisted :class:`WorkflowResult` records."""
+"""``aeat workflow list`` — enumerate persisted workflow runs.
+
+Wraps :func:`aeat.application.workflow.list_runs` to render every persisted
+:class:`aeat.application.workflow.WorkflowResult` either as a Rich table
+or as a JSON envelope on stdout.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +24,12 @@ _CONSOLE = Console()
 
 @register_schema("workflow list")
 class WorkflowListJson(OutputRootSchema[list[WorkflowResult]]):
-    """Schema for ``aeat workflow list --json``."""
+    """JSON output schema for ``aeat workflow list --json``.
+
+    Generic over ``list[``:class:`aeat.application.workflow.WorkflowResult`
+    ``]``: the wrapped payload is the listing returned by
+    :func:`aeat.application.workflow.list_runs`.
+    """
 
 
 def list_cmd(
@@ -34,11 +44,23 @@ def list_cmd(
         help="Emit the listing as a JSON array on stdout instead of a table.",
     ),
 ) -> None:
-    """List every persisted :class:`WorkflowResult` under the configured runs dir.
+    """List persisted :class:`aeat.application.workflow.WorkflowResult` records.
+
+    Reads runs from ``settings.aeat_workflow_runs_dir`` and renders them as
+    a Rich table by default, or as a JSON envelope when ``as_json`` (or the
+    detected JSON-output flag) is set.
 
     Args:
-        since: Optional ISO-8601 date filter (``YYYY-MM-DD``).
-        as_json: When ``True``, emit machine-readable JSON.
+        since: Optional ISO-8601 date filter (``YYYY-MM-DD``); only runs
+            started on or after this date are listed.
+        as_json: When ``True``, emit machine-readable JSON via
+            :func:`aeat.entrypoints.cli._schemas.emit_json_success`.
+
+    Raises:
+        :exc:`aeat.entrypoints.cli._errors.CliRefusedBoundaryError`: When
+            ``--json`` is set and ``--since`` is not a valid ISO date.
+        typer.Exit: With code ``2`` when ``--since`` is not a valid ISO date
+            and JSON output was not requested.
     """
     arguments = {"since": since, "json": as_json}
     with cli_run_context(entrypoint="aeat workflow list", arguments=arguments):

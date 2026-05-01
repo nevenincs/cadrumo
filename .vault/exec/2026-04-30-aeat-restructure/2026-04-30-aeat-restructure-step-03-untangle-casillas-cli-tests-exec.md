@@ -23,7 +23,7 @@ Step 3 PR 3 of N — resolves layered violation 1 (audit 18). The two casillas t
 
 ## rationale
 
-In the new layout, `casillas/` becomes `domain/casillas/` and `cli/` becomes `entrypoints/cli/`. A domain-side test that imports from the entrypoint package is a layered violation (`domain/` MUST NOT import from `entrypoints/`). Relocating the test files puts them in the package whose surface they actually test, so the future import-linter contract finds zero violations on day one.
+In the new layout, `casillas/` becomes `domain/casillas/` and `cli/` becomes `entrypoints/cli/`. A domain-side test that imports from the entrypoint package is a layered violation (`domain/` MUST NOT import from `entrypoints/`). Relocating the test files puts them in the package whose surface they actually test, so the import-contract gate finds zero violations on day one.
 
 ## verification
 

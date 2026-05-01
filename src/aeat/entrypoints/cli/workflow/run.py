@@ -1,7 +1,9 @@
-"""``aeat workflow run`` -- run the read-only workflow for a caller-named target.
+"""``aeat workflow run`` — run the read-only workflow for a caller-named target.
 
-The command is read-only because live AEAT submission is permanently
-forbidden.
+Drives :meth:`aeat.application.workflow.WorkflowEngine.run_for_period` for
+an explicit ``(modelo, period)`` pair and emits the resulting
+:class:`aeat.application.workflow.WorkflowResult`. The command is read-only
+because live AEAT submission is permanently forbidden.
 """
 
 from __future__ import annotations
@@ -22,7 +24,10 @@ from ._helpers import run_engine_for_period
 
 @register_schema("workflow run")
 class WorkflowRunJson(OutputRootSchema[WorkflowResult]):
-    """Schema for ``aeat workflow run --json``."""
+    """JSON output schema for ``aeat workflow run --json``.
+
+    Wraps a single :class:`aeat.application.workflow.WorkflowResult`.
+    """
 
 
 def run_cmd(
@@ -41,11 +46,18 @@ def run_cmd(
 ) -> None:
     """Drive the workflow for a named ``(modelo, period)`` target.
 
+    Records :attr:`aeat.core.observability.RunEventKind.WORKFLOW_STARTED` and
+    :attr:`aeat.core.observability.RunEventKind.WORKFLOW_COMPLETED` events
+    bracketing the engine call.
+
     Args:
-        modelo: Target modelo identifier.
-        period: Target period identifier.
-        sync_first: Whether the sync stage should run.
-        as_json: When ``True``, print the :class:`WorkflowResult` as JSON.
+        modelo: Target modelo identifier (e.g. ``"130"``).
+        period: Target period identifier (e.g. ``"2026Q1"``).
+        sync_first: Whether the self-healing sync stage runs before the
+            deadline stage.
+        as_json: When ``True``, print the
+            :class:`aeat.application.workflow.WorkflowResult` as JSON on
+            stdout.
     """
     arguments = {
         "modelo": modelo,

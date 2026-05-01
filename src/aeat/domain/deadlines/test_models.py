@@ -1,4 +1,12 @@
-"""Unit tests for the strict pydantic v2 models in :mod:`aeat.domain.deadlines._models`."""
+"""Unit tests for the strict pydantic v2 models in :mod:`aeat.domain.deadlines._models`.
+
+Verifies the strictness invariants of
+:class:`aeat.domain.deadlines.AutonomoProfile` (extra fields,
+immutability, strict bool/enum coercion), the date-ordering
+invariants of :class:`aeat.domain.deadlines.FilingObligation`, and
+that :class:`aeat.domain.deadlines.Schedule` survives a JSON round
+trip.
+"""
 
 from __future__ import annotations
 
