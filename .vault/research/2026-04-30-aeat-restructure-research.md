@@ -265,8 +265,7 @@ the audit work. Each ambiguity is also flagged on its row above.
   destinations: pure-infra rendering machinery + base class +
   firewall types + alias notices stay in `core/errors/`; 11 domain-
   specific exception classes redistribute (8 → `domain/formulas/`, 1
-  → `entrypoints/mcp/`, 2 → `domain/testing/`). Re-export shim
-  preserves the `aeat.core.errors` public-API contract. See "Modules
+  → `entrypoints/mcp/`, 2 → `domain/testing/`). All callers updated to the new canonical paths in the Step 7 keystone PR. See "Modules
   audited" for the full split design.
 - **`config.py` imports `auth` + `justificante`** — possible domain
   leakage into the infra layer; verify whether settings genuinely need
@@ -724,7 +723,7 @@ generic noise. Triage below uses three buckets:
 | 7 | R2 | No rollback / abort criteria | ACCEPT | Add abort triggers: (a) post-move CI failure rate > X% across 3 consecutive runs, (b) unresolvable circular import surfaces, (c) marker-realignment leaves any test in a state where collection-ban could mis-fire. Action: revert the layout PR; the rename PRs are decoupled. |
 | 8 | R2 | No definition of done / acceptance criteria | ACCEPT | Add checklist: imports resolve under new layout; coverage floor (60% per project mandate) maintained; import-boundary rule shipped (or named follow-up issue); vault contradiction list fully resolved per tier; all marker renames complete; security-audit guardrails validated at new locations. |
 | 9 | R2 | Import-boundary enforcement deferred to visual review | ACCEPT (clarify) | Name the tool decision explicitly. Default candidate: `import-linter` (lightweight, contract-driven). The choice itself can be deferred to an execution decision but the requirement to ship a static enforcement is a hard constraint. |
-| 10 | R2 | Public / external API surface not enumerated | ACCEPT | Add a "Public surface" subsection: minimum, `aeat.core.errors` (per `error-code-registry-adr`); confirm whether anything else is documented as public. Each entry gets shim-or-break decision. Semver: at least minor bump if shims; major if explicit break. |
+| 10 | R2 | Public / external API surface not enumerated | ACCEPT | Add a "Public surface" subsection: minimum, `aeat.core.errors` (per `error-code-registry-adr`); confirm whether anything else is documented as public. Resolution (post-execution): hard-cutover model adopted — all callers updated in the same change-set as every rename; minor semver bump. |
 | 11 | R2 | Tooling / IDE / type-checker config impacts | ACCEPT | Add a "Configuration files affected" subsection enumerating: `pyproject.toml` (`tool.coverage.run.source`, `tool.mypy.exclude`, `tool.pytest.ini_options.testpaths`, `tool.pyright.include`); pre-commit configs; `.mcp.json`; `justfile` / `Makefile` paths. |
 | 12 | R2 | `domain_submission` successor decision is deferred and load-bearing | **HARD ACCEPT** — safety regression risk. ADR must REMOVE the deferral. Decide before the move: either (a) `domain_outbound` carries the live-write collection-ban semantics with no finer grain, OR (b) `domain_export` is created as a sub-marker. The four-factor gate is defense-in-depth but the marker is the first line. No deferral. |
 | 13 | R2 | Parallel agent slot / pre-move branch impact | ACCEPT | Add a "Transition mechanic" subsection: layout PR lands in a coordinated freeze window (no new branches off pre-move main during the freeze); existing pre-move branches receive a one-shot mechanical rebase that rewrites import paths; agent-slot orchestration pauses for the freeze duration. |
@@ -975,7 +974,7 @@ Conflates THREE destinations:
 | Sub-module | Contents | Destination | Functional reason |
 | --- | --- | --- | --- |
 | `core/errors/_registry.py` | `ErrorCode`, `ErrorEnvelope`, `ErrorCategory`, `ERROR_REGISTRY`, registry functions, rendering pipeline (`build_error_envelope`, `render_*`), context scrubbing, exit-code mapping. **Plus** the `_DECLARED_ERROR_CODES` table (kept centralised; see open question). | `core/errors/` | Pure infrastructure; one cohesive responsibility (error identity + rendering). |
-| `core/errors/__init__.py` | `AeatError` base class with `__init_subclass__` hook; firewall exceptions (`SiteHealthError`, `AeatObservabilityError`); generic infra exceptions (`WorkspaceLockedError`, `DeprecatedAliasError`, `MovedAliasError`). Re-export shim for the public-surface contract. | `core/errors/` | Base class + firewall + generic infra exceptions; ~80 LOC. |
+| `core/errors/__init__.py` | `AeatError` base class with `__init_subclass__` hook; firewall exceptions (`SiteHealthError`, `AeatObservabilityError`); generic infra exceptions (`WorkspaceLockedError`, `DeprecatedAliasError`, `MovedAliasError`). Retained at canonical path; callers updated to new destination paths in the keystone PR. | `core/errors/` | Base class + firewall + generic infra exceptions; ~80 LOC. |
 | Move 1 | `FormulasError`, `RulesetValidationError`, `FormulaCycleError`, `CasillaNotDefinedError`, `AmbiguousPeriodError`, `MissingRulesetError`, `EvaluationError`, `AuditDiscrepancyError`. | `domain/formulas/_errors.py` | Already imported as a tight cluster by `aeat.domain.formulas.__init__`; ride home with the domain. |
 | Move 2 | `McpLaunchError`. | `entrypoints/mcp/_errors.py` | Already re-imported by `aeat.entrypoints.mcp._errors`. |
 | Move 3 | `FilingFixtureError`, `FixtureProvisioningError`. | `domain/testing/_errors.py` | Raised exclusively from `aeat.domain.testing` (and provisioning scripts under `scripts/`). |
@@ -1057,7 +1056,7 @@ Feeds the ADR public-surface table:
 
 #### Verdict
 
-`splits-into-5` (with one re-export shim).
+`splits-into-5` (all callers updated to new paths in the keystone PR).
 
 **Rationale**: the audit confirms `[MONO]` and `[CONFLATE]` and
 produces a concrete 5-destination split. The pure-infra rendering
@@ -1519,13 +1518,13 @@ restructure ADR layout block needs updating to add this nesting.
 #### Public-API contract impact
 
 - The `aeat.adapters.outbound.aeat.auth` import surface is **massive** (~98 symbols).
-- **Per-axis re-export shim** is the right pattern: `aeat.adapters.outbound.aeat.auth`
-  becomes a compatibility re-export from the 5 new homes.
+- **Per-axis hard-cutover** is the pattern applied: `aeat.adapters.outbound.aeat.auth`
+  becomes a split across 5 new homes; all callers updated to the new canonical paths.
 - Most consumers import a single-axis tight cluster — verified by
   the consumer breakdown. Each consumer's imports rewrite to a
   single new home (Google → `aeat.adapters.outbound.google`, AEAT →
   `aeat.adapters.outbound.aeat.auth`, etc.).
-- The shim adds no per-symbol cost; it's a re-export module.
+- The hard-cutover adds no per-symbol cost; each caller imports from exactly one new home.
 
 Feeds the ADR public-surface table.
 
@@ -2052,7 +2051,7 @@ domain needs the same caveat.
 #### Public-API contract impact
 
 - `aeat.application.filing` re-exports a substantial public surface (~25
-  symbols). Re-export shim preserves the contract.
+  symbols); all callers updated to new canonical paths in the Step 7 keystone PR.
 - `FilingDraftRepository`, `FilingAmendmentRepository` — currently
   consumed via deferred imports from outside; not in `__init__.py`
   `__all__`. After move, the public-import path becomes
@@ -2556,7 +2555,7 @@ runtime data flow.
 | `_dynamic.py` | 250 | pure-redaction (per-surface dynamic-PII scrubbers) |
 | `_pipeline.py` | 246 | pure-redaction (8-step orchestration: refuse-if-signed, strip dynamic, rewrite streams, scrub metadata, save deterministically) |
 | `_metadata.py` | 168 | pure-redaction (DocInfo + XMP scrubbing) |
-| `__init__.py` | 78 | glue (re-export shim) |
+| `__init__.py` | 78 | glue (public-surface re-exports) |
 | `fixtures.py` | 79 | infra (compile-time SHA-256 allowlist of committed sanitised fixtures) |
 | `_errors.py` | 75 | infra (exception hierarchy) |
 | `_determinism.py` | 73 | infra (byte-stable save flags) |
@@ -2777,7 +2776,7 @@ surface.
 | `_models.py` | 481 | domain-ir (frozen pydantic IR, formula AST, validation rules, `evaluate`, `validate_period_for_modelo`) |
 | `_fetch.py` | 372 | extraction (httpx streaming + SHA-256 + host allowlist + `BOE_ORDEN_SOURCES` table) |
 | `_cache.py` | 121 | infra (atomic JSON persistence) |
-| `__init__.py` | 104 | glue (re-export shim) |
+| `__init__.py` | 104 | glue (public-surface re-exports) |
 | `testing.py` | 70 | infra (reportlab fake PDF builder; test-only) |
 | `_enums.py` | 63 | domain-ir (4 closed StrEnums) |
 | `_errors.py` | 48 | infra (exception hierarchy) |
@@ -2881,7 +2880,7 @@ goes to inbound and IR goes to domain.
 #### Public-API contract impact
 
 - `aeat.domain.schema` `__all__` exports 33 symbols.
-- After split: `aeat.domain.schema` becomes a re-export shim that pulls
+- After split: all callers of `aeat.domain.schema` updated to the new canonical paths; the module
   extraction symbols from `aeat.adapters.inbound.schema` and IR
   symbols from `aeat.domain.schema`.
 - Single CLI consumer updates relative imports — mechanical.
@@ -2943,7 +2942,7 @@ schema split).
 (runtime, structural-protocol consumers) are separable at clean
 file boundaries with unidirectional dependency. Split is
 mechanically simple — move 2 files to inbound, keep 4 in domain,
-update `__init__.py` re-export shim. The CONFLATE? flag is
+update `__init__.py` public exports. The CONFLATE? flag is
 RESOLVED with concrete split design.
 
 ### `aeat.application.workflow` (audit 10, 2026-04-30)
@@ -3658,7 +3657,7 @@ precedent in a high-churn codebase that will erode layering."
 2. **Freeze-window extension policy** — what if layout-move PR
    is not mergeable within 24h?
 3. **`WorkspaceLockedError` conflicting dispositions** — public-
-   surface table says "verify before final shim ships"; dead-code
+   surface table says "verify before final cutover"; dead-code
    Phase 2 list says "rename or delete". Neither gates the other.
 
 **Persuasion path**: add a "Carve-out registry and escalation
@@ -3676,9 +3675,7 @@ but not that the system still does the right thing for Kent."
    — all 13 acceptance criteria are structural. A mechanical
    import rewrite can pass all of them while silently breaking
    the produce → verify → export pipeline.
-2. **Shim deprecation contract** — no signal mechanism
-   (DeprecationWarning?), no timeline, no removal criterion,
-   no communication channel.
+2. **Migration model contract** — no explicit statement of whether old paths would be shimmed or hard-cut; resolved as hard-cutover in the ADR.
 3. **Carve-out enforcement boundary scope** — same finding as
    Reviewer 1 #1 (convergent).
 4. **Python packaging / editable-install / wheel verification**
@@ -3694,7 +3691,7 @@ but not that the system still does the right thing for Kent."
 
 **Top 3 required**:
 1. End-to-end behavioural acceptance criterion (smoke test).
-2. Shim deprecation contract.
+2. Explicit migration model contract (hard-cutover; resolved in the ADR).
 3. Named rollout decision authority.
 
 ### Convergent themes (both reviewers)
@@ -3714,7 +3711,7 @@ but not that the system still does the right thing for Kent."
 | 22.2 | R2 #1 | Behavioural smoke test missing | Add to acceptance criteria: end-to-end pipeline test (produce → verify → export) green in CI |
 | 22.3 | R2 #5 | mypy/pyright clean run | Add to acceptance criteria: zero mypy/pyright errors on new layout |
 | 22.4 | R2 #6 | Migration script correctness | Add to acceptance criteria: migration-script test fixture covering relative imports + TYPE_CHECKING + star imports + dynamic imports |
-| 22.5 | R2 #2 | Shim deprecation contract | Add to public-surface section: shim deprecation mechanism (DeprecationWarning at import), timeline (2 minor versions minimum), removal criterion |
+| 22.5 | R2 #2 | Migration model contract | Add to public-surface section: explicit hard-cutover policy — every rename or relocation updates all callers in the same change-set as the source move; no backward-compat re-export layer is introduced |
 | 22.6 | R1 #5 + R2 #7 | Rollout decision authority | Add to operational contract: named role (project owner) authority to call freeze, declare done, invoke rollback |
 | 22.7 | R1 #6 | Tier-2 "revalidated" undefined | Add to vault-supersession: "revalidated" = explicit guardrail unit test passes against new path + audit doc inline-updated |
 | 22.8 | R1 #4 | Freeze-window extension policy | Add to transition mechanic: if move PR not mergeable in 24h → freeze extends in 12h increments; agent-slot orchestration informed; rollback considered after 72h cumulative |

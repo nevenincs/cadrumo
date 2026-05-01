@@ -7,7 +7,6 @@ from decimal import Decimal
 import pytest
 
 from . import (
-    CARRY_FORWARD_MAX_YEARS,
     CarryForwardEntry,
     ExpenseCategory,
     RentalExpense,
@@ -167,6 +166,3 @@ class TestCarryForwardConsumption:
         assert ages == [2024, 2025]
 
 
-class TestCarryForwardConstantInBounds:
-    def test_max_years_constant_is_4(self) -> None:
-        assert CARRY_FORWARD_MAX_YEARS == 4

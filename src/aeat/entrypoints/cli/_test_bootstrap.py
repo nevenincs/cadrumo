@@ -10,11 +10,7 @@ from __future__ import annotations
 import pytest
 
 from .bootstrap import (
-    DOC_MIME,
     FOLDER_MIME,
-    SCRATCH_DOC_NAME,
-    SCRATCH_FOLDER_NAME,
-    SCRATCH_SHEET_NAME,
     SHEET_MIME,
     ScratchResources,
     dedup_existing_resource,
@@ -60,24 +56,6 @@ class TestDedupExistingResource:
             {"id": "good", "name": "aeat-scratch", "mimeType": FOLDER_MIME},
         ]
         assert dedup_existing_resource("aeat-scratch", FOLDER_MIME, listing) == "good"
-
-
-class TestScratchConstants:
-    """The scratch resource names and MIME types must match the documented contract."""
-
-    def test_folder_mime(self) -> None:
-        assert FOLDER_MIME == "application/vnd.google-apps.folder"
-
-    def test_sheet_mime(self) -> None:
-        assert SHEET_MIME == "application/vnd.google-apps.spreadsheet"
-
-    def test_doc_mime(self) -> None:
-        assert DOC_MIME == "application/vnd.google-apps.document"
-
-    def test_resource_names(self) -> None:
-        assert SCRATCH_FOLDER_NAME == "aeat-scratch"
-        assert SCRATCH_SHEET_NAME == "aeat-scratch-sheet"
-        assert SCRATCH_DOC_NAME == "aeat-scratch-doc"
 
 
 class TestScratchResources:

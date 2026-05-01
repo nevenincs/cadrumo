@@ -81,12 +81,9 @@ class _LazyCatalogue:
         return self._ensure().get(ref_id)
 
 
-NORMATIVE_CATALOGUE: _LazyCatalogue = _LazyCatalogue()
-"""Lazy module-level :class:`NormativeCatalogue` singleton."""
 
 
 __all__ = [
-    "NORMATIVE_CATALOGUE",
     "Articulo",
     "NormativeCatalogue",
     "NormativeError",

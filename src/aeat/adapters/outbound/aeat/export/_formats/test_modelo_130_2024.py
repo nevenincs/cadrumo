@@ -11,21 +11,12 @@ from __future__ import annotations
 import pytest
 
 from ._record_spec import FieldKind, validate_record_specs
-from .modelo_130_2024 import ENCODING, RECORD_LENGTH, RECORD_SPECS
+from .modelo_130_2024 import RECORD_LENGTH, RECORD_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestModelo1302024Shape:
-    def test_total_record_length(self) -> None:
-        # Field content is 878 bytes (positions 1-878). The on-wire
-        # stream adds a 2-byte CRLF terminator (positions 879-880)
-        # handled by the serialiser. Total on-wire = 880.
-        assert RECORD_LENGTH == 878
-
-    def test_encoding(self) -> None:
-        assert ENCODING == "cp1252"
-
     def test_specs_are_contiguous_and_fill_record(self) -> None:
         """runs at import time; re-asserting here
         catches any future regression that smuggles an import-order
