@@ -12,8 +12,8 @@ from typer.testing import CliRunner
 from ....adapters.outbound.aeat.export import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from ....application.filing import FilingDraft, FilingOperatorProfile, approve_draft, build_draft
 from ....application.filing.runtime import build_runtime_schema_provider
-from ....domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ....domain.financial.transactions import (
+from ....adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
@@ -22,7 +22,7 @@ from ....domain.financial.transactions import (
 )
 from . import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture()
@@ -41,12 +41,12 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture()
 def draft_path(tmp_path: Path, isolated_dirs: Path) -> Path:
-    """Persist an approved draft via the wave-4 FilingDraftRepository envelope path.
+    """Persist an approved draft via the envelope path.
 
     The CLI's preflight loader prefers the envelope path; this fixture
     writes the approved draft through ``FilingDraftRepository.save``
     so the loader's primary code path runs (the legacy plaintext-JSON
-    fallback in ``_CliDraftLoader`` does not understand the wave-1+
+    fallback in ``_CliDraftLoader`` does not understand the +
     ``tuple[FilingValue, ...]`` shape and is reserved for older
     fixtures).
     """
@@ -57,7 +57,7 @@ def draft_path(tmp_path: Path, isolated_dirs: Path) -> Path:
         override_master_key_provider,
         override_secret_store,
     )
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     # Bootstrap an ephemeral master key + secret store so the
     # FINANCIAL-class envelope round-trip succeeds in the test env.
@@ -151,7 +151,7 @@ class TestPreflightCommand:
         expected_fragment: str,
     ) -> None:
         # Build an approved draft, downgrade its status to a non-
-        # preflight-eligible value, persist via the wave-4 envelope
+        # preflight-eligible value, persist via the envelope
         # repository (ciphertext at rest), and preflight should refuse.
         from ....adapters.persistence.storage import (
             EncryptedBlobStore,
@@ -160,8 +160,8 @@ class TestPreflightCommand:
             override_master_key_provider,
             override_secret_store,
         )
-        from ....application.filing._repository import FilingDraftRepository
-        from ....application.filing._schema import FilingDraftStatus
+        from ....domain.filing import FilingDraftRepository
+        from ....domain.filing._schema import FilingDraftStatus
 
         provider = EphemeralMasterKeyProvider()
         blob_store = EncryptedBlobStore(
@@ -203,8 +203,8 @@ class TestPreflightCommand:
         # Persisting a transaction catalogue with NOT_YET_PROCESSED
         # rows means the approved draft's review checksum no longer
         # matches the live state — preflight must mark it stale via
-        # the wave-4 envelope-repository round-trip.
-        from ....application.filing._repository import FilingDraftRepository
+        # the envelope-repository round-trip.
+        from ....domain.filing import FilingDraftRepository
 
         TransactionCatalogueRepository(store_dir=isolated_dirs / "transactions").save(
             TransactionCatalogue.from_transactions([_sample_transaction()]),

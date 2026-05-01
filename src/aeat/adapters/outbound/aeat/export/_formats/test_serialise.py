@@ -1,4 +1,4 @@
-"""Tests for the fichero-BOE serialiser (EPIC #201 C3b, wave 79b)."""
+"""Tests for the fichero-BOE serialiser (EPIC #201 C3b,)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from .modelo_130_2024 import (
     REQUIRED_HEADER_FIELDS,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def _base_headers() -> dict[str, str]:

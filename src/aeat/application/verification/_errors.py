@@ -1,4 +1,4 @@
-"""Error hierarchy for verification (#305 cluster E)."""
+"""Error hierarchy for verification (#305)."""
 
 from __future__ import annotations
 

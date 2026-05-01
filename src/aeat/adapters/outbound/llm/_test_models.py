@@ -9,7 +9,7 @@ import pytest
 
 from . import LLMProvider, LLMRequest, LLMResponse, Translation
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def test_llm_request_round_trip() -> None:

@@ -25,7 +25,7 @@ from .launch_google_workspace import (
     ensure_project_env_file,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class IsolatedSettings(Settings):

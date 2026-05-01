@@ -1,7 +1,7 @@
 """Unit tests for the structure of the ``aeat cloud`` sub-app.
 
 The Cloud Functions / Run / Storage commands themselves require live
-credentials and are exercised by the Phase 9 smoke suite. Here we only
+credentials and are exercised by the smoke suite. Here we only
 verify the typer command-tree shape so a refactor that drops a verb is
 caught at unit-test time.
 """
@@ -13,7 +13,7 @@ from typer.testing import CliRunner
 
 from .cloud import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestCloudCommandTree:

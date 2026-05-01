@@ -1,4 +1,4 @@
-"""BOE-Orden extractor backend for :mod:`aeat.schema`.
+"""BOE-Orden extractor backend for :mod:`aeat.domain.schema`.
 
 Implements the line-based extractor for the
 PDF form of an AEAT *Orden ministerial* published in the Boletín
@@ -280,7 +280,7 @@ class BoeOrdenExtractor:
     The extractor is deliberately narrow and targets the Modelo 130
     Orden layout. Follow-up PRs subclass / extend the pattern library
     for 303, 390, and the remaining modelos covered by
-    :class:`aeat.models.ModeloCode`.
+    :class:`aeat.domain.modelos.ModeloCode`.
     """
 
     def __init__(

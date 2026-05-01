@@ -1,4 +1,4 @@
-"""Unit tests for the pure helpers in :mod:`aeat.cli.doctor`.
+"""Unit tests for the pure helpers in :mod:`aeat.entrypoints.cli.doctor`.
 
 The orchestrator and individual check functions are exercised against
 real APIs in the live smoke suite. Here we cover only the deterministic
@@ -41,7 +41,7 @@ from .doctor import (
     short_scope,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
 

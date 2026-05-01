@@ -66,7 +66,7 @@ from . import (
 )
 from ._mutators import _node_at_path, _replace_at_path
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _swap_sub_op(node: object) -> SubFormula:
@@ -605,7 +605,7 @@ def _modelo_100_full_fixture_post_2025() -> dict[str, Decimal]:
     }
 
 
-# Note: pre-Wave-5 a backwards-compatible ``_modelo_100_full_fixture()``
+# Note: backwards-compatible ``_modelo_100_full_fixture()``
 # alias resolved to the post-2025 variant unconditionally. The alias
 # was removed because applying it against the 2024 ruleset would
 # fail baseline-clean audit (the 0560 ahorro top-bracket rate is 0.14

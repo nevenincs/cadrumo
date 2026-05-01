@@ -1,7 +1,7 @@
-"""Wave-6 tests: LLM cache + usage redaction discipline.
+"""LLM cache + usage redaction discipline.
 
 The LLM cache and usage log persist response text that may echo NIF /
-counterparty context from the prompt. Wave 6 wraps both writers so the
+counterparty context from the prompt. both writers so the
 substrate's CACHE-class / DIAGNOSTIC-class redaction discipline applies
 before persistence.
 """
@@ -25,7 +25,7 @@ from ._models import (
 )
 from ._usage import UsageRecorder
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _NIF_CANARY = "12345678Z"
 _BEARER_TAIL = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

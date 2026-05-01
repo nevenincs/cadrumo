@@ -140,7 +140,7 @@ def parse_expediente_detail(
 
     Returns:
         A :class:`JustificanteRef` ready for
-        :func:`fetch_justificante_pdf`.
+        :func:`capture_justificante`.
 
     Raises:
         SedeParseError: If no CSV-carrying anchor is present.

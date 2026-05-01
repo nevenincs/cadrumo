@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.auth.certificate`.
+"""Unit tests for :mod:`aeat.adapters.outbound.aeat.auth.certificate`.
 
 Every test generates a real self-signed PKCS#12 bundle at runtime via
 :mod:`cryptography` — no mocks, no fakes, no checked-in fixtures. Tests
@@ -33,7 +33,7 @@ from . import (
 )
 from .certificate import _select_backend
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 

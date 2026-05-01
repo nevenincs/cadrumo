@@ -1,8 +1,8 @@
-"""Unit tests for :mod:`aeat.filing`.
+"""Unit tests for :mod:`aeat.application.filing`.
 
-The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]`` per the project rule.
+The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_application]`` per the project rule.
 The tests use real Protocol-conforming pydantic doubles defined
-in :mod:`aeat.filing.testing` — no mocks, patches, fakes, or
+in :mod:`aeat.application.filing.testing` — no mocks, patches, fakes, or
 stubs.
 """
 
@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ...domain.financial.transactions import (
+from ...adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
@@ -50,7 +50,7 @@ from .testing import (
     default_schema_provider,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _profile() -> SyntheticProfile:
@@ -123,7 +123,7 @@ class TestModelo130Builder:
         assert by_id["07"].formula_trace == ("04", "05", "06")
 
     def test_apartado_ii_to_v_casillas_match_hand_calculations(self) -> None:
-        """Hand-calculations for the 12 new apartado-II/III/IV/V casillas (#305 cluster B phase 2)."""
+        """Hand-calculations for the 12 new apartado-II/III/IV/V casillas (#305)."""
         builder = Modelo130Builder()
         inputs = {
             "01": Decimal("12500"),

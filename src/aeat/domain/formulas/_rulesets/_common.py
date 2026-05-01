@@ -1,6 +1,6 @@
 """Shared helpers for concise ruleset authoring.
 
-Every concrete ruleset module under :mod:`aeat.formulas._rulesets`
+Every concrete ruleset module under :mod:`aeat.domain.formulas._rulesets`
 imports from here. The helpers keep the ruleset files short and
 declarative: ``casilla("03", label=...)`` is easier to review than
 manually instantiating :class:`CasillaDefinition`.
@@ -41,7 +41,6 @@ __all__ = [
     "brackets",
     "casilla",
     "clamp_pos",
-    "currency_casilla",
     "div_op",
     "formula",
     "lit",
@@ -53,7 +52,6 @@ __all__ = [
     "percent",
     "percent_from_whole",
     "ref",
-    "round2",
     "sub_op",
 ]
 

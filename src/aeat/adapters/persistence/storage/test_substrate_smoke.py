@@ -34,7 +34,7 @@ from . import (
     save_envelope,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def test_master_key_persists_across_provider_instances(tmp_path: Path) -> None:

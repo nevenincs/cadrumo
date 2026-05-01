@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.schema._models`."""
+"""Unit tests for :mod:`aeat.domain.schema._models`."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
+from ..casillas import CasillaDataType as CasillaCorpusDataType
 from ..modelos import ModeloCode
 from . import (
     BinaryFormulaOp,
@@ -34,9 +35,13 @@ from . import (
     validate_period_for_modelo,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _SHA = "a" * 64
+
+
+def test_schema_reuses_casilla_data_type_enum() -> None:
+    assert CasillaDataType is CasillaCorpusDataType
 
 
 def _provenance() -> SchemaProvenance:

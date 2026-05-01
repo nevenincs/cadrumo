@@ -1,6 +1,6 @@
 """Unit tests for Modelo 303 + Modelo 390 builders and reconciliation.
 
-The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]`` per the project rule.
+The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_application]`` per the project rule.
 No mocks, patches, fakes, or stubs — every test double is a
 hand-written strict pydantic model that conforms to the relevant
 Protocol via duck typing.
@@ -30,7 +30,7 @@ from .testing import (
     default_schema_provider,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _profile() -> SyntheticProfile:

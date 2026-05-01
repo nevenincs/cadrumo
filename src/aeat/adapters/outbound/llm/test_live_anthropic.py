@@ -11,7 +11,7 @@ from pydantic_settings import SettingsConfigDict
 from ....core.config import Settings
 from . import LLMClient, LLMRequest
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
 class _LiveSettings(Settings):

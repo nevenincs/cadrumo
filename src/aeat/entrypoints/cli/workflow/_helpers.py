@@ -2,7 +2,7 @@
 
 Production wiring composes the on-main deadline engine, filing runtime
 schema provider, and read-only submission preflight helper into a real
-:class:`aeat.workflow.WorkflowEngine`. Tests can still override the
+:class:`aeat.application.workflow.WorkflowEngine`. Tests can still override the
 construction seam by assigning ``_engine_factory`` / ``_profile_factory``.
 """
 
@@ -150,7 +150,6 @@ def run_engine_for_period(
 
 
 __all__ = [
-    "EngineFactory",
     "clear_test_hooks",
     "run_engine_for_period",
     "run_engine_next",

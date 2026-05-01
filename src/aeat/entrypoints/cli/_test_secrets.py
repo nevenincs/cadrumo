@@ -16,7 +16,7 @@ from ...adapters.persistence.storage import (
 )
 from .secrets import app as secrets_app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture

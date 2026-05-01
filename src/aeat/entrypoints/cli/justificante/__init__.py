@@ -17,12 +17,12 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from ....adapters.outbound.aeat.verify import verify_csv
 from ....core.logging import get_logger
 from ....domain.justificante import (
     Justificante,
     JustificanteError,
     parse_justificante,
-    verify_csv,
 )
 
 app = typer.Typer(

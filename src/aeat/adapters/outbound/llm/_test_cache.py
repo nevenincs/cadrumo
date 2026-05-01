@@ -10,7 +10,7 @@ import pytest
 
 from . import LLMCache, LLMProvider, LLMRequest, LLMResponse
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def _response() -> LLMResponse:
@@ -66,7 +66,7 @@ def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
     ],
 )
 def test_cache_path_rejects_unsafe_model_identifiers(tmp_path: Path, model: str) -> None:
-    # Wave-27 L-1 regression: ``key.model`` flows from the operator-
+    # regression: ``key.model`` flows from the operator-
     # configured registry / env-driven ``model_override``. A path-
     # shaped value must not let the cache write outside ``root_dir``.
     from . import LLMCacheError

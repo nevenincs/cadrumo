@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.deadlines.DeadlineEngine` and ``next_deadline``."""
+"""Unit tests for :class:`aeat.domain.deadlines.DeadlineEngine` and ``next_deadline``."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from . import (
     next_deadline,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _profile(**overrides: object) -> AutonomoProfile:

@@ -8,9 +8,9 @@ from pathlib import Path
 import typer
 from pydantic import BaseModel, ConfigDict
 
+from .....adapters.persistence.profile.assets import load_amortization_ledger, load_assets
+from .....adapters.persistence.profile.inventory import load_inventory
 from .....domain.formulas._rulesets.modelo_100.anexo_d_ledgers import derive_anexo_d_normal_inputs
-from .....domain.profile.assets import load_amortization_ledger, load_assets
-from .....domain.profile.inventory import load_inventory
 from ..._context import json_output_requested
 from ..._schemas import OutputRootSchema, emit_json_success, register_schema
 

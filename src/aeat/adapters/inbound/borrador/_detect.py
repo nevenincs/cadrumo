@@ -1,4 +1,4 @@
-"""Artefact-kind detection for Modelo 100 PDFs (#305 cluster F)."""
+"""Artefact-kind detection for Modelo 100 PDFs (#305)."""
 
 from __future__ import annotations
 

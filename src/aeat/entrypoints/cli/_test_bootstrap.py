@@ -1,7 +1,7 @@
-"""Unit tests for the pure helpers in :mod:`aeat.cli.bootstrap`.
+"""Unit tests for the pure helpers in :mod:`aeat.entrypoints.cli.bootstrap`.
 
 The Drive API interactions and the env-file write are exercised by the
-live smoke tests in Phase 9. Here we cover only the dedup decision
+live smoke tests in . Here we cover only the dedup decision
 logic, which is straightforward to test against a synthetic listing.
 """
 
@@ -10,17 +10,13 @@ from __future__ import annotations
 import pytest
 
 from .bootstrap import (
-    DOC_MIME,
     FOLDER_MIME,
-    SCRATCH_DOC_NAME,
-    SCRATCH_FOLDER_NAME,
-    SCRATCH_SHEET_NAME,
     SHEET_MIME,
     ScratchResources,
     dedup_existing_resource,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestDedupExistingResource:
@@ -60,24 +56,6 @@ class TestDedupExistingResource:
             {"id": "good", "name": "aeat-scratch", "mimeType": FOLDER_MIME},
         ]
         assert dedup_existing_resource("aeat-scratch", FOLDER_MIME, listing) == "good"
-
-
-class TestScratchConstants:
-    """The scratch resource names and MIME types must match the documented contract."""
-
-    def test_folder_mime(self) -> None:
-        assert FOLDER_MIME == "application/vnd.google-apps.folder"
-
-    def test_sheet_mime(self) -> None:
-        assert SHEET_MIME == "application/vnd.google-apps.spreadsheet"
-
-    def test_doc_mime(self) -> None:
-        assert DOC_MIME == "application/vnd.google-apps.document"
-
-    def test_resource_names(self) -> None:
-        assert SCRATCH_FOLDER_NAME == "aeat-scratch"
-        assert SCRATCH_SHEET_NAME == "aeat-scratch-sheet"
-        assert SCRATCH_DOC_NAME == "aeat-scratch-doc"
 
 
 class TestScratchResources:

@@ -1,7 +1,7 @@
 """``aeat sede`` sub-app — post-auth sede discovery CLI (#239).
 
 Subcommands (mirrors of the read-only sede surfaces in
-:mod:`aeat.sede`):
+:mod:`aeat.adapters.outbound.aeat.sede`):
 
 - ``aeat sede list-expedientes [--modelo M]`` — walk *Mis Expedientes*
   (the procedure tree) and print every leaf (id, modelo, ejercicio,

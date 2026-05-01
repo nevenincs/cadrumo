@@ -1,4 +1,4 @@
-"""Rule-adherence invariant: RESERVED literal length == declared length (wave 112).
+"""Rule-adherence invariant: RESERVED literal length == declared length.
 
 A RESERVED field declares ``literal_value`` and ``length``; the
 serialiser space-pads the literal to ``length``, but if
@@ -29,7 +29,7 @@ from ._record_spec import FieldKind
 from .modelo_130_2024 import RECORD_SPECS as RECORD_SPECS_130
 from .modelo_303_2024 import ENVELOPE as ENVELOPE_303
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 _DR_SPEC_DIR = (

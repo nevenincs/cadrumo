@@ -1,21 +1,21 @@
-"""End-to-end integration test for the wave-4 governed-persistence chain.
+"""End-to-end integration test for the governed-persistence chain.
 
-Walks every wave-4 repository together against real on-disk persistence:
+Walks every together against real on-disk persistence:
 
-- :class:`aeat.filing._repository.FilingDraftRepository` (FINANCIAL)
-- :class:`aeat.submission._repository.SubmissionRepository` (AUDIT)
-- :class:`aeat.filing._complementaria_repository.FilingAmendmentRepository`
+- :class:`aeat.domain.filing.FilingDraftRepository` (FINANCIAL)
+- :class:`aeat.domain.submission._repository.SubmissionRepository` (AUDIT)
+- :class:`aeat.domain.filing.FilingAmendmentRepository`
   (AUDIT)
-- :class:`aeat.justificante._repository.JustificanteRepository` (AUDIT)
-- :class:`aeat.filing._history_repository.FilingHistoryRepository`
+- :class:`aeat.domain.justificante._repository.JustificanteRepository` (AUDIT)
+- :class:`aeat.application.filing._history_repository.FilingHistoryRepository`
   (AUDIT)
 
-NOTE: Wave-4 phase 5 (live-submit governed audit sink) has been excised
+NOTE: (live-submit governed audit sink) has been excised
 because the upstream charter #116 / PR #432 permanently forbade live
 AEAT submission. With no live-submit code path there is no audit-event
 emission to govern; the JSONL redaction discipline still holds via
-the run-trace sink (wave 5 phase 1) and the LLM cache + usage log
-(wave 6).
+the run-trace sink and the LLM cache + usage log
+.
 
 The test asserts:
 
@@ -24,7 +24,7 @@ The test asserts:
    justificante, filing-history).
 2. Re-running the same step against the same store is idempotent.
 
-These are the load-bearing claims of the wave-4 ADR's Phase 7.
+These are the load-bearing claims of the ADR's .
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ from ...adapters.outbound.aeat.export._models import (
     SubmittedFiling,
     make_submission_id,
 )
-from ...adapters.outbound.aeat.export._repository import SubmissionRepository
+from ...domain.submission._repository import SubmissionRepository
 from ...adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
@@ -57,18 +57,18 @@ from ...domain.justificante._schema import Justificante
 from ..sync import WireFilingEntry, WireFilingHistory
 from ..sync._protocols import ModeloIdentifier
 from . import build_draft
-from ._complementaria import (
+from ...domain.filing._amendment import (
     AmendmentKind,
     CasillaChange,
     FilingAmendment,
 )
-from ._complementaria_repository import FilingAmendmentRepository
+from ...domain.filing._complementaria_repository import FilingAmendmentRepository
 from ._history_repository import FilingHistoryRepository
-from ._repository import FilingDraftRepository
-from ._schema import FilingDraft
+from ...domain.filing._repository import FilingDraftRepository
+from ...domain.filing._schema import FilingDraft
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _NIF_CANARY = "12345678Z"
 
@@ -182,7 +182,7 @@ def _build_justificante(tmp_path: Path, *, csv: str) -> Justificante:
 
 
 def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
-    """Walk one filing all the way through every wave-4 repository.
+    """Walk one filing all the way through every repository.
 
     Asserts at every step that the on-disk envelope carries the
     expected classification, that the live-submit audit log is
@@ -199,7 +199,7 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     draft_repo.save(draft)
     draft_envelope_text = draft_repo.envelope_path_for(draft.draft_id).read_text(encoding="utf-8")
     assert '"classification":"financial"' in draft_envelope_text
-    # Wave-7 leak canary: NIF must NOT appear in the on-disk ciphertext.
+    # canary: NIF must NOT appear in the on-disk ciphertext.
     assert _NIF_CANARY not in draft_envelope_text
     assert draft_repo.load(draft.draft_id) == draft
     # Idempotent: re-saving the same draft does not duplicate.
@@ -234,12 +234,12 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     assert justificante.csv not in justificante_envelope_text
     assert justificante_repo.load(justificante.csv) == justificante
 
-    # NOTE: live-submit audit emission was originally wave-4 phase 5,
+    # NOTE: live-submit audit emission was originally ,
     # but the upstream PR #432 (charter #116) permanently forbade live
     # AEAT submission. With no live emissions the GovernedLiveSubmitAuditSink
     # has no use case and was excised. The redaction discipline still
-    # holds end-to-end via the run-trace JSONL sink (wave 5) and the
-    # LLM cache + usage redaction (wave 6).
+    # holds end-to-end via the run-trace JSONL sink and the
+    # LLM cache + usage redaction.
 
     # --- 5. Persist the filing-history record for the modelo. --------
     history = WireFilingHistory(

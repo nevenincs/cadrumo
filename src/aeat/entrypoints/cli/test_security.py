@@ -12,10 +12,10 @@ from typer.testing import CliRunner
 
 from . import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _NIF_CANARY = "12345678Z"
-_HKDF_CONTEXT_TX = b"aeat.domain.financial.transactions.catalogue.v1"
+_HKDF_CONTEXT_TX = b"aeat.domain.transactions.catalogue.v1"
 
 
 class _Sample(BaseModel):
@@ -145,7 +145,7 @@ def test_rotate_refuses_when_recovery_wrapping_exists_without_flag(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Wave-24 H-1 regression: rotate-master-key MUST NOT silently
+    # regression: rotate-master-key MUST NOT silently
     # proceed when ``master.recovery.key`` exists and the operator
     # hasn't told us how to update it. Without the fence, the
     # wrapping would keep holding the OLD master-key bytes and a
@@ -193,7 +193,7 @@ def test_rotate_with_regenerate_recovery_produces_recoverable_new_key(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Wave-24 H-1 regression: --regenerate-recovery-key mints a
+    # regression: --regenerate-recovery-key mints a
     # fresh mnemonic + re-wraps the NEW master key. Decoding the new
     # mnemonic and unwrapping master.recovery.key must yield the
     # NEW master-key bytes (not the old).
@@ -260,7 +260,7 @@ def test_rotate_with_recovery_key_preserves_existing_mnemonic(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Wave-24 H-1 regression: --recovery-key "<existing mnemonic>"
+    # regression: --recovery-key "<existing mnemonic>"
     # re-wraps the NEW master key under the SAME KEK so the
     # operator's previously-printed mnemonic remains valid.
     import secrets
@@ -272,7 +272,7 @@ def test_rotate_with_recovery_key_preserves_existing_mnemonic(
         unwrap_master_key,
         wrap_master_key,
     )
-    from ...adapters.persistence.storage._recovery import RecoveryKey
+    from ...adapters.persistence.storage import RecoveryKey
 
     secrets_dir = tmp_path / "secrets"
     secrets_dir.mkdir()
@@ -322,7 +322,7 @@ def test_rotate_recovery_key_must_match_old_key_file(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Wave-24 H-1 defensive: --recovery-key + --old-key-file must
+    # defensive: --recovery-key + --old-key-file must
     # agree. If the supplied mnemonic decrypts master.recovery.key
     # to bytes that don't match --old-key-file, the operator has
     # provided inconsistent inputs and the rotation must refuse
@@ -334,7 +334,7 @@ def test_rotate_recovery_key_must_match_old_key_file(
         save_wrapped_master_key,
         wrap_master_key,
     )
-    from ...adapters.persistence.storage._recovery import RecoveryKey
+    from ...adapters.persistence.storage import RecoveryKey
 
     secrets_dir = tmp_path / "secrets"
     secrets_dir.mkdir()
@@ -397,7 +397,7 @@ def test_same_key_rejected(
 
 
 class TestVerifyCorpus:
-    """Wave-11 corpus integrity manifest CLI."""
+    """integrity manifest CLI."""
 
     def _seed_casillas(self, root: Path) -> None:
         root.mkdir(parents=True, exist_ok=True)
@@ -486,7 +486,7 @@ def test_malformed_key_file_rejected(
 
 
 class TestMigrateMasterKeyKdf:
-    """Wave-12 scrypt -> Argon2id master.kdf migration CLI."""
+    """scrypt -> Argon2id master.kdf migration CLI."""
 
     @staticmethod
     def _seed_v1_store(tmp_path: Path, *, passphrase: str) -> tuple[Path, bytes]:
@@ -495,7 +495,7 @@ class TestMigrateMasterKeyKdf:
         import secrets as _secrets
 
         from ...adapters.persistence.storage import encrypt_record
-        from ...adapters.persistence.storage._master_key import (
+        from ...adapters.persistence.storage.master_key._master_key import (
             _b64encode,
             _derive_legacy_scrypt_kek,
             _LegacyKdfParameters,
@@ -726,7 +726,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # Wave-22 M-3 regression: provisioning the keyring backend
+        # regression: provisioning the keyring backend
         # over an existing keychain entry without --force used to
         # silently FETCH the old key and regenerate the recovery
         # wrapping, invalidating the operator's previously-printed
@@ -762,7 +762,7 @@ class TestProvisionCommand:
         # generated recovery wrapping wraps the OLD master key,
         # invalidating any pre-existing printed mnemonic against the
         # on-disk file.
-        from ...adapters.persistence.storage._master_key import KeyringMasterKeyProvider
+        from ...adapters.persistence.storage.master_key._master_key import KeyringMasterKeyProvider
 
         keyring = pytest.importorskip("keyring")
 

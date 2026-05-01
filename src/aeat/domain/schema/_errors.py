@@ -1,6 +1,6 @@
-"""Domain errors raised by :mod:`aeat.schema`.
+"""Domain errors raised by :mod:`aeat.domain.schema`.
 
-Every error inherits from :class:`aeat.errors.AeatError` so the root
+Every error inherits from :class:`aeat.core.errors.AeatError` so the root
 ``AeatError`` exception is the single catch-all for the project's
 domain failures.
 """
@@ -11,7 +11,7 @@ from ...core.errors import AeatError
 
 
 class SchemaError(AeatError):
-    """Base class for every :mod:`aeat.schema` domain error."""
+    """Base class for every :mod:`aeat.domain.schema` domain error."""
 
 
 class SchemaExtractionError(SchemaError):

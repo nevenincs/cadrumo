@@ -9,7 +9,7 @@ Wires four subcommands under ``aeat sync`` per the feature ADR
 - ``aeat sync resolve-divergence <record-id> --action approve|reject
   [--notes TEXT]``
 
-The commands delegate every domain decision to :mod:`aeat.sync`; this
+The commands delegate every domain decision to :mod:`aeat.application.sync`; this
 module is pure CLI glue.
 """
 

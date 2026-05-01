@@ -16,7 +16,7 @@ from ._notifications import (
     parse_notifications_summary,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 _FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"

@@ -1,9 +1,9 @@
-"""Fiscal-period primitives for the :mod:`aeat.formulas` engine.
+"""Fiscal-period primitives for the :mod:`aeat.domain.formulas` engine.
 
 A :class:`FiscalPeriod` is a closed, strict pydantic v2 model identifying
 either a calendar year or a specific quarter within a year. The
 engine uses the period's ``start``/``end`` date span to resolve the
-active ruleset in :class:`aeat.formulas.RulesetRegistry`.
+active ruleset in :class:`aeat.domain.formulas.RulesetRegistry`.
 """
 
 from __future__ import annotations

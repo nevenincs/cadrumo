@@ -3,7 +3,7 @@
 Annual informative filing of transactions with single parties whose
 aggregate value exceeds €3,005.06 during the year. The MVP targets
 the summary totals block; per-counterparty detail rows (one per NIF
-declarado) lands in sub-EPIC #305-Modelo-347-full (wave 49 L6).
+declarado) lands in sub-EPIC #305-Modelo-347-full.
 """
 
 from __future__ import annotations

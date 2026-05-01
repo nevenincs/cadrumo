@@ -13,7 +13,7 @@ import pytest
 from ... import __path__ as aeat_path
 from . import ERROR_REGISTRY, AeatError, ErrorCategory, get_registered_error_code
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def _import_all_aeat_modules() -> None:

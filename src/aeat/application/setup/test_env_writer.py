@@ -38,7 +38,7 @@ from . import (
 )
 from ._env_writer import load_profile_envelope
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
@@ -214,7 +214,7 @@ def test_write_profile_file_writes_ciphertext_envelope(tmp_path: Path) -> None:
 def test_write_profile_file_lock_target_aligns_with_rotation(
     tmp_path: Path,
 ) -> None:
-    # Wave-25 H-2 regression: the setup-profile writer must acquire
+    # regression: the setup-profile writer must acquire
     # the writer-canonical sidecar lock (target.with_suffix('.lock'))
     # so concurrent rotate-master-key contends on the same OS-level
     # lock-byte target. With ``aeat_default_profile_path`` set, the

@@ -40,13 +40,13 @@ def parse_justificante(
 
     resolved_backend = backend
     if resolved_backend is None:
-        # Deferred import: ``aeat.config`` imports the public justificante
+        # Deferred import: ``aeat.core.config`` imports the public justificante
         # surface for the ``JustificanteParserBackend`` enum, so importing
         # it at module scope would form a cycle.
         from ...core.config import load_settings
 
         settings = load_settings()
-        resolved_backend = settings.aeat_justificante_parser_backend
+        resolved_backend = JustificanteParserBackend(settings.aeat_justificante_parser_backend.name)
 
     _logger.debug("parsing justificante %s with backend %s", pdf_path, resolved_backend)
     text = extract_text(pdf_path.resolve(), resolved_backend)

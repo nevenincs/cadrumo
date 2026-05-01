@@ -11,7 +11,7 @@ from .._engine import Engine
 from . import MODELO_200_2025, MODELO_200_2026
 from .test_modelo_200_2025 import _provided
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo200Ruleset2026:

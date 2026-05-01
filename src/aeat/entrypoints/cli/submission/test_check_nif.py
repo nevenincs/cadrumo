@@ -1,4 +1,4 @@
-"""Tests for ``aeat submission check-nif`` (EPIC #305 wave 107)."""
+"""Tests for ``aeat submission check-nif`` (EPIC #305)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 from . import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _runner = CliRunner()
 

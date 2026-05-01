@@ -13,9 +13,9 @@ class _CertBackend(ABC):
     """Contract every cert backend must satisfy.
 
     Backends are dispatched by
-    :func:`aeat.auth.certificate._select_backend` and consumed by
-    :func:`aeat.auth.certificate.preload_into_browser_context` and
-    :func:`aeat.auth.certificate.verify_handshake`.
+    :func:`aeat.adapters.outbound.aeat.auth.certificate._select_backend` and consumed by
+    :func:`aeat.adapters.outbound.aeat.auth.certificate.preload_into_browser_context` and
+    :func:`aeat.adapters.outbound.aeat.auth.certificate.verify_handshake`.
     """
 
     @abstractmethod
@@ -27,7 +27,7 @@ class _CertBackend(ABC):
         """Validate that ``context`` is configured for ``cert``.
 
         Raises:
-            aeat.auth.certificate.CertificateError: When the backend
+            aeat.adapters.outbound.aeat.auth.certificate.CertificateError: When the backend
                 rejects the context or cannot enforce the contract.
         """
 

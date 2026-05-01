@@ -1,6 +1,6 @@
 """Strict pydantic v2 records for the composite workflow engine.
 
-Every boundary-crossing type in :mod:`aeat.workflow` is defined here as
+Every boundary-crossing type in :mod:`aeat.application.workflow` is defined here as
 a frozen, strict, ``extra="forbid"`` :class:`pydantic.BaseModel` or as an
 :class:`enum.StrEnum` for closed enumerations. See
 [[2026-04-12-workflow-engine-adr]] for the ordering contract and the
@@ -12,15 +12,12 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
 from ...core.i18n import Translatable
 from ...domain.deadlines import FilingObligation
-
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.browser._site_health import SiteHealthAlert
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -62,6 +59,16 @@ class WorkflowAbortReason(StrEnum):
     USER_CANCELLED = "USER_CANCELLED"
     SITE_UNAVAILABLE = "SITE_UNAVAILABLE"
     UNHANDLED_EXCEPTION = "UNHANDLED_EXCEPTION"
+
+
+class SiteHealthAlert(BaseModel):
+    """Workflow-side alert wrapping a browser site-health status."""
+
+    model_config = _STRICT_FROZEN
+
+    stage: WorkflowStage
+    status: SiteHealthStatus
+    run_id: str = Field(min_length=1, max_length=128)
 
 
 class WorkflowStep(BaseModel):
@@ -119,7 +126,7 @@ class WorkflowResult(BaseModel):
             :attr:`WorkflowStage.DONE` or :attr:`WorkflowStage.ABORTED`.
         aborted_reason: The :class:`WorkflowAbortReason` recorded when
             ``final_stage == ABORTED``; ``None`` otherwise.
-        obligation: The :class:`aeat.deadlines.FilingObligation` the
+        obligation: The :class:`aeat.domain.deadlines.FilingObligation` the
             workflow targeted, if one was computed before the bailout.
         draft_id: The filing draft id, if a draft was built.
         submission_id: Reserved for historical persisted records. New

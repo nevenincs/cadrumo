@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.cli._docs_helpers`."""
+"""Unit tests for :mod:`aeat.entrypoints.cli._docs_helpers`."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from ._docs_helpers import (
     find_end_index,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestExtractPlaintext:

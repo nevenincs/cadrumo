@@ -7,7 +7,7 @@ plug in by implementing :class:`DivergenceRecordRepository`; the runner
 treats the repository contract as opaque.
 
 Storage imports are deferred behind the methods that consult them so the
-sync subpackage does not pull ``aeat.storage`` (with its Alembic plugin
+sync subpackage does not pull ``aeat.adapters.persistence.storage`` (with its Alembic plugin
 discovery) into every CLI command's import chain.
 """
 
@@ -59,7 +59,7 @@ class JsonFileDivergenceRepository:
     One ciphertext envelope per record at
     ``<root>/<record_id>.envelope.json`` written via the substrate's
     :func:`save_encrypted_envelope` at AUDIT class with HKDF context
-    ``aeat.sync.divergence.v1``. The class name preserves wire-shape
+    ``aeat.application.sync.divergence.v1``. The class name preserves wire-shape
     compatibility with the existing CLI surface; all on-disk records
     are now AES-256-GCM ciphertext.
     """
@@ -95,17 +95,17 @@ class JsonFileDivergenceRepository:
             exclusive_file_lock,
             save_encrypted_envelope,
         )
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         target = self._envelope_path_for(record.record_id)
-        # Align with the wave-4 / wave-18 lock convention: strip the
+        # Align with the / convention: strip the
         # full ``.envelope.json`` suffix and append ``.lock``. Using
         # ``Path.with_suffix(".lock")`` here would replace only the
         # last ``.json`` segment, producing ``<id>.envelope.lock`` —
         # which would NOT match what
         # ``RotationPlanEntry.lock_path_for`` resolves to and would
         # leave rotation and writer contending on different sidecar
-        # files (defeating the wave-18 alignment fix).
+        # files (defeating the fix).
         lock_target = target.with_name(target.name[: -len(_ENVELOPE_SUFFIX)] + ".lock")
         try:
             with exclusive_file_lock(lock_target):
@@ -131,7 +131,7 @@ class JsonFileDivergenceRepository:
             SensitivityClass,
             load_encrypted_envelope,
         )
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         path = self._envelope_path_for(record_id)
         if not path.exists():
@@ -155,7 +155,7 @@ class JsonFileDivergenceRepository:
             SensitivityClass,
             load_encrypted_envelope,
         )
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         records: list[DivergenceRecord] = []
         for path in sorted(self._root.glob(f"*{_ENVELOPE_SUFFIX}")):

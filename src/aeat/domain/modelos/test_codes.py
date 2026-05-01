@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.models._codes.ModeloCode`."""
+"""Unit tests for :class:`aeat.domain.modelos._codes.ModeloCode`."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pytest
 
 from ._codes import ModeloCode
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_modelo_code_has_exactly_twenty_one_members() -> None:
@@ -35,7 +35,7 @@ def test_value_round_trip(raw: str) -> None:
 
 
 def test_error_classes_import() -> None:
-    """Phase 3 error classes import cleanly from the private module."""
+    """error classes import cleanly from the private module."""
     from ...core.errors import AeatError
     from ._errors import (
         ModeloRegistryError,

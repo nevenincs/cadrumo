@@ -1,6 +1,6 @@
 """``aeat submission export`` — produce an AEAT-importable fichero-BOE file.
 
-EPIC #201 C3c (wave 81). Kent's happy path for self-filing:
+EPIC #201 C3c. Kent's happy path for self-filing:
 
     produce (ruleset engine) → review → approve → **export** → self-upload
 
@@ -14,7 +14,7 @@ refuses any draft whose CLI ``status`` field is explicitly
 ``"rejected"`` or ``"superseded"``; otherwise it produces output
 with a prominent BORRADOR banner in the console.
 
-Wave 92 adds Modelo 303 2024 via the multi-segment envelope path;
+Modelo 303 2024 via the multi-segment envelope path;
 the schema registry now carries a per-modelo CLI header builder and
 a dispatch tag so single-record (130) and envelope (303) filings
 share the same driver.
@@ -30,9 +30,9 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from ....adapters.inbound.identity import validate_spanish_tax_id
 from ....adapters.outbound.aeat.export import DraftStatus
 from ....adapters.outbound.aeat.export._formats._serialise import serialise, serialise_envelope
+from ....core.identity import validate_spanish_tax_id
 from ._helpers import load_draft
 from ._schema_registry import SCHEMA_REGISTRY, CliInputs, validate_iban_flag, validate_swift_flag
 
@@ -116,7 +116,7 @@ def export_cmd(
     draft = load_draft(draft_path)
 
     # The DraftStatus enum exposes DRAFT / INCOMPLETE / READY_TO_SUBMIT
-    # today (see `aeat.submission._protocols.DraftStatus`). Export refuses
+    # today (see `aeat.adapters.outbound.aeat.export._protocols.DraftStatus`). Export refuses
     # INCOMPLETE outright (validation not yet passed). DRAFT exports emit
     # a BORRADOR banner; READY_TO_SUBMIT is the approved-enough state
     # until C3i (FilingDraftStatus.APPROVED) lands.

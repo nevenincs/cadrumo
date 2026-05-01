@@ -4,7 +4,7 @@ import pytest
 
 from . import PromptDefinition, PromptRegistry
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def test_prompt_registry_returns_latest_version_by_default() -> None:

@@ -1,4 +1,4 @@
-"""Unit tests for verify_declaracion (#305 cluster E)."""
+"""Unit tests for verify_declaracion (#305)."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from . import (
     verify_declaracion,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _build_filing(

@@ -2,7 +2,7 @@
 
 Three paths exercised via :class:`typer.testing.CliRunner` against
 ``audit_app`` directly — the command is not yet registered on the root
-``aeat`` Typer (Phase 2 deferral). All tests use real
+``aeat`` Typer. All tests use real
 :class:`Ruleset` / :class:`CasillaDefinition` / :class:`LegalCitation`
 instances; the gap-path fixture uses pydantic's documented
 ``model_construct`` escape hatch to assemble a "missing-citation"
@@ -27,7 +27,7 @@ from . import (
 )
 from ._helpers import CitationCoverageReport
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _runner() -> CliRunner:
@@ -57,7 +57,7 @@ def test_citations_cmd_renders_spanish_diacritics() -> None:
     a UTF-8-backed buffer and confirming the framing characters
     survive.
 
-    Wave-69 regression #389 surfaced a Windows cp1252 crash on
+    regression #389 surfaced a Windows cp1252 crash on
     non-ASCII output. The :func:`_reconfigure_utf8` helper invoked at
     command entry guards against that path.
     """

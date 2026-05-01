@@ -1,13 +1,13 @@
-"""Unit tests for the Phase 1 CLI exit-code table."""
+"""Unit tests for the CLI exit-code table."""
 
 from __future__ import annotations
 
 import pytest
 import typer
 
-from ... import cli
+import aeat.entrypoints.cli as cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_exit_code_values_are_stable() -> None:

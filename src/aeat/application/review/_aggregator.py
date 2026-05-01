@@ -35,7 +35,7 @@ class ReviewQueue:
         """Return every pending review item that matches the filters.
 
         Args:
-            settings: Loaded :class:`aeat.config.Settings`.
+            settings: Loaded :class:`aeat.core.config.Settings`.
             kinds: Optional set of :class:`ReviewItemKind` to include.
                 ``None`` (default) means every kind. The argument is a
                 ``frozenset`` so callers cannot mutate it after passing.

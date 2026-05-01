@@ -2,7 +2,7 @@
 
 Anything in this module must be unit-testable without touching the
 Google Drive API. Helpers that need a live service belong in
-:mod:`aeat.cli.drive` directly.
+:mod:`aeat.entrypoints.cli.drive` directly.
 """
 
 from __future__ import annotations

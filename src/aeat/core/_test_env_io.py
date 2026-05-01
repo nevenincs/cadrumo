@@ -8,7 +8,7 @@ import pytest
 
 from .env_io import read_env_file, write_env_var, write_env_vars
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 class TestReadEnvFile:

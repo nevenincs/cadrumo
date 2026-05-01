@@ -1,4 +1,4 @@
-"""Strict pydantic v2 records for the Renta / Modelo 100 parser (#305 cluster F)."""
+"""Strict pydantic v2 records for the Renta / Modelo 100 parser (#305)."""
 
 from __future__ import annotations
 
@@ -53,6 +53,6 @@ class BorradorFiling(BaseModel):
     source_pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     parsed_at: datetime
     csv: str | None = None
-    # Per-casilla advisory messages (cluster F audit M2) — e.g.
+    # Per-casilla advisory messages ( audit M2) — e.g.
     # "casilla 0622: value 'unparseable' is not a number".
     warnings: tuple[str, ...] = ()

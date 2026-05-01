@@ -72,7 +72,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aeat = "aeat.cli:app"
+aeat = "aeat.entrypoints.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/wgergely/aeat"
@@ -89,7 +89,7 @@ packages = ["src/aeat"]
 # `importlib.resources.files()` can locate it at runtime in installed
 # wheels.
 include = [
-    "src/aeat/storage/_bip39_wordlist.txt",
+    "src/aeat/adapters/persistence/storage/master_key/_bip39_wordlist.txt",
 ]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
@@ -235,12 +235,12 @@ markers = [
     "unit: deterministic tests with no external I/O; mocks/stubs permitted per CLAUDE.md",
     "live_read: opt-in tests that READ from a real external service (covers Google scratch round-trips; see tests/README.md)",
     "live_write: permanently forbidden external write-shaped tests; collection-dropped with no bypass",
-    "domain_aeat_remote: exercises AEAT Sede Electronica read paths (auth, browser, casillas, inbox, justificante, portals, status, sync)",
+    "domain_outbound: exercises AEAT Sede Electronica read paths (auth, browser, casillas, inbox, justificante, portals, status, sync)",
     "domain_submission: exercises local filing export, preflight, and historical submission records; no AEAT write surface",
-    "domain_financial_input: exercises financial ingest (financial, cli/financial)",
-    "domain_local_state: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, schema, deadlines, cli/deadlines)",
-    "domain_mediation: exercises workflow orchestration, LLM, i18n, testing subpackages",
-    "domain_infra: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
+    "domain_inbound: exercises financial ingest (financial, cli/financial)",
+    "domain_persistence: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, schema, deadlines, cli/deadlines)",
+    "domain_application: exercises workflow orchestration, LLM, i18n, testing subpackages",
+    "domain_core: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
     # Hexagonal layered markers — restructure ADR (#476) Test-marker realignment.
     # Registered alongside the legacy markers for the restructure soak window;
     # legacy markers retire at the post-restructure Step 11 sanitization rollup.

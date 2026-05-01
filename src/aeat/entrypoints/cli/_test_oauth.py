@@ -1,4 +1,4 @@
-"""Unit tests for the pure parser in :mod:`aeat.cli.oauth`."""
+"""Unit tests for the pure parser in :mod:`aeat.entrypoints.cli.oauth`."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pytest
 
 from .oauth import parse_oauth_client_json
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestParseOauthClientJson:

@@ -41,7 +41,7 @@ from . import (
 )
 from ._divergence import classify_kind
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 # Starting operator allowlist from the ADR.
 DEFAULT_ALLOWLIST: frozenset[DivergenceKind] = frozenset(

@@ -16,7 +16,7 @@ from . import (
     compute_amortization_for_year,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _finca(

@@ -27,7 +27,7 @@ from . import (
     HandshakeResult,
 )
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
 def test_aeat_authenticator_synchronous_surface_live() -> None:
@@ -47,7 +47,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
         pytest.skip("AEAT certificate env vars are not fully configured")
 
     # Bridge the passphrase into the process environment for the
-    # cert loader (same pattern as aeat.auth.test_certificate_live).
+    # cert loader (same pattern as aeat.adapters.outbound.aeat.auth.test_certificate_live).
     os.environ.setdefault(
         "AEAT_CERTIFICATE_PASSWORD_SECRET",
         settings.aeat_certificate_password_secret.get_secret_value(),

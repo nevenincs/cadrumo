@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.schema._fetch` hardening surface.
+"""Unit tests for :mod:`aeat.domain.schema._fetch` hardening surface.
 
 Exercises the URL allow-list, size caps, ``boe_ref`` re-validation,
 atomic-write behaviour, and override-env-var bounds introduced by
@@ -26,7 +26,7 @@ from ._fetch import (
 )
 from .testing import build_fake_boe_pdf
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _settings_with(cache_dir: Path, override: str = "") -> Settings:

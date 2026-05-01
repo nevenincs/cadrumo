@@ -16,7 +16,7 @@ import pytest
 from ..._engine import Engine
 from .. import MODELO_100_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided(rendimiento: Decimal, *, reduccion_art_20: Decimal) -> dict[str, Decimal]:

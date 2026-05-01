@@ -80,35 +80,35 @@ def unique_prefix() -> str:
 
 def drive_service() -> Any:
     """Build a Drive v3 service from current ADC for use in live tests."""
-    from ...adapters.outbound.aeat.auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes
+    from ...adapters.outbound.google import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes
 
     return build_drive_service(get_credentials_for_scopes([DRIVE_SCOPE]))
 
 
 def sheets_service() -> Any:
     """Build a Sheets v4 service from current ADC for use in live tests."""
-    from ...adapters.outbound.aeat.auth import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
+    from ...adapters.outbound.google import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
 
     return build_sheets_service(get_credentials_for_scopes([SHEETS_SCOPE]))
 
 
 def docs_service() -> Any:
     """Build a Docs v1 service from current ADC for use in live tests."""
-    from ...adapters.outbound.aeat.auth import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
+    from ...adapters.outbound.google import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
 
     return build_docs_service(get_credentials_for_scopes([DOCS_SCOPE]))
 
 
 def storage_client(project: str) -> Any:
     """Build a Cloud Storage client for use in live tests."""
-    from ...adapters.outbound.aeat.auth import CLOUD_PLATFORM_SCOPE, build_storage_client, get_credentials_for_scopes
+    from ...adapters.outbound.google import CLOUD_PLATFORM_SCOPE, build_storage_client, get_credentials_for_scopes
 
     return build_storage_client(get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE]), project)
 
 
 def cloudfunctions_client() -> Any:
     """Build a Cloud Functions v2 client for use in live tests."""
-    from ...adapters.outbound.aeat.auth import (
+    from ...adapters.outbound.google import (
         CLOUD_PLATFORM_SCOPE,
         build_cloudfunctions_client,
         get_credentials_for_scopes,
@@ -119,7 +119,7 @@ def cloudfunctions_client() -> Any:
 
 def cloudrun_client() -> Any:
     """Build a Cloud Run v2 services client for use in live tests."""
-    from ...adapters.outbound.aeat.auth import CLOUD_PLATFORM_SCOPE, build_cloudrun_client, get_credentials_for_scopes
+    from ...adapters.outbound.google import CLOUD_PLATFORM_SCOPE, build_cloudrun_client, get_credentials_for_scopes
 
     return build_cloudrun_client(get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE]))
 

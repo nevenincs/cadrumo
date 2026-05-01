@@ -10,7 +10,7 @@ import pytest
 from ..logging import get_logger
 from . import run_context
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 class _CaptureHandler(logging.Handler):
@@ -58,7 +58,7 @@ class TestStderrRunEventFilter:
     """The default stderr handler must drop records carrying run_event.
 
     S2 concern: ``record_event`` logs at INFO through
-    ``aeat.observability`` which propagates to the root stderr
+    ``aeat.core.observability`` which propagates to the root stderr
     handler. Without the filter, every event would print on stderr —
     spamming long workflows. The filter drops only records with a
     ``run_event`` extra; plain log lines still reach stderr.

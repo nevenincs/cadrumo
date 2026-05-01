@@ -14,7 +14,7 @@ single extraction implementation backs three thin per-year subclasses:
 :class:`Modelo111V2024Extractor`, :class:`Modelo111V2025Extractor`,
 :class:`Modelo111V2026Extractor`. Each pins its own
 ``template_revision`` ClassVar so the registry under
-:mod:`aeat.declaracion._extractors` resolves the right
+:mod:`aeat.adapters.inbound.declaracion._extractors` resolves the right
 ``(modelo, año, revision)`` triple for every supported year. The
 shared extraction logic lives on :class:`Modelo111V2025Extractor`'s
 inherited :class:`GenericDeclaracionExtractor` flow.
@@ -62,7 +62,7 @@ class Modelo111V2025Extractor(GenericDeclaracionExtractor):
         "17",
         "18",
         # Resultado. Labels verified vs AEAT Instrucciones Modelo 111 2025
-        # (wave 48/49 H5 audit fix).
+        # (/49 H5 audit fix).
         "28",  # Total liquidación (suma retenciones + ingresos a cuenta)
         "29",  # A deducir: exclusivamente en caso de declaración complementaria
         "30",  # Resultado a ingresar

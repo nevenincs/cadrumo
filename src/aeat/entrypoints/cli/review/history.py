@@ -7,7 +7,7 @@ from typing import Any
 
 import typer
 
-from ....domain.financial.transactions import (
+from ....domain.transactions import (
     ClassificationHistoryEntry,
     find_transaction,
     snapshot_classification_state,

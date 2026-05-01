@@ -1,4 +1,4 @@
-"""Unit tests for the Phase 1 CLI output-schema registry."""
+"""Unit tests for the CLI output-schema registry."""
 
 from __future__ import annotations
 
@@ -11,9 +11,9 @@ from typing import Any, cast
 import pytest
 from pydantic import Field, ValidationError
 
-from ... import cli
+import aeat.entrypoints.cli as cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @contextmanager
@@ -76,7 +76,7 @@ def test_register_schema_rejects_non_output_schema_classes() -> None:
 
 
 def test_public_api_reexports_schema_registry_surface() -> None:
-    """Callers must import the schema surface from ``aeat.cli`` only."""
+    """Callers must import the schema surface from ``aeat.entrypoints.cli`` only."""
 
     assert cli.OutputSchema.__name__ == "OutputSchema"
     assert cli.SchemaEnvelope.__name__ == "SchemaEnvelope"

@@ -2,7 +2,7 @@
 
 This subpackage ships ``aeat setup``, the on-ramp a fresh Spanish
 autónomo runs after ``just bootstrap`` to produce a valid
-``env/.env`` and an :class:`aeat.deadlines.AutonomoProfile` JSON
+``env/.env`` and an :class:`aeat.domain.deadlines.AutonomoProfile` JSON
 file, without ever writing a certificate password to disk.
 
 Callers outside the subpackage import only from this module, honouring

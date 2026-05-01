@@ -67,7 +67,7 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
 
     Args:
         no_color: CLI-level ``--no-color`` override from a future root
-            callback. Phase 1 keeps the parameter optional so commands
+            callback. keeps the parameter optional so commands
             can adopt the helper before the global flag lands.
     """
 

@@ -23,7 +23,7 @@ from ._formula import (
     iter_param_refs,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.unit

@@ -152,7 +152,7 @@ def rotate_master_key_cmd(
         unwrap_master_key,
         wrap_master_key,
     )
-    from ...adapters.persistence.storage._recovery import RecoveryKey
+    from ...adapters.persistence.storage import RecoveryKey
     from ...core.config import load_settings
 
     if recovery_key is not None and regenerate_recovery_key:
@@ -439,7 +439,7 @@ def migrate_master_key_kdf_cmd(
     cleanly without modifying the v1 store on disk.
     """
     from ...adapters.persistence.storage import migrate_master_key_kdf
-    from ...adapters.persistence.storage._master_key import _default_passphrase_callback
+    from ...adapters.persistence.storage.master_key._master_key import _default_passphrase_callback
     from ...adapters.persistence.storage.errors import MasterKeyUnavailableError
     from ...core.config import load_settings
 
@@ -565,7 +565,7 @@ def provision_cmd(
     # AND AUTO backends; FILE explicitly opts out of keyring lookup.
     _keyring_module: object = None
     if resolved in (SecretStoreBackend.KEYRING, SecretStoreBackend.AUTO):
-        from ...adapters.persistence.storage._master_key import KEYRING_SERVICE, KEYRING_USERNAME
+        from ...adapters.persistence.storage.master_key._master_key import KEYRING_SERVICE, KEYRING_USERNAME
 
         try:
             import keyring as _imported_keyring

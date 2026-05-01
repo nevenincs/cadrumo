@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.portals._registry`."""
+"""Unit tests for :mod:`aeat.domain.portals._registry`."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from ._registry import (
     portals_for_modelo,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_registry_is_frozen_mappingproxy() -> None:
@@ -169,7 +169,7 @@ def test_finalise_registry_logs_info_on_success(
 
 
 def test_registry_module_has_no_print_calls() -> None:
-    """The registry module uses ``aeat.logging`` only — no ``print`` calls.
+    """The registry module uses ``aeat.core.logging`` only — no ``print`` calls.
 
     Parses the source as an AST and walks every ``Call`` node, asserting
     that no direct ``print(...)`` is invoked. This is stricter than a

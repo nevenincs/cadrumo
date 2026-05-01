@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 from ._cli import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _runner = CliRunner()
 

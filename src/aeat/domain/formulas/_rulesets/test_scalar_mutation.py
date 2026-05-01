@@ -45,7 +45,7 @@ from . import (
 )
 from ._mutators import iter_scalar_leaf_paths, mutate_scalar_leaf
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @dataclass(frozen=True)

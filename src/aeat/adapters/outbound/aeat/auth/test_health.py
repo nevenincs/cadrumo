@@ -32,7 +32,7 @@ from . import (
     load_certificate,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _SECRET = "correct-horse-battery-staple"
 _WARN_DAYS = 60

@@ -1,4 +1,4 @@
-"""Top-level orchestrator for :mod:`aeat.sanitizer`.
+"""Top-level orchestrator for :mod:`aeat.adapters.inbound.sanitizer`.
 
 Implements the 8-step order of operations from the sanitiser ADR:
 

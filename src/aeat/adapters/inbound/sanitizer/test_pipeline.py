@@ -1,4 +1,4 @@
-"""End-to-end tests for :mod:`aeat.sanitizer._pipeline`.
+"""End-to-end tests for :mod:`aeat.adapters.inbound.sanitizer._pipeline`.
 
 These tests exercise the orchestrator on synthesised PDFs and
 assert:
@@ -8,12 +8,13 @@ assert:
 * The signed-PDF refuse guard fires.
 * The already-sanitised refuse guard fires when the source SHA
   is in :data:`SANITIZED_SHAS`, and can be opted out per-call.
-* Public re-exports import cleanly from :mod:`aeat.sanitizer`.
+* Public re-exports import cleanly from :mod:`aeat.adapters.inbound.sanitizer`.
 """
 
 from __future__ import annotations
 
 import io
+from importlib import import_module
 
 import pikepdf
 import pytest
@@ -47,7 +48,7 @@ def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
     return b"\n".join(chunks)
 
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _build_real_world_like_pdf() -> bytes:
@@ -202,10 +203,10 @@ class TestRefuseIfAlreadySanitized:
 
 
 class TestPublicReexports:
-    """Every public symbol is importable from :mod:`aeat.sanitizer`."""
+    """Every public symbol is importable from :mod:`aeat.adapters.inbound.sanitizer`."""
 
     def test_all_public_names_are_importable(self) -> None:
-        from .... import sanitizer
+        sanitizer = import_module(__package__ or "aeat.adapters.inbound.sanitizer")
 
         for name in sanitizer.__all__:
             attr = getattr(sanitizer, name, None)

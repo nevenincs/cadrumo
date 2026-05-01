@@ -1,4 +1,4 @@
-"""Persistence helpers for extracted :class:`~aeat.schema.Modelo` records.
+"""Persistence helpers for extracted :class:`~aeat.domain.schema.Modelo` records.
 
 Canonical layout: ``<cache_root>/modelo_<code.value>/<boe_ref>.json``.
 Serialised with sorted keys and ``by_alias=True`` so ``RangeRule``
@@ -22,7 +22,7 @@ from ._models import Modelo
 _logger = get_logger(__name__)
 
 _BOE_REF_RE = re.compile(r"^(?=.*[A-Z0-9])[A-Z0-9-]+$")
-"""Mirrors :data:`aeat.schema._fetch._BOE_REF_RE` — kept local to
+"""Mirrors :data:`aeat.domain.schema._fetch._BOE_REF_RE` — kept local to
 avoid cross-module coupling; both patterns MUST agree."""
 
 
@@ -43,7 +43,7 @@ def resolve_schema_cache_file(
         ``root / modelo_<code.value> / <boe_ref>.json``.
 
     Raises:
-        aeat.schema.SchemaCacheError: If ``boe_ref`` contains
+        aeat.domain.schema.SchemaCacheError: If ``boe_ref`` contains
             unexpected characters.
     """
     if not _BOE_REF_RE.fullmatch(boe_ref):
@@ -106,8 +106,8 @@ def load_modelo_from_cache(
         The validated :class:`Modelo`.
 
     Raises:
-        aeat.schema.SchemaCacheError: When the file is missing.
-        aeat.schema.SchemaValidationError: When the JSON fails model
+        aeat.domain.schema.SchemaCacheError: When the file is missing.
+        aeat.domain.schema.SchemaValidationError: When the JSON fails model
             validation.
     """
     path = resolve_schema_cache_file(code, boe_ref, root)

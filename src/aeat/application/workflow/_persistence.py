@@ -1,4 +1,4 @@
-"""Files-only persistence for :class:`aeat.workflow.WorkflowResult`.
+"""Files-only persistence for :class:`aeat.application.workflow.WorkflowResult`.
 
 Each run is persisted as an ``Envelope[WorkflowResult]`` ciphertext
 envelope at AUDIT class via the substrate's ``save_encrypted_envelope``
@@ -53,7 +53,7 @@ def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
         exclusive_file_lock,
         save_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     runs_dir.mkdir(parents=True, exist_ok=True)
     try:
@@ -71,7 +71,7 @@ def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
     # The lock target matches what
     # ``RotationPlanEntry.lock_path_for`` resolves to for a multi-
     # file consumer with ``envelope_suffix=".envelope.json"`` (strip
-    # the suffix, append ``.lock``); the wave-18 alignment thus
+    # the suffix, append ``.lock``); the thus
     # engages OS-level serialisation between rotation and writer.
     lock_target = target.with_name(
         target.name[: -len(_WORKFLOW_RUN_ENVELOPE_SUFFIX)] + ".lock",
@@ -105,7 +105,7 @@ def load_run(run_id: str, *, runs_dir: Path) -> WorkflowResult:
         SensitivityClass,
         load_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     try:
         envelope_path = _envelope_path_for(runs_dir, run_id)
@@ -144,7 +144,7 @@ def list_runs(
         SensitivityClass,
         load_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     if not runs_dir.exists():
         return ()

@@ -401,7 +401,6 @@ def _type_value(raw: str) -> Decimal | int | str | date:
 
 
 __all__ = [
-    "HEADER_FORWARD_CIDS",
     "ScannedCasilla",
     "scan_pages",
 ]

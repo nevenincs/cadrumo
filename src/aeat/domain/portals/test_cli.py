@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.portals._cli`."""
+"""Unit tests for :mod:`aeat.domain.portals._cli`."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 from ._cli import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _runner = CliRunner()

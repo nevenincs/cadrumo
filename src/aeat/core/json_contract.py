@@ -1,4 +1,4 @@
-"""Shared JSON-contract primitives that must not import ``aeat.cli``."""
+"""Shared JSON-contract primitives that must not import ``aeat.entrypoints.cli``."""
 
 from __future__ import annotations
 

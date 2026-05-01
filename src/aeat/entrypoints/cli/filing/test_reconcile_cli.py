@@ -15,7 +15,7 @@ from ....application.filing.reconciliation import ReconciliationStatus
 from .. import app as root_app
 from ._reconcile import _exit_code_for, _infer_ejercicio, reject_forbidden_flags
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestRejectForbiddenFlags:
@@ -138,7 +138,7 @@ class TestLoadDraftFromDisk:
     """
 
     def _persist(self, draft, drafts_dir):
-        from ....application.filing._repository import FilingDraftRepository
+        from ....domain.filing import FilingDraftRepository
 
         repository = FilingDraftRepository(store_dir=drafts_dir)
         repository.save(draft)
@@ -191,7 +191,7 @@ class TestLoadDraftFromDisk:
 #
 # Pytest fixtures below are light — the CliRunner-based tests don't touch
 # disk or auth. Smoke-level behaviour verification only; full reconcile
-# flow coverage lives in aeat.filing.reconciliation.test_reconcile.
+# flow coverage lives in aeat.application.filing.reconciliation.test_reconcile.
 
 
 def _fixed_now() -> datetime:

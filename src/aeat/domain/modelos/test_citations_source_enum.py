@@ -27,7 +27,7 @@ from pydantic import ValidationError
 
 from . import LegalCitation, LegalCitationSource
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _build(source: LegalCitationSource | str) -> LegalCitation:

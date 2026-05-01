@@ -10,9 +10,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ....domain.financial import RawProvenance, SourceFormat
-from ....domain.financial.providers import RawTransaction
-from ....domain.financial.transactions import (
+from ....adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
@@ -22,7 +21,7 @@ from ....domain.financial.transactions import (
 )
 from .. import app as root_app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
 

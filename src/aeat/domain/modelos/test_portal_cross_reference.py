@@ -1,4 +1,4 @@
-"""Cross-reference tests between :mod:`aeat.models` and :mod:`aeat.portals`."""
+"""Cross-reference tests between :mod:`aeat.domain.modelos` and :mod:`aeat.domain.portals`."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from ..portals._registry import PORTAL_REGISTRY
 from ._codes import ModeloCode
 from ._registry import MODELO_REGISTRY
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_every_modelo_has_a_submission_portal() -> None:

@@ -10,7 +10,7 @@ from . import (
     describe_provider_operator_impact,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def test_operator_impact_explains_local_fallback_when_unconfigured() -> None:

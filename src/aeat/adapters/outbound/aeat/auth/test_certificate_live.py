@@ -1,4 +1,4 @@
-"""Live mTLS handshake smoke test for :mod:`aeat.auth.certificate`.
+"""Live mTLS handshake smoke test for :mod:`aeat.adapters.outbound.aeat.auth.certificate`.
 
 Gated on ``AEAT_LIVE_TESTS_ENABLED=1`` AND the cert env vars being set.
 Skips cleanly in every other configuration — NEVER fails in CI when
@@ -13,13 +13,14 @@ import pytest
 
 from .....core.config import Settings
 from . import (
+    CertificateBackend,
     CertificateBundle,
     HandshakeResult,
     load_certificate,
     verify_handshake,
 )
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
 def test_verify_handshake_live_against_aeat() -> None:
@@ -41,7 +42,7 @@ def test_verify_handshake_live_against_aeat() -> None:
         path=settings.aeat_certificate_path,
         password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",
         friendly_name=settings.aeat_certificate_friendly_name,
-        backend=settings.aeat_certificate_backend,
+        backend=CertificateBackend(settings.aeat_certificate_backend.name),
     )
     loaded = load_certificate(bundle)
     result = verify_handshake(loaded, settings.aeat_certificate_verify_url)

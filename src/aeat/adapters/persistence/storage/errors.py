@@ -1,6 +1,6 @@
 """Storage-layer exceptions.
 
-All storage errors inherit from :class:`aeat.errors.AeatError` so callers can
+All storage errors inherit from :class:`aeat.core.errors.AeatError` so callers can
 catch domain-wide failures with a single base class.
 
 The class tree:
@@ -18,7 +18,7 @@ from ....core.errors import AeatError
 
 
 class StorageError(AeatError):
-    """Base class for every error raised by :mod:`aeat.storage`."""
+    """Base class for every error raised by :mod:`aeat.adapters.persistence.storage`."""
 
 
 class MigrationError(StorageError):
@@ -77,7 +77,7 @@ class MasterKeyKdfVersionError(MasterKeyUnavailableError):
 
     The substrate gates the master.kdf parameters by version. Mismatch
     means the operator is on a build that has rotated the password-derived
-    KDF (e.g. the wave-12 scrypt -> Argon2id transition); the operator
+    KDF (e.g. the scrypt -> Argon2id transition); the operator
     must run ``aeat security migrate-master-key-kdf`` to re-wrap the
     master key under the new KDF.
     """
@@ -116,7 +116,7 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
 
     Reserved for callers that need to distinguish "not provisioned"
     from "wrong passphrase" — the default ``get_master_key`` path
-    silently mints when material is absent (the wave-17 silent first-
+    silently mints when material is absent (the first-
     run mint contract), so this class does not fire on the canonical
     load path. Future load-only / probe-only entry points (e.g. a
     diagnostic API or a ``--no-mint`` CLI option) raise this class
@@ -166,7 +166,7 @@ class PathContainmentError(PersistenceError, ValueError):
 
     Inherits from :class:`ValueError` as well as :class:`PersistenceError` so
     legacy call-sites that catch ``ValueError`` from the path helpers in
-    :mod:`aeat._paths` continue to work; new code should catch the
+    :mod:`aeat.core.paths` continue to work; new code should catch the
     typed :class:`PathContainmentError` instead.
 
     Method-resolution order: :class:`PathContainmentError` ->

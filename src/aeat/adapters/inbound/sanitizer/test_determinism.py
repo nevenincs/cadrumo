@@ -1,4 +1,4 @@
-"""Determinism tests for :mod:`aeat.sanitizer._determinism`.
+"""Determinism tests for :mod:`aeat.adapters.inbound.sanitizer._determinism`.
 
 The byte-stable save flag set is the load-bearing primitive for
 fixture diff review: without it, two runs against the same source
@@ -17,7 +17,7 @@ import pytest
 
 from ._determinism import deterministic_save_flags, save_with_deterministic_flags
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _new_one_page_pdf() -> pikepdf.Pdf:

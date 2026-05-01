@@ -20,7 +20,7 @@ from . import (
 )
 from ._providers import ProviderRequest, _FakeAdapter
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 class _IsolatedSettings(Settings):

@@ -1,6 +1,6 @@
 """FilingDivergenceKind enum for FilingDraft ↔ Justificante compare.
 
-Disjoint from :class:`aeat.sync._divergence.DivergenceKind` (which is
+Disjoint from :class:`aeat.application.sync._divergence.DivergenceKind` (which is
 schema-level and baked into auto-heal decision tables). The variants
 here are instance-level: one per concrete reason a FilingDraft and
 its AEAT justificante can disagree.

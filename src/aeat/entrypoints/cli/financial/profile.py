@@ -10,8 +10,8 @@ from pathlib import Path
 import typer
 
 from ....core.config import load_settings
-from ....domain.financial.categories import CATEGORY_PROFILES_2025, SpendingCategory
-from ....domain.financial.usage_ratios import (
+from ....domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
+from ....domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioError,
     UsageRatioProfile,

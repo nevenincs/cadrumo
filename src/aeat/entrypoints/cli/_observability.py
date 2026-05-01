@@ -1,4 +1,4 @@
-"""Shared helpers for wiring ``aeat.observability.run_context`` at the CLI layer.
+"""Shared helpers for wiring ``aeat.core.observability.run_context`` at the CLI layer.
 
 Every outermost public CLI command wraps its body in
 :func:`run_context` and emits one ``STEP_START`` / ``STEP_END`` pair
@@ -62,7 +62,7 @@ def _stringify(value: Any) -> str | None:
 
     ``None`` is returned unchanged so callers can skip unset optionals.
     Every other type is coerced via :func:`str` — ``StrEnum`` values
-    (e.g. :class:`aeat.filing.reconciliation.ReconciliationStatus`)
+    (e.g. :class:`aeat.application.filing.reconciliation.ReconciliationStatus`)
     render as their ``.value`` directly because ``StrEnum`` subclasses
     ``str``, Paths render as their POSIX string, and primitives
     round-trip naturally.

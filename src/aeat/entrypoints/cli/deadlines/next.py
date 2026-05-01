@@ -26,7 +26,7 @@ def next_obligation(
         help="Path to a JSON AutonomoProfile (defaults to AEAT_DEFAULT_PROFILE_PATH).",
     ),
 ) -> None:
-    """Print the next :class:`aeat.deadlines.FilingObligation` due."""
+    """Print the next :class:`aeat.domain.deadlines.FilingObligation` due."""
     profile_path = resolve_profile_path(profile)
     loaded_profile = load_profile(profile_path)
     engine = build_engine()

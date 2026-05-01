@@ -1,7 +1,7 @@
 """Closed taxonomies used by the modelo registry.
 
 These enums are the keying dimensions the registry exposes on
-:class:`aeat.models.ModeloMetadata`: the functional category a modelo
+:class:`aeat.domain.modelos.ModeloMetadata`: the functional category a modelo
 belongs to, the cadence at which it is filed, the taxpayer profile
 space it applies to, and the legal-source provenance of its citations.
 Every enum is a :class:`str.StrEnum` so members compare equal to their
@@ -51,7 +51,7 @@ class TaxpayerProfile(StrEnum):
     The seven ``AUTONOMO_*`` members cover the autónomo profile space
     the research D2 matrix locks; ``SL`` is a first-class member for
     the sociedad limitada strand. IVA regime is tracked separately on
-    :class:`aeat.deadlines.AutonomoProfile.iva_regime`.
+    :class:`aeat.domain.deadlines.AutonomoProfile.iva_regime`.
     """
 
     AUTONOMO_ED_SOLO = "autonomo_ed_solo"

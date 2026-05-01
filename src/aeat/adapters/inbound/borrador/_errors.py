@@ -1,4 +1,4 @@
-"""Error hierarchy for the borrador parser (EPIC #305 cluster F)."""
+"""Error hierarchy for the borrador parser (EPIC #305)."""
 
 from __future__ import annotations
 

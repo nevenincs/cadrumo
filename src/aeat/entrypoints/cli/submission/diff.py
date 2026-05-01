@@ -1,6 +1,6 @@
 """``aeat submission diff`` — compare two fichero-BOE files.
 
-EPIC #305 wave 98. Kent's verification journey extends to the
+EPIC #305 . Kent's verification journey extends to the
 comparison case: he exports filing A, later re-downloads his AEAT
 "declaración presentada" receipt as filing B, and wants to confirm
 the two match — or if they don't, exactly which casilla diverged.
@@ -146,7 +146,7 @@ def diff_cmd(
     payload_a = file_a.read_bytes()
     payload_b = file_b.read_bytes()
 
-    # Wave 135: per-file payload-length pre-flight with Kent-facing message.
+    # per-file payload-length pre-flight with Kent-facing message.
     expected = (
         int(entry.module.RECORD_LENGTH)
         if entry.kind == "record"

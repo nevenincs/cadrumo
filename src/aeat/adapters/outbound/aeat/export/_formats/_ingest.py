@@ -1,4 +1,4 @@
-"""DR Diseño-de-Registros ingestion library (EPIC #305 wave 86).
+"""DR Diseño-de-Registros ingestion library (EPIC #305).
 
 Converts a JSON representation of an AEAT *Diseño de Registros*
 specification into a tuple of :class:`SegmentSpec` objects ready
@@ -205,7 +205,6 @@ def ingest_dr_spec_path(path: Path | str) -> IngestedSpec:
 
 
 __all__ = [
-    "IngestSourceMeta",
     "IngestedSpec",
     "ingest_dr_spec_document",
     "ingest_dr_spec_path",

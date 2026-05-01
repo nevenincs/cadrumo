@@ -1,4 +1,4 @@
-"""Unit tests for the Phase 1 TTY helpers."""
+"""Unit tests for the TTY helpers."""
 
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from ... import cli
+import aeat.entrypoints.cli as cli
 from ...core.config import PROJECT_ROOT
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _run_probe(script: str, *, env_overrides: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:

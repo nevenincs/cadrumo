@@ -26,10 +26,10 @@ from ._schema import (
 
 if TYPE_CHECKING:
     from ....domain.justificante import Justificante
-    from .._schema import FilingDraft
+    from ....domain.filing import FilingDraft
 
 
-# Shared with aeat.verification: "one cent" is the Kent-visible
+# Shared with aeat.application.verification: "one cent" is the Kent-visible
 # rounding floor on every monetary comparison across the CLI.
 _TOLERANCE: Final[Decimal] = Decimal("0.01")
 

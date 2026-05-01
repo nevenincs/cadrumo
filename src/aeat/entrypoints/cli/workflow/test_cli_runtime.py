@@ -19,7 +19,7 @@ from ....domain.deadlines import AutonomoProfile, IVARegime
 from .. import app as root_app
 from ._helpers import clear_test_hooks
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 runner = CliRunner()
 
@@ -73,7 +73,7 @@ def runtime_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         SensitivityClass,
         save_encrypted_envelope,
     )
-    from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ....adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     profile = AutonomoProfile(
         tax_id="X1234567L",

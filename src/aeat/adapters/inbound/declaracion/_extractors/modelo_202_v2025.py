@@ -9,7 +9,7 @@ micropyme/pyme rate boxes introduced by Orden HAC/262/2025.
 Legal base: Orden HFP/227/2017 (BOE-A-2017-2778); modified by Orden
 HFP/312/2023 and Orden HAC/262/2025 (BOE-A-2025-5407).
 
-Wave 50 research: casilla 34 "Cantidad a ingresar (mayor de claves
+casilla 34 "Cantidad a ingresar (mayor de claves
 [32] y [33])" is VERIFIED real on the 2025 form per BOE-A-2025-5407
 Anexo I pág. 36465 (liquidación block 4). An earlier audit stream
 wrongly claimed the liquidación terminates at casilla 33 — the

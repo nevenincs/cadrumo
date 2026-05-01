@@ -20,7 +20,7 @@ from ..casillas import CasillaDataType
 from ..modelos import LegalCitation, LegalCitationSource
 from ._casilla import CasillaDefinition
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _LABEL: Translatable = {

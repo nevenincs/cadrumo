@@ -1,7 +1,7 @@
 """Env-file and profile-file writers for the first-run setup wizard.
 
 The writer delegates the line-level work to
-:func:`aeat.env_io.write_env_vars`, inheriting its comment
+:func:`aeat.core.env_io.write_env_vars`, inheriting its comment
 preservation, idempotent rewrite, and unrelated-key preservation
 behaviour for free. The wizard only supplies a fixed, enumerated set
 of keys — see :func:`owned_env_keys`.
@@ -148,7 +148,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     class per the default policy table — so the write routes through
     :func:`save_encrypted_envelope` and lands as a
     :class:`CipherEnvelope` on disk under HKDF context
-    ``aeat.setup.profile.v1``.
+    ``aeat.application.setup.profile.v1``.
 
     On a brand-new installation the master key is minted as a side
     effect of the first ``save_encrypted_envelope`` call; this helper
@@ -173,7 +173,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         refuse_unsecured_with_real_nif,
         save_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
     from ...core.config import load_settings
 
     # Detect first-run state so we can surface a recovery-key nudge
@@ -213,7 +213,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     # ``aeat security rotate-master-key`` cannot race the profile
     # write. The lock target matches what
     # ``RotationPlanEntry.lock_path_for`` resolves to for a single-
-    # file consumer (``target.with_suffix('.lock')``); the wave-18
+    # file consumer (``target.with_suffix('.lock')``); the
     # alignment thus engages OS-level serialisation between rotation
     # and writer.
     with exclusive_file_lock(target.with_suffix(".lock")):
@@ -265,7 +265,7 @@ def load_profile_envelope(target: Path) -> AutonomoProfile:
         SensitivityClass,
         load_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     envelope = load_encrypted_envelope(
         target,

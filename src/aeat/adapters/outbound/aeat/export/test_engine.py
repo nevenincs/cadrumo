@@ -1,4 +1,4 @@
-"""Unit tests for the read-only :class:`aeat.submission.SubmissionEngine`."""
+"""Unit tests for the read-only :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from . import (
     make_submission_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 @dataclass

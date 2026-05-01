@@ -27,7 +27,6 @@ from __future__ import annotations
 
 from ._factory import DefaultBrowserSession, default_browser_session_factory
 from ._site_health import (
-    SiteHealthAlert,
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
@@ -45,7 +44,6 @@ __all__ = [
     "EvasionStrategy",
     "PlaywrightStealthEvasion",
     "Profile",
-    "SiteHealthAlert",
     "SiteHealthEvidence",
     "SiteHealthState",
     "SiteHealthStatus",

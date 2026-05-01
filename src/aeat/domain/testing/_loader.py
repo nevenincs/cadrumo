@@ -1,7 +1,7 @@
 """Filesystem loader for synthetic filing-history fixtures.
 
 This module is the implementation for
-:func:`aeat.testing.load_filing_history`. External callers should
+:func:`aeat.domain.testing.load_filing_history`. External callers should
 import exclusively from :mod:`aeat.testing`.
 """
 

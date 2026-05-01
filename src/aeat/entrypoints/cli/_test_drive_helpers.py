@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.cli._drive_helpers`."""
+"""Unit tests for :mod:`aeat.entrypoints.cli._drive_helpers`."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from ._drive_helpers import (
     guess_mime_type,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestEscapeDriveQueryLiteral:

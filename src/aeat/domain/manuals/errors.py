@@ -1,8 +1,8 @@
-"""Domain errors for the ``aeat.manuals`` subpackage.
+"""Domain errors for the ``aeat.domain.manuals`` subpackage.
 
 All exceptions raised by loading, verifying, fetching, or extracting
 from the AEAT *Manual práctico* corpus inherit from :class:`ManualError`
-which in turn inherits from :class:`aeat.errors.AeatError`.
+which in turn inherits from :class:`aeat.core.errors.AeatError`.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from ...core.errors import AeatError
 
 
 class ManualError(AeatError):
-    """Base error for every ``aeat.manuals`` failure mode."""
+    """Base error for every ``aeat.domain.manuals`` failure mode."""
 
 
 class ManualNotFoundError(ManualError):
@@ -36,7 +36,7 @@ class RuleExtractionError(ManualError):
 
     The ``structure``, ``extract-rules``, and ``translate`` subcommands
     are defined in v1 to lock the public CLI shape but raise this
-    exception until the ``aeat.llm`` subpackage is available.
+    exception until the ``aeat.adapters.outbound.llm`` subpackage is available.
     """
 
 

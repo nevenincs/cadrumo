@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.auth._authenticator`.
+"""Unit tests for :mod:`aeat.adapters.outbound.aeat.auth._authenticator`.
 
 Zero mocks / patches / fakes (global ban) — we exercise the
 authenticator with a real ``LoadedCertificate`` (generated at
@@ -44,6 +44,7 @@ from . import (
     ClavePermanenteSessionDetail,
     HandshakeResult,
     LoadedCertificate,
+    _write_oauth_token_cache,
     extract_nif_from_subject,
     load_certificate,
     select_provider,
@@ -54,7 +55,7 @@ from .certificate import CertificateBundle
 if TYPE_CHECKING:
     from .....core.config import Settings
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 
@@ -686,6 +687,17 @@ def test_restrict_file_permissions_best_effort(tmp_path: Path) -> None:
         return
 
     assert path.exists()
+
+
+def test_oauth_token_cache_writer_restricts_file(tmp_path: Path) -> None:
+    token_path = tmp_path / ".tokens" / "google_oauth_token.json"
+
+    _write_oauth_token_cache(token_path, '{"refresh_token":"secret"}')
+
+    assert token_path.read_text(encoding="utf-8") == '{"refresh_token":"secret"}'
+    if os.name == "posix":
+        assert (token_path.stat().st_mode & 0o777) == 0o600
+        assert (token_path.parent.stat().st_mode & 0o777) == 0o700
 
 
 @pytest.mark.asyncio

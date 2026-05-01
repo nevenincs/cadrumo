@@ -17,14 +17,14 @@ import pytest
 from ....core.config import PROJECT_ROOT
 from ....domain.justificante import Justificante, parse_justificante
 from ....domain.testing import synthesize_filing_draft
-from .._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
+from ....domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
 from . import (
     FilingDivergenceKind,
     ReconciliationStatus,
     reconcile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _FIXED_NOW = datetime(2026, 4, 24, 20, 0, 0, tzinfo=UTC)

@@ -1,13 +1,13 @@
 """``aeat submission verify`` — re-parse an exported fichero-BOE file.
 
-EPIC #305 wave 95 (wave 97 refactor). The "verify" pillar of Kent's
+EPIC #305 . The "verify" pillar of Kent's
 produce -> verify -> export journey: he exports a filing, uploads it
 to AEAT, and wants to confirm locally that the bytes he uploaded
 decode back to the casilla values he intended. This command reads a
 ``.{modelo}`` file off disk, dispatches to the matching deserialiser,
 and pretty-prints headers + non-zero casillas to the console.
 
-Wave 97 lets the command auto-detect modelo + ejercicio from the
+the command auto-detect modelo + ejercicio from the
 standard ``{NIF}{YYYY}{PERIODO}.{modelo}`` filename emitted by
 ``aeat submission export`` — the flags ``--modelo`` and
 ``--ejercicio`` remain available as overrides for files with
@@ -170,7 +170,7 @@ def verify_cmd(
     # or ENVELOPE total_length bytes of content.
     content = payload[:-2] if payload.endswith(b"\r\n") else payload
 
-    # Wave 135 pre-flight: catch a wrong-length payload with a Kent-facing
+    # pre-flight: catch a wrong-length payload with a Kent-facing
     # message naming the likely failure modes (wrong --modelo / --ejercicio
     # flags, truncated file, or a file from a different schema) before the
     # deserialiser surfaces a generic "content is N bytes but total_length
@@ -265,7 +265,7 @@ def _print_envelope(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file
     _CONSOLE.print(f"[green]verify OK[/green] modelo={modelo} ejercicio={ejercicio} file={file_path.name}")
     _CONSOLE.print(f"segments={len(parsed.segments)}")
 
-    # Wave 103: surface the envelope-level header fields (NIF, PERIODO,
+    # surface the envelope-level header fields (NIF, PERIODO,
     # TIPO_DECLARACION, etc.) so Kent doesn't have to walk per-segment output.
     header_table = Table(title="headers (merged across segments, non-empty)", show_lines=False)
     header_table.add_column("field_id")
@@ -312,7 +312,7 @@ def _emit_record_json(parsed: ParsedRecord, *, modelo: str, ejercicio: str, file
 
 def _emit_envelope_json(parsed: ParsedEnvelope, *, modelo: str, ejercicio: str, file_path: Path) -> None:
     """Print the machine-readable shape for a multi-segment envelope parse."""
-    # Wave 103: drop empty-space filler so the JSON surface stays useful for
+    # drop empty-space filler so the JSON surface stays useful for
     # downstream scripts (the DP303DID reserved block is 617 bytes of ' ').
     fields = {fid: _jsonable(val) for fid, val in parsed.merged_field_values.items() if str(val).strip() != ""}
     payload = {

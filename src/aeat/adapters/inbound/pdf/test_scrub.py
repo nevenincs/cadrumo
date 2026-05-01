@@ -1,4 +1,4 @@
-"""Unit tests for the PII scrub library (#305 cluster C)."""
+"""Unit tests for the PII scrub library (#305)."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from ._scrub import (
     scrub_text,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 class TestNifRedaction:

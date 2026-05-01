@@ -1,6 +1,6 @@
-"""Fichero-BOE deserialiser (EPIC #201 C3d, wave 80a).
+"""Fichero-BOE deserialiser (EPIC #201 C3d,).
 
-Round-trip inverse of :func:`aeat.submission._formats._serialise.serialise`.
+Round-trip inverse of :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`.
 Takes a fichero-BOE byte payload + a `RECORD_SPECS` tuple and yields
 a ``ParsedRecord`` carrying the per-field values (as strings or
 :class:`Decimal` for currency) plus metadata.
@@ -9,7 +9,7 @@ This is the primary verification hook for issue #239 (Kent can
 prove his exported numbers match AEAT's record): the serialiser
 produces bytes, the deserialiser parses bytes back, and a diff
 over casilla values is a one-line operation. Round-trip fidelity
-is the wave-80b / C3d acceptance test.
+is the / C3d acceptance test.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ class ParsedRecord(BaseModel):
 
     Each field value is keyed by ``field_id``; currency fields also
     appear in :attr:`casilla_values` keyed by ``casilla_id`` for
-    easy cross-reference against :class:`aeat.filing.FilingDraft`.
+    easy cross-reference against :class:`aeat.application.filing.FilingDraft`.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -59,7 +59,7 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
 
     Inverse of :func:`encode_currency`.
 
-    Wave 85b: when ``inline_sign=True``, byte 0 is the sign marker
+    when ``inline_sign=True``, byte 0 is the sign marker
     (``"N"`` for negatives / ``" "`` for non-negatives) and the
     remaining bytes carry the zero-padded absolute magnitude.
     """
@@ -179,7 +179,7 @@ def deserialise(
 class ParsedEnvelope(BaseModel):
     """Result of parsing a multi-segment fichero-BOE envelope.
 
-    Wave 82a companion to :class:`ParsedRecord`. Each segment's
+    to :class:`ParsedRecord`. Each segment's
     :class:`ParsedRecord` is addressable by ``segment_id`` so callers
     can diff a specific page (e.g., Modelo 303 page 3 rectificativa
     block) without walking every segment.
@@ -199,7 +199,7 @@ class ParsedEnvelope(BaseModel):
     """
 
     merged_field_values: Mapping[str, str | Decimal | date]
-    """Flat view of every field_id across every segment (wave 103).
+    """Flat view of every field_id across every segment.
 
     Envelope-level headers like ``DP30301_F007_IDENTIFICACI_N_NIF``
     surface here so CLI consumers (verify, diff) can present them

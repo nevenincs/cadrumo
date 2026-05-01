@@ -1,8 +1,8 @@
-"""Public test-double helpers for :mod:`aeat.filing`.
+"""Public test-double helpers for :mod:`aeat.application.filing`.
 
 This module exposes the synthetic Modelo 130 casilla schema and a
 small profile / deadline-checker pair so that downstream tests can
-exercise :func:`aeat.filing.build_draft` end-to-end without
+exercise :func:`aeat.application.filing.build_draft` end-to-end without
 reaching into private builder internals. These helpers are
 intentionally test-grade — they will be replaced once the real
 casilla DB (#23), modelo catalogue (#6), and deadline engine
@@ -15,14 +15,14 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
-from ._builders._modelo_130_schema import (
+from ...domain.filing._builders._modelo_130_schema import (
     MODELO_130_SCHEMA,
     StaticCasillaCollection,
     StaticCasillaSchema,
     StaticCasillaSchemaProvider,
 )
-from ._builders._modelo_303_schema import MODELO_303_SCHEMA
-from ._builders._modelo_390_schema import MODELO_390_SCHEMA
+from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
+from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
 
 
 def default_schema_provider() -> StaticCasillaSchemaProvider:
@@ -31,7 +31,7 @@ def default_schema_provider() -> StaticCasillaSchemaProvider:
     Returns:
         A frozen :class:`StaticCasillaSchemaProvider` wiring the
         three hand-curated collections used by the test suite and
-        the ``aeat.filing`` public docstring examples.
+        the ``aeat.application.filing`` public docstring examples.
     """
     return StaticCasillaSchemaProvider(
         collections={
@@ -43,7 +43,7 @@ def default_schema_provider() -> StaticCasillaSchemaProvider:
 
 
 class SyntheticProfile(BaseModel):
-    """A frozen :class:`aeat.filing.FilingProfile`-conforming record."""
+    """A frozen :class:`aeat.application.filing.FilingProfile`-conforming record."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -53,7 +53,7 @@ class SyntheticProfile(BaseModel):
 
 
 class SyntheticDeadlineStatus(BaseModel):
-    """A frozen :class:`aeat.filing.DeadlineStatus`-conforming record."""
+    """A frozen :class:`aeat.application.filing.DeadlineStatus`-conforming record."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -62,7 +62,7 @@ class SyntheticDeadlineStatus(BaseModel):
 
 
 class SyntheticDeadlineChecker(BaseModel):
-    """A frozen :class:`aeat.filing.DeadlineChecker`-conforming record.
+    """A frozen :class:`aeat.application.filing.DeadlineChecker`-conforming record.
 
     The checker returns the same :class:`SyntheticDeadlineStatus`
     for every ``(modelo, period)`` query, which keeps tests

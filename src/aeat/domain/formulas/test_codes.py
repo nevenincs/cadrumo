@@ -1,4 +1,4 @@
-"""Tests for the :mod:`aeat.formulas._codes` enums."""
+"""Tests for the :mod:`aeat.domain.formulas._codes` enums."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pytest
 
 from ._codes import FormulaOp, Quarter
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.unit

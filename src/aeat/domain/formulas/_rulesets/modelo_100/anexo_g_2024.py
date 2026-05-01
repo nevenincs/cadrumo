@@ -113,5 +113,4 @@ __all__ = [
     "EFFECTIVE_TO",
     "FORMULAS",
     "PARAMETERS",
-    "TARIFA_ESTATAL_AHORRO_2024",
 ]

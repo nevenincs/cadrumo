@@ -1,7 +1,7 @@
 """Closed taxonomies used by the portal registry.
 
 These enums are the keying dimensions the registry exposes on
-:class:`aeat.portals.PortalMetadata`: the functional category a portal
+:class:`aeat.domain.portals.PortalMetadata`: the functional category a portal
 belongs to, the authentication method(s) it accepts, the URL-stability
 tier it sits in, and the AEAT-family subdomain it is hosted on. Every
 enum is a :class:`str.StrEnum` so members compare equal to their

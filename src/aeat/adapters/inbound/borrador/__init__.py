@@ -1,4 +1,4 @@
-"""Casilla-complete Modelo 100 (IRPF / Renta) PDF parsing (#305 cluster F).
+"""Casilla-complete Modelo 100 (IRPF / Renta) PDF parsing (#305).
 
 Modelo 100 has three artefact types a taxpayer encounters, all parsed
 through this module:

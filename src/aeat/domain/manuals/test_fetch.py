@@ -20,7 +20,7 @@ from . import (
 )
 from .errors import ManifestError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _manifest(sha256: str = "a" * 64, length: int = 10) -> FetchedManualPart:

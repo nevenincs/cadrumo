@@ -21,7 +21,7 @@ Layout overview:
   ``CASILLAS``, ``FORMULAS``, ``PARAMETERS`` tuples.
 
 The ADR for this feature documents the rationale for the sub-package
-pattern (first sub-package within ``aeat.formulas._rulesets`` — M100-
+pattern (first sub-package within ``aeat.domain.formulas._rulesets`` — M100-
 specific, justified by the 5-10x scale relative to sibling Tier-L
 modelos).
 """

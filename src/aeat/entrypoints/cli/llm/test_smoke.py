@@ -5,7 +5,7 @@ from typer.testing import CliRunner
 
 from . import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_llm_cli_has_expected_subcommands() -> None:

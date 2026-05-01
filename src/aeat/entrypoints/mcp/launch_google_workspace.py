@@ -2,7 +2,7 @@
 
 This module bridges the tracked, secret-free `.mcp.json` entry to the
 gitignored credential sources managed by the AEAT project. It loads
-`env/.env` via :mod:`aeat.config`, derives the exact upstream environment
+`env/.env` via :mod:`aeat.core.config`, derives the exact upstream environment
 variables `workspace-mcp` expects, forces the refresh-token cache into a
 repo-local gitignored directory, and then replaces the current process with the
 real server command.
@@ -272,7 +272,7 @@ def launch_google_workspace(extra_args: Sequence[str] = ()) -> NoReturn:
 
 
 def main(argv: Sequence[str] | None = None) -> NoReturn:
-    """CLI entry point for ``python -m aeat.mcp.launch_google_workspace``."""
+    """CLI entry point for ``python -m aeat.entrypoints.mcp.launch_google_workspace``."""
 
     args = tuple(argv) if argv is not None else tuple(sys.argv[1:])
     if "--dump-launch-spec" in args:

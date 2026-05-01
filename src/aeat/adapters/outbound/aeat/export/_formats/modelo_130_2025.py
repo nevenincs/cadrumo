@@ -1,6 +1,6 @@
 """Fichero-BOE record spec for Modelo 130 ejercicio 2025.
 
-Wave 80b (EPIC #201 / EPIC #305). Structural clone of
+ (EPIC #201 / EPIC #305). Structural clone of
 :mod:`modelo_130_2024` — AEAT has not published a new Modelo 130
 *Diseño de registros* for ejercicio 2025. Orden EHA/672/2007
 (BOE-A-2007-6032) + DR130e15v12.xls remain canonical; neither

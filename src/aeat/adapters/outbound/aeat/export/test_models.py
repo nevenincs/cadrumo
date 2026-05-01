@@ -1,4 +1,4 @@
-"""Unit tests for the strict pydantic v2 models in :mod:`aeat.submission._models`."""
+"""Unit tests for the strict pydantic v2 models in :mod:`aeat.adapters.outbound.aeat.export._models`."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from . import (
     make_submission_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def _attempt(

@@ -53,7 +53,7 @@ from . import (
     MODELO_390_2026,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _quarterly_inputs(*, base_general: Decimal, base_reducido: Decimal, base_super: Decimal) -> dict[str, Decimal]:

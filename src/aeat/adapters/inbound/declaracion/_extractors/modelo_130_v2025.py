@@ -8,7 +8,7 @@ single extraction implementation backs three thin per-year subclasses:
 :class:`Modelo130V2024Extractor`, :class:`Modelo130V2025Extractor`,
 and :class:`Modelo130V2026Extractor`. Each pins its own
 ``template_revision`` ClassVar so the registry under
-:mod:`aeat.declaracion._extractors` resolves the right
+:mod:`aeat.adapters.inbound.declaracion._extractors` resolves the right
 ``(modelo, año, revision)`` triple for every supported year. The
 shared extraction logic lives on :class:`Modelo130V2025Extractor`'s
 ``extract`` method and is inherited verbatim.
@@ -290,7 +290,7 @@ def _derive_status(
     values: list[ExtractedCasilla],
     warnings: list[ExtractionWarning],
 ) -> ExtractionStatus:
-    # Aligned with GenericDeclaracionExtractor (#305 wave 18 H2): multi-hit
+    # Aligned with GenericDeclaracionExtractor (#305 H2): multi-hit
     # or structurally-downgraded casillas (confidence < 1.0) do NOT count
     # toward COMPLETE; they stay resolved for PARTIAL-coverage math only.
     resolved_ids = {v.casilla_id for v in values}

@@ -1,4 +1,4 @@
-"""Cross-reference tests between :mod:`aeat.portals` and :mod:`aeat.models`."""
+"""Cross-reference tests between :mod:`aeat.domain.portals` and :mod:`aeat.domain.modelos`."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from ..modelos import ModeloCode
 from ._categories import PortalCategory
 from ._registry import PORTAL_REGISTRY
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _FILING_CENSUS_BORRADOR = {

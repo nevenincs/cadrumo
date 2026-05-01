@@ -1,8 +1,8 @@
-"""Test-only helpers for :mod:`aeat.schema`.
+"""Test-only helpers for :mod:`aeat.domain.schema`.
 
 Public surface: :func:`build_fake_boe_pdf` generates a synthetic
 BOE-style annex PDF that matches the line-based pattern library the
-:class:`~aeat.schema.BoeOrdenExtractor` consumes. The helper is
+:class:`~aeat.domain.schema.BoeOrdenExtractor` consumes. The helper is
 imported only by colocated tests and MUST NOT be imported by
 production code paths.
 """

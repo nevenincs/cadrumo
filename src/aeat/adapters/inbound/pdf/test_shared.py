@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat._pdf_import._shared` (#305 cluster A).
+"""Unit tests for :mod:`aeat.adapters.inbound.pdf._shared` (#305).
 
 Exercises the strict+frozen invariants of :class:`ExtractedCasilla` and the
 :class:`PdfFilingImportError` root's inheritance chain.
@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from ....core.errors import AeatError
 from . import ExtractedCasilla, PdfFilingImportError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 _PrintedValue = Decimal | int | str | bool | date | None
 

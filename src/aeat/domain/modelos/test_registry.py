@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.models._registry`."""
+"""Unit tests for :mod:`aeat.domain.modelos._registry`."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from ._registry import (
     year_plan,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_registry_completeness() -> None:

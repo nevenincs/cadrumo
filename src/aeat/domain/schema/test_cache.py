@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.schema._cache`."""
+"""Unit tests for :mod:`aeat.domain.schema._cache`."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from . import (
     save_modelo_to_cache,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _SHA = "b" * 64
 

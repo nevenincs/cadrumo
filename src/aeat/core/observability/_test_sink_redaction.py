@@ -1,9 +1,9 @@
-"""Wave-5 phase-1 tests: run-trace JSONL redaction discipline.
+"""tests: run-trace JSONL redaction discipline.
 
 The :class:`JsonlRunSink` writes :class:`RunEvent` records that may
 carry casilla form-fill values, AEAT navigation URLs, and free-form
-error messages. Wave-5 wraps the emit path through
-:func:`aeat.storage.redact_structured` against the DIAGNOSTIC-class
+error messages. the emit path through
+:func:`aeat.adapters.persistence.storage.redact_structured` against the DIAGNOSTIC-class
 default rule set so the JSONL never carries a plaintext NIF / token /
 URL path even if a caller forgets to scrub upstream.
 
@@ -30,7 +30,7 @@ from . import (
 )
 from ._sink import JsonlRunSink
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _NIF_CANARY = "12345678Z"
 _BEARER_TAIL = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

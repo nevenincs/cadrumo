@@ -9,18 +9,20 @@ from pathlib import Path
 import typer
 from pydantic import BaseModel, ConfigDict
 
-from .....domain.formulas._rulesets.modelo_100._amortization import LIS_ART_12_LINEAL_TABLE, AssetClass
-from .....domain.profile.assets import (
+from .....adapters.persistence.profile.assets import (
     AmortizationLedgerRepository,
-    AssetRecord,
-    LibertadAmortizacionElection,
-    compute_amortization_for_year,
     default_storage_dir,
     load_amortization_ledger,
     load_assets,
 )
-from .....domain.profile.assets import (
+from .....adapters.persistence.profile.assets import (
     add_asset as persist_asset,
+)
+from .....domain.formulas._rulesets.modelo_100._amortization import LIS_ART_12_LINEAL_TABLE, AssetClass
+from .....domain.profile.assets import (
+    AssetRecord,
+    LibertadAmortizacionElection,
+    compute_amortization_for_year,
 )
 from .....domain.profile.errors import AssetRecordError
 from ..._context import json_output_requested

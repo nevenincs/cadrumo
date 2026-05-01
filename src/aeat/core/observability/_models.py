@@ -21,7 +21,7 @@ sensitive in a tax / PII sense:
 - :class:`ErrorPayload.message` is free-form and may contain
   traceback fragments with file paths or captured user input.
 - :class:`ArgumentRecord` values are redacted for secret-named
-  parameters by :func:`aeat.cli._observability.build_arguments`
+  parameters by :func:`aeat.entrypoints.cli._observability.build_arguments`
   (``password`` / ``secret`` / ``token`` / etc. → ``"***"``). Other
   argument values are recorded verbatim.
 - :class:`RunTrace.cert_fingerprint` is a SHA-256 of the configured
@@ -92,7 +92,7 @@ class ArgumentRecord(BaseModel):
     ``cli_flag`` is an optional override carrying the *actual* Typer
     option name (e.g. ``"--json"``) when the Python parameter name
     (``as_json``) differs from the user-facing flag. Without the
-    override, :func:`aeat.observability._replay._argv_from_arguments`
+    override, :func:`aeat.core.observability._replay._argv_from_arguments`
     derives the flag name by replacing underscores with dashes, which
     is wrong for renamed options like
     ``typer.Option(False, "--json")`` bound to parameter ``as_json``.

@@ -18,7 +18,7 @@ from . import (
     with_translation,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 class TestLanguage:

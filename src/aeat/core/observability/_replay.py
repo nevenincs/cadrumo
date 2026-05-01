@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import shlex
+from importlib import import_module
 
 from ..config import PROJECT_ROOT, Settings
 from ._errors import AeatCorpusDriftError, AeatObservabilityError
@@ -146,7 +147,7 @@ def replay_run(run_id: str) -> RunTrace:
             entrypoint=original.entrypoint,
         )
     argv = _argv_from_arguments(original.entrypoint, original.arguments)
-    from ...entrypoints.cli import app
+    app = import_module("aeat.entrypoints.cli").app
 
     # Restore the prior value on exit so the process env is unchanged
     # for any caller that imports ``replay_run`` programmatically.

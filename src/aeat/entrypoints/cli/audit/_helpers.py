@@ -2,7 +2,7 @@
 
 Exposes a strict pydantic :class:`CitationCoverageReport` and the pure
 function :func:`validate_citation_coverage` that builds one from a
-:class:`Ruleset`. Public from :mod:`aeat.cli.audit` for forward
+:class:`Ruleset`. Public from :mod:`aeat.entrypoints.cli.audit` for forward
 compatibility with the future ``#394`` 13-root Kent-first tree (where
 the ``audit`` root is first-class) and the ``#399`` ``--json`` output
 schema work.

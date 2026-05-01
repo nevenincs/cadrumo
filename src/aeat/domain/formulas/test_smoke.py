@@ -1,4 +1,4 @@
-"""Public-surface smoke test for :mod:`aeat.formulas`."""
+"""Public-surface smoke test for :mod:`aeat.domain.formulas`."""
 
 from __future__ import annotations
 
@@ -6,12 +6,12 @@ import importlib
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.unit
 def test_every_public_name_imports() -> None:
-    """Every name in ``aeat.formulas.__all__`` must resolve to an attribute."""
+    """Every name in ``aeat.domain.formulas.__all__`` must resolve to an attribute."""
     module = importlib.import_module("aeat.domain.formulas")
     for name in module.__all__:
         assert hasattr(module, name), name
@@ -21,8 +21,8 @@ def test_every_public_name_imports() -> None:
 def test_registry_has_shipped_rulesets() -> None:
     """The default registry must expose every shipped ruleset.
 
-    Wave 1 (#173) shipped two Modelo 130 rulesets (2024, 2025).
-    Wave 2 (#183) added two Modelo 303 rulesets (2024, 2025).
+    (#173) shipped two Modelo 130 rulesets (2024, 2025).
+    (#183) added two Modelo 303 rulesets (2024, 2025).
     """
     from . import get_registry
 

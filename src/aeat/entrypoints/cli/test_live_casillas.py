@@ -6,7 +6,7 @@ import pytest
 
 from ._live import requires_live_enabled
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
 
 
 @pytest.mark.parametrize(

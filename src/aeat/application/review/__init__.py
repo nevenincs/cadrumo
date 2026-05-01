@@ -1,7 +1,7 @@
 """Unified review queue across the produce → verify → export pipeline.
 
 Public surface — callers must import review enums, models, adapters,
-and the aggregator exclusively from ``aeat.review`` and must not
+and the aggregator exclusively from ``aeat.application.review`` and must not
 reach into the private underscore modules inside this package. See
 [[2026-04-18-unified-review-queue-adr]] for the architectural
 contract.

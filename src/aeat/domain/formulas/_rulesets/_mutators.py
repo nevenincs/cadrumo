@@ -62,11 +62,7 @@ from .._ruleset import ParameterTable, ParameterValue, Ruleset
 __all__ = [
     "MUTATOR_REGISTRY",
     "NOT_MUTABLE_NODE_TYPES",
-    "MutationCase",
     "MutatorClass",
-    "PercentRateLocation",
-    "build_percent_rate_mutants",
-    "build_scalar_mutants",
     "is_additive_identity_literal",
     "iter_arithmetic_op_paths",
     "iter_brackets_nodes",
@@ -101,23 +97,6 @@ class MutatorClass(_StrictFrozenModel):
 
     slug: str = Field(min_length=1, max_length=64)
     description: str = Field(min_length=1, max_length=256)
-
-
-class MutationCase(_StrictFrozenModel):
-    """Result of evaluating one mutated ruleset against one fixture.
-
-    The kill-rate aggregator collects these records across the full
-    eighteen-ruleset surface and emits the catalogue used in the
-    issue's exec summary.
-    """
-
-    ruleset_id: str = Field(min_length=1, max_length=128)
-    casilla_id: str = Field(min_length=2, max_length=5)
-    mutator_slug: str = Field(min_length=1, max_length=64)
-    direction: str = Field(min_length=1, max_length=32)
-    max_abs_delta: Decimal
-    affected_casillas: tuple[str, ...]
-    killed: bool
 
 
 class PercentRateLocation(_StrictFrozenModel):
@@ -354,7 +333,7 @@ def iter_casilla_ref_paths(
 ) -> Iterator[tuple[tuple[int, ...], CasillaRef]]:
     """Yield ``(path, casilla_ref)`` for every :class:`CasillaRef` in ``formula``.
 
-    Closes the topology-typo gap catalogued in the Wave 5 audit: a
+    Closes the topology-typo gap catalogued in the a
     typo where the author wrote ``ref("0431")`` instead of
     ``ref("0432")`` would silently route the wrong upstream value
     into the formula. The associated mutator
@@ -565,28 +544,6 @@ def mutate_parameter_rate(
     return ruleset.model_copy(update={"parameters": new_table})
 
 
-def build_percent_rate_mutants(
-    ruleset: Ruleset,
-) -> tuple[tuple[PercentRateLocation, Decimal], ...]:
-    """Return the full set of ``(location, delta)`` pairs for ``ruleset``.
-
-    Two directions per mutable rate (``+0.01`` and ``-0.01``).
-    Compound and casilla-ref rates are skipped — they appear in the
-    unflagged-nodes catalogue produced by the kill-rate aggregator.
-    """
-    pairs: list[tuple[PercentRateLocation, Decimal]] = []
-    for fd in ruleset.formulas:
-        for path, node in iter_percent_nodes(fd.formula):
-            location = classify_percent_rate(fd, path, node)
-            if location.mode in ("literal", "param"):
-                pairs.append((location, Decimal("0.01")))
-                pairs.append((location, Decimal("-0.01")))
-    return tuple(pairs)
-
-
-# -- Brackets-threshold mutator ------------------------------------------
-
-
 def mutate_brackets_threshold(
     ruleset: Ruleset,
     casilla_id: str,
@@ -660,26 +617,6 @@ def mutate_scalar_leaf(
     new_leaf = Literal(value=new_value)
     new_formula = _replace_at_path(fd.formula, leaf_path, new_leaf)
     return _replace_formula_in_ruleset(ruleset, casilla_id, cast(Formula, new_formula))
-
-
-def build_scalar_mutants(
-    ruleset: Ruleset,
-) -> tuple[tuple[str, str, tuple[int, ...], str, Decimal], ...]:
-    """Return the full set of mul/div scalar mutation seeds for ``ruleset``.
-
-    Each entry is ``(casilla_id, formula_id, leaf_path, parent_op, factor)``.
-    Two factors per mutable leaf (``Decimal("1.01")`` for +1 % and
-    ``Decimal("0.99")`` for -1 %).
-    """
-    seeds: list[tuple[str, str, tuple[int, ...], str, Decimal]] = []
-    for fd in ruleset.formulas:
-        for leaf_path, _leaf, parent in iter_scalar_leaf_paths(fd.formula):
-            seeds.append((fd.casilla_id, fd.formula_id, leaf_path, parent, Decimal("1.01")))
-            seeds.append((fd.casilla_id, fd.formula_id, leaf_path, parent, Decimal("0.99")))
-    return tuple(seeds)
-
-
-# -- Internal helpers -----------------------------------------------------
 
 
 def _formula_for(ruleset: Ruleset, casilla_id: str) -> FormulaDefinition:
@@ -796,19 +733,19 @@ NOT_MUTABLE_NODE_TYPES: Final[dict[type, str]] = {
         "values, so mutation would test the engine, not the ruleset."
     ),
     # NB: Literal is intentionally absent from NOT_MUTABLE_NODE_TYPES.
-    # Pre-Wave-5 Literal was excluded under the rationale "Literal
+    # was excluded under the rationale "Literal
     # participates only when it is a Mul/Div leaf or a PercentFormula
-    # rate". The strict-audit (issue #457 Wave 5) showed that
+    # rate". The strict-audit (issue #457) showed that
     # rationale was over-broad: ~120 Literal nodes across the landed
     # rulesets are direct operands of Sub/Min/Max/Add/Round/ClampPos
     # (bracket boundaries, art. 20 piecewise thresholds, IVA rate
     # constants, additive-identity zeros). The :data:`THRESHOLD_LITERAL`
-    # mutator class introduced in Wave 5 covers those positions.
+    # mutator class introduced in those positions.
     # Architectural identities (Max(0, X) / Min(0, X) lower/upper
     # bounds with X > 0) are filtered by :func:`is_additive_identity_literal`.
     # NB: CasillaRef is intentionally absent from NOT_MUTABLE_NODE_TYPES
-    # post-Wave-6. The :data:`CASILLA_REF_TOPOLOGY` mutator class
-    # introduced in Wave 6 re-targets every reference to a different
+    # post-. The :data:`CASILLA_REF_TOPOLOGY` mutator class
+    # introduced in re-targets every reference to a different
     # casilla_id with a differing fixture value. Topology typos
     # (``ref("0431")`` vs ``ref("0432")``) are detected via that
     # harness; no MUTATOR_REGISTRY entry is needed because CasillaRef
@@ -830,7 +767,7 @@ def all_concrete_formula_types() -> Iterable[type]:
     the union arms are accessible via ``__args__`` after the
     :class:`pydantic.fields.FieldInfo` annotation is unwrapped. A robust
     implementation re-derives the union from the explicit listing in
-    ``aeat.formulas.__init__`` and the ``op``-tagged subclasses above.
+    ``aeat.domain.formulas.__init__`` and the ``op``-tagged subclasses above.
     """
     return (
         AddFormula,

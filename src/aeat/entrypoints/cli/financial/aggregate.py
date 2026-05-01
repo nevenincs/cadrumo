@@ -8,8 +8,8 @@ import typer
 
 from ....core.config import load_settings
 from ....core.i18n import Language, Translatable, get_translation
-from ....domain.financial._decimal import canonical_decimal
-from ....domain.financial.aggregation import (
+from ....adapters.inbound.financial._decimal import canonical_decimal
+from ....application.aggregation import (
     AggregationError,
     CasillaAggregation,
 )
@@ -30,7 +30,7 @@ def aggregate_cmd(
 ) -> None:
     """Aggregate classified transactions into a casilla ledger."""
 
-    from ....domain.financial.aggregation._provider import FinancialFilingInputsProvider
+    from ....application.aggregation._provider import FinancialFilingInputsProvider
 
     provider = FinancialFilingInputsProvider(repository=catalogue_repository())
     try:
@@ -113,4 +113,4 @@ def _format_decimal(value: Decimal) -> str:
     return canonical_decimal(value)
 
 
-__all__ = ["FinancialAggregateJson", "aggregate_cmd"]
+__all__ = ["aggregate_cmd"]

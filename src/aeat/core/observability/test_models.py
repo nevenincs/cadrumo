@@ -25,7 +25,7 @@ from . import (
     WorkflowLinkPayload,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def _make_event(payload: RunEventPayload) -> RunEvent:

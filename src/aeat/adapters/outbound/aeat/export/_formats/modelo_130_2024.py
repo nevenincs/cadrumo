@@ -1,6 +1,6 @@
 """Fichero-BOE record spec for Modelo 130 ejercicio 2024.
 
-Wave 77c (scaffold) + wave 79a (BOE-accurate rewrite). Source: AEAT
+ (scaffold) + (BOE-accurate rewrite). Source: AEAT
 *Diseño de Registro* ``dr130.09.pdf`` + ``DR130e15v12.xls`` (2015
 revision, last-modified 2021-07-13). The Modelo 130 layout has NOT
 been superseded since the 2015 revision; Orden EHA/672/2007
@@ -24,12 +24,12 @@ with 2 implicit decimals (13 digits zero-padded, no decimal point).
 
 ## History of prior miscites (tracked for auditability)
 
-- Wave 77c initial draft used Stream D's offsets which did not match
+- draft used Stream D's offsets which did not match
   dr130.09.pdf for the header block — TIPO_DECLARACION at 79 (wrong;
   real is 7), NIF at 10 (real 13), EJERCICIO at 4 (real 71), PERIODO
   at 8 (real 75). All casillas shifted +3. IBAN was a single 20-byte
   field; real is 4 sub-fields. FIRMA_MES was length 8; real is 10.
-  Wave 79a (this file) aligns with dr130.09.pdf verbatim.
+   (this file) aligns with dr130.09.pdf verbatim.
 
 ## References
 
@@ -61,7 +61,7 @@ ENCODING: FicheroBoeEncoding = "cp1252"
 _AMOUNT_LEN = 13
 
 #: Header-field identifiers every draft MUST provide. Consumed by
-#: :mod:`aeat.submission._formats._serialise` to fail-fast on missing
+#: :mod:`aeat.adapters.outbound.aeat.export._formats._serialise` to fail-fast on missing
 #: required inputs before emitting any bytes.
 REQUIRED_HEADER_FIELDS: frozenset[str] = frozenset(
     {

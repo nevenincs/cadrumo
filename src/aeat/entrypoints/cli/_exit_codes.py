@@ -26,7 +26,7 @@ class ExitCode(IntEnum):
 def exit_with(code: ExitCode, *, message: str | None = None) -> None:
     """Emit an optional stderr message and terminate with ``code``.
 
-    Phase 2 will route this helper through the sibling error-envelope
+     will route this helper through the sibling error-envelope
     implementation from issue #398. Until then, emission stays plain
     stderr so callers can still standardize on the shared exit table.
 

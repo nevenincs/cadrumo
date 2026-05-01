@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.auth._gate`."""
+"""Unit tests for :mod:`aeat.adapters.outbound.aeat.auth._gate`."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from . import (
     AeatLiveReadNotEnabledError,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def _fresh_settings(monkeypatch: pytest.MonkeyPatch, **overrides: str) -> Settings:

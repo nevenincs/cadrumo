@@ -16,7 +16,7 @@ Subcommands:
 
 Every subcommand is strictly read-only on AEAT — no auth, no HTTP,
 no env-var reads under ``AEAT_*``. The forbidden-flag guard
-mirrors :mod:`aeat.cli.filing._reconcile`: any flag named
+mirrors :mod:`aeat.entrypoints.cli.filing._reconcile`: any flag named
 ``--write`` / ``--submit`` / ``--send`` / ``--enviar`` / ... exits
 with code 2 before Typer dispatch.
 """
@@ -585,7 +585,7 @@ def _scaffold_from_justificante(justificante: object) -> dict[str, list[dict[str
     """Returns a YAML-ready scaffold with synthetic values pre-filled from the parsed justificante.
 
     Args:
-        justificante: A parsed :class:`aeat.justificante.Justificante`
+        justificante: A parsed :class:`aeat.domain.justificante.Justificante`
             (typed as ``object`` here to dodge a circular-import
             cost; structural attribute access only).
 

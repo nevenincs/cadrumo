@@ -24,7 +24,7 @@ from . import (
     generate_rule_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _llm_provenance() -> LLMProvenance:

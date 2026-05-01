@@ -1,7 +1,7 @@
 """Unit tests for the ``aeat workflow`` CLI sub-app.
 
 The tests exercise the typer surface via :class:`typer.testing.CliRunner`.
-Real :class:`aeat.workflow.WorkflowEngine` instances are wired through
+Real :class:`aeat.application.workflow.WorkflowEngine` instances are wired through
 the ``set_test_hooks`` module seam — no mocks, no patches. The shared
 test stand-ins live in ``_test_doubles.py``.
 """
@@ -19,7 +19,7 @@ from .. import app as root_app
 from ._helpers import clear_test_hooks, set_test_hooks
 from ._test_doubles import make_engine, make_profile
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _unwrap_result(output: str):
@@ -50,10 +50,10 @@ class TestWorkflowCli:
         payload = _unwrap_result(result.output)
         assert payload["final_stage"] == "DONE"
         run_id = payload["run_id"]
-        # Wave-7 made workflow runs CipherEnvelope-on-disk; the
+        # workflow runs CipherEnvelope-on-disk; the
         # canonical filename is ``<run_id>.envelope.json`` (not
         # ``<run_id>.json``). The bare-``.json`` assertion was a
-        # pre-wave-7 artefact that started silently passing on
+        # that started silently passing on
         # tmp-dir filesystem oddities and only began failing under
         # CI's deterministic POSIX runners.
         persisted = _isolated_runs_dir / f"{run_id}.envelope.json"

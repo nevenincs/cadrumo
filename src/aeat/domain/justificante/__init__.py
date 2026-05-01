@@ -1,9 +1,12 @@
 """Public API for the AEAT justificante (PDF receipt) parser (#44).
 
-Callers outside :mod:`aeat.justificante` must import exclusively from this
-module — the private ``_schema``, ``_extract``, ``_parser``, ``_verify``,
-and ``_parsers`` modules are implementation details and may change without
-notice.
+Callers outside :mod:`aeat.domain.justificante` must import exclusively from this
+module — the private ``_schema``, ``_extract``, ``_parser``, and ``_parsers``
+modules are implementation details and may change without notice.
+
+Live CSV verification lives in :mod:`aeat.adapters.outbound.aeat.verify`
+(Playwright/browser automation belongs in the outbound adapter layer, not
+the domain).
 
 Example:
     >>> from pathlib import Path
@@ -23,7 +26,6 @@ from ._errors import (
 )
 from ._parser import parse_justificante
 from ._schema import Justificante, JustificanteParserBackend
-from ._verify import verify_csv
 
 __all__ = [
     "Justificante",
@@ -33,5 +35,4 @@ __all__ = [
     "JustificanteParserBackend",
     "JustificanteVerificationError",
     "parse_justificante",
-    "verify_csv",
 ]

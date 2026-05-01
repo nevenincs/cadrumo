@@ -1,6 +1,6 @@
-"""Zero-boundary regression tests across every ruleset (EPIC #305 wave 59b).
+"""Zero-boundary regression tests across every ruleset (EPIC #305).
 
-Wave 58 stream 3 H4: 13 of 18 rulesets lacked a zero-input clean-path
+H4: 13 of 18 rulesets lacked a zero-input clean-path
 test. A regression that misroutes a zero to a division-by-something
 or NaN would ship silently. This module parametrizes the zero-input
 audit across every ruleset so a single file covers the whole fleet.
@@ -55,7 +55,7 @@ from . import (
     MODELO_390_2026,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _ALL_RULESETS = [

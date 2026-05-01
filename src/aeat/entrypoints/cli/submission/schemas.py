@@ -1,6 +1,6 @@
 """``aeat submission schemas`` — list every (modelo, ejercicio) the CLI can export.
 
-EPIC #305 wave 104. Kent's discovery surface: rather than trial-
+EPIC #305 . Kent's discovery surface: rather than trial-
 and-error with ``aeat submission export --help`` and hoping his
 modelo is wired, he can run ``aeat submission schemas`` to see the
 complete registry plus per-schema size / encoding / dispatch-kind

@@ -1,16 +1,16 @@
 """Strict pydantic v2 schema for the AEAT *Manual práctico* corpus.
 
-Every boundary-crossing record the ``aeat.manuals`` subpackage reads
+Every boundary-crossing record the ``aeat.domain.manuals`` subpackage reads
 from disk, writes to disk, or exposes over its public API is defined
 here. The schema is frozen and strict wherever the loader idiom
 permits it, per the project-wide pydantic v2 mandate reinforced by
 issue ``#25``.
 
 Closed catalogues are ``enum.StrEnum``. Trilingual fields use
-``aeat.i18n.Translatable``. Modelo casilla cross-references are stored
+``aeat.core.i18n.Translatable``. Modelo casilla cross-references are stored
 as validated strings (``MODELO_130:01`` shape) so the manuals corpus
 stays loadable even when a citation references a casilla outside the
-:class:`aeat.casillas.CasillaRecord` catalogue at load time.
+:class:`aeat.domain.casillas.CasillaRecord` catalogue at load time.
 
 Spanish is the authoritative language for AEAT-domain terminology per
 the trilingual i18n ADR. Spanish-authoritative translatable fields on
@@ -32,10 +32,10 @@ from ...core.i18n import Translatable
 from ..modelos import ModeloCode
 
 # Modelo + casilla cross-reference syntax used inside extracted rules.
-# The MODELO_NNN prefix is anchored to the closed `aeat.models.ModeloCode`
+# The MODELO_NNN prefix is anchored to the closed `aeat.domain.modelos.ModeloCode`
 # enum (each member's value is the three-character AEAT code string), so a
 # new modelo cannot be cited from the manuals corpus without first being
-# registered in `aeat.models`. The optional ``:<casilla>`` suffix is a
+# registered in `aeat.domain.modelos`. The optional ``:<casilla>`` suffix is a
 # validated string only — the casilla itself need not exist in the casilla
 # catalogue at load time.
 _MODELO_CODE_ALTERNATION = "|".join(member.value for member in ModeloCode)

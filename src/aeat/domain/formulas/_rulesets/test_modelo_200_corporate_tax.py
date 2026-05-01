@@ -18,7 +18,7 @@ from .modelo_200_corporate_tax import (
     modelo_200_tax_due,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.parametrize(

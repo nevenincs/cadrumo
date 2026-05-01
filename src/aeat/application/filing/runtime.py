@@ -1,6 +1,6 @@
-"""Production runtime helpers for :mod:`aeat.filing`.
+"""Production runtime helpers for :mod:`aeat.application.filing`.
 
-The filing runtime must not depend on :mod:`aeat.filing.testing`.
+The filing runtime must not depend on :mod:`aeat.application.filing.testing`.
 This module exposes the concrete profile and schema-provider
 implementations used by the CLI and workflow surfaces, backed by the
 same in-tree filing schemas the builders execute against today.
@@ -13,15 +13,15 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...domain.deadlines import AutonomoProfile, applies_to
-from ._builders._modelo_130_schema import (
+from ...domain.filing._builders._modelo_130_schema import (
     MODELO_130_SCHEMA,
     CasillaSource,
     StaticCasillaCollection,
     StaticCasillaSchema,
     StaticCasillaSchemaProvider,
 )
-from ._builders._modelo_303_schema import MODELO_303_SCHEMA
-from ._builders._modelo_390_schema import MODELO_390_SCHEMA
+from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
+from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _SUPPORTED_FILING_MODELOS: tuple[str, ...] = ("130", "303", "390")

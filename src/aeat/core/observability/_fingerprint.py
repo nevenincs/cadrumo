@@ -120,7 +120,7 @@ def compute_db_sha256(var_dir: Path) -> str:
     Excludes caches and self-referencing artefacts so the hash is
     stable across observability writes and LLM/schema/status lookups
     that would otherwise flap on every read. The curated list covers
-    every ``var/`` subdirectory that :class:`aeat.config.Settings`
+    every ``var/`` subdirectory that :class:`aeat.core.config.Settings`
     treats as a cache, log, or replay-internal artefact:
 
     - ``var/runs/`` — observability's own output (self-reference).

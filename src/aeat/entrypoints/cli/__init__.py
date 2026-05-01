@@ -6,7 +6,7 @@ route through the produce -> verify -> export workflow: setup, doctor,
 deadlines, filing drafts, guarded AEAT reads, and audit helpers.
 
 The package exposes ``app`` directly so the project entry point in
-``pyproject.toml`` reads ``aeat = "aeat.cli:app"``, matching the
+``pyproject.toml`` reads ``aeat = "aeat.entrypoints.cli:app"``, matching the
 single-file convention introduced by the base module structure.
 """
 

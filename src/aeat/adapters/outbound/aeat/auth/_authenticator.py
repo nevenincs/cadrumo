@@ -60,6 +60,7 @@ from ._providers import (
 from .certificate import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
+    CertificateBackend,
     CertificateBundle,
     CertificateHealth,
     HandshakeResult,
@@ -302,7 +303,7 @@ class BrowserContextLike(Protocol):
 
 @runtime_checkable
 class BrowserSessionLike(Protocol):
-    """Structural shape of :class:`aeat.browser.BrowserSession`.
+    """Structural shape of :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
 
     We depend on a single coroutine — ``create_context(provisioner=...)``
     — and a ``close()``. The authenticator does not reach into the
@@ -360,13 +361,13 @@ class AeatAuthenticator:
         """Construct an authenticator bound to ``settings``.
 
         Args:
-            settings: The :class:`aeat.config.Settings` instance the
+            settings: The :class:`aeat.core.config.Settings` instance the
                 authenticator reads its certificate path,
                 passphrase env var, backend, and verify URL from.
             browser_session_factory: Optional async callable
                 returning a :class:`BrowserSessionLike`. When
                 omitted, the authenticator constructs a real
-                :class:`aeat.browser.BrowserSession` lazily at
+                :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` lazily at
                 :meth:`authenticate` time. Tests pass a fake here
                 to avoid the Playwright import path.
         """
@@ -636,7 +637,7 @@ class AeatAuthenticator:
                 or ``close()`` was called).
         """
         if session.is_stale():
-            from ....persistence.storage._redaction import redact_for_log
+            from .....core.redaction import redact_for_log
 
             raise AeatSessionExpiredError(
                 redact_for_log(
@@ -735,7 +736,7 @@ class AeatAuthenticator:
                 password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
                 warn_days=self._settings.aeat_cert_warn_days,
                 critical_days=self._settings.aeat_cert_critical_days,
-                backend=self._settings.aeat_certificate_backend,
+                backend=CertificateBackend(self._settings.aeat_certificate_backend.name),
                 friendly_name=self._settings.aeat_certificate_friendly_name,
             )
             identity_nif: str | None = None
@@ -1122,7 +1123,7 @@ class AeatAuthenticator:
                 os.fsync(handle.fileno())
             self._restrict_file_permissions(tmp_path)
             os.replace(tmp_path, path)
-            from ....persistence.storage._lock import fsync_parent_dir
+            from .....core.locks import fsync_parent_dir
 
             fsync_parent_dir(path)
             self._restrict_file_permissions(path)
@@ -1135,12 +1136,12 @@ class AeatAuthenticator:
     def _restrict_file_permissions(path: Path) -> None:
         """Best-effort user-only permissions for persisted session files.
 
-        Delegates to :func:`aeat.auth._file_permissions.restrict_file_permissions`
+        Delegates to :func:`aeat.core.file_permissions.restrict_file_permissions`
         so the Windows ACL hardening discipline is shared with the
         Cl@ve Móvil provider (issue #469 M-2 — the Cl@ve Móvil writer
         previously skipped ACL hardening on Windows entirely).
         """
-        from ._file_permissions import restrict_file_permissions
+        from .....core.file_permissions import restrict_file_permissions
 
         restrict_file_permissions(path)
 
@@ -1159,7 +1160,7 @@ class AeatAuthenticator:
             path=path,
             password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 — env var NAME, not a secret
             friendly_name=self._settings.aeat_certificate_friendly_name,
-            backend=self._settings.aeat_certificate_backend,
+            backend=CertificateBackend(self._settings.aeat_certificate_backend.name),
         )
 
     async def _resolve_browser_session(self) -> BrowserSessionLike:
@@ -1193,7 +1194,7 @@ class AeatAuthenticator:
         """Best-effort teardown of a :class:`BrowserSessionLike`.
 
         The Protocol does not mandate a ``close()`` coroutine; real
-        :class:`aeat.browser.BrowserSession` wraps a Playwright
+        :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` wraps a Playwright
         ``Browser`` which owns a Chromium OS process. Tests supply
         fakes that may not. We probe for the method and call it when
         present; failure to close is logged but never raised.
@@ -1218,7 +1219,7 @@ class BrowserSessionFactory(Protocol):
     responsible for constructing / configuring the Playwright
     session. Unit tests supply a fake factory; the production
     factory lives with the caller (typically the CLI layer) so
-    ``aeat.auth`` does not import ``aeat.browser`` at module load.
+    ``aeat.adapters.outbound.aeat.auth`` does not import ``aeat.adapters.outbound.aeat.browser`` at module load.
     """
 
     async def __call__(self, settings: Settings) -> BrowserSessionLike: ...

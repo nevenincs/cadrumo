@@ -1,6 +1,6 @@
-"""Golden-fixture byte-exactness tests for Modelo 130 2025 (wave 105).
+"""Golden-fixture byte-exactness tests for Modelo 130 2025.
 
-Mirrors :mod:`test_golden_modelo_130` (wave 84 / 2024) for the 2025
+Mirrors :mod:`test_golden_modelo_130` ( / 2024) for the 2025
 ejercicio. :mod:`modelo_130_2025` re-exports the 2024 record spec
 verbatim (Orden EHA/672/2007 still governs Modelo 130), so the
 only per-ejercicio byte difference must be the 4-byte EJERCICIO
@@ -31,7 +31,7 @@ from .modelo_130_2025 import (
     REQUIRED_HEADER_FIELDS,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestModelo1302025GoldenKentQ1:
@@ -72,7 +72,7 @@ class TestModelo1302025GoldenKentQ1:
 
 
 class TestModelo1302024vs2025StructuralParity:
-    """Wave 105 invariant: 2024 and 2025 clones differ only at the
+    """2024 and 2025 clones differ only at the
     4-byte EJERCICIO field when the same casilla values are filed.
 
     Since "2024" → "2025" mutates only the final digit (ASCII 52 → 53),

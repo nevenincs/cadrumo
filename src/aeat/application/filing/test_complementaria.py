@@ -22,12 +22,12 @@ from . import (
 )
 from .testing import SyntheticProfile, default_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path):
-    """Wave-9: install an EphemeralMasterKeyProvider so the
+    """install an EphemeralMasterKeyProvider so the
     FilingDraftRepository / FilingAmendmentRepository ciphertext-at-rest
     writes work in the test sandbox without touching a real keychain."""
     from ...adapters.persistence.storage import (
@@ -66,7 +66,7 @@ def _profile(*modelos: str) -> SyntheticProfile:
 
 
 def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, draft: FilingDraft) -> None:
-    from ._repository import FilingDraftRepository
+    from ...domain.filing import FilingDraftRepository
 
     drafts_dir = tmp_path / "drafts"
     submissions_dir = tmp_path / "submissions"

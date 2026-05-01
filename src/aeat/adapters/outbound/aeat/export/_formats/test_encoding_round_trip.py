@@ -1,4 +1,4 @@
-"""Non-ASCII header round-trip invariant per encoding (wave 127).
+"""Non-ASCII header round-trip invariant per encoding.
 
 Kent's APELLIDOS / NOMBRE often contain Spanish tildes and
 accents (ñ, á, é, í, ó, ú, ü plus their upper-case variants,
@@ -12,7 +12,7 @@ encodings we ship:
   the Euro sign, so any € in a 303 header must fail loud at
   encode time rather than silently mojibake into ``?``.
 
-Wave 127 locks these invariants end-to-end.
+these invariants end-to-end.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ from .modelo_303_2024 import (
     REQUIRED_HEADER_FIELDS as REQUIRED_303,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 #: Characters both encodings support and Kent may reasonably file with.

@@ -3,7 +3,7 @@
 Kent runs these commands to discover which providers are configured,
 sign in, inspect the live session TTL, and clear a persisted session.
 The four subcommands are thin dispatch layers over the shared
-``AuthProvider`` abstraction in :mod:`aeat.auth`; no auth logic is
+``AuthProvider`` abstraction in :mod:`aeat.adapters.outbound.aeat.auth`; no auth logic is
 reimplemented here.
 """
 
@@ -21,8 +21,10 @@ from pydantic_settings import SettingsConfigDict
 from rich.console import Console
 
 from ....adapters.outbound.aeat.auth import (
-    SCOPES,
     AuthProviderKind,
+)
+from ....adapters.outbound.google import (
+    SCOPES,
     GoogleAuthPath,
     get_credentials,
     inspect_google_auth,
@@ -234,10 +236,14 @@ def _load_settings() -> Settings:
 
 def _parse_kind(raw: str) -> AuthProviderKind:
     try:
-        return AuthProviderKind(raw)
+        kind = AuthProviderKind(raw)
     except ValueError as exc:
-        valid = ", ".join(k.value for k in AuthProviderKind)
+        valid = ", ".join(k.value for k in _registry.iter_kinds())
         raise typer.BadParameter(f"unknown provider {raw!r}; valid values: {valid}") from exc
+    if kind not in _registry.iter_kinds():
+        valid = ", ".join(k.value for k in _registry.iter_kinds())
+        raise typer.BadParameter(f"unsupported provider {raw!r}; valid values: {valid}")
+    return kind
 
 
 @app.command("init", help="Guide Kent through the supported Google authentication paths.")
@@ -485,7 +491,7 @@ def init(
         doctor()
 
 
-@app.command("list-providers", help="List every known AEAT auth provider and its current state.")
+@app.command("list-providers", help="List supported AEAT auth providers and their current state.")
 def list_providers(
     configured_only: bool = typer.Option(
         False,
@@ -503,7 +509,7 @@ def list_providers(
         help="Emit JSON instead of a pretty table.",
     ),
 ) -> None:
-    """Kent-facing overview of every auth provider in the registry."""
+    """Kent-facing overview of every supported auth provider in the registry."""
     del show_all  # reserved for future use; see ADR
     settings = _load_settings()
 
@@ -529,7 +535,7 @@ def _resolve_kind(
         return explicit
     try:
         return _registry.default_kind(settings)
-    except _registry.NoConfiguredProviderError as exc:
+    except (_registry.NoConfiguredProviderError, _registry.UnknownProviderError) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
 
@@ -540,7 +546,7 @@ async def _close_provider(provider: Any) -> None:
     may grow a synchronous equivalent in the future. The helper
     accepts either by inspecting the return value for a coroutine,
     mirroring the dispatch pattern used inside
-    :mod:`aeat.auth._clave_movil` for browser-session teardown.
+    :mod:`aeat.adapters.outbound.aeat.auth._clave_movil` for browser-session teardown.
     """
     close = getattr(provider, "close", None)
     if close is None:
@@ -670,7 +676,7 @@ def configure(
 ) -> None:
     """Write Cl@ve Móvil configuration to ``env/.env`` idempotently.
 
-    Uses the same env-writer as ``aeat setup`` (:func:`aeat.env_io.write_env_vars`),
+    Uses the same env-writer as ``aeat setup`` (:func:`aeat.core.env_io.write_env_vars`),
     so existing comments and unrelated keys are preserved. ``env/.env`` is
     created if missing.
     """
@@ -760,12 +766,12 @@ def login(
         None,
         "--provider",
         "-p",
-        help="Auth provider kind (certificate, clave_permanente, clave_movil, clave_pin).",
+        help="Auth provider kind (certificate, clave_movil).",
     ),
     non_interactive: bool = typer.Option(
         False,
         "--non-interactive",
-        help="Refuse to run providers that need a human in the loop (Cl@ve Móvil / Cl@ve PIN).",
+        help="Refuse to run providers that need a human in the loop (Cl@ve Móvil).",
     ),
     json_output: bool = typer.Option(
         False,
@@ -805,7 +811,7 @@ def login(
         # surface — it is an internal file location that Kent has no
         # reason to consume from a login command. Downstream scripts
         # that need the path should resolve it via
-        # ``aeat.cli.auth._paths.storage_state_paths(settings, kind)``
+        # ``aeat.entrypoints.cli.auth._paths.storage_state_paths(settings, kind)``
         # rather than scraping login's output.
         payload = {
             "provider_kind": session.provider_kind.value,

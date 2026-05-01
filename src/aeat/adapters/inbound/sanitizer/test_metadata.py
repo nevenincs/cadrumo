@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.sanitizer._metadata`.
+"""Unit tests for :mod:`aeat.adapters.inbound.sanitizer._metadata`.
 
 The tests synthesise PDFs in-process (no fixture dep) covering:
 
@@ -18,7 +18,7 @@ import pytest
 
 from ._metadata import scrub_docinfo, scrub_xmp
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _new_pdf_with_docinfo() -> pikepdf.Pdf:

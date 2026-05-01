@@ -1,13 +1,13 @@
-"""BOE PDF fetcher for :mod:`aeat.schema`.
+"""BOE PDF fetcher for :mod:`aeat.domain.schema`.
 
 Mirrors the sha256-verified streaming-fetch pattern established by
-:mod:`aeat.manuals._fetch`. The fetched bytes are written to the
+:mod:`aeat.domain.manuals._fetch`. The fetched bytes are written to the
 schema cache directory; the returned :class:`FetchedSchemaSource`
 record carries the on-disk path plus every provenance scalar a
 downstream extractor needs.
 
 No manifest sidecar is written: provenance is embedded in the
-extractor's output :class:`~aeat.schema.Modelo`, which is itself
+extractor's output :class:`~aeat.domain.schema.Modelo`, which is itself
 persisted as diff-friendly JSON.
 
 Safety posture (audit-driven):
@@ -325,7 +325,7 @@ def fetch_boe_pdf(
         path and the provenance scalars needed downstream.
 
     Raises:
-        aeat.schema.SchemaCacheError: On unknown source, invalid
+        aeat.domain.schema.SchemaCacheError: On unknown source, invalid
             ``boe_ref``, disallowed override URL, oversized response,
             redirected fetch, or transport failure.
     """

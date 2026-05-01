@@ -21,7 +21,7 @@ from . import (
 )
 from ._store import _EVENTS_FILENAME, _TRACE_FILENAME, runs_dir
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 _NIF_CANARY = "12345678Z"

@@ -4,7 +4,7 @@ Imports every ``_entries/modelo_*.py`` module, collects its
 module-level ``ENTRY`` object, and freezes the result as the public
 :data:`MODELO_REGISTRY` mapping. Structural invariants are enforced at
 import time via :func:`_finalise_registry`; any violation raises
-:class:`aeat.models._errors.RegistryIntegrityError` and aborts package
+:class:`aeat.domain.modelos._errors.RegistryIntegrityError` and aborts package
 import.
 """
 
@@ -97,7 +97,7 @@ def _check_submission_portal(entries: Mapping[ModeloCode, ModeloMetadata]) -> No
     """Validate every ``submission_portal`` round-trips through the portal registry.
 
     When :attr:`ModeloMetadata.submission_portal` is non-``None``, it
-    must resolve inside :data:`aeat.portals.PORTAL_REGISTRY` and the
+    must resolve inside :data:`aeat.domain.portals.PORTAL_REGISTRY` and the
     portal's ``related_modelo`` must equal the modelo's own code. This
     closes the cross-reference round-trip at import time and is the
     type-level replacement for the free-form hint string shipped in
@@ -112,7 +112,7 @@ def _check_submission_portal(entries: Mapping[ModeloCode, ModeloMetadata]) -> No
             not match the modelo's code.
     """
     # Local import to avoid a circular module-level dependency with
-    # aeat.portals (which itself imports aeat.models.ModeloCode). The
+    # aeat.domain.portals (which itself imports aeat.domain.modelos.ModeloCode). The
     # import is routed through the public package root so it exercises
     # the lazy __getattr__ surface, keeping us on the documented API.
     from ..portals import PORTAL_REGISTRY
@@ -142,7 +142,7 @@ def _finalise_registry(
 
     Args:
         entries: The per-entry ``ENTRY`` objects loaded from
-            :mod:`aeat.models._entries`.
+            :mod:`aeat.domain.modelos._entries`.
 
     Returns:
         A :class:`types.MappingProxyType` from :class:`ModeloCode` to
@@ -230,17 +230,17 @@ def year_plan(year: int, profile: AutonomoProfile) -> Schedule:
     """Resolve the full filing :class:`Schedule` for a year and profile.
 
     Thin wrapper around
-    :meth:`aeat.deadlines.DeadlineEngine.compute`. The wrapper does not
+    :meth:`aeat.domain.deadlines.DeadlineEngine.compute`. The wrapper does not
     narrow the returned obligations; callers (notably the CLI) filter
     by profile-level applicability themselves.
 
     Args:
         year: The target fiscal year.
-        profile: The :class:`aeat.deadlines.AutonomoProfile` the
+        profile: The :class:`aeat.domain.deadlines.AutonomoProfile` the
             deadline engine resolves obligations for.
 
     Returns:
-        The :class:`aeat.deadlines.Schedule` produced by the deadline
+        The :class:`aeat.domain.deadlines.Schedule` produced by the deadline
         engine for ``year`` and ``profile``.
     """
     return DeadlineEngine().compute(profile, year=year)

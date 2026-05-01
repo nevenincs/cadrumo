@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.portals.Portal`."""
+"""Unit tests for :class:`aeat.domain.portals.Portal`."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pytest
 
 from ._codes import Portal
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_portal_has_exactly_42_members() -> None:

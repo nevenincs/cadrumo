@@ -1,9 +1,9 @@
 """Round-trip extractor test against the synthetic Modelo 130 generator.
 
 Every parametrised case renders a synthetic PDF via the L3 generator,
-runs :func:`aeat.declaracion.parse_declaracion` against the bytes, and
+runs :func:`aeat.adapters.inbound.declaracion.parse_declaracion` against the bytes, and
 asserts the extracted casillas equal the ground truth. This is the
-scale primitive cluster D's ADR (§9 exit criteria) mandates.
+scale primitive 's ADR (§9 exit criteria) mandates.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ from . import (
 
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.domain_financial_input,
+    pytest.mark.domain_inbound,
     pytest.mark.fixture_tier_l3,
 ]
 

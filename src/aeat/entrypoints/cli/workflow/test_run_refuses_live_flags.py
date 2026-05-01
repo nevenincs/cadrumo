@@ -15,7 +15,7 @@ from typer.testing import CliRunner
 
 from .. import app as root_app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_run_rejects_no_dry_run_flag() -> None:

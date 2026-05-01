@@ -1,7 +1,7 @@
 """Regex-driven field extraction for AEAT justificante PDFs (#44).
 
 This module translates the raw text of a justificante (as returned by one of
-the backends in :mod:`aeat.justificante._parsers`) into a
+the backends in :mod:`aeat.domain.justificante._parsers`) into a
 :class:`Justificante` pydantic record. The regex patterns deliberately
 accept both accented ("Código Seguro de Verificación") and stripped
 ("Codigo Seguro de Verificacion") label variants because AEAT's historical

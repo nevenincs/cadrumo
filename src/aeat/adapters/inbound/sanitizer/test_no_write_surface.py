@@ -1,4 +1,4 @@
-"""Write-guard test for :mod:`aeat.sanitizer` and ``aeat.cli.sanitize``.
+"""Write-guard test for :mod:`aeat.adapters.inbound.sanitizer` and ``aeat.entrypoints.cli.sanitize``.
 
 The sanitiser subpackage MUST NOT contain any public symbol whose
 name implies an AEAT mutation. This is a CI-time grep guard that
@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 # Banned verbs from the parent aeat-verify ADR's layer-2 write

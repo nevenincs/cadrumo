@@ -80,7 +80,7 @@ test:
 # Acceptance criterion 13: structural import-resolution alone is not
 # sufficient proof of restructure correctness.
 test-smoke-produce-verify-export:
-    uv run pytest src/aeat/submission/_formats/test_integration_kent_e2e.py src/aeat/submission/_formats/test_integration_kent_303_e2e.py -v
+    uv run pytest src/aeat/adapters/outbound/aeat/export/_formats/test_integration_kent_e2e.py src/aeat/adapters/outbound/aeat/export/_formats/test_integration_kent_303_e2e.py -v
 
 # Verify every documented re-export shim still resolves its symbols
 # (Step 8 acceptance precondition for the deterministic semver-bump rule).
@@ -251,7 +251,7 @@ gcloud-auth:
         echo "env/.env not found — run 'just env-setup' first." >&2
         exit 1
     fi
-    CLIENT_JSON=$(uv run python -c "from aeat.config import Settings; print(Settings().google_oauth_client_json)")
+    CLIENT_JSON=$(uv run python -c "from aeat.core.config import Settings; print(Settings().google_oauth_client_json)")
     if [ -z "$CLIENT_JSON" ]; then
         echo "GOOGLE_OAUTH_CLIENT_JSON is empty in env/.env — run 'uv run aeat auth init --path desktop-oauth-local-dev' first." >&2
         exit 1
@@ -261,12 +261,12 @@ gcloud-auth:
         echo "Drive/Sheets/Docs scopes cannot be requested against gcloud's built-in OAuth client." >&2
         exit 1
     fi
-    PROJECT=$(uv run python -c "from aeat.config import Settings; print(Settings().google_cloud_project)")
+    PROJECT=$(uv run python -c "from aeat.core.config import Settings; print(Settings().google_cloud_project)")
     if [ -z "$PROJECT" ]; then
         echo "GOOGLE_CLOUD_PROJECT is empty in env/.env — set it before continuing." >&2
         exit 1
     fi
-    SCOPES=$(uv run python -c "from aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)")
+    SCOPES=$(uv run python -c "from aeat.adapters.outbound.aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)")
     echo "▶ gcloud auth login (browser will open)…"
     gcloud auth login --quiet
     echo "▶ gcloud config set project $PROJECT"
@@ -290,7 +290,7 @@ gcloud-auth:
         Write-Error "env/.env not found - run 'just env-setup' first."
         exit 1
     }
-    $clientJson = (& uv run python -c "from aeat.config import Settings; print(Settings().google_oauth_client_json)" | Select-Object -Last 1).Trim()
+    $clientJson = (& uv run python -c "from aeat.core.config import Settings; print(Settings().google_oauth_client_json)" | Select-Object -Last 1).Trim()
     if (-not $clientJson) {
         Write-Error "GOOGLE_OAUTH_CLIENT_JSON is empty in env/.env - run 'uv run aeat auth init --path desktop-oauth-local-dev' first."
         exit 1
@@ -307,12 +307,12 @@ gcloud-auth:
     } catch {
         Write-Host "copy-bundled-python failed - continuing without override."
     }
-    $project = (& uv run python -c "from aeat.config import Settings; print(Settings().google_cloud_project)" | Select-Object -Last 1).Trim()
+    $project = (& uv run python -c "from aeat.core.config import Settings; print(Settings().google_cloud_project)" | Select-Object -Last 1).Trim()
     if (-not $project) {
         Write-Error "GOOGLE_CLOUD_PROJECT is empty in env/.env"
         exit 1
     }
-    $scopes = (& uv run python -c "from aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)" | Select-Object -Last 1).Trim()
+    $scopes = (& uv run python -c "from aeat.adapters.outbound.aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)" | Select-Object -Last 1).Trim()
     Write-Host "▶ gcloud auth login (browser will open)…"
     & $gcloud.Source auth login --quiet
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -425,7 +425,7 @@ gsuite-bootstrap-sa:
     if [ ! -f env/sa.json ]; then
         gcloud iam service-accounts keys create env/sa.json --iam-account="$SA" --project="$PROJECT"
     fi
-    uv run python -c "from pathlib import Path; from aeat.env_io import write_env_vars; write_env_vars(Path('env/.env'), {'GOOGLE_AUTH_PATH': 'service-account-automation', 'GOOGLE_APPLICATION_CREDENTIALS': 'env/sa.json'})"
+    uv run python -c "from pathlib import Path; from aeat.core.env_io import write_env_vars; write_env_vars(Path('env/.env'), {'GOOGLE_AUTH_PATH': 'service-account-automation', 'GOOGLE_APPLICATION_CREDENTIALS': 'env/sa.json'})"
     just gsuite-enable-apis
     uv run aeat bootstrap
     uv run aeat doctor
@@ -456,7 +456,7 @@ gsuite-bootstrap-sa:
         & $gcloud.Source iam service-accounts keys create env/sa.json --iam-account=$sa --project=$project
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
-    & uv run python -c "from pathlib import Path; from aeat.env_io import write_env_vars; write_env_vars(Path('env/.env'), {'GOOGLE_AUTH_PATH': 'service-account-automation', 'GOOGLE_APPLICATION_CREDENTIALS': 'env/sa.json'})"
+    & uv run python -c "from pathlib import Path; from aeat.core.env_io import write_env_vars; write_env_vars(Path('env/.env'), {'GOOGLE_AUTH_PATH': 'service-account-automation', 'GOOGLE_APPLICATION_CREDENTIALS': 'env/sa.json'})"
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     just gsuite-enable-apis
     uv run aeat bootstrap
@@ -471,13 +471,13 @@ gsuite-doctor:
 playwright-doctor:
     #!/usr/bin/env bash
     set -euo pipefail
-    uv run python -m aeat.browser.health
+    uv run python -m aeat.entrypoints.cli.browser.health
 
 [windows]
 playwright-doctor:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    uv run python -m aeat.browser.health
+    uv run python -m aeat.entrypoints.cli.browser.health
 
 # Walk through OAuth Desktop client provisioning.
 gsuite-oauth-client:

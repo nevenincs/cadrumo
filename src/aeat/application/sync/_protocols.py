@@ -8,8 +8,8 @@ actually consumes:
 - :class:`ModeloIdentifier` / :class:`PortalIdentifier` — typed,
   regex-validated string identifiers used at the live wire boundary.
   They intentionally accept any well-formed AEAT modelo / portal slug
-  rather than the closed :class:`aeat.models.ModeloCode` /
-  :class:`aeat.portals.Portal` enums; live AEAT data is the source of
+  rather than the closed :class:`aeat.domain.modelos.ModeloCode` /
+  :class:`aeat.domain.portals.Portal` enums; live AEAT data is the source of
   truth here, not our internal catalogue.
 - :class:`CertificateBackend` — preloads the operator certificate into
   the browser context.
@@ -45,8 +45,8 @@ class ModeloIdentifier(str):
     """Typed string identifier for an AEAT modelo (e.g. ``"100"``, ``"303"``).
 
     Format: three digits with an optional trailing uppercase letter.
-    The shape mirrors :class:`aeat.deadlines.ModeloIdentifier` and is
-    intentionally wider than :class:`aeat.models.ModeloCode` so live
+    The shape mirrors :class:`aeat.domain.deadlines.ModeloIdentifier` and is
+    intentionally wider than :class:`aeat.domain.modelos.ModeloCode` so live
     AEAT payloads referencing modelos outside the v1 closed catalogue
     can flow through the wire boundary without the runner crashing.
     """
@@ -74,7 +74,7 @@ class PortalIdentifier(str):
     """Typed string identifier for an AEAT portal slug.
 
     The wire-level slug shape (``"sede"``, ``"area-personal"``, ...) is
-    distinct from the canonical :class:`aeat.portals.Portal` enum
+    distinct from the canonical :class:`aeat.domain.portals.Portal` enum
     values (``"portal_sede_root"``); this type captures whichever
     identifier AEAT publishes in its live portal manifest.
     """
@@ -100,10 +100,10 @@ class PortalIdentifier(str):
 
 @runtime_checkable
 class CertificateBackend(Protocol):
-    """Narrow surface over :mod:`aeat.auth.certificate` for the runner.
+    """Narrow surface over :mod:`aeat.adapters.outbound.aeat.auth.certificate` for the runner.
 
     Production wires this to
-    :func:`aeat.auth.preload_into_browser_context`; tests substitute a
+    :func:`aeat.adapters.outbound.aeat.auth.preload_into_browser_context`; tests substitute a
     concrete Protocol-conforming class that records calls.
     """
 
@@ -142,7 +142,7 @@ class ModeloSchema(Protocol):
 
 @runtime_checkable
 class SchemaLoader(Protocol):
-    """Narrow surface over :mod:`aeat.schema` for the runner."""
+    """Narrow surface over :mod:`aeat.domain.schema` for the runner."""
 
     def load(self, modelo: ModeloIdentifier) -> ModeloSchema:
         """Return the extracted schema for a modelo."""
@@ -151,14 +151,14 @@ class SchemaLoader(Protocol):
 
 @runtime_checkable
 class Rule(Protocol):
-    """Narrow shape for a single manual rule from :mod:`aeat.manuals`."""
+    """Narrow shape for a single manual rule from :mod:`aeat.domain.manuals`."""
 
     rule_id: str
 
 
 @runtime_checkable
 class ManualRulesLoader(Protocol):
-    """Narrow surface over :mod:`aeat.manuals` for the runner."""
+    """Narrow surface over :mod:`aeat.domain.manuals` for the runner."""
 
     def load(self, modelo: ModeloIdentifier) -> tuple[Rule, ...]:
         """Return the manual rules for a modelo."""
@@ -167,14 +167,14 @@ class ManualRulesLoader(Protocol):
 
 @runtime_checkable
 class LLMRequest(Protocol):
-    """Narrow shape for a request to :mod:`aeat.llm`."""
+    """Narrow shape for a request to :mod:`aeat.adapters.outbound.llm`."""
 
     prompt: str
 
 
 @runtime_checkable
 class LLMClient(Protocol):
-    """Narrow surface over :mod:`aeat.llm` for the runner.
+    """Narrow surface over :mod:`aeat.adapters.outbound.llm` for the runner.
 
     The runner does not invoke the LLM on its happy path, but it
     carries the Protocol on its signature so escalation strategies

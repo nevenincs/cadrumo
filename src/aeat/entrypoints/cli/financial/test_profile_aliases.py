@@ -6,11 +6,11 @@ from types import MappingProxyType
 
 import pytest
 
-from ....domain.financial.categories import SpendingCategory
-from ....domain.financial.usage_ratios import ELIGIBLE_USAGE_RATIO_CATEGORIES
+from ....domain.categories import SpendingCategory
+from ....domain.usage_ratios import ELIGIBLE_USAGE_RATIO_CATEGORIES
 from ._profile_aliases import FAMILY_ALIASES
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_home_office_area_covers_six_categories() -> None:

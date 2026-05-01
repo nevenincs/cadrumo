@@ -13,7 +13,7 @@ from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
 from . import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _canonical_answers(tmp_path: Path) -> SetupAnswers:

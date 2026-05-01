@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.cli._sheets_helpers`."""
+"""Unit tests for :mod:`aeat.entrypoints.cli._sheets_helpers`."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pytest
 
 from ._sheets_helpers import coerce_value_input_option, parse_values_json
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestParseValuesJson:

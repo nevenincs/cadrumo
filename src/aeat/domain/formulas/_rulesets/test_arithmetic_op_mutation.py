@@ -1,6 +1,6 @@
-"""Arithmetic-op-class mutation harness (issue #457 Wave 6 closure).
+"""Arithmetic-op-class mutation harness (issue #457 closure).
 
-Closes the operator-class-typo deferral catalogued in the Wave 5
+Closes the operator-class-typo deferral catalogued in the
 audit: a typo where the author wrote ``add_op`` but meant ``sub_op``
 (or vice versa) was previously NOT exercised by any mutator. The
 existing operand-swap harness covers operand-order regressions
@@ -84,7 +84,7 @@ from .test_threshold_literal_mutation import (
     _modelo_303_fixture_with_iva_rate_baselines,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @dataclass(frozen=True)

@@ -9,7 +9,7 @@ import pytest
 from .._engine import Engine
 from . import MODELO_200_2024
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:

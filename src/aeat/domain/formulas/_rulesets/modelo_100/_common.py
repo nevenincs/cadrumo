@@ -14,20 +14,12 @@ from .._common import make_citation as _shared_make_citation
 
 # BOE consolidated-text URLs — pinned with consult-date suffix so the
 # citation traces to the exact text version used at authoring time.
-LIRPF_BASE_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
-LIS_BASE_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328"
-RIRPF_BASE_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820"
 
 LIRPF_CONSULT_2026_02_28_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20260228&tn=1"
 LIS_CONSULT_2026_02_28_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328&p=20260228&tn=1"
 RIRPF_CONSULT_2026_02_28_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820&p=20260228&tn=1"
 
 # Modifying-law BOE ids referenced from anexo citations.
-RD_LEY_4_2024_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-13066"
-LEY_7_2024_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-26694"
-LEY_12_2023_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-12203"
-ORDEN_HAC_242_2025_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049"
-ORDEN_HAC_277_2026_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2026-7041"
 
 # Default retrieval date — every M100 sub-package citation defaults to
 # 2026-04-27 unless explicitly overridden. The 2026-02-28 consult-date
@@ -80,18 +72,8 @@ def cite_rirpf(article: str, quoted_text_es: str) -> LegalCitation:
 
 
 __all__ = [
-    "LEY_7_2024_URL",
-    "LEY_12_2023_URL",
-    "LIRPF_BASE_URL",
     "LIRPF_CONSULT_2026_02_28_URL",
-    "LIS_BASE_URL",
-    "LIS_CONSULT_2026_02_28_URL",
     "M100_RETRIEVAL_DATE",
-    "ORDEN_HAC_242_2025_URL",
-    "ORDEN_HAC_277_2026_URL",
-    "RD_LEY_4_2024_URL",
-    "RIRPF_BASE_URL",
-    "RIRPF_CONSULT_2026_02_28_URL",
     "cite_lirpf",
     "cite_lis",
     "cite_rirpf",

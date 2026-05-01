@@ -23,7 +23,7 @@ from ...core.observability._errors import RunContextMissingError
 from ...domain.portals._errors import PortalIntegrityError
 from ._errors import decorate_typer_app, error_boundary_under_test
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 runner = CliRunner()
 

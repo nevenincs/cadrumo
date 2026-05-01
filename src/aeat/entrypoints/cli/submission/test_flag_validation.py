@@ -1,4 +1,4 @@
-"""Flag-level validation for --modelo and --ejercicio (wave 136).
+"""Flag-level validation for --modelo and --ejercicio.
 
 Typer callback validators on verify/diff reject obviously-malformed
 flag values BEFORE the registry lookup surfaces a generic
@@ -26,7 +26,7 @@ from ._schema_registry import (
     validate_swift_flag,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _runner = CliRunner()
 

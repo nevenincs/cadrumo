@@ -19,7 +19,7 @@ from ._live import (
     unique_prefix,
 )
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
 
 
 class TestSheetsLiveRoundTrip:

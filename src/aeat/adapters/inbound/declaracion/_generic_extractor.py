@@ -1,4 +1,4 @@
-"""Generic quarterly-declaración extractor (EPIC #305 cluster D).
+"""Generic quarterly-declaración extractor (EPIC #305).
 
 Every quarterly / monthly AEAT declaración the project supports shares
 the same shape: an NIF + ejercicio + período header, then each casilla
@@ -62,13 +62,13 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
     """Map ``text_casilla_id → expected label text``. Required when the
     label is multi-word so the truncation-detection pass can calculate
     the expected value-token count. Omitting a label means
-    truncation-detection is skipped for that casilla (wave 29 HIGH-3)."""
+    truncation-detection is skipped for that casilla."""
     casilla_width: ClassVar[int] = 2
     named_field_patterns: ClassVar[dict[str, str]] = {}
     """Map ``field_id → raw regex pattern`` for modelos whose summary
     blocks do NOT print numbered casilla IDs (e.g. 036/037/232/369/720).
     The pattern must include exactly one capture group for the value.
-    Wave 27: third primitive path complementing the decimal casilla_ids
+    third primitive path complementing the decimal casilla_ids
     and the text_casilla_ids primitives."""
 
     def __init_subclass__(cls, **kwargs: object) -> None:
@@ -93,7 +93,7 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
                 )
             seen.update(group)
 
-        # Wave 46 LOW: pre-compile named_field regexes once at subclass
+        # pre-compile named_field regexes once at subclass
         # definition rather than on every `extract()` call. The five
         # named-field modelos (036/037/232/369/720) amortise this
         # across every PDF ingested.
@@ -120,7 +120,7 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
         so "value to the right of the label" reduces to "the final token
         on the line". Single-token values only — multi-word payloads
         (e.g. ``"La Rioja"``) need the richer bbox-anchored primitive,
-        but the truncation-detection (wave 29 HIGH-3) warns when a
+        but the truncation-detection warns when a
         multi-token payload is silently collapsed to its last token.
         """
         width = type(self).casilla_width
@@ -198,7 +198,7 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
             if hit.match_count > 1:
                 warnings.append(_ambiguous_warning(casilla_id, hit.match_count))
 
-            # Wave 29 HIGH-3: detect likely-truncated multi-word values
+            # detect likely-truncated multi-word values
             # (e.g. "La Rioja" → captures only "Rioja"). The subclass
             # declares the label text in ``text_labels``; we re-scan the
             # full casilla line, subtract the label's token count, and
@@ -228,7 +228,7 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
 
         # Named-field path: arbitrary regex captures for summary blocks
         # that do NOT print numbered casilla IDs (036/037/232/369/720).
-        # Patterns pre-compiled at subclass-definition time (wave 46 LOW).
+        # Patterns pre-compiled at subclass-definition time.
         compiled_named: dict[str, re.Pattern[str]] = type(self)._named_field_compiled
         for field_id, pattern in compiled_named.items():
             matches = list(pattern.finditer(full_text))
@@ -271,12 +271,12 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
         )
 
 
-# Wave 59a H1: restrict the lookarounds to LETTERS (not \w, which also
+# restrict the lookarounds to LETTERS (not \w, which also
 # matches digits and underscore). AEAT's amount / casilla-ID tokens are
 # digits, and an adversarial wrap like ``9-\n10`` would be collapsed
 # to ``910`` under a looser regex. Keeping this to Unicode letters
 # (A-Z, a-z, accented Latin) and the soft-hyphen / ASCII hyphen pair
-# preserves the wave 51 H2 label-stitching use-case without touching
+# preserves the label-stitching use-case without touching
 # digit boundaries.
 _SOFT_HYPHEN_BREAK_RE = re.compile(r"(?<=[A-Za-zÀ-ÿ])[-­]\n(?=[A-Za-zÀ-ÿ])")
 
@@ -284,24 +284,24 @@ _SOFT_HYPHEN_BREAK_RE = re.compile(r"(?<=[A-Za-zÀ-ÿ])[-­]\n(?=[A-Za-zÀ-ÿ])"
 def _normalise_pdf_text(text: str) -> str:
     """Pre-normalise pdfplumber text for the label-regex primitives.
 
-    Wave 51 H2: AEAT's multi-column PDFs hyphenate long labels across
+    AEAT's multi-column PDFs hyphenate long labels across
     line breaks (``Cuota reper-\\ncutida``). Stitching the hyphen-newline
     pair back together keeps the label-anchored regex from silently
     missing the casilla. The soft-hyphen character (U+00AD) is also
     rendered as a regular ``-`` by pdfplumber in some PDFs, so strip
     both variants.
 
-    Wave 56 M1: narrowed to require alphanumeric context on BOTH sides
+    narrowed to require alphanumeric context on BOTH sides
     of the hyphen-newline pair. A leading bullet-style ``-\\nitem``
     (where the hyphen starts a line) no longer collapses into the
     following word — the lookbehind guarantees we only stitch real
     word-continuations.
 
-    Wave 59a H1: lookarounds further tightened to Unicode LETTERS only
+    lookarounds further tightened to Unicode LETTERS only
     (not digits / underscore). Prevents an adversarial digit wrap
     ``9-\\n10`` from collapsing to ``910``.
 
-    Wave 61d non-goal: a NBSP-space-restitching pre-pass was
+    non-goal: a NBSP-space-restitching pre-pass was
     prototyped and rejected — the only unambiguous restitching window
     is a line whose tail is a pure Spanish amount, but labels often
     embed casilla references (``"2% s/casilla 03 400,00"``) that are
@@ -399,7 +399,7 @@ def _derive_status(
     values: list[ExtractedCasilla],
     required: tuple[str, ...],
 ) -> ExtractionStatus:
-    # Wave 23 HIGH-1/HIGH-2 closure: header-only extractors (`casilla_ids=()`)
+    # closure: header-only extractors (`casilla_ids=()`)
     # must NEVER report COMPLETE — they have no casilla-level data to verify.
     if not required:
         return ExtractionStatus.UNVERIFIABLE

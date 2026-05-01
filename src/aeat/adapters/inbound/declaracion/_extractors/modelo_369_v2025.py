@@ -5,7 +5,7 @@ Régimen Exterior, trimestral) y IOSS (Régimen Importación, mensual)
 para ventas B2C transfronterizas en la UE.
 
 AEAT does not publish numbered casilla IDs for the 369 summary block
-per Orden HAC/611/2021. Wave 27 adds the named-field primitive and
+per Orden HAC/611/2021. the named-field primitive and
 migrates this extractor off the header-only MVP: we capture three
 summary totals that every 369 filing prints (total base imponible,
 total cuota IVA, total a ingresar).
@@ -31,7 +31,7 @@ class Modelo369V2025Extractor(GenericDeclaracionExtractor):
         revision="2025.01",
     )
     casilla_ids: ClassVar[tuple[str, ...]] = ()
-    # Line-anchored + soportado-exclusion (wave 33 M2 fix) to stop
+    # Line-anchored + soportado-exclusion (fix) to stop
     # ``Total cuotas IVA soportado`` from matching ``total_cuota_iva``
     # (soportado = IVA deducible, NOT IVA devengada).
     # Each pattern uses a negative-lookahead to reject ``soportad`` (IVA

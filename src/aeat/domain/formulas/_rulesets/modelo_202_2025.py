@@ -9,7 +9,7 @@ Kent's filing must satisfy on every period:
   AEAT prints casilla 17 as the whole-percent value (``17,00`` ⇒ 17%);
   the ``/ 100`` normalisation happens in the formula so the ruleset
   can be applied directly to raw PDF-extracted values without
-  pre-processing (wave 33 H1 fix).
+  pre-processing (fix).
 - casilla 32 = 18 - 27 - 28 - 30 (resultado — cuota integra menos
   bonificaciones, retenciones e ingresos a cuenta, pagos fraccionados
   anteriores).
@@ -23,7 +23,7 @@ Legal base: Orden HFP/227/2017 (BOE-A-2017-2778); refreshed by
 HFP/312/2023 and HAC/262/2025 (BOE-A-2025-5407) — the 2025 Orden
 introduced the micropyme / pyme rate boxes relevant to casilla 17.
 
-Wave 50 research: casilla 34 "Cantidad a ingresar (mayor de claves
+casilla 34 "Cantidad a ingresar (mayor de claves
 [32] y [33])" is VERIFIED against BOE-A-2025-5407 Anexo I pág. 36465
 liquidación block 4. The same page's Ingreso (8) block references
 ``Importe (casilla [34] ó [03])`` — confirming 34 is the terminal

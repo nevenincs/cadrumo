@@ -32,7 +32,7 @@ class Modelo115V2025Extractor(GenericDeclaracionExtractor):
         año=2025,
         revision="2025.01",
     )
-    # Labels verified vs AEAT Instrucciones Modelo 115 (wave 48/49 H5).
+    # Labels verified vs AEAT Instrucciones Modelo 115 (/49 H5).
     casilla_ids: ClassVar[tuple[str, ...]] = (
         "01",  # nº de arrendadores
         "02",  # base de retención

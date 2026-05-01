@@ -4,7 +4,7 @@ The :data:`CALENDAR` table is the v1 source of truth for filing
 windows. Every entry is sourced from the AEAT *calendario del
 contribuyente* and the BOE order that fixes the filing schedule for
 the modelo, with citations propagated to every emitted
-:class:`aeat.deadlines.FilingObligation`.
+:class:`aeat.domain.deadlines.FilingObligation`.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from calendar import monthrange
 from datetime import date
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -21,8 +21,9 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 class PeriodKind(StrEnum):
     """Period granularity supported by the v1 engine."""
 
-    QUARTERLY = "QUARTERLY"
-    ANNUAL = "ANNUAL"
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    ANNUAL = "annual"
 
 
 class CanonicalWindow(BaseModel):
@@ -50,6 +51,13 @@ class CanonicalWindow(BaseModel):
     closes_on: date
     payment_cutoff_on: date | None = None
     boe_references: tuple[str, ...] = Field(default_factory=tuple)
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _coerce_legacy_period_kind(cls, value: object) -> object:
+        if isinstance(value, str):
+            return PeriodKind(value.lower())
+        return value
 
     @model_validator(mode="after")
     def _check_window_order(self) -> CanonicalWindow:

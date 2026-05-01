@@ -279,11 +279,7 @@ def _qualifies_for_tier_60_rehab(contract: RentalContract) -> bool:
 
 __all__ = [
     "DEFAULT_EJERCICIO_AMENDMENT_YEAR",
-    "JOVEN_TENANT_AGE_MAX",
-    "JOVEN_TENANT_AGE_MIN",
     "LEY_12_2023_IN_FORCE_DATE",
-    "PRIOR_RENT_REBAJA_THRESHOLD",
-    "REHAB_LOOKBACK_DAYS",
     "TierResolution",
     "resolve_reduccion",
 ]

@@ -1,6 +1,6 @@
 """Shared review-package test fixtures.
 
-Every test in :mod:`aeat.review` that persists a draft via the
+Every test in :mod:`aeat.application.review` that persists a draft via the
 ciphertext-at-rest :class:`FilingDraftRepository` needs an
 :class:`EphemeralMasterKeyProvider` installed via
 :func:`override_master_key_provider`. Putting the autouse fixture in a

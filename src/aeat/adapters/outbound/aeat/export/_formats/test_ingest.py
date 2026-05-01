@@ -1,4 +1,4 @@
-"""Tests for the DR spec ingestion library (EPIC #305 wave 86)."""
+"""Tests for the DR spec ingestion library (EPIC #305)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from ._ingest import ingest_dr_spec_document, ingest_dr_spec_path
 from ._record_spec import FieldKind, SignedMode
 from ._serialise import serialise_envelope
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 _FIXTURE_DIR = (
     Path(__file__).resolve().parent.parent.parent.parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs"

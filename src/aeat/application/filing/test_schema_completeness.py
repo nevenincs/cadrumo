@@ -1,4 +1,4 @@
-"""Cross-validation: casilla schema ⊇ formula ruleset (#305 cluster B phase 1).
+"""Cross-validation: casilla schema ⊇ formula ruleset (#305).
 
 Silent drift between the casilla schema (what the builder iterates) and
 the formula ruleset (what the formula engine computes) is a real
@@ -25,7 +25,7 @@ from ...domain.formulas._rulesets.modelo_303_2024 import RULESET as RULESET_303_
 from ...domain.formulas._rulesets.modelo_303_2025 import RULESET as RULESET_303_2025
 from .runtime import build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _ruleset_casilla_ids(ruleset) -> set[str]:

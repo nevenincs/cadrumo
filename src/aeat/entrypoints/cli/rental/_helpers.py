@@ -1,7 +1,7 @@
 """Shared helpers for the ``aeat rental`` sub-app (#454).
 
 Storage imports are deferred behind :func:`open_session` so the
-sub-app does not pull :mod:`aeat.storage` (with its alembic plugin
+sub-app does not pull :mod:`aeat.adapters.persistence.storage` (with its alembic plugin
 discovery) into every CLI command's import chain; this preserves
 the json-pipe-safety contract.
 """

@@ -1,4 +1,4 @@
-"""Unit tests for the strict pydantic v2 models in :mod:`aeat.deadlines._models`."""
+"""Unit tests for the strict pydantic v2 models in :mod:`aeat.domain.deadlines._models`."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from . import (
     Schedule,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _profile() -> AutonomoProfile:

@@ -2,7 +2,7 @@
 
 The 2024 and 2025 rulesets are mechanically identical because the
 LIVA arts. 90 / 91 régimen general rates were not amended between
-the two years (see the wave-2 research doc §"Mid-year rule
+the two years (see the doc §"Mid-year rule
 changes"). The shared casilla and citation tuples are imported
 from the 2024 sibling; the formulas mirror the 2024 set with
 year-stamped ``formula_id`` strings so audit ledgers can

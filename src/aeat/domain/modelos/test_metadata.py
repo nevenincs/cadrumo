@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.models._metadata.ModeloMetadata`."""
+"""Unit tests for :class:`aeat.domain.modelos._metadata.ModeloMetadata`."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from ._citations import LegalCitation
 from ._codes import ModeloCode
 from ._metadata import ModeloMetadata
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _ALL: frozenset[TaxpayerProfile] = frozenset(TaxpayerProfile)
 

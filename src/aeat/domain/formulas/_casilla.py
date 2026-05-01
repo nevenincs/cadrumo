@@ -64,13 +64,13 @@ class CasillaDefinition(BaseModel):
         Issue #339 closure of the audit finding referenced in EPIC #316:
         ``CasillaDefinition.legal_basis`` was previously optional, which
         let a ruleset author ship a ``computed=True`` row with zero legal
-        provenance — bypassing the wave-69 ``KnownBadCitation`` blocklist
+        provenance — bypassing the ``KnownBadCitation`` blocklist
         entirely (the blocklist only fires when a citation is present).
         Tax math without legal citations is unverifiable for an AEAT-
         inspector scenario.
 
         The companion ``aeat audit rulesets citations`` CLI (under
-        :mod:`aeat.cli.audit`) reports per-modelo coverage and fails non-
+        :mod:`aeat.entrypoints.cli.audit`) reports per-modelo coverage and fails non-
         zero on any gap, so future drift surfaces both at import time and
         in the dedicated audit surface.
         """

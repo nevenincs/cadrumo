@@ -6,7 +6,7 @@ rectificativa). Filings from period 2024-09 onward use this layout.
 
 The MVP covers the same 33 casillas as v2025 — HAC/819 added tipos
 impositivos casillas but did not repackage the liquidación block, so
-the extractor set is IDENTICAL to v2025's. Wave 49 L8 corrects the
+the extractor set is IDENTICAL to v2025's. corrects the
 earlier "superset" claim: the set is equal, not proper-superset.
 Drift between v2024.09 and v2025 (new rectificativa casillas, etc.)
 is captured by the separate ``revision`` key so a phase-3 widening

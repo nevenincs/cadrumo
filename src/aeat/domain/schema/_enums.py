@@ -1,4 +1,4 @@
-"""Closed taxonomies exposed by :mod:`aeat.schema`.
+"""Closed taxonomies exposed by :mod:`aeat.domain.schema`.
 
 Every enum is a :class:`str.StrEnum` so members compare equal to
 their canonical string representation across JSON boundaries.
@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from ..casillas.models import CasillaDataType
+
 
 class SchemaSource(StrEnum):
-    """Provenance class of an extracted :class:`aeat.schema.Modelo`.
+    """Provenance class of an extracted :class:`aeat.domain.schema.Modelo`.
 
     ``BOE_ORDEN`` is the only member implemented in the v1 PoC. Three
     reserved follow-up extractor slots (``PORTAL_HTML_PROBE``,
@@ -21,26 +23,6 @@ class SchemaSource(StrEnum):
     """
 
     BOE_ORDEN = "boe_orden"
-
-
-class CasillaDataType(StrEnum):
-    """Closed catalogue of casilla data types.
-
-    Owned by :mod:`aeat.schema`. The adjacent
-    :class:`aeat.casillas.models.CasillaDataType` carries the same
-    member values for the curated reviewer corpus; the two enums are
-    bridged by string-value round-trip (see the 2026-04-17 schema
-    extraction ADR §7). ``isinstance`` comparisons across the two
-    enums are forbidden.
-    """
-
-    CURRENCY_EUR = "currency_eur"
-    INTEGER = "integer"
-    BOOLEAN = "boolean"
-    DATE = "date"
-    TEXT = "text"
-    SELECT = "select"
-    PERCENTAGE = "percentage"
 
 
 class BinaryFormulaOp(StrEnum):

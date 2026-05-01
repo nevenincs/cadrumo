@@ -26,8 +26,6 @@ if TYPE_CHECKING:
 
 
 def _format_status(description: AuthProviderDescription, entry: ProviderRegistryEntry) -> str:
-    if not entry.implemented:
-        return "not yet implemented"
     if description.configured and description.available:
         return "configured, healthy"
     if description.configured and not description.available:
@@ -53,10 +51,6 @@ def _format_expires(description: AuthProviderDescription) -> str:
 def _format_health(description: AuthProviderDescription, entry: ProviderRegistryEntry) -> str:
     """Render the HEALTH column as Kent-readable prose.
 
-    Unimplemented registry entries emit ``—`` here because the STATUS
-    column already says "not yet implemented" and repeating it is
-    noise.
-
     Implemented providers either supply a prose ``health_summary``
     (Cl@ve Móvil emits "ready — requires push approval on the Cl@ve
     app") that is passed through, or the cert-provider's legacy
@@ -65,9 +59,6 @@ def _format_health(description: AuthProviderDescription, entry: ProviderRegistry
     copy here, with a renewal URL surfaced on every non-healthy
     certificate severity so Kent always has a next step.
     """
-    if not entry.implemented:
-        return "—"
-
     severity = (description.health_severity or "").upper()
     days = description.days_until_expiry
     summary = description.health_summary or ""

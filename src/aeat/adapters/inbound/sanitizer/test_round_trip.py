@@ -1,7 +1,7 @@
 """Round-trip parser tests for committed sanitised fixtures (#239).
 
 Every committed fixture under ``tests/fixtures/justificantes/`` must
-remain parseable by :func:`aeat.justificante.parse_justificante`
+remain parseable by :func:`aeat.domain.justificante.parse_justificante`
 after sanitisation — the test fixture's whole point is to exercise
 the production extractor against a synthetic-but-shape-preserving
 representative of an AEAT capture.
@@ -9,7 +9,7 @@ representative of an AEAT capture.
 This file iterates the fixtures and asserts:
 
 * ``parse_justificante(fixture)`` returns a valid
-  :class:`aeat.justificante.Justificante`.
+  :class:`aeat.domain.justificante.Justificante`.
 * The parsed ``modelo`` / ``period`` / ``ejercicio`` /
   ``presented_at`` are non-empty (the fields the per-modelo
   extractor uses to bind regression assertions).
@@ -18,7 +18,7 @@ This file iterates the fixtures and asserts:
   ``replacements_applied`` rows — confirming the rewrite landed
   the synthetic at the position the parser reads.
 
-Until phase 9 lands the first fixtures, the test parametrise is
+Until lands the first fixtures, the test parametrise is
 empty and pytest collects zero items. The module ships the same
 sentinel-empty-list pattern as ``test_adversarial_absence.py``.
 """
@@ -32,7 +32,7 @@ import pytest
 
 from ....domain.justificante import parse_justificante
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _project_root() -> Path:

@@ -1,4 +1,4 @@
-"""Truth-table tests for :func:`aeat.deadlines.applies_to`.
+"""Truth-table tests for :func:`aeat.domain.deadlines.applies_to`.
 
 Each parametrised case asserts the documented BOE / Manual práctico
 rule for one autónomo modelo against one profile-flag combination.
@@ -16,7 +16,7 @@ from . import (
     explain,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _make_profile(

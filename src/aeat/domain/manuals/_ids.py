@@ -1,4 +1,4 @@
-"""Deterministic rule-id generation for ``aeat.manuals``.
+"""Deterministic rule-id generation for ``aeat.domain.manuals``.
 
 Rule identifiers are locked at the v1 schema layer even though v1
 does not yet produce real rule records, so follow-up extraction runs

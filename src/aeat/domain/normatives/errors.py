@@ -1,8 +1,8 @@
-"""Domain errors for the ``aeat.normatives`` subpackage.
+"""Domain errors for the ``aeat.domain.normatives`` subpackage.
 
 All exceptions raised while loading, querying, verifying, or citing
 Spanish tax normatives inherit from :class:`NormativeError`, which in
-turn inherits from :class:`aeat.errors.AeatError`.
+turn inherits from :class:`aeat.core.errors.AeatError`.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from ...core.errors import AeatError
 
 
 class NormativeError(AeatError):
-    """Base error for every ``aeat.normatives`` failure mode."""
+    """Base error for every ``aeat.domain.normatives`` failure mode."""
 
 
 class NormativeParseError(NormativeError):

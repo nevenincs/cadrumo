@@ -7,7 +7,7 @@ import pytest
 from ...core.errors import ErrorCategory, get_registered_error_code
 from . import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError, parse_tax_region
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_profile_errors_have_registered_codes() -> None:

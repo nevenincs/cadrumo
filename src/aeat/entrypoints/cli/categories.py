@@ -7,7 +7,7 @@ import json
 import typer
 
 from ...domain.casillas import ModeloCode
-from ...domain.financial.categories import CATEGORY_PROFILES_2025, SpendingCategory, family_for
+from ...domain.categories import CATEGORY_PROFILES_2025, SpendingCategory, family_for
 
 app = typer.Typer(
     name="categories",

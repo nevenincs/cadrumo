@@ -22,7 +22,7 @@ from ._amortization import (
 )
 from ._inventario import InventoryRecord, ValuationMethod
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestAmortizationCategory:

@@ -36,7 +36,7 @@ def _project() -> str:
 
 def _adc() -> Any:
     """Return ADC credentials with the cloud-platform scope."""
-    from ...adapters.outbound.aeat.auth import CLOUD_PLATFORM_SCOPE, get_credentials_for_scopes
+    from ...adapters.outbound.google import CLOUD_PLATFORM_SCOPE, get_credentials_for_scopes
 
     return get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
 
@@ -51,7 +51,7 @@ def functions_list() -> None:
     The ``-`` location wildcard returns functions from every region in
     a single call.
     """
-    from ...adapters.outbound.aeat.auth import build_cloudfunctions_client
+    from ...adapters.outbound.google import build_cloudfunctions_client
 
     client = build_cloudfunctions_client(_adc())
     parent = f"projects/{_project()}/locations/-"
@@ -76,7 +76,7 @@ def functions_list() -> None:
 @functions_app.command(name="describe", help="Print one Cloud Function's metadata.")
 def functions_describe(name: str = typer.Argument(..., help="Fully-qualified function name.")) -> None:
     """Print the full metadata for one function."""
-    from ...adapters.outbound.aeat.auth import build_cloudfunctions_client
+    from ...adapters.outbound.google import build_cloudfunctions_client
 
     client = build_cloudfunctions_client(_adc())
     function = client.get_function(name=name)
@@ -89,7 +89,7 @@ def functions_describe(name: str = typer.Argument(..., help="Fully-qualified fun
 @run_app.command(name="list", help="List Cloud Run services across all regions.")
 def run_list() -> None:
     """List every Cloud Run service in the project (-)."""
-    from ...adapters.outbound.aeat.auth import build_cloudrun_client
+    from ...adapters.outbound.google import build_cloudrun_client
 
     client = build_cloudrun_client(_adc())
     parent = f"projects/{_project()}/locations/-"
@@ -112,7 +112,7 @@ def run_list() -> None:
 @run_app.command(name="describe", help="Print one Cloud Run service's metadata.")
 def run_describe(name: str = typer.Argument(..., help="Fully-qualified service name.")) -> None:
     """Print full metadata for one Cloud Run service."""
-    from ...adapters.outbound.aeat.auth import build_cloudrun_client
+    from ...adapters.outbound.google import build_cloudrun_client
 
     client = build_cloudrun_client(_adc())
     service = client.get_service(name=name)
@@ -125,7 +125,7 @@ def run_describe(name: str = typer.Argument(..., help="Fully-qualified service n
 @storage_app.command(name="buckets", help="List Cloud Storage buckets in the project.")
 def storage_buckets() -> None:
     """List Cloud Storage buckets visible in the project."""
-    from ...adapters.outbound.aeat.auth import build_storage_client
+    from ...adapters.outbound.google import build_storage_client
 
     client = build_storage_client(_adc(), _project())
     table = Table(title="cloud storage buckets", header_style="bold")
@@ -146,7 +146,7 @@ def storage_ls(
     prefix: str | None = typer.Option(None, "--prefix", "-p", help="Object name prefix filter."),
 ) -> None:
     """List objects inside a Cloud Storage bucket."""
-    from ...adapters.outbound.aeat.auth import build_storage_client
+    from ...adapters.outbound.google import build_storage_client
 
     client = build_storage_client(_adc(), _project())
     table = Table(title=f"gs://{bucket}", header_style="bold")

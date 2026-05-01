@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.portals._categories`."""
+"""Unit tests for :mod:`aeat.domain.portals._categories`."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pytest
 
 from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_portal_category_has_exactly_7_members() -> None:

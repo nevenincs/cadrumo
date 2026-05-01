@@ -18,7 +18,7 @@ from ._minimos import (
     compute_minimo_personal_familiar,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestMinimoContribuyente:

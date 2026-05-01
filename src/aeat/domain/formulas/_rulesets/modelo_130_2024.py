@@ -359,7 +359,7 @@ def compute_casilla_13_minoracion(previous_year_rendimiento_neto: Decimal) -> De
 
     Implements the sliding-scale step function from RIRPF art. 110.3.c.
     The caller can then pass the result as the ``13`` user-input to
-    :meth:`aeat.formulas.Engine.derive`.
+    :meth:`aeat.domain.formulas.Engine.derive`.
     """
     if not isinstance(previous_year_rendimiento_neto, Decimal):
         raise TypeError("previous_year_rendimiento_neto must be a Decimal")

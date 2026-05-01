@@ -40,7 +40,7 @@ from ....domain.deadlines import (
 # which the marker-integrity walker enforces. Carry the same
 # pytestmark every sibling test module declares so the contract
 # stays uniform across the package.
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @dataclass

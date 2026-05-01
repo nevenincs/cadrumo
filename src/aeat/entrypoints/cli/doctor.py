@@ -858,7 +858,7 @@ def check_live_tests_flag(settings: Settings) -> Row:
 
 
 def check_live_access_gate(settings: Settings) -> Row:
-    """Report the :class:`aeat.auth.AeatAccessGate` env-var state (#167).
+    """Report the :class:`aeat.adapters.outbound.aeat.auth.AeatAccessGate` env-var state (#167).
 
     The doctor row surfaces the remaining env vars that gate live AEAT
     reads without ever exposing a secret value. Live AEAT writes are

@@ -18,7 +18,7 @@ the liquidación subset that feeds into casilla 00621 (líquido a
 ingresar o devolver). Rectificativa casillas + per-deducción
 itemisation live under sub-EPIC #305-Modelo-200-full.
 
-Labels cross-checked against AEAT Manual Sociedades 2024 (wave 26).
+Labels cross-checked against AEAT Manual Sociedades 2024.
 """
 
 from __future__ import annotations
@@ -50,17 +50,17 @@ class Modelo200V2025Extractor(GenericDeclaracionExtractor):
         "00558",  # tipo de gravamen
         "00560",  # cuota íntegra previa
         "00562",  # cuota íntegra
-        # wave 48/49 H7: 00582 is "bonificaciones y deducciones doble
+        # /49 H7: 00582 is "bonificaciones y deducciones doble
         # imposición internacional" per AEAT Manual Sociedades 2024. The
         # "cuota íntegra ajustada positiva" label actually belongs to 00592.
         "00582",  # bonificaciones y deducciones doble imposición internacional
-        "00592",  # cuota líquida (wave 26 + 48 label verification)
+        "00592",  # cuota líquida ( + 48 label verification)
         "00599",  # retenciones e ingresos a cuenta
         "00601",  # pago fraccionado 1P
         "00603",  # pago fraccionado 2P
         "00605",  # pago fraccionado 3P
-        "00615",  # abono de deducciones (feeds 00621, added in wave 26)
-        "00619",  # incremento por pérdida beneficios fiscales (feeds 00621, wave 26)
+        "00615",  # abono de deducciones (feeds 00621, added in)
+        "00619",  # incremento por pérdida beneficios fiscales (feeds 00621,)
         "00611",  # cuota diferencial
         "00621",  # líquido a ingresar o devolver
     )

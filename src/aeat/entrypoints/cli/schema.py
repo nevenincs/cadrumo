@@ -1,4 +1,4 @@
-"""Typer commands for :mod:`aeat.schema`.
+"""Typer commands for :mod:`aeat.domain.schema`.
 
 Mounted under ``aeat schema``. Commands:
 
@@ -22,11 +22,11 @@ from pathlib import Path
 import typer
 from pydantic import AnyHttpUrl
 
+from ...adapters.inbound.schema import BoeOrdenExtractor
 from ...core.config import load_settings
 from ...domain.modelos import ModeloCode
 from ...domain.schema import (
     BOE_ORDEN_SOURCES,
-    BoeOrdenExtractor,
     FetchedSchemaSource,
     SchemaCacheError,
     SchemaError,

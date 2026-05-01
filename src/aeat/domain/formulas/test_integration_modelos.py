@@ -7,7 +7,7 @@ import pytest
 from ..modelos import MODELO_REGISTRY, ModeloCode
 from ._registry import get_registry
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.unit
@@ -21,7 +21,7 @@ def test_every_ruleset_binds_to_a_registered_modelo() -> None:
 
 @pytest.mark.unit
 def test_no_ruleset_uses_the_casillas_local_modelo_code() -> None:
-    """Rulesets must use ``aeat.models.ModeloCode``, not the casillas-local enum."""
+    """Rulesets must use ``aeat.domain.modelos.ModeloCode``, not the casillas-local enum."""
     from ..casillas.models import ModeloCode as CasillasModeloCode
 
     registry = get_registry()

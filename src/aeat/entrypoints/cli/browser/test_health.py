@@ -1,8 +1,8 @@
 """Unit tests for ``aeat browser health`` (#95).
 
 Every test uses the explicit probe-factory override seam exposed by
-:mod:`aeat.cli.browser.health`. The doubles raise real
-:class:`aeat.errors.SiteHealthError` instances constructed from real
+:mod:`aeat.entrypoints.cli.browser.health`. The doubles raise real
+:class:`aeat.core.errors.SiteHealthError` instances constructed from real
 HTML fixtures under ``tests/fixtures/site_health/``. No monkeypatching
 or ``unittest.mock`` usage.
 """
@@ -24,7 +24,7 @@ from ....core.errors import SiteHealthError
 from . import app
 from .health import HealthProbeLike, ProbeFactory, _RealProbe, override_probe_factory
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"

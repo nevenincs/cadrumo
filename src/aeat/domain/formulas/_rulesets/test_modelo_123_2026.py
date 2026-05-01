@@ -9,7 +9,7 @@ import pytest
 from .._engine import Engine
 from . import MODELO_123_2025, MODELO_123_2026
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_2026_no_drift_from_2025_on_same_inputs() -> None:

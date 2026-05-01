@@ -22,7 +22,7 @@ from ._live import (
     storage_client,
 )
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
 
 
 def _skip_if_no_billing(exc: Exception) -> None:

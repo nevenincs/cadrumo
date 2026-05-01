@@ -24,7 +24,7 @@ from ._rulesets.modelo_130_2024 import (
     compute_casilla_13_minoracion,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _resolve_2024_q2():
@@ -433,5 +433,5 @@ def test_vivienda_habitual_cap_clamp_via_min_op() -> None:
 
 @pytest.mark.unit
 def test_modelo_130_2024_modelo_binds_to_authoritative_enum() -> None:
-    """The shipped ruleset uses aeat.models.ModeloCode."""
+    """The shipped ruleset uses aeat.domain.modelos.ModeloCode."""
     assert MODELO_130_2024.modelo is ModeloCode.MODELO_130

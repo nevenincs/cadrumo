@@ -23,7 +23,7 @@ from . import (
 )
 from ._divergence import classify_kind
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _record(payload, classification: DivergenceClassification) -> DivergenceRecord:

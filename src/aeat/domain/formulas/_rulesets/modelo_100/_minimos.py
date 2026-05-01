@@ -152,19 +152,6 @@ def compute_minimo_personal_familiar(profile: MinimosProfile) -> dict[str, Decim
 
 
 __all__ = [
-    "MINIMO_ASCENDIENTE_EXTRA_OVER_75",
-    "MINIMO_ASCENDIENTE_OVER_65",
-    "MINIMO_CONTRIBUYENTE_BASE",
-    "MINIMO_CONTRIBUYENTE_EXTRA_OVER_65",
-    "MINIMO_CONTRIBUYENTE_EXTRA_OVER_75",
-    "MINIMO_DESCENDIENTE_1",
-    "MINIMO_DESCENDIENTE_2",
-    "MINIMO_DESCENDIENTE_3",
-    "MINIMO_DESCENDIENTE_4_PLUS",
-    "MINIMO_DESCENDIENTE_BONUS_UNDER_3",
-    "MINIMO_DISCAPACIDAD_BONUS_ASISTENCIA",
-    "MINIMO_DISCAPACIDAD_GRADO_ALTO",
-    "MINIMO_DISCAPACIDAD_GRADO_BAJO",
     "GradoDiscapacidad",
     "MinimosProfile",
     "compute_minimo_personal_familiar",

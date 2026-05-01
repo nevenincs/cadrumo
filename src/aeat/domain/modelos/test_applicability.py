@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.models._applicability.ModeloApplicability`."""
+"""Unit tests for :class:`aeat.domain.modelos._applicability.ModeloApplicability`."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from ._applicability import ModeloApplicability
 from ._categories import TaxpayerProfile
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _ALL: frozenset[TaxpayerProfile] = frozenset(TaxpayerProfile)
 
