@@ -1,4 +1,4 @@
-"""Tests for ``aeat submission schemas`` (EPIC #305 wave 104)."""
+"""Tests for ``aeat submission schemas`` (EPIC #305)."""
 
 from __future__ import annotations
 

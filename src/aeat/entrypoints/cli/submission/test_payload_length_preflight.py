@@ -1,4 +1,4 @@
-"""Verify/diff pre-flight on payload-length mismatch (wave 135).
+"""Verify/diff pre-flight on payload-length mismatch.
 
 Catches Kent's common mistakes — pasting the wrong ``--modelo`` /
 ``--ejercicio`` flags, feeding a truncated file — with a CLI-

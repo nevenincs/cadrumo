@@ -1,6 +1,6 @@
 """Unit tests for the Modelo 130 2024 ruleset.
 
-Wave 48 stream 4 H4 / wave 53 stream 3 H3: close the coverage gap
+H4 / H3: close the coverage gap
 where Modelos 130_2024 and 130_2025 had no colocated test file
 (only referenced via smoke tests in test_engine.py /
 test_ruleset.py / test_registry.py).
@@ -152,7 +152,7 @@ class TestModelo130Ruleset2024:
         assert len(MODELO_130_2024.formulas) >= 8
 
     def test_external_worked_example_rirpf_110(self) -> None:
-        """External-anchored worked example (wave 57b H5/H6 closure).
+        """External-anchored worked example (closure).
 
         Provenance: RD 439/2007 (RIRPF) art. 110.1.a fixes the 20%
         rate on IRPF pagos fraccionados (estimacion directa);
@@ -191,7 +191,7 @@ class TestModelo130Ruleset2024:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_zero_boundary_is_clean(self) -> None:
-        """Wave 57b M5: zero-quarter boundary — no ingresos, no pago."""
+        """zero-quarter boundary — no ingresos, no pago."""
         provided = {
             k: Decimal("0.00")
             for k in [

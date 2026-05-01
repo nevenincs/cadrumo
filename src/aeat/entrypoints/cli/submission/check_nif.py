@@ -1,6 +1,6 @@
 """``aeat submission check-nif`` — standalone NIF / NIE / CIF validator.
 
-EPIC #305 wave 107. Kent-facing pre-flight utility that runs the
+EPIC #305 . Kent-facing pre-flight utility that runs the
 AEAT check-letter algorithm on an identifier and reports the
 result. Useful before he writes a draft JSON or invokes any other
 CLI command: he can copy-paste a NIF / NIE / CIF from a document

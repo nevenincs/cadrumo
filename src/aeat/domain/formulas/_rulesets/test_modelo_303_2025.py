@@ -29,7 +29,7 @@ def test_all_zero_quarter() -> None:
 def test_general_only_quarter_missing_65_yields_zero_attribution() -> None:
     """Base 07 = 10000 with 65 omitted => 66/69/71 collapse to 0.
 
-    The wave-1 missing-input contract defaults 65 to ``Decimal('0')``;
+    The missing-input contract defaults 65 to ``Decimal('0')``;
     casilla 66 = 64 x 65 / 100 then resolves to 0. Downstream
     callers must supply 65=100 explicitly, exactly as the AEAT form
     pre-prints. This test pins the documented behaviour so any
@@ -180,7 +180,7 @@ def test_constant_rates_emerge_from_engine() -> None:
 
 
 def test_engine_round_trip_is_deterministic() -> None:
-    """Wave 53 stream 4 M3 rename: this test proves engine determinism,
+    """M3 rename: this test proves engine determinism,
     not formula correctness. Feeding derived values back in yields zero
     discrepancies regardless of whether the formulas are right. See
     ``test_external_worked_example_aeat_livA_rates`` below for the
@@ -200,7 +200,7 @@ def test_engine_round_trip_is_deterministic() -> None:
 
 
 def test_external_worked_example_aeat_liva_rates() -> None:
-    """External-anchored worked example (wave 57a H5/H6 closure).
+    """External-anchored worked example (closure).
 
     Provenance: Ley 37/1992 (LIVA) artículos 90 y 91 fix the IVA
     rates at 21% general, 10% reducido, 4% superreducido. This

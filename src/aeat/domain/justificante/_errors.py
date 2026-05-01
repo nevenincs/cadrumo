@@ -1,4 +1,4 @@
-"""Error hierarchy for the justificante parser (#44, #305 cluster A).
+"""Error hierarchy for the justificante parser (#44, #305).
 
 All errors inherit from :class:`aeat._pdf_import.PdfFilingImportError` —
 the shared root for every PDF-import module — which in turn inherits

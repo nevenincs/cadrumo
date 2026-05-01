@@ -1,4 +1,4 @@
-"""Tests for the DR spec ingestion library (EPIC #305 wave 86)."""
+"""Tests for the DR spec ingestion library (EPIC #305)."""
 
 from __future__ import annotations
 

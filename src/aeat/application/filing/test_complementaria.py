@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
 
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path):
-    """Wave-9: install an EphemeralMasterKeyProvider so the
+    """install an EphemeralMasterKeyProvider so the
     FilingDraftRepository / FilingAmendmentRepository ciphertext-at-rest
     writes work in the test sandbox without touching a real keychain."""
     from ...adapters.persistence.storage import (

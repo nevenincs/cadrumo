@@ -8,10 +8,10 @@ model; every regulation carries at least one :class:`Citation` with
 a non-empty Spanish quote; every rate carries a BOE / Directive
 reference and an effective window.
 
-Wave-1 (#85) shipped the enumerations, the 2025 catalogue and the
+ (#85) shipped the enumerations, the 2025 catalogue and the
 27-state rate table.
 
-Wave-2 (#183) extended this substrate with:
+ (#183) extended this substrate with:
 - ``DOMESTIC_REVERSE_CHARGE`` :class:`VATCategory` member.
 - Period-keyed catalogue mapping :data:`VAT_CATALOGUES_BY_YEAR` +
   :func:`resolve_catalogue` helper.

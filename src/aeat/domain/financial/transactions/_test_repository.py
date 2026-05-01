@@ -152,7 +152,7 @@ class TestMixedImport:
 
 
 class TestCiphertextOnDisk:
-    """Wave-7: transactions encrypted at rest at FINANCIAL class via the
+    """transactions encrypted at rest at FINANCIAL class via the
     substrate's ``save_encrypted_envelope`` helper.
 
     The repository's envelope file is now a :class:`CipherEnvelope` —

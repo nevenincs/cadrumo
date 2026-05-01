@@ -80,7 +80,7 @@ class TestModelo111Ruleset:
         assert report.is_clean()
 
     def test_ruleset_exposes_fixed_rate_formulas(self) -> None:
-        # Wave 29 HIGH-2: fixed-rate retentions on premios (casilla 09) and
+        # fixed-rate retentions on premios (casilla 09) and
         # arrendamientos-ganancias (casilla 12) at 19% are now verified.
         assert len(MODELO_111_2025.casillas) == 11
         computed = {c.casilla_id for c in MODELO_111_2025.casillas if c.computed}
@@ -109,8 +109,8 @@ class TestModelo111Ruleset:
         assert report.is_clean()
 
     def test_external_worked_example_rirpf_99(self) -> None:
-        """External-anchored worked example (wave 57b H5/H6 closure;
-        citations corrected wave 67a).
+        """External-anchored worked example (closure;
+        citations corrected ).
 
         Provenance (BOE-A-2007-6820 RD 439/2007 consolidated
         retrieval 2026-04-22): RIRPF art. 99 ("Obligación de practicar
@@ -122,12 +122,12 @@ class TestModelo111Ruleset:
         retention amounts from the 19% statutory rate directly
         (NOT from the ruleset's ParameterTable).
 
-        Prior-wave miscites (tracked): wave 57b cited RIRPF art.
+        Prior-wave miscites (tracked): RIRPF art.
         105.1 for premios — WRONG (art. 105 is IIC transmisiones).
-        Wave 57b also cited RIRPF art. 100.3.c for arrendamientos —
+        cited RIRPF art. 100.3.c for arrendamientos —
         WRONG (art. 100 has no subsections in the consolidated text;
         the single-rate 19% rule lives in art. 100 para. 1 /
-        art. 75.2.c). Corrected in wave 67a.
+        art. 75.2.c). Corrected in .
 
         Scenario: Q2 2025 Kent with a 2 500 premio en metálico
         (casilla 08) and 1 000 in rendimientos capital mobiliario
@@ -166,7 +166,7 @@ class TestModelo111Ruleset:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_zero_boundary_is_clean(self) -> None:
-        """Wave 57b M5: zero-quarter boundary (no retenciones)."""
+        """zero-quarter boundary (no retenciones)."""
         provided = {
             "03": Decimal("0.00"),
             "06": Decimal("0.00"),

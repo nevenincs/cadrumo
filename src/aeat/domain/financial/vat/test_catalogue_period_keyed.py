@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
 
 
 def test_catalogues_by_year_contains_2025() -> None:
-    """The wave-2 mapping ships the 2025 entry."""
+    """The ships the 2025 entry."""
     assert 2025 in VAT_CATALOGUES_BY_YEAR
     assert VAT_CATALOGUES_BY_YEAR[2025] is VAT_CATALOGUE_2025
 

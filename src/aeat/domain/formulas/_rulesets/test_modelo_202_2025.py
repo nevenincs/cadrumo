@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 class TestModelo202Ruleset:
     def test_consistent_instalment_is_clean(self) -> None:
         # Base 100_000 x tipo 17% = 17_000 cuota.
-        # AEAT prints casilla 17 as whole-percent value (wave 33 H1):
+        # AEAT prints casilla 17 as whole-percent value:
         # Decimal("17.00") is what the PDF extractor produces.
         # 27 bonificaciones 0, 28 retenciones 1_000, 30 pagos anteriores 2_000.
         # resultado = 17_000 - 0 - 1_000 - 2_000 = 14_000.
@@ -85,8 +85,8 @@ class TestModelo202Ruleset:
         assert len(MODELO_202_2025.formulas) == 3
 
     def test_external_worked_example_lis_art_40_3_modalidad(self) -> None:
-        """External-anchored worked example (wave 59c H3 closure,
-        wave 60 stream 2 correction).
+        """External-anchored worked example (closure,
+        correction).
 
         Provenance: Ley 27/2014 (LIS) art. 40.3 párrafo 1 fixes the
         tipo de gravamen aplicable al pago fraccionado modalidad
@@ -104,7 +104,7 @@ class TestModelo202Ruleset:
         rate-swap bug in the ruleset would surface as a Decimal
         mismatch.
 
-        (Wave 60 stream 2 audit corrected an earlier 23%-as-tipo
+        (audit corrected an earlier 23%-as-tipo
         miscitation: LIS art. 40.3 párrafo 2 does mention 23% as an
         **importe mínimo** threshold — minimum of 23% of positive
         P&L — for large entities > EUR 10M net turnover, but this
@@ -141,7 +141,7 @@ class TestModelo202Ruleset:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_whole_percent_casilla_17_not_treated_as_fraction(self) -> None:
-        """Wave 33 H1 regression: casilla 17 = 17.00 (whole percent) must NOT yield 1.7M.
+        """regression: casilla 17 = 17.00 (whole percent) must NOT yield 1.7M.
 
         Pre-fix the formula was ``percent(ref("17"), ref("16"))`` which
         multiplied whole-percent * base = 100x wrong. The post-fix formula

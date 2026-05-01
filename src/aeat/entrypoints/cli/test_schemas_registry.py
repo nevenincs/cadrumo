@@ -1,4 +1,4 @@
-"""Unit tests for the Phase 1 CLI output-schema registry."""
+"""Unit tests for the CLI output-schema registry."""
 
 from __future__ import annotations
 

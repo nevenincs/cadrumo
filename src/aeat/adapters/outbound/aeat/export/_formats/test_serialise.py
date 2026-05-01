@@ -1,4 +1,4 @@
-"""Tests for the fichero-BOE serialiser (EPIC #201 C3b, wave 79b)."""
+"""Tests for the fichero-BOE serialiser (EPIC #201 C3b,)."""
 
 from __future__ import annotations
 

@@ -1,13 +1,13 @@
-"""DP303DID SEPA devolución page layout lock (wave 144).
+"""DP303DID SEPA devolución page layout lock.
 
 The DP303DID page carries Kent's refund-routing block: SWIFT/BIC,
 IBAN, bank name + address, country code, and the SEPA marker.
 When Kent files a devolución (tipo=D), his ``--iban`` and
 ``--swift`` flag values land here. Every byte offset in the
-wave-101 devolución export test and the wave-138 IBAN
+devolución export test and the IBAN
 normalisation E2E test depends on these offsets being stable.
 
-Wave 144 mirrors wave-143's DP30301 lock for this Kent-critical
+'s DP30301 lock for this Kent-critical
 SEPA page. A fixture regeneration that shifts SWIFT or IBAN by
 even one byte ships a malformed SEPA block to AEAT — the refund
 would land in a wrong account or silently drop. This test fails
@@ -81,7 +81,7 @@ class TestDp303didSepaLayout:
 
     def test_iban_slot_is_34_bytes_at_offset_23(self) -> None:
         """IBAN (ISO-13616) is up to 34 chars; the slot starts immediately
-        after the 11-byte SWIFT. Wave-138's normalisation E2E test depends
+        after the 11-byte SWIFT. 's normalisation E2E test depends
         on this offset and length being stable."""
         segment = _dp303did()
         by_field_id = {s.field_id: s for s in segment.specs}
@@ -91,7 +91,7 @@ class TestDp303didSepaLayout:
 
     def test_sepa_marker_is_1_byte_numeric_at_offset_194(self) -> None:
         """The SEPA marker is a 1-byte flag set to '1' when Kent supplies
-        an IBAN (wave-101 builder logic). Its NUMERIC kind means it pads
+        an IBAN (logic). Its NUMERIC kind means it pads
         with '0' by default — no IBAN → no SEPA declaration."""
         segment = _dp303did()
         by_field_id = {s.field_id: s for s in segment.specs}
@@ -102,8 +102,8 @@ class TestDp303didSepaLayout:
 
     def test_dp303did_segment_starts_at_absolute_byte_7153(self) -> None:
         """Sanity: DP303DID is the 7th segment in ENVELOPE, starting at
-        cumulative byte 7153 per wave-142. An absolute-offset reader (like
-        the wave-101 export test) uses 7153 + intra-segment offset."""
+        cumulative byte 7153 per . An absolute-offset reader (like
+        the test) uses 7153 + intra-segment offset."""
         cumulative = 0
         for seg in ENVELOPE:
             if seg.segment_id == "DP303DID":

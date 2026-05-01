@@ -495,7 +495,7 @@ class TestModelo200V2025Extractor:
         assert filing.modelo == "200"
         assert filing.period == "2025A"
         assert filing.extraction_status is ExtractionStatus.COMPLETE
-        # Wave 23 MEDIUM-2 + 4: assert the full five-digit casilla dict —
+        # MEDIUM-2 + 4: assert the full five-digit casilla dict —
         # one spot-check is not enough to prove the casilla_width=5 path.
         by_id = {v.casilla_id: v.printed_value for v in filing.values}
         for cid, raw in values.items():
@@ -551,7 +551,7 @@ _MODELO_840_VALUES = {
 
 
 class TestSoftHyphenLineBreakNormalisation:
-    """Wave 51 H2: `_normalise_pdf_text` stitches hyphenated labels."""
+    """`_normalise_pdf_text` stitches hyphenated labels."""
 
     def test_hyphen_newline_stitched_before_regex(self) -> None:
         """A label broken across a line by `-\\n` re-stitches so the
@@ -566,10 +566,10 @@ class TestSoftHyphenLineBreakNormalisation:
         assert "-\n" not in normalised
 
     def test_bullet_leading_dash_not_stitched(self) -> None:
-        """Wave 56 M1: a line that starts with `-\\n` (bullet-style) must
+        """a line that starts with `-\\n` (bullet-style) must
         NOT collapse into the following word.
 
-        Pre-wave-56 `_normalise_pdf_text` used a blind
+         `_normalise_pdf_text` used a blind
         `.replace("-\\n", "")` which would eat the bullet dash and
         merge it into whatever followed. The narrowed regex now
         requires alphanumeric context on BOTH sides.
@@ -592,7 +592,7 @@ class TestSoftHyphenLineBreakNormalisation:
         assert "-\n" in normalised
 
     def test_digit_boundary_not_stitched(self) -> None:
-        """Wave 59a H1: digit-boundary hyphen-newline pairs MUST NOT stitch.
+        """digit-boundary hyphen-newline pairs MUST NOT stitch.
 
         An adversarial wrap like ``9-\\n10`` would collapse to
         ``910`` under the pre-59a `\\w`-based lookaround. The tightened
@@ -609,7 +609,7 @@ class TestSoftHyphenLineBreakNormalisation:
         assert _normalise_pdf_text("foo_-\n_bar") == "foo_-\n_bar"
 
     def test_letter_boundary_still_stitches(self) -> None:
-        """Wave 59a H1: letter-on-letter hyphen stitching still works."""
+        """letter-on-letter hyphen stitching still works."""
         from ._generic_extractor import _normalise_pdf_text
 
         # ASCII letter boundary — still stitches.
@@ -656,10 +656,10 @@ class TestGenericExtractorInvariants:
 
 
 class TestModelo840TextCasillas:
-    """Modelo 840 uses the text-value primitive (wave 24)."""
+    """Modelo 840 uses the text-value primitive."""
 
     def test_truncation_warning_emitted_for_multi_word_value(self, tmp_path: Path) -> None:
-        """Wave 29 HIGH-3: multi-word values surface a truncation warning + confidence drop."""
+        """multi-word values surface a truncation warning + confidence drop."""
         from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
             QuarterlyGenParams,
             generate,
@@ -667,7 +667,7 @@ class TestModelo840TextCasillas:
 
         labels = {"38": "Municipio"}
         # Simulate Kent filing for "Las Palmas" — the naive TEXT_VALUE_GROUP
-        # would capture "Palmas" and silently drop "Las"; wave 29 flags it.
+        # would capture "Palmas" and silently drop "Las"; it.
         values = {"38": "Las Palmas"}
         params = QuarterlyGenParams(
             modelo="840",
@@ -691,7 +691,7 @@ class TestModelo840TextCasillas:
         assert any(w.casilla_id == "38" and w.code == "text-value-possibly-truncated" for w in filing.warnings)
 
     def test_missing_text_casilla_emits_not_found_warning(self, tmp_path: Path) -> None:
-        """Wave 29 MEDIUM-1: a text casilla absent from the PDF surfaces as `casilla-not-found`."""
+        """a text casilla absent from the PDF surfaces as `casilla-not-found`."""
         from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
             QuarterlyGenParams,
             generate,
@@ -788,7 +788,7 @@ def _draw_named_pdf(
 
 
 class TestModelo036MultiWordValues:
-    """Wave 33 H2: 036 captures multi-word régimen values without truncation."""
+    """036 captures multi-word régimen values without truncation."""
 
     def test_recargo_de_equivalencia_captured_fully(self, tmp_path: Path) -> None:
         pdf = _draw_named_pdf(
@@ -812,7 +812,7 @@ class TestModelo036MultiWordValues:
 
 
 class TestModelo369SoportadoExclusion:
-    """Wave 33 M2: IVA soportado line must NOT match total_cuota_iva (devengada)."""
+    """IVA soportado line must NOT match total_cuota_iva (devengada)."""
 
     def test_soportado_line_rejected(self, tmp_path: Path) -> None:
         pdf = _draw_named_pdf(
@@ -834,7 +834,7 @@ class TestModelo369SoportadoExclusion:
 
 
 class TestModelo369NamedFieldExtraction:
-    """Wave 27: Modelo 369 OSS/IOSS summary totals via named-field primitive."""
+    """Modelo 369 OSS/IOSS summary totals via named-field primitive."""
 
     def test_roundtrip_summary_totals(self, tmp_path: Path) -> None:
         pdf = _draw_named_pdf(
@@ -857,7 +857,7 @@ class TestModelo369NamedFieldExtraction:
 
 
 class TestModelo720NamedFieldExtraction:
-    """Wave 27: Modelo 720 per-clave counters via named-field primitive."""
+    """Modelo 720 per-clave counters via named-field primitive."""
 
     def test_roundtrip_per_clave_counters(self, tmp_path: Path) -> None:
         pdf = _draw_named_pdf(
@@ -879,7 +879,7 @@ class TestModelo720NamedFieldExtraction:
 
 
 class TestModelo036NamedFieldExtraction:
-    """Wave 27: Modelo 036 censal fields via named-field primitive."""
+    """Modelo 036 censal fields via named-field primitive."""
 
     def test_roundtrip_censal_fields(self, tmp_path: Path) -> None:
         pdf = _draw_named_pdf(
@@ -905,7 +905,7 @@ class TestModelo036NamedFieldExtraction:
 
 
 class TestModelo232NamedFieldExtraction:
-    """Wave 27: Modelo 232 uses the named-field primitive."""
+    """Modelo 232 uses the named-field primitive."""
 
     def test_roundtrip_named_fields(self, tmp_path: Path) -> None:
         """Render a 232 PDF with the three bloque counters in the synthetic text layer."""
@@ -950,7 +950,7 @@ class TestModelo232NamedFieldExtraction:
 class TestHeaderOnlyExtractors:
     """Identity / error-branch coverage for extractors with no content primitive.
 
-    Wave 27 migrated all modelos with no numbered-casilla summary
+    all modelos with no numbered-casilla summary
     (036/037/232/369/720/840) onto the text-value or named-field
     primitive, so no modelo remains unconditionally UNVERIFIABLE. This
     class now hosts the missing-NIF error-branch test; the sentinel
@@ -1066,14 +1066,14 @@ class TestModelo303PostHAC819Extractor:
 
 
 class TestThousandsSeparatorThreading:
-    """Wave 61d: thousands_sep plumbing through the synthetic generator.
+    """thousands_sep plumbing through the synthetic generator.
 
-    Wave 60 H3 claimed the wave-56 ``format_amount(thousands_sep=...)``
+    claimed the ``format_amount(thousands_sep=...)``
     opt-in was never threaded through ``draw_casilla_box`` /
-    ``QuarterlyGenParams``. Wave 61d threads it through, and this test
+    ``QuarterlyGenParams``. it through, and this test
     asserts the param reaches the rendered PDF text stream.
 
-    Scope clarification (wave 61d closure). A parametrized end-to-end
+    Scope clarification. A parametrized end-to-end
     NBSP round-trip test was prototyped and found infeasible via the
     reportlab synthetic-PDF pipeline: reportlab's Helvetica font lacks
     a U+202F (narrow NBSP) glyph (substituted as literal ``"n"``), and
@@ -1082,7 +1082,7 @@ class TestThousandsSeparatorThreading:
     normaliser layer without false-positives on label-embedded casilla
     references. Real Sede Electrónica PDFs render through proper
     Unicode-capable fonts and preserve NBSP through the
-    pdfplumber-equivalent extraction path, so the wave-51 regex fix
+    pdfplumber-equivalent extraction path, so the fix
     remains load-bearing in production while this synthetic test is
     limited to the dot-separator + string-layer coverage.
     """
@@ -1115,10 +1115,10 @@ class TestThousandsSeparatorThreading:
             assert by_id[cid] == Decimal(raw), f"mismatch on casilla {cid}: expected {raw}, got {by_id[cid]}"
 
     def test_hyphenated_label_stitched_by_normaliser(self, tmp_path: Path) -> None:
-        """Wave 61e H4 closure: end-to-end hyphenation at extractor layer.
+        """closure: end-to-end hyphenation at extractor layer.
 
         AEAT multi-column templates wrap long labels as
-        ``Reten-\\nciones``. The wave-51 / wave-56 / wave-59a
+        ``Reten-\\nciones``. The / /
         ``_normalise_pdf_text`` regex stitches letter-hyphen-newline-
         letter boundaries back together. Prior coverage was string-
         transform only; this test renders a synthetic PDF with a real
@@ -1178,11 +1178,11 @@ class TestThousandsSeparatorThreading:
     def test_format_amount_nbsp_matches_spanish_amount_regex(self) -> None:
         """String-layer threading: ``format_amount(thousands_sep="\\xa0")``
         MUST produce NBSP-separated output that ``SPANISH_AMOUNT_GROUP``
-        accepts, so the wave-51 regex fix remains exercised at the
+        accepts, so the fix remains exercised at the
         primitive level even though the full PDF round-trip is
         infeasible through reportlab+pdfplumber.
 
-        Wave 63d L4 rename: previously named
+        rename: previously named
         ``test_thousands_sep_reaches_draw_casilla_box`` which implied
         generator-level coverage it did not deliver.
         """

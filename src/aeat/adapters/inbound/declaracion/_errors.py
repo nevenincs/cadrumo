@@ -1,4 +1,4 @@
-"""Error hierarchy for the declaración parser (EPIC #305 cluster D)."""
+"""Error hierarchy for the declaración parser (EPIC #305)."""
 
 from __future__ import annotations
 

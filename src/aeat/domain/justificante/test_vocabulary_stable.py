@@ -1,4 +1,4 @@
-"""Public-surface stability guard for :mod:`aeat.justificante` (#305 cluster G).
+"""Public-surface stability guard for :mod:`aeat.justificante` (#305).
 
 The rehoming of :class:`JustificanteError` under
 :class:`aeat._pdf_import.PdfFilingImportError` must not accidentally prune

@@ -10,7 +10,7 @@ AEAT prints numbered casilla IDs on the form (14, 15, 33, 34, 37, 38,
 40, 62) carrying text payloads (ejercicio, causa, clase de cuota,
 tipo actividad, grupo/epígrafe, municipio, provincia, fecha). These
 are captured as strings via the text-value primitive
-(:data:`aeat._pdf_import._label_regex.TEXT_VALUE_GROUP`) — see wave 24.
+(:data:`aeat._pdf_import._label_regex.TEXT_VALUE_GROUP`) — see .
 
 Legal base: Orden HAC/2572/2003 (BOE 18/09/2003).
 """
@@ -45,7 +45,7 @@ class Modelo840V2025Extractor(GenericDeclaracionExtractor):
     )
     # Labels match the synthetic-generator fixture strings; the live
     # AEAT form prints the same label tokens (with slight casing).
-    # Used only for truncation-detection (wave 29 HIGH-3).
+    # Used only for truncation-detection.
     text_labels: ClassVar[dict[str, str]] = {
         "14": "Ejercicio",
         "15": "Causa presentacion",

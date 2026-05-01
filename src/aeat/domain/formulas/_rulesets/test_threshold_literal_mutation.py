@@ -1,6 +1,6 @@
-"""Threshold-literal mutation harness (issue #457 Wave 5 strict-audit closure).
+"""Threshold-literal mutation harness (issue #457 strict-audit closure).
 
-Closes the gap surfaced by the Wave-5 strict-review audit: ~120
+Closes the gap surfaced by the strict-review audit: ~120
 :class:`Literal` nodes across the landed rulesets are operands of
 :class:`SubFormula`, :class:`MinFormula`, :class:`MaxFormula`,
 :class:`AddFormula`, :class:`RoundFormula`, or
@@ -114,7 +114,7 @@ def _modelo_390_devolver_fixture() -> dict[str, Decimal]:
     Casilla 193 = ``clamp_pos(sub_op(Literal(0), ref('191')))``. With
     191 > 0 (the default ``_modelo_390_fixture`` scenario), the inner
     ``Sub(0, 191)`` is negative and ``clamp_pos`` absorbs any
-    epsilon-shift on the literal — pre-Wave-6 this was catalogued as a
+    epsilon-shift on the literal — was catalogued as a
     clamp-mask deferral. Driving 191 NEGATIVE (the legitimate
     "devolver" scenario where annual VAT due is negative because
     refunds exceeded charges) flips the inner ``Sub`` positive, so
@@ -234,7 +234,7 @@ _THRESHOLD_PATH_OVERRIDES: dict[
 # Catalogue of clamp-mask-dominated literal positions whose mutation
 # produces no observable discrepancy because a downstream
 # ``clamp_pos`` absorbs the change AND no fixture redesign can flip
-# the inner sign. Empty post-Wave-6 closure: the M390 193
+# the inner sign. Empty post-the M390 193
 # ``Literal(0)`` previously catalogued here was found to be
 # observable when 191 < 0 (the legitimate "devolver" scenario); the
 # per-path override ``_modelo_390_devolver_fixture`` in

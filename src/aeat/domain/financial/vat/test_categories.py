@@ -13,7 +13,7 @@ def test_vat_category_has_every_named_member() -> None:
     """VATCategory must carry all 17 members.
 
     The 17th member ``DOMESTIC_REVERSE_CHARGE`` was added in
-    wave 2 (#183) to disambiguate inversión del sujeto pasivo on
+     (#183) to disambiguate inversión del sujeto pasivo on
     domestic transactions (Art. 84.Uno.2º) from intra-community
     acquisitions (which already use
     ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE``).

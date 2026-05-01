@@ -1,4 +1,4 @@
-"""Public ``parse_borrador`` entry point for Modelo 100 PDFs (#305 cluster F)."""
+"""Public ``parse_borrador`` entry point for Modelo 100 PDFs (#305)."""
 
 from __future__ import annotations
 

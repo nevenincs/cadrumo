@@ -21,7 +21,7 @@ def runner() -> CliRunner:
 def test_list_subcommand(runner: CliRunner) -> None:
     """``aeat formulas list`` emits the registered rulesets as JSON.
 
-    Wave 2 (#183) added two Modelo 303 rulesets alongside the
+     (#183) added two Modelo 303 rulesets alongside the
     Modelo 130 pair.
     """
     result = runner.invoke(app, ["list"])

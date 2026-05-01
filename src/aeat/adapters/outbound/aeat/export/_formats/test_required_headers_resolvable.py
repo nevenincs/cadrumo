@@ -1,4 +1,4 @@
-"""Stream B invariant: REQUIRED_HEADER_FIELDS must reference real fields (wave 119).
+"""Stream B invariant: REQUIRED_HEADER_FIELDS must reference real fields.
 
 Every field_id listed in a schema's ``REQUIRED_HEADER_FIELDS`` must
 exist as a :class:`RecordFieldSpec.field_id` in at least one segment

@@ -185,7 +185,7 @@ class TestRealCorpusParses:
 
 
 class TestJustificanteErrorRehome:
-    """#305 cluster A — JustificanteError inherits the shared PDF-import root."""
+    """#305 — JustificanteError inherits the shared PDF-import root."""
 
     def test_justificante_error_is_pdf_filing_import_error(self) -> None:
         from ...adapters.inbound.pdf import PdfFilingImportError

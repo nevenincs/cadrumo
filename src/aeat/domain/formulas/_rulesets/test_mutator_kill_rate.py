@@ -103,7 +103,7 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
         # Mul/Div literal-leaf count.
         leaves = list(iter_scalar_leaf_paths(fd.formula))
         counts["mul_div_scalar"] += len(leaves)
-        # Threshold-literal positions (issue #457 Wave 5 closure).
+        # Threshold-literal positions (issue #457 closure).
         # Split into "covered by harness" (ε-shift detectable) vs
         # "identity-excluded" (additive/multiplicative identity:
         # Max(0, X) / Min(0, X)).
@@ -112,7 +112,7 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
                 counts["threshold_literal_identity_excluded"] += 1
             else:
                 counts["threshold_literal_covered"] += 1
-        # Arithmetic-op-swap positions (Wave 6 — operator-class typos).
+        # Arithmetic-op-swap positions ( — operator-class typos).
         # Walker enumerates every Add/Sub position; the per-class
         # harness's runtime probe filters fixture-masked entries
         # (catalogued in ``_FIXTURE_MASKED_OP_POSITIONS_RATIONALES``).
@@ -1265,7 +1265,7 @@ def test_catalogue_totals_are_non_trivial() -> None:
     """The catalogue's percent_rate, mul_div_scalar, and brackets totals are non-zero."""
     markdown = build_catalogue_markdown()
     totals_line = next(line for line in markdown.splitlines() if "**TOTAL**" in line)
-    # Column layout per ``build_catalogue_markdown`` (post-Wave-6):
+    # Column layout per ``build_catalogue_markdown`` (post-):
     #   [0] empty (leading "|")
     #   [1] **TOTAL**
     #   [2] sub_op
@@ -1293,6 +1293,4 @@ def test_catalogue_totals_are_non_trivial() -> None:
     # (catalogued in ``_FIXTURE_MASKED_OP_POSITIONS_RATIONALES``).
     assert cells[3].strip() == "**0**", f"sub_op_deferred total must be 0; got {cells[3].strip()!r}"
     assert cells[7].strip() == "**0**", f"mul_div_scalar_deferred total must be 0; got {cells[7].strip()!r}"
-    assert cells[9].strip() == "**0**", (
-        f"threshold_literal_deferred total must be 0 (Wave 6 closure); got {cells[9].strip()!r}"
-    )
+    assert cells[9].strip() == "**0**", f"threshold_literal_deferred total must be 0; got {cells[9].strip()!r}"

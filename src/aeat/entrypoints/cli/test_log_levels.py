@@ -1,4 +1,4 @@
-"""Unit tests for the Phase 1 CLI log-level resolver."""
+"""Unit tests for the CLI log-level resolver."""
 
 from __future__ import annotations
 

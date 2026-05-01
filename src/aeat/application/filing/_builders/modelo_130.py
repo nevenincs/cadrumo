@@ -223,7 +223,7 @@ class Modelo130Builder(FilingBuilder):
                 resultado = Decimal("0")
             return _computed_value(casilla.id, resultado, ("04", "05", "06"))
         # Apartado II — Actividades agrícolas / ganaderas / forestales / pesqueras.
-        # Added in #305 cluster B phase 2 to match the ruleset's 19-casilla set.
+        # Added in #305 to match the ruleset's 19-casilla set.
         if casilla.id == "09":
             ingresos_agraria = _as_decimal(values["08"].value)
             return _computed_value(

@@ -1,13 +1,13 @@
-"""DP30301 intra-segment header-field layout lock (wave 143).
+"""DP30301 intra-segment header-field layout lock.
 
 The DP30301 page carries Kent's filing-identification block:
 TIPO_DECLARACION, NIF, APELLIDOS_Y_NOMBRE, DEVENGO_EJERCICIO,
 DEVENGO_PERIODO. Their exact offsets within DP30301 are Kent-
-observable — the wave-92 CLI verify test, the wave-93 golden
-SHA, and the wave-135 payload-length pre-flight all depend on
+observable — the verify test, the golden
+SHA, and the payload-length pre-flight all depend on
 these offsets being byte-stable.
 
-Wave 142 locked inter-segment positions in the envelope; wave
+inter-segment positions in the envelope; wave
 143 complements that by locking intra-segment positions in the
 Kent-critical DP30301 page. A fixture regeneration that shifts
 any of these fields (say, inserting a new RESERVED padding slot
@@ -84,7 +84,7 @@ class TestDp30301HeaderLayout:
     def test_nif_slot_is_9_bytes_at_offset_14(self) -> None:
         """The NIF slot is exactly 9 bytes wide (matching the 9-char AEAT NIF/NIE/CIF
         canonical format) and starts immediately after the 1-byte TIPO_DECLARACION.
-        This is the specific offset used by the wave-92 CLI export test's byte assertion."""
+        This is the specific offset used by the export test's byte assertion."""
         segment = _dp30301()
         by_field_id = {s.field_id: s for s in segment.specs}
         nif = by_field_id["DP30301_F007_IDENTIFICACI_N_NIF"]
@@ -92,9 +92,9 @@ class TestDp30301HeaderLayout:
         assert nif.length == 9
 
     def test_periodo_is_2_bytes_at_offset_107(self) -> None:
-        """DP30301 PERIODO is 2 bytes at offset 107 (1-based); wave-91 reclassified
+        """DP30301 PERIODO is 2 bytes at offset 107 (1-based); reclassified
         this from RESERVED literal '01' to ALPHANUMERIC user-supplied. The offset
-        stays stable so the wave-92 CLI export byte assertion continues to work."""
+        stays stable so the export byte assertion continues to work."""
         segment = _dp30301()
         by_field_id = {s.field_id: s for s in segment.specs}
         periodo = by_field_id["DP30301_F010_DEVENGO_PER_ODO"]

@@ -12,7 +12,7 @@ from ...core.i18n import Translatable, require_authoritative
 
 KNOWN_MODELO_IDS = frozenset({"MODELO_130", "MODELO_303", "MODELO_390"})
 _PERIOD_RE = re.compile(r"^\d{4}(Q[1-4]|-\d{2})?$")
-_CASILLA_ID_RE = re.compile(r"^\d{2,5}$")  # wave 40 H1: widened for Modelo 200 5-digit IDs
+_CASILLA_ID_RE = re.compile(r"^\d{2,5}$")  # widened for Modelo 200 5-digit IDs
 
 
 class _StrictFrozenModel(BaseModel):

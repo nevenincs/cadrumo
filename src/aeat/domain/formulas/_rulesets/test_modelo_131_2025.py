@@ -58,7 +58,7 @@ class TestModelo131Ruleset:
         corrupted, 07 is recomputed from user_02 + derived_04 +
         derived_06 = 500 + 200 + 100 = 800, matching the user's 800;
         downstream checks stay clean. Only 04 itself flags
-        (user=150 vs. derived=200). Wave 37 L1.
+        (user=150 vs. derived=200). L1.
         """
         provided = _provided()
         provided["04"] = Decimal("150.00")  # wrong: engine derives 200 from 03=10000
@@ -100,7 +100,7 @@ class TestModelo131Ruleset:
         assert len(MODELO_131_2025.formulas) == 6
 
     def test_external_worked_example_rirpf_110(self) -> None:
-        """External-anchored worked example (wave 57b H5/H6 closure).
+        """External-anchored worked example (closure).
 
         Provenance: RD 439/2007 (RIRPF) art. 110.1.c fixes the 2%
         rate on volumen ingresos agricolas/ganaderas/forestales/

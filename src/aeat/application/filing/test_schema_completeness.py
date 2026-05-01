@@ -1,4 +1,4 @@
-"""Cross-validation: casilla schema ⊇ formula ruleset (#305 cluster B phase 1).
+"""Cross-validation: casilla schema ⊇ formula ruleset (#305).
 
 Silent drift between the casilla schema (what the builder iterates) and
 the formula ruleset (what the formula engine computes) is a real

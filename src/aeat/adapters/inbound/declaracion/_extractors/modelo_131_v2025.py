@@ -8,7 +8,7 @@ compensación de negativos anteriores, and final resultado a ingresar.
 
 Legal base: Orden EHA/672/2007 (BOE-A-2007-6032); yearly refresh per
 BOE Sede AEAT instructions. Casilla set cross-checked against AEAT
-Instrucciones Modelo 131 (wave 26) — labels refreshed to match the
+Instrucciones Modelo 131 — labels refreshed to match the
 printed form; no Orden change shifts the 01-15 set for ejercicio 2025
 (the only 2025 novelty is BIZUM as a payment channel, irrelevant to
 the casilla map).
@@ -30,7 +30,7 @@ class Modelo131V2025Extractor(GenericDeclaracionExtractor):
         año=2025,
         revision="2025.01",
     )
-    # Labels cross-checked against AEAT Instrucciones Modelo 131 (wave 26).
+    # Labels cross-checked against AEAT Instrucciones Modelo 131.
     casilla_ids: ClassVar[tuple[str, ...]] = (
         "01",  # suma rendimientos netos módulos
         "02",  # pago fraccionado del trimestre

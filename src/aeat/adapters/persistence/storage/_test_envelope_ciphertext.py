@@ -1,7 +1,7 @@
-"""Wave-7: ciphertext-payload-at-rest tests for the substrate envelope.
+"""ciphertext-payload-at-rest tests for the substrate envelope.
 
-The Wave-1 envelope spec promised at-rest encryption for FINANCIAL /
-AUDIT / IDENTITY payloads. Six waves deferred the wiring; wave 7 lands
+The spec promised at-rest encryption for FINANCIAL /
+AUDIT / IDENTITY payloads. Six waves deferred the wiring; lands
 it. These tests confirm:
 
 - A FINANCIAL/AUDIT payload encrypted via ``save_encrypted_envelope``
@@ -101,7 +101,7 @@ class TestCiphertextRoundTrip:
 
 
 class TestNoPlaintextLeak:
-    """The defining wave-7 claim: no plaintext leaf survives encryption."""
+    """The defining no plaintext leaf survives encryption."""
 
     def test_nif_canary_does_not_appear_in_on_disk_ciphertext(
         self,

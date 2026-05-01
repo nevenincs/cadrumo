@@ -21,8 +21,8 @@ def test_every_public_name_imports() -> None:
 def test_registry_has_shipped_rulesets() -> None:
     """The default registry must expose every shipped ruleset.
 
-    Wave 1 (#173) shipped two Modelo 130 rulesets (2024, 2025).
-    Wave 2 (#183) added two Modelo 303 rulesets (2024, 2025).
+    (#173) shipped two Modelo 130 rulesets (2024, 2025).
+    (#183) added two Modelo 303 rulesets (2024, 2025).
     """
     from . import get_registry
 

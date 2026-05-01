@@ -1,4 +1,4 @@
-"""Lock --help text shape for every submission CLI subcommand (wave 132).
+"""Lock --help text shape for every submission CLI subcommand.
 
 Kent discovers the CLI by running ``aeat submission --help`` and
 ``aeat submission <cmd> --help``. The help text is the

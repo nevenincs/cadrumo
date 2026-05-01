@@ -40,8 +40,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
 def test_registry_ships_modelo_130_and_303_rulesets() -> None:
     """The registry contains every shipped ruleset.
 
-    Wave 1 (#173) added the Modelo 130 2024+2025 pair; wave 2
-    (#183) added the Modelo 303 2024+2025 pair. EPIC #305 wave 28
+     (#173) added the Modelo 130 2024+2025 pair;
+    (#183) added the Modelo 303 2024+2025 pair. EPIC #305
     extends the fleet with the Modelo 115 2025 ruleset.
     """
     registry = get_registry()
@@ -95,7 +95,7 @@ def test_resolve_returns_2024_for_q2() -> None:
 
 @pytest.mark.unit
 def test_resolve_115_backfill_binds_2024() -> None:
-    """Wave 43: Modelo 115 2024 backfill resolves for 2024-Q4 complementarias."""
+    """Modelo 115 2024 backfill resolves for 2024-Q4 complementarias."""
     registry = get_registry()
     ruleset_2024 = registry.resolve(
         modelo=ModeloCode.MODELO_115,
@@ -111,7 +111,7 @@ def test_resolve_115_backfill_binds_2024() -> None:
 
 @pytest.mark.unit
 def test_resolve_180_backfill_binds_2024() -> None:
-    """Wave 43: Modelo 180 2024 backfill resolves for ejercicio-2024 annual filings."""
+    """Modelo 180 2024 backfill resolves for ejercicio-2024 annual filings."""
     registry = get_registry()
     # Annual filings use quarter=None (a FiscalPeriod with only a year).
     ruleset_2024 = registry.resolve(
@@ -160,7 +160,7 @@ def test_resolve_200_binds_each_annual_year() -> None:
 
 @pytest.mark.unit
 def test_resolve_111_backfill_binds_2024() -> None:
-    """Wave 44/45: Modelo 111 2024 backfill resolves for 2024-period complementarias."""
+    """/45: Modelo 111 2024 backfill resolves for 2024-period complementarias."""
     registry = get_registry()
     ruleset_2024 = registry.resolve(
         modelo=ModeloCode.MODELO_111,
@@ -176,7 +176,7 @@ def test_resolve_111_backfill_binds_2024() -> None:
 
 @pytest.mark.unit
 def test_resolve_123_backfill_binds_2024() -> None:
-    """Wave 44/45: Modelo 123 2024 backfill resolves for 2024-period filings."""
+    """/45: Modelo 123 2024 backfill resolves for 2024-period filings."""
     registry = get_registry()
     ruleset_2024 = registry.resolve(
         modelo=ModeloCode.MODELO_123,
@@ -203,7 +203,7 @@ def test_resolve_123_binds_2026() -> None:
 
 @pytest.mark.unit
 def test_resolve_modelo_100_summary_via_variant() -> None:
-    """Wave 47: Modelo 100 summary ruleset is reachable via variant="summary"."""
+    """Modelo 100 summary ruleset is reachable via variant="summary"."""
     from ._rulesets.modelo_100_summary_2025 import (
         RULESET as MODELO_100_SUMMARY_2025,
     )

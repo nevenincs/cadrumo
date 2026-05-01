@@ -1,4 +1,4 @@
-"""Unit tests for the PII scrub library (#305 cluster C)."""
+"""Unit tests for the PII scrub library (#305)."""
 
 from __future__ import annotations
 

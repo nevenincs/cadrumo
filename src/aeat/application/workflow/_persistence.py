@@ -71,7 +71,7 @@ def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
     # The lock target matches what
     # ``RotationPlanEntry.lock_path_for`` resolves to for a multi-
     # file consumer with ``envelope_suffix=".envelope.json"`` (strip
-    # the suffix, append ``.lock``); the wave-18 alignment thus
+    # the suffix, append ``.lock``); the thus
     # engages OS-level serialisation between rotation and writer.
     lock_target = target.with_name(
         target.name[: -len(_WORKFLOW_RUN_ENVELOPE_SUFFIX)] + ".lock",

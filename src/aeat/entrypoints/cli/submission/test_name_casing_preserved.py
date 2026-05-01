@@ -1,11 +1,11 @@
-"""Name-casing preservation contract (wave 139).
+"""Name-casing preservation contract.
 
 ``--apellidos`` and ``--nombre`` preserve Kent's casing verbatim.
 We do NOT silently upper-case: Kent's casing is his responsibility,
 and a silent transform would hide typos he'd want to catch at
 verify/diff time.
 
-Wave 139 locks the preserve-case contract so a future refactor
+the preserve-case contract so a future refactor
 (e.g. adding ``.upper()`` in ``build_130_headers`` or a typer
 callback) fails here and forces a deliberate discussion before
 changing Kent-observable behaviour.

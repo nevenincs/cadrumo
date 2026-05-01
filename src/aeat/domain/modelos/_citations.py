@@ -34,7 +34,7 @@ class LegalCitation(BaseModel):
             project-curated summary rather than the literal BOE
             article body. Set to ``True`` for every v1 citation.
 
-    Wave 69 (EPIC #305) adds a model-level blocklist validator that
+     (EPIC #305) adds a model-level blocklist validator that
     refuses known-bad ``(source, article, role-substring)`` triples
     surfaced by prior audit waves. See
     :mod:`aeat.models._citation_registry` for the rationale and the
@@ -62,7 +62,7 @@ class LegalCitation(BaseModel):
     def _reject_known_bad_citations(self) -> LegalCitation:
         """Refuse blocklisted ``(source, article, role)`` triples.
 
-        Wave 69 closure of the recurring citation-miscite pattern.
+        of the recurring citation-miscite pattern.
         If a future citation author attributes a known-bad article
         to a role the article does not carry in BOE consolidated
         text, import fails at construction time with a pointer to

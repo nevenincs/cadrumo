@@ -1,4 +1,4 @@
-"""Golden-fixture byte-exactness tests for Modelo 303 2024 (wave 93).
+"""Golden-fixture byte-exactness tests for Modelo 303 2024.
 
 Pins the full 7996-byte multi-segment envelope for a known-good
 autónomo Kent filing scenario. Any schema/encoder/serialiser change

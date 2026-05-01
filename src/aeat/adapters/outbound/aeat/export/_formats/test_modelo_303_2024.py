@@ -1,4 +1,4 @@
-"""Smoke tests for the auto-generated Modelo 303 2024 schema (wave 88+89+90)."""
+"""Smoke tests for the auto-generated Modelo 303 2024 schema (+89+90)."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ class TestModelo3032024Envelope:
         assert ENCODING == "iso-8859-1"
 
     def test_required_fields_include_dp30301_page_identification(self) -> None:
-        """Wave 91 adds DP30301 page-identification fields to the required
+        """DP30301 page-identification fields to the required
         set via the fixture's ``extra_required_fields`` override so filings
         without TIPO_DECLARACION / NIF / APELLIDOS+NOMBRE / DEVENGO_EJERCICIO
         / DEVENGO_PERIODO are rejected at serialisation."""
@@ -88,7 +88,7 @@ class TestModelo3032024Envelope:
     def test_round_trip_unsigned_currency(self) -> None:
         """Casilla 01 (base imponible al 4 %) is an unsigned CURRENCY field.
 
-        Wave 90 reclassified every 17-byte casilla-bearing NUMERIC field
+        every 17-byte casilla-bearing NUMERIC field
         as CURRENCY so ordinary base-imponible values round-trip.
         """
         headers: dict[str, str] = {hdr: "A" for hdr in REQUIRED_HEADER_FIELDS}

@@ -1,4 +1,4 @@
-"""Casilla-complete declaración PDF parsing (EPIC #305 cluster D).
+"""Casilla-complete declaración PDF parsing (EPIC #305).
 
 The module turns a *copia de la declaración* PDF into a strict
 :class:`DeclaracionFiling` record carrying every casilla ID + printed

@@ -37,7 +37,7 @@ class ExtractedCasilla(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    # max_length raised from 8 → 32 (EPIC #305 wave 27) to allow
+    # max_length raised from 8 → 32 (EPIC #305) to allow
     # named-field identifiers (e.g. ``total_operadores``) for modelos
     # 036/037/232/369/720 whose summary blocks have no numeric casilla IDs.
     casilla_id: str = Field(min_length=1, max_length=32)

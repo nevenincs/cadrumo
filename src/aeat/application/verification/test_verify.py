@@ -1,4 +1,4 @@
-"""Unit tests for verify_declaracion (#305 cluster E)."""
+"""Unit tests for verify_declaracion (#305)."""
 
 from __future__ import annotations
 

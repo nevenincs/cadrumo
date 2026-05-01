@@ -1,4 +1,4 @@
-"""Structural parity between Modelo 130 2024 and 2025 (wave 80b)."""
+"""Structural parity between Modelo 130 2024 and 2025."""
 
 from __future__ import annotations
 

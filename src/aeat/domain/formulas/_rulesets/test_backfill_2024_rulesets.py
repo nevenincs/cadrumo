@@ -1,6 +1,6 @@
-"""Unit tests for the 2024 backfill rulesets (EPIC #305 wave 52).
+"""Unit tests for the 2024 backfill rulesets (EPIC #305).
 
-Wave 48 stream 4 H4 coverage gap: six 2024 backfill rulesets shipped
+H4 coverage gap: six 2024 backfill rulesets shipped
 with zero dedicated unit tests. The backfills are structural clones
 of their 2025 siblings (same casillas + formulas + citations; only
 the ParameterTable effective range narrows to 2024), so the test

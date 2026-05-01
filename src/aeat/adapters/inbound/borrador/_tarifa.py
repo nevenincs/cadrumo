@@ -1,4 +1,4 @@
-"""Tarifa progresiva IRPF post-validator for Modelo 100 (#305 cluster F).
+"""Tarifa progresiva IRPF post-validator for Modelo 100 (#305).
 
 The summary-block ruleset covers 4 top-level derivations (cuota íntegra
 total, total deducciones, cuota líquida, cuota resultante) by treating

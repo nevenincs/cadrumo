@@ -1,4 +1,4 @@
-"""Tests for the DR schema-module generator (EPIC #305 wave 87)."""
+"""Tests for the DR schema-module generator (EPIC #305)."""
 
 from __future__ import annotations
 

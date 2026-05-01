@@ -1,6 +1,6 @@
-"""DP30301 recargo-de-equivalencia rate-rows layout lock (wave 147).
+"""DP30301 recargo-de-equivalencia rate-rows layout lock.
 
-Complements wave-146's régimen-general rate-row lock with the
+Complements 's régimen-general rate-row lock with the
 recargo-de-equivalencia rows — the second-order surcharge rates
 (1.40 %, 5.20 %, 1.75 %) applied when Kent's counterparty is in
 the recargo regime.
@@ -19,7 +19,7 @@ block):
 Note: casilla 17 (offset 483, 5 bytes, RESERVED literal "00000")
 appears in the rate-column position but carries a zero-percent
 literal. The exact semantics require DR303 cross-reference;
-wave 147 locks the observed layout but doesn't claim to know
+the observed layout but doesn't claim to know
 what "00000" means — future contributors should consult the
 xlsx source before changing it.
 """
@@ -120,7 +120,7 @@ class TestRecargo10PctAnd21PctRows:
 
 class TestSuspiciousZeroRateLiteral:
     """Casilla 17 carries a RESERVED literal "00000" at offset 483 — 5 bytes
-    in the rate-column position but with a zero-percent value. Wave 147
+    in the rate-column position but with a zero-percent value.
     documents this as observed behaviour; it's not clear from the fixture
     alone whether this is "tipo exento" or an xlsx-extraction artefact.
     Future contributors should resolve with the DR303 PDF before changing.
@@ -134,6 +134,6 @@ class TestSuspiciousZeroRateLiteral:
         assert cas17.kind is FieldKind.RESERVED
         assert cas17.literal_value == "00000", (
             "Casilla 17 was expected to carry the '00000' literal per the "
-            "wave-147 observation. If this changed, cross-reference the DR303 "
+            "observation. If this changed, cross-reference the DR303 "
             "PDF and update _EXPECTED_GAPS + this test together."
         )

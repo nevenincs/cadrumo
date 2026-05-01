@@ -1,4 +1,4 @@
-"""Unit tests for the Phase 1 CLI exit-code table."""
+"""Unit tests for the CLI exit-code table."""
 
 from __future__ import annotations
 

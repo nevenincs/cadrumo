@@ -1,4 +1,4 @@
-"""Tests for the fichero-BOE deserialiser + round-trip fidelity (EPIC #201 C3d, wave 80a)."""
+"""Tests for the fichero-BOE deserialiser + round-trip fidelity (EPIC #201 C3d,)."""
 
 from __future__ import annotations
 

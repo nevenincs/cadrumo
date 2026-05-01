@@ -1,4 +1,4 @@
-"""Parametrised CLI smoke test over every registered schema (wave 124).
+"""Parametrised CLI smoke test over every registered schema.
 
 For each (modelo, ejercicio) in :const:`SCHEMA_REGISTRY`, the
 produce → verify → diff-against-self loop must complete with
@@ -12,7 +12,7 @@ zero exit codes:
    file identical to itself (status=identical).
 
 A registry entry whose module / build_headers / kind combination
-is internally inconsistent would slip past the wave-123 unit-
+is internally inconsistent would slip past the unit-
 level checks but fail here — this test exercises the full command
 dispatch the same way Kent's shell does.
 """
@@ -150,7 +150,7 @@ _DEVOLUCION = _devolucion_cases()
     ids=[f"{m}-{e}-tipo_{t}" for m, e, t in _INGRESO_AND_NEGATIVA],
 )
 def test_tipo_i_and_n_round_trip(tmp_path: Path, modelo: str, ejercicio: str, tipo: str) -> None:
-    """Wave 125: every (modelo, ejercicio, tipo ∈ {I, N}) combo must
+    """every (modelo, ejercicio, tipo ∈ {I, N}) combo must
     export + verify + self-diff clean. Catches a regression where a
     tipo mode breaks end-to-end even if tipo=I works."""
     period = _ejercicio_to_period(ejercicio)
@@ -193,7 +193,7 @@ def test_tipo_i_and_n_round_trip(tmp_path: Path, modelo: str, ejercicio: str, ti
     ids=[f"{m}-{e}-tipo_{t}" for m, e, t in _DEVOLUCION],
 )
 def test_tipo_d_with_iban_round_trip(tmp_path: Path, modelo: str, ejercicio: str, tipo: str) -> None:
-    """Wave 125: tipo=D (devolución) must export cleanly when --iban is
+    """tipo=D (devolución) must export cleanly when --iban is
     supplied, and verify should surface the IBAN through DP303DID."""
     period = _ejercicio_to_period(ejercicio)
     draft_path = _write_draft(tmp_path, modelo=modelo, period=period)
@@ -231,7 +231,7 @@ def test_tipo_d_with_iban_round_trip(tmp_path: Path, modelo: str, ejercicio: str
 
 
 def test_tipo_d_without_iban_exits_3(tmp_path: Path) -> None:
-    """tipo=D must be refused when --iban is absent (wave-101 guard)."""
+    """tipo=D must be refused when --iban is absent."""
     period = _ejercicio_to_period("2024")
     draft_path = _write_draft(tmp_path, modelo="303", period=period)
     output_dir = tmp_path / "out"

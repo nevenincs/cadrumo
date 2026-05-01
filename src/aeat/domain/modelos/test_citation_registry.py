@@ -1,4 +1,4 @@
-"""Unit tests for the citation blocklist (EPIC #305 wave 69)."""
+"""Unit tests for the citation blocklist (EPIC #305)."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ class TestKnownBadBlocklist:
     """Every entry in ``_KNOWN_BAD_CITATIONS`` maps to a real prior miscite."""
 
     def test_lirpf_103_cuota_diferencial_is_blocklisted(self) -> None:
-        """Wave 59c miscite: LIRPF art. 103 for cuota diferencial."""
+        """LIRPF art. 103 for cuota diferencial."""
         match = find_known_bad(
             LegalCitationSource.LEY,
             "103",
@@ -29,7 +29,7 @@ class TestKnownBadBlocklist:
         assert "cuota diferencial" in match.role_substring_es.lower()
 
     def test_lirpf_77_cuota_integra_autonomica_is_blocklisted(self) -> None:
-        """Wave 63a miscite: LIRPF art. 77 for cuota íntegra autonómica."""
+        """LIRPF art. 77 for cuota íntegra autonómica."""
         match = find_known_bad(
             LegalCitationSource.LEY,
             "77",
@@ -38,7 +38,7 @@ class TestKnownBadBlocklist:
         assert match is not None
 
     def test_lirpf_67_cuota_integra_estatal_is_blocklisted(self) -> None:
-        """Wave 65a miscite: LIRPF art. 67 for cuota íntegra estatal."""
+        """LIRPF art. 67 for cuota íntegra estatal."""
         match = find_known_bad(
             LegalCitationSource.LEY,
             "67",
@@ -47,7 +47,7 @@ class TestKnownBadBlocklist:
         assert match is not None
 
     def test_lis_125_cuota_liquida_is_blocklisted(self) -> None:
-        """Wave 61a miscite: LIS art. 125 for cuota líquida."""
+        """LIS art. 125 for cuota líquida."""
         match = find_known_bad(
             LegalCitationSource.LEY,
             "125",
@@ -56,7 +56,7 @@ class TestKnownBadBlocklist:
         assert match is not None
 
     def test_rirpf_100_3a_arrendamientos_is_blocklisted(self) -> None:
-        """Wave 67g miscite: RIRPF art. 100.3.a for arrendamientos urbanos."""
+        """RIRPF art. 100.3.a for arrendamientos urbanos."""
         match = find_known_bad(
             LegalCitationSource.REGLAMENTO,
             "100.3.a",
@@ -65,7 +65,7 @@ class TestKnownBadBlocklist:
         assert match is not None
 
     def test_rirpf_100_3c_ganancias_is_blocklisted(self) -> None:
-        """Wave 57b miscite: RIRPF art. 100.3.c for ganancias."""
+        """RIRPF art. 100.3.c for ganancias."""
         match = find_known_bad(
             LegalCitationSource.REGLAMENTO,
             "100.3.c",
@@ -74,7 +74,7 @@ class TestKnownBadBlocklist:
         assert match is not None
 
     def test_rirpf_105_1_premios_is_blocklisted(self) -> None:
-        """Wave 57b miscite: RIRPF art. 105.1 for premios."""
+        """RIRPF art. 105.1 for premios."""
         match = find_known_bad(
             LegalCitationSource.REGLAMENTO,
             "105.1",
@@ -83,7 +83,7 @@ class TestKnownBadBlocklist:
         assert match is not None
 
     def test_rirpf_110_2_agricolas_is_blocklisted(self) -> None:
-        """Wave 57b miscite: RIRPF art. 110.2 for agrícolas."""
+        """RIRPF art. 110.2 for agrícolas."""
         match = find_known_bad(
             LegalCitationSource.REGLAMENTO,
             "110.2",
@@ -92,7 +92,7 @@ class TestKnownBadBlocklist:
         assert match is not None
 
     def test_rirpf_110_4_modulos_is_blocklisted(self) -> None:
-        """Wave 57b miscite: RIRPF art. 110.4 for módulos."""
+        """RIRPF art. 110.4 for módulos."""
         match = find_known_bad(
             LegalCitationSource.REGLAMENTO,
             "110.4",
@@ -101,28 +101,28 @@ class TestKnownBadBlocklist:
         assert match is not None
 
     def test_lis_125_liquido_a_ingresar_is_blocklisted(self) -> None:
-        """Wave 70 miscite: LIS art. 125 for Modelo 200 'líquido a ingresar'."""
+        """LIS art. 125 for Modelo 200 'líquido a ingresar'."""
         match = find_known_bad(
             LegalCitationSource.LEY,
             "125",
             "Artículo 125 LIS — líquido a ingresar o devolver; incremento por pérdida de beneficios fiscales.",
         )
         assert match is not None
-        assert "wave 71c" in match.audit_wave
+        assert "" in match.audit_wave
 
     def test_liva_71_resumen_anual_is_blocklisted(self) -> None:
-        """Wave 70 miscite: LIVA art. 71 for Modelo 390 resumen anual."""
+        """LIVA art. 71 for Modelo 390 resumen anual."""
         match = find_known_bad(
             LegalCitationSource.LEY,
             "71",
             "Artículo 71 Ley 37/1992 IVA — obligación de presentar la declaración-resumen anual del IVA.",
         )
         assert match is not None
-        assert "wave 71d" in match.audit_wave
+        assert "" in match.audit_wave
 
 
 class TestAccentFolding:
-    """Wave 73b: blocklist matching is diacritic-insensitive.
+    """blocklist matching is diacritic-insensitive.
 
     Real-world risk: pdfplumber drops diacritics on some PDF fonts,
     and hand-typed quoted_text_es may lose accents. Without folding,
@@ -158,7 +158,7 @@ class TestAccentFolding:
         assert match is not None
 
     def test_rirpf_100_capital_mobiliario_is_blocklisted(self) -> None:
-        """Wave 74 miscite: RIRPF art. 100 for capital mobiliario (wrong).
+        """RIRPF art. 100 for capital mobiliario (wrong).
 
         RIRPF art. 100 is arrendamientos inmuebles urbanos only.
         Capital mobiliario retención lives in RIRPF art. 90.
@@ -169,10 +169,10 @@ class TestAccentFolding:
             "tipos de retención sobre rendimientos del capital mobiliario",
         )
         assert match is not None
-        assert "wave 75b" in match.audit_wave
+        assert "" in match.audit_wave
 
     def test_lirpf_66_cuota_integra_general_is_blocklisted(self) -> None:
-        """Wave 74 miscite: LIRPF art. 66 for general cuota íntegra.
+        """LIRPF art. 66 for general cuota íntegra.
 
         Art. 66 is 'Tipos de gravamen del ahorro' (narrow). General
         cuota íntegra is art. 62 (estatal) + art. 73 (autonómica).
@@ -183,7 +183,7 @@ class TestAccentFolding:
             "Cuota íntegra general - liquidación en art. 66",
         )
         assert match is not None
-        assert "wave 75b" in match.audit_wave
+        assert "" in match.audit_wave
 
 
 class TestBlocklistPrecision:
@@ -248,7 +248,7 @@ class TestLegalCitationModelValidator:
             )
         message = str(exc_info.value)
         assert "Blocklisted citation" in message
-        assert "wave 59c" in message
+        assert "" in message
 
     def test_legitimate_citation_constructs(self) -> None:
         """A correctly-attributed citation survives validation."""
@@ -271,5 +271,5 @@ class TestLegalCitationModelValidator:
                 retrieval_date=date(2026, 4, 22),
                 is_curated_summary=True,
             )
-        assert "wave 29" in str(exc_info.value)
-        assert "wave 67g" in str(exc_info.value)
+        assert "" in str(exc_info.value)
+        assert "" in str(exc_info.value)

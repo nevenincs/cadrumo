@@ -12,7 +12,7 @@ node in every landed ruleset variant whose rate operand is mutable
 3. Asserts the audit surfaces a discrepancy on at least one casilla
    downstream of the mutated rate, and the ``|delta|`` on that
    casilla is ``≥ 0.02 €`` (the detection floor inherited from the
-   wave-67e operand-swap harness).
+   operand-swap harness).
 
 Rates living in compound expressions (e.g. the
 ``percent_from_whole`` shape used by Modelo 200 casilla 00562 and

@@ -1,4 +1,4 @@
-"""Unit tests for fichero-BOE record-spec primitives (EPIC #201 wave 75d)."""
+"""Unit tests for fichero-BOE record-spec primitives (EPIC #201)."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ class TestEncodeCurrency:
         assert encode_currency(Decimal("0.00"), length=13) == b"0000000000000"
 
     def test_negative_without_signed_raises(self) -> None:
-        """Wave 77a: negative must be explicit via signed=True."""
+        """negative must be explicit via signed=True."""
         with pytest.raises(ValueError, match="without signed=True"):
             encode_currency(Decimal("-100.00"), length=10)
 
@@ -101,7 +101,7 @@ class TestEncodeCurrency:
             encode_currency(Decimal("99999999999.99"), length=5)
 
     def test_half_up_rounding(self) -> None:
-        """Wave 77a: AEAT Instrucciones use ROUND_HALF_UP, not HALF_EVEN.
+        """AEAT Instrucciones use ROUND_HALF_UP, not HALF_EVEN.
 
         Decimal("2.005") → cents 201 under HALF_UP; 200 under HALF_EVEN.
         Pinning the correct behaviour catches future rounding drift.
@@ -112,13 +112,13 @@ class TestEncodeCurrency:
         assert encode_currency(Decimal("1.885"), length=6) == b"000189"
 
     def test_length_invariant(self) -> None:
-        """Wave 77a stream C F6: output byte-length must equal declared length."""
+        """C F6: output byte-length must equal declared length."""
         assert len(encode_currency(Decimal("1234.56"), length=13)) == 13
         assert len(encode_currency(Decimal("0.00"), length=5)) == 5
 
 
 class TestEncodeCurrencyInlineSign:
-    """Wave 83a: Modelo 303+ inline-sign convention ('N' prefix for negatives)."""
+    """Modelo 303+ inline-sign convention ('N' prefix for negatives)."""
 
     def test_positive_emits_space_prefix(self) -> None:
         """A positive value in inline_sign mode emits a leading space."""
@@ -169,7 +169,7 @@ class TestEncodeText:
         assert encode_text("42", length=6, justification=Justification.RIGHT, pad_char="0") == b"000042"
 
     def test_overflow_without_truncate_raises(self) -> None:
-        """Wave 77a: silent truncation would corrupt NIF / razón-social."""
+        """silent truncation would corrupt NIF / razón-social."""
         with pytest.raises(ValueError, match="overflows"):
             encode_text("LONGVALUE", length=4)
 
@@ -219,7 +219,7 @@ class TestEncodeDate:
 
 
 class TestReservedInvariant:
-    """Wave 77a: RESERVED ⇔ literal_value model-level invariant."""
+    """RESERVED ⇔ literal_value model-level invariant."""
 
     def test_reserved_without_literal_raises(self) -> None:
         with pytest.raises(ValidationError, match="RESERVED fields must carry"):
@@ -260,7 +260,7 @@ class TestReservedInvariant:
             )
 
     def test_inline_sign_on_non_currency_raises(self) -> None:
-        """Wave 86 hardening: signed_mode=INLINE_SIGN only valid on CURRENCY."""
+        """signed_mode=INLINE_SIGN only valid on CURRENCY."""
         from ._record_spec import SignedMode
 
         with pytest.raises(ValidationError, match="INLINE_SIGN is only valid"):
@@ -274,7 +274,7 @@ class TestReservedInvariant:
 
 
 class TestValidateRecordSpecs:
-    """Wave 77a: monotonic offset/length invariant across a spec tuple."""
+    """monotonic offset/length invariant across a spec tuple."""
 
     def _three_field_spec(self) -> tuple[RecordFieldSpec, ...]:
         return (

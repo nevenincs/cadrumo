@@ -1,4 +1,4 @@
-"""Cross-track invariant: ruleset casillas vs schema casillas (wave 113).
+"""Cross-track invariant: ruleset casillas vs schema casillas.
 
 Stream B perpetual — every casilla_id declared in a formula ruleset
 must either have a corresponding schema field so it ends up in the

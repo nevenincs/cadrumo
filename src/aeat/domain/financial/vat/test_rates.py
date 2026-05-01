@@ -55,7 +55,7 @@ def test_lookup_rate_raises_for_unknown_kind() -> None:
 def test_lookup_rate_respects_effective_from() -> None:
     """Rates dated before the earliest registered window must not match.
 
-    Wave 2 (#183) added the 2024 baseline ES window so 2024-12-31
+     (#183) added the 2024 baseline ES window so 2024-12-31
     now resolves; the pre-2024 window still has no record.
     """
     with pytest.raises(VatRateNotFoundError):

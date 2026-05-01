@@ -65,19 +65,19 @@ class TestModelo115Ruleset:
         assert report.is_clean()
 
     def test_includes_reglamento_and_ley_citations(self) -> None:
-        # Wave 68 correction: RIRPF art. 100 has NO sub-letter structure
+        # RIRPF art. 100 has NO sub-letter structure
         # in the BOE consolidated text (BOE-A-2007-6820). The 19% rate on
         # arrendamientos urbanos lives in art. 100.1; art. 100.2 carries
-        # the Ceuta/Melilla 60% reduction. The prior wave-29 claim that
+        # the Ceuta/Melilla 60% reduction. The prior that
         # the rate lived in "art. 100.3.a" was factually wrong — corrected
-        # across ruleset + tests in wave 67g/68.
+        # across ruleset + tests in /68.
         articles = {c.article for c in MODELO_115_2025.legal_citations}
         assert "100.1" in articles  # Reglamento: fija el 19%
         assert "101.8" in articles  # LIRPF: delega el tipo al reglamento
 
     def test_external_worked_example_rirpf_100_1(self) -> None:
-        """External-anchored worked example (wave 59c H3 closure;
-        citation corrected wave 67g).
+        """External-anchored worked example (closure;
+        citation corrected ).
 
         Provenance: RD 439/2007 (RIRPF) art. 100.1 fixes the 19%
         retención rate on rendimientos del arrendamiento o
@@ -90,9 +90,9 @@ class TestModelo115Ruleset:
         `irpf.arrendamientos_rate` parameter. BOE-A-2007-6820
         consolidated retrieval 2026-04-22.
 
-        Prior-wave miscite (tracked): wave 59c cited art. 100.3.a —
+        Prior-wave miscite (tracked): art. 100.3.a —
         invalid; RIRPF art. 100 has no sub-letter structure.
-        Corrected in wave 67g.
+        Corrected in .
 
         Scenario: Q3 2025 Kent leasing a commercial premise:
         - 01 perceptores = 1 (single landlord).

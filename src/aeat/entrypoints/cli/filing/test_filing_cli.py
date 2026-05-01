@@ -333,7 +333,7 @@ class TestFilingCLI:
         self,
         runner_disabled: object = None,
     ) -> None:
-        """Wave-15 canary: ``aeat filing complementaria submit`` must not exist.
+        """``aeat filing complementaria submit`` must not exist.
 
         The complementaria submit transport was removed when main's PR
         #446 deleted every live-submit code path (no-live-submit

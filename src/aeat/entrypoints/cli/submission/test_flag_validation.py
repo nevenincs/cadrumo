@@ -1,4 +1,4 @@
-"""Flag-level validation for --modelo and --ejercicio (wave 136).
+"""Flag-level validation for --modelo and --ejercicio.
 
 Typer callback validators on verify/diff reject obviously-malformed
 flag values BEFORE the registry lookup surfaces a generic

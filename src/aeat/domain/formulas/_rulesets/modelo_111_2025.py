@@ -82,7 +82,7 @@ _CITATIONS = (
         "Artículo 99 RD 439/2007 (Reglamento del IRPF) — obligación "
         "general de practicar pagos a cuenta; implementa el 19% de "
         "retención sobre premios en metálico (LIRPF art. 101.7) y los "
-        "tipos fijos sobre el resto de rendimientos gravados. Wave 69a "
+        "tipos fijos sobre el resto de rendimientos gravados. "
         "correction: prior citation of art. 105.1 for premios was wrong "
         "(art. 105 covers IIC transmisiones, not premios).",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",

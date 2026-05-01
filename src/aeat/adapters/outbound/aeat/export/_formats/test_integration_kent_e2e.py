@@ -1,4 +1,4 @@
-"""End-to-end integration: ruleset engine → serialise → deserialise (wave 108).
+"""End-to-end integration: ruleset engine → serialise → deserialise.
 
 Kent's complete produce → verify → export journey in a single
 pytest: the Modelo 130 2024 formula ruleset derives casillas from
@@ -7,7 +7,7 @@ fichero-BOE bytes, and the deserialiser rebuilds the casilla map.
 
 This bridges the two EPIC tracks (A: submission / export, B:
 financial input / formula derivation) inside a single assertion:
-the derived casillas serialise to the wave-84 golden SHA256 when
+the derived casillas serialise to the SHA256 when
 fed the same inputs the golden fixture pins.
 
 If this test fails, either the ruleset's formulas drifted away
@@ -51,7 +51,7 @@ class TestKentE2EModelo130Q12024:
     The ruleset derives every cascade casilla (03, 04, 07, 09, 11,
     12, 14, 17, 19); the serialiser stamps them into the 878-byte
     payload; the deserialiser round-trips them back; the golden SHA
-    proves byte-exact equivalence with the wave-84 fixture.
+    proves byte-exact equivalence with the fixture.
     """
 
     _INPUTS: ClassVar[dict[str, Decimal]] = {
@@ -84,7 +84,7 @@ class TestKentE2EModelo130Q12024:
 
     def test_ruleset_to_serialised_bytes_hits_golden_sha(self) -> None:
         """End-to-end: ruleset → serialise should be byte-identical to
-        the wave-84 golden fixture."""
+        the fixture."""
         casillas = self._derive_casillas()
         payload = serialise(
             casilla_values=casillas,
@@ -98,7 +98,7 @@ class TestKentE2EModelo130Q12024:
         actual = hashlib.sha256(payload).hexdigest()
         assert actual == expected_golden, (
             "E2E drift: ruleset-derived casillas no longer byte-match the "
-            "wave-84 golden fixture.\n"
+            "fixture.\n"
             f"  expected SHA256: {expected_golden}\n"
             f"  actual   SHA256: {actual}\n"
             "Either:\n"
@@ -130,11 +130,11 @@ class TestKentE2EModelo130Q12024:
 
 
 class TestKentE2EModelo130Q12025:
-    """Wave 110: 2025 ejercicio clone parity end-to-end.
+    """2025 ejercicio clone parity end-to-end.
 
     The 2025 ruleset re-exports the 2024 formulas, and the 2025
     schema re-exports the 2024 specs. Feeding the same Kent inputs
-    with ejercicio=2025 must produce the wave-105 golden SHA256
+    with ejercicio=2025 must produce the SHA256
     because the only byte-level difference is the 4-byte EJERCICIO
     stamp at position 70-73.
     """
