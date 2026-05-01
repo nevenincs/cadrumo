@@ -2,7 +2,7 @@
 
 Each module in this subpackage exposes a single module-level
 ``ENTRY: ModeloMetadata``. The canonical import point is
-``aeat.models._registry``, which collects every ``ENTRY`` into the
+``aeat.domain.modelos._registry``, which collects every ``ENTRY`` into the
 public ``MODELO_REGISTRY`` mapping.
 """
 

@@ -28,7 +28,7 @@ from ._errors import RunTraceValidationError
 from ._models import RunEvent, RunTrace
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage._classification import RedactionRule
+    from ..classification import RedactionRule
 
 
 # Cached at first use so repeated emits do not repeatedly resolve the
@@ -40,8 +40,8 @@ def _diagnostic_rules() -> tuple[RedactionRule, ...]:
     """Return the DIAGNOSTIC-class default rule set, resolved on first call."""
     global _DIAGNOSTIC_RULES
     if _DIAGNOSTIC_RULES is None:
-        from ...adapters.persistence.storage import SensitivityClass
-        from ...adapters.persistence.storage._redaction import default_rules_for_class
+        from ..classification import SensitivityClass
+        from ..redaction import default_rules_for_class
 
         _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
     return _DIAGNOSTIC_RULES  # type: ignore[return-value]

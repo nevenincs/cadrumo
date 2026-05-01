@@ -256,7 +256,7 @@ the audit work. Each ambiguity is also flagged on its row above.
   `core/` (`classification/`, `redaction/`, `corpus_manifest/`,
   `locks.py`, `path_safety.py`). The encrypted-record contract
   (10-symbol bundle imported by every per-domain repository) is
-  preserved via the `aeat.adapters.persistence.storage` re-export shim. Per-sub-module
+  preserved via hard-cutover: all callers updated to new canonical paths in the Step 7 keystone PR. Per-sub-module
   deep audits follow. See "Modules audited" for the full split
   design and 3 boundary-violation findings (NIF canary cross-domain
   leak, rotation private-helper coupling, fsync_parent_dir
@@ -528,8 +528,7 @@ subpackage list AND the issue-label taxonomy.
 
 - `adr/2026-04-25-error-code-registry-adr.md` — `aeat.core.errors` public
   import contract. Critical: the contract `from aeat.core.errors import ...`
-  must keep working through the restructure (re-export shim at
-  `aeat/errors.py` if needed, or document the breaking change).
+  must keep working through the restructure (hard-cutover: all callers updated to new canonical paths in the Step 7 keystone PR).
 
 **Logging cluster (move to `core/logging.py`)**:
 
@@ -583,9 +582,9 @@ edited.
 
 - **Public-import contracts must survive the move.** At minimum
   `aeat.core.errors` (per `error-code-registry-adr`) is documented as a
-  stable public surface; relocating to `aeat.core.errors` requires
-  either a re-export shim or a documented breaking change with a
-  migration window.
+  stable public surface; relocating to `aeat.core.errors` is handled
+  via hard-cutover: all callers updated to new canonical paths in the
+  Step 7 keystone PR.
 - **Issue-label taxonomy mirrors the markers.** `domain:aeat-remote`,
   `domain:submission`, `domain:local-state`, `domain:mediation`,
   `domain:financial-input` are referenced in multiple ADRs and plans
@@ -996,23 +995,19 @@ Per the existing `error-code-registry-adr`,
 `from aeat.core.errors import ...` is a documented public surface.
 Treatment:
 
-- **Re-export shim at `aeat/errors.py`** (or
-  `aeat/core/errors/__init__.py`) re-exports every public symbol from
-  its new home. Existing consumers continue to work unchanged.
+- **Hard-cutover**: all callers at old `aeat.core.errors` paths updated to
+  new canonical homes in the Step 7 keystone PR. No backward-compat
+  re-export layer introduced.
 - The 8 formulas exceptions ALREADY have a canonical alternative
   home: `aeat.domain.formulas` re-exports them via `aeat.domain.formulas.__init__`.
-  The shim adds redundancy but is justified by the public-API
-  contract.
-- Shim removal is a **separate downstream decision** after a
-  documented deprecation window.
 
 Feeds the ADR public-surface table:
-- `from aeat.core.errors import AeatError` — preserve via shim.
+- `from aeat.core.errors import AeatError` — hard-cutover to `aeat.core.errors`.
 - `from aeat.core.errors import FormulasError` (and the other 7) —
-  preserve via shim; canonical home becomes `aeat.domain.formulas`.
-- `from aeat.core.errors import McpLaunchError` — preserve via shim;
+  hard-cutover; canonical home becomes `aeat.domain.formulas`.
+- `from aeat.core.errors import McpLaunchError` — hard-cutover;
   canonical home becomes `aeat.entrypoints.mcp` (or `entrypoints/mcp`).
-- `from aeat.core.errors import FilingFixtureError` — preserve via shim;
+- `from aeat.core.errors import FilingFixtureError` — hard-cutover;
   canonical home becomes `aeat.domain.testing`.
 - `from aeat.core.errors import (rendering pipeline)` — direct, no
   rename.
@@ -1063,7 +1058,7 @@ produces a concrete 5-destination split. The pure-infra rendering
 machinery + catalogue table + base class + firewall declarations
 stay in `core/errors/` (~2,400 LOC). 11 domain-specific exception
 classes redistribute to 3 domain `_errors.py` files (~120 LOC). A
-re-export shim preserves the `aeat.core.errors` public-API contract.
+hard-cutover: all callers updated to new canonical paths; the `aeat.core.errors` public-API contract is satisfied by the module remaining at its canonical dotted path.
 
 #### Inventory drift discovered
 
@@ -1693,8 +1688,7 @@ but governance + locking + path-safety bubble up to `core/`.
 | `secret_store/` | `_secret_store`, `_materialisation` | ~628 |
 | `_rotation.py` (single file, crosses clusters) | `_rotation` | ~514 |
 
-Plus `errors.py` (shared error hierarchy) + `__init__.py` (re-export
-shim).
+Plus `errors.py` (shared error hierarchy) + `__init__.py` (public-surface re-exports).
 
 **CORE-LEAK promotions to `core/` (5 modules)**:
 
@@ -1740,14 +1734,14 @@ shim).
 #### Public-API contract impact
 
 - `aeat.adapters.persistence.storage.__init__.__all__` re-exports 130 symbols.
-- After split: re-export shim preserves the `aeat.adapters.persistence.storage` import.
+- After split: all callers updated to new canonical paths in the Step 7 keystone PR;
+  hard-cutover model — no re-export layer at old `aeat.adapters.persistence.storage`.
 - 5 CORE-LEAK promotions create new `aeat.core.*` public surfaces;
-  re-export shims at old `aeat.adapters.persistence.storage` paths during deprecation
-  window.
+  all consumers at old paths updated in the same change-set.
 - `_resolve_master_key_provider` is de-facto public (12+ external
   consumers). **Recommendation**: rename to
   `resolve_master_key_provider` (drop underscore) at move time.
-- `Base`, `KEYRING_SERVICE`, `KEYRING_USERNAME` preserved via shim.
+- `Base`, `KEYRING_SERVICE`, `KEYRING_USERNAME` preserved at canonical paths via hard-cutover.
 
 Feeds the ADR public-surface table.
 
@@ -2475,8 +2469,8 @@ internal cohesion, not external surface separation.
 
 #### Public-API contract impact
 
-- `aeat.adapters.outbound.llm` `__all__` exports 23 symbols. Re-export shim
-  preserves the `from aeat.adapters.outbound.llm import ...` contract.
+- `aeat.adapters.outbound.llm` `__all__` exports 23 symbols. Hard-cutover:
+  all callers updated to new canonical paths in the Step 7 keystone PR.
 - The single consumer (`cli/llm/__init__.py`) updates its relative
   imports from `..llm` to `..adapters.outbound.llm` — mechanical.
 

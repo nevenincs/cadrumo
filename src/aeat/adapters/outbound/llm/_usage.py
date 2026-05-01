@@ -66,8 +66,9 @@ class UsageRecorder:
         Returns:
             Path to the JSONL file that received the record.
         """
-        from ...persistence.storage import SensitivityClass, exclusive_file_lock, redact_structured
-        from ...persistence.storage._redaction import default_rules_for_class
+        from ....core.classification import SensitivityClass
+        from ....core.locks import exclusive_file_lock
+        from ....core.redaction import default_rules_for_class, redact_structured
 
         path = self.root_dir / f"usage-{record.created_at.date().isoformat()}.jsonl"
         redacted = redact_structured(

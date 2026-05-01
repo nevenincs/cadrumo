@@ -25,7 +25,7 @@ class PortalMetadata(BaseModel):
     cross-reference invariants that span the registry as a whole
     (``replaced_by`` resolution, ``related_modelo`` closure over every
     :class:`ModeloCode` member) are enforced at registry-assembly time
-    by :func:`aeat.portals._registry._finalise_registry` rather than
+    by :func:`aeat.domain.portals._registry._finalise_registry` rather than
     here, so individual entries can be constructed in isolation in
     unit tests.
 

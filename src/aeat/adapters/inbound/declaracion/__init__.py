@@ -4,10 +4,10 @@ The module turns a *copia de la declaración* PDF into a strict
 :class:`DeclaracionFiling` record carrying every casilla ID + printed
 value the extractor recovered. Downstream consumers:
 
-- :mod:`aeat.filing.build_draft` materialises a :class:`FilingDraft`
+- :mod:`aeat.application.filing.build_draft` materialises a :class:`FilingDraft`
   from the extracted casillas via ``inputs={c.casilla_id: c.printed_value ...}``.
-- :mod:`aeat.verification.verify_declaracion` compares the re-derived
-  casillas against the printed ones via :class:`aeat.formulas.Engine.audit_against`.
+- :mod:`aeat.application.verification.verify_declaracion` compares the re-derived
+  casillas against the printed ones via :class:`aeat.domain.formulas.Engine.audit_against`.
 
 Public API:
 

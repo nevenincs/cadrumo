@@ -1,10 +1,10 @@
-"""Private health-probe helper for :class:`aeat.browser.BrowserSession`.
+"""Private health-probe helper for :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
 
-Thin shim around :func:`aeat.browser._site_health_parsers.evaluate_response` that the
+Thin shim around :func:`aeat.adapters.outbound.aeat.browser._site_health_parsers.evaluate_response` that the
 session navigation hook calls after every ``page.goto``. Keeping this
 helper isolated in its own module makes the forbidden-import guard
-trivial: this module MUST NOT import anything from :mod:`aeat.auth`,
-:mod:`aeat.filing`, or :mod:`aeat.financial`.
+trivial: this module MUST NOT import anything from :mod:`aeat.adapters.outbound.aeat.auth`,
+:mod:`aeat.application.filing`, or :mod:`aeat.domain.financial`.
 """
 
 from __future__ import annotations

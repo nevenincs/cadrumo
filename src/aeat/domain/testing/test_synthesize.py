@@ -1,4 +1,4 @@
-"""Unit tests for :func:`aeat.testing.synthesize_filing_draft` (#239 W1 P7).
+"""Unit tests for :func:`aeat.domain.testing.synthesize_filing_draft` (#239 W1 P7).
 
 The helper is a pure construction surface — no AEAT round-trip — so
 every test is a strict pydantic validation + content-hash sanity

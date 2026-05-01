@@ -1,4 +1,4 @@
-"""Unit tests for the pure helpers in :mod:`aeat.cli.bootstrap`.
+"""Unit tests for the pure helpers in :mod:`aeat.entrypoints.cli.bootstrap`.
 
 The Drive API interactions and the env-file write are exercised by the
 live smoke tests in . Here we cover only the dedup decision

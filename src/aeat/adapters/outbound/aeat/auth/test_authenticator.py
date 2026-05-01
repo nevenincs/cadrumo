@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.auth._authenticator`.
+"""Unit tests for :mod:`aeat.adapters.outbound.aeat.auth._authenticator`.
 
 Zero mocks / patches / fakes (global ban) — we exercise the
 authenticator with a real ``LoadedCertificate`` (generated at

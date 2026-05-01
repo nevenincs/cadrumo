@@ -1,12 +1,12 @@
 """``aeat browser`` sub-app — Playwright browser session health probes.
 
 A small, directory-backed sub-app that mirrors the convention used by
-:mod:`aeat.cli.workflow`. Today the only command is ``health``;
+:mod:`aeat.entrypoints.cli.workflow`. Today the only command is ``health``;
 additional browser-layer operations can be added by landing new
 modules in this package.
 
 See [[2026-04-13-aeat-mantenimiento-detection-adr]] for the exit-code
-table locked into :func:`aeat.cli.browser.health.health_cmd`.
+table locked into :func:`aeat.entrypoints.cli.browser.health.health_cmd`.
 """
 
 from __future__ import annotations

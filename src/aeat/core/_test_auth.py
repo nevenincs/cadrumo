@@ -1,4 +1,4 @@
-"""Unit tests for the pure helpers in :mod:`aeat.auth`.
+"""Unit tests for the pure helpers in :mod:`aeat.adapters.outbound.aeat.auth`.
 
 Network-touching code paths (OAuth flow, ADC acquisition, service
 builders) are exercised by the live smoke test suite, never here.

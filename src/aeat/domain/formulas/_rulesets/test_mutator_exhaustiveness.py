@@ -1,7 +1,7 @@
 """Orphan-node defense for the mutation harness (#338).
 
-Every concrete subclass of :data:`aeat.formulas.Formula` and every
-concrete operand subclass of :data:`aeat.formulas.Operand` must
+Every concrete subclass of :data:`aeat.domain.formulas.Formula` and every
+concrete operand subclass of :data:`aeat.domain.formulas.Operand` must
 appear in **exactly one** of:
 
 - :data:`MUTATOR_REGISTRY` — the type owns a mutator class.
@@ -9,7 +9,7 @@ appear in **exactly one** of:
   intentionally not mutable, with a justifying reason.
 
 If a future contributor adds a new ``Formula`` subclass to
-``aeat.formulas`` without updating one of the two sets, the
+``aeat.domain.formulas`` without updating one of the two sets, the
 exhaustiveness test fails loudly. This is the only mechanism
 preventing silent gaps in the harness's coverage of the AST.
 """
@@ -63,7 +63,7 @@ _PUBLIC_OPERAND_TYPES: frozenset[type] = _PUBLIC_FORMULA_TYPES | frozenset({Lite
 
 
 def test_concrete_formula_types_match_public_export() -> None:
-    """Sanity check: ``all_concrete_formula_types`` matches ``aeat.formulas.Formula``."""
+    """Sanity check: ``all_concrete_formula_types`` matches ``aeat.domain.formulas.Formula``."""
     enumerated = frozenset(all_concrete_formula_types())
     assert enumerated == _PUBLIC_FORMULA_TYPES, (
         f"_mutators.all_concrete_formula_types is out of sync with "
@@ -74,7 +74,7 @@ def test_concrete_formula_types_match_public_export() -> None:
 
 
 def test_concrete_operand_types_match_public_export() -> None:
-    """Sanity check: ``all_concrete_operand_types`` matches ``aeat.formulas.Operand``."""
+    """Sanity check: ``all_concrete_operand_types`` matches ``aeat.domain.formulas.Operand``."""
     enumerated = frozenset(all_concrete_operand_types())
     assert enumerated == _PUBLIC_OPERAND_TYPES
 
@@ -94,7 +94,7 @@ def test_every_concrete_operand_is_either_mutated_or_documented() -> None:
     )
     assert not extra, (
         f"unexpected entry/entries {extra!r} in MUTATOR_REGISTRY union "
-        f"NOT_MUTABLE_NODE_TYPES; the type is not in aeat.formulas.Operand."
+        f"NOT_MUTABLE_NODE_TYPES; the type is not in aeat.domain.formulas.Operand."
     )
 
     overlap = registered & not_mutable

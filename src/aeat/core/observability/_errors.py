@@ -1,7 +1,7 @@
 """Concrete observability errors layered over :class:`AeatObservabilityError`.
 
 The base class :class:`AeatObservabilityError` lives in
-:mod:`aeat.errors` so other subpackages can catch it without importing
+:mod:`aeat.core.errors` so other subpackages can catch it without importing
 observability internals (see ADR D8). This module re-exports it and
 declares the leaf error types raised inside the observability layer.
 """

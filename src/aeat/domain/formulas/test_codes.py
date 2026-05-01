@@ -1,4 +1,4 @@
-"""Tests for the :mod:`aeat.formulas._codes` enums."""
+"""Tests for the :mod:`aeat.domain.formulas._codes` enums."""
 
 from __future__ import annotations
 

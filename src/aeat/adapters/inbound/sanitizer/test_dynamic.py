@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.sanitizer._dynamic` and ``_structtree``.
+"""Unit tests for :mod:`aeat.adapters.inbound.sanitizer._dynamic` and ``_structtree``.
 
 Each surface is exercised in isolation against a synthesised PDF
 that pins the surface in question. The tests assert presence

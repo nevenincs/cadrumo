@@ -1,12 +1,12 @@
 """Typed repositories for the rental-register record types (#454).
 
-Bridges between the public :mod:`aeat.rental._models` records and the
-internal :mod:`aeat.storage._orm` mapper rows. Every method routes
+Bridges between the public :mod:`aeat.domain.rental._models` records and the
+internal :mod:`aeat.adapters.persistence.storage._orm` mapper rows. Every method routes
 through ``Repository._flush_or_wrap`` so DB integrity violations
 surface as :class:`RepositoryError`.
 
 Storage imports are deferred behind methods that consult them so the
-rental subpackage does not pull :mod:`aeat.storage` (with its
+rental subpackage does not pull :mod:`aeat.adapters.persistence.storage` (with its
 Alembic plugin discovery) into every CLI command's import chain;
 this preserves the json-pipe-safety contract.
 """

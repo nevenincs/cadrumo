@@ -8,7 +8,7 @@ richer surfaces of its sibling subpackages.
 
 - ``ModeloIdentifier`` — typed validating string for an AEAT modelo.
 - ``AuthProviderProbe`` — narrow surface over
-  :class:`aeat.adapters.outbound.aeat.auth.AuthProvider` for the preflight gate.
+  :class:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.AuthProvider` for the preflight gate.
 - ``DeadlineWindowChecker`` — narrow surface over
   :mod:`aeat.domain.deadlines` used by preflight.
 - ``FilingFinding`` / ``FilingDraftLike`` / ``DraftLoader`` — narrow

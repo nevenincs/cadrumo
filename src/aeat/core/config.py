@@ -26,7 +26,7 @@ from .paths import (
 
 
 class DivergenceSink(StrEnum):
-    """Supported sinks for :class:`aeat.sync.DivergenceRecord` persistence."""
+    """Supported sinks for :class:`aeat.application.sync.DivergenceRecord` persistence."""
 
     FILE = "FILE"
 
@@ -153,7 +153,7 @@ class Settings(BaseSettings):
         default=None,
         description=(
             "Optional override for Kent's tax-residence profile JSON. "
-            "When unset, aeat.profile uses the OS config directory."
+            "When unset, aeat.domain.profile uses the OS config directory."
         ),
     )
 
@@ -302,7 +302,7 @@ class Settings(BaseSettings):
         description="Secondary opt-in specifically for Google Workspace fixture live tests",
     )
 
-    # ── Manuals corpus (aeat.manuals, #25) ──────────────────────────────────
+    # ── Manuals corpus (aeat.domain.manuals, #25) ──────────────────────────────────
     aeat_manuals_root: Path = Field(
         default=PROJECT_ROOT / "corpus" / "manuals",
         description="Root directory for the structured AEAT Manual práctico corpus",
@@ -315,13 +315,13 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Normatives corpus (aeat.normatives, #45) ────────────────────────────
+    # ── Normatives corpus (aeat.domain.normatives, #45) ────────────────────────────
     aeat_normatives_root: Path = Field(
         default=PROJECT_ROOT / "corpus" / "normatives",
         description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
-    # ── VAT catalogue (aeat.financial.vat, #85) ─────────────────────────────
+    # ── VAT catalogue (aeat.domain.vat, #85) ─────────────────────────────
     aeat_vat_catalogue_root: Path = Field(
         default=PROJECT_ROOT / "corpus" / "financial" / "vat",
         description="Root directory for the hand-reviewed VAT taxonomy catalogue",
@@ -391,7 +391,7 @@ class Settings(BaseSettings):
     )
     aeat_certificate_verify_url: str = Field(
         default="https://sede.agenciatributaria.gob.es/",
-        description="Target URL for aeat.auth.verify_handshake() mTLS smoke test",
+        description="Target URL for aeat.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test",
     )
     aeat_auth_timeout_ms: int = Field(
         default=30_000,
@@ -660,11 +660,11 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Schema extraction (aeat.schema, #9) ────────────────────────────────
+    # ── Schema extraction (aeat.domain.schema, #9) ────────────────────────────────
     aeat_schema_cache_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "schema-cache",
         description=(
-            "Directory where extracted Modelo schemas and their provenance manifests are persisted by aeat.schema."
+            "Directory where extracted Modelo schemas and their provenance manifests are persisted by aeat.domain.schema."
         ),
     )
     aeat_schema_source_urls_override: str = Field(
@@ -696,7 +696,7 @@ class Settings(BaseSettings):
     )
     aeat_justificante_parser_backend: JustificanteParserBackend = Field(
         default=JustificanteParserBackend.PDFPLUMBER,
-        description="Parser backend for `aeat.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
+        description="Parser backend for `aeat.domain.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
     )
 
     # ── Filing history (#168) ───────────────────────────────────────────────

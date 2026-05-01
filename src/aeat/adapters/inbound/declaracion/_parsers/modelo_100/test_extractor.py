@@ -2,7 +2,7 @@
 
 Parametrised over the three live AEAT-issued justificantes captured
 under ``scratch/recon-corpus/``. Each case exercises the real PDF
-bytes end-to-end via :func:`aeat.declaracion.parse_declaracion`, with
+bytes end-to-end via :func:`aeat.adapters.inbound.declaracion.parse_declaracion`, with
 no synthetic regeneration — these are the canonical ground truth for
 Modelo 100 layout parity.
 

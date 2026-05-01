@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.sanitizer._records`.
+"""Unit tests for :mod:`aeat.adapters.inbound.sanitizer._records`.
 
 The tests focus on three load-bearing contracts:
 

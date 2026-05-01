@@ -6,7 +6,7 @@ model. Every permalink points at a real BOE consolidated-text URL.
 Every committed file is hand-reviewed before it lands on ``main``.
 
 Public surface — callers from outside this subpackage must import
-exclusively from ``aeat.normatives`` and MUST NOT reach into private
+exclusively from ``aeat.domain.normatives`` and MUST NOT reach into private
 ``_schema``, ``_loader``, ``_lookup``, ``_cite``, or ``_verify``
 modules.
 

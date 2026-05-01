@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.sanitizer._metadata`.
+"""Unit tests for :mod:`aeat.adapters.inbound.sanitizer._metadata`.
 
 The tests synthesise PDFs in-process (no fixture dep) covering:
 

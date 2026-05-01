@@ -3,7 +3,7 @@
 The registry is the single source of truth for provider ordering,
 default resolution, and user-facing rendering. Each entry owns its
 label and whether a concrete ``AuthProvider`` has shipped. For
-implemented kinds the CLI delegates to :func:`aeat.auth.select_provider`
+implemented kinds the CLI delegates to :func:`aeat.application.auth.select_provider`
 to build the real provider. Subcommands read from this registry; no
 command constructs providers directly.
 """
@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....adapters.outbound.aeat.auth import (
+from ....application.auth import (
     AuthProvider,
     AuthProviderDescription,
     AuthProviderKind,

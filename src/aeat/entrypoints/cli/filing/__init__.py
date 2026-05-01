@@ -112,7 +112,7 @@ def _load_inputs(path: Path) -> dict[str, object]:
 def _draft_repository():  # type: ignore[no-untyped-def]
     """Return a FilingDraftRepository bound to the configured drafts dir.
 
-    Imports are deferred to avoid pulling aeat.storage (and Alembic
+    Imports are deferred to avoid pulling aeat.adapters.persistence.storage (and Alembic
     plugin discovery) into CLI commands that never persist a draft.
     """
     from ....application.filing._repository import FilingDraftRepository

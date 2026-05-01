@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.workflow._persistence`."""
+"""Unit tests for :mod:`aeat.application.workflow._persistence`."""
 
 from __future__ import annotations
 

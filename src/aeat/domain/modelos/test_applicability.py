@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.models._applicability.ModeloApplicability`."""
+"""Unit tests for :class:`aeat.domain.modelos._applicability.ModeloApplicability`."""
 
 from __future__ import annotations
 

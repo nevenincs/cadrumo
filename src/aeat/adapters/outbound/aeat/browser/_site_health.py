@@ -31,10 +31,10 @@ from pydantic import (
 
 if TYPE_CHECKING:
     # ``SiteHealthAlert.stage`` is typed ``WorkflowStage`` via a forward
-    # reference. The real import happens at the ``aeat.workflow``
+    # reference. The real import happens at the ``aeat.application.workflow``
     # package boundary, where ``SiteHealthAlert.model_rebuild(...)`` is
     # called with ``WorkflowStage`` in scope. See the ADR and the
-    # ``aeat.workflow.__init__`` rebuild site for the rationale.
+    # ``aeat.application.workflow.__init__`` rebuild site for the rationale.
     from .....application.workflow._models import WorkflowStage as WorkflowStage
 
 
@@ -136,12 +136,12 @@ class SiteHealthAlert(_SiteHealthRecord):
     """Workflow-side alert wrapping a :class:`SiteHealthStatus`.
 
     Emitted by the workflow engine when it catches a
-    :class:`aeat.errors.SiteHealthError` inside a stage; persisted on
-    the failed :class:`aeat.workflow.WorkflowStep` so a resumed run
+    :class:`aeat.core.errors.SiteHealthError` inside a stage; persisted on
+    the failed :class:`aeat.application.workflow.WorkflowStep` so a resumed run
     can explain the prior halt.
 
     Attributes:
-        stage: The :class:`aeat.workflow.WorkflowStage` that was
+        stage: The :class:`aeat.application.workflow.WorkflowStage` that was
             active when the alert fired.
         status: The captured :class:`SiteHealthStatus`.
         run_id: The workflow run identifier (1..128 chars).

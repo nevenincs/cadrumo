@@ -110,7 +110,7 @@ def lookup_spec(manual_id: ManualId, year: int, part: ManualPart) -> PartSpec:
             return spec
     raise ManifestError(
         f"no canonical URL registered for {manual_id.value}/{year}/{part.value}; "
-        "add a PartSpec entry to aeat.manuals._fetch.PART_SPECS",
+        "add a PartSpec entry to aeat.domain.manuals._fetch.PART_SPECS",
     )
 
 

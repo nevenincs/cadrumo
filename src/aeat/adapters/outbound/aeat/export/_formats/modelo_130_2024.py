@@ -61,7 +61,7 @@ ENCODING: FicheroBoeEncoding = "cp1252"
 _AMOUNT_LEN = 13
 
 #: Header-field identifiers every draft MUST provide. Consumed by
-#: :mod:`aeat.submission._formats._serialise` to fail-fast on missing
+#: :mod:`aeat.adapters.outbound.aeat.export._formats._serialise` to fail-fast on missing
 #: required inputs before emitting any bytes.
 REQUIRED_HEADER_FIELDS: frozenset[str] = frozenset(
     {

@@ -8,7 +8,7 @@ from ...core.errors import AeatError
 
 
 class CasillaError(AeatError):
-    """Base class for every error raised by :mod:`aeat.casillas`."""
+    """Base class for every error raised by :mod:`aeat.domain.casillas`."""
 
 
 class CasillaParseError(CasillaError):

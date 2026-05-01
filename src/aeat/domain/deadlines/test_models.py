@@ -1,4 +1,4 @@
-"""Unit tests for the strict pydantic v2 models in :mod:`aeat.deadlines._models`."""
+"""Unit tests for the strict pydantic v2 models in :mod:`aeat.domain.deadlines._models`."""
 
 from __future__ import annotations
 

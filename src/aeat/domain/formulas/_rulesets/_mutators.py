@@ -830,7 +830,7 @@ def all_concrete_formula_types() -> Iterable[type]:
     the union arms are accessible via ``__args__`` after the
     :class:`pydantic.fields.FieldInfo` annotation is unwrapped. A robust
     implementation re-derives the union from the explicit listing in
-    ``aeat.formulas.__init__`` and the ``op``-tagged subclasses above.
+    ``aeat.domain.formulas.__init__`` and the ``op``-tagged subclasses above.
     """
     return (
         AddFormula,

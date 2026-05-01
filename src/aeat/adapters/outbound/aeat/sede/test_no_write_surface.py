@@ -1,4 +1,4 @@
-"""Layer-3 write-guard for aeat.adapters.outbound.aeat.sede (#239).
+"""Layer-3 write-guard for aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede (#239).
 
 Walks every ``.py`` source file in ``src/aeat/sede/`` and fails the
 build if a forbidden call-context verb appears. The forbidden tokens
@@ -57,7 +57,7 @@ def _iter_sede_sources() -> tuple[Path, ...]:
 
 
 class TestNoCallContextWriteVerbs:
-    """Forbidden verbs must never appear as a call-site in aeat.adapters.outbound.aeat.sede."""
+    """Forbidden verbs must never appear as a call-site in aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede."""
 
     @pytest.mark.parametrize("verb", _load_forbidden_verbs())
     def test_verb_never_called(self, verb: str) -> None:
@@ -71,7 +71,7 @@ class TestNoCallContextWriteVerbs:
             for line_no, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
                 if pattern.search(line):
                     offenders.append(f"{source.relative_to(_SEDE_ROOT)}:{line_no}: {line.strip()}")
-        assert not offenders, f"Forbidden write verb {verb!r} used in a call context inside aeat.adapters.outbound.aeat.sede:\n" + "\n".join(
+        assert not offenders, f"Forbidden write verb {verb!r} used in a call context inside aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede:\n" + "\n".join(
             offenders
         )
 

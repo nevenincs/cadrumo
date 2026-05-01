@@ -1,10 +1,10 @@
 """Private parser backends for the justificante subpackage.
 
-Callers outside ``aeat.justificante`` must never import from here — the
-public surface lives at :mod:`aeat.justificante`. Backends expose a common
+Callers outside ``aeat.domain.justificante`` must never import from here — the
+public surface lives at :mod:`aeat.domain.justificante`. Backends expose a common
 :func:`extract_text` function that returns the raw concatenated text of a
 justificante PDF; all field extraction happens in
-:mod:`aeat.justificante._extract`.
+:mod:`aeat.domain.justificante._extract`.
 """
 
 from __future__ import annotations

@@ -1,13 +1,13 @@
-"""Opt-in live smoke test for :mod:`aeat.workflow`.
+"""Opt-in live smoke test for :mod:`aeat.application.workflow`.
 
 A meaningful end-to-end live run against AEAT requires concrete
 adapters wired against an authenticated session and the live cert
 backend. This test is deliberately minimal: it asserts that
-:func:`aeat.workflow.default_engine` rejects a call with no concrete
+:func:`aeat.application.workflow.default_engine` rejects a call with no concrete
 adapters, which is the only stable contract this subpackage can
 verify against live Settings without driving a real AEAT round-trip.
 
-The test is gated via :func:`aeat.cli._live.requires_live_enabled`
+The test is gated via :func:`aeat.entrypoints.cli._live.requires_live_enabled`
 per the project's canonical opt-in env var
 ``AEAT_LIVE_TESTS_ENABLED``.
 """

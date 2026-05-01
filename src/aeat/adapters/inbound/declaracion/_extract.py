@@ -1,6 +1,6 @@
 """Extraction primitives for declaración PDFs — thin wrappers.
 
-The concrete primitives live in :mod:`aeat._pdf_import._label_regex`;
+The concrete primitives live in :mod:`aeat.adapters.inbound.pdf._label_regex`;
 this module re-exports the subset that declaración extractors consume.
 Kept for backwards-compatible import paths.
 """

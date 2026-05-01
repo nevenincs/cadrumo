@@ -1,12 +1,12 @@
 """``aeat workflow`` sub-app — end-user composite workflow CLI.
 
 Exposes four subcommands tied to the workflow engine
-:mod:`aeat.workflow`:
+:mod:`aeat.application.workflow`:
 
 - ``aeat workflow next`` — run :meth:`WorkflowEngine.run_next`.
 - ``aeat workflow run`` — run :meth:`WorkflowEngine.run_for_period`.
 - ``aeat workflow show <run-id>`` — pretty-print a persisted
-  :class:`aeat.workflow.WorkflowResult`.
+  :class:`aeat.application.workflow.WorkflowResult`.
 - ``aeat workflow list [--since <iso-date>]`` — enumerate persisted
   runs.
 

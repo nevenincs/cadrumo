@@ -42,7 +42,7 @@ def build_client_certificates_kwarg(
     the exact call site and nowhere else. The returned list is wired
     directly into ``browser.new_context(client_certificates=...)`` by
     the browser session layer (see issue #8 follow-up in
-    ``aeat.browser``).
+    ``aeat.adapters.outbound.aeat.browser``).
 
     Args:
         cert: The loaded PKCS#12 certificate.
@@ -89,7 +89,7 @@ class PlaywrightContextBackend(_CertBackend):
                 "BrowserContext was not constructed with the expected client "
                 "certificate. Playwright requires client certs to be passed at "
                 "browser.new_context() time via the client_certificates kwarg; "
-                "use aeat.auth._certificate_backends._playwright_context."
+                "use aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context."
                 "build_client_certificates_kwarg() from the browser session "
                 "factory and tag the resulting context with "
                 f"{_MARKER_ATTR}={cert.sha256_thumbprint!r}."

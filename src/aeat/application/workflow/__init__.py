@@ -1,6 +1,6 @@
 """End-user composite workflow engine (issue #59).
 
-The :mod:`aeat.workflow` subpackage owns the project's first
+The :mod:`aeat.application.workflow` subpackage owns the project's first
 *composite* end-user command: a single entry point that orchestrates
 the deadline engine (#38), the self-healing sync runner (#11), the
 filing draft engine (#39), the submission engine (#42), and the
@@ -9,7 +9,7 @@ pipeline. The workflow is **read-only** because live AEAT submission
 is permanently forbidden; it stops after preflight.
 
 Public API discipline: callers outside this subpackage must import
-only from :mod:`aeat.workflow`. The underscored modules are
+only from :mod:`aeat.application.workflow`. The underscored modules are
 implementation detail.
 
 See [[2026-04-12-workflow-engine-research]],
@@ -20,9 +20,9 @@ See [[2026-04-12-workflow-engine-research]],
 from __future__ import annotations
 
 # Resolve the ``WorkflowStep.site_health_alert`` forward reference once
-# ``aeat.browser._site_health.SiteHealthAlert`` is importable. Importing
-# at this layer breaks the cycle: ``aeat.workflow._models`` must not
-# import from ``aeat.browser._site_health`` at module load time, but the
+# ``aeat.adapters.outbound.aeat.browser._site_health.SiteHealthAlert`` is importable. Importing
+# at this layer breaks the cycle: ``aeat.application.workflow._models`` must not
+# import from ``aeat.adapters.outbound.aeat.browser._site_health`` at module load time, but the
 # public subpackage boundary is a safe rebuild site.
 from ...adapters.outbound.aeat.browser import _site_health as _site_health_module
 from ...adapters.outbound.aeat.browser._site_health import SiteHealthAlert as _SiteHealthAlert

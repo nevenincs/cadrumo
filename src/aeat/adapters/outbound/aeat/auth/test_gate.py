@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.auth._gate`."""
+"""Unit tests for :mod:`aeat.adapters.outbound.aeat.auth._gate`."""
 
 from __future__ import annotations
 

@@ -106,8 +106,9 @@ class LLMCache:
         Returns:
             Persisted cache entry model.
         """
-        from ...persistence.storage import SensitivityClass, redact_structured
-        from ...persistence.storage._redaction import default_rules_for_class
+        from ....core.classification import SensitivityClass
+        from ....core.locks import fsync_parent_dir
+        from ....core.redaction import default_rules_for_class, redact_structured
 
         key = self.build_key(request, response.provider, response.model)
         entry = CachedEntry(
@@ -122,7 +123,6 @@ class LLMCache:
             entry.model_dump(mode="json"),
             rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
         )
-        from ...persistence.storage._lock import fsync_parent_dir
 
         path = self._path_for(key)
         path.parent.mkdir(parents=True, exist_ok=True)

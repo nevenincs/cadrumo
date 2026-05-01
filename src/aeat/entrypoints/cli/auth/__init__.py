@@ -3,7 +3,7 @@
 Kent runs these commands to discover which providers are configured,
 sign in, inspect the live session TTL, and clear a persisted session.
 The four subcommands are thin dispatch layers over the shared
-``AuthProvider`` abstraction in :mod:`aeat.auth`; no auth logic is
+``AuthProvider`` abstraction in :mod:`aeat.adapters.outbound.aeat.auth`; no auth logic is
 reimplemented here.
 """
 
@@ -540,7 +540,7 @@ async def _close_provider(provider: Any) -> None:
     may grow a synchronous equivalent in the future. The helper
     accepts either by inspecting the return value for a coroutine,
     mirroring the dispatch pattern used inside
-    :mod:`aeat.auth._clave_movil` for browser-session teardown.
+    :mod:`aeat.adapters.outbound.aeat.auth._clave_movil` for browser-session teardown.
     """
     close = getattr(provider, "close", None)
     if close is None:
@@ -670,7 +670,7 @@ def configure(
 ) -> None:
     """Write Cl@ve Móvil configuration to ``env/.env`` idempotently.
 
-    Uses the same env-writer as ``aeat setup`` (:func:`aeat.env_io.write_env_vars`),
+    Uses the same env-writer as ``aeat setup`` (:func:`aeat.core.env_io.write_env_vars`),
     so existing comments and unrelated keys are preserved. ``env/.env`` is
     created if missing.
     """
@@ -805,7 +805,7 @@ def login(
         # surface — it is an internal file location that Kent has no
         # reason to consume from a login command. Downstream scripts
         # that need the path should resolve it via
-        # ``aeat.cli.auth._paths.storage_state_paths(settings, kind)``
+        # ``aeat.entrypoints.cli.auth._paths.storage_state_paths(settings, kind)``
         # rather than scraping login's output.
         payload = {
             "provider_kind": session.provider_kind.value,

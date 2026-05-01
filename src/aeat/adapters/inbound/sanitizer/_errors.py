@@ -1,7 +1,7 @@
-"""Domain errors raised by the :mod:`aeat.sanitizer` subpackage.
+"""Domain errors raised by the :mod:`aeat.adapters.inbound.sanitizer` subpackage.
 
 All sanitiser errors inherit from
-:class:`aeat.errors.AeatError` so callers can catch the family
+:class:`aeat.core.errors.AeatError` so callers can catch the family
 without importing implementation details. The hierarchy mirrors
 the failure surfaces enumerated in the PDF-sanitiser ADR.
 """
@@ -12,7 +12,7 @@ from ....core.errors import AeatError
 
 
 class SanitizationError(AeatError):
-    """Base error for the :mod:`aeat.sanitizer` subpackage."""
+    """Base error for the :mod:`aeat.adapters.inbound.sanitizer` subpackage."""
 
     pass
 

@@ -1,4 +1,4 @@
-"""Closed enumerations for the :mod:`aeat.formulas` engine.
+"""Closed enumerations for the :mod:`aeat.domain.formulas` engine.
 
 Declares two enums:
 
@@ -7,7 +7,7 @@ Declares two enums:
   operators that the Modelo 130 DAG requires are present.
   New operators are added in a future wave behind a fresh ADR.
 * :class:`Quarter` — fiscal quarter identifiers used by
-  :class:`aeat.formulas.FiscalPeriod`.
+  :class:`aeat.domain.formulas.FiscalPeriod`.
 """
 
 from __future__ import annotations

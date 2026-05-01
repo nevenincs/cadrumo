@@ -70,7 +70,7 @@ class CasillaDefinition(BaseModel):
         inspector scenario.
 
         The companion ``aeat audit rulesets citations`` CLI (under
-        :mod:`aeat.cli.audit`) reports per-modelo coverage and fails non-
+        :mod:`aeat.entrypoints.cli.audit`) reports per-modelo coverage and fails non-
         zero on any gap, so future drift surfaces both at import time and
         in the dedicated audit surface.
         """

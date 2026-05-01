@@ -4,7 +4,7 @@ The :data:`CALENDAR` table is the v1 source of truth for filing
 windows. Every entry is sourced from the AEAT *calendario del
 contribuyente* and the BOE order that fixes the filing schedule for
 the modelo, with citations propagated to every emitted
-:class:`aeat.deadlines.FilingObligation`.
+:class:`aeat.domain.deadlines.FilingObligation`.
 """
 
 from __future__ import annotations

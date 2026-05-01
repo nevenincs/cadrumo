@@ -60,7 +60,7 @@ class _InboxStep:
 
 
 class _SubmissionStep:
-    """Stand-in for ``aeat.submission`` — top of the chain."""
+    """Stand-in for ``aeat.adapters.outbound.aeat.export`` — top of the chain."""
 
     def __init__(self, downstream: _Step) -> None:
         self._downstream = downstream

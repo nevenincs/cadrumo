@@ -11,7 +11,7 @@ in tax filings. The module is intentionally tiny:
 - :class:`IdentityError` is the typed failure shape; it registers
   a stable :class:`ErrorCode` (``INTEGRITY_IDENTITY_DOCUMENT``).
 
-The module lives outside :mod:`aeat.storage` because identity
+The module lives outside :mod:`aeat.adapters.persistence.storage` because identity
 validation is a domain concern, not a persistence concern. The
 substrate's redaction rule patterns remain permissive (over-
 redaction is the safer failure mode); domain code that needs a

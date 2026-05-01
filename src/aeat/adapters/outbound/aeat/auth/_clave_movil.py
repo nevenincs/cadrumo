@@ -15,7 +15,7 @@ Design summary:
 * The provider opens a headed Playwright window on fresh login so Kent
   can scan the QR visually. Resume-from-storage-state runs headlessly
   because no human interaction is required.
-* The persisted session uses :class:`aeat.auth._authenticator.AeatAuthenticator`'s
+* The persisted session uses :class:`aeat.adapters.outbound.aeat.auth._authenticator.AeatAuthenticator`'s
   existing sidecar layout, but with cert-specific fields left as
   placeholders and a ``provider_kind`` marker for the session detail.
   Kind-namespaced sidecar paths keep the Cl@ve and certificate
@@ -187,7 +187,7 @@ def _render_progress_banner(
 class ClaveMovilAuthProvider:
     """Cl@ve Móvil implementation of the :class:`AuthProvider` protocol.
 
-    Constructed by :func:`aeat.auth.select_provider` when
+    Constructed by :func:`aeat.adapters.outbound.aeat.auth.select_provider` when
     ``kind == AuthProviderKind.CLAVE_MOVIL``. A fresh login opens a
     headed Playwright window so Kent can scan the QR; resume runs
     headlessly because the stored cookies are sufficient.
@@ -546,7 +546,7 @@ class ClaveMovilAuthProvider:
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(tmp_path, path)
-            from ....persistence.storage._lock import fsync_parent_dir
+            from .....core.locks import fsync_parent_dir
 
             fsync_parent_dir(path)
         except Exception:
@@ -559,7 +559,7 @@ class ClaveMovilAuthProvider:
         # the storage-state JSON (containing localStorage + cookies
         # of the AEAT browser session — bearer-equivalent material)
         # readable by anything inheriting the parent dir's ACL.
-        from ._file_permissions import restrict_file_permissions
+        from .....core.file_permissions import restrict_file_permissions
 
         restrict_file_permissions(path)
 

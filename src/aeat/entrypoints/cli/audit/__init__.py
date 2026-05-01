@@ -1,13 +1,13 @@
 """``aeat audit`` subcommand surface (#339, dev-only).
 
  of issue #339 ships this subpackage in isolation: the audit
-``Typer`` apps are importable from :mod:`aeat.cli.audit` and fully
+``Typer`` apps are importable from :mod:`aeat.entrypoints.cli.audit` and fully
 testable via :class:`typer.testing.CliRunner`, but the surface is **not
 yet** registered on the root ``aeat`` ``Typer`` app. The root
 registration is deferred to a single follow-up commit that
 lands after either ``#398`` (error-code registry) or ``#399``
 (``--json`` output contract) merges, to avoid a 3-way collision on
-:mod:`aeat.cli.__init__`.
+:mod:`aeat.entrypoints.cli.__init__`.
 
 The ``audit`` namespace is intentionally non-default. Today it ships
 one dev-only command — ``aeat audit rulesets citations`` — that walks

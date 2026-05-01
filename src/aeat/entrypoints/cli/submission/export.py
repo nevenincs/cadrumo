@@ -116,7 +116,7 @@ def export_cmd(
     draft = load_draft(draft_path)
 
     # The DraftStatus enum exposes DRAFT / INCOMPLETE / READY_TO_SUBMIT
-    # today (see `aeat.submission._protocols.DraftStatus`). Export refuses
+    # today (see `aeat.adapters.outbound.aeat.export._protocols.DraftStatus`). Export refuses
     # INCOMPLETE outright (validation not yet passed). DRAFT exports emit
     # a BORRADOR banner; READY_TO_SUBMIT is the approved-enough state
     # until C3i (FilingDraftStatus.APPROVED) lands.

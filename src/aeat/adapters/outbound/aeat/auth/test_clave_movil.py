@@ -1,4 +1,4 @@
-"""Protocol-level Cl@ve Movil tests for ``aeat.auth._clave_movil.ClaveMovilAuthProvider``.
+"""Protocol-level Cl@ve Movil tests for ``aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider``.
 
 These tests use hand-written browser-session stand-ins and do not prove
 real AEAT authentication or operator Cl@ve approval.
@@ -6,7 +6,7 @@ real AEAT authentication or operator Cl@ve approval.
 No mocks, patches, or cassettes are used. The tests drive the provider
 against hand-written ``BrowserSessionLike`` stand-ins that record the
 navigation + form interactions. The stand-ins honour the same Protocol
-the real :class:`aeat.browser.BrowserSession` presents.
+the real :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` presents.
 """
 
 from __future__ import annotations
@@ -139,7 +139,7 @@ class _FakeContext:
 
 
 class _FakeBrowserSession:
-    """Stand-in for :class:`aeat.browser.BrowserSession`.
+    """Stand-in for :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
 
     Only the surface the Cl@ve provider uses —
     ``create_context(...)`` + ``close()`` — is implemented.

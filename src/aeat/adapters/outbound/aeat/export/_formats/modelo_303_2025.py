@@ -4,7 +4,7 @@
 Orden HAC/819/2024 (BOE-A-2024-16129) governs both 2024 and 2025
 Modelo 303 filings; the LIVA arts. 90 / 91 régimen-general rates
 were not amended between the two years (see the 2025 ruleset at
-``aeat.formulas._rulesets.modelo_303_2025`` for the mirroring
+``aeat.domain.formulas._rulesets.modelo_303_2025`` for the mirroring
 rationale).
 
 Kent uses this module when exporting a 2025-period 303 filing. The
