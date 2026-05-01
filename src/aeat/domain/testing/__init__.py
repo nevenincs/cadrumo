@@ -1,6 +1,6 @@
 """Synthetic filing-history fixtures loader.
 
-The :mod:`aeat.testing` subpackage owns the typed public API for
+The :mod:`aeat.domain.testing` subpackage owns the typed public API for
 loading the hand-curated backlog of **synthetic** past filings that
 lives under ``tests/fixtures/filing_history/``. It is the only
 "test helper" code allowed in the source tree per issue #14 — every
@@ -38,7 +38,7 @@ Public API
 - :func:`compute_record_id` — content-addressed ID helper shared
   with fixture authoring.
 - :func:`synthesize_filing_draft` — pure-construction factory that
-  builds a strict-frozen :class:`aeat.filing.FilingDraft` from a
+  builds a strict-frozen :class:`aeat.application.filing.FilingDraft` from a
   casilla map. Used by the W1 P7 read-only reconcile path to feed
   ``aeat filing reconcile`` an APPROVED draft without running the
   full transactions/ruleset/formulas/validator pipeline.
@@ -46,7 +46,7 @@ Public API
   wrapper that coerces decimal-as-string casilla values to
   :class:`Decimal` at the boundary.
 
-Status reuses :class:`aeat.filing.FilingDraftStatus`; this
+Status reuses :class:`aeat.application.filing.FilingDraftStatus`; this
 subpackage intentionally does **not** introduce a parallel status
 enum.
 
@@ -64,7 +64,7 @@ How to add a new synthetic record
 4. Compute ``record_id`` via :func:`compute_record_id` (or let the
    existing corpus pattern guide you — the colocated test
    ``_test_record_ids_are_unique`` will catch collisions).
-5. Status must be a valid :class:`aeat.filing.FilingDraftStatus`
+5. Status must be a valid :class:`aeat.application.filing.FilingDraftStatus`
    name (e.g. ``"ACKNOWLEDGED"``).
 6. Run ``just test`` — the colocated suite loads every fixture
    through strict pydantic validation and asserts the invariants.

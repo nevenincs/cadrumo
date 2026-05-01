@@ -1,8 +1,8 @@
-"""Unit tests for :mod:`aeat.filing`.
+"""Unit tests for :mod:`aeat.application.filing`.
 
 The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_application]`` per the project rule.
 The tests use real Protocol-conforming pydantic doubles defined
-in :mod:`aeat.filing.testing` — no mocks, patches, fakes, or
+in :mod:`aeat.application.filing.testing` — no mocks, patches, fakes, or
 stubs.
 """
 

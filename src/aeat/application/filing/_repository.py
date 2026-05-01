@@ -3,7 +3,7 @@
 Wraps the substrate's :class:`Envelope[FilingDraft]` contract behind a
 small typed surface that the filing CLI and any future consumer can
 call. Each draft is persisted as its own envelope file
-(``<draft_id>.envelope.json``) under :attr:`aeat.config.AeatSettings.aeat_drafts_dir`,
+(``<draft_id>.envelope.json``) under :attr:`aeat.core.config.AeatSettings.aeat_drafts_dir`,
 so per-draft locking does not contend across the whole drafts directory.
 
 The repository is the only sanctioned read/write path for filing
@@ -91,7 +91,7 @@ class FilingDraftRepository:
 
         Args:
             draft_id: The draft id (content-addressed hash from
-                :func:`aeat.filing.compute_draft_id`).
+                :func:`aeat.application.filing.compute_draft_id`).
 
         Returns:
             ``<store_dir>/<draft_id>.envelope.json``.

@@ -1,13 +1,13 @@
 """Filing draft generation engine for AEAT modelos.
 
-The :mod:`aeat.filing` subpackage owns the typed public API for
+The :mod:`aeat.application.filing` subpackage owns the typed public API for
 building, validating, and inspecting :class:`FilingDraft`
 records — the project's single answer to *"what does the system
 actually produce?"*.
 
 Public API discipline: callers from outside this subpackage MUST
 import only from :mod:`aeat.filing`. The concrete builders under
-:mod:`aeat.filing._builders` are private; consumers select a
+:mod:`aeat.application.filing._builders` are private; consumers select a
 builder via :func:`build_draft` instead.
 
 Example:

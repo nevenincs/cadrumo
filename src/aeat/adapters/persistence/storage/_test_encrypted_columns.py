@@ -2,7 +2,7 @@
 
 The tests run against a real in-memory SQLAlchemy session bound to
 a deliberately-isolated declarative base so we never touch the live
-``aeat.storage._orm`` schema. The master key is supplied by an
+``aeat.adapters.persistence.storage._orm`` schema. The master key is supplied by an
 :class:`EphemeralMasterKeyProvider` injected via
 :func:`override_master_key_provider`.
 """

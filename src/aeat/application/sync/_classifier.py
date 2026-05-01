@@ -5,7 +5,7 @@ The classifier compares a ``local`` pydantic snapshot against a
 :class:`DivergencePayload` members. Each emitted payload is then
 wrapped into a :class:`DivergenceRecord` whose classification is
 assigned via the static ``_CLASSIFICATION_TABLE`` in
-:mod:`aeat.sync._divergence`.
+:mod:`aeat.application.sync._divergence`.
 
 Structural dict-diffs are intentionally NOT supported: the whole
 point of the classifier is to carry semantic meaning into the
