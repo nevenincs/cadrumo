@@ -115,7 +115,55 @@ The four post-keystone PRs went **un-reviewed by gemini**:
 
 ### B. Code-security findings
 
-(populated by the security-review sub-agent)
+Audit walked the seven security domains called out in the task brief
+(secrets, path-traversal, subprocess, deserialisation, network egress,
+live-AEAT-write, restructure shims) plus a pass over logging filters
+and TLS posture. Sources audited:
+
+- `src/aeat/adapters/persistence/storage/_master_key.py`,
+  `_secret_store.py`, `_redaction.py`, `_recovery.py`,
+  `_path_safety.py`;
+- `src/aeat/adapters/outbound/aeat/auth/` (entire package, including
+  `_certificate_backends/_httpx_fallback.py`, `_clave_movil.py`,
+  `_file_permissions.py`, `_gate.py`, `__init__.py`,
+  `certificate.py`);
+- `src/aeat/adapters/outbound/aeat/export/` (engine, errors,
+  submitters);
+- `src/aeat/adapters/outbound/llm/_providers/` (openai, gemini,
+  local, base);
+- `src/aeat/adapters/inbound/sanitizer/_pipeline.py`,
+  `src/aeat/adapters/inbound/pdf/` (pikepdf-based);
+- `src/aeat/application/setup/_env_writer.py`;
+- `src/aeat/core/paths.py`, `_test_paths.py`, `logging.py`,
+  `env_io.py`;
+- `src/aeat/entrypoints/cli/doctor.py`,
+  `entrypoints/mcp/launch_google_workspace.py`;
+- shim modules `src/aeat/{errors,auth,submission,formulas}/__init__.py`
+  and the canonical targets they re-export.
+
+| severity | file:line | finding | disposition | rationale |
+|----------|-----------|---------|-------------|-----------|
+| HIGH | `src/aeat/adapters/outbound/aeat/auth/__init__.py:287` | `get_oauth_credentials` writes the cached Google OAuth token (incl. long-lived refresh-token) via `token_path.write_text(creds.to_json())` -- no `os.open(..., 0o600)`, no post-write `os.chmod`, no call to the in-package `restrict_file_permissions` helper. The token directory `settings.aeat_token_dir` is created only as `mkdir(parents=True, exist_ok=True)` (default mode). On POSIX the file lands at the user's umask (usually 0644) and the directory at 0755; on multi-user hosts a long-lived refresh token is therefore world-readable. | FILE | The codebase already imports `restrict_file_permissions` in the same module (line 61) for cert / Cl@ve session-state writes; the same hardening must wrap the OAuth token write. The substrate's `SecretStore` (SECRET-class, AES-256-GCM at rest) is the strict-correct destination. Filing is preferred over a quick FIX so the migration to `SecretStore` can be designed deliberately rather than bolting on a chmod. |
+| MEDIUM | `src/aeat/adapters/outbound/llm/_providers/gemini.py:67` | Gemini API key is passed as a URL query parameter (`params={"key": self._api_key}`). Google's API also accepts the `x-goog-api-key` HTTP header, which is the recommended posture: query-string keys land in third-party HTTP-debug logs (httpx `DEBUG`, mitmproxy traces, OS-level network captures). The substrate's `SecretScrubbingFilter` covers project loggers, but it does not gate transport-level loggers in the httpx stack. | FIX | One-line change: move `self._api_key` from `params` to `headers={"x-goog-api-key": self._api_key}`. Sibling adapters (`openai.py`) already use the header form. |
+| MEDIUM | `src/aeat/adapters/outbound/aeat/auth/_certificate_backends/_httpx_fallback.py:106-107` | Verify-only handshake exports the operator's PKCS#12 private key as un-encrypted PEM to two tempfiles (`_write_secure_tempfile`) so httpx can `load_cert_chain` them. Files are mode 0600 on POSIX (`mkstemp` default + best-effort `os.chmod`); on Windows they inherit the ACL of `%TEMP%`. Cleanup is `finally`-block `unlink`. The window is brief, but the unencrypted key sits on disk for the duration of the HTTPS GET. | FILE | This is a known trade-off (httpx `load_cert_chain` requires file paths). Acceptable for the verify-only smoke-test surface, but worth tracking. Mitigation candidates: (a) keep the bytes in memory and use `ssl.SSLContext.load_cert_chain` against an `io.BytesIO` (not directly supported by stdlib), (b) enforce Windows ACL hardening via the existing `restrict_file_permissions` helper before the GET, or (c) restrict `HTTPX_FALLBACK` to non-Windows hosts in policy. |
+| LOW | `src/aeat/adapters/persistence/storage/_master_key.py:809` | `atexit.register(_purge_caches_at_exit)` zeroises cached key buffers at process shutdown, but `atexit` does not run on `SIGKILL` / `os._exit` / segfault. The substrate already documents this as a best-effort hardening; flagging only so the limitation is captured in the audit. | STRIKE | Best-effort defensible: full memory hygiene against post-mortem core dumps would require `mlock` + secure-allocator integration (out of scope). The atexit hook + bytearray-based cache is the correct posture for Python. |
+| LOW | `src/aeat/entrypoints/mcp/launch_google_workspace.py:223` | `GOOGLE_OAUTH_CLIENT_SECRET` is propagated into the spawned `workspace-mcp` child env. Desktop OAuth `client_secret` is, by Google's own threat model, low-confidentiality, but it is still a secret and is passed to a third-party process. | STRIKE | Required by the upstream MCP server's contract; the launch_spec already redacts this key in `_format_spec_for_dump` and the env allow-list explicitly excludes every other AEAT secret. Acceptable. |
+| STRIKE | `src/aeat/{errors,auth,submission,formulas}/__init__.py` | The four re-export shims do `from <canonical> import *` and re-import `__all__`. Examined every canonical `__all__`: each lists only public symbols (no leading-underscore names). The `LiveSubmitForbiddenError` and the `AeatAccessGate` re-export through the shims, so a caller using the deprecated `aeat.submission` path still hits the permanent-forbid contract. | STRIKE | No symbols leaked beyond the canonical public surface; layered import boundaries cannot be bypassed by routing through the shim because the shim only re-exports what the canonical module already publishes. The DeprecationWarning is set with `stacklevel=2` so the operator sees the call-site, not the shim. |
+| STRIKE | `src/aeat/adapters/outbound/aeat/auth/_gate.py:94-102` | `AeatAccessGate.require_live_write` always raises `LiveSubmitForbiddenError` (no env-var bypass). `test_settings_expose_no_live_submit_env_vars` asserts no `LIVE_SUBMIT`-named env var exists in `Settings`. `SubmissionEngine.__init__` rejects any `legacy_live_kwargs` with the same forbidden error. `aeat.adapters.outbound.aeat.export._submitters` is a stub package with no submitter classes. | STRIKE | The four-factor live-submit gate is intact and reinforced -- the restructure tightened it, did not weaken it. |
+| STRIKE | path-traversal: `src/aeat/core/paths.py`, `_test_paths.py`, `adapters/persistence/storage/_path_safety.py` | `resolve_record_json_path` rejects shell metachars, traversal, dotfiles, separators, overlong tokens, and null bytes via `_SAFE_FILE_TOKEN_RE`. `resolve_relative_subpath` rejects backslash, parent traversal, absolute paths. Persistence wraps both as `PathContainmentError`. The `_test_paths.py` regression suite covers every documented bypass shape. | STRIKE | No new ingestion paths, all callers route through the typed wrappers. |
+| STRIKE | subprocess invocations | Production sites: `cli/doctor.py:151` (gcloud, argv list, binary from `shutil.which`), `adapters/outbound/aeat/auth/_file_permissions.py:68` (`icacls.exe`, argv list, absolute path from `SYSTEMROOT`, every error swallowed), `domain/financial/transactions/_llm.py:430` (LLM CLI, argv list, prompt via stdin or single argv element, binary from `shutil.which`). No `shell=True`. No `os.system`. No f-string command construction. | STRIKE | Every subprocess site uses argv lists, no shell escape, no f-string command interpolation. |
+| STRIKE | deserialisation | Only `yaml.safe_load` (sanitize CLI mapping). No `pickle`, no `marshal`, no `yaml.load`/`unsafe_load`. PDF parsing is via `pikepdf` (libqpdf-backed); the sanitiser strips dynamic surfaces (JS, OpenAction, AA, AcroForm, attachments) before any content-stream rewrite. Inbound declaracion parsing is regex-only. | STRIKE | No untrusted-deserialisation attack surface. |
+| STRIKE | TLS verification | `ssl.create_default_context()` for the httpx-fallback mTLS handshake; httpx default `verify=True` for OpenAI / Gemini / local Ollama. No `verify=False` anywhere in the production tree. The local Ollama adapter is HTTP because the endpoint is loopback (`127.0.0.1:11434`). | STRIKE | TLS posture is correct. |
+| STRIKE | secret logging | `aeat.core.logging.SecretScrubbingFilter` is attached to every project logger and to every handler at `configure_logging()` time. Patterns cover `access_token`, `api_key`, `authorization`, `bearer`, `cert_password`, `cookie`, `credential`, `nif`, `oauth_*`, `passphrase`, `pkcs12`, `refresh_token`, `secret`, `session_cookie`, `tax_id`, `token`. Bearer regex catches `Bearer XXX` strings; LLM regex catches `sk-...` prefixes. `LoadedCertificate` keeps PKCS#12 bytes and passphrase in `PrivateAttr` so `model_dump` / `repr` cannot leak them. `SecretStr` wraps the cert passphrase end-to-end. | STRIKE | Defence-in-depth: filter + structural redaction at the boundary types. |
+| STRIKE | env-writer secret hygiene | `application/setup/_env_writer.py` writes ONLY the `owned_env_keys` allow-list to `env/.env`. PKCS#12 password is NEVER written; only the env-var name is recorded as a comment line. `write_profile_file` routes the operator profile through `save_encrypted_envelope` at IDENTITY class with HKDF context `aeat.application.setup.profile.v1`. | STRIKE | First-run setup writer cannot accidentally persist a secret to the plaintext `.env`. |
+
+**Summary**: 1 HIGH (OAuth token-cache disk hardening), 2 MEDIUM
+(Gemini API-key transport, httpx-fallback PEM tempfiles), 1 LOW
+(workspace-mcp client_secret propagation), plus the
+`atexit` zeroise nuance (LOW). No CRITICAL findings. The
+restructure neither weakened nor introduced new exposure surfaces in
+any of the seven target domains. The four re-export shims and the
+`LiveSubmitForbiddenError` end-to-end remain intact.
 
 ### C. Tautological-test findings
 
