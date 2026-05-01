@@ -8,11 +8,11 @@ richer surfaces of its sibling subpackages.
 
 - ``ModeloIdentifier`` — typed validating string for an AEAT modelo.
 - ``AuthProviderProbe`` — narrow surface over
-  :class:`aeat.auth.AuthProvider` for the preflight gate.
+  :class:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.AuthProvider` for the preflight gate.
 - ``DeadlineWindowChecker`` — narrow surface over
-  :mod:`aeat.deadlines` used by preflight.
+  :mod:`aeat.domain.deadlines` used by preflight.
 - ``FilingFinding`` / ``FilingDraftLike`` / ``DraftLoader`` — narrow
-  filing draft surfaces; :class:`aeat.filing.FilingDraft`
+  filing draft surfaces; :class:`aeat.application.filing.FilingDraft`
   structurally conforms to ``FilingDraftLike``.
 
 Every record is either a strict+frozen pydantic v2 model or a
@@ -42,8 +42,8 @@ _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
 class ModeloIdentifier(str):
     """Typed string identifier for an AEAT modelo (e.g. ``"130"``, ``"303"``).
 
-    Shape-compatible with :class:`aeat.deadlines.ModeloIdentifier`.
-    Intentionally wider than :class:`aeat.models.ModeloCode`: any
+    Shape-compatible with :class:`aeat.domain.deadlines.ModeloIdentifier`.
+    Intentionally wider than :class:`aeat.domain.modelos.ModeloCode`: any
     well-formed three-digit modelo identifier is accepted, including
     modelos outside the v1 closed catalogue.
     """
@@ -93,7 +93,7 @@ class AuthProviderProbe(Protocol):
 
 @runtime_checkable
 class DeadlineWindowChecker(Protocol):
-    """Narrow surface over :mod:`aeat.deadlines` for the preflight gate."""
+    """Narrow surface over :mod:`aeat.domain.deadlines` for the preflight gate."""
 
     def is_window_open(self, modelo: str, period: str, today: date) -> bool:
         """Return ``True`` iff the AEAT filing window for ``modelo`` /
@@ -112,7 +112,7 @@ class FilingFindingSeverity(StrEnum):
 class FilingFinding(BaseModel):
     """Minimal finding record consumed by the preflight gate.
 
-    Distinct from :class:`aeat.filing.FilingValidationFinding`, which
+    Distinct from :class:`aeat.application.filing.FilingValidationFinding`, which
     carries the validator's full provenance graph; the submission
     engine reads only ``severity`` to decide whether the draft is
     blocked.
@@ -129,7 +129,7 @@ class FilingFinding(BaseModel):
 
 
 class DraftStatus(StrEnum):
-    """Mirror of :class:`aeat.filing.FilingDraftStatus` for preflight.
+    """Mirror of :class:`aeat.application.filing.FilingDraftStatus` for preflight.
 
     Kept in sync with the source enum; the engine uses only the
     ``APPROVED`` and ``APPROVAL_STALE`` members on its happy path.
@@ -151,7 +151,7 @@ class DraftStatus(StrEnum):
 class FilingDraftLike(Protocol):
     """Narrow surface over a filing draft.
 
-    :class:`aeat.filing.FilingDraft` structurally conforms to this
+    :class:`aeat.application.filing.FilingDraft` structurally conforms to this
     Protocol so the engine can accept either the real draft or any
     Protocol-conforming hand-rolled class in tests.
     """

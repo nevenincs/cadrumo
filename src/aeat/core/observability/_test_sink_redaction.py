@@ -3,7 +3,7 @@
 The :class:`JsonlRunSink` writes :class:`RunEvent` records that may
 carry casilla form-fill values, AEAT navigation URLs, and free-form
 error messages. the emit path through
-:func:`aeat.storage.redact_structured` against the DIAGNOSTIC-class
+:func:`aeat.adapters.persistence.storage.redact_structured` against the DIAGNOSTIC-class
 default rule set so the JSONL never carries a plaintext NIF / token /
 URL path even if a caller forgets to scrub upstream.
 

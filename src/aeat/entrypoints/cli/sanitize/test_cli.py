@@ -3,13 +3,13 @@
 The tests exercise:
 
 * The forbidden-flag rejection (parity with
-  :mod:`aeat.cli.filing._reconcile` write guard).
+  :mod:`aeat.entrypoints.cli.filing._reconcile` write guard).
 * End-to-end ``aeat sanitize pdf`` against a synthesised PDF.
 * ``aeat sanitize prepare-map`` writes a parseable scaffold.
 * ``aeat sanitize verify`` exits non-zero on a leak and zero on
   a clean output.
 * ``aeat sanitize check`` accepts a sanitised PDF that still
-  parses through :func:`aeat.justificante.parse_justificante`.
+  parses through :func:`aeat.domain.justificante.parse_justificante`.
 * Help output lists the four expected verbs.
 """
 

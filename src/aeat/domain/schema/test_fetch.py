@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.schema._fetch` hardening surface.
+"""Unit tests for :mod:`aeat.domain.schema._fetch` hardening surface.
 
 Exercises the URL allow-list, size caps, ``boe_ref`` re-validation,
 atomic-write behaviour, and override-env-var bounds introduced by

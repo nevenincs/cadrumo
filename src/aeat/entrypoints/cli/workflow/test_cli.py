@@ -1,7 +1,7 @@
 """Unit tests for the ``aeat workflow`` CLI sub-app.
 
 The tests exercise the typer surface via :class:`typer.testing.CliRunner`.
-Real :class:`aeat.workflow.WorkflowEngine` instances are wired through
+Real :class:`aeat.application.workflow.WorkflowEngine` instances are wired through
 the ``set_test_hooks`` module seam — no mocks, no patches. The shared
 test stand-ins live in ``_test_doubles.py``.
 """

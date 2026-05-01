@@ -44,9 +44,9 @@ _log = get_logger(__name__)
 
 _DEFAULT_INITIAL_STEP = "step-0"
 _EVENTS_FILENAME = "events.jsonl"
-# Env var set by :func:`aeat.observability.replay_run` for the
+# Env var set by :func:`aeat.core.observability.replay_run` for the
 # duration of the re-entered CLI call. Kept in sync with
-# :data:`aeat.observability._replay.REPLAY_ACTIVE_ENV_VAR` — spelled
+# :data:`aeat.core.observability._replay.REPLAY_ACTIVE_ENV_VAR` — spelled
 # here to avoid a cycle with ``_replay`` at import time.
 _REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
 

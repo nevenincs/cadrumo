@@ -1,4 +1,4 @@
-"""Determinism tests for :mod:`aeat.sanitizer._determinism`.
+"""Determinism tests for :mod:`aeat.adapters.inbound.sanitizer._determinism`.
 
 The byte-stable save flag set is the load-bearing primitive for
 fixture diff review: without it, two runs against the same source

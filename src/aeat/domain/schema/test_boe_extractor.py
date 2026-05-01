@@ -1,7 +1,7 @@
-"""End-to-end tests for :class:`aeat.schema.BoeOrdenExtractor`.
+"""End-to-end tests for :class:`aeat.domain.schema.BoeOrdenExtractor`.
 
 The synthetic fixture PDF is generated with :mod:`reportlab` — the
-same pattern as :mod:`aeat.justificante.test_parser`. It mimics the
+same pattern as :mod:`aeat.domain.justificante.test_parser`. It mimics the
 BOE Orden annex layout the extractor pattern library targets; it is
 NOT a real BOE document, and a live probe against the real
 BOE-published Orden HAC/665/2023 is tracked as a follow-up.

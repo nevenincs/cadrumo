@@ -1,4 +1,4 @@
-"""Public-surface smoke test for :mod:`aeat.formulas`."""
+"""Public-surface smoke test for :mod:`aeat.domain.formulas`."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @pytest.mark.unit
 def test_every_public_name_imports() -> None:
-    """Every name in ``aeat.formulas.__all__`` must resolve to an attribute."""
+    """Every name in ``aeat.domain.formulas.__all__`` must resolve to an attribute."""
     module = importlib.import_module("aeat.domain.formulas")
     for name in module.__all__:
         assert hasattr(module, name), name

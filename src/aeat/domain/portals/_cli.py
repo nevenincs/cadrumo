@@ -1,6 +1,6 @@
 """Typer sub-app for the ``aeat portals`` CLI surface.
 
-Exposes three commands backed by :data:`aeat.portals.PORTAL_REGISTRY`:
+Exposes three commands backed by :data:`aeat.domain.portals.PORTAL_REGISTRY`:
 
 - ``aeat portals list`` — filter and list portal entries.
 - ``aeat portals show`` — dump a single entry.

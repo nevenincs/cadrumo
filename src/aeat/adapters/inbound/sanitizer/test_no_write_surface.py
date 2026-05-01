@@ -1,4 +1,4 @@
-"""Write-guard test for :mod:`aeat.sanitizer` and ``aeat.cli.sanitize``.
+"""Write-guard test for :mod:`aeat.adapters.inbound.sanitizer` and ``aeat.entrypoints.cli.sanitize``.
 
 The sanitiser subpackage MUST NOT contain any public symbol whose
 name implies an AEAT mutation. This is a CI-time grep guard that

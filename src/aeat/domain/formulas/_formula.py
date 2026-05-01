@@ -1,7 +1,7 @@
 """Discriminated-union pydantic models for every formula node.
 
 The engine never evaluates strings. Every node is a pydantic v2
-model tagged by :class:`aeat.formulas.FormulaOp`. The public
+model tagged by :class:`aeat.domain.formulas.FormulaOp`. The public
 :data:`Operand` alias covers the four possible operands of a
 formula: a decimal literal, a casilla reference, a parameter
 reference, or a nested formula.

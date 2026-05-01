@@ -4,7 +4,7 @@ Wraps the substrate's :class:`Envelope[SubmittedFiling]` contract behind
 a small typed surface that the submission engine and any future consumer
 can call. Each submission is persisted as its own envelope file
 (``<submission_id>.envelope.json``) under
-:attr:`aeat.config.AeatSettings.aeat_submissions_dir` with a per-record
+:attr:`aeat.core.config.AeatSettings.aeat_submissions_dir` with a per-record
 exclusive_file_lock so concurrent writers serialise per-record but never
 across the whole directory.
 
@@ -14,7 +14,7 @@ identity-bearing context — :class:`SensitivityClass.AUDIT` per the
 default policy table.
 
 The repository does NOT replace the existing
-:meth:`aeat.submission._engine.SubmissionEngine._persist` writer; the
+:meth:`aeat.adapters.outbound.aeat.export._engine.SubmissionEngine._persist` writer; the
 migration helper :func:`migrate_legacy_submissions_to_repository` reads
 every legacy ``<submission_id>.json`` and persists each through the
 repository's envelope contract.
@@ -93,7 +93,7 @@ class SubmissionRepository:
 
         Args:
             submission_id: The submission identifier
-                (:func:`aeat.submission._models.make_submission_id`).
+                (:func:`aeat.adapters.outbound.aeat.export._models.make_submission_id`).
 
         Returns:
             ``<store_dir>/<submission_id>.envelope.json``.

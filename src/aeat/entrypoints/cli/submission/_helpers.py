@@ -32,7 +32,7 @@ class _CliDraft(FilingDraftLike):
 
     Not a mock: a real dataclass that structurally satisfies the
     :class:`FilingDraftLike` Protocol. Used only by the CLI loader as
-    a stand-in until ``aeat.filing.FilingDraft`` (#39) lands.
+    a stand-in until ``aeat.application.filing.FilingDraft`` (#39) lands.
     """
 
     draft_id: str
@@ -47,7 +47,7 @@ class _CliDraft(FilingDraftLike):
 class _CliDraftLoader:
     """``DraftLoader`` implementation for persisted filing drafts.
 
-    The primary path loads the real :class:`aeat.filing.FilingDraft`
+    The primary path loads the real :class:`aeat.application.filing.FilingDraft`
     JSON emitted by ``aeat filing build`` / ``aeat review`` and
     refreshes approval staleness before returning. A narrow fallback
     remains for older lightweight CLI fixtures that still serialize
@@ -81,7 +81,7 @@ class _OpenDeadlineChecker:
     """Stub :class:`DeadlineWindowChecker` used by the CLI.
 
     v1 always returns ``True``; rebase swaps this for a real
-    :class:`aeat.deadlines.DeadlineEngine`-backed adapter.
+    :class:`aeat.domain.deadlines.DeadlineEngine`-backed adapter.
     """
 
     def is_window_open(self, modelo: str, period: str, today: date) -> bool:
@@ -132,7 +132,7 @@ def load_draft(path: Path) -> FilingDraftLike:
     """Load a persisted filing draft JSON from disk.
 
     Real filing drafts are refreshed through
-    :func:`aeat.filing.refresh_review_status` before being returned so
+    :func:`aeat.application.filing.refresh_review_status` before being returned so
     submission preflight never trusts stale on-disk approval state.
     """
     return _CliDraftLoader().load(path)

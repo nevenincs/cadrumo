@@ -6,16 +6,16 @@ versioned, pydantic v2 records the rest of the project consumes as
 ground truth. The scope and decisions behind the shape live in the
 2026-04-17 schema-extraction ADR and research document.
 
-Consumers outside :mod:`aeat.schema` MUST import from this module
+Consumers outside :mod:`aeat.domain.schema` MUST import from this module
 only; underscore-prefixed submodules are internal and unstable. The
 public surface is the :data:`__all__` tuple below.
 
 Non-goals:
 
 - This subpackage is NOT the curated, human-reviewed catalogue —
-  that is :mod:`aeat.casillas`. Schema records emitted here are the
+  that is :mod:`aeat.domain.casillas`. Schema records emitted here are the
   extractor IR, before review.
-- :mod:`aeat.schema` MUST NOT import from :mod:`aeat.casillas`. The
+- :mod:`aeat.domain.schema` MUST NOT import from :mod:`aeat.domain.casillas`. The
   dependency direction is strictly downstream.
 """
 

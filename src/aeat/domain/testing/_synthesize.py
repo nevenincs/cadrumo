@@ -1,4 +1,4 @@
-"""Synthesise a :class:`aeat.filing.FilingDraft` for read-only reconcile checks.
+"""Synthesise a :class:`aeat.application.filing.FilingDraft` for read-only reconcile checks.
 
 The reconcile happy-path (#239 W1 P7) compares an APPROVED local
 :class:`FilingDraft` against the AEAT-stored justificante. Real

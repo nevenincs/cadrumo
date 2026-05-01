@@ -37,7 +37,7 @@ class LegalCitation(BaseModel):
      (EPIC #305) adds a model-level blocklist validator that
     refuses known-bad ``(source, article, role-substring)`` triples
     surfaced by prior audit waves. See
-    :mod:`aeat.models._citation_registry` for the rationale and the
+    :mod:`aeat.domain.modelos._citation_registry` for the rationale and the
     current blocklist.
     """
 

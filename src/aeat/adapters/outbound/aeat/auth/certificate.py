@@ -2,8 +2,8 @@
 
 This module is the public surface for certificate-based authentication
 against the Spanish tax authority's Sede Electrónica. Callers import
-exclusively from :mod:`aeat.auth`; the backend implementations live in
-the private :mod:`aeat.auth._certificate_backends` package.
+exclusively from :mod:`aeat.adapters.outbound.aeat.auth`; the backend implementations live in
+the private :mod:`aeat.adapters.outbound.aeat.auth._certificate_backends` package.
 
 Design constraints (see
 ``.vault/adr/2026-04-12-cert-auth-adr.md``):
@@ -16,7 +16,7 @@ Design constraints (see
 * Parsed private-key material and the raw PKCS#12 bytes live in
   :class:`pydantic.PrivateAttr` fields on :class:`LoadedCertificate`,
   so they can never be leaked via ``model_dump`` or ``repr``.
-* All errors inherit from :class:`aeat.errors.AeatError` via
+* All errors inherit from :class:`aeat.core.errors.AeatError` via
   :class:`CertificateError`.
 """
 
@@ -167,7 +167,7 @@ class CertificateHealthSeverity(StrEnum):
     Mapping from ``days_until_expiry`` to severity is driven by the
     ``warn_threshold_days`` / ``critical_threshold_days`` fields on the
     :class:`CertificateHealth` record and the sourced values in
-    :class:`aeat.config.Settings`.
+    :class:`aeat.core.config.Settings`.
 
     Attributes:
         OK: Certificate has more than ``warn_threshold_days`` remaining.
@@ -271,7 +271,7 @@ class CertificateHealth(BaseModel):
     Computed from a loaded certificate's ``not_after`` against a
     reference ``evaluated_at`` timestamp and a pair of warning /
     critical thresholds sourced from
-    :class:`aeat.config.Settings`. The record never carries any
+    :class:`aeat.core.config.Settings`. The record never carries any
     secret material; it is safe to log, persist, or surface to the
     CLI.
 
@@ -497,7 +497,7 @@ def evaluate_loaded_certificate_health(
     """Compute a :class:`CertificateHealth` from an already-loaded cert.
 
     The helper exists so callers that have already paid the PKCS#12
-    decode cost (e.g. :class:`aeat.workflow.WorkflowEngine`) can reuse
+    decode cost (e.g. :class:`aeat.application.workflow.WorkflowEngine`) can reuse
     the parsed record rather than re-reading the bundle from disk.
 
     Args:

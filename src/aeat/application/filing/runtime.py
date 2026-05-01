@@ -1,6 +1,6 @@
-"""Production runtime helpers for :mod:`aeat.filing`.
+"""Production runtime helpers for :mod:`aeat.application.filing`.
 
-The filing runtime must not depend on :mod:`aeat.filing.testing`.
+The filing runtime must not depend on :mod:`aeat.application.filing.testing`.
 This module exposes the concrete profile and schema-provider
 implementations used by the CLI and workflow surfaces, backed by the
 same in-tree filing schemas the builders execute against today.

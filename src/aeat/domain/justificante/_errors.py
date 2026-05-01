@@ -1,8 +1,8 @@
 """Error hierarchy for the justificante parser (#44, #305).
 
-All errors inherit from :class:`aeat._pdf_import.PdfFilingImportError` —
+All errors inherit from :class:`aeat.adapters.inbound.pdf.PdfFilingImportError` —
 the shared root for every PDF-import module — which in turn inherits
-:class:`aeat.errors.AeatError`. Callers catching either level continue
+:class:`aeat.core.errors.AeatError`. Callers catching either level continue
 to work unchanged.
 """
 

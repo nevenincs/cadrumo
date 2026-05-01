@@ -9,7 +9,7 @@ import typer
 from ....core.config import load_settings
 from ....core.i18n import Language, Translatable, get_translation
 from ....domain.financial._decimal import canonical_decimal
-from ....domain.financial.aggregation import (
+from ....application.aggregation import (
     AggregationError,
     CasillaAggregation,
 )
@@ -30,7 +30,7 @@ def aggregate_cmd(
 ) -> None:
     """Aggregate classified transactions into a casilla ledger."""
 
-    from ....domain.financial.aggregation._provider import FinancialFilingInputsProvider
+    from ....application.aggregation._provider import FinancialFilingInputsProvider
 
     provider = FinancialFilingInputsProvider(repository=catalogue_repository())
     try:

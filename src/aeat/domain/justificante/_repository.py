@@ -12,9 +12,9 @@ URL — auditable evidence with identity-bearing context, hence
 :class:`SensitivityClass.AUDIT`.
 
 Out of scope: the PDF blob itself remains in
-:attr:`aeat.config.AeatSettings.aeat_justificantes_dir` (operator-class
+:attr:`aeat.core.config.AeatSettings.aeat_justificantes_dir` (operator-class
 legal proof; the substrate already handles encrypted blobs via
-:class:`aeat.storage.EncryptedBlobStore`). This repository persists only
+:class:`aeat.adapters.persistence.storage.EncryptedBlobStore`). This repository persists only
 the *parsed metadata* — so the CSV / NIF / URL pass through the
 classification gate at load time even when the PDF is not co-located
 with the metadata.

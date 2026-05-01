@@ -1,4 +1,4 @@
-"""Strict pydantic v2 records for the :mod:`aeat.sanitizer` subpackage.
+"""Strict pydantic v2 records for the :mod:`aeat.adapters.inbound.sanitizer` subpackage.
 
 Every record in this module is `frozen`, `extra="forbid"`,
 `strict=True`. Cleartext PII lives exclusively in
@@ -15,7 +15,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints, field_validator
 
-from ..identity import validate_spanish_tax_id
+from ....core.identity import validate_spanish_tax_id
 
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
 

@@ -11,7 +11,7 @@ text the extractor parses against.
 The full architectural rationale, threat model, and 8-step order
 of operations live in
 ``.vault/adr/2026-04-25-pdf-sanitizer-adr.md``. Callers outside
-:mod:`aeat.sanitizer` must import exclusively from this module —
+:mod:`aeat.adapters.inbound.sanitizer` must import exclusively from this module —
 the private ``_records``, ``_errors``, ``_pipeline``, ``_streams``,
 ``_metadata``, ``_dynamic``, ``_structtree``, ``_determinism``
 modules are implementation details.

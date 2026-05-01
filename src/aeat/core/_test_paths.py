@@ -11,7 +11,7 @@ supersession` section) requires that every security-sensitive
 guardrail named in those audits has an explicit unit test that
 passes against the canonical path AND fails against bypass shapes.
 This module provides that coverage. It survives the keystone
-relocation: `aeat._paths` moves to `aeat.core.paths` in Step 7;
+relocation: `aeat.core.paths` moves to `aeat.core.paths` in Step 7;
 this test file moves with it (`aeat._test_paths` →
 `aeat.core._test_paths`).
 """

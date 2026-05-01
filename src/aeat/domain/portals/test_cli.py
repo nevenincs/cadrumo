@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.portals._cli`."""
+"""Unit tests for :mod:`aeat.domain.portals._cli`."""
 
 from __future__ import annotations
 

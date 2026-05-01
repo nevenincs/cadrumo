@@ -37,7 +37,7 @@ def verify_declaracion(
     """Compare the printed casilla values against engine-derived ones.
 
     Args:
-        declaracion: The parsed filing from :func:`aeat.declaracion.parse_declaracion`.
+        declaracion: The parsed filing from :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
         ruleset: The formula ruleset to audit against; ``None`` → verdict is
             :attr:`VerificationStatus.UNVERIFIABLE`.
         tolerance: Maximum absolute delta between printed and computed values

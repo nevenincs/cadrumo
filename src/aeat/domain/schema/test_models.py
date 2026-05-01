@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.schema._models`."""
+"""Unit tests for :mod:`aeat.domain.schema._models`."""
 
 from __future__ import annotations
 

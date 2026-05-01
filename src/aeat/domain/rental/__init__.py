@@ -5,7 +5,7 @@ Per-finca + per-contract register backing the M100 Anexo C aggregates
 introduced by Ley 12/2023, and the LIRPF art. 23.1.f amortización 3 %
 multi-year ledger with a per-finca cost-basis cap.
 
-Public API: callers outside :mod:`aeat.rental` import only from this
+Public API: callers outside :mod:`aeat.domain.rental` import only from this
 module. Internal modules (``_models``, ``_enums``, ``_errors``,
 ``_repository``, ``_tier_resolver``, ``_amortization_ledger``,
 ``_expense_rollup``, ``_anexo_c_aggregator``, ``anexo_c_provider``)

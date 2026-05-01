@@ -1,4 +1,4 @@
-"""Offline tests for :mod:`aeat.sede._declarations`.
+"""Offline tests for :mod:`aeat.adapters.outbound.aeat.sede._declarations`.
 
 The walker itself depends on Playwright + a live AEAT session, so
 its end-to-end coverage is a `live` test. These offline tests
@@ -6,7 +6,7 @@ exercise the post-Buscar HTML parser against a redacted fixture
 captured 2026-04-25 against Kent's account (Modelo 100 / 2022).
 The fixture's PII (NIE, name, expediente id) is replaced with
 synthetic shape-preserving values per the
-:mod:`aeat.sanitizer` token-replace pattern.
+:mod:`aeat.adapters.inbound.sanitizer` token-replace pattern.
 """
 
 from __future__ import annotations

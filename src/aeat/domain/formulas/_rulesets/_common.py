@@ -1,6 +1,6 @@
 """Shared helpers for concise ruleset authoring.
 
-Every concrete ruleset module under :mod:`aeat.formulas._rulesets`
+Every concrete ruleset module under :mod:`aeat.domain.formulas._rulesets`
 imports from here. The helpers keep the ruleset files short and
 declarative: ``casilla("03", label=...)`` is easier to review than
 manually instantiating :class:`CasillaDefinition`.

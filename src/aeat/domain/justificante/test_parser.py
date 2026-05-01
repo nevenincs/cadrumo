@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.justificante` (#44).
+"""Unit tests for :mod:`aeat.domain.justificante` (#44).
 
 These tests exercise the parser end-to-end against the committed synthetic
 fixture PDFs under ``tests/fixtures/justificantes/``. They use *real* PDF

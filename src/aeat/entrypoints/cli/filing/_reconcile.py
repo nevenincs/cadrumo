@@ -2,13 +2,13 @@
 
 Wires the Kent-observable triad:
 
-    FilingDraft on disk  →  aeat.sede walk + CSV → PDF
-                         →  aeat.justificante parse
-                         →  aeat.filing.reconciliation.reconcile
+    FilingDraft on disk  →  aeat.adapters.outbound.aeat.sede walk + CSV → PDF
+                         →  aeat.domain.justificante parse
+                         →  aeat.application.filing.reconciliation.reconcile
                          →  MATCH / DIVERGENT / NOT_YET_FOUND
 
 The subcommand is strictly read-only: every AEAT touch goes through
-`aeat.sede` (whose write-guard ban is enforced by the per-subpackage
+`aeat.adapters.outbound.aeat.sede` (whose write-guard ban is enforced by the per-subpackage
 grep test). No flag on this command may imply submission, amendment,
 or any state-changing action.
 """
@@ -289,7 +289,7 @@ async def _capture_for_filing(
 ) -> SedeCapture:
     """Try the procedure tree first, fall back to the declarations register.
 
-    `aeat.sede.find_expediente` walks Mis Expedientes which exposes
+    `aeat.adapters.outbound.aeat.sede.find_expediente` walks Mis Expedientes which exposes
     procedure-related filings (some IRPF anuales, sanciones, recursos).
     Quarterly modelos (M130, M303, M111, ...) are typically NOT in
     that tree — their authoritative record lives in

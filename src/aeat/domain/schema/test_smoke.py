@@ -1,11 +1,11 @@
-"""Smoke tests for :mod:`aeat.schema`.
+"""Smoke tests for :mod:`aeat.domain.schema`.
 
 Enforces three invariants at test-collection time:
 
 - The public surface matches the declared ``__all__`` tuple.
 - Every name in ``__all__`` is actually importable from the package
   root.
-- No module under ``src/aeat/schema/`` imports :mod:`aeat.casillas`
+- No module under ``src/aeat/schema/`` imports :mod:`aeat.domain.casillas`
   (strict dependency direction).
 """
 

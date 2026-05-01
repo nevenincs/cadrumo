@@ -15,8 +15,8 @@ Wires the review subcommands per the feature ADRs:
 - ``aeat review stale`` — list every persisted draft whose approval
   is currently stale (#230).
 
-These commands delegate every domain decision to :mod:`aeat.review`,
-:mod:`aeat.financial.transactions`, or :mod:`aeat.filing`; this
+These commands delegate every domain decision to :mod:`aeat.application.review`,
+:mod:`aeat.domain.financial.transactions`, or :mod:`aeat.application.filing`; this
 module is pure CLI glue.
 """
 

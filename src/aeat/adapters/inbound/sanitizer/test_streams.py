@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.sanitizer._streams`.
+"""Unit tests for :mod:`aeat.adapters.inbound.sanitizer._streams`.
 
 The tests synthesise PDFs in-process with content streams that
 pin each text-show operator the sanitiser must rewrite (Tj, TJ,

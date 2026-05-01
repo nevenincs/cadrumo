@@ -1,7 +1,7 @@
 """Summary-block extraction primitives for Modelo 100 (#305).
 
 Thin wrappers re-exporting the shared primitive from
-:mod:`aeat._pdf_import._label_regex` while keeping the original
+:mod:`aeat.adapters.inbound.pdf._label_regex` while keeping the original
 ``(raw, parsed)`` tuple return shape the Renta extractor depends on.
 """
 
@@ -24,7 +24,7 @@ def apply_label_regex(
     """Return a ``casilla_id → (raw, parsed)`` dict for matched patterns.
 
     Uses the shared ``parse_spanish_decimal`` from
-    :mod:`aeat._pdf_import._label_regex`. First match wins for the raw
+    :mod:`aeat.adapters.inbound.pdf._label_regex`. First match wins for the raw
     value; callers detect ambiguity via ``pattern.findall(text)`` if
     they want to downgrade confidence.
     """

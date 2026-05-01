@@ -4,7 +4,7 @@ Each per-kind model wraps the source record verbatim alongside the
 unified queue fields (``item_id``, ``modelo``, ``severity``,
 ``summary``, ``drill_command``, ``since``). The :data:`ReviewItem`
 discriminated union mirrors the canonical ``DivergencePayload``
-pattern in ``aeat.sync._divergence`` (see ADR D1).
+pattern in ``aeat.application.sync._divergence`` (see ADR D1).
 """
 
 from __future__ import annotations

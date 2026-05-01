@@ -1,7 +1,7 @@
 """Preflight gating for the filing submission engine.
 
 ``Preflight`` runs four ordered gates against a
-:class:`aeat.submission._protocols.FilingDraftLike` before any
+:class:`aeat.adapters.outbound.aeat.export._protocols.FilingDraftLike` before any
 browser work begins. Every failure raises
 :class:`SubmissionPreflightError`; the happy path is silent.
 """

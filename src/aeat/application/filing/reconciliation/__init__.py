@@ -1,7 +1,7 @@
 """FilingDraft ↔ Justificante reconciliation (#239).
 
-Takes Kent's locally-approved :class:`aeat.filing.FilingDraft` and the
-:class:`aeat.justificante.Justificante` parsed from AEAT's
+Takes Kent's locally-approved :class:`aeat.application.filing.FilingDraft` and the
+:class:`aeat.domain.justificante.Justificante` parsed from AEAT's
 authoritative PDF record, and emits a :class:`ReconciliationReport`
 with a single Kent-observable verdict: MATCH / DIVERGENT /
 NOT_YET_FOUND.

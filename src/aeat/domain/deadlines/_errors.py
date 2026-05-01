@@ -1,6 +1,6 @@
 """Domain errors for the deadline-engine subpackage.
 
-All errors inherit from :class:`aeat.errors.AeatError` so that callers
+All errors inherit from :class:`aeat.core.errors.AeatError` so that callers
 have a single root they can catch when integrating with the engine.
 """
 
@@ -10,7 +10,7 @@ from ...core.errors import AeatError
 
 
 class DeadlineError(AeatError):
-    """Base class for every error raised by :mod:`aeat.deadlines`."""
+    """Base class for every error raised by :mod:`aeat.domain.deadlines`."""
 
 
 class ProfileError(DeadlineError):

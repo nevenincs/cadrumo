@@ -7,7 +7,7 @@ plug in by implementing :class:`DivergenceRecordRepository`; the runner
 treats the repository contract as opaque.
 
 Storage imports are deferred behind the methods that consult them so the
-sync subpackage does not pull ``aeat.storage`` (with its Alembic plugin
+sync subpackage does not pull ``aeat.adapters.persistence.storage`` (with its Alembic plugin
 discovery) into every CLI command's import chain.
 """
 
@@ -59,7 +59,7 @@ class JsonFileDivergenceRepository:
     One ciphertext envelope per record at
     ``<root>/<record_id>.envelope.json`` written via the substrate's
     :func:`save_encrypted_envelope` at AUDIT class with HKDF context
-    ``aeat.sync.divergence.v1``. The class name preserves wire-shape
+    ``aeat.application.sync.divergence.v1``. The class name preserves wire-shape
     compatibility with the existing CLI surface; all on-disk records
     are now AES-256-GCM ciphertext.
     """

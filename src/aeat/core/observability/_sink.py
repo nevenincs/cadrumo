@@ -1,18 +1,18 @@
 """Logging handler that bridges :mod:`logging` to JSONL run events.
 
 The handler subscribes to the standard :mod:`logging` machinery so any
-caller using ``aeat.logging.get_logger`` automatically picks up the
+caller using ``aeat.core.logging.get_logger`` automatically picks up the
 JSONL sink while a run context is active. Records that do not carry a
 ``run_event`` extra are skipped — bare log lines never leak into
 ``events.jsonl``.
 
 The ``run_id`` / ``step_id`` attributes are stamped onto every
 :class:`logging.LogRecord` by the factory installed in
-:mod:`aeat.logging` (``_install_run_context_record_factory``).
+:mod:`aeat.core.logging` (``_install_run_context_record_factory``).
 
 Each sink instance is bound to a single ``run_id`` and filters any
 event whose ``run_id`` does not match. This prevents cross-run
-contamination when several :func:`aeat.observability.run_context`
+contamination when several :func:`aeat.core.observability.run_context`
 blocks execute concurrently (e.g. tasks in an ``asyncio`` event
 loop) and therefore have competing sinks attached to the root
 logger at the same time.
@@ -30,11 +30,11 @@ from typing import TYPE_CHECKING, Any, TextIO
 from ._models import RunEvent
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage._classification import RedactionRule
+    from ..classification import RedactionRule
 
 
 # The DIAGNOSTIC-class rule set is resolved lazily on first emit so the
-# observability package does not pull aeat.storage (which imports
+# observability package does not pull aeat.adapters.persistence.storage (which imports
 # Alembic plugin discovery and emits INFO log lines on stderr at import
 # time) into every CLI command's import chain. The cost of resolving
 # the rule set once is negligible compared with one-time Alembic
@@ -46,8 +46,8 @@ def _diagnostic_rules() -> tuple[RedactionRule, ...]:
     """Return the AUDIT-class default rule set, resolved on first call."""
     global _DIAGNOSTIC_RULES
     if _DIAGNOSTIC_RULES is None:
-        from ...adapters.persistence.storage import SensitivityClass
-        from ...adapters.persistence.storage._redaction import default_rules_for_class
+        from ..classification import SensitivityClass
+        from ..redaction import default_rules_for_class
 
         _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
     return _DIAGNOSTIC_RULES  # type: ignore[return-value]

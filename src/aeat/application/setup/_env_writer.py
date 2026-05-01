@@ -1,7 +1,7 @@
 """Env-file and profile-file writers for the first-run setup wizard.
 
 The writer delegates the line-level work to
-:func:`aeat.env_io.write_env_vars`, inheriting its comment
+:func:`aeat.core.env_io.write_env_vars`, inheriting its comment
 preservation, idempotent rewrite, and unrelated-key preservation
 behaviour for free. The wizard only supplies a fixed, enumerated set
 of keys — see :func:`owned_env_keys`.
@@ -148,7 +148,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     class per the default policy table — so the write routes through
     :func:`save_encrypted_envelope` and lands as a
     :class:`CipherEnvelope` on disk under HKDF context
-    ``aeat.setup.profile.v1``.
+    ``aeat.application.setup.profile.v1``.
 
     On a brand-new installation the master key is minted as a side
     effect of the first ``save_encrypted_envelope`` call; this helper

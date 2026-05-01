@@ -292,7 +292,7 @@ def test_overlapping_rulesets_rejected() -> None:
 
 @pytest.mark.unit
 def test_resolve_binds_to_authoritative_modelo_code() -> None:
-    """The registry uses ``aeat.models.ModeloCode`` (not the casillas enum)."""
+    """The registry uses ``aeat.domain.modelos.ModeloCode`` (not the casillas enum)."""
     registry = get_registry()
     for ruleset in registry.rulesets:
         assert isinstance(ruleset.modelo, ModeloCode)

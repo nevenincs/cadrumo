@@ -1,4 +1,4 @@
-"""File-backed loader and query API for ``aeat.manuals``.
+"""File-backed loader and query API for ``aeat.domain.manuals``.
 
 The loader walks the ``corpus/manuals/`` directory hierarchy and
 produces strictly-validated :class:`Manual`, :class:`Chapter`, and

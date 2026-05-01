@@ -1,6 +1,6 @@
 """Storage-layer exceptions.
 
-All storage errors inherit from :class:`aeat.errors.AeatError` so callers can
+All storage errors inherit from :class:`aeat.core.errors.AeatError` so callers can
 catch domain-wide failures with a single base class.
 
 The class tree:
@@ -18,7 +18,7 @@ from ....core.errors import AeatError
 
 
 class StorageError(AeatError):
-    """Base class for every error raised by :mod:`aeat.storage`."""
+    """Base class for every error raised by :mod:`aeat.adapters.persistence.storage`."""
 
 
 class MigrationError(StorageError):
@@ -166,7 +166,7 @@ class PathContainmentError(PersistenceError, ValueError):
 
     Inherits from :class:`ValueError` as well as :class:`PersistenceError` so
     legacy call-sites that catch ``ValueError`` from the path helpers in
-    :mod:`aeat._paths` continue to work; new code should catch the
+    :mod:`aeat.core.paths` continue to work; new code should catch the
     typed :class:`PathContainmentError` instead.
 
     Method-resolution order: :class:`PathContainmentError` ->

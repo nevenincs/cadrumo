@@ -1,4 +1,4 @@
-"""End-to-end tests for :mod:`aeat.sanitizer._pipeline`.
+"""End-to-end tests for :mod:`aeat.adapters.inbound.sanitizer._pipeline`.
 
 These tests exercise the orchestrator on synthesised PDFs and
 assert:
@@ -8,7 +8,7 @@ assert:
 * The signed-PDF refuse guard fires.
 * The already-sanitised refuse guard fires when the source SHA
   is in :data:`SANITIZED_SHAS`, and can be opted out per-call.
-* Public re-exports import cleanly from :mod:`aeat.sanitizer`.
+* Public re-exports import cleanly from :mod:`aeat.adapters.inbound.sanitizer`.
 """
 
 from __future__ import annotations
@@ -202,7 +202,7 @@ class TestRefuseIfAlreadySanitized:
 
 
 class TestPublicReexports:
-    """Every public symbol is importable from :mod:`aeat.sanitizer`."""
+    """Every public symbol is importable from :mod:`aeat.adapters.inbound.sanitizer`."""
 
     def test_all_public_names_are_importable(self) -> None:
         from .... import sanitizer

@@ -2,14 +2,14 @@
 
 One subdirectory per ``run_id`` under :attr:`Settings.aeat_runs_dir`,
 containing ``trace.json`` and ``events.jsonl``. Both files round-trip
-through the strict pydantic models in :mod:`aeat.observability._models`.
+through the strict pydantic models in :mod:`aeat.core.observability._models`.
 
 Run traces are DIAGNOSTIC class. The substrate's redaction rule set
 (``default_rules_for_class(SensitivityClass.DIAGNOSTIC)``) walks every
 string leaf — NIF SHA-256-prefixed, URL host-only, bearer-shaped tokens
 fingerprinted, opaque bearers fingerprinted — before serialisation. The
 storage import is deferred so the observability package does not pull
-``aeat.storage`` (with its Alembic plugin discovery) into every CLI
+``aeat.adapters.persistence.storage`` (with its Alembic plugin discovery) into every CLI
 command's import chain; this preserves the json-pipe-safety contract.
 """
 
@@ -28,7 +28,7 @@ from ._errors import RunTraceValidationError
 from ._models import RunEvent, RunTrace
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage._classification import RedactionRule
+    from ..classification import RedactionRule
 
 
 # Cached at first use so repeated emits do not repeatedly resolve the
@@ -40,8 +40,8 @@ def _diagnostic_rules() -> tuple[RedactionRule, ...]:
     """Return the DIAGNOSTIC-class default rule set, resolved on first call."""
     global _DIAGNOSTIC_RULES
     if _DIAGNOSTIC_RULES is None:
-        from ...adapters.persistence.storage import SensitivityClass
-        from ...adapters.persistence.storage._redaction import default_rules_for_class
+        from ..classification import SensitivityClass
+        from ..redaction import default_rules_for_class
 
         _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
     return _DIAGNOSTIC_RULES  # type: ignore[return-value]
@@ -50,7 +50,7 @@ def _diagnostic_rules() -> tuple[RedactionRule, ...]:
 _TRACE_FILENAME = "trace.json"
 _EVENTS_FILENAME = "events.jsonl"
 
-# Run ids are minted by :func:`aeat.observability._context._mint_run_id`
+# Run ids are minted by :func:`aeat.core.observability._context._mint_run_id`
 # as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
 # layer against the same shape so a crafted id (e.g. ``..`` or
 # ``/etc/passwd``) cannot cause ``runs_dir / run_id`` to escape the

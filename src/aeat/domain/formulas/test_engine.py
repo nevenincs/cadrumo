@@ -433,5 +433,5 @@ def test_vivienda_habitual_cap_clamp_via_min_op() -> None:
 
 @pytest.mark.unit
 def test_modelo_130_2024_modelo_binds_to_authoritative_enum() -> None:
-    """The shipped ruleset uses aeat.models.ModeloCode."""
+    """The shipped ruleset uses aeat.domain.modelos.ModeloCode."""
     assert MODELO_130_2024.modelo is ModeloCode.MODELO_130

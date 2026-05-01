@@ -1,4 +1,4 @@
-"""DocInfo + XMP scrub for :mod:`aeat.sanitizer`.
+"""DocInfo + XMP scrub for :mod:`aeat.adapters.inbound.sanitizer`.
 
 Two surfaces, two scrubbers:
 
