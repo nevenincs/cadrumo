@@ -260,8 +260,3 @@ class StaticCasillaSchemaProvider(BaseModel):
             KeyError: When the modelo has no registered collection.
         """
         return self.collections[modelo]
-
-
-def default_schema_provider() -> StaticCasillaSchemaProvider:
-    """Return a provider seeded with the synthetic Modelo 130 schema."""
-    return StaticCasillaSchemaProvider(collections={"130": MODELO_130_SCHEMA})
