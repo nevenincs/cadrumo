@@ -605,7 +605,7 @@ def _modelo_100_full_fixture_post_2025() -> dict[str, Decimal]:
     }
 
 
-# Note: pre-Wave-5 a backwards-compatible ``_modelo_100_full_fixture()``
+# Note: backwards-compatible ``_modelo_100_full_fixture()``
 # alias resolved to the post-2025 variant unconditionally. The alias
 # was removed because applying it against the 2024 ruleset would
 # fail baseline-clean audit (the 0560 ahorro top-bracket rate is 0.14

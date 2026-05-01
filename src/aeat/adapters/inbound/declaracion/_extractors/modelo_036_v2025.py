@@ -5,7 +5,7 @@ Empresarios, Profesionales y Retenedores. Completa (~8 pages, all
 obligados tributarios regardless of size/régimen). Event-triggered —
 filed within 1 month of the hecho censal (article 10 RD 1065/2007).
 
-Wave 27 migrates the extractor off the header-only MVP to the
+the extractor off the header-only MVP to the
 named-field primitive, capturing the most-used censal decisions:
 
 - causa de presentación (alta / modificación / baja).
@@ -37,7 +37,7 @@ class Modelo036V2025Extractor(GenericDeclaracionExtractor):
     casilla_ids: ClassVar[tuple[str, ...]] = ()
     # Label-to-value separators on 036 PDFs use either ":" or whitespace
     # columns; the regex skips both, then captures the rest of the line
-    # (wave 33 H2 fix — multi-word régimen values like "Recargo de
+    # (fix — multi-word régimen values like "Recargo de
     # equivalencia" or "Estimación directa simplificada" were previously
     # truncated to the first token). Trailing whitespace is stripped.
     named_field_patterns: ClassVar[dict[str, str]] = {

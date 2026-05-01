@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def test_catalogue_covers_every_vat_category() -> None:
     """Every VATCategory must have a VATRegulation in the catalogue.
 
-    Wave 2 (#183) added the 17th category ``DOMESTIC_REVERSE_CHARGE``.
+    (#183) added the 17th category ``DOMESTIC_REVERSE_CHARGE``.
     """
     assert set(VAT_CATALOGUE_2025.regulations.keys()) == set(VATCategory)
     assert len(VAT_CATALOGUE_2025) == 17

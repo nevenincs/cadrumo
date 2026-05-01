@@ -40,7 +40,7 @@ def _prepare_workflow_env(tmp_path: Path) -> dict[str, str]:
         bienes_extranjero_above_threshold=False,
     )
     profile_path = tmp_path / "profile.json"
-    # Wave 5: the setup wizard writes the profile through
+    # the setup wizard writes the profile through
     # ``save_encrypted_envelope`` at IDENTITY class. Match that wire
     # shape here so the workflow CLI's ``load_default_filing_profile``
     # round-trips through the substrate. Use the file backend with a

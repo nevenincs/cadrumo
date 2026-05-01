@@ -1,4 +1,4 @@
-"""DP30301 régimen-general rate-rows layout lock (wave 146).
+"""DP30301 régimen-general rate-rows layout lock.
 
 The 4% / 5% / 10% / 21% IVA rate rows in DP30301 are 39-byte
 blocks: a 17-byte base-imponible CURRENCY, a 5-byte rate literal
@@ -15,7 +15,7 @@ Canonical rate-row offsets per DR303e24:
   10% : CAS04 base  @ 247,  CAS05 tipo @ 264 (5B RESERVED), CAS06 cuota @ 269
   21% : CAS07 base  @ 286,  CAS08 tipo @ 303 (5B RESERVED), CAS09 cuota @ 308
 
-Wave 146 pins all four row layouts + their rate-literal values.
+all four row layouts + their rate-literal values.
 """
 
 from __future__ import annotations

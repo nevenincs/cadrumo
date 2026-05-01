@@ -1,6 +1,6 @@
 """Unit tests for the Modelo 130 2025 ruleset.
 
-Wave 55 companion to test_modelo_130_2024.py. The 2025 ruleset
+to test_modelo_130_2024.py. The 2025 ruleset
 re-uses the 2024 casillas + citations (mid-year rule changes absent
 for 2024→2025 per the research doc), so the 2025 tests exercise the
 same formulas via the 2025 variant to confirm no drift.
@@ -78,7 +78,7 @@ class TestModelo130Ruleset2025:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_2025_no_drift_from_2024(self) -> None:
-        """Wave 55 regression: 2025 ruleset MUST produce identical audit
+        """2025 ruleset MUST produce identical audit
         to 2024 for any fixture where both rulesets would legally apply
         (i.e. no mid-year change). The casillas + formulas are shared
         module-level imports, so a drift would require an active change.

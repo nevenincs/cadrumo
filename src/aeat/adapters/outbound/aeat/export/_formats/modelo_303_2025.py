@@ -1,6 +1,6 @@
 """Fichero-BOE envelope spec for Modelo 303 ejercicio 2025.
 
-Wave 94 (EPIC #305). Structural clone of :mod:`modelo_303_2024` —
+ (EPIC #305). Structural clone of :mod:`modelo_303_2024` —
 Orden HAC/819/2024 (BOE-A-2024-16129) governs both 2024 and 2025
 Modelo 303 filings; the LIVA arts. 90 / 91 régimen-general rates
 were not amended between the two years (see the 2025 ruleset at

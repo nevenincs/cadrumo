@@ -1,4 +1,4 @@
-"""Shared label-anchored regex extraction primitive (#305 cluster D refactor).
+"""Shared label-anchored regex extraction primitive (#305 refactor).
 
 Every casilla-complete extractor under :mod:`aeat.declaracion` and
 :mod:`aeat.borrador` runs essentially the same primitive: for a
@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
-# Wave 51 H1: AEAT per UNE 82100 uses a non-breaking space (U+00A0)
+# AEAT per UNE 82100 uses a non-breaking space (U+00A0)
 # or narrow no-break space (U+202F) as the thousands separator —
 # NEVER a regular ASCII space (which is reserved for column
 # separation). The primitive tolerates those two specific
@@ -30,7 +30,7 @@ from decimal import Decimal, InvalidOperation
 # space/tab), so it stays bounded to the printed amount and cannot
 # cross label-to-value gaps that use ASCII space or tab separators.
 #
-# Pre-wave-51 the group was ``(?:\.[0-9]{3})*`` which caused an AEAT
+# group was ``(?:\.[0-9]{3})*`` which caused an AEAT
 # amount formatted with a non-breaking space ("1\xa0234,56") to be
 # silently captured as "234,56" — a 1000x underreport.
 SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:[.  ][0-9]{3})*,[0-9]{2})"  # noqa: RUF001
@@ -51,7 +51,7 @@ def parse_spanish_decimal(raw: str) -> Decimal | None:
 
     Accepts the canonical Spanish form ``1.234,56``, whitespace-separated
     thousands ``1 234,56`` (any unicode whitespace including U+00A0 NBSP
-    and U+202F narrow NBSP — wave 51 H1), and US-style ``1234.56``.
+    and U+202F narrow NBSP — H1), and US-style ``1234.56``.
 
     Returns ``None`` on unparseable input.
     """

@@ -16,7 +16,7 @@ Formula IDs follow ``{ruleset_id}.{reason}`` where ``{reason}`` is a
 ``snake_case`` identifier of the derivation (e.g.
 ``modelo_130.2025.rendimiento_neto``).
 
-**Coverage scope (wave 42 M1).**
+**Coverage scope.**
 
 Modelo 130 and Modelo 303 ship both a 2024 and a 2025 ruleset because
 those are Kent's primary autónomo forms — pre-2025 quarters must be
@@ -109,7 +109,7 @@ from .modelo_390_2025 import RULESET as MODELO_390_2025
 from .modelo_390_2026 import RULESET as MODELO_390_2026
 
 # Numerically-ascending by modelo code; within a modelo, ascending by
-# effective-from year. Wave 42 M3: prior ordering accidentally trailed
+# effective-from year. prior ordering accidentally trailed
 # MODELO_100_SUMMARY_2025 at the end, breaking the numeric sequence.
 ALL_RULESETS: tuple[Ruleset, ...] = (
     MODELO_100_2024,

@@ -66,7 +66,7 @@ _CITATIONS = (
         "439/2007",
         "RD 439/2007 Reglamento del IRPF — retenciones "
         "(art. 74-101), pagos fraccionados (art. 109-112). "
-        "Wave 73a correction: prior narrative claimed RIRPF "
+        "prior narrative claimed RIRPF "
         "art. 67-77 covered liquidación — wrong; those are "
         "formal/registral obligations. Liquidación is a LIRPF topic.",
         url="https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
@@ -231,7 +231,7 @@ _FORMULAS = (
 RULESET: Ruleset = Ruleset(
     ruleset_id="modelo_100.summary.2025",
     modelo=ModeloCode.MODELO_100,
-    # Wave 47: explicit variant="summary" reserves the default slot
+    # explicit variant="summary" reserves the default slot
     # for the (eventual) full-form modelo_100 ruleset without a
     # registry-overlap conflict.
     variant="summary",

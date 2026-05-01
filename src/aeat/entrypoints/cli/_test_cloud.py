@@ -1,7 +1,7 @@
 """Unit tests for the structure of the ``aeat cloud`` sub-app.
 
 The Cloud Functions / Run / Storage commands themselves require live
-credentials and are exercised by the Phase 9 smoke suite. Here we only
+credentials and are exercised by the smoke suite. Here we only
 verify the typer command-tree shape so a refactor that drops a verb is
 caught at unit-test time.
 """

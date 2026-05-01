@@ -1,4 +1,4 @@
-"""DATE field encoding round-trip invariants (wave 129).
+"""DATE field encoding round-trip invariants.
 
 AEAT DR specs use two date conventions:
 

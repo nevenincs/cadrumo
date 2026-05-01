@@ -1,6 +1,6 @@
 """Fixed-width record-spec primitives for fichero-BOE export.
 
-EPIC #201 wave 75d + wave 77 primitive-safety hardening. See ADR
+EPIC #201 + primitive-safety hardening. See ADR
 ``.vault/adr/2026-04-22-aeat-fichero-boe-export-adr.md`` §2-4 for
 the design rationale.
 
@@ -9,7 +9,7 @@ Every concrete modelo module authors a tuple of
 registros* field layout. The encoders defined here produce the
 byte-exact output the AEAT portal expects via "importar datos".
 
-Wave 77 primitive-safety contract:
+primitive-safety contract:
 
 - ``encode_currency`` uses explicit ``ROUND_HALF_UP`` matching AEAT
   *Instrucciones de cumplimentación* (NOT banker's rounding).
@@ -18,7 +18,7 @@ Wave 77 primitive-safety contract:
 - ``RecordFieldSpec`` enforces the RESERVED ⇔ literal_value
   invariant at construction time.
 - :func:`validate_record_specs` enforces monotonic ``offset + length
-  == next.offset`` across a module's spec tuple. Wave 77c entry-
+  == next.offset`` across a module's spec tuple. entry-
   gate for modelo schemas.
 
 Per-modelo encoding: most modelos use **Windows-1252 / ISO-8859-1**
@@ -78,7 +78,7 @@ class DateFmt(StrEnum):
 
 
 class SignedMode(StrEnum):
-    """Sign-convention for a CURRENCY field (wave 85b).
+    """Sign-convention for a CURRENCY field.
 
     Different AEAT modelos use different conventions for negative
     amounts in the fichero-BOE wire format:
@@ -119,7 +119,7 @@ class RecordFieldSpec(BaseModel):
     field_id: Annotated[str, Field(min_length=1, max_length=96)]
     """AEAT field identifier (e.g. ``F01001``, ``NIF``, ``EJERCICIO``).
 
-    Wave 88 raised the cap from 32 to 96 chars to accommodate the
+    the cap from 32 to 96 chars to accommodate the
     auto-extracted descriptive names from DR*.xlsx where AEAT uses
     long Spanish-language field names (e.g.,
     ``DP30301_F001_INICIO_DEL_IDENTIFICADOR_DE_REGISTRO``).
@@ -146,7 +146,7 @@ class RecordFieldSpec(BaseModel):
     """Required when ``kind == DATE``; ignored otherwise."""
 
     signed_mode: SignedMode = SignedMode.UNSIGNED
-    """Wave 85b: how CURRENCY fields encode negative amounts.
+    """how CURRENCY fields encode negative amounts.
 
     Defaults to ``UNSIGNED`` (Modelo 130 convention: magnitude +
     separate SIGNO flag). Set to ``INLINE_SIGN`` for Modelo 303
@@ -156,7 +156,7 @@ class RecordFieldSpec(BaseModel):
 
     @model_validator(mode="after")
     def _reserved_requires_literal(self) -> RecordFieldSpec:
-        """Wave 77a: enforce RESERVED ⇔ literal_value invariant.
+        """enforce RESERVED ⇔ literal_value invariant.
 
         A RESERVED field is a literal constant (modelo code, record
         separator, filler "0000", etc.). Constructing a RESERVED spec
@@ -173,7 +173,7 @@ class RecordFieldSpec(BaseModel):
         if self.signed_mode is SignedMode.INLINE_SIGN and self.kind is not FieldKind.CURRENCY:
             raise ValueError(
                 f"signed_mode=INLINE_SIGN is only valid on CURRENCY fields; "
-                f"got {self.kind!r} for {self.field_id!r} (wave 86 audit hardening)"
+                f"got {self.kind!r} for {self.field_id!r} (hardening)"
             )
         return self
 
@@ -234,8 +234,7 @@ def encode_currency(
     with no separators. ``Decimal("1234.56")`` in a length-13 field
     produces ``b"0000000123456"``.
 
-    Wave 77a hardening:
-    - Explicit ``ROUND_HALF_UP`` matching AEAT *Instrucciones* (not
+        - Explicit ``ROUND_HALF_UP`` matching AEAT *Instrucciones* (not
       banker's rounding). ``Decimal("2.005")`` → ``b"000201"``.
     - ``signed=False`` (default) rejects negative inputs so a caller
       who forgot to wire the adjacent SIGNO field gets a clear error
@@ -243,7 +242,7 @@ def encode_currency(
       magnitude. Set ``signed=True`` when you have explicitly
       arranged the SIGNO flip elsewhere.
 
-    Wave 83a (Modelo 303+ inline-sign convention):
+     (Modelo 303+ inline-sign convention):
     - ``inline_sign=True`` switches from AEAT's "separate SIGNO/TIPO
       field" convention (Modelo 130 ``TIPO_DECLARACION="N"``) to the
       inline "N"-prefix convention used by Modelo 303 and other IVA
@@ -298,8 +297,7 @@ def encode_text(
 ) -> bytes:
     """Alphanumeric encoder.
 
-    Wave 77a hardening:
-    - Raises ``ValueError`` when ``len(value) > length`` (no silent
+        - Raises ``ValueError`` when ``len(value) > length`` (no silent
       truncation). A mis-measured spec that would clip a NIF or
       razón-social is a legally-binding corruption; fail loud.
     - Set ``truncate=True`` only when the caller has a concrete
@@ -338,7 +336,7 @@ def encode_date(
 class SegmentSpec(BaseModel):
     """A named, variable-length segment in a multi-segment fichero-BOE envelope.
 
-    Wave 82a (EPIC #201, Modelo 303+ support). Modelo 303 — and every
+     (EPIC #201, Modelo 303+ support). Modelo 303 — and every
     IVA modelo post-HAC/819/2024 — is not a single flat record. The
     on-wire format is an envelope like::
 
@@ -374,7 +372,7 @@ def validate_segment_specs(segments: tuple[SegmentSpec, ...]) -> None:
 
     Runs :func:`validate_record_specs` on each segment and checks that
     segment IDs are unique across the envelope. Does NOT enforce a
-    global offset (each segment resets to 1). Wave 82a companion to
+    global offset (each segment resets to 1). to
     :func:`validate_record_specs`.
     """
     if not segments:
@@ -395,7 +393,7 @@ def validate_record_specs(
     *,
     total_length: int,
 ) -> None:
-    """Wave 77a: enforce the monotonic offset/length invariant.
+    """enforce the monotonic offset/length invariant.
 
     Each concrete modelo module calls this at import time to guard
     against hand-authoring off-by-one errors that would cascade

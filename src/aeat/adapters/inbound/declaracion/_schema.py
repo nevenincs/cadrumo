@@ -1,4 +1,4 @@
-"""Strict pydantic v2 records for the declaración parser (#305 cluster D)."""
+"""Strict pydantic v2 records for the declaración parser (#305)."""
 
 from __future__ import annotations
 

@@ -1,9 +1,9 @@
-"""Proof-of-concept tests for Modelo 303 preview (wave 85a).
+"""Proof-of-concept tests for Modelo 303 preview.
 
 The preview module is explicitly NOT wired into the CLI schema
-registry — it exists to exercise the wave-82 envelope + wave-83a
+registry — it exists to exercise the envelope +
 inline_sign architecture against the only three Modelo 303 offsets
-that wave-84 audit could verify with high confidence:
+that could verify with high confidence:
 
 - DP30300 envelope opener/closer + ejercicio + período.
 - DP30301 NIF at offset 14 (the only offset stream-D got right).
@@ -11,7 +11,7 @@ that wave-84 audit could verify with high confidence:
   inline).
 
 A full Modelo 303 schema requires xlsx-ingestion tooling (deferred
-to wave 86+).
+to +).
 """
 
 from __future__ import annotations
@@ -100,7 +100,7 @@ class TestModelo3032024Preview:
     def test_casilla_69_inline_sign_negative(self) -> None:
         """Casilla 69 negative value → leading 'N' + zero-padded |value|.
 
-        Wave 85b: RecordFieldSpec.signed_mode=INLINE_SIGN now routes
+        RecordFieldSpec.signed_mode=INLINE_SIGN now routes
         negative casilla_values through encode_currency(inline_sign=True)
         automatically — no caller intervention needed.
         """

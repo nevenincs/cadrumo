@@ -1,4 +1,4 @@
-"""Shared Kent-profile test fixtures for golden + E2E tests (wave 111).
+"""Shared Kent-profile test fixtures for golden + E2E tests.
 
 These builders cover the canonical "Kent the autónomo" filing scenario
 reused across every byte-exactness and cross-track integration test:
@@ -7,10 +7,10 @@ reused across every byte-exactness and cross-track integration test:
   to the profile flows through every test automatically.
 - :const:`KENT_130_CASILLAS` carries the nine-casilla Q1 2024 Modelo
   130 fixture (ingresos 20 000, gastos 5 000, resultado 3 000) which
-  the wave-84 / wave-105 goldens pin + the wave-108 E2E derives from
+  the / pin + the E2E derives from
   Engine inputs.
 - :const:`KENT_303_CASILLAS_HAND` carries the twenty-casilla Q1 2024
-  Modelo 303 fixture used by the wave-93 / wave-99 hand-picked
+  Modelo 303 fixture used by the / hand-picked
   goldens (régimen general, cuota 3 150 a ingresar).
 - :func:`kent_130_headers` / :func:`kent_303_headers` return the
   per-ejercicio header dict (canonical CLI-side or DR303 field IDs

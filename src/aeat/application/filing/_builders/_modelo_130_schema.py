@@ -25,12 +25,12 @@ from .._schema import SCHEMA_VERSION_DEFAULT
 
 
 class CasillaSource(BaseModel):
-    """Provenance citation for one casilla (#305 cluster B).
+    """Provenance citation for one casilla (#305).
 
     Every casilla SHOULD carry at least one source citation so the
     legal authority behind the schema is auditable. Phase-1 introduces
     the field as optional (``tuple[CasillaSource, ...] = ()``) to
-    preserve backwards compatibility; cluster B phase-2 tightens the
+    preserve backwards compatibility; phase-2 tightens the
     invariant to ``≥1 entry`` per casilla.
     """
 
@@ -148,7 +148,7 @@ MODELO_130_SCHEMA = StaticCasillaCollection(
             description="Resultado a ingresar = max(0, 04 - 05 - 06)",
         ),
         # Apartado II — actividad agrícola / ganadera / forestal / pesquera.
-        # Added in #305 cluster B phase 2 to close the schema/ruleset gap
+        # Added in #305 to close the schema/ruleset gap
         # that silently orphaned computed casillas 09 / 11 / 12 / 14 / 17 / 19.
         StaticCasillaSchema(
             id="08",

@@ -1,4 +1,4 @@
-"""Summary-block extraction primitives for Modelo 100 (#305 cluster F).
+"""Summary-block extraction primitives for Modelo 100 (#305).
 
 Thin wrappers re-exporting the shared primitive from
 :mod:`aeat._pdf_import._label_regex` while keeping the original

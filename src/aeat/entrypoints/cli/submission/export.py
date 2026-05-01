@@ -1,6 +1,6 @@
 """``aeat submission export`` — produce an AEAT-importable fichero-BOE file.
 
-EPIC #201 C3c (wave 81). Kent's happy path for self-filing:
+EPIC #201 C3c. Kent's happy path for self-filing:
 
     produce (ruleset engine) → review → approve → **export** → self-upload
 
@@ -14,7 +14,7 @@ refuses any draft whose CLI ``status`` field is explicitly
 ``"rejected"`` or ``"superseded"``; otherwise it produces output
 with a prominent BORRADOR banner in the console.
 
-Wave 92 adds Modelo 303 2024 via the multi-segment envelope path;
+Modelo 303 2024 via the multi-segment envelope path;
 the schema registry now carries a per-modelo CLI header builder and
 a dispatch tag so single-record (130) and envelope (303) filings
 share the same driver.

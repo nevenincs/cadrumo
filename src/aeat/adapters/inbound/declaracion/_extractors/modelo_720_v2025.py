@@ -5,7 +5,7 @@ cuentas (clave C), valores/seguros/rentas (clave V), e inmuebles
 (clave I) en el extranjero cuando la valoración por clave supera los
 50 000 € (DA 18ª LGT).
 
-Wave 27 migrates this extractor off the header-only MVP to the
+this extractor off the header-only MVP to the
 named-field primitive: we capture the per-clave counters (nº
 registros) and total valoraciones that the Orden HAP/72/2013 diseño
 lógico requires on every registro de tipo 1 (resumen).
@@ -30,7 +30,7 @@ class Modelo720V2025Extractor(GenericDeclaracionExtractor):
         revision="2025.01",
     )
     casilla_ids: ClassVar[tuple[str, ...]] = ()
-    # Wave 33 H3: regex tightened — anchored to clave letter (C/V/I)
+    # regex tightened — anchored to clave letter (C/V/I)
     # and line-scoped. The original loose "cuentas/valores/inmuebles"
     # alternation risked false-positives on any line mentioning those
     # words elsewhere in the PDF. The anchored "clave X" form matches

@@ -3,15 +3,15 @@
 .. warning::
 
    This module is a proof-of-concept skeleton, NOT a production schema.
-   Wave 84 audit (stream verification against DR303e24.xlsx /
+   audit (stream verification against DR303e24.xlsx /
    DR303e25.xlsx) confirmed that stream-D research offsets were
    off-by-one on 3 of 5 spot-checks and miscategorised casilla 01's
    semantics. A full schema requires xlsx-ingestion tooling (wave
    86+) to avoid hand-transcription errors across ~2600 DP30301
    fields alone.
 
-   This skeleton exists to exercise the wave-82 multi-segment
-   envelope architecture + wave-83a inline-sign encoder END-TO-END,
+   This skeleton exists to exercise the multi-segment
+   envelope architecture + inline-sign encoder END-TO-END,
    proving the primitives work for Modelo 303's shape without
    committing to specific casilla offsets. It is NOT wired into the
    CLI schema registry (see ``src/aeat/cli/submission/export.py``).
@@ -45,7 +45,7 @@ This file ships the MINIMAL shape to prove the architecture:
   stream D and the audit agreed on), using ``inline_sign=True``.
 
 Every other DP30301 / DP30302 / DP30304 / DP30305 / DP303DID field
-is OUT OF SCOPE for this preview. Wave 86+ will populate them from
+is OUT OF SCOPE for this preview. + will populate them from
 the xlsx ingestion output.
 
 ## References
@@ -69,7 +69,7 @@ ENCODING: FicheroBoeEncoding = "iso-8859-1"
 
 # DP30300 envelope header — minimal: just enough to carry the
 # ejercicio/período/NIF trio. Real envelope also has programa ED,
-# AUX block, closer tag — deferred to wave 86.
+# AUX block, closer tag — deferred to .
 _DP30300_MINI = SegmentSpec(
     segment_id="DP30300_PREVIEW",
     specs=(
@@ -170,9 +170,9 @@ _DP30301_MINI = SegmentSpec(
 )
 
 # DP30303 preview: casilla 69 at offset 323 (only offset both
-# stream D and wave-84 audit agreed on). The 320 bytes before it
+# stream D and agreed on). The 320 bytes before it
 # are filled as a single ALPHANUMERIC placeholder — the real
-# layout has many intermediate fields that wave 86+ will
+# layout has many intermediate fields that + will
 # populate from xlsx.
 _DP30303_MINI = SegmentSpec(
     segment_id="DP30303_PREVIEW",

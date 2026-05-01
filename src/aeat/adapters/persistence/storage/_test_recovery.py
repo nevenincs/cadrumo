@@ -59,7 +59,7 @@ class TestMnemonicRoundTrip:
         with pytest.raises(ValueError, match="unknown BIP-39 word") as excinfo:
             decode_mnemonic(" ".join(words))
         message = str(excinfo.value)
-        # Wave-23 redaction: the failing word must NOT be echoed in
+        # the failing word must NOT be echoed in
         # the error message. The error reports the position only so
         # operator-visible logs / shell history / session captures
         # do not leak partial recovery-key contents.

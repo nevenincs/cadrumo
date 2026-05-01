@@ -77,7 +77,7 @@ class MasterKeyKdfVersionError(MasterKeyUnavailableError):
 
     The substrate gates the master.kdf parameters by version. Mismatch
     means the operator is on a build that has rotated the password-derived
-    KDF (e.g. the wave-12 scrypt -> Argon2id transition); the operator
+    KDF (e.g. the scrypt -> Argon2id transition); the operator
     must run ``aeat security migrate-master-key-kdf`` to re-wrap the
     master key under the new KDF.
     """
@@ -116,7 +116,7 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
 
     Reserved for callers that need to distinguish "not provisioned"
     from "wrong passphrase" — the default ``get_master_key`` path
-    silently mints when material is absent (the wave-17 silent first-
+    silently mints when material is absent (the first-
     run mint contract), so this class does not fire on the canonical
     load path. Future load-only / probe-only entry points (e.g. a
     diagnostic API or a ``--no-mint`` CLI option) raise this class

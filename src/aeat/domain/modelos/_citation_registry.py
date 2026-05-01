@@ -1,4 +1,4 @@
-"""Known-bad citation blocklist (EPIC #305 wave 69).
+"""Known-bad citation blocklist (EPIC #305).
 
 Six consecutive audit waves (59c, 61a, 63a, 65a, 67a, 68) surfaced
 Spanish-tax citation errors where a ``(source, article)`` pair was
@@ -8,7 +8,7 @@ Each miscite shipped through code review because `quoted_text_es`
 was internally self-consistent with the wrong article number; human
 review caught the error only on a later external verification pass.
 
-This module implements the blocklist half of the wave-68 stream-3
+This module implements the blocklist half of the stream-3
 recommendation: an import-time ``ValueError`` for any
 ``(source, article, role-substring)`` triple matching a prior miscite.
 The complementary positive-registry half (enforcing that every
@@ -29,7 +29,7 @@ When a future audit surfaces a new citation error, add one row to
   characterises the wrong role-of-the-article. The validator matches
   if this substring appears in ``quoted_text_es.lower()``. Keep the
   substring narrow enough that legitimate historical references
-  (e.g., "wave 63a corrected the art. 103 / cuota diferencial miscite")
+  (e.g., "the art. 103 / cuota diferencial miscite")
   don't false-positive — prefer the role name alone, not the article
   number.
 - ``audit_wave``: the first wave that flagged the miscite, for
@@ -37,10 +37,10 @@ When a future audit surfaces a new citation error, add one row to
 
 ## References
 
-- ``.vault/audit/2026-04-22-real-pdf-import-wave-64-exhaustive-audit.md`` (5 miscites)
-- ``.vault/audit/2026-04-22-real-pdf-import-wave-66-exhaustive-audit.md`` (4 more miscites)
-- ``.vault/audit/2026-04-22-real-pdf-import-wave-68-exhaustive-audit.md`` (RIRPF 100.3.a)
-- Wave 68 stream 3 recommendation for a hybrid registry+blocklist.
+- ``.vault/audit/2026-04-22-real-pdf-import--exhaustive-audit.md`` (5 miscites)
+- ``.vault/audit/2026-04-22-real-pdf-import--exhaustive-audit.md`` (4 more miscites)
+- ``.vault/audit/2026-04-22-real-pdf-import--exhaustive-audit.md`` (RIRPF 100.3.a)
+- recommendation for a hybrid registry+blocklist.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ from ._categories import LegalCitationSource
 def _fold_diacritics(text: str) -> str:
     """Normalise a string for accent-insensitive substring matching.
 
-    Wave 73b L2 closure (wave 70 stream 1 caution): pdfplumber and
+    closure (caution): pdfplumber and
     hand-typed ``quoted_text_es`` routinely drop diacritics. Without
     this fold, ``"cuota liquida"`` (no accent) would defeat the
     blocklist entry keyed on ``"cuota líquida"``. ``unicodedata.
@@ -81,7 +81,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.LEY,
         "103",
         "cuota diferencial",
-        "wave 59c / corrected wave 63a",
+        " / corrected ",
         "LIRPF art. 103 is 'Liquidaciones provisionales' (AEAT "
         "administrative power); cuota diferencial lives in art. 79 "
         "with the pagos-a-cuenta subtraction hooking through art. 99.",
@@ -90,7 +90,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.LEY,
         "77",
         "cuota íntegra autonómica",
-        "wave 63a / corrected wave 65a",
+        " / corrected ",
         "LIRPF art. 77 is 'Cuota líquida autonómica total' "
         "(post-deduction); cuota íntegra autonómica is art. 73 with "
         "the tarifa in art. 74.",
@@ -99,14 +99,14 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.LEY,
         "67",
         "cuota íntegra estatal",
-        "wave 65a / corrected wave 67a",
+        " / corrected ",
         "LIRPF art. 67 is 'Cuota líquida estatal' (post-deduction); cuota íntegra estatal is art. 62.",
     ),
     KnownBadCitation(
         LegalCitationSource.LEY,
         "79",
         "cuota líquida",
-        "wave 65a / corrected wave 67a",
+        " / corrected ",
         "LIRPF art. 79 is 'Cuota diferencial'; cuota líquida is the "
         "combination of art. 67 (estatal) + art. 77 (autonómica).",
     ),
@@ -114,7 +114,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.LEY,
         "125",
         "cuota líquida",
-        "wave 61a / corrected wave 67a",
+        " / corrected ",
         "LIS art. 125 is 'Autoliquidación e ingreso de la deuda "
         "tributaria' (procedural); cuota líquida definition lives in "
         "LIS art. 30.",
@@ -123,7 +123,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.LEY,
         "125",
         "líquido a ingresar",
-        "wave 70 stream 4 / corrected wave 71c",
+        "stream 4 / corrected ",
         "LIS art. 125 is procedural (declaración + ingreso + "
         "payment-in-kind via Patrimonio Histórico); the 'líquido a "
         "ingresar o devolver' arithmetic of Modelo 200 casilla 00611/"
@@ -135,7 +135,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.LEY,
         "71",
         "resumen anual",
-        "wave 70 stream 2 / corrected wave 71d",
+        "stream 2 / corrected ",
         "LIVA (Ley 37/1992) art. 71 is 'Lugar de realización de las "
         "prestaciones de servicios' (place-of-supply rules). The "
         "resumen-anual obligation (Modelo 390) lives in RIVA "
@@ -145,7 +145,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.REGLAMENTO,
         "100.3.a",
         "arrendamientos",
-        "wave 29 / corrected wave 67g",
+        " / corrected ",
         "RIRPF art. 100 has NO sub-letter structure in the BOE "
         "consolidated text (BOE-A-2007-6820). The 19% rate on "
         "arrendamientos urbanos lives in art. 100.1; art. 100.2 is "
@@ -155,7 +155,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.REGLAMENTO,
         "100.3.c",
         "ganancias",
-        "wave 57b / corrected wave 67a",
+        " / corrected ",
         "RIRPF art. 100 has NO sub-letter structure. The 19% rate on "
         "rendimientos gravados lives in art. 100.1; the pagos-a-cuenta "
         "obligation hook is art. 99.",
@@ -164,7 +164,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.REGLAMENTO,
         "105.1",
         "premios",
-        "wave 57b / corrected wave 67a",
+        " / corrected ",
         "RIRPF art. 105 covers 'Retenciones sobre las transmisiones "
         "o reembolsos de acciones y participaciones de IIC' — NOT "
         "premios en metálico. The 19% rate on premios derives from "
@@ -174,7 +174,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.REGLAMENTO,
         "110.2",
         "agrícolas",
-        "wave 57b / corrected wave 65a (tests) + wave 68a (ruleset)",
+        " / corrected (tests) + (ruleset)",
         "RIRPF art. 110.2 is the 60% reduction clause on the quarterly "
         "rendimiento. The 2% rate on actividades agrícolas/ganaderas/"
         "forestales/pesqueras lives in art. 110.1.c.",
@@ -183,7 +183,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.REGLAMENTO,
         "110.4",
         "módulos",
-        "wave 57b / corrected wave 65a (tests) + wave 68a (ruleset)",
+        " / corrected (tests) + (ruleset)",
         "RIRPF art. 110.4 is the minoración clause for low-income "
         "autónomos. The 4/3/2% rate on actividades en estimación "
         "objetiva (módulos) lives in art. 110.1.b.",
@@ -192,7 +192,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.REGLAMENTO,
         "100",
         "capital mobiliario",
-        "wave 74 stream 1 / corrected wave 75b",
+        "stream 1 / corrected ",
         "RIRPF art. 100 is 'Importe de las retenciones sobre "
         "rendimientos del arrendamiento o subarrendamiento de bienes "
         "inmuebles urbanos' — arrendamientos ONLY (art. 100.1 rate "
@@ -203,7 +203,7 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
         LegalCitationSource.LEY,
         "66",
         "cuota íntegra general",
-        "wave 74 stream 1 / corrected wave 75b",
+        "stream 1 / corrected ",
         "LIRPF art. 66 is 'Tipos de gravamen del ahorro' (base del "
         "ahorro tarifa) — narrow scope. The entry point for the "
         "general cuota íntegra chapter is LIRPF art. 62 (Cuota "

@@ -464,10 +464,7 @@ def import_(
         Path | None,
         typer.Option(
             "--from-declaracion",
-            help=(
-                "Path to an AEAT declaración (full filing copy) PDF; "
-                "produces a casilla-complete draft (#305 cluster D)."
-            ),
+            help=("Path to an AEAT declaración (full filing copy) PDF; produces a casilla-complete draft (#305)."),
         ),
     ] = None,
     from_borrador: Annotated[
@@ -477,7 +474,7 @@ def import_(
             help=(
                 "Path to an AEAT Modelo 100 (Renta) borrador / "
                 "predeclaración / declaración PDF; extracts the summary "
-                "block (#305 cluster F MVP)."
+                "block (#305 MVP)."
             ),
         ),
     ] = None,
@@ -507,12 +504,12 @@ def import_(
 
     ``--from-declaracion`` parses the full filing copy PDF and extracts
     every printed casilla value; produces a casilla-complete draft
-    ready for ``aeat filing verify`` (#305 cluster D / E).
+    ready for ``aeat filing verify`` (#305 / E).
 
     ``--from-borrador`` parses a Modelo 100 (Renta) artefact (borrador,
     predeclaración, or declaración); extracts the summary-block casillas
     and chains verification against the partial Modelo 100 ruleset
-    (#305 cluster F MVP).
+    (#305 MVP).
     """
     provided = sum(bool(flag) for flag in (from_justificante, from_declaracion, from_borrador))
     if provided == 0:
@@ -586,7 +583,7 @@ def _handle_declaracion_import(
     modelo: str | None,
     año: int | None,
 ) -> None:
-    """Dispatch the declaración (#305 cluster D + E) import path."""
+    """Dispatch the declaración (#305 + E) import path."""
     from ....adapters.inbound.declaracion import DeclaracionParseError, parse_declaracion
     from ....application.verification import verify_declaracion
 
@@ -682,7 +679,7 @@ def _handle_borrador_import(
     *,
     año: int | None,
 ) -> None:
-    """Dispatch the Modelo 100 (Renta) import path (#305 cluster F MVP)."""
+    """Dispatch the Modelo 100 (Renta) import path (#305 MVP)."""
     from ....adapters.inbound.borrador import BorradorParseError, parse_borrador
     from ....adapters.inbound.borrador._tarifa import validate_tarifa_estatal
     from ....domain.formulas import MODELO_100_SUMMARY_2025, compute_cuota_autonomica_general

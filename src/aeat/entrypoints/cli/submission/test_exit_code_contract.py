@@ -1,4 +1,4 @@
-"""Lock the submission CLI's exit-code contract (wave 131).
+"""Lock the submission CLI's exit-code contract.
 
 Kent scripts the CLI into pipelines (``aeat submission verify ...
 && aeat submission diff ...``), so every command's exit code is a
@@ -16,7 +16,7 @@ Documented exit-code convention across the sub-app:
 - **3** — draft status refusal (``export`` when draft is
   INCOMPLETE; tipo=D export without ``--iban``).
 
-Wave 131 pins this per command so a future scope change has to
+this per command so a future scope change has to
 update both the test and the command in lockstep.
 """
 

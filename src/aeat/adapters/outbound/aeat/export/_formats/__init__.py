@@ -1,4 +1,4 @@
-"""Fichero-BOE export formats per modelo (EPIC #201, wave 75d).
+"""Fichero-BOE export formats per modelo (EPIC #201,).
 
 This package houses per-modelo serialisers for the AEAT "importar
 datos" fixed-width fichero-BOE format. See

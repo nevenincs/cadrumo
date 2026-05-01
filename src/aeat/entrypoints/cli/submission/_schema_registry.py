@@ -1,6 +1,6 @@
 """Shared fichero-BOE schema registry for ``aeat submission`` commands.
 
-EPIC #305 wave 97. Factored out of :mod:`export` so that :mod:`verify`
+EPIC #305 . Factored out of :mod:`export` so that :mod:`verify`
 (and any future siblings like ``aeat submission diff``) can share the
 same ``(modelo, ejercicio) → schema module + CLI adapters`` dispatch
 without reaching across files into private underscore-prefixed names.

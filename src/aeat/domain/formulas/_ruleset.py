@@ -101,7 +101,7 @@ class Ruleset(BaseModel):
     modelo: ModeloCode
     variant: Annotated[str, Field(min_length=1, max_length=32)] = "default"
     """Disambiguates partial / alternate / regional encodings of the same
-    ``(modelo, period)``. Wave 47 implements the key-axis extension
+    ``(modelo, period)``. the key-axis extension
     committed in ``2026-04-22-ruleset-architecture-adr.md``. Existing
     canonical rulesets (130.2024, 303.2025, etc.) are ``variant="default"``;
     partials (``modelo_100.summary.2025``) and future regional variants

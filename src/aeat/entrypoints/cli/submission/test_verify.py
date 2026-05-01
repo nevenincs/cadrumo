@@ -1,4 +1,4 @@
-"""Tests for ``aeat submission verify`` (EPIC #305 wave 95 + wave 100)."""
+"""Tests for ``aeat submission verify`` (EPIC #305 +)."""
 
 from __future__ import annotations
 
@@ -110,7 +110,7 @@ class TestVerifyCommand:
         assert result.exit_code != 0
 
     def test_verify_auto_detects_modelo_and_ejercicio_from_filename(self, tmp_path: Path) -> None:
-        """Wave 97: {NIF}{YYYY}{PERIODO}.{modelo} filename parses without explicit flags."""
+        """{NIF}{YYYY}{PERIODO}.{modelo} filename parses without explicit flags."""
         path = _export_then_path(tmp_path, modelo="303", period="2024Q1")
         # No --modelo / --ejercicio passed.
         result = _runner.invoke(app, ["verify", str(path)])
@@ -129,7 +129,7 @@ class TestVerifyCommand:
         assert "cannot infer" in result.stdout
 
     def test_verify_json_modelo_130(self, tmp_path: Path) -> None:
-        """Wave 100: --json emits a JSON document with the decoded casillas."""
+        """--json emits a JSON document with the decoded casillas."""
         path = _export_then_path(tmp_path, modelo="130", period="2024Q1")
         result = _runner.invoke(app, ["verify", str(path), "--json"])
         assert result.exit_code == 0, result.stdout
@@ -144,7 +144,7 @@ class TestVerifyCommand:
         assert casillas["01"] == "10000.00"
 
     def test_verify_json_modelo_303(self, tmp_path: Path) -> None:
-        """Wave 100: --json works on envelope schemas, listing segment IDs."""
+        """--json works on envelope schemas, listing segment IDs."""
         path = _export_then_path(tmp_path, modelo="303", period="2024Q1")
         result = _runner.invoke(app, ["verify", str(path), "--json"])
         assert result.exit_code == 0, result.stdout
@@ -156,7 +156,7 @@ class TestVerifyCommand:
         assert len(segments) == 8
         assert "DP30300" in segments
         assert "DP30301" in segments
-        # Wave 103: envelope fields surface the merged NIF / periodo / tipo.
+        # envelope fields surface the merged NIF / periodo / tipo.
         fields = cast(dict[str, Any], doc["fields"])
         assert fields["DP30301_F007_IDENTIFICACI_N_NIF"] == "X1234567L"
         assert fields["DP30301_F010_DEVENGO_PER_ODO"] == "1T"

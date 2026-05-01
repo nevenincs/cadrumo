@@ -1,4 +1,4 @@
-"""Public ``parse_declaracion`` entry point (EPIC #305 cluster D)."""
+"""Public ``parse_declaracion`` entry point (EPIC #305)."""
 
 from __future__ import annotations
 

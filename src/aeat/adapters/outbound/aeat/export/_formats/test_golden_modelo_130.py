@@ -1,11 +1,11 @@
-"""Golden-fixture byte-exactness tests for Modelo 130 (wave 84).
+"""Golden-fixture byte-exactness tests for Modelo 130.
 
 These tests pin the full 880-byte serialiser output for a known-good
 Kent filing scenario. Any future change to the schema, encoder, or
 serialiser that alters a single byte will fail this test immediately.
 
 The SHA256 digest is the audit-trail anchor: a future wave that
-genuinely needs to change the byte layout (e.g., wave 85+ offset
+genuinely needs to change the byte layout (e.g., + offset
 correction after a manual AEAT portal-upload test) must update
 this file AND document the reason in the commit message. A stray
 byte shift should NEVER pass silently.

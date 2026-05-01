@@ -1,4 +1,4 @@
-"""Fichero-BOE serialiser reading `RECORD_SPECS` (EPIC #201 C3b, wave 79b).
+"""Fichero-BOE serialiser reading `RECORD_SPECS` (EPIC #201 C3b,).
 
 Per the :doc:`fichero-BOE export ADR` the serialiser is format-generic:
 one function drives every modelo via its `RECORD_SPECS` tuple. A
@@ -105,7 +105,7 @@ def serialise(
                             f"Decimal in headers; got {type(header_val).__name__}"
                         )
                     value = header_val
-                # Wave 85b: route inline-sign per-field via spec metadata.
+                # route inline-sign per-field via spec metadata.
                 inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
                 parts.append(
                     encode_currency(
@@ -156,7 +156,7 @@ def serialise_envelope(
     encoding: FicheroBoeEncoding,
     required_field_ids: frozenset[str] = frozenset(),
 ) -> bytes:
-    """Emit a multi-segment fichero-BOE envelope (EPIC #201, wave 82a).
+    """Emit a multi-segment fichero-BOE envelope (EPIC #201,).
 
     Modelo 303+ use an XML-tagged envelope of ordered segments rather
     than a flat record. This helper serialises each segment via

@@ -4,7 +4,7 @@ Codifies the régimen general arithmetic of the autoliquidación
 trimestral de IVA: IVA devengado on operaciones interiores
 (casillas 01-09), IVA deducible (casillas 28-45) and the
 resultado de la liquidación (casillas 64-71). Out-of-scope for
-this wave (per the wave-2 ADR
+this wave (per the ADR
 ``2026-04-17-modelo-303-formulas-adr.md``):
 
 - Régimen simplificado, REAGP, REBU, recargo de equivalencia
@@ -17,7 +17,7 @@ this wave (per the wave-2 ADR
 
 The 2024 and 2025 rulesets are mechanically identical because
 LIVA arts. 90 / 91 régimen general rates were not amended
-between the two years (see the wave-2 research doc
+between the two years (see the doc
 ``2026-04-17-modelo-303-casilla-rules-research.md`` §"Mid-year
 rule changes"). The shared casilla and citation tuples live in
 this module; the 2025 sibling re-imports them.
@@ -447,7 +447,7 @@ _CASILLAS = (
 
 
 # Casillas 64 and 71 are pass-through casillas in v1 (they equal 45
-# and 69 respectively). The wave-1 engine's :class:`AddFormula`
+# and 69 respectively). The engine's :class:`AddFormula`
 # requires ``min_length=2`` operands; we add ``Literal("0")`` as the
 # second operand to keep the formula DSL within its declared
 # arity. The terminal :class:`RoundFormula` quantises to 2 dp and

@@ -12,7 +12,7 @@ routes through this surface so the on-disk record is always the
 encrypted envelope.
 
 Sensitivity classification: drafts carry per-line casilla arithmetic
-that drives the exact tax due. Per the Wave-1 default policy table,
+that drives the exact tax due. Per the policy table,
 that is :class:`SensitivityClass.FINANCIAL`; the gate at
 :func:`load_encrypted_envelope` rejects payloads whose recorded class
 drifted.

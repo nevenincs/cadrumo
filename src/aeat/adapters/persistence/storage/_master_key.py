@@ -10,7 +10,7 @@ protocol:
   persists it.
 - :class:`FileFallbackMasterKeyProvider` — backed by a passphrase-
   derived KEK (Argon2id) wrapping an AES-256-GCM master key persisted
-  alongside a per-store random salt. Wave-12 migrated the KDF from
+  alongside a per-store random salt. the KDF from
   scrypt to Argon2id; the historical (v1, scrypt) format is no longer
   loadable and must be migrated via :func:`migrate_master_key_kdf`.
 - :class:`EphemeralMasterKeyProvider` — an in-memory provider used
@@ -102,12 +102,12 @@ _SALT_SIZE: Final[int] = 16
 _KDF_PARAMS_VERSION: Final[int] = 2
 """Bumped when the on-disk KDF parameter shape changes.
 
-* v1: scrypt (N=2**17, r=8, p=1). Wave-1 through wave-11.
-* v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1). Wave-12.
+* v1: scrypt (N=2**17, r=8, p=1). .
+* v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1). .
 """
 
 _LEGACY_KDF_PARAMS_VERSION: Final[int] = 1
-"""Wave-1..11 KDF parameter version. Read-only — only the migration helper consumes it."""
+"""..11 KDF parameter version. Read-only — only the migration helper consumes it."""
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

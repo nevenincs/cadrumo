@@ -1,4 +1,4 @@
-"""Lock the public JSON contract for every ``--json`` CLI emitter (wave 126).
+"""Lock the public JSON contract for every ``--json`` CLI emitter.
 
 The submission CLI ships four commands with machine-readable
 ``--json`` output: ``verify``, ``diff``, ``schemas``, ``check-nif``.

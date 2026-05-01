@@ -24,7 +24,7 @@ asserts:
 3. The fixture's raw bytes do not contain any leak-marker string
    from the synthetic mapping (e.g. ``REPLACE_WITH_REAL``).
 
-Until phase 9 lands the first fixtures, the test parametrise is
+Until lands the first fixtures, the test parametrise is
 empty and pytest reports zero collected items — that is the
 intended skip-clean state for CI runs that lack scratch captures.
 """
@@ -48,7 +48,7 @@ def _project_root() -> Path:
 def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
     """Return ``(pdf_path, sidecar_json_path)`` for every committed fixture.
 
-    Returns an empty list when no fixtures have landed yet — phase 9
+    Returns an empty list when no fixtures have landed yet —
     of the plan populates the directory.
     """
     fixture_root = _project_root() / "tests" / "fixtures" / "justificantes"
@@ -151,7 +151,7 @@ def test_fixture_root_is_skip_clean_when_empty() -> None:
     state observable in CI summaries.
     """
     if not _FIXTURE_PAIRS:
-        # No fixtures committed yet. Phase 9 of the plan lands the
+        # No fixtures committed yet. of the plan lands the
         # first three; until then this file is structurally green.
         return
     # Otherwise the parametrised tests above are the real work.

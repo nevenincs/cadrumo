@@ -1,6 +1,6 @@
 """Ruleset registry — maps ``(modelo, variant, period)`` to a :class:`Ruleset`.
 
-Wave 47 extends the registry key from ``(modelo, period)`` to
+the registry key from ``(modelo, period)`` to
 ``(modelo, variant, period)``. The ``variant`` axis disambiguates
 partial (``summary``), alternate (``full``), and regional
 (``canarias``) encodings of the same modelo+period. See
@@ -32,7 +32,7 @@ class RulesetRegistry(BaseModel):
     rulesets: tuple[Ruleset, ...] = Field(default_factory=tuple)
 
     def model_post_init(self, _context: object) -> None:
-        # Overlap check runs per (modelo, variant) slot — wave 47 ADR §1.
+        # Overlap check runs per (modelo, variant) slot — ADR §1.
         by_slot: dict[tuple[ModeloCode, str], list[Ruleset]] = {}
         for ruleset in self.rulesets:
             by_slot.setdefault((ruleset.modelo, ruleset.variant), []).append(ruleset)

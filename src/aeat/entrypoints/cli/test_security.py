@@ -145,7 +145,7 @@ def test_rotate_refuses_when_recovery_wrapping_exists_without_flag(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Wave-24 H-1 regression: rotate-master-key MUST NOT silently
+    # regression: rotate-master-key MUST NOT silently
     # proceed when ``master.recovery.key`` exists and the operator
     # hasn't told us how to update it. Without the fence, the
     # wrapping would keep holding the OLD master-key bytes and a
@@ -193,7 +193,7 @@ def test_rotate_with_regenerate_recovery_produces_recoverable_new_key(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Wave-24 H-1 regression: --regenerate-recovery-key mints a
+    # regression: --regenerate-recovery-key mints a
     # fresh mnemonic + re-wraps the NEW master key. Decoding the new
     # mnemonic and unwrapping master.recovery.key must yield the
     # NEW master-key bytes (not the old).
@@ -260,7 +260,7 @@ def test_rotate_with_recovery_key_preserves_existing_mnemonic(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Wave-24 H-1 regression: --recovery-key "<existing mnemonic>"
+    # regression: --recovery-key "<existing mnemonic>"
     # re-wraps the NEW master key under the SAME KEK so the
     # operator's previously-printed mnemonic remains valid.
     import secrets
@@ -322,7 +322,7 @@ def test_rotate_recovery_key_must_match_old_key_file(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Wave-24 H-1 defensive: --recovery-key + --old-key-file must
+    # defensive: --recovery-key + --old-key-file must
     # agree. If the supplied mnemonic decrypts master.recovery.key
     # to bytes that don't match --old-key-file, the operator has
     # provided inconsistent inputs and the rotation must refuse
@@ -397,7 +397,7 @@ def test_same_key_rejected(
 
 
 class TestVerifyCorpus:
-    """Wave-11 corpus integrity manifest CLI."""
+    """integrity manifest CLI."""
 
     def _seed_casillas(self, root: Path) -> None:
         root.mkdir(parents=True, exist_ok=True)
@@ -486,7 +486,7 @@ def test_malformed_key_file_rejected(
 
 
 class TestMigrateMasterKeyKdf:
-    """Wave-12 scrypt -> Argon2id master.kdf migration CLI."""
+    """scrypt -> Argon2id master.kdf migration CLI."""
 
     @staticmethod
     def _seed_v1_store(tmp_path: Path, *, passphrase: str) -> tuple[Path, bytes]:
@@ -726,7 +726,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # Wave-22 M-3 regression: provisioning the keyring backend
+        # regression: provisioning the keyring backend
         # over an existing keychain entry without --force used to
         # silently FETCH the old key and regenerate the recovery
         # wrapping, invalidating the operator's previously-printed

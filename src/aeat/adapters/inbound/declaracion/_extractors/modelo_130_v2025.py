@@ -290,7 +290,7 @@ def _derive_status(
     values: list[ExtractedCasilla],
     warnings: list[ExtractionWarning],
 ) -> ExtractionStatus:
-    # Aligned with GenericDeclaracionExtractor (#305 wave 18 H2): multi-hit
+    # Aligned with GenericDeclaracionExtractor (#305 H2): multi-hit
     # or structurally-downgraded casillas (confidence < 1.0) do NOT count
     # toward COMPLETE; they stay resolved for PARTIAL-coverage math only.
     resolved_ids = {v.casilla_id for v in values}

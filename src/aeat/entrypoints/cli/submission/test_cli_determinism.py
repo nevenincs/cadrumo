@@ -1,4 +1,4 @@
-"""CLI determinism lock: identical inputs → byte-identical outputs (wave 141).
+"""CLI determinism lock: identical inputs → byte-identical outputs.
 
 A foundational Kent-observable guarantee: running
 ``aeat submission export`` twice with the same draft must produce
@@ -10,7 +10,7 @@ serialiser.
 The serialiser itself is fundamentally deterministic (pure
 function of inputs), but import-time state (env vars, random
 seeds, hash randomisation, file-system timestamps) can leak into
-the output through careless dependencies. Wave 141 locks that no
+the output through careless dependencies. that no
 such leak exists at the CLI boundary.
 
 Exercised for every registered schema so a future Modelo 390 or

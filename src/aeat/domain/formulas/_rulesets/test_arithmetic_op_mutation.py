@@ -1,6 +1,6 @@
-"""Arithmetic-op-class mutation harness (issue #457 Wave 6 closure).
+"""Arithmetic-op-class mutation harness (issue #457 closure).
 
-Closes the operator-class-typo deferral catalogued in the Wave 5
+Closes the operator-class-typo deferral catalogued in the
 audit: a typo where the author wrote ``add_op`` but meant ``sub_op``
 (or vice versa) was previously NOT exercised by any mutator. The
 existing operand-swap harness covers operand-order regressions

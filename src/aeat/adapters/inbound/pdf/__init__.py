@@ -1,4 +1,4 @@
-"""Shared primitives for the project's PDF-import families (#305 cluster A).
+"""Shared primitives for the project's PDF-import families (#305).
 
 The :mod:`aeat._pdf_import` package owns types and errors that every
 per-PDF-class module under :mod:`aeat.justificante`, :mod:`aeat.declaracion`,

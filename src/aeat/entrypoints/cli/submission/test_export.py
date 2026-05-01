@@ -1,4 +1,4 @@
-"""Tests for ``aeat submission export`` (EPIC #201 C3c, wave 81)."""
+"""Tests for ``aeat submission export`` (EPIC #201 C3c,)."""
 
 from __future__ import annotations
 
@@ -107,7 +107,7 @@ class TestExportCommand:
         assert output_path.exists()
 
     def test_modelo_303_2024_q1_writes_envelope_file(self, tmp_path: Path) -> None:
-        """Wave 92: 303 dispatches through the multi-segment envelope path."""
+        """303 dispatches through the multi-segment envelope path."""
         draft = _write_draft(tmp_path, modelo="303")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -145,7 +145,7 @@ class TestExportCommand:
         assert payload.endswith(b"\r\n")
 
     def test_modelo_303_2025_routes_to_clone_schema(self, tmp_path: Path) -> None:
-        """Wave 94: 303 2025 re-exports the 2024 envelope verbatim."""
+        """303 2025 re-exports the 2024 envelope verbatim."""
         draft = _write_draft(tmp_path, modelo="303", period="2025Q3")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -227,7 +227,7 @@ class TestExportCommand:
         assert "REFUSED" in result.stdout
 
     def test_modelo_303_devolucion_stamps_iban_into_dp303did(self, tmp_path: Path) -> None:
-        """Wave 101: tipo=D export stamps IBAN + SEPA marker into DP303DID."""
+        """tipo=D export stamps IBAN + SEPA marker into DP303DID."""
         draft = _write_draft(tmp_path, modelo="303")
         output_dir = tmp_path / "out"
         result = _runner.invoke(
@@ -318,7 +318,7 @@ class TestExportCommand:
         draft_path.write_text(json.dumps(raw), encoding="utf-8")
 
     def test_invalid_nif_check_letter_rejected(self, tmp_path: Path) -> None:
-        """Wave 106: X1234567Z fails the AEAT check-letter algorithm
+        """X1234567Z fails the AEAT check-letter algorithm
         (correct letter is L); export must refuse before any bytes land."""
         draft = _write_draft(tmp_path)
         self._rewrite_nif(draft, "X1234567Z")

@@ -1,4 +1,4 @@
-"""End-to-end integration for Modelo 303 2024 (wave 109).
+"""End-to-end integration for Modelo 303 2024.
 
 Kent's IVA Q1 2024 scenario through both Track A (envelope
 serialiser) and Track B (formula ruleset) in a single pytest.
@@ -7,11 +7,11 @@ Feeds his régimen-general base imponible (casilla 07 = 20 000 € at
 21 %) into the Modelo 303 2024 ruleset, lets the engine derive all
 12 downstream casillas (rates, cuotas, totals), and proves that
 serialising the result to the 7994-byte fichero-BOE envelope yields
-the wave-109 golden SHA256 + round-trips back byte-exactly.
+the SHA256 + round-trips back byte-exactly.
 
 Ruleset + schema share a known mapping gap: casillas 45, 64, 67,
 71 are declared in the ruleset but have no fields in the 303 DR
-fixture (the wave-87 xlsx extraction missed the cuota-devengada-
+fixture (the extraction missed the cuota-devengada-
 total / diferencia / a-ingresar rollup block — see
 ``_EXPECTED_GAPS["303.2024"]`` in test_ruleset_schema_coverage.py
 and the matching note in tests/fixtures/dr_specs/dr303e24.json
@@ -107,7 +107,7 @@ class TestKentE2EModelo303Q12024:
             "  - the Modelo 303 2024 ruleset changed a formula (Track B), OR\n"
             "  - the schema/serialiser shifted a byte (Track A), OR\n"
             "  - casillas 45 / 64 / 67 / 71 gained schema fields,\n"
-            "    closing the wave-109/113 gap (update _EXPECTED_GAPS too).\n"
+            " closing the /113 gap (update _EXPECTED_GAPS too).\n"
             "Pick one, update the `expected` literal, and explain in the commit."
         )
 
@@ -116,7 +116,7 @@ class TestKentE2EModelo303Q12024:
         carries must round-trip byte-exactly through deserialise_envelope.
 
         Casillas 45, 64, 67, 71 are declared in the ruleset but have no
-        schema field (see wave-113 _EXPECTED_GAPS and wave-114 fixture
+        schema field (see _EXPECTED_GAPS and fixture
         source.notes), so they are excluded from the comparison via
         :func:`_schema_casilla_ids`.
         """
@@ -139,7 +139,7 @@ class TestKentE2EModelo303Q12024:
 
 
 class TestKentE2EModelo303Q12025:
-    """Wave 110: 2025 ejercicio end-to-end. Orden HAC/819/2024 governs
+    """2025 ejercicio end-to-end. Orden HAC/819/2024 governs
     both 2024 and 2025 Modelo 303 filings, so the 2025 ruleset + schema
     clones must compute + serialise identically modulo the EJERCICIO stamps.
     """

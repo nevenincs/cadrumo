@@ -1,4 +1,4 @@
-"""Unit tests for the Phase 1 TTY helpers."""
+"""Unit tests for the TTY helpers."""
 
 from __future__ import annotations
 

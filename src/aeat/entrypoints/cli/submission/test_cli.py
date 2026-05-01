@@ -41,12 +41,12 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture()
 def draft_path(tmp_path: Path, isolated_dirs: Path) -> Path:
-    """Persist an approved draft via the wave-4 FilingDraftRepository envelope path.
+    """Persist an approved draft via the envelope path.
 
     The CLI's preflight loader prefers the envelope path; this fixture
     writes the approved draft through ``FilingDraftRepository.save``
     so the loader's primary code path runs (the legacy plaintext-JSON
-    fallback in ``_CliDraftLoader`` does not understand the wave-1+
+    fallback in ``_CliDraftLoader`` does not understand the +
     ``tuple[FilingValue, ...]`` shape and is reserved for older
     fixtures).
     """
@@ -151,7 +151,7 @@ class TestPreflightCommand:
         expected_fragment: str,
     ) -> None:
         # Build an approved draft, downgrade its status to a non-
-        # preflight-eligible value, persist via the wave-4 envelope
+        # preflight-eligible value, persist via the envelope
         # repository (ciphertext at rest), and preflight should refuse.
         from ....adapters.persistence.storage import (
             EncryptedBlobStore,
@@ -203,7 +203,7 @@ class TestPreflightCommand:
         # Persisting a transaction catalogue with NOT_YET_PROCESSED
         # rows means the approved draft's review checksum no longer
         # matches the live state — preflight must mark it stale via
-        # the wave-4 envelope-repository round-trip.
+        # the envelope-repository round-trip.
         from ....application.filing._repository import FilingDraftRepository
 
         TransactionCatalogueRepository(store_dir=isolated_dirs / "transactions").save(

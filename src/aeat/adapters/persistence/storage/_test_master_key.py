@@ -281,9 +281,9 @@ class TestKeyringFailureSurfaces:
 
 
 class TestTornStateGate:
-    """Wave-28 HIGH-1: get_master_key must refuse on torn install state.
+    """get_master_key must refuse on torn install state.
 
-    The wave-26 ``complete_recovery`` write order is master.key →
+    The ``complete_recovery`` write order is master.key →
     master.kdf → salt; a crash between writes used to silently re-mint
     over the partial state via ``_mint_new``, destroying the recovered
     master.key bytes. The new gate raises
@@ -382,7 +382,7 @@ class TestSecurityHardening:
     ) -> None:
         """The callback must NOT pop the env var.
 
-        Wave-28 reverses the earlier "pop on first read" policy. The
+        the earlier "pop on first read" policy. The
         cache in ``FileFallbackMasterKeyProvider`` is reset under
         legitimate flows (recover re-mints, test sessions cycle the
         cache between sub-tests), and a popped env var blocks the
@@ -516,7 +516,7 @@ class TestFactory:
         # backend rejects the operation rather than silently routing
         # through file. ``MasterKeyKeychainLockedError`` is the
         # narrow class for "backend works but get_password refused"
-        # (the wave-17 keychain-locked taxonomy);
+        # (the keychain-locked taxonomy);
         # ``KeyringUnavailableError`` covers no-backend / package-
         # missing failures. Both extend the substrate's
         # ``SecretStoreError`` parent — accept either so the test
@@ -533,7 +533,7 @@ class TestFactory:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # Wave-26 M-4: when the keyring backend is genuinely
+        # when the keyring backend is genuinely
         # unusable (no usable backend, package missing,
         # ``fail.Keyring`` no-op installed), auto falls back to
         # file unconditionally — there is no keychain-backed
@@ -559,7 +559,7 @@ class TestFactory:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # Wave-26 M-4 regression: when the keychain is LOCKED
+        # regression: when the keychain is LOCKED
         # (backend works, get_password refused — Touch ID
         # cancelled, libsecret locked, etc.) AND no file-fallback
         # artefacts exist, auto must NOT silently mint a fresh
@@ -593,7 +593,7 @@ class TestFactory:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # Wave-26 M-4: when the keychain is LOCKED AND
+        # when the keychain is LOCKED AND
         # file-fallback artefacts already exist, auto routes
         # through file safely — the operator has previously
         # chosen the file backend (or already provisioned both).
@@ -813,7 +813,7 @@ class TestWave12KdfMigration:
         original v1 bytes survive on disk.
 
         Under the LEGACY ``_write_bytes_secure`` path that the
-        wave-12 migration used to call, ``master.key`` was opened
+        used to call, ``master.key`` was opened
         with ``O_TRUNC`` directly — the inode was zeroed before the
         write completed. A mid-write crash left ``master.key``
         partially-written or empty with no recovery path. Patching
