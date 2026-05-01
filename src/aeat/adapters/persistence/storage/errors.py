@@ -15,6 +15,7 @@ The class tree:
 from __future__ import annotations
 
 from ....core.errors import AeatError
+from ....core.locks import LockAcquisitionError
 
 
 class StorageError(AeatError):
@@ -137,10 +138,6 @@ class UnsecuredModeRefusedError(SecretStoreError):
        published deterministic master key; the substrate refuses to write
        such records into the unsecured store.
     """
-
-
-class LockAcquisitionError(PersistenceError):
-    """Raised when an exclusive file lock cannot be acquired within the timeout."""
 
 
 class ClassificationError(PersistenceError):

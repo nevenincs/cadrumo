@@ -18,12 +18,12 @@ from pydantic import ValidationError
 from ...core.config import Settings
 from ...core.i18n import Translatable
 from ...core.logging import get_logger
-from ...domain.financial.invoices import (
+from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     PaymentStatus,
 )
-from ...domain.financial.transactions import (
+from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
@@ -132,7 +132,7 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
 
 
 def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
-    from ...domain.financial.transactions._repository import TransactionCatalogueRepository
+    from ...domain.transactions._repository import TransactionCatalogueRepository
 
     store_dir = settings.aeat_financial_txs_dir.resolve()
     repository = TransactionCatalogueRepository(store_dir=store_dir)
@@ -196,7 +196,7 @@ def invoices_pending(
 
 
 def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
-    from ...domain.financial.invoices._repository import InvoiceCatalogueRepository
+    from ...domain.invoices._repository import InvoiceCatalogueRepository
 
     store_dir = settings.aeat_invoices_dir.resolve()
     repository = InvoiceCatalogueRepository(store_dir=store_dir)

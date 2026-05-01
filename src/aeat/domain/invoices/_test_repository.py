@@ -142,7 +142,7 @@ class TestCiphertextOnDisk:
             bad,
             store_dir / "invoices.envelope.json",
             master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.domain.financial.invoices.catalogue.v1",
+            hkdf_context=b"aeat.domain.invoices.catalogue.v1",
         )
         repo = InvoiceCatalogueRepository(store_dir=store_dir)
         with pytest.raises(ClassificationError):
@@ -177,7 +177,7 @@ class TestCiphertextOnDisk:
             foreign,
             store_dir / "invoices.envelope.json",
             master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.domain.financial.transactions.catalogue.v1",
+            hkdf_context=b"aeat.domain.transactions.catalogue.v1",
         )
         repo = InvoiceCatalogueRepository(store_dir=store_dir)
         with pytest.raises(DecryptionError):

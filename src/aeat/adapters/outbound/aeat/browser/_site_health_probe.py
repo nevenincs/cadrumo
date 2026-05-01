@@ -4,7 +4,7 @@ Thin shim around :func:`aeat.adapters.outbound.aeat.browser._site_health_parsers
 session navigation hook calls after every ``page.goto``. Keeping this
 helper isolated in its own module makes the forbidden-import guard
 trivial: this module MUST NOT import anything from :mod:`aeat.adapters.outbound.aeat.auth`,
-:mod:`aeat.application.filing`, or :mod:`aeat.domain.financial`.
+:mod:`aeat.application.filing`, or :mod:`aeat.adapters.inbound.financial`.
 """
 
 from __future__ import annotations

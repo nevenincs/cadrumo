@@ -1,7 +1,7 @@
 """Immutable invoice catalogue surface for the financial pipeline.
 
 Public surface — callers must import invoice models, errors, and service
-functions exclusively from ``aeat.domain.financial.invoices`` and must not
+functions exclusively from ``aeat.domain.invoices`` and must not
 reach into the private underscore modules inside this package.
 
 See ``.vault/adr/2026-04-17-invoice-catalogue-adr.md`` for the full

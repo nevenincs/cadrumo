@@ -25,7 +25,7 @@ from pathlib import Path
 from ...core.logging import get_logger
 from ._models import InvoiceCatalogue
 
-_HKDF_CONTEXT_INVOICE_CATALOGUE = b"aeat.domain.financial.invoices.catalogue.v1"
+_HKDF_CONTEXT_INVOICE_CATALOGUE = b"aeat.domain.invoices.catalogue.v1"
 
 _log = get_logger(__name__)
 

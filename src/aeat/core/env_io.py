@@ -73,7 +73,7 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
         import contextlib
 
         with contextlib.suppress(Exception):  # pragma: no cover - defensive
-            from ..adapters.persistence.storage._lock import fsync_parent_dir
+            from .locks import fsync_parent_dir
 
             fsync_parent_dir(path)
     finally:

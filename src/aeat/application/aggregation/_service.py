@@ -14,7 +14,7 @@ from ...domain.categories import (
     SpendingCategory,
     load_category_profiles_from_manual,
 )
-from ...domain.financial.transactions import (
+from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,

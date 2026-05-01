@@ -4,7 +4,7 @@ The profile carries business / personal split percentages — FINANCIAL
 class per the default policy table. Both helpers route through the
 substrate's encrypted-envelope writers so the on-disk record is always
 AES-256-GCM ciphertext under HKDF context
-``aeat.domain.financial.usage_ratios.profile.v1``.
+``aeat.domain.usage_ratios.profile.v1``.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 __all__ = ["load_usage_ratios", "save_usage_ratios"]
 
 _LOGGER = get_logger(__name__)
-_HKDF_CONTEXT_USAGE_RATIOS = b"aeat.domain.financial.usage_ratios.profile.v1"
+_HKDF_CONTEXT_USAGE_RATIOS = b"aeat.domain.usage_ratios.profile.v1"
 _USAGE_RATIO_VERSION = 1
 
 
@@ -31,7 +31,7 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
     A missing file is not an error — it is the virgin state — so this helper
     returns an empty :class:`UsageRatioProfile` in that case. The on-disk
     record is a :class:`CipherEnvelope` written under HKDF context
-    ``aeat.domain.financial.usage_ratios.profile.v1`` at FINANCIAL class.
+    ``aeat.domain.usage_ratios.profile.v1`` at FINANCIAL class.
 
     Args:
         path: Filesystem path of the usage-ratio envelope file.

@@ -40,7 +40,7 @@ class UsageRatioProfile(BaseModel):
 
     The ``ratios`` field holds a mapping from :class:`SpendingCategory` to a
     :class:`~decimal.Decimal` in the inclusive ``[0, 1]`` range. Only categories
-    whose :class:`~aeat.domain.financial.categories.ProportionalityRule` kind is
+    whose :class:`~aeat.domain.categories.ProportionalityRule` kind is
     ``USAGE_RATIO_HOME_AREA`` or ``USAGE_RATIO_PERSONAL`` may be persisted;
     every other kind is rejected by the cross-field validator.
 
@@ -91,7 +91,7 @@ class UsageRatioProfile(BaseModel):
 def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -> Decimal | None:
     """Return Kent's persisted ratio for a category, or ``None`` if unset.
 
-    Pure helper consumed by :mod:`aeat.domain.financial.deductibility` (issue #257).
+    Pure helper consumed by :mod:`aeat.adapters.inbound.financial.deductibility` (issue #257).
     When the return value is ``None`` the caller falls back to
     ``ProportionalityRule.default_ratio`` and records the resolution source in
     the transaction trace fields.

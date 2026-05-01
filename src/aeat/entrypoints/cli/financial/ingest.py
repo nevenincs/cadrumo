@@ -11,11 +11,11 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from ....domain.financial import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider, detect_provider
-from ....domain.financial.providers import FinancialProviderError, RawTransaction
+from ....adapters.inbound.financial import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider, detect_provider
+from ....adapters.inbound.financial.providers import FinancialProviderError, RawTransaction
 
 if TYPE_CHECKING:
-    from ....domain.financial.transactions import ImportSummary
+    from ....domain.transactions import ImportSummary
 
 _CONSOLE = Console()
 
@@ -130,8 +130,8 @@ def _persist_transactions(
     Alembic plugin discovery during import.
     """
     from ....core.config import load_settings
-    from ....domain.financial.transactions import TransactionCatalogueRepository
-    from ....domain.financial.transactions._enums import TransactionDirection
+    from ....domain.transactions import TransactionCatalogueRepository
+    from ....domain.transactions._enums import TransactionDirection
 
     def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
         # Zero-amount rows (fee waivers, FX-zero adjustments, paired

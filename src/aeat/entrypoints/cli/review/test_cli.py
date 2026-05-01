@@ -27,8 +27,8 @@ from ....application.sync import (
     ModeloIdentifier,
 )
 from ....core.i18n import Translatable
-from ....domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ....domain.financial.invoices import (
+from ....adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceKind,
@@ -36,8 +36,8 @@ from ....domain.financial.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from ....domain.financial.invoices._repository import InvoiceCatalogueRepository
-from ....domain.financial.transactions import (
+from ....domain.invoices._repository import InvoiceCatalogueRepository
+from ....domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,

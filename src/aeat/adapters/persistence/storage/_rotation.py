@@ -340,15 +340,15 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
     return (
         RotationPlanEntry(
             store_dir=Path(settings.aeat_financial_txs_dir),
-            hkdf_context=b"aeat.domain.financial.transactions.catalogue.v1",
+            hkdf_context=b"aeat.domain.transactions.catalogue.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.aeat_invoices_dir),
-            hkdf_context=b"aeat.domain.financial.invoices.catalogue.v1",
+            hkdf_context=b"aeat.domain.invoices.catalogue.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.aeat_attachments_dir) / "manifests",
-            hkdf_context=b"aeat.domain.financial.attachments.manifest.v1",
+            hkdf_context=b"aeat.domain.attachments.manifest.v1",
         ),
         RotationPlanEntry(
             # Single-file envelope: ``aeat_usage_ratios_path`` defaults
@@ -357,7 +357,7 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
             # filename rather than relying on the directory walk's
             # default suffix match (which would miss this file).
             store_dir=Path(settings.aeat_usage_ratios_path).parent,
-            hkdf_context=b"aeat.domain.financial.usage_ratios.profile.v1",
+            hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
             target_filename=Path(settings.aeat_usage_ratios_path).name,
         ),
         RotationPlanEntry(
@@ -476,7 +476,7 @@ def default_blob_store_roots(settings: Any) -> tuple[Path, ...]:
       by :func:`get_secret_store` for opaque-bearer credentials, OAuth
       refresh tokens, and identity records.
     - The financial-attachments store (``aeat_attachments_dir``), wired
-      up by :class:`aeat.domain.financial.attachments.AttachmentStore` for
+      up by :class:`aeat.domain.attachments.AttachmentStore` for
       receipts, invoices, and bank statements.
 
     Each root is a directory whose ``blobs/<hex[:2]>/<hex>.manifest.json``

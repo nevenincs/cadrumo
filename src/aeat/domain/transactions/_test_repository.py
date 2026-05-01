@@ -19,7 +19,7 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
-from ..financial._raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...adapters.inbound.financial._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ._enums import TransactionDirection
 from ._repository import (
     ImportSummary,
@@ -210,7 +210,7 @@ class TestCiphertextOnDisk:
             bad,
             store_dir / "transactions.envelope.json",
             master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.domain.financial.transactions.catalogue.v1",
+            hkdf_context=b"aeat.domain.transactions.catalogue.v1",
         )
         repo = TransactionCatalogueRepository(store_dir=store_dir)
         with pytest.raises(ClassificationError):

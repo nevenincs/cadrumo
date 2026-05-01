@@ -372,7 +372,7 @@ def save_encrypted_envelope(
         path: Destination file. Parent directory is created if absent.
         master_key_provider: Source of the master key.
         hkdf_context: Per-consumer context bytes (e.g.
-            ``b"aeat.domain.financial.transactions.v1"``). Different
+            ``b"aeat.domain.transactions.v1"``). Different
             consumers MUST use distinct contexts so cross-consumer
             ciphertext substitution fails.
     """

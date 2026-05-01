@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ....domain.financial import RawProvenance, SourceFormat
-from ....domain.financial.providers import RawTransaction
-from ....domain.financial.transactions import (
+from ....adapters.inbound.financial import RawProvenance, SourceFormat
+from ....adapters.inbound.financial.providers import RawTransaction
+from ....domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
