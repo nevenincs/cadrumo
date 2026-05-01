@@ -37,7 +37,7 @@ from ....domain.financial.invoices import (
     PaymentStatus,
 )
 from ....domain.financial.invoices._repository import InvoiceCatalogueRepository
-from ....domain.financial.transactions import (
+from ....domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,

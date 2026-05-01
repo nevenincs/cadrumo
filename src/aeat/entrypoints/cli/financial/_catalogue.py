@@ -14,7 +14,7 @@ from pathlib import Path
 import typer
 
 from ....core.config import load_settings
-from ....domain.financial.transactions import (
+from ....domain.transactions import (
     TransactionCatalogue,
     TransactionError,
 )
@@ -27,7 +27,7 @@ def catalogue_dir() -> Path:
 
 def catalogue_repository():
     """Return a :class:`TransactionCatalogueRepository` bound to the configured store dir."""
-    from ....domain.financial.transactions import TransactionCatalogueRepository
+    from ....domain.transactions import TransactionCatalogueRepository
 
     return TransactionCatalogueRepository(store_dir=catalogue_dir())
 

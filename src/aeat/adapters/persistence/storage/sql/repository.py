@@ -2,7 +2,7 @@
 
 Each repository exposes a small, explicit CRUD surface against its pydantic
 record type. The repositories translate between the public records and the
-internal :mod:`aeat.adapters.persistence.storage._orm` mapper classes on every boundary crossing.
+internal :mod:`aeat.adapters.persistence.storage.sql._orm` mapper classes on every boundary crossing.
 """
 
 from __future__ import annotations
@@ -13,9 +13,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ....core.logging import get_logger
+from .....core.logging import get_logger
+from ..errors import RepositoryError
 from . import _orm
-from .errors import RepositoryError
 from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 
 _log = get_logger(__name__)

@@ -20,16 +20,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.filing import FilingDraftStatus
 
-SYNTHETIC_COMMENT_REQUIRED_SUBSTRING = "SYNTHETIC"
-
-
 class FilingRecordPeriodKind(StrEnum):
     """Cadence of a synthetic filing record's period."""
 
     ANNUAL = "ANNUAL"
     QUARTERLY = "QUARTERLY"
     MONTHLY = "MONTHLY"
-
 
 class FilingRecordScenario(StrEnum):
     """The edge-case scenario a synthetic record exercises.
@@ -47,9 +43,7 @@ class FilingRecordScenario(StrEnum):
     CANCELLED = "CANCELLED"
     ROUNDING = "ROUNDING"
 
-
 FixtureScalar = Decimal | int | str | bool | None
-
 
 class FixtureCasilla(BaseModel):
     """One casilla on a :class:`FilingRecord`.
@@ -69,7 +63,6 @@ class FixtureCasilla(BaseModel):
     casilla_id: str = Field(..., min_length=1)
     label: str = Field(..., min_length=1)
     value: FixtureScalar
-
 
 class FilingRecord(BaseModel):
     """One synthetic historical filing record.
@@ -111,7 +104,6 @@ class FilingRecord(BaseModel):
     complementaria_of: str | None = None
     notes: str = ""
 
-
 def compute_record_id(
     *,
     modelo: str,
@@ -140,9 +132,7 @@ def compute_record_id(
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()[:16]
 
-
 __all__ = [
-    "SYNTHETIC_COMMENT_REQUIRED_SUBSTRING",
     "FilingRecord",
     "FilingRecordPeriodKind",
     "FilingRecordScenario",

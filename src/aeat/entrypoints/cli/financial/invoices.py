@@ -22,7 +22,7 @@ from ....domain.financial.invoices import (
     suggest_reconciliations,
     verify_link_consistency,
 )
-from ....domain.financial.transactions import (
+from ....domain.transactions import (
     TransactionCatalogue,
     TransactionError,
     link_invoice,
@@ -255,7 +255,7 @@ def _load_invoice_catalogue_or_empty() -> InvoiceCatalogue:
 
 def _load_transaction_catalogue_or_empty() -> TransactionCatalogue:
     """Load the configured transaction catalogue, returning an empty one when absent."""
-    from ....domain.financial.transactions import TransactionCatalogueRepository
+    from ....domain.transactions import TransactionCatalogueRepository
 
     repository = TransactionCatalogueRepository(store_dir=_transaction_catalogue_dir())
     try:

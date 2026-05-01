@@ -17,7 +17,7 @@ from ....application.filing import FilingDraftStatus, FilingOperatorProfile, app
 from ....application.filing.runtime import build_runtime_schema_provider
 from ....core.config import PROJECT_ROOT
 from ....domain.deadlines import AutonomoProfile, IVARegime
-from ....domain.financial.transactions import TransactionCatalogue
+from ....domain.transactions import TransactionCatalogue
 from .. import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

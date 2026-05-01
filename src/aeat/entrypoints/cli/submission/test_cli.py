@@ -13,7 +13,7 @@ from ....adapters.outbound.aeat.export import SubmissionAttempt, SubmissionStatu
 from ....application.filing import FilingDraft, FilingOperatorProfile, approve_draft, build_draft
 from ....application.filing.runtime import build_runtime_schema_provider
 from ....domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ....domain.financial.transactions import (
+from ....domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,

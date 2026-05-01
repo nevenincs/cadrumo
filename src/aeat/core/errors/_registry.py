@@ -1220,7 +1220,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.usage_ratios._errors.UsageRatioError",
+        "aeat.domain.usage_ratios._errors.UsageRatioError",
         ErrorCode(
             code="ERROR_FINANCIAL_USAGE_RATIOS_USAGE_RATIO",
             category=ErrorCategory.ERROR,
@@ -1233,7 +1233,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.usage_ratios._errors.UsageRatioPersistenceError",
+        "aeat.domain.usage_ratios._errors.UsageRatioPersistenceError",
         ErrorCode(
             code="FAIL_FINANCIAL_USAGE_RATIOS_USAGE_RATIO_PERSISTENCE",
             category=ErrorCategory.FAIL,

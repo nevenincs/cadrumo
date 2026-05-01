@@ -28,7 +28,7 @@ at the seams between modules.
 |-----------------|---------|
 | Cross-module duplications post-move | None surfaced. The Step-3 untangling PRs (#483, #484, #485) eliminated the four known duplications (`validate_spanish_tax_id`, formulas private internals, casillas CLI tests, transactions repository) before the keystone landed. |
 | Residual private-bypass imports the import-linter contract did not catch | None. The 9-entry carve-out registry at `.importlinter` covers every legitimate cross-layer access; no new violation was introduced post-#493. |
-| Missing or misplaced public-surface declarations | None. The 4 public-surface shims (`aeat.errors`, `aeat.auth`, `aeat.submission`, `aeat.formulas`) all verify exit 0 via `scripts/verify_shims.py`. |
+| Missing or misplaced public-surface declarations | None. The 4 public-surface modules (`aeat.core.errors`, `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.export`, `aeat.domain.formulas`) were verified during Step 5 tooling prep; `scripts/verify_shims.py` was subsequently deleted as the hard-cutover migration model eliminated the need for backward-compat path maintenance. |
 | Stale `aeat.<old>` references in source | None (post-Step-9 rebase tool run). The `scripts/check_relative_imports.py` pre-commit hook catches drift on every commit. |
 
 ## vault hygiene

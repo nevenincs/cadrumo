@@ -23,7 +23,7 @@ from ...domain.financial.invoices import (
     InvoiceCatalogue,
     PaymentStatus,
 )
-from ...domain.financial.transactions import (
+from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
@@ -132,7 +132,7 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
 
 
 def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
-    from ...domain.financial.transactions._repository import TransactionCatalogueRepository
+    from ...domain.transactions._repository import TransactionCatalogueRepository
 
     store_dir = settings.aeat_financial_txs_dir.resolve()
     repository = TransactionCatalogueRepository(store_dir=store_dir)

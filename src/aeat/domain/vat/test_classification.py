@@ -1,4 +1,4 @@
-"""Unit tests for :func:`aeat.domain.financial.vat.classify_vat` (#183)."""
+"""Unit tests for :func:`aeat.domain.vat.classify_vat` (#183)."""
 
 from __future__ import annotations
 

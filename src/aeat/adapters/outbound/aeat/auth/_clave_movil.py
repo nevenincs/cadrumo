@@ -955,7 +955,6 @@ class ClaveMovilAuthProvider:
 
 
 __all__ = [
-    "AEAT_CLAVE_MOVIL_SIDECAR_SCHEMA_VERSION",
     "ClaveMovilApprovalTimeoutError",
     "ClaveMovilAuthProvider",
     "ClaveMovilConfigurationError",

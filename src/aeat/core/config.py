@@ -17,7 +17,8 @@ from pathlib import Path
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from ..adapters.outbound.aeat.auth import AuthProviderKind, CertificateBackend, GoogleAuthPath
+from ..adapters.outbound.aeat.auth import AuthProviderKind, CertificateBackend
+from ..adapters.outbound.google import GoogleAuthPath
 from ..domain.justificante import JustificanteParserBackend
 from .paths import (
     normalize_project_relative_path,

@@ -19,7 +19,7 @@ from ...domain.financial.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from ...domain.financial.transactions import BusinessClassification, Transaction, TransactionDirection
+from ...domain.transactions import BusinessClassification, Transaction, TransactionDirection
 from ..filing import FilingFindingSeverity, FilingValidationFinding
 from ..sync import (
     CasillaAddedWithDefault,
