@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.config import PROJECT_ROOT
+from aeat.core.config import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 

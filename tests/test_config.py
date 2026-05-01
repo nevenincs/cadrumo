@@ -18,7 +18,7 @@ from typing import Union, get_args, get_origin
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.config import PROJECT_ROOT, Settings
+from aeat.core.config import PROJECT_ROOT, Settings
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
 
@@ -85,7 +85,7 @@ class TestAuthProviderEnum:
     """#285 — ``AEAT_AUTH_PROVIDER`` coerces to :class:`AuthProviderKind` strictly."""
 
     def test_env_value_coerces_to_enum(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from aeat.auth import AuthProviderKind
+        from aeat.adapters.outbound.aeat.auth import AuthProviderKind
 
         for name in Settings.env_var_names():
             monkeypatch.delenv(name, raising=False)

@@ -1,55 +1,12 @@
-"""Browser automation subpackage for the AEAT client.
+"""Internal re-export shim for `aeat.browser`.
 
-Provides the `BrowserSession` factory to manage Playwright contexts with
-anti-bot evasion strategies and persistent profiles.
-
-Example:
-    ```python
-    from pathlib import Path
-    from playwright.async_api import async_playwright
-    from ..config import load_settings
-    from . import BrowserSession, Profile
-
-    async def main():
-        settings = load_settings()
-        profile = Profile(name="test", storage_state_path=Path(".tokens/state.json"))
-
-        async with async_playwright() as p:
-            session = BrowserSession(playwright=p, settings=settings, profile=profile)
-            context = await session.create_context()
-            page = await context.new_page()
-            await page.goto("https://sede.agenciatributaria.gob.es")
-            await context.close()
-    ```
+Canonical location: :mod:`aeat.adapters.outbound.aeat.browser` post the aeat-restructure layout move.
 """
 
 from __future__ import annotations
 
-from ._factory import DefaultBrowserSession, default_browser_session_factory
-from ._site_health import (
-    SiteHealthAlert,
-    SiteHealthEvidence,
-    SiteHealthState,
-    SiteHealthStatus,
-)
-from ._site_health_parsers import evaluate_response
-from .evasion import EvasionStrategy, PlaywrightStealthEvasion
-from .health import run_health_check
-from .profile import Profile
-from .session import BrowserError, BrowserSession
+import importlib as _importlib
 
-__all__ = [
-    "BrowserError",
-    "BrowserSession",
-    "DefaultBrowserSession",
-    "EvasionStrategy",
-    "PlaywrightStealthEvasion",
-    "Profile",
-    "SiteHealthAlert",
-    "SiteHealthEvidence",
-    "SiteHealthState",
-    "SiteHealthStatus",
-    "default_browser_session_factory",
-    "evaluate_response",
-    "run_health_check",
-]
+from ..adapters.outbound.aeat.browser import *  # noqa: F403
+
+__all__ = getattr(_importlib.import_module("aeat.adapters.outbound.aeat.browser"), "__all__", ())

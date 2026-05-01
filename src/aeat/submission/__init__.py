@@ -1,65 +1,18 @@
-"""Read-only filing submission helpers.
+"""Public-surface re-export shim for the submission package.
 
-The :class:`SubmissionEngine` runs preflight and reads historical
-records only. AEAT remote submission and write-shaped portal walks are
-permanently forbidden; transport methods reject immediately with
-:class:`LiveSubmitForbiddenError`.
-
-Public API discipline: callers outside this subpackage must import
-only from :mod:`aeat.submission` (the package root); the underscored
-submodules are implementation detail.
-
-See ``[[2026-04-12-submission-engine-research]]`` and
-``[[2026-04-12-submission-engine-adr]]`` for the architectural
-context.
+Canonical location moved to :mod:`aeat.adapters.outbound.aeat.export` per the
+aeat-restructure ADR (Public surface and semver).
 """
 
 from __future__ import annotations
 
-from ._engine import SubmissionEngine
-from ._errors import (
-    LiveSubmitForbiddenError,
-    SubmissionError,
-    SubmissionPreflightError,
-)
-from ._models import (
-    SubmissionAttempt,
-    SubmissionStatus,
-    SubmittedFiling,
-    make_submission_id,
-)
-from ._preflight import Preflight
-from ._protocols import (
-    AuthProviderDescription,
-    AuthProviderKind,
-    AuthProviderProbe,
-    DeadlineWindowChecker,
-    DraftLoader,
-    DraftStatus,
-    FilingDraftLike,
-    FilingFinding,
-    FilingFindingSeverity,
-    ModeloIdentifier,
-)
+import warnings as _warnings
 
-__all__ = [
-    "AuthProviderDescription",
-    "AuthProviderKind",
-    "AuthProviderProbe",
-    "DeadlineWindowChecker",
-    "DraftLoader",
-    "DraftStatus",
-    "FilingDraftLike",
-    "FilingFinding",
-    "FilingFindingSeverity",
-    "LiveSubmitForbiddenError",
-    "ModeloIdentifier",
-    "Preflight",
-    "SubmissionAttempt",
-    "SubmissionEngine",
-    "SubmissionError",
-    "SubmissionPreflightError",
-    "SubmissionStatus",
-    "SubmittedFiling",
-    "make_submission_id",
-]
+from ..adapters.outbound.aeat.export import *  # noqa: F403
+from ..adapters.outbound.aeat.export import __all__  # noqa: F401
+
+_warnings.warn(
+    "Importing from `aeat.submission` is deprecated; use `aeat.adapters.outbound.aeat.export` instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

@@ -21,30 +21,30 @@ from pathlib import Path
 
 import pytest
 
-from aeat.config import PROJECT_ROOT
+from aeat.core.config import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
 
 PROJECT_NAME = "aeat"
 
 ON_MAIN_SUBPACKAGES = (
-    "aeat.auth",
-    "aeat.browser",
-    "aeat.cli",
-    "aeat.deadlines",
-    "aeat.filing",
-    "aeat.i18n",
-    "aeat.llm",
-    "aeat.manuals",
-    "aeat.models",
-    "aeat.normatives",
-    "aeat.portals",
-    "aeat.schema",
-    "aeat.sede",
-    "aeat.storage",
-    "aeat.submission",
-    "aeat.sync",
-    "aeat.testing",
+    "aeat.adapters.outbound.aeat.auth",
+    "aeat.adapters.outbound.aeat.browser",
+    "aeat.entrypoints.cli",
+    "aeat.domain.deadlines",
+    "aeat.application.filing",
+    "aeat.core.i18n",
+    "aeat.adapters.outbound.llm",
+    "aeat.domain.manuals",
+    "aeat.domain.modelos",
+    "aeat.domain.normatives",
+    "aeat.domain.portals",
+    "aeat.domain.schema",
+    "aeat.adapters.outbound.aeat.sede",
+    "aeat.adapters.persistence.storage",
+    "aeat.adapters.outbound.aeat.export",
+    "aeat.application.sync",
+    "aeat.domain.testing",
 )
 
 
