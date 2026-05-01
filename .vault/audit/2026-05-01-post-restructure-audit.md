@@ -162,12 +162,147 @@ Sub-agent scanned 1086 .py files (344 test files). Aggregate: **no `unittest.moc
 
 ### E. Implementation-gap findings
 
-(populated by the gap-audit sub-agent)
+Five-axis sweep of src/aeat/ for production-reachable NotImplementedError sites, abstract methods without concrete implementations, dead exports, dead definitions, duplicated enum / class declarations, and reserved enum members never produced.
+
+| severity | scope | finding | disposition | rationale |
+|---|---|---|---|---|
+| MEDIUM | src/aeat/adapters/outbound/aeat/auth/_providers.py:328-333 | select_provider(CLAVE_PERMANENTE) raises NotImplementedError; CLAVE_PIN falls through to the catch-all NotImplementedError. Both members are still declared in the AuthProviderKind StrEnum, described in _registry.py as configurable providers, and exposed by cli/auth/_session.py - so the user-visible CLI catalogue advertises four providers but only two actually authenticate. | FILE | The 2026-04-21 clave-portal reference doc justified excluding CLAVE_PERMANENTE (AEAT does not offer it on SelectorAccesos.html); CLAVE_PIN has no equivalent justification on file. Either remove the unimplementable enum members + registry entries or wire concrete providers. The current shape leaks four enum values into JSON contract output (provider_kind) without four working backends. |
+| LOW | src/aeat/adapters/outbound/aeat/auth/_certificate_backends/_httpx_fallback.py:85-88 | HttpxFallbackBackend.preload raises NotImplementedError unconditionally; the class is registered as a _CertBackend ABC implementor. | STRIKE | The base contract documents preload is optional for verify-only backends; the test surface confirms the verify-only path is the supported usage. Disposition LOW because the contract is honest but the abstract method should be split (verify-only backends should not inherit a preload slot they cannot fill). |
+| LOW | src/aeat/adapters/outbound/aeat/sede/_walker.py:204 | fetch_justificante_pdf is a public-looking helper that immediately raises NotImplementedError("...is wrapped by capture_justificante; call that instead"). | FILE | Either delete the function (its callers all use capture_justificante) or convert it to a private _fetch_justificante_pdf_impl so consumers cannot import a public symbol whose only behaviour is to raise. |
+| HIGH | src/aeat/domain/financial/invoices/_stubs.py | Whole module declares two Protocol stubs (SupportsAttachmentId, SupportsTaxCategoryId) flagged as "Typing-only Protocol placeholders for sibling packages not yet on main". rg confirms zero non-test references inside src/aeat/. Only mention is in .vault/plan/2026-04-17-invoice-catalogue-plan.md as forward-looking placeholders for issues #76 / #77. | FILE | Issues #76 (attachment service) and #77 (tax-category catalogue) have landed (see src/aeat/domain/financial/attachments/ and src/aeat/domain/financial/categories/). The protocol stubs were forward-looking placeholders that survived their replacement. Delete the module. |
+| HIGH | src/aeat/domain/casillas/models.py:36-41 vs src/aeat/domain/modelos/_codes.py:15-45 | Two distinct ModeloCode StrEnum classes with incompatible member values: casillas.models.ModeloCode carries "MODELO_130" / "MODELO_303" / "MODELO_390" (only three members, prefixed values) while modelos._codes.ModeloCode carries "036" / "100" / ... / "840" (twenty-one members, raw codes). Both enums share the MODELO_<n> member names. | FILE | High-risk cross-module landmine: any boundary that round-trips through string values from one enum to the other silently loses identity. The casilla corpus models KNOWN_MODELO_IDS literal at models.py:13 is also a hard-coded shadow. Pick the canonical enum (the 21-member one in domain/modelos), retire casillas.models.ModeloCode, replace KNOWN_MODELO_IDS with frozenset(c.name for c in ModeloCode). |
+| MEDIUM | src/aeat/domain/schema/_enums.py:26-43 vs src/aeat/domain/casillas/models.py:24-33 | Two distinct CasillaDataType StrEnum classes with identical member sets. The schema/_enums.py docstring (lines 28-35) explicitly acknowledges the duplication and forbids isinstance comparison across them. | FILE | Acknowledged in source ("the two enums are bridged by string-value round-trip") but still a concrete duplication. A single shared definition under domain/casillas (the schema package can import it) eliminates the manual round-trip. |
+| MEDIUM | src/aeat/application/filing/_schema.py:57-62 vs src/aeat/adapters/outbound/aeat/export/_protocols.py:104-109 | Two distinct FilingFindingSeverity StrEnum classes with identical member values (ERROR/WARNING/INFO). The export-side definition docstring calls out the duplicate and explains it is distinct from FilingValidationFinding. | FILE | Same risk as ModeloCode: an "is" check or non-coerced cross-boundary call silently fails. Consolidate into one canonical type and have the submission engine accept the filing-side type. |
+| MEDIUM | src/aeat/domain/deadlines/_calendar.py:21-25 vs src/aeat/domain/financial/aggregation/_models.py:30-35 | Two distinct PeriodKind StrEnum classes: deadlines._calendar.PeriodKind carries QUARTERLY/ANNUAL with UPPERCASE values; financial.aggregation._models.PeriodKind carries MONTHLY/QUARTERLY/ANNUAL with lowercase values. | FILE | Two different period-kind universes co-exist with inconsistent casing on the wire. One direction (deadlines -> aggregation) silently mis-serialises if a value crosses the boundary as a JSON string. Standardise to one PeriodKind (lowercase, including MONTHLY) under domain/financial/aggregation. |
+| LOW | src/aeat/domain/casillas/models.py:13 | KNOWN_MODELO_IDS = frozenset({"MODELO_130", "MODELO_303", "MODELO_390"}) - three values hard-coded as a module-level frozenset. The list now disagrees with the 21-modelo ModeloCode enum + the 21-modelo _entries/ registry. Used as a validator gate. | FILE | Replace with a derivation from the canonical ModeloCode enum (or a registered "has-casilla-corpus" predicate) so newly-onboarded modelos cannot be silently rejected by the casilla validator. The current shape is a feature-flag wearing a constants disguise. |
 
 ### F. Missing-feature findings
 
-(populated by the coverage-matrix sub-agent)
+#### Matrix 1: modelo x asset coverage (extractor / ruleset / export-format)
+
+Notation: Y = present, - = absent. Per the supported-modelo set declared in this audit brief plus the two administrative modelos (036/037) shipped under _entries/.
+
+| modelo | declared in _entries/ | extractor 2024 | extractor 2025 | extractor 2026 | ruleset 2024 | ruleset 2025 | ruleset 2026 | export 2024 | export 2025 |
+|---|---|---|---|---|---|---|---|---|---|
+| 036 | Y | - | Y | - | - | - | - | - | - |
+| 037 | Y | - | Y | - | - | - | - | - | - |
+| 100 | Y | Y (legacy 2021/22/23) | - | - | Y (full + summary) | Y (full + summary) | Y (full) | - | - |
+| 111 | Y | Y | Y | Y | Y | Y | Y | - | - |
+| 115 | Y | Y | Y | Y | Y | Y | Y | - | - |
+| 123 | Y | Y | Y | Y | Y | Y | Y | - | - |
+| 130 | Y | Y | Y | Y | Y | Y | Y | Y | Y |
+| 131 | Y | - | Y | - | Y | Y | Y | - | - |
+| 180 | Y | Y | Y | Y | Y | Y | Y | - | - |
+| 190 | Y | - | Y | - | - | - | - | - | - |
+| 193 | Y | - | Y | - | - | - | - | - | - |
+| 200 | Y | - | Y | - | Y | Y | Y | - | - |
+| 202 | Y | - | Y | - | - | Y | - | - | - |
+| 232 | Y | - | Y | - | - | - | - | - | - |
+| 303 | Y | Y (Orden 819) | Y | Y | Y | Y | Y | Y (+preview) | Y |
+| 347 | Y | - | Y | - | - | - | - | - | - |
+| 349 | Y | - | Y | - | - | - | - | - | - |
+| 369 | Y | - | Y | - | - | - | - | - | - |
+| 390 | Y | Y | Y | Y | Y | Y | Y | - | - |
+| 720 | Y | - | Y | - | - | - | - | - | - |
+| 840 | Y | - | Y | - | - | - | - | - | - |
+
+Findings:
+
+| severity | scope | finding | disposition | rationale |
+|---|---|---|---|---|
+| HIGH | modelo 100, extractor coverage | Modelo 100 ships legacy parsers for v2021/v2022/v2023 only (under _parsers/modelo_100/), but no v2024 / v2025 / v2026 declaracion extractor. Rulesets exist for 2024/2025/2026 (full and summary) and an _entries/ declaration is shipped. | FILE | Renta is the headline autonomo deliverable. Without a current-revision extractor, calc-verify against an AEAT-supplied declaracion PDF cannot run for the year that matters. |
+| HIGH | modelo 131, extractor coverage | Modelo 131 ships ruleset 2024 + 2025 + 2026 but the declaracion extractor lives only in modelo_131_v2025.py with a single class Modelo131V2025Extractor. | FILE | Extraction parity with the ruleset trio (2024/2025/2026) lets calc-verify run against historic Modelo 131 declarations the same way Modelo 130 already supports. |
+| HIGH | modelo 202, ruleset coverage | Modelo 202 (pago fraccionado IS) ships only modelo_202_2025.py - no 2024 or 2026 ruleset. | FILE | Modelo 200 (annual IS) ships 2024/2025/2026 in lockstep; the quarterly companion (202) needs the same year span if Kent is to compute Q1 2024 / Q1 2026 obligations. |
+| HIGH | modelos 130 / 303 only - fichero-BOE export coverage | Of nineteen periodic-return modelos, only modelo 130 and modelo 303 ship a fichero-BOE export format. | FILE | The fichero-BOE export-first roadmap explicitly waves "76+" formats; this audit confirms the gap and tags it HIGH because Kent currently has no path to upload casilla-classified data as a fichero-BOE for any modelo other than 130 / 303. |
+| MEDIUM | modelos 190 / 193 / 232 / 347 / 349 / 369 / 720 / 840 - ruleset coverage | Eight extractor-shipped modelos have no ruleset at all (any year). _rulesets/__init__.py does not register them, the registry will raise MissingRulesetError, and no formula chain exists for computing their casillas. | FILE | These modelos are extractor-only (read-side), which is the documented v1 posture for low-volume / informational modelos. Document that posture in _rulesets/__init__.py (the existing docstring covers 130 / 303 / 100 / 115 / 123 / 390 explicitly but is silent on these eight). |
+| MEDIUM | modelos 100 / 111 / 115 / 123 / 131 / 180 / 200 / 390 - fichero-BOE export coverage | Eight modelos ship full extractor + ruleset triplets but no fichero-BOE export format. | FILE | Track the per-modelo export-format work explicitly. Without a format module, the calc-verify chain cannot round-trip a draft into AEAT importar-datos surface; Kent has to fall back to manual data entry. |
+| MEDIUM | modelos 036 / 037 - administrative-form coverage | Modelos 036 / 037 are declared in _entries/ and have v2025 extractors but no rulesets and no export formats. | STRIKE | These are census / declaracion censal forms - they carry no per-casilla calc chain in the first place; the _entries/ declaration carries the legal-citation envelope. The shape is correct for administrative modelos. |
+| LOW | modelos 130 / 303 - extractor 2026 | Modelos 130 and 303 are the only modelos with a 2026 extractor revision registered. All other modelos with multi-year ruleset coverage (111/115/123/180/200/390) share a single extractor class for all three years. | STRIKE | Per the extractor-architecture ADR, an extractor revision is only re-cut when the AEAT template diff requires it. The shared-class pattern is correct when the template is unchanged. |
 
 ### G. Uniformity-gap findings
 
-(populated by the coverage-matrix sub-agent)
+#### Matrix 2: vault-doc completeness for major code domains
+
+For the top-level code feature directories under src/aeat/, checked against .vault/research/, .vault/adr/, .vault/plan/, and .vault/exec/. Y = at least one matching doc exists; - = absent.
+
+| code domain | research | ADR | plan | exec record |
+|---|---|---|---|---|
+| domain/casillas | Y (casilla-db, casilla-schema) | Y | Y | Y |
+| domain/deadlines | Y | Y | Y | Y |
+| domain/financial/aggregation | Y (t6-aggregation) | Y | Y | Y |
+| domain/financial/attachments | Y (attachment-service) | Y | Y | - |
+| domain/financial/categories | Y (p2e-tax-category-catalogue) | Y | Y | Y |
+| domain/financial/invoices | Y (invoice-catalogue) | Y | Y | - |
+| domain/financial/providers | Y (p2a-financial-provider, n26-data-source) | Y | Y | Y |
+| domain/financial/transactions | Y | Y | Y | Y |
+| domain/financial/vat | Y (r1-vat-enumeration) | Y | Y | Y |
+| domain/formulas | Y (modelo-formulas, ruleset-architecture, calc-verification) | Y | Y | Y |
+| domain/justificante | Y | Y | Y | - |
+| domain/manuals | Y (manual-practico) | Y | Y | Y |
+| domain/modelos | Y (modelo-inventory) | Y | Y | Y |
+| domain/normatives | Y (normatives) | Y | Y | Y |
+| domain/portals | Y (portal-catalogue) | Y | Y | - |
+| domain/profile | Y | Y | Y | Y |
+| domain/profile/inventory | Y (inventory-management) | Y | Y | Y |
+| domain/rental | Y (rental-income-hardening, usage-ratios) | Y | Y | Y |
+| domain/schema | Y (schema-extraction) | Y | Y | - |
+| domain/testing | Y (synthetic-filing-fixtures, real-pdf-fixture-corpus) | Y | Y | Y |
+| application/filing | Y (filing-draft-engine, filing-complementaria) | Y | Y | Y |
+| application/review | Y (unified-review-queue, rename-corpus-review) | Y | Y | Y |
+| application/setup | Y (setup-wizard) | Y | Y | - |
+| application/sync | Y (self-healing-sync, live-sync-backend) | Y | Y | Y |
+| application/verification | Y (calc-verification) | Y (aeat-verify-adr x 2) | Y | Y |
+| application/workflow | Y (workflow-engine, kent-workflows-expansion) | Y | Y | Y |
+| adapters/inbound/borrador | - | - | - | - |
+| adapters/inbound/declaracion | Y (declaracion-extractor) | Y | Y | - |
+| adapters/inbound/identity | - | - | - | - |
+| adapters/inbound/pdf | Y (pdf-import, pdf-taxonomy, real-pdf-import-umbrella) | Y | Y | Y |
+| adapters/inbound/sanitizer | Y (pdf-sanitizer) | Y | Y | - |
+| adapters/outbound/aeat/auth | Y (cert-auth, live-cert-auth, auth-protocol, auth-cli) | Y | Y | Y |
+| adapters/outbound/aeat/browser | Y (playwright-anti-bot, browser-leak, chromium-leak) | Y | Y | Y |
+| adapters/outbound/aeat/export | Y (aeat-fichero-boe-export, export-first) | Y | Y | - |
+| adapters/outbound/aeat/sede | Y (aeat-history-fetch, aeat-filing-detail-fetch, status-reader) | Y | Y | Y |
+| adapters/outbound/llm | Y (llm-client) | Y | Y | Y |
+| adapters/persistence/storage | Y (data-storage, secure-persistence-foundation) | Y | Y | Y |
+| entrypoints/cli | Y (aeat-cli-wireframe, json-output-contract) | Y | Y | Y |
+| entrypoints/mcp | Y (google-workspace-mcp-auth, gsuite-bootstrap) | Y | Y | Y |
+
+
+Findings:
+
+| severity | scope | finding | disposition | rationale |
+|---|---|---|---|---|
+| LOW | src/aeat/adapters/inbound/borrador/ | No vault doc trail anchored on the borrador-import pipeline despite _schema.py carrying an ArtefactKind StrEnum and concrete pydantic records. | FILE | The borrador adapter probably traces back to filing-draft-engine, but the lineage is not explicitly documented. Add a small .vault/reference/ doc or amend the closest plan to claim borrador as in-scope. |
+| LOW | src/aeat/adapters/inbound/identity/ | No vault doc trail for identity-document inbound parsing despite an IdentityDocument StrEnum and pydantic record set. | FILE | Same shape as the borrador finding. The closest documented doc is 2026-04-21-pdf-taxonomy-adr.md but it does not name identity documents explicitly. |
+| LOW | src/aeat/adapters/inbound/declaracion/ | Has research / ADR / plan but no exec-summary under .vault/exec/. | STRIKE | The extractor work was rolled into modelo-by-modelo calc-verify exec records; the exec trail exists, just not under the declaracion-extractor feature tag. |
+| LOW | src/aeat/adapters/inbound/sanitizer/ | Has plan / ADR / research but no exec record under that tag. | STRIKE | Sanitiser work landed via the 2026-04-22-real-pdf-import-wave-* exec series. |
+| LOW | src/aeat/domain/financial/attachments/ | Has research / ADR / plan but no exec record. | STRIKE | Attachment-service implementation rolled into 2026-04-17-attachment-service-audit.md (audit-only artefact). |
+| LOW | src/aeat/domain/financial/invoices/ | Has research / ADR / plan but no exec record under the invoice-catalogue tag. | STRIKE | Invoice work rolled into 2026-04-21-real-pdf-import-execution-wave-* series. |
+| LOW | src/aeat/domain/justificante/ | Has research / ADR / plan but no exec record. | STRIKE | Justificante reframing exec landed under the 2026-04-12-justificante-parser directory which was scaffolded but not finalised; the work was eventually folded into the live-write audit. |
+| LOW | src/aeat/domain/portals/ | Has research / ADR / plan but no exec record. | STRIKE | Portals work landed before the exec-record convention crystallised. |
+| LOW | src/aeat/domain/schema/ | Has research / ADR / plan but no exec record. | STRIKE | Schema-extraction was a one-shot; the implementation trail lives in PR review audits. |
+| LOW | src/aeat/application/setup/ | Has research / ADR / plan but no exec record. | FILE | The setup wizard work is re-active for the secure-persistence onboarding sweep; future exec records under 2026-04-30-secure-persistence-foundation should explicitly cite the setup feature tag. |
+| LOW | src/aeat/adapters/outbound/aeat/export/ | Has research / ADR / plan but no exec record under the export-first tag. | FILE | Export-first roadmap is partial (only 130/303); the missing exec trail tracks a real outstanding deliverable. |
+| MEDIUM | aeat-history-fetch | ADR + research + plan exist; no exec record under that tag. The code under src/aeat/adapters/outbound/aeat/sede/_declarations.py was clearly executed (1000+ lines of parsing). | FILE | Add a back-fill exec summary linking the ADR + plan to the merged code, so the history-fetch feature has a closed audit trail before the milestone-0.1.5 archive. |
+| LOW | aeat-verify (calc-verification) | Two same-named ADRs exist: 2026-04-24-aeat-verify-adr.md and 2026-04-25-aeat-verify-adr.md. | FILE | Either supersede or merge; the duplicate filename is a curate-pass smell. |
+| LOW | secure-persistence-foundation | Multiple wave-numbered ADRs make the ADR set hard to follow. | STRIKE | The no-wave rule applies to source code, not vault docs. The wave naming records the actual delivery cadence and is correct per the delivery-cadence-as-vault-metadata principle. |
+
+#### Per-modelo asymmetry findings (recap from Matrix 1)
+
+| severity | modelo | asymmetry | disposition |
+|---|---|---|---|
+| HIGH | 100 | full ruleset triplet (2024/25/26) but only legacy v2021/22/23 extractors; no current-year extractor. | FILE |
+| HIGH | 131 | ruleset triplet (2024/25/26) but extractor only 2025. | FILE |
+| HIGH | 202 | ruleset only 2025; sibling 200 has full triplet. | FILE |
+| MEDIUM | 130 | only modelo with 2024 export format; 2025 ships, 2026 does not. | FILE |
+| MEDIUM | 303 | export format ships 2024 + 2025 + a 2024_preview skeleton; no 2026 export despite 2026 ruleset + extractor. | FILE |
+| MEDIUM | 111 / 115 / 123 / 180 / 200 / 390 | extractor + ruleset triplets but no export-format module of any year. | FILE |
+| MEDIUM | 190 / 193 / 232 / 347 / 349 / 369 / 720 / 840 | extractor-only (no ruleset, no export). The _rulesets/__init__.py docstring does not document this intentional omission. | FILE (docstring fix) |
+
+#### Cross-cutting uniformity asymmetries
+
+| severity | scope | finding | disposition |
+|---|---|---|---|
+| MEDIUM | _rulesets/__init__.py docstring | Documents the deliberate year-coverage policy for only six modelos (130, 303, 100 full + summary, 115, 123, 390) - silent on 111 / 131 / 180 / 200 / 202. | FILE |
+| LOW | modelo_303_2024_preview.py | Production module under _formats/ carrying a DRAFT / PREVIEW warning, explicitly not wired into the CLI registry. | STRIKE |
+| MEDIUM | duplicate enum families | Three confirmed duplicates (ModeloCode, CasillaDataType, FilingFindingSeverity) and one inconsistent-casing duplicate (PeriodKind). Recap of section E. | FILE |
