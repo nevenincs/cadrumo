@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _RECON_ROOT = Path(__file__).resolve().parent

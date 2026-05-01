@@ -13,7 +13,7 @@ from ._modelo_180_cumulation import (
     aggregate_modelo_180_from_quarters,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo180Ruleset:

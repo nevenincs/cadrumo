@@ -24,7 +24,7 @@ from typer.testing import CliRunner
 
 from . import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _runner = CliRunner()
 

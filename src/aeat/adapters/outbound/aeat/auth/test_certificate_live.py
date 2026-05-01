@@ -19,7 +19,7 @@ from . import (
     verify_handshake,
 )
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
 def test_verify_handshake_live_against_aeat() -> None:

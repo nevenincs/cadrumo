@@ -15,7 +15,7 @@ from ....application.filing.reconciliation import ReconciliationStatus
 from .. import app as root_app
 from ._reconcile import _exit_code_for, _infer_ejercicio, reject_forbidden_flags
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestRejectForbiddenFlags:

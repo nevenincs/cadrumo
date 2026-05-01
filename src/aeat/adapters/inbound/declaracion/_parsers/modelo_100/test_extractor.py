@@ -23,7 +23,7 @@ from ..._schema import DeclaracionFiling, TemplateRevision
 
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.domain_financial_input,
+    pytest.mark.domain_inbound,
     pytest.mark.fixture_tier_l2,
 ]
 

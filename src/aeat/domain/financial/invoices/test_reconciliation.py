@@ -34,7 +34,7 @@ from ._service import (
     verify_link_consistency,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture(autouse=True)

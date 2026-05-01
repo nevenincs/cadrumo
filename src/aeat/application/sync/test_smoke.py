@@ -4,7 +4,7 @@ import pytest
 
 from ... import errors, logging, sync
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_smoke_sync() -> None:

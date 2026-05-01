@@ -26,7 +26,7 @@ import pytest
 
 from ._record_spec import encode_currency
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestUnsignedCurrency13Byte:

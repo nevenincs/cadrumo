@@ -6,7 +6,7 @@ import pytest
 
 from . import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily, family_for
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_spending_category_catalogue_is_large_enough() -> None:

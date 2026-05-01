@@ -22,7 +22,7 @@ from ....entrypoints.cli.audit import validate_citation_coverage
 from .._ruleset import Ruleset
 from . import ALL_RULESETS
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.parametrize(

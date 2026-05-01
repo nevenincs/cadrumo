@@ -13,7 +13,7 @@ from typer.testing import CliRunner
 
 from .cloud import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestCloudCommandTree:

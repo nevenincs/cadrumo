@@ -23,7 +23,7 @@ from ._record_spec import (
 )
 from ._serialise import serialise_envelope
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def _build_envelope_mini() -> tuple[SegmentSpec, ...]:

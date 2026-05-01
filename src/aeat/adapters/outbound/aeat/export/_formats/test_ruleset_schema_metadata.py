@@ -32,7 +32,7 @@ from ......domain.formulas._rulesets.modelo_130_2025 import RULESET as RULESET_1
 from ......domain.formulas._rulesets.modelo_303_2024 import RULESET as RULESET_303_2024
 from ......domain.formulas._rulesets.modelo_303_2025 import RULESET as RULESET_303_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 _RULESETS: list[tuple[str, str, Ruleset]] = [

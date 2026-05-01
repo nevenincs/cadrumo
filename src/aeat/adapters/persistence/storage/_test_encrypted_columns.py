@@ -27,7 +27,7 @@ from . import (
     override_master_key_provider,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 class _TestBase(DeclarativeBase):

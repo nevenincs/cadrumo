@@ -11,7 +11,7 @@ from typer.testing import CliRunner
 
 from .. import SCHEMA_REGISTRY, app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 runner = CliRunner()
 

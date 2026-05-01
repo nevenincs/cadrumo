@@ -18,7 +18,7 @@ from . import (
 )
 from ._envelope import EnvelopeMigrator, load_envelope, save_envelope
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")

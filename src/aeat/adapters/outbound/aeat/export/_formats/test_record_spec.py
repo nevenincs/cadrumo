@@ -20,7 +20,7 @@ from ._record_spec import (
     validate_record_specs,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestRecordFieldSpec:

@@ -38,7 +38,7 @@ from . import (
 )
 from ._env_writer import load_profile_envelope
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)

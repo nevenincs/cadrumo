@@ -11,7 +11,7 @@ from ._docs_helpers import (
     find_end_index,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestExtractPlaintext:

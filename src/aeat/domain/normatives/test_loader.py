@@ -16,7 +16,7 @@ from . import (
     load_catalogue,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _settings_with_root(root: Path) -> Settings:

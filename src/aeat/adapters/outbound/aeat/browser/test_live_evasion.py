@@ -19,7 +19,7 @@ from .....entrypoints.cli._live import requires_live_enabled
 from .profile import Profile
 from .session import BrowserSession
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
 @dataclass(frozen=True)

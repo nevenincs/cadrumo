@@ -15,7 +15,7 @@ from ._scrub import (
     scrub_text,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 class TestNifRedaction:

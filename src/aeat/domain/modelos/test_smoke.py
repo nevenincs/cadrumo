@@ -4,7 +4,7 @@ import pytest
 
 from ... import errors, logging, models
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_smoke_models() -> None:

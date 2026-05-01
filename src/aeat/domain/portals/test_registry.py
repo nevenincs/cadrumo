@@ -20,7 +20,7 @@ from ._registry import (
     portals_for_modelo,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_registry_is_frozen_mappingproxy() -> None:

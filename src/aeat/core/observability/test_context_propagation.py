@@ -26,7 +26,7 @@ from . import (
     run_context,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 class _Step(Protocol):

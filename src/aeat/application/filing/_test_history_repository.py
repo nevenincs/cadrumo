@@ -25,7 +25,7 @@ from ._history_repository import (
     migrate_legacy_filing_history_to_repository,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _make_history(*, modelo: str = "130", n_entries: int = 2) -> WireFilingHistory:

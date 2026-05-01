@@ -54,7 +54,7 @@ from .certificate import CertificateBundle
 if TYPE_CHECKING:
     from .....core.config import Settings
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 

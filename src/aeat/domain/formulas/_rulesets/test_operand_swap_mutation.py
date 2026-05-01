@@ -66,7 +66,7 @@ from . import (
 )
 from ._mutators import _node_at_path, _replace_at_path
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _swap_sub_op(node: object) -> SubFormula:

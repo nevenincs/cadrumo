@@ -26,7 +26,7 @@ from ._synthesize import (
     synthesize_filing_draft_from_decimals,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestSynthesizeFilingDraft:

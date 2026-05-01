@@ -18,7 +18,7 @@ import pytest
 
 from ._metadata import scrub_docinfo, scrub_xmp
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _new_pdf_with_docinfo() -> pikepdf.Pdf:

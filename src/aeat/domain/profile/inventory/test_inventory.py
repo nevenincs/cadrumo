@@ -27,7 +27,7 @@ from . import (
     save_inventory,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> MovementRecord:

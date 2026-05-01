@@ -25,7 +25,7 @@ from ._dynamic import (
 )
 from ._structtree import drop_struct_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _new_one_page_pdf() -> pikepdf.Pdf:

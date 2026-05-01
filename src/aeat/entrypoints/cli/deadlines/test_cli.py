@@ -22,7 +22,7 @@ from ....adapters.persistence.storage import (
 from ....domain.deadlines import AutonomoProfile, IVARegime
 from . import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)

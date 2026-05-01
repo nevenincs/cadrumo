@@ -23,7 +23,7 @@ from . import (
 from ._import import _normalise_period
 from .runtime import build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 

@@ -11,7 +11,7 @@ from . import (
     verify_catalogue,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_shipped_catalogue_is_clean() -> None:

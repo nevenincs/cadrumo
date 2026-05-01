@@ -19,7 +19,7 @@ from . import (
     load_attachment,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _write_source(path: Path, content: bytes) -> Path:

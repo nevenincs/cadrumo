@@ -21,7 +21,7 @@ from ._serialise import serialise_envelope
 from ._test_fixtures import KENT_303_CASILLAS_HAND, kent_303_headers
 from .modelo_303_2024 import ENCODING, ENVELOPE, REQUIRED_HEADER_FIELDS
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestModelo3032024GoldenKentQ1:

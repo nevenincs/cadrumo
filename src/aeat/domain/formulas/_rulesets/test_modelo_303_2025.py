@@ -9,7 +9,7 @@ import pytest
 from .._engine import Engine
 from .modelo_303_2025 import RULESET as MODELO_303_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _ledger_dict(inputs: dict[str, Decimal]) -> dict[str, Decimal]:

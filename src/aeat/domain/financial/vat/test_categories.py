@@ -6,7 +6,7 @@ import pytest
 
 from . import EUMemberState, VATCategory, VATRateKind
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_vat_category_has_every_named_member() -> None:

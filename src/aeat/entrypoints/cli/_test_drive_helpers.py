@@ -13,7 +13,7 @@ from ._drive_helpers import (
     guess_mime_type,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestEscapeDriveQueryLiteral:

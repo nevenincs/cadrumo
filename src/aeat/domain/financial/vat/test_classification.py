@@ -20,7 +20,7 @@ from . import (
     classify_vat,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _criteria(**overrides: object) -> VATClassificationCriteria:

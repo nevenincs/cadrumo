@@ -20,7 +20,7 @@ from ....domain.deadlines import AutonomoProfile, IVARegime
 from ....domain.financial.transactions import TransactionCatalogue
 from .. import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _JUSTIFICANTE_FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 

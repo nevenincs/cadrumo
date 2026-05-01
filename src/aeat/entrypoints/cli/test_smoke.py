@@ -5,7 +5,7 @@ from typer.testing import CliRunner
 
 from ... import cli, errors, logging
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 runner = CliRunner()
 

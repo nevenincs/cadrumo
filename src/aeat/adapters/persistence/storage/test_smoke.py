@@ -6,7 +6,7 @@ import pytest
 
 from .... import errors, logging, storage
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def test_smoke_storage() -> None:

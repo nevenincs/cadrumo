@@ -24,7 +24,7 @@ from . import (
     reconcile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _FIXED_NOW = datetime(2026, 4, 24, 20, 0, 0, tzinfo=UTC)

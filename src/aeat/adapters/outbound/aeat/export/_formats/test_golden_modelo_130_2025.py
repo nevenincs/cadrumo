@@ -31,7 +31,7 @@ from .modelo_130_2025 import (
     REQUIRED_HEADER_FIELDS,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestModelo1302025GoldenKentQ1:

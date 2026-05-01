@@ -11,7 +11,7 @@ from typer.testing import CliRunner
 
 from . import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 # Disable colour codes so the JSON output is parseable by json.loads in tests.
 _runner_plain = CliRunner()

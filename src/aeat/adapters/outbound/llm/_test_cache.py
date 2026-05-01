@@ -10,7 +10,7 @@ import pytest
 
 from . import LLMCache, LLMProvider, LLMRequest, LLMResponse
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def _response() -> LLMResponse:

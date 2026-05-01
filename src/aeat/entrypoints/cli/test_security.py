@@ -12,7 +12,7 @@ from typer.testing import CliRunner
 
 from . import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _NIF_CANARY = "12345678Z"
 _HKDF_CONTEXT_TX = b"aeat.domain.financial.transactions.catalogue.v1"

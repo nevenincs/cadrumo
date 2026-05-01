@@ -25,7 +25,7 @@ from . import (
     parse_justificante,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 FIXTURES_DIR = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 

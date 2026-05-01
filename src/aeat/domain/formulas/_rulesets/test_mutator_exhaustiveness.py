@@ -40,7 +40,7 @@ from ._mutators import (
     all_concrete_operand_types,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _PUBLIC_FORMULA_TYPES: frozenset[type] = frozenset(

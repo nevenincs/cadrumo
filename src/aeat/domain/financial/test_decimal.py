@@ -8,7 +8,7 @@ import pytest
 
 from ._decimal import canonical_decimal
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_canonical_decimal_renders_zero_without_precision_noise() -> None:

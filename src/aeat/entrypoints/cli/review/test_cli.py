@@ -45,7 +45,7 @@ from ....domain.financial.transactions import (
 )
 from .. import app as root_app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _summary(text: str) -> Translatable:

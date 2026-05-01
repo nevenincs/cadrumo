@@ -27,7 +27,7 @@ from . import (
 )
 from ._helpers import CitationCoverageReport
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _runner() -> CliRunner:

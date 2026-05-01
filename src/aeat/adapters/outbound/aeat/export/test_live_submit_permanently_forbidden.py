@@ -21,7 +21,7 @@ from . import (
     SubmissionEngine,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class _AuthProvider:

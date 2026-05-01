@@ -31,7 +31,7 @@ import pytest
 # Satisfies the marker-integrity checker — this module is a shared
 # fixture helper, not a test module. Real test files that consume these
 # fixtures carry their own ``pytestmark`` independently.
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 @dataclass(frozen=True, slots=True)

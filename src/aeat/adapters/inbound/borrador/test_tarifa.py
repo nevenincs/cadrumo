@@ -13,7 +13,7 @@ from ._tarifa import (
     validate_tarifa_estatal,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 class TestApplyTarifa:

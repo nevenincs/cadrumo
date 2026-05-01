@@ -31,7 +31,7 @@ from ._complementaria_repository import (
 )
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _profile() -> FilingOperatorProfile:

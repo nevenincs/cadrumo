@@ -12,7 +12,7 @@ from . import (
     verify_catalogue,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _EXPECTED_IDS = {
     "ley-35-2006",

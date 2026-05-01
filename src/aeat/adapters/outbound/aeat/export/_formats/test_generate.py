@@ -10,7 +10,7 @@ import pytest
 from ._generate import generate_module_source
 from ._ingest import ingest_dr_spec_path
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 _FIXTURE_DIR = (
     Path(__file__).resolve().parent.parent.parent.parent.parent.parent.parent.parent / "tests" / "fixtures" / "dr_specs"

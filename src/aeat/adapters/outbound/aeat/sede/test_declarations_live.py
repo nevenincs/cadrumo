@@ -23,7 +23,7 @@ from ._declarations import Declaration, capture_declaration, walk_declarations_r
 from ._errors import SedeError
 from ._schema import SedeCapture
 
-pytestmark = [pytest.mark.live_read, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
 def _load_active_clave_session():

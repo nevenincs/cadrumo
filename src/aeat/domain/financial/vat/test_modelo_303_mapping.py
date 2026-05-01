@@ -15,7 +15,7 @@ from . import (
 )
 from ._modelo_303_mapping import _OUT_OF_SCOPE_V1
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_every_vat_category_is_either_mapped_or_out_of_scope() -> None:

@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from . import CCAA, ForalRegimeError, KentTaxResidence, ResidenceChange, parse_tax_region
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_kent_tax_residence_is_strict_frozen() -> None:

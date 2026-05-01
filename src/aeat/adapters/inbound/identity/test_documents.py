@@ -6,7 +6,7 @@ import pytest
 
 from . import IdentityDocument, IdentityError, validate_identity
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 class TestNif:

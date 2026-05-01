@@ -31,7 +31,7 @@ from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
 from ._repository import InvoiceCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _RUNNER = CliRunner()
 

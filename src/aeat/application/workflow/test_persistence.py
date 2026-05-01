@@ -17,7 +17,7 @@ from . import (
 )
 from ._errors import WorkflowError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:

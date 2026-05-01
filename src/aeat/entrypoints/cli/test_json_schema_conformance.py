@@ -13,7 +13,7 @@ from ...domain.deadlines import AutonomoProfile, IVARegime
 from . import SCHEMA_REGISTRY
 from . import app as root_app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)

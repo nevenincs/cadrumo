@@ -12,7 +12,7 @@ from typer.testing import CliRunner
 from ...domain.deadlines import AutonomoProfile, IVARegime
 from . import app as root_app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _runner = CliRunner()
 

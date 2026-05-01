@@ -14,7 +14,7 @@ from . import (
     resolve_user_ratio,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_empty_profile_round_trips_json() -> None:
