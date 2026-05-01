@@ -9,7 +9,7 @@ self-healing sync ``#11``, future filing modules) consumes this
 schema.
 
 Public surface — callers from outside this subpackage must import
-exclusively from ``aeat.manuals`` and MUST NOT reach into private
+exclusively from ``aeat.domain.manuals`` and MUST NOT reach into private
 ``_schema``, ``_loader``, ``_verify``, ``_fetch``, or ``_ids``
 modules.
 

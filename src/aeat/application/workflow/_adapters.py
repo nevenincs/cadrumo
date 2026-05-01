@@ -2,7 +2,7 @@
 
 Each adapter is a thin translation layer: no domain decisions live
 here, only the minimal surface normalisation required by the narrow
-Protocols in :mod:`aeat.workflow._protocols`. The :func:`default_engine`
+Protocols in :mod:`aeat.application.workflow._protocols`. The :func:`default_engine`
 factory composes the adapters into a :class:`WorkflowEngine` and is
 the entry point production call sites (e.g. the CLI) use to obtain a
 fully-wired workflow engine.
@@ -32,7 +32,7 @@ from ...domain.deadlines import (
     DeadlineEngine,
     Schedule,
 )
-from ...domain.financial.aggregation._errors import AggregationUnsupportedModeloError
+from ..aggregation._errors import AggregationUnsupportedModeloError
 from ..filing import (
     CasillaSchemaProvider,
     FilingDraft,
@@ -67,7 +67,7 @@ class _FinancialInputsProvider(Protocol):
 
 
 class DeadlineEngineAdapter:
-    """Wrap :class:`aeat.deadlines.DeadlineEngine` as a workflow Protocol."""
+    """Wrap :class:`aeat.domain.deadlines.DeadlineEngine` as a workflow Protocol."""
 
     def __init__(self, engine: DeadlineEngine) -> None:
         """Store the wrapped :class:`DeadlineEngine`."""
@@ -85,7 +85,7 @@ class DeadlineEngineAdapter:
 
 
 class FilingDraftBuilderAdapter:
-    """Wrap :func:`aeat.filing.build_draft` as a workflow Protocol.
+    """Wrap :func:`aeat.application.filing.build_draft` as a workflow Protocol.
 
     A schema provider is stored on construction so the narrow
     Protocol method does not leak the provider argument into the
@@ -108,7 +108,7 @@ class FilingDraftBuilderAdapter:
         """Delegate to :func:`build_draft`.
 
         ``cast`` is used for the filing-engine cross-module types because
-        :class:`AutonomoProfile` and :class:`aeat.filing.FilingProfile`
+        :class:`AutonomoProfile` and :class:`aeat.application.filing.FilingProfile`
         are structurally similar but not declared as the same Protocol
         — the real adapter hooks in on the call site when the profile
         loader lands.
@@ -125,7 +125,7 @@ class FilingDraftBuilderAdapter:
 
 
 class SubmissionEngineAdapter:
-    """Wrap :class:`aeat.submission.SubmissionEngine` as a workflow Protocol.
+    """Wrap :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine` as a workflow Protocol.
 
     The adapter uses the engine's public preflight method so the
     workflow's ``RUNNING_PREFLIGHT`` stage can execute the gate without
@@ -142,7 +142,7 @@ class SubmissionEngineAdapter:
 
 
 class SyncRunnerAdapter:
-    """Wrap :class:`aeat.sync.LiveSyncRunner` as a workflow Protocol."""
+    """Wrap :class:`aeat.application.sync.LiveSyncRunner` as a workflow Protocol."""
 
     def __init__(self, runner: LiveSyncRunner) -> None:
         """Store the wrapped :class:`LiveSyncRunner`."""
@@ -260,7 +260,7 @@ def default_engine(
         submission_engine: Required submission Protocol. The caller
             must build the real :class:`SubmissionEngine` themselves
             (the composition is complex and already owned by
-            :mod:`aeat.cli.submission`) and pass it wrapped or
+            :mod:`aeat.entrypoints.cli.submission`) and pass it wrapped or
             pre-adapted.
         deadline_engine: Optional deadline Protocol. ``None`` triggers
             a :class:`WorkflowError`; deadlines are mandatory for the
@@ -269,7 +269,7 @@ def default_engine(
             ``None`` triggers a :class:`WorkflowError`.
         sync_runner: Optional sync Protocol. ``None`` skips the sync
             stage with a "not wired" diagnostic.
-        session: Optional authenticated :class:`aeat.auth.AeatSession`.
+        session: Optional authenticated :class:`aeat.adapters.outbound.aeat.auth.AeatSession`.
             ``None`` skips both the inbox probe and the already-filed
             probe (both stages record a "not wired" diagnostic).
         certificate_bundle: Optional certificate Protocol.
@@ -310,15 +310,15 @@ def _default_financial_inputs_provider(cfg: Settings) -> _FinancialInputsProvide
     catalogue_dir = cfg.aeat_financial_txs_dir.resolve()
     if not (catalogue_dir / "transactions.envelope.json").exists():
         return None
-    from ...domain.financial.aggregation._provider import FinancialFilingInputsProvider
+    from ..aggregation._provider import FinancialFilingInputsProvider
     from ...domain.financial.transactions._repository import TransactionCatalogueRepository
 
     return FinancialFilingInputsProvider(repository=TransactionCatalogueRepository(store_dir=catalogue_dir))
 
 
-# Re-exported so importing :mod:`aeat.workflow` surfaces the primary
+# Re-exported so importing :mod:`aeat.application.workflow` surfaces the primary
 # preflight-exception type without callers having to dig into
-# :mod:`aeat.submission` for an isinstance check.
+# :mod:`aeat.adapters.outbound.aeat.export` for an isinstance check.
 __all__ = [
     "DeadlineEngineAdapter",
     "FilingDraftBuilderAdapter",

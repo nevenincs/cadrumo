@@ -1,4 +1,4 @@
-"""Strict pydantic v2 schema for the ``aeat.normatives`` subpackage.
+"""Strict pydantic v2 schema for the ``aeat.domain.normatives`` subpackage.
 
 Every boundary-crossing record the subpackage reads from disk, writes
 to disk, or exposes over its public API is defined here. The schema is
@@ -6,7 +6,7 @@ frozen and strict wherever the loader idiom permits it, per the
 project-wide pydantic v2 mandate reinforced by issue ``#45``.
 
 Closed catalogues are :class:`enum.StrEnum`. Trilingual fields use
-:class:`aeat.i18n.Translatable`; the authoritative ``es`` key is
+:class:`aeat.core.i18n.Translatable`; the authoritative ``es`` key is
 enforced at load time on every title and summary.
 """
 
@@ -51,7 +51,7 @@ _StableId = Annotated[
         pattern=r"^[a-z0-9][a-z0-9-]*$",
     ),
 ]
-"""Kebab-case id shape shared with :mod:`aeat.manuals`."""
+"""Kebab-case id shape shared with :mod:`aeat.domain.manuals`."""
 
 
 _Reviewer = Annotated[
@@ -243,7 +243,7 @@ class NormativeCatalogue(_StrictMutable):
 
 
 class VerificationIssue(_StrictFrozen):
-    """A single finding produced by :func:`aeat.normatives.verify_catalogue`."""
+    """A single finding produced by :func:`aeat.domain.normatives.verify_catalogue`."""
 
     level: str = Field(description="'error' or 'warning'.")
     code: str = Field(description="Short, stable issue code.")

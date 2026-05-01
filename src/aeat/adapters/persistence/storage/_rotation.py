@@ -43,7 +43,7 @@ from ._envelope import (
     _build_aad,  # type: ignore[attr-defined]
     _derive_envelope_key,  # type: ignore[attr-defined]
 )
-from ._lock import exclusive_file_lock, fsync_parent_dir
+from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)

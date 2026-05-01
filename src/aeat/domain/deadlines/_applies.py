@@ -7,7 +7,7 @@ recorded in the research note
 
 Adding a new modelo means: (a) cite the BOE order in the research
 note, (b) add an entry to :data:`_RULES`, (c) add the canonical window
-to :mod:`aeat.deadlines._calendar`, (d) add a truth-table case to
+to :mod:`aeat.domain.deadlines._calendar`, (d) add a truth-table case to
 ``test_applies.py``.
 """
 
@@ -221,7 +221,7 @@ def explain(profile: AutonomoProfile, modelo: str) -> str:
     """Return the human-readable applies-because explanation.
 
     The string is suitable for the
-    :attr:`aeat.deadlines.FilingObligation.applies_because` field and
+    :attr:`aeat.domain.deadlines.FilingObligation.applies_because` field and
     for the ``aeat deadlines explain`` CLI subcommand.
 
     Args:

@@ -1,9 +1,9 @@
 """Round-trip calculation verification for imported declaración drafts (#305).
 
-Turns an :class:`aeat.declaracion.DeclaracionFiling` + the project's
+Turns an :class:`aeat.adapters.inbound.declaracion.DeclaracionFiling` + the project's
 formula engine output into a Kent-readable verdict: ``verified`` /
 ``needs_review`` / ``unverifiable``. The module consumes
-:func:`aeat.formulas.Engine.audit_against` and classifies each
+:func:`aeat.domain.formulas.Engine.audit_against` and classifies each
 discrepancy by cause (extraction unreliable / rounding / un-modelled
 rule / correctness divergence) so Kent gets an actionable next step.
 

@@ -1,4 +1,4 @@
-"""Files-only persistence for :class:`aeat.workflow.WorkflowResult`.
+"""Files-only persistence for :class:`aeat.application.workflow.WorkflowResult`.
 
 Each run is persisted as an ``Envelope[WorkflowResult]`` ciphertext
 envelope at AUDIT class via the substrate's ``save_encrypted_envelope``

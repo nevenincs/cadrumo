@@ -1,7 +1,7 @@
 """Round-trip parser tests for committed sanitised fixtures (#239).
 
 Every committed fixture under ``tests/fixtures/justificantes/`` must
-remain parseable by :func:`aeat.justificante.parse_justificante`
+remain parseable by :func:`aeat.domain.justificante.parse_justificante`
 after sanitisation — the test fixture's whole point is to exercise
 the production extractor against a synthetic-but-shape-preserving
 representative of an AEAT capture.
@@ -9,7 +9,7 @@ representative of an AEAT capture.
 This file iterates the fixtures and asserts:
 
 * ``parse_justificante(fixture)`` returns a valid
-  :class:`aeat.justificante.Justificante`.
+  :class:`aeat.domain.justificante.Justificante`.
 * The parsed ``modelo`` / ``period`` / ``ejercicio`` /
   ``presented_at`` are non-empty (the fields the per-modelo
   extractor uses to bind regression assertions).

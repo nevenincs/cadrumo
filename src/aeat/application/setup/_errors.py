@@ -1,6 +1,6 @@
 """Domain errors for the first-run setup wizard (#61).
 
-Every setup-wizard error inherits from :class:`aeat.errors.AeatError`
+Every setup-wizard error inherits from :class:`aeat.core.errors.AeatError`
 so callers can catch the package-wide base class.
 """
 

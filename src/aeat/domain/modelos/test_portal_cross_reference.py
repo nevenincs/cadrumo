@@ -1,4 +1,4 @@
-"""Cross-reference tests between :mod:`aeat.models` and :mod:`aeat.portals`."""
+"""Cross-reference tests between :mod:`aeat.domain.modelos` and :mod:`aeat.domain.portals`."""
 
 from __future__ import annotations
 

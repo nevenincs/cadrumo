@@ -2,7 +2,7 @@
 
 Provides a consistent logger factory to avoid scattered bare logging instances.
 The root logger carries the run-trace context filter from
-:mod:`aeat.observability._sink` so every record automatically picks up
+:mod:`aeat.core.observability._sink` so every record automatically picks up
 the active ``run_id`` / ``step_id`` while a run context is bound.
 
 This module is also the single source of truth for log-record secret
@@ -173,10 +173,10 @@ class SecretScrubbingFilter(logging.Filter):
 def _install_run_context_record_factory() -> None:
     """Install a :class:`LogRecord` factory that stamps ``run_id`` / ``step_id``.
 
-    The contextvars live in :mod:`aeat.observability._context`. They are
+    The contextvars live in :mod:`aeat.core.observability._context`. They are
     imported lazily inside the closure so this function never triggers
-    a partial import of :mod:`aeat.observability` (which would create a
-    cycle through :mod:`aeat.config` → :mod:`aeat.auth` → this module).
+    a partial import of :mod:`aeat.core.observability` (which would create a
+    cycle through :mod:`aeat.core.config` → :mod:`aeat.adapters.outbound.aeat.auth` → this module).
     """
     global _FACTORY_INSTALLED
     if _FACTORY_INSTALLED:
@@ -220,7 +220,7 @@ class _DropRunEventFilter(logging.Filter):
 
     Records carrying a ``run_event`` extra are the per-run JSONL sink's
     diet — they're already persisted to ``events.jsonl`` via
-    :class:`aeat.observability.JsonlRunSink`. Echoing them on stderr as
+    :class:`aeat.core.observability.JsonlRunSink`. Echoing them on stderr as
     well would spam the console with one ``run.event NAVIGATION`` line
     per step; suppressing them here removes the noise while leaving
     the record intact for any other handler (including the JSONL
@@ -263,7 +263,7 @@ def configure_logging() -> None:
         }
     )
 
-    # Local import: the observability layer imports ``aeat.logging`` for
+    # Local import: the observability layer imports ``aeat.core.logging`` for
     # its own get_logger() seed, so attaching the filter at module
     # import time would create a circular import. Inside this function
     # the import is safe because configure_logging() runs after both

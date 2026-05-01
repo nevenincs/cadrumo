@@ -1,6 +1,6 @@
 """Typer sub-app for the ``aeat modelos`` CLI surface.
 
-Exposes four commands backed by :data:`aeat.models.MODELO_REGISTRY`:
+Exposes four commands backed by :data:`aeat.domain.modelos.MODELO_REGISTRY`:
 
 - ``aeat modelos list`` — filter and list catalogue entries.
 - ``aeat modelos show`` — dump a single entry.
@@ -227,7 +227,7 @@ def year_plan_command(
     ),
     json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
 ) -> None:
-    """Compute the filing :class:`aeat.deadlines.Schedule` for a profile."""
+    """Compute the filing :class:`aeat.domain.deadlines.Schedule` for a profile."""
     profile = AutonomoProfile(
         tax_id=tax_id,
         iva_regime=iva_regime,

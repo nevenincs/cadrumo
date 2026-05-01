@@ -1,4 +1,4 @@
-"""Unit tests for the pure parser in :mod:`aeat.cli.oauth`."""
+"""Unit tests for the pure parser in :mod:`aeat.entrypoints.cli.oauth`."""
 
 from __future__ import annotations
 

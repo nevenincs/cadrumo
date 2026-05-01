@@ -76,7 +76,7 @@ def test_register_schema_rejects_non_output_schema_classes() -> None:
 
 
 def test_public_api_reexports_schema_registry_surface() -> None:
-    """Callers must import the schema surface from ``aeat.cli`` only."""
+    """Callers must import the schema surface from ``aeat.entrypoints.cli`` only."""
 
     assert cli.OutputSchema.__name__ == "OutputSchema"
     assert cli.SchemaEnvelope.__name__ == "SchemaEnvelope"

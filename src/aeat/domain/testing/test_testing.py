@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.testing`.
+"""Unit tests for :mod:`aeat.domain.testing`.
 
 These tests load the hand-curated synthetic filing corpus under
 ``tests/fixtures/filing_history/`` through the public loader and

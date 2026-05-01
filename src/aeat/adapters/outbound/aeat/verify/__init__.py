@@ -1,7 +1,7 @@
 """Playwright CSV verification against AEAT's Sede electrónica (#44).
 
 The ``verify_csv`` helper is **opt-in**: it only runs when the caller
-supplies or constructs a :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`,
+supplies or constructs a :class:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.browser.BrowserSession`,
 and it never mutates AEAT-side state. Our contract is:
 
 * open the Sede verification page,
@@ -9,7 +9,7 @@ and it never mutates AEAT-side state. Our contract is:
 * read back the server response,
 * return ``True`` iff AEAT confirms the document as valid.
 
-Because the live bot-detection probe in :mod:`aeat.adapters.outbound.aeat.browser`
+Because the live bot-detection probe in :mod:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.browser`
 is a known flaky path (see issue #41), the function degrades gracefully when a
 browser cannot be constructed and surfaces the underlying error to the caller.
 """
@@ -65,9 +65,9 @@ async def _build_default_browser_session() -> tuple[BrowserSessionLike, Playwrig
     """Construct the default browser session and its Playwright owner."""
     from playwright.async_api import async_playwright
 
+    from .....core.config import load_settings
     from ..browser import BrowserSession
     from ..browser.profile import Profile
-    from .....core.config import load_settings
 
     settings = load_settings()
     storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json"
@@ -156,12 +156,12 @@ async def verify_csv(
 
 
 __all__ = [
+    "DEFAULT_BROWSER_SESSION_FACTORY",
     "BrowserContextLike",
     "BrowserKeyboardLike",
     "BrowserPageLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
-    "DEFAULT_BROWSER_SESSION_FACTORY",
     "PlaywrightOwnerLike",
     "verify_csv",
 ]

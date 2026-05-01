@@ -193,7 +193,7 @@ def record_field(
 ) -> RecordFieldSpec:
     """Concise constructor for :class:`RecordFieldSpec`.
 
-    Mirrors the :func:`aeat.formulas._rulesets._common.formula`
+    Mirrors the :func:`aeat.domain.formulas._rulesets._common.formula`
     helper pattern used in the formulas package. Applies
     kind-appropriate defaults for ``justification`` and ``pad_char``
     so most field declarations only need offset/length/field_id/kind.

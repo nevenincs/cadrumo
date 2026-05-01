@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.cli._sheets_helpers`."""
+"""Unit tests for :mod:`aeat.entrypoints.cli._sheets_helpers`."""
 
 from __future__ import annotations
 

@@ -39,6 +39,13 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from .....application.auth import (
+    AuthProvider,
+    AuthProviderDescription,
+    AuthProviderKind,
+    describe_provider_operator_impact,
+    select_provider,
+)
 from ._authenticator import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
@@ -58,7 +65,7 @@ from ._clave_movil import (
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
 )
-from ._file_permissions import restrict_file_permissions
+from .....core.file_permissions import restrict_file_permissions
 from ._gate import AeatAccessGate, AeatGateEnvSnapshot
 from ._google_paths import (
     GoogleAuthInspection,
@@ -70,9 +77,8 @@ from ._google_paths import (
 )
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
-    AuthProvider,
-    AuthProviderDescription,
-    AuthProviderKind,
+    AuthLoginAssertionDetail,
+    AuthSessionDetail,
     BrowserContextProvisioner,
     CertificateContextProvisioner,
     CertificateLoginAssertionDetail,
@@ -83,8 +89,7 @@ from ._providers import (
     ClavePermanenteSessionDetail,
     ClavePinLoginAssertionDetail,
     ClavePinSessionDetail,
-    describe_provider_operator_impact,
-    select_provider,
+    describe_certificate_provider,
 )
 from .certificate import (
     AeatLiveReadNotEnabledError,
@@ -127,9 +132,11 @@ __all__ = [
     "AeatLoginAssertionError",
     "AeatSession",
     "AeatSessionExpiredError",
+    "AuthLoginAssertionDetail",
     "AuthProvider",
     "AuthProviderDescription",
     "AuthProviderKind",
+    "AuthSessionDetail",
     "BrowserContextLike",
     "BrowserContextProvisioner",
     "BrowserPageLike",
@@ -165,6 +172,7 @@ __all__ = [
     "LoadedCertificate",
     "adc_well_known_path",
     "build_client_certificates_kwarg",
+    "describe_certificate_provider",
     "describe_provider_operator_impact",
     "evaluate_loaded_certificate_health",
     "extract_nif_from_subject",

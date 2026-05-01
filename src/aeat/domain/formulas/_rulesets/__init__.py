@@ -1,4 +1,4 @@
-"""Concrete rulesets shipped with :mod:`aeat.formulas`.
+"""Concrete rulesets shipped with :mod:`aeat.domain.formulas`.
 
 **Ruleset ID grammar.**
 

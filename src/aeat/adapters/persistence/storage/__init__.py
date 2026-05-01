@@ -29,7 +29,7 @@ from ._blob_store import (
     BlobReference,
     EncryptedBlobStore,
 )
-from ._classification import (
+from ....core.classification import (
     AtRestTreatment,
     ClassificationPolicy,
     RedactionRule,
@@ -39,7 +39,7 @@ from ._classification import (
     default_policy_for,
     default_policy_table,
 )
-from ._corpus_manifest import (
+from ....core.corpus_manifest import (
     CorpusEntry,
     CorpusManifest,
     CorpusManifestDiff,
@@ -78,7 +78,7 @@ from ._envelope import (
     save_encrypted_envelope,
     save_envelope,
 )
-from ._lock import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
+from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
 from ._master_key import (
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
@@ -110,7 +110,7 @@ from ._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
-from ._redaction import (
+from ....core.redaction import (
     default_rules,
     default_rules_for,
     default_rules_for_class,

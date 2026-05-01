@@ -1,4 +1,4 @@
-"""Unit tests for the pure helpers in :mod:`aeat.cli.doctor`.
+"""Unit tests for the pure helpers in :mod:`aeat.entrypoints.cli.doctor`.
 
 The orchestrator and individual check functions are exercised against
 real APIs in the live smoke suite. Here we cover only the deterministic

@@ -6,7 +6,7 @@ excision ADR [[2026-04-18-live-submit-cli-excision-adr]]:
 
 - ``aeat submission preflight <draft-path>`` — run preflight only.
 - ``aeat submission show <submission-id>`` — pretty-print a persisted
-  :class:`aeat.submission.SubmittedFiling`.
+  :class:`aeat.adapters.outbound.aeat.export.SubmittedFiling`.
 - ``aeat submission list [--modelo ...] [--status ...]`` — list every
   persisted filing, optionally filtered.
 

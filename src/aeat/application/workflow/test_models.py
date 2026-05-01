@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.workflow._models`."""
+"""Unit tests for :mod:`aeat.application.workflow._models`."""
 
 from __future__ import annotations
 

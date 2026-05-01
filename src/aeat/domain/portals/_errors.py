@@ -1,8 +1,8 @@
 """Error hierarchy for the portal catalogue.
 
-Every error raised from :mod:`aeat.portals` derives from
+Every error raised from :mod:`aeat.domain.portals` derives from
 :class:`PortalRegistryError`, which in turn derives from the project
-root :class:`aeat.errors.AeatError`. Two concrete subclasses cover the
+root :class:`aeat.core.errors.AeatError`. Two concrete subclasses cover the
 failure modes surfaced to external callers:
 
 - :class:`UnknownPortalError` — raised by registry lookups on an
@@ -17,11 +17,11 @@ from ...core.errors import AeatError
 
 
 class PortalRegistryError(AeatError):
-    """Base class for every error raised from :mod:`aeat.portals`."""
+    """Base class for every error raised from :mod:`aeat.domain.portals`."""
 
 
 class UnknownPortalError(PortalRegistryError):
-    """Raised by :func:`aeat.portals.get_portal` on unknown names.
+    """Raised by :func:`aeat.domain.portals.get_portal` on unknown names.
 
     Attributes:
         portal: The offending portal name or value as supplied by the
@@ -42,6 +42,6 @@ class PortalIntegrityError(PortalRegistryError):
     dangling ``replaced_by``, unresolved ``related_modelo``, or
     ``ModeloCode`` member without a backing FILING/CENSUS portal).
     Always raised from
-    :func:`aeat.portals._registry._finalise_registry` and therefore
+    :func:`aeat.domain.portals._registry._finalise_registry` and therefore
     never crosses a user call stack — it aborts package import.
     """

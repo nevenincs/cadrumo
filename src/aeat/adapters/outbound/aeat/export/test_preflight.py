@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.submission._preflight.Preflight`."""
+"""Unit tests for :class:`aeat.adapters.outbound.aeat.export._preflight.Preflight`."""
 
 from __future__ import annotations
 

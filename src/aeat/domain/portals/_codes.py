@@ -1,7 +1,7 @@
 """Closed enumeration of every AEAT portal tracked by the registry.
 
 The :class:`Portal` members name every portal that the v1 catalogue
-materialises under :mod:`aeat.portals`. Member values are the member
+materialises under :mod:`aeat.domain.portals`. Member values are the member
 name lowercased (e.g. ``"portal_m303_iva_autoliquidacion"``), which
 gives callers a stable, machine-predictable identifier safe to emit
 over CLI / JSON without further mapping.
@@ -11,7 +11,7 @@ portal-catalogue research doc §6 for the enumeration):
 
 - 8 AUTH entry points (Sede root, Mi área personal, Cl@ve + cert + DNIe
   gateways).
-- 21 FILING / CENSUS procedures (one per :class:`aeat.models.ModeloCode`,
+- 21 FILING / CENSUS procedures (one per :class:`aeat.domain.modelos.ModeloCode`,
   including the retired Modelo 037 simplificada).
 - 2 BORRADOR entries (Renta Web borrador, Pre303 ayuda).
 - 4 CONSULTATION entries (Mis expedientes, Mis notificaciones, Mis datos
@@ -31,8 +31,8 @@ class Portal(StrEnum):
 
     Values are the member name lowercased. Adding a new member is a
     first-class enum widening and must be accompanied by a new entry
-    file under :mod:`aeat.portals._entries` or registry assembly will
-    abort with :class:`aeat.portals.PortalIntegrityError`.
+    file under :mod:`aeat.domain.portals._entries` or registry assembly will
+    abort with :class:`aeat.domain.portals.PortalIntegrityError`.
     """
 
     # Authentication (8)

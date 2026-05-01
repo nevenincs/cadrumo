@@ -1,4 +1,4 @@
-"""Content-stream rewrite for :mod:`aeat.sanitizer`.
+"""Content-stream rewrite for :mod:`aeat.adapters.inbound.sanitizer`.
 
 Walks every text-show operator on every page of a PDF and rewrites
 the operand text in place against a :class:`TokenMap`. Pikepdf's

@@ -3,10 +3,10 @@
 The Agencia Tributaria's identifier algorithm is shared infrastructure
 across multiple subpackages — invoice counterparty checks, encrypted
 master-key NIF canaries, sanitiser fixture validation, and CLI
-preflight gates. Co-locating the algorithm under :mod:`aeat.identity`
+preflight gates. Co-locating the algorithm under :mod:`aeat.core.identity`
 gives every caller a public, non-private import path so the layered
 restructure is not blocked by subpackage-private bypass imports into
-:mod:`aeat.financial.invoices._validators`.
+:mod:`aeat.domain.financial.invoices._validators`.
 """
 
 from __future__ import annotations

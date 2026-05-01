@@ -95,7 +95,7 @@ class TestGapStoryConsistency:
             assert cid in doc, (
                 f"modelo_303_2024 docstring does not mention casilla {cid}; "
                 f"the fixture was updated without regenerating the module. "
-                f"Run ``python -m aeat.submission._formats._generate "
+                f"Run ``python -m aeat.adapters.outbound.aeat.export._formats._generate "
                 f"tests/fixtures/dr_specs/dr303e24.json src/aeat/submission/"
                 f"_formats/modelo_303_2024.py``."
             )

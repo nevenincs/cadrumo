@@ -108,7 +108,7 @@ class FilingObligation(BaseModel):
             ``today`` used by :meth:`DeadlineEngine.compute`.
         applies_because: Human-readable explanation of why the profile
             is obliged to file this modelo. References the rule from
-            :mod:`aeat.deadlines._applies`.
+            :mod:`aeat.domain.deadlines._applies`.
         boe_references: Tuple of opaque BOE / Manual práctico citation
             keys. Stable identifiers, never URLs.
     """

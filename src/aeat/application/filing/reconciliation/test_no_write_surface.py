@@ -1,6 +1,6 @@
-"""Layer-3 write-guard for aeat.filing.reconciliation (#239).
+"""Layer-3 write-guard for aeat.application.filing.reconciliation (#239).
 
-Mirror of ``aeat.sede.test_no_write_surface``. Walks every ``.py``
+Mirror of ``aeat.adapters.outbound.aeat.sede.test_no_write_surface``. Walks every ``.py``
 source under the subpackage and fails if a forbidden call-context
 verb appears. The reconciliation layer is a pure compare — it MUST
 remain structurally free of any AEAT-mutation verb, English or
@@ -42,7 +42,7 @@ class TestNoCallContextWriteVerbs:
                 if pattern.search(line):
                     offenders.append(f"{source.relative_to(_RECON_ROOT)}:{line_no}: {line.strip()}")
         assert not offenders, (
-            f"Forbidden write verb {verb!r} used as a call inside aeat.filing.reconciliation:\n" + "\n".join(offenders)
+            f"Forbidden write verb {verb!r} used as a call inside aeat.application.filing.reconciliation:\n" + "\n".join(offenders)
         )
 
 
