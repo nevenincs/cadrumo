@@ -6,10 +6,12 @@ aeat-restructure ADR (Public surface and semver).
 
 from __future__ import annotations
 
+import importlib as _importlib
 import warnings as _warnings
 
 from ..adapters.outbound.aeat.export import *  # noqa: F403
-from ..adapters.outbound.aeat.export import __all__  # noqa: F401
+
+__all__ = getattr(_importlib.import_module("aeat.adapters.outbound.aeat.export"), "__all__", ())
 
 _warnings.warn(
     "Importing from `aeat.submission` is deprecated; use `aeat.adapters.outbound.aeat.export` instead.",

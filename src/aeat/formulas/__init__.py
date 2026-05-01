@@ -6,10 +6,12 @@ aeat-restructure ADR (Public surface and semver).
 
 from __future__ import annotations
 
+import importlib as _importlib
 import warnings as _warnings
 
 from ..domain.formulas import *  # noqa: F403
-from ..domain.formulas import __all__  # noqa: F401
+
+__all__ = getattr(_importlib.import_module("aeat.domain.formulas"), "__all__", ())
 
 _warnings.warn(
     "Importing from `aeat.formulas` is deprecated; use `aeat.domain.formulas` instead.",
