@@ -1,4 +1,4 @@
-"""Live test for :func:`aeat.sede.walk_declarations_register` (#239).
+"""Live test for :func:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede.walk_declarations_register` (#239).
 
 Drives the *Consultar declaraciones presentadas* form against
 the real AEAT sede with a Cl@ve-móvil session. Skips cleanly when:
@@ -10,7 +10,7 @@ the real AEAT sede with a Cl@ve-móvil session. Skips cleanly when:
   for an automated suite).
 
 The test is read-only by construction — every public surface in
-:mod:`aeat.sede._declarations` is structurally incapable of
+:mod:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._declarations` is structurally incapable of
 mutating AEAT state (parent ADR's five-layer write guard).
 """
 

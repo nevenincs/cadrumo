@@ -5,7 +5,7 @@ that returns a ``BrowserSessionLike``. Until this module, the only
 production wiring was the live-test fixture that manually opened a
 Playwright instance and built a :class:`BrowserSession`. That left
 ``aeat auth login`` unable to run end-to-end because
-:func:`aeat.auth.select_provider` constructs providers with
+:func:`aeat.adapters.outbound.aeat.auth.select_provider` constructs providers with
 ``browser_session_factory=None`` by default.
 
 This module closes that gap by providing:
@@ -14,7 +14,7 @@ This module closes that gap by providing:
   that owns a ``Playwright`` instance + :class:`BrowserSession`
   pair. Its ``close()`` tears down both.
 * :func:`default_browser_session_factory` — the async callable that
-  matches :class:`aeat.auth.BrowserSessionFactory` and yields a
+  matches :class:`aeat.adapters.outbound.aeat.auth.BrowserSessionFactory` and yields a
   ``DefaultBrowserSession`` on demand.
 
 The CLI wires this factory into ``select_provider`` so
@@ -97,7 +97,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     """Start Playwright and return a wrapped :class:`BrowserSession`.
 
     The returned object satisfies
-    :class:`aeat.auth.BrowserSessionLike` and owns its Playwright
+    :class:`aeat.adapters.outbound.aeat.auth.BrowserSessionLike` and owns its Playwright
     instance for the full lifetime. Call ``await session.close()``
     when you are done — auth providers already do this in their
     ``close()`` path.

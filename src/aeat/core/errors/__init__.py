@@ -58,10 +58,10 @@ class AeatError(Exception):
 class AeatObservabilityError(AeatError):
     """Base class for observability-layer errors (#99).
 
-    Lives in :mod:`aeat.errors` (rather than the leaf
-    :mod:`aeat.observability` subpackage) so other subpackages can
+    Lives in :mod:`aeat.core.errors` (rather than the leaf
+    :mod:`aeat.core.observability` subpackage) so other subpackages can
     catch it without importing observability internals. Concrete
-    subclasses are declared in :mod:`aeat.observability._errors`.
+    subclasses are declared in :mod:`aeat.core.observability._errors`.
     """
 
 
@@ -77,7 +77,7 @@ class FixtureProvisioningError(AeatError):
 class FilingFixtureError(AeatError):
     """Raised when a synthetic filing-history fixture cannot be loaded.
 
-    Thrown by :mod:`aeat.testing` when the fixtures directory cannot be
+    Thrown by :mod:`aeat.domain.testing` when the fixtures directory cannot be
     resolved, a fixture file cannot be read, JSON decoding fails, or a
     payload fails strict pydantic validation (including the synthetic-
     only invariant checks on the ``synthetic`` and ``_comment`` fields).
@@ -87,16 +87,16 @@ class FilingFixtureError(AeatError):
 class SiteHealthError(AeatError):
     """Raised when AEAT site-health detection classifies a non-OK state.
 
-    Carries a strict :class:`aeat.browser._site_health.SiteHealthStatus`
+    Carries a strict :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
     attribute describing the detected state (mantenimiento, WAF challenge,
     rate limit, unreachable, unknown error) together with the evidence
     used to classify it. The workflow engine catches this error in a typed
     arm that precedes the generic exception handler so a planned
     mantenimiento never collapses into ``UNHANDLED_EXCEPTION``.
 
-    The error lives in :mod:`aeat.errors` (and not in either leaf
+    The error lives in :mod:`aeat.core.errors` (and not in either leaf
     subpackage) to break the circular import between
-    :mod:`aeat.browser` (which raises it) and :mod:`aeat.workflow`
+    :mod:`aeat.adapters.outbound.aeat.browser` (which raises it) and :mod:`aeat.application.workflow`
     (which consumes it).
     """
 
@@ -105,7 +105,7 @@ class SiteHealthError(AeatError):
 
         Args:
             status: The strict
-                :class:`aeat.browser._site_health.SiteHealthStatus`
+                :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
                 instance describing the detected non-OK state.
         """
 
@@ -129,15 +129,15 @@ class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
-# -- aeat.formulas error hierarchy (#173) --------------------------------
-# The formula engine lives in :mod:`aeat.formulas`. Per the project-wide
+# -- aeat.domain.formulas error hierarchy (#173) --------------------------------
+# The formula engine lives in :mod:`aeat.domain.formulas`. Per the project-wide
 # mandate (CLAUDE.md §Errors: "All domain errors inherit from
-# aeat.errors.AeatError"), the entire formula-engine error hierarchy is
+# aeat.core.errors.AeatError"), the entire formula-engine error hierarchy is
 # declared here rather than inside the subpackage.
 
 
 class FormulasError(AeatError):
-    """Base error for the :mod:`aeat.formulas` engine."""
+    """Base error for the :mod:`aeat.domain.formulas` engine."""
 
 
 class RulesetValidationError(FormulasError):

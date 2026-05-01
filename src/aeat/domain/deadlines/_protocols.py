@@ -1,15 +1,15 @@
 """Internal validating-string identifier for AEAT modelos.
 
-The deadline engine cannot import :mod:`aeat.models` directly:
-:mod:`aeat.models._registry` imports from :mod:`aeat.deadlines` to
-expose :func:`aeat.models.year_plan`, so a hard back-edge would cause
+The deadline engine cannot import :mod:`aeat.domain.modelos` directly:
+:mod:`aeat.domain.modelos._registry` imports from :mod:`aeat.domain.deadlines` to
+expose :func:`aeat.domain.modelos.year_plan`, so a hard back-edge would cause
 a circular import at package-load time.
 
 :class:`ModeloIdentifier` is therefore a deadlines-internal
 regex-validated ``str`` subclass. Pydantic schema-aware validation
 keeps boundary-crossing payloads (notably :class:`Schedule`) honest
 without forcing the engine to depend on the closed
-:class:`aeat.models.ModeloCode` enum. Live AEAT payloads occasionally
+:class:`aeat.domain.modelos.ModeloCode` enum. Live AEAT payloads occasionally
 carry modelos that are not yet in our v1 inventory; this type lets
 those flow through the boundary without crashing the engine.
 """
@@ -30,7 +30,7 @@ class ModeloIdentifier(str):
 
     The format is intentionally permissive — three digits with an
     optional trailing uppercase letter — to admit modelos that have
-    not yet been promoted into the closed :class:`aeat.models.ModeloCode`
+    not yet been promoted into the closed :class:`aeat.domain.modelos.ModeloCode`
     catalogue.
     """
 

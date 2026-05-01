@@ -1,4 +1,4 @@
-"""Typer commands for :mod:`aeat.schema`.
+"""Typer commands for :mod:`aeat.domain.schema`.
 
 Mounted under ``aeat schema``. Commands:
 

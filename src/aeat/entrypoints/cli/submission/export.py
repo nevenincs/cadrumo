@@ -30,9 +30,9 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from ....adapters.inbound.identity import validate_spanish_tax_id
 from ....adapters.outbound.aeat.export import DraftStatus
 from ....adapters.outbound.aeat.export._formats._serialise import serialise, serialise_envelope
+from ....core.identity import validate_spanish_tax_id
 from ._helpers import load_draft
 from ._schema_registry import SCHEMA_REGISTRY, CliInputs, validate_iban_flag, validate_swift_flag
 
@@ -116,7 +116,7 @@ def export_cmd(
     draft = load_draft(draft_path)
 
     # The DraftStatus enum exposes DRAFT / INCOMPLETE / READY_TO_SUBMIT
-    # today (see `aeat.submission._protocols.DraftStatus`). Export refuses
+    # today (see `aeat.adapters.outbound.aeat.export._protocols.DraftStatus`). Export refuses
     # INCOMPLETE outright (validation not yet passed). DRAFT exports emit
     # a BORRADOR banner; READY_TO_SUBMIT is the approved-enough state
     # until C3i (FilingDraftStatus.APPROVED) lands.

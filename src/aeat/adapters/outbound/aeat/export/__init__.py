@@ -6,7 +6,7 @@ permanently forbidden; transport methods reject immediately with
 :class:`LiveSubmitForbiddenError`.
 
 Public API discipline: callers outside this subpackage must import
-only from :mod:`aeat.submission` (the package root); the underscored
+only from :mod:`aeat.adapters.outbound.aeat.export` (the package root); the underscored
 submodules are implementation detail.
 
 See ``[[2026-04-12-submission-engine-research]]`` and

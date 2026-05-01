@@ -191,7 +191,7 @@ class TestLoadDraftFromDisk:
 #
 # Pytest fixtures below are light — the CliRunner-based tests don't touch
 # disk or auth. Smoke-level behaviour verification only; full reconcile
-# flow coverage lives in aeat.filing.reconciliation.test_reconcile.
+# flow coverage lives in aeat.application.filing.reconciliation.test_reconcile.
 
 
 def _fixed_now() -> datetime:

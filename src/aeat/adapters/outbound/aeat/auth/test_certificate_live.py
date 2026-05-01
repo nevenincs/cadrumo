@@ -1,4 +1,4 @@
-"""Live mTLS handshake smoke test for :mod:`aeat.auth.certificate`.
+"""Live mTLS handshake smoke test for :mod:`aeat.adapters.outbound.aeat.auth.certificate`.
 
 Gated on ``AEAT_LIVE_TESTS_ENABLED=1`` AND the cert env vars being set.
 Skips cleanly in every other configuration — NEVER fails in CI when

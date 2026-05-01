@@ -1,7 +1,7 @@
 """Shared helpers for the ``aeat deadlines`` CLI sub-app.
 
 Pure CLI glue: profile loading, schedule materialisation. Every domain
-decision is delegated to :mod:`aeat.deadlines`.
+decision is delegated to :mod:`aeat.domain.deadlines`.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def load_profile(path: Path) -> AutonomoProfile:
     """Load and validate an :class:`AutonomoProfile` from disk.
 
     The setup wizard writes the profile as an encrypted envelope at
-    IDENTITY class via :func:`aeat.setup.write_profile_file`; this
+    IDENTITY class via :func:`aeat.application.setup.write_profile_file`; this
     helper round-trips through the matching loader so the on-disk
     record is always ciphertext.
 

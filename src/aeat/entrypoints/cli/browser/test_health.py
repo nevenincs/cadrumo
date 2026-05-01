@@ -1,8 +1,8 @@
 """Unit tests for ``aeat browser health`` (#95).
 
 Every test uses the explicit probe-factory override seam exposed by
-:mod:`aeat.cli.browser.health`. The doubles raise real
-:class:`aeat.errors.SiteHealthError` instances constructed from real
+:mod:`aeat.entrypoints.cli.browser.health`. The doubles raise real
+:class:`aeat.core.errors.SiteHealthError` instances constructed from real
 HTML fixtures under ``tests/fixtures/site_health/``. No monkeypatching
 or ``unittest.mock`` usage.
 """

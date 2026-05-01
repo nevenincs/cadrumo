@@ -6,7 +6,7 @@ surfaces — not concrete classes — for two reasons:
 1. **Cross-subpackage decoupling.** Each Protocol lets the workflow
    engine integrate with an in-house subpackage without forcing a
    hard import dependency at the engine layer; adapters in
-   :mod:`aeat.workflow._adapters` translate the richer real surfaces
+   :mod:`aeat.application.workflow._adapters` translate the richer real surfaces
    onto these narrow Protocols.
 2. **No-mocks testing.** The project forbids mocks/patches/fakes/stubs
    in its test suite. Protocols let us substitute hand-rolled
@@ -32,7 +32,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 @runtime_checkable
 class DeadlineEngineProtocol(Protocol):
-    """Narrow surface over :class:`aeat.deadlines.DeadlineEngine`."""
+    """Narrow surface over :class:`aeat.domain.deadlines.DeadlineEngine`."""
 
     def compute(
         self,
@@ -47,7 +47,7 @@ class DeadlineEngineProtocol(Protocol):
 
 @runtime_checkable
 class FilingDraftBuilderProtocol(Protocol):
-    """Narrow surface over :func:`aeat.filing.build_draft`."""
+    """Narrow surface over :func:`aeat.application.filing.build_draft`."""
 
     def build(
         self,
@@ -64,7 +64,7 @@ class FilingDraftBuilderProtocol(Protocol):
 
 @runtime_checkable
 class SubmissionEngineProtocol(Protocol):
-    """Read-only preflight surface over :class:`aeat.submission.SubmissionEngine`."""
+    """Read-only preflight surface over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
 
     def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
         """Run preflight gates against ``draft``; raise on failure."""
@@ -76,7 +76,7 @@ class SyncRunSummary(BaseModel):
 
     The workflow engine only needs to know whether the sync succeeded
     and surface a numeric summary for diagnostics; the full
-    :class:`aeat.sync.SyncRunResult` graph is intentionally not
+    :class:`aeat.application.sync.SyncRunResult` graph is intentionally not
     imported here.
     """
 
@@ -89,7 +89,7 @@ class SyncRunSummary(BaseModel):
 
 @runtime_checkable
 class SyncRunnerProtocol(Protocol):
-    """Narrow surface over :class:`aeat.sync.LiveSyncRunner`."""
+    """Narrow surface over :class:`aeat.application.sync.LiveSyncRunner`."""
 
     async def run(
         self,
@@ -109,7 +109,7 @@ class CertificateBundleProtocol(Protocol):
     The workflow engine calls :meth:`describe` once during the
     preflight stage to prove the configured auth provider is present
     and healthy. Any exception raised here is translated into
-    :attr:`aeat.workflow.WorkflowAbortReason.CERT_INVALID` to preserve
+    :attr:`aeat.application.workflow.WorkflowAbortReason.CERT_INVALID` to preserve
     the existing workflow abort taxonomy.
     """
 

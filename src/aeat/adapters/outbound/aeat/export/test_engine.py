@@ -1,4 +1,4 @@
-"""Unit tests for the read-only :class:`aeat.submission.SubmissionEngine`."""
+"""Unit tests for the read-only :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
 
 from __future__ import annotations
 

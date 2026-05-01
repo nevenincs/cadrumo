@@ -1,6 +1,6 @@
 """Domain errors for the filing submission engine.
 
-All errors inherit from :class:`aeat.errors.AeatError` so callers have
+All errors inherit from :class:`aeat.core.errors.AeatError` so callers have
 a single root they can catch at integration boundaries.
 """
 
@@ -11,10 +11,10 @@ from .....core.i18n import Translatable
 
 
 class SubmissionError(AeatError):
-    """Base class for every error raised by :mod:`aeat.submission`.
+    """Base class for every error raised by :mod:`aeat.adapters.outbound.aeat.export`.
 
     Attributes:
-        translated_message: Optional :class:`aeat.i18n.Translatable`
+        translated_message: Optional :class:`aeat.core.i18n.Translatable`
             payload carrying a user-facing version of the message.
     """
 

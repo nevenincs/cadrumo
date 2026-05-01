@@ -1,20 +1,20 @@
 """Static guardrails enforcing permanent remote-write CLI excision.
 
 This module mechanically prevents the
-:mod:`aeat.cli.submission.submit` and dry-run portal-walk commands from
+:mod:`aeat.entrypoints.cli.submission.submit` and dry-run portal-walk commands from
 being reintroduced into the default CLI surface. See
 ``.vault/adr/2026-04-18-live-submit-cli-excision-adr.md`` and the
 2026-04-27 permanent-forbid policy ADR.
 
 Three assertions:
 
-1. Importing :mod:`aeat.cli.submission.submit` raises
+1. Importing :mod:`aeat.entrypoints.cli.submission.submit` raises
    :class:`ModuleNotFoundError`.
-2. The :class:`typer.Typer` app under :mod:`aeat.cli.submission`
+2. The :class:`typer.Typer` app under :mod:`aeat.entrypoints.cli.submission`
    does NOT register a command named ``submit``.
 3. The string ``button#firmar-y-enviar`` (the deleted modelo-130
    "sign and send" CSS selector) does not appear anywhere under
-   :mod:`aeat.cli`.
+   :mod:`aeat.entrypoints.cli`.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.deadlines.DeadlineEngine` and ``next_deadline``."""
+"""Unit tests for :class:`aeat.domain.deadlines.DeadlineEngine` and ``next_deadline``."""
 
 from __future__ import annotations
 

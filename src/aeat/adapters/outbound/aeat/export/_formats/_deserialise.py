@@ -1,6 +1,6 @@
 """Fichero-BOE deserialiser (EPIC #201 C3d,).
 
-Round-trip inverse of :func:`aeat.submission._formats._serialise.serialise`.
+Round-trip inverse of :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`.
 Takes a fichero-BOE byte payload + a `RECORD_SPECS` tuple and yields
 a ``ParsedRecord`` carrying the per-field values (as strings or
 :class:`Decimal` for currency) plus metadata.
@@ -36,7 +36,7 @@ class ParsedRecord(BaseModel):
 
     Each field value is keyed by ``field_id``; currency fields also
     appear in :attr:`casilla_values` keyed by ``casilla_id`` for
-    easy cross-reference against :class:`aeat.filing.FilingDraft`.
+    easy cross-reference against :class:`aeat.application.filing.FilingDraft`.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")

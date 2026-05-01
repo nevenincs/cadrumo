@@ -4,7 +4,7 @@ Imports every ``_entries/portal_*.py`` module, collects its module-level
 ``ENTRY`` object, and freezes the result as the public
 :data:`PORTAL_REGISTRY` mapping. Structural invariants are enforced at
 import time via :func:`_finalise_registry`; any violation raises
-:class:`aeat.portals._errors.PortalIntegrityError` and aborts package
+:class:`aeat.domain.portals._errors.PortalIntegrityError` and aborts package
 import.
 """
 
@@ -207,7 +207,7 @@ def _finalise_registry(
 
     Args:
         entries: The per-entry ``ENTRY`` objects loaded from
-            :mod:`aeat.portals._entries`.
+            :mod:`aeat.domain.portals._entries`.
 
     Returns:
         A :class:`types.MappingProxyType` from :class:`Portal` to

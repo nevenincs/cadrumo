@@ -1,6 +1,6 @@
 """Shared helpers for constructing per-portal registry entries.
 
-Each entry module in :mod:`aeat.portals._entries` calls
+Each entry module in :mod:`aeat.domain.portals._entries` calls
 :func:`build_entry` to turn a compact set of keyword arguments into a
 fully validated :class:`PortalMetadata`. Keeping this glue private
 isolates the repetitive construction boilerplate from the authoritative

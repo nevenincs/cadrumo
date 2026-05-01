@@ -1,6 +1,6 @@
 """Shared helpers for constructing per-modelo registry entries.
 
-Each entry module in :mod:`aeat.models._entries` calls
+Each entry module in :mod:`aeat.domain.modelos._entries` calls
 :func:`build_entry` to turn a compact dict of primitive values into a
 fully validated :class:`ModeloMetadata`. Keeping this glue private
 isolates the repetitive construction boilerplate from the authoritative

@@ -4,7 +4,7 @@ Wraps the substrate's :class:`Envelope[WireFilingHistory]` contract behind
 a small typed surface that the sync runner and any future consumer can
 call. Each modelo's filing history is persisted as its own envelope file
 (``<modelo>.envelope.json``) under
-:attr:`aeat.config.AeatSettings.aeat_filing_history_dir` with a
+:attr:`aeat.core.config.AeatSettings.aeat_filing_history_dir` with a
 per-modelo :func:`exclusive_file_lock`.
 
 Sensitivity classification: a filing-history payload captures the

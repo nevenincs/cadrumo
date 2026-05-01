@@ -1,4 +1,4 @@
-"""Errors raised by :mod:`aeat.sede` navigation and fetch helpers."""
+"""Errors raised by :mod:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede` navigation and fetch helpers."""
 
 from __future__ import annotations
 

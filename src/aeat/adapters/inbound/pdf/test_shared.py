@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat._pdf_import._shared` (#305).
+"""Unit tests for :mod:`aeat.adapters.inbound.pdf._shared` (#305).
 
 Exercises the strict+frozen invariants of :class:`ExtractedCasilla` and the
 :class:`PdfFilingImportError` root's inheritance chain.

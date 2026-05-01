@@ -2,7 +2,7 @@
 
 Enforces the direction called out in #108's acceptance brief: every
 modelo the on-disk casilla catalogue knows about must resolve to a
-:class:`aeat.models.ModeloMetadata` entry. The reverse direction
+:class:`aeat.domain.modelos.ModeloMetadata` entry. The reverse direction
 (every registry entry references only known casilla codes) lands in a
 later iteration once :class:`ModeloMetadata` carries structured
 casilla references.

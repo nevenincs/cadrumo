@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.workflow.WorkflowEngine`.
+"""Unit tests for :class:`aeat.application.workflow.WorkflowEngine`.
 
 Every test uses real Protocol-conforming test doubles. No mocks,
 patches, or ``unittest.mock`` imports — the project-wide no-mocks
@@ -9,11 +9,11 @@ The shared :class:`_Fixtures` helper builds a healthy set of doubles
 and lets individual tests override exactly the knob that should
 provoke a bailout.
 
-The :mod:`aeat.sede` boundary is exercised through the
+The :mod:`aeat.adapters.outbound.aeat.sede` boundary is exercised through the
 :class:`WorkflowEngine` constructor's ``expedientes_source`` and
 ``notifications_source`` seams. Tests inject async callables that
-return real :class:`aeat.sede.Expediente` and
-:class:`aeat.sede.RemoteNotification` records, bypassing the live
+return real :class:`aeat.adapters.outbound.aeat.sede.Expediente` and
+:class:`aeat.adapters.outbound.aeat.sede.RemoteNotification` records, bypassing the live
 Playwright walkers without falsifying their record shape.
 """
 
@@ -71,7 +71,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @dataclass
 class _FakeDraft:
-    """Structural :class:`aeat.submission.FilingDraftLike` test double."""
+    """Structural :class:`aeat.adapters.outbound.aeat.export.FilingDraftLike` test double."""
 
     draft_id: str = "draft-xyz"
     modelo: str = "130"
@@ -157,7 +157,7 @@ class _FakeSyncRunner:
 
 @dataclass
 class _FakeExpedientesSource:
-    """Seam over :func:`aeat.sede.walk_expedientes_tree` for tests.
+    """Seam over :func:`aeat.adapters.outbound.aeat.sede.walk_expedientes_tree` for tests.
 
     Returns whatever expedientes the test put on ``self.expedientes``;
     the engine filters by modelo + ejercicio internally.
@@ -176,7 +176,7 @@ class _FakeExpedientesSource:
 
 @dataclass
 class _FakeNotificationsSource:
-    """Seam over :func:`aeat.sede.fetch_notifications_query` for tests."""
+    """Seam over :func:`aeat.adapters.outbound.aeat.sede.fetch_notifications_query` for tests."""
 
     rows: tuple[RemoteNotification, ...] = ()
 
@@ -297,7 +297,7 @@ class _Fixtures:
         )
 
 
-# An :class:`aeat.auth.AeatSession` is strict-frozen pydantic with a
+# An :class:`aeat.adapters.outbound.aeat.auth.AeatSession` is strict-frozen pydantic with a
 # heavy provider_detail discriminator; constructing one fully would
 # pull in unrelated machinery. The engine never inspects the session
 # itself — it only forwards it to the injected source seams — so a

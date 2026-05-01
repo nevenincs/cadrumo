@@ -1,10 +1,10 @@
 """Closed enumeration of every AEAT modelo tracked by the registry.
 
 The :class:`ModeloCode` members name every modelo that the v1 catalogue
-materialises under :mod:`aeat.models`. The enum values are the canonical
+materialises under :mod:`aeat.domain.modelos`. The enum values are the canonical
 three-character AEAT code strings (``"036"``, ``"100"``, ...), which
 lets consumers interoperate transparently with string-keyed APIs such
-as :data:`aeat.deadlines.CALENDAR`.
+as :data:`aeat.domain.deadlines.CALENDAR`.
 """
 
 from __future__ import annotations

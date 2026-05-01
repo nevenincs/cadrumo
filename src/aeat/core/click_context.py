@@ -1,4 +1,4 @@
-"""Shared Click-context helpers that must not import ``aeat.cli``."""
+"""Shared Click-context helpers that must not import ``aeat.entrypoints.cli``."""
 
 from __future__ import annotations
 

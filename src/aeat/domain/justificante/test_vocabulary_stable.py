@@ -1,11 +1,16 @@
-"""Public-surface stability guard for :mod:`aeat.justificante` (#305).
+"""Public-surface stability guard for :mod:`aeat.domain.justificante` (#305).
 
 The rehoming of :class:`JustificanteError` under
-:class:`aeat._pdf_import.PdfFilingImportError` must not accidentally prune
+:class:`aeat.adapters.inbound.pdf.PdfFilingImportError` must not accidentally prune
 any of the module's ``__all__`` exports. This test pins the frozen minimum
 surface so future refactors trip this check instead of silently breaking
 downstream callers (notably the amendment-baseline flow and the shipped
 ``aeat filing import --from-justificante`` command).
+
+Note: ``verify_csv`` was intentionally removed from the domain public surface
+(audit-11). The function now lives in
+:mod:`aeat.adapters.outbound.aeat.verify` because Playwright/browser
+automation belongs in the adapter layer, not the domain.
 """
 
 from __future__ import annotations
@@ -26,7 +31,6 @@ _FROZEN_PUBLIC_SURFACE: frozenset[str] = frozenset(
         "JustificanteParserBackend",
         "JustificanteVerificationError",
         "parse_justificante",
-        "verify_csv",
     }
 )
 

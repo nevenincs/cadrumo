@@ -58,7 +58,7 @@ class TestStderrRunEventFilter:
     """The default stderr handler must drop records carrying run_event.
 
     S2 concern: ``record_event`` logs at INFO through
-    ``aeat.observability`` which propagates to the root stderr
+    ``aeat.core.observability`` which propagates to the root stderr
     handler. Without the filter, every event would print on stderr —
     spamming long workflows. The filter drops only records with a
     ``run_event`` extra; plain log lines still reach stderr.

@@ -6,7 +6,7 @@ the wizard with a real in-process prompter (no mocks, no patches).
 
 The :class:`FirstRunRunner` Protocol lets the wizard hand off to a
 read-only workflow check (issue #59) without hard-importing
-``aeat.workflow``. When no runner is supplied the ``FIRST_RUN`` step
+``aeat.application.workflow``. When no runner is supplied the ``FIRST_RUN`` step
 is skipped cleanly.
 """
 

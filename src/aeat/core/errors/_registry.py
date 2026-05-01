@@ -36,7 +36,7 @@ class ErrorCategory(StrEnum):
 
 
 class ErrorCode(BaseModel):
-    """Stable metadata attached to an :class:`aeat.errors.AeatError` type."""
+    """Stable metadata attached to an :class:`aeat.core.errors.AeatError` type."""
 
     model_config = ConfigDict(
         frozen=True,
@@ -128,7 +128,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth._authenticator._PersistedSessionInvalidError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth._authenticator._PersistedSessionInvalidError",
         ErrorCode(
             code="AUTH_AUTH_AUTHENTICATOR_PERSISTED_SESSION_INVALID",
             category=ErrorCategory.AUTH,
@@ -141,7 +141,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilApprovalTimeoutError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilApprovalTimeoutError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_APPROVAL_TIMEOUT",
             category=ErrorCategory.AUTH,
@@ -154,7 +154,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilConfigurationError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_CONFIGURATION",
             category=ErrorCategory.AUTH,
@@ -167,7 +167,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.AeatLiveReadNotEnabledError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.AeatLiveReadNotEnabledError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_AEAT_LIVE_READ_NOT_ENABLED",
             category=ErrorCategory.AUTH,
@@ -180,7 +180,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.AeatLoginAssertionError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.AeatLoginAssertionError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_AEAT_LOGIN_ASSERTION",
             category=ErrorCategory.AUTH,
@@ -193,7 +193,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.AeatSessionExpiredError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.AeatSessionExpiredError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_AEAT_SESSION_EXPIRED",
             category=ErrorCategory.AUTH,
@@ -206,7 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.CertificateError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE",
             category=ErrorCategory.AUTH,
@@ -219,7 +219,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.CertificateExpiredError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateExpiredError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_EXPIRED",
             category=ErrorCategory.AUTH,
@@ -232,7 +232,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.CertificateHandshakeError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateHandshakeError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_HANDSHAKE",
             category=ErrorCategory.AUTH,
@@ -245,7 +245,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.CertificateLoadError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateLoadError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_LOAD",
             category=ErrorCategory.AUTH,
@@ -258,7 +258,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.CertificateNifParseError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateNifParseError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_NIF_PARSE",
             category=ErrorCategory.AUTH,
@@ -271,7 +271,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.CertificatePasswordError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificatePasswordError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_PASSWORD",
             category=ErrorCategory.AUTH,
@@ -284,7 +284,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.CertificatePreExpiryError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificatePreExpiryError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_PRE_EXPIRY",
             category=ErrorCategory.AUTH,
@@ -323,7 +323,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.browser.session.BrowserError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.browser.session.BrowserError",
         ErrorCode(
             code="FAIL_BROWSER_SESSION_BROWSER",
             category=ErrorCategory.FAIL,
@@ -1090,7 +1090,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.transactions._errors.TransactionCatalogueError",
+        "aeat.domain.transactions._errors.TransactionCatalogueError",
         ErrorCode(
             code="ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION_CATALOGUE",
             category=ErrorCategory.ERROR,
@@ -1103,7 +1103,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.transactions._errors.TransactionError",
+        "aeat.domain.transactions._errors.TransactionError",
         ErrorCode(
             code="ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION",
             category=ErrorCategory.ERROR,
@@ -1116,7 +1116,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.transactions._errors.TransactionNotFoundError",
+        "aeat.domain.transactions._errors.TransactionNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1129,7 +1129,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.transactions._errors.TransactionPersistenceError",
+        "aeat.domain.transactions._errors.TransactionPersistenceError",
         ErrorCode(
             code="FAIL_FINANCIAL_TRANSACTIONS_TRANSACTION_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -1142,7 +1142,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.aggregation._errors.AggregationError",
+        "aeat.application.aggregation._errors.AggregationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION",
             category=ErrorCategory.ERROR,
@@ -1155,7 +1155,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.aggregation._errors.AggregationPeriodError",
+        "aeat.application.aggregation._errors.AggregationPeriodError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION_PERIOD",
             category=ErrorCategory.ERROR,
@@ -1168,7 +1168,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.aggregation._errors.AggregationUnsupportedModeloError",
+        "aeat.application.aggregation._errors.AggregationUnsupportedModeloError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
             category=ErrorCategory.REFUSED,
@@ -1181,7 +1181,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.aggregation._errors.AggregationMissingClassificationError",
+        "aeat.application.aggregation._errors.AggregationMissingClassificationError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_MISSING_CLASSIFICATION",
             category=ErrorCategory.REFUSED,
@@ -1194,7 +1194,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.aggregation._errors.AggregationCategoryCoverageError",
+        "aeat.application.aggregation._errors.AggregationCategoryCoverageError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_CATEGORY_COVERAGE",
             category=ErrorCategory.REFUSED,
@@ -1207,7 +1207,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.aggregation._errors.AggregationCasillaMappingError",
+        "aeat.application.aggregation._errors.AggregationCasillaMappingError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_CASILLA_MAPPING",
             category=ErrorCategory.REFUSED,
@@ -1246,7 +1246,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.vat.errors.VatCatalogueError",
+        "aeat.domain.vat.errors.VatCatalogueError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATALOGUE",
             category=ErrorCategory.ERROR,
@@ -1259,7 +1259,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.vat.errors.VatCategoryNotFoundError",
+        "aeat.domain.vat.errors.VatCategoryNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATEGORY_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1272,7 +1272,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.vat.errors.VatClassificationError",
+        "aeat.domain.vat.errors.VatClassificationError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CLASSIFICATION",
             category=ErrorCategory.ERROR,
@@ -1285,7 +1285,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.vat.errors.VatError",
+        "aeat.domain.vat.errors.VatError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT",
             category=ErrorCategory.ERROR,
@@ -1298,7 +1298,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.vat.errors.VatRateNotFoundError",
+        "aeat.domain.vat.errors.VatRateNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_RATE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1311,7 +1311,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.financial.vat.errors.VatRateOverlapError",
+        "aeat.domain.vat.errors.VatRateOverlapError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_RATE_OVERLAP",
             category=ErrorCategory.ERROR,
@@ -1857,7 +1857,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.sede._errors.ExpedienteNotFoundError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.ExpedienteNotFoundError",
         ErrorCode(
             code="ERROR_SEDE_EXPEDIENTE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1870,7 +1870,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.sede._errors.JustificanteFetchError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.JustificanteFetchError",
         ErrorCode(
             code="FAIL_SEDE_JUSTIFICANTE_FETCH",
             category=ErrorCategory.FAIL,
@@ -1883,7 +1883,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.sede._errors.SedeError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.SedeError",
         ErrorCode(
             code="ERROR_SEDE",
             category=ErrorCategory.ERROR,
@@ -1896,7 +1896,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.sede._errors.SedeNavigationError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.SedeNavigationError",
         ErrorCode(
             code="ERROR_SEDE_NAVIGATION",
             category=ErrorCategory.ERROR,
@@ -1909,7 +1909,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.sede._errors.SedeParseError",
+        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.SedeParseError",
         ErrorCode(
             code="FAIL_SEDE_PARSE",
             category=ErrorCategory.FAIL,
@@ -2084,7 +2084,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.identity._documents.IdentityError",
+        "aeat.core.identity._documents.IdentityError",
         ErrorCode(
             code="INTEGRITY_IDENTITY_DOCUMENT",
             category=ErrorCategory.INTEGRITY,

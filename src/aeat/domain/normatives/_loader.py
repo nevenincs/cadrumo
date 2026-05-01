@@ -1,4 +1,4 @@
-"""File-backed loader for the ``aeat.normatives`` corpus.
+"""File-backed loader for the ``aeat.domain.normatives`` corpus.
 
 The loader walks ``AEAT_NORMATIVES_ROOT`` and produces a strictly-
 validated :class:`NormativeCatalogue`. One JSON file per normative,

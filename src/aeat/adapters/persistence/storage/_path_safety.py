@@ -1,7 +1,7 @@
 """Typed path-containment helpers for the persistence substrate.
 
-The wider project ships :func:`aeat._paths.resolve_relative_subpath` and
-:func:`aeat._paths.resolve_record_json_path` which raise plain
+The wider project ships :func:`aeat.core.paths.resolve_relative_subpath` and
+:func:`aeat.core.paths.resolve_record_json_path` which raise plain
 :class:`ValueError` on traversal violations. New persistence code uses
 the typed wrappers in this module instead so:
 
@@ -26,7 +26,7 @@ from .errors import PathContainmentError
 def safe_subpath(root: Path, relative_path: str, *, context: str) -> Path:
     """Resolve ``relative_path`` under ``root`` and enforce containment.
 
-    Wraps :func:`aeat._paths.resolve_relative_subpath`. Any
+    Wraps :func:`aeat.core.paths.resolve_relative_subpath`. Any
     :class:`ValueError` raised by the wrapped helper is re-raised as a
     :class:`PathContainmentError` with the same message and ``__cause__``.
 
@@ -51,7 +51,7 @@ def safe_subpath(root: Path, relative_path: str, *, context: str) -> Path:
 def safe_record_path(root: Path, record_id: str, *, context: str) -> Path:
     """Resolve a record-id-keyed JSON file under ``root``.
 
-    Wraps :func:`aeat._paths.resolve_record_json_path` and re-raises
+    Wraps :func:`aeat.core.paths.resolve_record_json_path` and re-raises
     its :class:`ValueError` as :class:`PathContainmentError`.
 
     Args:

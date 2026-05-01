@@ -1,4 +1,4 @@
-"""Catalogue-level verification for ``aeat.normatives``.
+"""Catalogue-level verification for ``aeat.domain.normatives``.
 
 The verifier re-runs schema validation (via the loader) and adds a
 handful of cross-record checks that cannot be expressed inside a

@@ -1,4 +1,4 @@
-"""Pydantic v2 models exposed by :mod:`aeat.schema`.
+"""Pydantic v2 models exposed by :mod:`aeat.domain.schema`.
 
 The module declares the typed intermediate representation every
 extractor backend emits:
@@ -76,7 +76,7 @@ class _StrictFrozenModel(BaseModel):
 class SchemaVersion(_StrictFrozenModel):
     """Schema-shape version carried alongside a :class:`Modelo`.
 
-    Bumped when the :mod:`aeat.schema` pydantic hierarchy gains a
+    Bumped when the :mod:`aeat.domain.schema` pydantic hierarchy gains a
     field; independent of AEAT form revisions (those are tracked in
     :attr:`SchemaProvenance.document_ref`).
     """
@@ -289,7 +289,7 @@ def evaluate(
 def validate_period_for_modelo(code: ModeloCode, period: str) -> None:
     """Assert that ``period`` matches the cadence shape of ``code``.
 
-    Derived from the cadence metadata exposed by :mod:`aeat.models`;
+    Derived from the cadence metadata exposed by :mod:`aeat.domain.modelos`;
     the module keeps no parallel cadence table of its own.
 
     Args:
