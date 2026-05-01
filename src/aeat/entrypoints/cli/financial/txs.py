@@ -7,12 +7,12 @@ from pathlib import Path
 
 import typer
 
-from ....domain.financial import CsvProvider, OfxProvider, XlsxProvider, detect_provider
-from ....domain.financial._decimal import canonical_decimal
+from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, XlsxProvider, detect_provider
+from ....adapters.inbound.financial._decimal import canonical_decimal
 from ....domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ....domain.categories._proportionality import ProportionalityKind
-from ....domain.financial.providers import RawTransaction
-from ....domain.financial.transactions import (
+from ....adapters.inbound.financial.providers import RawTransaction
+from ....domain.transactions import (
     BusinessClassification,
     LLMClassifierError,
     ModelTier,
@@ -532,7 +532,7 @@ def _combine_reason(*, kent_reason: str | None, llm_reason: str) -> str:
 
 def _parse_tier(raw: str | None) -> ModelTier:
     """Parse a --tier string into a ModelTier; default is the enforced floor."""
-    from ....domain.financial.transactions import MINIMUM_CLASSIFICATION_TIER
+    from ....domain.transactions import MINIMUM_CLASSIFICATION_TIER
 
     if raw is None:
         return MINIMUM_CLASSIFICATION_TIER

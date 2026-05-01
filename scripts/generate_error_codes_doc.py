@@ -8,7 +8,7 @@ import pkgutil
 from pathlib import Path
 
 import aeat
-from aeat.errors import ERROR_REGISTRY
+from aeat.core.errors import ERROR_REGISTRY
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = PROJECT_ROOT / "docs" / "error-codes.md"

@@ -48,7 +48,7 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
 
 @pytest.fixture()
 def profile_path(tmp_path: Path) -> Path:
-    from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ....adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     profile = AutonomoProfile(
         tax_id="X1234567L",

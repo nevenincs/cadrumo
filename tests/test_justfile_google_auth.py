@@ -6,7 +6,7 @@ import pytest
 
 from aeat.core.config import PROJECT_ROOT
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def test_gsuite_bootstrap_sa_persists_service_account_path_selection() -> None:

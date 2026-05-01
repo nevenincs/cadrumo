@@ -100,10 +100,10 @@ class PortalIdentifier(str):
 
 @runtime_checkable
 class CertificateBackend(Protocol):
-    """Narrow surface over :mod:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate` for the runner.
+    """Narrow surface over :mod:`aeat.adapters.outbound.aeat.auth.certificate` for the runner.
 
     Production wires this to
-    :func:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.preload_into_browser_context`; tests substitute a
+    :func:`aeat.adapters.outbound.aeat.auth.preload_into_browser_context`; tests substitute a
     concrete Protocol-conforming class that records calls.
     """
 

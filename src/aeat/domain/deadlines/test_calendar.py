@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from . import CALENDAR, KNOWN_AUTONOMO_MODELOS, SUPPORTED_YEARS
+from . import CALENDAR, KNOWN_AUTONOMO_MODELOS, SUPPORTED_YEARS, CanonicalWindow, PeriodKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -34,6 +36,20 @@ def test_window_order() -> None:
         assert window.opens_on <= window.closes_on
         if window.payment_cutoff_on is not None:
             assert window.payment_cutoff_on <= window.closes_on
+
+
+def test_period_kind_serializes_lowercase_and_accepts_legacy_uppercase() -> None:
+    window = CanonicalWindow(
+        modelo="130",
+        year=2026,
+        period="2026Q1",
+        kind=PeriodKind("quarterly"),
+        opens_on=date(2026, 4, 1),
+        closes_on=date(2026, 4, 20),
+    )
+
+    assert window.kind is PeriodKind.QUARTERLY
+    assert window.model_dump(mode="json")["kind"] == "quarterly"
 
 
 def test_quarterly_modelo_303_2026_count() -> None:

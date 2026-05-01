@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...domain.deadlines import AutonomoProfile
-from ...domain.financial.transactions._repository import TransactionCatalogueRepository
+from ...domain.transactions._repository import TransactionCatalogueRepository
 from ._models import CasillaAggregation
 from ._service import aggregate_catalogue
 

@@ -9,8 +9,9 @@ from enum import StrEnum
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 from ...core.i18n import Translatable, require_authoritative
+from ..modelos import ModeloCode
 
-KNOWN_MODELO_IDS = frozenset({"MODELO_130", "MODELO_303", "MODELO_390"})
+KNOWN_MODELO_IDS = frozenset(value for code in ModeloCode for value in (code.name, code.value))
 _PERIOD_RE = re.compile(r"^\d{4}(Q[1-4]|-\d{2})?$")
 _CASILLA_ID_RE = re.compile(r"^\d{2,5}$")  # widened for Modelo 200 5-digit IDs
 
@@ -31,14 +32,6 @@ class CasillaDataType(StrEnum):
     TEXT = "text"
     SELECT = "select"
     PERCENTAGE = "percentage"
-
-
-class ModeloCode(StrEnum):
-    """Stable modelo identifiers exposed by the public casillas API."""
-
-    MODELO_130 = "MODELO_130"
-    MODELO_303 = "MODELO_303"
-    MODELO_390 = "MODELO_390"
 
 
 class PeriodType(StrEnum):

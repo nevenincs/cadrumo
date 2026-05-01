@@ -23,7 +23,7 @@ import pytest
 
 from aeat.core.config import PROJECT_ROOT
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 PROJECT_NAME = "aeat"
 

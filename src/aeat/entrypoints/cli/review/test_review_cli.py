@@ -11,8 +11,8 @@ from typer.testing import CliRunner
 
 from ....application.filing import FilingDraft, FilingDraftStatus, FilingOperatorProfile, build_draft
 from ....application.filing.runtime import build_runtime_schema_provider
-from ....domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ....domain.financial.transactions import (
+from ....adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
@@ -37,7 +37,7 @@ def _profile() -> FilingOperatorProfile:
 def _write_draft(path: Path) -> Path:
     """Build a draft and persist it through the FilingDraftRepository
     (ciphertext-at-rest). Returns the canonical envelope path."""
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     draft = build_draft(
         modelo="130",
@@ -93,7 +93,7 @@ def _read_persisted_draft(drafts_root: Path, draft_id: str) -> FilingDraft:
     The CLI persists ciphertext envelopes through the repository; tests
     read back through the same repository so the encryption gate fires.
     """
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     repository = FilingDraftRepository(store_dir=drafts_root)
     loaded = repository.load(draft_id)

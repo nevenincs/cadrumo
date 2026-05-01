@@ -13,6 +13,7 @@ import pytest
 
 from .....core.config import Settings
 from . import (
+    CertificateBackend,
     CertificateBundle,
     HandshakeResult,
     load_certificate,
@@ -41,7 +42,7 @@ def test_verify_handshake_live_against_aeat() -> None:
         path=settings.aeat_certificate_path,
         password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",
         friendly_name=settings.aeat_certificate_friendly_name,
-        backend=settings.aeat_certificate_backend,
+        backend=CertificateBackend(settings.aeat_certificate_backend.name),
     )
     loaded = load_certificate(bundle)
     result = verify_handshake(loaded, settings.aeat_certificate_verify_url)

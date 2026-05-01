@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ...domain.financial.transactions import (
+from ...adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,

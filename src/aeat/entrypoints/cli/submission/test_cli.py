@@ -12,8 +12,8 @@ from typer.testing import CliRunner
 from ....adapters.outbound.aeat.export import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from ....application.filing import FilingDraft, FilingOperatorProfile, approve_draft, build_draft
 from ....application.filing.runtime import build_runtime_schema_provider
-from ....domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ....domain.financial.transactions import (
+from ....adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
@@ -57,7 +57,7 @@ def draft_path(tmp_path: Path, isolated_dirs: Path) -> Path:
         override_master_key_provider,
         override_secret_store,
     )
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     # Bootstrap an ephemeral master key + secret store so the
     # FINANCIAL-class envelope round-trip succeeds in the test env.
@@ -160,8 +160,8 @@ class TestPreflightCommand:
             override_master_key_provider,
             override_secret_store,
         )
-        from ....application.filing._repository import FilingDraftRepository
-        from ....application.filing._schema import FilingDraftStatus
+        from ....domain.filing import FilingDraftRepository
+        from ....domain.filing._schema import FilingDraftStatus
 
         provider = EphemeralMasterKeyProvider()
         blob_store = EncryptedBlobStore(
@@ -204,7 +204,7 @@ class TestPreflightCommand:
         # rows means the approved draft's review checksum no longer
         # matches the live state — preflight must mark it stale via
         # the envelope-repository round-trip.
-        from ....application.filing._repository import FilingDraftRepository
+        from ....domain.filing import FilingDraftRepository
 
         TransactionCatalogueRepository(store_dir=isolated_dirs / "transactions").save(
             TransactionCatalogue.from_transactions([_sample_transaction()]),

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..casillas import ModeloCode, PeriodType
 
@@ -29,6 +29,13 @@ class CasillaMapping(_StrictFrozenModel):
     period_type: PeriodType
     casilla_code: str = Field(min_length=2, max_length=8)
     sign: CasillaMappingSign
+
+    @field_validator("period_type", mode="before")
+    @classmethod
+    def _coerce_period_type(cls, value: object) -> object:
+        if isinstance(value, str):
+            return PeriodType(value.lower())
+        return value
 
     @model_validator(mode="after")
     def _validate_period_type(self) -> CasillaMapping:

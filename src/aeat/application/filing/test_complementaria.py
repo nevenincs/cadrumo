@@ -66,7 +66,7 @@ def _profile(*modelos: str) -> SyntheticProfile:
 
 
 def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, draft: FilingDraft) -> None:
-    from ._repository import FilingDraftRepository
+    from ...domain.filing import FilingDraftRepository
 
     drafts_dir = tmp_path / "drafts"
     submissions_dir = tmp_path / "submissions"

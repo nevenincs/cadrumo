@@ -138,7 +138,7 @@ class TestLoadDraftFromDisk:
     """
 
     def _persist(self, draft, drafts_dir):
-        from ....application.filing._repository import FilingDraftRepository
+        from ....domain.filing import FilingDraftRepository
 
         repository = FilingDraftRepository(store_dir=drafts_dir)
         repository.save(draft)

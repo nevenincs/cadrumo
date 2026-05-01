@@ -19,14 +19,6 @@ See [[2026-04-12-workflow-engine-research]],
 
 from __future__ import annotations
 
-# Resolve the ``WorkflowStep.site_health_alert`` forward reference once
-# ``aeat.adapters.outbound.aeat.browser._site_health.SiteHealthAlert`` is importable. Importing
-# at this layer breaks the cycle: ``aeat.application.workflow._models`` must not
-# import from ``aeat.adapters.outbound.aeat.browser._site_health`` at module load time, but the
-# public subpackage boundary is a safe rebuild site.
-from ...adapters.outbound.aeat.browser import _site_health as _site_health_module
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthAlert as _SiteHealthAlert
-from . import _models as _workflow_models
 from ._adapters import (
     DeadlineEngineAdapter,
     FilingDraftBuilderAdapter,
@@ -43,6 +35,7 @@ from ._errors import (
     WorkflowError,
 )
 from ._models import (
+    SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
@@ -60,11 +53,6 @@ from ._protocols import (
     SyncRunSummary,
 )
 
-_workflow_models.SiteHealthAlert = _SiteHealthAlert  # type: ignore[attr-defined]
-_site_health_module.WorkflowStage = WorkflowStage  # type: ignore[attr-defined]
-_SiteHealthAlert.model_rebuild()
-WorkflowStep.model_rebuild()
-
 __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineAdapter",
@@ -79,6 +67,7 @@ __all__ = [
     "SyncRunSummary",
     "SyncRunnerAdapter",
     "SyncRunnerProtocol",
+    "SiteHealthAlert",
     "WorkflowAbortReason",
     "WorkflowAbortedError",
     "WorkflowComponentError",

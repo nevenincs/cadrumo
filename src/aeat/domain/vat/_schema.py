@@ -1,4 +1,4 @@
-"""Strict pydantic v2 schema for the ``aeat.domain.financial.vat`` subpackage.
+"""Strict pydantic v2 schema for the ``aeat.domain.vat`` subpackage.
 
 Every record the subpackage exposes — enumerations, per-rate values,
 citations, regulations, catalogues, verification reports — is defined

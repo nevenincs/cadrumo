@@ -17,7 +17,6 @@ rationale and placement decisions.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING
 
 from pydantic import (
     AnyHttpUrl,
@@ -28,14 +27,6 @@ from pydantic import (
     TypeAdapter,
     field_validator,
 )
-
-if TYPE_CHECKING:
-    # ``SiteHealthAlert.stage`` is typed ``WorkflowStage`` via a forward
-    # reference. The real import happens at the ``aeat.application.workflow``
-    # package boundary, where ``SiteHealthAlert.model_rebuild(...)`` is
-    # called with ``WorkflowStage`` in scope. See the ADR and the
-    # ``aeat.application.workflow.__init__`` rebuild site for the rationale.
-    from .....application.workflow._models import WorkflowStage as WorkflowStage
 
 
 class SiteHealthState(StrEnum):
@@ -130,26 +121,6 @@ class SiteHealthStatus(_SiteHealthRecord):
     evidence: SiteHealthEvidence
     observed_at: AwareDatetime
     retry_after_seconds: int | None = Field(default=None, ge=1)
-
-
-class SiteHealthAlert(_SiteHealthRecord):
-    """Workflow-side alert wrapping a :class:`SiteHealthStatus`.
-
-    Emitted by the workflow engine when it catches a
-    :class:`aeat.core.errors.SiteHealthError` inside a stage; persisted on
-    the failed :class:`aeat.application.workflow.WorkflowStep` so a resumed run
-    can explain the prior halt.
-
-    Attributes:
-        stage: The :class:`aeat.application.workflow.WorkflowStage` that was
-            active when the alert fired.
-        status: The captured :class:`SiteHealthStatus`.
-        run_id: The workflow run identifier (1..128 chars).
-    """
-
-    stage: WorkflowStage
-    status: SiteHealthStatus
-    run_id: str = Field(min_length=1, max_length=128)
 
 
 _URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)

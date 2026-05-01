@@ -39,7 +39,7 @@ def _prepare_workflow_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
         override_secret_store,
         save_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)

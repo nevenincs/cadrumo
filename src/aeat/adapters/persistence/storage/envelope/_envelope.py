@@ -34,12 +34,12 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ....core.logging import get_logger
-from ....core.classification import SensitivityClass
-from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
-from ....core.locks import fsync_parent_dir
-from ._master_key import MasterKeyProvider
-from .errors import (
+from .....core.logging import get_logger
+from .....core.classification import SensitivityClass
+from ..crypto._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+from .....core.locks import fsync_parent_dir
+from ..master_key._master_key import MasterKeyProvider
+from ..errors import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
@@ -372,7 +372,7 @@ def save_encrypted_envelope(
         path: Destination file. Parent directory is created if absent.
         master_key_provider: Source of the master key.
         hkdf_context: Per-consumer context bytes (e.g.
-            ``b"aeat.domain.financial.transactions.v1"``). Different
+            ``b"aeat.domain.transactions.v1"``). Different
             consumers MUST use distinct contexts so cross-consumer
             ciphertext substitution fails.
     """

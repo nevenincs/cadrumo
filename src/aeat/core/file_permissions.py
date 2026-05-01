@@ -11,8 +11,8 @@ grants full control to the operator only. The ``icacls`` call is
 best-effort and tries both ``DOMAIN\\user`` and ``user`` candidate
 names so it works on standalone machines and domain-joined hosts.
 
-The helper is shared between :mod:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth._authenticator`
-and :mod:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth._clave_movil` so the
+The helper is shared between :mod:`aeat.adapters.outbound.aeat.auth._authenticator`
+and :mod:`aeat.adapters.outbound.aeat.auth._clave_movil` so the
 Windows-ACL discipline cannot diverge between the two session writers.
 """
 

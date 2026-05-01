@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import Settings
+from .....core.config import Settings
 from . import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
@@ -16,10 +16,10 @@ from . import (
     PortalAuthMethod,
     PortalRecord,
     PortalRepository,
-    RepositoryError,
     create_engine_from_settings,
     session_scope,
 )
+from ..errors import RepositoryError
 from ._orm import Base
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]

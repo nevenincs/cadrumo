@@ -11,15 +11,15 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ...core.i18n import Translatable
-from ...domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ...domain.financial.invoices import (
+from ...adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ...domain.invoices import (
     Invoice,
     InvoiceKind,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
 )
-from ...domain.financial.transactions import BusinessClassification, Transaction, TransactionDirection
+from ...domain.transactions import BusinessClassification, Transaction, TransactionDirection
 from ..filing import FilingFindingSeverity, FilingValidationFinding
 from ..sync import (
     CasillaAddedWithDefault,

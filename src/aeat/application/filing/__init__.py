@@ -55,46 +55,51 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 
 from ...core.logging import get_logger
-from ._builder import FilingBuilder
-from ._builders import (
+from ...domain.filing import (
+    APPROVAL_BASIS_VERSION,
     QUARTERLY_303_INPUT_KEY,
-    Modelo130Builder,
-    Modelo303Builder,
-    Modelo390Builder,
-    get_builder,
-)
-from ._complementaria import (
+    SCHEMA_VERSION_DEFAULT,
     AmendmentKind,
     CasillaChange,
+    CasillaCollection,
     CasillaDelta,
     CasillaInputs,
-    FilingAmendment,
-    ModeloCode,
-    build_complementaria,
-    list_amendments,
-    load_amendment,
-    make_amendment_id,
-)
-from ._errors import (
-    FilingAmendmentError,
-    FilingAmendmentValidationError,
-    FilingBuilderError,
-    FilingComputationError,
-    FilingDraftError,
-    FilingImportError,
-    FilingValidationError,
-)
-from ._import import JustificanteImportResult, import_filing_from_justificante
-from ._protocols import (
-    CasillaCollection,
     CasillaSchema,
     CasillaSchemaProvider,
     DeadlineChecker,
     DeadlineStatus,
+    FilingAmendment,
+    FilingApprovalBasis,
+    FilingBuilder,
+    FilingBuilderError,
+    FilingComputationError,
+    FilingDraft,
+    FilingDraftError,
+    FilingDraftStatus,
+    FilingFindingSeverity,
+    FilingImportError,
     FilingInputs,
     FilingProfile,
+    FilingScalar,
+    FilingValidationError,
+    FilingValidationFinding,
+    FilingValidator,
+    FilingValue,
+    FilingValueKind,
+    Modelo130Builder,
+    Modelo303Builder,
+    Modelo390Builder,
+    ModeloCode,
     ModeloIdentity,
+    apply_validation,
+    compute_draft_id,
+    derive_validation_status,
+    get_builder,
+    make_amendment_id,
 )
+from ...domain.filing import FilingAmendmentError, FilingAmendmentValidationError
+from ._complementaria import build_complementaria, list_amendments, load_amendment
+from ._import import JustificanteImportResult, import_filing_from_justificante
 from ._review import (
     FilingApprovalStaleReason,
     approval_stale_reasons,
@@ -105,20 +110,6 @@ from ._review import (
     refresh_review_status,
     unapprove_draft,
 )
-from ._schema import (
-    APPROVAL_BASIS_VERSION,
-    SCHEMA_VERSION_DEFAULT,
-    FilingApprovalBasis,
-    FilingDraft,
-    FilingDraftStatus,
-    FilingFindingSeverity,
-    FilingScalar,
-    FilingValidationFinding,
-    FilingValue,
-    FilingValueKind,
-    compute_draft_id,
-)
-from ._validator import FilingValidator, apply_validation, derive_validation_status
 from .runtime import (
     FilingOperatorProfile,
     RuntimeCasillaCollection,

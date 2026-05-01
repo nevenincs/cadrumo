@@ -33,13 +33,13 @@ from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING
 
-from ....core.logging import get_logger
+from .....core.logging import get_logger
 from ._blob_store import EncryptedBlobStore
-from ._master_key import get_master_key_provider
-from ._secret_store import SecretStore
+from ..master_key._master_key import get_master_key_provider
+from ..secret_store._secret_store import SecretStore
 
 if TYPE_CHECKING:
-    from ....core.config import Settings
+    from .....core.config import Settings
 
 _log = get_logger(__name__)
 _factory_lock = Lock()
@@ -65,7 +65,7 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
     with _factory_lock:
         if _singleton_store is not None:
             return _singleton_store
-        from ....core.config import load_settings
+        from .....core.config import load_settings
 
         resolved = settings if settings is not None else load_settings()
         provider = get_master_key_provider(settings_override=resolved)

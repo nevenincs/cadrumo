@@ -18,7 +18,7 @@ import textwrap
 import pytest
 from rebase_imports import load_rewrite_rules, rewrite_text
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 @pytest.fixture(scope="module")

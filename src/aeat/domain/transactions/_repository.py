@@ -28,18 +28,18 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.persistence.storage._classification import SensitivityClass
-from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-from ...adapters.persistence.storage._envelope import Envelope, load_encrypted_envelope, save_encrypted_envelope
-from ...adapters.persistence.storage._lock import exclusive_file_lock
+from ...core.classification import SensitivityClass
+from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+from ...adapters.persistence.storage.envelope._envelope import Envelope, load_encrypted_envelope, save_encrypted_envelope
+from ...core.locks import exclusive_file_lock
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...core.logging import get_logger
 from ._models import Transaction, TransactionCatalogue, derive_transaction_id
 
-_HKDF_CONTEXT_TX_CATALOGUE = b"aeat.domain.financial.transactions.catalogue.v1"
+_HKDF_CONTEXT_TX_CATALOGUE = b"aeat.domain.transactions.catalogue.v1"
 
 if TYPE_CHECKING:
-    from ..financial._raw_transaction import RawTransaction
+    from ._raw_transaction import RawTransaction
     from ._enums import TransactionDirection
 
 _log = get_logger(__name__)
@@ -221,7 +221,6 @@ class TransactionCatalogueRepository:
 
 __all__ = [
     "ClassificationError",
-    "DirectionResolver",
     "EnvelopeVersionError",
     "ImportSummary",
     "TransactionCatalogueRepository",

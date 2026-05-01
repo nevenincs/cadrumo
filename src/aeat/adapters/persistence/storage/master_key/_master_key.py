@@ -60,12 +60,12 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt as _LegacyScrypt
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
-    from ....core.config import Settings
+    from .....core.config import Settings
 
-from ....core.logging import get_logger
-from ._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from ....core.locks import exclusive_file_lock, fsync_parent_dir
-from .errors import (
+from .....core.logging import get_logger
+from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
+from .....core.locks import exclusive_file_lock, fsync_parent_dir
+from ..errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
     MasterKeyKeychainLockedError,
@@ -904,7 +904,7 @@ def looks_like_real_tax_id(value: str) -> bool:
         invalid inputs and for synthetic placeholders alike — both
         cases are safe to allow under the unsecured backend.
     """
-    from ....core.identity import validate_spanish_tax_id
+    from .....core.identity import validate_spanish_tax_id
 
     try:
         canonical = validate_spanish_tax_id(value)
@@ -972,7 +972,7 @@ def get_master_key_provider(
             ``keyring`` and no usable keychain is detected.
         SecretStoreError: When ``backend`` is not a known value.
     """
-    from ....core.config import SecretStoreBackend, load_settings  # local import to avoid cycles
+    from .....core.config import SecretStoreBackend, load_settings  # local import to avoid cycles
 
     settings = settings_override if settings_override is not None else load_settings()
     backend_value = settings.aeat_secret_store_backend.value if backend is None else backend

@@ -25,7 +25,7 @@ from pathlib import Path
 from ...core.logging import get_logger
 from ._models import InvoiceCatalogue
 
-_HKDF_CONTEXT_INVOICE_CATALOGUE = b"aeat.domain.financial.invoices.catalogue.v1"
+_HKDF_CONTEXT_INVOICE_CATALOGUE = b"aeat.domain.invoices.catalogue.v1"
 
 _log = get_logger(__name__)
 
@@ -70,7 +70,7 @@ class InvoiceCatalogueRepository:
             SensitivityClass,
             load_encrypted_envelope,
         )
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         target = self.envelope_path
         if not target.exists():
@@ -98,7 +98,7 @@ class InvoiceCatalogueRepository:
             exclusive_file_lock,
             save_encrypted_envelope,
         )
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target):

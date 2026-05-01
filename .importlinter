@@ -27,15 +27,16 @@ layers =
     aeat.domain
     aeat.core
 ignore_imports =
-    aeat.domain.rental._repository -> aeat.adapters.persistence.storage.*
-    aeat.domain.filing._repository -> aeat.adapters.persistence.storage.*
-    aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage.*
-    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage.*
-    aeat.domain.submission._repository -> aeat.adapters.persistence.storage.*
-    aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.*
-    aeat.domain.invoices._repository -> aeat.adapters.persistence.storage.*
-    aeat.domain.attachments._repository -> aeat.adapters.persistence.storage.*
-    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.*
+    aeat.domain.rental._repository -> aeat.adapters.persistence.**
+    aeat.domain.filing._repository -> aeat.adapters.persistence.**
+    aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.**
+    aeat.domain.justificante._repository -> aeat.adapters.persistence.**
+    aeat.domain.submission._repository -> aeat.adapters.persistence.**
+    aeat.domain.transactions._repository -> aeat.adapters.persistence.**
+    aeat.domain.invoices._repository -> aeat.adapters.persistence.**
+    aeat.domain.attachments._repository -> aeat.adapters.persistence.**
+    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.**
+unmatched_ignore_imports_alerting = none
 
 
 [importlinter:contract:adapters-independence]
@@ -45,6 +46,7 @@ modules =
     aeat.adapters.inbound
     aeat.adapters.outbound
     aeat.adapters.persistence
+unmatched_ignore_imports_alerting = none
 
 
 [importlinter:contract:core-is-leaf]

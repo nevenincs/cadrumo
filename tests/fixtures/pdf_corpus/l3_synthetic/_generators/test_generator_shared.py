@@ -8,7 +8,7 @@ import pytest
 
 from ._generator_shared import format_amount
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 @pytest.mark.parametrize(

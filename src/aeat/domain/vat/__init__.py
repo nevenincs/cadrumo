@@ -27,7 +27,7 @@ reference and an effective window.
   contributions, plus :func:`lookup_modelo_303_contribution`.
 
 Public surface — callers from outside this subpackage must import
-exclusively from ``aeat.domain.financial.vat`` and MUST NOT reach into
+exclusively from ``aeat.domain.vat`` and MUST NOT reach into
 private modules.
 """
 

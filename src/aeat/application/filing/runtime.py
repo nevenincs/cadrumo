@@ -13,15 +13,15 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...domain.deadlines import AutonomoProfile, applies_to
-from ._builders._modelo_130_schema import (
+from ...domain.filing._builders._modelo_130_schema import (
     MODELO_130_SCHEMA,
     CasillaSource,
     StaticCasillaCollection,
     StaticCasillaSchema,
     StaticCasillaSchemaProvider,
 )
-from ._builders._modelo_303_schema import MODELO_303_SCHEMA
-from ._builders._modelo_390_schema import MODELO_390_SCHEMA
+from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
+from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _SUPPORTED_FILING_MODELOS: tuple[str, ...] = ("130", "303", "390")

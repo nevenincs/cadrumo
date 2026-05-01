@@ -347,9 +347,4 @@ import time per ``(member_state, kind)`` partition.
 """
 
 
-def total_rate_count() -> int:
-    """Return the total number of :class:`VATRate` records in the table."""
-    return sum(len(rates) for rates in VAT_RATE_TABLE.values())
-
-
-__all__ = ["VAT_RATE_TABLE", "total_rate_count"]
+__all__ = ["VAT_RATE_TABLE"]

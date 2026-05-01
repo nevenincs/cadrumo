@@ -1,0 +1,1 @@
+"""Justificante import-contract tests."""

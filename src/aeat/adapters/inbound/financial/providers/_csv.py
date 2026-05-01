@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core.config import load_settings
+from .....core.config import load_settings
 from .._raw_transaction import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,

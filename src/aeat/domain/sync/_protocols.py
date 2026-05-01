@@ -28,14 +28,10 @@ actually consumes:
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
-
-if TYPE_CHECKING:  # pragma: no cover - import side effects only
-    from ...adapters.outbound.aeat.browser import BrowserSession
-
 
 _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
 _PORTAL_RE = re.compile(r"^[a-z][a-z0-9_\-]{1,63}$")
@@ -107,7 +103,7 @@ class CertificateBackend(Protocol):
     concrete Protocol-conforming class that records calls.
     """
 
-    async def preload_into_browser_context(self, session: BrowserSession) -> None:
+    async def preload_into_browser_context(self, session: object) -> None:
         """Preload the certificate into the given browser session context."""
         ...
 

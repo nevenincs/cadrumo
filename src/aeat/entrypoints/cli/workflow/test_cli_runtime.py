@@ -73,7 +73,7 @@ def runtime_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         SensitivityClass,
         save_encrypted_envelope,
     )
-    from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ....adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     profile = AutonomoProfile(
         tax_id="X1234567L",

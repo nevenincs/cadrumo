@@ -62,11 +62,7 @@ from .._ruleset import ParameterTable, ParameterValue, Ruleset
 __all__ = [
     "MUTATOR_REGISTRY",
     "NOT_MUTABLE_NODE_TYPES",
-    "MutationCase",
     "MutatorClass",
-    "PercentRateLocation",
-    "build_percent_rate_mutants",
-    "build_scalar_mutants",
     "is_additive_identity_literal",
     "iter_arithmetic_op_paths",
     "iter_brackets_nodes",
@@ -101,23 +97,6 @@ class MutatorClass(_StrictFrozenModel):
 
     slug: str = Field(min_length=1, max_length=64)
     description: str = Field(min_length=1, max_length=256)
-
-
-class MutationCase(_StrictFrozenModel):
-    """Result of evaluating one mutated ruleset against one fixture.
-
-    The kill-rate aggregator collects these records across the full
-    eighteen-ruleset surface and emits the catalogue used in the
-    issue's exec summary.
-    """
-
-    ruleset_id: str = Field(min_length=1, max_length=128)
-    casilla_id: str = Field(min_length=2, max_length=5)
-    mutator_slug: str = Field(min_length=1, max_length=64)
-    direction: str = Field(min_length=1, max_length=32)
-    max_abs_delta: Decimal
-    affected_casillas: tuple[str, ...]
-    killed: bool
 
 
 class PercentRateLocation(_StrictFrozenModel):
@@ -565,28 +544,6 @@ def mutate_parameter_rate(
     return ruleset.model_copy(update={"parameters": new_table})
 
 
-def build_percent_rate_mutants(
-    ruleset: Ruleset,
-) -> tuple[tuple[PercentRateLocation, Decimal], ...]:
-    """Return the full set of ``(location, delta)`` pairs for ``ruleset``.
-
-    Two directions per mutable rate (``+0.01`` and ``-0.01``).
-    Compound and casilla-ref rates are skipped — they appear in the
-    unflagged-nodes catalogue produced by the kill-rate aggregator.
-    """
-    pairs: list[tuple[PercentRateLocation, Decimal]] = []
-    for fd in ruleset.formulas:
-        for path, node in iter_percent_nodes(fd.formula):
-            location = classify_percent_rate(fd, path, node)
-            if location.mode in ("literal", "param"):
-                pairs.append((location, Decimal("0.01")))
-                pairs.append((location, Decimal("-0.01")))
-    return tuple(pairs)
-
-
-# -- Brackets-threshold mutator ------------------------------------------
-
-
 def mutate_brackets_threshold(
     ruleset: Ruleset,
     casilla_id: str,
@@ -660,26 +617,6 @@ def mutate_scalar_leaf(
     new_leaf = Literal(value=new_value)
     new_formula = _replace_at_path(fd.formula, leaf_path, new_leaf)
     return _replace_formula_in_ruleset(ruleset, casilla_id, cast(Formula, new_formula))
-
-
-def build_scalar_mutants(
-    ruleset: Ruleset,
-) -> tuple[tuple[str, str, tuple[int, ...], str, Decimal], ...]:
-    """Return the full set of mul/div scalar mutation seeds for ``ruleset``.
-
-    Each entry is ``(casilla_id, formula_id, leaf_path, parent_op, factor)``.
-    Two factors per mutable leaf (``Decimal("1.01")`` for +1 % and
-    ``Decimal("0.99")`` for -1 %).
-    """
-    seeds: list[tuple[str, str, tuple[int, ...], str, Decimal]] = []
-    for fd in ruleset.formulas:
-        for leaf_path, _leaf, parent in iter_scalar_leaf_paths(fd.formula):
-            seeds.append((fd.casilla_id, fd.formula_id, leaf_path, parent, Decimal("1.01")))
-            seeds.append((fd.casilla_id, fd.formula_id, leaf_path, parent, Decimal("0.99")))
-    return tuple(seeds)
-
-
-# -- Internal helpers -----------------------------------------------------
 
 
 def _formula_for(ruleset: Ruleset, casilla_id: str) -> FormulaDefinition:

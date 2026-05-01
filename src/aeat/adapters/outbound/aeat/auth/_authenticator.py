@@ -60,6 +60,7 @@ from ._providers import (
 from .certificate import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
+    CertificateBackend,
     CertificateBundle,
     CertificateHealth,
     HandshakeResult,
@@ -636,7 +637,7 @@ class AeatAuthenticator:
                 or ``close()`` was called).
         """
         if session.is_stale():
-            from ....persistence.storage._redaction import redact_for_log
+            from .....core.redaction import redact_for_log
 
             raise AeatSessionExpiredError(
                 redact_for_log(
@@ -735,7 +736,7 @@ class AeatAuthenticator:
                 password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
                 warn_days=self._settings.aeat_cert_warn_days,
                 critical_days=self._settings.aeat_cert_critical_days,
-                backend=self._settings.aeat_certificate_backend,
+                backend=CertificateBackend(self._settings.aeat_certificate_backend.name),
                 friendly_name=self._settings.aeat_certificate_friendly_name,
             )
             identity_nif: str | None = None
@@ -1159,7 +1160,7 @@ class AeatAuthenticator:
             path=path,
             password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 — env var NAME, not a secret
             friendly_name=self._settings.aeat_certificate_friendly_name,
-            backend=self._settings.aeat_certificate_backend,
+            backend=CertificateBackend(self._settings.aeat_certificate_backend.name),
         )
 
     async def _resolve_browser_session(self) -> BrowserSessionLike:

@@ -27,16 +27,11 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from . import (
-    CipherEnvelope,
-    Envelope,
-    EphemeralMasterKeyProvider,
-    SensitivityClass,
-    load_encrypted_envelope,
-    override_master_key_provider,
-    save_encrypted_envelope,
-)
-from .errors import ClassificationError, DecryptionError
+from .....core.classification import SensitivityClass
+from ..crypto import override_master_key_provider
+from ..master_key import EphemeralMasterKeyProvider
+from . import CipherEnvelope, Envelope, load_encrypted_envelope, save_encrypted_envelope
+from ..errors import ClassificationError, DecryptionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -227,7 +222,7 @@ class TestEnvelopeVersionGate:
         tmp_path: Path,
         provider: EphemeralMasterKeyProvider,
     ) -> None:
-        from .errors import EnvelopeVersionError
+        from ..errors import EnvelopeVersionError
 
         envelope = Envelope[_SamplePayload](
             schema_version=99,
