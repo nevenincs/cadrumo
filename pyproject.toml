@@ -241,6 +241,16 @@ markers = [
     "domain_local_state: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, schema, deadlines, cli/deadlines)",
     "domain_mediation: exercises workflow orchestration, LLM, i18n, testing subpackages",
     "domain_infra: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
+    # Hexagonal layered markers — restructure ADR (#476) Test-marker realignment.
+    # Registered alongside the legacy markers for the restructure soak window;
+    # legacy markers retire at the post-restructure Step 11 sanitization rollup.
+    "domain_inbound: exercises adapters.inbound.* (financial providers, borrador, declaracion, identity, sanitizer, pdf shared, schema extraction)",
+    "domain_outbound: exercises adapters.outbound.* (aeat auth/browser/sede/export/verify, google, llm)",
+    "domain_export: sub-marker on adapters.outbound.aeat.export.* (fichero-BOE serialise / verify pipelines)",
+    "domain_persistence: exercises adapters.persistence.* (storage substrate)",
+    "domain_model: exercises domain.* business model + computation (modelos, casillas, formulas, manuals, deadlines, profile, rental, ...)",
+    "domain_application: exercises application.* use-cases / orchestration (filing, workflow, sync, setup, review, verification)",
+    "domain_core: exercises core.* foundational cross-cutting (config, logging, errors, paths, observability, identity, i18n, env_io)",
     "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only — #15 ADR",
     "fixture_tier_l1: test uses committed or fetched public AEAT anchors (BOE / Manual práctico / Renta Web Open — EPIC #305 cluster C)",
     "fixture_tier_l2: test uses scrubbed private anchors from the user archive (contributor-local only — EPIC #305 cluster C)",
