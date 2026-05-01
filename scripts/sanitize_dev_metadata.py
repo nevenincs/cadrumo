@@ -172,11 +172,11 @@ def main(argv: list[str] | None = None) -> int:
         if rewritten != original:
             files_changed += 1
             rel = path.relative_to(repo_root).as_posix()
-            print(f"{'(dry) ' if args.dry_run else ''}rewrite {rel}")
+            print(f"{'(dry) ' if args.dry_run else ''}rewrite {rel}")  # noqa: T201
             if not args.dry_run:
                 path.write_text(rewritten, encoding="utf-8")
 
-    print(f"scanned={files_scanned} changed={files_changed}")
+    print(f"scanned={files_scanned} changed={files_changed}")  # noqa: T201
     return 0
 
 
