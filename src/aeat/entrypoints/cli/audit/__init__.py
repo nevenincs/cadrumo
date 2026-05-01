@@ -138,6 +138,5 @@ __all__ = [
     "CitationCoverageReport",
     "aggregate_reports",
     "audit_app",
-    "rulesets_app",
     "validate_citation_coverage",
 ]

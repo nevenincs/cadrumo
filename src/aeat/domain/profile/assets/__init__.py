@@ -601,15 +601,10 @@ class AmortizationLedgerRepository:
 
 
 __all__ = [
-    "ASSETS_AMORTIZATION_LEDGER_FILENAME",
-    "ASSETS_LEDGER_FILENAME",
     "AmortizationEntry",
     "AmortizationLedger",
     "AmortizationLedgerRepository",
-    "AmortizationRecordResult",
     "AssetRecord",
-    "AssetsLedgerDocument",
-    "AssetsLedgerRepository",
     "LibertadAmortizacionElection",
     "add_asset",
     "compute_amortization_for_year",
@@ -618,6 +613,5 @@ __all__ = [
     "load_amortization_ledger",
     "load_assets",
     "record_amortization",
-    "save_amortization_ledger",
     "save_assets",
 ]

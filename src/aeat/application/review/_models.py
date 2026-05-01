@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.i18n import Translatable
 from ...domain.financial.invoices import Invoice
-from ...domain.financial.transactions import Transaction
+from ...domain.transactions import Transaction
 from ..filing import FilingValidationFinding
 from ..sync import DivergenceRecord
 from ._enums import ReviewItemKind, ReviewSeverity

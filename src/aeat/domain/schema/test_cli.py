@@ -13,8 +13,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ...adapters.inbound.schema.testing import build_fake_boe_pdf
 from ...entrypoints.cli.schema import app
-from .testing import build_fake_boe_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

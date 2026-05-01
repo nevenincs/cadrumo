@@ -311,7 +311,7 @@ def _default_financial_inputs_provider(cfg: Settings) -> _FinancialInputsProvide
     if not (catalogue_dir / "transactions.envelope.json").exists():
         return None
     from ..aggregation._provider import FinancialFilingInputsProvider
-    from ...domain.financial.transactions._repository import TransactionCatalogueRepository
+    from ...domain.transactions._repository import TransactionCatalogueRepository
 
     return FinancialFilingInputsProvider(repository=TransactionCatalogueRepository(store_dir=catalogue_dir))
 

@@ -1,27 +1,25 @@
-"""Programmatic AEAT modelo schema extraction and typed IR.
+"""Typed IR, cache, errors, and runtime evaluate for AEAT modelo schemas.
 
-This subpackage owns the pipeline that reads primary AEAT sources
-(currently BOE-published *Ordenes ministeriales*) and emits typed,
-versioned, pydantic v2 records the rest of the project consumes as
-ground truth. The scope and decisions behind the shape live in the
-2026-04-17 schema-extraction ADR and research document.
+This subpackage owns the intermediate-representation (IR) types,
+cache I/O, error hierarchy, and the ``evaluate`` / ``validate_period_for_modelo``
+runtime functions. The BOE-PDF extraction engine lives in the inbound
+adapter layer at :mod:`aeat.adapters.inbound.schema`.
 
-Consumers outside :mod:`aeat.domain.schema` MUST import from this module
-only; underscore-prefixed submodules are internal and unstable. The
-public surface is the :data:`__all__` tuple below.
+Consumers outside :mod:`aeat.domain.schema` MUST import from this
+module only; underscore-prefixed submodules are internal and unstable.
+The public surface is the :data:`__all__` tuple below.
 
 Non-goals:
 
 - This subpackage is NOT the curated, human-reviewed catalogue —
   that is :mod:`aeat.domain.casillas`. Schema records emitted here are the
   extractor IR, before review.
-- :mod:`aeat.domain.schema` MUST NOT import from :mod:`aeat.domain.casillas`. The
-  dependency direction is strictly downstream.
+- :mod:`aeat.domain.schema` MUST NOT import from :mod:`aeat.domain.casillas`.
+  The dependency direction is strictly downstream.
 """
 
 from __future__ import annotations
 
-from ._boe_extractor import BoeOrdenExtractor
 from ._cache import (
     load_modelo_from_cache,
     resolve_schema_cache_file,
@@ -69,7 +67,6 @@ __all__ = (
     "BOE_ORDEN_SOURCES",
     "BinaryFormulaOp",
     "BinaryOp",
-    "BoeOrdenExtractor",
     "BoeOrdenSource",
     "Casilla",
     "CasillaDataType",

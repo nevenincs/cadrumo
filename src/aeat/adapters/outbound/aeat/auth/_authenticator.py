@@ -636,7 +636,7 @@ class AeatAuthenticator:
                 or ``close()`` was called).
         """
         if session.is_stale():
-            from ....persistence.storage._redaction import redact_for_log
+            from .....core.redaction import redact_for_log
 
             raise AeatSessionExpiredError(
                 redact_for_log(

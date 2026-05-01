@@ -12,7 +12,7 @@ from typer.testing import CliRunner
 
 from ....domain.financial import RawProvenance, SourceFormat
 from ....domain.financial.providers import RawTransaction
-from ....domain.financial.transactions import (
+from ....domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,

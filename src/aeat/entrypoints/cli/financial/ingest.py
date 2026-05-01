@@ -15,7 +15,7 @@ from ....domain.financial import CsvProvider, OfxProvider, PdfN26Provider, XlsxP
 from ....domain.financial.providers import FinancialProviderError, RawTransaction
 
 if TYPE_CHECKING:
-    from ....domain.financial.transactions import ImportSummary
+    from ....domain.transactions import ImportSummary
 
 _CONSOLE = Console()
 
@@ -130,8 +130,8 @@ def _persist_transactions(
     Alembic plugin discovery during import.
     """
     from ....core.config import load_settings
-    from ....domain.financial.transactions import TransactionCatalogueRepository
-    from ....domain.financial.transactions._enums import TransactionDirection
+    from ....domain.transactions import TransactionCatalogueRepository
+    from ....domain.transactions._enums import TransactionDirection
 
     def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
         # Zero-amount rows (fee waivers, FX-zero adjustments, paired

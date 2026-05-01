@@ -205,7 +205,6 @@ def ingest_dr_spec_path(path: Path | str) -> IngestedSpec:
 
 
 __all__ = [
-    "IngestSourceMeta",
     "IngestedSpec",
     "ingest_dr_spec_document",
     "ingest_dr_spec_path",

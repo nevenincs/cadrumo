@@ -13,12 +13,12 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import Engine
 
-from ....core.logging import get_logger
-from .errors import MigrationError
+from .....core.logging import get_logger
+from ..errors import MigrationError
 
 _log = get_logger(__name__)
 
-_REPO_ROOT = Path(__file__).resolve().parents[5]
+_REPO_ROOT = Path(__file__).resolve().parents[6]
 _ALEMBIC_INI = _REPO_ROOT / "alembic.ini"
 
 

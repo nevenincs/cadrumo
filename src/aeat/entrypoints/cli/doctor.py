@@ -28,12 +28,15 @@ from rich.console import Console
 from rich.table import Table
 
 from ...adapters.outbound.aeat.auth import (
+    AeatAuthenticator,
+    describe_provider_operator_impact,
+)
+from ...adapters.outbound.google import (
     CLOUD_PLATFORM_SCOPE,
     DOCS_SCOPE,
     DRIVE_SCOPE,
     REQUIRED_ADC_SCOPES,
     SHEETS_SCOPE,
-    AeatAuthenticator,
     GoogleAuthPath,
     adc_well_known_path,
     build_cloudfunctions_client,
@@ -43,7 +46,6 @@ from ...adapters.outbound.aeat.auth import (
     build_serviceusage_service,
     build_sheets_service,
     build_storage_client,
-    describe_provider_operator_impact,
     get_credentials_for_scopes,
     inspect_google_auth,
 )

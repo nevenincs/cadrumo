@@ -21,12 +21,12 @@ from ...domain.financial.invoices import (
     PaymentStatus,
 )
 from ...domain.financial.invoices._repository import InvoiceCatalogueRepository
-from ...domain.financial.transactions import (
+from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
 )
-from ...domain.financial.transactions._repository import TransactionCatalogueRepository
+from ...domain.transactions._repository import TransactionCatalogueRepository
 from ..filing import (
     FilingDraft,
     FilingDraftStatus,

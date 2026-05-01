@@ -60,12 +60,12 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt as _LegacyScrypt
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
-    from ....core.config import Settings
+    from .....core.config import Settings
 
-from ....core.logging import get_logger
-from ._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from ....core.locks import exclusive_file_lock, fsync_parent_dir
-from .errors import (
+from .....core.locks import exclusive_file_lock, fsync_parent_dir
+from .....core.logging import get_logger
+from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
+from ..errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
     MasterKeyKeychainLockedError,

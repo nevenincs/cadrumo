@@ -214,7 +214,6 @@ def _is_click_control_flow(error: Exception) -> bool:
 __all__ = [
     "CliRefusedBoundaryError",
     "build_error_envelope",
-    "command_error_boundary",
     "decorate_typer_app",
     "error_boundary_under_test",
     "json_output_requested",

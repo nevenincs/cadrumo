@@ -41,4 +41,4 @@ app.add_typer(
 )
 
 
-__all__ = ["app", "invoices_app", "profile_app"]
+__all__ = ["app", "invoices_app]
