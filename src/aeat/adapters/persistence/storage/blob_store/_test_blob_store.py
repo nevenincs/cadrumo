@@ -9,15 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from . import (
-    KEY_SIZE,
-    BlobIntegrityError,
-    BlobNotFoundError,
-    BlobReference,
-    DecryptionError,
-    EphemeralMasterKeyProvider,
-    SensitivityClass,
-)
+from .....core.classification import SensitivityClass
+from ..crypto import KEY_SIZE
+from ..errors import BlobIntegrityError, BlobNotFoundError, DecryptionError
+from ..master_key import EphemeralMasterKeyProvider
+from . import BlobReference
 from ._blob_store import EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]

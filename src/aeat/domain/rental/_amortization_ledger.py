@@ -147,7 +147,6 @@ def computation_to_ledger_entry(
 
 __all__ = [
     "ART_23_1_F_RATE",
-    "DAYS_PER_YEAR",
     "AmortizationComputation",
     "computation_to_ledger_entry",
     "compute_amortization_for_year",

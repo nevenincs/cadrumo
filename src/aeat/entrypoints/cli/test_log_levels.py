@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from ... import cli
+import aeat.entrypoints.cli as cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

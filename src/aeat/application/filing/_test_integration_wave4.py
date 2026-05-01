@@ -2,9 +2,9 @@
 
 Walks every together against real on-disk persistence:
 
-- :class:`aeat.application.filing._repository.FilingDraftRepository` (FINANCIAL)
-- :class:`aeat.adapters.outbound.aeat.export._repository.SubmissionRepository` (AUDIT)
-- :class:`aeat.application.filing._complementaria_repository.FilingAmendmentRepository`
+- :class:`aeat.domain.filing.FilingDraftRepository` (FINANCIAL)
+- :class:`aeat.domain.submission._repository.SubmissionRepository` (AUDIT)
+- :class:`aeat.domain.filing.FilingAmendmentRepository`
   (AUDIT)
 - :class:`aeat.domain.justificante._repository.JustificanteRepository` (AUDIT)
 - :class:`aeat.application.filing._history_repository.FilingHistoryRepository`
@@ -44,7 +44,7 @@ from ...adapters.outbound.aeat.export._models import (
     SubmittedFiling,
     make_submission_id,
 )
-from ...adapters.outbound.aeat.export._repository import SubmissionRepository
+from ...domain.submission._repository import SubmissionRepository
 from ...adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
@@ -57,15 +57,15 @@ from ...domain.justificante._schema import Justificante
 from ..sync import WireFilingEntry, WireFilingHistory
 from ..sync._protocols import ModeloIdentifier
 from . import build_draft
-from ._complementaria import (
+from ...domain.filing._amendment import (
     AmendmentKind,
     CasillaChange,
     FilingAmendment,
 )
-from ._complementaria_repository import FilingAmendmentRepository
+from ...domain.filing._complementaria_repository import FilingAmendmentRepository
 from ._history_repository import FilingHistoryRepository
-from ._repository import FilingDraftRepository
-from ._schema import FilingDraft
+from ...domain.filing._repository import FilingDraftRepository
+from ...domain.filing._schema import FilingDraft
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

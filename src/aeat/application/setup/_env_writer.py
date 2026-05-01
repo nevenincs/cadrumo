@@ -173,7 +173,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
         refuse_unsecured_with_real_nif,
         save_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
     from ...core.config import load_settings
 
     # Detect first-run state so we can surface a recovery-key nudge
@@ -265,7 +265,7 @@ def load_profile_envelope(target: Path) -> AutonomoProfile:
         SensitivityClass,
         load_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     envelope = load_encrypted_envelope(
         target,

@@ -130,7 +130,7 @@ class SedeCapture(BaseModel):
 
     Bundles the expediente listing metadata, the CSV handle, the raw
     PDF bytes, and the captured-at timestamp. Produced by
-    :func:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede.capture_justificante`; consumed by the reconciler.
+    :func:`aeat.adapters.outbound.aeat.sede.capture_justificante`; consumed by the reconciler.
 
     Attributes:
         expediente: The expediente the capture originated from.

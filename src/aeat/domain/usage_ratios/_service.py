@@ -48,7 +48,7 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
         SensitivityClass,
         load_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     target = path.resolve()
     if not target.exists():
@@ -129,7 +129,7 @@ def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
         exclusive_file_lock,
         save_encrypted_envelope,
     )
-    from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     target = path.resolve()
     target.parent.mkdir(parents=True, exist_ok=True)

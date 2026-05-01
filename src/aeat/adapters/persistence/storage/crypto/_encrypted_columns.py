@@ -41,9 +41,9 @@ from typing import Any
 from sqlalchemy import LargeBinary
 from sqlalchemy.types import TypeDecorator
 
-from ....core.logging import get_logger
+from .....core.logging import get_logger
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
-from ._master_key import MasterKeyProvider, get_master_key_provider
+from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 
 _log = get_logger(__name__)
 _LOW_ENTROPY_LENGTH_THRESHOLD = 12  # sec-M-4: warn below this byte-length

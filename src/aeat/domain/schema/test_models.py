@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
+from ..casillas import CasillaDataType as CasillaCorpusDataType
 from ..modelos import ModeloCode
 from . import (
     BinaryFormulaOp,
@@ -37,6 +38,10 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _SHA = "a" * 64
+
+
+def test_schema_reuses_casilla_data_type_enum() -> None:
+    assert CasillaDataType is CasillaCorpusDataType
 
 
 def _provenance() -> SchemaProvenance:

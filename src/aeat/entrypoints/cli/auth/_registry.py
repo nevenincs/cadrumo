@@ -1,11 +1,10 @@
 """Provider registry for the ``aeat auth`` CLI.
 
 The registry is the single source of truth for provider ordering,
-default resolution, and user-facing rendering. Each entry owns its
-label and whether a concrete ``AuthProvider`` has shipped. For
-implemented kinds the CLI delegates to :func:`aeat.application.auth.select_provider`
-to build the real provider. Subcommands read from this registry; no
-command constructs providers directly.
+default resolution, and user-facing rendering. Only providers with a
+concrete ``AuthProvider`` implementation are listed here; unsupported
+kinds can still exist in lower-level contracts for compatibility, but
+the CLI must not advertise them as selectable auth paths.
 """
 
 from __future__ import annotations
@@ -60,23 +59,12 @@ REGISTRY: Sequence[ProviderRegistryEntry] = (
         label="Cl@ve Móvil",
         implemented=True,
     ),
-    ProviderRegistryEntry(
-        kind=AuthProviderKind.CLAVE_PERMANENTE,
-        label="Cl@ve Permanente",
-        implemented=False,
-    ),
-    ProviderRegistryEntry(
-        kind=AuthProviderKind.CLAVE_PIN,
-        label="Cl@ve PIN",
-        implemented=False,
-    ),
 )
 
 
 INTERACTIVE_KINDS: frozenset[AuthProviderKind] = frozenset(
     {
         AuthProviderKind.CLAVE_MOVIL,
-        AuthProviderKind.CLAVE_PIN,
     }
 )
 
@@ -84,6 +72,12 @@ INTERACTIVE_KINDS: frozenset[AuthProviderKind] = frozenset(
 def iter_entries() -> Sequence[ProviderRegistryEntry]:
     """Return the canonical provider order."""
     return REGISTRY
+
+
+def iter_kinds() -> tuple[AuthProviderKind, ...]:
+    """Return provider kinds accepted by the user-facing CLI."""
+
+    return tuple(entry.kind for entry in REGISTRY)
 
 
 def get_entry(kind: AuthProviderKind) -> ProviderRegistryEntry:
@@ -100,13 +94,11 @@ def build_provider(kind: AuthProviderKind, settings: Settings) -> AuthProvider:
     Passes the shared production :func:`default_browser_session_factory`
     so the returned provider can drive Playwright without the caller
     having to wire one itself. Raises :class:`ProviderNotImplementedError`
-    for registry entries that have a label but no shipped
-    implementation — the CLI layer catches that and maps it to an
+    if a registry entry and the application-layer provider factory ever
+    drift apart; the CLI layer catches that and maps it to an
     actionable exit-code-2 message.
     """
-    entry = get_entry(kind)
-    if not entry.implemented:
-        raise ProviderNotImplementedError(f"provider {kind.value!r} is known but not yet implemented; see EPIC #279")
+    kind = get_entry(kind).kind
     from ....adapters.outbound.aeat.browser import default_browser_session_factory
 
     try:
@@ -122,30 +114,21 @@ def build_provider(kind: AuthProviderKind, settings: Settings) -> AuthProvider:
 def describe(kind: AuthProviderKind, settings: Settings) -> AuthProviderDescription:
     """Produce an ``AuthProviderDescription`` for a registry kind.
 
-    Implemented providers delegate to the provider's own ``describe()``
-    (which fails soft for missing configuration). Not-yet-shipped
-    kinds return a fixed "not yet implemented" description so the CLI
-    can still list them. The browser-session factory is passed through
-    even for describe-only calls so providers that grow optional I/O
-    in their describe() do not silently see ``None`` and break.
+    Providers delegate to their own ``describe()`` (which fails soft
+    for missing configuration). The browser-session factory is passed
+    through even for describe-only calls so providers that grow
+    optional I/O in their describe() do not silently see ``None`` and
+    break.
     """
     entry = get_entry(kind)
-    if entry.implemented:
-        from ....adapters.outbound.aeat.browser import default_browser_session_factory
+    from ....adapters.outbound.aeat.browser import default_browser_session_factory
 
-        provider = select_provider(
-            kind,
-            settings=settings,
-            browser_session_factory=default_browser_session_factory,
-        )
-        return provider.describe()
-    return AuthProviderDescription(
-        kind=entry.kind,
-        label=entry.label,
-        configured=False,
-        available=False,
-        health_summary="not yet implemented",
+    provider = select_provider(
+        entry.kind,
+        settings=settings,
+        browser_session_factory=default_browser_session_factory,
     )
+    return provider.describe()
 
 
 def default_kind(settings: Settings) -> AuthProviderKind:
@@ -157,7 +140,9 @@ def default_kind(settings: Settings) -> AuthProviderKind:
     3. Raise :class:`NoConfiguredProviderError`.
     """
     if settings.aeat_auth_provider is not None:
-        return settings.aeat_auth_provider
+        configured = AuthProviderKind(settings.aeat_auth_provider.value)
+        get_entry(configured)
+        return configured
     for entry in REGISTRY:
         description = describe(entry.kind, settings)
         if description.configured:

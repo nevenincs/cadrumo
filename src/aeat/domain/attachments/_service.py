@@ -8,7 +8,7 @@ from pathlib import Path
 
 from ._enums import AttachmentKind, AttachmentSource
 from ._models import Attachment
-from ._store import AttachmentStore
+from ._repository import AttachmentStore
 
 
 def add_attachment(

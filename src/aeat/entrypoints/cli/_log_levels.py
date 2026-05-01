@@ -7,7 +7,7 @@ import os
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ... import logging as aeat_logging
+from ...core import logging as aeat_logging
 from ...core.errors import AeatError
 
 

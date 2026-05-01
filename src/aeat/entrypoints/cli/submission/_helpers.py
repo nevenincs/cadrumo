@@ -159,7 +159,7 @@ def _load_persisted_filing_draft(draft_path: Path) -> FilingDraft | None:
     when the refresh produced a new state) or ``None`` when the path is
     not an envelope file or the envelope cannot be deserialised.
     """
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     if not draft_path.name.endswith(".envelope.json"):
         return None

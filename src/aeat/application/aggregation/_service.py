@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...domain.casillas import ModeloCode as CategoryModeloCode
 from ...domain.modelos import ModeloCode
 from ...domain.categories import (
     CasillaMapping,
@@ -273,13 +272,9 @@ def _resolve_casilla(
 
 
 def _mapping_modelo(mapping: CasillaMapping) -> ModeloCode | None:
-    if mapping.modelo is CategoryModeloCode.MODELO_130:
-        return ModeloCode.MODELO_130
-    if mapping.modelo is CategoryModeloCode.MODELO_303:
-        return ModeloCode.MODELO_303
-    if mapping.modelo is CategoryModeloCode.MODELO_390:
-        return ModeloCode.MODELO_390
-    return None
+    if isinstance(mapping.modelo, ModeloCode):
+        return mapping.modelo
+    return _parse_modelo(str(mapping.modelo))
 
 
 def _parse_modelo(modelo: str | ModeloCode) -> ModeloCode:

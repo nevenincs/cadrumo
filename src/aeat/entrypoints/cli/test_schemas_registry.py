@@ -11,7 +11,7 @@ from typing import Any, cast
 import pytest
 from pydantic import Field, ValidationError
 
-from ... import cli
+import aeat.entrypoints.cli as cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

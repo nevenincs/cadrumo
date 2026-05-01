@@ -11,7 +11,7 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from ....adapters.inbound.financial import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider, detect_provider
+from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider, detect_provider
 from ....adapters.inbound.financial.providers import FinancialProviderError, RawTransaction
 
 if TYPE_CHECKING:

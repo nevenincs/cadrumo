@@ -17,7 +17,7 @@ import pytest
 from ....core.config import PROJECT_ROOT
 from ....domain.justificante import Justificante, parse_justificante
 from ....domain.testing import synthesize_filing_draft
-from .._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
+from ....domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
 from . import (
     FilingDivergenceKind,
     ReconciliationStatus,

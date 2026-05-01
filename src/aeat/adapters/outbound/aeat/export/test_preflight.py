@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 
+from .....domain.submission._protocols import FilingFindingSeverity as DomainSubmissionFindingSeverity
 from . import (
     AuthProviderDescription,
     AuthProviderKind,
@@ -73,6 +74,10 @@ class _FailingAuthProvider:
 
 
 _TODAY = date(2026, 4, 10)
+
+
+def test_preflight_uses_canonical_filing_finding_severity() -> None:
+    assert FilingFindingSeverity is DomainSubmissionFindingSeverity
 
 
 def _preflight(*, checker: Any | None = None, cert: Any | None = None) -> Preflight:

@@ -115,7 +115,7 @@ def _draft_repository():  # type: ignore[no-untyped-def]
     Imports are deferred to avoid pulling aeat.adapters.persistence.storage (and Alembic
     plugin discovery) into CLI commands that never persist a draft.
     """
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing._repository import FilingDraftRepository
 
     return FilingDraftRepository(store_dir=_drafts_dir())
 
@@ -540,7 +540,7 @@ def _handle_justificante_import(from_justificante: Path) -> None:
         raise typer.BadParameter(str(exc)) from exc
 
     draft_path = _save_draft(result.draft)
-    from ....adapters.outbound.aeat.export._repository import SubmissionRepository
+    from ....domain.submission._repository import SubmissionRepository
 
     submission_repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)
     submission_repository.save(result.submission)

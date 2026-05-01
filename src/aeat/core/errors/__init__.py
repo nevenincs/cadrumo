@@ -7,12 +7,12 @@ predictable error handling throughout the application.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, ClassVar
+from typing import Any, TYPE_CHECKING, ClassVar
+
+from ._registry import ErrorCode
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
     from ..i18n import Translatable
-    from ._registry import ErrorCode
 
 
 class AeatError(Exception):
@@ -100,7 +100,7 @@ class SiteHealthError(AeatError):
     (which consumes it).
     """
 
-    def __init__(self, *, status: SiteHealthStatus) -> None:
+    def __init__(self, *, status: Any) -> None:
         """Construct a SiteHealthError carrying a detected status.
 
         Args:
@@ -109,8 +109,10 @@ class SiteHealthError(AeatError):
                 instance describing the detected non-OK state.
         """
 
-        super().__init__(status.state.value, context={"state": status.state.value})
-        self.status: SiteHealthStatus = status
+        state = getattr(status, "state")
+        state_value = getattr(state, "value", state)
+        super().__init__(str(state_value), context={"state": str(state_value)})
+        self.status: Any = status
 
 
 class WorkspaceLockedError(AeatError):

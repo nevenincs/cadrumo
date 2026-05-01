@@ -35,16 +35,16 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core.logging import get_logger
-from ._blob_store import EncryptedBlobStore
-from ._crypto import decrypt_record, encrypt_record
-from ._envelope import (
+from .blob_store._blob_store import EncryptedBlobStore
+from .crypto._crypto import decrypt_record, encrypt_record
+from .envelope._envelope import (
     CipherEnvelope,
     EncryptionMetadata,
     _build_aad,  # type: ignore[attr-defined]
     _derive_envelope_key,  # type: ignore[attr-defined]
 )
 from ....core.locks import exclusive_file_lock, fsync_parent_dir
-from ._master_key import MasterKeyProvider
+from .master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
 
@@ -97,11 +97,9 @@ class RotationPlanEntry(BaseModel):
           ``<base>.lock`` (``target.with_suffix('.lock')``). Use
           :meth:`Path.with_suffix` directly.
 
-        The lock file ``exclusive_file_lock`` actually opens is the
-        returned path with an additional ``.lock`` suffix appended
-        (see :func:`aeat.adapters.persistence.storage._lock._lock_path_for`); the
-        rotation and writer therefore land on the same lock-byte
-        target.
+        The lock file ``exclusive_file_lock`` actually opens is the returned
+        path with an additional ``.lock`` suffix appended; the rotation and
+        writer therefore land on the same lock-byte target.
         """
         if self.target_filename is not None:
             return envelope_path.with_suffix(".lock")

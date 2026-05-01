@@ -18,12 +18,12 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.errors import ClassificationError
 from . import build_draft
-from ._repository import (
+from ...domain.filing._repository import (
     DraftMigrationSummary,
     FilingDraftRepository,
     migrate_legacy_drafts_to_repository,
 )
-from ._schema import FilingDraft
+from ...domain.filing._schema import FilingDraft
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -159,7 +159,7 @@ class TestClassificationGate:
 
     def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
         from ...adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         store_dir.mkdir(parents=True, exist_ok=True)
         draft = _make_draft()

@@ -1,67 +1,39 @@
-"""Strict amendment models and builder helpers for :mod:`aeat.application.filing`."""
+"""Filing-amendment use cases for :mod:`aeat.application.filing`.
+
+Houses the orchestration entry points that turn an originally
+submitted filing into a persisted amendment: ``build_complementaria``,
+``load_amendment``, ``list_amendments`` and friends. The immutable
+amendment records and the deterministic id helper live at
+:mod:`aeat.domain.filing._amendment` so the repository layer (also in
+:mod:`aeat.domain.filing`) can persist amendments without depending on
+the application layer.
+"""
 
 from __future__ import annotations
 
-import hashlib
-import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
-from enum import StrEnum
 from pathlib import Path
-
-from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import load_settings
 from ...core.paths import resolve_record_json_path
+from ...domain.filing._amendment import (
+    AmendmentKind,
+    CasillaChange,
+    CasillaDelta,
+    CasillaInputs,
+    FilingAmendment,
+    ModeloCode,
+    make_amendment_id,
+)
+from ...domain.filing._errors import FilingAmendmentError, FilingAmendmentValidationError
+from ...domain.filing._schema import FilingDraft, FilingScalar, FilingValue
 from ...domain.justificante import parse_justificante
-from ._errors import FilingAmendmentError, FilingAmendmentValidationError
-from ._schema import FilingDraft, FilingScalar, FilingValue
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
-type ModeloCode = str
-type CasillaInputs = Mapping[str, object]
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _REASONS_INPUT_KEY = "_reasons"
 _AMENDMENTS_DIRNAME = "amendments"
-
-
-class AmendmentKind(StrEnum):
-    """Legally distinct amendment kinds supported by the engine."""
-
-    COMPLEMENTARIA = "complementaria"
-    SUSTITUTIVA = "sustitutiva"
-
-
-class CasillaChange(BaseModel):
-    """One changed casilla in an amendment delta."""
-
-    model_config = _STRICT_FROZEN
-
-    casilla_code: str = Field(min_length=1)
-    old_value: Decimal | None = None
-    new_value: Decimal
-    reason: str = Field(min_length=1)
-
-
-type CasillaDelta = tuple[CasillaChange, ...]
-
-
-class FilingAmendment(BaseModel):
-    """Immutable amendment record derived from a previously submitted filing."""
-
-    model_config = _STRICT_FROZEN
-
-    amendment_id: str = Field(min_length=1)
-    submission_id: str = Field(min_length=1)
-    original_csv: str = Field(min_length=1)
-    original_model: ModeloCode = Field(min_length=1)
-    original_period: str = Field(min_length=1)
-    amendment_kind: AmendmentKind
-    delta: CasillaDelta = Field(min_length=1)
-    amended_draft: FilingDraft
-    created_at: datetime
 
 
 def build_complementaria(original, updated_inputs: CasillaInputs) -> FilingAmendment:
@@ -112,7 +84,7 @@ def build_complementaria(original, updated_inputs: CasillaInputs) -> FilingAmend
 
 def load_amendment(amendment_id: str) -> FilingAmendment:
     """Load a previously persisted amendment by id."""
-    from ._complementaria_repository import FilingAmendmentRepository
+    from ...domain.filing._complementaria_repository import FilingAmendmentRepository
 
     try:
         resolve_record_json_path(_amendments_dir(), amendment_id, context="amendment id")
@@ -127,7 +99,7 @@ def load_amendment(amendment_id: str) -> FilingAmendment:
 
 def list_amendments(*, modelo: str | None = None) -> tuple[FilingAmendment, ...]:
     """Return every persisted amendment, optionally filtered by modelo."""
-    from ._complementaria_repository import FilingAmendmentRepository
+    from ...domain.filing._complementaria_repository import FilingAmendmentRepository
 
     target_dir = _amendments_dir()
     if not target_dir.exists():
@@ -136,22 +108,6 @@ def list_amendments(*, modelo: str | None = None) -> tuple[FilingAmendment, ...]
     return tuple(
         amendment for amendment in repository.iter_amendments() if modelo is None or amendment.original_model == modelo
     )
-
-
-def make_amendment_id(
-    *,
-    submission_id: str,
-    amendment_kind: AmendmentKind,
-    delta: CasillaDelta,
-) -> str:
-    """Compute a stable amendment identifier."""
-    payload = {
-        "submission_id": submission_id,
-        "amendment_kind": amendment_kind.value,
-        "delta": [change.model_dump(mode="json") for change in delta],
-    }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()[:16]
 
 
 def _amendments_dir() -> Path:
@@ -163,7 +119,7 @@ def _amendments_dir() -> Path:
 
 def _persist_amendment(amendment: FilingAmendment) -> Path:
     """Persist ``amendment`` through the AUDIT-class FilingAmendmentRepository."""
-    from ._complementaria_repository import FilingAmendmentRepository
+    from ...domain.filing._complementaria_repository import FilingAmendmentRepository
 
     try:
         # Reject path-traversal-shaped ids before composing the
@@ -178,7 +134,7 @@ def _persist_amendment(amendment: FilingAmendment) -> Path:
 
 def _load_original_draft(draft_id: str) -> FilingDraft:
     """Locate the original draft by id via the FilingDraftRepository."""
-    from ._repository import FilingDraftRepository
+    from ...domain.filing._repository import FilingDraftRepository
 
     drafts_dir = load_settings().aeat_drafts_dir
     if not drafts_dir.exists():

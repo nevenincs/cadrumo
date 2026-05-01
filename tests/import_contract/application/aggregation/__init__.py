@@ -1,0 +1,1 @@
+"""Aggregation import-contract tests."""

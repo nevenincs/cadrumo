@@ -156,7 +156,7 @@ def _seed_all(tmp_path: Path) -> None:
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version="filing-schema-0.1.0",
     )
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     FilingDraftRepository(store_dir=drafts_dir).save(draft)
 

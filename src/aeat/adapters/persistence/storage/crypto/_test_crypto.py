@@ -15,7 +15,7 @@ from ._crypto import (
     derive_key,
     encrypt_record,
 )
-from .errors import DecryptionError, EncryptionError, KeyDerivationError
+from ..errors import DecryptionError, EncryptionError, KeyDerivationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -260,8 +260,8 @@ class TestErrorCodeRegistration:
         error_class: str,
         expected_code: str,
     ) -> None:
-        from ....core.errors._registry import bind_error_code
-        from . import errors as storage_errors
+        from .....core.errors._registry import bind_error_code
+        from .. import errors as storage_errors
 
         cls = getattr(storage_errors, error_class)
         bound = bind_error_code(cls)

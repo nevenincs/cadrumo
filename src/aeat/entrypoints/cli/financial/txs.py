@@ -7,7 +7,7 @@ from pathlib import Path
 
 import typer
 
-from ....adapters.inbound.financial import CsvProvider, OfxProvider, XlsxProvider, detect_provider
+from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, XlsxProvider, detect_provider
 from ....adapters.inbound.financial._decimal import canonical_decimal
 from ....domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ....domain.categories._proportionality import ProportionalityKind

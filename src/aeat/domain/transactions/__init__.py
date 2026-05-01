@@ -40,6 +40,7 @@ from ._llm import (
 )
 from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
+from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ._service import (
     find_transaction,
     link_invoice,
@@ -78,6 +79,9 @@ __all__ = [
     "ModelProfile",
     "ModelTier",
     "PromptSpec",
+    "RawProvenance",
+    "RawTransaction",
+    "SourceFormat",
     "SubprocessLLMClassifier",
     "Transaction",
     "TransactionCatalogue",

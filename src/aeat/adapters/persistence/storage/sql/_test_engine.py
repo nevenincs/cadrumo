@@ -7,8 +7,9 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from ....core.config import PROJECT_ROOT, Settings
-from . import StorageError, create_engine_from_settings, dispose_engine
+from .....core.config import PROJECT_ROOT, Settings
+from ..errors import StorageError
+from . import create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

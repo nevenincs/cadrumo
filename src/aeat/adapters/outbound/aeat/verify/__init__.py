@@ -1,7 +1,7 @@
 """Playwright CSV verification against AEAT's Sede electrónica (#44).
 
 The ``verify_csv`` helper is **opt-in**: it only runs when the caller
-supplies or constructs a :class:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.browser.BrowserSession`,
+supplies or constructs a :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`,
 and it never mutates AEAT-side state. Our contract is:
 
 * open the Sede verification page,
@@ -9,7 +9,7 @@ and it never mutates AEAT-side state. Our contract is:
 * read back the server response,
 * return ``True`` iff AEAT confirms the document as valid.
 
-Because the live bot-detection probe in :mod:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.browser`
+Because the live bot-detection probe in :mod:`aeat.adapters.outbound.aeat.browser`
 is a known flaky path (see issue #41), the function degrades gracefully when a
 browser cannot be constructed and surfaces the underlying error to the caller.
 """

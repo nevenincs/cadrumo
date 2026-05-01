@@ -26,6 +26,7 @@ Narrower scope constants are provided for least-privilege scenarios.
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -39,13 +40,13 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from .....application.auth import (
+from .....domain.auth import (
     AuthProvider,
     AuthProviderDescription,
     AuthProviderKind,
     describe_provider_operator_impact,
-    select_provider,
 )
+from .....core.file_permissions import restrict_file_permissions
 from ._authenticator import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
@@ -65,7 +66,6 @@ from ._clave_movil import (
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
 )
-from .....core.file_permissions import restrict_file_permissions
 from ._gate import AeatAccessGate, AeatGateEnvSnapshot
 from ._google_paths import (
     GoogleAuthInspection,
@@ -242,6 +242,19 @@ ADC_LOGIN_SCOPE_CSV = format_scope_csv(ADC_LOGIN_SCOPES)
 # ── OAuth 2.0 ───────────────────────────────────────────────────────────────
 
 
+def _write_oauth_token_cache(token_path: Path, payload: str) -> None:
+    """Persist OAuth token JSON with operator-only permissions."""
+
+    token_path.parent.mkdir(parents=True, exist_ok=True)
+    if os.name == "posix":
+        try:
+            os.chmod(token_path.parent, 0o700)
+        except OSError:
+            log.warning("failed to restrict OAuth token directory permissions: %s", token_path.parent)
+    token_path.write_text(payload, encoding="utf-8")
+    restrict_file_permissions(token_path)
+
+
 def get_oauth_credentials(
     client_id: str,
     client_secret: str,
@@ -291,8 +304,7 @@ def get_oauth_credentials(
         creds = flow.run_local_server(port=8080)
 
     # 3. Persist the token for next time
-    token_path.parent.mkdir(parents=True, exist_ok=True)
-    token_path.write_text(creds.to_json())
+    _write_oauth_token_cache(token_path, creds.to_json())
 
     return creds
 
@@ -515,3 +527,28 @@ def get_credentials_for_scopes(scopes: list[str] | None = None) -> BaseCredentia
     scopes = scopes or SCOPES
     settings = Settings()
     return get_credentials(settings, scopes=scopes)
+
+
+def select_provider(
+    kind: AuthProviderKind,
+    *,
+    settings: Settings,
+    browser_session_factory: BrowserSessionFactory | None = None,
+) -> AuthProvider:
+    """Return the concrete outbound auth provider for ``kind``."""
+    if kind is AuthProviderKind.CERTIFICATE:
+        return AeatAuthenticator(
+            settings,
+            browser_session_factory=browser_session_factory,
+        )
+    if kind is AuthProviderKind.CLAVE_MOVIL:
+        return ClaveMovilAuthProvider(
+            settings,
+            browser_session_factory=browser_session_factory,
+        )
+    if kind is AuthProviderKind.CLAVE_PERMANENTE:
+        raise NotImplementedError(
+            "auth provider 'clave_permanente' is not offered by AEAT Sede Electrónica today; "
+            "use clave_movil (push approval via the Cl@ve app) or certificate."
+        )
+    raise NotImplementedError(f"auth provider {kind.value!r} is not implemented yet")

@@ -29,6 +29,7 @@ import sys
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
+from importlib import import_module
 from pathlib import Path
 from typing import Final
 
@@ -41,10 +42,6 @@ DEFAULT_LOCK_TIMEOUT: Final[float] = 30.0
 
 _RETRY_BACKOFF: Final[float] = 0.05
 """Sleep interval between non-blocking lock-acquire attempts."""
-
-
-class LockAcquisitionError(RuntimeError):
-    """Raised when an exclusive file lock cannot be acquired within the timeout."""
 
 
 def _lock_path_for(target: Path) -> Path:
@@ -169,6 +166,8 @@ def exclusive_file_lock(
         the lock as advisory across the whole file regardless of the
         underlying primitive.
     """
+    LockAcquisitionError = import_module("aeat.adapters.persistence.storage.errors").LockAcquisitionError
+
     if timeout < 0:
         raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")
     lock_path = _lock_path_for(target)

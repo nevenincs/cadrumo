@@ -14,9 +14,9 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from ....core.config import load_settings
-from ....core.errors import AeatError
-from ....core.logging import get_logger
+from .....core.config import load_settings
+from .....core.errors import AeatError
+from .....core.logging import get_logger
 from .._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 LOGGER = get_logger(__name__)

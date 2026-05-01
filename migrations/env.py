@@ -1,6 +1,6 @@
 """Alembic environment for the aeat storage layer.
 
-Reads the database URL from :class:`aeat.config.Settings` (unless it has been
+Reads the database URL from :class:`aeat.core.config.Settings` (unless it has been
 injected into the Alembic config by a programmatic caller such as
 :mod:`aeat.storage.migrations_api`) and uses
 :data:`aeat.storage._orm.metadata` as the autogenerate target.
@@ -11,8 +11,8 @@ from __future__ import annotations
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from aeat.adapters.persistence.storage import _orm
-from aeat.adapters.persistence.storage.engine import _ensure_sqlite_parent
+from aeat.adapters.persistence.storage.sql import _orm
+from aeat.adapters.persistence.storage.sql.engine import _ensure_sqlite_parent
 from aeat.core.config import load_settings
 from aeat.core.logging import get_logger
 

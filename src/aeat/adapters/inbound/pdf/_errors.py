@@ -9,8 +9,4 @@ every PDF-import error regardless of source use :class:`PdfFilingImportError`.
 
 from __future__ import annotations
 
-from ....core.errors import AeatError
-
-
-class PdfFilingImportError(AeatError):
-    """Base class for every PDF-import parsing error."""
+from ....domain.justificante._errors import PdfFilingImportError

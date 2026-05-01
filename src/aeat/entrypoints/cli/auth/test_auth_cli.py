@@ -119,18 +119,16 @@ def _seed_persisted_session(
 
 
 class TestListProviders:
-    """`aeat auth list-providers` reports every known provider in canonical order."""
+    """`aeat auth list-providers` reports supported providers in canonical order."""
 
     def test_table_lists_every_kind(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         result = _runner.invoke(app, ["auth", "list-providers"])
         assert result.exit_code == 0, result.output
         assert "Certificate (FNMT)" in result.output
-        assert "Cl@ve Permanente" in result.output
         assert "Cl@ve Móvil" in result.output
-        assert "Cl@ve PIN" in result.output
-        # Rich may wrap the status column; the JSON surface is the
-        # deterministic placement test for the "not yet implemented" label.
+        assert "Cl@ve Permanente" not in result.output
+        assert "Cl@ve PIN" not in result.output
 
     def test_configured_filter_hides_unshipped_providers(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
@@ -148,13 +146,9 @@ class TestListProviders:
         assert [row["kind"] for row in payload] == [
             AuthProviderKind.CERTIFICATE.value,
             AuthProviderKind.CLAVE_MOVIL.value,
-            AuthProviderKind.CLAVE_PERMANENTE.value,
-            AuthProviderKind.CLAVE_PIN.value,
         ]
         assert payload[0]["implemented"] is True
         assert payload[1]["implemented"] is True
-        assert payload[2]["implemented"] is False
-        assert payload[2]["health_summary"] == "not yet implemented"
 
 
 # ── registry / default resolution ────────────────────────────────────────────
@@ -188,9 +182,9 @@ class TestRegistry:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         del isolated_token_dir
-        monkeypatch.setenv("AEAT_AUTH_PROVIDER", AuthProviderKind.CLAVE_PERMANENTE.value)
+        monkeypatch.setenv("AEAT_AUTH_PROVIDER", AuthProviderKind.CLAVE_MOVIL.value)
         settings = _isolated_settings()
-        assert _registry.default_kind(settings) == AuthProviderKind.CLAVE_PERMANENTE
+        assert _registry.default_kind(settings) == AuthProviderKind.CLAVE_MOVIL
 
     def test_default_kind_falls_back_to_configured(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
@@ -198,19 +192,17 @@ class TestRegistry:
         with pytest.raises(_registry.NoConfiguredProviderError):
             _registry.default_kind(settings)
 
-    def test_build_provider_rejects_unshipped_kinds(self, isolated_token_dir: Path) -> None:
+    def test_registry_rejects_unsupported_kinds(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         settings = _isolated_settings()
-        with pytest.raises(_registry.ProviderNotImplementedError):
+        with pytest.raises(_registry.UnknownProviderError):
             _registry.build_provider(AuthProviderKind.CLAVE_PERMANENTE, settings)
 
-    def test_describe_returns_placeholder_for_unshipped_kinds(self, isolated_token_dir: Path) -> None:
+    def test_describe_rejects_unsupported_kinds(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         settings = _isolated_settings()
-        description = _registry.describe(AuthProviderKind.CLAVE_PIN, settings)
-        assert description.configured is False
-        assert description.available is False
-        assert description.health_summary == "not yet implemented"
+        with pytest.raises(_registry.UnknownProviderError):
+            _registry.describe(AuthProviderKind.CLAVE_PIN, settings)
 
 
 # ── login ─────────────────────────────────────────────────────────────────────
@@ -219,12 +211,13 @@ class TestRegistry:
 class TestLogin:
     """`aeat auth login` error paths are Kent-readable and exit with code 2."""
 
-    def test_login_unshipped_provider_exits_2(self, isolated_token_dir: Path) -> None:
+    def test_login_unsupported_provider_exits_2(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         result = _runner.invoke(app, ["auth", "login", "--provider", "clave_permanente"])
         assert result.exit_code == 2, result.output
-        assert "not yet implemented" in result.output
-        assert "#279" in result.output
+        assert "unsupported provider" in result.output
+        assert "certificate" in result.output
+        assert "clave_movil" in result.output
 
     def test_login_unknown_provider_rejected(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
@@ -312,7 +305,7 @@ class TestStatus:
         assert payload["is_expired"] is False
         assert 0 < payload["seconds_remaining"] <= payload["idle_ttl_seconds"]
 
-    def test_mismatched_provider_reports_no_session(self, isolated_token_dir: Path) -> None:
+    def test_unsupported_provider_is_rejected(self, isolated_token_dir: Path) -> None:
         now = datetime.now(UTC)
         _seed_persisted_session(
             isolated_token_dir,
@@ -320,8 +313,8 @@ class TestStatus:
             idle_deadline=now + timedelta(minutes=5),
         )
         result = _runner.invoke(app, ["auth", "status", "--provider", "clave_permanente"])
-        assert result.exit_code == 0, result.output
-        assert "no active session" in result.output
+        assert result.exit_code == 2, result.output
+        assert "unsupported provider" in result.output
 
 
 # ── logout ────────────────────────────────────────────────────────────────────
@@ -381,7 +374,7 @@ class TestLogout:
         payload = _unwrap_result(result.output)
         assert len(payload["removed_paths"]) == 2
 
-    def test_logout_with_wrong_provider_preserves_session(self, isolated_token_dir: Path) -> None:
+    def test_logout_unsupported_provider_preserves_session(self, isolated_token_dir: Path) -> None:
         now = datetime.now(UTC)
         _seed_persisted_session(
             isolated_token_dir,
@@ -392,8 +385,8 @@ class TestLogout:
         paths = storage_state_paths(settings)
 
         result = _runner.invoke(app, ["auth", "logout", "--provider", "clave_permanente"])
-        assert result.exit_code == 0, result.output
-        # Session belongs to certificate, not clave_permanente — keep it.
+        assert result.exit_code == 2, result.output
+        assert "unsupported provider" in result.output
         assert paths.storage_state.exists()
         assert paths.metadata.exists()
 
@@ -566,12 +559,15 @@ class TestConformance:
 
     def test_registry_covers_every_provider_kind(self) -> None:
         registry_kinds = {entry.kind for entry in _registry.iter_entries()}
-        assert registry_kinds == set(AuthProviderKind)
+        assert registry_kinds == {
+            AuthProviderKind.CERTIFICATE,
+            AuthProviderKind.CLAVE_MOVIL,
+        }
 
-    def test_placeholder_description_model_dump_is_json_safe(self, isolated_token_dir: Path) -> None:
+    def test_descriptions_model_dump_is_json_safe(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         settings = _isolated_settings()
-        description = _registry.describe(AuthProviderKind.CLAVE_PIN, settings)
+        description = _registry.describe(AuthProviderKind.CLAVE_MOVIL, settings)
         payload = description.model_dump(mode="json")
-        assert payload["kind"] == AuthProviderKind.CLAVE_PIN.value
+        assert payload["kind"] == AuthProviderKind.CLAVE_MOVIL.value
         assert payload["configured"] is False

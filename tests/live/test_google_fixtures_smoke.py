@@ -92,7 +92,7 @@ _GOOGLE_ENABLED = _truthy(os.environ.get("AEAT_LIVE_TESTS_GOOGLE"))
 
 pytestmark = [
     pytest.mark.live_read,
-    pytest.mark.domain_infra,
+    pytest.mark.domain_core,
     pytest.mark.skipif(
         not (_LIVE_ENABLED and _GOOGLE_ENABLED),
         reason=(

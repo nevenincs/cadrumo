@@ -19,12 +19,12 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.errors import ClassificationError
 from . import build_draft
-from ._complementaria import (
+from ...domain.filing._amendment import (
     AmendmentKind,
     CasillaChange,
     FilingAmendment,
 )
-from ._complementaria_repository import (
+from ...domain.filing._complementaria_repository import (
     AmendmentMigrationSummary,
     FilingAmendmentRepository,
     migrate_legacy_amendments_to_repository,
@@ -151,7 +151,7 @@ class TestClassificationGate:
 
     def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
         from ...adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         store_dir.mkdir(parents=True, exist_ok=True)
         amendment = _make_amendment()

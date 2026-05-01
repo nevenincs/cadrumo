@@ -14,6 +14,7 @@ assert:
 from __future__ import annotations
 
 import io
+from importlib import import_module
 
 import pikepdf
 import pytest
@@ -205,7 +206,7 @@ class TestPublicReexports:
     """Every public symbol is importable from :mod:`aeat.adapters.inbound.sanitizer`."""
 
     def test_all_public_names_are_importable(self) -> None:
-        from .... import sanitizer
+        sanitizer = import_module(__package__ or "aeat.adapters.inbound.sanitizer")
 
         for name in sanitizer.__all__:
             attr = getattr(sanitizer, name, None)

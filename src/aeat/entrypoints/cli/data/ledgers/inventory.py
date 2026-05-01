@@ -9,6 +9,11 @@ from pathlib import Path
 import typer
 from pydantic import BaseModel, ConfigDict
 
+from .....adapters.persistence.profile.inventory import (
+    create_inventory_ledger,
+    load_inventory,
+    record_movement,
+)
 from .....domain.profile.errors import InventoryLedgerError
 from .....domain.profile.inventory import (
     InventoryLedger,
@@ -16,10 +21,7 @@ from .....domain.profile.inventory import (
     MovementRecord,
     StockLayer,
     compute_inventory_valuation,
-    create_inventory_ledger,
-    load_inventory,
     parse_valuation_method,
-    record_movement,
 )
 from ..._context import json_output_requested
 from ..._schemas import OutputRootSchema, emit_json_success, register_schema

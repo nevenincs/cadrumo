@@ -10,25 +10,27 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import SecretStoreBackend, Settings
+from .....core.config import SecretStoreBackend, Settings
+from ..crypto import KEY_SIZE
+from ..errors import (
+    KeyringUnavailableError,
+    MasterKeyKdfVersionError,
+    MasterKeyUnavailableError,
+    SecretStoreError,
+    UnsecuredModeRefusedError,
+)
 from . import (
-    KEY_SIZE,
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
-    KeyringUnavailableError,
-    MasterKeyKdfVersionError,
     MasterKeyProvider,
-    MasterKeyUnavailableError,
-    SecretStoreError,
     UnsecuredMasterKeyProvider,
-    UnsecuredModeRefusedError,
     get_master_key_provider,
     looks_like_real_tax_id,
     migrate_master_key_kdf,
     refuse_unsecured_with_real_nif,
 )
-from ._crypto import encrypt_record
+from ..crypto._crypto import encrypt_record
 from ._master_key import (
     PASSPHRASE_ENV_VAR,
     _b64decode,
@@ -124,7 +126,7 @@ class TestFileFallbackProvider:
         # inherit from MasterKeyUnavailableError so legacy catchers
         # still work, but the typed subclass lets the CLI render a
         # class-specific actionable hint.
-        from . import MasterKeyPassphraseMismatchError
+        from ..errors import MasterKeyPassphraseMismatchError
 
         with pytest.raises(MasterKeyPassphraseMismatchError):
             FileFallbackMasterKeyProvider(
@@ -305,7 +307,7 @@ class TestTornStateGate:
         (store_dir / "master.key").write_bytes(b"orphan-master-key")
 
         from . import FileFallbackMasterKeyProvider
-        from .errors import MasterKeyMaterialMissingError
+        from ..errors import MasterKeyMaterialMissingError
 
         FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
@@ -328,7 +330,7 @@ class TestTornStateGate:
         )
 
         from . import FileFallbackMasterKeyProvider
-        from .errors import MasterKeyMaterialMissingError
+        from ..errors import MasterKeyMaterialMissingError
 
         FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
@@ -348,7 +350,7 @@ class TestTornStateGate:
         (store_dir / "salt").write_bytes(b"\x00" * 16)
 
         from . import FileFallbackMasterKeyProvider
-        from .errors import MasterKeyMaterialMissingError
+        from ..errors import MasterKeyMaterialMissingError
 
         FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
@@ -539,7 +541,7 @@ class TestFactory:
         # file unconditionally — there is no keychain-backed
         # master key that a file-fallback could diverge from.
         from . import KeyringMasterKeyProvider
-        from .errors import KeyringUnavailableError
+        from ..errors import KeyringUnavailableError
 
         def _probe_fail() -> None:
             raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
@@ -568,7 +570,7 @@ class TestFactory:
         # state so the operator unlocks-and-retries OR explicitly
         # switches to ``AEAT_SECRET_STORE_BACKEND=file``.
         from . import KeyringMasterKeyProvider
-        from .errors import MasterKeyKeychainLockedError
+        from ..errors import MasterKeyKeychainLockedError
 
         keyring = pytest.importorskip("keyring")
         from keyring.errors import KeyringError
@@ -760,7 +762,8 @@ class TestWave12KdfMigration:
         new KEK, master.kdf still v1) and surface a spurious
         ``MasterKeyPassphraseMismatchError``.
         """
-        from . import LockAcquisitionError, exclusive_file_lock
+        from .....core.locks import exclusive_file_lock
+        from ..errors import LockAcquisitionError
 
         store = tmp_path / "secrets"
         _seed_legacy_v1_store(store, passphrase="hunter2")

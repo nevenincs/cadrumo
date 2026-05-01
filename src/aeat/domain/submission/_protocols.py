@@ -7,8 +7,7 @@ surface the engine actually consumes, decoupling submission from the
 richer surfaces of its sibling subpackages.
 
 - ``ModeloIdentifier`` — typed validating string for an AEAT modelo.
-- ``AuthProviderProbe`` — narrow surface over
-  :class:`aeat.application.auth.AuthProvider` for the preflight gate.
+- ``AuthProviderProbe`` — narrow auth-provider surface for the preflight gate.
 - ``DeadlineWindowChecker`` — narrow surface over
   :mod:`aeat.domain.deadlines` used by preflight.
 - ``FilingFinding`` / ``FilingDraftLike`` / ``DraftLoader`` — narrow
@@ -26,20 +25,12 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
 from ...core.i18n import Translatable
-
-if TYPE_CHECKING:
-    # Annotation-only imports — these value records live in the
-    # application layer (`aeat.application.auth`). The domain submission
-    # surface declares them as protocol return types so concrete
-    # adapter / application implementations can plug in without the
-    # domain layer importing application code at runtime.
-    from ...application.auth import AuthProviderDescription, AuthProviderKind
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -88,12 +79,36 @@ class ModeloIdentifier(str):
 
 
 @runtime_checkable
+class AuthProviderDescriptionLike(Protocol):
+    """Submission-facing shape returned by an auth provider."""
+
+    @property
+    def kind(self) -> object: ...
+
+    @property
+    def label(self) -> str: ...
+
+    @property
+    def configured(self) -> bool: ...
+
+    @property
+    def available(self) -> bool: ...
+
+    @property
+    def subject(self) -> str | None: ...
+
+    @property
+    def expires_on(self) -> date | None: ...
+
+
+@runtime_checkable
 class AuthProviderProbe(Protocol):
     """Narrow submission-facing auth-provider surface."""
 
-    kind: AuthProviderKind
+    @property
+    def kind(self) -> object: ...
 
-    def describe(self) -> AuthProviderDescription:
+    def describe(self) -> AuthProviderDescriptionLike:
         """Return a safe description of the active auth provider."""
         ...
 

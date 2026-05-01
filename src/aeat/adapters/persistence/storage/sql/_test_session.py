@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from ....core.config import Settings
+from .....core.config import Settings
 from . import create_engine_from_settings, session_scope
 from ._orm import Base
 
