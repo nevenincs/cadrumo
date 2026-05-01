@@ -1,4 +1,4 @@
-"""Unit tests for :func:`aeat.domain.testing.synthesize_filing_draft` (#239 W1 P7).
+"""Unit tests for :func:`aeat.application.filing.testing.synthesize_filing_draft` (#239 W1 P7).
 
 The helper is a pure construction surface — no AEAT round-trip — so
 every test is a strict pydantic validation + content-hash sanity
@@ -15,7 +15,7 @@ from decimal import Decimal, InvalidOperation
 import pytest
 from pydantic import ValidationError
 
-from ...application.filing._schema import (
+from .._schema import (
     FilingDraft,
     FilingDraftStatus,
     FilingValueKind,

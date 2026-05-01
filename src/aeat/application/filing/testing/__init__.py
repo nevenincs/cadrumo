@@ -1,6 +1,6 @@
 """Synthetic filing-history fixtures loader.
 
-The :mod:`aeat.domain.testing` subpackage owns the typed public API for
+The :mod:`aeat.application.filing.testing` subpackage owns the typed public API for
 loading the hand-curated backlog of **synthetic** past filings that
 lives under ``tests/fixtures/filing_history/``. It is the only
 "test helper" code allowed in the source tree per issue #14 — every
@@ -84,7 +84,7 @@ Example
 
 from __future__ import annotations
 
-from ...core.errors import FilingFixtureError
+from ....core.errors import FilingFixtureError
 from ._loader import SYNTHETIC_FIXTURES_ROOT, load_filing_history
 from ._schema import (
     FilingRecord,

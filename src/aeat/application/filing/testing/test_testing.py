@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.domain.testing`.
+"""Unit tests for :mod:`aeat.application.filing.testing`.
 
 These tests load the hand-curated synthetic filing corpus under
 ``tests/fixtures/filing_history/`` through the public loader and
@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...application.filing import FilingDraftStatus
-from ...core.errors import FilingFixtureError
+from .. import FilingDraftStatus
+from ....core.errors import FilingFixtureError
 from . import (
     SYNTHETIC_FIXTURES_ROOT,
     FilingRecord,

@@ -44,7 +44,7 @@ ON_MAIN_SUBPACKAGES = (
     "aeat.adapters.persistence.storage",
     "aeat.adapters.outbound.aeat.export",
     "aeat.application.sync",
-    "aeat.domain.testing",
+    "aeat.application.filing.testing",
 )
 
 
