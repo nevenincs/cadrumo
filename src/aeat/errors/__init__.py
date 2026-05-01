@@ -6,10 +6,12 @@ aeat-restructure ADR (Public surface and semver).
 
 from __future__ import annotations
 
+import importlib as _importlib
 import warnings as _warnings
 
 from ..core.errors import *  # noqa: F403
-from ..core.errors import __all__  # noqa: F401
+
+__all__ = getattr(_importlib.import_module("aeat.core.errors"), "__all__", ())
 
 _warnings.warn(
     "Importing from `aeat.errors` is deprecated; use `aeat.core.errors` instead.",

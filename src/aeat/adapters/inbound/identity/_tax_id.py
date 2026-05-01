@@ -27,7 +27,7 @@ def validate_spanish_tax_id(value: str) -> str:
       ``TRWAGMYFPDXBNJZSQVHLCKE`` indexed by ``number % 23``.
     * **NIE** — a leading ``X``/``Y``/``Z`` substituted with ``0``/``1``/``2``
       before applying the NIF rule.
-    * **CIF** — a leading letter from ``ABCDEFGHJNPQRSUVW``, 7 digits, and
+    * **CIF** — a leading letter from ``ABCDEFGHJKLMNPQRSUVW``, 7 digits, and
       a 1-character control.  Leading letters in ``KPQRSNW`` require a
       **letter** control drawn from ``JABCDEFGHI``; leading letters in
       ``ABEH`` require a **digit** control; all other leaders accept

@@ -6,10 +6,12 @@ aeat-restructure ADR (Public surface and semver).
 
 from __future__ import annotations
 
+import importlib as _importlib
 import warnings as _warnings
 
 from ..adapters.outbound.aeat.auth import *  # noqa: F403
-from ..adapters.outbound.aeat.auth import __all__  # noqa: F401
+
+__all__ = getattr(_importlib.import_module("aeat.adapters.outbound.aeat.auth"), "__all__", ())
 
 _warnings.warn(
     "Importing from `aeat.auth` is deprecated; use `aeat.adapters.outbound.aeat.auth` instead.",
