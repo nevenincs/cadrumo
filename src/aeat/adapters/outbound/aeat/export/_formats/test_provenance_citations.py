@@ -1,4 +1,4 @@
-"""Stream A citation audit for generated schema modules (wave 117).
+"""Stream A citation audit for generated schema modules.
 
 Every ``modelo_{n}_{year}.py`` module that is GENERATED from a
 JSON fixture must carry a provenance block in its docstring
@@ -103,7 +103,7 @@ class TestProvenanceCitations:
 
 
 class TestHandAuthoredProvenance:
-    """Wave 118: extend Stream A's citation audit to the hand-authored
+    """extend Stream A's citation audit to the hand-authored
     record-style schemas (Modelo 130 2024 / 2025) + the 303 2025 clone.
 
     These modules don't come from the generator so they don't carry the

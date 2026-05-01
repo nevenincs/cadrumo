@@ -1,4 +1,4 @@
-"""Unit tests for the shared label-regex primitive (#305 cluster D refactor)."""
+"""Unit tests for the shared label-regex primitive (#305 refactor)."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class TestParseSpanishDecimal:
     @pytest.mark.parametrize(
         ("raw", "expected"),
         [
-            # Wave 51 H1: parse_spanish_decimal() tolerates every unicode
+            # parse_spanish_decimal() tolerates every unicode
             # whitespace variant (including ASCII / tab) for robustness
             # on messy input. The REGEX capture is stricter (NBSP / narrow
             # NBSP only — see TestSpanishAmountGroupRegex) to avoid
@@ -48,7 +48,7 @@ class TestParseSpanishDecimal:
 
 
 class TestSpanishAmountGroupRegex:
-    """Wave 51 H1: the regex must capture NBSP-separated thousands."""
+    """the regex must capture NBSP-separated thousands."""
 
     @pytest.mark.parametrize(
         ("line", "expected"),
@@ -65,7 +65,7 @@ class TestSpanishAmountGroupRegex:
         assert hits["01"].decimal_value == expected
 
     def test_regex_does_not_cross_column_ascii_space(self) -> None:
-        """Regression guard (wave 51): the regex must NOT treat ASCII
+        """Regression guard: the regex must NOT treat ASCII
         column-separator whitespace as a thousands separator — that
         would collapse `03 400,00` (casilla ref + value on one line)
         into `3400,00`.

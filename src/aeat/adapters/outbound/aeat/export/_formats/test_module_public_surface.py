@@ -1,4 +1,4 @@
-"""Public-surface lock for per-modelo schema modules (wave 115).
+"""Public-surface lock for per-modelo schema modules.
 
 Stream B perpetual — every ``modelo_{n}_{year}.py`` module must
 expose exactly the canonical set of public names:
@@ -122,13 +122,13 @@ class TestEnvelopeModulePublicSurface:
         # Only generator-emitted modules own _SEGMENT_* constants. Clone
         # modules (e.g. modelo_303_2025) re-export ENVELOPE from their
         # source sibling without re-declaring the internals, per the
-        # wave-94 clone design — they are covered by the clone-parity
+        # design — they are covered by the clone-parity
         # tests in test_modelo_303_2025.py instead.
         [modelo_303_2024],
         ids=lambda m: m.__name__.rsplit(".", 1)[-1],
     )
     def test_envelope_segment_constants_match_tuple(self, module: ModuleType) -> None:
-        """Wave 116: every ENVELOPE entry must correspond to a ``_SEGMENT_{i}_
+        """every ENVELOPE entry must correspond to a ``_SEGMENT_{i}_
         {segment_id}`` module-level constant, and there must be no orphan
         constants not referenced in ENVELOPE. This catches generator drift
         where the segment tuple and the internal constants fall out of sync

@@ -1,4 +1,4 @@
-"""Tests for multi-segment envelope serialise/deserialise (wave 82a).
+"""Tests for multi-segment envelope serialise/deserialise.
 
 The envelope pattern is what EPIC #201 needs for Modelo 303+ which
 uses XML-tagged pages rather than a single flat record. These tests

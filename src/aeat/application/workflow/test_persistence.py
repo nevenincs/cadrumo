@@ -84,11 +84,11 @@ class TestPersistenceRoundTrip:
         self,
         tmp_path: Path,
     ) -> None:
-        # Wave-25 H-3 regression: the workflow run writer must
+        # regression: the workflow run writer must
         # acquire the writer-canonical sidecar lock so concurrent
         # rotate-master-key contends on the same OS-level lock-byte
         # target. The runs_dir contains
-        # ``<run_id>.envelope.json`` files; the wave-4-canonical
+        # ``<run_id>.envelope.json`` files; the -canonical
         # sidecar is ``<run_id>.lock`` (not ``<run_id>.envelope.lock``).
         from ...adapters.persistence.storage import LockAcquisitionError, RotationPlanEntry, exclusive_file_lock
 

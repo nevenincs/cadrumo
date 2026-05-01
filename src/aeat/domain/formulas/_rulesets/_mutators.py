@@ -354,7 +354,7 @@ def iter_casilla_ref_paths(
 ) -> Iterator[tuple[tuple[int, ...], CasillaRef]]:
     """Yield ``(path, casilla_ref)`` for every :class:`CasillaRef` in ``formula``.
 
-    Closes the topology-typo gap catalogued in the Wave 5 audit: a
+    Closes the topology-typo gap catalogued in the a
     typo where the author wrote ``ref("0431")`` instead of
     ``ref("0432")`` would silently route the wrong upstream value
     into the formula. The associated mutator
@@ -796,19 +796,19 @@ NOT_MUTABLE_NODE_TYPES: Final[dict[type, str]] = {
         "values, so mutation would test the engine, not the ruleset."
     ),
     # NB: Literal is intentionally absent from NOT_MUTABLE_NODE_TYPES.
-    # Pre-Wave-5 Literal was excluded under the rationale "Literal
+    # was excluded under the rationale "Literal
     # participates only when it is a Mul/Div leaf or a PercentFormula
-    # rate". The strict-audit (issue #457 Wave 5) showed that
+    # rate". The strict-audit (issue #457) showed that
     # rationale was over-broad: ~120 Literal nodes across the landed
     # rulesets are direct operands of Sub/Min/Max/Add/Round/ClampPos
     # (bracket boundaries, art. 20 piecewise thresholds, IVA rate
     # constants, additive-identity zeros). The :data:`THRESHOLD_LITERAL`
-    # mutator class introduced in Wave 5 covers those positions.
+    # mutator class introduced in those positions.
     # Architectural identities (Max(0, X) / Min(0, X) lower/upper
     # bounds with X > 0) are filtered by :func:`is_additive_identity_literal`.
     # NB: CasillaRef is intentionally absent from NOT_MUTABLE_NODE_TYPES
-    # post-Wave-6. The :data:`CASILLA_REF_TOPOLOGY` mutator class
-    # introduced in Wave 6 re-targets every reference to a different
+    # post-. The :data:`CASILLA_REF_TOPOLOGY` mutator class
+    # introduced in re-targets every reference to a different
     # casilla_id with a differing fixture value. Topology typos
     # (``ref("0431")`` vs ``ref("0432")``) are detected via that
     # harness; no MUTATOR_REGISTRY entry is needed because CasillaRef

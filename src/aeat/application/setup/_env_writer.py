@@ -213,7 +213,7 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     # ``aeat security rotate-master-key`` cannot race the profile
     # write. The lock target matches what
     # ``RotationPlanEntry.lock_path_for`` resolves to for a single-
-    # file consumer (``target.with_suffix('.lock')``); the wave-18
+    # file consumer (``target.with_suffix('.lock')``); the
     # alignment thus engages OS-level serialisation between rotation
     # and writer.
     with exclusive_file_lock(target.with_suffix(".lock")):

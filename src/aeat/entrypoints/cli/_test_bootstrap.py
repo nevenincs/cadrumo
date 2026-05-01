@@ -1,7 +1,7 @@
 """Unit tests for the pure helpers in :mod:`aeat.cli.bootstrap`.
 
 The Drive API interactions and the env-file write are exercised by the
-live smoke tests in Phase 9. Here we cover only the dedup decision
+live smoke tests in . Here we cover only the dedup decision
 logic, which is straightforward to test against a synthetic listing.
 """
 

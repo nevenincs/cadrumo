@@ -1,6 +1,6 @@
-"""CasillaRef-topology mutation harness (issue #457 Wave 6 closure).
+"""CasillaRef-topology mutation harness (issue #457 closure).
 
-Closes the topology-typo deferral catalogued in the Wave 5 audit: a
+Closes the topology-typo deferral catalogued in the a
 typo where the author wrote ``ref("0431")`` instead of ``ref("0432")``
 silently routes the wrong upstream value into the formula. The
 existing harnesses cover operand-level (sub_op swap), rate (percent),

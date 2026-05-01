@@ -1,4 +1,4 @@
-"""Cross-track metadata consistency between ruleset and schema (wave 120).
+"""Cross-track metadata consistency between ruleset and schema.
 
 Each formula ruleset carries metadata (``modelo``, ``variant``,
 ``effective_from``, ``effective_to``) that must align with the
@@ -16,9 +16,9 @@ Concrete invariants locked here:
 3. ``effective_to`` is within the same ejercicio (no cross-year
    rulesets until 0.2.x when rectificativa rulesets land).
 
-This is the companion Stream A invariant to wave 117/118 (which
+This is the companion Stream A invariant to /118 (which
 locked the provenance citations *inside* each schema module
-docstring); wave 120 locks the *external* metadata pointer from
+docstring); the *external* metadata pointer from
 the ruleset into the schema.
 """
 

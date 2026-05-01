@@ -1,6 +1,6 @@
 """Tests for the master-key rotation substrate helper.
 
-Wave-10: rotation re-encrypts every governance envelope under a new
+rotation re-encrypts every governance envelope under a new
 master key in a single bytes-level pass. These tests confirm:
 
 - A round-trip rotation: encrypt under key-A → rotate to key-B →
@@ -367,7 +367,7 @@ class TestMultiConsumerPlan:
 
 
 class TestBlobStoreRotation:
-    """Wave-16: blob-store DEK re-wrapping under master-key rotation."""
+    """blob-store DEK re-wrapping under master-key rotation."""
 
     def test_blob_dek_is_re_wrapped_under_new_key(
         self,
@@ -472,7 +472,7 @@ class TestBlobStoreRotation:
 
 
 class TestSingleFileRotationEntry:
-    """Wave-16: single-file consumers (usage_ratios, setup profile)."""
+    """single-file consumers (usage_ratios, setup profile)."""
 
     def test_target_filename_visits_only_named_file(
         self,
@@ -603,7 +603,7 @@ class TestRotationLockTargetAlignment:
     """Rotation lock-target must match the writer's lock-target."""
 
     def test_multi_file_envelope_uses_writer_lock_convention(self) -> None:
-        # Wave-4 writers compute ``<id>.lock`` (stripping
+        # compute ``<id>.lock`` (stripping
         # ``.envelope.json``); rotation must match so they contend on
         # the same OS-level lock-byte target.
         entry = RotationPlanEntry(
@@ -642,7 +642,7 @@ class TestRotationLockTargetAlignment:
         tmp_path: Path,
         alice: EphemeralMasterKeyProvider,
     ) -> None:
-        # Wave-4 ``FilingDraftRepository`` locks
+        # ``FilingDraftRepository`` locks
         # ``<store>/<draft_id>.lock`` (passed to exclusive_file_lock,
         # which appends another ``.lock`` to make the actual lock-
         # byte target ``<draft_id>.lock.lock``). The rotation must
@@ -676,7 +676,7 @@ class TestRotationLockTargetAlignment:
         self,
         tmp_path: Path,
     ) -> None:
-        # The wave-7 usage-ratios writer locks
+        # The usage-ratios writer locks
         # ``target.with_suffix('.lock')`` for ``target = usage-ratios.json``.
         # The rotation plan entry for the usage-ratios profile must
         # produce the same lock target.

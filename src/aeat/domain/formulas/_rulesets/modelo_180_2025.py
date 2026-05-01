@@ -15,7 +15,7 @@ Only one algebraic formula holds at aggregation level:
 - casilla 03 = 19% x casilla 02 (same rate as the quarterly Modelo 115
   because 180 is the annual aggregation of 115 filings).
 
-**Scope limitations (wave 40 audit M1):**
+**Scope limitations (M1):**
 
 This MVP assumes a single-rate filing — every arrendamiento on the
 180 pays 19% IRPF. Real-world 180 filings may mix:

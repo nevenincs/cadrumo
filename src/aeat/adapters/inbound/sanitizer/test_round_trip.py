@@ -18,7 +18,7 @@ This file iterates the fixtures and asserts:
   ``replacements_applied`` rows — confirming the rewrite landed
   the synthetic at the position the parser reads.
 
-Until phase 9 lands the first fixtures, the test parametrise is
+Until lands the first fixtures, the test parametrise is
 empty and pytest collects zero items. The module ships the same
 sentinel-empty-list pattern as ``test_adversarial_absence.py``.
 """

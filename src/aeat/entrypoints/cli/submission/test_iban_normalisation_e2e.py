@@ -1,8 +1,8 @@
-"""IBAN normalisation E2E guarantee (wave 138).
+"""IBAN normalisation E2E guarantee.
 
-The wave-137 ``validate_iban_flag`` callback strips whitespace /
+The ``validate_iban_flag`` callback strips whitespace /
 hyphens and upper-cases the IBAN before the flag value reaches
-``build_303_headers``. Wave 138 proves that guarantee end-to-end:
+``build_303_headers``. that guarantee end-to-end:
 Kent pasting the IBAN in any of its common human-typed forms
 (spaces every 4 chars, hyphens, lowercase, mixed case) must
 produce byte-identical export output.
@@ -87,7 +87,7 @@ class TestIbanNormalisationE2E:
     def test_every_variant_produces_identical_bytes(self, tmp_path: Path) -> None:
         """All human-typed IBAN variants must export byte-identical files.
 
-        If this fails, the wave-137 validator or wave-138 end-to-end path
+        If this fails, the or end-to-end path
         let a non-canonical form reach ``serialise_envelope`` — future Kent
         diff-against-receipt workflows would show spurious differences.
         """

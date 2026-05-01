@@ -59,12 +59,12 @@ class RotationPlanEntry(BaseModel):
         hkdf_context: The same ``hkdf_context`` the consumer's
             repository uses at save / load time.
         envelope_suffix: Filename suffix the consumer uses; defaults
-            to ``.envelope.json`` (matches every wave-7 repository).
+            to ``.envelope.json`` (matches every repository).
             Ignored when ``target_filename`` is set.
         target_filename: Optional exact filename inside ``store_dir``.
             Use this for single-file consumers whose on-disk filename
             does not end in ``.envelope.json`` (e.g.
-            ``usage-ratios.json`` written by the wave-7 usage-ratios
+            ``usage-ratios.json`` written by the usage-ratios
             service, or an operator-configured
             ``aeat_default_profile_path``). When set, the rotation
             visits exactly ``store_dir / target_filename`` and ignores
@@ -89,7 +89,7 @@ class RotationPlanEntry(BaseModel):
 
         - Multi-file envelopes (``envelope_suffix`` set, default
           ``.envelope.json``): the writer convention is
-          ``<id>.lock`` (wave-4 ``lock_target_for`` helpers). Strip
+          ``<id>.lock`` ( ``lock_target_for`` helpers). Strip
           the configured ``envelope_suffix`` from the envelope name
           and append ``.lock``.
         - Single-file envelopes (``target_filename`` set, e.g.
@@ -255,7 +255,7 @@ def rotate_master_key(
         # repository writer cannot stomp the rotation (or vice versa).
         # The lock target is computed via ``RotationPlanEntry.lock_path_for``
         # so rotation and writer contend on the same OS-level lock-byte
-        # target — see the helper's docstring for the wave-4 / single-
+        # target — see the helper's docstring for the / single-
         # file conventions.
         lock_target = entry.lock_path_for(path)
         with exclusive_file_lock(lock_target):
@@ -333,7 +333,7 @@ def rotate_master_key(
 def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
     """Return the canonical rotation plan against ``settings``.
 
-    Enumerates every wave-7 governance repository's directory + HKDF
+    Enumerates every repository's directory + HKDF
     context. Operators with custom directories / additional consumers
     pass an extended plan to :func:`rotate_master_key` directly.
     """

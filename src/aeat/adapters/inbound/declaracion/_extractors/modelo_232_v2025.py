@@ -5,7 +5,7 @@ ejercicio natural) que recoge operaciones con partes vinculadas por
 encima de umbrales y cualquier operación con paraísos fiscales.
 
 AEAT does NOT print numbered casilla IDs on the 232 summary — the form
-is structured as three info blocks with named fields. Wave 27 adds
+is structured as three info blocks with named fields. adds
 the field-name primitive and migrates this extractor off the
 header-only MVP: we now capture the three "Nº registros" counters
 that every 232 filing prints at the end of the form.
@@ -32,7 +32,7 @@ class Modelo232V2025Extractor(GenericDeclaracionExtractor):
     casilla_ids: ClassVar[tuple[str, ...]] = ()
     # Three "Nº registros" counters — one per info block (operaciones
     # vinculadas, intangibles art. 23 LIS, operaciones con paraísos).
-    # Wave 33 M3: line-anchored (?m)^. Each pattern matches on a single
+    # line-anchored (?m)^. Each pattern matches on a single
     # line that mentions BOTH the block keyword AND an integer count,
     # in either order. A single outer capture group preserves
     # apply_label_regex's group(1) contract. Caveat: this regex was

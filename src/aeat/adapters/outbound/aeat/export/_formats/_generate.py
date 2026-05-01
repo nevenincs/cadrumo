@@ -1,4 +1,4 @@
-"""DR spec → Python module generator (EPIC #305 wave 87).
+"""DR spec → Python module generator (EPIC #305).
 
 Given an :class:`IngestedSpec` from the JSON ingestion pipeline,
 emit a Python source module that declares the per-modelo envelope
@@ -18,7 +18,7 @@ self-contained.
 
 The generated Python module is byte-identical to what a human
 would hand-author but without the transcription errors that hit
-wave 77c and wave 79a.
+.
 
 ## Regeneration discipline
 

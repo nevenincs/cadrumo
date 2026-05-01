@@ -1,4 +1,4 @@
-"""Rule-adherence invariant: RESERVED literal length == declared length (wave 112).
+"""Rule-adherence invariant: RESERVED literal length == declared length.
 
 A RESERVED field declares ``literal_value`` and ``length``; the
 serialiser space-pads the literal to ``length``, but if

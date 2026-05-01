@@ -145,7 +145,7 @@ def test_json_file_repository_rejects_traversal_on_save(tmp_path: Path) -> None:
 def test_writer_lock_target_aligns_with_rotation_lock_path_for(
     tmp_path: Path,
 ) -> None:
-    # Wave-20 H-1 regression: the divergence writer's lock target
+    # regression: the divergence writer's lock target
     # must match what ``RotationPlanEntry.lock_path_for`` resolves
     # to for the same envelope path. Without this alignment the
     # writer locks ``<id>.envelope.lock.lock`` while rotation locks

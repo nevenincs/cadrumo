@@ -1,4 +1,4 @@
-"""Stream B invariant: SCHEMA_REGISTRY entry shape consistency (wave 123).
+"""Stream B invariant: SCHEMA_REGISTRY entry shape consistency.
 
 Every :class:`SchemaEntry` in ``SCHEMA_REGISTRY`` pairs a schema
 module with a ``kind`` tag (``"record"`` or ``"envelope"``) and a
@@ -8,7 +8,7 @@ dispatch attempt ``serialise_envelope`` on a module that has no
 ``ENVELOPE`` attribute — crashing at call time rather than at
 registry load.
 
-Wave 123 locks the pairing at collection so the failure surface
+the pairing at collection so the failure surface
 is the registry, not Kent's next ``aeat submission export`` run.
 
 Rules enforced per entry:

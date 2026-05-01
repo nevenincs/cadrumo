@@ -123,7 +123,7 @@ class TestModelo130Builder:
         assert by_id["07"].formula_trace == ("04", "05", "06")
 
     def test_apartado_ii_to_v_casillas_match_hand_calculations(self) -> None:
-        """Hand-calculations for the 12 new apartado-II/III/IV/V casillas (#305 cluster B phase 2)."""
+        """Hand-calculations for the 12 new apartado-II/III/IV/V casillas (#305)."""
         builder = Modelo130Builder()
         inputs = {
             "01": Decimal("12500"),

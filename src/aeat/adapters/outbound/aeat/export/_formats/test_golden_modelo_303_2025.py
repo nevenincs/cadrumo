@@ -1,6 +1,6 @@
-"""Golden-fixture byte-exactness tests for Modelo 303 2025 (wave 99).
+"""Golden-fixture byte-exactness tests for Modelo 303 2025.
 
-Mirrors the wave-93 :mod:`test_golden_modelo_303` test suite for
+Mirrors the :mod:`test_golden_modelo_303` test suite for
 the 2025 ejercicio. Because :mod:`modelo_303_2025` re-exports the
 2024 schema verbatim (Orden HAC/819/2024 governs both ejercicios),
 the only per-year differences must be the three ejercicio stamps
@@ -81,7 +81,7 @@ class TestModelo3032025GoldenKentQ1:
 
 
 class TestModelo3032024vs2025StructuralParity:
-    """Wave 99 invariant: 2024 and 2025 clones differ only at the three
+    """2024 and 2025 clones differ only at the three
     ejercicio-stamped byte positions when the same casilla values are
     filed. A byte-level diff that falls outside those positions is a
     schema drift the clone contract forbids."""

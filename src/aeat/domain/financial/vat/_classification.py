@@ -1,6 +1,6 @@
 """Closed-table VAT classification (issuer / customer / kind / direction).
 
-Layered on top of the wave-1 :mod:`aeat.financial.vat` substrate
+Layered on top of the :mod:`aeat.financial.vat` substrate
 (`VATCategory` enum, `VATRate` records, `lookup_rate`), this
 module adds the missing classification axes so a transaction can
 be tagged deterministically based on the parties' tax residency,
@@ -8,7 +8,7 @@ the customer's VAT-status, the transaction kind, and the invoice
 direction.
 
 The resolver implementation is a closed first-match-wins decision
-table over the rules R01-R99 from the wave-2 ADR (#183). Each
+table over the rules R01-R99 from the ADR (#183). Each
 rule is a plain :class:`typing.NamedTuple` carrying a stable
 identifier, a description and a predicate; the table itself is a
 module-level constant. There is no dynamic dispatch, no string
@@ -72,7 +72,7 @@ class IssuerResidency(StrEnum):
     """Tax-residency classification of the invoice issuer.
 
     The five values partition the universe of issuer residencies the
-    wave-2 classifier distinguishes. ``ES_CANARIAS`` and
+    distinguishes. ``ES_CANARIAS`` and
     ``ES_CEUTA_MELILLA`` are NOT subject to LIVA; the classifier
     short-circuits to :class:`VATCategory.DOMESTIC_NOT_SUBJECT` for
     those issuers (out of TAI).

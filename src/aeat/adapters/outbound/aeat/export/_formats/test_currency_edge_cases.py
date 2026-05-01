@@ -1,10 +1,10 @@
-"""Currency encoding edge-case matrix (wave 128).
+"""Currency encoding edge-case matrix.
 
 The CURRENCY encoders in :mod:`._record_spec` must handle every
 value Kent's ruleset can emit across both the 13-byte (Modelo
 130) and 17-byte (Modelo 303) column widths, and under both the
 UNSIGNED and INLINE_SIGN conventions. Golden-SHA tests lock a
-single happy-path scenario per modelo; wave 128 fills in the
+single happy-path scenario per modelo; in the
 edge-case matrix:
 
 - Zero (Decimal("0.00"))
@@ -105,14 +105,14 @@ class TestInlineSignedCurrency17Byte:
 
     def test_unsigned_negative_raises(self) -> None:
         """encode_currency without signed=True must refuse negative values
-        (documented wave-79b behaviour — the caller must opt into signing)."""
+        (documented behaviour — the caller must opt into signing)."""
         with pytest.raises(ValueError, match="signed=True"):
             encode_currency(Decimal("-1.00"), length=13, encoding="cp1252")
 
 
 class TestRoundingBehaviour:
     """Decimal values with sub-cent precision round ROUND_HALF_UP per the
-    wave-79b mandate (matches AEAT's rounding convention)."""
+    mandate (matches AEAT's rounding convention)."""
 
     @pytest.mark.parametrize(
         ("value", "expected_cents_int"),

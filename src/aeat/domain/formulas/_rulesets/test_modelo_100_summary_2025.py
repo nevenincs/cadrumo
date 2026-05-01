@@ -1,7 +1,7 @@
 """Unit tests for the Modelo 100 summary-block ruleset.
 
-Wave 48 stream 4 H4 coverage gap: the Modelo 100 summary ruleset was
-the first ruleset shipped (wave 10) and had only borrador-integration
+H4 coverage gap: the Modelo 100 summary ruleset was
+the first ruleset shipped and had only borrador-integration
 coverage. Dedicated formula-engine unit tests live here.
 """
 
@@ -51,7 +51,7 @@ def _provided() -> dict[str, Decimal]:
 
 class TestModelo100SummaryRuleset:
     def test_ruleset_id_and_variant(self) -> None:
-        """Wave 47: Modelo 100 summary uses the ``variant='summary'`` slot."""
+        """Modelo 100 summary uses the ``variant='summary'`` slot."""
         assert MODELO_100_SUMMARY_2025.ruleset_id == "modelo_100.summary.2025"
         assert MODELO_100_SUMMARY_2025.variant == "summary"
 
@@ -128,17 +128,17 @@ class TestModelo100SummaryRuleset:
             pagos-a-cuenta subtraction
 
         Citation-accuracy history (tracked for auditability):
-         - Wave 61c originally cited art. 103 for the cuota diferencial
+         - cited art. 103 for the cuota diferencial
            — WRONG (art. 103 is "Liquidaciones provisionales"). Corrected
-           in wave 63a to 79 + 99.
-         - Wave 63a cited art. 77 for cuota íntegra autonómica — WRONG
+           in to 79 + 99.
+         - art. 77 for cuota íntegra autonómica — WRONG
            (art. 77 is "Cuota líquida autonómica total", post-deduction).
-           Corrected in wave 65a to art. 73.
-         - Wave 65a cited art. 67 for cuota íntegra estatal — WRONG
-           (art. 67 is "Cuota líquida estatal"). Corrected in wave 67a
-           to art. 62. Wave 65a also cited art. 79 for "cuota líquida
+           Corrected in art. 73.
+         - art. 67 for cuota íntegra estatal — WRONG
+           (art. 67 is "Cuota líquida estatal"). Corrected in
+           to art. 62. cited art. 79 for "cuota líquida
            total" — WRONG (art. 79 is "Cuota diferencial"; cuota líquida
-           total splits across arts. 67 + 77). Wave 67a untangles this.
+           total splits across arts. 67 + 77). this.
            Fixture arithmetic unchanged throughout; only statutory
            pointers update.
 

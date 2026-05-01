@@ -83,7 +83,7 @@ class TestModelo123Ruleset:
         assert computed == {"03", "06", "09", "11"}
 
     def test_external_worked_example_lirpf_art_25(self) -> None:
-        """External-anchored worked example (wave 59c H3 closure).
+        """External-anchored worked example (closure).
 
         Provenance: Ley 35/2006 (LIRPF) art. 25 defines rendimientos
         del capital mobiliario (dividendos, intereses). Modelo 123 is

@@ -1,4 +1,4 @@
-"""Tests for the Modelo 303 2025 schema clone (wave 94)."""
+"""Tests for the Modelo 303 2025 schema clone."""
 
 from __future__ import annotations
 

@@ -4,7 +4,7 @@ The 2024 and 2025 rulesets are mechanically identical — AEAT RD
 439/2007 art. 110 was not amended between the two years (see the
 research doc §Mid-year rule changes). The separate ruleset file
 simplifies future divergence (e.g., the La Palma 60% reduction from
-4T 2025 onwards, which lands in wave 2 as a dedicated territorial
+4T 2025 onwards, which lands in a dedicated territorial
 overlay).
 """
 

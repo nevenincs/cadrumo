@@ -8,7 +8,7 @@ and the Netherlands are expanded with the two common tiers; every
 other member state is covered with at least the ``GENERAL`` tier so
 ``lookup_rate`` can round-trip every :class:`EUMemberState` member.
 
-Per the Modelo 303 wave-2 ADR (#183) the ES row carries two
+Per the Modelo 303 ADR (#183) the ES row carries two
 date-bounded windows per rate kind:
 
 - 2024 baseline: ``effective_from=2024-01-01``,
@@ -23,7 +23,7 @@ RDL 20/2022 are deliberately NOT included in this table — they
 are keyed by product class, not by ``(member_state, kind)``, and
 adding them under the existing shape would either overlap with
 the baseline 4 % super-reducido entry or require a new
-``VATRateKind`` member that the wave-2 classifier does not yet
+``VATRateKind`` member that the does not yet
 distinguish. See the ADR for the deferred follow-up.
 
 A load-time invariant asserts that no two :class:`VATRate`

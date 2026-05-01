@@ -4,7 +4,7 @@ Declares two enums:
 
 * :class:`FormulaOp` — the fixed set of operator tags used by every
   pydantic formula node. The set is deliberately minimal — only the
-  operators that the Modelo 130 (wave-1) DAG requires are present.
+  operators that the Modelo 130 DAG requires are present.
   New operators are added in a future wave behind a fresh ADR.
 * :class:`Quarter` — fiscal quarter identifiers used by
   :class:`aeat.formulas.FiscalPeriod`.

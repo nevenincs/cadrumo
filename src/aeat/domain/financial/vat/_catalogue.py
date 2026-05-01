@@ -14,9 +14,9 @@ combination of :attr:`Citation.source`, :attr:`Citation.article` and
 :attr:`Citation.quoted_text_es` — the quoted text is sufficient to
 re-locate the article on boe.es and confirm the rule.
 
-Per the Modelo 303 wave-2 ADR (#183) this module also exposes a
+Per the Modelo 303 ADR (#183) this module also exposes a
 period-keyed mapping :data:`VAT_CATALOGUES_BY_YEAR` and a
-:func:`resolve_catalogue` helper. Wave 2 ships the 2025 catalogue
+:func:`resolve_catalogue` helper. the 2025 catalogue
 only; non-2025 years fall back to the 2025 entry with a debug log
 line. The mapping infrastructure is in place so future waves can
 slot in year-specific catalogues without touching call sites.
@@ -1156,7 +1156,7 @@ VAT_CATALOGUES_BY_YEAR: Mapping[int, VATCatalogue] = MappingProxyType(
 )
 """Year-keyed view over the available :class:`VATCatalogue` instances.
 
-Wave 2 (#183) ships only the 2025 entry. Future waves slot in year-
+ (#183) ships only the 2025 entry. Future waves slot in year-
 specific catalogues (e.g., a 2026 entry once Ley 7/2024-derived
 amendments require divergent regulation text) without touching
 call sites — :func:`resolve_catalogue` performs the lookup with a

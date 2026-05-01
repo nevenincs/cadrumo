@@ -3,7 +3,7 @@
 Every parametrised case renders a synthetic PDF via the L3 generator,
 runs :func:`aeat.declaracion.parse_declaracion` against the bytes, and
 asserts the extracted casillas equal the ground truth. This is the
-scale primitive cluster D's ADR (§9 exit criteria) mandates.
+scale primitive 's ADR (§9 exit criteria) mandates.
 """
 
 from __future__ import annotations

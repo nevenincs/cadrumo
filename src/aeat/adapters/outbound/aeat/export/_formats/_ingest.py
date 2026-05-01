@@ -1,4 +1,4 @@
-"""DR Diseño-de-Registros ingestion library (EPIC #305 wave 86).
+"""DR Diseño-de-Registros ingestion library (EPIC #305).
 
 Converts a JSON representation of an AEAT *Diseño de Registros*
 specification into a tuple of :class:`SegmentSpec` objects ready

@@ -5,7 +5,7 @@ empresarios individuales meeting size thresholds (no IVA
 intracomunitario, no operaciones con paraísos fiscales, no
 exports/imports outside EU, no IS, etc.). Event-triggered.
 
-Shares the named-field set with Modelo 036 (wave 27) — same régimen
+Shares the named-field set with Modelo 036 — same régimen
 IVA / IRPF / IAE fields — since 037 is a strict subset of 036's
 registro.
 
@@ -31,7 +31,7 @@ class Modelo037V2025Extractor(GenericDeclaracionExtractor):
     casilla_ids: ClassVar[tuple[str, ...]] = ()
     # Label-to-value separators on 037 PDFs use either ":" or whitespace
     # columns; the regex skips both, then captures the rest of the line
-    # for multi-word régimen values (wave 33 H2 fix).
+    # for multi-word régimen values (fix).
     named_field_patterns: ClassVar[dict[str, str]] = {
         "causa_presentacion": r"(?m)^[^\n]*?Causa\s+(?:de\s+)?presentaci[oó]n\s*:?\s*([^\s:][^\n]*?)\s*$",
         "regimen_iva": r"(?m)^[^\n]*?R[eé]gimen\s+(?:especial\s+)?IVA\s*:?\s*([^\s:][^\n]*?)\s*$",

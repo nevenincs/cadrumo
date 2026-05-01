@@ -1,4 +1,4 @@
-"""Round-trip calculation verification for imported declaración drafts (#305 cluster E).
+"""Round-trip calculation verification for imported declaración drafts (#305).
 
 Turns an :class:`aeat.declaracion.DeclaracionFiling` + the project's
 formula engine output into a Kent-readable verdict: ``verified`` /

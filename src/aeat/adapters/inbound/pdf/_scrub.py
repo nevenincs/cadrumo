@@ -1,4 +1,4 @@
-"""Deterministic PII scrubbing for AEAT filing PDFs (EPIC #305 cluster C).
+"""Deterministic PII scrubbing for AEAT filing PDFs (EPIC #305).
 
 Real filings carry Kent's NIF, real amounts, his name, an AEAT-assigned
 CSV, and occasionally his IBAN / address. Committing any of that to a

@@ -1,12 +1,12 @@
-"""303 envelope per-segment cumulative layout lock (wave 142).
+"""303 envelope per-segment cumulative layout lock.
 
-A complementary guard to the wave-89 "total envelope = 7994" check.
+A complementary guard to the "total envelope = 7994" check.
 The total alone doesn't catch a segment reordering — swapping
 DP30301 and DP30302 in the ENVELOPE tuple still sums to 7994 but
 shifts where every casilla after the reshuffle lands, breaking
 byte-exact compatibility with AEAT.
 
-Wave 142 pins the exact (segment_id, cumulative_start_offset,
+the exact (segment_id, cumulative_start_offset,
 segment_length) triple for every segment in the 303 2024 envelope.
 Any reordering, insertion, deletion, or segment-length change
 fails here.
@@ -62,7 +62,7 @@ class TestEnvelopeSegmentLayout:
 
     def test_cumulative_sum_is_7994(self) -> None:
         """Sanity: the per-segment lengths sum to the envelope total (defence
-        in depth — the wave-89 test already locks this, but a broken layout
+        in depth — the already locks this, but a broken layout
         lock should fail BOTH together rather than diverge."""
         assert sum(s.total_length for s in ENVELOPE) == 7994
 
