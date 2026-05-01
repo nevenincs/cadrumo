@@ -21,7 +21,7 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 | 202 | ✅ | ✅ (9 casillas) | ✅ (2025 liquidación) | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 232 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
 | **303** | ✅ | ✅ (8-segment envelope, 393 fields, DR303e24.xlsx auto-generated) | ✅ (2024 + 2025 + 2026, calc-verify Tier-L #326) | ✅ | ✅ (2024 + 2025, 7994-byte envelope, golden SHA pinned, verify round-trip) | ✅ (pre-Q3-2024) | ⏳ #234 | ✅ | ⏳ #272 | ✅ | ✅ | ✅ (2024.09 + 2025 + 2026, 33-casilla full liquidación block #326) | ❌ | ❌ |
-| 347 | ✅ | 🚧 | ❌ | ❌ | ❌ | ⏳ #235 | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
+| 347 | ✅ | ✅ (typed per-counterparty detail records + 2024/2025/2026 manifests) | N/A (Tier-S summary parity verifier; no formula ruleset) | ❌ | ❌ | ⏳ #235 | N/A | ✅ | ❌ | ✅ (`aeat filing import --from-declaracion`) | 🚧 | ✅ (2024 + 2025 + 2026, 4-casilla resumen + per-counterparty detail rows, Tier-S summary parity) | ❌ | ❌ |
 | 349 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (2025 MVP) | ❌ | ❌ |
 | 369 | ✅ | 🚧 | ❌ | ❌ | ❌ | ❌ | N/A | partial | ❌ | partial | 🚧 | ✅ (named-field MVP) | ❌ | ❌ |
 | **390** | ✅ | ✅ (15 casillas) | ✅ (2024 + 2025 + 2026, calc-verify Tier-L #327) | ✅ | ⏳ #201 | ✅ (SUSTITUTIVA) | N/A | ✅ | ⏳ #272 | ✅ | 🚧 | ✅ (2024 + 2025 + 2026, 15-casilla scoped résumen anual #327) | ❌ | ❌ |
@@ -35,6 +35,8 @@ Legend: ✅ shipped · 🚧 in progress · ⏳ scheduled · ❌ not yet scoped �
 `tests/integration/test_kent_workflows.py` exercises `aeat filing import` end-to-end via Typer's CliRunner against synthetic PDFs for every Tier-L modelo. As of #324 (2026-04-28), the file ships dedicated `TestKentImports*` classes covering Modelos 100 (summary, via `--from-borrador`), 111, 115, 123, 130 (template), 131, 180, 200, 202, 303, 390. Modelo 200 now verifies the 2025 v2025-extractor PDF against `modelo_200.2025` and includes `cause=CORRECTNESS_DIVERGENCE` coverage for tampered 00621. Spanish-default and explicit English (`AEAT_OUTPUT_LANGUAGE=en`) paths are exercised for every modelo.
 
 ## provenance
+
+Additional update **2026-05-01** (#330 — Modelo 347 reaches Tier-S declaration-import verification for 2024/2025/2026: strict `Modelo347RecordLine` per-counterparty records, per-year schema manifests, 2024/2025/2026 declaration extractors, and Kent CLI import parity verification against printed resumen totals; clean records return `VERIFIED`, resumen drift returns `NEEDS_REVIEW` with `CORRECTNESS_DIVERGENCE`. No formula ruleset or BOE export is claimed).
 
 Additional update **2026-04-30** (#218 — Modelo 130 now has T6 classified-catalogue aggregation for quarterly periods via `aeat financial aggregate`, a strict `CasillaAggregation` ledger, formula-engine handoff, and workflow inputs-provider wiring; Modelo 303 aggregation remains deferred).
 
