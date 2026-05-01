@@ -36,7 +36,7 @@ from . import (
 )
 from ._llm import build_prompt, parse_response
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _sample_transaction(

@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 from ._cli import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _runner = CliRunner()

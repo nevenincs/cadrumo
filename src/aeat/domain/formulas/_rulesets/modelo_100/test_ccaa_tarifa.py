@@ -24,7 +24,7 @@ from ._ccaa import (
     compute_cuota_autonomica_general,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestTarifaMadrid:

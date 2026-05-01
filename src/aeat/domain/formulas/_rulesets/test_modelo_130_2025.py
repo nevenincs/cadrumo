@@ -17,7 +17,7 @@ from .._engine import Engine
 from . import MODELO_130_2025
 from .modelo_130_2024 import compute_casilla_13_minoracion
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:

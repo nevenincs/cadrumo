@@ -12,7 +12,7 @@ from ....core.config import LLMProviderSetting, Settings
 from . import LLMCache, LLMClient, Translator, UsageRecorder
 from ._providers import _FakeAdapter
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 class _IsolatedSettings(Settings):

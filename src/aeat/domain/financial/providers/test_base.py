@@ -11,7 +11,7 @@ import pytest
 from .. import ProviderValidation, RawTransaction, SourceFormat, detect_provider
 from ._base import parse_amount_value
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial"
 

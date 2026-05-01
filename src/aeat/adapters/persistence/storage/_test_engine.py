@@ -10,7 +10,7 @@ from sqlalchemy import text
 from ....core.config import PROJECT_ROOT, Settings
 from . import StorageError, create_engine_from_settings, dispose_engine
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _settings_for(url: str) -> Settings:

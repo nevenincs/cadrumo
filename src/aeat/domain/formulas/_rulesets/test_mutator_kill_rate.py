@@ -61,7 +61,7 @@ from .test_threshold_literal_mutation import (
     _iter_covered_threshold_targets,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:

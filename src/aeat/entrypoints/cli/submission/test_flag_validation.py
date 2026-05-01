@@ -26,7 +26,7 @@ from ._schema_registry import (
     validate_swift_flag,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _runner = CliRunner()
 

@@ -32,7 +32,7 @@ from . import (
     MODELO_180_2024,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _EXPECTED_RANGE = (date(2024, 1, 1), date(2024, 12, 31))

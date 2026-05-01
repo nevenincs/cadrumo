@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _valid_line(

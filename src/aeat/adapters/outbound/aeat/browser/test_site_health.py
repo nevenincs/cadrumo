@@ -30,7 +30,7 @@ from ._site_health_parsers import (
     parse_waf_challenge,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"

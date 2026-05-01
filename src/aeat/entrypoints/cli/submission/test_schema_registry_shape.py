@@ -32,7 +32,7 @@ import pytest
 
 from ._schema_registry import SCHEMA_REGISTRY, CliInputs, SchemaEntry
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _MODELO_RE = re.compile(r"^\d{3}$")

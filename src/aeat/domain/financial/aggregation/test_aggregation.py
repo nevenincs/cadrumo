@@ -47,7 +47,7 @@ from . import (
 )
 from ._provider import FinancialFilingInputsProvider
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _RUNNER = CliRunner()
 

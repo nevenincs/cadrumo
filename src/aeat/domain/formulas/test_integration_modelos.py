@@ -7,7 +7,7 @@ import pytest
 from ..modelos import MODELO_REGISTRY, ModeloCode
 from ._registry import get_registry
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.unit

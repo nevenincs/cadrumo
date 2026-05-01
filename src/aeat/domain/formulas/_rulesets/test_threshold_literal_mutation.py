@@ -57,7 +57,7 @@ from .test_operand_swap_mutation import (
     _modelo_390_fixture,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @dataclass(frozen=True)

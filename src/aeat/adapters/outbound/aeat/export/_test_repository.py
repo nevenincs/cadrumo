@@ -29,7 +29,7 @@ from ._repository import (
     migrate_legacy_submissions_to_repository,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def _make_filing(

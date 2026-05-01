@@ -21,7 +21,7 @@ import pytest
 from ._record_spec import SegmentSpec
 from .modelo_303_2024 import ENVELOPE
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def _dp303did() -> SegmentSpec:

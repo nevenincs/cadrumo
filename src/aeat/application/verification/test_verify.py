@@ -23,7 +23,7 @@ from . import (
     verify_declaracion,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _build_filing(

@@ -35,7 +35,7 @@ from . import (
     list_attachments,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _RUNNER = CliRunner()
 _MANIFEST_SUFFIX = ".envelope.json"

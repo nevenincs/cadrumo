@@ -20,7 +20,7 @@ from . import (
     parse_http_url,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _citation() -> Citation:

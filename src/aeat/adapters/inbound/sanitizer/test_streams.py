@@ -22,7 +22,7 @@ from pydantic import SecretStr
 from ._records import ArbitraryReplacement, NameReplacement, NifReplacement, TokenMap
 from ._streams import apply_token_map_to_pdf
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _pdf_with_content_stream(stream_bytes: bytes) -> pikepdf.Pdf:

@@ -7,7 +7,7 @@ import typer
 
 from ... import cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_exit_code_values_are_stable() -> None:

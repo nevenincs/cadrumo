@@ -11,7 +11,7 @@ from ._categories import LegalCitationSource
 from ._citation_registry import find_known_bad
 from ._citations import LegalCitation
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestKnownBadBlocklist:

@@ -6,7 +6,7 @@ import pytest
 
 from .oauth import parse_oauth_client_json
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestParseOauthClientJson:

@@ -26,7 +26,7 @@ import pytest
 from ._deserialise import _decode_date
 from ._record_spec import DateFmt, encode_date
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 _SAMPLE_DATES: list[date] = [

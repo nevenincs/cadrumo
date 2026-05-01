@@ -23,7 +23,7 @@ from . import (
 )
 from .errors import ManualNotFoundError, ManualParseError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class _IsolatedSettings(Settings):

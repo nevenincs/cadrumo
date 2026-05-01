@@ -26,7 +26,7 @@ from . import (
     render_error_text,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def _sample_code(code: str) -> ErrorCode:

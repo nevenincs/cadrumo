@@ -4,7 +4,7 @@ import pytest
 
 from ..... import auth, errors, logging
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def test_smoke_auth() -> None:

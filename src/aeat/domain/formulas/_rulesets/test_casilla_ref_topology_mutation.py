@@ -81,7 +81,7 @@ from .test_threshold_literal_mutation import (
     _modelo_303_fixture_with_iva_rate_baselines,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @dataclass(frozen=True)

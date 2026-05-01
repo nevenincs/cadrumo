@@ -31,7 +31,7 @@ import pytest
 
 from .test_ruleset_schema_coverage import _EXPECTED_GAPS
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 _FIXTURE_PATH = (

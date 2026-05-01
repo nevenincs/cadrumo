@@ -30,7 +30,7 @@ from . import (
 )
 from ._sink import JsonlRunSink
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _NIF_CANARY = "12345678Z"
 _BEARER_TAIL = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

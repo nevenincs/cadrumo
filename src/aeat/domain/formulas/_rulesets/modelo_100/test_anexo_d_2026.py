@@ -14,7 +14,7 @@ import pytest
 from ..._engine import Engine
 from .. import MODELO_100_2026
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _baseline_zero_other_anexos() -> dict[str, Decimal]:

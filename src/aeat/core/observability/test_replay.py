@@ -21,7 +21,7 @@ from . import (
 )
 from ._replay import _argv_from_arguments
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def _build_trace(run_id: str, *, corpus_sha256: str) -> RunTrace:

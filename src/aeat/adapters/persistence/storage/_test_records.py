@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from . import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def test_modelo_record_strict_rejects_coercion() -> None:

@@ -12,7 +12,7 @@ from ._rates import _assert_no_overlap
 from ._schema import VATRate
 from .errors import VatRateNotFoundError, VatRateOverlapError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_es_general_2024_rate() -> None:

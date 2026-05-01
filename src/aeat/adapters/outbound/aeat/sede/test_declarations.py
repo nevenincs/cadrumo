@@ -19,7 +19,7 @@ import pytest
 from ._declarations import _extract_csv_from_url, _parse_listbox, _parse_presented_at
 from ._errors import SedeParseError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 _FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"

@@ -24,7 +24,7 @@ from ....core.errors import SiteHealthError
 from . import app
 from .health import HealthProbeLike, ProbeFactory, _RealProbe, override_probe_factory
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
 _FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from ._codes import Quarter
 from ._period import FiscalPeriod
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.unit

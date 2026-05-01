@@ -34,7 +34,7 @@ from . import (
     validate_period_for_modelo,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _SHA = "a" * 64
 

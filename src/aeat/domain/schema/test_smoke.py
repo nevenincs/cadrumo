@@ -18,7 +18,7 @@ import pytest
 
 from ... import errors, logging, schema
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _SCHEMA_DIR = Path(schema.__file__).parent
 _FORBIDDEN_ROOTS: frozenset[str] = frozenset({"aeat.domain.casillas"})

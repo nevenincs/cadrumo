@@ -14,7 +14,7 @@ import pytest
 from ._errors import SedeParseError
 from ._parse import parse_expediente_detail, parse_resumen_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 _FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"

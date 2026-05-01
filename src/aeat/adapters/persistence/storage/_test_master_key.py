@@ -38,7 +38,7 @@ from ._master_key import (
     _LegacyKdfParameters,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Settings:

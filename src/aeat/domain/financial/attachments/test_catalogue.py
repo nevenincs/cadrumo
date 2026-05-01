@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from . import Attachment, AttachmentCatalogue, AttachmentKind, AttachmentSource
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _attachment(data: bytes) -> Attachment:

@@ -27,7 +27,7 @@ from . import (
     save_modelo_to_cache,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _SHA = "b" * 64
 

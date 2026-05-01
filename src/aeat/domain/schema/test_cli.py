@@ -16,7 +16,7 @@ from typer.testing import CliRunner
 from ...entrypoints.cli.schema import app
 from .testing import build_fake_boe_pdf
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _ANNEX_LINES: tuple[str, ...] = (
     "# Rendimiento de la actividad",

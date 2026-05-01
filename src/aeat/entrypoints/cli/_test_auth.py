@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 from . import auth as auth_module
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
 

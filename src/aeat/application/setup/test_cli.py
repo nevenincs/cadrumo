@@ -22,7 +22,7 @@ from ...domain.profile import CCAA
 from ...entrypoints.cli import app
 from . import SetupAnswers
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _runner = CliRunner()
 

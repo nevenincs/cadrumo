@@ -55,7 +55,7 @@ from . import (
     MODELO_390_2026,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _ALL_RULESETS = [

@@ -6,7 +6,7 @@ import pytest
 
 from . import CALENDAR, KNOWN_AUTONOMO_MODELOS, SUPPORTED_YEARS
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_calendar_is_non_empty() -> None:

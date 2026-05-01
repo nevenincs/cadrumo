@@ -27,7 +27,7 @@ from ._clave_movil import (
 )
 from ._providers import AuthProviderKind, ClaveMovilSessionDetail
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 # ── Browser-session stand-ins ────────────────────────────────────────────────

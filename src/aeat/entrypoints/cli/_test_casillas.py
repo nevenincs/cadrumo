@@ -10,7 +10,7 @@ from typer.testing import CliRunner
 
 from .casillas import app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 runner = CliRunner()
 

@@ -12,7 +12,7 @@ from . import (
     AeatLiveReadNotEnabledError,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def _fresh_settings(monkeypatch: pytest.MonkeyPatch, **overrides: str) -> Settings:

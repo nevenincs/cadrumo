@@ -47,7 +47,7 @@ def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
     return b"\n".join(chunks)
 
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _build_real_world_like_pdf() -> bytes:

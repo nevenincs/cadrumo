@@ -15,7 +15,7 @@ from . import (
     lookup_rate,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_rate_table_covers_all_27_member_states() -> None:

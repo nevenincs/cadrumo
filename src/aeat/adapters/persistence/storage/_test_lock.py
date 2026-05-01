@@ -12,7 +12,7 @@ import pytest
 from . import LockAcquisitionError, exclusive_file_lock
 from ._lock import _lock_path_for
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 class TestSingleProcessAcquireRelease:

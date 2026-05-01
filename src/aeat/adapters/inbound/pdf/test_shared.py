@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from ....core.errors import AeatError
 from . import ExtractedCasilla, PdfFilingImportError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 _PrintedValue = Decimal | int | str | bool | date | None
 

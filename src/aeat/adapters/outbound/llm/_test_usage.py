@@ -10,7 +10,7 @@ import pytest
 
 from . import LLMProvider, LLMResponse, UsageRecorder
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def test_usage_recorder_round_trip_and_summary(tmp_path: Path) -> None:

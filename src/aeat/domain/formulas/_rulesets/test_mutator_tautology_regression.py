@@ -31,7 +31,7 @@ import pytest
 
 from . import test_mutator_kill_rate as kill_rate_module
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_aggregator_catches_uncovered_populated_node(monkeypatch: pytest.MonkeyPatch) -> None:

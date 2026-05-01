@@ -12,7 +12,7 @@ from . import (
     load_vat_rules_from_manual,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_load_2025_returns_fallback_catalogue(caplog: pytest.LogCaptureFixture) -> None:

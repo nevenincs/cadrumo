@@ -18,7 +18,7 @@ from . import (
     TransactionDirection,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _sample_raw(

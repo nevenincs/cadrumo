@@ -30,7 +30,7 @@ from typer.testing import CliRunner
 from . import app
 from ._schema_registry import SCHEMA_REGISTRY
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _runner = CliRunner()
 

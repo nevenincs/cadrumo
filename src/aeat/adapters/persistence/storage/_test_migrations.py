@@ -20,7 +20,7 @@ from . import (
     session_scope,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def test_migrations_round_trip(tmp_path: Path) -> None:

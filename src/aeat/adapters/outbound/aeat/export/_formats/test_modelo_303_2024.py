@@ -10,7 +10,7 @@ from ._deserialise import deserialise_envelope
 from ._serialise import serialise_envelope
 from .modelo_303_2024 import ENCODING, ENVELOPE, REQUIRED_HEADER_FIELDS
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 class TestModelo3032024Envelope:

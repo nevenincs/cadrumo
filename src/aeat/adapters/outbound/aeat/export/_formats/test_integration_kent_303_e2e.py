@@ -40,7 +40,7 @@ from .modelo_303_2025 import ENCODING as ENCODING_2025
 from .modelo_303_2025 import ENVELOPE as ENVELOPE_2025
 from .modelo_303_2025 import REQUIRED_HEADER_FIELDS as REQUIRED_HEADER_FIELDS_2025
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def _schema_casilla_ids() -> frozenset[str]:

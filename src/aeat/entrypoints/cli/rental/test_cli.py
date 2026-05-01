@@ -19,7 +19,7 @@ from ....adapters.persistence.storage._crypto import KEY_SIZE
 from ....adapters.persistence.storage._orm import Base
 from ....adapters.persistence.storage.engine import create_engine_from_settings, dispose_engine
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)

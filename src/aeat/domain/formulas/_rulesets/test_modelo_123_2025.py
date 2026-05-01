@@ -11,7 +11,7 @@ from .._engine import Engine
 from .._ruleset import Ruleset
 from . import MODELO_123_2024, MODELO_123_2025, MODELO_123_2026
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided(**overrides: str) -> dict[str, Decimal]:

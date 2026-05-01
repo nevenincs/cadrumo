@@ -10,7 +10,7 @@ import pytest
 from . import CCAA, KentTaxResidence, TaxResidenceProfileError, load_tax_residence, save_tax_residence
 from ._storage import _default_path, clear_json, load_json, save_json
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_round_trip_json_serialization(tmp_path: Path) -> None:

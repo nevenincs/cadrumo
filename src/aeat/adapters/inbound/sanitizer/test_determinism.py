@@ -17,7 +17,7 @@ import pytest
 
 from ._determinism import deterministic_save_flags, save_with_deterministic_flags
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _new_one_page_pdf() -> pikepdf.Pdf:

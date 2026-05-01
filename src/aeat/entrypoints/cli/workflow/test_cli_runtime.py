@@ -19,7 +19,7 @@ from ....domain.deadlines import AutonomoProfile, IVARegime
 from .. import app as root_app
 from ._helpers import clear_test_hooks
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 runner = CliRunner()
 

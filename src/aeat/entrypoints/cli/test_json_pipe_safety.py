@@ -14,7 +14,7 @@ import pytest
 from ...core.config import PROJECT_ROOT
 from ...domain.deadlines import AutonomoProfile, IVARegime
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _CLI_EXE = Path(sys.executable).with_name("aeat.exe" if os.name == "nt" else "aeat")
 _JQ_EXE = shutil.which("jq")

@@ -23,7 +23,7 @@ import pytest
 
 from ._extract import extract_justificante
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 # Synthetic PDF text shapes derived from live captures with PII

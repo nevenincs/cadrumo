@@ -13,7 +13,7 @@ from . import ManualId, ManualPart, verify_manual_dir
 from ._verify import raise_on_errors
 from .errors import ManualNotFoundError, ManualReviewRequiredError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class _IsolatedSettings(Settings):

@@ -16,7 +16,7 @@ from . import (
     compute_run_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_mediation]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestWorkflowStageOrdering:

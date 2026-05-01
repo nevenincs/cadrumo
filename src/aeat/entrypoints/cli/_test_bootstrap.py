@@ -20,7 +20,7 @@ from .bootstrap import (
     dedup_existing_resource,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestDedupExistingResource:

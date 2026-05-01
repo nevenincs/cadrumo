@@ -14,7 +14,7 @@ import pytest
 
 from . import __all__ as justificante_all
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _FROZEN_PUBLIC_SURFACE: frozenset[str] = frozenset(

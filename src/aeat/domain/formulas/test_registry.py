@@ -33,7 +33,7 @@ from ._rulesets.modelo_200_2024 import RULESET as MODELO_200_2024
 from ._rulesets.modelo_200_2025 import RULESET as MODELO_200_2025
 from ._rulesets.modelo_200_2026 import RULESET as MODELO_200_2026
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.mark.unit

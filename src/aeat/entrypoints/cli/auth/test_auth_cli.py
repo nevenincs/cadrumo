@@ -18,7 +18,7 @@ from . import _registry, _session
 from ._paths import storage_state_paths
 from ._render import render_status_line
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _runner = CliRunner()

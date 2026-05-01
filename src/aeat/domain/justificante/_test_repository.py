@@ -27,7 +27,7 @@ from ._repository import (
 )
 from ._schema import Justificante
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_submission]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _make_justificante(tmp_path: Path, *, csv: str = "ABCD1234EFGH5678") -> Justificante:

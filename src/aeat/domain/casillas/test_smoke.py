@@ -6,7 +6,7 @@ import pytest
 
 from ... import casillas, errors, logging
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_aeat_remote]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_smoke_casillas() -> None:

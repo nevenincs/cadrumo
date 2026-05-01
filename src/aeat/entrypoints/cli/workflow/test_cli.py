@@ -19,7 +19,7 @@ from .. import app as root_app
 from ._helpers import clear_test_hooks, set_test_hooks
 from ._test_doubles import make_engine, make_profile
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _unwrap_result(output: str):
