@@ -13,8 +13,7 @@ not exist before the run are seeded — previously-provisioned fixtures
 are left untouched so any hand-annotated review notes survive
 re-provisioning.
 
-The script reuses the Google client surface provisioned by chore/4
-(:mod:`aeat.auth`, :mod:`aeat.env_io`) rather than defining a competing
+The script reuses the Google client surface rather than defining a competing
 client. See ``.vault/adr/2026-04-12-google-fixtures-adr.md``.
 
 Usage::
@@ -43,7 +42,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from _fixture_catalogue import CATALOGUE, FixtureKind, FixtureSpec  # noqa: E402
 from googleapiclient.errors import HttpError  # noqa: E402
 
-from aeat.auth import (  # noqa: E402
+from aeat.adapters.outbound.aeat.auth import (  # noqa: E402
     DOCS_SCOPE,
     DRIVE_SCOPE,
     SHEETS_SCOPE,
@@ -52,10 +51,10 @@ from aeat.auth import (  # noqa: E402
     build_sheets_service,
     get_credentials_for_scopes,
 )
-from aeat.config import PROJECT_ROOT  # noqa: E402
-from aeat.env_io import write_env_vars  # noqa: E402
-from aeat.errors import FixtureProvisioningError  # noqa: E402
-from aeat.logging import get_logger  # noqa: E402
+from aeat.core.config import PROJECT_ROOT  # noqa: E402
+from aeat.core.env_io import write_env_vars  # noqa: E402
+from aeat.core.errors import FixtureProvisioningError  # noqa: E402
+from aeat.core.logging import get_logger  # noqa: E402
 
 log = get_logger(__name__)
 

@@ -13,7 +13,7 @@ from ._base import parse_amount_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial"
+_FIXTURES = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "financial"
 
 
 def test_raw_transaction_round_trip_uses_mapping_field() -> None:

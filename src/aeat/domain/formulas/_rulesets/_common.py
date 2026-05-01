@@ -41,7 +41,6 @@ __all__ = [
     "brackets",
     "casilla",
     "clamp_pos",
-    "currency_casilla",
     "div_op",
     "formula",
     "lit",
@@ -53,7 +52,6 @@ __all__ = [
     "percent",
     "percent_from_whole",
     "ref",
-    "round2",
     "sub_op",
 ]
 

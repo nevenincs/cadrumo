@@ -15,10 +15,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....application.workflow import WorkflowStage
 from .....core.config import PROJECT_ROOT
 from . import (
-    SiteHealthAlert,
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
@@ -382,33 +380,4 @@ class TestSiteHealthModels:
                 evidence=ev,
                 observed_at=datetime.now(tz=UTC),
                 retry_after_seconds=0,
-            )
-
-    def test_alert_composes_stage_and_status(self) -> None:
-        ev = _evidence()
-        status = SiteHealthStatus(
-            state=SiteHealthState.MANTENIMIENTO,
-            evidence=ev,
-            observed_at=datetime.now(tz=UTC),
-        )
-        alert = SiteHealthAlert(
-            stage=WorkflowStage.BUILDING_DRAFT,
-            status=status,
-            run_id="run-1234",
-        )
-        assert alert.stage is WorkflowStage.BUILDING_DRAFT
-        assert alert.status.state is SiteHealthState.MANTENIMIENTO
-
-    def test_alert_rejects_empty_run_id(self) -> None:
-        ev = _evidence()
-        status = SiteHealthStatus(
-            state=SiteHealthState.MANTENIMIENTO,
-            evidence=ev,
-            observed_at=datetime.now(tz=UTC),
-        )
-        with pytest.raises(ValidationError):
-            SiteHealthAlert(
-                stage=WorkflowStage.BUILDING_DRAFT,
-                status=status,
-                run_id="",
             )

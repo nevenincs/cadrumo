@@ -37,14 +37,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ....core.logging import get_logger
-from ._blob_store import BlobReference, EncryptedBlobStore
-from ....core.classification import SensitivityClass, default_policy_for
-from ._crypto import KEY_SIZE, derive_key
-from ._envelope import Envelope
-from ....core.locks import exclusive_file_lock
-from ._master_key import MasterKeyProvider, get_master_key_provider
-from .errors import (
+from .....core.logging import get_logger
+from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
+from .....core.classification import SensitivityClass, default_policy_for
+from ..crypto._crypto import KEY_SIZE, derive_key
+from ..envelope._envelope import Envelope
+from .....core.locks import exclusive_file_lock
+from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
+from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
     RetentionPolicyError,
@@ -185,7 +185,7 @@ class SecretStore:
         # the directory flush cannot lose the swap. The index is
         # stored plaintext; it carries only digests (no plaintext
         # keys, no plaintext values).
-        from ....core.locks import fsync_parent_dir
+        from .....core.locks import fsync_parent_dir
 
         self._store_dir.mkdir(parents=True, exist_ok=True)
         target = self._index_path()

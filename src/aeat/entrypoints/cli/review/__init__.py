@@ -16,7 +16,7 @@ Wires the review subcommands per the feature ADRs:
   is currently stale (#230).
 
 These commands delegate every domain decision to :mod:`aeat.application.review`,
-:mod:`aeat.domain.financial.transactions`, or :mod:`aeat.application.filing`; this
+:mod:`aeat.domain.transactions`, or :mod:`aeat.application.filing`; this
 module is pure CLI glue.
 """
 
@@ -74,7 +74,7 @@ def _resolve_draft_path(draft_ref: str) -> Path:
 
 def _load_review_draft(path: Path) -> FilingDraft:
     """Load a draft envelope through the FilingDraftRepository."""
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     if not path.exists():
         raise typer.BadParameter(f"draft file not found: {path}")
@@ -98,7 +98,7 @@ def _load_review_draft(path: Path) -> FilingDraft:
 
 def _save_draft(draft: FilingDraft) -> None:
     """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     repository = FilingDraftRepository(store_dir=_drafts_dir())
     repository.save(draft)

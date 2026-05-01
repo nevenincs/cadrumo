@@ -12,15 +12,12 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
 from ...core.i18n import Translatable
 from ...domain.deadlines import FilingObligation
-
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.browser._site_health import SiteHealthAlert
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -62,6 +59,16 @@ class WorkflowAbortReason(StrEnum):
     USER_CANCELLED = "USER_CANCELLED"
     SITE_UNAVAILABLE = "SITE_UNAVAILABLE"
     UNHANDLED_EXCEPTION = "UNHANDLED_EXCEPTION"
+
+
+class SiteHealthAlert(BaseModel):
+    """Workflow-side alert wrapping a browser site-health status."""
+
+    model_config = _STRICT_FROZEN
+
+    stage: WorkflowStage
+    status: SiteHealthStatus
+    run_id: str = Field(min_length=1, max_length=128)
 
 
 class WorkflowStep(BaseModel):

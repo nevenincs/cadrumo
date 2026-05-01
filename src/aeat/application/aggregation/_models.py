@@ -7,13 +7,13 @@ import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from enum import StrEnum
 from types import MappingProxyType
 from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator, model_validator
 
 from ...domain.casillas import PeriodType
+from ...domain.deadlines import PeriodKind
 from ...domain.formulas._codes import Quarter
 from ._errors import AggregationPeriodError, t
 
@@ -25,14 +25,6 @@ _QUARTER_MONTHS: dict[Quarter, tuple[int, int]] = {
     Quarter.Q3: (7, 9),
     Quarter.Q4: (10, 12),
 }
-
-
-class PeriodKind(StrEnum):
-    """Closed set of aggregation period shapes."""
-
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-    ANNUAL = "annual"
 
 
 class Period(BaseModel):
@@ -97,7 +89,7 @@ class Period(BaseModel):
             if isinstance(payload.get("quarter"), str):
                 payload["quarter"] = Quarter(payload["quarter"])
             if isinstance(payload.get("kind"), str):
-                payload["kind"] = PeriodKind(payload["kind"])
+                payload["kind"] = PeriodKind(payload["kind"].lower())
             return payload
         return data
 

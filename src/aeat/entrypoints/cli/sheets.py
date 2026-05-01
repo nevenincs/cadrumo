@@ -16,7 +16,7 @@ app = typer.Typer(name="sheets", no_args_is_help=True, help="Google Sheets helpe
 
 def _sheets() -> Any:
     """Build an authenticated Sheets v4 service lazily."""
-    from ...adapters.outbound.aeat.auth import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
+    from ...adapters.outbound.google import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
 
     creds = get_credentials_for_scopes([SHEETS_SCOPE])
     return build_sheets_service(creds)

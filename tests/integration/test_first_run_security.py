@@ -35,7 +35,7 @@ from typer.testing import CliRunner
 from aeat.entrypoints.cli import app
 from aeat.entrypoints.cli.security import app as security_app
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 runner = CliRunner()
 
@@ -191,7 +191,7 @@ class TestUnsecuredFirstRunSyntheticNIF:
         assert "RECOVERY KEY" in provision.output
 
         # The published deterministic key is NOT a real master key.
-        from aeat.adapters.persistence.storage._master_key import _UNSECURED_PUBLISHED_KEY
+        from aeat.adapters.persistence.storage.master_key._master_key import _UNSECURED_PUBLISHED_KEY
 
         assert _UNSECURED_PUBLISHED_KEY.startswith(b"AEAT_UNSECURED_TEST_KEY")
 

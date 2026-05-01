@@ -24,7 +24,7 @@ write migrations.
 
 from __future__ import annotations
 
-from ._blob_store import (
+from .blob_store._blob_store import (
     BlobManifest,
     BlobReference,
     EncryptedBlobStore,
@@ -50,7 +50,13 @@ from ....core.corpus_manifest import (
     save_corpus_manifest,
     verify_corpus_manifest,
 )
-from ._crypto import (
+from .blob_store._materialisation import (
+    export_to_temp_path,
+    get_secret_store,
+    materialise_secret,
+    override_secret_store,
+)
+from .crypto._crypto import (
     GCM_TAG_SIZE,
     KEY_SIZE,
     NONCE_SIZE,
@@ -59,14 +65,14 @@ from ._crypto import (
     derive_key,
     encrypt_record,
 )
-from ._encrypted_columns import (
+from .crypto._encrypted_columns import (
     EncryptedBytes,
     EncryptedJSON,
     EncryptedString,
     HashedLookup,
     override_master_key_provider,
 )
-from ._envelope import (
+from .envelope._envelope import (
     AeadAlgorithm,
     CipherEnvelope,
     EncryptionMetadata,
@@ -79,7 +85,7 @@ from ._envelope import (
     save_envelope,
 )
 from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
-from ._master_key import (
+from .master_key._master_key import (
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
@@ -92,14 +98,7 @@ from ._master_key import (
     migrate_master_key_kdf,
     refuse_unsecured_with_real_nif,
 )
-from ._materialisation import (
-    export_to_temp_path,
-    get_secret_store,
-    materialise_secret,
-    override_secret_store,
-)
-from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
-from ._recovery import (
+from .master_key._recovery import (
     RecoveryKey,
     WrappedMasterKey,
     decode_mnemonic,
@@ -110,6 +109,7 @@ from ._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
+from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 from ....core.redaction import (
     default_rules,
     default_rules_for,
@@ -126,8 +126,8 @@ from ._rotation import (
     rotate_blob_stores,
     rotate_master_key,
 )
-from ._secret_store import SecretRecord, SecretStore
-from .engine import create_engine_from_settings, dispose_engine, get_engine
+from .secret_store._secret_store import SecretRecord, SecretStore
+from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
     BlobIntegrityError,
     BlobNotFoundError,
@@ -158,10 +158,10 @@ from .errors import (
     StorageError,
     UnsecuredModeRefusedError,
 )
-from .migrations_api import downgrade_to_base, round_trip_migrations, upgrade_to_head
-from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
-from .repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository
-from .session import get_sessionmaker, session_scope
+from .sql.migrations_api import downgrade_to_base, round_trip_migrations, upgrade_to_head
+from .sql.records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
+from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository
+from .sql.session import get_sessionmaker, session_scope
 
 __all__ = [
     "DEFAULT_LOCK_TIMEOUT",

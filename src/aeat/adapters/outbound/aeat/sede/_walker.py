@@ -1,13 +1,13 @@
 """Playwright-driven sede walker: session → expedientes → PDF bytes.
 
-The walker is the only side-effectful layer in :mod:`aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede`. It
+The walker is the only side-effectful layer in :mod:`aeat.adapters.outbound.aeat.sede`. It
 takes an :class:`AeatSession` whose ``storage_state_path`` carries
 valid AEAT cookies, drives a read-only Playwright session over the
 sede, and exposes three operations to callers:
 
 * :func:`walk_expedientes_tree` — listing traversal.
 * :func:`resolve_justificante_ref` — expediente → CSV handle.
-* :func:`fetch_justificante_pdf` — CSV handle → raw PDF bytes.
+* :func:`capture_justificante` — expediente → authoritative PDF capture.
 
 All three are read-only by construction: only ``page.goto`` and
 ``context.request.get`` cross the wire. No ``click()`` onto submit
@@ -127,7 +127,7 @@ async def resolve_justificante_ref(
 
     Returns:
         A :class:`JustificanteRef` ready for
-        :func:`fetch_justificante_pdf`.
+        :func:`capture_justificante`.
 
     Raises:
         SedeNavigationError: If the detail page cannot be loaded.
@@ -169,39 +169,6 @@ async def resolve_justificante_ref(
             with contextlib.suppress(Exception):
                 await context.close()
             await browser_session.close()
-
-
-async def fetch_justificante_pdf(
-    session: AeatSession,
-    ref: JustificanteRef,
-    *,
-    settings: Settings | None = None,
-) -> SedeCapture:
-    """Download the raw PDF bytes behind a :class:`JustificanteRef`.
-
-    Uses Playwright's :class:`APIRequestContext` (not browser
-    navigation) so Chrome's PDF-viewer interception never kicks in —
-    we get the authentic body AEAT serves.
-
-    Args:
-        session: Authenticated session.
-        ref: Output of :func:`resolve_justificante_ref`. The ``pdf_url``
-            field drives the HTTP GET.
-        settings: Optional override.
-
-    Returns:
-        A :class:`SedeCapture` bundling the raw PDF bytes with their
-        SHA-256 and the capture timestamp.
-
-    Raises:
-        JustificanteFetchError: If the HTTP status is non-2xx, the
-            body is empty, or the Content-Type is not PDF.
-    """
-    # SedeCapture requires the source Expediente. The caller supplies
-    # it through the higher-level :func:`capture_justificante` wrapper;
-    # this primitive exposes just the bytes-plus-hash pair to keep
-    # tests lean.
-    raise NotImplementedError("fetch_justificante_pdf is wrapped by capture_justificante; call that instead")
 
 
 async def capture_justificante(
@@ -391,7 +358,6 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
 
 __all__ = [
     "capture_justificante",
-    "fetch_justificante_pdf",
     "find_expediente",
     "resolve_justificante_ref",
     "walk_expedientes_tree",

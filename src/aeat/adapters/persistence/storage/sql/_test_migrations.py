@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import inspect
 
-from ....core.config import Settings
+from .....core.config import Settings
 from . import (
     ModeloRecord,
     ModeloRepository,

@@ -208,4 +208,4 @@ def serialise_envelope(
     return b"".join(chunks) + _CRLF
 
 
-__all__ = ["HeaderValue", "serialise", "serialise_envelope"]
+__all__ = ["serialise", "serialise_envelope"]

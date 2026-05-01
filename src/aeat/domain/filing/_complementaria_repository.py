@@ -35,10 +35,10 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
     save_encrypted_envelope,
 )
-from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...core.logging import get_logger
-from ._complementaria import FilingAmendment
+from ._amendment import FilingAmendment
 
 _HKDF_CONTEXT_AMENDMENT = b"aeat.application.filing.amendment.v1"
 

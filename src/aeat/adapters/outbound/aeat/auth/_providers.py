@@ -1,8 +1,8 @@
 """Concrete AEAT auth provider types and context provisioners.
 
 Provider-agnostic abstractions (``AuthProviderKind``, ``AuthProviderDescription``,
-``AuthProvider`` protocol, ``select_provider``, ``describe_provider_operator_impact``)
-live in ``aeat.application.auth``; this module holds concrete
+``AuthProvider`` protocol, ``describe_provider_operator_impact``)
+live in ``aeat.domain.auth``; this module holds concrete
 per-provider detail models and the certificate browser-context provisioner.
 """
 
@@ -13,12 +13,11 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....application.auth import (
+from .....domain.auth import (
     AuthProvider,
     AuthProviderDescription,
     AuthProviderKind,
     describe_provider_operator_impact,
-    select_provider,
 )
 from ._certificate_backends._playwright_context import build_client_certificates_kwarg
 from .certificate import (
@@ -240,5 +239,4 @@ __all__ = [
     "ClavePinSessionDetail",
     "describe_certificate_provider",
     "describe_provider_operator_impact",
-    "select_provider",
 ]

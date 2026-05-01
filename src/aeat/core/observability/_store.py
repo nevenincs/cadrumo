@@ -106,7 +106,7 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     bearer token, or sensitive URL path even if a caller fed one into
     ``arguments`` or ``metadata``.
     """
-    from ...adapters.persistence.storage import redact_structured
+    from ..redaction import redact_structured
 
     target = _run_dir(trace.run_id, settings=settings) / _TRACE_FILENAME
     redacted = redact_structured(trace.model_dump(mode="json"), rules=_diagnostic_rules())
@@ -149,7 +149,7 @@ def save_events_append(
     the on-disk record stays free of plaintext NIFs / tokens / sensitive
     URLs.
     """
-    from ...adapters.persistence.storage import redact_structured
+    from ..redaction import redact_structured
 
     target = _run_dir(run_id, settings=settings) / _EVENTS_FILENAME
     redacted = redact_structured(event.model_dump(mode="json"), rules=_diagnostic_rules())

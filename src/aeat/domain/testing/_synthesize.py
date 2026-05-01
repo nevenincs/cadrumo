@@ -32,7 +32,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from ...application.filing._schema import (
+from ...domain.filing._schema import (
     SCHEMA_VERSION_DEFAULT,
     FilingDraft,
     FilingDraftStatus,

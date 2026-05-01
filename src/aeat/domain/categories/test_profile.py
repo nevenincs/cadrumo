@@ -42,6 +42,27 @@ def _mapping() -> CasillaMapping:
     )
 
 
+def test_casilla_mapping_period_type_accepts_string_variants() -> None:
+    lower = CasillaMapping.model_validate(
+        {
+            "modelo": ModeloCode.MODELO_130,
+            "period_type": "quarterly",
+            "casilla_code": "01",
+            "sign": CasillaMappingSign.CREDIT,
+        }
+    )
+    upper = CasillaMapping.model_validate(
+        {
+            "modelo": ModeloCode.MODELO_390,
+            "period_type": "ANNUAL",
+            "casilla_code": "95",
+            "sign": CasillaMappingSign.CREDIT,
+        }
+    )
+    assert lower.period_type is PeriodType.QUARTERLY
+    assert upper.period_type is PeriodType.ANNUAL
+
+
 def _rule() -> ProportionalityRule:
     return ProportionalityRule(
         kind=ProportionalityKind.FULL_DEDUCTIBLE,

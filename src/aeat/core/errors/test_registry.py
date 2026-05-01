@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from importlib import import_module
+from typing import cast
 
 import pytest
 from click.exceptions import Exit
 from pydantic import ValidationError
 from typer.main import get_command
 
-from ...adapters.outbound.aeat.auth.certificate import AeatSessionExpiredError
-from ...adapters.outbound.aeat.browser.session import BrowserError
-from ...application.review._errors import ReviewKindReservedError
-from ...domain.portals._errors import PortalIntegrityError
-from ...entrypoints.cli import app
 from ..observability._errors import RunContextMissingError
 from . import (
     ERROR_REGISTRY,
@@ -107,6 +104,7 @@ def test_default_messages_do_not_contain_known_broken_fragments() -> None:
 
 
 def test_suggestions_parse_as_valid_cli_commands() -> None:
+    app = import_module("aeat.entrypoints.cli").app
     command = get_command(app)
     top_level = {registered.name for registered in app.registered_commands if registered.name is not None}
     top_level.update({registered.name for registered in app.registered_groups if registered.name is not None})
@@ -129,20 +127,30 @@ def test_suggestions_parse_as_valid_cli_commands() -> None:
     ("error_factory", "expected_prefix"),
     [
         (WorkspaceLockedError, "LOCKED"),
-        (lambda: ReviewKindReservedError("queue", "tracked by issue #230"), "REFUSED"),
-        (AeatSessionExpiredError, "AUTH"),
-        (PortalIntegrityError, "INTEGRITY"),
-        (BrowserError, "FAIL"),
+        ("review_kind_reserved", "REFUSED"),
+        ("aeat_session_expired", "AUTH"),
+        ("portal_integrity", "INTEGRITY"),
+        ("browser_error", "FAIL"),
         (RunContextMissingError, "INTERNAL"),
         (DeprecatedAliasError, "[deprecated]"),
         (MovedAliasError, "[moved]"),
     ],
 )
 def test_rendered_prefixes_are_grep_stable(
-    error_factory: Callable[[], Exception],
+    error_factory: Callable[[], Exception] | str,
     expected_prefix: str,
 ) -> None:
-    rendered = render_error_text(error_factory())
+    if error_factory == "review_kind_reserved":
+        review_error = import_module("aeat.application.review._errors").ReviewKindReservedError
+        error_factory = lambda: review_error("queue", "tracked by issue #230")
+    elif error_factory == "aeat_session_expired":
+        error_factory = import_module("aeat.adapters.outbound.aeat.auth.certificate").AeatSessionExpiredError
+    elif error_factory == "portal_integrity":
+        error_factory = import_module("aeat.domain.portals._errors").PortalIntegrityError
+    elif error_factory == "browser_error":
+        error_factory = import_module("aeat.adapters.outbound.aeat.browser.session").BrowserError
+    factory = cast(Callable[[], Exception], error_factory)
+    rendered = render_error_text(factory())
     first_line = rendered.splitlines()[0]
     if expected_prefix.startswith("["):
         assert first_line.startswith(f"{expected_prefix} ")

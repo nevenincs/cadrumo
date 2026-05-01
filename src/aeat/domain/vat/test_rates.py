@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.domain.financial.vat._rates`."""
+"""Unit tests for :mod:`aeat.domain.vat._rates`."""
 
 from __future__ import annotations
 

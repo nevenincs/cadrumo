@@ -13,7 +13,7 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
 
 from ...core.logging import get_logger
-from ..financial.providers import RawTransaction
+from ._raw_transaction import RawTransaction
 from ._enums import LEGACY_UNCLASSIFIED_ALIAS, BusinessClassification, TransactionDirection
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")

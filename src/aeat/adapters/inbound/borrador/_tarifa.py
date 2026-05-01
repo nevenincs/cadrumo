@@ -157,7 +157,6 @@ def validate_tarifa_estatal(
 
 
 __all__ = [
-    "TarifaFinding",
     "apply_tarifa",
     "validate_tarifa_estatal",
 ]

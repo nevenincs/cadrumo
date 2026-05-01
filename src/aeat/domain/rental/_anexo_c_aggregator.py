@@ -415,9 +415,6 @@ def _compute_imputacion(
 
 
 __all__ = [
-    "CATASTRAL_REVISION_LOOKBACK_YEARS",
-    "IMPUTACION_RATE_OLD_OR_NO_REVISION",
-    "IMPUTACION_RATE_RECENT_REVISION",
     "AnexoCAggregates",
     "ContractTierAttribution",
     "FincaAttribution",

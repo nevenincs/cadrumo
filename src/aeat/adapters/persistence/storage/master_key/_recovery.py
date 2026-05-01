@@ -41,7 +41,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._crypto import (
+from ..crypto._crypto import (
     KEY_SIZE,
     EncryptedBlob,
     decrypt_record,

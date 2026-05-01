@@ -11,8 +11,8 @@ import pytest
 
 from ...core.config import Settings
 from ...core.i18n import Translatable
-from ...domain.financial import RawProvenance, RawTransaction, SourceFormat
-from ...domain.financial.invoices import (
+from ...adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
+from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceKind,
@@ -20,13 +20,13 @@ from ...domain.financial.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from ...domain.financial.invoices._repository import InvoiceCatalogueRepository
-from ...domain.financial.transactions import (
+from ...domain.invoices._repository import InvoiceCatalogueRepository
+from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
 )
-from ...domain.financial.transactions._repository import TransactionCatalogueRepository
+from ...domain.transactions._repository import TransactionCatalogueRepository
 from ..filing import (
     FilingDraft,
     FilingDraftStatus,
@@ -159,7 +159,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version="filing-schema-0.1.0",
     )
-    from ..filing._repository import FilingDraftRepository
+    from ...domain.filing import FilingDraftRepository
 
     FilingDraftRepository(store_dir=settings.aeat_drafts_dir).save(draft)
 

@@ -17,7 +17,7 @@ docstring and imports:
 ```python
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 ```
 
 Per-function access or domain markers are forbidden. Mixed-access
@@ -37,12 +37,12 @@ function.
 
 | Marker                   | Covers                                                                            | Selection example                                |
 | :----------------------- | :-------------------------------------------------------------------------------- | :----------------------------------------------- |
-| `domain_aeat_remote`     | `auth`, `browser`, `casillas`, `inbox`, `justificante`, `portals`, `status`, `sync` | `uv run pytest -m "unit and domain_aeat_remote"` |
+| `domain_outbound`     | `auth`, `browser`, `casillas`, `inbox`, `justificante`, `portals`, `status`, `sync` | `uv run pytest -m "unit and domain_outbound"` |
 | `domain_submission`      | `filing`, `submission` local export, preflight, and historical records             | `uv run pytest -m "unit and domain_submission"`  |
-| `domain_financial_input` | `financial`, `cli/financial`                                                       | `just test-domain financial_input`               |
-| `domain_local_state`     | `storage`, `models`, `normatives`, `manuals`, `corpus`, `schema`, `deadlines`     | `just test-domain local_state`                   |
-| `domain_mediation`       | `workflow`, `llm`, `i18n`, `testing`                                              | `just test-domain mediation`                     |
-| `domain_infra`           | root modules, non-domain `cli`, `setup`, top-level `tests/*.py`                    | `just test-domain infra`                         |
+| `domain_inbound` | `financial`, `cli/financial`                                                       | `just test-domain financial_input`               |
+| `domain_persistence`     | `storage`, `models`, `normatives`, `manuals`, `corpus`, `schema`, `deadlines`     | `just test-domain local_state`                   |
+| `domain_application`       | `workflow`, `llm`, `i18n`, `testing`                                              | `just test-domain mediation`                     |
+| `domain_core`           | root modules, non-domain `cli`, `setup`, top-level `tests/*.py`                    | `just test-domain infra`                         |
 
 An additional `flaky` marker is registered for opt-in retry via
 `pytest-rerunfailures`; it is permitted only on `live_read` / `live_write`

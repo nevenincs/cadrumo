@@ -9,19 +9,16 @@ from pathlib import Path
 
 import pytest
 
-from . import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretRecord,
-    SecretStore,
-    SensitivityClass,
-)
+from .....core.classification import SensitivityClass
+from ..master_key import EphemeralMasterKeyProvider
+from ..secret_store import SecretRecord, SecretStore
+from . import EncryptedBlobStore
 from ._materialisation import (
     export_to_temp_path,
     materialise_secret,
     override_secret_store,
 )
-from .errors import SecretNotFoundError
+from ..errors import SecretNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

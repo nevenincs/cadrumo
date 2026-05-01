@@ -9,14 +9,12 @@ from pathlib import Path
 
 import pytest
 
-from . import (
-    KEY_SIZE,
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SensitivityClass,
-)
+from .....core.classification import SensitivityClass
+from ..blob_store import EncryptedBlobStore
+from ..crypto import KEY_SIZE
+from ..master_key import EphemeralMasterKeyProvider
 from ._secret_store import SecretRecord, SecretStore
-from .errors import (
+from ..errors import (
     RetentionPolicyError,
     SecretAlreadyExistsError,
     SecretNotFoundError,

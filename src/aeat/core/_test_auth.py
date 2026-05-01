@@ -9,32 +9,32 @@ would otherwise hit Google APIs.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from importlib import import_module
 from pathlib import Path
 
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from ..adapters.outbound.aeat.auth import (
-    ADC_LOGIN_SCOPE_CSV,
-    ADC_LOGIN_SCOPES,
-    CLOUD_PLATFORM_SCOPE,
-    DOCS_SCOPE,
-    DRIVE_SCOPE,
-    OPENID_SCOPE,
-    REQUIRED_ADC_SCOPES,
-    SCOPES,
-    SHEETS_SCOPE,
-    USERINFO_EMAIL_SCOPE,
-    GoogleAuthPath,
-    assert_credentials_have_scopes,
-    inspect_google_auth,
-    inspect_oauth_token_cache,
-)
 from .config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
+_AUTH_MODULE = import_module("aeat.adapters.outbound.aeat.auth")
+ADC_LOGIN_SCOPE_CSV = _AUTH_MODULE.ADC_LOGIN_SCOPE_CSV
+ADC_LOGIN_SCOPES = _AUTH_MODULE.ADC_LOGIN_SCOPES
+CLOUD_PLATFORM_SCOPE = _AUTH_MODULE.CLOUD_PLATFORM_SCOPE
+DOCS_SCOPE = _AUTH_MODULE.DOCS_SCOPE
+DRIVE_SCOPE = _AUTH_MODULE.DRIVE_SCOPE
+OPENID_SCOPE = _AUTH_MODULE.OPENID_SCOPE
+REQUIRED_ADC_SCOPES = _AUTH_MODULE.REQUIRED_ADC_SCOPES
+SCOPES = _AUTH_MODULE.SCOPES
+SHEETS_SCOPE = _AUTH_MODULE.SHEETS_SCOPE
+USERINFO_EMAIL_SCOPE = _AUTH_MODULE.USERINFO_EMAIL_SCOPE
+GoogleAuthPath = _AUTH_MODULE.GoogleAuthPath
+assert_credentials_have_scopes = _AUTH_MODULE.assert_credentials_have_scopes
+inspect_google_auth = _AUTH_MODULE.inspect_google_auth
+inspect_oauth_token_cache = _AUTH_MODULE.inspect_oauth_token_cache
 
 
 @dataclass

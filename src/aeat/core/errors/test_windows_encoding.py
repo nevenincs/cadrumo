@@ -6,10 +6,10 @@ import io
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
+from importlib import import_module
 
 import pytest
 
-from ...entrypoints.cli._errors import write_stderr
 from . import WorkspaceLockedError, render_error_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
@@ -39,6 +39,7 @@ def test_cp1252_stderr_path_does_not_raise_on_non_ascii_output(
     language: str,
     expected_fragment: str,
 ) -> None:
+    write_stderr = import_module("aeat.entrypoints.cli._errors").write_stderr
     buffer = io.BytesIO()
     stream = io.TextIOWrapper(buffer, encoding="cp1252", errors="strict")
 

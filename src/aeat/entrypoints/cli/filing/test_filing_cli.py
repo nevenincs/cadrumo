@@ -17,7 +17,7 @@ from ....application.filing import FilingDraftStatus, FilingOperatorProfile, app
 from ....application.filing.runtime import build_runtime_schema_provider
 from ....core.config import PROJECT_ROOT
 from ....domain.deadlines import AutonomoProfile, IVARegime
-from ....domain.financial.transactions import TransactionCatalogue
+from ....domain.transactions import TransactionCatalogue
 from .. import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -75,7 +75,7 @@ def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         SensitivityClass,
         save_encrypted_envelope,
     )
-    from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+    from ....adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
     profile = AutonomoProfile(
         tax_id="00000000T",
@@ -106,8 +106,8 @@ def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
     from datetime import UTC, datetime
 
     from ....adapters.outbound.aeat.export._models import SubmissionAttempt, SubmissionStatus, SubmittedFiling
-    from ....adapters.outbound.aeat.export._repository import SubmissionRepository
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.submission._repository import SubmissionRepository
+    from ....domain.filing import FilingDraftRepository
 
     draft = build_draft(
         modelo="130",
@@ -245,7 +245,7 @@ class TestFilingCLI:
             schema_provider=build_runtime_schema_provider(),
             transaction_catalogue=TransactionCatalogue(),
         )
-        from ....application.filing._repository import FilingDraftRepository
+        from ....domain.filing import FilingDraftRepository
 
         repo = FilingDraftRepository(store_dir=drafts_dir)
         repo.save(approved)

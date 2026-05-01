@@ -13,12 +13,11 @@ from __future__ import annotations
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from ..adapters.outbound.aeat.auth import AuthProviderKind, CertificateBackend, GoogleAuthPath
-from ..domain.justificante import JustificanteParserBackend
 from .paths import (
     normalize_project_relative_path,
     normalize_project_relative_str,
@@ -69,6 +68,28 @@ class LLMProviderSetting(StrEnum):
     LOCAL = "LOCAL"
 
 
+class GoogleAuthPathSetting(StrEnum):
+    DESKTOP_OAUTH_LOCAL_DEV = "desktop-oauth-local-dev"
+    SERVICE_ACCOUNT_AUTOMATION = "service-account-automation"
+
+
+class CertificateBackendSetting(StrEnum):
+    PLAYWRIGHT_CONTEXT = "playwright_context"
+    HTTPX_FALLBACK = "httpx_fallback"
+
+
+class AuthProviderKindSetting(StrEnum):
+    CERTIFICATE = "certificate"
+    CLAVE_MOVIL = "clave_movil"
+    CLAVE_PERMANENTE = "clave_permanente"
+    CLAVE_PIN = "clave_pin"
+
+
+class JustificanteParserBackendSetting(StrEnum):
+    PDFPLUMBER = "pdfplumber"
+    PYMUPDF = "pymupdf"
+
+
 class Settings(BaseSettings):
     """Application settings populated from environment variables and ``.env``.
 
@@ -83,7 +104,7 @@ class Settings(BaseSettings):
     )
 
     # ── Google OAuth 2.0 (Desktop / Interactive) ────────────────────────────
-    google_auth_path: GoogleAuthPath | None = Field(
+    google_auth_path: GoogleAuthPathSetting | StrEnum | None = Field(
         default=None,
         description="Active Google auth path: desktop-oauth-local-dev or service-account-automation",
     )
@@ -385,8 +406,8 @@ class Settings(BaseSettings):
         default=None,
         description="Optional human-readable label for the certificate",
     )
-    aeat_certificate_backend: CertificateBackend = Field(
-        default=CertificateBackend.PLAYWRIGHT_CONTEXT,
+    aeat_certificate_backend: CertificateBackendSetting = Field(
+        default=CertificateBackendSetting.PLAYWRIGHT_CONTEXT,
         description="Which cert backend to use (PLAYWRIGHT_CONTEXT by default)",
     )
     aeat_certificate_verify_url: str = Field(
@@ -421,7 +442,7 @@ class Settings(BaseSettings):
     )
 
     # ── AEAT auth provider default (#285) ───────────────────────────────────
-    aeat_auth_provider: AuthProviderKind | None = Field(
+    aeat_auth_provider: AuthProviderKindSetting | None = Field(
         default=None,
         description=(
             "Default auth provider for `aeat auth login` / `status` when "
@@ -694,8 +715,8 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "justificantes",
         description="Directory where parsed justificante PDFs and metadata are stored",
     )
-    aeat_justificante_parser_backend: JustificanteParserBackend = Field(
-        default=JustificanteParserBackend.PDFPLUMBER,
+    aeat_justificante_parser_backend: JustificanteParserBackendSetting = Field(
+        default=JustificanteParserBackendSetting.PDFPLUMBER,
         description="Parser backend for `aeat.domain.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
     )
 

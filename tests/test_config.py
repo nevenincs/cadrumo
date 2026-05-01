@@ -1,6 +1,6 @@
 """Tests that Settings and ``env/.env.example`` stay fully aligned.
 
-The Settings model in ``aeat.config`` is the single source of truth for every
+The Settings model in ``aeat.core.config`` is the single source of truth for every
 environment variable the application reads.  These tests enforce that:
 
 1. Every Settings field has a matching line in ``env/.env.example``.
@@ -22,7 +22,7 @@ from aeat.core.config import PROJECT_ROOT, Settings
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_infra]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def _parse_env_example_vars() -> set[str]:
@@ -82,10 +82,10 @@ class TestEnvExampleAlignment:
 
 
 class TestAuthProviderEnum:
-    """#285 — ``AEAT_AUTH_PROVIDER`` coerces to :class:`AuthProviderKind` strictly."""
+    """#285 — ``AEAT_AUTH_PROVIDER`` coerces to the settings enum strictly."""
 
     def test_env_value_coerces_to_enum(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from aeat.adapters.outbound.aeat.auth import AuthProviderKind
+        from aeat.core.config import AuthProviderKindSetting
 
         for name in Settings.env_var_names():
             monkeypatch.delenv(name, raising=False)
@@ -95,7 +95,7 @@ class TestAuthProviderEnum:
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
         settings = IsolatedSettings()
-        assert settings.aeat_auth_provider is AuthProviderKind.CLAVE_MOVIL
+        assert settings.aeat_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
 
     def test_blank_env_value_treated_as_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
         for name in Settings.env_var_names():

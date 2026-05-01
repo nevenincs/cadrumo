@@ -15,7 +15,7 @@ from decimal import Decimal, InvalidOperation
 import pytest
 from pydantic import ValidationError
 
-from ...application.filing._schema import (
+from ...domain.filing._schema import (
     FilingDraft,
     FilingDraftStatus,
     FilingValueKind,

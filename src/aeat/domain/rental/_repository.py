@@ -30,7 +30,7 @@ from ._models import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover — type-only imports
-    from ...adapters.persistence.storage import _orm
+    from ...adapters.persistence.storage.sql import _orm
 
 _log = get_logger(__name__)
 
@@ -51,13 +51,13 @@ class RentalFincaRepository:
         self._session = session
 
     def list_all(self) -> list[RentalFinca]:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         rows = self._session.execute(select(_orm.RentalFincaRow).order_by(_orm.RentalFincaRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> RentalFinca:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row = self._session.get(_orm.RentalFincaRow, record_id)
@@ -66,7 +66,7 @@ class RentalFincaRepository:
         return self._to_record(row)
 
     def get_by_identifier(self, identifier: str) -> RentalFinca | None:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
             select(_orm.RentalFincaRow).where(_orm.RentalFincaRow.identifier == identifier),
@@ -74,7 +74,7 @@ class RentalFincaRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalFinca) -> RentalFinca:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row: _orm.RentalFincaRow | None = None
@@ -121,7 +121,7 @@ class RentalFincaRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row = self._session.get(_orm.RentalFincaRow, record_id)
@@ -164,13 +164,13 @@ class RentalContractRepository:
         self._session = session
 
     def list_all(self) -> list[RentalContract]:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         rows = self._session.execute(select(_orm.RentalContractRow).order_by(_orm.RentalContractRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def list_for_finca(self, finca_id: int) -> list[RentalContract]:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         rows = (
             self._session.execute(
@@ -184,7 +184,7 @@ class RentalContractRepository:
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> RentalContract:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row = self._session.get(_orm.RentalContractRow, record_id)
@@ -193,7 +193,7 @@ class RentalContractRepository:
         return self._to_record(row)
 
     def upsert(self, record: RentalContract) -> RentalContract:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row: _orm.RentalContractRow | None = None
@@ -211,7 +211,7 @@ class RentalContractRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row = self._session.get(_orm.RentalContractRow, record_id)
@@ -275,7 +275,7 @@ class RentalIncomeRepository:
         self._session = session
 
     def list_for_period(self, period_year: int) -> list[RentalIncomeRecord]:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         rows = (
             self._session.execute(
@@ -293,7 +293,7 @@ class RentalIncomeRepository:
         contract_id: int,
         period_year: int,
     ) -> RentalIncomeRecord | None:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
             select(_orm.RentalIncomeRecordRow).where(
@@ -304,7 +304,7 @@ class RentalIncomeRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalIncomeRecord) -> RentalIncomeRecord:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row: _orm.RentalIncomeRecordRow | None = None
@@ -336,7 +336,7 @@ class RentalIncomeRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row = self._session.get(_orm.RentalIncomeRecordRow, record_id)
@@ -364,7 +364,7 @@ class RentalExpenseRepository:
         self._session = session
 
     def list_for_finca_period(self, finca_id: int, period_year: int) -> list[RentalExpense]:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         rows = (
             self._session.execute(
@@ -381,7 +381,7 @@ class RentalExpenseRepository:
         return [self._to_record(row) for row in rows]
 
     def add(self, record: RentalExpense) -> RentalExpense:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         if record.id is not None:
@@ -400,7 +400,7 @@ class RentalExpenseRepository:
         return self._to_record(row)
 
     def upsert(self, record: RentalExpense) -> RentalExpense:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         if record.id is None:
@@ -417,7 +417,7 @@ class RentalExpenseRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row = self._session.get(_orm.RentalExpenseRow, record_id)
@@ -453,7 +453,7 @@ class RentalAmortizationLedgerRepository:
         self._session = session
 
     def list_for_finca(self, finca_id: int) -> list[RentalAmortizationLedgerEntry]:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         rows = (
             self._session.execute(
@@ -471,7 +471,7 @@ class RentalAmortizationLedgerRepository:
         finca_id: int,
         period_year: int,
     ) -> RentalAmortizationLedgerEntry | None:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
             select(_orm.RentalAmortizationLedgerRow).where(
@@ -482,7 +482,7 @@ class RentalAmortizationLedgerRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalAmortizationLedgerEntry) -> RentalAmortizationLedgerEntry:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row: _orm.RentalAmortizationLedgerRow | None = None
@@ -520,7 +520,7 @@ class RentalAmortizationLedgerRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage import _orm
+        from ...adapters.persistence.storage.sql import _orm
         from ...adapters.persistence.storage.errors import RepositoryError
 
         row = self._session.get(_orm.RentalAmortizationLedgerRow, record_id)

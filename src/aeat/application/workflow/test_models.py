@@ -9,11 +9,18 @@ import pytest
 from pydantic import ValidationError
 
 from . import (
+    SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
     compute_run_id,
+)
+from ...adapters.outbound.aeat.browser._site_health import (
+    SiteHealthEvidence,
+    SiteHealthState,
+    SiteHealthStatus,
+    _URL_ADAPTER,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -110,6 +117,38 @@ class TestWorkflowStepValidation:
                 success=True,
                 summary={"en": "ok"},
                 details=cast(dict[str, str], {"key": 42}),
+            )
+
+
+class TestSiteHealthAlert:
+    def _status(self) -> SiteHealthStatus:
+        evidence = SiteHealthEvidence(
+            url=_URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/"),
+            http_status=503,
+            html_fragment="<html>mantenimiento</html>",
+            detected_markers=("mantenimiento",),
+        )
+        return SiteHealthStatus(
+            state=SiteHealthState.MANTENIMIENTO,
+            evidence=evidence,
+            observed_at=datetime.now(tz=UTC),
+        )
+
+    def test_alert_composes_stage_and_status(self) -> None:
+        alert = SiteHealthAlert(
+            stage=WorkflowStage.BUILDING_DRAFT,
+            status=self._status(),
+            run_id="run-1234",
+        )
+        assert alert.stage is WorkflowStage.BUILDING_DRAFT
+        assert alert.status.state is SiteHealthState.MANTENIMIENTO
+
+    def test_alert_rejects_empty_run_id(self) -> None:
+        with pytest.raises(ValidationError):
+            SiteHealthAlert(
+                stage=WorkflowStage.BUILDING_DRAFT,
+                status=self._status(),
+                run_id="",
             )
 
     def test_ended_at_must_not_precede_started_at(self) -> None:

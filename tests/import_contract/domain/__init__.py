@@ -1,0 +1,1 @@
+"""Domain import-contract tests."""

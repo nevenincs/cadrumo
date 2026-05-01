@@ -2,24 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
-from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core.logging import get_logger
 from ...formulas import LIS_ART_12_LINEAL_TABLE, AssetClass
 from ..errors import AssetRecordError, BasisCapExceededError
 
-_log = get_logger(__name__)
-
-ASSETS_LEDGER_FILENAME = "assets-ledger.envelope.json"
-ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.envelope.json"
 SCHEMA_VERSION = "1"
-_ENVELOPE_VERSION = 1
-_HKDF_CONTEXT_ASSETS = b"aeat.domain.profile.assets.ledger.v1"
-_HKDF_CONTEXT_AMORTIZATION = b"aeat.domain.profile.assets.amortization-ledger.v1"
 _CENT = Decimal("0.01")
 _ONE = Decimal("1")
 _ZERO = Decimal("0.00")
@@ -151,55 +142,6 @@ class AssetsLedgerDocument(BaseModel):
         return value
 
 
-def default_storage_dir() -> Path:
-    """Return the configured governed ledger storage directory."""
-
-    from ....core.config import load_settings
-
-    return Path(load_settings().aeat_ledgers_dir)
-
-
-def load_assets(*, storage_dir: Path | None = None) -> tuple[AssetRecord, ...]:
-    """Load persisted asset records from the encrypted ledger.
-
-    Args:
-        storage_dir: Optional directory override for tests or import flows.
-
-    Returns:
-        Tuple of asset records. Missing files return an empty tuple.
-    """
-
-    return AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir()).load().assets
-
-
-def save_assets(assets: tuple[AssetRecord, ...], *, storage_dir: Path | None = None) -> Path:
-    """Persist asset records as a governed encrypted envelope."""
-
-    repository = AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir())
-    repository.save(AssetsLedgerDocument(assets=assets))
-    return repository.envelope_path
-
-
-def add_asset(asset: AssetRecord, *, storage_dir: Path | None = None) -> AssetsLedgerDocument:
-    """Atomically add ``asset`` to the encrypted asset ledger."""
-
-    return AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir()).add(asset)
-
-
-def load_amortization_ledger(*, storage_dir: Path | None = None) -> AmortizationLedger:
-    """Load the amortization ledger, returning an empty ledger when absent."""
-
-    return AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir()).load()
-
-
-def save_amortization_ledger(ledger: AmortizationLedger, *, storage_dir: Path | None = None) -> Path:
-    """Persist the amortization ledger as a governed encrypted envelope."""
-
-    repository = AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir())
-    repository.save(ledger)
-    return repository.envelope_path
-
-
 def compute_amortization_for_year(asset: AssetRecord, year: int, ledger: AmortizationLedger) -> Decimal:
     """Compute allowable amortization for one asset and year.
 
@@ -238,56 +180,23 @@ def compute_amortization_for_year(asset: AssetRecord, year: int, ledger: Amortiz
     return _quantize(min(prorated, remaining))
 
 
-def record_amortization(
-    asset: AssetRecord,
-    year: int,
-    *,
-    storage_dir: Path | None = None,
-    ledger: AmortizationLedger | None = None,
-) -> AmortizationLedger:
-    """Compute and record amortization for one asset/year."""
-
-    if ledger is not None:
-        by_asset = _nested_entries(ledger)
-        by_year = by_asset.setdefault(asset.identifier, {})
-        if year in by_year:
-            save_amortization_ledger(ledger, storage_dir=storage_dir)
-            return ledger
-        amount = compute_amortization_for_year(asset, year, ledger)
-        by_year[year] = amount
-        updated = AmortizationLedger(entries=_flatten_entries(by_asset))
-        save_amortization_ledger(updated, storage_dir=storage_dir)
-        return updated
-    return AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir()).record(asset, year).ledger
-
-
 def compute_anexo_d_amortization_aggregate(
     year: int,
     *,
-    assets: tuple[AssetRecord, ...] | None = None,
+    assets: tuple[AssetRecord, ...] = (),
     ledger: AmortizationLedger | None = None,
     actividad_id: str | None = None,
-    storage_dir: Path | None = None,
 ) -> Decimal:
     """Compute Anexo D normal casilla `0173` from assets."""
 
-    resolved_assets = assets if assets is not None else load_assets(storage_dir=storage_dir)
-    resolved_ledger = ledger if ledger is not None else load_amortization_ledger(storage_dir=storage_dir)
+    resolved_ledger = ledger if ledger is not None else AmortizationLedger()
     total = _ZERO
-    for asset in resolved_assets:
+    for asset in assets:
         if actividad_id is not None and asset.actividad_id not in {None, actividad_id}:
             continue
         amount = compute_amortization_for_year(asset, year, resolved_ledger)
         total += amount * asset.allocation_ratio
     return _quantize(total)
-
-
-def _assets_path(storage_dir: Path | None) -> Path:
-    return (storage_dir or default_storage_dir()) / ASSETS_LEDGER_FILENAME
-
-
-def _amortization_path(storage_dir: Path | None) -> Path:
-    return (storage_dir or default_storage_dir()) / ASSETS_AMORTIZATION_LEDGER_FILENAME
 
 
 def _annual_rate(asset: AssetRecord) -> Decimal:
@@ -364,260 +273,11 @@ def _quantize(value: Decimal) -> Decimal:
     return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
-class AssetsLedgerRepository:
-    """Governed repository for the encrypted assets ledger."""
-
-    def __init__(self, *, store_dir: Path) -> None:
-        self._store_dir = Path(store_dir)
-
-    @property
-    def envelope_path(self) -> Path:
-        """Return the canonical encrypted envelope path."""
-
-        return self._store_dir / ASSETS_LEDGER_FILENAME
-
-    @property
-    def lock_target(self) -> Path:
-        """Return the canonical lock sidecar path."""
-
-        return self._store_dir / "assets-ledger.lock"
-
-    def load(self) -> AssetsLedgerDocument:
-        """Load the ledger, returning an empty document when absent."""
-
-        if not self.envelope_path.exists():
-            return AssetsLedgerDocument()
-        try:
-            from ....adapters.persistence.storage import Envelope, SensitivityClass, load_encrypted_envelope
-            from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-
-            envelope = load_encrypted_envelope(
-                self.envelope_path,
-                Envelope[AssetsLedgerDocument],
-                expected_class=SensitivityClass.FINANCIAL,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_ASSETS,
-                max_supported_version=_ENVELOPE_VERSION,
-            )
-            return envelope.payload
-        except Exception as exc:
-            raise AssetRecordError(f"unable to load asset ledger: {self.envelope_path}") from exc
-
-    def save(self, document: AssetsLedgerDocument) -> None:
-        """Persist ``document`` as FINANCIAL-class ciphertext."""
-
-        from ....adapters.persistence.storage import (
-            Envelope,
-            SensitivityClass,
-            exclusive_file_lock,
-            save_encrypted_envelope,
-        )
-        from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            envelope = Envelope[AssetsLedgerDocument](
-                schema_version=_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.FINANCIAL,
-                payload=document,
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_ASSETS,
-            )
-        _log.info("saved %d asset records to %s", len(document.assets), self.envelope_path)
-
-    def add(self, asset: AssetRecord) -> AssetsLedgerDocument:
-        """Atomically add ``asset`` and refuse duplicate identifiers."""
-
-        from ....adapters.persistence.storage import exclusive_file_lock
-
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            current = self._load_unlocked()
-            if any(existing.identifier == asset.identifier for existing in current.assets):
-                raise AssetRecordError(
-                    f"asset {asset.identifier!r} already exists",
-                    context={"asset_id": asset.identifier},
-                    suggestion=f"aeat data ledgers assets show {asset.identifier}",
-                )
-            updated = AssetsLedgerDocument(assets=(*current.assets, asset))
-            self._save_unlocked(updated)
-            return updated
-
-    def _load_unlocked(self) -> AssetsLedgerDocument:
-        if not self.envelope_path.exists():
-            return AssetsLedgerDocument()
-        from ....adapters.persistence.storage import Envelope, SensitivityClass, load_encrypted_envelope
-        from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-
-        envelope = load_encrypted_envelope(
-            self.envelope_path,
-            Envelope[AssetsLedgerDocument],
-            expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_ASSETS,
-            max_supported_version=_ENVELOPE_VERSION,
-        )
-        return envelope.payload
-
-    def _save_unlocked(self, document: AssetsLedgerDocument) -> None:
-        from ....adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-
-        envelope = Envelope[AssetsLedgerDocument](
-            schema_version=_ENVELOPE_VERSION,
-            written_at=datetime.now(UTC),
-            classification=SensitivityClass.FINANCIAL,
-            payload=document,
-        )
-        save_encrypted_envelope(
-            envelope,
-            self.envelope_path,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_ASSETS,
-        )
-
-
-class AmortizationLedgerRepository:
-    """Governed repository for the encrypted amortization ledger."""
-
-    def __init__(self, *, store_dir: Path) -> None:
-        self._store_dir = Path(store_dir)
-
-    @property
-    def envelope_path(self) -> Path:
-        """Return the canonical encrypted envelope path."""
-
-        return self._store_dir / ASSETS_AMORTIZATION_LEDGER_FILENAME
-
-    @property
-    def lock_target(self) -> Path:
-        """Return the canonical lock sidecar path."""
-
-        return self._store_dir / "assets-amortization-ledger.lock"
-
-    def load(self) -> AmortizationLedger:
-        """Load the ledger, returning an empty document when absent."""
-
-        if not self.envelope_path.exists():
-            return AmortizationLedger()
-        try:
-            from ....adapters.persistence.storage import Envelope, SensitivityClass, load_encrypted_envelope
-            from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-
-            envelope = load_encrypted_envelope(
-                self.envelope_path,
-                Envelope[AmortizationLedger],
-                expected_class=SensitivityClass.FINANCIAL,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_AMORTIZATION,
-                max_supported_version=_ENVELOPE_VERSION,
-            )
-            return envelope.payload
-        except Exception as exc:
-            raise AssetRecordError(f"unable to load amortization ledger: {self.envelope_path}") from exc
-
-    def save(self, ledger: AmortizationLedger) -> None:
-        """Persist ``ledger`` as FINANCIAL-class ciphertext."""
-
-        from ....adapters.persistence.storage import (
-            Envelope,
-            SensitivityClass,
-            exclusive_file_lock,
-            save_encrypted_envelope,
-        )
-        from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            envelope = Envelope[AmortizationLedger](
-                schema_version=_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.FINANCIAL,
-                payload=ledger,
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_AMORTIZATION,
-            )
-        _log.info("saved amortization ledger to %s", self.envelope_path)
-
-    def record(self, asset: AssetRecord, year: int) -> AmortizationRecordResult:
-        """Atomically compute and record amortization for ``asset`` and ``year``."""
-
-        from ....adapters.persistence.storage import exclusive_file_lock
-
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            current = self._load_unlocked()
-            by_asset = _nested_entries(current)
-            by_year = by_asset.setdefault(asset.identifier, {})
-            if year in by_year:
-                return AmortizationRecordResult(ledger=current, amount=by_year[year], stored=False)
-            amount = compute_amortization_for_year(asset, year, current)
-            by_year[year] = amount
-            updated = AmortizationLedger(entries=_flatten_entries(by_asset))
-            self._save_unlocked(updated)
-            return AmortizationRecordResult(ledger=updated, amount=amount, stored=True)
-
-    def _load_unlocked(self) -> AmortizationLedger:
-        if not self.envelope_path.exists():
-            return AmortizationLedger()
-        from ....adapters.persistence.storage import Envelope, SensitivityClass, load_encrypted_envelope
-        from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-
-        envelope = load_encrypted_envelope(
-            self.envelope_path,
-            Envelope[AmortizationLedger],
-            expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_AMORTIZATION,
-            max_supported_version=_ENVELOPE_VERSION,
-        )
-        return envelope.payload
-
-    def _save_unlocked(self, ledger: AmortizationLedger) -> None:
-        from ....adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from ....adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
-
-        envelope = Envelope[AmortizationLedger](
-            schema_version=_ENVELOPE_VERSION,
-            written_at=datetime.now(UTC),
-            classification=SensitivityClass.FINANCIAL,
-            payload=ledger,
-        )
-        save_encrypted_envelope(
-            envelope,
-            self.envelope_path,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_AMORTIZATION,
-        )
-
-
 __all__ = [
-    "ASSETS_AMORTIZATION_LEDGER_FILENAME",
-    "ASSETS_LEDGER_FILENAME",
     "AmortizationEntry",
     "AmortizationLedger",
-    "AmortizationLedgerRepository",
-    "AmortizationRecordResult",
     "AssetRecord",
-    "AssetsLedgerDocument",
-    "AssetsLedgerRepository",
     "LibertadAmortizacionElection",
-    "add_asset",
     "compute_amortization_for_year",
     "compute_anexo_d_amortization_aggregate",
-    "default_storage_dir",
-    "load_amortization_ledger",
-    "load_assets",
-    "record_amortization",
-    "save_amortization_ledger",
-    "save_assets",
 ]

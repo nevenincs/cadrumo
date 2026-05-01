@@ -9,13 +9,9 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from . import (
-    ClassificationError,
-    EncryptionMetadata,
-    Envelope,
-    EnvelopeVersionError,
-    SensitivityClass,
-)
+from .....core.classification import SensitivityClass
+from ..errors import ClassificationError, EnvelopeVersionError
+from . import EncryptionMetadata, Envelope
 from ._envelope import EnvelopeMigrator, load_envelope, save_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -241,7 +237,7 @@ class TestEncryptionMetadata:
     """``EncryptionMetadata`` round-trips and validates the algorithm name."""
 
     def test_round_trip_via_blob(self) -> None:
-        from ._crypto import encrypt_record
+        from ..crypto._crypto import encrypt_record
 
         key = b"\x00" * 32
         blob = encrypt_record(b"hello", key=key)

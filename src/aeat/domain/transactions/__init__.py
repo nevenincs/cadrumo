@@ -1,7 +1,7 @@
 """Immutable transaction catalogue surface for the financial pipeline.
 
 Public surface — callers must import transaction models, errors, and
-service functions exclusively from ``aeat.domain.financial.transactions`` and
+service functions exclusively from ``aeat.domain.transactions`` and
 must not reach into the private underscore modules inside this package.
 """
 
@@ -40,6 +40,7 @@ from ._llm import (
 )
 from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
+from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ._service import (
     find_transaction,
     link_invoice,
@@ -78,6 +79,9 @@ __all__ = [
     "ModelProfile",
     "ModelTier",
     "PromptSpec",
+    "RawProvenance",
+    "RawTransaction",
+    "SourceFormat",
     "SubprocessLLMClassifier",
     "Transaction",
     "TransactionCatalogue",

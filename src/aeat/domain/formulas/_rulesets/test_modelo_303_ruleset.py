@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...financial.vat import EUMemberState, VATRateKind, lookup_rate
+from ...vat import EUMemberState, VATRateKind, lookup_rate
 from ...modelos import ModeloCode
 from .._codes import Quarter
 from .._period import FiscalPeriod

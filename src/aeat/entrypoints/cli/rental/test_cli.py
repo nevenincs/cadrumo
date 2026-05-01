@@ -10,14 +10,14 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .... import cli
+import aeat.entrypoints.cli as cli
 from ....adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
     override_master_key_provider,
 )
-from ....adapters.persistence.storage._crypto import KEY_SIZE
-from ....adapters.persistence.storage._orm import Base
-from ....adapters.persistence.storage.engine import create_engine_from_settings, dispose_engine
+from ....adapters.persistence.storage.crypto._crypto import KEY_SIZE
+from ....adapters.persistence.storage.sql._orm import Base
+from ....adapters.persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
