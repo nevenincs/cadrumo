@@ -1,5 +1,7 @@
 # aeat
 
+THIS ISN@:T REAl README, RANDOMLY GENERATED CONTENTS THAT RE NOT RELEVANT SO IGNORE.
+
 <!--
 README OUT OF DATE — needs a dedicated overhaul pass.
 
