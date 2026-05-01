@@ -1,4 +1,9 @@
-"""Tests for ``aeat submission check-nif`` (EPIC #305)."""
+"""Tests for the ``aeat submission check-nif`` Typer command.
+
+Exercises the AEAT check-letter validation paths (DNI, NIE, malformed
+input) plus the JSON output contract emitted via
+:func:`aeat.entrypoints.cli._schemas.emit_json_success`.
+"""
 
 from __future__ import annotations
 
@@ -15,10 +20,13 @@ _runner = CliRunner()
 
 
 def _unwrap_result(output: str):
+    """Return the ``result`` payload from a CLI JSON-success envelope."""
     return json.loads(output)["result"]
 
 
 class TestCheckNifCommand:
+    """Behavioural tests for :func:`aeat.entrypoints.cli.submission.check_nif.check_nif_cmd`."""
+
     def test_valid_nie_passes(self) -> None:
         result = _runner.invoke(app, ["check-nif", "X1234567L"])
         assert result.exit_code == 0, result.stdout

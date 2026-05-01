@@ -1,18 +1,19 @@
 """``aeat workflow`` sub-app — end-user composite workflow CLI.
 
-Exposes four subcommands tied to the workflow engine
+Exposes four subcommands tied to the workflow engine in
 :mod:`aeat.application.workflow`:
 
-- ``aeat workflow next`` — run :meth:`WorkflowEngine.run_next`.
-- ``aeat workflow run`` — run :meth:`WorkflowEngine.run_for_period`.
-- ``aeat workflow show <run-id>`` — pretty-print a persisted
+- ``aeat workflow next`` invokes
+  :meth:`aeat.application.workflow.WorkflowEngine.run_next`.
+- ``aeat workflow run`` invokes
+  :meth:`aeat.application.workflow.WorkflowEngine.run_for_period`.
+- ``aeat workflow show <run-id>`` pretty-prints a persisted
   :class:`aeat.application.workflow.WorkflowResult`.
-- ``aeat workflow list [--since <iso-date>]`` — enumerate persisted
-  runs.
+- ``aeat workflow list [--since <iso-date>]`` enumerates persisted runs.
 
-The ``next`` and ``run`` subcommands are read-only on the default
-CLI surface. Live AEAT submission is permanently forbidden, so these
-subcommands only participate in the produce -> verify -> export flow.
+The ``next`` and ``run`` subcommands are strictly read-only: live AEAT
+submission is permanently forbidden, so these subcommands only participate
+in the produce -> verify -> export flow.
 """
 
 from __future__ import annotations

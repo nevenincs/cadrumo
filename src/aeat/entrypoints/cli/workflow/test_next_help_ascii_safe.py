@@ -1,8 +1,9 @@
 """Regression test: ``aeat workflow next --help`` never advertises live flags.
 
-Symmetric to ``test_run_help_ascii_safe.py``. See that module's docstring
-for context on issue ``#393`` and the Windows ``cp1252`` precedent from
-PR ``#389``.
+Symmetric to :mod:`aeat.entrypoints.cli.workflow.test_run_help_ascii_safe` —
+see that module for the live-write safety rationale. Assertions are
+restricted to ASCII-safe substrings to avoid the Windows ``cp1252``
+encoding mismatch on Rich-rendered help output.
 """
 
 from __future__ import annotations

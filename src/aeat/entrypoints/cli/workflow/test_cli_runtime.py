@@ -1,9 +1,11 @@
 """Real-wiring tests for the ``aeat workflow`` CLI.
 
-These tests exercise the production helper path rather than the
-``set_test_hooks`` seam, using a real profile JSON file, the
-runtime filing schema provider, and the read-only submission
-preflight helper already shipped in the repo.
+Exercises the production helper path rather than the
+:func:`aeat.entrypoints.cli.workflow._helpers.set_test_hooks` seam, using
+a real on-disk profile envelope, the runtime filing schema provider, and
+the read-only submission preflight helper. Confirms preflight gating —
+draft must be :attr:`aeat.adapters.outbound.aeat.export.DraftStatus.APPROVED`
+— surfaces as a structured ``PREFLIGHT_FAILED`` workflow result.
 """
 
 from __future__ import annotations

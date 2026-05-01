@@ -1,4 +1,9 @@
-"""``aeat rental finca`` commands (#454)."""
+"""``aeat rental finca`` Typer commands.
+
+Add, list and show fincas in the rental register. Persistence flows
+through :class:`aeat.domain.rental.RentalFincaRepository`; postal
+addresses are stored encrypted at rest.
+"""
 
 from __future__ import annotations
 
@@ -20,7 +25,7 @@ from ._helpers import open_session
 app = typer.Typer(
     name="finca",
     no_args_is_help=True,
-    help="Gestión de fincas en el registro de alquileres (#454).",
+    help="Gestión de fincas en el registro de alquileres.",
 )
 
 
@@ -31,14 +36,23 @@ class FincaListJson(OutputRootSchema[list[RentalFinca]]):
 
 @register_schema("rental finca show")
 class FincaShowJson(OutputSchema):
-    """Schema for ``aeat rental finca show --json``."""
+    """Schema for ``aeat rental finca show --json``.
+
+    Attributes:
+        finca: The persisted :class:`RentalFinca` record selected by
+            its stable identifier.
+    """
 
     finca: RentalFinca
 
 
 @register_schema("rental finca add")
 class FincaAddJson(OutputSchema):
-    """Schema for ``aeat rental finca add --json``."""
+    """Schema for ``aeat rental finca add --json``.
+
+    Attributes:
+        finca: The newly persisted :class:`RentalFinca` record.
+    """
 
     finca: RentalFinca
 
@@ -107,6 +121,12 @@ def list_cmd() -> None:
 
 @app.command(name="show", help="Mostrar una finca por su identificador.")
 def show_cmd(identifier: str = typer.Argument(..., help="Identificador estable de la finca.")) -> None:
+    """Show one finca by its stable identifier.
+
+    Raises:
+        FincaNotFoundError: When ``identifier`` does not match any
+            persisted finca.
+    """
     with open_session() as session:
         repo = RentalFincaRepository(session)
         finca = repo.get_by_identifier(identifier)

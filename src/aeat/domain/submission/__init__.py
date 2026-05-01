@@ -16,6 +16,11 @@ from ._protocols import (
     FilingFindingSeverity,
     ModeloIdentifier,
 )
+from ._repository import (
+    SubmissionMigrationSummary,
+    SubmissionRepository,
+    migrate_legacy_submissions_to_repository,
+)
 
 __all__ = [
     "AuthProviderProbe",
@@ -31,8 +36,11 @@ __all__ = [
     "SubmissionAttempt",
     "SubmissionEngine",
     "SubmissionError",
+    "SubmissionMigrationSummary",
     "SubmissionPreflightError",
+    "SubmissionRepository",
     "SubmissionStatus",
     "SubmittedFiling",
     "make_submission_id",
+    "migrate_legacy_submissions_to_repository",
 ]

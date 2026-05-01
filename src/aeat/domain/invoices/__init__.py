@@ -22,6 +22,14 @@ from ._errors import (
 )
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from ._repository import InvoiceCatalogueRepository
+from ._service import (
+    LinkInconsistency,
+    ReconciliationSuggestion,
+    link_transaction,
+    link_transaction_bidirectional,
+    suggest_reconciliations,
+    verify_link_consistency,
+)
 
 __all__ = [
     "Invoice",
@@ -38,4 +46,10 @@ __all__ = [
     "IvaRate",
     "PaymentStatus",
     "derive_invoice_id",
+    "LinkInconsistency",
+    "ReconciliationSuggestion",
+    "link_transaction",
+    "link_transaction_bidirectional",
+    "suggest_reconciliations",
+    "verify_link_consistency",
 ]

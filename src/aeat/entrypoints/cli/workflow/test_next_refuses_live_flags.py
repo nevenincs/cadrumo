@@ -1,7 +1,9 @@
 """Regression test: ``aeat workflow next`` exits non-zero on live-flag input.
 
-Symmetric to ``test_run_refuses_live_flags.py``. See that module's
-docstring for the rationale and the controlling ADR reference.
+Symmetric to :mod:`aeat.entrypoints.cli.workflow.test_run_refuses_live_flags`.
+The ``--no-dry-run`` and ``--i-understand-this-is-real`` flags must not
+exist on the read-only workflow surface; passing them must produce a
+typer "no such option" exit rather than be silently stripped.
 """
 
 from __future__ import annotations

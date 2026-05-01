@@ -1,4 +1,10 @@
-"""CLI tests for ``aeat review`` approval and stale-detection flows."""
+"""CLI tests for the ``aeat review`` approval and stale-detection flows.
+
+Builds a real :class:`FilingDraft`, persists it through
+:class:`aeat.domain.filing.FilingDraftRepository`, then drives the
+CLI to approve, show, mark stale and unapprove the draft, asserting
+both the on-disk state and the operator-facing prompts.
+"""
 
 from __future__ import annotations
 
@@ -27,6 +33,7 @@ _RUNNER = CliRunner()
 
 
 def _profile() -> FilingOperatorProfile:
+    """Return the canonical operator profile used by the draft tests."""
     return FilingOperatorProfile(
         tax_id="00000000T",
         display_name="Kent",
@@ -35,8 +42,11 @@ def _profile() -> FilingOperatorProfile:
 
 
 def _write_draft(path: Path) -> Path:
-    """Build a draft and persist it through the FilingDraftRepository
-    (ciphertext-at-rest). Returns the canonical envelope path."""
+    """Build and persist a draft via the :class:`FilingDraftRepository`.
+
+    Persistence rides the ciphertext-at-rest path. Returns the
+    canonical envelope path on disk.
+    """
     from ....domain.filing import FilingDraftRepository
 
     draft = build_draft(
@@ -52,6 +62,7 @@ def _write_draft(path: Path) -> Path:
 
 
 def _sample_transaction() -> Transaction:
+    """Return a deterministic outgoing :class:`Transaction` used to bust drafts."""
     raw = RawTransaction(
         transaction_id="row-1",
         booked_date=date(2026, 4, 10),
@@ -81,6 +92,7 @@ def _sample_transaction() -> Transaction:
 
 @pytest.fixture()
 def drafts_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Pin ``AEAT_DRAFTS_DIR`` to a fresh tmp_path subdirectory."""
     target = tmp_path / "drafts"
     target.mkdir()
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(target))
@@ -88,7 +100,7 @@ def drafts_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def _read_persisted_draft(drafts_root: Path, draft_id: str) -> FilingDraft:
-    """Read the post-CLI draft via the FilingDraftRepository.
+    """Read the post-CLI draft via the :class:`FilingDraftRepository`.
 
     The CLI persists ciphertext envelopes through the repository; tests
     read back through the same repository so the encryption gate fires.
@@ -103,6 +115,7 @@ def _read_persisted_draft(drafts_root: Path, draft_id: str) -> FilingDraft:
 
 @pytest.fixture()
 def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Pin ``AEAT_FINANCIAL_TXS_DIR`` to a fresh tmp_path subdirectory."""
     target = tmp_path / "transactions"
     target.mkdir()
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(target))

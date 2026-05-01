@@ -1,7 +1,7 @@
 """Generic synthetic generator for quarterly AEAT modelos (#305).
 
 Renders a PDF whose text layer matches the line-anchored regex the
-:class:`aeat.declaracion._generic_extractor.GenericDeclaracionExtractor`
+:class:`aeat.adapters.inbound.declaracion._generic_extractor.GenericDeclaracionExtractor`
 reads: header (NIF / Ejercicio / Período), then each casilla on its
 own line prefixed by the zero-padded ID + label + Spanish amount.
 

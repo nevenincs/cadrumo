@@ -1,9 +1,10 @@
-"""Shared review-CLI test fixtures.
+"""Shared pytest fixtures for the ``aeat review`` CLI tests.
 
-Installs an :class:`EphemeralMasterKeyProvider` for every test that
-hits the CLI's ciphertext-at-rest persistence path so the
-:class:`FilingDraftRepository` round-trips against a real on-disk
-secret store rather than the production master key.
+Installs an :class:`aeat.adapters.persistence.storage.EphemeralMasterKeyProvider`
+for every test that hits the CLI's ciphertext-at-rest persistence path
+so the :class:`aeat.domain.filing.FilingDraftRepository` round-trips
+against a real on-disk secret store rather than the production master
+key.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    """Install an ephemeral master key + tmp-path-backed secret store."""
     from ....adapters.persistence.storage import (
         EncryptedBlobStore,
         EphemeralMasterKeyProvider,

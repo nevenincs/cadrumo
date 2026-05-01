@@ -1,20 +1,22 @@
-"""DATE field encoding round-trip invariants.
+"""Lock DATE field encoding round-trip invariants.
 
 AEAT DR specs use two date conventions:
 
-- ``YYYYMMDD`` (8 bytes, ``%Y%m%d``) — ISO-leaning, used by most
-  post-2020 Órdenes.
-- ``DDMMYYYY`` (8 bytes, ``%d%m%Y``) — Spanish-conventional,
-  historical Órdenes.
+* ``YYYYMMDD`` (8 bytes, ``%Y%m%d``) — ISO-leaning, used by most post-2020
+  Órdenes.
+* ``DDMMYYYY`` (8 bytes, ``%d%m%Y``) — Spanish-conventional, historical
+  Órdenes.
 
-This test locks:
+The suite locks three properties:
 
-1. Both formats encode and decode any valid ``datetime.date``
-   losslessly.
-2. Calendar-boundary values (Jan 1, Dec 31, Feb 29 on leap years)
-   round-trip without drift.
-3. Invalid bytes (non-numeric, wrong length) raise at decode time
-   rather than producing a garbage date object.
+* Both formats encode and decode any valid ``datetime.date`` losslessly.
+* Calendar-boundary values (Jan 1, Dec 31, Feb 29 on leap years) round-trip
+  without drift.
+* Invalid bytes (non-numeric, wrong length) raise at decode time rather than
+  producing a garbage date object.
+
+Targets :func:`aeat.adapters.outbound.aeat.export._formats._record_spec.encode_date`
+and :func:`aeat.adapters.outbound.aeat.export._formats._deserialise._decode_date`.
 """
 
 from __future__ import annotations

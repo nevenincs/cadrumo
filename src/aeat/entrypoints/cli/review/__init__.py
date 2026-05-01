@@ -1,23 +1,22 @@
-"""``aeat review`` sub-app — pipeline-decision review surfaces.
+"""``aeat review`` Typer sub-app for pipeline-decision review surfaces.
 
-Wires the review subcommands per the feature ADRs:
+Wires the review subcommands:
 
-- ``aeat review queue [--kind K]... [--state pending|all] [--modelo M]
-  [--format table|json]`` — unified pending-review dashboard
-  (#232, [[2026-04-18-unified-review-queue-adr]]).
+- ``aeat review queue`` — unified pending-review dashboard with
+  ``--kind``, ``--state``, ``--modelo`` and ``--format`` filters.
 - ``aeat review history <transaction-id>`` — classification history
-  chain for one transaction (#237).
+  chain for one transaction.
 - ``aeat review approve <draft>`` — record an approval for one
-  persisted draft (#230).
-- ``aeat review unapprove <draft>`` — rescind a stored approval (#230).
-- ``aeat review show <draft>`` — show the current review state for
-  one draft including any staleness reasons (#230).
-- ``aeat review stale`` — list every persisted draft whose approval
-  is currently stale (#230).
+  persisted draft.
+- ``aeat review unapprove <draft>`` — rescind a stored approval.
+- ``aeat review show <draft>`` — show the current review state for one
+  draft, including any staleness reasons.
+- ``aeat review stale`` — list every persisted draft whose approval is
+  currently stale.
 
-These commands delegate every domain decision to :mod:`aeat.application.review`,
-:mod:`aeat.domain.transactions`, or :mod:`aeat.application.filing`; this
-module is pure CLI glue.
+These commands delegate every domain decision to
+:mod:`aeat.application.review`, :mod:`aeat.domain.transactions` or
+:mod:`aeat.application.filing`; this module is pure CLI glue.
 """
 
 from __future__ import annotations
@@ -47,13 +46,14 @@ from .queue import queue_cmd
 app = typer.Typer(
     name="review",
     no_args_is_help=True,
-    help="Review surfaces: queue (#232), history (#237), draft approve/unapprove/show/stale (#230).",
+    help="Review surfaces: queue, history, draft approve/unapprove/show/stale.",
 )
 
 _CONSOLE = Console()
 
 
 def _drafts_dir() -> Path:
+    """Return the resolved drafts directory, creating it if absent."""
     path = load_settings().aeat_drafts_dir.resolve()
     path.mkdir(parents=True, exist_ok=True)
     return path
@@ -73,7 +73,11 @@ def _resolve_draft_path(draft_ref: str) -> Path:
 
 
 def _load_review_draft(path: Path) -> FilingDraft:
-    """Load a draft envelope through the FilingDraftRepository."""
+    """Load a draft envelope through the :class:`FilingDraftRepository`.
+
+    Refreshes the persisted review-status flags so the CLI surface
+    always reflects the current state of upstream catalogues.
+    """
     from ....domain.filing import FilingDraftRepository
 
     if not path.exists():
@@ -97,7 +101,11 @@ def _load_review_draft(path: Path) -> FilingDraft:
 
 
 def _save_draft(draft: FilingDraft) -> None:
-    """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
+    """Persist ``draft`` through the :class:`FilingDraftRepository`.
+
+    Writes ciphertext envelopes to disk; plaintext draft contents
+    never hit the filesystem outside the encryption layer.
+    """
     from ....domain.filing import FilingDraftRepository
 
     repository = FilingDraftRepository(store_dir=_drafts_dir())
@@ -105,6 +113,7 @@ def _save_draft(draft: FilingDraft) -> None:
 
 
 def _resolve_approver(approved_by: str | None) -> str:
+    """Return the explicit approver, the OS username, or ``"unknown"``."""
     if approved_by is not None and approved_by.strip():
         return approved_by.strip()
     username = getpass.getuser().strip()
@@ -114,6 +123,7 @@ def _resolve_approver(approved_by: str | None) -> str:
 
 
 def _status_label(draft: FilingDraft) -> str:
+    """Return the human-facing approval label for ``draft``."""
     if draft.approved_at is None:
         return "UNAPPROVED"
     return draft.status.value
@@ -125,7 +135,14 @@ def _render_review_next_steps(
     draft_path: Path,
     reasons: tuple[object, ...] = (),
 ) -> None:
-    """Print the likely next operator commands for the current review state."""
+    """Print the likely next operator commands for the current review state.
+
+    Args:
+        draft: The draft whose review state is being rendered.
+        draft_path: Path of the draft envelope on disk.
+        reasons: Tuple of stale-approval reasons gathered from
+            :func:`approval_stale_reasons`; non-empty implies stale.
+    """
 
     if draft.status is FilingDraftStatus.APPROVAL_STALE or reasons:
         _CONSOLE.print(f"Next: aeat filing show {draft_path}")
@@ -147,7 +164,19 @@ def approve_cmd(
     approved_by: str | None = typer.Option(None, "--approved-by", help="Signer recorded on the approval."),
     yes: bool = typer.Option(False, "--yes", help="Skip the interactive confirmation prompt."),
 ) -> None:
-    """Approve one persisted draft."""
+    """Approve one persisted draft.
+
+    Args:
+        draft_ref: Draft id from ``aeat filing build/list``, or a path
+            to a persisted ``<draft_id>.envelope.json`` file.
+        approved_by: Optional explicit approver name; defaults to the
+            current OS user.
+        yes: Skip the interactive confirmation prompt when truthy.
+
+    Raises:
+        typer.Exit: When the operator declines confirmation, or when
+            :func:`approve_draft` rejects the draft.
+    """
 
     draft_path = _resolve_draft_path(draft_ref)
     draft = _load_review_draft(draft_path)
@@ -179,7 +208,12 @@ def unapprove_cmd(
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip the interactive confirmation prompt."),
 ) -> None:
-    """Remove the stored approval record from one draft."""
+    """Remove the stored approval record from one draft.
+
+    Args:
+        draft_ref: Draft id, or path to the persisted envelope file.
+        yes: Skip the interactive confirmation prompt when truthy.
+    """
 
     draft_path = _resolve_draft_path(draft_ref)
     draft = _load_review_draft(draft_path)
@@ -201,7 +235,11 @@ def show_cmd(
         help="Draft id from `aeat filing build/list`, or a persisted draft JSON path.",
     ),
 ) -> None:
-    """Show the current review state for one draft."""
+    """Show the current review state for one draft.
+
+    Args:
+        draft_ref: Draft id, or path to the persisted envelope file.
+    """
 
     draft_path = _resolve_draft_path(draft_ref)
     draft = _load_review_draft(draft_path)

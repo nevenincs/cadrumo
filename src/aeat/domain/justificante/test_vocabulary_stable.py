@@ -4,8 +4,7 @@ The rehoming of :class:`JustificanteError` under
 :class:`aeat.adapters.inbound.pdf.PdfFilingImportError` must not accidentally prune
 any of the module's ``__all__`` exports. This test pins the frozen minimum
 surface so future refactors trip this check instead of silently breaking
-downstream callers (notably the amendment-baseline flow and the shipped
-``aeat filing import --from-justificante`` command).
+downstream callers.
 
 Note: ``verify_csv`` was intentionally removed from the domain public surface
 (audit-11). The function now lives in
@@ -30,7 +29,6 @@ _FROZEN_PUBLIC_SURFACE: frozenset[str] = frozenset(
         "JustificanteParseError",
         "JustificanteParserBackend",
         "JustificanteVerificationError",
-        "parse_justificante",
     }
 )
 
@@ -39,3 +37,8 @@ def test_justificante_public_surface_has_every_frozen_symbol() -> None:
     """Every symbol in the frozen set must remain in ``__all__``."""
     missing = _FROZEN_PUBLIC_SURFACE - set(justificante_all)
     assert not missing, f"aeat.domain.justificante.__all__ is missing frozen symbols: {sorted(missing)}"
+
+
+def test_justificante_domain_surface_does_not_reexport_parser_pipeline() -> None:
+    """The parser entry point belongs to the inbound adapter surface."""
+    assert "parse_justificante" not in justificante_all

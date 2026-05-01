@@ -1,12 +1,13 @@
-"""``aeat rental anexo-c`` commands (#454).
+"""``aeat rental anexo-c`` Typer commands.
 
-Two commands:
+Provides two commands that derive the Modelo 100 Anexo C casillas from
+the rental register:
 
-  - ``compute``: derives the M100 Anexo C casillas (0061/0066/0072/
-    0078/0085) for an ejercicio from the rental register and emits
-    them as JSON.
-  - ``verify``: cross-checks register-derived casillas against
-    caller-supplied values and surfaces any discrepancy.
+- ``compute`` derives the M100 Anexo C casillas
+  (0061 / 0066 / 0072 / 0078 / 0085) for an ejercicio from the rental
+  register and emits them as JSON.
+- ``verify`` cross-checks register-derived casillas against
+  caller-supplied values and surfaces any discrepancy.
 """
 
 from __future__ import annotations
@@ -35,22 +36,40 @@ from ._helpers import open_session
 app = typer.Typer(
     name="anexo-c",
     no_args_is_help=True,
-    help="Cálculo y verificación de Anexo C M100 desde el registro (#454).",
+    help="Cálculo y verificación de Anexo C M100 desde el registro.",
 )
 
 
 @register_schema("rental anexo-c compute")
 class AnexoCComputeJson(OutputSchema):
+    """Schema for ``aeat rental anexo-c compute --json``.
+
+    Attributes:
+        aggregates: Derived :class:`AnexoCAggregates` for the period.
+    """
+
     aggregates: AnexoCAggregates
 
 
 @register_schema("rental anexo-c verify")
 class AnexoCVerifyJson(OutputSchema):
+    """Schema for ``aeat rental anexo-c verify --json``.
+
+    Attributes:
+        report: Merge report comparing supplied vs register-derived
+            casillas.
+    """
+
     report: AnexoCMergeReport
 
 
 @app.command(name="compute", help="Calcular Anexo C M100 desde el registro para un ejercicio.")
 def compute_cmd(period_year: int = typer.Option(..., "--year")) -> None:
+    """Compute and emit the Anexo C aggregates derived from the register.
+
+    Args:
+        period_year: Tax year (``YYYY``) to aggregate.
+    """
     with open_session() as session:
         aggregates = compute_anexo_c_aggregates(
             period_year=period_year,
@@ -89,6 +108,13 @@ def verify_cmd(
         help="Archivo JSON con las casillas suministradas (claves 0061/0066/0072/0078/0085).",
     ),
 ) -> None:
+    """Compare supplied casillas against the register-derived values.
+
+    Args:
+        period_year: Tax year (``YYYY``) the supplied casillas belong to.
+        supplied: Path to a JSON file mapping casilla code -> Decimal-
+            convertible amount.
+    """
     raw = json.loads(supplied.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise typer.BadParameter("supplied JSON must be a flat object of casilla -> amount")

@@ -21,8 +21,8 @@ Step 2 PR 1 of N. Carrier PR for Step 0 + Step 1 ADR amendments + plan amendment
 - Delete `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_secret_adapters.py` (whole module, 278 LOC).
 - Delete `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_test_secret_adapters.py` (colocated test, ~190 LOC, 12 tests).
 - Add `# TODO(#477):` annotations on all 5 `migrate_legacy_*_to_repository` helpers per Step 0 Decision 10 outcome.
-- ADR amendments (Step 0/1 outcomes; test-marker rule extension to all 6 destination layers; Phase 2 dead-code list addition for `SchemaSource` enum slots).
-- Plan amendment (migration-helper count correction 3 → 5; SchemaSource enum slots added to Step 10 list).
+- ADR amendments (Step 0/1 outcomes; test-marker rule extension to all 6 destination layers; Phase 2 dead-code list addition for deleting the former `SchemaSource` enum slots).
+- Plan amendment (migration-helper count correction 3 → 5; former `SchemaSource` enum slots added to Step 10 deletion list).
 
 ## pre-merge safety check
 
@@ -51,11 +51,16 @@ Result: zero non-test, non-self, non-vault references to any symbol in `_secret_
 
 1. Approval gate section: appended `### Step 0/1 outcomes (recorded 2026-04-30)` recording Decision 6 (`DELETE`), Decision 10 (`RETAIN with TODO(#477)`), and Step 1 sub-pass 3 manual-override-list outcome (zero-length, audit-grounded).
 2. Test-marker realignment / Migration mechanic — per-test-file: extended from 2 destination layers (`domain/`, `adapters/persistence/`) to ALL 6 layers (`domain/`, `adapters/persistence/`, `adapters/inbound/`, `adapters/outbound/`, `application/`, `core/`) per Step 1 finding. The ~37 destination-aware reclassifications (`submission/_formats/*` → `domain_outbound + domain_export`; `review/*` → `domain_application`; `identity/*` → `domain_inbound`) are listed.
-3. Dead-code workstream / Phase 2 list: added the 3 `SchemaSource` reserved enum members + their `_models.py` docstring + `test_models.py` references (per Step 0 Decision 6 outcome). Clarified the migration helpers are NOT in Phase 2 per Decision 10 (`RETAIN with TODO(#477)`).
+3. Dead-code workstream / Phase 2 list: added deletion of the 3 former `SchemaSource` enum members + their `_models.py` docstring + `test_models.py` references (per Step 0 Decision 6 outcome). Clarified the migration helpers are NOT in Phase 2 per Decision 10 (`RETAIN with TODO(#477)`).
 
 ### Plan amendment (`.vault/plan/2026-04-30-aeat-restructure-plan.md`)
 
-Step 10 description: corrected the migration-helper count from 3 to 5 (the actual count surfaced by Step 0 audit); listed the 5 helper names; added the 3 `SchemaSource` reserved enum members to the Step 10 deletion list.
+Step 10 description: corrected the migration-helper count from 3 to 5 (the actual count surfaced by Step 0 audit); listed the 5 helper names; added deletion of the 3 former `SchemaSource` enum members to the Step 10 deletion list.
+
+Supersession: the delivered hard-cutover later deleted all five
+`migrate_legacy_*_to_repository` helpers and companion
+`*MigrationSummary` models in the eliminate-shims pass after confirming
+zero production callers; `#477` is closed.
 
 ### Migration-helper TODO annotations (5 source files)
 

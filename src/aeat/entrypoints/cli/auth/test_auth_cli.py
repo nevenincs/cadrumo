@@ -11,7 +11,7 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 from typer.testing import CliRunner
 
-from ....adapters.outbound.aeat.auth import AuthProviderKind
+from ....application.auth import AuthProviderKind
 from ....core.config import Settings
 from .. import app
 from . import _registry, _session
@@ -82,7 +82,7 @@ def _seed_persisted_session(
     identity_nif: str = "12345678Z",
     provider_kind: AuthProviderKind | None = AuthProviderKind.CERTIFICATE,
 ) -> Path:
-    """Write a fake storage-state + metadata pair matching the authenticator layout."""
+    """Write a concrete storage-state + metadata pair matching the authenticator layout."""
     storage = tmp_path / "default-storage.json"
     storage.write_text(json.dumps({"cookies": [], "origins": []}), encoding="utf-8")
 

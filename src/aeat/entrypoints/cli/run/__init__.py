@@ -1,11 +1,13 @@
-"""``aeat run`` sub-app — run-trace inspection and read-only replay (#99).
+"""``aeat run`` Typer sub-app for run-trace inspection and read-only replay.
 
 Wires three subcommands under ``aeat run``:
 
 - ``aeat run list`` — table of persisted runs.
-- ``aeat run show <run_id>`` — pretty-print a :class:`RunTrace` and its events.
+- ``aeat run show <run_id>`` — pretty-print a
+  :class:`aeat.core.observability.RunTrace` and its event log.
 - ``aeat run replay <run_id>`` — deterministic read-only replay gated
-  on ``corpus_sha256`` drift.
+  on ``corpus_sha256`` drift via
+  :exc:`aeat.core.observability.AeatCorpusDriftError`.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from .show import show_cmd
 app = typer.Typer(
     name="run",
     no_args_is_help=True,
-    help="Run-trace inspection and deterministic read-only replay (#99).",
+    help="Run-trace inspection and deterministic read-only replay.",
 )
 
 app.command(name="list", help="List persisted run traces.")(list_cmd)

@@ -7,22 +7,24 @@ The codebase has drifted significantly past what this README describes.
 Notably absent / stale:
   * Cl@ve Móvil auth (now the sanctioned live path; README still says
     "no Cl@ve / DNIe yet").
-  * aeat.sanitizer subpackage (PDF sanitiser pipeline that produces the
-    fixture corpus, shipped as part of #239).
-  * aeat.filing.reconciliation (FilingDraft ↔ Justificante comparator
+  * aeat.adapters.inbound.sanitizer subpackage (PDF sanitiser pipeline
+    that produces the fixture corpus, shipped as part of #239).
+  * aeat.application.filing.reconciliation (FilingDraft ↔ Justificante comparator
     with MATCH / DIVERGENT / NOT_YET_FOUND triad, shipped in #239).
-  * aeat.sede.walk_declarations_register (Consultar declaraciones
-    presentadas walker; the canonical filings register, shipped #239).
-  * aeat.testing.synthesize_filing_draft (test-fixture FilingDraft
-    factory used by reconcile dry-runs).
+  * aeat.adapters.outbound.aeat.sede.walk_declarations_register
+    (Consultar declaraciones presentadas walker; the canonical filings
+    register, shipped #239).
+  * aeat.application.filing.testing.synthesize_filing_draft
+    (test-fixture FilingDraft factory used by reconcile dry-runs).
   * The expanded justificante fixture corpus (40 sanitised PDFs across
     M100 2021-2023, M130 2021-2024, M303 2021-2024, M111 2024,
     M190 2024, M390 2021-2023).
 
 Do not treat this README as the source of truth for shipped features.
 Until it is rewritten, consult `.vault/audit/`, the per-subpackage
-docstrings under `src/aeat/<name>/__init__.py`, and `docs/coverage/`
-for what is actually implemented.
+docstrings under `src/aeat/<name>/__init__.py`, and the maintained
+docs under `docs/` (especially `docs/architecture.md` and
+`docs/getting-started.md`) for what is actually implemented.
 
 Tracking: needs a separate PR with dedicated attention before the
 next operator-facing release.
@@ -98,37 +100,23 @@ classification appended at the end.
 
 ## Architecture
 
-The on-main subpackages under `src/aeat/`:
+The on-main layout under `src/aeat/`:
 
-| Subpackage             | Responsibility                                                            |
-| :--------------------- | :------------------------------------------------------------------------ |
-| `aeat.models`          | Closed catalogue of supported modelos (130, 303, 390).                    |
-| `aeat.portals`         | URL + form metadata for every AEAT portal the project touches.            |
-| `aeat.auth`            | PKCS#12 client-certificate authentication and credential resolution.      |
-| `aeat.browser`         | Controlled headless Playwright session against AEAT.                      |
-| `aeat.schema`          | Pydantic models for every wire and storage record.                        |
-| `aeat.normatives`      | Live normative corpus (BOE references, vigencia windows).                 |
-| `aeat.manuals`         | Manual práctico ingestion and structured extraction.                      |
-| `aeat.deadlines`       | Deadline engine — what's due, when, with what tolerance.                  |
-| `aeat.filing`          | Filing draft engine — assembles a typed draft from manuals + casillas.    |
-| `aeat.submission`      | Read-only preflight, export/verify helpers, and local filing records.     |
-| `aeat.status`          | *Mis expedientes* reader — the authoritative AEAT-side state.             |
-| `aeat.inbox`           | *Mis notificaciones* reader — pending notifications and acknowledgements. |
-| `aeat.sync`            | Self-healing reconciliation between AEAT-side state and local storage.    |
-| `aeat.storage`         | Local on-disk store for filings, receipts, and audit trail.               |
-| `aeat.i18n`            | Trilingual (es / en / hu) message catalogue with nested-dict shape.       |
-| `aeat.llm`             | Bounded LLM client for manual práctico extraction and explanations.      |
-| `aeat.testing`         | Shared fixtures and synthetic filing factories for the test suite.        |
-| `aeat.cli`             | Typer-based CLI surface (`aeat ...`).                                     |
-| `aeat.workflow`        | Orchestration engine that drives a filing through the pipeline.           |
-| `aeat.setup`           | Interactive first-run setup wizard (shipped via #61 / PR #66).            |
+| Package                              | Responsibility                                                        |
+| :----------------------------------- | :-------------------------------------------------------------------- |
+| `aeat.domain`                        | Business model, computation, records, formula engines, and tax rules. |
+| `aeat.application`                   | Use cases and orchestration between domain and adapters.              |
+| `aeat.adapters.inbound`              | Incoming PDFs, declarations, schemas, identity, and financial inputs. |
+| `aeat.adapters.outbound.aeat`        | AEAT-side auth, browser, sede, verify, and export adapters.           |
+| `aeat.adapters.outbound.google`      | Google OAuth and Workspace/GCP service builders.                      |
+| `aeat.adapters.outbound.llm`         | LLM provider adapters, cache, usage, and translation gateway.         |
+| `aeat.adapters.persistence.storage`  | Local SQL, crypto, envelopes, blob store, secret store, and rotation. |
+| `aeat.entrypoints`                   | User-facing CLI and MCP entrypoints.                                  |
+| `aeat.core`                          | Foundational config, errors, i18n, paths, locks, redaction, and logs. |
 
 A data-flow diagram with one paragraph per arrow lives in
 [`docs/architecture.md`](docs/architecture.md). The contributor
 walkthrough lives in [`docs/getting-started.md`](docs/getting-started.md).
-The operator runbook for `aeat security` (master-key rotation,
-corpus integrity verification, KDF migration) lives in
-[`docs/security-runbook.md`](docs/security-runbook.md).
 
 ## Roadmap
 
@@ -171,7 +159,7 @@ Milestones:
   uv run aeat auth init --path desktop-oauth-local-dev
   uv run aeat auth init --path desktop-oauth-local-dev --json <path>
   uv run aeat doctor                      # verifies Desktop OAuth CLI/bootstrap readiness
-  just gcloud-auth                        # optional ADC compatibility step for legacy wrappers
+  just gcloud-auth                        # optional ADC step for gcloud-based recipes
   ```
 
 `uv run aeat --help` (and `--help` on any sub-command) prints the
@@ -180,8 +168,6 @@ authoritative version.
 ## Casillas corpus
 
 The curated casilla workflow is exposed through `aeat casillas ...`.
-Contributor guidance for adding a new `(modelo, period)` catalogue lives in
-`docs/casillas.md`.
 
 ## Doctor
 
@@ -215,7 +201,7 @@ paths:
 
 | Path | Default | Use when | What it unlocks |
 | ---- | ------- | -------- | --------------- |
-| Desktop OAuth local-dev | yes | normal workstation development and any consumer Gmail setup | sets `GOOGLE_AUTH_PATH`, writes Desktop OAuth values, prepares the repo-local CLI/MCP path, then optionally lets `just gcloud-auth` acquire ADC for wrapper compatibility |
+| Desktop OAuth local-dev | yes | normal workstation development and any consumer Gmail setup | sets `GOOGLE_AUTH_PATH`, writes Desktop OAuth values, prepares the repo-local CLI/MCP path, then optionally lets `just gcloud-auth` acquire ADC for gcloud-based recipes |
 | Service-account automation | no | CI, cron, Cloud Functions, or other headless automation | headless Google API access via `GOOGLE_APPLICATION_CREDENTIALS`, optionally with Workspace impersonation |
 
 ### Desktop OAuth local-dev (default)
@@ -235,17 +221,15 @@ This is the local default. The flow is deliberately two-step:
   `env/.env`, prepares the repo-local CLI token path, and prepares the
   repo-local MCP credentials directory.
 - Then run `uv run aeat doctor` to verify the active path. Run
-  `just gcloud-auth` only if you still need the legacy ADC-backed
-  wrapper path.
+  `just gcloud-auth` only when a gcloud-backed recipe needs ADC.
 - `uv run aeat oauth-client init` still exists as the low-level
-  compatibility helper, but the normal Kent-facing path is
-  `uv run aeat auth init`.
+  OAuth helper, but the normal Kent-facing path is `uv run aeat auth init`.
 - If `aeat doctor` reports a required `Drive round-trip` failure with a
   stale Desktop OAuth token, rerun
   `uv run aeat auth init --path desktop-oauth-local-dev --reset-cli-token`
   and complete the fresh browser consent flow.
 
-Legacy wrappers stay wrappers:
+Recipe wrappers stay wrappers:
 
 - `just bootstrap` wraps dependency sync, env setup, the local Google
   auth chain, API enablement, `aeat bootstrap`, and `aeat doctor`.

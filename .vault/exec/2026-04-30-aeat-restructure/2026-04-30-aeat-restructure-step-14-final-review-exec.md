@@ -27,9 +27,9 @@ at the seams between modules.
 | pattern checked | finding |
 |-----------------|---------|
 | Cross-module duplications post-move | None surfaced. The Step-3 untangling PRs (#483, #484, #485) eliminated the four known duplications (`validate_spanish_tax_id`, formulas private internals, casillas CLI tests, transactions repository) before the keystone landed. |
-| Residual private-bypass imports the import-linter contract did not catch | None. The 9-entry carve-out registry at `.importlinter` covers every legitimate cross-layer access; no new violation was introduced post-#493. |
-| Missing or misplaced public-surface declarations | None. The 4 public-surface modules (`aeat.core.errors`, `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.export`, `aeat.domain.formulas`) were verified during Step 5 tooling prep; `scripts/verify_shims.py` was subsequently deleted as the hard-cutover migration model eliminated the need for backward-compat path maintenance. |
-| Stale `aeat.<old>` references in source | None (post-Step-9 rebase tool run). The `scripts/check_relative_imports.py` pre-commit hook catches drift on every commit. |
+| Residual private-bypass imports the import-contract tests did not catch | None. The accepted hard-cutover guardrail is the pytest import-contract suite; no new violation was introduced post-#493. |
+| Missing or misplaced public-surface declarations | None. Canonical public modules (`aeat.core.errors`, `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.export`, `aeat.domain.formulas`) are reachable in the hard-cutover layout. `scripts/verify_shims.py` was deleted because no backward-compat root re-export layer is retained. |
+| Stale `aeat.<old>` references in source | None (post-Step-9 rebase tool run). Active guardrails now route through the import-contract tests rather than the deleted `scripts/check_relative_imports.py` helper. |
 
 ## vault hygiene
 
@@ -46,12 +46,12 @@ on Step-15 milestone close. The flagged items:
 
 The ADR has an "Outcomes (rollout, 2026-05-01)" section recording:
 
-- Semver bump: MINOR (0.1.0 -> 0.1.1 at next release)
+- Semver bump: MAJOR hard cut at next release
 - 15 of 15 acceptance criteria satisfied
 - Dead-code totals: Phase-1 = 5 PRs (#478, #479, #480, #481, #482); Phase-2 = 1 PR (#494)
 - Step-13 issues: 2 umbrellas (#498, #499) + 1 STRIKE (#500 closed)
 - Sanitization: source 197 + tests 405+ + vault 589
-- Override list: 9-entry import-linter carve-out registry, unchanged
+- Override list: 9-entry carve-out registry, unchanged
 - Migration model: hard-cutover; no backward-compat re-export layer was introduced; no removal window needed
 
 ## findings disposition

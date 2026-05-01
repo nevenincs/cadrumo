@@ -1,14 +1,16 @@
-"""Divergence record repository: Protocol + encrypted-envelope implementation.
+"""Divergence-record repository protocol and encrypted-envelope implementation.
 
-:class:`JsonFileDivergenceRepository` writes one ciphertext envelope per
-record under ``AEAT_SYNC_DIVERGENCE_FILE_DIR`` at AUDIT class via the
-substrate's :func:`save_encrypted_envelope`. Future storage backends can
-plug in by implementing :class:`DivergenceRecordRepository`; the runner
-treats the repository contract as opaque.
+Defines the persistence contract for sync divergence records and the
+default file-backed implementation, :class:`JsonFileDivergenceRepository`.
+The default implementation writes one ciphertext envelope per record
+under ``AEAT_SYNC_DIVERGENCE_FILE_DIR`` at the AUDIT sensitivity class
+via :func:`aeat.adapters.persistence.storage.save_encrypted_envelope`. Alternative storage
+backends plug in by implementing :class:`DivergenceRecordRepository`;
+the runner treats the contract as opaque.
 
-Storage imports are deferred behind the methods that consult them so the
-sync subpackage does not pull ``aeat.adapters.persistence.storage`` (with its Alembic plugin
-discovery) into every CLI command's import chain.
+Storage imports are deferred inside methods so the sync subpackage does
+not drag :mod:`aeat.adapters.persistence.storage` (and its Alembic plugin discovery) into
+every CLI command's import chain.
 """
 
 from __future__ import annotations
@@ -32,13 +34,28 @@ _ENVELOPE_SUFFIX = ".envelope.json"
 
 @runtime_checkable
 class DivergenceRecordRepository(Protocol):
-    """Persistence contract for divergence records."""
+    """Persistence contract for :class:`DivergenceRecord` instances.
+
+    Implementations may store records on the filesystem, in object
+    storage, or in a database. The runner depends only on this Protocol.
+    """
 
     def save(self, record: DivergenceRecord) -> None:
-        """Persist a single divergence record."""
+        """Persist a single divergence record.
+
+        Args:
+            record: The :class:`DivergenceRecord` to persist.
+        """
 
     def load(self, record_id: str) -> DivergenceRecord:
-        """Load a single divergence record by id."""
+        """Load a single divergence record by id.
+
+        Args:
+            record_id: The stable record identifier.
+
+        Returns:
+            The reconstructed :class:`DivergenceRecord`.
+        """
 
     def list(self) -> tuple[DivergenceRecord, ...]:
         """Return every persisted divergence record."""
@@ -50,18 +67,29 @@ class DivergenceRecordRepository(Protocol):
         resolution_state: ResolutionState,
         notes: str | None = None,
     ) -> DivergenceRecord:
-        """Transition an existing record's resolution state."""
+        """Transition an existing record's resolution state.
+
+        Args:
+            record_id: The record to mutate.
+            resolution_state: The new :class:`ResolutionState`.
+            notes: Optional human-readable annotation persisted alongside
+                the new state.
+
+        Returns:
+            The freshly persisted :class:`DivergenceRecord`.
+        """
 
 
 class JsonFileDivergenceRepository:
-    """Encrypted-envelope-backed divergence repository.
+    """Encrypted-envelope-backed :class:`DivergenceRecordRepository`.
 
-    One ciphertext envelope per record at
-    ``<root>/<record_id>.envelope.json`` written via the substrate's
-    :func:`save_encrypted_envelope` at AUDIT class with HKDF context
-    ``aeat.application.sync.divergence.v1``. The class name preserves wire-shape
-    compatibility with the existing CLI surface; all on-disk records
-    are now AES-256-GCM ciphertext.
+    Stores one ciphertext envelope per record at
+    ``<root>/<record_id>.envelope.json`` via
+    :func:`aeat.adapters.persistence.storage.save_encrypted_envelope` at the AUDIT
+    sensitivity class with HKDF context
+    ``aeat.application.sync.divergence.v1``. The class name preserves
+    wire-shape compatibility with the existing CLI surface; every
+    on-disk record is AES-256-GCM ciphertext.
     """
 
     def __init__(self, root: Path) -> None:
@@ -74,10 +102,13 @@ class JsonFileDivergenceRepository:
         return self._root
 
     def _envelope_path_for(self, record_id: str) -> Path:
-        # ``resolve_record_json_path`` validates the record_id shape and
-        # rejects path-traversal attempts. We append the ``.envelope``
-        # marker after that validation succeeds so the cipher-on-disk
-        # filename remains unforgeable.
+        """Return the envelope path for ``record_id`` after safety validation.
+
+        :func:`aeat.core.paths.resolve_record_json_path` validates the
+        record id shape and rejects path-traversal attempts. The
+        ``.envelope`` marker is appended only after validation succeeds
+        so the cipher-on-disk filename remains unforgeable.
+        """
         try:
             json_path = resolve_record_json_path(self._root, record_id, context="divergence record id")
         except ValueError as exc:
@@ -89,6 +120,13 @@ class JsonFileDivergenceRepository:
         return self._envelope_path_for(record_id)
 
     def save(self, record: DivergenceRecord) -> None:
+        """Persist ``record`` as an encrypted envelope under :attr:`root`.
+
+        Acquires the writer-canonical sidecar lock so concurrent
+        master-key rotation and the writer contend on the same
+        OS-level lock-byte target. Raises :exc:`DivergenceRepositoryError`
+        on any I/O failure.
+        """
         from ...adapters.persistence.storage import (
             Envelope,
             SensitivityClass,
@@ -98,14 +136,12 @@ class JsonFileDivergenceRepository:
         from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         target = self._envelope_path_for(record.record_id)
-        # Align with the / convention: strip the
-        # full ``.envelope.json`` suffix and append ``.lock``. Using
-        # ``Path.with_suffix(".lock")`` here would replace only the
-        # last ``.json`` segment, producing ``<id>.envelope.lock`` —
-        # which would NOT match what
-        # ``RotationPlanEntry.lock_path_for`` resolves to and would
-        # leave rotation and writer contending on different sidecar
-        # files (defeating the fix).
+        # Strip the full ``.envelope.json`` suffix and append ``.lock``.
+        # ``Path.with_suffix(".lock")`` would replace only the last
+        # ``.json`` segment, producing ``<id>.envelope.lock`` — which
+        # would NOT match what ``RotationPlanEntry.lock_path_for``
+        # resolves to and would leave rotation and writer contending
+        # on different sidecar files.
         lock_target = target.with_name(target.name[: -len(_ENVELOPE_SUFFIX)] + ".lock")
         try:
             with exclusive_file_lock(lock_target):
@@ -126,6 +162,12 @@ class JsonFileDivergenceRepository:
         _LOGGER.info("persisted divergence record %s -> %s", record.record_id, target)
 
     def load(self, record_id: str) -> DivergenceRecord:
+        """Decrypt and return the persisted record matching ``record_id``.
+
+        Raises:
+            DivergenceRepositoryError: If the record is missing or its
+                envelope cannot be decoded.
+        """
         from ...adapters.persistence.storage import (
             Envelope,
             SensitivityClass,
@@ -150,6 +192,12 @@ class JsonFileDivergenceRepository:
         return envelope.payload
 
     def list(self) -> tuple[DivergenceRecord, ...]:
+        """Return every persisted record in deterministic filename order.
+
+        Raises:
+            DivergenceRepositoryError: If any envelope cannot be read
+                or decrypted.
+        """
         from ...adapters.persistence.storage import (
             Envelope,
             SensitivityClass,
@@ -180,6 +228,17 @@ class JsonFileDivergenceRepository:
         resolution_state: ResolutionState,
         notes: str | None = None,
     ) -> DivergenceRecord:
+        """Load, mutate, and re-save ``record_id`` with a new resolution.
+
+        Args:
+            record_id: The record to mutate.
+            resolution_state: The new :class:`ResolutionState` to record.
+            notes: Optional human-readable note appended alongside the
+                state change.
+
+        Returns:
+            The persisted, updated :class:`DivergenceRecord`.
+        """
         current = self.load(record_id)
         updated_fields: dict[str, object] = {"resolution_state": resolution_state}
         if notes is not None:

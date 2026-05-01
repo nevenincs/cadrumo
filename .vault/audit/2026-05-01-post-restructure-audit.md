@@ -86,11 +86,11 @@ The four post-keystone PRs went **un-reviewed by gemini**:
 
 | PR | path:line | finding | disposition | rationale |
 |----|-----------|---------|-------------|-----------|
-| #486 | `src/aeat/domain/financial/transactions/__init__.py` | Promoting `TransactionCatalogueRepository` to public `__init__.py` breaks lazy-loading | **STRIKE** | Verified: lazy-loading IS preserved via `__getattr__` (line 54-62) + `TYPE_CHECKING` import (line 50-51). Gemini missed the implementation pattern. |
-| #490 | `scripts/rebase_imports.py:19` | Relative imports not re-anchored as documented | **STRIKE** | Verified: relative-import re-anchoring is handled by `scripts/fix_relative_imports.py` (separate script ran in same Step-7 keystone). The rebase script's docstring claim was about absolute imports. |
-| #490 | `scripts/rebase_imports.py:121` | `rewrite_text` multi-pass efficiency | **STRIKE** | Post-merge tooling; rebase is a one-shot operation that already ran. Future re-runs are rare; performance is non-critical. |
-| #491 | `justfile:94` | `lint-imports` recipe needs `import-linter` package | **STRIKE** | Verified: `import-linter>=2.0` is at `pyproject.toml:135` in dev deps. Gemini was wrong. |
-| #493 | `scripts/run_layout_move.py:312` | Shim generation assumes target has `__all__` | **FILE** | Real concern: the 4 shim modules currently do `from <target> import __all__`. If a future PR removes `__all__` from any target (errors/auth/export/formulas), shim import will crash. Hardening: switch to `getattr(module, '__all__', ())` with importlib. The keystone shim writer already used this pattern but the actual shim files in main use the direct import. → File hardening issue. |
+| #486 | `src/aeat/domain/transactions/__init__.py` | Promoting `TransactionCatalogueRepository` to public `__init__.py` breaks lazy-loading | **STRIKE** | Verified: lazy-loading IS preserved via `__getattr__` + `TYPE_CHECKING` import. Gemini missed the implementation pattern. |
+| #490 | deleted restructure scripts | Relative imports not re-anchored as documented | **STRIKE** | Superseded by the delivered hard-cutover state; the one-shot rebase/fix scripts were deleted after the keystone move. |
+| #490 | deleted restructure scripts | `rewrite_text` multi-pass efficiency | **STRIKE** | Superseded one-shot tooling; no live script remains to optimise. |
+| #491 | import-boundary guardrail | `lint-imports` recipe needs `import-linter` package | **STRIKE** | Superseded by pytest import-contract tests in the accepted hard-cutover state; `.importlinter` and the recipe are gone. |
+| #493 | deleted shim generator | Shim generation assumes target has `__all__` | **STRIKE** | Superseded by the major hard cut. The root compatibility shims were not retained, and the generator was deleted. |
 
 #### A3. MEDIUM-priority gemini findings (verified)
 
@@ -102,16 +102,16 @@ The four post-keystone PRs went **un-reviewed by gemini**:
 | #483 | `src/aeat/adapters/inbound/identity/_tax_id.py:30` | docstring missing K, L, M from CIF letter list | **FIX** — confirmed: `_CIF_LEADERS = "ABCDEFGHJKLMNPQRSUVW"` includes K/L/M but docstring at line 30 says `"ABCDEFGHJNPQRSUVW"`. Real drift. |
 | #483 | `src/aeat/adapters/inbound/identity/_tax_id.py:30+` | lost ABEH explanatory comment | **STRIKE** — current docstring at line 33 still says "leading letters in ABEH require a digit control"; comment is preserved. |
 | #483 | `src/aeat/adapters/inbound/identity/_tax_id.py:118` | PEP 8: `__all__` should be after imports, before constants | **FILE** — confirmed: `__all__` is at line 118 (last); should be near top. Style nit but real. |
-| #483 | `src/aeat/domain/financial/invoices/_validators.py:5` | typo "sanitiser" should be "sanitizer" | **FIX** — confirmed: comment at line 5 says "sanitiser, CLI submission gates"; should match the package name `aeat.adapters.inbound.sanitizer`. |
+| #483 | `src/aeat/domain/invoices/_validators.py` | typo "sanitiser" should be "sanitizer" | **FIX** — confirmed: comment says "sanitiser, CLI submission gates"; should match the package name `aeat.adapters.inbound.sanitizer`. |
 | #484 | `src/aeat/domain/formulas/__init__.py:56` | `__all__` not alphabetically sorted | **FILE** — verified: `MODELO_100_SUMMARY_2025` (line 56) sorts after `AddFormula` (line 57) by case-insensitive sort but ASCII puts `M` after `A`. Convention is constants-first, then alpha names. Gemini's strict-alpha read is debatable. Lower priority. |
 | #485 | exec docs | 24 tests not collected | **STRIKE** — `(24 deselected)` per pytest output; deselected ≠ uncollected. |
 | #487 | `src/aeat/core/_test_paths.py` | `monkeypatch.chdir` / `monkeypatch.setenv` preferred | **FILE** — modernisation; not a correctness issue. |
-| #488 | `.importlinter:21+59` | "core is leaf" contract redundant; naming ambiguity | **FILE** — review the contract names + redundancy after the dust settles. |
-| #488 | `pyproject.toml:134` | comment dependency-flow direction | **FILE** — comment vs import-linter direction may diverge after carve-out evolution. |
-| #489 | `scripts/verify_shims.py:154+164` | command-construction + broad except | **STRIKE** — script is one-shot tooling; verify_shims is invoked manually with controlled args. |
+| #488 | import-contract tests | "core is leaf" contract redundant; naming ambiguity | **STRIKE** — superseded by the pytest import-contract guardrail in the hard-cutover state. |
+| #488 | `pyproject.toml` | comment dependency-flow direction | **STRIKE** — stale import-linter-specific review; the active guardrail is no longer configured through import-linter. |
+| #489 | deleted shim verifier | command-construction + broad except | **STRIKE** — superseded and deleted with the shimless hard cut. |
 | #491 | `justfile:88` | `--no-sync` inconsistency | **STRIKE** — verified consistent: every recipe that runs `uv run` uses `--no-sync` (lines 88, 90, 94). |
-| #493 | `scripts/fix_relative_imports.py:235` | `main` duplicates rewrite logic | **STRIKE** — post-merge tooling; one-shot scripts do not need DRY. |
-| #493 | `scripts/restructure_rewrite_map.json:51` | mojibake `â†'` in arrow | **FIX** — re-encode the file as UTF-8 with proper U+2192 arrow. |
+| #493 | deleted relative-import script | `main` duplicates rewrite logic | **STRIKE** — superseded one-shot tooling; no live script remains. |
+| #493 | deleted rewrite map | mojibake `â†'` in arrow | **STRIKE** — superseded one-shot artefact; no live rewrite map remains. |
 
 ### B. Code-security findings
 
@@ -125,7 +125,7 @@ and TLS posture. Sources audited:
   `_path_safety.py`;
 - `src/aeat/adapters/outbound/aeat/auth/` (entire package, including
   `_certificate_backends/_httpx_fallback.py`, `_clave_movil.py`,
-  `_file_permissions.py`, `_gate.py`, `__init__.py`,
+  `_file_permissions.py`, `__init__.py`,
   `certificate.py`);
 - `src/aeat/adapters/outbound/aeat/export/` (engine, errors,
   submitters);
@@ -138,8 +138,8 @@ and TLS posture. Sources audited:
   `env_io.py`;
 - `src/aeat/entrypoints/cli/doctor.py`,
   `entrypoints/mcp/launch_google_workspace.py`;
-- shim modules `src/aeat/{errors,auth,submission,formulas}/__init__.py`
-  and the canonical targets they re-export.
+- deleted root modules `src/aeat/{errors,auth,submission,formulas}.py`
+  and the canonical targets that replaced them.
 
 | severity | file:line | finding | disposition | rationale |
 |----------|-----------|---------|-------------|-----------|
@@ -148,10 +148,10 @@ and TLS posture. Sources audited:
 | MEDIUM | `src/aeat/adapters/outbound/aeat/auth/_certificate_backends/_httpx_fallback.py:106-107` | Verify-only handshake exports the operator's PKCS#12 private key as un-encrypted PEM to two tempfiles (`_write_secure_tempfile`) so httpx can `load_cert_chain` them. Files are mode 0600 on POSIX (`mkstemp` default + best-effort `os.chmod`); on Windows they inherit the ACL of `%TEMP%`. Cleanup is `finally`-block `unlink`. The window is brief, but the unencrypted key sits on disk for the duration of the HTTPS GET. | FILE | This is a known trade-off (httpx `load_cert_chain` requires file paths). Acceptable for the verify-only smoke-test surface, but worth tracking. Mitigation candidates: (a) keep the bytes in memory and use `ssl.SSLContext.load_cert_chain` against an `io.BytesIO` (not directly supported by stdlib), (b) enforce Windows ACL hardening via the existing `restrict_file_permissions` helper before the GET, or (c) restrict `HTTPX_FALLBACK` to non-Windows hosts in policy. |
 | LOW | `src/aeat/adapters/persistence/storage/_master_key.py:809` | `atexit.register(_purge_caches_at_exit)` zeroises cached key buffers at process shutdown, but `atexit` does not run on `SIGKILL` / `os._exit` / segfault. The substrate already documents this as a best-effort hardening; flagging only so the limitation is captured in the audit. | STRIKE | Best-effort defensible: full memory hygiene against post-mortem core dumps would require `mlock` + secure-allocator integration (out of scope). The atexit hook + bytearray-based cache is the correct posture for Python. |
 | LOW | `src/aeat/entrypoints/mcp/launch_google_workspace.py:223` | `GOOGLE_OAUTH_CLIENT_SECRET` is propagated into the spawned `workspace-mcp` child env. Desktop OAuth `client_secret` is, by Google's own threat model, low-confidentiality, but it is still a secret and is passed to a third-party process. | STRIKE | Required by the upstream MCP server's contract; the launch_spec already redacts this key in `_format_spec_for_dump` and the env allow-list explicitly excludes every other AEAT secret. Acceptable. |
-| STRIKE | `src/aeat/{errors,auth,submission,formulas}/__init__.py` | The four re-export shims do `from <canonical> import *` and re-import `__all__`. Examined every canonical `__all__`: each lists only public symbols (no leading-underscore names). The `LiveSubmitForbiddenError` and the `AeatAccessGate` re-export through the shims, so a caller using the deprecated `aeat.submission` path still hits the permanent-forbid contract. | STRIKE | No symbols leaked beyond the canonical public surface; layered import boundaries cannot be bypassed by routing through the shim because the shim only re-exports what the canonical module already publishes. The DeprecationWarning is set with `stacklevel=2` so the operator sees the call-site, not the shim. |
-| STRIKE | `src/aeat/adapters/outbound/aeat/auth/_gate.py:94-102` | `AeatAccessGate.require_live_write` always raises `LiveSubmitForbiddenError` (no env-var bypass). `test_settings_expose_no_live_submit_env_vars` asserts no `LIVE_SUBMIT`-named env var exists in `Settings`. `SubmissionEngine.__init__` rejects any `legacy_live_kwargs` with the same forbidden error. `aeat.adapters.outbound.aeat.export._submitters` is a stub package with no submitter classes. | STRIKE | The four-factor live-submit gate is intact and reinforced -- the restructure tightened it, did not weaken it. |
+| STRIKE | deleted root modules `src/aeat/{errors,auth,submission,formulas}.py` | The accepted hard cut removes the four root compatibility surfaces. Canonical imports provide the public symbols directly. | STRIKE | No root shim remains that could bypass layered import boundaries. |
+| STRIKE | `src/aeat/core/access_gate/__init__.py` | `AeatAccessGate.require_live_write` always raises `LiveSubmitForbiddenError` (no env-var bypass). `test_settings_expose_no_live_submit_env_vars` asserts no `LIVE_SUBMIT`-named env var exists in `Settings`. `SubmissionEngine.__init__` rejects any `legacy_live_kwargs` with the same forbidden error. | STRIKE | The four-factor live-submit gate is intact and reinforced -- the restructure tightened it, did not weaken it. |
 | STRIKE | path-traversal: `src/aeat/core/paths.py`, `_test_paths.py`, `adapters/persistence/storage/_path_safety.py` | `resolve_record_json_path` rejects shell metachars, traversal, dotfiles, separators, overlong tokens, and null bytes via `_SAFE_FILE_TOKEN_RE`. `resolve_relative_subpath` rejects backslash, parent traversal, absolute paths. Persistence wraps both as `PathContainmentError`. The `_test_paths.py` regression suite covers every documented bypass shape. | STRIKE | No new ingestion paths, all callers route through the typed wrappers. |
-| STRIKE | subprocess invocations | Production sites: `cli/doctor.py:151` (gcloud, argv list, binary from `shutil.which`), `adapters/outbound/aeat/auth/_file_permissions.py:68` (`icacls.exe`, argv list, absolute path from `SYSTEMROOT`, every error swallowed), `domain/financial/transactions/_llm.py:430` (LLM CLI, argv list, prompt via stdin or single argv element, binary from `shutil.which`). No `shell=True`. No `os.system`. No f-string command construction. | STRIKE | Every subprocess site uses argv lists, no shell escape, no f-string command interpolation. |
+| STRIKE | subprocess invocations | Production sites: `cli/doctor.py` (gcloud, argv list, binary from `shutil.which`), `adapters/outbound/aeat/auth/_file_permissions.py` (`icacls.exe`, argv list, absolute path from `SYSTEMROOT`, every error swallowed), `domain/transactions/_llm.py` (LLM CLI, argv list, prompt via stdin or single argv element, binary from `shutil.which`). No `shell=True`. No `os.system`. No f-string command construction. | STRIKE | Every subprocess site uses argv lists, no shell escape, no f-string command interpolation. |
 | STRIKE | deserialisation | Only `yaml.safe_load` (sanitize CLI mapping). No `pickle`, no `marshal`, no `yaml.load`/`unsafe_load`. PDF parsing is via `pikepdf` (libqpdf-backed); the sanitiser strips dynamic surfaces (JS, OpenAction, AA, AcroForm, attachments) before any content-stream rewrite. Inbound declaracion parsing is regex-only. | STRIKE | No untrusted-deserialisation attack surface. |
 | STRIKE | TLS verification | `ssl.create_default_context()` for the httpx-fallback mTLS handshake; httpx default `verify=True` for OpenAI / Gemini / local Ollama. No `verify=False` anywhere in the production tree. The local Ollama adapter is HTTP because the endpoint is loopback (`127.0.0.1:11434`). | STRIKE | TLS posture is correct. |
 | STRIKE | secret logging | `aeat.core.logging.SecretScrubbingFilter` is attached to every project logger and to every handler at `configure_logging()` time. Patterns cover `access_token`, `api_key`, `authorization`, `bearer`, `cert_password`, `cookie`, `credential`, `nif`, `oauth_*`, `passphrase`, `pkcs12`, `refresh_token`, `secret`, `session_cookie`, `tax_id`, `token`. Bearer regex catches `Bearer XXX` strings; LLM regex catches `sk-...` prefixes. `LoadedCertificate` keeps PKCS#12 bytes and passphrase in `PrivateAttr` so `model_dump` / `repr` cannot leak them. `SecretStr` wraps the cert passphrase end-to-end. | STRIKE | Defence-in-depth: filter + structural redaction at the boundary types. |
@@ -162,8 +162,8 @@ and TLS posture. Sources audited:
 (workspace-mcp client_secret propagation), plus the
 `atexit` zeroise nuance (LOW). No CRITICAL findings. The
 restructure neither weakened nor introduced new exposure surfaces in
-any of the seven target domains. The four re-export shims and the
-`LiveSubmitForbiddenError` end-to-end remain intact.
+any of the seven target domains. The deleted root modules and the
+canonical `LiveSubmitForbiddenError` end-to-end remain intact.
 
 ### C. Tautological-test findings
 
@@ -175,7 +175,7 @@ Sub-agent scanned 1086 .py files (344 test files). Aggregate: **no `unittest.moc
 | MEDIUM | `src/aeat/adapters/outbound/aeat/export/_formats/test_modelo_130_2024.py:24,27` | `test_total_record_length` asserts `RECORD_LENGTH == 878`; `test_encoding` asserts `ENCODING == "cp1252"` | **FILE** | Pin-the-constant tests; the contiguity test directly above + the byte-exact golden fixture are the real guards |
 | MEDIUM | `src/aeat/adapters/outbound/aeat/export/_formats/test_modelo_303_2024.py:26` | `test_encoding_is_iso_8859_1` re-states an imported literal | **FILE** | Same pattern as above |
 | MEDIUM | `src/aeat/domain/rental/_test_expense_rollup.py:171-172` | `TestCarryForwardConstantInBounds.test_max_years_constant_is_4` asserts `CARRY_FORWARD_MAX_YEARS == 4` | **FILE** | Tautology with no behavioural envelope; cannot detect drift |
-| MEDIUM | `src/aeat/domain/financial/vat/test_categories.py:52-53` | `test_eu_member_state_has_27_members` ends with `EUMemberState.ES.value == "es"` and `EUMemberState.DE.value == "de"` (StrEnum self-value) | **FIX** | Earlier `len(list(EUMemberState)) == 27` is real; drop the trailing identity asserts |
+| MEDIUM | `src/aeat/domain/vat/test_categories.py` | `test_eu_member_state_has_27_members` ends with `EUMemberState.ES.value == "es"` and `EUMemberState.DE.value == "de"` (StrEnum self-value) | **FIX** | Earlier `len(list(EUMemberState)) == 27` is real; drop the trailing identity asserts |
 | MEDIUM | `src/aeat/entrypoints/cli/_test_cloud_live.py:48,60,72` | Three tests end with `assert isinstance(result, list)` after `result = list(...)` | **FIX** | Replace with shape assertions on element type |
 | LOW | `src/aeat/domain/justificante/test_verify_live.py:39` | `assert isinstance(result, bool)` after function annotated `-> bool`; `pytest.skip` swallows the failure path | **FILE** | Test silently passes via skip on real failure; assertion is tautological per the type annotation |
 | LOW | 9 files (multiple `test_smoke.py`) | `assert <package>.__doc__ is not None` + `assert issubclass(errors.AeatError, Exception)` | **FILE / partial STRIKE** | The `__doc__` checks are weak; the `issubclass(AeatError, Exception)` IS strictly tautological — `AeatError` is `class AeatError(Exception):` |
@@ -186,7 +186,7 @@ Sub-agent scanned 1086 .py files (344 test files). Aggregate: **no `unittest.moc
 
 | severity | file:line | finding | disposition | rationale |
 |----------|-----------|---------|-------------|-----------|
-| **HIGH** | `src/aeat/adapters/outbound/llm/_providers/fake.py:10` + `_providers/__init__.py:5,17` | `_FakeAdapter` is a fully implemented adapter living in production source, re-exported in `__all__`. Only test files import it. | **FILE** | Project mandate forbids fakes; the artefact ships in the wheel. Either move under a test-only path or strike if "deterministic real adapter" is the team-acknowledged escape hatch. |
+| **HIGH** | `src/aeat/adapters/outbound/llm/_providers/deterministic.py` + `_providers/__init__.py` | `_DeterministicAdapter` is a deterministic adapter living in production source, re-exported in `__all__`. Only test files appear to need this shape. | **FILE** | Track whether this belongs under a test-only path or is an acknowledged deterministic provider rather than a fake. |
 | **HIGH** | `src/aeat/adapters/outbound/llm/_client.py:53` | `LLMClient.__init__` accepts `_adapter: _ProviderAdapter \| None = None` — a private kwarg whose only callers are tests | **FILE** | Test seam baked into a public class; downstream callers can pass `_adapter=` to bypass provider selection. Either remove + use a factory, or rename to a clearly-public `adapter_override` |
 | MEDIUM | `src/aeat/adapters/persistence/storage/_master_key.py:454-460,787-794` | `_reset_for_tests(cls)` is invoked by production CLI (`security.py:645,690`) | **FIX** | Misnamed — this is a real production cache-reset primitive. Rename to `_clear_cache` |
 | MEDIUM | `src/aeat/adapters/persistence/storage/_test_lock.py:88-91` + `test_substrate_smoke.py:159-162` | `@pytest.mark.skipif(... reason="Windows mp.spawn flaky in CI; opt-in via AEAT_RUN_LOCK_CONTENTION=1")` | **FILE** | **Direct violation of project mandate** "never add skips ... and instead tackle the core issue". Two cross-process lock tests silently skipped on every Windows CI run |
@@ -199,8 +199,8 @@ Sub-agent scanned 1086 .py files (344 test files). Aggregate: **no `unittest.moc
 
 #### D. Strikes (legitimate patterns inspected)
 
-- The 4 public-surface re-export shims (`errors`, `auth`, `submission`, `formulas`) — clean star-import + DeprecationWarning; no test-bypass.
-- `src/aeat/adapters/outbound/aeat/_gate.py` `PYTEST_CURRENT_TEST` reference — audit-record only, production never branches on it.
+- Deleted root modules (`errors`, `auth`, `submission`, `formulas`) — verified absent by import-contract tests.
+- `src/aeat/core/access_gate/__init__.py` `PYTEST_CURRENT_TEST` reference — audit-record only, production never branches on it.
 - `src/aeat/entrypoints/cli/workflow/_test_doubles.py` — shared test-helpers, no production import.
 - `src/aeat/adapters/outbound/aeat/browser/test_session.py` `DummyEvasion`/`StubContext`/`StubBrowser`/`StubChromium`/`StubPlaywright` — deterministic real-class Playwright protocol implementations, no production import.
 - 56 `Protocol` classes with `...` bodies — legitimate Python protocol stubs.
@@ -217,11 +217,11 @@ Five-axis sweep of src/aeat/ for production-reachable NotImplementedError sites,
 | MEDIUM | src/aeat/adapters/outbound/aeat/auth/_providers.py:328-333 | select_provider(CLAVE_PERMANENTE) raises NotImplementedError; CLAVE_PIN falls through to the catch-all NotImplementedError. Both members are still declared in the AuthProviderKind StrEnum, described in _registry.py as configurable providers, and exposed by cli/auth/_session.py - so the user-visible CLI catalogue advertises four providers but only two actually authenticate. | FILE | The 2026-04-21 clave-portal reference doc justified excluding CLAVE_PERMANENTE (AEAT does not offer it on SelectorAccesos.html); CLAVE_PIN has no equivalent justification on file. Either remove the unimplementable enum members + registry entries or wire concrete providers. The current shape leaks four enum values into JSON contract output (provider_kind) without four working backends. |
 | LOW | src/aeat/adapters/outbound/aeat/auth/_certificate_backends/_httpx_fallback.py:85-88 | HttpxFallbackBackend.preload raises NotImplementedError unconditionally; the class is registered as a _CertBackend ABC implementor. | STRIKE | The base contract documents preload is optional for verify-only backends; the test surface confirms the verify-only path is the supported usage. Disposition LOW because the contract is honest but the abstract method should be split (verify-only backends should not inherit a preload slot they cannot fill). |
 | LOW | src/aeat/adapters/outbound/aeat/sede/_walker.py:204 | fetch_justificante_pdf is a public-looking helper that immediately raises NotImplementedError("...is wrapped by capture_justificante; call that instead"). | FILE | Either delete the function (its callers all use capture_justificante) or convert it to a private _fetch_justificante_pdf_impl so consumers cannot import a public symbol whose only behaviour is to raise. |
-| HIGH | src/aeat/domain/financial/invoices/_stubs.py | Whole module declares two Protocol stubs (SupportsAttachmentId, SupportsTaxCategoryId) flagged as "Typing-only Protocol placeholders for sibling packages not yet on main". rg confirms zero non-test references inside src/aeat/. Only mention is in .vault/plan/2026-04-17-invoice-catalogue-plan.md as forward-looking placeholders for issues #76 / #77. | FILE | Issues #76 (attachment service) and #77 (tax-category catalogue) have landed (see src/aeat/domain/financial/attachments/ and src/aeat/domain/financial/categories/). The protocol stubs were forward-looking placeholders that survived their replacement. Delete the module. |
+| HIGH | deleted `src/aeat/domain/invoices/_stubs.py` | Whole module declared two Protocol stubs (SupportsAttachmentId, SupportsTaxCategoryId) flagged as "Typing-only Protocol placeholders for sibling packages not yet on main". | STRIKE | The stale stub module has been deleted in the accepted layout. |
 | HIGH | src/aeat/domain/casillas/models.py:36-41 vs src/aeat/domain/modelos/_codes.py:15-45 | Two distinct ModeloCode StrEnum classes with incompatible member values: casillas.models.ModeloCode carries "MODELO_130" / "MODELO_303" / "MODELO_390" (only three members, prefixed values) while modelos._codes.ModeloCode carries "036" / "100" / ... / "840" (twenty-one members, raw codes). Both enums share the MODELO_<n> member names. | FILE | High-risk cross-module landmine: any boundary that round-trips through string values from one enum to the other silently loses identity. The casilla corpus models KNOWN_MODELO_IDS literal at models.py:13 is also a hard-coded shadow. Pick the canonical enum (the 21-member one in domain/modelos), retire casillas.models.ModeloCode, replace KNOWN_MODELO_IDS with frozenset(c.name for c in ModeloCode). |
 | MEDIUM | src/aeat/domain/schema/_enums.py:26-43 vs src/aeat/domain/casillas/models.py:24-33 | Two distinct CasillaDataType StrEnum classes with identical member sets. The schema/_enums.py docstring (lines 28-35) explicitly acknowledges the duplication and forbids isinstance comparison across them. | FILE | Acknowledged in source ("the two enums are bridged by string-value round-trip") but still a concrete duplication. A single shared definition under domain/casillas (the schema package can import it) eliminates the manual round-trip. |
 | MEDIUM | src/aeat/application/filing/_schema.py:57-62 vs src/aeat/adapters/outbound/aeat/export/_protocols.py:104-109 | Two distinct FilingFindingSeverity StrEnum classes with identical member values (ERROR/WARNING/INFO). The export-side definition docstring calls out the duplicate and explains it is distinct from FilingValidationFinding. | FILE | Same risk as ModeloCode: an "is" check or non-coerced cross-boundary call silently fails. Consolidate into one canonical type and have the submission engine accept the filing-side type. |
-| MEDIUM | src/aeat/domain/deadlines/_calendar.py:21-25 vs src/aeat/domain/financial/aggregation/_models.py:30-35 | Two distinct PeriodKind StrEnum classes: deadlines._calendar.PeriodKind carries QUARTERLY/ANNUAL with UPPERCASE values; financial.aggregation._models.PeriodKind carries MONTHLY/QUARTERLY/ANNUAL with lowercase values. | FILE | Two different period-kind universes co-exist with inconsistent casing on the wire. One direction (deadlines -> aggregation) silently mis-serialises if a value crosses the boundary as a JSON string. Standardise to one PeriodKind (lowercase, including MONTHLY) under domain/financial/aggregation. |
+| MEDIUM | src/aeat/domain/deadlines/_calendar.py vs src/aeat/application/aggregation/_models.py | Two distinct PeriodKind StrEnum classes: deadlines._calendar.PeriodKind carries QUARTERLY/ANNUAL with UPPERCASE values; aggregation._models.PeriodKind carries MONTHLY/QUARTERLY/ANNUAL with lowercase values. | FILE | Two different period-kind universes co-exist with inconsistent casing on the wire. One direction (deadlines -> aggregation) silently mis-serialises if a value crosses the boundary as a JSON string. Standardise to one PeriodKind (lowercase, including MONTHLY) under application/aggregation. |
 | LOW | src/aeat/domain/casillas/models.py:13 | KNOWN_MODELO_IDS = frozenset({"MODELO_130", "MODELO_303", "MODELO_390"}) - three values hard-coded as a module-level frozenset. The list now disagrees with the 21-modelo ModeloCode enum + the 21-modelo _entries/ registry. Used as a validator gate. | FILE | Replace with a derivation from the canonical ModeloCode enum (or a registered "has-casilla-corpus" predicate) so newly-onboarded modelos cannot be silently rejected by the casilla validator. The current shape is a feature-flag wearing a constants disguise. |
 
 ### F. Missing-feature findings
@@ -277,13 +277,13 @@ For the top-level code feature directories under src/aeat/, checked against .vau
 |---|---|---|---|---|
 | domain/casillas | Y (casilla-db, casilla-schema) | Y | Y | Y |
 | domain/deadlines | Y | Y | Y | Y |
-| domain/financial/aggregation | Y (t6-aggregation) | Y | Y | Y |
-| domain/financial/attachments | Y (attachment-service) | Y | Y | - |
-| domain/financial/categories | Y (p2e-tax-category-catalogue) | Y | Y | Y |
-| domain/financial/invoices | Y (invoice-catalogue) | Y | Y | - |
-| domain/financial/providers | Y (p2a-financial-provider, n26-data-source) | Y | Y | Y |
-| domain/financial/transactions | Y | Y | Y | Y |
-| domain/financial/vat | Y (r1-vat-enumeration) | Y | Y | Y |
+| application/aggregation | Y (t6-aggregation) | Y | Y | Y |
+| domain/attachments | Y (attachment-service) | Y | Y | - |
+| domain/categories | Y (p2e-tax-category-catalogue) | Y | Y | Y |
+| domain/invoices | Y (invoice-catalogue) | Y | Y | - |
+| adapters/inbound/financial/providers | Y (p2a-financial-provider, n26-data-source) | Y | Y | Y |
+| domain/transactions | Y | Y | Y | Y |
+| domain/vat | Y (r1-vat-enumeration) | Y | Y | Y |
 | domain/formulas | Y (modelo-formulas, ruleset-architecture, calc-verification) | Y | Y | Y |
 | domain/justificante | Y | Y | Y | - |
 | domain/manuals | Y (manual-practico) | Y | Y | Y |
@@ -294,7 +294,7 @@ For the top-level code feature directories under src/aeat/, checked against .vau
 | domain/profile/inventory | Y (inventory-management) | Y | Y | Y |
 | domain/rental | Y (rental-income-hardening, usage-ratios) | Y | Y | Y |
 | domain/schema | Y (schema-extraction) | Y | Y | - |
-| domain/testing | Y (synthetic-filing-fixtures, real-pdf-fixture-corpus) | Y | Y | Y |
+| application/filing/testing | Y (synthetic-filing-fixtures, real-pdf-fixture-corpus) | Y | Y | Y |
 | application/filing | Y (filing-draft-engine, filing-complementaria) | Y | Y | Y |
 | application/review | Y (unified-review-queue, rename-corpus-review) | Y | Y | Y |
 | application/setup | Y (setup-wizard) | Y | Y | - |
@@ -324,8 +324,8 @@ Findings:
 | LOW | src/aeat/adapters/inbound/identity/ | No vault doc trail for identity-document inbound parsing despite an IdentityDocument StrEnum and pydantic record set. | FILE | Same shape as the borrador finding. The closest documented doc is 2026-04-21-pdf-taxonomy-adr.md but it does not name identity documents explicitly. |
 | LOW | src/aeat/adapters/inbound/declaracion/ | Has research / ADR / plan but no exec-summary under .vault/exec/. | STRIKE | The extractor work was rolled into modelo-by-modelo calc-verify exec records; the exec trail exists, just not under the declaracion-extractor feature tag. |
 | LOW | src/aeat/adapters/inbound/sanitizer/ | Has plan / ADR / research but no exec record under that tag. | STRIKE | Sanitiser work landed via the 2026-04-22-real-pdf-import-wave-* exec series. |
-| LOW | src/aeat/domain/financial/attachments/ | Has research / ADR / plan but no exec record. | STRIKE | Attachment-service implementation rolled into 2026-04-17-attachment-service-audit.md (audit-only artefact). |
-| LOW | src/aeat/domain/financial/invoices/ | Has research / ADR / plan but no exec record under the invoice-catalogue tag. | STRIKE | Invoice work rolled into 2026-04-21-real-pdf-import-execution-wave-* series. |
+| LOW | src/aeat/domain/attachments/ | Has research / ADR / plan but no exec record. | STRIKE | Attachment-service implementation rolled into 2026-04-17-attachment-service-audit.md (audit-only artefact). |
+| LOW | src/aeat/domain/invoices/ | Has research / ADR / plan but no exec record under the invoice-catalogue tag. | STRIKE | Invoice work rolled into 2026-04-21-real-pdf-import-execution-wave-* series. |
 | LOW | src/aeat/domain/justificante/ | Has research / ADR / plan but no exec record. | STRIKE | Justificante reframing exec landed under the 2026-04-12-justificante-parser directory which was scaffolded but not finalised; the work was eventually folded into the live-write audit. |
 | LOW | src/aeat/domain/portals/ | Has research / ADR / plan but no exec record. | STRIKE | Portals work landed before the exec-record convention crystallised. |
 | LOW | src/aeat/domain/schema/ | Has research / ADR / plan but no exec record. | STRIKE | Schema-extraction was a one-shot; the implementation trail lives in PR review audits. |

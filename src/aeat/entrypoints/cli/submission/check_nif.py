@@ -1,19 +1,19 @@
 """``aeat submission check-nif`` — standalone NIF / NIE / CIF validator.
 
-EPIC #305 . Kent-facing pre-flight utility that runs the
-AEAT check-letter algorithm on an identifier and reports the
-result. Useful before he writes a draft JSON or invokes any other
-CLI command: he can copy-paste a NIF / NIE / CIF from a document
-and confirm the character sequence is sound without going through
-the whole export flow.
+Operator-facing pre-flight utility that runs the AEAT check-letter
+algorithm on an identifier and reports the result. Useful before
+writing a draft JSON or invoking any other CLI command: an operator
+can copy-paste a NIF / NIE / CIF from a document and confirm the
+character sequence is sound without going through the whole export
+flow.
 
-Delegates to the already-shipped
-:func:`aeat.core.identity.validate_spanish_tax_id`
-so the rules stay single-sourced.
+Delegates to :func:`aeat.core.identity.validate_spanish_tax_id` so the
+rules stay single-sourced.
 
 Exit codes:
-- 0 — identifier is valid; canonical form printed.
-- 2 — identifier is malformed or the check-letter is wrong.
+
+- ``0`` — identifier is valid; canonical form printed.
+- ``2`` — identifier is malformed or the check-letter is wrong.
 """
 
 from __future__ import annotations
@@ -32,7 +32,18 @@ _CONSOLE = Console()
 
 @register_schema("submission check-nif")
 class CheckNifJson(OutputSchema):
-    """Schema for ``aeat submission check-nif --json``."""
+    """JSON output schema for ``aeat submission check-nif --json``.
+
+    Attributes:
+        status: ``"valid"`` when the identifier passes; ``"invalid"``
+            otherwise.
+        input: The original identifier as supplied by the operator.
+        canonical: Canonical (upper-cased) form of the identifier when
+            valid.
+        kind: Inferred kind (``"NIF"``, ``"NIE"``, or ``"CIF"``) when
+            valid.
+        error: Human-readable failure description when invalid.
+    """
 
     status: Literal["valid", "invalid"]
     input: str
@@ -45,7 +56,19 @@ def check_nif_cmd(
     tax_id: str = typer.Argument(..., help="Spanish NIF / NIE / CIF to validate."),
     as_json: bool = typer.Option(False, "--json", help="Emit a machine-readable JSON document instead of rich output."),
 ) -> None:
-    """Validate a Spanish tax identifier against AEAT's check-letter rules."""
+    """Validate a Spanish tax identifier against AEAT's check-letter rules.
+
+    Args:
+        tax_id: The identifier to validate.
+        as_json: When ``True``, emit a machine-readable JSON document
+            instead of rich console output.
+
+    Raises:
+        :exc:`aeat.entrypoints.cli._errors.CliRefusedBoundaryError`: When
+            ``--json`` is active and the identifier is invalid.
+        typer.Exit: With code ``2`` when the identifier is invalid in
+            rich-output mode.
+    """
     emit_json = as_json or json_output_requested()
     try:
         canonical = validate_spanish_tax_id(tax_id)
@@ -70,7 +93,15 @@ def check_nif_cmd(
 
 
 def _classify(canonical: str) -> str:
-    """Label the canonical identifier as NIF / NIE / CIF for the report."""
+    """Label the canonical identifier as ``NIF``, ``NIE``, or ``CIF``.
+
+    Args:
+        canonical: The upper-cased canonical identifier.
+
+    Returns:
+        ``"NIF"`` for digit-leading identifiers, ``"NIE"`` for
+        ``X``/``Y``/``Z`` leaders, and ``"CIF"`` otherwise.
+    """
     leader = canonical[0]
     if leader.isdigit():
         return "NIF"

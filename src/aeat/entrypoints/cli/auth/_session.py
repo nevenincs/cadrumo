@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ....adapters.outbound.aeat.auth import AuthProviderKind
+from ....application.auth import AuthProviderKind
 from ....core.errors import AeatError
 from ._paths import storage_state_paths
 

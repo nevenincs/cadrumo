@@ -29,7 +29,7 @@ function.
 
 | Marker       | Semantics                                                                 | Selection example                        |
 | :----------- | :------------------------------------------------------------------------ | :--------------------------------------- |
-| `unit`       | Deterministic, no external I/O. Mocks and stubs are permitted.            | `uv run pytest -m unit` (default)        |
+| `unit`       | Deterministic, no external I/O. Use concrete implementations. | `uv run pytest -m unit` (default)        |
 | `live_read`  | Talks to a real external service with read-shaped operations only.        | `uv run pytest -m live_read`             |
 | `live_write` | Talks to a real external service with write-shaped operations. **Banned.** | `uv run pytest -m live_write` (see below) |
 
@@ -42,7 +42,7 @@ function.
 | `domain_inbound` | `financial`, `cli/financial`                                                       | `just test-domain financial_input`               |
 | `domain_persistence`     | `storage`, `models`, `normatives`, `manuals`, `corpus`, `schema`, `deadlines`     | `just test-domain local_state`                   |
 | `domain_application`       | `workflow`, `llm`, `i18n`, `testing`                                              | `just test-domain mediation`                     |
-| `domain_core`           | root modules, non-domain `cli`, `setup`, top-level `tests/*.py`                    | `just test-domain infra`                         |
+| `domain_core`           | `aeat.core`, non-domain `entrypoints`, setup, top-level `tests/*.py`               | `just test-domain infra`                         |
 
 An additional `flaky` marker is registered for opt-in retry via
 `pytest-rerunfailures`; it is permitted only on `live_read` / `live_write`
@@ -81,22 +81,21 @@ interactive-terminal bypass for `live_write` collection.
 
 ## pytest-only posture
 
-The project uses **pytest exclusively**. The `unittest` package, the
-standard library's `unittest.mock`, and the third-party `mock` library
-are **banned globally** by ruff rule `TID251`. There is no escape
-hatch. Violations fail `just lint`, the pre-commit hook, and any local
-ruff run.
+The project uses **pytest exclusively**. The `unittest` package and the
+third-party `mock` library are **banned globally** by ruff rule
+`TID251`. There is no escape hatch. Violations fail `just lint`, the
+pre-commit hook, and any local ruff run.
 
-Rationale: live-AEAT tests must not use mocks (charter `#116`). Banning
-the primary mocking entrypoints globally closes the only path by which
-a regression could reintroduce them to a live test file.
+Rationale: live-AEAT tests must use concrete pytest fixtures and real
+in-process objects. Banning `unittest` and the third-party `mock`
+package globally closes the direct import path back to unittest-style
+testing.
 
 ## Banned imports
 
 ### Globally (ruff `TID251`)
 
 - `unittest`
-- `unittest.mock`
 - `mock`
 
 Error message cites this file. Applies everywhere in the repo, source
@@ -127,7 +126,7 @@ Constants live in `tests/conftest.py` as `LIVE_ACCESS_MARKERS`,
 `live_read` tests are skipped unless `AEAT_LIVE_TESTS_ENABLED=1` is
 set in the environment. The canonical env var name is spelled
 **`AEAT_LIVE_TESTS_ENABLED`** (not `AEAT_LIVE_TESTS`); it is the field
-the pydantic `Settings` model in `src/aeat/config.py` reads.
+the pydantic `Settings` model in `src/aeat/core/config.py` reads.
 
 The opt-in is enforced at two layers:
 
@@ -140,7 +139,7 @@ The opt-in is enforced at two layers:
 
 Google Workspace live tests additionally require
 `AEAT_LIVE_TESTS_GOOGLE=1` and project-owned fixtures provisioned via
-`just google-fixtures-provision` (see `scripts/README.md`).
+the project-owned Google fixture provisioning workflow.
 
 ## Plugin roster
 
@@ -193,7 +192,7 @@ Checklist:
    as their unit siblings.
 2. Declare `pytestmark = [pytest.mark.<access>, pytest.mark.<domain>]`
    at module level. Never apply access or domain markers per function.
-3. Never import `unittest` / `unittest.mock` / `mock`.
+3. Never import `unittest` or `mock`.
 4. In `live_read` / `live_write` files, also never import any module
    from the extended banned set (`pytest_httpx`, `time_machine`, etc.).
 5. For `live_read` / `live_write` tests that hit genuinely flaky
@@ -210,6 +209,6 @@ Checklist:
   posture, plugin set, coverage gate.
 - `tests/_marker_hook.py` - shared collection hook body.
 - `tests/test_marker_integrity.py` - AST-backed drift detector.
-- `scripts/README.md` - Google Workspace fixture provisioning for
-  `live_read` tests.
+- `.vault/adr/2026-04-12-google-fixtures-adr.md` - Google Workspace
+  fixture policy for `live_read` tests.
 - `CLAUDE.md` - trilingual testing contract and module-layout mandate.

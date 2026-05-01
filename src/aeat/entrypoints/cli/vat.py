@@ -1,4 +1,12 @@
-"""``aeat vat`` sub-app — Spanish VAT (IVA) taxonomy + rules CLI."""
+"""``aeat vat`` sub-app — Spanish VAT (IVA) taxonomy and rules CLI.
+
+Exposes commands for listing :class:`aeat.domain.vat.VATCategory` entries
+and per-:class:`aeat.domain.vat.EUMemberState` rates, showing the full
+:class:`aeat.domain.vat.VATRegulation` for a category, rendering the
+canonical citation via :func:`aeat.domain.vat.cite`, and verifying the
+shipped :data:`aeat.domain.vat.VAT_CATALOGUE_2025` against its cross-record
+schema with :func:`aeat.domain.vat.verify_catalogue`.
+"""
 
 from __future__ import annotations
 
@@ -40,7 +48,17 @@ _console = Console()
 
 
 def _parse_category(raw: str) -> VATCategory:
-    """Parse ``raw`` into a :class:`VATCategory` or raise ``Exit``."""
+    """Parse ``raw`` into a :class:`aeat.domain.vat.VATCategory`.
+
+    Args:
+        raw: The unparsed category identifier supplied by the user.
+
+    Returns:
+        The matching :class:`aeat.domain.vat.VATCategory`.
+
+    Raises:
+        typer.Exit: With code ``1`` when ``raw`` is not a known category.
+    """
     try:
         return VATCategory(raw)
     except ValueError as exc:
@@ -52,7 +70,17 @@ def _parse_category(raw: str) -> VATCategory:
 
 
 def _parse_member_state(raw: str) -> EUMemberState:
-    """Parse ``raw`` into an :class:`EUMemberState` or raise ``Exit``."""
+    """Parse ``raw`` into an :class:`aeat.domain.vat.EUMemberState`.
+
+    Args:
+        raw: ISO 3166-1 alpha-2 code (case-insensitive).
+
+    Returns:
+        The matching :class:`aeat.domain.vat.EUMemberState`.
+
+    Raises:
+        typer.Exit: With code ``1`` when ``raw`` is not a known member state.
+    """
     try:
         return EUMemberState(raw.lower())
     except ValueError as exc:
@@ -65,7 +93,7 @@ def _parse_member_state(raw: str) -> EUMemberState:
 
 @categories_app.command(name="list", help="List every VAT category with its Spanish label.")
 def categories_list() -> None:
-    """Render the VAT catalogue as a rich table keyed by category."""
+    """Render :data:`aeat.domain.vat.VAT_CATALOGUE_2025` as a Rich table."""
     table = Table(title="aeat vat categories", header_style="bold")
     table.add_column("category", style="cyan")
     table.add_column("label (es)", style="white")
@@ -91,7 +119,13 @@ def rates_list(
         help="Filter by ISO 3166-1 alpha-2 code, e.g. 'es'.",
     ),
 ) -> None:
-    """Render the VAT rate table as a rich table."""
+    """Render :data:`aeat.domain.vat.VAT_RATE_TABLE` as a Rich table.
+
+    Args:
+        member_state: Optional ISO 3166-1 alpha-2 code; when set, only rates
+            for the matching :class:`aeat.domain.vat.EUMemberState` are
+            included in the output.
+    """
     filter_state: EUMemberState | None = None
     if member_state is not None:
         filter_state = _parse_member_state(member_state)
@@ -122,7 +156,15 @@ def rates_list(
 def show(
     category: str = typer.Argument(..., help="VAT category, e.g. 'domestic_general_21'."),
 ) -> None:
-    """Print the full metadata for a single :class:`VATRegulation`."""
+    """Print the full metadata for a single :class:`aeat.domain.vat.VATRegulation`.
+
+    Args:
+        category: Category identifier; resolved by :func:`_parse_category`.
+
+    Raises:
+        typer.Exit: With code ``1`` when the category is not present in
+            :data:`aeat.domain.vat.VAT_CATALOGUE_2025`.
+    """
     vat_category = _parse_category(category)
     regulation = VAT_CATALOGUE_2025.get(vat_category)
     if regulation is None:
@@ -152,7 +194,18 @@ def show(
 def rule(
     category: str = typer.Argument(..., help="VAT category, e.g. 'domestic_general_21'."),
 ) -> None:
-    """Detailed view: delegates to ``show`` and appends ``cite(category)``."""
+    """Render the regulation followed by its canonical citation.
+
+    Delegates to :func:`show` and appends the canonical citation produced by
+    :func:`aeat.domain.vat.cite`.
+
+    Args:
+        category: Category identifier; resolved by :func:`_parse_category`.
+
+    Raises:
+        typer.Exit: With code ``1`` when the category lookup or citation
+            resolution fails (see :exc:`aeat.domain.vat.VatCategoryNotFoundError`).
+    """
     vat_category = _parse_category(category)
     show(category)
     try:
@@ -166,7 +219,15 @@ def rule(
 
 @app.command(name="verify", help="Validate VAT_CATALOGUE_2025 against the cross-record schema.")
 def verify() -> None:
-    """Run :func:`verify_catalogue` and exit non-zero on errors."""
+    """Validate the shipped catalogue against its cross-record schema.
+
+    Runs :func:`aeat.domain.vat.verify_catalogue` against
+    :data:`aeat.domain.vat.VAT_CATALOGUE_2025` and renders the report.
+
+    Raises:
+        typer.Exit: With code ``1`` when verification raises
+            :exc:`aeat.domain.vat.VatError` or yields any non-clean findings.
+    """
     try:
         report = verify_catalogue(VAT_CATALOGUE_2025)
     except VatError as exc:

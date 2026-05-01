@@ -19,7 +19,7 @@ _CERT_RENEWAL_URL = "https://www.sede.fnmt.gob.es/certificados/persona-fisica/re
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from ....adapters.outbound.aeat.auth import AuthProviderDescription, AuthProviderKind
+    from ....application.auth import AuthProviderDescription, AuthProviderKind
     from ....core.config import Settings
     from ._registry import ProviderRegistryEntry
     from ._session import PersistedAuthSession

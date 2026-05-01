@@ -1,4 +1,4 @@
-"""M100 Anexo C aggregator + backwards-compat shim tests (#454)."""
+"""M100 Anexo C aggregator + rental-register merge provider tests (#454)."""
 
 from __future__ import annotations
 
@@ -302,7 +302,7 @@ class TestProviderShim:
 
                 finca = finca_repo.upsert(
                     RentalFinca(
-                        identifier="shim-1",
+                        identifier="finca-1",
                         address="X",
                         valor_catastral_total=Decimal("100000.00"),
                         valor_catastral_construccion=Decimal("60000.00"),

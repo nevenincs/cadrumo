@@ -15,16 +15,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.application.workflow import WorkflowStage
+from aeat.application.workflow import SiteHealthAlert, WorkflowStage
 from aeat.core.config import PROJECT_ROOT
 from aeat.adapters.outbound.aeat.browser import (
-    SiteHealthAlert,
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
     evaluate_response,
-)
-from aeat.adapters.outbound.aeat.browser._site_health_parsers import (
     parse_mantenimiento_banner,
     parse_rate_limit_response,
     parse_waf_challenge,

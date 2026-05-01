@@ -174,7 +174,7 @@ class Settings(BaseSettings):
         default=None,
         description=(
             "Optional override for Kent's tax-residence profile JSON. "
-            "When unset, aeat.domain.profile uses the OS config directory."
+            "When unset, aeat.adapters.persistence.profile uses the OS config directory."
         ),
     )
 
@@ -208,22 +208,35 @@ class Settings(BaseSettings):
         description="Directory for encrypted inventory and amortization ledgers (#453)",
     )
 
-    # ── Trilingual i18n ─────────────────────────────────────────────────────
+    # ── Quad-lingual i18n (es, en, ca, hu) ──────────────────────────────────
     aeat_output_language: str = Field(
         default="es",
-        description="Target output language for user-facing content (es, en, hu)",
+        description=(
+            "Target output language for user-facing content. "
+            "Accepts ISO 639-1 codes from the quad-lingual contract: "
+            "es (default, AEAT canonical), en, ca, hu."
+        ),
     )
     aeat_authoritative_language_aeat_terms: str = Field(
         default="es",
-        description="Authoritative language for AEAT domain terminology",
+        description=(
+            "Authoritative language for AEAT domain terminology "
+            "(modelos, casillas, BOE references). Must be 'es' — "
+            "the project's contract pins Spanish as the legal canonical."
+        ),
     )
     aeat_authoritative_language_project_docs: str = Field(
         default="en",
         description="Authoritative language for internal code and documentation",
     )
     aeat_fallback_languages: str = Field(
-        default="en,es",
-        description="Comma-separated list of fallback languages if the target language is missing",
+        default="es,en,ca,hu",
+        description=(
+            "Comma-separated fallback chain consulted when the target "
+            "language is missing on a Translatable. Default puts Spanish "
+            "first so AEAT legal text stays canonical, then English, then "
+            "the remaining co-official locales."
+        ),
     )
 
     # ── Scratch resources (provisioned by `aeat bootstrap`) ─────────────────
@@ -240,7 +253,7 @@ class Settings(BaseSettings):
         description="Document ID for the aeat-scratch sandbox doc",
     )
 
-    # ── Google test fixtures (provisioned by scripts/provision_google_fixtures.py) ──
+    # ── Google test fixture identifiers ────────────────────────────────────
     aeat_google_test_fixtures_folder_id: str = Field(
         default="",
         description="Drive folder ID that roots every Google Workspace test fixture",
@@ -681,11 +694,11 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Schema extraction (aeat.domain.schema, #9) ────────────────────────────────
+    # ── Schema extraction/cache (#9) ─────────────────────────────────────────────
     aeat_schema_cache_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "schema-cache",
         description=(
-            "Directory where extracted Modelo schemas and their provenance manifests are persisted by aeat.domain.schema."
+            "Directory where inbound schema extraction persists Modelo schemas and provenance manifests."
         ),
     )
     aeat_schema_source_urls_override: str = Field(
@@ -717,7 +730,10 @@ class Settings(BaseSettings):
     )
     aeat_justificante_parser_backend: JustificanteParserBackendSetting = Field(
         default=JustificanteParserBackendSetting.PDFPLUMBER,
-        description="Parser backend for `aeat.domain.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
+        description=(
+            "Parser backend for `aeat.adapters.inbound.justificante` "
+            "(PDFPLUMBER for fidelity, PYMUPDF reserved)"
+        ),
     )
 
     # ── Filing history (#168) ───────────────────────────────────────────────
@@ -735,6 +751,22 @@ class Settings(BaseSettings):
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
+
+    @field_validator(
+        "aeat_certificate_backend",
+        "aeat_auth_provider",
+        "aeat_justificante_parser_backend",
+        mode="before",
+    )
+    @classmethod
+    def _normalize_lower_value_enums(cls, value: object) -> object:
+        """Accept legacy uppercase env values for lowercase runtime enums."""
+
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped:
+                return stripped.lower()
+        return value
 
     @field_validator(
         "aeat_certificate_path",

@@ -3,106 +3,562 @@
   "period": "2025",
   "records": [
     {
-      "casilla_id": "95",
+      "casilla_id": "01",
       "computed": false,
       "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual taxable base for operations taxed at 21 percent in the summary return.",
-        "es": "Base imponible anual de las operaciones gravadas al 21 por ciento en la declaración resumen.",
-        "hu": "Az eves osszesito bevallasban szereplo 21 szazalekos ugyletek adoalapja."
+        "en": "General regime Q1 base",
+        "es": "Régimen general 1T base",
+        "hu": "Általános rendszer 1T alap"
       },
       "label": {
-        "en": "Annual taxable base at 21 percent",
-        "es": "Base imponible anual al 21 por ciento",
-        "hu": "Eves adoalap 21 szazalekon"
+        "en": "General regime Q1 base",
+        "es": "Régimen general 1T base",
+        "hu": "Általános rendszer 1T alap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2025",
       "references_casillas": [],
       "references_rules": [],
-      "required": true,
-      "definition_reviewed_at": "2026-04-12",
-      "definition_reviewed_by": "codex",
+      "required": false,
       "select_options": null,
-      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/25manual/IVA.html",
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
       "source_page": 1,
-      "source_section": "Capítulo 9. Modelos 390, 349 y 379",
+      "source_section": "Apartado 1 — Datos estadísticos (1T)",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "04",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "en": "General regime Q1 quota",
+        "es": "Régimen general 1T cuota",
+        "hu": "Általános rendszer 1T összeg"
+      },
+      "label": {
+        "en": "General regime Q1 quota",
+        "es": "Régimen general 1T cuota",
+        "hu": "Általános rendszer 1T összeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 1 — Datos estadísticos (1T)",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "95",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "en": "Total taxable bases",
+        "es": "Total bases imponibles",
+        "hu": "Összes adóalap"
+      },
+      "label": {
+        "en": "Total taxable bases",
+        "es": "Total bases imponibles",
+        "hu": "Összes adóalap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 3 — Régimen general anual",
       "synthetic": false,
       "validation": []
     },
     {
       "casilla_id": "96",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
-      "formula": {
-        "expression": "0.21 * 95",
-        "references_casillas": [
-          "95"
-        ]
-      },
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
       "help": {
-        "en": "Annual VAT accrued at 21 percent calculated from casilla 95.",
-        "es": "Cuota anual devengada al 21 por ciento calculada a partir de la casilla 95.",
-        "hu": "Az eves, 21 szazalekos fizetendo AFA a 95. rovat alapjan."
+        "en": "Total output VAT",
+        "es": "Total cuotas repercutidas",
+        "hu": "Áthárított ÁFA összesen"
       },
       "label": {
-        "en": "Annual VAT accrued at 21 percent",
-        "es": "Cuota anual devengada al 21 por ciento",
-        "hu": "Eves fizetendo AFA 21 szazalekon"
+        "en": "Total output VAT",
+        "es": "Total cuotas repercutidas",
+        "hu": "Áthárított ÁFA összesen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2025",
-      "references_casillas": [
-        "95"
-      ],
+      "references_casillas": [],
       "references_rules": [],
-      "required": true,
-      "definition_reviewed_at": "2026-04-12",
-      "definition_reviewed_by": "codex",
+      "required": false,
       "select_options": null,
-      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/25manual/IVA.html",
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
       "source_page": 1,
-      "source_section": "Capítulo 9. Modelos 390, 349 y 379",
+      "source_section": "Apartado 3 — Régimen general anual",
       "synthetic": false,
       "validation": []
     },
     {
-      "casilla_id": "662",
+      "casilla_id": "100",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "en": "Total deductible input VAT (domestic)",
+        "es": "Total IVA soportado deducible operaciones interiores",
+        "hu": "Levonható ÁFA belföld"
+      },
+      "label": {
+        "en": "Total deductible input VAT (domestic)",
+        "es": "Total IVA soportado deducible operaciones interiores",
+        "hu": "Levonható ÁFA belföld"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 3 — Régimen general anual",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "101",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "en": "Total deductible input VAT (imports)",
+        "es": "Total IVA soportado deducible importaciones",
+        "hu": "Levonható ÁFA import"
+      },
+      "label": {
+        "en": "Total deductible input VAT (imports)",
+        "es": "Total IVA soportado deducible importaciones",
+        "hu": "Levonható ÁFA import"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 3 — Régimen general anual",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "104",
       "computed": true,
       "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "annual_output_vat - annual_deductible_vat",
+        "expression": "(100 + 101)",
         "references_casillas": [
-          "96"
+          "100",
+          "101"
         ]
       },
       "help": {
-        "en": "Net annual result of the summary return once annual VAT accrued and deductible VAT are offset.",
-        "es": "Resultado neto anual de la declaración resumen una vez compensadas las cuotas devengadas y deducibles del ejercicio.",
-        "hu": "Az eves osszesito bevallas netto eredmenye a fizetendo es levonhato AFA osszevezetese utan."
+        "en": "Total deductible input VAT. Computed as (100 + 101).",
+        "es": "Total IVA soportado deducible. Se calcula como (100 + 101).",
+        "hu": "Összes levonható ÁFA. Számítás: (100 + 101)."
       },
       "label": {
-        "en": "Annual net result",
-        "es": "Resultado anual neto",
-        "hu": "Eves netto eredmeny"
+        "en": "Total deductible input VAT",
+        "es": "Total IVA soportado deducible",
+        "hu": "Összes levonható ÁFA"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2025",
       "references_casillas": [
-        "96"
+        "100",
+        "101"
       ],
-      "references_rules": [],
-      "required": true,
-      "definition_reviewed_at": "2026-04-12",
-      "definition_reviewed_by": "codex",
+      "references_rules": [
+        "modelo_390.2025.iva_soportado_total"
+      ],
+      "required": false,
       "select_options": null,
-      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/presentacion-declaraciones-ayuda-tecnica/modelo-390.html",
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
       "source_page": 1,
-      "source_section": "Modelo 390. Presentación mediante formulario",
+      "source_section": "Apartado 3 — Régimen general anual",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "105",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(96 - 104)",
+        "references_casillas": [
+          "96",
+          "104"
+        ]
+      },
+      "help": {
+        "en": "Result (general regime). Computed as (96 - 104).",
+        "es": "Resultado régimen general. Se calcula como (96 - 104).",
+        "hu": "Általános rendszer eredménye. Számítás: (96 - 104)."
+      },
+      "label": {
+        "en": "Result (general regime)",
+        "es": "Resultado régimen general",
+        "hu": "Általános rendszer eredménye"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [
+        "96",
+        "104"
+      ],
+      "references_rules": [
+        "modelo_390.2025.resultado_regimen_general"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 3 — Régimen general anual",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "108",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "en": "Result (simplified regime)",
+        "es": "Resultado régimen simplificado",
+        "hu": "Egyszerűsített rendszer eredménye"
+      },
+      "label": {
+        "en": "Result (simplified regime)",
+        "es": "Resultado régimen simplificado",
+        "hu": "Egyszerűsített rendszer eredménye"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartados 4-5 — Otros regímenes",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "109",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "en": "Result (other regimes)",
+        "es": "Resultado otros regímenes",
+        "hu": "Egyéb rendszerek eredménye"
+      },
+      "label": {
+        "en": "Result (other regimes)",
+        "es": "Resultado otros regímenes",
+        "hu": "Egyéb rendszerek eredménye"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartados 4-5 — Otros regímenes",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "190",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(105 + 108 + 109)",
+        "references_casillas": [
+          "105",
+          "108",
+          "109"
+        ]
+      },
+      "help": {
+        "en": "Result sum. Computed as (105 + 108 + 109).",
+        "es": "Suma resultado. Se calcula como (105 + 108 + 109).",
+        "hu": "Eredmény összege. Számítás: (105 + 108 + 109)."
+      },
+      "label": {
+        "en": "Result sum",
+        "es": "Suma resultado",
+        "hu": "Eredmény összege"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [
+        "105",
+        "108",
+        "109"
+      ],
+      "references_rules": [
+        "modelo_390.2025.suma_resultado"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 6 — Resultado anual",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "191",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(190 - 662)",
+        "references_casillas": [
+          "190",
+          "662"
+        ]
+      },
+      "help": {
+        "en": "Annual result quota. Computed as (190 - 662).",
+        "es": "Cuota resultante anual. Se calcula como (190 - 662).",
+        "hu": "Éves eredmény-összeg. Számítás: (190 - 662)."
+      },
+      "label": {
+        "en": "Annual result quota",
+        "es": "Cuota resultante anual",
+        "hu": "Éves eredmény-összeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [
+        "190",
+        "662"
+      ],
+      "references_rules": [
+        "modelo_390.2025.cuota_resultante_anual"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 6 — Resultado anual",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "192",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, 191)",
+        "references_casillas": [
+          "191"
+        ]
+      },
+      "help": {
+        "en": "Total payable. Computed as max(0, 191).",
+        "es": "Total a ingresar. Se calcula como max(0, 191).",
+        "hu": "Fizetendő összeg. Számítás: max(0, 191)."
+      },
+      "label": {
+        "en": "Total payable",
+        "es": "Total a ingresar",
+        "hu": "Fizetendő összeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [
+        "191"
+      ],
+      "references_rules": [
+        "modelo_390.2025.total_a_ingresar"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 6 — Resultado anual",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "LIVA art. 164 + RIVA art. 71.7: total a ingresar / a devolver son magnitudes no-negativas.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "casilla_id": "193",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0 - 191))",
+        "references_casillas": [
+          "191"
+        ]
+      },
+      "help": {
+        "en": "Total refundable. Computed as max(0, (0 - 191)).",
+        "es": "Total a devolver. Se calcula como max(0, (0 - 191)).",
+        "hu": "Visszatérítendő összeg. Számítás: max(0, (0 - 191))."
+      },
+      "label": {
+        "en": "Total refundable",
+        "es": "Total a devolver",
+        "hu": "Visszatérítendő összeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [
+        "191"
+      ],
+      "references_rules": [
+        "modelo_390.2025.total_a_devolver"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 6 — Resultado anual",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "LIVA art. 164 + RIVA art. 71.7: total a ingresar / a devolver son magnitudes no-negativas.",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "casilla_id": "662",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "en": "Capital-goods regularisation",
+        "es": "Regularización bienes de inversión",
+        "hu": "Tárgyi eszközök szabályozása"
+      },
+      "label": {
+        "en": "Capital-goods regularisation",
+        "es": "Regularización bienes de inversión",
+        "hu": "Tárgyi eszközök szabályozása"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_390",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2025.html",
+      "source_page": 1,
+      "source_section": "Apartado 7 — Regularización bienes de inversión",
       "synthetic": false,
       "validation": []
     }

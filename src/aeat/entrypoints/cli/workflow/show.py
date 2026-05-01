@@ -1,4 +1,10 @@
-"""``aeat workflow show`` — pretty-print a persisted :class:`WorkflowResult`."""
+"""``aeat workflow show`` — pretty-print a persisted workflow run.
+
+Loads a :class:`aeat.application.workflow.WorkflowResult` from
+``settings.aeat_workflow_runs_dir`` via
+:func:`aeat.application.workflow.load_run` and renders it as
+Rich-formatted JSON or as a JSON envelope on stdout.
+"""
 
 from __future__ import annotations
 
@@ -17,7 +23,10 @@ _CONSOLE = Console()
 
 @register_schema("workflow show")
 class WorkflowShowJson(OutputRootSchema[WorkflowResult]):
-    """Schema for ``aeat workflow show --json``."""
+    """JSON output schema for ``aeat workflow show --json``.
+
+    Wraps a single :class:`aeat.application.workflow.WorkflowResult`.
+    """
 
 
 def show_cmd(
@@ -28,12 +37,20 @@ def show_cmd(
         help="Emit the raw JSON record on stdout instead of the rich view.",
     ),
 ) -> None:
-    """Load and pretty-print a persisted :class:`WorkflowResult`.
+    """Load and pretty-print a persisted :class:`aeat.application.workflow.WorkflowResult`.
 
     Args:
-        run_id: Identifier of the run to load. Matches the file stem
-            under ``AEAT_WORKFLOW_RUNS_DIR``.
-        as_json: When ``True``, emit compact JSON to stdout.
+        run_id: Identifier of the run to load. Matches the file stem under
+            ``AEAT_WORKFLOW_RUNS_DIR``.
+        as_json: When ``True``, emit compact JSON to stdout via
+            :func:`aeat.entrypoints.cli._schemas.emit_json_success`.
+
+    Raises:
+        :exc:`aeat.application.workflow.WorkflowError`: When ``--json`` is
+            set and the run cannot be loaded; surfaced through the JSON
+            error envelope.
+        typer.Exit: With code ``1`` when the run cannot be loaded and JSON
+            output was not requested.
     """
     arguments = {"run_id": run_id, "json": as_json}
     with cli_run_context(

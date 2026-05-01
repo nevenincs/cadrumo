@@ -1,9 +1,10 @@
 """Unit tests for Modelo 303 + Modelo 390 builders and reconciliation.
 
-The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_application]`` per the project rule.
-No mocks, patches, fakes, or stubs — every test double is a
-hand-written strict pydantic model that conforms to the relevant
-Protocol via duck typing.
+Covers the arithmetic of :class:`aeat.application.filing.Modelo303Builder`
+and :class:`aeat.application.filing.Modelo390Builder` plus the
+cross-validation rules between an annual 390 and its four quarterly
+303 drafts. Test doubles are hand-written strict pydantic models that
+conform to the relevant Protocol via duck typing.
 """
 
 from __future__ import annotations

@@ -10,11 +10,10 @@ from __future__ import annotations
 from datetime import date
 from unicodedata import category, normalize
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..formulas import CCAA
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError
-from ._storage import clear_json, default_path, load_json, save_json
 
 _FORAL_ALIASES = frozenset(
     {
@@ -115,51 +114,6 @@ def _normalize_region_token(raw: str) -> str:
     return "".join(char for char in decomposed if category(char) != "Mn")
 
 
-def load_tax_residence(path: object | None = None) -> KentTaxResidence | None:
-    """Load Kent's tax-residence profile, returning ``None`` if absent."""
-
-    payload = load_json(_coerce_path(path))
-    if payload is None:
-        return None
-    try:
-        return KentTaxResidence.model_validate(payload)
-    except ValidationError as exc:
-        raise TaxResidenceProfileError("invalid tax-residence profile content") from exc
-
-
-def require_tax_residence(path: object | None = None) -> KentTaxResidence:
-    """Load Kent's tax-residence profile or raise a REFUSED error."""
-
-    residence = load_tax_residence(path)
-    if residence is None:
-        raise ProfileNotConfiguredError()
-    return residence
-
-
-def save_tax_residence(residence: KentTaxResidence, path: object | None = None) -> None:
-    """Persist Kent's tax-residence profile as schema-versioned JSON."""
-
-    save_json(residence.model_dump(mode="json"), _coerce_path(path))
-
-
-def clear_tax_residence(path: object | None = None) -> None:
-    """Delete Kent's tax-residence profile if it exists."""
-
-    clear_json(_coerce_path(path))
-
-
-def _coerce_path(path: object | None):
-    if path is None:
-        return None
-    from pathlib import Path
-
-    if isinstance(path, Path):
-        return path
-    if isinstance(path, str):
-        return Path(path)
-    return path  # let storage/type checking fail loudly
-
-
 __all__ = [
     "CCAA",
     "ForalRegimeError",
@@ -167,10 +121,5 @@ __all__ = [
     "ProfileNotConfiguredError",
     "ResidenceChange",
     "TaxResidenceProfileError",
-    "clear_tax_residence",
-    "default_path",
-    "load_tax_residence",
     "parse_tax_region",
-    "require_tax_residence",
-    "save_tax_residence",
 ]

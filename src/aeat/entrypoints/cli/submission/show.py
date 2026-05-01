@@ -1,4 +1,8 @@
-"""``aeat submission show`` — pretty-print a persisted SubmittedFiling."""
+"""``aeat submission show`` — pretty-print a persisted SubmittedFiling.
+
+Read-only inspection surface backed by
+:meth:`aeat.adapters.outbound.aeat.export.SubmissionEngine.load_submission`.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +20,15 @@ _CONSOLE = Console()
 def show_cmd(
     submission_id: str = typer.Argument(..., help="The submission id to load."),
 ) -> None:
-    """Load and pretty-print a persisted :class:`SubmittedFiling`."""
+    """Load and pretty-print a persisted :class:`SubmittedFiling`.
+
+    Args:
+        submission_id: The submission id to load.
+
+    Raises:
+        typer.Exit: With code ``1`` when no record exists for the given
+            id.
+    """
     arguments = {"submission_id": submission_id}
     with cli_run_context(
         entrypoint="aeat submission show",

@@ -7,8 +7,7 @@ have a single root they can catch at integration boundaries.
 ``adapters/outbound/aeat/export`` layer) because:
 
 1. The gate module (``core/access_gate/``) raises it, and
-   ``core/`` cannot import from ``adapters/`` under the
-   import-linter contract.
+   ``core/`` must remain independent from adapter implementations.
 2. The policy "live AEAT submission is permanently forbidden" is
    a foundational invariant, not an adapter implementation detail.
 """

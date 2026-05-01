@@ -27,7 +27,7 @@ recording provenance + consent.
 
 The library is **never invoked at runtime** from production code — only
 from contributor-local workflows (``just scrub-from-drive``) and
-``src/aeat/_pdf_import/test_scrub.py`` tests.
+``src/aeat/adapters/inbound/pdf/test_scrub.py`` tests.
 """
 
 from __future__ import annotations

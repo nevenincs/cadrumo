@@ -1,4 +1,15 @@
-"""Encrypted persistence for actividad economica inventory ledgers."""
+"""Encrypted persistence for actividad economica inventory ledgers.
+
+Wraps :mod:`aeat.adapters.persistence.storage`'s envelope, master-key, and
+file-locking primitives to persist
+:class:`aeat.domain.profile.inventory.InventoryLedger` payloads as
+FINANCIAL-class ciphertext. Module-level helpers wrap the
+:class:`InventoryLedgerRepository` for common one-shot operations.
+
+Attributes:
+    INVENTORY_LEDGER_FILENAME: Filename used inside the storage directory for
+        the encrypted inventory envelope.
+"""
 
 from __future__ import annotations
 
@@ -26,19 +37,40 @@ _HKDF_CONTEXT_INVENTORY = b"aeat.domain.profile.inventory.ledger.v1"
 
 
 def default_storage_dir() -> Path:
-    """Return the configured governed ledger storage directory."""
+    """Return the configured governed ledger storage directory.
+
+    Returns:
+        Filesystem path resolved from
+        :attr:`aeat.core.config.Settings.aeat_ledgers_dir`.
+    """
 
     return Path(load_settings().aeat_ledgers_dir)
 
 
 def load_inventory(*, storage_dir: Path | None = None) -> tuple[InventoryLedger, ...]:
-    """Load inventory ledgers from the encrypted ledger."""
+    """Load inventory ledgers from the encrypted ledger.
+
+    Args:
+        storage_dir: Override for the ledger storage directory; defaults to
+            :func:`default_storage_dir`.
+
+    Returns:
+        Tuple of persisted inventory ledgers, empty when no envelope exists.
+    """
 
     return InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir()).load().ledgers
 
 
 def save_inventory(ledgers: tuple[InventoryLedger, ...], *, storage_dir: Path | None = None) -> Path:
-    """Persist inventory ledgers as a governed encrypted envelope."""
+    """Persist ``ledgers`` as a governed FINANCIAL-class encrypted envelope.
+
+    Args:
+        ledgers: Inventory ledgers to persist.
+        storage_dir: Override for the ledger storage directory.
+
+    Returns:
+        Path to the encrypted envelope file that was written.
+    """
 
     repository = InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir())
     repository.save(InventoryLedgerDocument(ledgers=ledgers))
@@ -46,7 +78,19 @@ def save_inventory(ledgers: tuple[InventoryLedger, ...], *, storage_dir: Path | 
 
 
 def create_inventory_ledger(ledger: InventoryLedger, *, storage_dir: Path | None = None) -> InventoryLedgerDocument:
-    """Atomically create ``ledger`` and refuse duplicates."""
+    """Atomically create ``ledger`` and refuse duplicate (actividad, year) pairs.
+
+    Args:
+        ledger: Inventory ledger to insert.
+        storage_dir: Override for the ledger storage directory.
+
+    Returns:
+        The updated ledger document including the newly inserted ledger.
+
+    Raises:
+        :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When a ledger
+            with the same ``(actividad_id, year)`` pair already exists.
+    """
 
     return InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir()).create(ledger)
 
@@ -58,7 +102,22 @@ def record_movement(
     year: int,
     storage_dir: Path | None = None,
 ) -> InventoryLedger:
-    """Append a movement to an existing activity/year ledger."""
+    """Append ``movement`` to an existing activity-and-year inventory ledger.
+
+    Args:
+        actividad_id: Identifier of the actividad economica owning the ledger.
+        movement: Movement record to append.
+        year: Tax year of the target ledger.
+        storage_dir: Override for the ledger storage directory.
+
+    Returns:
+        The updated inventory ledger.
+
+    Raises:
+        :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When the
+            target ledger does not exist, the movement id is duplicated,
+            or the resulting valuation is invalid.
+    """
 
     return InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir()).record_movement(
         actividad_id,
@@ -68,25 +127,44 @@ def record_movement(
 
 
 class InventoryLedgerRepository:
-    """Governed repository for the encrypted inventory ledger."""
+    """Governed repository for the encrypted inventory ledger.
+
+    Each method takes an exclusive file lock on :attr:`lock_target` for the
+    duration of the read-modify-write cycle so concurrent processes cannot
+    corrupt the ledger envelope.
+    """
 
     def __init__(self, *, store_dir: Path) -> None:
+        """Initialize the repository.
+
+        Args:
+            store_dir: Directory in which the encrypted envelope and lock
+                sidecar live.
+        """
         self._store_dir = Path(store_dir)
 
     @property
     def envelope_path(self) -> Path:
-        """Return the canonical encrypted envelope path."""
+        """Path to the canonical encrypted envelope file."""
 
         return self._store_dir / INVENTORY_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
-        """Return the canonical lock sidecar path."""
+        """Path to the canonical exclusive-lock sidecar file."""
 
         return self._store_dir / "inventory-ledger.lock"
 
     def load(self) -> InventoryLedgerDocument:
-        """Load the ledger, returning an empty document when absent."""
+        """Load the ledger, returning an empty document when absent.
+
+        Returns:
+            Decrypted inventory ledger document.
+
+        Raises:
+            :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When the
+                envelope exists but cannot be loaded or decrypted.
+        """
 
         if not self.envelope_path.exists():
             return InventoryLedgerDocument()
@@ -104,7 +182,11 @@ class InventoryLedgerRepository:
             raise InventoryLedgerError(f"unable to load inventory ledger: {self.envelope_path}") from exc
 
     def save(self, document: InventoryLedgerDocument) -> None:
-        """Persist ``document`` as FINANCIAL-class ciphertext."""
+        """Persist ``document`` as FINANCIAL-class ciphertext.
+
+        Args:
+            document: Ledger document to encrypt and write.
+        """
 
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target):
@@ -123,7 +205,18 @@ class InventoryLedgerRepository:
         _log.info("saved %d inventory ledgers to %s", len(document.ledgers), self.envelope_path)
 
     def create(self, ledger: InventoryLedger) -> InventoryLedgerDocument:
-        """Atomically create a ledger and refuse duplicate actividad/year pairs."""
+        """Atomically create ``ledger`` and refuse duplicate actividad/year pairs.
+
+        Args:
+            ledger: Inventory ledger to insert.
+
+        Returns:
+            The ledger document including the new ledger.
+
+        Raises:
+            :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When a
+                ledger with the same ``(actividad_id, year)`` pair exists.
+        """
 
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target):
@@ -142,7 +235,25 @@ class InventoryLedgerRepository:
             return updated
 
     def record_movement(self, actividad_id: str, movement: MovementRecord, *, year: int) -> InventoryLedger:
-        """Atomically append ``movement`` after validating valuation."""
+        """Atomically append ``movement`` after validating the new valuation.
+
+        The replacement ledger is fully revalidated via
+        :func:`aeat.domain.profile.inventory.compute_inventory_valuation`
+        before being persisted, so any rule violation aborts the write.
+
+        Args:
+            actividad_id: Identifier of the owning actividad economica.
+            movement: Movement record to append.
+            year: Tax year of the target ledger.
+
+        Returns:
+            The updated inventory ledger.
+
+        Raises:
+            :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When the
+                target ledger does not exist, the movement id is duplicated,
+                or the resulting valuation is invalid.
+        """
 
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target):

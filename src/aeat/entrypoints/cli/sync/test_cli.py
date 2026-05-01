@@ -1,4 +1,11 @@
-"""Unit tests for the ``aeat sync`` CLI sub-app."""
+"""Unit tests for the ``aeat sync`` CLI sub-app.
+
+Covers the four registered subcommands -- ``run``,
+``list-divergences``, ``show-divergence``, and
+``resolve-divergence`` -- against an isolated
+:class:`aeat.application.sync.JsonFileDivergenceRepository` rooted
+at a tmp directory.
+"""
 
 from __future__ import annotations
 
@@ -32,6 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+    """Install an in-process master-key provider and secret store for each test."""
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -60,6 +68,7 @@ def repo_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def _make_record() -> DivergenceRecord:
+    """Construct a minimal additive ``DivergenceRecord`` for fixture seeding."""
     payload = CasillaAddedWithDefault(
         modelo=ModeloIdentifier("100"),
         casilla_id="C9",

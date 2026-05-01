@@ -26,7 +26,7 @@ from aeat.entrypoints.cli import app as root_app
 from aeat.domain.deadlines import AutonomoProfile, IVARegime
 from aeat.domain.formulas import Engine, FiscalPeriod, Quarter, get_registry
 from aeat.domain.modelos import ModeloCode
-from aeat.adapters.inbound.financial._raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from aeat.adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
 from aeat.domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
 from aeat.domain.deadlines import PeriodKind as DeadlinePeriodKind
 from aeat.domain.transactions import (
@@ -36,7 +36,7 @@ from aeat.domain.transactions import (
     TransactionDirection,
     set_classification,
 )
-from aeat.domain.transactions._repository import TransactionCatalogueRepository
+from aeat.domain.transactions import TransactionCatalogueRepository
 from aeat.application.aggregation import (
     AggregationCasillaMappingError,
     AggregationError,
@@ -47,7 +47,7 @@ from aeat.application.aggregation import (
     PeriodKind,
     aggregate_catalogue,
 )
-from aeat.application.aggregation._provider import FinancialFilingInputsProvider
+from aeat.application.aggregation import FinancialFilingInputsProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

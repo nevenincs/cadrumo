@@ -20,12 +20,12 @@ from aeat.adapters.persistence.storage import (
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
-from aeat.domain.justificante._repository import (
+from aeat.domain.justificante import (
+    Justificante,
     JustificanteMigrationSummary,
     JustificanteRepository,
     migrate_legacy_justificantes_to_repository,
 )
-from aeat.domain.justificante._schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

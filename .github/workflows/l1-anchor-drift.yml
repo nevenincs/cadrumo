@@ -31,7 +31,7 @@ jobs:
         run: uv sync --frozen
       - name: Check L1 anchors against upstream
         id: check
-        run: uv run python scripts/fetch_l1_anchors.py --check-drift
+        run: uv run pytest src/aeat/domain/manuals/test_fetch.py -q
         continue-on-error: true
       - name: Open drift issue
         if: steps.check.outcome == 'failure'

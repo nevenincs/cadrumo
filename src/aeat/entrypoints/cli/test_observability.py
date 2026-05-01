@@ -1,16 +1,35 @@
-"""Tests for the shared ``cli_run_context`` helpers (#99)."""
+"""Tests for the shared ``cli_run_context`` helpers and replay command.
+
+Exercises
+:func:`aeat.entrypoints.cli._observability.build_arguments`: ordering
+rules (positional first, then flags in insertion order), filtering of
+``None`` values, secret-substring redaction (case-insensitive across
+``api_key``/``secret``/``passphrase``/``token``/``credential``), and
+the ``flag_map`` plumbing that populates
+:attr:`aeat.core.observability.ArgumentRecord.cli_flag`. Also covers
+``aeat run replay`` round-tripping a persisted
+:class:`aeat.core.observability.RunTrace`.
+"""
 
 from __future__ import annotations
 
-import pytest
+from datetime import UTC, datetime
+from pathlib import Path
 
-from ...core.observability import ArgumentSource
+import pytest
+from typer.testing import CliRunner
+
+from ...core.config import PROJECT_ROOT, Settings
+from ...core.observability import ArgumentSource, RunOutcome, RunTrace, compute_corpus_sha256, save_trace
+from . import app
 from ._observability import build_arguments
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class TestBuildArguments:
+    """Ordering, filtering, and source-tagging rules for ``build_arguments``."""
+
     def test_preserves_insertion_order_for_flags(self) -> None:
         values = {"b_flag": "1", "a_flag": "2", "c_flag": "3"}
         records = build_arguments(values)
@@ -39,6 +58,8 @@ class TestBuildArguments:
 
 
 class TestSecretRedaction:
+    """Secret-substring detection and value redaction in ``build_arguments``."""
+
     def test_secret_named_flag_redacted(self) -> None:
         values = {"password": "hunter2", "modelo": "130"}
         records = build_arguments(values)
@@ -76,7 +97,7 @@ class TestSecretRedaction:
 
 
 class TestFlagMap:
-    """NEW-1: flag_map propagates to ArgumentRecord.cli_flag."""
+    """``flag_map`` propagation to :attr:`ArgumentRecord.cli_flag`."""
 
     def test_flag_map_sets_cli_flag(self) -> None:
         values = {"as_json": True, "modelo": "130"}
@@ -97,3 +118,33 @@ class TestFlagMap:
         records = build_arguments(values, positional=("modelo",), flag_map={"modelo": "--modelo"})
         assert records[0].source.value == "POSITIONAL"
         assert records[0].cli_flag is None
+
+
+class TestReplayCommand:
+    """End-to-end smoke for ``aeat run replay``."""
+
+    def test_replay_invokes_recorded_cli_entrypoint(self, tmp_path: Path) -> None:
+        """A persisted ``RunTrace`` is round-tripped through the replay command."""
+        settings = Settings(aeat_runs_dir=tmp_path)
+        trace = RunTrace(
+            run_id="0123456789abcdef",
+            started_at=datetime(2026, 4, 14, tzinfo=UTC),
+            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+            entrypoint="aeat run list",
+            arguments=(),
+            corpus_sha256=compute_corpus_sha256(PROJECT_ROOT / ".vault", settings),
+            db_sha256="b" * 64,
+            cert_fingerprint="",
+            outcome=RunOutcome.OK,
+        )
+        save_trace(trace, settings=settings)
+
+        result = CliRunner().invoke(
+            app,
+            ["run", "replay", trace.run_id],
+            env={"AEAT_RUNS_DIR": str(tmp_path)},
+        )
+
+        assert result.exit_code == 0, result.output
+        assert "replay OK" in result.output
+        assert trace.run_id in result.output

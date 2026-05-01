@@ -1,4 +1,11 @@
-"""Regression tests for the root-level ``aeat --json`` alias."""
+"""Regression tests for the root-level ``aeat --json`` alias.
+
+Confirms that placing ``--json`` immediately after the ``aeat``
+entrypoint -- before the subcommand path -- produces the same
+machine-readable output as appending ``--json`` to the leaf command.
+Covers ``modelos show``, ``portals show``, ``submission check-nif``,
+``auth status``, ``workflow next``, and ``workflow list``.
+"""
 
 from __future__ import annotations
 
@@ -19,6 +26,7 @@ _runner = CliRunner()
 
 @pytest.fixture(autouse=True)
 def _cleanup_master_key_override() -> Iterator[None]:
+    """Reset master-key and secret-store overrides between tests."""
     yield
     from ...adapters.persistence.storage import override_master_key_provider, override_secret_store
 
@@ -27,6 +35,7 @@ def _cleanup_master_key_override() -> Iterator[None]:
 
 
 def _prepare_workflow_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Install in-process secret store and seed an encrypted profile + draft inputs."""
     from datetime import UTC, datetime
 
     from ...adapters.persistence.storage import (
@@ -87,12 +96,13 @@ def _prepare_workflow_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def _unwrap_result(output: str) -> dict[str, object]:
+    """Extract the ``result`` payload from a JSON-mode CLI success."""
     payload = json.loads(output)
     return payload["result"]
 
 
 def test_root_json_alias_reaches_modelos_show() -> None:
-    """`aeat --json modelos show 303` should emit machine-readable output."""
+    """``aeat --json modelos show 303`` emits machine-readable output."""
 
     result = _runner.invoke(root_app, ["--json", "modelos", "show", "303"])
     assert result.exit_code == 0, result.output
@@ -101,7 +111,7 @@ def test_root_json_alias_reaches_modelos_show() -> None:
 
 
 def test_root_json_alias_reaches_portals_show() -> None:
-    """`aeat --json portals show portal_sede_root` should emit JSON."""
+    """``aeat --json portals show portal_sede_root`` emits JSON."""
 
     result = _runner.invoke(root_app, ["--json", "portals", "show", "portal_sede_root"])
     assert result.exit_code == 0, result.output
@@ -110,7 +120,7 @@ def test_root_json_alias_reaches_portals_show() -> None:
 
 
 def test_root_json_alias_reaches_submission_check_nif() -> None:
-    """`aeat --json submission check-nif X1234567L` should emit JSON."""
+    """``aeat --json submission check-nif X1234567L`` emits JSON."""
 
     result = _runner.invoke(root_app, ["--json", "submission", "check-nif", "X1234567L"])
     assert result.exit_code == 0, result.output
@@ -120,7 +130,7 @@ def test_root_json_alias_reaches_submission_check_nif() -> None:
 
 
 def test_root_json_alias_reaches_auth_status() -> None:
-    """`aeat --json auth status` should emit the no-session JSON shape."""
+    """``aeat --json auth status`` emits the no-session JSON shape."""
 
     result = _runner.invoke(root_app, ["--json", "auth", "status"])
     assert result.exit_code == 0, result.output
@@ -129,7 +139,7 @@ def test_root_json_alias_reaches_auth_status() -> None:
 
 
 def test_root_json_alias_reaches_workflow_next(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """`aeat --json workflow next --no-sync` should emit JSON from root mode."""
+    """``aeat --json workflow next --no-sync`` emits JSON from root mode."""
 
     _prepare_workflow_env(tmp_path, monkeypatch)
     result = _runner.invoke(root_app, ["--json", "workflow", "next", "--no-sync"])
@@ -140,7 +150,7 @@ def test_root_json_alias_reaches_workflow_next(tmp_path: Path, monkeypatch: pyte
 
 
 def test_root_json_alias_reaches_workflow_list(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """`aeat --json workflow list` should emit a JSON array from root mode."""
+    """``aeat --json workflow list`` emits a JSON array from root mode."""
 
     _prepare_workflow_env(tmp_path, monkeypatch)
     seed = _runner.invoke(root_app, ["--json", "workflow", "next", "--no-sync"])

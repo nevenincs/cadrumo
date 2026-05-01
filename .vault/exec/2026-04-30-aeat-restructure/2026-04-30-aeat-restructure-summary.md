@@ -48,12 +48,13 @@ errors).
 
 ## semver bump
 
-**MINOR** (0.1.0 -> 0.1.1 at the next release tag).
+**MAJOR hard cut** at the next release tag.
 
-All 4 public-surface re-export shims (`aeat.errors`, `aeat.auth`,
-`aeat.submission`, `aeat.formulas`) preserved end-to-end. The
-shim-verification subroutine (`scripts/verify_shims.py`) returns
-exit 0 on every check; this is the MINOR bump precondition.
+The final delivered model removes the old root public modules
+(`aeat.errors`, `aeat.auth`, `aeat.submission`, `aeat.formulas`) and
+keeps only the canonical hexagonal package paths. The earlier
+shim-verification precondition was superseded by the hard-cutover
+decision; root module absence is now verified directly.
 
 ## 15 acceptance criteria
 
@@ -98,12 +99,13 @@ checklist is recorded in the Step 8 acceptance comment on issue
 
 The autonomous pipeline shipped 6 net-new pieces of tooling:
 
-- `.importlinter` contract + recipe (`just lint-imports`) — PR #488
-- `scripts/verify_shims.py` (`just verify-shims`) — PR #489
-- `scripts/rebase_imports.py` (`just rebase-imports`) — PR #490
-- `scripts/run_layout_move.py` (driver) — PR #493 (keystone)
-- `scripts/sanitize_dev_metadata.py` — PR #496
-- `scripts/rewrite_vault_paths.py` — PR #497
+- pytest import-contract guardrail — PR #488, later retained as the accepted hard-cutover boundary check
+- shim-verification one-shot tooling — superseded and deleted by the
+  hard-cutover model
+- rebase/import rewrite one-shot tooling — PR #490; deleted after use
+- layout-move driver — PR #493 (keystone); deleted after use
+- source sanitization one-shot tooling — PR #496; deleted after use
+- vault-path rewrite one-shot tooling — PR #497; deleted after use
 
 ## abort triggers (none fired)
 
@@ -126,5 +128,5 @@ abort/rollback path.
 
 - #498 Modelo 202 ruleset gap → backlog
 - #499 Modelo 303/2024 casilla closure → backlog
-- Shim-removal PR (auto-generated at second-minor-after-introduction
-  window per ADR Shim deprecation contract)
+- No removal PR is scheduled; there is no retained root
+  re-export layer in the accepted hard-cutover state.

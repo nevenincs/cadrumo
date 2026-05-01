@@ -1,4 +1,10 @@
-"""Persistence tests for encrypted inventory ledgers."""
+"""Persistence tests for the encrypted inventory ledger.
+
+Verifies that :mod:`aeat.adapters.persistence.profile.inventory` round-trips
+ledgers through encrypted FINANCIAL-class envelopes (no plaintext SKU leakage)
+and that movement appends are atomically validated against the resulting
+valuation, refusing inputs that would consume more stock than available.
+"""
 
 from __future__ import annotations
 

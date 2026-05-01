@@ -1,4 +1,11 @@
-"""Unit tests for the CLI exit-code table."""
+"""Unit tests for the CLI exit-code table.
+
+Pins the numeric values of :class:`aeat.entrypoints.cli.ExitCode` --
+which form a compatibility contract for shell pipelines and CI
+scripts -- and verifies that
+:func:`aeat.entrypoints.cli.exit_with` writes its message to stderr
+before raising :class:`typer.Exit`.
+"""
 
 from __future__ import annotations
 

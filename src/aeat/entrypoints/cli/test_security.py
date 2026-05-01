@@ -1,4 +1,14 @@
-"""Smoke tests for the ``aeat security`` Typer sub-app."""
+"""Smoke tests for the ``aeat security`` Typer sub-app.
+
+Exercises the operator-facing key-management surface end-to-end:
+master-key rotation (with and without an existing recovery
+wrapping), KDF migration from scrypt to Argon2id, the ``provision``
+flow for the file/keyring/unsecured backends, recovery via
+24-word mnemonic, the portable ``key-export`` backup, and the
+corpus-integrity verifier. All tests run against an isolated
+:class:`aeat.adapters.persistence.storage.SecretStore` rooted at
+``tmp_path``.
+"""
 
 from __future__ import annotations
 
@@ -26,12 +36,13 @@ class _Sample(BaseModel):
 
 @pytest.fixture()
 def runner() -> CliRunner:
+    """Provide a fresh :class:`typer.testing.CliRunner` per test."""
     return CliRunner()
 
 
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path) -> Iterator[None]:
-    """Bootstrap a SecretStore + master-key override for the test."""
+    """Bootstrap a :class:`SecretStore` and master-key override per test."""
     from ...adapters.persistence.storage import (
         EncryptedBlobStore,
         EphemeralMasterKeyProvider,
@@ -60,6 +71,7 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_envelope(target: Path, *, key: bytes, hkdf_context: bytes) -> None:
+    """Write a financial-class encrypted envelope at ``target`` for rotation tests."""
     from ...adapters.persistence.storage import (
         Envelope,
         EphemeralMasterKeyProvider,
@@ -82,6 +94,7 @@ def _seed_envelope(target: Path, *, key: bytes, hkdf_context: bytes) -> None:
 
 
 def _write_key(path: Path, *, key: bytes) -> None:
+    """Persist a 32-byte key as hex text at ``path``."""
     path.write_text(key.hex(), encoding="ascii")
 
 
@@ -90,7 +103,7 @@ def test_rotate_master_key_round_trip(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Operator runs the CLI and every governance envelope rotates."""
+    """``aeat security rotate-master-key`` re-encrypts every governance envelope."""
     import secrets
 
     old_key = secrets.token_bytes(32)
@@ -145,6 +158,7 @@ def test_rotate_refuses_when_recovery_wrapping_exists_without_flag(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Rotation refuses when ``master.recovery.key`` exists without an opt-in flag."""
     # regression: rotate-master-key MUST NOT silently
     # proceed when ``master.recovery.key`` exists and the operator
     # hasn't told us how to update it. Without the fence, the
@@ -193,6 +207,7 @@ def test_rotate_with_regenerate_recovery_produces_recoverable_new_key(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """``--regenerate-recovery-key`` mints a fresh mnemonic over the new master key."""
     # regression: --regenerate-recovery-key mints a
     # fresh mnemonic + re-wraps the NEW master key. Decoding the new
     # mnemonic and unwrapping master.recovery.key must yield the
@@ -260,6 +275,7 @@ def test_rotate_with_recovery_key_preserves_existing_mnemonic(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """``--recovery-key <existing mnemonic>`` re-wraps the new key under the same KEK."""
     # regression: --recovery-key "<existing mnemonic>"
     # re-wraps the NEW master key under the SAME KEK so the
     # operator's previously-printed mnemonic remains valid.
@@ -322,6 +338,7 @@ def test_rotate_recovery_key_must_match_old_key_file(
     runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Rotation refuses when ``--recovery-key`` and ``--old-key-file`` disagree."""
     # defensive: --recovery-key + --old-key-file must
     # agree. If the supplied mnemonic decrypts master.recovery.key
     # to bytes that don't match --old-key-file, the operator has
@@ -376,6 +393,7 @@ def test_same_key_rejected(
     tmp_path: Path,
     runner: CliRunner,
 ) -> None:
+    """Rotating a key onto itself is rejected with an explanatory error."""
     import secrets
 
     key_file = tmp_path / "k.hex"
@@ -397,9 +415,10 @@ def test_same_key_rejected(
 
 
 class TestVerifyCorpus:
-    """integrity manifest CLI."""
+    """``aeat security verify-corpus`` integrity-manifest tests."""
 
     def _seed_casillas(self, root: Path) -> None:
+        """Seed a one-entry casillas corpus under ``root``."""
         root.mkdir(parents=True, exist_ok=True)
         (root / "130").mkdir()
         (root / "130" / "2026Q1.json").write_text(
@@ -413,6 +432,7 @@ class TestVerifyCorpus:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """``--regenerate`` then a plain ``verify-corpus`` reports a clean tree."""
         casillas_root = tmp_path / "casillas"
         self._seed_casillas(casillas_root)
         monkeypatch.setenv("AEAT_CASILLAS_ROOT", str(casillas_root))
@@ -431,6 +451,7 @@ class TestVerifyCorpus:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """A mutated corpus file triggers drift and a nonzero exit."""
         casillas_root = tmp_path / "casillas"
         self._seed_casillas(casillas_root)
         monkeypatch.setenv("AEAT_CASILLAS_ROOT", str(casillas_root))
@@ -451,6 +472,7 @@ class TestVerifyCorpus:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """A missing manifest sidecar exits nonzero with a helpful message."""
         casillas_root = tmp_path / "casillas"
         self._seed_casillas(casillas_root)
         monkeypatch.setenv("AEAT_CASILLAS_ROOT", str(casillas_root))
@@ -463,6 +485,7 @@ def test_malformed_key_file_rejected(
     tmp_path: Path,
     runner: CliRunner,
 ) -> None:
+    """A non-hex key file is rejected before any rotation work begins."""
     bad = tmp_path / "bad.hex"
     bad.write_text("not hex", encoding="ascii")
     good = tmp_path / "good.hex"
@@ -486,11 +509,11 @@ def test_malformed_key_file_rejected(
 
 
 class TestMigrateMasterKeyKdf:
-    """scrypt -> Argon2id master.kdf migration CLI."""
+    """``aeat security migrate-master-key-kdf`` (scrypt -> Argon2id) tests."""
 
     @staticmethod
     def _seed_v1_store(tmp_path: Path, *, passphrase: str) -> tuple[Path, bytes]:
-        """Lay down a v1 store at ``tmp_path / "secrets"`` and return (store, master-key)."""
+        """Lay down a v1 (scrypt) store and return ``(store_dir, master_key_bytes)``."""
         import base64
         import secrets as _secrets
 
@@ -527,7 +550,7 @@ class TestMigrateMasterKeyKdf:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """End-to-end: seed v1, run migrate via CLI, load works under v2."""
+        """End-to-end: seed v1, migrate via CLI, then load successfully under v2."""
         store, plaintext_key = self._seed_v1_store(tmp_path, passphrase="hunter2")  # noqa: S106 - test passphrase
         monkeypatch.setenv("AEAT_SECRET_PASSPHRASE", "hunter2")
 
@@ -559,7 +582,7 @@ class TestMigrateMasterKeyKdf:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Running the CLI on an already-v2 store reports skipped and exits 0."""
+        """Running the CLI on an already-v2 store reports ``already v2`` and exits 0."""
         from ...adapters.persistence.storage import FileFallbackMasterKeyProvider
 
         store = tmp_path / "secrets"
@@ -588,7 +611,7 @@ class TestMigrateMasterKeyKdf:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """A wrong passphrase exits 1 and does not modify the v1 store."""
+        """A wrong passphrase exits 1 and leaves the v1 store untouched."""
         store, _ = self._seed_v1_store(tmp_path, passphrase="correct")  # noqa: S106 - test passphrase
         before_kdf = (store / "master.kdf").read_bytes()
         before_key = (store / "master.key").read_bytes()
@@ -613,7 +636,7 @@ class TestMigrateMasterKeyKdf:
         tmp_path: Path,
         runner: CliRunner,
     ) -> None:
-        """Pointing at a non-existent store dir is rejected with a usage error."""
+        """A non-existent ``--store-dir`` is rejected with a usage error."""
         result = runner.invoke(
             app,
             [
@@ -628,7 +651,7 @@ class TestMigrateMasterKeyKdf:
 
 
 class TestProvisionCommand:
-    """Interactive `aeat security provision` flow."""
+    """Interactive ``aeat security provision`` flow tests."""
 
     def test_file_backend_round_trip(
         self,
@@ -636,6 +659,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """File backend mints master + recovery key and writes all artefacts."""
         secrets_dir = tmp_path / "secrets"
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
         monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
@@ -660,6 +684,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Provisioning over an existing store refuses without ``--force``."""
         secrets_dir = tmp_path / "secrets"
         secrets_dir.mkdir(parents=True)
         # Pre-existing artefacts.
@@ -684,6 +709,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """``--force`` overwrites the existing store and prints a fresh recovery key."""
         secrets_dir = tmp_path / "secrets"
         secrets_dir.mkdir(parents=True)
         (secrets_dir / "master.key").write_bytes(b"placeholder")
@@ -701,6 +727,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """The ``unsecured`` backend refuses without ``AEAT_ALLOW_UNENCRYPTED``."""
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
         monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
         result = runner.invoke(app, ["security", "provision", "--backend", "unsecured"])
@@ -713,6 +740,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """With ``AEAT_ALLOW_UNENCRYPTED=1`` the unsecured backend provisions and warns."""
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
         monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
         result = runner.invoke(app, ["security", "provision", "--backend", "unsecured"])
@@ -726,6 +754,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Keyring backend refuses when an entry already exists without ``--force``."""
         # regression: provisioning the keyring backend
         # over an existing keychain entry without --force used to
         # silently FETCH the old key and regenerate the recovery
@@ -757,6 +786,7 @@ class TestProvisionCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """``--force`` deletes the existing keyring entry, then mints a fresh master key."""
         # With --force, the existing keyring entry must be DELETED
         # and a fresh master key minted — otherwise the freshly-
         # generated recovery wrapping wraps the OLD master key,
@@ -803,7 +833,14 @@ class TestProvisionCommand:
 
 
 def _extract_recovery_mnemonic(output: str) -> str:
-    """Pull the 24 words out of the recovery-key panel in CLI output."""
+    """Pull the 24-word recovery mnemonic out of the recovery-key panel.
+
+    The provision command prints the words in 4 rows of 6, each
+    word inside a ``[cyan]...[/]`` rich tag. The
+    :class:`typer.testing.CliRunner` output has the rich markup
+    stripped, so this helper walks the lines and collects the rows
+    that look like a 6-word block.
+    """
     # The provision command prints the words in 4 rows of 6, each
     # word inside a `[cyan]...[/]` rich tag. The CliRunner output
     # has the rich markup stripped, so we just walk the lines and
@@ -824,7 +861,7 @@ def _extract_recovery_mnemonic(output: str) -> str:
 
 
 class TestRecoverCommand:
-    """Recover via 24-word mnemonic + re-mint the file-fallback state."""
+    """``aeat security recover`` -- recover via mnemonic and re-mint state."""
 
     def test_recovery_round_trip_under_new_passphrase(
         self,
@@ -832,6 +869,7 @@ class TestRecoverCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Recovery preserves master-key bytes across a passphrase change."""
         secrets_dir = tmp_path / "secrets"
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
         monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
@@ -895,6 +933,7 @@ class TestRecoverCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """A valid-but-wrong mnemonic surfaces ``did not unwrap`` and exits 1."""
         secrets_dir = tmp_path / "secrets"
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
         monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
@@ -918,6 +957,7 @@ class TestRecoverCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Recover refuses with ``no recovery wrapping`` when the substrate is unprovisioned."""
         secrets_dir = tmp_path / "secrets"
         secrets_dir.mkdir(parents=True)
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
@@ -932,7 +972,7 @@ class TestRecoverCommand:
 
 
 class TestKeyExportCommand:
-    """`aeat security key-export --out <path>` portable backup."""
+    """``aeat security key-export --out <path>`` portable backup tests."""
 
     def test_export_after_provision(
         self,
@@ -940,6 +980,7 @@ class TestKeyExportCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Export after provision writes a JSON record with all expected fields."""
         secrets_dir = tmp_path / "secrets"
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))
         monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
@@ -968,6 +1009,7 @@ class TestKeyExportCommand:
         runner: CliRunner,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Export without ``master.recovery.key`` exits 1 with a clear message."""
         secrets_dir = tmp_path / "secrets"
         secrets_dir.mkdir(parents=True)
         monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(secrets_dir))

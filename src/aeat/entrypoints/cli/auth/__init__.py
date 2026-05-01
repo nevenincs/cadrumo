@@ -20,9 +20,7 @@ import typer
 from pydantic_settings import SettingsConfigDict
 from rich.console import Console
 
-from ....adapters.outbound.aeat.auth import (
-    AuthProviderKind,
-)
+from ....application.auth import AuthProviderKind
 from ....adapters.outbound.google import (
     SCOPES,
     GoogleAuthPath,

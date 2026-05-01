@@ -1,4 +1,9 @@
-"""``aeat rental income`` commands (#454)."""
+"""``aeat rental income`` Typer commands.
+
+Persist (or update) the gross rental income for one contract /
+ejercicio pair, and list incomes recorded for an ejercicio. Backed by
+:class:`aeat.domain.rental.RentalIncomeRepository`.
+"""
 
 from __future__ import annotations
 
@@ -19,12 +24,18 @@ from ._helpers import open_session
 app = typer.Typer(
     name="income",
     no_args_is_help=True,
-    help="Registro de ingresos íntegros por contrato/ejercicio (#454).",
+    help="Registro de ingresos íntegros por contrato/ejercicio.",
 )
 
 
 @register_schema("rental income record")
 class IncomeRecordJson(OutputSchema):
+    """Schema for ``aeat rental income record --json``.
+
+    Attributes:
+        record: The persisted :class:`RentalIncomeRecord`.
+    """
+
     record: RentalIncomeRecord
 
 
@@ -40,7 +51,11 @@ def record_cmd(
     gross_rent_received: str = typer.Option(..., "--amount", help="Ingreso íntegro del periodo."),
     dias_alquilados: int = typer.Option(365, "--dias-alquilados"),
 ) -> None:
-    """Persist or update the per-contract per-period income."""
+    """Persist or update the per-contract per-period income.
+
+    Raises:
+        ContractNotFoundError: When ``contract_id`` is unknown.
+    """
     with open_session() as session:
         contract_repo = RentalContractRepository(session)
         try:
@@ -71,6 +86,7 @@ def record_cmd(
 def list_cmd(
     period_year: int = typer.Option(..., "--period", help="Ejercicio (YYYY)."),
 ) -> None:
+    """List every income record persisted for ``period_year``."""
     with open_session() as session:
         income_repo = RentalIncomeRepository(session)
         records = income_repo.list_for_period(period_year)

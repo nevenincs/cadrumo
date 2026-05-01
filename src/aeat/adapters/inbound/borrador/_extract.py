@@ -1,8 +1,9 @@
-"""Summary-block extraction primitives for Modelo 100 (#305).
+"""Summary-block extraction primitives for Modelo 100.
 
-Thin wrappers re-exporting the shared primitive from
-:mod:`aeat.adapters.inbound.pdf._label_regex` while keeping the original
-``(raw, parsed)`` tuple return shape the Renta extractor depends on.
+Thin wrappers re-exporting :data:`aeat.adapters.inbound.pdf._label_regex.SPANISH_AMOUNT_GROUP`
+and :func:`aeat.adapters.inbound.pdf._label_regex.parse_spanish_decimal`
+while preserving the ``(raw, parsed)`` tuple return shape that the Renta
+extractor depends on.
 """
 
 from __future__ import annotations
@@ -21,12 +22,23 @@ def apply_label_regex(
     text: str,
     label_regex_map: dict[str, re.Pattern[str]],
 ) -> dict[str, tuple[str, object]]:
-    """Return a ``casilla_id → (raw, parsed)`` dict for matched patterns.
+    """Return a ``casilla_id`` to ``(raw, parsed)`` dict for matched patterns.
 
-    Uses the shared ``parse_spanish_decimal`` from
-    :mod:`aeat.adapters.inbound.pdf._label_regex`. First match wins for the raw
-    value; callers detect ambiguity via ``pattern.findall(text)`` if
-    they want to downgrade confidence.
+    Uses :func:`aeat.adapters.inbound.pdf._label_regex.parse_spanish_decimal`
+    to coerce the captured group. First match wins for the raw value;
+    callers detect ambiguity via ``pattern.findall(text)`` if they want
+    to downgrade confidence.
+
+    Args:
+        text: The full text to search.
+        label_regex_map: Mapping of casilla id to a compiled
+            :class:`re.Pattern` whose first capture group is the raw
+            Spanish-formatted amount.
+
+    Returns:
+        Dict keyed by casilla id whose value is a ``(raw, parsed)``
+        tuple where ``parsed`` is a :class:`decimal.Decimal` when
+        parseable and the original raw string otherwise.
     """
     hits: dict[str, tuple[str, object]] = {}
     for casilla_id, pattern in label_regex_map.items():

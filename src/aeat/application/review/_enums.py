@@ -1,7 +1,9 @@
 """Closed enumerations for the unified review queue.
 
-See [[2026-04-18-unified-review-queue-adr]] decision D5 for the
-kind, severity, and state taxonomy.
+Defines the kind, severity, and state taxonomy used by every
+:class:`aeat.application.review.ReviewItem`. Reserved-but-unimplemented
+``--kind`` tokens are tracked in :data:`_RESERVED_KINDS` and surfaced
+to callers via :func:`reserved_kind_reason`.
 """
 
 from __future__ import annotations

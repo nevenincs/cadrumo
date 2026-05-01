@@ -9,8 +9,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, TYPE_CHECKING, ClassVar
 
-from ._registry import ErrorCode
-
 if TYPE_CHECKING:
     from ..i18n import Translatable
 
@@ -77,7 +75,7 @@ class FixtureProvisioningError(AeatError):
 class FilingFixtureError(AeatError):
     """Raised when a synthetic filing-history fixture cannot be loaded.
 
-    Thrown by :mod:`aeat.domain.testing` when the fixtures directory cannot be
+    Thrown by :mod:`aeat.application.filing.testing` when the fixtures directory cannot be
     resolved, a fixture file cannot be read, JSON decoding fails, or a
     payload fails strict pydantic validation (including the synthetic-
     only invariant checks on the ``synthetic`` and ``_comment`` fields).
@@ -113,10 +111,6 @@ class SiteHealthError(AeatError):
         state_value = getattr(state, "value", state)
         super().__init__(str(state_value), context={"state": str(state_value)})
         self.status: Any = status
-
-
-class WorkspaceLockedError(AeatError):
-    """Raised when a concurrent process already owns a workspace lock."""
 
 
 class DeprecatedAliasError(AeatError):
@@ -190,6 +184,7 @@ from ._registry import (  # noqa: E402
     ErrorCategory,
     ErrorCode,
     ErrorEnvelope,
+    bind_error_code,
     build_error_envelope,
     get_error_exit_code,
     get_registered_error_code,
@@ -222,7 +217,7 @@ __all__ = [
     "MovedAliasError",
     "RulesetValidationError",
     "SiteHealthError",
-    "WorkspaceLockedError",
+    "bind_error_code",
     "build_error_envelope",
     "get_error_exit_code",
     "get_registered_error_code",

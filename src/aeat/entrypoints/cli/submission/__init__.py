@@ -1,18 +1,28 @@
-"""``aeat submission`` sub-app — preflight and local file helpers.
+"""Expose the ``aeat submission`` Typer sub-app for local filing operations.
 
-Wires four subcommands under ``aeat submission`` per the submission
-engine ADR [[2026-04-12-submission-engine-adr]] and the live-submit
-excision ADR [[2026-04-18-live-submit-cli-excision-adr]]:
+Wires every read-only and export-only command under ``aeat submission``:
 
-- ``aeat submission preflight <draft-path>`` — run preflight only.
-- ``aeat submission show <submission-id>`` — pretty-print a persisted
+- ``aeat submission preflight <draft-path>`` runs the preflight gates
+  against a persisted draft (no browser action).
+- ``aeat submission export <draft-path>`` exports an approved draft to
+  an AEAT-importable ``fichero-BOE`` file.
+- ``aeat submission verify <file>`` re-parses an exported fichero-BOE
+  file and prints its decoded headers and casillas.
+- ``aeat submission diff <a> <b>`` diffs two fichero-BOE files and
+  reports byte and per-casilla deltas.
+- ``aeat submission schemas`` lists every ``(modelo, ejercicio)`` pair
+  the CLI can export and verify.
+- ``aeat submission check-nif <id>`` validates a Spanish NIF / NIE / CIF
+  against AEAT's check-letter rules.
+- ``aeat submission show <submission-id>`` pretty-prints a persisted
   :class:`aeat.adapters.outbound.aeat.export.SubmittedFiling`.
-- ``aeat submission list [--modelo ...] [--status ...]`` — list every
+- ``aeat submission list [--modelo ...] [--status ...]`` lists every
   persisted filing, optionally filtered.
 
 The previously-registered ``submit`` and ``dry-run`` subcommands are
-absent. Kent's CLI path is produce -> verify -> export. Live AEAT
-submission and write-shaped portal walks are permanently forbidden.
+absent by design. The supported CLI path is
+produce -> verify -> export. Live AEAT submission and write-shaped
+portal walks are permanently forbidden.
 """
 
 from __future__ import annotations

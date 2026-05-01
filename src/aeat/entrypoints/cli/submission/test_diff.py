@@ -1,4 +1,9 @@
-"""Tests for ``aeat submission diff`` (EPIC #305 +)."""
+"""Tests for the ``aeat submission diff`` Typer command.
+
+Covers identical-files happy path, semantic-mismatch detection,
+envelope-vs-record dispatch, filename-inference fallback, and the JSON
+output contract.
+"""
 
 from __future__ import annotations
 
@@ -17,6 +22,7 @@ _runner = CliRunner()
 
 
 def _unwrap_result(output: str) -> dict[str, Any]:
+    """Return the ``result`` payload from a CLI JSON-success envelope."""
     return cast(dict[str, Any], json.loads(output)["result"])
 
 
@@ -28,6 +34,7 @@ def _write_draft_and_export(
     values: dict[str, str],
     out_name: str,
 ) -> Path:
+    """Build a CLI-format draft, run ``export``, and return the produced file path."""
     draft = {
         "draft_id": f"DIFF-{out_name}",
         "modelo": modelo,
@@ -75,6 +82,8 @@ _BASE_130_VALUES: dict[str, str] = {
 
 
 class TestDiffCommand:
+    """Behavioural tests for :func:`aeat.entrypoints.cli.submission.diff.diff_cmd`."""
+
     def test_diff_identical_files_exits_0(self, tmp_path: Path) -> None:
         a = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="a")
         b = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="b")
@@ -95,7 +104,7 @@ class TestDiffCommand:
         assert "99999" in result.stdout or "99 999" in result.stdout
 
     def test_diff_modelo_303_envelope_field_delta(self, tmp_path: Path) -> None:
-        """envelope field_values diff (NIF / PERIODO etc.) surfaces."""
+        """Envelope field-value diffs (NIF, PERIODO, etc.) surface in the output."""
         # Two 303 filings at different periods — DP30301_F010_DEVENGO_PER_ODO
         # differs, and diff must name it.
         a = _write_draft_and_export(tmp_path, modelo="303", period="2024Q1", values=_BASE_130_VALUES, out_name="a")
@@ -118,8 +127,8 @@ class TestDiffCommand:
         assert "86" in result.stdout
 
     def test_diff_unsupported_modelo_exits_2(self, tmp_path: Path) -> None:
-        a = tmp_path / "fake_a.390"
-        b = tmp_path / "fake_b.390"
+        a = tmp_path / "placeholder_a.390"
+        b = tmp_path / "placeholder_b.390"
         a.write_bytes(b"  ")
         b.write_bytes(b"  ")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "390", "--ejercicio", "2024"])
@@ -136,7 +145,7 @@ class TestDiffCommand:
         assert "cannot infer" in result.stdout
 
     def test_diff_json_identical_files(self, tmp_path: Path) -> None:
-        """--json on identical files emits status=identical."""
+        """``--json`` on identical files emits ``status == "identical"``."""
         a = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="a")
         b = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="b")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--json"])
@@ -147,7 +156,7 @@ class TestDiffCommand:
         assert doc["casilla_deltas"] == []
 
     def test_diff_json_casilla_mismatch(self, tmp_path: Path) -> None:
-        """--json on semantic diff returns casilla_deltas list."""
+        """``--json`` on a semantic diff returns a populated ``casilla_deltas`` list."""
         a = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=_BASE_130_VALUES, out_name="a")
         tweaked = {**_BASE_130_VALUES, "01": "99999.00"}
         b = _write_draft_and_export(tmp_path, modelo="130", period="2024Q1", values=tweaked, out_name="b")
@@ -162,8 +171,8 @@ class TestDiffCommand:
         assert deltas_by_casilla["01"]["b"] == "99999.00"
 
     def test_diff_json_unsupported_modelo(self, tmp_path: Path) -> None:
-        a = tmp_path / "fake_a.390"
-        b = tmp_path / "fake_b.390"
+        a = tmp_path / "placeholder_a.390"
+        b = tmp_path / "placeholder_b.390"
         a.write_bytes(b"  ")
         b.write_bytes(b"  ")
         result = _runner.invoke(app, ["diff", str(a), str(b), "--modelo", "390", "--ejercicio", "2024", "--json"])

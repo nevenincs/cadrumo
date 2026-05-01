@@ -43,7 +43,7 @@ _COARSE_IVA = (
     CasillaMapping(
         modelo=ModeloCode.MODELO_303,
         period_type=PeriodType.QUARTERLY,
-        casilla_code="71",
+        casilla_code="04",
         sign=CasillaMappingSign.CREDIT,
     ),
 )

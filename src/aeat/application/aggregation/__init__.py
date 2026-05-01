@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ._errors import (
     AggregationCasillaMappingError,
     AggregationCategoryCoverageError,
@@ -12,6 +14,9 @@ from ._errors import (
 )
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 from ._service import aggregate_catalogue
+
+if TYPE_CHECKING:
+    from ._provider import FinancialFilingInputsProvider
 
 __all__ = [
     "AggregationCasillaMappingError",

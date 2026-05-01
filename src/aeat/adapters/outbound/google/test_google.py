@@ -9,6 +9,7 @@ would otherwise hit Google APIs.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 
 import pytest
@@ -26,6 +27,7 @@ from . import (
     SHEETS_SCOPE,
     USERINFO_EMAIL_SCOPE,
     GoogleAuthPath,
+    _write_oauth_token_cache,
     assert_credentials_have_scopes,
     inspect_google_auth,
     inspect_oauth_token_cache,
@@ -41,8 +43,8 @@ _OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
 class _ScopedCreds:
     """Minimal stand-in for a credentials object exposing a ``scopes`` list.
 
-    Not a mock — a plain dataclass with the single attribute the helper
-    inspects. Required because there is no way to construct a real
+    Plain dataclass with the single attribute the helper inspects.
+    Required because there is no way to construct a real
     ``google.auth.credentials.Credentials`` without performing an actual
     authentication.
     """
@@ -196,3 +198,17 @@ class TestInspectOauthTokenCache:
 
         assert issue is not None
         assert "missing required scopes" in issue
+
+
+class TestOauthTokenCacheWriter:
+    """OAuth token cache writes must persist token payloads and permissions."""
+
+    def test_write_oauth_token_cache_restricts_file(self, tmp_path: Path) -> None:
+        token_path = tmp_path / ".tokens" / "google_oauth_token.json"
+
+        _write_oauth_token_cache(token_path, '{"refresh_token":"secret"}')
+
+        assert token_path.read_text(encoding="utf-8") == '{"refresh_token":"secret"}'
+        if os.name == "posix":
+            assert (token_path.stat().st_mode & 0o777) == 0o600
+            assert (token_path.parent.stat().st_mode & 0o777) == 0o700

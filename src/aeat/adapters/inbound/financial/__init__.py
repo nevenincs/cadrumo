@@ -1,8 +1,19 @@
-"""Financial input adapter surface.
+"""Public surface of the financial input adapter.
 
-This package owns provider-native ingestion records and file parsers. Domain
-packages consume the typed raw records but do not own provider detection or
-source-file parsing.
+This package owns provider-native ingestion records and file parsers for bank
+statement formats. Domain packages consume the typed raw records but never own
+provider detection or source-file parsing themselves.
+
+The exported symbols partition into three groups: provider-native record types
+(:class:`aeat.domain.transactions.RawTransaction`,
+:class:`aeat.domain.transactions.RawProvenance`,
+:class:`aeat.domain.transactions.SourceFormat`), the provider abstract base
+plus its concrete implementations (:class:`CsvProvider`, :class:`OfxProvider`,
+:class:`PdfN26Provider`, :class:`XlsxProvider`), and the auto-detection helper
+:func:`detect_provider`.
+
+See Also:
+    :mod:`aeat.adapters.inbound.financial.providers`: concrete providers.
 """
 
 from __future__ import annotations

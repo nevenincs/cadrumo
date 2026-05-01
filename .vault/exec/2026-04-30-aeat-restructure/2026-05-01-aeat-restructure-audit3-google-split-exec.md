@@ -12,7 +12,7 @@ related:
 # `aeat-restructure` audit-3 google-split
 
 Split Google OAuth/service helpers out of `adapters/outbound/aeat/auth/` into a
-dedicated `adapters/outbound/google/` subpackage. No re-export shim per ADR
+dedicated `adapters/outbound/google/` subpackage. No compatibility layer per ADR
 audit-3 directive.
 
 ## status
@@ -46,7 +46,7 @@ test file `core/_test_auth.py` (which tests pure Google-inspection helpers)
 was relocated to `google/test_google.py` with `pytestmark` updated from
 `domain_core` to `domain_outbound`.
 
-No shim was added. All 45+ import sites updated directly.
+No compatibility layer was added. All 45+ import sites updated directly.
 
 ## tests
 

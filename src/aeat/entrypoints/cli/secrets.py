@@ -1,4 +1,4 @@
-"""``aeat secrets`` CLI — operator-facing secret-store management.
+"""``aeat secrets`` Typer CLI for operator-facing secret-store management.
 
 Four subcommands:
 
@@ -10,10 +10,7 @@ Four subcommands:
   (``--from-stdin``). Optional flags pin classification and expiry.
 - ``aeat secrets rm <key>`` — delete the record.
 - ``aeat secrets rotate <key>`` — replace the value while preserving
-  the existing classification + metadata.
-
-The CLI consumes the post-#398 error decorator and the post-#399
-``--json`` schema-registry contract.
+  the existing classification and metadata.
 
 Storage subpackage imports are deferred to subcommand bodies so the
 root ``aeat`` Typer app does not transitively trigger Alembic plugin
@@ -32,7 +29,13 @@ from rich.console import Console
 
 
 class _ClassChoice(StrEnum):
-    """Operator-facing CLI subset of :class:`SensitivityClass`."""
+    """Operator-facing CLI subset of
+    :class:`aeat.adapters.persistence.storage.SensitivityClass`.
+
+    Attributes:
+        SECRET: Long-lived secret material.
+        SESSION: Short-lived session credentials.
+    """
 
     SECRET = "SECRET"  # noqa: S105 — sensitivity tag, not a credential
     SESSION = "SESSION"
@@ -47,6 +50,12 @@ def _parse_expires_in(value: str) -> datetime:
 
     Accepts the suffix shorthand ``Nd`` / ``Nh`` / ``Nm`` (days /
     hours / minutes); any other shape raises ``typer.BadParameter``.
+
+    Args:
+        value: Operator-supplied shorthand (e.g. ``90d``).
+
+    Returns:
+        Absolute UTC datetime corresponding to ``now() + delta``.
     """
     if not value:
         raise typer.BadParameter("--expires-in must be non-empty (e.g. 90d / 24h / 30m).")
@@ -66,6 +75,15 @@ def _parse_expires_in(value: str) -> datetime:
 
 
 def _read_value(from_file: Path | None, from_stdin: bool) -> bytes:
+    """Return the raw secret bytes from the chosen source.
+
+    Exactly one of ``from_file`` or ``from_stdin`` must be supplied;
+    raw bytes are read so binary secrets (certificates, PKCS#12
+    archives) round-trip cleanly.
+
+    Raises:
+        typer.BadParameter: When neither or both sources are supplied.
+    """
     if from_file is not None and from_stdin:
         raise typer.BadParameter("--from-file and --from-stdin are mutually exclusive.")
     if from_file is not None:
@@ -128,7 +146,20 @@ def put_command(
         help="Replace an existing record at the same key.",
     ),
 ) -> None:
-    """Persist a new secret under ``key``."""
+    """Persist a new secret under ``key``.
+
+    Args:
+        key: Natural key under which to store the secret.
+        from_file: Read the secret value from this file.
+        from_stdin: Read the secret value from stdin (raw bytes).
+        classification: Sensitivity class.
+        expires_in: Expiry shorthand consumed by :func:`_parse_expires_in`.
+        overwrite: Replace any existing record at the same key.
+
+    Raises:
+        typer.Exit: Code ``2`` when the key already exists and
+            ``overwrite`` is not set.
+    """
     from ...adapters.persistence.storage import SecretRecord, SensitivityClass, get_secret_store
     from ...adapters.persistence.storage.errors import SecretAlreadyExistsError
 
@@ -154,7 +185,11 @@ def put_command(
 def rm_command(
     key: str = typer.Argument(..., help="Natural key of the record to delete."),
 ) -> None:
-    """Delete the record persisted under ``key``."""
+    """Delete the record persisted under ``key``.
+
+    Raises:
+        typer.Exit: Code ``1`` when no record exists for ``key``.
+    """
     from ...adapters.persistence.storage import get_secret_store
     from ...adapters.persistence.storage.errors import SecretNotFoundError
 
@@ -188,7 +223,18 @@ def rotate_command(
         help="New expiry shorthand (e.g. 90d / 24h / 30m).",
     ),
 ) -> None:
-    """Rotate the value of an existing secret."""
+    """Rotate the value of an existing secret.
+
+    Args:
+        key: Natural key of the record to rotate.
+        from_file: Read the new value from this file.
+        from_stdin: Read the new value from stdin.
+        expires_in: New expiry shorthand consumed by
+            :func:`_parse_expires_in`.
+
+    Raises:
+        typer.Exit: Code ``1`` when no record exists for ``key``.
+    """
     from ...adapters.persistence.storage import get_secret_store
     from ...adapters.persistence.storage.errors import SecretNotFoundError
 

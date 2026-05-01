@@ -17,15 +17,13 @@ from aeat.adapters.persistence.storage import (
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
-from aeat.domain.submission._models import (
+from aeat.domain.submission import (
     SubmissionAttempt,
     SubmissionStatus,
     SubmittedFiling,
-    make_submission_id,
-)
-from aeat.domain.submission._repository import (
     SubmissionMigrationSummary,
     SubmissionRepository,
+    make_submission_id,
     migrate_legacy_submissions_to_repository,
 )
 

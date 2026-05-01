@@ -9,7 +9,7 @@ engine ADR [[2026-04-12-deadline-engine-adr]]:
 
 The commands are pure typer glue: they parse arguments, load the
 profile from disk (or from the optional ``AEAT_DEFAULT_PROFILE_PATH``
-setting), construct an in-process catalogue stub, and delegate every
+setting), construct an in-process catalogue implementation, and delegate every
 domain decision to :mod:`aeat.domain.deadlines`.
 """
 

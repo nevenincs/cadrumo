@@ -61,7 +61,7 @@ _BUSCAR_SETTLE_MS = 3_000
 _VER_CLICK_TIMEOUT_MS = 15_000
 
 # AEAT CSV shape: 8-24 uppercase alphanumeric characters. Mirror
-# of ``_CSV_LABEL_RE`` in :mod:`aeat.domain.justificante._extract`. Used
+# of ``_CSV_LABEL_RE`` in :mod:`aeat.adapters.inbound.justificante._extract`. Used
 # to shape-validate the CSV extracted from a cotejo URL so a
 # malformed AEAT response cannot land arbitrary text in the
 # downstream :class:`JustificanteRef.pdf_url`.

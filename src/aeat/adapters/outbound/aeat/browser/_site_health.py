@@ -60,7 +60,7 @@ class SiteHealthState(StrEnum):
 class _SiteHealthRecord(BaseModel):
     """Common config base for every site-health wire record.
 
-    Mirrors the ``_StatusRecord`` convention in :mod:`aeat.status`:
+    Mirrors the status-record convention used by AEAT status readers:
     strict typing, frozen instances, and ``extra="forbid"`` so any
     unexpected field is a parse error rather than a silent
     pass-through.

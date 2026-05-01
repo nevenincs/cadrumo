@@ -28,7 +28,7 @@ Files where only `__all__` was trimmed (definition kept — still used internall
 - `src/aeat/adapters/outbound/aeat/export/_formats/_ingest.py` — `IngestSourceMeta`
 - `src/aeat/adapters/outbound/aeat/export/_formats/_serialise.py` — `HeaderValue`
 - `src/aeat/adapters/outbound/aeat/export/_formats/_test_fixtures.py` — `KentProfile`
-- `src/aeat/domain/financial/transactions/_repository.py` — `DirectionResolver`
+- `src/aeat/domain/transactions/_repository.py` — `DirectionResolver`
 - `src/aeat/domain/formulas/_rulesets/_common.py` — `currency_casilla`, `round2`
 - `src/aeat/domain/formulas/_rulesets/_mutators.py` — `PercentRateLocation`
 - `src/aeat/domain/formulas/_rulesets/modelo_100/_ccaa.py` — 17 `TARIFA_*` constants
@@ -48,12 +48,12 @@ Files where only `__all__` was trimmed (definition kept — still used internall
 Files where definition was also deleted (no in-file callers):
 
 - `src/aeat/adapters/inbound/declaracion/_extract.py` — `LabelExtractionHit` import alias
-- `src/aeat/domain/financial/vat/_catalogue.py` — `total_citation_count` function
-- `src/aeat/domain/financial/vat/_rates.py` — `total_rate_count` function
+- `src/aeat/domain/vat/_catalogue.py` — `total_citation_count` function
+- `src/aeat/domain/vat/_rates.py` — `total_rate_count` function
 - `src/aeat/domain/formulas/_rulesets/_mutators.py` — `MutationCase` class, `build_percent_rate_mutants`, `build_scalar_mutants`
 - `src/aeat/domain/formulas/_rulesets/modelo_100/_common.py` — 8 dead URL constants
 - `src/aeat/domain/normatives/__init__.py` — `NORMATIVE_CATALOGUE`
-- `src/aeat/domain/testing/_schema.py` — `SYNTHETIC_COMMENT_REQUIRED_SUBSTRING`
+- `src/aeat/application/filing/_testing_schema.py` — `SYNTHETIC_COMMENT_REQUIRED_SUBSTRING`
 
 Edge cases preserved:
 

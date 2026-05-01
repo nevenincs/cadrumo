@@ -1,15 +1,15 @@
-"""Modelo 390 v2025 extractor — Resumen anual del IVA.
+"""Modelo 390 (Resumen anual del IVA) declaración extractor.
 
-Annual aggregation of the quarterly Modelo 303 filings. Forms:
+Annual aggregation of the quarterly Modelo 303 filings. Sections:
 régimen general (Apartado 3), régimen simplificado (Apartado 4),
 resultado anual (Apartado 6), regularización de la inversión en
-bienes de inversión (Apartado 7). Full form has ~680 casillas; the
-scoped surface targets the 15-casilla result chain that the
-``modelo_390.{year}`` rulesets verify (issue #327).
+bienes de inversión (Apartado 7). The full form has ~680 casillas; this
+extractor targets the 15-casilla result chain verified by the
+``modelo_390.{year}`` rulesets.
 
-Three template-revision variants ship: ``Modelo390V2024Extractor``
-for 2024 filings, ``Modelo390V2025Extractor`` for 2025, and
-``Modelo390V2026Extractor`` for 2026. The casilla map is the same
+Three template-revision variants ship — :class:`Modelo390V2024Extractor`
+for 2024 filings, :class:`Modelo390V2025Extractor` for 2025, and
+:class:`Modelo390V2026Extractor` for 2026. The casilla map is the same
 across the three years because the form layout is unchanged.
 """
 
@@ -22,15 +22,26 @@ from .._schema import TemplateRevision
 
 
 class Modelo390V2025Extractor(GenericDeclaracionExtractor):
-    """Concrete extractor for Modelo 390 tax year 2025 (período 0A)."""
+    """Concrete extractor for Modelo 390 tax year 2025 (período 0A).
+
+    Captures the 15-casilla summary + resultado chain via the shared
+    :class:`aeat.adapters.inbound.declaracion._generic_extractor.GenericDeclaracionExtractor`
+    primitives.
+
+    Attributes:
+        template_revision: Identifier (modelo ``"390"``, año ``2025``,
+            revision ``"2025.01"``).
+        casilla_ids: Ordered tuple of supported casillas covering Apartado 1
+            (datos estadísticos), Apartado 3 (régimen general anual totals),
+            Apartado 6 (resultado anual), and Apartado 7 (regularización
+            bienes inversión).
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="390",
         año=2025,
         revision="2025.01",
     )
-    # MVP: summary + resultado casillas only. Full form support lands in
-    # sub-EPIC #305-Modelo-390-full alongside ruleset #221.
     casilla_ids: ClassVar[tuple[str, ...]] = (
         # Apartado 1 — datos estadísticos.
         "01",  # Régimen general (1T total base)
@@ -55,7 +66,12 @@ class Modelo390V2025Extractor(GenericDeclaracionExtractor):
 
 
 class Modelo390V2024Extractor(Modelo390V2025Extractor):
-    """Modelo 390 v2024 extractor using the unchanged 2025 layout."""
+    """Modelo 390 v2024 extractor reusing the unchanged 2025 layout.
+
+    Attributes:
+        template_revision: Identifier (modelo ``"390"``, año ``2024``,
+            revision ``"2024.01"``).
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="390",
@@ -65,7 +81,12 @@ class Modelo390V2024Extractor(Modelo390V2025Extractor):
 
 
 class Modelo390V2026Extractor(Modelo390V2025Extractor):
-    """Modelo 390 v2026 extractor using the unchanged 2025 layout."""
+    """Modelo 390 v2026 extractor reusing the unchanged 2025 layout.
+
+    Attributes:
+        template_revision: Identifier (modelo ``"390"``, año ``2026``,
+            revision ``"2026.01"``).
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="390",

@@ -1,25 +1,28 @@
 """Persistence layer and migrations entry point.
 
-Public API of the storage subpackage. Callers outside :mod:`aeat.adapters.persistence.storage` MUST
-import only from here — internal modules (``_orm``, ``engine``, ``session``,
-``repository``, ``migrations_api``) are implementation details.
+Public API of the storage subpackage. Callers outside
+:mod:`aeat.adapters.persistence.storage` must import only from here; internal
+modules (``sql._orm``, ``sql.engine``, ``sql.session``, ``sql.repository``,
+``sql.migrations_api``, and the encryption substrate under ``crypto``,
+``envelope``, ``master_key``, ``blob_store``, ``secret_store``) are
+implementation details.
 
 The public surface is intentionally narrow:
 
-- Pydantic v2 record models: :class:`ModeloRecord`, :class:`PortalRecord`,
+- Pydantic v2 record models — :class:`ModeloRecord`, :class:`PortalRecord`,
   :class:`CorpusArtifactRecord`, plus :class:`PortalAuthMethod`.
-- Errors: :class:`StorageError`, :class:`MigrationError`,
+- Errors — :class:`StorageError`, :class:`MigrationError`,
   :class:`RepositoryError`.
-- Engine + session helpers: :func:`get_engine`, :func:`dispose_engine`,
+- Engine and session helpers — :func:`get_engine`, :func:`dispose_engine`,
   :func:`session_scope`.
-- Typed repositories: :class:`ModeloRepository`, :class:`PortalRepository`,
+- Typed repositories — :class:`ModeloRepository`, :class:`PortalRepository`,
   :class:`CorpusArtifactRepository`.
-- Migration helpers: :func:`upgrade_to_head`, :func:`downgrade_to_base`,
+- Migration helpers — :func:`upgrade_to_head`, :func:`downgrade_to_base`,
   :func:`round_trip_migrations`.
-
-See the evolution workflow section of the data-storage ADR
-(``.vault/adr/2026-04-12-data-storage-adr.md``) for how to add columns and
-write migrations.
+- Encryption substrate — :class:`Envelope`, :class:`EncryptedBlobStore`,
+  :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
+  helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
+  :class:`EncryptedJSON`, and :class:`HashedLookup`.
 """
 
 from __future__ import annotations

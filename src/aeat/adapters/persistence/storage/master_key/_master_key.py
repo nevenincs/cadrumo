@@ -487,7 +487,7 @@ class FileFallbackMasterKeyProvider:
             passphrase_callback: Optional override for passphrase
                 resolution. Defaults to
                 :func:`_default_passphrase_callback`. Tests inject a
-                stub that returns a deterministic value.
+                callback that returns a deterministic value.
         """
         self._store_dir = Path(store_dir)
         self._passphrase_callback = passphrase_callback or _default_passphrase_callback
@@ -959,7 +959,7 @@ def get_master_key_provider(
             ``keyring`` / ``file``). Overrides the value resolved from
             settings.
         settings_override: Optional pre-built settings instance. Tests
-            inject a settings stub bound to ``tmp_path`` so the file
+            inject a settings object bound to ``tmp_path`` so the file
             backend writes inside the test sandbox.
         passphrase_callback: Optional override for passphrase
             resolution; only consulted by the file backend.

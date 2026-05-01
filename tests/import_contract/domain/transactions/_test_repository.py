@@ -20,9 +20,9 @@ from aeat.adapters.persistence.storage import (
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
 from aeat.adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
-from aeat.domain.transactions._enums import TransactionDirection
-from aeat.domain.transactions._repository import (
+from aeat.domain.transactions import (
     ImportSummary,
+    TransactionDirection,
     TransactionCatalogueRepository,
 )
 
@@ -195,7 +195,7 @@ class TestCiphertextOnDisk:
             save_encrypted_envelope,
         )
         from aeat.adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
-        from aeat.domain.transactions._models import TransactionCatalogue
+        from aeat.domain.transactions import TransactionCatalogue
 
         store_dir.mkdir(parents=True, exist_ok=True)
         # Compose an OPERATIONAL-class envelope and write it as ciphertext

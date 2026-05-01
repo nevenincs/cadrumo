@@ -63,18 +63,18 @@ class TestValidatorHelpers:
 
 class TestVerifyRejectsBadFlags:
     def test_non_numeric_modelo_is_rejected(self, tmp_path: Path) -> None:
-        stub = tmp_path / "stub.bin"
-        stub.write_bytes(b" ")
-        result = _runner.invoke(app, ["verify", str(stub), "--modelo", "ABC", "--ejercicio", "2024"])
+        placeholder = tmp_path / "placeholder.bin"
+        placeholder.write_bytes(b" ")
+        result = _runner.invoke(app, ["verify", str(placeholder), "--modelo", "ABC", "--ejercicio", "2024"])
         assert result.exit_code != 0
         # typer surfaces the BadParameter message in stderr/stdout mix.
         combined = " ".join((result.stdout + (result.stderr or "")).split()).lower()
         assert "3-digit" in combined or "numeric" in combined
 
     def test_short_year_ejercicio_is_rejected(self, tmp_path: Path) -> None:
-        stub = tmp_path / "stub.bin"
-        stub.write_bytes(b" ")
-        result = _runner.invoke(app, ["verify", str(stub), "--modelo", "130", "--ejercicio", "24"])
+        placeholder = tmp_path / "placeholder.bin"
+        placeholder.write_bytes(b" ")
+        result = _runner.invoke(app, ["verify", str(placeholder), "--modelo", "130", "--ejercicio", "24"])
         assert result.exit_code != 0
         combined = " ".join((result.stdout + (result.stderr or "")).split()).lower()
         assert "4-digit" in combined or "year" in combined

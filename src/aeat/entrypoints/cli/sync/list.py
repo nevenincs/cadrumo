@@ -1,4 +1,10 @@
-"""``aeat sync list-divergences`` — list persisted divergence records."""
+"""``aeat sync list-divergences`` -- enumerate persisted divergence records.
+
+Loads :class:`aeat.application.sync.DivergenceRecord` instances from
+:class:`aeat.application.sync.JsonFileDivergenceRepository` and
+renders them as a Rich table, optionally filtered by
+:class:`aeat.application.sync.ResolutionState`.
+"""
 
 from __future__ import annotations
 
@@ -20,7 +26,13 @@ def list_divergences(
         help="Filter by resolution state (pending, auto_healed, human_approved, rejected).",
     ),
 ) -> None:
-    """List every persisted divergence record, optionally filtered by state."""
+    """List every persisted divergence record, optionally filtered by state.
+
+    Args:
+        state: Optional :class:`aeat.application.sync.ResolutionState`
+            to restrict the listing. When ``None`` every record is
+            shown.
+    """
     arguments = {"state": state}
     with cli_run_context(entrypoint="aeat sync list-divergences", arguments=arguments):
         settings = load_settings()

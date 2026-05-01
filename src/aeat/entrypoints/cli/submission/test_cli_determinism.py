@@ -1,21 +1,21 @@
-"""CLI determinism lock: identical inputs → byte-identical outputs.
+"""CLI determinism lock: identical inputs produce byte-identical outputs.
 
-A foundational Kent-observable guarantee: running
-``aeat submission export`` twice with the same draft must produce
-the exact same bytes on disk. Without this, diff-against-receipt
-workflows would be unreliable — Kent couldn't tell whether a
-byte difference came from his data or from a non-deterministic
-serialiser.
+A foundational operator-observable guarantee: running
+``aeat submission export`` twice with the same draft must produce the
+exact same bytes on disk. Without this, diff-against-receipt workflows
+would be unreliable — an operator could not tell whether a byte
+difference came from data or from a non-deterministic serialiser.
 
-The serialiser itself is fundamentally deterministic (pure
-function of inputs), but import-time state (env vars, random
-seeds, hash randomisation, file-system timestamps) can leak into
-the output through careless dependencies. that no
-such leak exists at the CLI boundary.
+The serialiser itself is fundamentally deterministic (pure function of
+inputs), but import-time state (env vars, random seeds, hash
+randomisation, file-system timestamps) can leak into the output through
+careless dependencies. These tests assert that no such leak exists at
+the CLI boundary.
 
-Exercised for every registered schema so a future Modelo 390 or
-Modelo 100 registration automatically picks up the determinism
-check with no extra code.
+Parametrised over every entry in
+:data:`._schema_registry.SCHEMA_REGISTRY` so a future Modelo 390 or
+Modelo 100 registration automatically picks up the determinism check
+with no extra code.
 """
 
 from __future__ import annotations
@@ -39,6 +39,7 @@ _REGISTRY_IDS = [f"{m}-{e}" for m, e in _REGISTRY_KEYS]
 
 
 def _write_draft(tmp_path: Path, *, modelo: str, period: str) -> Path:
+    """Write a minimal CLI-format draft JSON exercising casilla 01 only."""
     payload = {
         "draft_id": f"DETERMINISM-{modelo}-{period}",
         "modelo": modelo,
@@ -54,6 +55,7 @@ def _write_draft(tmp_path: Path, *, modelo: str, period: str) -> Path:
 
 
 def _export(tmp_path: Path, *, modelo: str, period: str, sub: str) -> Path:
+    """Run ``aeat submission export`` and return the produced fichero-BOE path."""
     draft = _write_draft(tmp_path, modelo=modelo, period=period)
     out = tmp_path / sub
     result = _runner.invoke(
@@ -96,12 +98,13 @@ def test_two_exports_produce_byte_identical_files(tmp_path: Path, modelo: str, e
 
 @pytest.mark.parametrize(("modelo", "ejercicio"), _REGISTRY_KEYS, ids=_REGISTRY_IDS)
 def test_five_sequential_exports_all_identical(tmp_path: Path, modelo: str, ejercicio: str) -> None:
-    """Five runs in a row must all produce the same SHA256.
+    """Five runs in a row must all produce the same SHA-256.
 
     Stronger than the 2-run check: catches a non-deterministic
     dependency that only surfaces every few invocations (e.g. a
-    hash-randomised dict ordering that happens to match on 2 runs
-    but diverges later)."""
+    hash-randomised dict ordering that happens to match on 2 runs but
+    diverges later).
+    """
     period = f"{ejercicio}Q1"
     hashes: list[str] = []
     for i in range(5):

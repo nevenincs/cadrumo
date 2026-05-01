@@ -1,8 +1,10 @@
 """Unit tests for :mod:`aeat.application.filing`.
 
-The module carries ``pytestmark = [pytest.mark.unit, pytest.mark.domain_application]`` per the project rule.
-The tests use real Protocol-conforming pydantic doubles defined
-in :mod:`aeat.application.filing.testing` — no mocks, patches, fakes, or
+Covers the public draft-construction surface, the
+:class:`Modelo130Builder` arithmetic, and the cross-cutting
+:class:`FilingValidator` rules. Test doubles are real
+Protocol-conforming pydantic models defined in
+:mod:`aeat.application.filing.testing` — no mocks, patches, fakes, or
 stubs.
 """
 
@@ -123,7 +125,7 @@ class TestModelo130Builder:
         assert by_id["07"].formula_trace == ("04", "05", "06")
 
     def test_apartado_ii_to_v_casillas_match_hand_calculations(self) -> None:
-        """Hand-calculations for the 12 new apartado-II/III/IV/V casillas (#305)."""
+        """Hand-calculations for the 12 apartado-II/III/IV/V casillas."""
         builder = Modelo130Builder()
         inputs = {
             "01": Decimal("12500"),

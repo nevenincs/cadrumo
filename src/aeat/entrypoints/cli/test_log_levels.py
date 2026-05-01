@@ -1,4 +1,10 @@
-"""Unit tests for the CLI log-level resolver."""
+"""Unit tests for the CLI log-level resolver.
+
+Exercises :func:`aeat.entrypoints.cli.resolve_log_level`, the
+flag/env precedence rules, conflict detection, and
+:func:`aeat.entrypoints.cli.apply_to_root_logger` propagation to
+both the root logger and its installed handlers.
+"""
 
 from __future__ import annotations
 

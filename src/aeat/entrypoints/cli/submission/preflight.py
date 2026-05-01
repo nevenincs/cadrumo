@@ -1,4 +1,10 @@
-"""``aeat submission preflight`` — run preflight gates without browser work."""
+"""``aeat submission preflight`` — run preflight gates without browser work.
+
+Drives the
+:class:`aeat.adapters.outbound.aeat.export.Preflight` checker against a
+persisted draft and reports the outcome. No transport calls are made;
+this is the safe pre-export gate.
+"""
 
 from __future__ import annotations
 
@@ -17,7 +23,19 @@ _CONSOLE = Console()
 def preflight_cmd(
     draft_ref: str = typer.Argument(..., help="Draft id or path to a persisted filing draft JSON."),
 ) -> None:
-    """Run preflight on ``draft_ref`` and print the outcome."""
+    """Run preflight on ``draft_ref`` and print the outcome.
+
+    Args:
+        draft_ref: Either a draft id (looked up under
+            :attr:`aeat.core.config.Settings.aeat_drafts_dir`) or a
+            filesystem path to a persisted filing draft JSON.
+
+    Raises:
+        typer.Exit: With code ``1`` when the
+            :class:`aeat.adapters.outbound.aeat.export.Preflight` check
+            raises
+            :exc:`aeat.adapters.outbound.aeat.export.SubmissionPreflightError`.
+    """
     arguments = {"draft_ref": draft_ref}
     with cli_run_context(
         entrypoint="aeat submission preflight",

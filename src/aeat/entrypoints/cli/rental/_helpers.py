@@ -1,9 +1,9 @@
-"""Shared helpers for the ``aeat rental`` sub-app (#454).
+"""Shared helpers for the ``aeat rental`` Typer sub-app.
 
-Storage imports are deferred behind :func:`open_session` so the
-sub-app does not pull :mod:`aeat.adapters.persistence.storage` (with its alembic plugin
-discovery) into every CLI command's import chain; this preserves
-the json-pipe-safety contract.
+Storage imports are deferred behind :func:`open_session` so the sub-app
+does not pull :mod:`aeat.adapters.persistence.storage` (with its alembic
+plugin discovery) into every CLI command's import chain; this preserves
+the JSON-pipe-safety contract.
 """
 
 from __future__ import annotations
@@ -18,13 +18,16 @@ if TYPE_CHECKING:  # pragma: no cover — type-only imports
 
 @contextmanager
 def open_session() -> Iterator[Session]:
-    """Open a SQLAlchemy session bound to the configured database.
+    """Yield a SQLAlchemy :class:`Session` bound to the configured database.
 
-    Each invocation creates a fresh engine and disposes it on exit
-    so the CLI does not retain DB connections beyond a single
-    command. The configured ``aeat_database_url`` from
-    :class:`Settings` is used; defaults to a local SQLite database
-    under ``var/aeat.db``.
+    Each invocation creates a fresh engine and disposes it on exit so
+    the CLI does not retain DB connections beyond a single command. The
+    configured ``aeat_database_url`` on :class:`aeat.core.config.Settings`
+    is used; the default is a local SQLite database under ``var/aeat.db``.
+
+    Yields:
+        An open :class:`sqlalchemy.orm.Session` scoped to one CLI
+        invocation.
     """
     from ....adapters.persistence.storage import create_engine_from_settings, session_scope
     from ....core.config import load_settings

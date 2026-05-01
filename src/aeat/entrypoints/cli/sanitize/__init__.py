@@ -1,24 +1,23 @@
-"""``aeat sanitize`` sub-app — PDF PII redaction CLI (#239).
+"""``aeat sanitize`` Typer sub-app for PDF PII redaction.
 
 Subcommands:
 
-- ``aeat sanitize pdf <input> --mapping <yaml> --output <out>`` —
-  apply a TokenMap to a captured PDF and write the sanitised
-  result.
-- ``aeat sanitize prepare-map <input> --output <yaml>`` — scaffold
-  a per-capture mapping YAML by running the existing justificante
-  parser; the operator fills in the cleartext locally.
+- ``aeat sanitize pdf <input> --mapping <yaml> --output <out>`` — apply
+  a :class:`TokenMap` to a captured PDF and write the sanitised result.
+- ``aeat sanitize prepare-map <input> --output <yaml>`` — scaffold a
+  per-capture mapping YAML by running the existing justificante parser;
+  the operator fills in the cleartext locally.
 - ``aeat sanitize verify <output> --against <yaml>`` — adversarial
-  absence check; exits non-zero if any ``real:`` value leaks into
-  the sanitised output.
+  absence check; exits non-zero if any ``real:`` value leaks into the
+  sanitised output.
 - ``aeat sanitize check <output>`` — structural-integrity check
-  (re-opens with pikepdf, runs the justificante parser).
+  (re-opens with :mod:`pikepdf`, runs the justificante parser).
 
-Every subcommand is strictly read-only on AEAT — no auth, no HTTP,
-no env-var reads under ``AEAT_*``. The forbidden-flag guard
-mirrors :mod:`aeat.entrypoints.cli.filing._reconcile`: any flag named
-``--write`` / ``--submit`` / ``--send`` / ``--enviar`` / ... exits
-with code 2 before Typer dispatch.
+Every subcommand is strictly read-only on AEAT — no auth, no HTTP, no
+env-var reads under ``AEAT_*``. The forbidden-flag guard mirrors
+:mod:`aeat.entrypoints.cli.filing._reconcile`: any flag named
+``--write`` / ``--submit`` / ``--send`` / ``--enviar`` / ... exits with
+code 2 before Typer dispatch.
 """
 
 from __future__ import annotations
@@ -35,6 +34,7 @@ import yaml
 from pydantic import SecretStr
 from rich.console import Console
 
+from ....adapters.inbound.justificante import parse_justificante
 from ....adapters.inbound.sanitizer import (
     AddressReplacement,
     AlreadySanitizedError,
@@ -52,13 +52,13 @@ from ....adapters.inbound.sanitizer import (
     sanitize_pdf,
 )
 from ....core.logging import get_logger
-from ....domain.justificante import JustificanteError, parse_justificante
+from ....domain.justificante import JustificanteError
 
 log = get_logger(__name__)
 
 app = typer.Typer(
     name="sanitize",
-    help="PDF sanitiser — redact PII for fixture commits (#239).",
+    help="PDF sanitiser — redact PII for fixture commits.",
     no_args_is_help=True,
 )
 
@@ -134,7 +134,25 @@ def pdf_command(
         ),
     ] = False,
 ) -> None:
-    """Sanitise ``input_path`` against ``mapping_path`` and write to ``output_path``."""
+    """Sanitise ``input_path`` against ``mapping_path`` and write to ``output_path``.
+
+    Args:
+        ctx: Typer context whose extra args are scanned for forbidden
+            mutation flags.
+        input_path: Captured source PDF to sanitise.
+        mapping_path: YAML file mapping cleartext (``real``) to
+            synthetic (``synthetic``) values.
+        output_path: Destination path for the sanitised PDF.
+        report_path: Optional path to write the
+            :class:`SanitizationResult` audit JSON to.
+        allow_already_sanitized: Bypass
+            :exc:`AlreadySanitizedError` when the source SHA-256 is
+            already a known sanitised fixture.
+
+    Raises:
+        typer.Exit: Code ``2`` for missing inputs, refused
+            re-sanitisation, or any other :exc:`SanitizationError`.
+    """
     reject_forbidden_flags(tuple(ctx.args or ()))
 
     if not input_path.is_file():
@@ -186,22 +204,31 @@ def prepare_map_command(
         typer.Option("--output", "-o", help="Where to write the scaffold YAML."),
     ],
 ) -> None:
-    """Run the justificante parser and emit a YAML scaffold with synthetic values pre-filled.
+    """Run the justificante parser and emit a YAML scaffold.
 
-    The scaffold pre-fills:
+    The scaffold pre-fills synthetic values where they can be derived
+    deterministically:
 
     * ``nif`` from the parsed ``tax_id``.
     * ``csv`` from the parsed ``csv``.
     * ``name`` placeholder (operator must fill the real value).
-    * ``importe`` from every Spanish-shape decimal token detected
-      in the PDF's text — covers the ~80 monetary casillas of a
-      Modelo 100 declaration without operator enumeration.
-    * ``arbitrary`` from every catastral reference, NRC, and date
-      token detected.
+    * ``importe`` from every Spanish-shape decimal token detected in
+      the PDF's text — covers the ~80 monetary casillas of a Modelo 100
+      declaration without operator enumeration.
+    * ``arbitrary`` from every catastral reference, NRC, and date token
+      detected.
 
     The operator only needs to fill in the real taxpayer name and
-    review the auto-detected entries before running ``aeat
-    sanitize pdf``.
+    review the auto-detected entries before running ``aeat sanitize
+    pdf``.
+
+    Args:
+        ctx: Typer context (forbidden-flag scan).
+        input_path: Captured source PDF to introspect.
+        output_path: Path to write the scaffold YAML to.
+
+    Raises:
+        typer.Exit: Code ``2`` when ``input_path`` does not exist.
     """
     reject_forbidden_flags(tuple(ctx.args or ()))
 
@@ -250,9 +277,16 @@ def prepare_map_command(
 def _extract_pdf_text(path: Path) -> str:
     """Return the concatenated text of every page in ``path``.
 
-    Uses pdfplumber (already a project dependency); silently
+    Uses :mod:`pdfplumber` (already a project dependency); silently
     returns an empty string when the PDF cannot be opened so the
     scaffold falls back to the structural fields only.
+
+    Args:
+        path: PDF file to read.
+
+    Returns:
+        Newline-joined page text, or ``""`` when the PDF cannot be
+        opened by :mod:`pdfplumber`.
     """
     try:
         import pdfplumber
@@ -300,11 +334,19 @@ _PHONE_ES_RE = re.compile(
 def _detect_pii_surfaces(text: str) -> dict[str, list[dict[str, str]]]:
     """Return per-category entries auto-detected in ``text``.
 
-    The detection is conservative: it returns categories the
-    operator should review, never categories where false positives
-    would corrupt the sanitiser's output. The synthetic values are
+    Detection is conservative: it returns categories the operator
+    should review, never categories where false positives would
+    corrupt the sanitiser's output. The synthetic values are
     deterministic placeholders the operator can override before
     sanitising.
+
+    Args:
+        text: Concatenated PDF page text to scan.
+
+    Returns:
+        Mapping of category name to a list of
+        ``{real, synthetic, surface_label}`` entries ready for YAML
+        serialisation.
     """
     importes: list[str] = sorted({m.group(0) for m in _IMPORTE_RE.finditer(text)})
     dates: list[str] = sorted({m.group(0) for m in _DATE_RE.finditer(text)})
@@ -417,7 +459,22 @@ def verify_command(
         typer.Option("--against", help="Path to the per-capture mapping YAML."),
     ],
 ) -> None:
-    """Verify ``output_pdf`` carries no ``real:`` value from ``mapping_path``."""
+    """Verify ``output_pdf`` carries no ``real:`` value from ``mapping_path``.
+
+    Synthetic values are masked out of the byte streams before the
+    leak scan so a real value that is a substring of a synthetic
+    (e.g. ``0,00`` inside ``1.000,00``) is not falsely flagged.
+    Masking proceeds longest-first so nested overlaps collapse cleanly.
+
+    Args:
+        ctx: Typer context (forbidden-flag scan).
+        output_pdf: Path of the sanitised PDF to inspect.
+        mapping_path: Path of the per-capture mapping YAML.
+
+    Raises:
+        typer.Exit: Code ``2`` for missing files; code ``1`` if any
+            ``real:`` value is found in the output bytes.
+    """
     reject_forbidden_flags(tuple(ctx.args or ()))
 
     if not output_pdf.is_file():
@@ -478,7 +535,17 @@ def check_command(
     ctx: typer.Context,
     output_pdf: Annotated[Path, typer.Argument(help="Sanitised PDF to inspect.")],
 ) -> None:
-    """Re-open ``output_pdf`` with pikepdf and run the justificante parser."""
+    """Re-open ``output_pdf`` with :mod:`pikepdf` and run the justificante parser.
+
+    Args:
+        ctx: Typer context (forbidden-flag scan).
+        output_pdf: Path of the sanitised PDF to introspect.
+
+    Raises:
+        typer.Exit: Code ``2`` when ``output_pdf`` is missing; code
+            ``1`` when :mod:`pikepdf` cannot parse it or
+            :func:`parse_justificante` rejects it.
+    """
     reject_forbidden_flags(tuple(ctx.args or ()))
 
     if not output_pdf.is_file():
@@ -518,7 +585,20 @@ _REPLACEMENT_CATEGORIES: dict[str, type] = {
 
 
 def _load_mapping_yaml(path: Path) -> TokenMap:
-    """Loads a TokenMap from ``path``; exits with a message on validation error."""
+    """Load a :class:`TokenMap` from ``path``.
+
+    Args:
+        path: Per-capture mapping YAML file.
+
+    Returns:
+        Validated :class:`TokenMap` ready to drive
+        :func:`sanitize_pdf` or :func:`verify_command`.
+
+    Raises:
+        typer.Exit: Code ``2`` for any structural or per-entry
+            validation failure (with a human-readable diagnostic
+            written to stderr).
+    """
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     if not isinstance(raw, dict):
         _ERR_CONSOLE.print(f"[red]Mapping YAML must be a mapping at the top level: {path}[/red]")
@@ -563,12 +643,12 @@ def _load_mapping_yaml(path: Path) -> TokenMap:
 def _iter_token_map_entries(
     mapping: TokenMap,
 ) -> list[tuple[str, tuple]]:
-    """Returns ``(category_name, entries)`` pairs for every populated category."""
+    """Return ``(category_name, entries)`` pairs for every populated category."""
     return [(name, getattr(mapping, name)) for name in _REPLACEMENT_CATEGORIES if getattr(mapping, name)]
 
 
 def _empty_scaffold() -> dict[str, list[dict[str, str]]]:
-    """Returns a YAML-ready scaffold with one placeholder entry per category."""
+    """Return a YAML-ready scaffold with one placeholder entry per category."""
     return {
         category: [
             {
@@ -582,12 +662,12 @@ def _empty_scaffold() -> dict[str, list[dict[str, str]]]:
 
 
 def _scaffold_from_justificante(justificante: object) -> dict[str, list[dict[str, str]]]:
-    """Returns a YAML-ready scaffold with synthetic values pre-filled from the parsed justificante.
+    """Return a YAML-ready scaffold pre-filled from a parsed justificante.
 
     Args:
         justificante: A parsed :class:`aeat.domain.justificante.Justificante`
-            (typed as ``object`` here to dodge a circular-import
-            cost; structural attribute access only).
+            (typed as ``object`` here to dodge a circular-import cost;
+            structural attribute access only).
 
     Returns:
         Dict in the shape consumable by :func:`_load_mapping_yaml`,
@@ -632,26 +712,25 @@ def _scaffold_from_justificante(justificante: object) -> dict[str, list[dict[str
 
 
 def _synthesise_csv_for(modelo: str, *, ejercicio: str = "") -> str:
-    """Returns a 16-character synthetic CSV deterministically derived from ``modelo``.
+    """Return a 16-character synthetic CSV deterministically derived from ``modelo``.
 
     The synthetic conforms to the 16-char base32-like shape AEAT
-    publishes. It is intentionally *not* random: the same
-    ``(modelo, ejercicio)`` pair always yields the same synthetic
-    so a fixture's CSV is auditable across runs.
+    publishes. It is intentionally not random: the same
+    ``(modelo, ejercicio)`` pair always yields the same synthetic so a
+    fixture's CSV is auditable across runs.
 
     When ``ejercicio`` is supplied, the embed shape is
-    ``SANITIZED{modelo}{ejercicio}`` (matches the existing
-    fixture corpus, e.g. ``SANITIZED1302024`` for M130 / 2024).
-    Otherwise the helper falls back to ``SANITIZED{modelo}XXXX``
-    padding so the result still hits the 16-char target.
+    ``SANITIZED{modelo}{ejercicio}`` (matches the existing fixture
+    corpus, e.g. ``SANITIZED1302024`` for M130 / 2024). Otherwise the
+    helper falls back to ``SANITIZED{modelo}XXXX`` padding so the
+    result still hits the 16-char target.
 
     Args:
         modelo: AEAT modelo code (typically 3 digits).
-        ejercicio: Optional tax year (4 digits). When provided
-            and ``len("SANITIZED" + modelo + ejercicio) <= 16``,
-            the year is embedded directly. Out-of-bounds inputs
-            silently fall back to padding to keep the helper
-            shape-conforming.
+        ejercicio: Optional tax year (4 digits). When provided and
+            ``len("SANITIZED" + modelo + ejercicio) <= 16``, the year
+            is embedded directly. Out-of-bounds inputs silently fall
+            back to padding to keep the helper shape-conforming.
 
     Returns:
         A 16-character uppercase synthetic CSV.
@@ -664,7 +743,7 @@ def _synthesise_csv_for(modelo: str, *, ejercicio: str = "") -> str:
 
 
 def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
-    """Returns the concatenated decompressed content streams of every page."""
+    """Return the concatenated decompressed content streams of every page."""
     pdf = pikepdf.Pdf.open(io.BytesIO(pdf_bytes))
     chunks: list[bytes] = []
     for page in pdf.pages:
@@ -680,12 +759,11 @@ def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
 
 
 def _write_report(result: SanitizationResult, path: Path) -> None:
-    """Writes the SanitizationResult as JSON to ``path``.
+    """Write ``result`` as JSON to ``path``.
 
-    ``output_bytes`` is excluded — the PDF bytes are not UTF-8
-    safe and the audit log already carries ``output_sha256`` for
-    integrity, so a JSON-friendly digest is the right serialised
-    shape.
+    ``output_bytes`` is excluded: the PDF bytes are not UTF-8 safe and
+    the audit log already carries ``output_sha256`` for integrity, so
+    a JSON-friendly digest is the right serialised shape.
     """
     payload = result.model_dump(mode="json", exclude={"output_bytes"})
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")

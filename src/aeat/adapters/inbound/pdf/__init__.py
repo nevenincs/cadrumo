@@ -2,7 +2,7 @@
 
 The :mod:`aeat.adapters.inbound.pdf` package owns types and errors that every
 per-PDF-class module under :mod:`aeat.domain.justificante`, :mod:`aeat.adapters.inbound.declaracion`,
-:mod:`aeat.adapters.inbound.borrador`, and :mod:`aeat.predeclaracion` consumes. It is
+:mod:`aeat.adapters.inbound.borrador` consumes. It is
 *deliberately underscore-prefixed* because the concrete parsing modules
 are the public surface; callers from outside the project should not
 need to import from here.

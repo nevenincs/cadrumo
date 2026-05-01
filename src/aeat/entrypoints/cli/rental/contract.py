@@ -1,4 +1,10 @@
-"""``aeat rental contract`` commands (#454)."""
+"""``aeat rental contract`` Typer commands.
+
+Manage rental contracts attached to fincas in the register: add a new
+contract, list contracts (optionally filtered by finca), and show one
+contract by id. Persistence is delegated to
+:class:`aeat.domain.rental.RentalContractRepository`.
+"""
 
 from __future__ import annotations
 
@@ -21,7 +27,7 @@ from ._helpers import open_session
 app = typer.Typer(
     name="contract",
     no_args_is_help=True,
-    help="Gestión de contratos de arrendamiento (#454).",
+    help="Gestión de contratos de arrendamiento.",
 )
 
 
@@ -32,11 +38,23 @@ class ContractListJson(OutputRootSchema[list[RentalContract]]):
 
 @register_schema("rental contract show")
 class ContractShowJson(OutputSchema):
+    """Schema for ``aeat rental contract show --json``.
+
+    Attributes:
+        contract: The persisted :class:`RentalContract` requested by id.
+    """
+
     contract: RentalContract
 
 
 @register_schema("rental contract add")
 class ContractAddJson(OutputSchema):
+    """Schema for ``aeat rental contract add --json``.
+
+    Attributes:
+        contract: The newly persisted :class:`RentalContract` record.
+    """
+
     contract: RentalContract
 
 
@@ -55,7 +73,12 @@ def add_cmd(
     prior_contract_last_rent: str | None = typer.Option(None, "--prior-rent"),
     lau_17_6_compliant: bool = typer.Option(True, "--lau-17-6-compliant / --no-lau-17-6-compliant"),
 ) -> None:
-    """Register a contract on an existing finca."""
+    """Register a contract on an existing finca.
+
+    Raises:
+        FincaNotFoundError: When ``finca_identifier`` does not match any
+            persisted finca.
+    """
     with open_session() as session:
         finca_repo = RentalFincaRepository(session)
         finca = finca_repo.get_by_identifier(finca_identifier)
@@ -95,7 +118,12 @@ def add_cmd(
 def list_cmd(
     finca_identifier: str | None = typer.Option(None, "--finca", help="Filtrar por finca."),
 ) -> None:
-    """List contracts, optionally filtering by finca identifier."""
+    """List contracts, optionally filtering by finca identifier.
+
+    Raises:
+        FincaNotFoundError: When ``finca_identifier`` is supplied but
+            does not match any persisted finca.
+    """
     with open_session() as session:
         contract_repo = RentalContractRepository(session)
         if finca_identifier is not None:
@@ -136,6 +164,11 @@ def list_cmd(
 
 @app.command(name="show", help="Mostrar un contrato por id.")
 def show_cmd(contract_id: int = typer.Argument(..., help="Id de contrato.")) -> None:
+    """Show a contract by its primary key.
+
+    Raises:
+        ContractNotFoundError: When no contract exists for ``contract_id``.
+    """
     with open_session() as session:
         repo = RentalContractRepository(session)
         try:

@@ -1,7 +1,7 @@
 """Reconstruct a :class:`FilingDraft` from an AEAT justificante PDF (#271).
 
 Kent keeps the justificante PDF of a past filing on disk. This module
-parses the PDF via :mod:`aeat.domain.justificante`, materialises an empty draft
+parses the PDF via :mod:`aeat.adapters.inbound.justificante`, materialises an empty draft
 scaffold (every casilla ``EMPTY``) via the registered builder for the
 modelo, and co-produces a ``SubmittedFiling`` record so the import is
 usable as the baseline for amendment flows (#93, #234, #235).
@@ -21,10 +21,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
+from ...adapters.inbound.justificante import parse_justificante
 from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.filing import CasillaSchemaProvider, FilingBuilderError, FilingDraft, FilingImportError
-from ...domain.justificante import Justificante, parse_justificante
+from ...domain.justificante import Justificante
 from .runtime import FilingOperatorProfile
 
 if TYPE_CHECKING:

@@ -78,9 +78,9 @@ Conscious project-mandate exception. Project mandates require every milestone to
 - Hexagonal layout move + top-5 monolithic splits (`storage` ~12k, `cli` ~7.6k, `auth` ~4.8k, `filing` ~4.5k, `errors` ~3k)
 - `submission/` → `adapters/outbound/aeat/export/` rename (legal-liability clarity)
 - `models/` → `domain/modelos/` (Spanish-canonical, avoids Pydantic naming collision)
-- Static import-boundary enforcement via `import-linter` (CI fails on violation)
+- Static import-boundary enforcement via pytest import-contract tests (CI fails on violation)
 - Test-marker realignment in lockstep (`domain_local_state` bifurcates into `domain_model` + `domain_persistence`; `domain_aeat_remote` → `domain_outbound`; etc.)
-- Public-surface preservation via re-export shims (`from aeat.errors`, `from aeat.auth`)
+- Public-surface migration to canonical modules (`aeat.core.errors`, `aeat.adapters.outbound.aeat.auth`)
 - Vault-corpus supersession (Tier 1-4 contradiction list, hard gate on Tier 2 security guardrails)
 - Dead-code workstream Phase 1 + Phase 2 (~590 LOC + 4 empty placeholder subpackages)
 
@@ -92,7 +92,7 @@ Conscious project-mandate exception. Project mandates require every milestone to
 
 EPIC [#475](https://github.com/wgergely/aeat/issues/475) — see also charter parent [#120](https://github.com/wgergely/aeat/issues/120). RE-SEQUENCED through #475: [#390](https://github.com/wgergely/aeat/issues/390), [#392](https://github.com/wgergely/aeat/issues/392), [#291](https://github.com/wgergely/aeat/issues/291), [#416](https://github.com/wgergely/aeat/issues/416). Destination signal (no scope change): [#233](https://github.com/wgergely/aeat/issues/233), [#279](https://github.com/wgergely/aeat/issues/279).
 
-ADR `2026-04-30-aeat-restructure-adr.md` (status: **accepted — execution-ready**); research `2026-04-30-aeat-restructure-research.md`; plan `2026-04-30-aeat-restructure-plan.md` (18-step autonomous pipeline; single-agent execution).
+ADR `2026-04-30-aeat-restructure-adr.md` (status: **accepted — delivered hard-cutover**); research `2026-04-30-aeat-restructure-research.md`; plan `2026-04-30-aeat-restructure-plan.md` (15-step autonomous pipeline; single-agent execution).
 
 ---
 

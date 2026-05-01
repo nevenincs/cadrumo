@@ -1,9 +1,4 @@
-"""``aeat portals`` sub-app — AEAT portal catalogue helpers (#7).
-
-Re-exports the Typer ``app`` constructed in :mod:`aeat.domain.portals._cli`.
-Kept as a thin shim so the CLI wiring matches the pattern used by
-other sub-apps (e.g. :mod:`aeat.entrypoints.cli.modelos`).
-"""
+"""``aeat portals`` sub-app — AEAT portal catalogue helpers (#7)."""
 
 from __future__ import annotations
 

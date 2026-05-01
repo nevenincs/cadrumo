@@ -1,4 +1,12 @@
-"""Schema-conformance tests for registered ``--json`` command payloads."""
+"""Schema-conformance tests for registered ``--json`` command payloads.
+
+For every command path registered in
+:data:`aeat.entrypoints.cli.SCHEMA_REGISTRY`, this module invokes
+the real CLI under :class:`typer.testing.CliRunner`, unwraps the
+``result`` envelope, and validates it against the bound
+:class:`aeat.entrypoints.cli.OutputSchema` subclass. Drift between
+the runtime output and its declared schema fails fast here.
+"""
 
 from __future__ import annotations
 
@@ -18,11 +26,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _cleanup_master_key_override() -> Iterator[None]:
-    """Ensure each test starts with a clean ``override_master_key_provider`` state.
+    """Reset the master-key and secret-store overrides between tests.
 
-    The workflow tests in this file install an in-process master-key
-    provider via ``_prepare_workflow_env``; this fixture clears it
-    after each test so unrelated tests do not inherit a stale override.
+    The workflow tests install an in-process master-key provider via
+    :func:`_prepare_workflow_env`; this fixture clears it after each
+    test so unrelated tests do not inherit a stale override.
     """
     yield
     from ...adapters.persistence.storage import override_master_key_provider, override_secret_store
@@ -86,6 +94,7 @@ _EXPECTED_REGISTERED_COMMANDS = {
 
 
 def _prepare_workflow_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Install in-process secret store and seed an encrypted profile + draft inputs."""
     from datetime import UTC, datetime
 
     from ...adapters.persistence.storage import (
@@ -149,6 +158,7 @@ def _prepare_workflow_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def _unwrap_result(output: str, *, command_path: str) -> str:
+    """Unwrap the ``result`` payload from a JSON envelope and re-serialise it."""
     payload = json.loads(output)
     assert payload["schema_version"] == "1"
     assert payload["command"] == command_path
@@ -156,7 +166,7 @@ def _unwrap_result(output: str, *, command_path: str) -> str:
 
 
 def test_schema_registry_contains_current_json_contract_bindings() -> None:
-    """The registry should enumerate the current JSON-contract command set."""
+    """The registry must enumerate the current JSON-contract command set."""
 
     assert set(SCHEMA_REGISTRY) == _EXPECTED_REGISTERED_COMMANDS
 
@@ -301,7 +311,7 @@ def test_registered_schema_validates_real_cli_output(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Each bound schema should validate the real CLI JSON bytes it owns."""
+    """Every bound schema must validate the real CLI JSON bytes it owns."""
 
     result = invoke(tmp_path, monkeypatch)
     assert result.exit_code == 0, result.output

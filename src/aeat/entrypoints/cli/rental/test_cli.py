@@ -1,4 +1,10 @@
-"""End-to-end CLI tests for ``aeat rental`` (#454)."""
+"""End-to-end CLI tests for the ``aeat rental`` Typer sub-app.
+
+Pin every CLI invocation to an isolated, encrypted SQLite database so
+the tests exercise the real repository / encryption stack rather than
+test doubles. Covers sub-app registration, finca CRUD, JSON schemas
+and the Anexo C compute pipeline.
+"""
 
 from __future__ import annotations
 
@@ -24,6 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _master_key() -> Iterator[None]:
+    """Install an ephemeral master key for every CLI test."""
     override_master_key_provider(EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)))
     try:
         yield
@@ -51,10 +58,12 @@ def _isolated_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Pa
 
 
 def _runner() -> CliRunner:
+    """Return a fresh Typer ``CliRunner`` for one test."""
     return CliRunner()
 
 
 def _add_finca(runner: CliRunner) -> None:
+    """Invoke ``rental finca add`` with a stable fixture row."""
     result = runner.invoke(
         cli.app,
         [
@@ -83,6 +92,8 @@ def _add_finca(runner: CliRunner) -> None:
 
 
 class TestSubAppRegistration:
+    """The root CLI must advertise the rental sub-app and its groups."""
+
     def test_root_cli_help_lists_rental(self) -> None:
         result = _runner().invoke(cli.app, ["--help"])
         assert result.exit_code == 0
@@ -96,6 +107,8 @@ class TestSubAppRegistration:
 
 
 class TestFincaAddListShow:
+    """End-to-end finca CRUD across human and JSON output paths."""
+
     def test_add_list_show_round_trip(self) -> None:
         runner = _runner()
         _add_finca(runner)
@@ -126,6 +139,8 @@ class TestFincaAddListShow:
 
 
 class TestAnexoCComputeEndToEnd:
+    """Drive the full compute pipeline through the CLI surface."""
+
     def test_full_pipeline_with_register_drives_aggregates(self) -> None:
         runner = _runner()
         _add_finca(runner)

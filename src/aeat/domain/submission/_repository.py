@@ -19,10 +19,10 @@ migration helper :func:`migrate_legacy_submissions_to_repository` reads
 every legacy ``<submission_id>.json`` and persists each through the
 repository's envelope contract.
 
-Layered-import note: this module is the domain-side carve-out
-exception listed in ``.importlinter`` — ``aeat.domain.submission._repository``
-imports ``aeat.adapters.persistence.storage.*`` because every
-domain-owned governance repository wraps the same substrate.
+Layered-import note: this module is a domain-side persistence carve-out:
+``aeat.domain.submission._repository`` imports
+``aeat.adapters.persistence.storage.*`` because every domain-owned
+governance repository wraps the same substrate.
 """
 
 from __future__ import annotations

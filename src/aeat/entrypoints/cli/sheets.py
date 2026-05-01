@@ -1,4 +1,11 @@
-"""``aeat sheets`` sub-app — Sheets v4 helpers via the discovery client."""
+"""Expose the ``aeat sheets`` Google Sheets v4 helpers as a Typer sub-app.
+
+Thin convenience wrapper over the Sheets v4 discovery client built by
+:func:`aeat.adapters.outbound.google.build_sheets_service`. Each command
+authenticates lazily through
+:func:`aeat.adapters.outbound.google.get_credentials_for_scopes` so
+unrelated CLI invocations never pay the credential lookup cost.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +22,12 @@ app = typer.Typer(name="sheets", no_args_is_help=True, help="Google Sheets helpe
 
 
 def _sheets() -> Any:
-    """Build an authenticated Sheets v4 service lazily."""
+    """Build an authenticated Sheets v4 service lazily.
+
+    Returns:
+        An authenticated Google Sheets v4 service object built via
+        :func:`aeat.adapters.outbound.google.build_sheets_service`.
+    """
     from ...adapters.outbound.google import SHEETS_SCOPE, build_sheets_service, get_credentials_for_scopes
 
     creds = get_credentials_for_scopes([SHEETS_SCOPE])
@@ -27,7 +39,12 @@ def get(
     spreadsheet_id: str = typer.Argument(..., help="Spreadsheet ID."),
     range_a1: str = typer.Argument(..., help="A1 range, e.g. Sheet1!A1:B10."),
 ) -> None:
-    """Print the values inside an A1 range."""
+    """Print the values inside an A1 range as JSON.
+
+    Args:
+        spreadsheet_id: The target spreadsheet's ID.
+        range_a1: A1 range to read (e.g. ``Sheet1!A1:B10``).
+    """
     service = _sheets()
     response = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_a1).execute()
     typer.echo(json.dumps(response.get("values", []), indent=2))
@@ -40,7 +57,16 @@ def set_(
     values_json: str = typer.Argument(..., help="JSON values: scalar, list, or list-of-lists."),
     raw: bool = typer.Option(False, "--raw", help="Use RAW input mode (skip Google's parsing)."),
 ) -> None:
-    """Overwrite a range with the supplied values."""
+    """Overwrite a range with the supplied values.
+
+    Args:
+        spreadsheet_id: The target spreadsheet's ID.
+        range_a1: A1 range to overwrite.
+        values_json: JSON values: scalar, list, or list-of-lists, parsed
+            via :func:`._sheets_helpers.parse_values_json`.
+        raw: When ``True``, use ``RAW`` input mode (skip Google's
+            parsing). Defaults to ``USER_ENTERED``.
+    """
     service = _sheets()
     values = parse_values_json(values_json)
     body = {"values": values}
@@ -65,7 +91,15 @@ def append(
     values_json: str = typer.Argument(..., help="JSON values to append."),
     raw: bool = typer.Option(False, "--raw", help="Use RAW input mode."),
 ) -> None:
-    """Append rows after the last row in the anchor range."""
+    """Append rows after the last row in the anchor range.
+
+    Args:
+        spreadsheet_id: The target spreadsheet's ID.
+        range_a1: A1 range that anchors the append.
+        values_json: JSON values to append, parsed via
+            :func:`._sheets_helpers.parse_values_json`.
+        raw: When ``True``, use ``RAW`` input mode.
+    """
     service = _sheets()
     values = parse_values_json(values_json)
     body = {"values": values}
@@ -87,7 +121,11 @@ def append(
 
 @app.command(name="new", help="Create a new spreadsheet and print its ID.")
 def new(title: str = typer.Argument(..., help="Spreadsheet title.")) -> None:
-    """Create an empty spreadsheet."""
+    """Create an empty spreadsheet and print its ID.
+
+    Args:
+        title: Title for the new spreadsheet.
+    """
     service = _sheets()
     response = service.spreadsheets().create(body={"properties": {"title": title}}, fields="spreadsheetId").execute()
     typer.echo(response["spreadsheetId"])
@@ -95,7 +133,11 @@ def new(title: str = typer.Argument(..., help="Spreadsheet title.")) -> None:
 
 @app.command(name="tabs", help="List the tab titles inside a spreadsheet.")
 def tabs(spreadsheet_id: str = typer.Argument(..., help="Spreadsheet ID.")) -> None:
-    """List sheet tabs in a spreadsheet."""
+    """List sheet tabs in a spreadsheet.
+
+    Args:
+        spreadsheet_id: The target spreadsheet's ID.
+    """
     service = _sheets()
     response = service.spreadsheets().get(spreadsheetId=spreadsheet_id, fields="sheets(properties)").execute()
     table = Table(title=f"sheets tabs ({spreadsheet_id})", header_style="bold")

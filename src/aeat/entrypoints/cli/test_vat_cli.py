@@ -1,4 +1,10 @@
-"""Unit tests for the ``aeat vat`` CLI sub-app."""
+"""Unit tests for the ``aeat vat`` CLI sub-app (:mod:`aeat.entrypoints.cli.vat`).
+
+Exercises the typer surface — categories listing, rate filtering, regulation
+lookup, canonical citation rendering via :func:`aeat.domain.vat.cite`, and the
+catalogue-verify command — to lock in CLI behaviour against
+:data:`aeat.domain.vat.VAT_CATALOGUE_2025`.
+"""
 
 from __future__ import annotations
 

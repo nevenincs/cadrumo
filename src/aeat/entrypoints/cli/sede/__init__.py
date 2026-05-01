@@ -1,32 +1,33 @@
-"""``aeat sede`` sub-app — post-auth sede discovery CLI (#239).
+"""Expose the ``aeat sede`` post-auth sede discovery sub-app.
 
-Subcommands (mirrors of the read-only sede surfaces in
-:mod:`aeat.adapters.outbound.aeat.sede`):
+Wires every read-only sede surface from
+:mod:`aeat.adapters.outbound.aeat.sede` behind a Typer sub-app:
 
-- ``aeat sede list-expedientes [--modelo M]`` — walk *Mis Expedientes*
-  (the procedure tree) and print every leaf (id, modelo, ejercicio,
+- ``aeat sede list-expedientes [--modelo M]`` walks *Mis Expedientes*
+  (the procedure tree) and prints every leaf (id, modelo, ejercicio,
   category path).
-- ``aeat sede list-declarations --modelo M --ejercicio Y`` — drive
-  the *Consultar declaraciones presentadas* form for one
-  ``(modelo, ejercicio)`` query and print one row per filing.
+- ``aeat sede list-declarations --modelo M --ejercicio Y`` drives the
+  *Consultar declaraciones presentadas* form for one
+  ``(modelo, ejercicio)`` query and prints one row per filing.
 - ``aeat sede capture-declaration --modelo M --ejercicio Y --period P``
-  — fetch the raw justificante PDF for a single filing identified
-  by ``(modelo, ejercicio, period)`` via the declaraciones-presentadas
+  fetches the raw justificante PDF for a single filing identified by
+  ``(modelo, ejercicio, period)`` via the declaraciones-presentadas
   surface.
 - ``aeat sede capture-corpus --modelos M[,M...] --ejercicios Y[,Y...]``
-  — capture every declaration the authenticated NIF has for each
+  captures every declaration the authenticated NIF has for each
   ``(modelo, ejercicio)`` pair; PDFs land under
   ``scratch/declarations-corpus/`` with a JSONL manifest.
-- ``aeat sede discover [--modelo M]`` — one-shot walker+capturer that
-  emits a per-modelo :class:`DiscoveryReport` to stdout and writes
-  every captured PDF under ``scratch/sede-discovery/<ts>/``.
-- ``aeat sede notifications [--summary | --query]`` — read-only walk
-  of the AEAT notifications/messages surface (formal *Notificaciones*
-  + lighter-weight *Comunicaciones*).
+- ``aeat sede discover [--modelo M]`` is a one-shot walker and capturer
+  that emits a per-modelo report to stdout and writes every captured
+  PDF under ``scratch/sede-discovery/<ts>/``.
+- ``aeat sede notifications [--summary | --query]`` is a read-only walk
+  of the AEAT notifications and messages surface (formal
+  *Notificaciones* plus lighter-weight *Comunicaciones*).
 
 Every subcommand is strictly read-only. The session keep-alive flow
-(``aeat auth whoami``) is the caller's responsibility when a run
-crosses AEAT's ~18-minute idle deadline.
+(``aeat auth whoami``) is the caller's responsibility when a run crosses
+AEAT's ~18-minute idle deadline encoded in
+:data:`aeat.adapters.outbound.aeat.auth.AEAT_SESSION_IDLE_TTL`.
 """
 
 from __future__ import annotations
@@ -42,11 +43,10 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ....adapters.outbound.aeat.auth._authenticator import (
+from ....adapters.inbound.justificante import parse_justificante
+from ....adapters.outbound.aeat.auth import (
     AEAT_SESSION_IDLE_TTL,
     AeatSession,
-)
-from ....adapters.outbound.aeat.auth._providers import (
     AuthProviderKind,
     ClaveMovilSessionDetail,
 )
@@ -64,7 +64,6 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core.config import load_settings
 from ....core.logging import get_logger
-from ....domain.justificante import parse_justificante
 from .._errors import json_output_requested
 from .._schemas import OutputRootSchema, emit_json_success, register_schema
 from ..auth import _session
@@ -74,7 +73,7 @@ log = get_logger(__name__)
 
 app = typer.Typer(
     name="sede",
-    help="Post-auth AEAT sede discovery (read-only, #239).",
+    help="Post-auth AEAT sede discovery (read-only).",
     no_args_is_help=True,
 )
 
@@ -83,21 +82,41 @@ _CONSOLE = Console()
 
 @register_schema("sede list-expedientes")
 class SedeListExpedientesJson(OutputRootSchema[list[Expediente]]):
-    """Schema for ``aeat sede list-expedientes --json``."""
+    """JSON output schema for ``aeat sede list-expedientes --json``.
+
+    Wraps a list of
+    :class:`aeat.adapters.outbound.aeat.sede.Expediente` rows.
+    """
 
 
 @register_schema("sede notifications")
 class SedeNotificationsJson(OutputRootSchema[NotificationsSnapshot]):
-    """Schema for ``aeat sede notifications --json``."""
+    """JSON output schema for ``aeat sede notifications --json``.
+
+    Wraps a
+    :class:`aeat.adapters.outbound.aeat.sede.NotificationsSnapshot`.
+    """
 
 
 def _require_active_session() -> AeatSession:
     """Load the cached AEAT session or exit with a helpful message.
 
-    Returns a lightweight :class:`AeatSession` bound to the on-disk
-    ``storage_state`` path. The sede walker only consumes
-    ``storage_state_path`` / ``identity_nif``, so the reconstructed
-    session doesn't need provider-specific handshake detail.
+    Returns a lightweight
+    :class:`aeat.adapters.outbound.aeat.auth.AeatSession` bound to the
+    on-disk ``storage_state`` path. The sede walker only consumes
+    :attr:`AeatSession.storage_state_path` and
+    :attr:`AeatSession.identity_nif`, so the reconstructed session does
+    not need provider-specific handshake detail.
+
+    Returns:
+        The reconstructed session.
+
+    Raises:
+        :exc:`aeat.adapters.outbound.aeat.sede.SedeError`: When ``--json``
+            output is active and no session exists or the cookie file is
+            missing.
+        typer.Exit: With code ``1`` (no session) or ``2`` (non-Cl@ve-móvil
+            provider) for the rich-output paths.
     """
     settings = load_settings()
     persisted = _session.load(settings, None)
@@ -160,7 +179,13 @@ def list_expedientes(
         typer.Option("--json", help="Emit JSON instead of a human table."),
     ] = False,
 ) -> None:
-    """Walk Mis Expedientes and print every leaf row."""
+    """Walk *Mis Expedientes* and print every leaf row.
+
+    Args:
+        modelo: When supplied, only list expedientes whose category label
+            references this modelo code.
+        json_output: When ``True``, emit JSON instead of a human table.
+    """
     session = _require_active_session()
     try:
         expedientes = asyncio.run(walk_expedientes_tree(session, modelo=modelo))
@@ -216,7 +241,13 @@ def list_declarations(
         typer.Option("--json", help="Emit JSON instead of a human table."),
     ] = False,
 ) -> None:
-    """Walk the declaraciones register for a single (modelo, ejercicio)."""
+    """Walk the declaraciones register for a single ``(modelo, ejercicio)``.
+
+    Args:
+        modelo: Modelo code to query (e.g. ``100``, ``130``, ``303``).
+        ejercicio: Tax year to query (e.g. ``2024``).
+        json_output: When ``True``, emit JSON instead of a human table.
+    """
     session = _require_active_session()
     try:
         declarations = asyncio.run(
@@ -278,7 +309,20 @@ def capture_declaration_cmd(
         ),
     ],
 ) -> None:
-    """Drive the declaraciones register, locate the matching row, capture the PDF."""
+    """Drive the declaraciones register, locate the matching row, and capture the PDF.
+
+    Args:
+        modelo: Modelo code (e.g. ``100``, ``130``, ``303``).
+        ejercicio: Tax year to query (e.g. ``2024``).
+        period: Period token to filter on (``0A`` annual, ``1T``-``4T``
+            quarterly, ``01``-``12`` monthly).
+        output_path: Where to write the captured PDF.
+
+    Raises:
+        :exc:`aeat.adapters.outbound.aeat.sede.SedeError`: When no
+            matching declaration exists or the capture fails.
+        typer.Exit: With code ``1`` on capture failure.
+    """
     session = _require_active_session()
 
     async def _run() -> tuple[bytes, str]:
@@ -356,12 +400,28 @@ def capture_corpus_cmd(
         ),
     ] = 1.0,
 ) -> None:
-    """Walk every (modelo, ejercicio) tuple and capture every declaration.
+    """Walk every ``(modelo, ejercicio)`` tuple and capture every declaration.
 
-    Each iteration is wrapped in a broad ``Exception`` catch so a
-    transient Playwright timeout on one query doesn't abort the
-    entire corpus. ``--delay-seconds`` paces the loop to reduce
-    the chance of AEAT's anti-bot heuristics flagging the run.
+    Each iteration is wrapped in a broad :exc:`Exception` catch so a
+    transient Playwright timeout on one query does not abort the entire
+    corpus. ``--delay-seconds`` paces the loop to reduce the chance of
+    AEAT's anti-bot heuristics flagging the run.
+
+    Args:
+        modelos: Comma-separated modelo codes (e.g.
+            ``100,130,303,390,111,190``).
+        ejercicios: Comma-separated tax years (e.g.
+            ``2021,2022,2023,2024``).
+        output_root: Root directory for captures.
+        skip_existing: When ``True`` (default), skip PDFs already present
+            on disk; otherwise re-fetch.
+        delay_seconds: Sleep between iterations (anti-throttle pacing).
+
+    Raises:
+        :exc:`aeat.adapters.outbound.aeat.sede.SedeError`: When a fatal
+            sede error aborts the corpus run (per-iteration errors are
+            recorded in the summary instead).
+        typer.Exit: With code ``1`` on fatal failure.
     """
     session = _require_active_session()
     output_root.mkdir(parents=True, exist_ok=True)
@@ -487,7 +547,19 @@ def discover(
         ),
     ] = Path("scratch/sede-discovery"),
 ) -> None:
-    """Capture PDFs + parsed metadata for every matching expediente."""
+    """Capture PDFs and parsed metadata for every matching expediente.
+
+    Args:
+        modelo: Restrict discovery to this modelo code; omit to capture
+            every expediente.
+        output_root: Output directory for captures (default
+            ``scratch/sede-discovery/<utc-timestamp>/``).
+
+    Raises:
+        :exc:`aeat.adapters.outbound.aeat.sede.SedeError`: When the
+            initial expediente walk fails fatally.
+        typer.Exit: With code ``1`` on discovery failure.
+    """
     session = _require_active_session()
     ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     run_dir = output_root / ts
@@ -570,7 +642,13 @@ def notifications(
         typer.Option("--json", help="Emit JSON instead of a human table."),
     ] = False,
 ) -> None:
-    """Print every notification + communication AEAT has on file."""
+    """Print every notification and communication AEAT has on file.
+
+    Args:
+        summary_only: When ``True``, use the unread-summary endpoint
+            (cheaper, smaller column set) instead of the full query.
+        json_output: When ``True``, emit JSON instead of a human table.
+    """
     session = _require_active_session()
     fetch = fetch_notifications_summary if summary_only else fetch_notifications_query
     try:

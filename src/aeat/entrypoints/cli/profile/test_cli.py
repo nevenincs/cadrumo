@@ -1,4 +1,9 @@
-"""CLI tests for ``aeat profile`` tax-residence commands."""
+"""CLI tests for ``aeat profile`` tax-residence commands.
+
+Exercises the Typer surface in :mod:`aeat.entrypoints.cli.profile`:
+help text, set/show/clear round-trips, foral-region refusal and
+JSON-schema registration.
+"""
 
 from __future__ import annotations
 
@@ -30,6 +35,7 @@ def _strip_ansi(text: str) -> str:
 
 
 def _env(tmp_path: Path, *, language: str = "es") -> dict[str, str]:
+    """Build the env dict that pins the profile to ``tmp_path`` and a language."""
     return {
         "AEAT_TAX_RESIDENCE_PROFILE_PATH": str(tmp_path / "tax-residence.json"),
         "AEAT_OUTPUT_LANGUAGE": language,

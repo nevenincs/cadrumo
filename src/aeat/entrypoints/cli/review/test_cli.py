@@ -1,4 +1,10 @@
-"""CLI tests for the ``aeat review queue`` sub-app."""
+"""CLI tests for the ``aeat review queue`` command surface.
+
+Seeds every kind of review-queue source (transactions, invoices,
+divergences, drafts) on disk, then invokes the Typer surface to verify
+filtering by kind, modelo and confidence; reserved-kind rejection;
+and JSON / table emission contracts.
+"""
 
 from __future__ import annotations
 
@@ -49,6 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _summary(text: str) -> Translatable:
+    """Build a :class:`Translatable` triple where every locale is ``text``."""
     return {"es": text, "en": text, "hu": text}
 
 
@@ -67,6 +74,7 @@ def isolated_settings(
 
 
 def _seed_all(tmp_path: Path) -> None:
+    """Seed one record of every review-queue source under ``tmp_path``."""
     raw = RawTransaction(
         transaction_id="prov-1",
         booked_date=date(2026, 4, 10),
@@ -310,7 +318,7 @@ def _seed_transactions_with_varied_confidence(tmp_path: Path) -> tuple[str, str,
 
 
 def test_queue_filters_by_confidence_below(isolated_settings: Path) -> None:
-    """`aeat review queue --confidence-below 0.5` must surface only low-confidence transactions (#236)."""
+    """``--confidence-below 0.5`` must surface only low-confidence transactions."""
     low_id, high_id, bare_id = _seed_transactions_with_varied_confidence(isolated_settings)
     runner = CliRunner()
     result = runner.invoke(

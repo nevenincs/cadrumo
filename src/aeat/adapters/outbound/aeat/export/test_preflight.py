@@ -27,8 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 class _Draft(FilingDraftLike):
     """Protocol-conforming test double for :class:`FilingDraftLike`.
 
-    Written by hand per the project rule: real Protocol implementation,
-    not a mock.
+    Written by hand per the project rule as a real Protocol implementation.
     """
 
     draft_id: str = "draft-1"

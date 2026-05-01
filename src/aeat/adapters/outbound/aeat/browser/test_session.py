@@ -31,8 +31,8 @@ class DummyEvasion(EvasionStrategy):
         self.called = True
 
 
-class StubContext:
-    """Stub context capturing the kwargs it was created with."""
+class RecordingContext:
+    """Concrete context capturing the kwargs it was created with."""
 
     def __init__(self, kwargs: dict) -> None:
         self.kwargs = kwargs
@@ -43,21 +43,21 @@ class StubContext:
         self.close_calls += 1
 
 
-class StubBrowser:
-    """Stub browser that yields a StubContext."""
+class RecordingBrowser:
+    """Concrete browser that yields a :class:`RecordingContext`."""
 
-    def __init__(self, chromium: "StubChromium") -> None:
+    def __init__(self, chromium: "RecordingChromium") -> None:
         self._chromium = chromium
         self.close_calls = 0
         self.close_failures_remaining = 0
         self._counted_closed = False
 
-    async def new_context(self, **kwargs) -> StubContext:
-        """Return a stub context."""
-        return StubContext(kwargs)
+    async def new_context(self, **kwargs) -> RecordingContext:
+        """Return a recording context."""
+        return RecordingContext(kwargs)
 
     async def close(self) -> None:
-        """Close the stub browser and decrement the live-process count."""
+        """Close the browser and decrement the live-process count."""
         if self.close_failures_remaining > 0:
             self.close_failures_remaining -= 1
             self.close_calls += 1
@@ -69,47 +69,47 @@ class StubBrowser:
         self.close_calls += 1
 
 
-class StubChromium:
-    """Stub chromium that yields a StubBrowser."""
+class RecordingChromium:
+    """Concrete chromium adapter that yields a :class:`RecordingBrowser`."""
 
     def __init__(self) -> None:
         self.live_browser_count = 0
         self.launch_calls = 0
         self.closed_browser_count = 0
-        self.launched_browsers: list[StubBrowser] = []
+        self.launched_browsers: list[RecordingBrowser] = []
         self.next_close_failures = 0
 
-    async def launch(self, **kwargs) -> StubBrowser:
-        """Return a stub browser."""
+    async def launch(self, **kwargs) -> RecordingBrowser:
+        """Return a recording browser."""
         del kwargs
         self.launch_calls += 1
         self.live_browser_count += 1
-        browser = StubBrowser(self)
+        browser = RecordingBrowser(self)
         browser.close_failures_remaining = self.next_close_failures
         self.next_close_failures = 0
         self.launched_browsers.append(browser)
         return browser
 
 
-class StubPlaywright:
-    """Stub playwright instance for unit testing."""
+class RecordingPlaywright:
+    """Concrete Playwright adapter for unit testing."""
 
     def __init__(self) -> None:
-        self.chromium = StubChromium()
+        self.chromium = RecordingChromium()
 
 
-class FailingNewContextBrowser(StubBrowser):
-    """Stub browser whose ``new_context`` path fails after launch."""
+class FailingNewContextBrowser(RecordingBrowser):
+    """Browser whose ``new_context`` path fails after launch."""
 
-    async def new_context(self, **kwargs) -> StubContext:
+    async def new_context(self, **kwargs) -> RecordingContext:
         del kwargs
         raise RuntimeError("boom from new_context")
 
 
-class FailingNewContextChromium(StubChromium):
+class FailingNewContextChromium(RecordingChromium):
     """Chromium double that returns a failing browser."""
 
-    async def launch(self, **kwargs) -> StubBrowser:
+    async def launch(self, **kwargs) -> RecordingBrowser:
         del kwargs
         self.launch_calls += 1
         self.live_browser_count += 1
@@ -118,14 +118,14 @@ class FailingNewContextChromium(StubChromium):
         return browser
 
 
-class FailingNewContextPlaywright(StubPlaywright):
+class FailingNewContextPlaywright(RecordingPlaywright):
     """Playwright double whose browser fails during context creation."""
 
     def __init__(self) -> None:
         self.chromium = FailingNewContextChromium()
 
 
-class FailingClosePlaywright(StubPlaywright):
+class FailingClosePlaywright(RecordingPlaywright):
     """Playwright double whose first browser close attempt fails."""
 
     def __init__(self) -> None:
@@ -135,14 +135,14 @@ class FailingClosePlaywright(StubPlaywright):
 
 @pytest.mark.asyncio
 async def test_browser_session_creation(tmp_path: Path) -> None:
-    """Test creating a browser context with a stub Playwright instance."""
+    """Test creating a browser context with a concrete Playwright adapter."""
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
     evasion = DummyEvasion()
-    pw_stub = StubPlaywright()
+    playwright_adapter = RecordingPlaywright()
 
     session = BrowserSession(
-        playwright=cast(Playwright, pw_stub),
+        playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
         evasion_strategy=evasion,
@@ -164,7 +164,7 @@ async def test_browser_session_uses_existing_storage_state_file(tmp_path: Path) 
     storage_state_path.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
     profile = Profile(name="test", storage_state_path=storage_state_path)
     session = BrowserSession(
-        playwright=cast(Playwright, StubPlaywright()),
+        playwright=cast(Playwright, RecordingPlaywright()),
         settings=settings,
         profile=profile,
         evasion_strategy=DummyEvasion(),
@@ -182,7 +182,7 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
     override_path = tmp_path / "resume.json"
     override_path.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
     session = BrowserSession(
-        playwright=cast(Playwright, StubPlaywright()),
+        playwright=cast(Playwright, RecordingPlaywright()),
         settings=settings,
         profile=profile,
         evasion_strategy=DummyEvasion(),
@@ -254,7 +254,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     settings = Settings()
     profile = Profile(name="cert-test", storage_state_path=tmp_path / "state.json")
     session = BrowserSession(
-        playwright=cast(Playwright, StubPlaywright()),
+        playwright=cast(Playwright, RecordingPlaywright()),
         settings=settings,
         profile=profile,
         evasion_strategy=DummyEvasion(),
@@ -266,7 +266,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         )
     )
 
-    kwargs: dict[str, object] = cast(StubContext, context).kwargs
+    kwargs: dict[str, object] = cast(RecordingContext, context).kwargs
     assert "client_certificates" in kwargs
     cc = kwargs["client_certificates"]
     assert isinstance(cc, list) and len(cc) == 1
@@ -282,9 +282,9 @@ async def test_browser_session_close_is_idempotent(tmp_path: Path) -> None:
     """Closing a session repeatedly must not resurrect browser processes."""
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
-    pw_stub = StubPlaywright()
+    playwright_adapter = RecordingPlaywright()
     session = BrowserSession(
-        playwright=cast(Playwright, pw_stub),
+        playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
         evasion_strategy=DummyEvasion(),
@@ -295,9 +295,9 @@ async def test_browser_session_close_is_idempotent(tmp_path: Path) -> None:
     await session.close()
     await session.close()
 
-    assert pw_stub.chromium.launch_calls == 1
-    assert pw_stub.chromium.live_browser_count == 0
-    assert pw_stub.chromium.launched_browsers[0].close_calls == 1
+    assert playwright_adapter.chromium.launch_calls == 1
+    assert playwright_adapter.chromium.live_browser_count == 0
+    assert playwright_adapter.chromium.launched_browsers[0].close_calls == 1
 
 
 @pytest.mark.asyncio
@@ -305,9 +305,9 @@ async def test_browser_session_rejects_second_live_context_until_close(tmp_path:
     """A session owns one live browser at a time until ``close()`` runs."""
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
-    pw_stub = StubPlaywright()
+    playwright_adapter = RecordingPlaywright()
     session = BrowserSession(
-        playwright=cast(Playwright, pw_stub),
+        playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
         evasion_strategy=DummyEvasion(),
@@ -323,8 +323,8 @@ async def test_browser_session_rejects_second_live_context_until_close(tmp_path:
     await context2.close()
     await session.close()
 
-    assert pw_stub.chromium.launch_calls == 2
-    assert pw_stub.chromium.live_browser_count == 0
+    assert playwright_adapter.chromium.launch_calls == 2
+    assert playwright_adapter.chromium.live_browser_count == 0
 
 
 @pytest.mark.asyncio
@@ -332,9 +332,9 @@ async def test_browser_session_closes_browser_when_new_context_fails(tmp_path: P
     """Partial launch failures must not leak a retained browser."""
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
-    pw_stub = FailingNewContextPlaywright()
+    playwright_adapter = FailingNewContextPlaywright()
     session = BrowserSession(
-        playwright=cast(Playwright, pw_stub),
+        playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
         evasion_strategy=DummyEvasion(),
@@ -343,9 +343,9 @@ async def test_browser_session_closes_browser_when_new_context_fails(tmp_path: P
     with pytest.raises(BrowserError, match="boom from new_context"):
         await session.create_context()
 
-    assert pw_stub.chromium.launch_calls == 1
-    assert pw_stub.chromium.live_browser_count == 0
-    assert pw_stub.chromium.launched_browsers[0].close_calls == 1
+    assert playwright_adapter.chromium.launch_calls == 1
+    assert playwright_adapter.chromium.live_browser_count == 0
+    assert playwright_adapter.chromium.launched_browsers[0].close_calls == 1
 
 
 @pytest.mark.asyncio
@@ -353,9 +353,9 @@ async def test_browser_session_close_failure_surfaces_and_allows_retry(tmp_path:
     """Close failures must be explicit and leave cleanup retryable."""
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
-    pw_stub = FailingClosePlaywright()
+    playwright_adapter = FailingClosePlaywright()
     session = BrowserSession(
-        playwright=cast(Playwright, pw_stub),
+        playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
         evasion_strategy=DummyEvasion(),
@@ -366,29 +366,29 @@ async def test_browser_session_close_failure_surfaces_and_allows_retry(tmp_path:
     with pytest.raises(BrowserError, match="Failed to close retained browser"):
         await session.close()
 
-    assert pw_stub.chromium.live_browser_count == 1
-    assert pw_stub.chromium.launched_browsers[0].close_calls == 1
+    assert playwright_adapter.chromium.live_browser_count == 1
+    assert playwright_adapter.chromium.launched_browsers[0].close_calls == 1
 
     await session.close()
     context2 = await session.create_context()
     await context2.close()
     await session.close()
 
-    assert pw_stub.chromium.live_browser_count == 0
-    assert pw_stub.chromium.closed_browser_count == 2
+    assert playwright_adapter.chromium.live_browser_count == 0
+    assert playwright_adapter.chromium.closed_browser_count == 2
 
 
 @pytest.mark.asyncio
 async def test_browser_session_process_count_stays_flat_across_repeated_cycles(tmp_path: Path) -> None:
     """Repeated construct/create/close cycles must not accumulate browsers."""
     settings = Settings()
-    pw_stub = StubPlaywright()
+    playwright_adapter = RecordingPlaywright()
     live_counts: list[int] = []
 
     for idx in range(5):
         profile = Profile(name=f"test-{idx}", storage_state_path=tmp_path / f"state-{idx}.json")
         session = BrowserSession(
-            playwright=cast(Playwright, pw_stub),
+            playwright=cast(Playwright, playwright_adapter),
             settings=settings,
             profile=profile,
             evasion_strategy=DummyEvasion(),
@@ -396,10 +396,10 @@ async def test_browser_session_process_count_stays_flat_across_repeated_cycles(t
         context = await session.create_context()
         await context.close()
         await session.close()
-        live_counts.append(pw_stub.chromium.live_browser_count)
+        live_counts.append(playwright_adapter.chromium.live_browser_count)
 
     assert live_counts == [0, 0, 0, 0, 0]
-    assert pw_stub.chromium.launch_calls == 5
+    assert playwright_adapter.chromium.launch_calls == 5
 
 
 def _probe_or_raise(

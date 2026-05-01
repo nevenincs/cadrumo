@@ -1,20 +1,20 @@
 """``aeat submission diff`` — compare two fichero-BOE files.
 
-EPIC #305 . Kent's verification journey extends to the
-comparison case: he exports filing A, later re-downloads his AEAT
-"declaración presentada" receipt as filing B, and wants to confirm
-the two match — or if they don't, exactly which casilla diverged.
+Operators export filing A, later re-download an AEAT "declaración
+presentada" receipt as filing B, and want to confirm the two match — or
+if they do not, exactly which casilla diverged.
 
 The command is strictly read-only. It parses both files through the
-same :mod:`_schema_registry` dispatch used by
-:mod:`export` / :mod:`verify`, diffs byte-by-byte as a fast-path
-guard, then diffs field-by-field and casilla-by-casilla so the
-console output names the semantic delta (not just "files differ").
+same :mod:`._schema_registry` dispatch used by :mod:`.export` and
+:mod:`.verify`, diffs byte-by-byte as a fast-path guard, then diffs
+field-by-field and casilla-by-casilla so the console output names the
+semantic delta (not just "files differ").
 
 Exit codes:
-- 0 — files are byte-identical.
-- 1 — files parse cleanly but show at least one semantic difference.
-- 2 — unsupported modelo, unparseable filename, or decoder failure.
+
+- ``0`` — files are byte-identical.
+- ``1`` — files parse cleanly but show at least one semantic difference.
+- ``2`` — unsupported modelo, unparseable filename, or decoder failure.
 """
 
 from __future__ import annotations
@@ -43,7 +43,14 @@ _CONSOLE = Console()
 
 
 class SubmissionDiffDelta(OutputSchema):
-    """One field or casilla delta from ``aeat submission diff --json``."""
+    """One field or casilla delta from ``aeat submission diff --json``.
+
+    Attributes:
+        casilla: Casilla id when the delta is at casilla granularity.
+        field_id: Header field id when the delta is at field granularity.
+        a: Rendered value from ``file_a``.
+        b: Rendered value from ``file_b``.
+    """
 
     casilla: str | None = None
     field_id: str | None = None
@@ -52,7 +59,28 @@ class SubmissionDiffDelta(OutputSchema):
 
 
 class SubmissionDiffPayload(OutputSchema):
-    """Schema for ``aeat submission diff --json`` payload objects."""
+    """JSON payload schema for ``aeat submission diff --json``.
+
+    Attributes:
+        status: One of ``identical``, ``mismatch``,
+            ``bytes-differ-no-semantic-delta``, ``unsupported``, or
+            ``error``.
+        modelo: Modelo code (when known).
+        ejercicio: Filing year (when known).
+        bytes: Payload byte count (identical-status responses).
+        file_a: ``file_a`` basename.
+        file_b: ``file_b`` basename.
+        casilla_deltas: Per-casilla deltas.
+        field_deltas: Per-header-field deltas.
+        available: Sorted ``(modelo, ejercicio)`` pairs available in the
+            registry, populated on ``unsupported`` responses.
+        error_type: Exception class name when ``status == 'error'``.
+        error_message: Exception message when ``status == 'error'``.
+        which_file: For payload-length pre-flight failures, identifies
+            ``file_a`` or ``file_b``.
+        expected_bytes: Expected payload length for the schema.
+        actual_bytes: Observed payload length.
+    """
 
     status: Literal["identical", "mismatch", "bytes-differ-no-semantic-delta", "unsupported", "error"]
     modelo: str | None = None
@@ -72,7 +100,10 @@ class SubmissionDiffPayload(OutputSchema):
 
 @register_schema("submission diff")
 class SubmissionDiffJson(OutputRootSchema[SubmissionDiffPayload]):
-    """Schema for ``aeat submission diff --json``."""
+    """Top-level JSON wrapper schema for ``aeat submission diff --json``.
+
+    Wraps a :class:`SubmissionDiffPayload`.
+    """
 
 
 def diff_cmd(
@@ -98,11 +129,29 @@ def diff_cmd(
         help="Emit a machine-readable JSON document instead of the rich-formatted tables.",
     ),
 ) -> None:
-    """Diff two fichero-BOE files and report byte + semantic deltas.
+    """Diff two fichero-BOE files and report byte and semantic deltas.
 
-    The schema is inferred from FILE_A's filename when the CLI flags
-    are omitted; FILE_B is assumed to share the same schema and any
-    shape mismatch surfaces at the decoder boundary with exit 2.
+    The schema is inferred from ``file_a``'s filename when the CLI flags
+    are omitted; ``file_b`` is assumed to share the same schema, and any
+    shape mismatch surfaces at the decoder boundary with exit ``2``.
+
+    Args:
+        file_a: First fichero-BOE file.
+        file_b: Second fichero-BOE file.
+        modelo: Modelo code; auto-detected from ``file_a``'s filename
+            when omitted.
+        ejercicio: Filing year; auto-detected from ``file_a``'s filename
+            when omitted.
+        as_json: When ``True``, emit a JSON document instead of the
+            rich-formatted tables.
+
+    Raises:
+        :exc:`aeat.entrypoints.cli._errors.CliRefusedBoundaryError`: For
+            unsupported modelos, payload-length mismatches, or decoder
+            failures when ``--json`` is active.
+        typer.Exit: With code ``1`` when at least one semantic delta is
+            reported, ``2`` for the unsupported / inference / decoder
+            failure paths.
     """
     emit_json = as_json or json_output_requested()
     if modelo is None or ejercicio is None:
@@ -237,6 +286,7 @@ def diff_cmd(
 
 
 def _parse(payload: bytes, *, entry: SchemaEntry) -> ParsedRecord | ParsedEnvelope:
+    """Decode ``payload`` through the dispatch matching ``entry.kind``."""
     content = payload[:-2] if payload.endswith(b"\r\n") else payload
     if entry.kind == "record":
         return deserialise(
@@ -261,8 +311,19 @@ def _report_semantic_diff(
     modelo: str,
     ejercicio: str,
 ) -> bool:
-    """Pretty-print the per-field and per-casilla deltas. Returns True
-    when at least one difference was reported."""
+    """Pretty-print the per-field and per-casilla deltas.
+
+    Args:
+        parsed_a: Parsed payload from ``file_a``.
+        parsed_b: Parsed payload from ``file_b``.
+        file_a: Source path of ``parsed_a`` (used in console headers).
+        file_b: Source path of ``parsed_b`` (used in console headers).
+        modelo: Modelo code (used in console headers).
+        ejercicio: Filing year (used in console headers).
+
+    Returns:
+        ``True`` when at least one difference was reported.
+    """
     _CONSOLE.print(
         f"[yellow]diff MISMATCH[/yellow] modelo={modelo} ejercicio={ejercicio} a={file_a.name} b={file_b.name}"
     )
@@ -300,18 +361,21 @@ def _report_semantic_diff(
 
 
 def _casillas_of(parsed: ParsedRecord | ParsedEnvelope) -> Mapping[str, object]:
+    """Return the casilla-id-to-value mapping regardless of payload kind."""
     if isinstance(parsed, ParsedEnvelope):
         return parsed.merged_casilla_values
     return parsed.casilla_values
 
 
 def _fields_of(parsed: ParsedRecord | ParsedEnvelope) -> Mapping[str, object]:
+    """Return the field-id-to-value mapping regardless of payload kind."""
     if isinstance(parsed, ParsedEnvelope):
         return parsed.merged_field_values
     return parsed.field_values
 
 
 def _dict_diff(a: Mapping[str, object], b: Mapping[str, object]) -> list[tuple[str, object, object]]:
+    """Return ``(key, a_value, b_value)`` triples for every divergent key."""
     keys = set(a) | set(b)
     out: list[tuple[str, object, object]] = []
     for k in sorted(keys):
@@ -323,6 +387,7 @@ def _dict_diff(a: Mapping[str, object], b: Mapping[str, object]) -> list[tuple[s
 
 
 def _render(value: object) -> str:
+    """Render ``value`` for display, surfacing missing values as ``<missing>``."""
     if value is None:
         return "<missing>"
     return str(value)
@@ -337,8 +402,19 @@ def _emit_diff_json(
     modelo: str,
     ejercicio: str,
 ) -> bool:
-    """Emit the semantic-diff machine-readable shape. Returns True when at
-    least one delta was reported."""
+    """Emit the semantic-diff machine-readable shape via :func:`emit_json_success`.
+
+    Args:
+        parsed_a: Parsed payload from ``file_a``.
+        parsed_b: Parsed payload from ``file_b``.
+        file_a: Source path of ``parsed_a``.
+        file_b: Source path of ``parsed_b``.
+        modelo: Modelo code.
+        ejercicio: Filing year.
+
+    Returns:
+        ``True`` when at least one delta was reported.
+    """
     casilla_deltas = _dict_diff(_casillas_of(parsed_a), _casillas_of(parsed_b))
     field_deltas = _dict_diff(_fields_of(parsed_a), _fields_of(parsed_b))
 

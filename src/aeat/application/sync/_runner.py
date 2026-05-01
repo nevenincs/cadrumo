@@ -1,19 +1,19 @@
-"""Live sync runner: fetch → validate → classify → dispatch → persist.
+"""Live sync runner orchestrating the fetch → validate → classify → dispatch → persist pipeline.
 
 The runner composes a small set of Protocol surfaces (certificate
 backend, local catalogue loader, schema/manual/LLM clients) plus two
-concrete sub-systems (the validator and the dispatcher). It
-orchestrates a single run and returns a :class:`SyncRunResult`
-describing what happened.
+concrete sub-systems (the validator and the dispatcher). It orchestrates
+a single run and returns a :class:`SyncRunResult` describing what
+happened.
 
 The runner is **read-only** against AEAT. No form submissions, no
-server-side mutation, no retries beyond transient navigation errors.
-Healing always targets local state.
+server-side mutation, no retries beyond transient navigation errors —
+healing always targets local state.
 
-The "live payload fetch" contract is intentionally abstracted behind a
-``LivePayloadFetcher`` Protocol so the runner can be driven by a
-concrete in-test fetcher or by a production fetcher that drives a
-Playwright session.
+The live-payload fetch contract is abstracted behind
+:class:`LivePayloadFetcher` so the runner can be driven by a concrete
+in-test fetcher or by a production fetcher that drives a Playwright
+session.
 """
 
 from __future__ import annotations
@@ -48,7 +48,20 @@ _LOGGER = get_logger(__name__)
 
 
 class SyncRunResult(BaseModel):
-    """Frozen summary of a single sync run."""
+    """Frozen summary of one :meth:`LiveSyncRunner.run` invocation.
+
+    Attributes:
+        started_at: UTC timestamp when the run began.
+        finished_at: UTC timestamp when the run returned.
+        modelo: Optional :class:`ModeloIdentifier` the run scoped to.
+        period: Optional filing period filter for the run.
+        auto_heal: Whether the dispatcher was allowed to apply
+            allowlisted additive healing.
+        plan: The :class:`HealingPlan` produced by the dispatcher.
+        outcomes: Per-record :class:`StrategyOutcome` tuple.
+        divergence_records: The persisted divergence records this run
+            produced.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -66,10 +79,10 @@ class SyncRunResult(BaseModel):
 class LivePayloadFetcher(Protocol):
     """Fetches live AEAT payloads against the validated browser session.
 
-    Concrete implementations drive a Playwright session. The runner
-    accepts any object conforming to this Protocol so in-test fetchers
-    (real concrete Python classes, no mocks) can supply synthetic
-    payloads.
+    Concrete implementations drive a Playwright session against the
+    AEAT portal. The runner accepts any object conforming to this
+    Protocol so in-test fetchers (real concrete Python classes, no
+    mocks) can supply synthetic payloads.
     """
 
     async def fetch_modelo_raw(
@@ -77,24 +90,36 @@ class LivePayloadFetcher(Protocol):
         *,
         session: BrowserSession,
         modelo: ModeloIdentifier,
-    ) -> bytes: ...
+    ) -> bytes:
+        """Return the raw payload bytes for the live modelo definition."""
 
     async def fetch_portal_manifest_raw(
         self,
         *,
         session: BrowserSession,
-    ) -> bytes: ...
+    ) -> bytes:
+        """Return the raw payload bytes for the live portal link manifest."""
 
     async def fetch_filing_history_raw(
         self,
         *,
         session: BrowserSession,
         modelo: ModeloIdentifier,
-    ) -> bytes: ...
+    ) -> bytes:
+        """Return the raw payload bytes for the live filing history."""
 
 
 class LiveSyncRunner:
-    """Orchestrates a single live-to-local sync run."""
+    """Orchestrates a single live-to-local sync cycle.
+
+    The runner is composed of small, narrow Protocol-typed
+    collaborators (cf. :class:`CertificateBackend`,
+    :class:`LocalCatalogueLoader`, :class:`SchemaLoader`,
+    :class:`ManualRulesLoader`, :class:`LLMClient`,
+    :class:`LivePayloadFetcher`) plus the :class:`WireValidator`,
+    :class:`DivergenceClassifier`, :class:`HealingDispatcher` and
+    :class:`DivergenceRecordRepository` concrete sub-systems.
+    """
 
     def __init__(
         self,

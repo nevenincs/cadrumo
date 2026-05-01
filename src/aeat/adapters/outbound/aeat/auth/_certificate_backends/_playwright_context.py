@@ -30,6 +30,9 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _MARKER_ATTR = "_aeat_certificate_thumbprint"
+"""Attribute name the browser session layer stamps on a constructed
+:class:`playwright.async_api.BrowserContext` to record the thumbprint
+of the client certificate it was provisioned with."""
 
 
 def build_client_certificates_kwarg(
@@ -41,8 +44,7 @@ def build_client_certificates_kwarg(
     Materialises the passphrase from :class:`pydantic.SecretStr` at
     the exact call site and nowhere else. The returned list is wired
     directly into ``browser.new_context(client_certificates=...)`` by
-    the browser session layer (see issue #8 follow-up in
-    ``aeat.adapters.outbound.aeat.browser``).
+    :mod:`aeat.adapters.outbound.aeat.browser`.
 
     Args:
         cert: The loaded PKCS#12 certificate.
@@ -65,7 +67,13 @@ def build_client_certificates_kwarg(
 
 
 class PlaywrightContextBackend(_CertBackend):
-    """Primary backend — per-context client cert via Playwright."""
+    """Primary backend — per-context client cert via Playwright.
+
+    Implements the
+    :class:`aeat.adapters.outbound.aeat.auth._certificate_backends._base._CertBackend`
+    contract for browser-driven sessions. The verify leg is delegated
+    to :class:`HttpxFallbackBackend`.
+    """
 
     def preload(
         self,
@@ -76,10 +84,20 @@ class PlaywrightContextBackend(_CertBackend):
 
         The browser session layer is expected to tag the constructed
         :class:`playwright.async_api.BrowserContext` with an attribute
-        named ``_aeat_certificate_thumbprint`` matching
-        ``cert.sha256_thumbprint``. If the marker is absent, we raise
-        :class:`CertificateError` pointing the operator at
-        :func:`build_client_certificates_kwarg`.
+        named :data:`_MARKER_ATTR` matching ``cert.sha256_thumbprint``.
+        If the marker is absent, raises
+        :class:`aeat.adapters.outbound.aeat.auth.certificate.CertificateError`
+        pointing the operator at :func:`build_client_certificates_kwarg`.
+
+        Args:
+            cert: The loaded PKCS#12 certificate.
+            context: A Playwright :class:`~playwright.async_api.BrowserContext`
+                object (typed as ``object`` to avoid leaking the
+                Playwright dependency upward).
+
+        Raises:
+            CertificateError: When the context lacks the expected
+                thumbprint marker.
         """
         from ..certificate import CertificateError
 
@@ -105,7 +123,14 @@ class PlaywrightContextBackend(_CertBackend):
 
         The Playwright backend has no standalone handshake primitive —
         spinning up a full browser just to probe TLS would be wasteful.
-        We borrow :class:`HttpxFallbackBackend` for the verify leg.
+        Borrows :class:`HttpxFallbackBackend` for the verify leg.
+
+        Args:
+            cert: The loaded PKCS#12 certificate to present.
+            url: HTTPS endpoint to probe.
+
+        Returns:
+            A populated handshake result describing the outcome.
         """
         _ = datetime.now(UTC)  # touch datetime so imports stay explicit
         return HttpxFallbackBackend().verify(cert, url)

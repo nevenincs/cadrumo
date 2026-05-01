@@ -2,7 +2,7 @@
 
 Modelo 303 is the quarterly IVA form filed by Spanish autónomos
 and businesses in the general IVA regime. This builder covers v1
-scope per :mod:`aeat.application.filing._builders._modelo_303_schema`:
+scope per :mod:`aeat.domain.filing._builders._modelo_303_schema`:
 operaciones interiores régimen general (casillas 01-09), IVA
 deducible (28-45), and resultado de la liquidación (64-71).
 
