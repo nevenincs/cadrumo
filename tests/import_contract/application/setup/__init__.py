@@ -1,0 +1,1 @@
+"""Setup import-contract tests."""

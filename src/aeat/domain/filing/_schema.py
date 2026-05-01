@@ -16,6 +16,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.i18n import Translatable
+from ..submission._protocols import FilingFindingSeverity
 
 # Default schema version stamped on a freshly built draft when a
 # caller provides an ad hoc collection without an explicit runtime
@@ -52,14 +53,6 @@ class FilingValueKind(StrEnum):
     INHERITED = "INHERITED"
     DEFAULT = "DEFAULT"
     EMPTY = "EMPTY"
-
-
-class FilingFindingSeverity(StrEnum):
-    """Severity of a :class:`FilingValidationFinding`."""
-
-    ERROR = "ERROR"
-    WARNING = "WARNING"
-    INFO = "INFO"
 
 
 # A type alias for the small set of primitive value types a casilla

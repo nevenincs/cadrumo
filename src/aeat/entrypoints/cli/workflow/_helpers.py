@@ -150,7 +150,6 @@ def run_engine_for_period(
 
 
 __all__ = [
-    "EngineFactory",
     "clear_test_hooks",
     "run_engine_for_period",
     "run_engine_next",

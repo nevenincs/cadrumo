@@ -1188,14 +1188,8 @@ def resolve_catalogue(*, on: date) -> VATCatalogue:
     return VAT_CATALOGUE_2025
 
 
-def total_citation_count(catalogue: VATCatalogue = VAT_CATALOGUE_2025) -> int:
-    """Return the total number of :class:`Citation` records in ``catalogue``."""
-    return sum(len(regulation.citations) for regulation in catalogue)
-
-
 __all__ = [
     "VAT_CATALOGUES_BY_YEAR",
     "VAT_CATALOGUE_2025",
     "resolve_catalogue",
-    "total_citation_count",
 ]

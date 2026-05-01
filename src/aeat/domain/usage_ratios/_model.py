@@ -91,7 +91,7 @@ class UsageRatioProfile(BaseModel):
 def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -> Decimal | None:
     """Return Kent's persisted ratio for a category, or ``None`` if unset.
 
-    Pure helper consumed by :mod:`aeat.adapters.inbound.financial.deductibility` (issue #257).
+    Pure helper consumed by :mod:`aeat.domain.deductibility` (issue #257).
     When the return value is ``None`` the caller falls back to
     ``ProportionalityRule.default_ratio`` and records the resolution source in
     the transaction trace fields.

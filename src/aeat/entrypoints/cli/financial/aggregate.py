@@ -113,4 +113,4 @@ def _format_decimal(value: Decimal) -> str:
     return canonical_decimal(value)
 
 
-__all__ = ["FinancialAggregateJson", "aggregate_cmd"]
+__all__ = ["aggregate_cmd"]

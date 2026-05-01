@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import inspect, text
 
-from ....core.config import Settings
+from .....core.config import Settings
 from . import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
@@ -31,7 +31,6 @@ from . import (
     PortalAuthMethod,
     PortalRecord,
     PortalRepository,
-    RepositoryError,
     create_engine_from_settings,
     dispose_engine,
     get_engine,
@@ -39,6 +38,7 @@ from . import (
     session_scope,
     upgrade_to_head,
 )
+from ..errors import RepositoryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ...... import declaracion as declaracion_pkg
+from ... import parse_declaracion
 from ....pdf._shared import ExtractedCasilla
 from ..._schema import DeclaracionFiling, TemplateRevision
 
@@ -68,7 +68,7 @@ def test_parses_live_irpf_justificante(
     pdf_path = _justificante(ejercicio)
     _skip_if_missing(pdf_path)
 
-    filing = declaracion_pkg.parse_declaracion(pdf_path)
+    filing = parse_declaracion(pdf_path)
 
     assert filing.modelo == "100"
     assert filing.ejercicio == ejercicio
@@ -104,7 +104,7 @@ def test_2023_matches_known_ground_truth() -> None:
     pdf_path = _justificante("2023")
     _skip_if_missing(pdf_path)
 
-    filing = declaracion_pkg.parse_declaracion(pdf_path)
+    filing = parse_declaracion(pdf_path)
     by_id = _values_by_id(filing)
 
     # Base imponible / liquidable general values printed on the 2023 receipt.

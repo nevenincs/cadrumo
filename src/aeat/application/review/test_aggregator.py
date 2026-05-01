@@ -159,7 +159,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version="filing-schema-0.1.0",
     )
-    from ..filing._repository import FilingDraftRepository
+    from ...domain.filing import FilingDraftRepository
 
     FilingDraftRepository(store_dir=settings.aeat_drafts_dir).save(draft)
 

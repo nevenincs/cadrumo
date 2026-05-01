@@ -102,7 +102,7 @@ def register(code: ErrorCode) -> ErrorCode:
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.adapters.inbound.pdf._errors.PdfFilingImportError",
+        "aeat.domain.justificante._errors.PdfFilingImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_FILING_IMPORT",
             category=ErrorCategory.ERROR,
@@ -128,7 +128,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth._authenticator._PersistedSessionInvalidError",
+        "aeat.adapters.outbound.aeat.auth._authenticator._PersistedSessionInvalidError",
         ErrorCode(
             code="AUTH_AUTH_AUTHENTICATOR_PERSISTED_SESSION_INVALID",
             category=ErrorCategory.AUTH,
@@ -141,7 +141,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilApprovalTimeoutError",
+        "aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilApprovalTimeoutError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_APPROVAL_TIMEOUT",
             category=ErrorCategory.AUTH,
@@ -154,7 +154,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilConfigurationError",
+        "aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_CONFIGURATION",
             category=ErrorCategory.AUTH,
@@ -167,7 +167,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.AeatLiveReadNotEnabledError",
+        "aeat.adapters.outbound.aeat.auth.certificate.AeatLiveReadNotEnabledError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_AEAT_LIVE_READ_NOT_ENABLED",
             category=ErrorCategory.AUTH,
@@ -180,7 +180,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.AeatLoginAssertionError",
+        "aeat.adapters.outbound.aeat.auth.certificate.AeatLoginAssertionError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_AEAT_LOGIN_ASSERTION",
             category=ErrorCategory.AUTH,
@@ -193,7 +193,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.AeatSessionExpiredError",
+        "aeat.adapters.outbound.aeat.auth.certificate.AeatSessionExpiredError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_AEAT_SESSION_EXPIRED",
             category=ErrorCategory.AUTH,
@@ -206,7 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateError",
+        "aeat.adapters.outbound.aeat.auth.certificate.CertificateError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE",
             category=ErrorCategory.AUTH,
@@ -219,7 +219,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateExpiredError",
+        "aeat.adapters.outbound.aeat.auth.certificate.CertificateExpiredError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_EXPIRED",
             category=ErrorCategory.AUTH,
@@ -232,7 +232,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateHandshakeError",
+        "aeat.adapters.outbound.aeat.auth.certificate.CertificateHandshakeError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_HANDSHAKE",
             category=ErrorCategory.AUTH,
@@ -245,7 +245,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateLoadError",
+        "aeat.adapters.outbound.aeat.auth.certificate.CertificateLoadError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_LOAD",
             category=ErrorCategory.AUTH,
@@ -258,7 +258,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificateNifParseError",
+        "aeat.adapters.outbound.aeat.auth.certificate.CertificateNifParseError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_NIF_PARSE",
             category=ErrorCategory.AUTH,
@@ -271,7 +271,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificatePasswordError",
+        "aeat.adapters.outbound.aeat.auth.certificate.CertificatePasswordError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_PASSWORD",
             category=ErrorCategory.AUTH,
@@ -284,7 +284,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.auth.certificate.CertificatePreExpiryError",
+        "aeat.adapters.outbound.aeat.auth.certificate.CertificatePreExpiryError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_PRE_EXPIRY",
             category=ErrorCategory.AUTH,
@@ -323,7 +323,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.browser.session.BrowserError",
+        "aeat.adapters.outbound.aeat.browser.session.BrowserError",
         ErrorCode(
             code="FAIL_BROWSER_SESSION_BROWSER",
             category=ErrorCategory.FAIL,
@@ -830,7 +830,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing._errors.FilingAmendmentError",
+        "aeat.domain.filing._errors.FilingAmendmentError",
         ErrorCode(
             code="ERROR_FILING_AMENDMENT",
             category=ErrorCategory.ERROR,
@@ -843,7 +843,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing._errors.FilingAmendmentValidationError",
+        "aeat.domain.filing._errors.FilingAmendmentValidationError",
         ErrorCode(
             code="INTEGRITY_FILING_AMENDMENT_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -856,7 +856,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing._errors.FilingBuilderError",
+        "aeat.domain.filing._errors.FilingBuilderError",
         ErrorCode(
             code="ERROR_FILING_BUILDER",
             category=ErrorCategory.ERROR,
@@ -869,7 +869,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing._errors.FilingComputationError",
+        "aeat.domain.filing._errors.FilingComputationError",
         ErrorCode(
             code="ERROR_FILING_COMPUTATION",
             category=ErrorCategory.ERROR,
@@ -882,7 +882,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing._errors.FilingDraftError",
+        "aeat.domain.filing._errors.FilingDraftError",
         ErrorCode(
             code="ERROR_FILING_DRAFT",
             category=ErrorCategory.ERROR,
@@ -895,7 +895,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing._errors.FilingImportError",
+        "aeat.domain.filing._errors.FilingImportError",
         ErrorCode(
             code="FAIL_FILING_IMPORT",
             category=ErrorCategory.FAIL,
@@ -908,7 +908,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing._errors.FilingValidationError",
+        "aeat.domain.filing._errors.FilingValidationError",
         ErrorCode(
             code="INTEGRITY_FILING_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -1857,7 +1857,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.ExpedienteNotFoundError",
+        "aeat.adapters.outbound.aeat.sede._errors.ExpedienteNotFoundError",
         ErrorCode(
             code="ERROR_SEDE_EXPEDIENTE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1870,7 +1870,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.JustificanteFetchError",
+        "aeat.adapters.outbound.aeat.sede._errors.JustificanteFetchError",
         ErrorCode(
             code="FAIL_SEDE_JUSTIFICANTE_FETCH",
             category=ErrorCategory.FAIL,
@@ -1883,7 +1883,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.SedeError",
+        "aeat.adapters.outbound.aeat.sede._errors.SedeError",
         ErrorCode(
             code="ERROR_SEDE",
             category=ErrorCategory.ERROR,
@@ -1896,7 +1896,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.SedeNavigationError",
+        "aeat.adapters.outbound.aeat.sede._errors.SedeNavigationError",
         ErrorCode(
             code="ERROR_SEDE_NAVIGATION",
             category=ErrorCategory.ERROR,
@@ -1909,7 +1909,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.adapters.outbound.aeat.sede._errors.SedeParseError",
+        "aeat.adapters.outbound.aeat.sede._errors.SedeParseError",
         ErrorCode(
             code="FAIL_SEDE_PARSE",
             category=ErrorCategory.FAIL,
@@ -2473,40 +2473,92 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.export._errors.LiveSubmitForbiddenError",
+        "aeat.core.access_gate._errors.SubmissionError",
         ErrorCode(
-            code="LOCKED_SUBMISSION_LIVE_SUBMIT_FORBIDDEN",
+            code="ERROR_ACCESS_GATE_SUBMISSION",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error de política de envío.",
+            default_message_en="Base class for access-gate submission policy errors.",
+            default_message_hu="Hozzáférési kapu beküldési hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.access_gate._errors.SubmissionPreflightError",
+        ErrorCode(
+            code="ERROR_ACCESS_GATE_SUBMISSION_PREFLIGHT",
+            category=ErrorCategory.ERROR,
+            default_message_es="La política previa de envío rechazó la operación.",
+            default_message_en="Raised when access-gate preflight rejects a submission operation.",
+            default_message_hu="A hozzáférési kapu előzetes ellenőrzése elutasította a beküldést.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.access_gate._errors.LiveSubmitForbiddenError",
+        ErrorCode(
+            code="LOCKED_ACCESS_GATE_LIVE_SUBMIT_FORBIDDEN",
             category=ErrorCategory.LOCKED,
             default_message_es="El envío en vivo a AEAT está permanentemente prohibido.",
-            default_message_en="Live AEAT submission is permanently forbidden.",
-            default_message_hu="Az élő AEAT beküldés véglegesen tiltott.",
+            default_message_en="Live AEAT submission is permanently forbidden by the access gate.",
+            default_message_hu="Az élő AEAT beküldést a hozzáférési kapu véglegesen tiltja.",
             default_suggestion="aeat submission export",
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.export._errors.SubmissionError",
+        "aeat.core.access_gate._errors.AeatLiveReadNotEnabledError",
         ErrorCode(
-            code="ERROR_SUBMISSION",
-            category=ErrorCategory.ERROR,
-            default_message_es="Error de envio.",
-            default_message_en="Base class for submission-related errors.",
-            default_message_hu="Bekuldes hiba.",
+            code="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
+            category=ErrorCategory.REFUSED,
+            default_message_es="La lectura en vivo de AEAT no está habilitada.",
+            default_message_en="Live AEAT read access is not enabled.",
+            default_message_hu="Az élő AEAT olvasás nincs engedélyezve.",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.export._errors.SubmissionPreflightError",
+        "aeat.domain.submission._errors.SubmissionError",
         ErrorCode(
-            code="ERROR_SUBMISSION_PREFLIGHT",
+            code="ERROR_DOMAIN_SUBMISSION",
             category=ErrorCategory.ERROR,
-            default_message_es="La validacion previa del envio rechazo el borrador.",
-            default_message_en="Raised when preflight gating rejects a draft before any browser work.",
-            default_message_hu="A bekuldes elotti ellenorzes elutasitotta a tervezetet.",
+            default_message_es="Error de envío de dominio.",
+            default_message_en="Base class for domain submission errors.",
+            default_message_hu="Domain beküldési hiba.",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.submission._errors.SubmissionPreflightError",
+        ErrorCode(
+            code="ERROR_DOMAIN_SUBMISSION_PREFLIGHT",
+            category=ErrorCategory.ERROR,
+            default_message_es="La validación previa del envío de dominio rechazó el borrador.",
+            default_message_en="Raised when domain submission preflight rejects a draft.",
+            default_message_hu="A domain beküldés előzetes ellenőrzése elutasította a tervezetet.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.submission._errors.LiveSubmitForbiddenError",
+        ErrorCode(
+            code="LOCKED_DOMAIN_LIVE_SUBMIT_FORBIDDEN",
+            category=ErrorCategory.LOCKED,
+            default_message_es="El envío en vivo a AEAT está permanentemente prohibido.",
+            default_message_en="Live AEAT submission is permanently forbidden in the domain submission engine.",
+            default_message_hu="Az élő AEAT beküldés véglegesen tiltott a domain beküldési motorban.",
+            default_suggestion="aeat submission export",
             retryable=False,
             runbook_id=None,
         ),
@@ -2571,6 +2623,71 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             default_message_es="La validacion de wire fallo.",
             default_message_en="Raised when a live AEAT payload fails strict pydantic validation.",
             default_message_hu="Wire ervenyesitese sikertelen.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.sync._errors.SyncError",
+        ErrorCode(
+            code="ERROR_DOMAIN_SYNC",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error de sincronización de dominio.",
+            default_message_en="Base class for domain sync errors.",
+            default_message_hu="Domain szinkron hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.sync._errors.WireValidationError",
+        ErrorCode(
+            code="INTEGRITY_DOMAIN_SYNC_WIRE_VALIDATION",
+            category=ErrorCategory.INTEGRITY,
+            default_message_es="La validación wire de dominio falló.",
+            default_message_en="Raised when a domain sync payload fails strict validation.",
+            default_message_hu="A domain sync wire érvényesítése sikertelen.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.sync._errors.DivergenceClassificationError",
+        ErrorCode(
+            code="ERROR_DOMAIN_SYNC_DIVERGENCE_CLASSIFICATION",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error de clasificación de divergencia de dominio.",
+            default_message_en="Raised when the domain sync classifier cannot classify a divergence.",
+            default_message_hu="Domain sync eltérés besorolási hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.sync._errors.HealingError",
+        ErrorCode(
+            code="ERROR_DOMAIN_SYNC_HEALING",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error al reparar una divergencia de dominio.",
+            default_message_en="Raised when a domain sync healing strategy cannot apply.",
+            default_message_hu="Domain sync javítási hiba.",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.sync._errors.DivergenceRepositoryError",
+        ErrorCode(
+            code="ERROR_DOMAIN_SYNC_DIVERGENCE_REPOSITORY",
+            category=ErrorCategory.ERROR,
+            default_message_es="Error del repositorio de divergencias de dominio.",
+            default_message_en="Raised when the domain sync divergence repository cannot persist or load.",
+            default_message_hu="Domain sync eltérés tár hiba.",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

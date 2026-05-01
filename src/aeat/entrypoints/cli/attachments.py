@@ -15,6 +15,8 @@ from ...domain.attachments import (
     AttachmentKind,
     AttachmentSource,
     AttachmentStore,
+)
+from ...application.attachments import (
     add_attachment,
     list_attachments,
     load_attachment,

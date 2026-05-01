@@ -36,11 +36,11 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from _fixture_catalogue import CATALOGUE  # noqa: E402
 from googleapiclient.errors import HttpError  # noqa: E402
 
-from aeat.auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes  # noqa: E402
-from aeat.config import PROJECT_ROOT, Settings  # noqa: E402
-from aeat.env_io import write_env_vars  # noqa: E402
-from aeat.errors import FixtureProvisioningError  # noqa: E402
-from aeat.logging import get_logger  # noqa: E402
+from aeat.adapters.outbound.aeat.auth import DRIVE_SCOPE, build_drive_service, get_credentials_for_scopes  # noqa: E402
+from aeat.core.config import PROJECT_ROOT, Settings  # noqa: E402
+from aeat.core.env_io import write_env_vars  # noqa: E402
+from aeat.core.errors import FixtureProvisioningError  # noqa: E402
+from aeat.core.logging import get_logger  # noqa: E402
 
 log = get_logger(__name__)
 

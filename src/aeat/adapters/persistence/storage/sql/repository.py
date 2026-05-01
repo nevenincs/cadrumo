@@ -13,9 +13,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ....core.logging import get_logger
+from .....core.logging import get_logger
 from . import _orm
-from .errors import RepositoryError
+from ..errors import RepositoryError
 from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 
 _log = get_logger(__name__)

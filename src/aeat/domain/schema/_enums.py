@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from ..casillas.models import CasillaDataType
+
 
 class SchemaSource(StrEnum):
     """Provenance class of an extracted :class:`aeat.domain.schema.Modelo`.
@@ -21,26 +23,6 @@ class SchemaSource(StrEnum):
     """
 
     BOE_ORDEN = "boe_orden"
-
-
-class CasillaDataType(StrEnum):
-    """Closed catalogue of casilla data types.
-
-    Owned by :mod:`aeat.domain.schema`. The adjacent
-    :class:`aeat.domain.casillas.models.CasillaDataType` carries the same
-    member values for the curated reviewer corpus; the two enums are
-    bridged by string-value round-trip (see the 2026-04-17 schema
-    extraction ADR §7). ``isinstance`` comparisons across the two
-    enums are forbidden.
-    """
-
-    CURRENCY_EUR = "currency_eur"
-    INTEGER = "integer"
-    BOOLEAN = "boolean"
-    DATE = "date"
-    TEXT = "text"
-    SELECT = "select"
-    PERCENTAGE = "percentage"
 
 
 class BinaryFormulaOp(StrEnum):

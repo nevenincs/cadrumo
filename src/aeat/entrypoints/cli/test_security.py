@@ -272,7 +272,7 @@ def test_rotate_with_recovery_key_preserves_existing_mnemonic(
         unwrap_master_key,
         wrap_master_key,
     )
-    from ...adapters.persistence.storage._recovery import RecoveryKey
+    from ...adapters.persistence.storage import RecoveryKey
 
     secrets_dir = tmp_path / "secrets"
     secrets_dir.mkdir()
@@ -334,7 +334,7 @@ def test_rotate_recovery_key_must_match_old_key_file(
         save_wrapped_master_key,
         wrap_master_key,
     )
-    from ...adapters.persistence.storage._recovery import RecoveryKey
+    from ...adapters.persistence.storage import RecoveryKey
 
     secrets_dir = tmp_path / "secrets"
     secrets_dir.mkdir()
@@ -495,7 +495,7 @@ class TestMigrateMasterKeyKdf:
         import secrets as _secrets
 
         from ...adapters.persistence.storage import encrypt_record
-        from ...adapters.persistence.storage._master_key import (
+        from ...adapters.persistence.storage.master_key._master_key import (
             _b64encode,
             _derive_legacy_scrypt_kek,
             _LegacyKdfParameters,
@@ -762,7 +762,7 @@ class TestProvisionCommand:
         # generated recovery wrapping wraps the OLD master key,
         # invalidating any pre-existing printed mnemonic against the
         # on-disk file.
-        from ...adapters.persistence.storage._master_key import KeyringMasterKeyProvider
+        from ...adapters.persistence.storage.master_key._master_key import KeyringMasterKeyProvider
 
         keyring = pytest.importorskip("keyring")
 

@@ -343,7 +343,7 @@ def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
     on-disk location back to the operator without ever touching
     plaintext.
     """
-    from ..filing._repository import FilingDraftRepository
+    from ...domain.filing import FilingDraftRepository
 
     root = settings.aeat_drafts_dir.resolve()
     if not root.exists():

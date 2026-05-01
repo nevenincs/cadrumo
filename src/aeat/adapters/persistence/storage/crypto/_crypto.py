@@ -25,7 +25,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from pydantic import BaseModel, ConfigDict, Field
 
-from .errors import DecryptionError, EncryptionError, KeyDerivationError
+from ..errors import DecryptionError, EncryptionError, KeyDerivationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

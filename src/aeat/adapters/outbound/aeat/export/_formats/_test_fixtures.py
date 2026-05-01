@@ -124,7 +124,6 @@ __all__ = [
     "KENT",
     "KENT_130_CASILLAS",
     "KENT_303_CASILLAS_HAND",
-    "KentProfile",
     "kent_130_headers",
     "kent_303_headers",
 ]

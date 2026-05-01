@@ -13,17 +13,17 @@ from functools import lru_cache
 from pathlib import Path
 
 from ...domain.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
-from ...domain.transactions import Transaction, TransactionCatalogue
-from ...domain.formulas import FiscalPeriod, MissingRulesetError, Quarter, get_registry
-from ...domain.modelos import ModeloCode
-from ._errors import FilingDraftError
-from ._protocols import CasillaSchemaProvider
-from ._schema import (
+from ...domain.filing import (
+    CasillaSchemaProvider,
     FilingApprovalBasis,
     FilingDraft,
+    FilingDraftError,
     FilingDraftStatus,
+    derive_validation_status,
 )
-from ._validator import derive_validation_status
+from ...domain.formulas import FiscalPeriod, MissingRulesetError, Quarter, get_registry
+from ...domain.modelos import ModeloCode
+from ...domain.transactions import Transaction, TransactionCatalogue
 
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:Q(?P<quarter>[1-4]))?$")
 _REVIEW_STATUSES = frozenset(

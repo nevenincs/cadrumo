@@ -15,14 +15,14 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
-from ._builders._modelo_130_schema import (
+from ...domain.filing._builders._modelo_130_schema import (
     MODELO_130_SCHEMA,
     StaticCasillaCollection,
     StaticCasillaSchema,
     StaticCasillaSchemaProvider,
 )
-from ._builders._modelo_303_schema import MODELO_303_SCHEMA
-from ._builders._modelo_390_schema import MODELO_390_SCHEMA
+from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
+from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
 
 
 def default_schema_provider() -> StaticCasillaSchemaProvider:

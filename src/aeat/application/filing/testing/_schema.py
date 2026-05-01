@@ -1,10 +1,10 @@
-"""Pydantic v2 schema for :mod:`aeat.application.filing.testing` synthetic filing fixtures.
+"""Pydantic v2 schema for :mod:`aeat.domain.testing` synthetic filing fixtures.
 
 Every type in this module is a strict, frozen pydantic v2 model or a
 closed :class:`enum.StrEnum`. The :class:`FilingRecord` shape is the
 boundary-crossing record persisted to
 ``tests/fixtures/filing_history/<modelo>/<period>-<scenario>.json``
-and re-loaded by :func:`aeat.application.filing.testing.load_filing_history`.
+and re-loaded by :func:`aeat.domain.testing.load_filing_history`.
 """
 
 from __future__ import annotations
@@ -18,10 +18,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .. import FilingDraftStatus
-
-SYNTHETIC_COMMENT_REQUIRED_SUBSTRING = "SYNTHETIC"
-
+from ..filing import FilingDraftStatus
 
 class FilingRecordPeriodKind(StrEnum):
     """Cadence of a synthetic filing record's period."""
@@ -29,7 +26,6 @@ class FilingRecordPeriodKind(StrEnum):
     ANNUAL = "ANNUAL"
     QUARTERLY = "QUARTERLY"
     MONTHLY = "MONTHLY"
-
 
 class FilingRecordScenario(StrEnum):
     """The edge-case scenario a synthetic record exercises.
@@ -47,9 +43,7 @@ class FilingRecordScenario(StrEnum):
     CANCELLED = "CANCELLED"
     ROUNDING = "ROUNDING"
 
-
 FixtureScalar = Decimal | int | str | bool | None
-
 
 class FixtureCasilla(BaseModel):
     """One casilla on a :class:`FilingRecord`.
@@ -69,7 +63,6 @@ class FixtureCasilla(BaseModel):
     casilla_id: str = Field(..., min_length=1)
     label: str = Field(..., min_length=1)
     value: FixtureScalar
-
 
 class FilingRecord(BaseModel):
     """One synthetic historical filing record.
@@ -111,7 +104,6 @@ class FilingRecord(BaseModel):
     complementaria_of: str | None = None
     notes: str = ""
 
-
 def compute_record_id(
     *,
     modelo: str,
@@ -140,9 +132,7 @@ def compute_record_id(
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()[:16]
 
-
 __all__ = [
-    "SYNTHETIC_COMMENT_REQUIRED_SUBSTRING",
     "FilingRecord",
     "FilingRecordPeriodKind",
     "FilingRecordScenario",

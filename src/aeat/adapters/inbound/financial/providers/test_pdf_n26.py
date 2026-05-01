@@ -12,7 +12,7 @@ from .. import PdfN26Provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial" / "n26"
+_FIXTURES = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "financial" / "n26"
 
 
 def _load_expected(name: str) -> list[dict[str, object]]:

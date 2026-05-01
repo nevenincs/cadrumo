@@ -14,7 +14,7 @@ inline ``sys.path`` adjustment — see
 
 Adding a new fixture is an additive edit: append a ``FixtureSpec``
 entry, pick a stable kebab-case ``fixture_id``, add the matching env
-var to :class:`aeat.config.Settings` and ``env/.env.example``, and
+var to :class:`aeat.core.config.Settings` and ``env/.env.example``, and
 re-run ``just google-fixtures-provision``.
 
 The fixtures are **synthetic-only**. No real client data, real AEAT
@@ -64,7 +64,7 @@ class FixtureSpec(BaseModel):
         env_var_name: The uppercase environment variable name under
             which the provisioned resource ID is persisted into
             ``env/.env``. Must match a field on
-            :class:`aeat.config.Settings`.
+            :class:`aeat.core.config.Settings`.
         description: Human-readable description of the fixture's role.
         consumed_by: Free-form reference to the issue(s) or test
             module(s) that read this fixture at runtime.

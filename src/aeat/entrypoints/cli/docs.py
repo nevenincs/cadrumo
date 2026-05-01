@@ -19,7 +19,7 @@ app = typer.Typer(name="docs", no_args_is_help=True, help="Google Docs helpers."
 
 def _docs() -> Any:
     """Build an authenticated Docs v1 service lazily."""
-    from ...adapters.outbound.aeat.auth import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
+    from ...adapters.outbound.google import DOCS_SCOPE, build_docs_service, get_credentials_for_scopes
 
     creds = get_credentials_for_scopes([DOCS_SCOPE])
     return build_docs_service(creds)

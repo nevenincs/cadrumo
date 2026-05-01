@@ -23,7 +23,7 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
     """Atomically write ``text`` to ``path`` via tempfile + os.replace.
 
     Mirrors the substrate's atomic-write discipline at
-    :func:`aeat.adapters.persistence.storage._master_key.atomic_write_secure_bytes`. The
+    :func:`aeat.adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`. The
     plaintext ``env/.env`` payload is operator-controlled
     configuration, not a secret — but the durability story matters:
     a ``path.write_text`` call truncates the existing inode in-place

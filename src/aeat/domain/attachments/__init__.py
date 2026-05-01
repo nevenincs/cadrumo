@@ -7,7 +7,7 @@ messages, Drive documents, receipts, contracts, metadata blobs — and link
 them to transactions and/or invoices so every casilla value the project
 eventually justifies can be traced to physical evidence.
 
-Domain models, errors, and the store live here. Orchestration helpers
+Domain models, errors, and the repository live here. Orchestration helpers
 (``add_attachment``, ``list_attachments``, ``load_attachment``) are in
 ``aeat.application.attachments``.
 """
@@ -22,8 +22,7 @@ from ._errors import (
     AttachmentValidationError,
 )
 from ._models import Attachment, AttachmentCatalogue
-from ._service import add_attachment, list_attachments, load_attachment
-from ._store import AttachmentStore
+from ._repository import AttachmentStore
 
 __all__ = [
     "Attachment",
@@ -35,7 +34,4 @@ __all__ = [
     "AttachmentSource",
     "AttachmentStore",
     "AttachmentValidationError",
-    "add_attachment",
-    "list_attachments",
-    "load_attachment",
 ]

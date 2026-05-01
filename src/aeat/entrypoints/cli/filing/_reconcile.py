@@ -36,7 +36,7 @@ from ....adapters.outbound.aeat.sede import (
     find_expediente,
     walk_declarations_register,
 )
-from ....application.filing._schema import FilingDraft, FilingDraftStatus
+from ....domain.filing import FilingDraft, FilingDraftStatus
 from ....application.filing.reconciliation import (
     ReconciliationReport,
     ReconciliationStatus,
@@ -195,7 +195,7 @@ def _load_draft(
     Drafts are ciphertext-at-rest only; the repository enforces the
     classification gate and version contract.
     """
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     drafts_dir = Path(settings.aeat_drafts_dir)
     if not drafts_dir.is_dir():

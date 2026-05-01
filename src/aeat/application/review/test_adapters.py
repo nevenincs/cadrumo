@@ -400,7 +400,7 @@ def _draft(
 
 def _write_draft(settings: Settings, draft: FilingDraft) -> Path:
     """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
-    from ..filing._repository import FilingDraftRepository
+    from ...domain.filing import FilingDraftRepository
 
     settings.aeat_drafts_dir.mkdir(parents=True, exist_ok=True)
     repository = FilingDraftRepository(store_dir=settings.aeat_drafts_dir)

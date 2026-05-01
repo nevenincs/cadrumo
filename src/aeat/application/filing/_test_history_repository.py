@@ -132,7 +132,7 @@ class TestClassificationGate:
 
     def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
         from ...adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         store_dir.mkdir(parents=True, exist_ok=True)
         history = _make_history(modelo="130")

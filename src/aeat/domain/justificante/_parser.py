@@ -46,7 +46,7 @@ def parse_justificante(
         from ...core.config import load_settings
 
         settings = load_settings()
-        resolved_backend = settings.aeat_justificante_parser_backend
+        resolved_backend = JustificanteParserBackend(settings.aeat_justificante_parser_backend.name)
 
     _logger.debug("parsing justificante %s with backend %s", pdf_path, resolved_backend)
     text = extract_text(pdf_path.resolve(), resolved_backend)

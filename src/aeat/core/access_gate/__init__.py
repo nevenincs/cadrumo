@@ -28,7 +28,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ._errors import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
+from ._errors import (
+    AeatLiveReadNotEnabledError,
+    LiveSubmitForbiddenError,
+    SubmissionError,
+    SubmissionPreflightError,
+)
 
 if TYPE_CHECKING:
     from ..config import Settings
@@ -116,5 +121,3 @@ __all__ = [
     "SubmissionError",
     "SubmissionPreflightError",
 ]
-
-from ._errors import SubmissionError, SubmissionPreflightError  # noqa: E402, F401

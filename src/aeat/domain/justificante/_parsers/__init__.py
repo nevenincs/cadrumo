@@ -29,10 +29,12 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
         JustificanteParseError: If ``backend`` is not yet implemented or the
             underlying library fails to open the PDF.
     """
-    if backend is JustificanteParserBackend.PDFPLUMBER:
+    backend_value = backend.value if hasattr(backend, "value") else str(backend)
+    normalized_backend = backend_value.lower()
+    if normalized_backend == JustificanteParserBackend.PDFPLUMBER.value.lower():
         from ._pdfplumber_backend import extract_text_pdfplumber
 
         return extract_text_pdfplumber(pdf_path)
-    if backend is JustificanteParserBackend.PYMUPDF:
+    if normalized_backend == JustificanteParserBackend.PYMUPDF.value.lower():
         raise JustificanteParseError("PYMUPDF backend is not implemented yet; use PDFPLUMBER (the default).")
     raise JustificanteParseError(f"unknown parser backend: {backend!r}")

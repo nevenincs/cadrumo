@@ -20,6 +20,7 @@ from . import (
     save_casillas,
     verify_casillas,
 )
+from ..modelos import ModeloCode as CanonicalModeloCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -54,6 +55,22 @@ def _record(
         definition_reviewed_at=definition_reviewed_at,
         llm_draft_provenance=llm_draft_provenance,
     )
+
+
+def test_casillas_exports_canonical_modelo_code() -> None:
+    """The casilla API must not expose a shadow ModeloCode enum."""
+
+    from . import ModeloCode
+
+    assert ModeloCode is CanonicalModeloCode
+    assert ModeloCode.MODELO_130.value == "130"
+
+
+def test_modelo_validator_accepts_canonical_and_legacy_modelo_ids() -> None:
+    """Corpus payloads keep legacy names while new boundaries use canonical codes."""
+
+    assert _record().modelo == "MODELO_130"
+    assert CasillaCatalogue(modelo=CanonicalModeloCode.MODELO_130.value, period="2025Q4", records=()).modelo == "130"
 
 
 def test_loader_rejects_malformed_records(tmp_path: Path) -> None:

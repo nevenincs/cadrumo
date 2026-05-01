@@ -74,7 +74,7 @@ def _resolve_draft_path(draft_ref: str) -> Path:
 
 def _load_review_draft(path: Path) -> FilingDraft:
     """Load a draft envelope through the FilingDraftRepository."""
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     if not path.exists():
         raise typer.BadParameter(f"draft file not found: {path}")
@@ -98,7 +98,7 @@ def _load_review_draft(path: Path) -> FilingDraft:
 
 def _save_draft(draft: FilingDraft) -> None:
     """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
-    from ....application.filing._repository import FilingDraftRepository
+    from ....domain.filing import FilingDraftRepository
 
     repository = FilingDraftRepository(store_dir=_drafts_dir())
     repository.save(draft)

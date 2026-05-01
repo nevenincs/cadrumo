@@ -9,19 +9,15 @@ browser work begins. Every failure raises
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING
-
 from ...core.logging import get_logger
 from ._errors import SubmissionPreflightError
 from ._protocols import (
+    AuthProviderDescriptionLike,
     AuthProviderProbe,
     DeadlineWindowChecker,
     DraftStatus,
     FilingDraftLike,
 )
-
-if TYPE_CHECKING:
-    from ...application.auth import AuthProviderDescription
 
 _logger = get_logger(__name__)
 
@@ -29,15 +25,15 @@ _logger = get_logger(__name__)
 # StrEnum value for ``AuthProviderKind.CERTIFICATE`` — duplicated as a
 # bare string so the domain layer does not import the application-layer
 # enum at runtime. Kept in sync with
-# :class:`aeat.application.auth.AuthProviderKind` by code review.
+# :class:`aeat.domain.auth.AuthProviderKind` by code review.
 _AUTH_KIND_CERTIFICATE = "certificate"
 
 
-def _describe_provider_operator_impact(description: AuthProviderDescription) -> str:
+def _describe_provider_operator_impact(description: AuthProviderDescriptionLike) -> str:
     """Return Kent's operator-impact summary for ``description``.
 
     Mirror of
-    :func:`aeat.application.auth.describe_provider_operator_impact`.
+    :func:`aeat.domain.auth.describe_provider_operator_impact`.
     Duplicated here because the layered-import contract forbids
     `aeat.domain.*` from depending on `aeat.application.*` at runtime;
     the helper is pure string formatting against ``description``'s
@@ -56,7 +52,7 @@ def _describe_provider_operator_impact(description: AuthProviderDescription) -> 
             "produce, verify, and export filings locally, but AEAT-backed reads "
             "stay unavailable until auth is fixed."
         )
-    if description.kind == _AUTH_KIND_CERTIFICATE:
+    if _enum_value(description.kind) == _AUTH_KIND_CERTIFICATE:
         return (
             "Certificate auth is ready. Kent keeps the same CLI filing flow for "
             "AEAT-backed reads, and future providers can plug into the same "
@@ -164,7 +160,7 @@ class Preflight:
                 description.available,
             )
             raise SubmissionPreflightError(
-                f"auth provider {description.kind.value} is not ready "
+                f"auth provider {_enum_value(description.kind)} is not ready "
                 f"(configured={description.configured} available={description.available}). "
                 f"{_describe_provider_operator_impact(description)}"
             )

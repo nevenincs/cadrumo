@@ -95,7 +95,7 @@ class JsonFileDivergenceRepository:
             exclusive_file_lock,
             save_encrypted_envelope,
         )
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         target = self._envelope_path_for(record.record_id)
         # Align with the / convention: strip the
@@ -131,7 +131,7 @@ class JsonFileDivergenceRepository:
             SensitivityClass,
             load_encrypted_envelope,
         )
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         path = self._envelope_path_for(record_id)
         if not path.exists():
@@ -155,7 +155,7 @@ class JsonFileDivergenceRepository:
             SensitivityClass,
             load_encrypted_envelope,
         )
-        from ...adapters.persistence.storage._encrypted_columns import _resolve_master_key_provider
+        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
         records: list[DivergenceRecord] = []
         for path in sorted(self._root.glob(f"*{_ENVELOPE_SUFFIX}")):

@@ -11,7 +11,7 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from ... import cli
+import aeat.entrypoints.cli as cli
 from ...core.config import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

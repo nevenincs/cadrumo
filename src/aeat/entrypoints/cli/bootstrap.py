@@ -138,7 +138,7 @@ def _persist_ids(resources: ScratchResources) -> None:
 def bootstrap() -> None:
     """Provision the scratch resource set, persist IDs, print a summary."""
     # Local imports keep the CLI startup path light when only --help is used.
-    from ...adapters.outbound.aeat.auth import (
+    from ...adapters.outbound.google import (
         REQUIRED_ADC_SCOPES,
         build_drive_service,
         get_credentials_for_scopes,

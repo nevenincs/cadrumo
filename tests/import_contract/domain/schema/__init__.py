@@ -1,0 +1,1 @@
+"""Schema import-contract tests."""
