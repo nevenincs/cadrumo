@@ -48,7 +48,7 @@
   },
   "_notes": [
     "Sub-tree splits (financial/, schema/, submission/, auth/) require finer-grain rules than this flat map; the rebase script treats every key as a dotted prefix and rewrites longest-match-first.",
-    "Internal carve-outs (e.g. submission/_formats/ \u00e2\u2020\u2019 adapters/outbound/aeat/export/) are handled by adding more specific keys at higher rank.",
+    "Internal carve-outs (e.g. submission/_formats/ -> adapters/outbound/aeat/export/) are handled by adding more specific keys at higher rank.",
     "The script also rewrites string-form module references inside importlib.import_module() calls and entry-point declarations in pyproject.toml."
   ]
 }
