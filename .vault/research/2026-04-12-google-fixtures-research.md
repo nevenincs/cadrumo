@@ -24,13 +24,13 @@ specific upstream test concretely needs them.
 
 chore/4 already landed the full Google Workspace integration surface:
 
-- `src/aeat/auth/__init__.py` — credential resolver (`get_credentials_for_scopes`),
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py` — credential resolver (`get_credentials_for_scopes`),
   scope constants, service builders (`build_drive_service`, `build_sheets_service`,
   `build_docs_service`).
-- `src/aeat/cli/bootstrap.py` — the `aeat bootstrap` command already provisions
+- `src/aeat/entrypoints/cli/bootstrap.py` — the `aeat bootstrap` command already provisions
   a scratch folder / sheet / doc idempotently under the active credentials and
   writes the IDs back into `env/.env`. This is the blueprint this issue reuses.
-- `src/aeat/cli/drive.py`, `sheets.py`, `docs.py` — typed Drive / Sheets / Docs
+- `src/aeat/entrypoints/cli/drive.py`, `sheets.py`, `docs.py` — typed Drive / Sheets / Docs
   CLI helpers.
 - `src/aeat/env_io.py` — dependency-free `.env` rewriter (`write_env_vars`).
 - `just gsuite-bootstrap` / `just gcloud-auth` — cross-platform bootstrap chain.
@@ -97,7 +97,7 @@ for non-src Python tooling (no existing `scripts/` directory in this worktree;
 this issue creates it). The alternative — adding a new subpackage such as
 `src/aeat/fixtures/` — would expose test-only provisioning logic on the
 importable public surface, and would collide with feature-14's ownership of
-`src/aeat/testing/`. **Decision: ship the provisioning tooling under
+`src/aeat/domain/testing/`. **Decision: ship the provisioning tooling under
 `scripts/`.** The catalogue lives as a Python literal at
 `scripts/_fixture_catalogue.py` (strict pydantic v2 models) so review and diff
 are trivial.
@@ -116,10 +116,10 @@ flag is `AEAT_LIVE_TESTS_GOOGLE=1`. The smoke test skips unless both are set.
 
 ## Reuse summary (what we do NOT re-implement)
 
-- Credential resolution: use `aeat.auth.get_credentials_for_scopes`.
-- Drive / Sheets / Docs service builders: use `aeat.auth.build_*_service`.
-- Idempotent find-or-create: reuse the pattern from `aeat.cli.bootstrap`.
-- `.env` rewrite: use `aeat.env_io.write_env_vars`.
+- Credential resolution: use `aeat.adapters.outbound.aeat.auth.get_credentials_for_scopes`.
+- Drive / Sheets / Docs service builders: use `aeat.adapters.outbound.aeat.auth.build_*_service`.
+- Idempotent find-or-create: reuse the pattern from `aeat.entrypoints.cli.bootstrap`.
+- `.env` rewrite: use `aeat.core.env_io.write_env_vars`.
 - Scopes: use `DRIVE_SCOPE`, `SHEETS_SCOPE`, `DOCS_SCOPE`.
 
 ## Open questions (none blocking)

@@ -29,7 +29,7 @@ Surveyed in the wave-17 research artefact:
 
 - **No substrate changes**: wave-1..16 cryptographic primitives are accepted-as-final. Wave-17 only adds UX wrapping + CLI commands + doctor checks + documentation. Any change to the substrate is out of scope.
 - **No live-submit re-introduction**: per the project's permanent live-submit prohibition (PR #446 + memory). Wave-17 cannot add commands that touch a remote AEAT service.
-- **Trilingual error registry**: every new error class must be registered in `aeat.errors._registry` with es/en/hu messages. No raw `ValueError` / `RuntimeError` at user-facing boundaries.
+- **Trilingual error registry**: every new error class must be registered in `aeat.core.errors._registry` with es/en/hu messages. No raw `ValueError` / `RuntimeError` at user-facing boundaries.
 - **Pydantic v2 strict-frozen** for any new record types.
 - **No mocks/fakes/skips**: per the project mandate. New tests exercise real master-key paths via `EphemeralMasterKeyProvider` for in-process control + a real file-fallback integration test for first-run coverage.
 - **Bounded scope**: wave-17 is the LAST wave of the secure-persistence-foundation epic. Anything that doesn't fit is closed by-rejection or marked release-notes scope (per the wave-14 closure pattern).
@@ -123,7 +123,7 @@ Existing call sites that raise `MasterKeyUnavailableError` are not regressed —
 
 1. **Phase 1 — `aeat doctor` security rows.** Add 4-6 health rows: secret-store dir + permissions, active backend, master-key readiness (file-fallback: master.key + master.kdf + salt; keychain: probe), KDF version (post-wave-12 v2), unsecured-mode warning, recovery-key-wrapped backup presence.
 
-2. **Phase 2 — Three-failure-class error subclasses.** New error classes in `aeat.storage.errors`; trilingual registry entries; narrow throws in `KeyringMasterKeyProvider` + `FileFallbackMasterKeyProvider`.
+2. **Phase 2 — Three-failure-class error subclasses.** New error classes in `aeat.adapters.persistence.storage.errors`; trilingual registry entries; narrow throws in `KeyringMasterKeyProvider` + `FileFallbackMasterKeyProvider`.
 
 3. **Phase 3 — `UnsecuredMasterKeyProvider` + opt-out plumbing.** New provider class; `aeat_secret_store_backend=unsecured` mode; `AEAT_ALLOW_UNENCRYPTED=1` gate; NIF-canary refusal at profile-load time.
 

@@ -25,19 +25,19 @@ return at this point in the roadmap. Audit during the #227 PR
 (2026-04-18) found three live-write reachability gaps:
 
 1. **`aeat submission submit` is registered at the default CLI**
-   surface — `src/aeat/cli/submission/__init__.py:35-38`. This
+   surface — `src/aeat/entrypoints/cli/submission/__init__.py:35-38`. This
    directly violates `.claude/rules/aeat-project-mandates.md`:
    > DO NOT register `aeat submission submit` in the default CLI;
    > it lives in a hidden `aeat live-submit` group gated behind env
    > vars.
 2. **`SubmissionEngine.live_transport_supported` defaults to True**
-   (`src/aeat/submission/_engine.py:72`), so any caller who omits
+   (`src/aeat/adapters/outbound/aeat/export/_engine.py:72`), so any caller who omits
    the flag inherits the unsafe default. Only `cli/submission/_helpers.py:189-200`
    explicitly opts to `False`; every other production / test caller
    gets the unsafe default.
 3. **`Modelo130Submitter.submit` carries a real
    `await session.click("button#firmar-y-enviar")`**
-   (`src/aeat/submission/_submitters/modelo130.py:190`). This is
+   (`src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py:190`). This is
    the literal "sign and send" click that would file a return.
 
 Multi-layer runtime gates exist (CLI flag, env var, pytest refusal,
@@ -62,15 +62,15 @@ Concretely:
 
 - Drop `from .submit import submit_cmd` and the
   `app.command(name="submit", ...)(submit_cmd)` registration from
-  `src/aeat/cli/submission/__init__.py`.
-- Delete `src/aeat/cli/submission/submit.py`.
+  `src/aeat/entrypoints/cli/submission/__init__.py`.
+- Delete `src/aeat/entrypoints/cli/submission/submit.py`.
 - Delete `TestSubmitCommand` from
-  `src/aeat/cli/submission/test_cli.py` and replace with a new
+  `src/aeat/entrypoints/cli/submission/test_cli.py` and replace with a new
   `TestSubmitCommandRemoved` that asserts the CLI no longer exposes
   `submit`.
 - Update the package docstring (`cli/submission/__init__.py:1-15`)
   to drop the `submit` listing and explain why (link to this ADR).
-- Update the stale comment in `src/aeat/auth/certificate.py:75`
+- Update the stale comment in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py:75`
   that references `aeat submission submit --force-expiring-cert`.
 
 **Rationale.** The mandate is explicit and non-negotiable. The
@@ -85,16 +85,16 @@ sees a `submit` option.
 
 Concretely:
 
-- `src/aeat/submission/_engine.py:72`: change
+- `src/aeat/adapters/outbound/aeat/export/_engine.py:72`: change
   `live_transport_supported: bool = True` to
   `live_transport_supported: bool = False`. Update the docstring
   to call out that the default is now safe-by-default (opt-in) and
   that explicit `True` is required to reach the
   per-modelo `submit()` transport.
-- `src/aeat/cli/submission/_helpers.py:189-200`: drop the now-
+- `src/aeat/entrypoints/cli/submission/_helpers.py:189-200`: drop the now-
   redundant `live_transport_supported=False` arg from `build_engine`
   (default is False).
-- `src/aeat/submission/test_safety_helpers.py:220`: explicitly pass
+- `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py:220`: explicitly pass
   `live_transport_supported=True` because the test exercises the
   post-bypass live path.
 - Other test sites (`test_engine.py`, `test_live_submission.py`,
@@ -113,13 +113,13 @@ exercise the live-safety paths via test bypass.
 Concretely:
 
 - New static test
-  `src/aeat/cli/submission/test_no_submit_command.py` asserts:
+  `src/aeat/entrypoints/cli/submission/test_no_submit_command.py` asserts:
   - `"submit"` is NOT in the registered Typer command names of the
     `aeat submission` sub-app.
   - The string `"button#firmar-y-enviar"` does not appear anywhere
-    under `src/aeat/cli/` (the click is a submitter-internal
+    under `src/aeat/entrypoints/cli/` (the click is a submitter-internal
     detail; it must never leak into the CLI tree).
-- New behavioural test in `src/aeat/submission/test_engine.py`
+- New behavioural test in `src/aeat/adapters/outbound/aeat/export/test_engine.py`
   asserts that a default-constructed `SubmissionEngine` (no
   `live_transport_supported` arg) raises
   `AeatLiveTransportUnavailableError` on
@@ -133,7 +133,7 @@ the default back".
 ### D4 — engine-level live click (`Modelo130Submitter.submit`) is OUT OF SCOPE
 
 The `await session.click("button#firmar-y-enviar")` line at
-`src/aeat/submission/_submitters/modelo130.py:190` stays in this
+`src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py:190` stays in this
 ADR's scope as **inert reachable-by-opt-in only**. After D2 it can
 only execute if a caller explicitly passes
 `live_transport_supported=True` AND `dry_run=False` AND the env
@@ -185,7 +185,7 @@ for what new contributors must respect.
 ## enforcement / review checklist
 
 - [ ] `aeat submission --help` does not list `submit`.
-- [ ] `import aeat.cli.submission.submit` raises `ModuleNotFoundError`.
+- [ ] `import aeat.entrypoints.cli.submission.submit` raises `ModuleNotFoundError`.
 - [ ] `SubmissionEngine()` default-constructed + `submit_draft(dry_run=False)`
       raises `AeatLiveTransportUnavailableError`.
 - [ ] `rg -n 'live_transport_supported' src/aeat/` shows no

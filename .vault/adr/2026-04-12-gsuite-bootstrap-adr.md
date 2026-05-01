@@ -148,7 +148,7 @@ unit-tested module.
 
 ### c. cli surface
 
-New package `src/aeat/cli/` with Typer sub-apps:
+New package `src/aeat/entrypoints/cli/` with Typer sub-apps:
 
 - `__main__.py` — root `aeat` Typer app, wires sub-apps.
 - `doctor.py` — `aeat doctor`. Read-only health table covering env file,
@@ -180,7 +180,7 @@ Pyproject:
 
 ```toml
 [project.scripts]
-aeat = "aeat.cli.__main__:app"
+aeat = "aeat.entrypoints.cli.__main__:app"
 ```
 
 ### d. justfile recipes
@@ -215,16 +215,16 @@ The existing `bootstrap` recipe gets one extra final line that runs
 
 Co-located per CLAUDE.md:
 
-- `src/aeat/cli/_test_drive_live.py` — round-trip: create temp file
+- `src/aeat/entrypoints/cli/_test_drive_live.py` — round-trip: create temp file
   with UUID prefix in scratch folder, list, fetch metadata, download,
   delete. `@pytest.mark.live`.
-- `src/aeat/cli/_test_sheets_live.py` — set range, append, get, clear.
-- `src/aeat/cli/_test_docs_live.py` — append text, get, verify
+- `src/aeat/entrypoints/cli/_test_sheets_live.py` — set range, append, get, clear.
+- `src/aeat/entrypoints/cli/_test_docs_live.py` — append text, get, verify
   presence, delete inserted range.
-- `src/aeat/cli/_test_cloud_live.py` — list functions, list run
+- `src/aeat/entrypoints/cli/_test_cloud_live.py` — list functions, list run
   services, list storage buckets — assert the calls return without auth
   errors. No deploy.
-- A shared `src/aeat/cli/_live.py` module exposes a `scratch` fixture
+- A shared `src/aeat/entrypoints/cli/_live.py` module exposes a `scratch` fixture
   and skip-if-disabled helper.
 
 `pyproject.toml` `[tool.pytest.ini_options]`:

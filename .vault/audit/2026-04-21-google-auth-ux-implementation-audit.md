@@ -32,13 +32,13 @@ Audit the implementation of the accepted Google auth UX contract across the CLI 
 
 ## Verification
 
-- `uv run pytest src/aeat/_test_auth.py src/aeat/cli/_test_auth.py src/aeat/cli/_test_doctor.py src/aeat/cli/_test_oauth.py src/aeat/mcp/test_launch_google_workspace.py tests/test_config.py -q`
-- `uv run ruff check src/aeat/_test_auth.py src/aeat/auth/__init__.py src/aeat/auth/_google_paths.py src/aeat/cli/auth.py src/aeat/cli/doctor.py src/aeat/cli/_test_auth.py src/aeat/cli/_test_doctor.py src/aeat/cli/_test_oauth.py src/aeat/mcp/launch_google_workspace.py src/aeat/mcp/test_launch_google_workspace.py src/aeat/config.py tests/test_config.py`
+- `uv run pytest src/aeat/_test_auth.py src/aeat/entrypoints/cli/_test_auth.py src/aeat/entrypoints/cli/_test_doctor.py src/aeat/entrypoints/cli/_test_oauth.py src/aeat/entrypoints/mcp/test_launch_google_workspace.py tests/test_config.py -q`
+- `uv run ruff check src/aeat/_test_auth.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_google_paths.py src/aeat/entrypoints/cli/auth.py src/aeat/entrypoints/cli/doctor.py src/aeat/entrypoints/cli/_test_auth.py src/aeat/entrypoints/cli/_test_doctor.py src/aeat/entrypoints/cli/_test_oauth.py src/aeat/entrypoints/mcp/launch_google_workspace.py src/aeat/entrypoints/mcp/test_launch_google_workspace.py src/aeat/config.py tests/test_config.py`
 - `uv run ty check src/aeat/auth src/aeat/cli src/aeat/mcp src/aeat/config.py`
 - `uv run prek run --files README.md CONTRIBUTING.md env/.env.example`
 - `uv run aeat auth --help`
 - `uv run aeat auth init --path desktop-oauth-local-dev --no-acquire-cli-token --no-doctor`
-- `uv run python -m aeat.mcp.launch_google_workspace --dump-launch-spec`
+- `uv run python -m aeat.entrypoints.mcp.launch_google_workspace --dump-launch-spec`
 - `uv run aeat doctor`
 
 ## Conclusion

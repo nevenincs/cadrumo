@@ -26,16 +26,16 @@ Verification status: VERIFIED (ruleset=modelo_100.summary.2025)
 
 ## Files landed
 
-### New module: `src/aeat/borrador/`
+### New module: `src/aeat/adapters/inbound/borrador/`
 
 - `__init__.py` + `_parser.py` — public `parse_borrador(pdf, *, artefact_kind_override, año_override)`.
 - `_schema.py` — `BorradorFiling` (strict+frozen), `ArtefactKind` enum with values `BORRADOR / PREDECLARACION / DECLARACION`, plus a `warnings: tuple[str, ...]` field for unparseable values (added during audit closure for M2).
 - `_errors.py` — `BorradorParseError < PdfFilingImportError`, `ArtefactNotRecognisedError`.
 - `_detect.py` — regex-based detection of VISTA PREVIA banner, CSV stamp, BORRADOR header; precedence PREDECLARACION > DECLARACION > BORRADOR.
-- `_extract.py` + `_parsers/` — pdfplumber backend + label-regex primitive (shared shape with `aeat.declaracion._extract`; full consolidation deferred).
+- `_extract.py` + `_parsers/` — pdfplumber backend + label-regex primitive (shared shape with `aeat.adapters.inbound.declaracion._extract`; full consolidation deferred).
 - `_extractors/modelo_100_summary_v2025.py` — summary-block extractor covering 27 casillas (rendimientos netos, ganancias, base imponible, mínimos, base liquidable, cuotas íntegras, deducciones, cuota líquida, retenciones, resultado).
 
-### New ruleset: `src/aeat/formulas/_rulesets/modelo_100_summary_2025.py`
+### New ruleset: `src/aeat/domain/formulas/_rulesets/modelo_100_summary_2025.py`
 
 12 casillas × 4 formulas:
 
@@ -50,12 +50,12 @@ Legal citations: Ley 35/2006 (IRPF) + RD 439/2007 (RIRPF).
 
 Renders 27 summary casillas + the artefact-specific marker (BORRADOR header / VISTA PREVIA banner + diagonal watermark / CSV footer) so `detect_artefact_kind` classifies each kind distinguishably.
 
-### CLI extension: `src/aeat/cli/filing/__init__.py`
+### CLI extension: `src/aeat/entrypoints/cli/filing/__init__.py`
 
 - New `--from-borrador <PATH>` flag, mutually exclusive with `--from-justificante` / `--from-declaracion`.
 - Auto-detects artefact kind; chains `Engine.audit_against` with the summary ruleset; prints Kent-readable verdict.
 
-### Tests: `src/aeat/borrador/test_modelo_100_summary.py`
+### Tests: `src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py`
 
 8 tests:
 

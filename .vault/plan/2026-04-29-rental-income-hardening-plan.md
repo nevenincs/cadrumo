@@ -35,7 +35,7 @@ the LIRPF art. 23.1.f amortización 3 % multi-year ledger with cost-
 basis cap, the LIRPF art. 23.1 expense rollup with art. 23.1.a) cap +
 4-year carry-forward, the LIRPF art. 85 imputación 1,1 % / 2 %
 computation, the M100 Anexo C wiring with backwards-compat shim, and
-the `aeat rental` CLI sub-app. SQLite via the merged `aeat.storage`
+the `aeat rental` CLI sub-app. SQLite via the merged `aeat.adapters.persistence.storage`
 substrate (Path B per ADR §Rationale).
 
 ## Proposed Changes
@@ -49,7 +49,7 @@ identifier — the produced source code carries no wave/phase markers.
 ## Tasks
 
 - **Phase 1 — Storage schema**
-  1. Add five ORM tables in `src/aeat/storage/_orm.py`:
+  1. Add five ORM tables in `src/aeat/adapters/persistence/storage/_orm.py`:
      `rental_fincas`, `rental_contracts`, `rental_income_records`,
      `rental_expenses`, `rental_amortization_ledger`. Encrypted
      columns for tenant identifying fields and finca address.
@@ -59,25 +59,25 @@ identifier — the produced source code carries no wave/phase markers.
   3. Verify `_test_migrations.py` round-trip still passes.
 
 - **Phase 2 — Public records + repositories + errors**
-  1. Create `src/aeat/rental/__init__.py` public surface.
-  2. Create `src/aeat/rental/_enums.py` with `UseType`,
+  1. Create `src/aeat/domain/rental/__init__.py` public surface.
+  2. Create `src/aeat/domain/rental/_enums.py` with `UseType`,
      `ExpenseCategory`, `ReduccionTier`.
-  3. Create `src/aeat/rental/_models.py` with the five frozen-
+  3. Create `src/aeat/domain/rental/_models.py` with the five frozen-
      strict Pydantic v2 records: `RentalFinca`, `RentalContract`,
      `RentalIncomeRecord`, `RentalExpense`,
      `RentalAmortizationLedgerEntry`. Each carries
      `schema_version: str = "1"`.
-  4. Create `src/aeat/rental/_errors.py` with
+  4. Create `src/aeat/domain/rental/_errors.py` with
      `RentalRegisterError(AeatError)` base + per-class subclasses;
      register every subclass in
-     `aeat.errors._registry._DECLARED_ERROR_CODES` per #398.
-  5. Create `src/aeat/rental/_repository.py` with five
+     `aeat.core.errors._registry._DECLARED_ERROR_CODES` per #398.
+  5. Create `src/aeat/domain/rental/_repository.py` with five
      `Repository[RecordT]` subclasses mapping records ↔ ORM rows.
   6. Round-trip tests: create → upsert → list → get → delete for
      each repository against `tmp_path` SQLite engines (no mocks).
 
 - **Phase 3 — Tier resolver**
-  1. Create `src/aeat/rental/_tier_resolver.py`:
+  1. Create `src/aeat/domain/rental/_tier_resolver.py`:
      - `TierResolution` Pydantic record (frozen-strict): `tier`,
        `reduccion_pct`, `qualifying_share`, `boe_citation_id`.
      - `resolve_reduccion(contract, finca, period_year, *,
@@ -108,7 +108,7 @@ identifier — the produced source code carries no wave/phase markers.
      - `LAU 17.6 violation → FORFEIT_LAU_17_6 (0 %)`.
 
 - **Phase 4 — Amortización ledger + expense rollup**
-  1. Create `src/aeat/rental/_amortization_ledger.py`:
+  1. Create `src/aeat/domain/rental/_amortization_ledger.py`:
      - `AmortizationComputation` record: `period_year`, `basis`,
        `gross_amortization`, `capped_amortization`,
        `cumulative_through_year`.
@@ -121,7 +121,7 @@ identifier — the produced source code carries no wave/phase markers.
      - `recompute_ledger(finca, contracts, incomes,
         repository) -> tuple[AmortizationComputation, ...]` — full
         per-finca recompute over years.
-  2. Create `src/aeat/rental/_expense_rollup.py`:
+  2. Create `src/aeat/domain/rental/_expense_rollup.py`:
      - `GastosForYear` record: `total`, `por_categoria`,
        `cap_excedido` (Decimal — financiación + reparación
        overflow), `carry_forward_years_remaining`.
@@ -141,7 +141,7 @@ identifier — the produced source code carries no wave/phase markers.
         is dropped.
 
 - **Phase 5 — Anexo C aggregator + M100 wiring**
-  1. Create `src/aeat/rental/_anexo_c_aggregator.py`:
+  1. Create `src/aeat/domain/rental/_anexo_c_aggregator.py`:
      - `AnexoCAggregates` Pydantic record: `casilla_0061`,
        `casilla_0066`, `casilla_0072`, `casilla_0078`,
        `casilla_0085`, plus `per_finca_attribution: Mapping[
@@ -150,7 +150,7 @@ identifier — the produced source code carries no wave/phase markers.
      - `compute_anexo_c_aggregates(period_year, store)`.
      - Casilla 0078 attribution: `Σ_per_contract tier_pct ×
         qualifying_share × clamp_pos(per_contract_rendimiento_neto)`.
-  2. Create `src/aeat/rental/anexo_c_provider.py`:
+  2. Create `src/aeat/domain/rental/anexo_c_provider.py`:
      - `compute_or_passthrough(period_year, provided_casillas,
         store=None)` — empty / unconfigured store passes through.
   3. Tests:
@@ -167,11 +167,11 @@ identifier — the produced source code carries no wave/phase markers.
         register-derived f1 ≠ supplied f1.
 
 - **Phase 6 — CLI commands**
-  1. Create `src/aeat/cli/rental/__init__.py` exposing the
+  1. Create `src/aeat/entrypoints/cli/rental/__init__.py` exposing the
      `app: typer.Typer` root.
-  2. Create `src/aeat/cli/rental/finca.py`, `contract.py`,
+  2. Create `src/aeat/entrypoints/cli/rental/finca.py`, `contract.py`,
      `expense.py`, `amortization.py`, `anexo_c.py` sub-apps.
-  3. Register the sub-app in `src/aeat/cli/__init__.py` via
+  3. Register the sub-app in `src/aeat/entrypoints/cli/__init__.py` via
      `app.add_typer(rental_module.app, name="rental", help=...)`.
   4. Per-command `--json` schema registrations via
      `@register_schema("rental.finca.list")` etc.
@@ -212,7 +212,7 @@ cross-phase atomic transaction is required.
 ### Mission criteria
 
 - [ ] Per-finca + per-contract register persists via SQLite under
-  the merged `aeat.storage` substrate.
+  the merged `aeat.adapters.persistence.storage` substrate.
 - [ ] Tier auto-resolver implements the BOE priority order
   (90 → 70 → 60 → 50) with verbatim trigger conditions and the
   `qualifying_share` split for 70-b-1.
@@ -239,11 +239,11 @@ mandates)
   `ConfigDict(strict=True, frozen=True, extra="forbid")`. ✅ ADR
   Constraints §1.
 - **`AeatError` discipline** — every new exception subclasses
-  `aeat.errors.AeatError`; every subclass has a registry entry. ✅
+  `aeat.core.errors.AeatError`; every subclass has a registry entry. ✅
   ADR Constraints §2 + research §1.
-- **Logging via `aeat.logging.get_logger`** — no other logger
+- **Logging via `aeat.core.logging.get_logger`** — no other logger
   factory used. ✅ ADR Constraints §3.
-- **Public API discipline** — only `aeat.rental` package root
+- **Public API discipline** — only `aeat.domain.rental` package root
   exposed; underscore-prefixed modules are private. ✅ ADR
   Implementation §Subpackage layout.
 - **Trilingual** — every Translatable surface ships ES + EN + HU;
@@ -254,7 +254,7 @@ mandates)
   Constraints §6.
 - **Module-level pytest markers** —
   `pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]`
-  on every unit test module under `aeat.rental`; `pytest.mark.
+  on every unit test module under `aeat.domain.rental`; `pytest.mark.
   domain_submission` on M100 wiring tests. ✅ ADR Constraints §7.
 - **No wave/phase numbering in code** — phase markers exist only
   in this plan + commit messages, never in source code or

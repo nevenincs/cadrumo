@@ -63,7 +63,7 @@ record with `mode: Literal["read"] = "read"` and an immutable tuple
 `MIS_EXPEDIENTES`, `EXPEDIENTE_DETAIL`, `MIS_NOTIFICACIONES`. The
 paths mirror the provisional constants inlined in
 `src/aeat/status/_reader.py` and the `aeat_status_detail_url_template`
-override on `aeat.config.Settings`. `find_node(node_id)` returns the
+override on `aeat.core.config.Settings`. `find_node(node_id)` returns the
 matching entry and raises `KeyError` with the available-identifier
 list on misspellings. The module docstring deliberately avoids
 materialising any of the forbidden `page.cl` / `page.fi` / `.click(`
@@ -113,11 +113,11 @@ for three reasons, all grounded in the non-negotiable constraints:
    (phase 2.2 second sentence) resolves identically to this typing
    choice.
 3. `FilingPeriod` is not a public record on main; `FiscalPeriod`
-   (from `aeat.formulas`) is the canonical typed period identifier
+   (from `aeat.domain.formulas`) is the canonical typed period identifier
    the rest of the project already uses. The user's execution notes
    explicitly call out: "If `FilingPeriod` doesn't exist as a named
    record on main, use the existing period-identifier convention
-   from `aeat.formulas._period` or the filing module - do NOT invent
+   from `aeat.domain.formulas._period` or the filing module - do NOT invent
    a new one." Using `FiscalPeriod` satisfies this guidance.
 
 Live-path wiring (in `test_fetch_live.py`) demonstrates the bridge
@@ -153,7 +153,7 @@ The adapter carries data-type classification as
 `CasillaDataType.CURRENCY_EUR` for every casilla because the Tier-1
 modelos expose only monetary fields in the filing-detail surface.
 Richer per-casilla data-type resolution (looking up
-`aeat.casillas.CasillaRecord.data_type` via the curated catalogue)
+`aeat.domain.casillas.CasillaRecord.data_type` via the curated catalogue)
 is deferred to a follow-on PR - it is not on the Phase 2 critical
 path and a blanket `CURRENCY_EUR` is correct for every casilla the
 Tier-1 fetchers currently extract.
@@ -197,8 +197,8 @@ to pass after the file lands.
 
 The live test declares a minimal inline `_PreloadedCertBackend`
 that satisfies the `aeat.status.CertificateBackend` Protocol by
-delegating to the public `aeat.auth.certificate.preload_into_browser_context`
-helper - no private `aeat.auth` / `aeat.status` module is
+delegating to the public `aeat.adapters.outbound.aeat.auth.certificate.preload_into_browser_context`
+helper - no private `aeat.adapters.outbound.aeat.auth` / `aeat.status` module is
 imported, matching the Phase 1 public-API discipline.
 
 ### Layer 3 write-guard (2.5)
@@ -236,7 +236,7 @@ modification. Every new file is scrubbed of forbidden tokens:
   Phase 1 + Phase 2 case).
 - Repository-wide `uv run pytest` - 3158 passed, 5 skipped, 29
   deselected; one pre-existing failure in
-  `tests/test_marker_integrity.py::test_module_carries_valid_pytestmark[src/aeat/submission/_formats/_test_fixtures.py]`
+  `tests/test_marker_integrity.py::test_module_carries_valid_pytestmark[src/aeat/adapters/outbound/aeat/export/_formats/_test_fixtures.py]`
   that predates this branch (verified by the Phase 1 summary) and is
   explicitly out of Phase 2 scope per the executing prompt.
 

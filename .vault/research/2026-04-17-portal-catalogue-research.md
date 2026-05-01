@@ -27,7 +27,7 @@ Read-only research. Sources: (1) WebFetch of public AEAT pages at
 `sede.agenciatributaria.gob.es/Sede/presentar-consultar-declaraciones-modelo.html`
 and adjacent procedure indices on 2026-04-17, (2) existing repo
 research under `.vault/research/` (modelo inventory, cert auth,
-submission engine, setup wizard), (3) `aeat.models._entries.modelo_*`
+submission engine, setup wizard), (3) `aeat.domain.modelos._entries.modelo_*`
 for the free-form `submission_portal_hint` strings already captured
 in the modelo registry, (4) Orden HAC/1526/2024 (BOE-A-2025-410) for
 the modelo 037 suppression fact. No live AEAT writes.
@@ -254,7 +254,7 @@ portal-catalogue ADR must decide whether to:
 
 - Option A: deprecate `submission_portal_hint` and add a typed
   `submission_portal: Portal` (breaks import cycle via
-  `aeat.models` → `aeat.portals` — one-way, safe).
+  `aeat.domain.modelos` → `aeat.domain.portals` — one-way, safe).
 - Option B: keep both for one release then remove the hint string.
 
 Either way, the unit test `test_casilla_cross_reference`-style pattern
@@ -286,7 +286,7 @@ Ten items the ADR must resolve.
    ModeloCode` for historical lookup and to keep the registry closure
    test total across all `ModeloCode` members (not just active ones).
 5. **Extensible metadata pattern.** Match #108 exactly: one file per
-   portal under `src/aeat/portals/_entries/portal_<kebab>.py`,
+   portal under `src/aeat/domain/portals/_entries/portal_<kebab>.py`,
    registry assembled at import time, frozen `MappingProxyType`,
    integrity check at import time. No exceptions.
 6. **URL stability tiers.** Commit to the four-tier enum
@@ -303,14 +303,14 @@ Ten items the ADR must resolve.
    via `PortalMetadata`, plus a custom validator that asserts the URL
    scheme is `https`, the host matches the declared `Subdomain`, and
    for `FILING` Portals the path matches `/Sede/procedimientoini/G[A-Z0-9]{3}\.shtml`.
-10. **CLI surface.** Match `aeat.models._cli` style: `aeat portals list`,
+10. **CLI surface.** Match `aeat.domain.modelos._cli` style: `aeat portals list`,
     `aeat portals show <member>`, `aeat portals for-modelo <code>`.
-    Recommendation: yes — expose via `src/aeat/portals/_cli.py`, register
-    as a subcommand in `src/aeat/cli/__init__.py`.
+    Recommendation: yes — expose via `src/aeat/domain/portals/_cli.py`, register
+    as a subcommand in `src/aeat/entrypoints/cli/__init__.py`.
 
 ### 10. Test coverage shape
 
-Unit tests under `src/aeat/portals/test_*.py` (Rust-style colocation).
+Unit tests under `src/aeat/domain/portals/test_*.py` (Rust-style colocation).
 Mandatory coverage:
 
 - `test_codes.py` — every `Portal` member resolves via
@@ -327,15 +327,15 @@ Mandatory coverage:
 
 ### 11. Scope cues for the ADR
 
-- Subpackage: `src/aeat/portals/` (already stubbed).
+- Subpackage: `src/aeat/domain/portals/` (already stubbed).
 - Public API: `Portal` `StrEnum`, `PortalMetadata` pydantic v2 model,
   `PortalCategory`, `AuthMethod`, `UrlStability`, `Subdomain`
   `StrEnum`s, `PORTAL_REGISTRY`, `get_portal`, `portals_for_modelo`,
   `portals_by_category`, `UnknownPortalError`,
   `PortalRegistryError`.
-- External dependency introduced: `aeat.portals` imports
-  `aeat.models._codes.ModeloCode` (one-way). `aeat.models` may also
-  import `aeat.portals.Portal` for the typed `submission_portal`
+- External dependency introduced: `aeat.domain.portals` imports
+  `aeat.domain.modelos._codes.ModeloCode` (one-way). `aeat.domain.modelos` may also
+  import `aeat.domain.portals.Portal` for the typed `submission_portal`
   field on `ModeloMetadata` — this creates a two-way dependency at
   the subpackage level but no cycle at the module level because the
   codes module is leaf.

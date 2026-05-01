@@ -18,7 +18,7 @@ Implementation plan for issue #457 / branch
 
 ### Step 1.1 — Generalise `_mutate_outer_sub_op` to descend through `ClampPositiveFormula`
 
-File: `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`.
+File: `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py`.
 
 - Add a private `_find_outer_sub_op(node)` helper that walks down
   through `RoundFormula` and `ClampPositiveFormula` wrappers and
@@ -38,7 +38,7 @@ File: `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`.
 
 ### Step 2.1 — Expose per-class harness coverage generators
 
-File: `src/aeat/formulas/_rulesets/test_scalar_mutation.py`.
+File: `src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py`.
 
 - Rename the local `_build_test_params()` to expose two generators:
   - `_build_test_params()` — keeps yielding the parametrize cases
@@ -49,7 +49,7 @@ File: `src/aeat/formulas/_rulesets/test_scalar_mutation.py`.
     `_iter_scalar_targets()` and fan out into +1 % / -1 %
     directions. This is a refactor that preserves behaviour.
 
-File: `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py`.
+File: `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py`.
 
 - Add `_iter_percent_targets()` yielding `(ruleset_id, casilla_id,
   signature)` where signature is `f"literal:{path}"` or
@@ -61,7 +61,7 @@ needed.)
 
 ### Step 2.2 — Refactor the aggregator
 
-File: `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`.
+File: `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`.
 
 - Import `_iter_scalar_targets` from `.test_scalar_mutation` and
   `_iter_percent_targets` from `.test_percent_rate_mutation`.
@@ -107,7 +107,7 @@ columns.
 
 ### Step 3.1 — M100 mul/div scalar fixtures
 
-File: `src/aeat/formulas/_rulesets/test_scalar_mutation.py`.
+File: `src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py`.
 
 - Import `MODELO_100_2024 / 2025 / 2026` from the package.
 - Add three fixture functions per year:
@@ -136,7 +136,7 @@ File: `src/aeat/formulas/_rulesets/test_scalar_mutation.py`.
 
 ### Step 3.2 — M100 sub_op fixtures
 
-File: `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`.
+File: `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py`.
 
 - Import `MODELO_100_2024 / 2025 / 2026`.
 - Add `_modelo_100_full_fixture()` — single fixture covering both
@@ -162,7 +162,7 @@ each M100 row's `mul_div_scalar_deferred` equals `mul_div_scalar - 3`
 
 ### Step 4.1 — `test_mutator_tautology_regression.py`
 
-File: `src/aeat/formulas/_rulesets/test_mutator_tautology_regression.py` (NEW).
+File: `src/aeat/domain/formulas/_rulesets/test_mutator_tautology_regression.py` (NEW).
 
 The regression test cluster:
 
@@ -233,8 +233,8 @@ Cover the seven safety invariants from the handover prompt's STEP 2:
 Plus the standard project mandates: PYDANTIC v2 strict for any new
 model (none introduced in this PR; all changes are test
 infrastructure), typed signatures, Google-style docstrings, errors
-inherit from `aeat.errors.AeatError`, logging via
-`aeat.logging.get_logger(__name__)` only, public API discipline,
+inherit from `aeat.core.errors.AeatError`, logging via
+`aeat.core.logging.get_logger(__name__)` only, public API discipline,
 NO wave/phase numbering in source code or docstrings, lint /
 typecheck / test / hooks all green.
 

@@ -21,12 +21,12 @@ Land the `CasillaSchema` provenance extension + cross-validation test + Modelo 1
 
 **Files**:
 
-- `src/aeat/filing/_protocols.py` — add `CasillaSource` pydantic record; extend `CasillaSchema` with `label`, `description`, `sources`, `valid_from`, `valid_to`.
-- `src/aeat/filing/__init__.py` — re-export `CasillaSource`.
+- `src/aeat/application/filing/_protocols.py` — add `CasillaSource` pydantic record; extend `CasillaSchema` with `label`, `description`, `sources`, `valid_from`, `valid_to`.
+- `src/aeat/application/filing/__init__.py` — re-export `CasillaSource`.
 
 **Tests**:
 
-- `src/aeat/filing/test_schema.py` (new) — `@pytest.mark.unit`, `@pytest.mark.domain_infra`. Round-trip pydantic JSON; strict-mode rejection of unknown fields; rejection of empty `sources` tuple on required casillas; `valid_from ≤ valid_to` validator.
+- `src/aeat/application/filing/test_schema.py` (new) — `@pytest.mark.unit`, `@pytest.mark.domain_infra`. Round-trip pydantic JSON; strict-mode rejection of unknown fields; rejection of empty `sources` tuple on required casillas; `valid_from ≤ valid_to` validator.
 
 ### Step 1.2 — Migrate existing corpus files
 
@@ -40,7 +40,7 @@ Each casilla's `label` is the authoritative Spanish text from the AEAT form, wit
 
 ### Step 1.3 — Cross-validation test
 
-**File**: `src/aeat/filing/test_schema_completeness.py` (new).
+**File**: `src/aeat/application/filing/test_schema_completeness.py` (new).
 
 - `test_corpus_covers_every_ruleset_casilla[modelo, año]` — parametrised over `{(130, 2024), (130, 2025), (303, 2024), (303, 2025)}`. Xfail for 390 until #221.
 - `test_ruleset_has_formula_for_every_corpus_formula_input[modelo, año]` — inverse direction; catches the "corpus says casilla 18 = f(02, 03) but no ruleset implements it" failure already present in the current corpus.
@@ -52,7 +52,7 @@ Each casilla's `label` is the authoritative Spanish text from the AEAT form, wit
 
 ### Step 2.1 — Add the interactive-form-XML loader
 
-**New module**: `src/aeat/schema/_forms_xml_loader.py`.
+**New module**: `src/aeat/domain/schema/_forms_xml_loader.py`.
 
 - Reads AEAT's public interactive-form XML for `(modelo, año)` from the published URL pattern `https://sede.agenciatributaria.gob.es/Sede/xml/modelo-N-año.xml` (confirm exact URL before landing — AEAT publishes pilot XMLs at varying endpoints; the loader's URL map is a single hash to update annually).
 - Writes raw XML to `corpus/_sources/interactive_forms/modelo_N/YYYY.xml`; records SHA-256.
@@ -61,7 +61,7 @@ Each casilla's `label` is the authoritative Spanish text from the AEAT form, wit
 
 **Just recipe**: `just regen-corpus` iterates every registered `(modelo, año)` pair.
 
-**Tests**: `src/aeat/schema/test_forms_xml_loader.py` — round-trip a committed sample XML through the loader; assert byte-identical JSON output.
+**Tests**: `src/aeat/domain/schema/test_forms_xml_loader.py` — round-trip a committed sample XML through the loader; assert byte-identical JSON output.
 
 ### Step 2.2 — Regenerate Modelo 130 corpus
 
@@ -69,7 +69,7 @@ Each casilla's `label` is the authoritative Spanish text from the AEAT form, wit
 
 ### Step 2.3 — Extend Modelo 130 ruleset to match
 
-**File**: `src/aeat/formulas/_rulesets/modelo_130_2025.py`.
+**File**: `src/aeat/domain/formulas/_rulesets/modelo_130_2025.py`.
 
 - For every casilla in the regenerated corpus, register either a formula (if derived) or a literal entry (if user-supplied) so the ruleset's casilla set equals the corpus's.
 - Reuse the existing `Engine` DSL; no formula-engine changes.
@@ -77,7 +77,7 @@ Each casilla's `label` is the authoritative Spanish text from the AEAT form, wit
 
 ### Step 2.4 — Regression test on a real Kent-sized draft
 
-**New file**: `src/aeat/filing/test_modelo_130_real_shape.py`.
+**New file**: `src/aeat/application/filing/test_modelo_130_real_shape.py`.
 
 - Builds a draft with every 19-casilla input set; asserts `draft.values` has 19 entries, every required casilla populated, every computed casilla re-derivable via `Engine.audit_against` to zero discrepancies.
 - Marker: `@pytest.mark.unit`, `@pytest.mark.domain_financial_input`.
@@ -92,7 +92,7 @@ Mirrors phase 2 with a much larger loader output. Estimated 3× the manual label
 
 ### Step 3.2 — Extend Modelo 303 ruleset
 
-`src/aeat/formulas/_rulesets/modelo_303_2025.py` extended from 12 formula casillas + references to the full ~88-casilla set. Where a casilla is a literal (user-supplied), register it as such.
+`src/aeat/domain/formulas/_rulesets/modelo_303_2025.py` extended from 12 formula casillas + references to the full ~88-casilla set. Where a casilla is a literal (user-supplied), register it as such.
 
 ### Step 3.3 — Add `valid_from` / `valid_to` for the 2024-09 renumbering
 
@@ -147,9 +147,9 @@ After each phase merges:
 
 ## Quality gates per phase
 
-- `uv run ruff check src/aeat/filing/ src/aeat/schema/ src/aeat/formulas/ corpus/` — clean.
-- `uv run ty check src/aeat/filing/ src/aeat/schema/ src/aeat/formulas/` — clean.
-- `uv run pytest -m unit src/aeat/filing/ src/aeat/schema/ src/aeat/formulas/` — green, including newly-flipped completeness assertions.
+- `uv run ruff check src/aeat/application/filing/ src/aeat/domain/schema/ src/aeat/domain/formulas/ corpus/` — clean.
+- `uv run ty check src/aeat/application/filing/ src/aeat/domain/schema/ src/aeat/domain/formulas/` — clean.
+- `uv run pytest -m unit src/aeat/application/filing/ src/aeat/domain/schema/ src/aeat/domain/formulas/` — green, including newly-flipped completeness assertions.
 - CI on the PR — green on both Ubuntu + Windows runners.
 
 ## Non-goals

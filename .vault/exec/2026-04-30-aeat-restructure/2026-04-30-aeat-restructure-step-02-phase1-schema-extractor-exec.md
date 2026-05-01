@@ -13,13 +13,13 @@ related:
 
 ## status
 
-Step 2 PR 5 of 5 — final Phase-1 dead-code item. Whole-file deletion of `src/aeat/schema/_extractor.py` per research-doc Decision 7 (`Extractor` Protocol fate) + ADR Phase 1 list.
+Step 2 PR 5 of 5 — final Phase-1 dead-code item. Whole-file deletion of `src/aeat/domain/schema/_extractor.py` per research-doc Decision 7 (`Extractor` Protocol fate) + ADR Phase 1 list.
 
 ## scope
 
-- Delete `src/aeat/schema/_extractor.py` (27 LOC, dead Protocol with no production callers).
-- Remove `from ._extractor import Extractor` and `"Extractor"` from `aeat/schema/__init__.py`.
-- Update 3 docstrings (`_boe_extractor.py`, `_fetch.py`, `_models.py`) that referenced `~aeat.schema.Extractor` cross-refs.
+- Delete `src/aeat/domain/schema/_extractor.py` (27 LOC, dead Protocol with no production callers).
+- Remove `from ._extractor import Extractor` and `"Extractor"` from `aeat/domain/schema/__init__.py`.
+- Update 3 docstrings (`_boe_extractor.py`, `_fetch.py`, `_models.py`) that referenced `~aeat.domain.schema.Extractor` cross-refs.
 
 ## pre-merge safety check
 
@@ -32,7 +32,7 @@ Zero production code uses the `Extractor` Protocol — no `extract()` callers ru
 
 ## verification
 
-- `python -c "import aeat.schema; assert 'Extractor' not in aeat.schema.__all__"` — passes.
+- `python -c "import aeat.domain.schema; assert 'Extractor' not in aeat.domain.schema.__all__"` — passes.
 - `prek` pre-commit hooks — to be enforced on commit.
 
 ## next step

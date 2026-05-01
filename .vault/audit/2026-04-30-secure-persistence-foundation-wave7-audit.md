@@ -31,7 +31,7 @@ Wave 7 lands two stages back-to-back:
 
 - **Substrate** (commit `754047f`): adds
   ``save_encrypted_envelope`` / ``load_encrypted_envelope`` /
-  ``CipherEnvelope`` to ``aeat.storage``. AES-256-GCM via
+  ``CipherEnvelope`` to ``aeat.adapters.persistence.storage``. AES-256-GCM via
   ``encrypt_record``, per-consumer keys via HKDF-SHA256, AAD binding
   on (classification, hkdf_context). 8 substrate-level tests cover
   round-trip, no-plaintext-leak, classification gate, AAD-binding
@@ -75,12 +75,12 @@ now closed:
   ``DecryptionError`` (verified by 2 dedicated substrate tests +
   5 per-repository ``test_foreign_class_envelope_refused`` tests).
 - **Per-consumer key derivation** — distinct HKDF contexts:
-  ``aeat.financial.transactions.catalogue.v1``,
-  ``aeat.filing.draft.v1``,
-  ``aeat.filing.amendment.v1``,
-  ``aeat.filing.history.v1``,
-  ``aeat.justificante.metadata.v1``,
-  ``aeat.submission.filing.v1``. Sharing the master key but not the
+  ``aeat.domain.financial.transactions.catalogue.v1``,
+  ``aeat.application.filing.draft.v1``,
+  ``aeat.application.filing.amendment.v1``,
+  ``aeat.application.filing.history.v1``,
+  ``aeat.domain.justificante.metadata.v1``,
+  ``aeat.adapters.outbound.aeat.export.filing.v1``. Sharing the master key but not the
   derived key is the correct posture.
 - **Test discipline** — ``EphemeralMasterKeyProvider`` continues to
   back every test; the new ``_resolve_master_key_provider()`` helper
@@ -99,7 +99,7 @@ now closed:
 ### Pre-existing failures (NOT wave-7 regressions)
 
 The full unit-suite shows 2 failures in
-``src/aeat/mcp/test_launch_google_workspace.py``. Confirmed by stash-
+``src/aeat/entrypoints/mcp/test_launch_google_workspace.py``. Confirmed by stash-
 testing the pre-merge state: these are a ``greenlet``/Playwright
 library version incompatibility, not introduced by wave-7. They
 predate the merge and are outside the wave-7 / persistence scope.

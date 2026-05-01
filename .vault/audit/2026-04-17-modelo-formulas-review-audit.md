@@ -27,26 +27,26 @@ related:
 
 ## Summary
 
-The `aeat.formulas` subpackage lands cleanly as a deterministic,
+The `aeat.domain.formulas` subpackage lands cleanly as a deterministic,
 sandboxed, period-versioned formula engine with Modelo 130 (2024 and
 2025) as the proof-of-concept ruleset. The implementation faithfully
 mirrors the ADR: closed-operator pydantic DSL, `graphlib.TopologicalSorter`
 as the sole evaluator, `Decimal`-only arithmetic, terminal
 `ROUND_HALF_UP`, single-rounding invariant enforced at load time,
 trilingual labels with Spanish authoritativeness, relative imports
-throughout, errors rooted at `aeat.errors.AeatError`.
+throughout, errors rooted at `aeat.core.errors.AeatError`.
 
 **81/81 colocated unit tests pass (~0.7 s)**; `ruff check` is clean;
 `ty check` is clean across the whole project; the `aeat formulas
 {list,show,compute,audit}` CLI emits deterministic JSON and exits
 non-zero with `--strict` on discrepancy. The PR respects its wave-1
-boundary: zero changes to `aeat.casillas`, `aeat.filing._builders`,
+boundary: zero changes to `aeat.domain.casillas`, `aeat.application.filing._builders`,
 or `corpus/casillas/`.
 
 ## Strengths
 
 - **Safety & determinism.** No `eval` / `exec` / `compile` /
-  `ast.parse` / `__import__` anywhere in `src/aeat/formulas/`.
+  `ast.parse` / `__import__` anywhere in `src/aeat/domain/formulas/`.
   `graphlib.TopologicalSorter` is the only evaluator; cycles raise
   `FormulaCycleError` at `Ruleset` load time
   (`_ruleset.py:163-173`). Engine runs inside
@@ -65,15 +65,15 @@ or `corpus/casillas/`.
   `model_rebuild()` called on every variant to resolve the
   self-referential `Operand` alias.
 - **Relative imports.** Every internal import inside
-  `src/aeat/formulas/` is relative. The CLI shim
-  `src/aeat/cli/formulas.py:9` uses `from ..formulas._cli import app`.
+  `src/aeat/domain/formulas/` is relative. The CLI shim
+  `src/aeat/entrypoints/cli/formulas.py:9` uses `from ..formulas._cli import app`.
   No `aeat.*` absolute imports in production code.
 - **Public-API discipline.** Cross-subpackage imports always
   use the package root: `from ..casillas import CasillaDataType`,
   `from ..i18n import Translatable, require_authoritative`,
   `from ..models import LegalCitation, LegalCitationSource,
-  ModeloCode`. The registry binds to `aeat.models.ModeloCode`
-  (authoritative), never to the `aeat.casillas.models.ModeloCode`
+  ModeloCode`. The registry binds to `aeat.domain.modelos.ModeloCode`
+  (authoritative), never to the `aeat.domain.casillas.models.ModeloCode`
   restricted enum (integration test enforces).
 - **Trilingual contract.** `CasillaDefinition.label: Translatable`;
   `require_authoritative(..., domain="aeat")` invoked in a
@@ -83,11 +83,11 @@ or `corpus/casillas/`.
   `src/aeat/errors.py:78-132` under a single `FormulasError(AeatError)`
   root, exactly as specified (no rogue `_errors.py` inside the
   subpackage).
-- **Logging.** `aeat.logging.get_logger(__name__)` used
+- **Logging.** `aeat.core.logging.get_logger(__name__)` used
   (`_engine.py:22, 45`); one INFO per `derive`; DEBUG per defaulted
   input. No `print` calls.
 - **Testing mandate.** `@pytest.mark.unit` on every test; colocated
-  in `src/aeat/formulas/test_*.py`; no `mock`, `patch`, `MagicMock`,
+  in `src/aeat/domain/formulas/test_*.py`; no `mock`, `patch`, `MagicMock`,
   `pytest_mock`, or `monkeypatch.setattr` usage. Expected values
   hand-computed as `Decimal` strings.
 - **Ruleset correctness.** The 9 computed formulas match the
@@ -155,5 +155,5 @@ regressions, no architectural drift, no scope creep, and full test
 coverage of the critical paths (81/81 pass, ruff clean, ty clean).
 The non-blocking notes are documentation / future-proofing items;
 none block merge. A future wave that wires the new engine into
-`aeat.filing._builders.modelo_130` or adds Modelo 303 should
+`aeat.application.filing._builders.modelo_130` or adds Modelo 303 should
 revisit the MEDIUM note on `BracketsFormula` production exercise.

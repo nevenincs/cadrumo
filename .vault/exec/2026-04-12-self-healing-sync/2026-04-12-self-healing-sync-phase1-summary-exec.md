@@ -29,7 +29,7 @@ fc8d631 feat(sync): divergence types + semantic classifier (#11)
 
 ## files touched
 
-New under `src/aeat/sync/`:
+New under `src/aeat/application/sync/`:
 
 - `__init__.py` (public re-exports only)
 - `_errors.py`, `_protocols.py`, `_wire.py`, `_validator.py`
@@ -40,14 +40,14 @@ New under `src/aeat/sync/`:
   `test_bounded_policy.py`, `test_repository.py`, `test_runner.py`,
   `test_live_sync.py` (live, opt-in)
 
-New under `src/aeat/cli/sync/`:
+New under `src/aeat/entrypoints/cli/sync/`:
 
 - `__init__.py`, `run.py`, `list.py`, `show.py`, `resolve.py`,
   `test_cli.py`
 
 Modified:
 
-- `src/aeat/cli/__init__.py` — added `sync_module.app` sub-app wiring.
+- `src/aeat/entrypoints/cli/__init__.py` — added `sync_module.app` sub-app wiring.
 - `src/aeat/config.py` — added `DivergenceSink` StrEnum and six
   `AEAT_SYNC_*` fields.
 - `env/.env.example` — documented the new env vars and rewrote the
@@ -57,9 +57,9 @@ Modified:
 
 ## invariants enforced
 
-- **Subpackage layout**: every module lives under `src/aeat/sync/`
-  or `src/aeat/cli/sync/`; all internal modules are `_`-prefixed;
-  callers import from `aeat.sync` only.
+- **Subpackage layout**: every module lives under `src/aeat/application/sync/`
+  or `src/aeat/entrypoints/cli/sync/`; all internal modules are `_`-prefixed;
+  callers import from `aeat.application.sync` only.
 - **Pydantic v2 strict + frozen + extra='forbid'** on every
   boundary-crossing type: wire payloads, divergence payloads
   (`DivergencePayload` is a `Field(discriminator="kind")` union),
@@ -67,7 +67,7 @@ Modified:
   `SyncRunResult`. Closed enumerations are `enum.StrEnum`.
 - **Protocol stubs** for every in-flight dependency (#6/#7/#8/#9/
   #10/#17/#21/#25), each documented against the owning issue.
-  `aeat.browser.BrowserSession` and `aeat.i18n` are imported
+  `aeat.adapters.outbound.aeat.browser.BrowserSession` and `aeat.core.i18n` are imported
   directly (both branches merged).
 - **Bounded auto-heal invariant**: the dispatcher double-gates
   auto-apply on classification ∈ ADDITIVE AND kind ∈
@@ -75,8 +75,8 @@ Modified:
   `_enforce_bounded_policy` downgrade that refuses to trust a
   misbehaving strategy. Invariant is tested across every
   `DivergenceKind` under both empty and full allowlists.
-- **Errors** inherit from `aeat.errors.AeatError` via `SyncError`.
-- **Logging** via `aeat.logging.get_logger(__name__)` only.
+- **Errors** inherit from `aeat.core.errors.AeatError` via `SyncError`.
+- **Logging** via `aeat.core.logging.get_logger(__name__)` only.
 - **Tests** use pytest and real concrete Protocol-conforming test
   doubles; no `unittest.mock`, no `pytest-mock`, no `patch`, no
   skip-masking. `@pytest.mark.unit` / `@pytest.mark.live` on every

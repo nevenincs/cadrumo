@@ -249,13 +249,13 @@ Two real candidates:
 
 ```toml
 [project.scripts]
-aeat = "aeat.cli.__main__:app"
+aeat = "aeat.entrypoints.cli.__main__:app"
 ```
 
 CLI module layout:
 
 ```
-src/aeat/cli/
+src/aeat/entrypoints/cli/
   __init__.py
   __main__.py        # typer.Typer() instance + sub-apps
   doctor.py          # aeat doctor

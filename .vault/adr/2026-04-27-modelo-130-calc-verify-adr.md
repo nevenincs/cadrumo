@@ -63,7 +63,7 @@ The current per-issue gaps are:
 
 ### D1. 2026 ruleset is a structural clone of 2025
 
-Author `src/aeat/formulas/_rulesets/modelo_130_2026.py` as a clone of
+Author `src/aeat/domain/formulas/_rulesets/modelo_130_2026.py` as a clone of
 the 2025 module: it imports `_CASILLAS_2024` + `_CITATIONS_2024` from
 `modelo_130_2024`, declares its own `_FORMULAS_2026` with the
 `modelo_130.2026.<reason>` formula-id namespace, and ships its own
@@ -73,7 +73,7 @@ the 2025 module: it imports `_CASILLAS_2024` + `_CITATIONS_2024` from
 0.20`, `agraria.trimestral_rate = 0.02`. This mirrors the existing
 2024 → 2025 clone pattern.
 
-Register `MODELO_130_2026` in `src/aeat/formulas/_rulesets/__init__.py`
+Register `MODELO_130_2026` in `src/aeat/domain/formulas/_rulesets/__init__.py`
 and add it to `ALL_RULESETS`.
 
 **Why a clone, not a re-import.** The existing 2025 ruleset re-imports
@@ -160,7 +160,7 @@ scope for this issue.
 Extend `tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_130_generator.py`
 to render all 19 casilla boxes (the 7 existing + 12 new positions on
 the same A4 page). Extend
-`src/aeat/declaracion/_extractors/modelo_130_v2025.py` to add label
+`src/aeat/adapters/inbound/declaracion/_extractors/modelo_130_v2025.py` to add label
 regexes for the same 12 casillas; the regex shape mirrors the
 existing 7 (`label-anchored Spanish-amount-group`).
 
@@ -182,7 +182,7 @@ is 7. This is the same scoping the existing extractor uses for
 
 ### D6. Round-trip strategy
 
-Per the `aeat.formulas` engine's `audit_against` contract, a
+Per the `aeat.domain.formulas` engine's `audit_against` contract, a
 verification pass returns `VERIFIED` when:
 
 - Every `computed=True` casilla supplied to `provided` matches the
@@ -330,13 +330,13 @@ Per STEP 5 of the handover prompt:
   #322 M131, #323 M180, #324 M200, #325 M202, #326 M303, #327 M390).
 - Tier-S (#328-#331) and Tier-R (#332-#337).
 - Sub-umbrellas #341 (RENTA M100), #345 (IVA complexity).
-- `src/aeat/sede/`, `src/aeat/auth/_clave_movil.py`,
-  `src/aeat/cli/sede/`, `src/aeat/cli/sanitize/`,
-  `src/aeat/cli/filing/_reconcile.py`,
-  `src/aeat/justificante/_extract.py` (#239 territory).
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`,
+  `src/aeat/entrypoints/cli/sede/`, `src/aeat/entrypoints/cli/sanitize/`,
+  `src/aeat/entrypoints/cli/filing/_reconcile.py`,
+  `src/aeat/domain/justificante/_extract.py` (#239 territory).
 - Error-registry / decorator infrastructure (#398, landed; consume).
 - `--json` output schemas / exit-code table (#399, landed; consume).
-- `aeat.cli.audit` / `aeat.cli.__init__.py` (#339, landed; consume).
+- `aeat.entrypoints.cli.audit` / `aeat.entrypoints.cli.__init__.py` (#339, landed; consume).
 - Live-submit forbidden enforcement sweep (#432, held).
 - Any new CLI commands or root-level Typer changes.
 

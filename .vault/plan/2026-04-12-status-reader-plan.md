@@ -28,8 +28,8 @@ unit tests.
 - `uv run vaultspec-core install` already completed for this
   worktree (it is).
 - Sibling branches' territory respected (no touching
-  `[tool.pytest]`, `conftest.py`, `src/aeat/auth/certificate`, or
-  `src/aeat/browser/`).
+  `[tool.pytest]`, `conftest.py`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate`, or
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/`).
 
 ## Workstreams
 
@@ -50,7 +50,7 @@ Files under `src/aeat/status/`:
 
 - `_errors.py` — `StatusReaderError`, `StatusAuthError`,
   `StatusParseError`, `StatusNotFoundError`, all inheriting from
-  `aeat.errors.AeatError`.
+  `aeat.core.errors.AeatError`.
 - `_models.py` — `AeatStatusKind`, `PayorKind`, `Expediente`,
   `Notificacion`, `Devolucion`, `BorradorIrpf`, `Payor`,
   `DatosFiscales`, `CalendarioEntry`. All strict + frozen +
@@ -90,7 +90,7 @@ Files under `src/aeat/status/`:
   - Stub `fetch_*` methods for the other five surfaces raising
     `StatusReaderError("surface not yet implemented (#43 follow-up)")`.
   - All public methods async; Google-style docstrings; logging via
-    `aeat.logging.get_logger(__name__)`.
+    `aeat.core.logging.get_logger(__name__)`.
 
 ### W6 — Public API
 
@@ -100,13 +100,13 @@ Files under `src/aeat/status/`:
 
 ### W7 — CLI
 
-- `src/aeat/cli/status/__init__.py` — typer sub-app `app` with one
+- `src/aeat/entrypoints/cli/status/__init__.py` — typer sub-app `app` with one
   command per surface. Default pretty-table output, `--json`
   opt-in. The commands construct a `StatusReader` via
-  `_build_reader()` which calls `aeat.browser.BrowserSession`.
+  `_build_reader()` which calls `aeat.adapters.outbound.aeat.browser.BrowserSession`.
   Stub surfaces emit `typer.Exit(1)` with a clear message until
   their parsers land.
-- Register the sub-app in `src/aeat/cli/__init__.py` as
+- Register the sub-app in `src/aeat/entrypoints/cli/__init__.py` as
   `app.add_typer(status_module.app, name="status", …)`.
 
 ### W8 — Tests

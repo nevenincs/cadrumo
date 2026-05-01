@@ -33,7 +33,7 @@ QUALITY-003 | PASS | Logging via Project Factory
 No generic logging calls found. Code correctly avoids logging.
 
 QUALITY-004 | PASS | Collocated Complete Tests
-Unit tests in src/aeat/i18n/test_i18n.py achieve complete coverage of primitives, fallback chain, validation rules, and authoritative-language enforcement. Tests are collocated with the source code.
+Unit tests in src/aeat/core/i18n/test_i18n.py achieve complete coverage of primitives, fallback chain, validation rules, and authoritative-language enforcement. Tests are collocated with the source code.
 
 QUALITY-005 | PASS | No Mocks in Tests
 Zero mocks, patches, fakes, or stubs used in tests.

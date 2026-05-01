@@ -57,7 +57,7 @@ Architectural drivers:
   for the SQL backend and mandates that callers import only from the
   public surface of the persistence subpackage. Both decisions are
   preserved here. The substrate generalises the existing
-  `aeat.storage` public surface rather than introducing a new
+  `aeat.adapters.persistence.storage` public surface rather than introducing a new
   subpackage; the public name and import discipline remain stable.
 - The standing pydantic-v2 mandate requires strict frozen models at
   every boundary. Every public record exposed by the substrate
@@ -122,7 +122,7 @@ Tech-stack considerations surveyed in the research artifact:
   Windows without a native compile step. `cryptography>=47.0.0` is
   already pinned; no further runtime dependencies are introduced for
   Wave 1.
-- Existing `aeat.storage` public surface MUST remain importable for
+- Existing `aeat.adapters.persistence.storage` public surface MUST remain importable for
   every existing caller (modelos, portals, corpus_artifacts). The
   substrate is additive at the public-surface level. The internal
   `_orm.py`, `engine.py`, `session.py`, `repository.py` modules grow
@@ -143,7 +143,7 @@ Tech-stack considerations surveyed in the research artifact:
 
 ## Implementation
 
-The substrate is delivered as additions to the `aeat.storage`
+The substrate is delivered as additions to the `aeat.adapters.persistence.storage`
 subpackage. The public surface gains the following exports; the
 underlying modules are organised into thematic clusters under
 internal underscore-prefixed names. Every public symbol is documented
@@ -160,8 +160,8 @@ pydantic record per class: at-rest treatment (`PLAINTEXT` |
 `CIPHERTEXT_REQUIRED`), retention (a `RetentionPolicy` record with
 `max_age` and `archive_after`), and a `RedactionRule` set used by the
 audit sink and the run-trace path. The default policy table is
-declared as a `MappingProxyType` in `aeat.storage._classification`
-and exposed via `aeat.storage.default_policy_for(cls)`. Consumers MAY
+declared as a `MappingProxyType` in `aeat.adapters.persistence.storage._classification`
+and exposed via `aeat.adapters.persistence.storage.default_policy_for(cls)`. Consumers MAY
 override per-record but the default is always available.
 
 ### 2. Master-key acquisition
@@ -176,7 +176,7 @@ A `MasterKeyProvider` protocol with two concrete implementations:
   does not introduce a hard runtime dependency.
 - `FileFallbackMasterKeyProvider` — backed by an encrypted master-key
   file under the path `aeat_secret_store_dir / master.key` (the
-  setting is added to `aeat.config` and is path-normalised). The
+  setting is added to `aeat.core.config` and is path-normalised). The
   master key is wrapped with a passphrase-derived KEK using scrypt
   (`n=2**17, r=8, p=1, dklen=32`) and a per-store sixteen-byte random
   salt persisted alongside. The passphrase is read from the
@@ -184,7 +184,7 @@ A `MasterKeyProvider` protocol with two concrete implementations:
   prompted via `getpass.getpass` once per process and cached in
   memory for the process lifetime.
 
-A factory `aeat.storage.get_master_key_provider()` returns the active
+A factory `aeat.adapters.persistence.storage.get_master_key_provider()` returns the active
 provider per the resolved `aeat_secret_store_backend` setting (closed
 enum: `keyring` | `file` | `auto`; default `auto` selects keyring
 when available and falls back to file). The provider is process-
@@ -201,18 +201,18 @@ without a usable backend.
 
 ### 3. AEAD primitives
 
-A small `aeat.storage._crypto` module wraps `AESGCM` from
+A small `aeat.adapters.persistence.storage._crypto` module wraps `AESGCM` from
 `cryptography.hazmat.primitives.ciphers.aead`. Public surface:
 
-- `aeat.storage.encrypt_record(plaintext: bytes, *, key: bytes)
+- `aeat.adapters.persistence.storage.encrypt_record(plaintext: bytes, *, key: bytes)
   -> EncryptedBlob` — generates a 12-byte random nonce, encrypts via
   AES-256-GCM, returns a frozen pydantic `EncryptedBlob` record with
   `nonce: bytes`, `ciphertext: bytes`, and `tag_present: bool`. The
   on-wire form is `nonce || ciphertext_with_tag`.
-- `aeat.storage.decrypt_record(blob: EncryptedBlob, *, key: bytes)
+- `aeat.adapters.persistence.storage.decrypt_record(blob: EncryptedBlob, *, key: bytes)
   -> bytes` — decrypts and verifies the GCM tag; raises
   `EncryptionError` on tag mismatch.
-- `aeat.storage.derive_key(*, key_material: bytes, salt: bytes,
+- `aeat.adapters.persistence.storage.derive_key(*, key_material: bytes, salt: bytes,
   context: bytes) -> bytes` — HKDF-SHA256 derivation for per-row /
   per-blob keys.
 
@@ -224,7 +224,7 @@ re-key well before that).
 
 ### 4. SQLAlchemy `TypeDecorator` set
 
-`aeat.storage._encrypted_columns` exports `EncryptedString`,
+`aeat.adapters.persistence.storage._encrypted_columns` exports `EncryptedString`,
 `EncryptedBytes`, `EncryptedJSON`, and `HashedLookup`. Each
 `TypeDecorator` performs encrypt-on-bind / decrypt-on-result via the
 substrate's master key. Storage type is `BLOB` (not `VARCHAR`) so
@@ -238,7 +238,7 @@ search-by-equality without leaking the plaintext value.
 
 ### 5. Encrypted blob store
 
-`aeat.storage._blob_store` provides an `EncryptedBlobStore` repository
+`aeat.adapters.persistence.storage._blob_store` provides an `EncryptedBlobStore` repository
 with two layouts:
 
 - Plaintext blobs (CORPUS class only) — written content-addressed
@@ -259,7 +259,7 @@ are validated as pydantic v2 frozen records.
 
 ### 6. Schema-version envelope for file-backed domains
 
-`aeat.storage._envelope` exports a generic `Envelope[PayloadT]`
+`aeat.adapters.persistence.storage._envelope` exports a generic `Envelope[PayloadT]`
 pydantic v2 frozen model with fields `schema_version: int`,
 `written_at: datetime` (timezone-aware), `classification:
 SensitivityClass`, `payload: PayloadT | EncryptedBlob`, and
@@ -281,7 +281,7 @@ Wave 1; the contract is in place.
 
 ### 7. Cross-platform file lock
 
-`aeat.storage._lock` exports `exclusive_file_lock(path: Path, *,
+`aeat.adapters.persistence.storage._lock` exports `exclusive_file_lock(path: Path, *,
 timeout: float = 30.0)` as a context manager. POSIX uses
 `fcntl.flock(fd, LOCK_EX | LOCK_NB)` with a sleep-and-retry loop
 until timeout; Windows uses `msvcrt.locking(fd, LK_NBLCK, 1)` with
@@ -294,7 +294,7 @@ methods that document the lock semantics.
 
 ### 8. Path-normalisation fix
 
-`aeat.config._normalize_repo_relative_paths` adds the three settings
+`aeat.core.config._normalize_repo_relative_paths` adds the three settings
 the audit identified as drift-prone: `aeat_invoices_dir`,
 `aeat_attachments_dir`, `aeat_runs_dir`. The new
 `aeat_secret_store_dir`, `aeat_blob_store_dir`, and `aeat_audit_dir`
@@ -306,7 +306,7 @@ settings).
 
 ### 9. Secret store
 
-`aeat.storage._secret_store` provides:
+`aeat.adapters.persistence.storage._secret_store` provides:
 
 - `SecretRecord` (frozen pydantic v2): `key: str` (NFKC-normalised,
   case-sensitive, alphanumeric + `:` + `-` + `_`), `value: bytes`,
@@ -342,8 +342,8 @@ is deferred to Wave 2 or Wave 4.
 
 ### 11. Error codes
 
-The following error classes are added under `aeat.storage.errors`,
-each registered in `aeat.errors._registry` at import time:
+The following error classes are added under `aeat.adapters.persistence.storage.errors`,
+each registered in `aeat.core.errors._registry` at import time:
 
 - `PersistenceError(StorageError)` — base for every new substrate
   error. `StorageError` remains the public name for the
@@ -380,7 +380,7 @@ automatically.
 
 ### 12. New settings
 
-`aeat.config.Settings` adds the following fields (all path-normalised):
+`aeat.core.config.Settings` adds the following fields (all path-normalised):
 
 - `aeat_secret_store_dir: Path` (default `var/secrets`)
 - `aeat_secret_store_backend: SecretStoreBackend` (closed enum:
@@ -416,7 +416,7 @@ treatment without requiring it to invent the policy, and the policy
 table is the single point of truth for retention and redaction.
 
 The audit's HIGH narrow-storage finding is structurally addressed by
-generalising the `aeat.storage` public surface. The data-storage ADR
+generalising the `aeat.adapters.persistence.storage` public surface. The data-storage ADR
 intended this expansion; the audit is the prompt to deliver it. The
 `StorageError` → `PersistenceError` subclass relationship preserves
 the existing public name while adding the new sub-tree of error
@@ -476,7 +476,7 @@ Negative:
   `HashedLookup` decorator (deterministic HMAC) and pay the cost
   of an extra column. This is documented in the substrate's
   developer guide and discoverable via the type's docstring.
-- The substrate adds surface area to `aeat.storage`. The internal
+- The substrate adds surface area to `aeat.adapters.persistence.storage`. The internal
   modules grow; the public surface gains roughly twenty new
   exports (sensitivity enum, classification policy, master key
   provider protocol and concretes, encrypt/decrypt helpers, four

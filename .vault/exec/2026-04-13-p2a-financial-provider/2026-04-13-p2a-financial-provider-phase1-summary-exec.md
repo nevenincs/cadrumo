@@ -12,9 +12,9 @@ related:
 Completed the Track B T1 financial ingest substrate for issue `#73`.
 
 - Modified: `src/aeat/config.py`
-- Modified: `src/aeat/cli/__init__.py`
-- Created: `src/aeat/financial/`
-- Created: `src/aeat/cli/financial/`
+- Modified: `src/aeat/entrypoints/cli/__init__.py`
+- Created: `src/aeat/domain/financial/`
+- Created: `src/aeat/entrypoints/cli/financial/`
 - Created: `tests/fixtures/financial/`
 
 ## Description

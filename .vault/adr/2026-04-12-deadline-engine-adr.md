@@ -24,17 +24,17 @@ is read-only — it never touches the storage layer, never files, never
 mutates the catalogue/corpus/manuals.
 
 Multiple dependent subpackages are still in flight on sibling branches:
-- #6 `aeat.models` — modelo catalogue (Protocol stub here)
+- #6 `aeat.domain.modelos` — modelo catalogue (Protocol stub here)
 - #17 `aeat.corpus` — year-specific overrides (Protocol stub here)
-- #25 `aeat.manuals` — narrative deadline rules (Protocol stub here)
+- #25 `aeat.domain.manuals` — narrative deadline rules (Protocol stub here)
 
 ## decision
 
-1. **Single subpackage: `src/aeat/deadlines/`.** Public API is
-   exported from `aeat.deadlines.__init__`. Internal modules are
+1. **Single subpackage: `src/aeat/domain/deadlines/`.** Public API is
+   exported from `aeat.domain.deadlines.__init__`. Internal modules are
    `_`-prefixed (`_models.py`, `_engine.py`, `_protocols.py`,
    `_errors.py`, `_calendar.py`, `_applies.py`). External callers
-   import only from `aeat.deadlines`.
+   import only from `aeat.domain.deadlines`.
 
 2. **Pydantic v2 strict everywhere.** Every boundary-crossing type —
    `AutonomoProfile`, `FilingObligation`, `Schedule` — is a strict
@@ -73,11 +73,11 @@ Multiple dependent subpackages are still in flight on sibling branches:
    never produced by the engine in v1; they are reserved for
    downstream consumers (#10 storage, #11 sync runner).
 
-7. **Errors inherit from `aeat.errors.AeatError`.** The hierarchy is
+7. **Errors inherit from `aeat.core.errors.AeatError`.** The hierarchy is
    `DeadlineError → ProfileError | ScheduleComputationError`. No
    stdlib exceptions cross the public API.
 
-8. **Logging.** Only `aeat.logging.get_logger(__name__)`. The engine
+8. **Logging.** Only `aeat.core.logging.get_logger(__name__)`. The engine
    logs at DEBUG only — it must not be chatty when called from the
    CLI or from `#11` sync.
 
@@ -86,7 +86,7 @@ Multiple dependent subpackages are still in flight on sibling branches:
    `next`, `explain`. The CLI is pure glue — it parses arguments,
    constructs an in-process catalogue stub, and calls `DeadlineEngine`.
 
-10. **Settings.** Two additive fields in `aeat.config.Settings`:
+10. **Settings.** Two additive fields in `aeat.core.config.Settings`:
     `aeat_default_profile_path: Path | None` and
     `aeat_deadline_due_soon_days: int = 14`. Both documented in
     `env/.env.example`; alignment enforced by `tests/test_config.py`.
@@ -97,7 +97,7 @@ Multiple dependent subpackages are still in flight on sibling branches:
 - Filing anything (read-only engine).
 - Notifications / alerts.
 - Web UI.
-- Hard imports from `aeat.models`, `aeat.corpus`, `aeat.manuals` —
+- Hard imports from `aeat.domain.modelos`, `aeat.corpus`, `aeat.domain.manuals` —
   Protocol stubs replaced on rebase.
 - Modelos outside the autónomo set listed in the research note.
 - Estimación objetiva (modelo 131) — not a v1 path.

@@ -17,7 +17,7 @@ Extraction (cluster D) produces `(casilla_id, printed_value)` tuples. Calc-verif
 
 ## The primitive is already built
 
-`src/aeat/formulas/_engine.py` — `Engine.audit_against(ruleset, provided: Mapping[str, Decimal], tolerance: Decimal = Decimal("0.01")) -> AuditReport`. The function:
+`src/aeat/domain/formulas/_engine.py` — `Engine.audit_against(ruleset, provided: Mapping[str, Decimal], tolerance: Decimal = Decimal("0.01")) -> AuditReport`. The function:
 
 - Derives every computed casilla from the supplied literals.
 - Diffs computed against `provided`.
@@ -111,6 +111,6 @@ The three-file triplet is the full audit trail for one imported filing.
 ## Open questions (ADR)
 
 1. **Default tolerance**: `Decimal("0.01")` (1 cent) matches AEAT's precision. Does any modelo need different tolerance? Answer: **not by default**; per-casilla overrides permitted via the ruleset's metadata.
-2. **Rounding-mode alignment**: AEAT uses `ROUND_HALF_UP` for monetary totals. Confirm the Engine uses the same. `src/aeat/formulas/_engine.py` already pins `Decimal` arithmetic; spot-check in the implementation phase.
+2. **Rounding-mode alignment**: AEAT uses `ROUND_HALF_UP` for monetary totals. Confirm the Engine uses the same. `src/aeat/domain/formulas/_engine.py` already pins `Decimal` arithmetic; spot-check in the implementation phase.
 3. **Multi-currency**: N/A — AEAT filings are EUR only.
 4. **Kent override**: if Kent manually edits a casilla post-import, does verification re-run automatically? Answer: **no**, explicit `aeat filing verify <id>` — avoid surprise CPU cost.

@@ -23,7 +23,7 @@ and added the optional 4th integration test case.
 
 ## Files modified
 
-- `src/aeat/declaracion/_extractors/modelo_130_v2025.py` — extended
+- `src/aeat/adapters/inbound/declaracion/_extractors/modelo_130_v2025.py` — extended
   `_MODELO_130_CASILLAS` from 7 to 19 ids. The label-regex map is
   built from this tuple, so casillas 08-19 now get parseable
   patterns. `_REQUIRED_FOR_COMPLETE` is **explicitly** set to the
@@ -38,7 +38,7 @@ and added the optional 4th integration test case.
   output for boxes 01-07; missing values for 08-19 still render
   label-only lines (the `draw_casilla_box` helper handles
   `value=None`).
-- `src/aeat/declaracion/test_modelo_130_v2025.py` — added
+- `src/aeat/adapters/inbound/declaracion/test_modelo_130_v2025.py` — added
   `test_full_19_casilla_liquidacion_round_trip` exercising the
   generator → PDF parse → ground-truth equality on all 19 casillas
   with non-zero asymmetric values (mirrors the operand-swap rich
@@ -59,7 +59,7 @@ and added the optional 4th integration test case.
 
 ## Tests added
 
-- 1 new case in `src/aeat/declaracion/test_modelo_130_v2025.py`.
+- 1 new case in `src/aeat/adapters/inbound/declaracion/test_modelo_130_v2025.py`.
 - 1 new case in
   `tests/integration/test_kent_workflows.py::TestKentImportsModelo130Declaracion`.
 

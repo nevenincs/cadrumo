@@ -10,7 +10,7 @@ related:
 
 # step 1 — errors, protocols, wire schemas
 
-Scaffolded `src/aeat/sync/` with:
+Scaffolded `src/aeat/application/sync/` with:
 
 - `_errors.py` — `SyncError` + `WireValidationError`,
   `DivergenceClassificationError`, `HealingError`,

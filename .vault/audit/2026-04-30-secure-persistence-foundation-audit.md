@@ -106,9 +106,9 @@ run-trace redaction) rather than blocking wave 4:
 
 - The substrate's `redact_structured` helper is now load-bearing for
   the live-submit audit sink; wave 5 will wire the same rule-set
-  through every `aeat.observability` writer so run traces and
+  through every `aeat.core.observability` writer so run traces and
   diagnostic dumps inherit the same discipline.
-- The legacy `aeat.submission._audit.append_live_submit_audit` writer
+- The legacy `aeat.adapters.outbound.aeat.export._audit.append_live_submit_audit` writer
   is preserved alongside the new governed sink so existing engine
   code paths continue to work; wave 5 will migrate the engine call
   sites to the governed sink and remove the legacy writer in the

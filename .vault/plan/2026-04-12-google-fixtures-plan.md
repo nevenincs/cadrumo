@@ -49,11 +49,11 @@ README.
    - Build Drive / Sheets / Docs services.
    - Walk the catalogue in parent-first order (root folder → children).
    - Find-or-create by name/mime inside parent (idempotent, using the
-     pattern from `aeat.cli.bootstrap`).
+     pattern from `aeat.entrypoints.cli.bootstrap`).
    - After creating a Sheet, seed `A1` via the Sheets API.
    - After creating a Doc, seed body via the Docs `batchUpdate` API.
    - Collect `(env_var_name, resource_id)` pairs and call
-     `aeat.env_io.write_env_vars` to persist into `env/.env`.
+     `aeat.core.env_io.write_env_vars` to persist into `env/.env`.
    - Print a rich table with `fixture_id`, `kind`, `id`, `created|existing`.
 4. `scripts/teardown_google_fixtures.py`:
    - Resolve credentials.
@@ -116,6 +116,6 @@ Add cross-platform `[unix]` + `[windows]` recipes:
 - Pydantic v2 strict mandate respected for every metadata record.
 - Live-test mandates (no mocks, dual opt-in, `@pytest.mark.live`) honoured.
 - Reuse of chore/4's client surface verified against
-  `src/aeat/cli/bootstrap.py` patterns.
+  `src/aeat/entrypoints/cli/bootstrap.py` patterns.
 
 Proceeding to execution.

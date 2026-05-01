@@ -18,9 +18,9 @@ Delivered the Issue `#153` launcher fix that keeps `.mcp.json` secret-free while
 
 - Modified: `.mcp.json`
 - Modified: `.gitignore`
-- Created: `src/aeat/mcp/__init__.py`
-- Created: `src/aeat/mcp/launch_google_workspace.py`
-- Created: `src/aeat/mcp/test_launch_google_workspace.py`
+- Created: `src/aeat/entrypoints/mcp/__init__.py`
+- Created: `src/aeat/entrypoints/mcp/launch_google_workspace.py`
+- Created: `src/aeat/entrypoints/mcp/test_launch_google_workspace.py`
 - Created: `.vault/research/2026-04-16-google-workspace-mcp-auth-research.md`
 - Created: `.vault/reference/2026-04-16-google-workspace-mcp-auth-reference.md`
 - Created: `.vault/adr/2026-04-16-google-workspace-mcp-auth-adr.md`
@@ -49,7 +49,7 @@ One live-proof edge remains outside the change scope: a full read-only Drive too
 
 ## Tests
 
-- `uv run pytest src/aeat/mcp/test_launch_google_workspace.py tests/test_config.py`
+- `uv run pytest src/aeat/entrypoints/mcp/test_launch_google_workspace.py tests/test_config.py`
 - `uv run ruff check src/aeat/mcp tests/test_config.py`
 - `uv run ty check src/aeat/mcp`
 - `just lint`

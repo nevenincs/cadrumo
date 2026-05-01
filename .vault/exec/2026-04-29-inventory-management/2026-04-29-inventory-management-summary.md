@@ -13,18 +13,18 @@ related:
 Implemented the first #453 tracking surface for M100 Anexo D normal inventory
 and amortization inputs.
 
-- Created: `src/aeat/profile/assets/__init__.py`
-- Created: `src/aeat/profile/inventory/__init__.py`
-- Created: `src/aeat/profile/errors.py`
-- Created: `src/aeat/cli/profile/__init__.py`
-- Created: `src/aeat/cli/profile/assets.py`
-- Created: `src/aeat/cli/profile/inventory.py`
-- Created: `src/aeat/formulas/_rulesets/modelo_100/anexo_d_ledgers.py`
+- Created: `src/aeat/domain/profile/assets/__init__.py`
+- Created: `src/aeat/domain/profile/inventory/__init__.py`
+- Created: `src/aeat/domain/profile/errors.py`
+- Created: `src/aeat/entrypoints/cli/profile/__init__.py`
+- Created: `src/aeat/entrypoints/cli/profile/assets.py`
+- Created: `src/aeat/entrypoints/cli/profile/inventory.py`
+- Created: `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_d_ledgers.py`
 - Created: `docs/concepts/inventory-and-amortization.md`
-- Modified: `src/aeat/errors/_registry.py`
-- Modified: `src/aeat/cli/__init__.py`
-- Modified: `src/aeat/cli/test_json_schema_conformance.py`
-- Modified: `src/aeat/cli/workflow/test_cli.py`
+- Modified: `src/aeat/core/errors/_registry.py`
+- Modified: `src/aeat/entrypoints/cli/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/test_json_schema_conformance.py`
+- Modified: `src/aeat/entrypoints/cli/workflow/test_cli.py`
 - Modified: `docs/coverage/kent-capabilities.md`
 
 ## Description
@@ -60,8 +60,8 @@ persistence-adherence auditing, and data-security opt-in/adherence support.
 
 Focused verification passed:
 
-- `uv run pytest src/aeat/profile/assets/test_assets.py src/aeat/profile/inventory/test_inventory.py src/aeat/formulas/_rulesets/modelo_100/test_anexo_d_ledgers.py src/aeat/cli/profile/test_profile_cli.py`
-- `uv run pytest src/aeat/cli/test_json_schema_conformance.py src/aeat/cli/workflow/test_cli.py::TestWorkflowCli::test_next_json_round_trips`
+- `uv run pytest src/aeat/domain/profile/assets/test_assets.py src/aeat/domain/profile/inventory/test_inventory.py src/aeat/domain/formulas/_rulesets/modelo_100/test_anexo_d_ledgers.py src/aeat/entrypoints/cli/profile/test_profile_cli.py`
+- `uv run pytest src/aeat/entrypoints/cli/test_json_schema_conformance.py src/aeat/entrypoints/cli/workflow/test_cli.py::TestWorkflowCli::test_next_json_round_trips`
 - `uv run ruff check ...` on the touched slice
 - `uv run ty check ...` on the touched slice
 
@@ -70,9 +70,9 @@ Full project verification:
 - `just lint` passed.
 - `just test` passed: 4,828 passed, 19 skipped, 24 deselected.
 - `just typecheck` and `just hooks` still fail on unrelated branch-wide ty
-  diagnostics in `src/aeat/browser/test_session.py`,
-  `src/aeat/schema/test_cache.py`, `src/aeat/schema/test_models.py`, and
-  `src/aeat/sede/_declarations.py`. The touched #453 slice type-checks cleanly.
+  diagnostics in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py`,
+  `src/aeat/domain/schema/test_cache.py`, `src/aeat/domain/schema/test_models.py`, and
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/_declarations.py`. The touched #453 slice type-checks cleanly.
 
 Formal vaultspec code review passed after resolving all findings in
 `2026-04-29-inventory-management-code-review`.

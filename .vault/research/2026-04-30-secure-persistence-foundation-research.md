@@ -52,12 +52,12 @@ The audit identified the following plaintext-on-disk filing
 state. Each is a Wave-4 migration candidate:
 
 - `var/drafts/<draft_id>.json` — filing-draft records under
-  `aeat.cli.filing` and `aeat.cli.review`. Contains taxpayer
+  `aeat.entrypoints.cli.filing` and `aeat.entrypoints.cli.review`. Contains taxpayer
   NIF, line-by-line casilla values, approval state. Migration
   target: FINANCIAL-class envelope per draft, content-addressed
   by the existing draft id (already a UUID).
 - `var/submissions/<submission_id>.json` and amendments under
-  `aeat.submission._engine` / `aeat.filing._complementaria`.
+  `aeat.adapters.outbound.aeat.export._engine` / `aeat.application.filing._complementaria`.
   AUDIT-class for the submission record (it captures the
   exact bytes Kent uploaded to AEAT); identity-bearing.
 - `var/justificantes/<csv>.pdf` — AEAT-issued PDF receipts
@@ -110,7 +110,7 @@ state. Each is a Wave-4 migration candidate:
   legal proof; the substrate already wraps them via the
   `EncryptedBlobStore` content-addressable layout.
 - Phase 5: live-submit audit relocation. New
-  `aeat.submission._audit` writer routes every event through
+  `aeat.adapters.outbound.aeat.export._audit` writer routes every event through
   `redact(value, rules=default_rules_for_class(AUDIT))` then
   writes JSONL to `aeat_audit_dir`. Migration helper drains
   any existing `.aeat/live-submit-audit.log` into the new
@@ -125,7 +125,7 @@ state. Each is a Wave-4 migration candidate:
 
 ## Standing constraints inherited from Waves 1-3
 
-- The substrate's public API is `aeat.storage` only.
+- The substrate's public API is `aeat.adapters.persistence.storage` only.
 - Pydantic v2 strict frozen at every boundary.
 - No mocks; tests use real cryptography, real on-disk
   persistence, real CliRunner, real multiprocessing.
@@ -151,7 +151,7 @@ because Wave 3 prioritised the Kent moment):
 - sec-L-3 — NIF check-letter validator landed in Wave-2 Phase 3;
   the substrate's `nif-hash` redaction rule's regex remains
   permissive on purpose. Optional Wave-4 hardening would tighten
-  it to consume `aeat.identity.validate_identity` for false-
+  it to consume `aeat.adapters.inbound.identity.validate_identity` for false-
   positive elimination
 - vs-L-5 — already actioned in Wave-2 Phase 0
 - vs-L-6 — secret-store delete blob-cleanup logging (already

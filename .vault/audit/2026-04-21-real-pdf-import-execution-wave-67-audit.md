@@ -29,7 +29,7 @@ Plan mandated one summary per wave. Present: phase-1 (#271 justificante), phase-
 
 Only casillas 03/04/07 had hand-calculated assertions; the 6 new computed casillas (09/11/12/14/17/19) shipped with schema + builder but no test proving the formulas compute the right values.
 
-**Resolution**: `test_apartado_ii_to_v_casillas_match_hand_calculations` in `src/aeat/filing/test_filing.py` — deterministic input set (01=12500, 02=3500, 05=400, 06=0, 08=5000, 10=30, 13=0, 15=100, 16=0, 18=0); asserts every computed casilla value + formula trace.
+**Resolution**: `test_apartado_ii_to_v_casillas_match_hand_calculations` in `src/aeat/application/filing/test_filing.py` — deterministic input set (01=12500, 02=3500, 05=400, 06=0, 08=5000, 10=30, 13=0, 15=100, 16=0, 18=0); asserts every computed casilla value + formula trace.
 
 ### MEDIUM — M2: Coverage matrices stale vs. shipped state (**fixed**)
 

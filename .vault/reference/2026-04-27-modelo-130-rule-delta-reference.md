@@ -16,9 +16,9 @@ of Modelo 130 (pago fraccionado IRPF para autónomos en estimación
 directa, trimestral) for tax years 2024, 2025, and 2026. It is the
 authoritative reference cited by:
 
-- `src/aeat/formulas/_rulesets/modelo_130_2024.py`
-- `src/aeat/formulas/_rulesets/modelo_130_2025.py`
-- `src/aeat/formulas/_rulesets/modelo_130_2026.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_130_2024.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_130_2025.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_130_2026.py`
 - the `#321` ADR / plan / research / exec records.
 
 ## Statutory grounding
@@ -63,7 +63,7 @@ surface.
 
 **No amendment.** The 2024 and 2025 rulesets are mechanically and
 numerically identical. The 2025 ruleset file
-(`src/aeat/formulas/_rulesets/modelo_130_2025.py`) re-imports
+(`src/aeat/domain/formulas/_rulesets/modelo_130_2025.py`) re-imports
 `_CASILLAS` and `_CITATIONS` from the 2024 module and declares only
 its own `_FORMULAS` (with a year-scoped formula-id namespace) and
 `_PARAMETERS` (with the same numerical values bound to the 2025
@@ -81,7 +81,7 @@ obligations), not art. 110. No further 2025 or 2026 modification to
 art. 110 has been published as of the consolidated-text last-update
 date 2026-02-28.
 
-The 2026 ruleset file (`src/aeat/formulas/_rulesets/modelo_130_2026.py`)
+The 2026 ruleset file (`src/aeat/domain/formulas/_rulesets/modelo_130_2026.py`)
 re-imports `_CASILLAS_2024` and `_CITATIONS_2024` from the 2024
 module and declares its own `_FORMULAS` (with the
 `modelo_130.2026.<reason>` formula-id namespace) and `_PARAMETERS`
@@ -89,7 +89,7 @@ module and declares its own `_FORMULAS` (with the
 of 2026-01-01 to 2026-12-31).
 
 The `test_2026_no_drift_from_2025` regression in
-`src/aeat/formulas/_rulesets/test_modelo_130_2026.py` asserts the
+`src/aeat/domain/formulas/_rulesets/test_modelo_130_2026.py` asserts the
 no-drift invariant: an `Engine().audit_against(...)` pass over both
 the 2025 and 2026 rulesets with the same fixture must produce
 identical ledger entries.

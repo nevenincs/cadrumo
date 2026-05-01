@@ -43,55 +43,55 @@ audit gate.
 
 ## Files created
 
-- `src/aeat/identity/__init__.py`
-- `src/aeat/identity/_documents.py`
-- `src/aeat/identity/test_documents.py`
-- `src/aeat/storage/_materialisation.py`
-- `src/aeat/storage/_test_materialisation.py`
-- `src/aeat/cli/secrets.py`
-- `src/aeat/cli/_test_secrets.py`
-- `src/aeat/auth/_secret_adapters.py`
-- `src/aeat/auth/_test_secret_adapters.py`
+- `src/aeat/adapters/inbound/identity/__init__.py`
+- `src/aeat/adapters/inbound/identity/_documents.py`
+- `src/aeat/adapters/inbound/identity/test_documents.py`
+- `src/aeat/adapters/persistence/storage/_materialisation.py`
+- `src/aeat/adapters/persistence/storage/_test_materialisation.py`
+- `src/aeat/entrypoints/cli/secrets.py`
+- `src/aeat/entrypoints/cli/_test_secrets.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_secret_adapters.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_test_secret_adapters.py`
 
 ## Files modified
 
-- `src/aeat/storage/_master_key.py` — bytearray caches with
+- `src/aeat/adapters/persistence/storage/_master_key.py` — bytearray caches with
   `_zeroise` helper; `atexit` purge hook
   (`_purge_caches_at_exit`); `Path.resolve()` cache key
   normalisation; per-`(service, username)` keyring cache.
-- `src/aeat/storage/_secret_store.py` — atomic index write via
+- `src/aeat/adapters/persistence/storage/_secret_store.py` — atomic index write via
   tempfile + `os.replace`; narrow `contextlib.suppress` to
   `BlobNotFoundError` with WARNING log on
   `BlobIntegrityError` / `OSError`.
-- `src/aeat/storage/_blob_store.py` — payload-first delete order;
+- `src/aeat/adapters/persistence/storage/_blob_store.py` — payload-first delete order;
   `iter_manifests` routes through `load_envelope`; `BlobManifest`
   `content_type` docstring expanded.
-- `src/aeat/storage/_envelope.py` — `AeadAlgorithm` StrEnum
+- `src/aeat/adapters/persistence/storage/_envelope.py` — `AeadAlgorithm` StrEnum
   replaces the bare `str` algorithm field; per-step debug
   logging; monotonic-version assertion in `_apply_migrators`.
-- `src/aeat/storage/_encrypted_columns.py` —
+- `src/aeat/adapters/persistence/storage/_encrypted_columns.py` —
   `_HKDF_CONTEXT_LOOKUP` renamed to `_HKDF_CONTEXT_COLUMN_LOOKUP`;
   `HashedLookup.compute` emits one-shot INFO log on plaintext
   shorter than 12 bytes.
-- `src/aeat/storage/_redaction.py` — new
+- `src/aeat/adapters/persistence/storage/_redaction.py` — new
   `bearer-token-fingerprint` rule covers non-JWT bearer tokens
   (Google `ya29` access tokens; generic `Bearer ` headers).
-- `src/aeat/storage/_classification.py` — default policy table
+- `src/aeat/adapters/persistence/storage/_classification.py` — default policy table
   for SECRET / SESSION / AUDIT / DIAGNOSTIC extended to reference
   the new bearer rule.
-- `src/aeat/storage/errors.py` — `PathContainmentError`
+- `src/aeat/adapters/persistence/storage/errors.py` — `PathContainmentError`
   docstring documents the C3 MRO + ErrorCode keying.
-- `src/aeat/storage/_lock.py` — docstring documents the
+- `src/aeat/adapters/persistence/storage/_lock.py` — docstring documents the
   retryable-True semantic + Windows mandatory vs POSIX advisory
   lock difference.
-- `src/aeat/storage/_crypto.py` — `EncryptedBlob.ciphertext`
+- `src/aeat/adapters/persistence/storage/_crypto.py` — `EncryptedBlob.ciphertext`
   docstring expanded.
-- `src/aeat/storage/__init__.py` — public surface gains
+- `src/aeat/adapters/persistence/storage/__init__.py` — public surface gains
   `AeadAlgorithm`, the materialisation helpers, the secret-store
   factory, and the `override_secret_store` test helper.
-- `src/aeat/cli/__init__.py` — `aeat secrets` namespace wired into
+- `src/aeat/entrypoints/cli/__init__.py` — `aeat secrets` namespace wired into
   the root Typer app.
-- `src/aeat/errors/_registry.py` — `IdentityError` registered
+- `src/aeat/core/errors/_registry.py` — `IdentityError` registered
   under `INTEGRITY_IDENTITY_DOCUMENT`.
 - `pyproject.toml` — per-file ruff ignores extended for the
   redaction + secret-store test modules (literal token / key
@@ -128,20 +128,20 @@ the envelope migrator chain.
 
 ### Phase 2 — `materialise_secret` helpers
 
-`aeat.storage.materialise_secret(key)` is a context manager that
+`aeat.adapters.persistence.storage.materialise_secret(key)` is a context manager that
 yields a `Path` to a short-lived secure tempfile; the file lands
 under the OS tempdir with mode `0o600` on POSIX and is unlinked
 on context exit (including on exception).
-`aeat.storage.export_to_temp_path(key)` is the explicit-cleanup
+`aeat.adapters.persistence.storage.export_to_temp_path(key)` is the explicit-cleanup
 variant returning a `(path, cleanup)` tuple for callers that need
 the path beyond a single `with` block. The
-`aeat.storage.get_secret_store()` factory is a process-wide lazy
+`aeat.adapters.persistence.storage.get_secret_store()` factory is a process-wide lazy
 singleton keyed by the resolved `Settings`; tests inject a
 deterministic stub via the new `override_secret_store` helper.
 
 ### Phase 3 — Spanish identity-document validator
 
-New `aeat.identity` subpackage. Public surface:
+New `aeat.adapters.inbound.identity` subpackage. Public surface:
 `IdentityDocument`, `validate_identity`, `IdentityError`. The
 validator implements the canonical NIF (8 digits + check letter
 from the 23-char table), NIE (X / Y / Z prefix substituted to
@@ -173,7 +173,7 @@ shorthand, overwrite semantics, and edge cases.
 
 ### Phases 6 through 9 — canary consumer secret-adapters
 
-`aeat.auth._secret_adapters` ships the read-through bridge
+`aeat.adapters.outbound.aeat.auth._secret_adapters` ships the read-through bridge
 between consumer code and the secret store. Generic primitives:
 
 - `load_secret_or_legacy(*, key, legacy_path, parser) -> T`
@@ -204,8 +204,8 @@ classification, and TTL for the five Wave-2 migration targets:
   the `SecretStore` to accept IDENTITY is queued for a follow-up
   ADR.
 
-The legacy-plaintext call sites in `aeat.cli.oauth`,
-`aeat.cli.auth`, the OAuth token cache helpers, the workspace
+The legacy-plaintext call sites in `aeat.entrypoints.cli.oauth`,
+`aeat.entrypoints.cli.auth`, the OAuth token cache helpers, the workspace
 MCP launcher, and the setup wizard are NOT yet rewired to
 consume these adapters in this commit. The rewire is a touch on
 multiple stable surfaces (with downstream-review impact on Gemini,

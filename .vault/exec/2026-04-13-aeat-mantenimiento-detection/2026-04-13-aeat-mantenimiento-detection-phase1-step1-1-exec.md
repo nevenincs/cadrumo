@@ -12,7 +12,7 @@ related:
 
 ## Intent
 
-Hoist `SiteHealthError` into `aeat.errors` as a direct `AeatError`
+Hoist `SiteHealthError` into `aeat.core.errors` as a direct `AeatError`
 subclass carrying a strict `status: SiteHealthStatus` attribute. The
 class is defined under a `TYPE_CHECKING` guard so the module avoids
 a circular import against `aeat.status`.
@@ -26,7 +26,7 @@ a circular import against `aeat.status`.
 
 ## Acceptance
 
-- `python -c "from aeat.errors import SiteHealthError"` succeeds
+- `python -c "from aeat.core.errors import SiteHealthError"` succeeds
   (verified in Phase 8 gates).
 - Subclass of `AeatError` preserved.
 

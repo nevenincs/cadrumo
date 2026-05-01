@@ -14,7 +14,7 @@ issue: wgergely/aeat#42
 
 ## scope
 
-Deliver `aeat.submission` per the ADR: strict pydantic v2 schema,
+Deliver `aeat.adapters.outbound.aeat.export` per the ADR: strict pydantic v2 schema,
 errors, preflight, Submitter ABC, Modelo130Submitter, SubmissionEngine,
 Typer CLI sub-app, four new Settings fields, colocated unit tests,
 one opt-in live dry-run test. No storage integration. No hard imports
@@ -23,7 +23,7 @@ from in-flight siblings.
 ## file map
 
 ```
-src/aeat/submission/
+src/aeat/adapters/outbound/aeat/export/
     __init__.py                        # public re-exports
     _errors.py                         # SubmissionError + subclasses
     _protocols.py                      # stubs for #6 #7 #8 #23 #38 #39 #44
@@ -41,7 +41,7 @@ src/aeat/submission/
     test_preflight.py                  # four gates
     test_engine.py                     # dry-run default, double gate, JSON persist
     test_live_submission.py            # @pytest.mark.live dry-run only
-src/aeat/cli/submission/
+src/aeat/entrypoints/cli/submission/
     __init__.py                        # typer sub-app wiring
     _helpers.py                        # build_engine, load_draft, stubs
     preflight.py                       # aeat submission preflight
@@ -50,7 +50,7 @@ src/aeat/cli/submission/
     show.py                            # aeat submission show
     list.py                            # aeat submission list
     test_cli.py                        # CliRunner unit tests
-src/aeat/cli/__init__.py               # MODIFIED: add_typer(submission_module.app)
+src/aeat/entrypoints/cli/__init__.py               # MODIFIED: add_typer(submission_module.app)
 src/aeat/config.py                     # MODIFIED: four new Settings fields
 env/.env.example                       # MODIFIED: four new env vars
 ```
@@ -92,7 +92,7 @@ env/.env.example                       # MODIFIED: four new env vars
   `aeat_submission_require_human_confirmation`,
   `aeat_submission_browser_trace_dir`.
 - Mirror in `env/.env.example`.
-- `src/aeat/cli/submission/` typer sub-app wired into root CLI.
+- `src/aeat/entrypoints/cli/submission/` typer sub-app wired into root CLI.
 - `test_cli.py`.
 
 ### phase-5 — live test + verification gates
@@ -100,7 +100,7 @@ env/.env.example                       # MODIFIED: four new env vars
 - `test_live_submission.py` marked `@pytest.mark.live`, gated on
   `AEAT_LIVE_TESTS=1`, performs dry-run only.
 - Run: `uv run pytest src/aeat/submission -q`,
-  `uv run pytest src/aeat/cli/submission -q`,
+  `uv run pytest src/aeat/entrypoints/cli/submission -q`,
   `uv run pytest tests/test_config.py -q`,
   `just lint`, `just typecheck`, `just test`, `just hooks`.
 
@@ -133,13 +133,13 @@ contract).
 
 **Rationale:** the plan aligns 1:1 with issue #42's authoritative
 scope and uses the already-established Protocol-stub pattern from
-`aeat.deadlines`, so rebase against in-flight siblings is a mechanical
+`aeat.domain.deadlines`, so rebase against in-flight siblings is a mechanical
 diff. Dry-run-by-default with the double-gate for live submission is
 conservative enough that fat-fingering is impossible without explicit
 intent at three layers (CLI flag, engine parameter, settings flag).
 The colocated test layout and the BrowserSessionLike narrow Protocol
 keep unit tests fast and mock-free, respecting the project's "no
 mocks / no fakes / no stubs" mandate. No scope creep: the plan does
-not touch `aeat.filing`, `aeat.casillas`, `aeat.auth.certificate`,
-`aeat.portals`, or `aeat.justificante`, all of which are sibling
+not touch `aeat.application.filing`, `aeat.domain.casillas`, `aeat.adapters.outbound.aeat.auth.certificate`,
+`aeat.domain.portals`, or `aeat.domain.justificante`, all of which are sibling
 territory.

@@ -56,17 +56,17 @@ Ground-truth facts collected from the worktree on `2026-04-12`:
   `schema`, `storage`, `sync`. `corpus`, `models`, and `storage` are empty
   stubs with no exports, safe to extend without collision. No `src/aeat/
   manuals/` subpackage exists yet.
-- `aeat.errors` defines a single `AeatError(Exception)` root with no
+- `aeat.core.errors` defines a single `AeatError(Exception)` root with no
   subclasses yet. New domain errors must inherit from it.
-- `aeat.logging` exposes `get_logger(name: str) -> logging.Logger` backed
+- `aeat.core.logging` exposes `get_logger(name: str) -> logging.Logger` backed
   by a `dictConfig` initialised lazily. Every module uses
   `get_logger(__name__)`.
-- `aeat.config.Settings` is a `pydantic_settings.BaseSettings` subclass
+- `aeat.core.config.Settings` is a `pydantic_settings.BaseSettings` subclass
   with 24 fields, one per `.env` variable. `tests/test_config.py` enforces
   exact alignment with `env/.env.example` in both directions, and also
   verifies `Settings()` instantiates with no env at all. New settings must
   have defaults and matching `env/.env.example` entries.
-- `aeat.i18n` exposes `Translatable` as a `TypedDict(total=False)` with
+- `aeat.core.i18n` exposes `Translatable` as a `TypedDict(total=False)` with
   optional `es`, `en`, `hu` keys, plus `Language` (`StrEnum`),
   `TranslationFallback`, `get_translation`, `require_authoritative`, and a
   `TranslationError(AeatError)`. The trilingual ADR (`#20`) decided that
@@ -75,12 +75,12 @@ Ground-truth facts collected from the worktree on `2026-04-12`:
   source must satisfy `require_authoritative(..., domain="aeat")` — i.e.
   the `es` key must be present. Missing `en`/`hu` are warnings, not
   errors.
-- `aeat.cli` is a `typer.Typer` app with the root registered at
-  `aeat.cli:app` (`pyproject.toml [project.scripts]`). Subgroups are
+- `aeat.entrypoints.cli` is a `typer.Typer` app with the root registered at
+  `aeat.entrypoints.cli:app` (`pyproject.toml [project.scripts]`). Subgroups are
   registered via `app.add_typer(sub.app, name="…", help="…")`. Existing
   subgroups: `drive`, `sheets`, `docs`, `cloud`, `oauth-client`. The
   `[tool.ruff.lint.per-file-ignores]` already waives `B008` for
-  `src/aeat/cli/**/*.py` so `typer.Argument(...)`/`typer.Option(...)` in
+  `src/aeat/entrypoints/cli/**/*.py` so `typer.Argument(...)`/`typer.Option(...)` in
   defaults is the idiomatic pattern.
 - Tests are colocated inside each subpackage (Rust-style). Every test
   function is marked exactly once with `@pytest.mark.unit` or
@@ -103,18 +103,18 @@ territory the `#25` branch must stay out of:
   `corpus/manuals/<id>/<year>/` which is a new subtree. The `Fetcher`
   surface is not yet on disk, so `#25` must stub it via a local
   `typing.Protocol`.
-- `#21 llm` (feature/21-llm-client, in progress) owns `src/aeat/llm/`
+- `#21 llm` (feature/21-llm-client, in progress) owns `src/aeat/adapters/outbound/llm/`
   and the `LLMClient`/`Translator`/`BulkTranslator` surface. The subpackage
   does not exist on this branch yet — confirmed by the absence of
-  `src/aeat/llm/` in the worktree. `#25` must stub these via local
+  `src/aeat/adapters/outbound/llm/` in the worktree. `#25` must stub these via local
   Protocols and cleanly fail any workflow that needs the real LLM with a
   domain error until `#21` lands.
 - `#6 models` (feature/6-modelo-enum, in progress) owns `src/aeat/
   models/` and the `ModeloId` enum. Currently empty. `#25` cross-
   references casilla identifiers like `MODELO_130:01`; the validation
   contract must accept a string-typed identifier with a structural
-  shape check, not a hard import from `aeat.models`.
-- `#10 storage` (PR #28, ready) owns `src/aeat/storage/`. `#25` does not
+  shape check, not a hard import from `aeat.domain.modelos`.
+- `#10 storage` (PR #28, ready) owns `src/aeat/adapters/persistence/storage/`. `#25` does not
   persist through storage; its corpus is plain files on disk.
 - `#15 testing` owns `[tool.pytest]` config, `conftest.py`, and
   `tests/README`. `#25` must not modify any of those.
@@ -196,13 +196,13 @@ with the autonomous handover) or fabricated reviewer metadata (rejected
 by the verify CLI and by the pydantic mandate). Instead, `#25` v1
 delivers:
 
-- The full `src/aeat/manuals/` schema + loader + query API + error
+- The full `src/aeat/domain/manuals/` schema + loader + query API + error
   hierarchy + deterministic rule-id generator, grounded in strict
   pydantic v2.
 - Local `Protocol` stubs for the `#17` `Fetcher`, the `#21` `LLMClient`/
   `Translator`/`BulkTranslator`, and the `#6` modelo identifiers, clearly
   marked `TODO(#17|#21|#6)` so they can be replaced on rebase.
-- CLI subcommands under `src/aeat/cli/manual.py` with **real**
+- CLI subcommands under `src/aeat/entrypoints/cli/manual.py` with **real**
   implementations for `fetch`, `verify`, `list`, and `show`, and
   **planned-blocker** implementations for `structure`, `extract-rules`,
   and `translate` that raise a typed `RuleExtractionError` until `#21`

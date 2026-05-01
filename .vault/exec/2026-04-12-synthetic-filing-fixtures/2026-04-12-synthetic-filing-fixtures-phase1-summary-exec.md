@@ -28,21 +28,21 @@ conflicts that had no resolution path because the branch had zero
 ## Work delivered
 
 1. **Errors** — added
-   `aeat.errors.FilingFixtureError(AeatError)`.
-2. **Schema** — `src/aeat/testing/_schema.py` defines
+   `aeat.core.errors.FilingFixtureError(AeatError)`.
+2. **Schema** — `src/aeat/domain/testing/_schema.py` defines
    `FilingRecord`, `FixtureCasilla`,
    `FilingRecordPeriodKind`, `FilingRecordScenario`, and the
    `compute_record_id` helper. All models are strict + frozen
    + `extra="forbid"`. `FilingDraftStatus` is reused from
-   `aeat.filing`.
-3. **Loader** — `src/aeat/testing/_loader.py` resolves
+   `aeat.application.filing`.
+3. **Loader** — `src/aeat/domain/testing/_loader.py` resolves
    `SYNTHETIC_FIXTURES_ROOT` by walking parents of `__file__`
    until `tests/fixtures/filing_history/` appears, then
    implements `load_filing_history(modelo, period)` via
    `FilingRecord.model_validate_json` (pydantic v2 JSON mode
    handles Decimal + datetime coercion without loosening the
    strict Python-mode invariants).
-4. **Public API** — `src/aeat/testing/__init__.py` re-exports
+4. **Public API** — `src/aeat/domain/testing/__init__.py` re-exports
    the whole public surface and carries the contributor doc
    (how to add a new fixture, invariants, example usage).
 5. **Fixture corpus** — 17 hand-curated JSON files under
@@ -55,7 +55,7 @@ conflicts that had no resolution path because the branch had zero
    - 390: 2023 clean, 2024 clean, 2024 complementaria.
    Every file starts with `"synthetic": true` followed by the
    `_comment` warning string.
-6. **Unit tests** — `src/aeat/testing/test_testing.py` with 21
+6. **Unit tests** — `src/aeat/domain/testing/test_testing.py` with 21
    `@pytest.mark.unit` tests covering corpus load, modelo
    coverage, scenario coverage, synthetic invariant,
    filename-level comment marker, modelo/period filters,

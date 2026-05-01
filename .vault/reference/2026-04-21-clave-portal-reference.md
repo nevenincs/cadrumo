@@ -243,14 +243,14 @@ rather than assume the subdomain.
   status surface (`expedientes`, `notificaciones`, `devoluciones`,
   `borrador`, `datos-fiscales`, `calendario`) passes a `/wlpl/...`
   path and will 404 exactly like our Cl@ve probe did.
-- `src/aeat/auth/_authenticator.py:431` — the certificate provider's
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py:431` — the certificate provider's
   `verify_handshake()` and `verify()` probes target
   `Settings.aeat_certificate_verify_url` (default
   `https://sede.agenciatributaria.gob.es/`). The handshake test is
   fine (mTLS is domain-level); the login-verification semantics
   probably are not, but cert auth is on hold pending Kent's FNMT
   renewal so no user is hitting this today.
-- `src/aeat/cli/submission/_helpers.py:108` — presentation URL
+- `src/aeat/entrypoints/cli/submission/_helpers.py:108` — presentation URL
   `f"https://sede.agenciatributaria.gob.es/modelo-{modelo}"` is a
   placeholder and needs live verification before submission dry-run
   output is trusted.

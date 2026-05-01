@@ -18,7 +18,7 @@ Step 4 — Tier-2 security-audit prep (HARD GATE before Step 7 layout-move PR ca
 ## scope
 
 - New test file `src/aeat/_test_paths.py` covering all rejected/accepted shapes for `resolve_record_json_path` and `resolve_relative_subpath`.
-- The test file will move with `aeat._paths` → `aeat.core.paths` in Step 7's keystone PR. Tier-2 inline-updates of the two cited audit docs to reference the new location ride in the same Step 7 PR per the ADR.
+- The test file will move with `aeat.core.paths` → `aeat.core.paths` in Step 7's keystone PR. Tier-2 inline-updates of the two cited audit docs to reference the new location ride in the same Step 7 PR per the ADR.
 
 ## test coverage
 

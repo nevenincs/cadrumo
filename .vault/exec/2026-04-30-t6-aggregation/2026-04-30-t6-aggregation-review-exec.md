@@ -22,7 +22,7 @@ Findings addressed:
 
 Verification after fixes:
 
-- `uv run --no-sync pytest src/aeat/financial/aggregation/test_aggregation.py -q`
-- `uv run --no-sync pytest src/aeat/workflow/test_live.py src/aeat/cli/workflow/test_cli.py src/aeat/cli/workflow/test_cli_runtime.py -q`
-- `uv run --no-sync pytest src/aeat/cli/test_json_pipe_safety.py -q`
-- `uv run --no-sync ruff check src/aeat/financial/aggregation src/aeat/cli/financial/aggregate.py src/aeat/workflow/_adapters.py src/aeat/financial/transactions/_repository.py`
+- `uv run --no-sync pytest src/aeat/domain/financial/aggregation/test_aggregation.py -q`
+- `uv run --no-sync pytest src/aeat/application/workflow/test_live.py src/aeat/entrypoints/cli/workflow/test_cli.py src/aeat/entrypoints/cli/workflow/test_cli_runtime.py -q`
+- `uv run --no-sync pytest src/aeat/entrypoints/cli/test_json_pipe_safety.py -q`
+- `uv run --no-sync ruff check src/aeat/domain/financial/aggregation src/aeat/entrypoints/cli/financial/aggregate.py src/aeat/application/workflow/_adapters.py src/aeat/domain/financial/transactions/_repository.py`

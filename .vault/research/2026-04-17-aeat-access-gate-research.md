@@ -28,7 +28,7 @@ AEAT write is a legally binding tax act.
 
 Companion issues already shipped:
 
-- #8 — PKCS#12 certificate loader + backends (`aeat.auth.certificate`).
+- #8 — PKCS#12 certificate loader + backends (`aeat.adapters.outbound.aeat.auth.certificate`).
 - #94 — Pre-expiry health gate (`CertificateHealth`, doctor row,
   submit flag).
 - #116 — Live-AEAT-write safety charter R1–R6 (permanent pointer).
@@ -48,13 +48,13 @@ the feature/167 branch at head `185c21e` (test-infra pytest lockdown).
 
 ## 3. What already exists (functional inventory)
 
-### 3.1 Certificate auth surface (`src/aeat/auth/`)
+### 3.1 Certificate auth surface (`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/`)
 
-- Public module `src/aeat/auth/certificate.py` (682 LOC) — all pydantic v2
+- Public module `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` (682 LOC) — all pydantic v2
   boundary records (`CertificateBundle`, `LoadedCertificate`,
   `HandshakeResult`, `CertificateHealth`), loader, health evaluator,
   backend dispatch.
-- Private backends in `src/aeat/auth/_certificate_backends/`:
+- Private backends in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/`:
   - `_playwright_context.py` — primary; supplies PKCS#12 to
     `browser.new_context(client_certificates=[...])` via
     `build_client_certificates_kwarg()`. `preload()` validates the
@@ -69,13 +69,13 @@ the feature/167 branch at head `185c21e` (test-infra pytest lockdown).
   accidental leaks.
 - Error hierarchy: `CertificateError → {LoadError, PasswordError,
   ExpiredError, HandshakeError, PreExpiryError}`, all inheriting from
-  `aeat.errors.AeatError`.
+  `aeat.core.errors.AeatError`.
 
 ### 3.2 Existing gates and their call-sites
 
 The live-write gate is a **nine-point sequence** inside
 `SubmissionEngine._submit_with_transport()`
-(`src/aeat/submission/_engine.py:181-315`) plus the CLI wrapper.
+(`src/aeat/adapters/outbound/aeat/export/_engine.py:181-315`) plus the CLI wrapper.
 Gate map:
 
 | # | Gate                                   | Source                                                              | Bypass difficulty |
@@ -91,7 +91,7 @@ Gate map:
 | 9 | Interactive phrase confirmation        | `_confirm.py:29-58` (exact phrase `SUBMIT {modelo} {period} {nif} {total} {checksum}`) | stdin hijack only |
 
 Each successful live-write is additionally logged to an append-only
-JSONL at `.aeat/live-submit-audit.log` (`src/aeat/submission/_audit.py`)
+JSONL at `.aeat/live-submit-audit.log` (`src/aeat/adapters/outbound/aeat/export/_audit.py`)
 with timestamp, draft checksum, submission URL, response status,
 confirmation phrase, env state, PID. After append the file is chmod
 0400 to prevent in-process rewrite.
@@ -115,18 +115,18 @@ of write-capable call-sites).
 Live-read tests that exist today (all gated on
 `AEAT_LIVE_TESTS_ENABLED=1`):
 
-- `src/aeat/auth/test_certificate_live.py` — verify_handshake smoke.
-- `src/aeat/browser/test_live_evasion.py` — bot-detection probe.
-- `src/aeat/casillas/test_live_cli.py` — casilla catalogue fetch.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py` — verify_handshake smoke.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_live_evasion.py` — bot-detection probe.
+- `src/aeat/domain/casillas/test_live_cli.py` — casilla catalogue fetch.
 - `src/aeat/inbox/test_live_inbox.py` — notifications fetch + ack.
-- `src/aeat/sync/test_live_sync.py` — status-reader sync.
-- `src/aeat/justificante/test_verify_live.py` — PDF fetch.
-- `src/aeat/submission/test_live_submission.py` — dry-run end-to-end
+- `src/aeat/application/sync/test_live_sync.py` — status-reader sync.
+- `src/aeat/domain/justificante/test_verify_live.py` — PDF fetch.
+- `src/aeat/adapters/outbound/aeat/export/test_live_submission.py` — dry-run end-to-end
   (never calls submit with `dry_run=False`).
 
 ### 3.4 Browser session layer
 
-`src/aeat/browser/session.py:BrowserSession.create_context()` accepts
+`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py:BrowserSession.create_context()` accepts
 an `auth_backend: object | None = None` parameter (line 50). The body
 (line 113) is a no-op with an inline `# stub for #8` comment —
 **the certificate is never propagated into the Playwright context**.
@@ -137,13 +137,13 @@ an `auth_backend: object | None = None` parameter (line 50). The body
 
 Certificate lifecycle is scattered:
 
-- Doctor row (`src/aeat/cli/doctor.py:620-643`) reads the env var and
+- Doctor row (`src/aeat/entrypoints/cli/doctor.py:620-643`) reads the env var and
   calls `certificate_health()` directly.
-- Submit CLI (`src/aeat/cli/submission/submit.py:45-78,113`) repeats
+- Submit CLI (`src/aeat/entrypoints/cli/submission/submit.py:45-78,113`) repeats
   the same pattern.
-- Preflight (`src/aeat/submission/_preflight.py:105-114`) calls
+- Preflight (`src/aeat/adapters/outbound/aeat/export/_preflight.py:105-114`) calls
   `load_certificate()` a third time, catching its own error shape.
-- Browser session (`src/aeat/browser/session.py:113`) pretends to
+- Browser session (`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py:113`) pretends to
   accept a cert but discards it.
 
 Future remote-read modules (#168 filing history, #169 missing filings,
@@ -226,7 +226,7 @@ fetcher, justificante poller).
   the only piece of renewal the project owns.
 - **No new subpackage.** A new `src/aeat/remote/` subpackage was
   loosely mentioned in the handover prompt; the user mandate is
-  *against fragmentation*. `aeat.auth` is the natural home for the
+  *against fragmentation*. `aeat.adapters.outbound.aeat.auth` is the natural home for the
   authenticator and session records; creating a sibling subpackage
   would scatter the cert family further.
 
@@ -234,7 +234,7 @@ fetcher, justificante poller).
 
 The delta-work #167 owns:
 
-1. **Introduce `AeatAuthenticator` + `AeatSession`** in `aeat.auth`
+1. **Introduce `AeatAuthenticator` + `AeatSession`** in `aeat.adapters.outbound.aeat.auth`
    (not a new subpackage). The authenticator owns the composition of
    `Settings`, `CertificateBundle`, `BrowserSession` (optional),
    `health(...)`; the session is a frozen pydantic record that
@@ -251,7 +251,7 @@ The delta-work #167 owns:
    compares against the configured cert. One live test exercises it;
    skips cleanly when the cert / env are absent.
 4. **Add a read-side gate** — `require_live_access(read: bool, write: bool)`
-   helper in `aeat.auth` that consolidates the nine-point sequence
+   helper in `aeat.adapters.outbound.aeat.auth` that consolidates the nine-point sequence
    but exposes it as a reusable precondition. The existing submission
    gate **keeps its own inline checks** (those are our defensive
    last-mile) but the helper gives future remote-read sites a single
@@ -287,13 +287,13 @@ catalogue.
 
 ## 9. References
 
-- `src/aeat/auth/certificate.py` — public cert surface.
-- `src/aeat/auth/_certificate_backends/*.py` — backends.
-- `src/aeat/submission/_engine.py` — 9-point write gate.
-- `src/aeat/submission/_preflight.py` — gates 1–4.
-- `src/aeat/submission/_confirm.py` — gate 9.
-- `src/aeat/submission/_audit.py` — R6 log.
-- `src/aeat/browser/session.py` — factory missing cert wiring.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` — public cert surface.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_certificate_backends/*.py` — backends.
+- `src/aeat/adapters/outbound/aeat/export/_engine.py` — 9-point write gate.
+- `src/aeat/adapters/outbound/aeat/export/_preflight.py` — gates 1–4.
+- `src/aeat/adapters/outbound/aeat/export/_confirm.py` — gate 9.
+- `src/aeat/adapters/outbound/aeat/export/_audit.py` — R6 log.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py` — factory missing cert wiring.
 - `pyproject.toml` — marker catalogue and ban-list.
 - `tests/conftest.py` — live-test banned imports.
 - `env/.env.example` — env documentation surface.

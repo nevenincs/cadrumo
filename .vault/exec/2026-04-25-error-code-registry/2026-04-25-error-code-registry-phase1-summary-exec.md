@@ -14,14 +14,14 @@ related:
 
 ## Scope
 
-- Converted `aeat.errors` from a single module into a package while preserving
-  the public `from aeat.errors import ...` surface.
-- Added `aeat.errors._registry` with the strict `ErrorCategory`, `ErrorCode`,
+- Converted `aeat.core.errors` from a single module into a package while preserving
+  the public `from aeat.core.errors import ...` surface.
+- Added `aeat.core.errors._registry` with the strict `ErrorCategory`, `ErrorCode`,
   and `ErrorEnvelope` models plus the registration, rendering, exit-code, and
   secret-scrubbing helpers.
 - Bound registered codes to imported `AeatError` subclasses at declaration time
   through `AeatError.__init_subclass__`.
-- Added the shared CLI boundary in `aeat.cli._errors` and applied it from the
+- Added the shared CLI boundary in `aeat.entrypoints.cli._errors` and applied it from the
   root Typer app while explicitly skipping `workflow run` and `workflow next`
   per the #393 coordination boundary.
 - Replaced the remaining direct MCP launch holdout with a named `AeatError`

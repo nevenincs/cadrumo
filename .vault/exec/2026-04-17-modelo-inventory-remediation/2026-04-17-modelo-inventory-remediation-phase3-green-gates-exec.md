@@ -14,8 +14,8 @@ related:
 
 Ran the repository gates after the remediation landed and fixed the one hook-driven formatting cleanup required by Ruff.
 
-- Modified: `src/aeat/models/_entries/modelo_037.py`
-- Modified: `src/aeat/deadlines/_applies.py`
+- Modified: `src/aeat/domain/modelos/_entries/modelo_037.py`
+- Modified: `src/aeat/domain/deadlines/_applies.py`
 
 ## Description
 

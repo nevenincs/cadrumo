@@ -15,7 +15,7 @@ status: approved
 
 ## goal
 
-Ship `aeat.setup` end-to-end per the ADR: pydantic v2 strict records,
+Ship `aeat.application.setup` end-to-end per the ADR: pydantic v2 strict records,
 typed wizard, pure verifier, env-file writer, four CLI subcommands,
 colocated unit tests, lint/type/test/hooks green on Windows.
 
@@ -25,17 +25,17 @@ colocated unit tests, lint/type/test/hooks green on Windows.
 - `uv run vaultspec-core install` already completed for this
   worktree (it is).
 - Sibling branches respected (no touching `[tool.pytest]`,
-  `conftest.py`, `src/aeat/workflow/`, release-please surface).
+  `conftest.py`, `src/aeat/application/workflow/`, release-please surface).
 
 ## workstreams
 
 ### W1 — subpackage scaffold
 
-1. Create `src/aeat/setup/__init__.py` with the public exports from
-   the ADR. All callers outside `aeat.setup` import from this root.
+1. Create `src/aeat/application/setup/__init__.py` with the public exports from
+   the ADR. All callers outside `aeat.application.setup` import from this root.
 2. `_errors.py` with the error hierarchy (`SetupError`,
    `SetupAbortedError`, `SetupVerifyError`, `SetupAnswersError`),
-   all subclasses of `aeat.errors.AeatError`.
+   all subclasses of `aeat.core.errors.AeatError`.
 3. `_models.py` with `SetupStep`, `SetupOutcome`, `VerifySeverity`,
    `SetupAnswers`, `SetupResult`, `VerifyFinding`. Every record is
    `strict=True, frozen=True, extra="forbid"`.
@@ -47,7 +47,7 @@ colocated unit tests, lint/type/test/hooks green on Windows.
 
 1. `_env_writer.py` exposing `write_env_file(answers, target) -> None`
    and `owned_env_keys() -> tuple[str, ...]`.
-2. The writer delegates to `aeat.env_io.write_env_vars` so idempotency
+2. The writer delegates to `aeat.core.env_io.write_env_vars` so idempotency
    and unrelated-key preservation are inherited for free.
 3. A second side effect: `write_profile_file(answers, target)` emits
    the `AutonomoProfile` JSON alongside the env file.
@@ -91,12 +91,12 @@ colocated unit tests, lint/type/test/hooks green on Windows.
 
 ### W5 — CLI wiring
 
-1. `src/aeat/cli/setup.py` exposes a Typer sub-app with:
+1. `src/aeat/entrypoints/cli/setup.py` exposes a Typer sub-app with:
    - `setup` (default) — interactive.
    - `verify` — run verifier only.
    - `show` — print config without writing.
 2. `setup` accepts `--non-interactive / --from <path> / --env-file <path>`.
-3. Register in `src/aeat/cli/__init__.py` via `app.add_typer(
+3. Register in `src/aeat/entrypoints/cli/__init__.py` via `app.add_typer(
    setup_module.app, name="setup", ...)`.
 4. Smoke test via `typer.testing.CliRunner` for `setup --help`,
    `setup verify --help`, `setup show --help`.

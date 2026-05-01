@@ -20,7 +20,7 @@ Derived from `[[2026-04-12-notifications-inbox-research]]` and
 
 - `src/aeat/inbox/__init__.py` — package docstring, public re-exports.
 - `src/aeat/inbox/_errors.py` — `InboxError`, `InboxFetchError`,
-  `InboxAcknowledgeError` under `aeat.errors.AeatError`.
+  `InboxAcknowledgeError` under `aeat.core.errors.AeatError`.
 - `src/aeat/inbox/_models.py` — strict+frozen pydantic v2:
   `NotificacionKind(StrEnum)`, `NotificacionPriority(StrEnum)`,
   `Notificacion(BaseModel)`, `Inbox(BaseModel)` (wraps
@@ -60,7 +60,7 @@ Derived from `[[2026-04-12-notifications-inbox-research]]` and
 
 ## phase-4: cli
 
-- `src/aeat/cli/inbox/` — typer sub-app.
+- `src/aeat/entrypoints/cli/inbox/` — typer sub-app.
   - `__init__.py` wires 5 commands: `fetch`, `list`, `show`, `ack`,
     `next-deadline`.
   - `_helpers.py` constructs an `InboxFetcher` with a concrete
@@ -69,7 +69,7 @@ Derived from `[[2026-04-12-notifications-inbox-research]]` and
     source, not a mock). Rebase swaps this for the real #43
     `StatusReader` adapter.
   - `fetch.py`, `list.py`, `show.py`, `ack.py`, `next_deadline.py`.
-- Wire into `src/aeat/cli/__init__.py` as
+- Wire into `src/aeat/entrypoints/cli/__init__.py` as
   `app.add_typer(inbox_module.app, name="inbox", ...)`.
 
 ## phase-5: tests
@@ -91,7 +91,7 @@ Colocated under `src/aeat/inbox/`:
   Until then, imports `aeat.status` lazily and skips with a clear
   reason if the module is not present. Flags the #41 stealth bug
   explicitly if raised.
-- `src/aeat/cli/inbox/test_cli.py` — typer runner drives each
+- `src/aeat/entrypoints/cli/inbox/test_cli.py` — typer runner drives each
   subcommand against a deterministic temp inbox dir.
 
 ## phase-6: vault exec records + code review
@@ -117,6 +117,6 @@ branches. The plan matches the acceptance criteria in wgergely/aeat#46
 - Settings + env + `tests/test_config.py` alignment.                ✔
 - Unit + opt-in live tests, no mocks.                               ✔
 - Errors inherit from `AeatError`.                                  ✔
-- Logging via `aeat.logging.get_logger(__name__)`.                  ✔
+- Logging via `aeat.core.logging.get_logger(__name__)`.                  ✔
 
 Proceeding to execute.

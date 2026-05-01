@@ -26,7 +26,7 @@ Today `BusinessClassification.UNCLASSIFIED` collapses four distinct pipeline sta
 - Sibling issue `#236` adds `confidence` and `DecisionProvenance` to every decision record. The state split must not preempt that work, and must leave room for future `ClassificationHistory` entries to carry a richer provenance record.
 - `TransactionCatalogue` is immutable by contract (`model_config = ConfigDict(strict=True, frozen=True, extra="forbid")`). The history chain must preserve immutability — `set_classification` continues to return a fresh catalogue with a fresh `Transaction`.
 - `aeat review` is not yet an installed Typer sub-app. `#237` introduces a minimal `review` group that today owns only `history`; `#204` will extend it with `queue` / `approve` in follow-up work.
-- Tests treat `UNCLASSIFIED` as the catalogue default. Factories under `src/aeat/financial/transactions/test_*.py` must be updated to the new default.
+- Tests treat `UNCLASSIFIED` as the catalogue default. Factories under `src/aeat/domain/financial/transactions/test_*.py` must be updated to the new default.
 
 ## Constraints
 
@@ -35,7 +35,7 @@ Today `BusinessClassification.UNCLASSIFIED` collapses four distinct pipeline sta
 - `business_pct` coupling stays intact — only `MIXED` may carry a percentage. All four new non-classified states must reject `business_pct`.
 - History entries must be immutable tuples (`tuple[ClassificationHistoryEntry, ...]`) and survive JSON round-trip.
 - The enum value labels are stable public strings — tooling, CLI output, and serialized JSON will consume them. No `str` conversion tricks.
-- Error inheritance from `aeat.errors.AeatError` is preserved. Logging uses `aeat.logging.get_logger(__name__)`.
+- Error inheritance from `aeat.core.errors.AeatError` is preserved. Logging uses `aeat.core.logging.get_logger(__name__)`.
 
 ## Implementation
 
@@ -60,11 +60,11 @@ Add a module-level helper `is_classified(state: BusinessClassification) -> bool`
 
 Call-site inventory — every occurrence of the legacy member is migrated by this PR:
 
-- `src/aeat/financial/transactions/_enums.py` — enum definition.
-- `src/aeat/financial/transactions/_models.py:71` — default value flips to `NOT_YET_PROCESSED`.
-- `src/aeat/cli/financial/txs.py:30,35,43,90` — CLI help text, `--unclassified` flag semantics (now an alias), and `classify --as` help text listing legal targets drops `UNCLASSIFIED` in favour of the four explicit states plus `BUSINESS/PERSONAL/MIXED`.
-- `src/aeat/financial/transactions/test_cli.py:36,115` — factory default + JSON assertion.
-- `src/aeat/financial/transactions/test_catalogue.py:56,129` — factory default + before-state assertion.
+- `src/aeat/domain/financial/transactions/_enums.py` — enum definition.
+- `src/aeat/domain/financial/transactions/_models.py:71` — default value flips to `NOT_YET_PROCESSED`.
+- `src/aeat/entrypoints/cli/financial/txs.py:30,35,43,90` — CLI help text, `--unclassified` flag semantics (now an alias), and `classify --as` help text listing legal targets drops `UNCLASSIFIED` in favour of the four explicit states plus `BUSINESS/PERSONAL/MIXED`.
+- `src/aeat/domain/financial/transactions/test_cli.py:36,115` — factory default + JSON assertion.
+- `src/aeat/domain/financial/transactions/test_catalogue.py:56,129` — factory default + before-state assertion.
 - `docs/coverage/pipeline.md` — row states flip from ❌ to ✅ for #237.
 
 ### Legacy alias
@@ -108,7 +108,7 @@ Append rule: a new entry is appended on every `set_classification` call **unless
 
 1. `aeat financial txs list --state <STATE>` — filter by any `BusinessClassification` value. `--state` accepts case-insensitive member names. The existing `--unclassified` flag stays alive and is equivalent to `--state PROCESSED_UNCLASSIFIED` (the Kent success moment); it is marked hidden in help and documented as "deprecated; prefer --state".
 2. `aeat financial txs classify <tx> --as <STATE> --pct 0.5 [--reason TEXT]` — `--reason` is new and optional; defaults to `""`. Other semantics unchanged.
-3. `aeat review history <tx-id>` — new command in a new `src/aeat/cli/review/` subpackage. Prints one JSON object per history entry plus the current head, oldest first, newest last. `aeat review` is registered at the CLI root app alongside `aeat financial`.
+3. `aeat review history <tx-id>` — new command in a new `src/aeat/entrypoints/cli/review/` subpackage. Prints one JSON object per history entry plus the current head, oldest first, newest last. `aeat review` is registered at the CLI root app alongside `aeat financial`.
 
 ### Migration
 

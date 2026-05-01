@@ -18,7 +18,7 @@ implements the `HealthProbeLike` protocol and raises a real
 
 ## Changes
 
-- `src/aeat/cli/browser/test_health.py` — new `@pytest.mark.unit`
+- `src/aeat/entrypoints/cli/browser/test_health.py` — new `@pytest.mark.unit`
   module covering OK, mantenimiento, WAF, and rate-limit paths,
   plus a JSON-output payload assertion. `monkeypatch.setattr`
   replaces the module-level `PROBE_FACTORY` attribute; no

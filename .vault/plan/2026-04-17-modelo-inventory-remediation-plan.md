@@ -44,7 +44,7 @@ The remediation will cover:
      threshold.
 
 - `Phase 2 - deadline engine and CLI parity`
-  1. Implement `347` in `aeat.deadlines._calendar` and `_applies`.
+  1. Implement `347` in `aeat.domain.deadlines._calendar` and `_applies`.
   1. Refactor `111`, `190`, and `130` applicability to use the richer
      runtime profile.
   1. Update `aeat modelos year-plan` flags and profile projection logic to

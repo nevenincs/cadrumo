@@ -112,7 +112,7 @@ autónomas, not Comunidades Autónomas, and lack potestad LIRPF art.
   work touches verification only.
 - **No mocks / fakes / stubs / freezegun / pytest-mock.** Project-wide
   ban. Tests use real `CasillaDefinition` / `Ruleset` / `Formula`
-  instances; real synthetic PDFs from `aeat.testing`; real CLI
+  instances; real synthetic PDFs from `aeat.domain.testing`; real CLI
   invocation via Typer `CliRunner`.
 - **No wave / phase numbering in source code or docstrings.** Wave
   markers belong in vault docs and commit messages only.
@@ -137,10 +137,10 @@ autónomas, not Comunidades Autónomas, and lack potestad LIRPF art.
 ### D1. File layout — sub-package per modelo, per-anexo modules per año
 
 Author the full-form M100 surface as a sub-package within
-`src/aeat/formulas/_rulesets/`:
+`src/aeat/domain/formulas/_rulesets/`:
 
 ```
-src/aeat/formulas/_rulesets/
+src/aeat/domain/formulas/_rulesets/
 ├── modelo_100_summary_2025.py             (existing — variant="summary")
 ├── modelo_100_2024.py                      (NEW — aggregator: imports anexos, builds RULESET)
 ├── modelo_100_2025.py                      (NEW)
@@ -340,7 +340,7 @@ work preserves this:
 - Synthetic generator (`tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_100_generator.py`)
   is already shaped flexibly with `casilla_values: Mapping[str, Decimal]`.
   Extend `_BOXES` to cover full-form casillas across multiple pages.
-- Borrador extractor (`src/aeat/borrador/_extractors/modelo_100_summary_v2025.py`)
+- Borrador extractor (`src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`)
   needs per-año + multi-anexo extension. Add three new sibling extractors:
   `Modelo100V2024Extractor`, `Modelo100V2025Extractor`,
   `Modelo100V2026Extractor` with full-form casilla regex maps.
@@ -423,7 +423,7 @@ After each implementation wave, before moving to the next:
 - `aeat audit rulesets citations` shows 100% on every M100 ruleset
   added so far.
 - `just lint && just typecheck && just hooks` green.
-- `just test src/aeat/formulas/_rulesets/modelo_100/` green.
+- `just test src/aeat/domain/formulas/_rulesets/modelo_100/` green.
 - Mutation kill-rate ≥ 90% on newly-added M100 nodes.
 - Per-wave exec record under
   `.vault/exec/2026-04-27-modelo-100-renta-full-calc/wave-<N>-<topic>-exec.md`

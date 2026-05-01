@@ -20,7 +20,7 @@ Audit finding 2026-04-22 (cited by EPIC #316): only Modelo 130 has a
 CLI-level integration test asserting the full
 parse → ruleset-resolve → verify chain. Eleven Tier-L modelos have
 landed extractors and ten of them have at least one landed ruleset, but
-a regression in `aeat.cli.filing._handle_declaracion_import` or
+a regression in `aeat.entrypoints.cli.filing._handle_declaracion_import` or
 `_handle_borrador_import` would silently break the user-facing import
 verb for every uncovered modelo without a CI signal. This ADR locks in
 the Kent-observable contract for the import surface across all ten
@@ -34,7 +34,7 @@ Each new test class invokes the CLI via `typer.testing.CliRunner` —
 exactly the surface a Kent runs at the prompt. Direct calls to
 `parse_declaracion`, `parse_borrador`, `verify_declaracion`, or
 `Engine.audit_against` are forbidden in this file; those are already
-exercised at the `aeat.declaracion` and `aeat.verification` layers.
+exercised at the `aeat.adapters.inbound.declaracion` and `aeat.application.verification` layers.
 The audit gap closed by this ADR is at the CLI layer specifically.
 
 ### D2. Ten classes, one per Tier-L modelo
@@ -134,7 +134,7 @@ quarterly + annual summary modelo. The dedicated
 `modelo_100_generator.py` is reused for Modelo 100-summary. Label
 maps are inlined into `tests/integration/test_kent_workflows.py` so
 the file remains self-contained and any future re-organisation of
-`aeat.declaracion`-internal test fixtures does not break the
+`aeat.adapters.inbound.declaracion`-internal test fixtures does not break the
 integration suite.
 
 ### D7. No mocks. Real PDFs, real CLI, real engine.
@@ -162,8 +162,8 @@ selection.
 - Real CLI surface exercised end-to-end - confirmed by D1.
 - pydantic v2 strict applies to test-helper config (none introduced).
 - typed signatures + Google-style docstrings on every test class - planned.
-- Errors inherit from `aeat.errors.AeatError` - tests do not raise.
-- Logging via `aeat.logging.get_logger` - tests do not log.
+- Errors inherit from `aeat.core.errors.AeatError` - tests do not raise.
+- Logging via `aeat.core.logging.get_logger` - tests do not log.
 - Test markers preserved at module level - D8.
 - Coverage floor 60% on `src/aeat` - test additions only raise it.
 - No new public surface introduced under `src/aeat/`.
@@ -175,8 +175,8 @@ selection.
   CI runtime impact: each case generates one synthetic PDF (~50 ms)
   and runs Click's CliRunner (~50 ms). Estimated total: ~4-5 s of
   added test time on the unit suite per platform.
-- Coverage on `src/aeat/cli/filing/__init__.py` and
-  `src/aeat/verification/_verify.py` rises (positive - these are the
+- Coverage on `src/aeat/entrypoints/cli/filing/__init__.py` and
+  `src/aeat/application/verification/_verify.py` rises (positive - these are the
   audited surfaces). Source coverage of `src/aeat` stays well above
   the 60 % floor.
 - A future Modelo 200 2025 ruleset (or any ruleset year-coverage

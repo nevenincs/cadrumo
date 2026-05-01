@@ -17,7 +17,7 @@ EVASION-001 | INFO | ADR Alignment
 The chosen evasion strategy (`playwright-stealth`) and fallback (`chromium` manual patches) are thoroughly justified in the ADR. Concrete tells covered, proxy rotation risks, and profile stability requirements are adequately documented.
 
 TYPES-001 | INFO | Signature and Docstring Compliance
-All modified files (`profile.py`, `evasion.py`, `session.py`, `health.py`, `__init__.py`) have fully typed public signatures and Google-style docstrings. All errors correctly inherit from `BrowserError` extending `aeat.errors.AeatError`. Logging utilizes the `get_logger` factory.
+All modified files (`profile.py`, `evasion.py`, `session.py`, `health.py`, `__init__.py`) have fully typed public signatures and Google-style docstrings. All errors correctly inherit from `BrowserError` extending `aeat.core.errors.AeatError`. Logging utilizes the `get_logger` factory.
 
 TESTS-001 | INFO | Unit Test Coverage
 Appropriate unit-test coverage was achieved:

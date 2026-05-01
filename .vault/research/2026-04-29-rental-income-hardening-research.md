@@ -40,7 +40,7 @@ per-finca / per-contract truth from the M100 audit surface.
 
 ### 1. Existing M100 Anexo C surface (post-PR-#448)
 
-The Anexo C surface lives in `src/aeat/formulas/_rulesets/modelo_100/`
+The Anexo C surface lives in `src/aeat/domain/formulas/_rulesets/modelo_100/`
 across three per-año modules: `anexo_c_2024.py`, `anexo_c_2025.py`,
 `anexo_c_2026.py`. The 2024 + 2026 modules import `CASILLAS` and
 `CITATIONS` from 2025; the FORMULAS are declared per-año with
@@ -318,14 +318,14 @@ Two strategies present:
 - **Path A — JSON file under `~/.config/aeat/`**, mirroring the
   pattern proposed for #452 (CCAA-in-profile). Concrete: the
   per-finca registry as a JSON envelope (using the existing
-  `aeat.storage.save_encrypted_envelope` API at the FINANCIAL
+  `aeat.adapters.persistence.storage.save_encrypted_envelope` API at the FINANCIAL
   classification, since per-finca metadata includes contract terms
   that map to GDPR personal data). Pro: rebase-resilient; trivial to
   bootstrap on a fresh workstation; no migration to write. Con:
   cross-table foreign keys (finca → contracts → expenses → ledger
   rows) become hand-rolled identity management.
 
-- **Path B — SQLite via `aeat.storage`**, with new tables
+- **Path B — SQLite via `aeat.adapters.persistence.storage`**, with new tables
   `rental_fincas`, `rental_contracts`, `rental_expenses`,
   `rental_amortization_ledger`. Pro: foreign keys, deterministic
   schema, alembic migrations, encrypted-column columns for
@@ -338,7 +338,7 @@ makes Path B viable: SQLAlchemy + alembic + `EncryptedString` /
 on the branch and well-exercised by `_test_repository.py` etc. The
 project already has three exemplar Repositories (Modelo, Portal,
 CorpusArtifact). The issue body's own §2 explicitly proposes "SQLite
-via existing `aeat.storage`" — the issue is the source of truth and
+via existing `aeat.adapters.persistence.storage`" — the issue is the source of truth and
 authoritatively prefers Path B.
 
 Cross-cutting argument: this hardening is the first M100 surface to
@@ -357,7 +357,7 @@ shim per the issue's Definition of Done item §6).
 
 The issue body specifies `aeat rental finca` and `aeat rental
 contract` as the top-level command groups. The existing CLI registry
-in `src/aeat/cli/__init__.py` does not yet export an `aeat profile`
+in `src/aeat/entrypoints/cli/__init__.py` does not yet export an `aeat profile`
 sub-app (#452 is in flight, separate worktree, no source collision
 with #454). The handover prompt suggested `aeat profile rental` to
 coordinate with #452, but the issue explicitly chooses `aeat rental`
@@ -403,8 +403,8 @@ share fraction; the reducción amount is `tier_pct × qualifying_share
 
 Module-level marker: `pytestmark = [pytest.mark.unit,
 pytest.mark.domain_local_state]` for all unit tests in
-`src/aeat/rental/`. The existing M100 tests under
-`src/aeat/formulas/_rulesets/modelo_100/test_anexo_c_*.py` use
+`src/aeat/domain/rental/`. The existing M100 tests under
+`src/aeat/domain/formulas/_rulesets/modelo_100/test_anexo_c_*.py` use
 `pytest.mark.domain_submission` — that marker stays appropriate for
 the M100 Anexo C wiring tests (since those exercise the filing
 ruleset surface), and the new aeat-rental unit tests use

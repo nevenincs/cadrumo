@@ -16,7 +16,7 @@ Playwright by composing the real helper and fixture bodies.
 
 ## Changes
 
-- `src/aeat/browser/test_session.py` — four new `@pytest.mark.unit`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py` — four new `@pytest.mark.unit`
   tests drive the real `probe_response` helper from real fixture
   HTML and assert the correct `SiteHealthError` is raised for
   mantenimiento, WAF, and rate-limited bodies. An OK fixture must

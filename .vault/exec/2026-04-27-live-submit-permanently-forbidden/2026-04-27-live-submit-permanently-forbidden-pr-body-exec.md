@@ -19,8 +19,8 @@ AEAT portal.
 
 # What Changed
 
-- Removed the remaining live-submit runtime surface from `aeat.submission`.
-- Reduced `aeat.auth` live-write gating to permanent refusal.
+- Removed the remaining live-submit runtime surface from `aeat.adapters.outbound.aeat.export`.
+- Reduced `aeat.adapters.outbound.aeat.auth` live-write gating to permanent refusal.
 - Removed live-submit env vars from `Settings` and `env/.env.example`.
 - Removed residual live-submit framing from CLI, workflow, observability, docs,
   roadmap, and charter surfaces.
@@ -32,26 +32,26 @@ AEAT portal.
 
 # Code Paths Excised
 
-- `src/aeat/submission/_audit.py` deleted: `103` lines removed.
-- `src/aeat/submission/_confirm.py` deleted: `138` lines removed.
-- `src/aeat/submission/_engine.py`: `117` lines removed / `29` added to make
+- `src/aeat/adapters/outbound/aeat/export/_audit.py` deleted: `103` lines removed.
+- `src/aeat/adapters/outbound/aeat/export/_confirm.py` deleted: `138` lines removed.
+- `src/aeat/adapters/outbound/aeat/export/_engine.py`: `117` lines removed / `29` added to make
   the engine dry-run-only, reject legacy live kwargs, and refuse before
   preflight.
-- `src/aeat/submission/_submitters/__init__.py`: `37` lines removed / `5`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/__init__.py`: `37` lines removed / `5`
   added to remove the `Submitter.submit` live-write contract.
-- `src/aeat/submission/_submitters/modelo130.py`: `48` lines removed / `2`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py`: `48` lines removed / `2`
   added to collapse the historical live path.
-- `src/aeat/auth/_gate.py`: `45` lines removed / `16` added to convert
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py`: `45` lines removed / `16` added to convert
   `require_live_write()` into permanent refusal and remove live-submit env
   capture.
-- `src/aeat/errors/_registry.py`: `59` lines removed / `7` added to remove the
+- `src/aeat/core/errors/_registry.py`: `59` lines removed / `7` added to remove the
   old live-submit error taxonomy and register the simplified permanent-forbid
   surface.
-- `src/aeat/workflow/_engine.py`: `7` lines removed / `25` added so the public
+- `src/aeat/application/workflow/_engine.py`: `7` lines removed / `25` added so the public
   workflow API also refuses `dry_run=False` before dispatch.
 - `src/aeat/config.py`: `8` lines removed / `1` added to remove live-submit
   settings fields.
-- `src/aeat/cli/doctor.py`: `20` lines removed / `5` added to replace the old
+- `src/aeat/entrypoints/cli/doctor.py`: `20` lines removed / `5` added to replace the old
   env-var guidance with permanent-forbidden wording.
 
 # Docs, Charter, And ADRs

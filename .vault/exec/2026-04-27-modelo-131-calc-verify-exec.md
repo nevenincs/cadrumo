@@ -26,9 +26,9 @@ related:
 
 # modelo-131-calc-verify execution summary
 
-- Created: `src/aeat/formulas/_rulesets/modelo_131_2026.py`
-- Created: `src/aeat/formulas/_rulesets/test_modelo_131_2024.py`
-- Created: `src/aeat/formulas/_rulesets/test_modelo_131_2026.py`
+- Created: `src/aeat/domain/formulas/_rulesets/modelo_131_2026.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_modelo_131_2024.py`
+- Created: `src/aeat/domain/formulas/_rulesets/test_modelo_131_2026.py`
 - Created: `.vault/reference/2026-131-rule-delta.md`
 - Modified: ruleset registry, registry/list tests, mutation tests, zero-boundary coverage, Modelo 131 2025 test markers, deterministic auth test endpoint, lockfile/bootstrap metadata, and `docs/coverage/modelos.md`
 
@@ -53,10 +53,10 @@ L1 anchor decision: waived in `.vault/reference/2026-131-rule-delta.md`; synthet
 Focused verification passed:
 
 - `uv run aeat audit rulesets citations`: M131 2024, 2025, and 2026 each report `computed=6`, `with_citation=6`, `coverage=100.00%`; aggregate reports 100%.
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_131_2024.py src/aeat/formulas/_rulesets/test_modelo_131_2025.py src/aeat/formulas/_rulesets/test_modelo_131_2026.py src/aeat/formulas/test_registry.py src/aeat/formulas/test_cli.py src/aeat/formulas/test_smoke.py src/aeat/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/formulas/_rulesets/test_percent_rate_mutation.py src/aeat/formulas/_rulesets/test_operand_swap_mutation.py src/aeat/formulas/_rulesets/test_zero_boundary_coverage.py`: 176 passed.
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_131_2024.py src/aeat/formulas/_rulesets/test_modelo_131_2026.py src/aeat/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/formulas/_rulesets/test_percent_rate_mutation.py src/aeat/formulas/_rulesets/test_operand_swap_mutation.py tests/integration/test_kent_workflows.py::TestKentImportsModelo131Declaracion`: 129 passed after code-review fixes.
-- `uv run pytest src/aeat/auth/test_authenticator.py::test_reauthenticate_does_not_deadlock`: passed after changing the test-only certificate verification URL to a local closed-port endpoint.
-- `uv run pytest src/aeat/cli/test_json_schema_conformance.py::test_registered_schema_validates_real_cli_output src/aeat/cli/test_root_json_alias.py::test_root_json_alias_reaches_auth_status`: 16 passed after logging out the manual CLI auth session used for this work.
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_131_2024.py src/aeat/domain/formulas/_rulesets/test_modelo_131_2025.py src/aeat/domain/formulas/_rulesets/test_modelo_131_2026.py src/aeat/domain/formulas/test_registry.py src/aeat/domain/formulas/test_cli.py src/aeat/domain/formulas/test_smoke.py src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py src/aeat/domain/formulas/_rulesets/test_zero_boundary_coverage.py`: 176 passed.
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_131_2024.py src/aeat/domain/formulas/_rulesets/test_modelo_131_2026.py src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py tests/integration/test_kent_workflows.py::TestKentImportsModelo131Declaracion`: 129 passed after code-review fixes.
+- `uv run pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py::test_reauthenticate_does_not_deadlock`: passed after changing the test-only certificate verification URL to a local closed-port endpoint.
+- `uv run pytest src/aeat/entrypoints/cli/test_json_schema_conformance.py::test_registered_schema_validates_real_cli_output src/aeat/entrypoints/cli/test_root_json_alias.py::test_root_json_alias_reaches_auth_status`: 16 passed after logging out the manual CLI auth session used for this work.
 - `just lint`: passed.
 - `just typecheck`: passed.
 - `just test`: 3795 passed, 13 skipped, 26 deselected, 26 warnings.

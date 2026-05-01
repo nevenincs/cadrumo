@@ -18,8 +18,8 @@ Step 2 PR 1 of N. Carrier PR for Step 0 + Step 1 ADR amendments + plan amendment
 
 ## scope
 
-- Delete `src/aeat/auth/_secret_adapters.py` (whole module, 278 LOC).
-- Delete `src/aeat/auth/_test_secret_adapters.py` (colocated test, ~190 LOC, 12 tests).
+- Delete `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_secret_adapters.py` (whole module, 278 LOC).
+- Delete `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_test_secret_adapters.py` (colocated test, ~190 LOC, 12 tests).
 - Add `# TODO(#477):` annotations on all 5 `migrate_legacy_*_to_repository` helpers per Step 0 Decision 10 outcome.
 - ADR amendments (Step 0/1 outcomes; test-marker rule extension to all 6 destination layers; Phase 2 dead-code list addition for `SchemaSource` enum slots).
 - Plan amendment (migration-helper count correction 3 → 5; SchemaSource enum slots added to Step 10 list).
@@ -38,7 +38,7 @@ grep -rn "KEY_GOOGLE_OAUTH_CLIENT|KEY_GOOGLE_SERVICE_ACCOUNT|KEY_GOOGLE_OAUTH_TO
     --include="*.yaml" --include="*.yml" .
 ```
 
-Result: zero non-test, non-self, non-vault references to any symbol in `_secret_adapters.py`. The module is genuinely dead in production. `aeat/auth/__init__.py` does NOT re-export from `_secret_adapters`.
+Result: zero non-test, non-self, non-vault references to any symbol in `_secret_adapters.py`. The module is genuinely dead in production. `aeat/adapters/outbound/aeat/auth/__init__.py` does NOT re-export from `_secret_adapters`.
 
 ## verification
 
@@ -61,11 +61,11 @@ Step 10 description: corrected the migration-helper count from 3 to 5 (the actua
 
 Added `# TODO(#477): remove after 2026-10-27 retention window per restructure ADR Decision 10.` immediately above each helper's `def` line in:
 
-- `src/aeat/submission/_repository.py:194`
-- `src/aeat/filing/_complementaria_repository.py:181`
-- `src/aeat/filing/_history_repository.py:179`
-- `src/aeat/filing/_repository.py:205`
-- `src/aeat/justificante/_repository.py:178`
+- `src/aeat/adapters/outbound/aeat/export/_repository.py:194`
+- `src/aeat/application/filing/_complementaria_repository.py:181`
+- `src/aeat/application/filing/_history_repository.py:179`
+- `src/aeat/application/filing/_repository.py:205`
+- `src/aeat/domain/justificante/_repository.py:178`
 
 ### Exec records committed
 

@@ -68,8 +68,8 @@ new persisted business state needs schema versioning, path governance, and
 clear classification. The pragmatic path for #453 is schema-versioned JSON
 under the user's config directory with test-time path injection, while
 documenting that a future migration can move these ledgers into #216's governed
-backend without changing the public `aeat.profile.assets` and
-`aeat.profile.inventory` APIs.
+backend without changing the public `aeat.domain.profile.assets` and
+`aeat.domain.profile.inventory` APIs.
 
 Multi-actividad scope needs separate inventory ledgers keyed by
 `actividad_id`. Assets can be allocated to an activity through an optional

@@ -22,7 +22,7 @@ This audit walks Kent's actual journey as the tool exists on `main` today, marks
 
 ### stage 0 — discovery
 
-Kent reads `README.md`. The tagline he sees first is: _"AEAT automation CLI: Google Workspace + GCP helpers and health checks."_ This is the actual root-command description in `src/aeat/cli/__init__.py:50`. Kent does not know what GCP is and does not see the word _taxes_ or _modelo_ anywhere in the opening. He almost closes the tab. He keeps going only because his friend swore.
+Kent reads `README.md`. The tagline he sees first is: _"AEAT automation CLI: Google Workspace + GCP helpers and health checks."_ This is the actual root-command description in `src/aeat/entrypoints/cli/__init__.py:50`. Kent does not know what GCP is and does not see the word _taxes_ or _modelo_ anywhere in the opening. He almost closes the tab. He keeps going only because his friend swore.
 
 ★ **Wall 0 — the product is introduced as a DevOps utility, not a tax tool.** A Spanish autónomo should see in the first line: "help a self-employed person file their AEAT returns." The current tagline optimises for contributors, not users.
 
@@ -48,7 +48,7 @@ He downloads the JSON, runs `aeat oauth-client init --json`, then must manually 
 
 README step 2 says `aeat setup`. Kent runs it. `Error: No such command 'setup'`. README footnote says _"merging in #61."_
 
-★ **Wall 4 — the primary onboarding wizard does not exist on `main`.** Issue #61 is closed but the command is not there. `src/aeat/cli/setup.py` exists but Kent cannot find it via `aeat setup`. He falls back to hand-editing `env/.env` — ~200 lines, many AEAT-specific keys, no ordering by importance.
+★ **Wall 4 — the primary onboarding wizard does not exist on `main`.** Issue #61 is closed but the command is not there. `src/aeat/entrypoints/cli/setup.py` exists but Kent cannot find it via `aeat setup`. He falls back to hand-editing `env/.env` — ~200 lines, many AEAT-specific keys, no ordering by importance.
 
 He guesses values for `AEAT_CERTIFICATE_PATH`, `AEAT_CERTIFICATE_PASSWORD_SECRET` (name of an env var — but where does the actual passphrase go?), `AEAT_DEFAULT_PROFILE_NAME` (no comment in `.env.example`), `AEAT_OUTPUT_LANGUAGE` (he spots the default is `hu` — Hungarian — and has to change it to `es`).
 
@@ -60,7 +60,7 @@ He guesses values for `AEAT_CERTIFICATE_PATH`, `AEAT_CERTIFICATE_PASSWORD_SECRET
 
 `aeat doctor` runs. Rich table. Green across Google Workspace rows. Certificate row: `SKIP`. Kent doesn't know whether that means "pass" or "not checked." ADC-scopes row shows a `WARN` but doctor exits 0, so Kent moves on.
 
-★ **Wall 7 — `doctor` does not actually verify AEAT connectivity.** It never attempts a live handshake against Sede Electrónica. The function `verify_handshake()` exists in `src/aeat/auth/certificate.py` but is wired only in tests. Kent will not discover his cert is misconfigured until a real workflow fails.
+★ **Wall 7 — `doctor` does not actually verify AEAT connectivity.** It never attempts a live handshake against Sede Electrónica. The function `verify_handshake()` exists in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` but is wired only in tests. Kent will not discover his cert is misconfigured until a real workflow fails.
 
 ★ **Wall 8 — `doctor` does not check Playwright, LLM keys, or inbox readiness.** Three critical realms for Kent's journey are invisible to the one health command Kent will trust.
 
@@ -68,9 +68,9 @@ He guesses values for `AEAT_CERTIFICATE_PATH`, `AEAT_CERTIFICATE_PASSWORD_SECRET
 
 Kent's instinct is `aeat status`. He runs it. The group shows six subcommands. He tries `aeat status expedientes` → `exit 2: cert-auth backend #8 not yet landed`. He tries `aeat status calendario` → same. All six fail identically.
 
-★ **Wall 9 — `aeat status` is a broken facade.** The group is the most obvious entry point for "check my situation" and it ships as six hidden stubs that return developer-internal error strings. `src/aeat/cli/status/__init__.py`. Kent has no way to know this group will be useful "later." It looks broken.
+★ **Wall 9 — `aeat status` is a broken facade.** The group is the most obvious entry point for "check my situation" and it ships as six hidden stubs that return developer-internal error strings. `src/aeat/entrypoints/cli/status/__init__.py`. Kent has no way to know this group will be useful "later." It looks broken.
 
-He pivots to `aeat deadlines list --year 2026`. It needs `--profile profile.json`. He has no such file. There is no wizard, no template. He reads `src/aeat/deadlines/_helpers.py` to understand the schema, then writes one by hand.
+He pivots to `aeat deadlines list --year 2026`. It needs `--profile profile.json`. He has no such file. There is no wizard, no template. He reads `src/aeat/domain/deadlines/_helpers.py` to understand the schema, then writes one by hand.
 
 ★ **Wall 10 — `--profile` requires hand-authored JSON.** `AutonomoProfile` has nine boolean/enum fields with Spanish tax-law semantics (IVA regime, IRPF estimation method, IAE heading, intracomunitario flag, ...). Kent cannot author this correctly without reading tax law and the Pydantic model. A wizard that interviews him once and writes this file is exactly what `aeat setup` was supposed to be. It is missing.
 
@@ -130,7 +130,7 @@ He eventually builds a draft. `aeat filing show draft.json` prints a Rich table 
 
 `aeat submission preflight` → passes. `aeat submission dry-run` → walks the portal, stops short. `aeat submission submit draft.json --i-understand-this-is-real` → Kent types the phrase, the live submission runs, a justificante PDF is produced.
 
-This stage is genuinely good. The `--i-understand-this-is-real` phrase gate (`src/aeat/submission/`), the append-only `LiveSubmitAuditRecord`, the dry-run parity — this is the strongest UX artifact in the project. If Kent got here, he gets out cleanly.
+This stage is genuinely good. The `--i-understand-this-is-real` phrase gate (`src/aeat/adapters/outbound/aeat/export/`), the append-only `LiveSubmitAuditRecord`, the dry-run parity — this is the strongest UX artifact in the project. If Kent got here, he gets out cleanly.
 
 ### stage 11 — after submit
 
@@ -157,7 +157,7 @@ Kent hits **twenty walls** between `git clone` and a successfully submitted Mode
 - The **deadline engine** produces a correct forward-looking schedule for 11 autónomo modelos across 2024–2027 once a profile JSON exists.
 - The **Modelo 130 formula engine** is typed, cycle-checked, period-aware, and produces a real `ComputationLedger` with operand traces.
 - The **model registry** enforces coverage at import time — all 21 registered modelos have trilingual labels, legal basis, and applicability metadata.
-- The **setup verifier** (`src/aeat/setup/_verifier.py`) is the only surface in the codebase that produces trilingual findings with remediation hints — it is the template the rest of the error surface should follow.
+- The **setup verifier** (`src/aeat/application/setup/_verifier.py`) is the only surface in the codebase that produces trilingual findings with remediation hints — it is the template the rest of the error surface should follow.
 - `aeat doctor` output is clear and exits non-zero correctly for the realms it does check.
 - `aeat bootstrap` gives exceptionally clear remediation text on Drive-quota failures (consumer-Gmail path). This is the gold-standard error message in the codebase; copy it elsewhere.
 
@@ -210,11 +210,11 @@ This mapping would let the project answer a single question at every release bou
 Ranked by ratio of UX impact to implementation effort:
 
 1. **Switch `AEAT_OUTPUT_LANGUAGE` default from `hu` to `es`** (wall 5). One-line change in `env/.env.example` and `src/aeat/config.py`. Ship today.
-2. **Rewrite the root CLI tagline** (wall 0). `src/aeat/cli/__init__.py:50` — change to something like "File your Spanish tax returns (modelos 130, 303, 390, ...) from the command line." Ship today.
+2. **Rewrite the root CLI tagline** (wall 0). `src/aeat/entrypoints/cli/__init__.py:50` — change to something like "File your Spanish tax returns (modelos 130, 303, 390, ...) from the command line." Ship today.
 3. **Fix `just bootstrap` step order** (wall 1). Either reorder or detect the `oauth-client.json` precondition and run `gsuite-oauth-client` inline with a prompt. One-hour fix.
 4. **Document the cert passphrase home** (wall 6). `env/.env.example` comment + README section + `aeat setup`-generated instructions. Half-day.
 5. **Detect unconfigured state at root and print "Run `aeat setup` to get started"** (wall 4 partial). If `env/.env` is missing or empty, the root command should print a greeting instead of dumping 25 commands. One-day fix, even before the full `aeat setup` wizard lands.
-6. **Stop leaking internal issue numbers in `aeat workflow next` errors** (wall 9 adjacent, `src/aeat/cli/workflow/_helpers.py:73`). Replace `"requires sibling-branch adapters for #43/#46/#8"` with `"This command needs additional configuration. Run \`aeat setup --check\` to see what is missing."` One-hour fix.
+6. **Stop leaking internal issue numbers in `aeat workflow next` errors** (wall 9 adjacent, `src/aeat/entrypoints/cli/workflow/_helpers.py:73`). Replace `"requires sibling-branch adapters for #43/#46/#8"` with `"This command needs additional configuration. Run \`aeat setup --check\` to see what is missing."` One-hour fix.
 7. **Un-hide `aeat status` but make every subcommand return a human "coming in v0.1.0" line** (wall 9). Returning `exit 2` with developer jargon is strictly worse than an honest "not yet" message that points to the issue tracker. One-day fix.
 8. **Add `aeat financial ingest --persist`** (wall 14). The single highest-impact change in the financial pipeline. This is a leaf issue that should exist under EPIC #104 and does not.
 9. **File the missing issues.** Walls 0, 1, 2, 5, 6, 10, 13, 14, 15, 17 need GitHub issues before they can be scheduled. Add a `ux` label at the same time.

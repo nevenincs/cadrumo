@@ -27,20 +27,20 @@ whether it is valid"?
   Closed enumerations are `enum.StrEnum`. No dataclasses for
   boundary-crossing types. No bare `dict[str, Any]` in public
   signatures or persisted files.
-- **Public API discipline.** Callers outside `aeat.filing` may import
-  only from `aeat.filing`; private builder implementations live in
-  `aeat.filing._builders`.
-- **Sibling-branch isolation.** Hard imports from `aeat.models`,
-  `aeat.schema`, `aeat.casillas`, `aeat.deadlines`, `aeat.storage`,
-  `aeat.llm`, `aeat.sync` are forbidden — every cross-module
-  collaborator is consumed via a Protocol stub. `aeat.manuals.Rule`
-  and `aeat.i18n.Translatable` are exceptions because they are
+- **Public API discipline.** Callers outside `aeat.application.filing` may import
+  only from `aeat.application.filing`; private builder implementations live in
+  `aeat.application.filing._builders`.
+- **Sibling-branch isolation.** Hard imports from `aeat.domain.modelos`,
+  `aeat.domain.schema`, `aeat.domain.casillas`, `aeat.domain.deadlines`, `aeat.adapters.persistence.storage`,
+  `aeat.adapters.outbound.llm`, `aeat.application.sync` are forbidden — every cross-module
+  collaborator is consumed via a Protocol stub. `aeat.domain.manuals.Rule`
+  and `aeat.core.i18n.Translatable` are exceptions because they are
   already on `main`.
 - **Trilingual contract.** All user-facing strings are
-  `aeat.i18n.Translatable` nested dicts (`es`/`en`/`hu`).
-- **Errors.** Every domain error inherits from `aeat.errors.AeatError`.
+  `aeat.core.i18n.Translatable` nested dicts (`es`/`en`/`hu`).
+- **Errors.** Every domain error inherits from `aeat.core.errors.AeatError`.
 - **Tests.** Pytest only, `@pytest.mark.unit`, colocated with the
-  module under `src/aeat/filing/`. No mocks/patches/fakes/stubs;
+  module under `src/aeat/application/filing/`. No mocks/patches/fakes/stubs;
   Protocol-conforming concrete test doubles are written by hand.
 
 ## Trade-off 1 — single function vs. session class
@@ -99,7 +99,7 @@ per modelo.
 Drafts are written as individual JSON files under
 `AEAT_DRAFTS_DIR` (default `<repo>/var/drafts`). The filename is
 `{modelo}_{period}_{draft_id}.json`. This avoids any premature
-coupling to `aeat.storage` (#10) while preserving the round-trip
+coupling to `aeat.adapters.persistence.storage` (#10) while preserving the round-trip
 guarantee — `FilingDraft.model_validate_json(path.read_text())`
 must equal the original draft.
 
@@ -118,7 +118,7 @@ its identity.
 ## Cross-module Protocols
 
 Every upstream collaborator is represented by a `Protocol` defined
-in `aeat.filing._protocols`. The PoC ships in-test concrete
+in `aeat.application.filing._protocols`. The PoC ships in-test concrete
 implementations of each Protocol; production wiring lives behind
 follow-up rebases.
 

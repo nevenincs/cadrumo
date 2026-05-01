@@ -27,7 +27,7 @@ Implementation plan for issue `#281`, the session-shape refactor and `AuthProvid
 - `Phase 1 - contract definition`
   1. Add provider-kind, provider-description, provider-detail, and provider protocol types in `src/aeat/auth`.
   2. Replace the top-level `AeatSession` and `AeatLoginAssertion` certificate fields with provider-agnostic cores plus discriminated certificate detail payloads.
-  3. Update package exports so the new auth contract is available from `aeat.auth`.
+  3. Update package exports so the new auth contract is available from `aeat.adapters.outbound.aeat.auth`.
 - `Phase 2 - browser and provider migration`
   1. Replace the `create_context(cert=...)` seam with a provisioner contract in auth and browser session layers.
   2. Move certificate-specific context wiring and marker behavior behind the concrete certificate provider path.
@@ -47,7 +47,7 @@ This issue is `parallel-risky` and should be treated as effectively serial withi
 
 ## Verification
 
-- Run focused unit tests covering `aeat.auth`, `aeat.browser`, `aeat.submission`, and `aeat.workflow`.
+- Run focused unit tests covering `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.browser`, `aeat.adapters.outbound.aeat.export`, and `aeat.application.workflow`.
 - Run linting and type checking over the touched modules.
 - Confirm certificate behavior remains intact in existing unit-test scenarios.
 - Confirm the new `AeatSession` shape round-trips for every supported detail variant.

@@ -22,7 +22,7 @@ together).
 ## work performed
 
 - **Phase 1 — schema + errors + protocols.** Shipped
-  `src/aeat/submission/_models.py` (pydantic v2 strict+frozen
+  `src/aeat/adapters/outbound/aeat/export/_models.py` (pydantic v2 strict+frozen
   `SubmissionStatus` / `SubmissionAttempt` / `SubmittedFiling` with
   time-ordering and ACK-consistency `@model_validator`s, plus
   `make_submission_id` returning a stable SHA-256 prefix),
@@ -54,11 +54,11 @@ together).
   (`aeat_submissions_dir`, `aeat_submission_dry_run_default`,
   `aeat_submission_require_human_confirmation`,
   `aeat_submission_browser_trace_dir`) with matching
-  `env/.env.example` entries. Shipped `src/aeat/cli/submission/`
+  `env/.env.example` entries. Shipped `src/aeat/entrypoints/cli/submission/`
   Typer sub-app with `preflight`, `dry-run`, `submit`, `show`,
   `list` subcommands; `submit` refuses without
   `--i-understand-this-is-real`. CLI registered in
-  `src/aeat/cli/__init__.py`.
+  `src/aeat/entrypoints/cli/__init__.py`.
 - **Phase 5 — live rehearsal + verification.** Shipped
   `test_live_submission.py` gated on `AEAT_LIVE_TESTS=1`
   (`@pytest.mark.live`), always dry-run. Ran full verification
@@ -68,13 +68,13 @@ together).
 
 | file | marker | cases |
 | ---- | ------ | ----- |
-| `src/aeat/submission/test_models.py` | unit | 16 |
-| `src/aeat/submission/test_errors.py` | unit | 3 |
-| `src/aeat/submission/test_preflight.py` | unit | 6 |
-| `src/aeat/submission/test_engine.py` | unit | 6 |
-| `src/aeat/submission/_submitters/test_modelo130.py` | unit | 4 |
-| `src/aeat/cli/submission/test_cli.py` | unit | 8 |
-| `src/aeat/submission/test_live_submission.py` | live | 1 (skipped) |
+| `src/aeat/adapters/outbound/aeat/export/test_models.py` | unit | 16 |
+| `src/aeat/adapters/outbound/aeat/export/test_errors.py` | unit | 3 |
+| `src/aeat/adapters/outbound/aeat/export/test_preflight.py` | unit | 6 |
+| `src/aeat/adapters/outbound/aeat/export/test_engine.py` | unit | 6 |
+| `src/aeat/adapters/outbound/aeat/export/_submitters/test_modelo130.py` | unit | 4 |
+| `src/aeat/entrypoints/cli/submission/test_cli.py` | unit | 8 |
+| `src/aeat/adapters/outbound/aeat/export/test_live_submission.py` | live | 1 (skipped) |
 
 ## verification matrix
 

@@ -19,54 +19,54 @@ human reviewer.
 
 ## Proposed Changes
 
-New subpackage `src/aeat/manuals/` with strict pydantic v2 schema,
+New subpackage `src/aeat/domain/manuals/` with strict pydantic v2 schema,
 deterministic rule IDs, file loader + query API, verification command,
-and an `httpx` fetcher. New CLI subgroup `src/aeat/cli/manual.py` wired
+and an `httpx` fetcher. New CLI subgroup `src/aeat/entrypoints/cli/manual.py` wired
 into the existing `aeat` typer app. Additive settings in
 `src/aeat/config.py` and `env/.env.example`. New `corpus/manuals/`
 directory populated with committed `manifest.json` files for Renta 2025
 Parte 1, Renta 2025 Parte 2, and IVA 2025; the raw `source.pdf` blobs
 are git-ignored and materialised on demand by the fetcher.
 
-No modifications to sibling branch territory: `aeat.corpus`, `aeat.llm`,
-`aeat.models`, `aeat.storage`, `pyproject.toml [tool.pytest]`, root
+No modifications to sibling branch territory: `aeat.corpus`, `aeat.adapters.outbound.llm`,
+`aeat.domain.modelos`, `aeat.adapters.persistence.storage`, `pyproject.toml [tool.pytest]`, root
 `conftest.py`, `tests/README`.
 
 Every persisted record is a strict pydantic v2 model. Every trilingual
-field uses `aeat.i18n.Translatable`. Every error inherits from
-`aeat.errors.AeatError` via `ManualError`. Every module uses
-`aeat.logging.get_logger(__name__)`.
+field uses `aeat.core.i18n.Translatable`. Every error inherits from
+`aeat.core.errors.AeatError` via `ManualError`. Every module uses
+`aeat.core.logging.get_logger(__name__)`.
 
 ## Tasks
 
 - `phase-1-schema`
-  1. Create `src/aeat/manuals/__init__.py` with module docstring and
+  1. Create `src/aeat/domain/manuals/__init__.py` with module docstring and
      `__all__` scaffolding (empty list initially, populated as modules
      land).
-  1. Add `src/aeat/manuals/_schema.py` with `ManualId`, `ManualPart`,
+  1. Add `src/aeat/domain/manuals/_schema.py` with `ManualId`, `ManualPart`,
      `RuleKind` (`enum.StrEnum`), and pydantic v2 strict models
      `LLMProvenance`, `SectionSource`, `RuleSource`, `Paragraph`,
      `Rule`, `SectionRef`, `Section`, `Chapter`, `Manual`. Every
      reviewer-gated record exposes `reviewed_by: str` and
      `reviewed_at: date`. Trilingual fields use `Translatable`.
-  1. Add `src/aeat/manuals/_ids.py` with `generate_rule_id(...) -> str`
+  1. Add `src/aeat/domain/manuals/_ids.py` with `generate_rule_id(...) -> str`
      producing `{manual_id}-{year}-{part}-{chapter_id}-{section_id}-
      rule{ordinal:04d}`; collapses `-single-` for `SINGLE` parts.
 
 - `phase-1-errors-and-stubs`
-  1. Add `src/aeat/manuals/errors.py` with `ManualError(AeatError)`,
+  1. Add `src/aeat/domain/manuals/errors.py` with `ManualError(AeatError)`,
      `ManualParseError`, `ManualNotFoundError`, `RuleExtractionError`,
      `ManualReviewRequiredError`.
-  1. Add `src/aeat/manuals/_stubs.py` with `FetcherProtocol`,
+  1. Add `src/aeat/domain/manuals/_stubs.py` with `FetcherProtocol`,
      `LLMClientProtocol`, `TranslatorProtocol`, `BulkTranslatorProtocol`
      each marked `TODO(#17|#21)` in the docstring, plus the regex
      sentinel `MODELO_ID_PATTERN` marked `TODO(#6)`.
 
 - `phase-1-loader-and-verify`
-  1. Add `src/aeat/manuals/_loader.py` with `load_manual(...)`,
+  1. Add `src/aeat/domain/manuals/_loader.py` with `load_manual(...)`,
      `ManualCatalogue`, `find_rules(...)`. Strict validation; raises
      `ManualNotFoundError` / `ManualParseError`.
-  1. Add `src/aeat/manuals/_verify.py` with `VerificationReport` model
+  1. Add `src/aeat/domain/manuals/_verify.py` with `VerificationReport` model
      and `verify_manual_dir(path, *, review_required=True)`. Walks the
      directory, validates schema, checks cross-references, checks
      trilingual completeness against the authoritative-language
@@ -74,44 +74,44 @@ field uses `aeat.i18n.Translatable`. Every error inherits from
      non-empty error lists into a non-zero exit.
 
 - `phase-1-fetch`
-  1. Add `src/aeat/manuals/_fetch.py` with `PartSpec`, `PART_SPECS`,
+  1. Add `src/aeat/domain/manuals/_fetch.py` with `PartSpec`, `PART_SPECS`,
      `FetchedManualPart` pydantic model, and `fetch_manual_part(...)`.
      Streams the PDF via `httpx`, computes sha256 on the fly, writes
      `manifest.json`, returns the typed result.
 
 - `phase-1-public-surface`
-  1. Update `src/aeat/manuals/__init__.py` to re-export the public API.
+  1. Update `src/aeat/domain/manuals/__init__.py` to re-export the public API.
      Add Google-style docstrings to every public symbol.
 
 - `phase-1-cli`
-  1. Add `src/aeat/cli/manual.py` with `app = typer.Typer(...)` and
+  1. Add `src/aeat/entrypoints/cli/manual.py` with `app = typer.Typer(...)` and
      seven subcommands: `fetch`, `structure`, `extract-rules`,
      `translate`, `verify`, `list`, `show`. `fetch`/`verify`/`list`/
-     `show` call into `aeat.manuals`. `structure`/`extract-rules`/
+     `show` call into `aeat.domain.manuals`. `structure`/`extract-rules`/
      `translate` raise `RuleExtractionError`.
-  1. Register the subgroup in `src/aeat/cli/__init__.py` via
+  1. Register the subgroup in `src/aeat/entrypoints/cli/__init__.py` via
      `app.add_typer(manual_module.app, name="manual", ...)`.
 
 - `phase-1-settings`
   1. Add `aeat_manuals_root: Path = Field(default=PROJECT_ROOT /
      "corpus" / "manuals", ...)` and `aeat_manuals_review_required:
-     bool = Field(default=True, ...)` to `aeat.config.Settings`.
+     bool = Field(default=True, ...)` to `aeat.core.config.Settings`.
   1. Add matching entries to `env/.env.example`. Verify
      `tests/test_config.py` still passes.
 
 - `phase-1-tests`
-  1. Add `src/aeat/manuals/test_schema.py` covering model validation,
+  1. Add `src/aeat/domain/manuals/test_schema.py` covering model validation,
      required fields, round-trip, trilingual completeness, deterministic
      rule ID.
-  1. Add `src/aeat/manuals/test_loader.py` covering the loader happy
+  1. Add `src/aeat/domain/manuals/test_loader.py` covering the loader happy
      path, malformed-record rejection, cross-reference validator, and
      `find_rules` filters.
-  1. Add `src/aeat/manuals/test_verify.py` covering the verify report
+  1. Add `src/aeat/domain/manuals/test_verify.py` covering the verify report
      and the rejection of unreviewed records.
-  1. Add `src/aeat/manuals/test_fetch.py` covering `FetchedManualPart`
+  1. Add `src/aeat/domain/manuals/test_fetch.py` covering `FetchedManualPart`
      validation and `PART_SPECS` table integrity. No live HTTP in unit
      tests (the live fetch is exercised in step `phase-1-materialise`).
-  1. Add `src/aeat/cli/test_manual_cli.py` smoke-testing the CLI via
+  1. Add `src/aeat/entrypoints/cli/test_manual_cli.py` smoke-testing the CLI via
      `typer.testing.CliRunner` for the planned-blocker commands and
      the happy-path commands that do not need the network.
 
@@ -153,7 +153,7 @@ grouped separately so `tests/test_config.py` does not flap.
 
 Mission success criteria, from the ADR:
 
-- `src/aeat/manuals/` subpackage exists with the full schema, loader,
+- `src/aeat/domain/manuals/` subpackage exists with the full schema, loader,
   query API, deterministic rule ID generator, verification report,
   fetch command, error hierarchy, typed `__init__`, and colocated
   unit tests.
@@ -209,10 +209,10 @@ pipeline mandate to record an explicit plan-review outcome.
   via `FetchedManualPart` and do not carry reviewer fields (they
   describe provenance of a raw binary, not reviewed content). ✓
 - **Sibling branch respect**: no task touches `src/aeat/corpus/`,
-  `src/aeat/llm/` (does not exist), `src/aeat/models/`,
-  `src/aeat/storage/`, `pyproject.toml [tool.pytest]`, root
+  `src/aeat/adapters/outbound/llm/` (does not exist), `src/aeat/domain/modelos/`,
+  `src/aeat/adapters/persistence/storage/`, `pyproject.toml [tool.pytest]`, root
   `conftest.py`, or `tests/README`. The stub Protocols live under
-  `src/aeat/manuals/_stubs.py`, private to this subpackage. ✓
+  `src/aeat/domain/manuals/_stubs.py`, private to this subpackage. ✓
 - **Dependency budget**: zero new runtime dependencies. `httpx`,
   `pydantic`, `pydantic-settings`, and `typer` are already present. No
   PDF parser is added (deferred to the follow-up that parses). ✓

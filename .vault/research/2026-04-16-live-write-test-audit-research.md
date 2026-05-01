@@ -31,23 +31,23 @@ This research grounds issue `#119`, the test-suite safety audit for the AEAT liv
 - The actual bodies of every `@pytest.mark.live` test function were checked for `dry_run=False`, `submit(`, `live=True`, `--live`, `CONFIRMO`, and `AEAT_LIVE_SUBMIT_ENABLED`.
 - No live test body contains any of those tokens.
 - The only live AEAT submission-path tests found are dry-run or read-only:
-  - `src/aeat/submission/test_live_submission.py`
-  - `src/aeat/filing/test_live_complementaria.py`
-  - `src/aeat/workflow/test_live.py`
-  - `src/aeat/sync/test_live_sync.py`
+  - `src/aeat/adapters/outbound/aeat/export/test_live_submission.py`
+  - `src/aeat/application/filing/test_live_complementaria.py`
+  - `src/aeat/application/workflow/test_live.py`
+  - `src/aeat/application/sync/test_live_sync.py`
 
 ### Fixture and environment surface
 
 - No `conftest.py` autouse fixture sets `AEAT_LIVE_SUBMIT_ENABLED`.
-- No test fixture or helper monkeypatches `aeat.submission._confirm.request_human_submit_confirmation`; the symbol is not referenced anywhere in the repo.
+- No test fixture or helper monkeypatches `aeat.adapters.outbound.aeat.export._confirm.request_human_submit_confirmation`; the symbol is not referenced anywhere in the repo.
 - `AEAT_LIVE_SUBMIT_ENABLED` is not defined in `env/.env.example`, not referenced in test code, and was not present in the shell environment during the audit.
 - The canonical live-test gate in this repo is `AEAT_LIVE_TESTS_ENABLED=false` in `env/.env.example`.
 
 ### Submission-engine import and double usage
 
-- `src/aeat/submission/test_live_submission.py` constructs a real `SubmissionEngine` and exercises only `engine.submit_draft(_Draft())`, which stays on the dry-run path.
-- `src/aeat/filing/test_live_complementaria.py` uses `build_engine(...)` and explicitly calls `engine.submit_amendment(..., dry_run=True)`.
-- Separate from live-write safety, the unit suites under `src/aeat/submission/test_engine.py` and `src/aeat/workflow/test_engine.py` rely on `_RecordingSubmitter`, `_Session`, and `_FakeSubmissionEngine` style doubles around the submission boundary. These do not expose a live AEAT write path, but they do drift from the repo’s no-fakes test charter and require follow-up work beyond a narrow marker fix.
+- `src/aeat/adapters/outbound/aeat/export/test_live_submission.py` constructs a real `SubmissionEngine` and exercises only `engine.submit_draft(_Draft())`, which stays on the dry-run path.
+- `src/aeat/application/filing/test_live_complementaria.py` uses `build_engine(...)` and explicitly calls `engine.submit_amendment(..., dry_run=True)`.
+- Separate from live-write safety, the unit suites under `src/aeat/adapters/outbound/aeat/export/test_engine.py` and `src/aeat/application/workflow/test_engine.py` rely on `_RecordingSubmitter`, `_Session`, and `_FakeSubmissionEngine` style doubles around the submission boundary. These do not expose a live AEAT write path, but they do drift from the repo’s no-fakes test charter and require follow-up work beyond a narrow marker fix.
 
 ## Outcome
 

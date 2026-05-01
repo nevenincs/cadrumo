@@ -18,10 +18,10 @@ patrimoniales, contraprestaciones en especie y cesión del derecho de
 imagen — trimestral) for tax years 2024, 2025, and 2026. It is the
 authoritative reference cited by:
 
-- `src/aeat/formulas/_rulesets/modelo_111_2024.py`
-- `src/aeat/formulas/_rulesets/modelo_111_2025.py`
-- `src/aeat/formulas/_rulesets/modelo_111_2026.py`
-- `src/aeat/declaracion/_extractors/modelo_111_v2025.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_111_2024.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_111_2025.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_111_2026.py`
+- `src/aeat/adapters/inbound/declaracion/_extractors/modelo_111_v2025.py`
 - the `#318` ADR / plan / research / exec records.
 
 ## Statutory grounding
@@ -47,7 +47,7 @@ the LIRPF or the 99-100 series of the RIRPF.
 ### Citation hygiene — wave 67a corrections (already landed)
 
 The wave-67a citation audit (recorded in
-`src/aeat/models/_citation_registry.py` as `KnownBadCitation` rows)
+`src/aeat/domain/modelos/_citation_registry.py` as `KnownBadCitation` rows)
 established two non-negotiable mappings for M111:
 
 - **Premios en metálico → 19 %**: rate is fixed by **LIRPF art.
@@ -59,7 +59,7 @@ established two non-negotiable mappings for M111:
   Not art. 100.3.a or art. 100.3.c — RIRPF art. 100 has no
   sub-letter structure.
 
-The citation tuple in `src/aeat/formulas/_rulesets/modelo_111_2025.py`
+The citation tuple in `src/aeat/domain/formulas/_rulesets/modelo_111_2025.py`
 (re-imported by the 2024 + 2026 modules) encodes these corrected
 mappings and is blocklist-clean.
 
@@ -87,7 +87,7 @@ they are not modelled in the formula DAG. This split is deliberate
 
 **No amendment.** The 2024 and 2025 rulesets are mechanically and
 numerically identical. The 2024 ruleset file
-(`src/aeat/formulas/_rulesets/modelo_111_2024.py`) re-imports
+(`src/aeat/domain/formulas/_rulesets/modelo_111_2024.py`) re-imports
 `_CASILLAS`, `_CITATIONS`, and `_FORMULAS` from the 2025 module and
 declares only its own `_PARAMETERS` (with the same numerical values
 bound to the 2024 effective range). The formula-id namespace is
@@ -109,14 +109,14 @@ to the rate-bearing articles has been published as of the
 consolidated-text last-update dates (RIRPF 2026-02-28; LIRPF
 2026-03-21).
 
-The 2026 ruleset file (`src/aeat/formulas/_rulesets/modelo_111_2026.py`)
+The 2026 ruleset file (`src/aeat/domain/formulas/_rulesets/modelo_111_2026.py`)
 re-imports `_CASILLAS_2025`, `_CITATIONS_2025`, and `_FORMULAS_2025`
 from the 2025 module and declares its own `_PARAMETERS` (with the
 same numerical values bound to the 2026 effective range of
 2026-01-01 to 2026-12-31).
 
 The `test_2026_no_drift_from_2025` regression in
-`src/aeat/formulas/_rulesets/test_modelo_111_2026.py` asserts the
+`src/aeat/domain/formulas/_rulesets/test_modelo_111_2026.py` asserts the
 no-drift invariant: an `Engine().audit_against(...)` pass over both
 the 2025 and 2026 rulesets with the same fixture must produce
 identical ledger entries.
@@ -250,4 +250,4 @@ available but are not gating.
 
 | Date          | Author                         | Change                                                                                                                                                                                                                                                                                                                                                       |
 | :------------ | :----------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 2026-04-27    | Issue `#318` implementation    | Initial manifest. 2024 / 2025 / 2026 ruleset state recorded as identical. Sibling 2024 + 2026 extractor classes registered in `src/aeat/declaracion/_extractors/__init__.py` alongside the existing 2025 class — closes the post-PR-440 registry gap surfaced on M130 / `#321`. Per-year mutation harness fingerprint (`sub_op = 1`, `percent_rate_param = 2`) extended to `modelo_111.2026`. |
+| 2026-04-27    | Issue `#318` implementation    | Initial manifest. 2024 / 2025 / 2026 ruleset state recorded as identical. Sibling 2024 + 2026 extractor classes registered in `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py` alongside the existing 2025 class — closes the post-PR-440 registry gap surfaced on M130 / `#321`. Per-year mutation harness fingerprint (`sub_op = 1`, `percent_rate_param = 2`) extended to `modelo_111.2026`. |

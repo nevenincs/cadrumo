@@ -30,18 +30,18 @@ that replaced the authenticator layer wholesale:
 
 - PR #295 — `refactor(auth): decouple AEAT auth provider protocol` (merged
   2026-04-18). Introduced the `AuthProvider` protocol in
-  `src/aeat/auth/_protocols.py`, the `AeatLoginAssertion` +
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_protocols.py`, the `AeatLoginAssertion` +
   `CertificateSessionDetail` pydantic records, and the
   `AEAT_CERTIFICATE_THUMBPRINT_MARKER` context tag.
 - PR #297 — `feat(auth): refactor cert auth into AuthProvider protocol (#282)`
   (merged 2026-04-18). Landed `CertificateAuthProvider` at
-  `src/aeat/auth/_providers/_certificate/provider.py` with full
+  `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers/_certificate/provider.py` with full
   `authenticate / resume / verify` implementations, a real handshake worker
   executed via `asyncio.to_thread`, Playwright `client_certificates` wiring
   through `build_client_certificates_kwarg`, and a navigation-based login
   assertion returning `AeatLoginAssertion`.
 
-Additionally, `src/aeat/auth/test_authenticator_live.py` (merged under #167 / PR
+Additionally, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator_live.py` (merged under #167 / PR
 #181, still present on `main`) already runs the full end-to-end live flow
 gated on `AEAT_LIVE_TESTS_ENABLED=1`:
 
@@ -51,7 +51,7 @@ gated on `AEAT_LIVE_TESTS_ENABLED=1`:
 4. A full async `authenticate()` + `verify_login()` pass driven by real
    `async_playwright` — no mocks, patches, or monkey-patched attributes.
 
-The gated live cert smoke test at `src/aeat/auth/test_certificate_live.py` covers
+The gated live cert smoke test at `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py` covers
 the lower-level handshake path.
 
 ## Considerations

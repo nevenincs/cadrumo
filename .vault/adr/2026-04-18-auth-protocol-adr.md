@@ -46,7 +46,7 @@ This is the smallest architectural change that unlocks pluggable auth providers 
 
 ## Consequences
 
-- `src/aeat/auth`, `src/aeat/browser/session.py`, `src/aeat/submission/_protocols.py`, `src/aeat/workflow/_protocols.py`, and their tests will all need coordinated edits.
+- `src/aeat/auth`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py`, `src/aeat/adapters/outbound/aeat/export/_protocols.py`, `src/aeat/application/workflow/_protocols.py`, and their tests will all need coordinated edits.
 - The certificate provider becomes the first concrete implementation of the new protocol, so some current names and exports will shift even though the observable behavior should remain unchanged.
 - Transitional translation code may exist briefly while downstream modules move from `LoadedCertificate`-based seams to provider-agnostic contracts.
 - The issue will leave follow-on work for the concrete Cl@ve providers, doctor/provider UX, and any status/sync surfaces that still assume certificate preloading as the only authenticated path.

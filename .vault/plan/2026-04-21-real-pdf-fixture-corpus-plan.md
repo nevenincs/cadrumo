@@ -47,14 +47,14 @@ New `tests/test_fixture_tier_markers.py`:
 
 ## Phase 2 — Scrub library
 
-### Step 2.1 — `src/aeat/_pdf_import/_scrub.py`
+### Step 2.1 — `src/aeat/adapters/inbound/pdf/_scrub.py`
 
-Prerequisite: cluster A's `src/aeat/_pdf_import/` package exists (this plan depends on cluster A executing first; if cluster A hasn't executed yet, it ships alongside this plan on the same PR).
+Prerequisite: cluster A's `src/aeat/adapters/inbound/pdf/` package exists (this plan depends on cluster A executing first; if cluster A hasn't executed yet, it ships alongside this plan on the same PR).
 
 Files:
 
-- `src/aeat/_pdf_import/_scrub.py` — implements `ScrubSidecar` pydantic record + `scrub_filing(source_pdf, *, output_dir, rng_seed, consent_revocable_until) -> tuple[Path, ScrubSidecar]`.
-- `src/aeat/_pdf_import/test_scrub.py` — markers `@pytest.mark.unit`, `@pytest.mark.domain_financial_input`.
+- `src/aeat/adapters/inbound/pdf/_scrub.py` — implements `ScrubSidecar` pydantic record + `scrub_filing(source_pdf, *, output_dir, rng_seed, consent_revocable_until) -> tuple[Path, ScrubSidecar]`.
+- `src/aeat/adapters/inbound/pdf/test_scrub.py` — markers `@pytest.mark.unit`, `@pytest.mark.domain_financial_input`.
 
 ### Step 2.2 — Scrub unit tests
 
@@ -98,7 +98,7 @@ scrub-from-drive DRIVE_FILE_ID OUT_DIR='tests/fixtures/pdf_corpus/l2_scrubbed_pr
     TMP="$(mktemp -d)"
     trap "rm -rf '$TMP'" EXIT
     uv run aeat drive cat "$DRIVE_FILE_ID" > "$TMP/source.pdf"
-    uv run python -m aeat._pdf_import._scrub --input "$TMP/source.pdf" --output-dir "{{OUT_DIR}}" --consent-days "{{CONSENT_DAYS}}"
+    uv run python -m aeat.adapters.inbound.pdf._scrub --input "$TMP/source.pdf" --output-dir "{{OUT_DIR}}" --consent-days "{{CONSENT_DAYS}}"
     echo "Review the scrubbed PDF visually, then git add it + the sidecar"
 ```
 
@@ -190,9 +190,9 @@ Add columns `L1 anchors`, `L2 anchors`, `L3 generator` per modelo with ❌ / �
 
 ## Phase 6 — Quality gates
 
-- `uv run ruff check src/aeat/_pdf_import/ tests/fixtures/pdf_corpus/` — clean.
-- `uv run ty check src/aeat/_pdf_import/` — clean.
-- `uv run pytest -m unit src/aeat/_pdf_import/ tests/fixtures/pdf_corpus/` — green.
+- `uv run ruff check src/aeat/adapters/inbound/pdf/ tests/fixtures/pdf_corpus/` — clean.
+- `uv run ty check src/aeat/adapters/inbound/pdf/` — clean.
+- `uv run pytest -m unit src/aeat/adapters/inbound/pdf/ tests/fixtures/pdf_corpus/` — green.
 - Guard-pattern hook executes on a sample scrubbed fixture (generate one in-test against a synthetic; verify guard passes).
 
 ## Kent UX roleplay

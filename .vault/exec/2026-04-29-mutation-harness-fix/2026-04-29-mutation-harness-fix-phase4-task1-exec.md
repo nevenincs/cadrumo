@@ -12,7 +12,7 @@ related:
 
 ## What
 
-New file `src/aeat/formulas/_rulesets/test_mutator_tautology_regression.py`
+New file `src/aeat/domain/formulas/_rulesets/test_mutator_tautology_regression.py`
 with 4 tests:
 
 - `test_aggregator_catches_uncovered_populated_node` — synthetic
@@ -51,5 +51,5 @@ issue #457 fixed cannot return without breaking these tests.
 
 ## Verification
 
-`uv run pytest src/aeat/formulas/_rulesets/test_mutator_tautology_regression.py -q`
+`uv run pytest src/aeat/domain/formulas/_rulesets/test_mutator_tautology_regression.py -q`
 → 4 passed.

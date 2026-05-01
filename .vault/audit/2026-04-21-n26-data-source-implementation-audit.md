@@ -34,10 +34,10 @@ This is not a parser correctness bug on the exercised surface. It is a remaining
 ## Verification
 
 - `uv run python tests/fixtures/financial/n26/_generate.py` -> regenerated the committed deterministic PDF fixture corpus
-- `uv run pytest src/aeat/financial/providers/test_pdf_n26.py src/aeat/financial/providers/test_base.py src/aeat/cli/financial/test_cli.py -q` -> passed (`15 passed`)
-- `uv run pytest src/aeat/financial/providers src/aeat/cli/financial/test_cli.py -q` -> passed (`26 passed`)
-- `uv run ruff check src/aeat/financial/providers/_pdf_n26.py src/aeat/financial/providers/test_pdf_n26.py src/aeat/financial/_raw_transaction.py src/aeat/financial/providers/__init__.py src/aeat/financial/providers/_detection.py src/aeat/cli/financial/ingest.py src/aeat/cli/financial/test_cli.py tests/fixtures/financial/n26/_generate.py` -> passed
-- `uv run ty check src/aeat/financial src/aeat/cli/financial` -> passed
+- `uv run pytest src/aeat/domain/financial/providers/test_pdf_n26.py src/aeat/domain/financial/providers/test_base.py src/aeat/entrypoints/cli/financial/test_cli.py -q` -> passed (`15 passed`)
+- `uv run pytest src/aeat/domain/financial/providers src/aeat/entrypoints/cli/financial/test_cli.py -q` -> passed (`26 passed`)
+- `uv run ruff check src/aeat/domain/financial/providers/_pdf_n26.py src/aeat/domain/financial/providers/test_pdf_n26.py src/aeat/domain/financial/_raw_transaction.py src/aeat/domain/financial/providers/__init__.py src/aeat/domain/financial/providers/_detection.py src/aeat/entrypoints/cli/financial/ingest.py src/aeat/entrypoints/cli/financial/test_cli.py tests/fixtures/financial/n26/_generate.py` -> passed
+- `uv run ty check src/aeat/financial src/aeat/entrypoints/cli/financial` -> passed
 - `uv run aeat financial ingest tests/fixtures/financial/n26/n26-savings-2025-05.pdf --provider auto --output-json` -> emitted 6 rows matching the hand-written expected ledger for that fixture
 - Manual fixture review -> the committed goldens for `2024-06`, `2025-01`, and `2025-05` match the visual statement rows, booking dates, value dates, and amounts in the synthetic PDF corpus
 

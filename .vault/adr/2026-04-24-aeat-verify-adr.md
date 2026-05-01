@@ -40,7 +40,7 @@ devoluciones, calendario — but no single subpackage owns a typed,
 strictly-pydantic model of that domain. `aeat.status` exposes raw primitives
 (`Expediente`, `Notificacion`, `Devolucion`, `BorradorIrpf`, `DatosFiscales`,
 `Payor`, `CalendarioEntry`) with four `fetch_*` methods still stubbed out;
-`aeat.history` owns the per-modelo parse of filed casillas; `aeat.portals`
+`aeat.history` owns the per-modelo parse of filed casillas; `aeat.domain.portals`
 catalogues pre-auth entries. None of these aggregates the AEAT-authoritative
 view of a single filing — the shape a reconciler needs to say "this is what
 AEAT has on record for Kent's Q1 2026 Modelo 303". The closest-shaped record
@@ -51,7 +51,7 @@ cross-surface composition with notifications or acuses.
 
 The second gap is functional. Kent needs to prove — in a Kent-observable,
 machine-auditable way — that the numbers he just uploaded to AEAT match what
-AEAT has on record. The `aeat.verification` module added in PR #301 verifies
+AEAT has on record. The `aeat.application.verification` module added in PR #301 verifies
 that his imported `DeclaracionFiling` agrees with the formula engine's
 re-computation of the same casillas; that is a local-only verdict. There is
 no bridge from his local `FilingDraft` to AEAT's authoritative record, and
@@ -69,7 +69,7 @@ new write paths outside the single audited submission engine.
 
 ## Considerations
 
-- `aeat.verification` already publishes a verdict surface — `VerificationStatus`,
+- `aeat.application.verification` already publishes a verdict surface — `VerificationStatus`,
   `VerificationVerdict`, `ClassifiedDiscrepancy`, `DiscrepancyCause`,
   `verify_declaracion` — and the CLI verb `aeat justificante verify`,
   `aeat casillas verify`, `aeat setup verify`, `aeat submission verify`,
@@ -81,7 +81,7 @@ new write paths outside the single audited submission engine.
   HTML-to-`FiledModelo` surface under `aeat.history._parsers`) exist only
   for Modelos 130, 303, and 390. Every other modelo raises
   `HistoryUnsupportedModeloError` at fetch time today.
-- `aeat.sync._divergence` owns a mature schema-level divergence vocabulary:
+- `aeat.application.sync._divergence` owns a mature schema-level divergence vocabulary:
   `DivergenceClassification`, `DivergenceKind` (10 closed variants tuned
   for corpus / ruleset / portal drift), `ResolutionState`,
   `DivergenceRecord`. Its classification table is a statically-enforced
@@ -110,7 +110,7 @@ new write paths outside the single audited submission engine.
 - Project mandate: every boundary-crossing record is a strict, frozen
   pydantic v2 model with `extra="forbid"`. Every Python module lives
   under `src/aeat/<subpackage>/`. Live tests gate on
-  `AEAT_LIVE_TESTS_ENABLED` via `aeat.cli._live.requires_live_enabled()`.
+  `AEAT_LIVE_TESTS_ENABLED` via `aeat.entrypoints.cli._live.requires_live_enabled()`.
 
 ## Constraints
 
@@ -135,15 +135,15 @@ new write paths outside the single audited submission engine.
   `__init__.py`. Private modules are `_`-prefixed and not imported by
   consumers outside the subpackage.
 - **Live-test gate**: `AEAT_LIVE_TESTS_ENABLED=1` via
-  `aeat.cli._live.requires_live_enabled()`. Never
+  `aeat.entrypoints.cli._live.requires_live_enabled()`. Never
   `@pytest.mark.skipif(os.environ.get(...))`. The env var is
   `AEAT_LIVE_TESTS_ENABLED` (not `AEAT_LIVE_TESTS`) — the project has
   been bitten by the shorter misspelling historically.
 - **Module location**: all new Python code under `src/aeat/<subpackage>/`.
   No drift outside the src-layout.
-- **No modifications** to `aeat.verification` (owned by #301), to
-  `aeat.auth` internals (owned by #281), to `aeat.sync._divergence`
-  enums (consume only), to `aeat.filing` approval state (owned by
+- **No modifications** to `aeat.application.verification` (owned by #301), to
+  `aeat.adapters.outbound.aeat.auth` internals (owned by #281), to `aeat.application.sync._divergence`
+  enums (consume only), to `aeat.application.filing` approval state (owned by
   #230), to notification-centre parser internals (owned by #312 —
   Protocol-stubbed only), or to `AEAT_LIVE_SUBMIT_*` env vars / the
   submit gate (owned by #117).
@@ -190,7 +190,7 @@ bodies):
   `mode: Literal["read"]`.
 - `RemoteCasilla` — one casilla value as AEAT reports it. Fields:
   `casilla_id: str`, `raw_value: str` (uncoerced string as AEAT prints),
-  `data_type: CasillaDataType` (resolved via `aeat.casillas.CasillaRecord`),
+  `data_type: CasillaDataType` (resolved via `aeat.domain.casillas.CasillaRecord`),
   `coerced_value: Decimal | str | bool | None`, `mode: Literal["read"]`.
 - `RemoteExpediente` — expediente wrapper. Fields: `expediente_id: str`,
   `filings: tuple[RemoteFiling, ...]` (may include original +
@@ -260,10 +260,10 @@ to satisfy both Protocols. When PR #312 lands, the adapter picks up the
 real `fetch_notificaciones` implementation automatically via the existing
 structural-conformance pattern.
 
-### 2. `aeat.filing.reconciliation` — comparator and Kent-observable report
+### 2. `aeat.application.filing.reconciliation` — comparator and Kent-observable report
 
 ```
-src/aeat/filing/reconciliation/
+src/aeat/application/filing/reconciliation/
     __init__.py                 # public API: reconcile,
                                 # ReconciliationReport,
                                 # FilingDivergenceKind,
@@ -282,7 +282,7 @@ src/aeat/filing/reconciliation/
 ```
 
 `FilingDivergenceKind` (closed, disjoint from
-`aeat.sync._divergence.DivergenceKind`):
+`aeat.application.sync._divergence.DivergenceKind`):
 
 - `CASILLA_VALUE_MISMATCH` — local and remote both report a value for
   the casilla; they disagree outside rounding tolerance.
@@ -293,7 +293,7 @@ src/aeat/filing/reconciliation/
   `APPROVED`) disagrees with `RemoteFilingStatus`, or the remote
   status is `RECHAZADA` / `ANULADA` / `UNKNOWN`.
 - `ROUNDING_ONLY` — delta within `Decimal("0.01")` tolerance shared
-  with `aeat.verification`.
+  with `aeat.application.verification`.
 - `FILING_NOT_YET_FOUND` — AEAT has no record of the `(modelo, period)`
   expected by the local draft.
 
@@ -309,7 +309,7 @@ Kent-observable outcome enum (the terminal triad from issue #239):
   AEAT has no record, per-casilla comparison is undefined.
 
 Outcome mapping is enforced by a static `MappingProxyType` table that
-mirrors the `aeat.sync._divergence` classification pattern — deterministic,
+mirrors the `aeat.application.sync._divergence` classification pattern — deterministic,
 not heuristic. Reviewers see the kind-to-outcome binding in one place.
 
 `CasillaDelta`:
@@ -321,7 +321,7 @@ not heuristic. Reviewers see the kind-to-outcome binding in one place.
 - `delta: Decimal | None` (populated for `CASILLA_VALUE_MISMATCH` and
   `ROUNDING_ONLY`)
 - `narrative: Translatable` (es/en/hu) — Kent-readable reason
-  line; follows the `aeat.verification.ClassifiedDiscrepancy.narrative`
+  line; follows the `aeat.application.verification.ClassifiedDiscrepancy.narrative`
   precedent.
 
 `ReconciliationReport` (strict, frozen, `extra="forbid"`):
@@ -374,9 +374,9 @@ Flow:
   read even if cache is fresh).
 - Exit codes: `0` = `MATCH`, `1` = `DIVERGENT`, `2` = `NOT_YET_FOUND`,
   `4` = live-access error (Cl@ve timeout, auth failure).
-- Human-readable output follows the `aeat.verification` precedent:
+- Human-readable output follows the `aeat.application.verification` precedent:
   single-word status at the top, bulleted casilla deltas, narrative tail.
-- `aeat verify` stays reserved for `aeat.verification`; no alias
+- `aeat verify` stays reserved for `aeat.application.verification`; no alias
   collision.
 
 ### 4. Sync-run integration — `aeat sync run` gating
@@ -394,7 +394,7 @@ Flow:
   Cl@ve-movil's real behaviour is a plan-phase task.
 - Report persistence: when `status` is `divergent` or
   `not_yet_found`, the report is serialised into the existing
-  `aeat.sync._divergence.DivergenceRecord` sink. The
+  `aeat.application.sync._divergence.DivergenceRecord` sink. The
   `DivergenceRecord` schema shape is reused as-is (record id,
   detected_at, modelo, payload, resolution_state);
   `DivergenceClassification` is reused for the record shell;
@@ -415,7 +415,7 @@ PR that needs a write surface must explicitly widen the `Literal`,
 which surfaces loudly in code review.
 
 **Layer 2 — public API contract.** Every exported function / method
-from `aeat.remote` and `aeat.filing.reconciliation` returns a frozen
+from `aeat.remote` and `aeat.application.filing.reconciliation` returns a frozen
 pydantic record or a tuple of frozen records. No public symbol is
 named `submit`, `send`, `commit`, `finalize`, `presentar`, `enviar`,
 `firmar`, `radicar`, `remitir`. The whitelisted Playwright primitive
@@ -427,7 +427,7 @@ is `page.goto(..., wait_until="domcontentloaded")` followed by
 
 **Layer 3 — unit-test grep guard.** Two unit tests —
 `test_no_write_surface.py` under `src/aeat/remote/` and
-`src/aeat/filing/reconciliation/` — walk every `.py` file in their
+`src/aeat/application/filing/reconciliation/` — walk every `.py` file in their
 tree and fail on any match of:
 
 - `page\.(fill|click|type|select_option|check|press|set_input_files)`
@@ -448,16 +448,16 @@ Spanish verb set. No new GitHub Actions workflow is added — the
 existing unit-suite step on Ubuntu and Windows picks these up.
 
 **Layer 4 — charter #116 alignment.** The live path consumes the
-existing `aeat.auth.AeatAccessGate` plus `AeatGateEnvSnapshot`
+existing `aeat.adapters.outbound.aeat.auth.AeatAccessGate` plus `AeatGateEnvSnapshot`
 records. No new write-gate env vars. No new write-safety helpers.
 Audit records emitted by the reconciler capture `AeatGateEnvSnapshot`
 so the audit trail shows "live-write gate was OFF when the
 reconciler ran". `AeatLiveReadNotEnabledError` from
-`aeat.auth.certificate` is the propagated error shape when the
+`aeat.adapters.outbound.aeat.auth.certificate` is the propagated error shape when the
 live-read gate is not satisfied.
 
 **Layer 5 — test discipline.** Every live test uses
-`aeat.cli._live.requires_live_enabled()` at the top of the test body.
+`aeat.entrypoints.cli._live.requires_live_enabled()` at the top of the test body.
 Every live test is marked `@pytest.mark.live_read` (never
 `live_write`). Every live test triggers a real Cl@ve-movil 2FA
 prompt on first run; Kent approves on his phone. Subsequent runs
@@ -472,10 +472,10 @@ skip cleanly if unset. The gate env var is `AEAT_LIVE_TESTS_ENABLED`
 ### 6. Out of scope (explicit exclusions)
 
 - Any state-changing AEAT interaction.
-- Modifications to `aeat.verification` (#301).
-- Modifications to `aeat.auth` internals (#281).
-- Modifications to `aeat.sync._divergence` enums (consume only).
-- Modifications to `aeat.filing` approval state (#230).
+- Modifications to `aeat.application.verification` (#301).
+- Modifications to `aeat.adapters.outbound.aeat.auth` internals (#281).
+- Modifications to `aeat.application.sync._divergence` enums (consume only).
+- Modifications to `aeat.application.filing` approval state (#230).
 - Notification-centre parser internals (#312 — Protocol-stub only).
 - `AEAT_LIVE_SUBMIT_*` env vars or submit-gate plumbing (#117).
 - Tier 3 modelos (347, 349, 123 informational).
@@ -501,12 +501,12 @@ skip cleanly if unset. The gate env var is `AEAT_LIVE_TESTS_ENABLED`
 
 ## Rationale
 
-### Naming split — `aeat.remote` and `aeat.filing.reconciliation`
+### Naming split — `aeat.remote` and `aeat.application.filing.reconciliation`
 
-Research section 4 established that `aeat.verification` already publishes
+Research section 4 established that `aeat.application.verification` already publishes
 a Kent-facing verdict vocabulary anchored to the PDF-vs-engine axis —
 `VerificationStatus`, `VerificationVerdict`, `verify_declaracion`, and
-four `verify`-named CLI verbs. Reusing `aeat.verification` for a
+four `verify`-named CLI verbs. Reusing `aeat.application.verification` for a
 separate axis (local-vs-AEAT) would collapse two orthogonal comparisons
 onto one name and regress the vocabulary established by #301.
 
@@ -515,17 +515,17 @@ top-level subpackage with both domain and reconciler inside pulls the
 remote-domain primitives out of line with `aeat.status` and
 `aeat.history`, which are already the "how we talk to AEAT"
 subpackages. Keeping the remote domain in `aeat.remote` but placing the
-reconciler in `aeat.sync._reconciliation` dilutes the `aeat.sync`
+reconciler in `aeat.application.sync._reconciliation` dilutes the `aeat.application.sync`
 auto-heal invariant — `ADDITIVE` implies safe-to-heal is narrow and
 schema-level; filing-instance value divergence must never auto-heal.
-An `aeat.verify.remote` sibling of `aeat.verification` shares a name
+An `aeat.verify.remote` sibling of `aeat.application.verification` shares a name
 prefix but means something materially different, imposing a high
 cognitive cost on every future contributor.
 
 The adopted split cleanly slots `aeat.remote` between `aeat.status`
-(raw AEAT primitives) and `aeat.filing` (local drafts); the
-reconciler lives under `aeat.filing.reconciliation` as a sibling to
-`aeat.filing._import` — the nearest-existing neighbour, also a
+(raw AEAT primitives) and `aeat.application.filing` (local drafts); the
+reconciler lives under `aeat.application.filing.reconciliation` as a sibling to
+`aeat.application.filing._import` — the nearest-existing neighbour, also a
 local/remote transform in the opposite direction. The CLI verb
 `aeat filing reconcile` has no existing collision (research section 4
 catalogued `casillas verify`, `submission verify`, `submission diff`,
@@ -534,7 +534,7 @@ catalogued `casillas verify`, `submission verify`, `submission diff`,
 
 ### `FilingDivergenceKind` fork (not extending `DivergenceKind`)
 
-Research section 5 established that `aeat.sync._divergence.DivergenceKind`
+Research section 5 established that `aeat.application.sync._divergence.DivergenceKind`
 is the backbone of a statically-enforced auto-heal-safety contract. Its
 10 variants are tuned for schema-level drift (corpus additions, ruleset
 removals, portal URL changes, etc.) and its classification
@@ -634,14 +634,14 @@ no silent pass-through), and lets the enum extend via ordinary PR
 review as new AEAT statuses surface. The warning log on unknown
 parse is the drift signal for the maintainer.
 
-### Rounding tolerance shared with `aeat.verification`
+### Rounding tolerance shared with `aeat.application.verification`
 
 Sourcing the tolerance from a new `Settings.aeat_reconciliation_rounding_tolerance`
 field offers per-deployment tuning but fragments Kent's mental model:
 the PDF-vs-engine verifier accepts 0.01-euro rounding, the
 local-vs-AEAT reconciler could accept something else, and Kent sees
 two different "rounding" definitions across two CLI verbs. Reusing
-`Decimal("0.01")` from `aeat.verification` keeps one definition of
+`Decimal("0.01")` from `aeat.application.verification` keeps one definition of
 "close enough" across the stack.
 
 ### Sync-run gating on `APPROVED`
@@ -725,6 +725,6 @@ against Cl@ve provider live behaviour before wiring.
 - **The write-guard grep tests will fail loudly on any attempt to
   add a write-path to either subpackage.** This is the intended
   behaviour and the primary reason the PR can be large. Future
-  write-surface work goes through `aeat.submission` and the
+  write-surface work goes through `aeat.adapters.outbound.aeat.export` and the
   existing four-factor gate, not through `aeat.remote` or
-  `aeat.filing.reconciliation`.
+  `aeat.application.filing.reconciliation`.

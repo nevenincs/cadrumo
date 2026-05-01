@@ -23,7 +23,7 @@ M130 reference implementation
 
 ### Step 1.1 — Author `modelo_115_2026.py`
 
-- File: `src/aeat/formulas/_rulesets/modelo_115_2026.py`.
+- File: `src/aeat/domain/formulas/_rulesets/modelo_115_2026.py`.
 - Pattern: re-import-clone of 2025, mirroring `modelo_115_2024.py`.
 - Effective range: 2026-01-01 → 2026-12-31.
 - `irpf.arrendamientos_rate = Decimal("0.19")`.
@@ -34,7 +34,7 @@ M130 reference implementation
 
 ### Step 1.2 — Register `MODELO_115_2026` in `__init__.py`
 
-- File: `src/aeat/formulas/_rulesets/__init__.py`.
+- File: `src/aeat/domain/formulas/_rulesets/__init__.py`.
 - Add `from .modelo_115_2026 import RULESET as MODELO_115_2026`.
 - Insert into `ALL_RULESETS` (after `MODELO_115_2025`, before
   `MODELO_123_2024`).
@@ -54,17 +54,17 @@ M130 reference implementation
 
 ### Step 1.4 — Mutation harness rows for 2026
 
-- File: `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`.
+- File: `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`.
   Add `"modelo_115.2026"` row to `EXPECTED_COUNTS` mirroring the
   2024 / 2025 rows (`sub_op=1, percent_rate_param=1`, all others
   zero).
 - File:
-  `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py`.
+  `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py`.
   Add `(MODELO_115_2026, "03", _f115_fixture())` to
   `_ruleset_cases` after the 2025 row. Update import to include
   `MODELO_115_2026`.
 - File:
-  `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`.
+  `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py`.
   Add a 2026 entry under the wave-75a parametrise block reusing
   `_modelo_115_fixture`. Update import to include
   `MODELO_115_2026`.
@@ -72,7 +72,7 @@ M130 reference implementation
 ### Step 1.5 — Per-year worked example test for 2026
 
 - File:
-  `src/aeat/formulas/_rulesets/test_modelo_115_2026.py` (NEW).
+  `src/aeat/domain/formulas/_rulesets/test_modelo_115_2026.py` (NEW).
 - Mirror `test_modelo_130_2026.py` structure on the smaller M115
   surface:
   - `_provided()` helper returning a clean Q3 2026 fixture (the
@@ -98,7 +98,7 @@ M130 reference implementation
 
 ### Step 2.1 — Add sibling classes to `modelo_115_v2025.py`
 
-- File: `src/aeat/declaracion/_extractors/modelo_115_v2025.py`.
+- File: `src/aeat/adapters/inbound/declaracion/_extractors/modelo_115_v2025.py`.
 - After `Modelo115V2025Extractor`, add
   `Modelo115V2024Extractor(Modelo115V2025Extractor)` and
   `Modelo115V2026Extractor(Modelo115V2025Extractor)` siblings.
@@ -113,7 +113,7 @@ M130 reference implementation
 ### Step 2.2 — Register sibling classes
 
 - File:
-  `src/aeat/declaracion/_extractors/__init__.py`.
+  `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py`.
 - Update import `from .modelo_115_v2025 import (...)` to bring in
   `Modelo115V2024Extractor` + `Modelo115V2026Extractor`.
 - Add both to `_REGISTERED_CLASSES` (after the existing
@@ -173,12 +173,12 @@ M130 reference implementation
 - `uv run aeat audit rulesets citations` — confirm
   `modelo_115.2026` reports `OK ... coverage=100.00%` and the
   aggregate stays at 100 %.
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_115_2026.py`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_115_2026.py`
   — confirm the new module passes.
-- `uv run pytest src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`
   — confirm the new EXPECTED_COUNTS row matches actual.
-- `uv run pytest src/aeat/formulas/_rulesets/test_percent_rate_mutation.py
-  src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py
+  src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py`
   — confirm the new 2026 cases kill their mutants.
 - `uv run pytest tests/integration/test_kent_workflows.py::TestKentImportsModelo115Declaracion`
   — confirm the per-year parametrisation passes.
@@ -227,7 +227,7 @@ Self-reviewed against:
   BOE references and architectural reasoning, not delivery
   cadence).
 - Project mandate compliance: pydantic v2, errors via
-  `aeat.errors.AeatError`, logging via `aeat.logging.get_logger`,
+  `aeat.core.errors.AeatError`, logging via `aeat.core.logging.get_logger`,
   trilingual labels, Google-style docstrings, test markers at
   module level.
 - Coverage floor 60 % preserved (the new test module and

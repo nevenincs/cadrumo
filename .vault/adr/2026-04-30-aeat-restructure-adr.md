@@ -251,7 +251,7 @@ src/aeat/
     ├── redaction/              # added by audit 4: was `storage/_redaction.py` — PII redaction primitives (NIF/URL/JWT scrubbing)
     ├── corpus_manifest/        # added by audit 4: was `storage/_corpus_manifest.py` — self-attesting integrity manifest for plaintext CORPUS directories
     ├── observability/          # added by audit 15: was `adapters/persistence/observability/` — cross-cutting run-trace instrumentation (analogous to opentelemetry/structlog placement)
-    └── identity/               # added by decision-grounding audit: validate_spanish_tax_id moved here from `aeat.financial.invoices._validators` — resolves 2 layered-architecture violations (storage._master_key NIF canary; sanitizer._records synthetic NIF check)
+    └── identity/               # added by decision-grounding audit: validate_spanish_tax_id moved here from `aeat.domain.financial.invoices._validators` — resolves 2 layered-architecture violations (storage._master_key NIF canary; sanitizer._records synthetic NIF check)
 ```
 
 ### Rename rationale (high-impact)
@@ -443,19 +443,19 @@ export shim or makes a documented breaking change:
 
 | Public surface | Source | Treatment | Mechanism |
 | --- | --- | --- | --- |
-| `from aeat.errors import AeatError` | `error-code-registry-adr` + audit 1 | Preserve | Direct re-export shim from `aeat.core.errors`; canonical home stays in `core/errors/`. |
-| `from aeat.errors import (rendering pipeline)` (`build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, `get_registered_error_code`, `ErrorCategory`, `ErrorCode`, `ErrorEnvelope`, `ERROR_REGISTRY`, `register`, `bind_error_code`, `resolve_error_message`, `scrub_error_context`) | `error-code-registry-adr` + audit 1 | Preserve | Direct re-export shim from `aeat.core.errors`; tight cluster, all stay in `core/errors/`. |
-| `from aeat.errors import FormulasError, RulesetValidationError, FormulaCycleError, CasillaNotDefinedError, AmbiguousPeriodError, MissingRulesetError, EvaluationError, AuditDiscrepancyError` | audit 1 | Preserve via shim; canonical home **moves** | The 8 formulas exceptions move to `domain/formulas/_errors.py`. Re-export shim at `aeat.core.errors` re-imports from `aeat.domain.formulas`. Canonical home is `aeat.formulas` (which already re-exports them). Shim removal is a downstream decision. |
-| `from aeat.errors import McpLaunchError` | audit 1 | Preserve via shim; canonical home **moves** | Moves to `entrypoints/mcp/_errors.py`. Shim re-imports. |
-| `from aeat.errors import FilingFixtureError, FixtureProvisioningError` | audit 1 | Preserve via shim; canonical home **moves** | Move to `domain/testing/_errors.py`. Shim re-imports. |
-| `from aeat.errors import SiteHealthError, AeatObservabilityError` | audit 1 | Preserve | Stay in `core/errors/__init__.py` as firewall declarations. The cross-domain reason for hosting them at this level (preventing import cycles between `browser`, `workflow`, and `observability`) is genuine; relocation is unsafe. |
-| `from aeat.errors import DeprecatedAliasError, MovedAliasError` | audit 1 | Preserve | Stay in `core/errors/__init__.py` as generic infra exceptions. |
-| `from aeat.errors import WorkspaceLockedError` | audit 1 + refreshed cold-review 22.11 | **DELETE + replace** | Verified production-dead (only test-file usage). Resolution: delete from `__init__.py`, replace test-file usage with a synthetic test exception (e.g. `_TestableAeatError` defined inside the affected test file). NO shim. The "rename or delete" disposition in dead-code Phase 2 is resolved as DELETE. |
-| `from aeat.auth import (Google cluster: scope constants, get_oauth_credentials, get_service_account_credentials, get_credentials, get_credentials_for_scopes, build_*_service, build_*_client, GoogleAuthPath, GoogleAuthInspection, inspect_google_auth, ...)` | audit 3 | Preserve via shim; canonical home **moves** | All Google symbols (~24) move to `aeat.adapters.outbound.google`. Re-export shim at `aeat/auth/__init__.py` re-imports. Consumers (CLI Google subcommands + MCP) all import a single-axis cluster — rewrite is mechanical. |
-| `from aeat.auth import (AEAT cluster: AeatAuthenticator, AeatSession, AeatLoginAssertion, AuthProviderKind, AuthProvider, all session-detail variants, CertificateBundle, CertificateError hierarchy, ClaveMovilAuthProvider, select_provider, ...)` | audit 3 | Preserve via shim; canonical homes **move and split** | Concrete AEAT providers + cert types → `aeat.adapters.outbound.aeat.auth`. `select_provider` factory + provider-agnostic types → `aeat.application.auth`. Browser Playwright protocols → `aeat.adapters.outbound.aeat.browser` (CORE-LEAK fix). Re-export shim preserves the `aeat.auth` import. |
-| `from aeat.auth import AeatAccessGate, AeatGateEnvSnapshot, AeatLiveReadNotEnabledError` | audit 3 | Preserve via shim; canonical home **moves** | Move to `aeat.core.access_gate`. `AeatLiveReadNotEnabledError` is also relocated from `aeat.auth.certificate` (where it was misplaced) to the gate module. Re-export shim preserves `aeat.auth` and `aeat.errors` imports. |
-| `from aeat.auth import restrict_file_permissions` | audit 3 | Preserve via shim; canonical home **moves** | Move to `aeat.core.file_permissions`. Re-export shim. |
-| `from aeat.submission import LiveSubmitForbiddenError` | audit 3 | Preserve via shim; canonical home **moves** | Relocated from `submission/` to `core/access_gate/_errors.py` (per Constraints — eliminates `core/` ← `adapters/` layering violation). Re-export shim at the old path keeps existing consumers working. |
+| `from aeat.core.errors import AeatError` | `error-code-registry-adr` + audit 1 | Preserve | Direct re-export shim from `aeat.core.errors`; canonical home stays in `core/errors/`. |
+| `from aeat.core.errors import (rendering pipeline)` (`build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, `get_registered_error_code`, `ErrorCategory`, `ErrorCode`, `ErrorEnvelope`, `ERROR_REGISTRY`, `register`, `bind_error_code`, `resolve_error_message`, `scrub_error_context`) | `error-code-registry-adr` + audit 1 | Preserve | Direct re-export shim from `aeat.core.errors`; tight cluster, all stay in `core/errors/`. |
+| `from aeat.core.errors import FormulasError, RulesetValidationError, FormulaCycleError, CasillaNotDefinedError, AmbiguousPeriodError, MissingRulesetError, EvaluationError, AuditDiscrepancyError` | audit 1 | Preserve via shim; canonical home **moves** | The 8 formulas exceptions move to `domain/formulas/_errors.py`. Re-export shim at `aeat.core.errors` re-imports from `aeat.domain.formulas`. Canonical home is `aeat.domain.formulas` (which already re-exports them). Shim removal is a downstream decision. |
+| `from aeat.core.errors import McpLaunchError` | audit 1 | Preserve via shim; canonical home **moves** | Moves to `entrypoints/mcp/_errors.py`. Shim re-imports. |
+| `from aeat.core.errors import FilingFixtureError, FixtureProvisioningError` | audit 1 | Preserve via shim; canonical home **moves** | Move to `domain/testing/_errors.py`. Shim re-imports. |
+| `from aeat.core.errors import SiteHealthError, AeatObservabilityError` | audit 1 | Preserve | Stay in `core/errors/__init__.py` as firewall declarations. The cross-domain reason for hosting them at this level (preventing import cycles between `browser`, `workflow`, and `observability`) is genuine; relocation is unsafe. |
+| `from aeat.core.errors import DeprecatedAliasError, MovedAliasError` | audit 1 | Preserve | Stay in `core/errors/__init__.py` as generic infra exceptions. |
+| `from aeat.core.errors import WorkspaceLockedError` | audit 1 + refreshed cold-review 22.11 | **DELETE + replace** | Verified production-dead (only test-file usage). Resolution: delete from `__init__.py`, replace test-file usage with a synthetic test exception (e.g. `_TestableAeatError` defined inside the affected test file). NO shim. The "rename or delete" disposition in dead-code Phase 2 is resolved as DELETE. |
+| `from aeat.adapters.outbound.aeat.auth import (Google cluster: scope constants, get_oauth_credentials, get_service_account_credentials, get_credentials, get_credentials_for_scopes, build_*_service, build_*_client, GoogleAuthPath, GoogleAuthInspection, inspect_google_auth, ...)` | audit 3 | Preserve via shim; canonical home **moves** | All Google symbols (~24) move to `aeat.adapters.outbound.google`. Re-export shim at `aeat/adapters/outbound/aeat/auth/__init__.py` re-imports. Consumers (CLI Google subcommands + MCP) all import a single-axis cluster — rewrite is mechanical. |
+| `from aeat.adapters.outbound.aeat.auth import (AEAT cluster: AeatAuthenticator, AeatSession, AeatLoginAssertion, AuthProviderKind, AuthProvider, all session-detail variants, CertificateBundle, CertificateError hierarchy, ClaveMovilAuthProvider, select_provider, ...)` | audit 3 | Preserve via shim; canonical homes **move and split** | Concrete AEAT providers + cert types → `aeat.adapters.outbound.aeat.auth`. `select_provider` factory + provider-agnostic types → `aeat.application.auth`. Browser Playwright protocols → `aeat.adapters.outbound.aeat.browser` (CORE-LEAK fix). Re-export shim preserves the `aeat.adapters.outbound.aeat.auth` import. |
+| `from aeat.adapters.outbound.aeat.auth import AeatAccessGate, AeatGateEnvSnapshot, AeatLiveReadNotEnabledError` | audit 3 | Preserve via shim; canonical home **moves** | Move to `aeat.core.access_gate`. `AeatLiveReadNotEnabledError` is also relocated from `aeat.adapters.outbound.aeat.auth.certificate` (where it was misplaced) to the gate module. Re-export shim preserves `aeat.adapters.outbound.aeat.auth` and `aeat.core.errors` imports. |
+| `from aeat.adapters.outbound.aeat.auth import restrict_file_permissions` | audit 3 | Preserve via shim; canonical home **moves** | Move to `aeat.core.file_permissions`. Re-export shim. |
+| `from aeat.adapters.outbound.aeat.export import LiveSubmitForbiddenError` | audit 3 | Preserve via shim; canonical home **moves** | Relocated from `submission/` to `core/access_gate/_errors.py` (per Constraints — eliminates `core/` ← `adapters/` layering violation). Re-export shim at the old path keeps existing consumers working. |
 
 Additional public surfaces are surfaced during per-module audits
 and folded into this table.
@@ -481,7 +481,7 @@ contract, shims accumulate indefinitely or are silently removed.
 
 - **Deprecation signal**: every shim emits a `DeprecationWarning`
   on first import per process, citing the canonical path. Example:
-  `aeat.errors` shim warns "Importing from `aeat.errors` is
+  `aeat.core.errors` shim warns "Importing from `aeat.core.errors` is
   deprecated; use `aeat.core.errors` instead. Removal earliest
   at version X.Y."
 - **Removal eligibility**: a shim becomes eligible for removal at
@@ -494,7 +494,7 @@ contract, shims accumulate indefinitely or are silently removed.
   picking up that follow-up issue executes the removal PR. The
   removal PR runs the full acceptance-criteria check; merges
   deterministically if green. Removal PR is a major bump if the
-  shim is at a documented public surface (`aeat.errors`); minor
+  shim is at a documented public surface (`aeat.core.errors`); minor
   bump otherwise. No external scheduler is required.
 - **CHANGELOG**: every shim addition AND removal is a CHANGELOG
   entry under the matching version.
@@ -844,7 +844,7 @@ in this ADR):
   collection runs successfully under the new marker set.
 - `domain_local_state` test files reclassified by destination
   (`domain_model` or `domain_persistence`) per the migration mechanic.
-- Public-surface decisions executed. `aeat.errors` re-export shim in
+- Public-surface decisions executed. `aeat.core.errors` re-export shim in
   place (or documented break with semver bump); any other public
   surfaces surfaced by the audit treated similarly.
 - Configuration files updated: `pyproject.toml` (coverage / mypy /

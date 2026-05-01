@@ -11,9 +11,9 @@ related:
 
 Defined the provider-facing auth contracts and generalized the session/assertion records.
 
-- Modified: `src/aeat/auth/_authenticator.py`
-- Modified: `src/aeat/auth/__init__.py`
-- Created: `src/aeat/auth/_providers.py`
+- Modified: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`
+- Modified: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py`
+- Created: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_providers.py`
 
 ## Description
 
@@ -21,4 +21,4 @@ Added `AuthProviderKind`, `AuthProviderDescription`, provider-detail models, and
 
 ## Tests
 
-Validated the contract and compatibility behavior with `uv run pytest src/aeat/auth/test_authenticator.py -q`. The suite now covers the provider-conformance path through a `NullAuthProvider` test and keeps the prior certificate-backed session/assertion scenarios green.
+Validated the contract and compatibility behavior with `uv run pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py -q`. The suite now covers the provider-conformance path through a `NullAuthProvider` test and keeps the prior certificate-backed session/assertion scenarios green.

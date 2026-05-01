@@ -20,7 +20,7 @@ issue: wgergely/aeat#42
 
 ## summary
 
-Implemented `aeat.submission` per the ADR and plan. The subpackage
+Implemented `aeat.adapters.outbound.aeat.export` per the ADR and plan. The subpackage
 exposes `SubmissionEngine`, `Submitter` ABC, `Modelo130Submitter`,
 `Preflight`, strict+frozen pydantic v2 records
 (`SubmissionStatus`, `SubmissionAttempt`, `SubmittedFiling`), the
@@ -39,32 +39,32 @@ Settings fields (`AEAT_SUBMISSIONS_DIR`,
 
 ## artefacts produced
 
-- `src/aeat/submission/__init__.py`
-- `src/aeat/submission/_errors.py`
-- `src/aeat/submission/_protocols.py`
-- `src/aeat/submission/_models.py`
-- `src/aeat/submission/_preflight.py`
-- `src/aeat/submission/_engine.py`
-- `src/aeat/submission/_submitters/__init__.py`
-- `src/aeat/submission/_submitters/_contract.py`
-- `src/aeat/submission/_submitters/modelo130.py`
-- `src/aeat/submission/_submitters/test_modelo130.py`
-- `src/aeat/submission/test_models.py`
-- `src/aeat/submission/test_errors.py`
-- `src/aeat/submission/test_preflight.py`
-- `src/aeat/submission/test_engine.py`
-- `src/aeat/submission/test_live_submission.py`
-- `src/aeat/cli/submission/__init__.py`
-- `src/aeat/cli/submission/_helpers.py`
-- `src/aeat/cli/submission/preflight.py`
-- `src/aeat/cli/submission/dry_run.py`
-- `src/aeat/cli/submission/submit.py`
-- `src/aeat/cli/submission/show.py`
-- `src/aeat/cli/submission/list.py`
-- `src/aeat/cli/submission/test_cli.py`
+- `src/aeat/adapters/outbound/aeat/export/__init__.py`
+- `src/aeat/adapters/outbound/aeat/export/_errors.py`
+- `src/aeat/adapters/outbound/aeat/export/_protocols.py`
+- `src/aeat/adapters/outbound/aeat/export/_models.py`
+- `src/aeat/adapters/outbound/aeat/export/_preflight.py`
+- `src/aeat/adapters/outbound/aeat/export/_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/__init__.py`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/_contract.py`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/test_modelo130.py`
+- `src/aeat/adapters/outbound/aeat/export/test_models.py`
+- `src/aeat/adapters/outbound/aeat/export/test_errors.py`
+- `src/aeat/adapters/outbound/aeat/export/test_preflight.py`
+- `src/aeat/adapters/outbound/aeat/export/test_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/test_live_submission.py`
+- `src/aeat/entrypoints/cli/submission/__init__.py`
+- `src/aeat/entrypoints/cli/submission/_helpers.py`
+- `src/aeat/entrypoints/cli/submission/preflight.py`
+- `src/aeat/entrypoints/cli/submission/dry_run.py`
+- `src/aeat/entrypoints/cli/submission/submit.py`
+- `src/aeat/entrypoints/cli/submission/show.py`
+- `src/aeat/entrypoints/cli/submission/list.py`
+- `src/aeat/entrypoints/cli/submission/test_cli.py`
 - `src/aeat/config.py` (modified: four new Settings fields)
 - `env/.env.example` (modified: four new env vars)
-- `src/aeat/cli/__init__.py` (modified: registered submission sub-app)
+- `src/aeat/entrypoints/cli/__init__.py` (modified: registered submission sub-app)
 
 ## verification
 
@@ -77,7 +77,7 @@ first clean run.
 - Rebase-swap Protocol stubs in `_protocols.py` as #6 / #7 / #8 / #23
   / #39 / #44 land on ``main``.
 - Hook `_engine.py`'s `browser_session_factory` to the real
-  `aeat.browser.BrowserSession` factory in the CLI once the live
+  `aeat.adapters.outbound.aeat.browser.BrowserSession` factory in the CLI once the live
   submission flow is desired — the current CLI uses a `_NullSession`
   deterministic stub because v1 ships dry-run-only over in-process
   stubs.

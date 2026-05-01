@@ -14,7 +14,7 @@ issue: wgergely/aeat#38
 
 ## scope
 
-Deliver `aeat.deadlines` per the ADR: a strict pydantic v2 schema, a
+Deliver `aeat.domain.deadlines` per the ADR: a strict pydantic v2 schema, a
 pure-function engine, applies-to truth tables, a typer CLI sub-app, two
 additive Settings fields, and unit tests. No storage. No filing. No
 hard imports from in-flight subpackages.
@@ -22,7 +22,7 @@ hard imports from in-flight subpackages.
 ## file map
 
 ```
-src/aeat/deadlines/
+src/aeat/domain/deadlines/
     __init__.py          # public re-exports + module docstring usage
     _errors.py           # DeadlineError, ProfileError, ScheduleComputationError
     _protocols.py        # ModeloIdentifier, ModeloCatalogueLoader, CorpusReader
@@ -36,7 +36,7 @@ src/aeat/deadlines/
     test_engine.py       # compute() over synthetic profiles, status
                          # transitions, next_deadline edge cases
     test_calendar.py     # canonical-window invariants
-src/aeat/cli/deadlines/
+src/aeat/entrypoints/cli/deadlines/
     __init__.py          # typer sub-app wiring
     list.py              # `aeat deadlines list`
     next.py              # `aeat deadlines next`
@@ -52,7 +52,7 @@ src/aeat/cli/deadlines/
 
 ## protocol stubs
 
-- `ModeloIdentifier` — typed `str` (matches `aeat.sync._protocols`
+- `ModeloIdentifier` — typed `str` (matches `aeat.application.sync._protocols`
   shape so the rebase to #6 is mechanical).
 - `ModeloCatalogueLoader` — `runtime_checkable Protocol` with
   `known_modelos() -> tuple[ModeloIdentifier, ...]` and
@@ -86,8 +86,8 @@ smallest `closes_on >= today`, or `None` if all are overdue.
 
 ## tests
 
-All `@pytest.mark.unit`, all colocated under `src/aeat/deadlines/` and
-`src/aeat/cli/deadlines/`. No mocks/patches/fakes/stubs — tests use
+All `@pytest.mark.unit`, all colocated under `src/aeat/domain/deadlines/` and
+`src/aeat/entrypoints/cli/deadlines/`. No mocks/patches/fakes/stubs — tests use
 small `dataclass`-free Protocol-conforming classes for the loader.
 
 - `test_models.py`: strict-validation rejects unknown fields, frozen
@@ -116,8 +116,8 @@ small `dataclass`-free Protocol-conforming classes for the loader.
 - [ ] strict pydantic v2 on every boundary type
 - [ ] engine pure: no I/O, no input mutation, no global state
 - [ ] errors inherit from `AeatError`
-- [ ] logging via `aeat.logging.get_logger`
-- [ ] public API discipline: callers import only from `aeat.deadlines`
+- [ ] logging via `aeat.core.logging.get_logger`
+- [ ] public API discipline: callers import only from `aeat.domain.deadlines`
 - [ ] sibling-branch territories untouched
 - [ ] settings + .env.example aligned (test green)
 - [ ] `just lint && just typecheck && just test && just hooks` green
@@ -126,7 +126,7 @@ small `dataclass`-free Protocol-conforming classes for the loader.
 
 Self-review on 2026-04-12: the plan respects every constraint listed in
 the issue and the worktree handover. The Protocol stub for
-`ModeloIdentifier` mirrors the established `aeat.sync._protocols`
+`ModeloIdentifier` mirrors the established `aeat.application.sync._protocols`
 shape so rebase to #6 is mechanical. The calendar table is small and
 fully cited; the `applies_to` truth tables are derived in the research
 note from BOE / Manual práctico, not invented. The pure-function

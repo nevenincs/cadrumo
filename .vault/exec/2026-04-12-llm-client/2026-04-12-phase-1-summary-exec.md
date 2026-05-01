@@ -13,17 +13,17 @@ Completed the issue `#21` implementation for the typed LLM client foundation
 and its command-line integration.
 
 - Modified: `src/aeat/config.py`
-- Modified: `src/aeat/cli/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/__init__.py`
 - Modified: `env/.env.example`
 - Modified: `pyproject.toml`
-- Created: `src/aeat/llm/`
-- Created: `src/aeat/cli/llm/`
+- Created: `src/aeat/adapters/outbound/llm/`
+- Created: `src/aeat/entrypoints/cli/llm/`
 
 ## Description
 
-The delivered surface establishes `aeat.llm` as the only public import path for
+The delivered surface establishes `aeat.adapters.outbound.llm` as the only public import path for
 LLM features. Provider-specific code is isolated beneath
-`src/aeat/llm/_providers/`, cache and usage persistence are file-based under
+`src/aeat/adapters/outbound/llm/_providers/`, cache and usage persistence are file-based under
 `var/`, and downstream consumers can rely on stable prompt ids seeded in the
 registry.
 

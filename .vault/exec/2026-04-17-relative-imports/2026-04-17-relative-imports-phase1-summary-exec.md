@@ -45,8 +45,8 @@ Phase 1 of `[[2026-04-17-relative-imports-plan]]` completed
 
 - **Ruff TID251 cannot enforce this directly.** The plan and ADR
   originally proposed banning the `aeat` dotted prefix. Empirically,
-  Ruff resolves `from . import X` (in package `aeat.workflow`) to
-  `aeat.workflow` *before* matching the banned-api list — so banning
+  Ruff resolves `from . import X` (in package `aeat.application.workflow`) to
+  `aeat.application.workflow` *before* matching the banned-api list — so banning
   `aeat` flagged every relative import too (1468 spurious errors on
   the converted tree). Switched to a custom AST scanner. The ADR's
   "Decision" section and `pyproject.toml` comment block both record
@@ -54,10 +54,10 @@ Phase 1 of `[[2026-04-17-relative-imports-plan]]` completed
   Ruff's behaviour has changed.
 
 - **Codemod hit code-as-string in one file.**
-  `src/aeat/submission/test_safety_helpers.py` constructs a
+  `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py` constructs a
   `python -c "<inlined>"` subprocess via `textwrap.dedent`. The
-  inlined source originally used `from aeat.config import Settings`
-  and `from aeat.submission import (...)`; the regex-based codemod
+  inlined source originally used `from aeat.core.config import Settings`
+  and `from aeat.adapters.outbound.aeat.export import (...)`; the regex-based codemod
   converted both to relative form, and the subprocess (which has no
   parent package) failed with `ImportError: attempted relative import
   with no known parent package`. Reverted those two lines to absolute;
@@ -79,7 +79,7 @@ Phase 1 of `[[2026-04-17-relative-imports-plan]]` completed
 - `just test` — `1157 passed, 1 skipped, 24 deselected` (the live
   suite is gated as expected; nothing live-only ran).
 - **Positive boundary**: prepended
-  `from aeat.config import Settings` to `src/aeat/cli/setup.py` →
+  `from aeat.core.config import Settings` to `src/aeat/entrypoints/cli/setup.py` →
   `scripts/check_relative_imports.py` exited 1 with the configured
   message; reverted.
 - **Negative boundary**: prepended the same line to

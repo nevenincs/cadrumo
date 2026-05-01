@@ -15,17 +15,17 @@ related:
 Accepted
 
 ## Context
-Issue #23 needs a real, trilingual, diff-friendly casilla catalogue with strict validation, CLI support, and a human-review workflow. The original issue text targeted `src/aeat/schema/casillas.py`, but that directory is owned by issue #9 and is still in flight. The solution must also avoid hard imports from in-flight siblings while still stabilizing a usable public API on this branch.
+Issue #23 needs a real, trilingual, diff-friendly casilla catalogue with strict validation, CLI support, and a human-review workflow. The original issue text targeted `src/aeat/domain/schema/casillas.py`, but that directory is owned by issue #9 and is still in flight. The solution must also avoid hard imports from in-flight siblings while still stabilizing a usable public API on this branch.
 
 ## Decisions
 
 ### 1. Package location
-We will implement the feature in a new public subpackage: `aeat.casillas`.
+We will implement the feature in a new public subpackage: `aeat.domain.casillas`.
 
 Rationale:
-- avoids a direct collision with issue #9 ownership of `aeat.schema`,
+- avoids a direct collision with issue #9 ownership of `aeat.domain.schema`,
 - matches the project precedent for additive subpackages,
-- keeps the public import surface stable now (`from aeat.casillas import ...`) and easy to preserve after rebases.
+- keeps the public import surface stable now (`from aeat.domain.casillas import ...`) and easy to preserve after rebases.
 
 ### 2. Persisted storage layout
 Canonical casilla files live under `corpus/casillas/<modelo>/<period>.json`.
@@ -84,4 +84,4 @@ Rationale:
 - The package will carry a small amount of temporary Protocol scaffolding that must be replaced on rebase after issues #6, #9, #21, and #25 merge.
 - The initial corpus is manually curated and therefore intentionally conservative rather than exhaustive automation.
 - Verification logic becomes a first-class gate, not an optional helper.
-- Callers outside the package must import only from `aeat.casillas`, never from internal implementation modules.
+- Callers outside the package must import only from `aeat.domain.casillas`, never from internal implementation modules.

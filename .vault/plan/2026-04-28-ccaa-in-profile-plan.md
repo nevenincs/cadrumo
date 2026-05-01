@@ -14,7 +14,7 @@ Implement durable tax-residence CCAA capture for Kent, wire it into the Modelo 1
 
 ## Proposed Changes
 
-Add a new `aeat.profile` package with strict frozen models, registered errors, and atomic JSON persistence. Add a new `aeat profile` CLI group with human and JSON output. Extend setup wizard answers and persistence so first-run setup captures tax residence. Update Modelo 100 filing imports to require and consume the profile CCAA. Add unit and integration coverage, then record execution and review results.
+Add a new `aeat.domain.profile` package with strict frozen models, registered errors, and atomic JSON persistence. Add a new `aeat profile` CLI group with human and JSON output. Extend setup wizard answers and persistence so first-run setup captures tax residence. Update Modelo 100 filing imports to require and consume the profile CCAA. Add unit and integration coverage, then record execution and review results.
 
 ## Tasks
 
@@ -34,7 +34,7 @@ The profile package and CLI can be implemented independently from documentation.
 
 ## Plan Review
 
-Path A persistence is chosen: a JSON file under the OS config directory, independent from `#216`. Namespace collision is avoided by creating `aeat.profile`, not extending financial/browser/category profile surfaces. The foral-regime path is explicit and points to `#424`. M100 import consumes `load_tax_residence()` rather than accepting silent caller defaults. CLI strings are trilingual through `Translatable`, with JSON output registered. UTF-8 output is preserved by Typer and the shared JSON writer.
+Path A persistence is chosen: a JSON file under the OS config directory, independent from `#216`. Namespace collision is avoided by creating `aeat.domain.profile`, not extending financial/browser/category profile surfaces. The foral-regime path is explicit and points to `#424`. M100 import consumes `load_tax_residence()` rather than accepting silent caller defaults. CLI strings are trilingual through `Translatable`, with JSON output registered. UTF-8 output is preserved by Typer and the shared JSON writer.
 
 ## Verification
 

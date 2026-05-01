@@ -20,22 +20,22 @@ Verdict: APPROVED. No remaining findings after the final audit-trail patch.
 
 ## Reviewed surfaces
 
-- `src/aeat/submission/_engine.py`
-- `src/aeat/submission/_confirm.py`
-- `src/aeat/submission/_audit.py`
+- `src/aeat/adapters/outbound/aeat/export/_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/_confirm.py`
+- `src/aeat/adapters/outbound/aeat/export/_audit.py`
 - `src/aeat/config.py`
 - `env/.env.example`
-- `src/aeat/cli/submission/*`
-- `src/aeat/cli/filing/__init__.py`
-- `src/aeat/workflow/_protocols.py`
-- `src/aeat/workflow/_adapters.py`
-- `src/aeat/workflow/_engine.py`
-- `src/aeat/submission/test_engine.py`
-- `src/aeat/submission/test_safety_helpers.py`
-- `src/aeat/cli/submission/test_cli.py`
-- `src/aeat/cli/filing/test_filing_cli.py`
-- `src/aeat/workflow/test_engine.py`
-- `src/aeat/cli/workflow/test_cli.py`
+- `src/aeat/entrypoints/cli/submission/*`
+- `src/aeat/entrypoints/cli/filing/__init__.py`
+- `src/aeat/application/workflow/_protocols.py`
+- `src/aeat/application/workflow/_adapters.py`
+- `src/aeat/application/workflow/_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/test_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py`
+- `src/aeat/entrypoints/cli/submission/test_cli.py`
+- `src/aeat/entrypoints/cli/filing/test_filing_cli.py`
+- `src/aeat/application/workflow/test_engine.py`
+- `src/aeat/entrypoints/cli/workflow/test_cli.py`
 
 ## Final review notes
 

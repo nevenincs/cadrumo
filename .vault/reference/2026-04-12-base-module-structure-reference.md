@@ -17,8 +17,8 @@ All Python code must live under `src/aeat/`. No top-level scripts, no `lib/`, no
 
 ## 2. Public API Discipline
 Code outside a subpackage MUST only import from the subpackage's `__init__.py`.
-- **Valid:** `from aeat.models import ModelCatalogue`
-- **Invalid:** `from aeat.models.catalogue import ModelCatalogue`
+- **Valid:** `from aeat.domain.modelos import ModelCatalogue`
+- **Invalid:** `from aeat.domain.modelos.catalogue import ModelCatalogue`
 
 ## 3. Type Style
 - **Enums:** Use for closed catalogues (e.g., models, portals).
@@ -30,12 +30,12 @@ Do not use bare dictionaries in public signatures.
 Google-style docstrings and full type hints are required on all public symbols.
 
 ## 5. Testing
-Tests are colocated with the code they test (Rust style). For example, `src/aeat/models/test_smoke.py`.
+Tests are colocated with the code they test (Rust style). For example, `src/aeat/domain/modelos/test_smoke.py`.
 Every test must be marked with either `@pytest.mark.unit` or `@pytest.mark.live`.
 Live tests must NEVER use mocks, patches, fakes, or stubs.
 
 ## 6. Errors
-All domain errors must inherit from `aeat.errors.AeatError`. Do not raise raw `Exception` in feature code.
+All domain errors must inherit from `aeat.core.errors.AeatError`. Do not raise raw `Exception` in feature code.
 
 ## 7. Logging
-Use the `aeat.logging.get_logger(__name__)` factory. Do not scatter `logging.getLogger` calls without going through the project factory.
+Use the `aeat.core.logging.get_logger(__name__)` factory. Do not scatter `logging.getLogger` calls without going through the project factory.

@@ -12,9 +12,9 @@ related:
 Wired the CLI/settings surface and added fixture-driven verification.
 
 - Modified: `env/.env.example`
-- Modified: `src/aeat/cli/__init__.py`
-- Modified: `src/aeat/cli/test_smoke.py`
-- Created: `src/aeat/cli/financial/`
+- Modified: `src/aeat/entrypoints/cli/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/test_smoke.py`
+- Created: `src/aeat/entrypoints/cli/financial/`
 - Created: `tests/fixtures/financial/`
 
 ## Description

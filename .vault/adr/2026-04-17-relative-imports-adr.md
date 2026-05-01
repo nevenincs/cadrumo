@@ -51,7 +51,7 @@ inside the package tree.
 - **Public-API discipline preserved**: the existing CLAUDE.md rule
   *"Code outside a subpackage must import only from the subpackage
   root"* survives unchanged in spirit; only the syntax shifts from
-  `from aeat.models import X` to `from ..models import X` (or
+  `from aeat.domain.modelos import X` to `from ..models import X` (or
   `from .models import X`, depending on caller depth).
 - **Ruff rule selection**: there is no built-in rule that *requires*
   relative imports. The closest fit is **TID251 (`banned-api`)** with
@@ -65,7 +65,7 @@ inside the package tree.
   regex on `^from aeat\.` and `^import aeat\.`.
 - **Pre-existing violations**: a few files reach into another
   subpackage's private modules (e.g.,
-  `from aeat.sync._wire import X` from outside `aeat/sync/`). These
+  `from aeat.application.sync._wire import X` from outside `aeat/application/sync/`). These
   already violated the public-API discipline. Out of scope for #162;
   converted as-is.
 - **No runtime behaviour change**: relative-vs-absolute does not
@@ -95,7 +95,7 @@ inside the package tree.
    - `tests/**/*.py`
    - `scripts/**/*.py`
    - any `pyproject.toml`/manifest string references (e.g.,
-     `[project.scripts] aeat = "aeat.cli:app"`).
+     `[project.scripts] aeat = "aeat.entrypoints.cli:app"`).
 
 5. **Update `CLAUDE.md`**:
    - Under *Module Structure & API Rules*, add a "Relative-Imports
@@ -156,7 +156,7 @@ inside the package tree.
 - `just typecheck` (`uv run ty check src tests`) passes.
 - `just test` (`uv run pytest`) passes.
 - **Positive boundary check**: introduce a stray
-  `from aeat.config import Settings` in `src/aeat/cli/setup.py`;
+  `from aeat.core.config import Settings` in `src/aeat/entrypoints/cli/setup.py`;
   confirm Ruff fails with the TID251 message; revert.
 - **Negative boundary check**: introduce the same stray line in
   `tests/test_config.py`; confirm Ruff stays clean (per-file-ignore

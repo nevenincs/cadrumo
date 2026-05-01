@@ -19,7 +19,7 @@ unsupported after the change.
 
 ## Proposed Changes
 
-Update the strict Pydantic schemas in `aeat.casillas` and `aeat.manuals`,
+Update the strict Pydantic schemas in `aeat.domain.casillas` and `aeat.domain.manuals`,
 propagate the new names through verification/CLI text, and rewrite the checked-in
 casilla corpus JSON. The repository-owned surfaces move in one cut; no
 parse-time alias layer is kept for stale local JSON.
@@ -34,7 +34,7 @@ parse-time alias layer is kept for stale local JSON.
 - `Phase 2 - Rewrite repo-owned fixtures and corpus`
   1. Rewrite the checked-in `corpus/casillas/*.json` files to the new keys.
   1. Update all affected unit tests and inline JSON fixtures in
-     `src/aeat/casillas/` and `src/aeat/manuals/`.
+     `src/aeat/domain/casillas/` and `src/aeat/domain/manuals/`.
   1. Update contributor-facing documentation that still advertises the old
      names.
 
@@ -59,6 +59,6 @@ must happen after the full rename lands.
   metadata is blank or missing.
 - Old-key payloads are intentionally unsupported after the rename, and the
   repository no longer contains them in committed corpus or tests.
-- Targeted unit suites for `src/aeat/casillas/` and `src/aeat/manuals/` pass.
+- Targeted unit suites for `src/aeat/domain/casillas/` and `src/aeat/domain/manuals/` pass.
 - The full repository test suite passes without introducing new skips, mocks, or
   weakened assertions.

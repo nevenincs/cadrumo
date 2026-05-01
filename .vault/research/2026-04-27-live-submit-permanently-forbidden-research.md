@@ -56,18 +56,18 @@ create that source before regenerating provider copies.
   `AEAT_ALLOW_LIVE_SUBMIT_OPT_IN`.
 - `aeat filing complementaria submit` no longer accepts `--live`; amendment
   submission is dry-run-only.
-- `src/aeat/submission/test_live_submit_permanently_forbidden.py` now pins the
+- `src/aeat/adapters/outbound/aeat/export/test_live_submit_permanently_forbidden.py` now pins the
   permanent prohibition through constructor, gate, settings, CLI, and source
   introspection assertions.
 
 ### Remaining historical or legacy surfaces
 
-- `src/aeat/submission/_confirm.py` still contains the old typed-confirmation
+- `src/aeat/adapters/outbound/aeat/export/_confirm.py` still contains the old typed-confirmation
   helper. It is no longer on an executable product path.
-- `src/aeat/submission/_audit.py` still contains historical live-submit audit
+- `src/aeat/adapters/outbound/aeat/export/_audit.py` still contains historical live-submit audit
   helpers targeting `.aeat/live-submit-audit.log`. They are no longer on an
   executable product path.
-- `src/aeat/errors/_registry.py` and `docs/error-codes.md` still contain older
+- `src/aeat/core/errors/_registry.py` and `docs/error-codes.md` still contain older
   live-submit-only registry entries alongside the new permanent-forbid code.
   They now describe legacy history rather than reachable product behavior.
 - Historical workflow-refusal tests that assert the removed flags are still

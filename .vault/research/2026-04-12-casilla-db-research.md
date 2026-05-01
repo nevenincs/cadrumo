@@ -11,24 +11,24 @@ related:
 # Casilla DB Research
 
 ## Context
-Issue #23 needs a new curated casilla catalogue that can land without colliding with the in-flight `aeat.schema` work from issue #9. The branch must also respect the already-landed storage, i18n, CLI, and package-layout conventions on `main`.
+Issue #23 needs a new curated casilla catalogue that can land without colliding with the in-flight `aeat.domain.schema` work from issue #9. The branch must also respect the already-landed storage, i18n, CLI, and package-layout conventions on `main`.
 
 ## Findings
 
 ### Package and ownership boundaries
-- Issue #23 originally targeted `src/aeat/schema/casillas.py`, but `src/aeat/schema/` is owned by issue #9 and is explicitly in flight.
-- The current repository already accepts additive subpackages that were not in the original issue #12 list (`aeat.browser`, `aeat.i18n`, `aeat.corpus`), so a new `src/aeat/casillas/` package is the lowest-conflict option.
+- Issue #23 originally targeted `src/aeat/domain/schema/casillas.py`, but `src/aeat/domain/schema/` is owned by issue #9 and is explicitly in flight.
+- The current repository already accepts additive subpackages that were not in the original issue #12 list (`aeat.adapters.outbound.aeat.browser`, `aeat.core.i18n`, `aeat.corpus`), so a new `src/aeat/domain/casillas/` package is the lowest-conflict option.
 - Public API discipline on this branch is enforced through typed `__init__.py` exports and smoke tests that assert `__all__` completeness.
 
 ### Existing implementation conventions
 - Boundary-crossing records in the codebase use pydantic v2 models with `ConfigDict(strict=True, frozen=True)` where immutability is reasonable.
-- Domain errors inherit from `aeat.errors.AeatError`.
-- Logging uses `aeat.logging.get_logger(__name__)`.
-- Typer command groups are mounted from `src/aeat/cli/__init__.py`.
-- Live tests are opt-in through `AEAT_LIVE_TESTS_ENABLED` and helper gates in `src/aeat/cli/_live.py`.
+- Domain errors inherit from `aeat.core.errors.AeatError`.
+- Logging uses `aeat.core.logging.get_logger(__name__)`.
+- Typer command groups are mounted from `src/aeat/entrypoints/cli/__init__.py`.
+- Live tests are opt-in through `AEAT_LIVE_TESTS_ENABLED` and helper gates in `src/aeat/entrypoints/cli/_live.py`.
 
 ### Dependency coordination
-- `aeat.models`, `aeat.schema`, `aeat.llm`, `aeat.manuals`, and `aeat.corpus` all have in-flight owners or not-yet-landed surfaces.
+- `aeat.domain.modelos`, `aeat.domain.schema`, `aeat.adapters.outbound.llm`, `aeat.domain.manuals`, and `aeat.corpus` all have in-flight owners or not-yet-landed surfaces.
 - The safest integration strategy on this branch is to define Protocol-based stubs for:
   - `Casilla`, `FormulaNode`, `ValidationRule` from issue #9
   - `LLMClient` and bulk translation surface from issue #21
@@ -57,7 +57,7 @@ Issue #23 needs a new curated casilla catalogue that can land without colliding 
 - This period selection is an inference from the calendar and should be called out explicitly in the ADR.
 
 ### LLM-as-draft-only workflow
-- The branch cannot hard-import `aeat.llm` yet, but the CLI can still define draft-oriented workflows behind Protocols so the call sites stabilize now and rebind cleanly once issue #21 lands.
+- The branch cannot hard-import `aeat.adapters.outbound.llm` yet, but the CLI can still define draft-oriented workflows behind Protocols so the call sites stabilize now and rebind cleanly once issue #21 lands.
 - `extract` and `translate` should write draft JSON to a temporary file outside `corpus/casillas/` and should not mutate the canonical corpus in place.
 - `verify` must reject canonical records that lack `reviewed_by` and `reviewed_at`.
 
@@ -69,7 +69,7 @@ Issue #23 needs a new curated casilla catalogue that can land without colliding 
   - how to review and verify a casilla corpus file before commit.
 
 ## Recommendation
-- Create a new `aeat.casillas` subpackage with strict pydantic models, Protocol stubs for upstream dependencies, JSON loader/saver/verification helpers, and Typer subcommands mounted at `aeat casillas`.
+- Create a new `aeat.domain.casillas` subpackage with strict pydantic models, Protocol stubs for upstream dependencies, JSON loader/saver/verification helpers, and Typer subcommands mounted at `aeat casillas`.
 - Store canonical files under `corpus/casillas/<modelo>/<period>.json`.
 - Validate three initial catalogues for `MODELO_130`, `MODELO_303`, and `MODELO_390` using 2025-complete periods.
 - Enforce the draft-only workflow in code by making `extract`/`translate` output temp files and `verify` reject unreviewed canonical records.

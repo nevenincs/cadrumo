@@ -27,11 +27,11 @@ shape the implementation plan.
 
 ## decisions
 
-### D1 — New `src/aeat/observability/` subpackage
+### D1 — New `src/aeat/core/observability/` subpackage
 
 A new subpackage owns all run-trace concerns. It lives at
-`src/aeat/observability/`, follows public API discipline (callers import only
-from `aeat.observability`, underscored modules are internal), and is not
+`src/aeat/core/observability/`, follows public API discipline (callers import only
+from `aeat.core.observability`, underscored modules are internal), and is not
 consumed by any other subpackage at import time except as a top-level
 context manager and `record_event` helper.
 
@@ -45,7 +45,7 @@ The run identifier and active step identifier live in
 context manager. Entering the context manager sets the vars; exiting
 resets them via the `contextvars.Token` returned by `var.set(...)`.
 The context manager is entered **only at the outermost public entry point**
-of each subpackage — not inside internal submodules. For `aeat.submission`
+of each subpackage — not inside internal submodules. For `aeat.adapters.outbound.aeat.export`
 we wrap `SubmissionEngine.submit_draft` / `submit_amendment` and nothing
 else, to stay out of `#117`'s territory.
 
@@ -104,7 +104,7 @@ command that attempted the read. The JSONL sink is implemented as a
 `run_event` extra attribute; bare log records do not leak into
 `events.jsonl`.
 
-Log records emitted through `aeat.logging.get_logger(__name__)` still
+Log records emitted through `aeat.core.logging.get_logger(__name__)` still
 reach stderr as today; the JSONL handler is an additive sink activated
 only when a `run_context` is active. A dedicated `_inject_context_filter`
 class adds `run_id`, `step_id`, `module` attributes to every
@@ -153,11 +153,11 @@ trace store:
 
 ### D8 — Errors inherit from `AeatError`
 
-Four new errors live in `aeat.observability._errors`:
+Four new errors live in `aeat.core.observability._errors`:
 `AeatObservabilityError` (base), `RunContextMissingError`,
 `AeatCorpusDriftError`, `RunTraceValidationError`. All subclass
-`aeat.errors.AeatError` via a new `AeatObservabilityError` exported from
-`aeat.errors` for import-time consumption.
+`aeat.core.errors.AeatError` via a new `AeatObservabilityError` exported from
+`aeat.core.errors` for import-time consumption.
 
 ## consequences
 
@@ -197,7 +197,7 @@ Four new errors live in `aeat.observability._errors`:
 - **Passing `run_id` as an explicit argument through every function.**
   Rejected: N×M surface churn, breaks backward compatibility, and
   fights Python's `contextvars` idiom.
-- **Persist events via `aeat.storage` (#10).** Rejected: `var/runs/`
+- **Persist events via `aeat.adapters.persistence.storage` (#10).** Rejected: `var/runs/`
   is the right container for ephemeral local audit data; storage is
   for long-lived, replicable state. If archival is ever needed, the
   JSONL files can be uploaded wholesale.
@@ -207,8 +207,8 @@ Four new errors live in `aeat.observability._errors`:
 - `RunTrace`, `RunEvent`, `ArgumentRecord` all strict pydantic v2,
   `extra="forbid"`, `frozen=True`, `strict=True`.
 - All enums `enum.StrEnum`.
-- Every public entry point in `aeat.submission`, `aeat.sync`,
-  `aeat.inbox`, `aeat.status`, `aeat.workflow` emits ≥1 `RunEvent`
+- Every public entry point in `aeat.adapters.outbound.aeat.export`, `aeat.application.sync`,
+  `aeat.inbox`, `aeat.status`, `aeat.application.workflow` emits ≥1 `RunEvent`
   with the active `run_id`.
 - `aeat run replay <run_id> --dry-run` reproduces a recorded fixture
   run end-to-end without contacting AEAT; refuses on corpus sha drift.

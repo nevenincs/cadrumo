@@ -164,151 +164,151 @@ Important physical roots and their current contents:
 
 Centralized storage:
 
-- `src/aeat/storage/_orm.py`, `repository.py`, `engine.py`, `session.py`,
+- `src/aeat/adapters/persistence/storage/_orm.py`, `repository.py`, `engine.py`, `session.py`,
   `migrations_api.py`
   own the formal DB-backed layer for `modelos`, `portals`, and
   `corpus_artifacts`
 
 Financial and accounting state:
 
-- `src/aeat/financial/transactions/_service.py`
+- `src/aeat/domain/financial/transactions/_service.py`
   stores `transactions.json`
-- `src/aeat/financial/invoices/_service.py`
+- `src/aeat/domain/financial/invoices/_service.py`
   stores `invoices.json` and can also rewrite linked transaction state
-- `src/aeat/financial/usage_ratios/_service.py`
+- `src/aeat/domain/financial/usage_ratios/_service.py`
   stores usage-ratio JSON
-- `src/aeat/financial/attachments/_store.py`
+- `src/aeat/domain/financial/attachments/_store.py`
   stores raw blobs and manifest JSON
 
 Profile, config, and identity state:
 
 - `src/aeat/env_io.py`
   reads and rewrites flat `KEY=VALUE` env files
-- `src/aeat/setup/_env_writer.py`
+- `src/aeat/application/setup/_env_writer.py`
   writes `env/.env` and persisted `AutonomoProfile` JSON
-- `src/aeat/cli/oauth.py`
+- `src/aeat/entrypoints/cli/oauth.py`
   copies OAuth client JSON and updates `env/.env`
-- `src/aeat/cli/auth/__init__.py`
+- `src/aeat/entrypoints/cli/auth/__init__.py`
   copies OAuth and service-account JSON, rewrites `env/.env`, and manages
   auth-path selection
-- `src/aeat/auth/__init__.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py`
   persists `google_oauth_token.json`
-- `src/aeat/cli/auth/_paths.py`, `src/aeat/cli/auth/_session.py`
+- `src/aeat/entrypoints/cli/auth/_paths.py`, `src/aeat/entrypoints/cli/auth/_session.py`
   define, read, and delete persisted session files
-- `src/aeat/auth/_authenticator.py`, `src/aeat/auth/_clave_movil.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`
   persist AEAT browser session state and metadata sidecars
 
 Filing and submission state:
 
-- `src/aeat/cli/filing/__init__.py`
+- `src/aeat/entrypoints/cli/filing/__init__.py`
   writes drafts and imported submission-linked records
-- `src/aeat/cli/review/__init__.py`
+- `src/aeat/entrypoints/cli/review/__init__.py`
   rewrites draft approval state
-- `src/aeat/filing/_complementaria.py`
+- `src/aeat/application/filing/_complementaria.py`
   writes amendments and reads original draft state
-- `src/aeat/submission/_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/_engine.py`
   writes submission and amendment-result JSON
-- `src/aeat/submission/_audit.py`
+- `src/aeat/adapters/outbound/aeat/export/_audit.py`
   appends live-submit audit JSONL
 
 Workflow, sync, and observability:
 
-- `src/aeat/workflow/_persistence.py`
+- `src/aeat/application/workflow/_persistence.py`
   writes workflow result JSON
-- `src/aeat/sync/_repository.py`
+- `src/aeat/application/sync/_repository.py`
   writes divergence JSON
-- `src/aeat/observability/_store.py`,
-  `src/aeat/observability/_sink.py`,
-  `src/aeat/observability/_context.py`
+- `src/aeat/core/observability/_store.py`,
+  `src/aeat/core/observability/_sink.py`,
+  `src/aeat/core/observability/_context.py`
   write `trace.json` and `events.jsonl`
 
 Reference, schema, and corpus state:
 
-- `src/aeat/casillas/catalogue.py`
+- `src/aeat/domain/casillas/catalogue.py`
   writes canonical casilla JSON and temp draft JSON
-- `src/aeat/manuals/_fetch.py`
+- `src/aeat/domain/manuals/_fetch.py`
   writes fetched manual PDFs and manifests
-- `src/aeat/manuals/_loader.py`
+- `src/aeat/domain/manuals/_loader.py`
   reads structured extracted manual JSON
-- `src/aeat/normatives/_loader.py`
+- `src/aeat/domain/normatives/_loader.py`
   reads normative JSON corpus
-- `src/aeat/schema/_fetch.py`
+- `src/aeat/domain/schema/_fetch.py`
   caches BOE PDFs
-- `src/aeat/schema/_cache.py`
+- `src/aeat/domain/schema/_cache.py`
   caches extracted schema JSON
 
 LLM state:
 
-- `src/aeat/llm/_cache.py`
+- `src/aeat/adapters/outbound/llm/_cache.py`
   stores cached completion JSON
-- `src/aeat/llm/_usage.py`
+- `src/aeat/adapters/outbound/llm/_usage.py`
   stores daily usage JSONL
 
 ## Connector, export, and local-state augmentation map
 
 Google and Workspace connectors:
 
-- `src/aeat/cli/bootstrap.py`
+- `src/aeat/entrypoints/cli/bootstrap.py`
   creates or inspects Drive, Sheet, and Doc resources and writes resulting IDs
   into `env/.env`
-- `src/aeat/cli/drive.py`
+- `src/aeat/entrypoints/cli/drive.py`
   downloads remote Drive content into operator-chosen local paths and uploads
   local files to Drive
-- `src/aeat/cli/docs.py`
+- `src/aeat/entrypoints/cli/docs.py`
   mutates remote Docs state without local persistence of the document body
-- `src/aeat/cli/sheets.py`
+- `src/aeat/entrypoints/cli/sheets.py`
   mutates remote Sheets state without a local sheet cache
-- `src/aeat/mcp/launch_google_workspace.py`
+- `src/aeat/entrypoints/mcp/launch_google_workspace.py`
   provisions and uses `env/workspace-mcp-credentials`
 
 AEAT connectors and local augmentation:
 
-- `src/aeat/auth/_authenticator.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`
   captures AEAT browser sessions into `storage_state` JSON and sidecars
-- `src/aeat/auth/_clave_movil.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`
   captures Cl@ve-backed session state and diagnostics
-- `src/aeat/sede/_walker.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/_walker.py`
   walks authenticated AEAT state and yields justificante captures
-- `src/aeat/sede/_notifications.py`
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/_notifications.py`
   fetches remote AEAT notification state
-- `src/aeat/cli/sede/__init__.py`
+- `src/aeat/entrypoints/cli/sede/__init__.py`
   persists fetched justificante PDFs and discovery reports
-- `src/aeat/workflow/_engine.py`
+- `src/aeat/application/workflow/_engine.py`
   augments local workflow state from AEAT notifications and expedientes
-- `src/aeat/submission/_submitters/modelo130.py`
+- `src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py`
   writes browser trace artifacts during live submission
-- `src/aeat/submission/_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/_engine.py`
   turns remote submission responses into local submission records
 
 BOE and manual connectors:
 
-- `src/aeat/schema/_fetch.py`
+- `src/aeat/domain/schema/_fetch.py`
   fetches or reads BOE PDFs and caches them locally
-- `src/aeat/schema/_cache.py`
+- `src/aeat/domain/schema/_cache.py`
   persists extracted schema JSON
-- `src/aeat/manuals/_fetch.py`
+- `src/aeat/domain/manuals/_fetch.py`
   downloads AEAT manual PDFs and writes manifests
 
 Financial import connectors:
 
-- `src/aeat/financial/providers/_csv.py`
+- `src/aeat/domain/financial/providers/_csv.py`
   parses CSV and TXT statements
-- `src/aeat/financial/providers/_xlsx.py`
+- `src/aeat/domain/financial/providers/_xlsx.py`
   parses XLSX statements
-- `src/aeat/financial/providers/_ofx.py`
+- `src/aeat/domain/financial/providers/_ofx.py`
   parses OFX and QFX statements
-- `src/aeat/financial/providers/_pdf_n26.py`
+- `src/aeat/domain/financial/providers/_pdf_n26.py`
   parses N26 PDFs
-- `src/aeat/cli/financial/txs.py`
+- `src/aeat/entrypoints/cli/financial/txs.py`
   persists normalized imported state into `transactions.json`
-- `src/aeat/cli/financial/ingest.py`
+- `src/aeat/entrypoints/cli/financial/ingest.py`
   emits parsed provider transactions as NDJSON or JSON to stdout
 
 LLM-backed augmentation:
 
-- `src/aeat/llm/_client.py`
+- `src/aeat/adapters/outbound/llm/_client.py`
   reads cache, calls remote provider APIs, and writes cache and usage records
-- `src/aeat/cli/financial/txs.py`
+- `src/aeat/entrypoints/cli/financial/txs.py`
   writes LLM-derived classification back into the transaction catalogue
 
 ## Findings

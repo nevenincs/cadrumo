@@ -22,15 +22,15 @@ Audit of the repo produced these facts (file paths cite evidence):
 - `corpus/casillas/modelo_130/2025Q4.json` — **4 casillas**: `01, 02, 03, 18`. Of these, `03` and `18` are computed with `formula_inputs` populated.
 - `corpus/casillas/modelo_303/2025Q4.json` — **4 casillas**: `01, 03, 27, 71`.
 - `corpus/casillas/modelo_390/2025.json` — **3 casillas**: `95, 96, 662`.
-- `src/aeat/formulas/_rulesets/modelo_130_2025.py` — declares **9 formula casillas**: `03, 04, 07, 09, 11, 12, 14, 17, 19`. Five of these nine (`04, 07, 09, 11, 12, 14, 17, 19`) have no entry in the corpus.
-- `src/aeat/formulas/_rulesets/modelo_303_2025.py` — declares **12 formula casillas** (referencing ~30 casilla IDs); only 1 of those 12 (`03`) is in the corpus.
-- `src/aeat/formulas/_rulesets/` has **no Modelo 390 ruleset** at all today — only rulesets for 130 and 303.
+- `src/aeat/domain/formulas/_rulesets/modelo_130_2025.py` — declares **9 formula casillas**: `03, 04, 07, 09, 11, 12, 14, 17, 19`. Five of these nine (`04, 07, 09, 11, 12, 14, 17, 19`) have no entry in the corpus.
+- `src/aeat/domain/formulas/_rulesets/modelo_303_2025.py` — declares **12 formula casillas** (referencing ~30 casilla IDs); only 1 of those 12 (`03`) is in the corpus.
+- `src/aeat/domain/formulas/_rulesets/` has **no Modelo 390 ruleset** at all today — only rulesets for 130 and 303.
 
 Cross-cutting gaps:
 
-- `src/aeat/filing/runtime.py` — `build_runtime_schema_provider()` loads three hard-coded collections. No test asserts the collection's casilla IDs ⊇ ruleset's casilla IDs.
-- `src/aeat/schema/_boe_extractor.py` — can parse AEAT form PDFs to extract casilla definitions, but its pattern library only matches Modelo 130 (line 280–284). Blocked on live BOE verification (`TODO(#9-followup-live-boe-verification)` at `src/aeat/schema/_fetch.py:132`).
-- `src/aeat/manuals/_schema.py` / `_stubs.py` — Manual práctico parser exists but is stub-level; not wired into corpus generation.
+- `src/aeat/application/filing/runtime.py` — `build_runtime_schema_provider()` loads three hard-coded collections. No test asserts the collection's casilla IDs ⊇ ruleset's casilla IDs.
+- `src/aeat/domain/schema/_boe_extractor.py` — can parse AEAT form PDFs to extract casilla definitions, but its pattern library only matches Modelo 130 (line 280–284). Blocked on live BOE verification (`TODO(#9-followup-live-boe-verification)` at `src/aeat/domain/schema/_fetch.py:132`).
+- `src/aeat/domain/manuals/_schema.py` / `_stubs.py` — Manual práctico parser exists but is stub-level; not wired into corpus generation.
 - No cross-validation test exists between corpus and rulesets. The two can drift silently and have already.
 
 ## Real-form casilla counts (from AEAT's published forms — not yet in the repo)
@@ -54,8 +54,8 @@ The real-form casilla count for `130` (19) is **knowable** from a single publish
 
 The project has four potential sources for casilla definitions. Their authority ranks:
 
-1. **AEAT BOE orders** (e.g., *Orden HAC/610/2024* for Modelo 130) — legally authoritative. Published as PDFs on the BOE website. `src/aeat/schema/_boe_extractor.py` can parse these but is pattern-narrow and not on the mainline corpus build path.
-2. **AEAT Manual práctico** — the operational reference AEAT publishes annually. `src/aeat/manuals/` intends to parse it; currently stub.
+1. **AEAT BOE orders** (e.g., *Orden HAC/610/2024* for Modelo 130) — legally authoritative. Published as PDFs on the BOE website. `src/aeat/domain/schema/_boe_extractor.py` can parse these but is pattern-narrow and not on the mainline corpus build path.
+2. **AEAT Manual práctico** — the operational reference AEAT publishes annually. `src/aeat/domain/manuals/` intends to parse it; currently stub.
 3. **AEAT interactive form XML / HTML** — downloadable from Sede electrónica. Structured. Contains every casilla ID, label, data type, and some validation rules. No project surface reads it today.
 4. **Printed form PDFs** — human-readable but lower fidelity for automation. Usable as a fallback.
 
@@ -85,7 +85,7 @@ These are silent correctness bugs. A test asserting "corpus covers at least ever
 2. **Schema-complete bar**: defined per modelo as "every casilla IDs on the printed form is enumerated with a data type, a label (trilingual), a source citation, and — if derived — a formula referencing the same ruleset the corpus pairs with." Quantified: 19 casillas for 130; ~88 for 303; ~680 for 390 (likely split into annual + anexo sub-schemas); 0→hundreds for 100 (deferred to cluster F).
 3. **Delivery order**: 130 first (smallest, ruleset exists), 303 second (largest ruleset, highest volume), 390 third (but parked until a ruleset lands — see #221), then 111, 115, 180, 190. Modelo 100 is cluster F.
 4. **Ruleset-corpus divergence policy**: one lint test + one pytest, both added in this cluster, that fail when corpus and ruleset disagree on the casilla ID set.
-5. **Schema versioning**: today one version per modelo. Once we extend, we need `schema_version` keyed on `(modelo, año)` (formulas and casilla sets change yearly). Existing `SCHEMA_VERSION_DEFAULT` in `src/aeat/filing/_schema.py` becomes a default for legacy code paths only.
+5. **Schema versioning**: today one version per modelo. Once we extend, we need `schema_version` keyed on `(modelo, año)` (formulas and casilla sets change yearly). Existing `SCHEMA_VERSION_DEFAULT` in `src/aeat/application/filing/_schema.py` becomes a default for legacy code paths only.
 6. **Provenance on every casilla**: extend the pydantic record with `source_citation: str` (BOE / manual reference) and `source_url: AnyHttpUrl | None`. Audit trail requirement.
 
 ## Risk register

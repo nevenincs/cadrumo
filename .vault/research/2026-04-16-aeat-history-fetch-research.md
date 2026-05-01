@@ -40,7 +40,7 @@ Two subpackages already fetch data from authenticated AEAT surfaces:
   expedientes*. Each `Expediente` carries:
   `(expediente_id, modelo, period, status, presented_at, csv,
   justificante_url, source_page_url, fetched_at)`.
-- `aeat.justificante` (#44) — parses a locally-downloaded PDF
+- `aeat.domain.justificante` (#44) — parses a locally-downloaded PDF
   receipt into `Justificante` with *only the headline totals*
   (`total_a_ingresar`, `total_a_devolver`, csv, tax_id, presented_at).
 
@@ -58,7 +58,7 @@ Relevant architectural reference:
   composes `BrowserSession` + `CertificateBackend` via Protocols;
   #168 reuses the same authenticated context indirectly (see D1
   below).
-- `aeat.casillas.CasillaRecord` — defines the canonical casilla
+- `aeat.domain.casillas.CasillaRecord` — defines the canonical casilla
   catalogue shape (`casilla_id`, `label`, `data_type`, etc.).
   History records refer to casillas by `casilla_id` only — we
   deliberately do not re-embed the catalogue shape.
@@ -166,7 +166,7 @@ path 100% offline.
 The casilla→value mapping keyed by `casilla_id`. Values are carried as
 strings verbatim from the portal (see D3 below) to preserve AEAT's
 printed formatting; downstream consumers (verification engine) convert
-through `aeat.casillas.CasillaRecord.data_type` rules.
+through `aeat.domain.casillas.CasillaRecord.data_type` rules.
 
 | Field                    | Type                        | Notes                                                        |
 | ------------------------ | --------------------------- | ------------------------------------------------------------ |
@@ -212,7 +212,7 @@ for row in tbody.find_all("tr"):
 ```
 
 Spanish decimal conventions (`1.234,56` → `1234.56`) are already
-handled by `aeat.justificante._extract._parse_decimal`; we reuse the
+handled by `aeat.domain.justificante._extract._parse_decimal`; we reuse the
 helper or lift its logic into a shared `aeat._decimal` module (plan
 decision).
 
@@ -239,7 +239,7 @@ early when no live session can be constructed.
 
 ## config surface
 
-Two new `Settings` fields on `aeat.config.Settings`:
+Two new `Settings` fields on `aeat.core.config.Settings`:
 
 - `aeat_filing_history_dir: Path` — default
   `PROJECT_ROOT / "var" / "filing-history"`. Single JSON file

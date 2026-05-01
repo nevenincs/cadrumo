@@ -39,7 +39,7 @@ that can satisfy iteration 6 without drifting from the current codebase.
 
 ### Grounded requirements from issue #398 and iteration 6
 
-- Issue #398 requires a central registry at `src/aeat/errors/_registry.py`
+- Issue #398 requires a central registry at `src/aeat/core/errors/_registry.py`
   backed by a frozen Pydantic v2 model, a registered `code` on every
   `AeatError` subclass, a CLI error-emission decorator, a JSON error envelope,
   stable stderr prefixes, and CI enforcement against freeform CLI errors.
@@ -59,7 +59,7 @@ that can satisfy iteration 6 without drifting from the current codebase.
 - `src/aeat/errors.py` is a plain inheritance tree. It has no central error
   registry, no category taxonomy, no shared payload shape, and no CLI emission
   helper.
-- The root CLI is `src/aeat/cli/__init__.py`, which registers many Typer
+- The root CLI is `src/aeat/entrypoints/cli/__init__.py`, which registers many Typer
   sub-apps directly. There is no single error translator at the root.
 - Error handling is fragmented:
   - many CLI paths raise `typer.BadParameter`;
@@ -68,21 +68,21 @@ that can satisfy iteration 6 without drifting from the current codebase.
     as `export REFUSED`, `export UNSUPPORTED`, `corpus drift`, or `replay
     refused`;
   - some domain exceptions carry local `code` values already, for example
-    `src/aeat/casillas/errors.py`, but those codes are local identifiers, not
+    `src/aeat/domain/casillas/errors.py`, but those codes are local identifiers, not
     iteration-6 registry entries.
 - The existing JSON error behavior is also inconsistent with iteration 6.
-  `src/aeat/cli/submission/test_json_output_contract.py` and
-  `src/aeat/cli/submission/test_verify.py` currently assert JSON error payloads
+  `src/aeat/entrypoints/cli/submission/test_json_output_contract.py` and
+  `src/aeat/entrypoints/cli/submission/test_verify.py` currently assert JSON error payloads
   on stdout. Iteration 6 requires human-readable stderr plus the machine
   envelope on stderr, while stdout remains clean.
 - The current Typer default is already visible in tests as a problem.
-  `src/aeat/cli/auth/test_auth_cli.py` has to strip Rich panel borders and ANSI
+  `src/aeat/entrypoints/cli/auth/test_auth_cli.py` has to strip Rich panel borders and ANSI
   escapes before asserting on error text. That is direct evidence that the
   default renderer is not grep-stable enough for iteration 6.
 - Exit-code meaning is currently local, not global. For example:
-  - `src/aeat/cli/submission/test_exit_code_contract.py` locks a submission-only
+  - `src/aeat/entrypoints/cli/submission/test_exit_code_contract.py` locks a submission-only
     contract where `1`, `2`, and `3` already mean specific things;
-  - `src/aeat/cli/browser/health.py` maps browser health states to `0`, `2`,
+  - `src/aeat/entrypoints/cli/browser/health.py` maps browser health states to `0`, `2`,
     `3`, `4`, `5`, and `6`;
   - other commands use `1` or `2` opportunistically.
   Iteration 6 therefore introduces a repo-wide contract change, not just a new
@@ -223,7 +223,7 @@ infrastructure lands.
 The defensible first boundary is:
 
 - every `AeatError` subclass must declare a registered code;
-- every CLI-raised user-facing failure under `src/aeat/cli/` must normalize
+- every CLI-raised user-facing failure under `src/aeat/entrypoints/cli/` must normalize
   into a registered code before emission;
 - non-CLI deep internals may still raise native exceptions temporarily if the
   CLI boundary translates them into registered fallback codes such as
@@ -249,7 +249,7 @@ phaseable.
 
 ### Consequences and ADR inputs
 
-- The root CLI construction in `src/aeat/cli/__init__.py` will need an explicit
+- The root CLI construction in `src/aeat/entrypoints/cli/__init__.py` will need an explicit
   decision about whether to disable Typer pretty exceptions globally. The
   research recommendation is yes for the operator surface.
 - Existing tests that assert JSON error documents on stdout will need to move

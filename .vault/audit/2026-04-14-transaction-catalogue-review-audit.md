@@ -21,20 +21,20 @@ After those fixes and their regression tests landed, no remaining LOW, MEDIUM, H
 
 ## Reviewed Scope
 
-- `src/aeat/financial/transactions/__init__.py`
-- `src/aeat/financial/transactions/_enums.py`
-- `src/aeat/financial/transactions/_errors.py`
-- `src/aeat/financial/transactions/_models.py`
-- `src/aeat/financial/transactions/_service.py`
-- `src/aeat/financial/transactions/_stubs.py`
-- `src/aeat/financial/transactions/test_models.py`
-- `src/aeat/financial/transactions/test_catalogue.py`
-- `src/aeat/financial/transactions/test_cli.py`
-- `src/aeat/cli/financial/txs.py`
-- `src/aeat/cli/financial/__init__.py`
+- `src/aeat/domain/financial/transactions/__init__.py`
+- `src/aeat/domain/financial/transactions/_enums.py`
+- `src/aeat/domain/financial/transactions/_errors.py`
+- `src/aeat/domain/financial/transactions/_models.py`
+- `src/aeat/domain/financial/transactions/_service.py`
+- `src/aeat/domain/financial/transactions/_stubs.py`
+- `src/aeat/domain/financial/transactions/test_models.py`
+- `src/aeat/domain/financial/transactions/test_catalogue.py`
+- `src/aeat/domain/financial/transactions/test_cli.py`
+- `src/aeat/entrypoints/cli/financial/txs.py`
+- `src/aeat/entrypoints/cli/financial/__init__.py`
 - `src/aeat/config.py`
 - `env/.env.example`
-- `src/aeat/financial/providers/__init__.py`
+- `src/aeat/domain/financial/providers/__init__.py`
 
 ## Checklist Outcome
 
@@ -42,8 +42,8 @@ After those fixes and their regression tests landed, no remaining LOW, MEDIUM, H
 - `Transaction` preserves the wrapped `RawTransaction` verbatim and every catalogue update returns a new validated record instead of mutating `raw`.
 - Invoice/category references remain runtime `str | None` fields, while `_stubs.py` contains typing-only Protocol placeholders and does not import unmerged sibling packages.
 - All transaction models are strict frozen pydantic v2 models, and the closed sets use `enum.StrEnum`.
-- Public callers import from `aeat.financial.transactions` only; all implementation modules remain underscored and are not re-exported directly.
-- Logging uses `aeat.logging.get_logger(__name__)`, and the transaction-specific errors inherit from `aeat.errors.AeatError`.
+- Public callers import from `aeat.domain.financial.transactions` only; all implementation modules remain underscored and are not re-exported directly.
+- Logging uses `aeat.core.logging.get_logger(__name__)`, and the transaction-specific errors inherit from `aeat.core.errors.AeatError`.
 - `just lint`, `just typecheck`, `just test`, and `just hooks` all passed locally on this branch.
 
 ## Residual Risks

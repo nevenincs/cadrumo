@@ -16,15 +16,15 @@ Land a directory-backed `aeat browser` sub-app exposing
 
 ## Changes
 
-- `src/aeat/cli/browser/__init__.py` — new sub-app wiring.
-- `src/aeat/cli/browser/health.py` — command implementation. Uses a
+- `src/aeat/entrypoints/cli/browser/__init__.py` — new sub-app wiring.
+- `src/aeat/entrypoints/cli/browser/health.py` — command implementation. Uses a
   module-level `PROBE_FACTORY` callable as the sanctioned
   dependency-injection seam so unit tests can inject a concrete
   test double without `unittest.mock`. The default factory imports
   Playwright and builds a real `BrowserSession`; imports are
   lazy-loaded inside the factory to keep test startup Playwright-
   free.
-- `src/aeat/cli/__init__.py` — `app.add_typer(browser_module.app,
+- `src/aeat/entrypoints/cli/__init__.py` — `app.add_typer(browser_module.app,
   name="browser", ...)`.
 
 ## Exit-code table

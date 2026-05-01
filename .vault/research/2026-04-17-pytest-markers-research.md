@@ -58,21 +58,21 @@ Enumerated below by proposed domain. "Current" is `module` if `pytestmark = ...`
 
 | file | current | access | notes |
 | --- | --- | --- | --- |
-| `src/aeat/auth/test_certificate.py` | per-function `unit` | `unit` | cert-loader happy paths |
-| `src/aeat/auth/test_certificate_live.py` | per-function `live` | `live_read` | mTLS handshake probe |
-| `src/aeat/auth/test_health.py` | per-function `unit` | `unit` |  |
-| `src/aeat/auth/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/browser/test_evasion.py` | per-function `unit` | `unit` |  |
-| `src/aeat/browser/test_live_evasion.py` | per-function `live` | `live_read` | bot-detection probe |
-| `src/aeat/browser/test_profile.py` | per-function `unit` | `unit` |  |
-| `src/aeat/browser/test_session.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py` | per-function `unit` | `unit` | cert-loader happy paths |
+| `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py` | per-function `live` | `live_read` | mTLS handshake probe |
+| `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_health.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_evasion.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_live_evasion.py` | per-function `live` | `live_read` | bot-detection probe |
+| `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_profile.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py` | per-function `unit` | `unit` |  |
 | `src/aeat/inbox/test_classifier.py` | per-function `unit` | `unit` |  |
 | `src/aeat/inbox/test_deadline.py` | per-function `unit` | `unit` |  |
 | `src/aeat/inbox/test_fetcher.py` | per-function `unit` | `unit` |  |
 | `src/aeat/inbox/test_live_inbox.py` | per-function `live` | `live_read` | fetch+ack; skipped until #8 |
 | `src/aeat/inbox/test_models.py` | per-function `unit` | `unit` |  |
-| `src/aeat/justificante/test_parser.py` | module `unit` | `unit` |  |
-| `src/aeat/justificante/test_verify_live.py` | module `live` | `live_read` | CSV verification round-trip |
+| `src/aeat/domain/justificante/test_parser.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/justificante/test_verify_live.py` | module `live` | `live_read` | CSV verification round-trip |
 | `src/aeat/status/test_cache.py` | module `unit` | `unit` |  |
 | `src/aeat/status/test_cache_key.py` | module `unit` | `unit` |  |
 | `src/aeat/status/test_errors.py` | module `unit` | `unit` |  |
@@ -81,19 +81,19 @@ Enumerated below by proposed domain. "Current" is `module` if `pytestmark = ...`
 | `src/aeat/status/test_reader.py` | module `unit` | `unit` |  |
 | `src/aeat/status/test_site_health.py` | per-function `unit` | `unit` |  |
 | `src/aeat/status/_parsers/test_expedientes.py` | module `unit` | `unit` |  |
-| `src/aeat/casillas/test_live_cli.py` | per-function `live` | `live_read` | skip until #21 |
-| `src/aeat/casillas/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/casillas/_test_catalogue.py` | per-function `unit` | `unit` |  |
-| `src/aeat/casillas/_test_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/sync/test_bounded_policy.py` | per-function `unit` | `unit` |  |
-| `src/aeat/sync/test_classifier.py` | per-function `unit` | `unit` |  |
-| `src/aeat/sync/test_live_sync.py` | per-function `live` | `live_read` | dependency-gated fetch read |
-| `src/aeat/sync/test_repository.py` | per-function `unit` | `unit` |  |
-| `src/aeat/sync/test_runner.py` | per-function `unit` | `unit` |  |
-| `src/aeat/sync/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/sync/test_strategies.py` | per-function `unit` | `unit` |  |
-| `src/aeat/sync/test_wire.py` | per-function `unit` | `unit` |  |
-| `src/aeat/portals/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/casillas/test_live_cli.py` | per-function `live` | `live_read` | skip until #21 |
+| `src/aeat/domain/casillas/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/casillas/_test_catalogue.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/casillas/_test_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/sync/test_bounded_policy.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/sync/test_classifier.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/sync/test_live_sync.py` | per-function `live` | `live_read` | dependency-gated fetch read |
+| `src/aeat/application/sync/test_repository.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/sync/test_runner.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/sync/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/sync/test_strategies.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/sync/test_wire.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/portals/test_smoke.py` | per-function `unit` | `unit` |  |
 
 #### 2.3.2 domain_submission - AEAT write-capable boundary
 
@@ -101,17 +101,17 @@ Every test in this domain must be reviewed against charter rule `R5`. None execu
 
 | file | current | access | notes |
 | --- | --- | --- | --- |
-| `src/aeat/filing/test_complementaria.py` | module `unit` | `unit` |  |
-| `src/aeat/filing/test_filing.py` | per-function `unit` | `unit` |  |
-| `src/aeat/filing/test_live_complementaria.py` | module `live` | `live_read` | explicit `dry_run=True` |
-| `src/aeat/filing/test_modelo_303_390.py` | per-function `unit` | `unit` |  |
-| `src/aeat/submission/test_engine.py` | module `unit` | `unit` |  |
-| `src/aeat/submission/test_errors.py` | module `unit` | `unit` |  |
-| `src/aeat/submission/test_live_submission.py` | module `live` | `live_read` | dry-run-only per module docstring |
-| `src/aeat/submission/test_models.py` | module `unit` | `unit` |  |
-| `src/aeat/submission/test_preflight.py` | module `unit` | `unit` |  |
-| `src/aeat/submission/test_safety_helpers.py` | module `unit` | `unit` |  |
-| `src/aeat/submission/_submitters/test_modelo130.py` | module `unit` | `unit` |  |
+| `src/aeat/application/filing/test_complementaria.py` | module `unit` | `unit` |  |
+| `src/aeat/application/filing/test_filing.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/filing/test_live_complementaria.py` | module `live` | `live_read` | explicit `dry_run=True` |
+| `src/aeat/application/filing/test_modelo_303_390.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/export/test_engine.py` | module `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/export/test_errors.py` | module `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/export/test_live_submission.py` | module `live` | `live_read` | dry-run-only per module docstring |
+| `src/aeat/adapters/outbound/aeat/export/test_models.py` | module `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/export/test_preflight.py` | module `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py` | module `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/aeat/export/_submitters/test_modelo130.py` | module `unit` | `unit` |  |
 
 **No `live_write` test exists today.** The plan that follows this research will introduce the marker, document it, and install the ban hook. Any future test that truly exercises `dry_run=False` against a real AEAT endpoint (which the charter forbids) would carry `live_write`; collection-time refusal ensures the ban is structural rather than procedural.
 
@@ -119,82 +119,82 @@ Every test in this domain must be reviewed against charter rule `R5`. None execu
 
 | file | current | access | notes |
 | --- | --- | --- | --- |
-| `src/aeat/financial/categories/test_profile.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/categories/test_proportionality.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/categories/test_registry.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/categories/test_spending_category.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/invoices/test_catalogue.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/invoices/test_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/invoices/test_models.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/invoices/test_reconciliation.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/invoices/test_validators.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/providers/test_base.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/providers/test_csv.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/providers/test_ofx.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/providers/test_xlsx.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/transactions/test_catalogue.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/transactions/test_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/transactions/test_models.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/vat/test_categories.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/vat/test_corpus.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/vat/test_rates.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/vat/test_rules.py` | per-function `unit` | `unit` |  |
-| `src/aeat/financial/vat/test_verify.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/financial/test_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/categories/test_profile.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/categories/test_proportionality.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/categories/test_registry.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/categories/test_spending_category.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/invoices/test_catalogue.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/invoices/test_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/invoices/test_models.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/invoices/test_reconciliation.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/invoices/test_validators.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/providers/test_base.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/providers/test_csv.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/providers/test_ofx.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/providers/test_xlsx.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/transactions/test_catalogue.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/transactions/test_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/transactions/test_models.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/vat/test_categories.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/vat/test_corpus.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/vat/test_rates.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/vat/test_rules.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/financial/vat/test_verify.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/financial/test_cli.py` | per-function `unit` | `unit` |  |
 
 #### 2.3.4 domain_local_state - on-disk catalogues and local SQLite mirror
 
 | file | current | access | notes |
 | --- | --- | --- | --- |
-| `src/aeat/storage/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/storage/_test_constraints.py` | per-function `unit` | `unit` |  |
-| `src/aeat/storage/_test_engine.py` | per-function `unit` | `unit` |  |
-| `src/aeat/storage/_test_migrations.py` | per-function `unit` | `unit` |  |
-| `src/aeat/storage/_test_records.py` | per-function `unit` | `unit` |  |
-| `src/aeat/storage/_test_repository.py` | per-function `unit` | `unit` |  |
-| `src/aeat/storage/_test_session.py` | per-function `unit` | `unit` |  |
-| `src/aeat/models/test_applicability.py` | module `unit` | `unit` |  |
-| `src/aeat/models/test_casilla_cross_reference.py` | module `unit` | `unit` |  |
-| `src/aeat/models/test_citations.py` | module `unit` | `unit` |  |
-| `src/aeat/models/test_cli.py` | module `unit` | `unit` |  |
-| `src/aeat/models/test_codes.py` | module `unit` | `unit` |  |
-| `src/aeat/models/test_metadata.py` | module `unit` | `unit` |  |
-| `src/aeat/models/test_registry.py` | module `unit` | `unit` |  |
-| `src/aeat/models/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/normatives/test_loader.py` | per-function `unit` | `unit` |  |
-| `src/aeat/normatives/test_lookup_and_cite.py` | per-function `unit` | `unit` |  |
-| `src/aeat/normatives/test_schema.py` | per-function `unit` | `unit` |  |
-| `src/aeat/normatives/test_verify.py` | per-function `unit` | `unit` |  |
-| `src/aeat/manuals/test_fetch.py` | per-function `unit` | `unit` |  |
-| `src/aeat/manuals/test_loader.py` | per-function `unit` | `unit` |  |
-| `src/aeat/manuals/test_schema.py` | per-function `unit` | `unit` |  |
-| `src/aeat/manuals/test_verify.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/persistence/storage/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/persistence/storage/_test_constraints.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/persistence/storage/_test_engine.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/persistence/storage/_test_migrations.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/persistence/storage/_test_records.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/persistence/storage/_test_repository.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/persistence/storage/_test_session.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/modelos/test_applicability.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/modelos/test_casilla_cross_reference.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/modelos/test_citations.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/modelos/test_cli.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/modelos/test_codes.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/modelos/test_metadata.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/modelos/test_registry.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/modelos/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/normatives/test_loader.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/normatives/test_lookup_and_cite.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/normatives/test_schema.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/normatives/test_verify.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/manuals/test_fetch.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/manuals/test_loader.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/manuals/test_schema.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/manuals/test_verify.py` | per-function `unit` | `unit` |  |
 | `src/aeat/corpus/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/schema/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/deadlines/test_applies.py` | module `unit` | `unit` |  |
-| `src/aeat/deadlines/test_calendar.py` | module `unit` | `unit` |  |
-| `src/aeat/deadlines/test_engine.py` | module `unit` | `unit` |  |
-| `src/aeat/deadlines/test_models.py` | module `unit` | `unit` |  |
-| `src/aeat/cli/deadlines/test_cli.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/schema/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/deadlines/test_applies.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/deadlines/test_calendar.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/deadlines/test_engine.py` | module `unit` | `unit` |  |
+| `src/aeat/domain/deadlines/test_models.py` | module `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/deadlines/test_cli.py` | module `unit` | `unit` |  |
 
 #### 2.3.5 domain_mediation - workflow, LLM, i18n, testing
 
 | file | current | access | notes |
 | --- | --- | --- | --- |
-| `src/aeat/workflow/test_engine.py` | per-function `unit` | `unit` |  |
-| `src/aeat/workflow/test_live.py` | per-function `live` | `live_read` | no writes per module docstring |
-| `src/aeat/workflow/test_models.py` | per-function `unit` | `unit` |  |
-| `src/aeat/workflow/test_persistence.py` | per-function `unit` | `unit` |  |
-| `src/aeat/llm/test_live_anthropic.py` | per-function `live` | `live_read` | Anthropic round-trip |
-| `src/aeat/llm/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/llm/_test_cache.py` | per-function `unit` | `unit` |  |
-| `src/aeat/llm/_test_client.py` | per-function `unit` | `unit` |  |
-| `src/aeat/llm/_test_models.py` | per-function `unit` | `unit` |  |
-| `src/aeat/llm/_test_prompts.py` | per-function `unit` | `unit` |  |
-| `src/aeat/llm/_test_translation.py` | per-function `unit` | `unit` |  |
-| `src/aeat/llm/_test_usage.py` | per-function `unit` | `unit` |  |
-| `src/aeat/i18n/test_i18n.py` | per-function `unit` | `unit` |  |
-| `src/aeat/testing/test_testing.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/workflow/test_engine.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/workflow/test_live.py` | per-function `live` | `live_read` | no writes per module docstring |
+| `src/aeat/application/workflow/test_models.py` | per-function `unit` | `unit` |  |
+| `src/aeat/application/workflow/test_persistence.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/llm/test_live_anthropic.py` | per-function `live` | `live_read` | Anthropic round-trip |
+| `src/aeat/adapters/outbound/llm/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/llm/_test_cache.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/llm/_test_client.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/llm/_test_models.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/llm/_test_prompts.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/llm/_test_translation.py` | per-function `unit` | `unit` |  |
+| `src/aeat/adapters/outbound/llm/_test_usage.py` | per-function `unit` | `unit` |  |
+| `src/aeat/core/i18n/test_i18n.py` | per-function `unit` | `unit` |  |
+| `src/aeat/domain/testing/test_testing.py` | per-function `unit` | `unit` |  |
 
 #### 2.3.6 domain_infra - project plumbing, CLI, setup, release-meta
 
@@ -202,33 +202,33 @@ Every test in this domain must be reviewed against charter rule `R5`. None execu
 | --- | --- | --- | --- |
 | `src/aeat/_test_auth.py` | per-function `unit` | `unit` |  |
 | `src/aeat/_test_env_io.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/test_categories_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/test_manual_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/test_vat_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/browser/test_health.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/filing/test_filing_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/inbox/test_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/llm/test_smoke.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/submission/test_cli.py` | module `unit` | `unit` |  |
-| `src/aeat/cli/sync/test_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/workflow/test_cli.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/_test_bootstrap.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/_test_cloud.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/_test_cloud_live.py` | per-function `live` | `live_read` | Google Cloud read-only smoke |
-| `src/aeat/cli/_test_docs_helpers.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/_test_docs_live.py` | per-function `live` | `live_read` | scratch-doc round-trip (net-neutral) |
-| `src/aeat/cli/_test_doctor.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/_test_drive_helpers.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/_test_drive_live.py` | per-function `live` | `live_read` | scratch-folder round-trip |
-| `src/aeat/cli/_test_oauth.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/_test_sheets_helpers.py` | per-function `unit` | `unit` |  |
-| `src/aeat/cli/_test_sheets_live.py` | per-function `live` | `live_read` | scratch-sheet round-trip |
-| `src/aeat/setup/test_cli.py` | module `unit` | `unit` |  |
-| `src/aeat/setup/test_env_writer.py` | module `unit` | `unit` |  |
-| `src/aeat/setup/test_models.py` | module `unit` | `unit` |  |
-| `src/aeat/setup/test_verifier.py` | module `unit` | `unit` |  |
-| `src/aeat/setup/test_wizard.py` | module `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/test_categories_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/test_manual_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/test_vat_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/browser/test_health.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/filing/test_filing_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/inbox/test_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/llm/test_smoke.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/submission/test_cli.py` | module `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/sync/test_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/workflow/test_cli.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/_test_bootstrap.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/_test_cloud.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/_test_cloud_live.py` | per-function `live` | `live_read` | Google Cloud read-only smoke |
+| `src/aeat/entrypoints/cli/_test_docs_helpers.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/_test_docs_live.py` | per-function `live` | `live_read` | scratch-doc round-trip (net-neutral) |
+| `src/aeat/entrypoints/cli/_test_doctor.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/_test_drive_helpers.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/_test_drive_live.py` | per-function `live` | `live_read` | scratch-folder round-trip |
+| `src/aeat/entrypoints/cli/_test_oauth.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/_test_sheets_helpers.py` | per-function `unit` | `unit` |  |
+| `src/aeat/entrypoints/cli/_test_sheets_live.py` | per-function `live` | `live_read` | scratch-sheet round-trip |
+| `src/aeat/application/setup/test_cli.py` | module `unit` | `unit` |  |
+| `src/aeat/application/setup/test_env_writer.py` | module `unit` | `unit` |  |
+| `src/aeat/application/setup/test_models.py` | module `unit` | `unit` |  |
+| `src/aeat/application/setup/test_verifier.py` | module `unit` | `unit` |  |
+| `src/aeat/application/setup/test_wizard.py` | module `unit` | `unit` |  |
 | `tests/test_config.py` | module `unit` | `unit` |  |
 | `tests/test_docs.py` | per-function `unit` | `unit` |  |
 | `tests/test_release_config.py` | per-function `unit` | `unit` |  |
@@ -289,21 +289,21 @@ Mixed-domain modules are rare but legal. In that case the module-level `pytestma
 
 From section 2.3 the 14 currently `live`-marked modules all fall into `live_read` under the proposed taxonomy. Citations (module path then docstring evidence):
 
-- `src/aeat/auth/test_certificate_live.py` - "mTLS handshake smoke test" (read)
-- `src/aeat/browser/test_live_evasion.py` - bot-evasion probe (read)
-- `src/aeat/casillas/test_live_cli.py` - skipped until #21 (would be read)
-- `src/aeat/cli/_test_cloud_live.py` - "Read-only round-trips against Cloud Functions, Cloud Run, and Cloud Storage"
-- `src/aeat/cli/_test_docs_live.py` - scratch-doc round-trip, self-cleaning
-- `src/aeat/cli/_test_drive_live.py` - scratch-folder round-trip
-- `src/aeat/cli/_test_sheets_live.py` - scratch-sheet round-trip
-- `src/aeat/filing/test_live_complementaria.py` - "exercises only the dry-run/read-only amendment submission path"
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py` - "mTLS handshake smoke test" (read)
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_live_evasion.py` - bot-evasion probe (read)
+- `src/aeat/domain/casillas/test_live_cli.py` - skipped until #21 (would be read)
+- `src/aeat/entrypoints/cli/_test_cloud_live.py` - "Read-only round-trips against Cloud Functions, Cloud Run, and Cloud Storage"
+- `src/aeat/entrypoints/cli/_test_docs_live.py` - scratch-doc round-trip, self-cleaning
+- `src/aeat/entrypoints/cli/_test_drive_live.py` - scratch-folder round-trip
+- `src/aeat/entrypoints/cli/_test_sheets_live.py` - scratch-sheet round-trip
+- `src/aeat/application/filing/test_live_complementaria.py` - "exercises only the dry-run/read-only amendment submission path"
 - `src/aeat/inbox/test_live_inbox.py` - fetch+ack read
-- `src/aeat/justificante/test_verify_live.py` - CSV verification round-trip (read)
-- `src/aeat/llm/test_live_anthropic.py` - Anthropic API round-trip (read)
+- `src/aeat/domain/justificante/test_verify_live.py` - CSV verification round-trip (read)
+- `src/aeat/adapters/outbound/llm/test_live_anthropic.py` - Anthropic API round-trip (read)
 - `src/aeat/status/test_live.py` - Sede landing page read (placeholder)
-- `src/aeat/submission/test_live_submission.py` - "performs a DRY-RUN-ONLY engine invocation. It never enters live submission mode."
-- `src/aeat/sync/test_live_sync.py` - "fetch then validate then classify" read cycle
-- `src/aeat/workflow/test_live.py` - asserts rejection-on-missing-adapters (no writes)
+- `src/aeat/adapters/outbound/aeat/export/test_live_submission.py` - "performs a DRY-RUN-ONLY engine invocation. It never enters live submission mode."
+- `src/aeat/application/sync/test_live_sync.py` - "fetch then validate then classify" read cycle
+- `src/aeat/application/workflow/test_live.py` - asserts rejection-on-missing-adapters (no writes)
 - `tests/live/test_google_fixtures_smoke.py` - Drive+Sheets+Docs read probes
 
 **Subtle case - scratch-resource round-trips.** The Google scratch tests (`_test_docs_live.py`, `_test_drive_live.py`, `_test_sheets_live.py`, `tests/live/test_google_fixtures_smoke.py`) do perform writes against Google-owned, project-provisioned scratch resources. Under the charter's letter-of-the-law, those are writes. Under the charter's intent, `R1` forbids writes to the **AEAT Sede Electronica** specifically - AEAT has no sandbox, every write is legally binding. Google Workspace writes against scratch-only documents are out of scope of R1.
@@ -458,11 +458,11 @@ Files that require edits in the implementation PR:
 
 3. **ruff / ty lint on pytestmark.** No known issue - `pytest` is already a dev dep. `ty` rules config does not flag `pytest.mark.*` attribute access.
 
-4. **Per-function @pytest.mark.unit retained vs. module-level.** `#163` mandates module-level. The migration touches ~130 test files. The plan should do this as a single mechanical refactor PR: insert `pytestmark = [...]` at the top, delete per-function `@pytest.mark.unit` decorators. Parametrized tests (e.g. `src/aeat/casillas/test_live_cli.py`) show that `@pytest.mark.parametrize` does not conflict with module-level `pytestmark`.
+4. **Per-function @pytest.mark.unit retained vs. module-level.** `#163` mandates module-level. The migration touches ~130 test files. The plan should do this as a single mechanical refactor PR: insert `pytestmark = [...]` at the top, delete per-function `@pytest.mark.unit` decorators. Parametrized tests (e.g. `src/aeat/domain/casillas/test_live_cli.py`) show that `@pytest.mark.parametrize` does not conflict with module-level `pytestmark`.
 
 5. **Mixed-domain modules.** Rare but legal. `workflow/test_live.py` touches both workflow and submission; `sync/test_live_sync.py` touches sync + browser + auth. Plan should permit a list of domain markers and forbid zero-or-missing.
 
-6. **Under-src conftest.** The project has no `src/aeat/conftest.py`. The hook in section 5.2 lives in `tests/conftest.py`. `pyproject.toml` has `testpaths = ["src", "tests"]`, and pytest walks upward from each test file looking for conftest files. A conftest at the repo root OR at `tests/` applies globally - BUT pytest only picks up `tests/conftest.py` because collected items under `src/aeat/...` share the rootdir. This needs verification; if broken, add a `src/aeat/conftest.py` that re-exports the hook, or promote the hook to a root-level `conftest.py`. **Verification step:** run `uv run pytest --collect-only src/aeat/submission/test_live_submission.py -m live_write` after tagging that file temporarily with `live_write` and confirm zero collection.
+6. **Under-src conftest.** The project has no `src/aeat/conftest.py`. The hook in section 5.2 lives in `tests/conftest.py`. `pyproject.toml` has `testpaths = ["src", "tests"]`, and pytest walks upward from each test file looking for conftest files. A conftest at the repo root OR at `tests/` applies globally - BUT pytest only picks up `tests/conftest.py` because collected items under `src/aeat/...` share the rootdir. This needs verification; if broken, add a `src/aeat/conftest.py` that re-exports the hook, or promote the hook to a root-level `conftest.py`. **Verification step:** run `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/test_live_submission.py -m live_write` after tagging that file temporarily with `live_write` and confirm zero collection.
 
 7. **Existing tests/test_config.py env-alignment.** Adding two new env vars to `Settings` without corresponding lines in `env/.env.example` fails `tests/test_config.py`. Plan must stage the three changes together.
 

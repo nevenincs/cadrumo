@@ -32,7 +32,7 @@ secrets.
 - Version-controlled, diff-friendly, human-inspectable.
 - Every file visibly synthetic — header comment *and* a top-level
   `synthetic: true` field the loader refuses to skip.
-- A typed loader under `src/aeat/testing/` that the rest of the
+- A typed loader under `src/aeat/domain/testing/` that the rest of the
   source tree can import without reaching into `tests/`.
 
 ## non-goals
@@ -45,15 +45,15 @@ secrets.
 
 ## landscape — what already exists on main
 
-- `aeat.filing` is merged. It ships:
+- `aeat.application.filing` is merged. It ships:
   - `FilingDraftStatus` (`StrEnum`): `DRAFT`, `VALIDATED`,
     `READY_TO_SUBMIT`, `SUBMITTED`, `ACKNOWLEDGED`, `REJECTED`,
     `AMENDED`, `CANCELLED`.
   - `FilingDraft`, `FilingValue`, `FilingValueKind`,
     `FilingValidationFinding` — all frozen, strict pydantic v2.
   - `compute_draft_id` — content-addressed 16-char SHA-256 prefix.
-- `aeat.errors.AeatError` is the project error base.
-- `aeat.logging.get_logger(__name__)` is the logging entry point.
+- `aeat.core.errors.AeatError` is the project error base.
+- `aeat.core.logging.get_logger(__name__)` is the logging entry point.
 - #12 base module structure is merged — each subpackage exposes
   its API from `__init__.py`, with colocated `_test_*.py` or
   `test_*.py` files per the CLAUDE.md Rust-style convention.
@@ -78,7 +78,7 @@ Reading issue #14 and the `FilingDraft` schema, a synthetic
 | `period` | `str` | `"2024"`, `"2024Q1"`, `"2024-03"` forms |
 | `period_kind` | `StrEnum` | `ANNUAL`, `QUARTERLY`, `MONTHLY` |
 | `profile_tax_id` | `str` | synthetic tax ID |
-| `status` | `FilingDraftStatus` | imported from `aeat.filing` |
+| `status` | `FilingDraftStatus` | imported from `aeat.application.filing` |
 | `casillas` | `tuple[FixtureCasilla, ...]` | typed casilla values |
 | `totals` | `dict[str, Decimal]` | named computed totals |
 | `created_at` | `datetime` | UTC |
@@ -111,7 +111,7 @@ relying on comments:
    loader asserts this as a strict pydantic field (`Literal[True]`).
 2. Every file's **second** key is `"_comment"` carrying the exact
    string `"SYNTHETIC FIXTURE — do not confuse with real client
-   data. See src/aeat/testing/__init__.py."`. The loader validates
+   data. See src/aeat/domain/testing/__init__.py."`. The loader validates
    the field exists and is non-empty.
 
 Both checks fire at model-validation time, not at lint time, so
@@ -119,7 +119,7 @@ there is no path to load a fixture that drops either marker.
 
 ## loader shape
 
-`src/aeat/testing/` is a new subpackage. It exposes:
+`src/aeat/domain/testing/` is a new subpackage. It exposes:
 
 - `FilingRecord` — strict, frozen pydantic v2 `BaseModel`.
 - `FilingRecordScenario` / `FilingRecordPeriodKind` — `StrEnum`.
@@ -166,7 +166,7 @@ window, and every required edge case.
 ## testing strategy
 
 Unit tests only (`@pytest.mark.unit`), colocated at
-`src/aeat/testing/test_testing.py` (Rust-style). No mocks, no
+`src/aeat/domain/testing/test_testing.py` (Rust-style). No mocks, no
 patches — the fixtures *are* the test inputs.
 
 - `test_load_all_records_parse_cleanly` — iterator returns every

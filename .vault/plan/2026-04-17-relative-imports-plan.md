@@ -168,8 +168,8 @@ broke at runtime — fix and re-run.
 
 ### Step 9 — boundary smoke test
 
-- Add a stray `from aeat.config import Settings` to
-  `src/aeat/cli/setup.py`, confirm `just lint` fails with the
+- Add a stray `from aeat.core.config import Settings` to
+  `src/aeat/entrypoints/cli/setup.py`, confirm `just lint` fails with the
   TID251 message, then revert.
 - Add the same line to `tests/test_config.py`, confirm `just lint`
   stays clean, then revert.

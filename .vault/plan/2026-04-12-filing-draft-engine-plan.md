@@ -15,14 +15,14 @@ Branch: `feature/39-filing-draft-engine`
 
 ## Goal
 
-Land the typed public API for `aeat.filing`, a `Modelo130Builder`
+Land the typed public API for `aeat.application.filing`, a `Modelo130Builder`
 proof-of-concept, the cross-cutting validator, the `aeat filing`
 CLI surface, and the colocated unit-test suite — all behind
 Protocol stubs for in-flight sibling subpackages.
 
 ## Steps
 
-1. **Schema layer** (`src/aeat/filing/_schema.py`)
+1. **Schema layer** (`src/aeat/application/filing/_schema.py`)
    - Define `FilingDraftStatus`, `FilingValueKind`,
      `FilingFindingSeverity` as `enum.StrEnum`.
    - Define `FilingValue`, `FilingValidationFinding`, `FilingDraft`
@@ -31,23 +31,23 @@ Protocol stubs for in-flight sibling subpackages.
    - Implement `compute_draft_id` as a pure function over the
      content tuple.
 
-2. **Errors** (`src/aeat/filing/_errors.py`)
+2. **Errors** (`src/aeat/application/filing/_errors.py`)
    - `FilingDraftError`, `FilingBuilderError`,
      `FilingValidationError`, `FilingComputationError` — all
-     subclasses of `aeat.errors.AeatError`.
+     subclasses of `aeat.core.errors.AeatError`.
 
-3. **Protocol stubs** (`src/aeat/filing/_protocols.py`)
+3. **Protocol stubs** (`src/aeat/application/filing/_protocols.py`)
    - `ModeloIdentity`, `CasillaSchema`, `CasillaCollection`,
      `CasillaSchemaProvider`, `DeadlineStatus`, `DeadlineChecker`,
      `FilingProfile`.
    - All `@runtime_checkable` so test doubles can satisfy them by
      duck-typing without inheritance.
 
-4. **Builder ABC** (`src/aeat/filing/_builder.py`)
+4. **Builder ABC** (`src/aeat/application/filing/_builder.py`)
    - `FilingBuilder` ABC with `modelo_id` class attribute and
      `build(period, profile, inputs)` abstract method.
 
-5. **Modelo 130 builder** (`src/aeat/filing/_builders/modelo_130.py`)
+5. **Modelo 130 builder** (`src/aeat/application/filing/_builders/modelo_130.py`)
    - Concrete `Modelo130Builder` using a hand-curated casilla
      schema (`_modelo_130_schema.py`) that exercises every
      `FilingValueKind`.
@@ -56,7 +56,7 @@ Protocol stubs for in-flight sibling subpackages.
    - Raises `FilingComputationError` on dependency cycles or
      missing required inputs.
 
-6. **Validator** (`src/aeat/filing/_validator.py`)
+6. **Validator** (`src/aeat/application/filing/_validator.py`)
    - `FilingValidator` runs:
      - missing-required casilla → `casilla-required-missing`
      - out-of-range value → `casilla-out-of-range`
@@ -65,7 +65,7 @@ Protocol stubs for in-flight sibling subpackages.
      - schema-version mismatch → `filing-schema-version-mismatch`
    - Returns a tuple of `FilingValidationFinding`.
 
-7. **Public API** (`src/aeat/filing/__init__.py`)
+7. **Public API** (`src/aeat/application/filing/__init__.py`)
    - Re-export every public symbol.
    - `build_draft(modelo, period, profile, inputs, *, settings=None)`
    - `validate_draft(draft, *, settings=None)`
@@ -77,13 +77,13 @@ Protocol stubs for in-flight sibling subpackages.
    - Add `aeat_drafts_dir`, `aeat_draft_fail_on_warning`.
    - Mirror in `env/.env.example`.
 
-9. **CLI** (`src/aeat/cli/filing/`)
+9. **CLI** (`src/aeat/entrypoints/cli/filing/`)
    - Typer sub-app with `build`, `validate`, `show`, `list`
      commands.
-   - Wired into `aeat.cli:app`.
+   - Wired into `aeat.entrypoints.cli:app`.
 
-10. **Tests** (`src/aeat/filing/test_filing.py`,
-    `src/aeat/cli/filing/test_filing_cli.py`)
+10. **Tests** (`src/aeat/application/filing/test_filing.py`,
+    `src/aeat/entrypoints/cli/filing/test_filing_cli.py`)
     - Builder against synthetic schemas + hand-curated inputs.
     - Validator against synthetic drafts.
     - End-to-end smoke for Modelo 130.
@@ -123,10 +123,10 @@ Date: 2026-04-12
   way to honour the "no mocks/patches/fakes/stubs in tests"
   rule while still keeping cross-module isolation.
 - The `_builders/` private package is the right boundary —
-  callers from outside `aeat.filing` cannot reach the concrete
+  callers from outside `aeat.application.filing` cannot reach the concrete
   Modelo 130 implementation. The public registry hides the
   selection logic.
-- Tests are colocated under `src/aeat/filing/` per the
+- Tests are colocated under `src/aeat/application/filing/` per the
   Rust-style convention enforced by CLAUDE.md.
 - All settings additions are documented in `.env.example` and
   the alignment test will catch drift.
@@ -137,8 +137,8 @@ Approved. Proceed to execution.
 
 ## Risks
 
-- The Protocol stubs for `aeat.casillas` / `aeat.schema` /
-  `aeat.deadlines` will need a small rebase once those
+- The Protocol stubs for `aeat.domain.casillas` / `aeat.domain.schema` /
+  `aeat.domain.deadlines` will need a small rebase once those
   subpackages land. The cost is bounded — it is a search-replace
   on the import lines plus a typing pass.
 - Windows-only `just` execution: `prek run --all-files` is the

@@ -182,7 +182,7 @@ partial-init `ImportError` at runtime.
 
 Function-scoped imports sidestep that trap entirely. They are the
 canonical cycle-breaker used elsewhere in the project (e.g. the
-`SiteHealthAlert.stage → aeat.workflow.WorkflowStage` forward
+`SiteHealthAlert.stage → aeat.application.workflow.WorkflowStage` forward
 reference documented at `aeat.status.__init__:55`).
 
 Enforcement: top-level `from ..history import …` in
@@ -306,7 +306,7 @@ Mapping specifics:
   `StatusAuthError` (auth-session has expired). This surfaces
   through `HistoryFetchError` by the same wrapping.
 
-Every error on the path is a subclass of `aeat.errors.AeatError`,
+Every error on the path is a subclass of `aeat.core.errors.AeatError`,
 so consumers can catch the base class for coarse handling or the
 specific subclass for diagnostic routing.
 

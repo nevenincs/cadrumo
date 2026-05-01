@@ -51,7 +51,7 @@ Surveyed via web search; every URL below was verified fetchable at research time
 
 ### Path 2 — User's private archive (Kent's own filings)
 
-The project ships a `aeat drive` CLI (`src/aeat/cli/drive.py`) with `ls`, `find`, `fetch` backed by the existing `aeat.auth` Google OAuth plumbing. A probe against the primary working directory's current auth state returned `403 insufficientPermissions` — fallback to ADC without the Drive scope. The authenticated-OAuth path would work once the user runs `aeat oauth-client` with Drive scope, but:
+The project ships a `aeat drive` CLI (`src/aeat/entrypoints/cli/drive.py`) with `ls`, `find`, `fetch` backed by the existing `aeat.adapters.outbound.aeat.auth` Google OAuth plumbing. A probe against the primary working directory's current auth state returned `403 insufficientPermissions` — fallback to ADC without the Drive scope. The authenticated-OAuth path would work once the user runs `aeat oauth-client` with Drive scope, but:
 
 - **This is the user's property.** We do not pull real filings into my context or the repo.
 - **Names only, never contents.** A listing (`aeat drive find "name contains 'modelo'"`) yields filenames and IDs; that alone is high-value intelligence (which modelos and años the user has filed) without leaking tax data.
@@ -107,7 +107,7 @@ For path 2 → L2 derivatives, the scrubbing pipeline must be deterministic, rev
 ## Open questions (for the ADR)
 
 1. **L1 commit policy** — do we commit raw BOE / Manual PDFs (bytes + SHA-256) or only their URLs + hash-pins that we fetch at test time? Recommendation: **hash-pin + fetch**. Avoid bloating the repo with hundreds of megabytes of PDFs; keep a redistribution-permission audit trail; allow `AEAT_FIXTURE_OFFLINE=1` env var for CI without network.
-2. **L2 scrub tooling location** — `scripts/scrub_filing.py` (one-shot) vs. `src/aeat/_pdf_import/_scrub.py` (library + CLI)? Recommendation: **library** under the new `_pdf_import` package so clusters D / E can call it directly.
+2. **L2 scrub tooling location** — `scripts/scrub_filing.py` (one-shot) vs. `src/aeat/adapters/inbound/pdf/_scrub.py` (library + CLI)? Recommendation: **library** under the new `_pdf_import` package so clusters D / E can call it directly.
 3. **Deterministic scrubbing** — seeded RNG per-file, stable across re-runs? Recommendation: **yes**; the seed is the SHA-256 of the original file name (not contents) so re-scrubbing the same file twice produces byte-identical output, but the seed is not recoverable from the scrubbed output.
 4. **User consent flow** — how does Kent authorise committing his scrubbed derivatives? Recommendation: a `just scrub-filing` recipe with a `--accept-commit-policy` flag that records consent in the sidecar JSON.
 5. **Synthetic fidelity** — how many real anchors per modelo do we need to trust the generator? Recommendation: **≥3 real samples per `(modelo, año, template_revision)` tuple**; if fewer are available, the generator for that tuple is flagged "fidelity-unverified" and its tests run with a `xfail(strict=True)` that flips to xpass once anchors land.

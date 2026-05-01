@@ -40,7 +40,7 @@ The work is split by the issue's mandated phasing:
 - Phase 1 ships standalone foundation modules, tests, docs, env/config
   plumbing, and vault artifacts with no imports from sibling-owned code.
 - Phase 2, after `#398` merges, replaces the temporary stderr-only exit helper
-  path with the real `aeat.errors.ErrorEnvelope` integration and wires the
+  path with the real `aeat.core.errors.ErrorEnvelope` integration and wires the
   root-level `--json` path across Kent-first non-workflow commands.
 - Phase 3, after `#393` merges, adds the final workflow command bindings and
   their pipe-safety regressions.
@@ -53,8 +53,8 @@ remaining Phase 2 and Phase 3 steps as explicit follow-on work.
 ### Phase 1
 
 1. Create and publish the shared CLI foundation modules:
-   `src/aeat/cli/_schemas.py`, `_exit_codes.py`, `_tty.py`,
-   `_log_levels.py`, plus the public `aeat.cli` re-exports.
+   `src/aeat/entrypoints/cli/_schemas.py`, `_exit_codes.py`, `_tty.py`,
+   `_log_levels.py`, plus the public `aeat.entrypoints.cli` re-exports.
 2. Extend `src/aeat/logging.py` with the record-level scrubber and shared
    scrub field list.
 3. Update `src/aeat/config.py` and `env/.env.example` for `AEAT_LOG_LEVEL`.
@@ -67,7 +67,7 @@ remaining Phase 2 and Phase 3 steps as explicit follow-on work.
 ### Phase 2
 
 1. Rebase after `#398` merges and replace the plain stderr-only helper path
-   with the real `aeat.errors.ErrorEnvelope` import and serialization.
+   with the real `aeat.core.errors.ErrorEnvelope` import and serialization.
 2. Add the root-level `--json` context option callback and wire the success
    path across every Kent-first command except workflow `run` / `next`.
 3. Register per-command output schemas and add canonical `jq`, `tee`, and
@@ -76,8 +76,8 @@ remaining Phase 2 and Phase 3 steps as explicit follow-on work.
 ### Phase 3
 
 1. Rebase after `#393` merges.
-2. Add the root-level `--json` wiring to `src/aeat/cli/workflow/run.py` and
-   `src/aeat/cli/workflow/next.py`.
+2. Add the root-level `--json` wiring to `src/aeat/entrypoints/cli/workflow/run.py` and
+   `src/aeat/entrypoints/cli/workflow/next.py`.
 3. Add workflow-specific pipe-safety tests.
 
 ## Explicit Plan Review
@@ -86,7 +86,7 @@ Review outcome: approved for execution as a Phase 1-only implementation pass.
 
 - `CLAUDE.md` / project mandates:
   the plan keeps new Python modules under `src/aeat/`, uses pytest,
-  preserves public imports through `aeat.cli`, keeps boundaries strict,
+  preserves public imports through `aeat.entrypoints.cli`, keeps boundaries strict,
   and avoids mocks/fakes as a shortcut.
 - Issue scope:
   the plan covers every required Phase 1 deliverable from Step 3, plus the
@@ -99,8 +99,8 @@ Review outcome: approved for execution as a Phase 1-only implementation pass.
   warnings list; any later human-facing payload fields remain subject to the
   trilingual emission rule in Phase 2.
 - Sibling-branch boundaries:
-  Phase 1 avoids `src/aeat/sede/`, `src/aeat/auth/_clave_movil.py`,
-  `src/aeat/cli/workflow/run.py`, `src/aeat/cli/workflow/next.py`,
+  Phase 1 avoids `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`,
+  `src/aeat/entrypoints/cli/workflow/run.py`, `src/aeat/entrypoints/cli/workflow/next.py`,
   and all `#398` registry/decorator files.
 - Phasing check:
   every Phase 1 deliverable is implementable without importing code from
@@ -123,7 +123,7 @@ surface, config/env plumbing, and public CLI re-exports overlap.
 
 Phase 1 is complete when:
 
-- the four new foundation modules exist and are re-exported from `aeat.cli`
+- the four new foundation modules exist and are re-exported from `aeat.entrypoints.cli`
 - `src/aeat/logging.py` scrubs sensitive record fields before formatting
 - the exact exit-code table is documented and regression-tested
 - `AEAT_LOG_LEVEL` exists in config and `env/.env.example`

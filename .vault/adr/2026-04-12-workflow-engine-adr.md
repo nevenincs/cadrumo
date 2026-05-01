@@ -84,7 +84,7 @@ it on every row of the domain matrix.
 Every domain `WorkflowAbortReason` in the table above is reachable
 from exactly one or two stages and exhaustively tested. The unit
 test suite is the executable specification of this matrix; see
-`src/aeat/workflow/test_engine.py` for the one-to-one mapping.
+`src/aeat/application/workflow/test_engine.py` for the one-to-one mapping.
 
 ### 3. dry-run is the default; live requires double confirmation
 
@@ -113,7 +113,7 @@ so the gate is uniform across the codebase.
 - `StatusReaderProtocol` (#43, **stub only**)
 - `InboxProtocol` (#46, **stub only**)
 - `CertificateBundleProtocol` (#8, **stub only** — uses
-  `aeat.submission.LoadedCertificate` shape)
+  `aeat.adapters.outbound.aeat.export.LoadedCertificate` shape)
 
 a `default_engine(...)` factory wires the on-main components to their
 adapters. tests construct the engine with hand-rolled Protocol-conforming
@@ -134,7 +134,7 @@ single file. the storage layer (#10) wires in as a follow-up.
 
 ### 6. strict pydantic v2 everywhere
 
-every record in `aeat.workflow` is a strict pydantic v2 `BaseModel` with
+every record in `aeat.application.workflow` is a strict pydantic v2 `BaseModel` with
 `model_config = ConfigDict(strict=True, extra="forbid", frozen=True)`:
 
 - `WorkflowResult`
@@ -146,7 +146,7 @@ closed enumerations are `enum.StrEnum`:
 - `WorkflowStage`
 - `WorkflowAbortReason`
 
-errors inherit from `aeat.errors.AeatError`:
+errors inherit from `aeat.core.errors.AeatError`:
 
 - `WorkflowError` (base)
 - `WorkflowAbortedError` (raised only when the caller explicitly opts in

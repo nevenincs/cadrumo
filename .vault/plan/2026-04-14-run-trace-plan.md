@@ -16,47 +16,47 @@ related:
 
 Implement the decisions of `2026-04-14-run-trace-adr` on branch
 `feature/99-run-trace` without touching the internals of
-`src/aeat/submission/` (#117) or `src/aeat/financial/transactions/` (#74).
+`src/aeat/adapters/outbound/aeat/export/` (#117) or `src/aeat/domain/financial/transactions/` (#74).
 
 ## deliverables
 
-1. `src/aeat/observability/` subpackage (new).
+1. `src/aeat/core/observability/` subpackage (new).
 2. Extensions to `src/aeat/logging.py` (contextvars filter + JSONL handler).
-3. `aeat.errors.AeatObservabilityError` (new base, subclasses in
-   `aeat.observability._errors`).
+3. `aeat.core.errors.AeatObservabilityError` (new base, subclasses in
+   `aeat.core.observability._errors`).
 4. `Settings.aeat_runs_dir` (additive) plus `.env.example` entry.
 5. `run_context` wraps at the outermost public entry points of
-   `aeat.submission`, `aeat.sync`, `aeat.inbox`, `aeat.status`,
-   `aeat.workflow`.
-6. `src/aeat/cli/run/` top-level Typer (`list`, `show`, `replay`).
-7. Colocated unit tests under `src/aeat/observability/test_*.py`.
+   `aeat.adapters.outbound.aeat.export`, `aeat.application.sync`, `aeat.inbox`, `aeat.status`,
+   `aeat.application.workflow`.
+6. `src/aeat/entrypoints/cli/run/` top-level Typer (`list`, `show`, `replay`).
+7. Colocated unit tests under `src/aeat/core/observability/test_*.py`.
 
 ## step-by-step
 
 ### step 1 — observability subpackage skeleton
 
-Create `src/aeat/observability/__init__.py` exporting the public API:
+Create `src/aeat/core/observability/__init__.py` exporting the public API:
 
 ```python
-from aeat.observability._context import (
+from aeat.core.observability._context import (
     RUN_CONTEXT_VAR,
     STEP_CONTEXT_VAR,
     RunContextInfo,
     current_run_context,
     run_context,
 )
-from aeat.observability._errors import (
+from aeat.core.observability._errors import (
     AeatCorpusDriftError,
     AeatObservabilityError,
     RunContextMissingError,
     RunTraceValidationError,
 )
-from aeat.observability._fingerprint import (
+from aeat.core.observability._fingerprint import (
     compute_corpus_sha256,
     compute_db_sha256,
     read_cert_fingerprint,
 )
-from aeat.observability._models import (
+from aeat.core.observability._models import (
     ArgumentRecord,
     ArgumentSource,
     AssertionPayload,
@@ -73,9 +73,9 @@ from aeat.observability._models import (
     StepBoundaryPayload,
     WorkflowLinkPayload,
 )
-from aeat.observability._recorder import record_event
-from aeat.observability._replay import replay_run
-from aeat.observability._store import (
+from aeat.core.observability._recorder import record_event
+from aeat.core.observability._replay import replay_run
+from aeat.core.observability._store import (
     iter_runs,
     load_events,
     load_trace,
@@ -273,7 +273,7 @@ Deterministic hashes per research D:
 ### step 8 — `_errors.py`
 
 ```python
-from aeat.errors import AeatError
+from aeat.core.errors import AeatError
 
 class AeatObservabilityError(AeatError): ...
 class RunContextMissingError(AeatObservabilityError): ...
@@ -284,7 +284,7 @@ class AeatCorpusDriftError(AeatObservabilityError):
 class RunTraceValidationError(AeatObservabilityError): ...
 ```
 
-Re-export `AeatObservabilityError` from `aeat.errors` via a new line in
+Re-export `AeatObservabilityError` from `aeat.core.errors` via a new line in
 `src/aeat/errors.py`:
 
 ```python
@@ -292,8 +292,8 @@ class AeatObservabilityError(AeatError):
     """Base class for observability-layer errors (#99)."""
 ```
 
-and have `aeat.observability._errors.AeatObservabilityError` be
-`aeat.errors.AeatObservabilityError` directly (single source of truth).
+and have `aeat.core.observability._errors.AeatObservabilityError` be
+`aeat.core.errors.AeatObservabilityError` directly (single source of truth).
 
 ### step 9 — `_replay.py`
 
@@ -312,7 +312,7 @@ def replay_run(run_id: str, *, dry_run: bool = True) -> RunTrace:
         raise AeatObservabilityError("replay is dry-run only (#99)")
     # reconstruct argv and re-enter the CLI with `no-live` forced on
     argv = _argv_from_arguments(original.entrypoint, original.arguments)
-    from aeat.cli import app
+    from aeat.entrypoints.cli import app
     app(argv, standalone_mode=False)
     return original
 ```
@@ -328,7 +328,7 @@ Add a `logging.Filter` that reads the contextvars and augments records:
 ```python
 class _RunContextFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        from aeat.observability._context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
+        from aeat.core.observability._context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
         ctx = RUN_CONTEXT_VAR.get(None)
         record.run_id = ctx.run_id if ctx is not None else ""
         record.step_id = STEP_CONTEXT_VAR.get(None) or ""
@@ -370,17 +370,17 @@ wrap lives in a thin adapter module next to the existing package init
 and is used by the CLI only — library consumers still import the raw
 class.
 
-- `aeat.submission.SubmissionEngine.submit_draft` and
+- `aeat.adapters.outbound.aeat.export.SubmissionEngine.submit_draft` and
   `submit_amendment`: wrap at the CLI command level in
-  `src/aeat/cli/submission/` (not inside `_engine.py` — #117 territory).
+  `src/aeat/entrypoints/cli/submission/` (not inside `_engine.py` — #117 territory).
   Entry point emits `WORKFLOW_LINK` + per-phase `STEP_*` events.
-- `aeat.sync.LiveSyncRunner.run`: wrap inside `src/aeat/cli/sync/` and
+- `aeat.application.sync.LiveSyncRunner.run`: wrap inside `src/aeat/entrypoints/cli/sync/` and
   emit one `STEP_START` / `STEP_END` pair + per-phase events.
-- `aeat.inbox.InboxFetcher.fetch`: wrap inside `src/aeat/cli/inbox/`.
+- `aeat.inbox.InboxFetcher.fetch`: wrap inside `src/aeat/entrypoints/cli/inbox/`.
 - `aeat.status.StatusReader` entry points: wrap inside
-  `src/aeat/cli/status/`.
-- `aeat.workflow.WorkflowEngine.run_next`: wrap inside
-  `src/aeat/cli/workflow/run.py` (already exists) and emit the
+  `src/aeat/entrypoints/cli/status/`.
+- `aeat.application.workflow.WorkflowEngine.run_next`: wrap inside
+  `src/aeat/entrypoints/cli/workflow/run.py` (already exists) and emit the
   `WORKFLOW_LINK` event carrying both the observability `run_id` and
   the `WorkflowResult.run_id`.
 
@@ -388,7 +388,7 @@ Each wrap must be a minimal-surface change (≤10 lines per CLI file).
 
 ### step 13 — `aeat run` CLI
 
-New directory `src/aeat/cli/run/` with `__init__.py` exposing a
+New directory `src/aeat/entrypoints/cli/run/` with `__init__.py` exposing a
 `typer.Typer` `app`:
 
 - `list` — iterate `iter_runs()`, print table.
@@ -396,17 +396,17 @@ New directory `src/aeat/cli/run/` with `__init__.py` exposing a
 - `replay <run_id> [--dry-run / --no-dry-run]` — default `--dry-run`;
   `--no-dry-run` raises explicitly because live replay is out of scope.
 
-Register in `src/aeat/cli/__init__.py`:
+Register in `src/aeat/entrypoints/cli/__init__.py`:
 
 ```python
-from aeat.cli import run as run_module
+from aeat.entrypoints.cli import run as run_module
 ...
 app.add_typer(run_module.app, name="run", help="Run-trace inspection and deterministic dry-run replay (#99).")
 ```
 
 ### step 14 — colocated tests
 
-Four `@pytest.mark.unit` tests in `src/aeat/observability/test_*.py`:
+Four `@pytest.mark.unit` tests in `src/aeat/core/observability/test_*.py`:
 
 1. `test_run_id_propagates_across_subpackages` — build Protocol
    doubles for `submission → status → inbox`, enter a `run_context`,
@@ -455,18 +455,18 @@ plan.
 This section is the explicit plan review the handover prompt demands.
 
 - ✅ **`src/aeat/` layout mandate.** Every new module lands under
-  `src/aeat/observability/` or `src/aeat/cli/run/`. Tests are
+  `src/aeat/core/observability/` or `src/aeat/entrypoints/cli/run/`. Tests are
   colocated. No top-level scripts. No files outside `src/aeat/`.
 - ✅ **Public API discipline.** External callers import only from
-  `aeat.observability`, `aeat.errors`. Underscored modules are
+  `aeat.core.observability`, `aeat.core.errors`. Underscored modules are
   internal. The `__all__` list matches the re-exports.
 - ✅ **Pydantic v2 mandate.** Every persisted type is strict, frozen,
   `extra="forbid"`. Closed enums are `StrEnum`. `RunEventPayload` is
   a tagged union with an exactly-one invariant enforced by a
   `model_validator`. No bare `dict[str, Any]`.
 - ✅ **Errors inherit from `AeatError`.** `AeatObservabilityError` is
-  declared in `aeat.errors`; all subclasses inherit from it.
-- ✅ **Logging via `aeat.logging.get_logger(__name__)`.** The
+  declared in `aeat.core.errors`; all subclasses inherit from it.
+- ✅ **Logging via `aeat.core.logging.get_logger(__name__)`.** The
   observability sink is a logging handler; callsites use
   `get_logger`.
 - ✅ **Trilingual contract.** CLI output uses English (internal code
@@ -477,16 +477,16 @@ This section is the explicit plan review the handover prompt demands.
   no mocks, no patches, no fakes. Real Protocol-conforming doubles
   only.
 - ✅ **`AEAT_LIVE_TESTS_ENABLED` canonical.** The plan reuses
-  `aeat.cli._live.requires_live_enabled()` if any live test is ever
+  `aeat.entrypoints.cli._live.requires_live_enabled()` if any live test is ever
   added — none is added in this scope.
 - ✅ **GitHub Actions disabled.** No file under `.github/workflows/`
   is added.
 - ✅ **Conventional commits.** Commit type is `feat` per the ADR.
-- ✅ **#117 territory respected.** No file under `src/aeat/submission/`
-  except the CLI adapter at `src/aeat/cli/submission/*.py` is touched.
+- ✅ **#117 territory respected.** No file under `src/aeat/adapters/outbound/aeat/export/`
+  except the CLI adapter at `src/aeat/entrypoints/cli/submission/*.py` is touched.
   The wrap sits at the CLI layer, outside the engine internals.
 - ✅ **#74 territory respected.** No file under
-  `src/aeat/financial/transactions/` is touched.
+  `src/aeat/domain/financial/transactions/` is touched.
 - ✅ **`config.py` additive.** Only one field added; no renames.
 - ✅ **`WorkflowRun` preserved.** `WorkflowResult` is not modified;
   the observability `run_id` is a separate identifier recorded via a
@@ -496,8 +496,8 @@ This section is the explicit plan review the handover prompt demands.
 
 ### risks and mitigations
 
-- **Circular import risk** between `aeat.logging` and
-  `aeat.observability._context`. Mitigated by importing
+- **Circular import risk** between `aeat.core.logging` and
+  `aeat.core.observability._context`. Mitigated by importing
   `RUN_CONTEXT_VAR` / `STEP_CONTEXT_VAR` *inside* the filter's
   `filter()` method, which is called after module load.
 - **Typer `standalone_mode=False` behavior.** Replay calls

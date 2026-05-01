@@ -43,46 +43,46 @@ therefore a single `AeatSession`) across every `(modelo, period)`
 pair inside one invocation, surfaces `NOT_YET_FOUND` prominently in
 the Kent-facing run summary, and persists `DIVERGENT` / `NOT_YET_FOUND`
 reports through the Phase-3 persistence adapter without touching the
-closed `aeat.sync._divergence.DivergencePayload` union.
+closed `aeat.application.sync._divergence.DivergencePayload` union.
 
-- Created: `src/aeat/cli/sync/_reconcile_stage.py` (pure stage +
+- Created: `src/aeat/entrypoints/cli/sync/_reconcile_stage.py` (pure stage +
   `ReconcileStageSummary` pydantic record + `ReconciliationSink`
   Protocol + `emit_reconcile_summary` rich renderer).
-- Created: `src/aeat/cli/sync/test_reconcile_stage.py` (APPROVED
+- Created: `src/aeat/entrypoints/cli/sync/test_reconcile_stage.py` (APPROVED
   gating, session-reuse, NOT_YET_FOUND surfacing, DIVERGENT
   persistence, mixed-batch, empty-corpus, strict-frozen-forbid
   record checks).
-- Created: `src/aeat/cli/sync/test_no_write_surface.py` plus
+- Created: `src/aeat/entrypoints/cli/sync/test_no_write_surface.py` plus
   `_no_write_surface_fixture.txt` (Layer-3 grep guard narrowly
   scoped to the two new Phase-5 files).
-- Modified: `src/aeat/cli/sync/run.py` (converted to the
+- Modified: `src/aeat/entrypoints/cli/sync/run.py` (converted to the
   `register(app, *, fetcher_provider, sink_provider, ...)` factory
   pattern; reconcile stage invoked before the
   prerequisites-pending refusal).
-- Modified: `src/aeat/cli/sync/__init__.py` (imports
+- Modified: `src/aeat/entrypoints/cli/sync/__init__.py` (imports
   `register_run` and calls it instead of wiring a plain-function
   command).
-- Modified: `src/aeat/filing/reconciliation/__init__.py` (public
+- Modified: `src/aeat/application/filing/reconciliation/__init__.py` (public
   API now re-exports `FilingReconciliationDivergenceRecord`,
   `FilingReconciliationPayload`, and `reconciliation_records` so
   sync-run consumers honour the "import from
-  `aeat.filing.reconciliation` only" discipline without touching
+  `aeat.application.filing.reconciliation` only" discipline without touching
   private modules).
 
 ## Description
 
 ### 5.1 Stage module placement
 
-The plan allowed an inline insertion into `src/aeat/cli/sync/run.py`
+The plan allowed an inline insertion into `src/aeat/entrypoints/cli/sync/run.py`
 *or* a dedicated sibling module; the execution opted for a dedicated
-`src/aeat/cli/sync/_reconcile_stage.py` for three load-bearing
+`src/aeat/entrypoints/cli/sync/_reconcile_stage.py` for three load-bearing
 reasons:
 
 1. The Phase-5 non-negotiable #1 ("zero writes") demands a narrowly
    scoped Layer-3 grep guard. Putting the reconcile logic inside
    `run.py` would force the guard to cover the schema-level
    sync-run orchestration — which transitively reaches the audited
-   `aeat.submission` engine and its legitimately write-enabled
+   `aeat.adapters.outbound.aeat.export` engine and its legitimately write-enabled
    vocabulary. Isolating the reconcile surface in its own module
    lets Layer 3 stay meaningful and tight.
 2. The stage's injection seams (`fetcher_provider`, `sink_provider`,
@@ -132,7 +132,7 @@ pass.
 
 `NOT_YET_FOUND` reports are surfaced through two distinct channels:
 
-- A WARNING-level log through `aeat.logging.get_logger(__name__)`
+- A WARNING-level log through `aeat.core.logging.get_logger(__name__)`
   naming the draft id, the modelo, and the period — this hits
   Kent's log viewer immediately and the operator does not have to
   read the run summary to see that AEAT has no record.
@@ -150,16 +150,16 @@ readable when Kent uploads a clean filing.
 ### 5.4 Persistence via the Phase-3 adapter
 
 Both `DIVERGENT` and `NOT_YET_FOUND` reports flow through
-`aeat.filing.reconciliation.reconciliation_records(report)` and land
+`aeat.application.filing.reconciliation.reconciliation_records(report)` and land
 on the `ReconciliationSink` Protocol (one `save(record)` method per
 the narrow contract). The sink accepts the Phase-3
 `FilingReconciliationDivergenceRecord` shape — *not* the closed
-`aeat.sync._divergence.DivergenceRecord` — so the bounded
+`aeat.application.sync._divergence.DivergenceRecord` — so the bounded
 auto-heal-safety contract the Phase-3 rationale protects stays
-untouched. `aeat.sync._divergence` is read-only from Phase 5's
+untouched. `aeat.application.sync._divergence` is read-only from Phase 5's
 perspective; no enum is widened, no payload variant is injected.
 Phase-3's non-negotiable constraint #7 ("no modifications to
-`src/aeat/sync/_divergence.py`") is fully respected.
+`src/aeat/application/sync/_divergence.py`") is fully respected.
 
 ### 5.5 Public API discipline
 
@@ -168,7 +168,7 @@ The Phase-3 `_persist.FilingReconciliationDivergenceRecord`,
 collaborators were previously referenced only in docstrings and in
 the adjacent `test_persist.py` via private-module imports. Phase 5
 needs them at Kent-facing boundaries (the sync-run stage, its unit
-tests), so the `aeat.filing.reconciliation` public API now
+tests), so the `aeat.application.filing.reconciliation` public API now
 re-exports them. The Layer-3 grep guard at
 `test_no_write_surface.py` still passes — none of the newly exported
 names match any forbidden English/Spanish write-verb prefix. Callers
@@ -178,16 +178,16 @@ imports" discipline the plan's non-negotiable constraint #3 locks.
 ### 5.6 Layer-3 write-guard for Phase 5
 
 A sibling Layer-3 guard (`test_no_write_surface.py` +
-`_no_write_surface_fixture.txt`) lands under `src/aeat/cli/sync/`
+`_no_write_surface_fixture.txt`) lands under `src/aeat/entrypoints/cli/sync/`
 walking exactly two paths — `_reconcile_stage.py` and
 `test_reconcile_stage.py`. The sibling sync-run commands
 (`run.py`, `list.py`, `show.py`, `resolve.py` and their
 `test_cli.py`) are deliberately outside the guard's scope: the
 sync-run orchestration legitimately routes through the audited
-`aeat.submission` engine and speaks `submit` / `enviar` / POST in
+`aeat.adapters.outbound.aeat.export` engine and speaks `submit` / `enviar` / POST in
 the complementaria submission path, and scoping the guard wider
 would regress its narrow, meaningful signal. This mirrors the
-Phase-4 decision to scope `src/aeat/cli/filing/test_no_write_surface.py`
+Phase-4 decision to scope `src/aeat/entrypoints/cli/filing/test_no_write_surface.py`
 only to the two new reconcile CLI files.
 
 ### Deviation from the plan: `run.py` signature change
@@ -247,7 +247,7 @@ regress it by reducing to the first-returned element.
   — 873 passed, 2480 deselected.
 - Repository-wide `uv run pytest` — 3318 passed, 5 skipped,
   29 deselected, one pre-existing failure in
-  `tests/test_marker_integrity.py::test_module_carries_valid_pytestmark[src/aeat/submission/_formats/_test_fixtures.py]`
+  `tests/test_marker_integrity.py::test_module_carries_valid_pytestmark[src/aeat/adapters/outbound/aeat/export/_formats/_test_fixtures.py]`
   that predates this branch and is explicitly out of Phase 5 scope
   per the executing prompt.
 

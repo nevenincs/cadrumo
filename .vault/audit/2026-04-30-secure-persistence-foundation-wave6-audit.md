@@ -37,7 +37,7 @@ Test footprint: 7 new redaction-discipline tests. Existing LLM suite
 
 ### Carry-forwards from wave 5 — IN PROGRESS
 
-The legacy `aeat.submission._audit.append_live_submit_audit`
+The legacy `aeat.adapters.outbound.aeat.export._audit.append_live_submit_audit`
 deprecation wrapper remains in place. No urgency to excise — the
 governed sink is the engine's path; third-party callers are warned;
 operators have a migration window.

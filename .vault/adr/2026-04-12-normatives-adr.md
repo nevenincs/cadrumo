@@ -78,7 +78,7 @@ normative. JSON is chosen for:
 - diff friendliness (one file per normative keeps PR diffs surgical);
 - reviewability (hand-review of legal content is non-negotiable;
   JSON is human-readable without tooling);
-- loader symmetry (`aeat.manuals` already uses the same shape under
+- loader symmetry (`aeat.domain.manuals` already uses the same shape under
   `corpus/manuals/`; the loader idiom carries over intact);
 - tool independence (no database, no external service, no network
   round-trip to verify a citation).
@@ -102,7 +102,7 @@ not by v1 `verify`.
 ### Pydantic v2 strict everywhere (mandate)
 
 Per the project-wide pydantic v2 mandate reinforced on `#45`, every
-record in `aeat.normatives` — `NormativeKind`, `NormativeReference`,
+record in `aeat.domain.normatives` — `NormativeKind`, `NormativeReference`,
 `Articulo`, `NormativeCatalogue` — is a strict pydantic v2 model with
 `ConfigDict(strict=True, frozen=True, extra="forbid")`. Closed
 catalogues are `enum.StrEnum`. No dataclasses for boundary-crossing
@@ -116,7 +116,7 @@ callers cannot corrupt loaded records in place.
 
 Every free-text field that surfaces to users is a
 `Translatable` (nested dict: `es`, `en`, `hu`) imported directly
-from `aeat.i18n` — which is already on `main` via `#20`. Spanish is
+from `aeat.core.i18n` — which is already on `main` via `#20`. Spanish is
 authoritative for AEAT domain terminology; Hungarian is the target
 output language; English is the authoritative engineering language.
 The schema enforces presence of the authoritative `es` key on every
@@ -124,7 +124,7 @@ title and summary at load time.
 
 ### Public API discipline
 
-`aeat.normatives` is a new sibling subpackage under `src/aeat/`. It
+`aeat.domain.normatives` is a new sibling subpackage under `src/aeat/`. It
 re-exports a tight surface from its `__init__.py`:
 
 - types: `NormativeKind`, `Articulo`, `NormativeReference`,
@@ -136,30 +136,30 @@ re-exports a tight surface from its `__init__.py`:
 - errors: `NormativeError`, `NormativeParseError`,
   `NormativeNotFoundError`.
 
-Callers from other subpackages must import only from `aeat.normatives`
-— never from `aeat.normatives._schema`, `._loader`, etc. This mirrors
-the `aeat.manuals` public-surface discipline.
+Callers from other subpackages must import only from `aeat.domain.normatives`
+— never from `aeat.domain.normatives._schema`, `._loader`, etc. This mirrors
+the `aeat.domain.manuals` public-surface discipline.
 
 ### Stub policy for in-flight siblings
 
 `#17` corpus-rulebook is in-flight and will eventually own `corpus/`
-plus `src/aeat/corpus/`. `aeat.normatives` **does not import**
+plus `src/aeat/corpus/`. `aeat.domain.normatives` **does not import**
 `aeat.corpus` on this branch. The corpus root is resolved from a
 settings Path default (`AEAT_NORMATIVES_ROOT`) with no dependency on
 the unwritten subpackage. When `#17` lands, the constant can be
 rewired to delegate to `aeat.corpus` via a one-line change in
 `_loader.py` with no knock-on effects on downstream consumers.
 
-Similarly, `aeat.manuals` rules will eventually cite normatives by
+Similarly, `aeat.domain.manuals` rules will eventually cite normatives by
 id. That rewire is a follow-up to `#25`, not v1 of `#45`, and does
-not require any change to the `aeat.normatives` surface.
+not require any change to the `aeat.domain.normatives` surface.
 
 ## Constraints
 
 - Python `>=3.13`. All new code under `src/aeat/`. Public API
   discipline.
 - No new runtime dependencies. `pydantic`, `pydantic-settings`,
-  `typer`, and the in-tree `aeat.i18n` cover the entire surface.
+  `typer`, and the in-tree `aeat.core.i18n` cover the entire surface.
 - Every committed JSON file references a real BOE consolidated-text
   URL and a real BOE-A identifier, verified by hand against the BOE
   website at commit time.
@@ -168,7 +168,7 @@ not require any change to the `aeat.normatives` surface.
 
 ## Decision
 
-Deliver v1 of `aeat.normatives` as:
+Deliver v1 of `aeat.domain.normatives` as:
 
 1. **Schema**: strict pydantic v2 types for `NormativeKind`,
    `Articulo`, `NormativeReference`, `NormativeCatalogue`. All
@@ -176,7 +176,7 @@ Deliver v1 of `aeat.normatives` as:
    catalogues are `enum.StrEnum`. Authoritative `es` translations
    enforced at load time.
 2. **Errors**: `NormativeError` (+ `NormativeParseError`,
-   `NormativeNotFoundError`) inheriting from `aeat.errors.AeatError`.
+   `NormativeNotFoundError`) inheriting from `aeat.core.errors.AeatError`.
 3. **Loader**: `load_catalogue()` reads every
    `corpus/normatives/<id>.json` into a `NormativeCatalogue`
    keyed by stable id. The aggregate validates id uniqueness and
@@ -193,12 +193,12 @@ Deliver v1 of `aeat.normatives` as:
    RD 1065/2007, Orden HAC/242/2025.
 6. **CLI**: `aeat normatives list [--tag ...]`, `aeat normatives
    show <id>`, `aeat normatives verify`, wired into the existing
-   `aeat.cli` root app.
+   `aeat.entrypoints.cli` root app.
 7. **Settings**: additive `AEAT_NORMATIVES_ROOT: Path` in
    `src/aeat/config.py`, documented in `env/.env.example`,
    enforced by `tests/test_config.py`.
 8. **Tests**: colocated unit tests inside
-   `src/aeat/normatives/` exercising the loader, the lookup
+   `src/aeat/domain/normatives/` exercising the loader, the lookup
    helpers, the citation formatter, the verify report, and a
    schema upgrade round-trip. No live tests. No mocks.
 

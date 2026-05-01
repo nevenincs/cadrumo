@@ -13,11 +13,11 @@ related:
 
 ## status
 
-Step 3 PR 4 of 4 — final substantive untangle for Step 3. Resolves layered violation 3 (audit 5: `filing._review` → `aeat.financial.transactions._repository`) AND 7 ancillary subpackage-private bypasses across `cli/financial/`, `cli/review/`, and `cli/submission/`.
+Step 3 PR 4 of 4 — final substantive untangle for Step 3. Resolves layered violation 3 (audit 5: `filing._review` → `aeat.domain.financial.transactions._repository`) AND 7 ancillary subpackage-private bypasses across `cli/financial/`, `cli/review/`, and `cli/submission/`.
 
 ## scope
 
-Promote `TransactionCatalogueRepository` and `ImportSummary` from `aeat.financial.transactions._repository` (subpackage-private) to public `aeat.financial.transactions`. Rewrite 9 caller sites to import from the public surface.
+Promote `TransactionCatalogueRepository` and `ImportSummary` from `aeat.domain.financial.transactions._repository` (subpackage-private) to public `aeat.domain.financial.transactions`. Rewrite 9 caller sites to import from the public surface.
 
 ## promoted symbols
 
@@ -26,20 +26,20 @@ Promote `TransactionCatalogueRepository` and `ImportSummary` from `aeat.financia
 
 ## caller sites rewritten (9)
 
-- `src/aeat/cli/financial/ingest.py` (lines 18, 134)
-- `src/aeat/cli/financial/invoices.py` (line 258)
-- `src/aeat/cli/financial/_catalogue.py` (line 30)
-- `src/aeat/cli/review/test_cli.py` (line 37)
-- `src/aeat/cli/review/test_review.py` (line 23)
-- `src/aeat/cli/review/test_review_cli.py` (line 21)
-- `src/aeat/cli/submission/test_cli.py` (line 21)
-- `src/aeat/filing/_review.py` (lines 309, 324) — the audit's named violation site
+- `src/aeat/entrypoints/cli/financial/ingest.py` (lines 18, 134)
+- `src/aeat/entrypoints/cli/financial/invoices.py` (line 258)
+- `src/aeat/entrypoints/cli/financial/_catalogue.py` (line 30)
+- `src/aeat/entrypoints/cli/review/test_cli.py` (line 37)
+- `src/aeat/entrypoints/cli/review/test_review.py` (line 23)
+- `src/aeat/entrypoints/cli/review/test_review_cli.py` (line 21)
+- `src/aeat/entrypoints/cli/submission/test_cli.py` (line 21)
+- `src/aeat/application/filing/_review.py` (lines 309, 324) — the audit's named violation site
 
 All rewrites: `transactions._repository` → `transactions` in the import path.
 
 ## verification
 
-- `python -c "from aeat.financial.transactions import TransactionCatalogueRepository, ImportSummary"` — succeeds.
+- `python -c "from aeat.domain.financial.transactions import TransactionCatalogueRepository, ImportSummary"` — succeeds.
 - `pytest --collect-only`: 6796/6820 tests collect; zero collection errors.
 - `grep -rn "financial\\.transactions\\._repository" src/aeat --include="*.py"` — zero hits in production source (only stale `.pyc` bytecode).
 
@@ -53,10 +53,10 @@ After this PR merges, Step 3 closes:
 
 | Violation | Resolution PR |
 |---|---|
-| 1: `casillas` → `aeat.cli` | Step 3 PR 3 (#485 — relocate tests) |
+| 1: `casillas` → `aeat.entrypoints.cli` | Step 3 PR 3 (#485 — relocate tests) |
 | 2: `profile.assets` + `profile.inventory` → `formulas._rulesets.modelo_100` | Step 3 PR 2 (#484 — formulas-public-surface promotion) |
 | 3: `filing._review` → `financial.transactions._repository` | this PR (Step 3 PR 4) |
-| 4: `storage._master_key` → `validate_spanish_tax_id` | Step 3 PR 1 (#483 — `aeat.identity` promotion) |
+| 4: `storage._master_key` → `validate_spanish_tax_id` | Step 3 PR 1 (#483 — `aeat.adapters.inbound.identity` promotion) |
 | 5: `sanitizer._records` → same as #4 | Step 3 PR 1 (#483 — same resolution as #4) |
 | 6: `verification._verify` → `formulas._ledger`/`._ruleset` | Step 3 PR 2 (#484 — public-surface) |
 | 7: `cli/filing/__init__.py` → 4-level deep `formulas` privates | Step 3 PR 2 (#484 — public-surface) |

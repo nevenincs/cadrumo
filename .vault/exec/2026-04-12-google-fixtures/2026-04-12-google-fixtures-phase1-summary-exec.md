@@ -34,7 +34,7 @@ typecheck, pytest, and hooks are green on Windows. Ready for PR.
 - `scripts/_fixture_catalogue.py` — strict pydantic v2 fixture
   catalogue with three entries (root folder, smoke Sheet, smoke Doc).
 - `scripts/provision_google_fixtures.py` — idempotent provisioner
-  reusing `aeat.auth` and `aeat.env_io`.
+  reusing `aeat.adapters.outbound.aeat.auth` and `aeat.core.env_io`.
 - `scripts/teardown_google_fixtures.py` — recursive delete +
   env-var clear, no-op when no fixture has been provisioned.
 - `scripts/README.md` — contributor-facing doc.
@@ -67,9 +67,9 @@ typecheck, pytest, and hooks are green on Windows. Ready for PR.
 ## Branch boundary audit
 
 Untouched areas: `tests/conftest.py`, `pyproject.toml` pytest/ty
-config sections, `src/aeat/storage/`, `src/aeat/browser/`,
-`src/aeat/i18n/`, `src/aeat/corpus/`, `src/aeat/models/`,
-`src/aeat/portals/`, `src/aeat/testing/`, `tests/fixtures/`. Only
+config sections, `src/aeat/adapters/persistence/storage/`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/`,
+`src/aeat/core/i18n/`, `src/aeat/corpus/`, `src/aeat/domain/modelos/`,
+`src/aeat/domain/portals/`, `src/aeat/domain/testing/`, `tests/fixtures/`. Only
 additive edits to genuinely shared files.
 
 ## Scope-trim rationale (issue #13, "ship FEWER")

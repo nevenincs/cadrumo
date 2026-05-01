@@ -36,7 +36,7 @@ extractor class declared those `template_revision` keys.
 
 ## Files modified
 
-- `src/aeat/declaracion/_extractors/modelo_130_v2025.py` — added two
+- `src/aeat/adapters/inbound/declaracion/_extractors/modelo_130_v2025.py` — added two
   thin subclasses (`Modelo130V2024Extractor`,
   `Modelo130V2026Extractor`) that inherit the shared extraction
   logic from `Modelo130V2025Extractor` and pin only their own
@@ -44,9 +44,9 @@ extractor class declared those `template_revision` keys.
   2024 / 2025 / 2026 (RIRPF art. 110 unchanged per the rule-delta
   manifest), so the regex map + casilla list + structural integrity
   check all carry over verbatim.
-- `src/aeat/declaracion/_extractors/__init__.py` — registered the
+- `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py` — registered the
   two new extractor classes alongside the existing 2025 entry.
-- `src/aeat/declaracion/test_modelo_130_v2025.py`:
+- `src/aeat/adapters/inbound/declaracion/test_modelo_130_v2025.py`:
   - Refactored the `_generate_pdf` helper to take an explicit
     `año: int = 2025` keyword and a `casilla_values: dict[str, str]`
     positional dict (was `**kwargs` — `ty` flagged the kwargs splat
@@ -71,7 +71,7 @@ extractor class declared those `template_revision` keys.
 ## Tests added
 
 - 3 new parametrised cases in
-  `src/aeat/declaracion/test_modelo_130_v2025.py::test_per_year_round_trip_resolves_to_correct_template`
+  `src/aeat/adapters/inbound/declaracion/test_modelo_130_v2025.py::test_per_year_round_trip_resolves_to_correct_template`
   (one per year).
 - 3 new parametrised cases in
   `tests/integration/test_kent_workflows.py::TestKentImportsModelo130Declaracion::test_per_year_happy_path_verified`

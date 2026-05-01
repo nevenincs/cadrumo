@@ -27,7 +27,7 @@ A targeted audit of every Kent-facing surface that interacts with the security l
 
 ### G1 — Silent first-run master-key minting (CRITICAL)
 
-`src/aeat/setup/_env_writer.py:179-185` — `write_profile_file()` calls `save_encrypted_envelope(envelope, target, master_key_provider=_resolve_master_key_provider(), ...)`. On a fresh installation with the file-fallback backend, `_resolve_master_key_provider()` triggers `FileFallbackMasterKeyProvider.get_master_key()`, which silently mints a 32-byte master key and persists `master.kdf` + `master.key` + `salt`. The setup wizard prints nothing about this. The minting log message is `_log.info()` — invisible to TTY users unless `--debug` is set.
+`src/aeat/application/setup/_env_writer.py:179-185` — `write_profile_file()` calls `save_encrypted_envelope(envelope, target, master_key_provider=_resolve_master_key_provider(), ...)`. On a fresh installation with the file-fallback backend, `_resolve_master_key_provider()` triggers `FileFallbackMasterKeyProvider.get_master_key()`, which silently mints a 32-byte master key and persists `master.kdf` + `master.key` + `salt`. The setup wizard prints nothing about this. The minting log message is `_log.info()` — invisible to TTY users unless `--debug` is set.
 
 **Operator impact**: a user finishes the setup wizard believing they configured a profile, with no awareness that:
 - A master key was just minted on their disk.
@@ -36,7 +36,7 @@ A targeted audit of every Kent-facing surface that interacts with the security l
 
 ### G2 — `aeat doctor` has zero security checks (CRITICAL)
 
-`src/aeat/cli/doctor.py:891-923` — the `collect_rows` orchestrator wires roughly 40 health rows: certificate path, certificate friendly name, certificate backend, certificate verify URL, output language, profile path, drafts dir, submissions dir, manuals root, live-tests flag, etc. Zero rows touch:
+`src/aeat/entrypoints/cli/doctor.py:891-923` — the `collect_rows` orchestrator wires roughly 40 health rows: certificate path, certificate friendly name, certificate backend, certificate verify URL, output language, profile path, drafts dir, submissions dir, manuals root, live-tests flag, etc. Zero rows touch:
 
 - Whether the secret-store directory exists and is writable.
 - Which backend is active (`KEYRING` / `FILE` / `AUTO`-fallback).
@@ -59,7 +59,7 @@ A targeted audit of every Kent-facing surface that interacts with the security l
 
 ### G4 — No first-run integration test (HIGH)
 
-`src/aeat/setup/test_cli.py:31-46` — the setup CLI test fixture injects an `EphemeralMasterKeyProvider`. The non-interactive end-to-end test (`test_setup_non_interactive_runs_end_to_end` at line 95-116) never exercises the real file-fallback path. No integration test simulates:
+`src/aeat/application/setup/test_cli.py:31-46` — the setup CLI test fixture injects an `EphemeralMasterKeyProvider`. The non-interactive end-to-end test (`test_setup_non_interactive_runs_end_to_end` at line 95-116) never exercises the real file-fallback path. No integration test simulates:
 
 1. Brand-new user with no prior `master.key` / `master.kdf` / `salt`.
 2. `aeat setup --non-interactive` minting the master key.
@@ -72,7 +72,7 @@ A targeted audit of every Kent-facing surface that interacts with the security l
 
 ### G5 — Opaque failure modes when master key unavailable (HIGH)
 
-`src/aeat/cli/financial/ingest.py:33-68` and equivalent for every other persisting CLI: the master-key provider is invoked transitively via `_resolve_master_key_provider()` and the underlying `FileFallbackMasterKeyProvider.get_master_key()` raises `MasterKeyUnavailableError` (or `MasterKeyKdfVersionError` post-wave-12, or `KeyringUnavailableError` on keychain failures). The CLI's error-envelope renders these as `INTERNAL: ...` with the raw cryptographic detail.
+`src/aeat/entrypoints/cli/financial/ingest.py:33-68` and equivalent for every other persisting CLI: the master-key provider is invoked transitively via `_resolve_master_key_provider()` and the underlying `FileFallbackMasterKeyProvider.get_master_key()` raises `MasterKeyUnavailableError` (or `MasterKeyKdfVersionError` post-wave-12, or `KeyringUnavailableError` on keychain failures). The CLI's error-envelope renders these as `INTERNAL: ...` with the raw cryptographic detail.
 
 The three failure classes are **not distinguished** in the user-facing message:
 - **Keychain locked / unavailable** (recoverable by unlocking the OS keychain).
@@ -107,7 +107,7 @@ The current behaviour is "first persistence operation triggers silent provisioni
 
 ### G9 — Profile-vs-encryption linkage undocumented (MEDIUM)
 
-`docs/getting-started.md:64-84` describes the profile as a "JSON file" written by the wizard. The actual on-disk artefact is a `CipherEnvelope[AutonomoProfile]` at `SensitivityClass.IDENTITY` (`src/aeat/setup/_env_writer.py:176-187`). The encryption is bound to the master-key lifecycle — losing the master key means losing the profile.
+`docs/getting-started.md:64-84` describes the profile as a "JSON file" written by the wizard. The actual on-disk artefact is a `CipherEnvelope[AutonomoProfile]` at `SensitivityClass.IDENTITY` (`src/aeat/application/setup/_env_writer.py:176-187`). The encryption is bound to the master-key lifecycle — losing the master key means losing the profile.
 
 **Operator impact**: operators don't know the profile is itself a cryptographic checkpoint.
 

@@ -22,13 +22,13 @@ Plan reference:
   `["2024", "2025", "2026"]`. Asserts on stable substrings only:
   `Extraction status: COMPLETE`, `Verification status: VERIFIED`,
   and `f"Modelo 115 {ejercicio}Q1"`.
-- `src/aeat/formulas/test_smoke.py` — added `modelo_115.2026`
+- `src/aeat/domain/formulas/test_smoke.py` — added `modelo_115.2026`
   to the fleet ID set asserted by
   `test_registry_has_shipped_rulesets`.
-- `src/aeat/formulas/test_registry.py` — added `modelo_115.2026`
+- `src/aeat/domain/formulas/test_registry.py` — added `modelo_115.2026`
   to the sorted fleet list asserted by
   `test_registry_ships_modelo_130_and_303_rulesets`.
-- `src/aeat/formulas/test_cli.py` — added `modelo_115.2026` to
+- `src/aeat/domain/formulas/test_cli.py` — added `modelo_115.2026` to
   the sorted fleet list asserted by `test_list_subcommand`.
 
 ## Verification
@@ -36,9 +36,9 @@ Plan reference:
 - `uv run pytest tests/integration/test_kent_workflows.py::TestKentImportsModelo115Declaracion`
   → 7 passed (the existing 4 cases + the new 3-parameter
   parametrisation).
-- `uv run pytest src/aeat/formulas/test_cli.py::test_list_subcommand
-  src/aeat/formulas/test_registry.py::test_registry_ships_modelo_130_and_303_rulesets
-  src/aeat/formulas/test_smoke.py::test_registry_has_shipped_rulesets`
+- `uv run pytest src/aeat/domain/formulas/test_cli.py::test_list_subcommand
+  src/aeat/domain/formulas/test_registry.py::test_registry_ships_modelo_130_and_303_rulesets
+  src/aeat/domain/formulas/test_smoke.py::test_registry_has_shipped_rulesets`
   → 3 passed.
 
 ## Notes

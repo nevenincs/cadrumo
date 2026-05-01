@@ -12,7 +12,7 @@ related:
 
 ## What
 
-`src/aeat/formulas/_rulesets/test_operand_swap_mutation.py` —
+`src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py` —
 introduced a private `_swap_outer_sub_op_in_subtree` helper that
 descends through `ClampPositiveFormula` wrappers until a `SubFormula`
 is reached. `_mutate_outer_sub_op` now uses this helper, supporting
@@ -35,7 +35,7 @@ the descent step the helper raised `TypeError` on the
 
 ## Verification
 
-`uv run pytest src/aeat/formulas/_rulesets/test_operand_swap_mutation.py -q`
+`uv run pytest src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py -q`
 → 60 passed (was 50 pre-#457).
 
 Behaviour preserved on every direct `RoundFormula(SubFormula(...))`

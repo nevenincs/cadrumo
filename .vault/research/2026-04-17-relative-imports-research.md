@@ -66,21 +66,21 @@ existing CLAUDE.md "Public API Discipline" rule
 Three shapes covering all 1108 occurrences:
 
 - **Same-package sibling**:
-  `from aeat.sync._wire import X` inside `src/aeat/sync/_runner.py`
+  `from aeat.application.sync._wire import X` inside `src/aeat/application/sync/_runner.py`
   → `from ._wire import X`
 
 - **Same-package nested**:
-  `from aeat.financial.transactions._models import X` inside
-  `src/aeat/financial/transactions/_service.py`
+  `from aeat.domain.financial.transactions._models import X` inside
+  `src/aeat/domain/financial/transactions/_service.py`
   → `from ._models import X`
 
 - **Cross-subpackage** (importing a sibling subpackage from another
   subpackage's interior):
-  `from aeat.config import Settings` inside `src/aeat/cli/setup.py`
+  `from aeat.core.config import Settings` inside `src/aeat/entrypoints/cli/setup.py`
   → `from ..config import Settings`
 
-  `from aeat.models import ModelCatalogue` inside
-  `src/aeat/cli/modelos/__init__.py`
+  `from aeat.domain.modelos import ModelCatalogue` inside
+  `src/aeat/entrypoints/cli/modelos/__init__.py`
   → `from ...models import ModelCatalogue`
 
 The dot-count equals the file's depth below `src/aeat/` minus the
@@ -99,7 +99,7 @@ can compute this from the source file path and the module path.
   10 occurrences across `scripts/provision_google_fixtures.py` and
   `scripts/teardown_google_fixtures.py`.
 
-- **`pyproject.toml [project.scripts] aeat = "aeat.cli:app"`** — string
+- **`pyproject.toml [project.scripts] aeat = "aeat.entrypoints.cli:app"`** — string
   reference, not an import statement. Unaffected.
 
 ### 5. Colocated tests inside src/aeat/
@@ -164,7 +164,7 @@ The new TID251 entries slot into that block without churn.
 ### 8. CLAUDE.md alignment
 
 The existing rule *"Code outside a subpackage must import only from
-the subpackage root (e.g., `from aeat.models import ModelCatalogue`)"*
+the subpackage root (e.g., `from aeat.domain.modelos import ModelCatalogue`)"*
 is unchanged in spirit. Under the new mandate the same example becomes
 `from ..models import ModelCatalogue` when invoked from
 `src/aeat/<other_subpackage>/...`, or `from .models import ...` when
@@ -179,7 +179,7 @@ root imports only) survives; only the syntax shifts.
 
 - **Cross-subpackage interior access**: a few files reach into another
   subpackage's private modules (e.g.,
-  `from aeat.sync._wire import X` from outside `aeat/sync/`). These
+  `from aeat.application.sync._wire import X` from outside `aeat/application/sync/`). These
   already violate the public-API discipline. **Out of scope** for
   #162 — convert as-is to `from ..sync._wire import X`. A separate
   audit may file follow-ups.

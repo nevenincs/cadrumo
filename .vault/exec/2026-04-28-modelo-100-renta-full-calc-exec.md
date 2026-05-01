@@ -42,35 +42,35 @@ and subsequent anexos plug into the same shape.
 ## Files created
 
 - Sub-package scaffolding:
-    - `src/aeat/formulas/_rulesets/modelo_100/__init__.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/_common.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/_ccaa.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/_amortization.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/_inventario.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/__init__.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/_common.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/_ccaa.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/_amortization.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/_inventario.py`
 - Per-anexo per-año:
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b1_2024.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b1_2025.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b1_2026.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_b1_2024.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_b1_2025.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_b1_2026.py`
 - Per-año aggregators:
-    - `src/aeat/formulas/_rulesets/modelo_100_2024.py`
-    - `src/aeat/formulas/_rulesets/modelo_100_2025.py`
-    - `src/aeat/formulas/_rulesets/modelo_100_2026.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100_2024.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100_2025.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100_2026.py`
 - Co-located tests:
-    - `src/aeat/formulas/_rulesets/modelo_100/test_anexo_b1_2024.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/test_anexo_b1_2025.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/test_anexo_b1_2026.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/test_anexo_b1_2024.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/test_anexo_b1_2025.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/test_anexo_b1_2026.py`
 
 ## Files modified
 
-- `src/aeat/formulas/_rulesets/__init__.py` — registered
+- `src/aeat/domain/formulas/_rulesets/__init__.py` — registered
   `MODELO_100_2024 / 2025 / 2026` (default variant) alongside the
   existing `MODELO_100_SUMMARY_2025`. Updated docstring with the
   megaproject `#317` overview.
-- `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py` — bumped
+- `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py` — bumped
   `EXPECTED_COUNTS` for the three new rulesets (sub_op=9,
   mul_div_scalar=2 per ruleset; no PercentFormula or BracketsFormula
   nodes yet).
-- `src/aeat/formulas/_rulesets/test_zero_boundary_coverage.py` —
+- `src/aeat/domain/formulas/_rulesets/test_zero_boundary_coverage.py` —
   parametrize list extended with the three new rulesets; secondary-
   guard skip-list extended with `0021` (M100 art. 20 reducción cap
   is 7.302 € constant for rendimientos ≤ 14.852, so non-zero on zero
@@ -127,7 +127,7 @@ delta lands as a follow-up issue.
 - `just lint` — clean.
 - `just typecheck` (`ty check src tests`) — clean.
 - `just hooks` (prek run --all-files) — clean.
-- `pytest src/aeat/formulas/_rulesets/` — 464 tests pass (24 new
+- `pytest src/aeat/domain/formulas/_rulesets/` — 464 tests pass (24 new
   Anexo B1 cases plus harness extensions).
 - Mutation harness — `EXPECTED_COUNTS` bumped; per-class harnesses
   (operand-swap, scalar, kill-rate aggregator, exhaustiveness defense)
@@ -172,22 +172,22 @@ each of 2024 / 2025 / 2026.
 ### Files created
 
 - Anexo B2 (capital mobiliario):
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b2_2024.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b2_2025.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_b2_2026.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/test_anexo_b2_2025.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_b2_2024.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_b2_2025.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_b2_2026.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/test_anexo_b2_2025.py`
 - Anexo C (capital inmobiliario):
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_c_2024.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_c_2025.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/anexo_c_2026.py`
-    - `src/aeat/formulas/_rulesets/modelo_100/test_anexo_c_2025.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_c_2024.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_c_2025.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_c_2026.py`
+    - `src/aeat/domain/formulas/_rulesets/modelo_100/test_anexo_c_2025.py`
 
 ### Files modified
 
-- `src/aeat/formulas/_rulesets/modelo_100_2024.py / _2025.py / _2026.py`
+- `src/aeat/domain/formulas/_rulesets/modelo_100_2024.py / _2025.py / _2026.py`
   per-año aggregators extended to compose Anexo B2 + C alongside the
   existing Anexo B1.
-- `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py` —
+- `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py` —
   `EXPECTED_COUNTS` bumped (sub_op 9 -> 14 per ruleset; mul_div_scalar
   unchanged at 2). The five additional sub_ops are 2 in B2 (one in
   the rendimiento neto previo aggregation, one in the reducción
@@ -241,7 +241,7 @@ that does NOT feed into 0106 / 0107. Anexo F (Wave 8) will consume
 - ✅ `just lint` — clean.
 - ✅ `just typecheck` — clean.
 - ✅ `just hooks` — clean.
-- ✅ `pytest src/aeat/formulas/_rulesets/` — 474 tests pass (10 new
+- ✅ `pytest src/aeat/domain/formulas/_rulesets/` — 474 tests pass (10 new
   Anexo B2/C cases on top of the prior 464).
 - ✅ Mutation kill-rate aggregator + operand-swap + zero-boundary +
   exhaustiveness defense pass on the three updated rulesets.

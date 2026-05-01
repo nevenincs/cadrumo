@@ -19,10 +19,10 @@ Status: **APPROVED**
 ## Scope
 
 - `src/aeat/errors.py` — added `FilingFixtureError`.
-- `src/aeat/testing/__init__.py` — public API + contributor doc.
-- `src/aeat/testing/_schema.py` — pydantic v2 schema.
-- `src/aeat/testing/_loader.py` — filesystem loader.
-- `src/aeat/testing/test_testing.py` — 21 colocated unit tests.
+- `src/aeat/domain/testing/__init__.py` — public API + contributor doc.
+- `src/aeat/domain/testing/_schema.py` — pydantic v2 schema.
+- `src/aeat/domain/testing/_loader.py` — filesystem loader.
+- `src/aeat/domain/testing/test_testing.py` — 21 colocated unit tests.
 - `tests/fixtures/filing_history/modelo_130/*.json` — 8 files.
 - `tests/fixtures/filing_history/modelo_303/*.json` — 6 files.
 - `tests/fixtures/filing_history/modelo_390/*.json` — 3 files.
@@ -50,7 +50,7 @@ Status: **APPROVED**
   frozen=True, extra="forbid", populate_by_name=True)`.
 - `FilingRecordPeriodKind`, `FilingRecordScenario` — closed
   `enum.StrEnum`.
-- `FilingDraftStatus` is reused from `aeat.filing` (no parallel
+- `FilingDraftStatus` is reused from `aeat.application.filing` (no parallel
   enum).
 - `FilingRecord.totals` typed as `dict[str, Decimal]`; values
   round-trip through pydantic v2 JSON mode as Decimals.
@@ -62,35 +62,35 @@ Status: **APPROVED**
 
 ## Public API discipline
 
-- Callers import only from `aeat.testing`. `_loader.py` and
+- Callers import only from `aeat.domain.testing`. `_loader.py` and
   `_schema.py` are underscored and private.
-- `aeat.testing.__init__` exports 9 symbols (schema types,
+- `aeat.domain.testing.__init__` exports 9 symbols (schema types,
   loader, error, root constant, helper).
 - `test_malformed_json_raises_filing_fixture_error` imports
-  `_load_one` from `aeat.testing._loader` solely to exercise a
+  `_load_one` from `aeat.domain.testing._loader` solely to exercise a
   branch that cannot be reached through the public API with
   in-corpus files; this mirrors the private-helper test pattern
-  used elsewhere in `aeat.filing`.
+  used elsewhere in `aeat.application.filing`.
 
 ## Errors / logging
 
-- `FilingFixtureError` inherits from `aeat.errors.AeatError`.
+- `FilingFixtureError` inherits from `aeat.core.errors.AeatError`.
 - Every loader failure (directory missing, I/O error, malformed
   JSON, validation error) is re-raised as `FilingFixtureError`
   with the offending path in the message and the original
   exception chained via `raise … from exc`.
-- Loader uses `aeat.logging.get_logger(__name__)` for a DEBUG
+- Loader uses `aeat.core.logging.get_logger(__name__)` for a DEBUG
   line per loaded record. No bare `print`, no bare `logging`.
 
 ## Src-layout + test colocation
 
-- Loader lives at `src/aeat/testing/`. This satisfies the
+- Loader lives at `src/aeat/domain/testing/`. This satisfies the
   CLAUDE.md hard rule that all Python modules live under
   `src/aeat/`.
 - Fixture files live under `tests/fixtures/filing_history/`
   (not shipped in the wheel) — satisfies the "only test helper
   code in the source tree" constraint from issue #14.
-- Unit tests are colocated at `src/aeat/testing/test_testing.py`
+- Unit tests are colocated at `src/aeat/domain/testing/test_testing.py`
   per the Rust-style convention.
 
 ## Testing discipline

@@ -16,17 +16,17 @@ Ship the `aeat filing import --from-justificante <path>` CLI command end-to-end 
 
 ## Step 1 — Expose `ejercicio` on `Justificante`
 
-**Files**: `src/aeat/justificante/_schema.py`, `src/aeat/justificante/_extract.py`.
+**Files**: `src/aeat/domain/justificante/_schema.py`, `src/aeat/domain/justificante/_extract.py`.
 
 - Add `ejercicio: str | None = Field(default=None, max_length=8)` to `Justificante`.
 - In `extract_justificante`, resolve `_EJERCICIO_RE.search(normalised)` once (already computed), surface the stripped match to the `Justificante(...)` call. Remain `None` if the regex misses (forward-compatible with historical PDFs that only print the period).
 - **No** test changes needed for `justificante/test_parser.py` beyond adding an assertion for the new field's expected value on the three committed fixtures (`"2026"`, `"2026"`, `"2025"`).
 
-## Step 2 — Add `aeat.filing._import`
+## Step 2 — Add `aeat.application.filing._import`
 
-**New file**: `src/aeat/filing/_import.py`.
+**New file**: `src/aeat/application/filing/_import.py`.
 
-Public surface (re-exported from `aeat.filing.__init__`):
+Public surface (re-exported from `aeat.application.filing.__init__`):
 
 - `class JustificanteImportResult(BaseModel)` — strict, frozen; fields `draft: FilingDraft`, `submission: SubmittedFiling`, `warnings: tuple[Translatable, ...]`.
 - `def import_filing_from_justificante(pdf_path: Path, *, schema_provider: CasillaSchemaProvider) -> JustificanteImportResult`.
@@ -35,7 +35,7 @@ Behaviour:
 
 1. `justificante = parse_justificante(pdf_path)`.
 2. `period = _normalise_period(modelo=justificante.modelo, ejercicio=justificante.ejercicio, raw_period=justificante.period)`.
-    - If `ejercicio` is `None` and the raw period is not already canonical, raise `FilingImportError` — a new exception under `aeat.filing._errors` rooted at `FilingDraftError`.
+    - If `ejercicio` is `None` and the raw period is not already canonical, raise `FilingImportError` — a new exception under `aeat.application.filing._errors` rooted at `FilingDraftError`.
     - Quarterly: `_QUARTER_RE = re.compile(r"^([1-4])T$")` → `f"{ejercicio}Q{n}"`.
     - Monthly: `_MONTH_RE = re.compile(r"^(0[1-9]|1[0-2])$")` → `f"{ejercicio}-{m}"`.
     - Annual (`"0A"`): → `f"{ejercicio}A"` (matches existing Modelo 100/390 annual convention).
@@ -50,20 +50,20 @@ Behaviour:
 
 **Error hygiene**: All raises inherit `FilingDraftError` → `AeatError`.
 
-## Step 3 — Extend `aeat.filing._errors`
+## Step 3 — Extend `aeat.application.filing._errors`
 
-Add `FilingImportError(FilingDraftError)` — single-line class with docstring. Re-export from `aeat.filing.__init__`.
+Add `FilingImportError(FilingDraftError)` — single-line class with docstring. Re-export from `aeat.application.filing.__init__`.
 
-## Step 4 — Re-export from `aeat.filing`
+## Step 4 — Re-export from `aeat.application.filing`
 
-**File**: `src/aeat/filing/__init__.py`.
+**File**: `src/aeat/application/filing/__init__.py`.
 
 - Import `import_filing_from_justificante`, `JustificanteImportResult`, `FilingImportError` from `._import` and `._errors`.
 - Append to `__all__`.
 
 ## Step 5 — Wire the CLI
 
-**File**: `src/aeat/cli/filing/__init__.py`.
+**File**: `src/aeat/entrypoints/cli/filing/__init__.py`.
 
 - Add `_import_filing` command under the `@app.command("import")` decorator.
 - Flags: `--from-justificante` (required `Path`). Future flags like `--from-aeat` are out of scope.
@@ -77,7 +77,7 @@ Add `FilingImportError(FilingDraftError)` — single-line class with docstring. 
 
 ## Step 6 — Unit tests
 
-**New file**: `src/aeat/filing/test_import.py`.
+**New file**: `src/aeat/application/filing/test_import.py`.
 
 - Module markers: `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]`.
 - Fixtures: reuse `tests/fixtures/justificantes/modelo_130_2026Q1.pdf` and `...303_2026Q1.pdf`.
@@ -89,21 +89,21 @@ Add `FilingImportError(FilingDraftError)` — single-line class with docstring. 
     - `test_normalise_period` — parametrised unit covering `("1T", "2026")→"2026Q1"`, `("12", "2026")→"2026-12"`, `("0A", "2025")→"2025A"`, `("2026Q1", None)→"2026Q1"` passthrough, and a malformed `("XX", "2026")` → `FilingImportError`.
     - `test_warning_mentions_line_level` — checks the warning's `"en"` translation contains "casilla" or "line-level".
 
-**Amended file**: `src/aeat/cli/filing/test_filing_cli.py`.
+**Amended file**: `src/aeat/entrypoints/cli/filing/test_filing_cli.py`.
 
 - Add `TestFilingImportCLI` class with:
     - `test_import_writes_draft_and_submission` — points `AEAT_DRAFTS_DIR` + `AEAT_SUBMISSIONS_DIR` at tmp dirs, runs `aeat filing import --from-justificante <fixture>`, asserts both JSON artefacts exist, output contains the warning marker.
     - `test_import_rejects_missing_pdf` — exit code != 0, no drafts written.
 
-**Amended file**: `src/aeat/justificante/test_parser.py`.
+**Amended file**: `src/aeat/domain/justificante/test_parser.py`.
 
 - Extend the three `TestParseJustificante` assertions to include `record.ejercicio == "2026"` / `"2025"`.
 
 ## Step 7 — Lint & type checks
 
 - `uv run ruff check src/aeat`
-- `uv run mypy src/aeat/filing/_import.py src/aeat/cli/filing/__init__.py src/aeat/justificante/_schema.py src/aeat/justificante/_extract.py`
-- `uv run pytest -x -q src/aeat/filing/test_import.py src/aeat/cli/filing/test_filing_cli.py src/aeat/justificante/test_parser.py`
+- `uv run mypy src/aeat/application/filing/_import.py src/aeat/entrypoints/cli/filing/__init__.py src/aeat/domain/justificante/_schema.py src/aeat/domain/justificante/_extract.py`
+- `uv run pytest -x -q src/aeat/application/filing/test_import.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/domain/justificante/test_parser.py`
 
 ## Step 8 — Vaultspec + PR
 

@@ -35,6 +35,6 @@ The browser/profile path fixes and the authenticator persistence logic are tight
 
 ## Verification
 
-- Run `uv run pytest src/aeat/auth/test_authenticator.py src/aeat/browser/test_profile.py src/aeat/browser/test_session.py -m unit`
-- Run `uv run ruff check src/aeat/auth/_authenticator.py src/aeat/auth/test_authenticator.py src/aeat/browser/profile.py src/aeat/browser/session.py src/aeat/browser/test_profile.py src/aeat/browser/test_session.py src/aeat/cli/browser/health.py src/aeat/justificante/_verify.py`
+- Run `uv run pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_profile.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py -m unit`
+- Run `uv run ruff check src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/profile.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_profile.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py src/aeat/entrypoints/cli/browser/health.py src/aeat/domain/justificante/_verify.py`
 - Re-read the rolling session-persistence review and confirm the placeholder-file and invalid-replay findings are resolved.

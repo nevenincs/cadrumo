@@ -14,7 +14,7 @@ related:
 
 ## delivered
 
-- Rewrote `src/aeat/models/__init__.py` with a full package docstring
+- Rewrote `src/aeat/domain/modelos/__init__.py` with a full package docstring
   describing the registry's role, trilingual contract, and deadline-
   engine boundary.
 - Locked `__all__` to the 15 symbols required by the plan: the four
@@ -37,7 +37,7 @@ related:
 
 `__all__` tuple order is alphabetical (ruff RUF022) rather than the
 plan's declaration order. The set of exported symbols is unchanged;
-tuple order does not affect `from aeat.models import X` semantics.
+tuple order does not affect `from aeat.domain.modelos import X` semantics.
 
 ## commit
 

@@ -40,11 +40,11 @@ Run: `rg -n "justificante" src/aeat/ --type py` — review each hit. Keep occurr
 
 ## Step 4 — Add one regression assertion
 
-New test `src/aeat/justificante/test_vocabulary_stable.py`:
+New test `src/aeat/domain/justificante/test_vocabulary_stable.py`:
 
 ```python
 def test_justificante_public_surface_is_frozen() -> None:
-    """Guards against accidental renames in aeat.justificante."""
+    """Guards against accidental renames in aeat.domain.justificante."""
     from aeat import justificante
     expected = {
         "Justificante",
@@ -63,9 +63,9 @@ Explicit lock so cluster-A's re-home of `JustificanteError` under `PdfFilingImpo
 
 ## Step 5 — Quality gates
 
-- `uv run ruff check docs/ src/aeat/justificante/` — clean.
-- `uv run ty check src/aeat/justificante/` — clean.
-- `uv run pytest -m unit src/aeat/justificante/` — green (adds 1 test).
+- `uv run ruff check docs/ src/aeat/domain/justificante/` — clean.
+- `uv run ty check src/aeat/domain/justificante/` — clean.
+- `uv run pytest -m unit src/aeat/domain/justificante/` — green (adds 1 test).
 
 ## Kent UX roleplay
 

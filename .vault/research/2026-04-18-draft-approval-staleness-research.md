@@ -20,60 +20,60 @@ an approved draft, candidate detection strategies, and the recommended direction
 
 ## current branch state
 
-`src/aeat/filing/_schema.py` defines `FilingDraftStatus` with `DRAFT`,
+`src/aeat/application/filing/_schema.py` defines `FilingDraftStatus` with `DRAFT`,
 `VALIDATED`, `READY_TO_SUBMIT`, `SUBMITTED`, `ACKNOWLEDGED`, `REJECTED`,
 `AMENDED`, and `CANCELLED`. `FilingDraft` persists `draft_id`, `modelo`,
 `period`, `profile_tax_id`, `status`, `values`, `findings`, timestamps,
 `schema_version`, and `notes`. There are no approval fields such as
 `approved_at`, `approved_by`, `approval_basis`, or `review_checksum`.
 
-`src/aeat/filing/_schema.py` also makes `draft_id` content-addressed over
+`src/aeat/application/filing/_schema.py` also makes `draft_id` content-addressed over
 `(modelo, period, profile_tax_id, schema_version, values)`. This is stable for
 the draft payload itself, but it is intentionally narrower than the full review
 surface: it does not capture transaction catalogue state, category-profile
 state, or formula/ruleset state outside the stamped `schema_version`.
 
-`src/aeat/filing/_builders/modelo_130.py`,
-`src/aeat/filing/_builders/modelo_303.py`, and
-`src/aeat/filing/_builders/modelo_390.py` stamp `schema_version` from the
+`src/aeat/application/filing/_builders/modelo_130.py`,
+`src/aeat/application/filing/_builders/modelo_303.py`, and
+`src/aeat/application/filing/_builders/modelo_390.py` stamp `schema_version` from the
 casilla collection and derive the `draft_id` from the built values. This means
 builders already expose one deterministic version vector for the filing schema,
 but they do not persist any explicit review basis beyond the draft payload.
 
-`src/aeat/filing/_validator.py` validates a draft and emits findings. The
+`src/aeat/application/filing/_validator.py` validates a draft and emits findings. The
 validator can warn on schema-version mismatch, but it does not persist approval
 state and it does not mark an existing draft as stale. `apply_validation`
 currently promotes drafts only through the pre-approval path
 `DRAFT -> VALIDATED -> READY_TO_SUBMIT`.
 
-`src/aeat/cli/filing/__init__.py` persists drafts as JSON under
-`Settings.aeat_drafts_dir`. `src/aeat/filing/_complementaria.py` reloads the
+`src/aeat/entrypoints/cli/filing/__init__.py` persists drafts as JSON under
+`Settings.aeat_drafts_dir`. `src/aeat/application/filing/_complementaria.py` reloads the
 original draft from the same JSON directory when building an amendment. Any
 approval persistence scheme therefore has to survive plain JSON round-trips and
 remain usable by amendment reload paths.
 
-`src/aeat/submission/_preflight.py` requires `READY_TO_SUBMIT` and checks only
+`src/aeat/adapters/outbound/aeat/export/_preflight.py` requires `READY_TO_SUBMIT` and checks only
 error findings, deadline window, and certificate load. There is no approval
-gate and no stale-approval gate. `src/aeat/submission/_protocols.py` keeps a
+gate and no stale-approval gate. `src/aeat/adapters/outbound/aeat/export/_protocols.py` keeps a
 submission-local `DraftStatus` shim with only `DRAFT`, `INCOMPLETE`, and
-`READY_TO_SUBMIT`, and `src/aeat/workflow/_engine.py` assumes the same
+`READY_TO_SUBMIT`, and `src/aeat/application/workflow/_engine.py` assumes the same
 `READY_TO_SUBMIT` hand-off. Approval support is therefore not yet threaded
 through the submission and workflow boundary types.
 
-`src/aeat/submission/_confirm.py` computes a live-submission checksum from the
+`src/aeat/adapters/outbound/aeat/export/_confirm.py` computes a live-submission checksum from the
 current draft payload, including status and findings, and uses it only to build
 the operator confirmation phrase for a live AEAT write. This checksum is
 submission-specific and is not stored as review provenance.
 
-`src/aeat/financial/transactions/_models.py` gives transactions a
+`src/aeat/domain/financial/transactions/_models.py` gives transactions a
 content-addressed `transaction_id` derived from raw transaction fields.
-Classification updates in `src/aeat/financial/transactions/_service.py` mutate
+Classification updates in `src/aeat/domain/financial/transactions/_service.py` mutate
 semantic classification state and also touch `classified_at` and
 `classified_by`. The catalogue is persisted as JSON via atomic save/load
 helpers, but there is no catalogue-level fingerprint or review snapshot.
 
-`src/aeat/financial/categories/_registry.py` and
-`src/aeat/financial/categories/_corpus.py` expose category-profile mappings.
+`src/aeat/domain/financial/categories/_registry.py` and
+`src/aeat/domain/financial/categories/_corpus.py` expose category-profile mappings.
 The public loader currently returns `CATEGORY_PROFILES_2025` for 2025. Filing
 builders already stamp the casilla-schema version, but there is no separate
 fingerprint for the category mappings that drive transaction-to-casilla
@@ -113,7 +113,7 @@ global "ledger updated at" timestamp gathered from the local state.
 
 This is operationally simple, but it is the weakest option on this branch.
 There is no single monotonic state owner across `src/aeat/filing`,
-`src/aeat/financial/transactions`, `src/aeat/financial/categories`, and the
+`src/aeat/domain/financial/transactions`, `src/aeat/domain/financial/categories`, and the
 formula/schema surfaces. A timestamp approach becomes correct only if every code
 path that can affect review validity remembers to bump the same clock. The
 current branch does not have that invariant.
@@ -126,7 +126,7 @@ versioned files change without updating the chosen timestamp source.
 
 ### strategy B: reuse the live-submission checksum
 
-Reuse `src/aeat/submission/_confirm.py:compute_draft_checksum()` as the stored
+Reuse `src/aeat/adapters/outbound/aeat/export/_confirm.py:compute_draft_checksum()` as the stored
 review checksum and compare it during review/export.
 
 This is stronger than a single timestamp because it is deterministic, but it is
@@ -196,8 +196,8 @@ need to invalidate approvals even when the category registry stays fixed.
 A decomposed approval basis is also better for branch compatibility. The
 existing workflow and submission code still assume `READY_TO_SUBMIT`, so issue
 #230 should persist review provenance first and let later review/export work
-thread new statuses through `src/aeat/submission/_protocols.py` and
-`src/aeat/workflow/_engine.py`. Persisted basis data is useful immediately and
+thread new statuses through `src/aeat/adapters/outbound/aeat/export/_protocols.py` and
+`src/aeat/application/workflow/_engine.py`. Persisted basis data is useful immediately and
 does not require `draft_id` churn.
 
 ## recommended direction

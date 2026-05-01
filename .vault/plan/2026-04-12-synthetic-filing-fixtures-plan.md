@@ -17,7 +17,7 @@ Branch: `feature/14-synthetic-filing-fixtures`
 
 ## Goal
 
-Land the `aeat.testing` subpackage: a typed pydantic v2
+Land the `aeat.domain.testing` subpackage: a typed pydantic v2
 `FilingRecord`, a deterministic `load_filing_history` iterator,
 17 hand-curated synthetic fixture files, colocated unit tests,
 and a contributor docstring — all gated by the synthetic-only
@@ -30,15 +30,15 @@ invariant.
    `FixtureProvisioningError` docstring style.
 
 2. **Subpackage layout**
-   - `src/aeat/testing/__init__.py` — public API, contributor
+   - `src/aeat/domain/testing/__init__.py` — public API, contributor
      docstring, `__all__`.
-   - `src/aeat/testing/_schema.py` — `FilingRecord`,
+   - `src/aeat/domain/testing/_schema.py` — `FilingRecord`,
      `FixtureCasilla`, `FilingRecordPeriodKind`,
      `FilingRecordScenario`. Strict, frozen, `extra="forbid"`.
-   - `src/aeat/testing/_loader.py` — `SYNTHETIC_FIXTURES_ROOT`
+   - `src/aeat/domain/testing/_loader.py` — `SYNTHETIC_FIXTURES_ROOT`
      resolver, `load_filing_history` iterator, JSON + pydantic
      parsing wrapped in `FilingFixtureError`.
-   - `src/aeat/testing/test_testing.py` — colocated unit tests.
+   - `src/aeat/domain/testing/test_testing.py` — colocated unit tests.
 
 3. **Schema details**
    - `FilingRecord.synthetic: Literal[True]` — pydantic will
@@ -48,14 +48,14 @@ invariant.
      alias on load (pydantic v2 `populate_by_name=True`).
    - `FilingRecord.source: Literal["synthetic"]`.
    - `FilingRecord.status: FilingDraftStatus` — imported from
-     `aeat.filing`.
+     `aeat.application.filing`.
    - `FilingRecord.casillas: tuple[FixtureCasilla, ...]`.
    - `FilingRecord.totals: dict[str, Decimal]` — frozen dict
      semantics come from `frozen=True` on the model.
    - `FilingRecord.created_at`, `submitted_at`,
      `acknowledged_at` — `datetime`, UTC.
    - `compute_record_id(...)` — stable 16-char hash prefix
-     mirroring `aeat.filing.compute_draft_id`, persisted to
+     mirroring `aeat.application.filing.compute_draft_id`, persisted to
      the fixture file so `record_id` is both human-readable
      and content-addressed.
    - Field order in JSON matches declaration order so diffs
@@ -97,7 +97,7 @@ invariant.
    `test_refuses_missing_comment_marker`,
    `test_record_ids_are_unique`.
 
-7. **Contributor doc** — inside `aeat.testing.__init__`
+7. **Contributor doc** — inside `aeat.domain.testing.__init__`
    module-level docstring. Covers filename convention, the
    invariant, how to run the smoke tests.
 
@@ -129,7 +129,7 @@ Checks performed:
   marker.
 - Pydantic v2 mandate satisfied: every boundary-crossing type
   is strict + frozen + `extra="forbid"`.
-- Loader under `src/aeat/testing/` satisfies the src-layout
+- Loader under `src/aeat/domain/testing/` satisfies the src-layout
   mandate; fixtures under `tests/fixtures/…` satisfy the "only
   test helper code in the source tree" constraint.
 - Errors inherit from `AeatError`. Logging via

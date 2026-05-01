@@ -67,7 +67,7 @@ lose accents on text extraction. The extractor normalises via
 
 ### 4. Error hierarchy
 
-All justificante errors inherit from :class:`aeat.errors.AeatError`:
+All justificante errors inherit from :class:`aeat.core.errors.AeatError`:
 
 - ``JustificanteError`` — root.
 - ``JustificanteParseError`` — any parse failure.
@@ -105,7 +105,7 @@ only needed as a **dev dependency**, not a runtime dependency.
 ### 7. Public API surface
 
 Callers outside the subpackage must import **only** from
-:mod:`aeat.justificante`. The private modules (``_schema``, ``_extract``,
+:mod:`aeat.domain.justificante`. The private modules (``_schema``, ``_extract``,
 ``_parser``, ``_parsers.*``, ``_verify``, ``_errors``) are implementation
 details and may be refactored without notice. The public exports are:
 

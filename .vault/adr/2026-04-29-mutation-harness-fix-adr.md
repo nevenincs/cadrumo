@@ -43,7 +43,7 @@ The fix must NOT:
 
 - modify per-modelo rulesets or formulas — the change is harness-only;
 - introduce new mutator classes (that is #338's territory);
-- couple to `aeat.storage` / `aeat.financial` (#216 territory; the
+- couple to `aeat.adapters.persistence.storage` / `aeat.domain.financial` (#216 territory; the
   pre-merged WIP is for visibility only and is rebased out before the
   PR opens);
 - introduce mocks, fakes, or stubs (project mandate).

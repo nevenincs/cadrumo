@@ -316,10 +316,10 @@ module. The phase summary lands at Step 14 close as
   - The `verification._verify` and `cli/filing/__init__.py` private-
     bypass imports into `formulas._*` are resolved by promoting the
     needed symbols to the public formulas surface.
-  - `casillas` → `aeat.cli` and `profile.assets` → `formulas._rulesets`
+  - `casillas` → `aeat.entrypoints.cli` and `profile.assets` → `formulas._rulesets`
     private imports are traced to specific call sites and re-routed to
     public APIs.
-  - `filing._review` → `aeat.financial.transactions._repository` is
+  - `filing._review` → `aeat.domain.financial.transactions._repository` is
     rewritten through the public subpackage surface, OR the symbol is
     promoted.
   Each PR carries a code review under the FIX / FILE / STRIKE matrix.

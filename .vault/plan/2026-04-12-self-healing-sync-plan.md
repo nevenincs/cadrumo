@@ -29,7 +29,7 @@ Reviewed against the ADR and issue #11 on 2026-04-12.
   (classification + allowlist) and tested rigorously.
 - Read-only against AEAT; no form submission or server-side
   mutation.
-- CLI extends the existing typer surface under `src/aeat/cli/`.
+- CLI extends the existing typer surface under `src/aeat/entrypoints/cli/`.
 - Settings are additive and alignment-tested.
 
 **Outcome: APPROVED. Proceed to execution.**
@@ -37,7 +37,7 @@ Reviewed against the ADR and issue #11 on 2026-04-12.
 ## file layout
 
 ```
-src/aeat/sync/
+src/aeat/application/sync/
 ├── __init__.py                 # public re-exports only
 ├── _protocols.py               # Protocol stubs for in-flight deps
 ├── _errors.py                  # SyncError + subclasses
@@ -65,7 +65,7 @@ src/aeat/sync/
 ├── test_bounded_policy.py      # the invariant
 └── test_live_sync.py           # @pytest.mark.live, skipped by default
 
-src/aeat/cli/sync/
+src/aeat/entrypoints/cli/sync/
 ├── __init__.py
 ├── run.py                      # aeat sync run
 ├── list.py                     # aeat sync list-divergences
@@ -205,8 +205,8 @@ src/aeat/cli/sync/
 
 ## step 7 — cli
 
-- Add `src/aeat/cli/sync/` with four typer subcommands per ADR.
-- Wire into the existing cli app under `src/aeat/cli/__init__.py`
+- Add `src/aeat/entrypoints/cli/sync/` with four typer subcommands per ADR.
+- Wire into the existing cli app under `src/aeat/entrypoints/cli/__init__.py`
   (or whichever module owns the root typer group — read and
   respect the existing convention).
 - Acceptance: `test_cli.py` invokes each subcommand via

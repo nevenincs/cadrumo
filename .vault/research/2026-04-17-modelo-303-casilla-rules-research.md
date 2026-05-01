@@ -25,10 +25,10 @@ Parent PR: #182 (engine + Modelo 130 wave 1)
 The #183 acceptance is twofold:
 
 1. Codify the Modelo 303 (autoliquidación IVA trimestral) computation
-   rules as a period-versioned ruleset on `aeat.formulas`, for
+   rules as a period-versioned ruleset on `aeat.domain.formulas`, for
    fiscal years 2024 and 2025.
 2. Verify that the downstream **Spanish VAT classification substrate**
-   (`aeat.financial.vat`) carries the full taxonomy needed to feed a
+   (`aeat.domain.financial.vat`) carries the full taxonomy needed to feed a
    Modelo 303 draft without ad-hoc glue: issuer residence, customer
    residence, customer tax status, transaction kind, period-versioned
    rates and regulations. Close the gaps.
@@ -229,7 +229,7 @@ frutas, verduras, legumbres, tubérculos, cereales):**
 | 2022-10-01 → 2023-12-31 | 5 %  | Ley 38/2022 |
 | 2024-01-01 onwards        | 21 % | retorno a general |
 
-The `aeat.financial.vat._rates` module is expanded to carry these
+The `aeat.domain.financial.vat._rates` module is expanded to carry these
 windows as `VATRate` records with `effective_from` / `effective_until`
 set. The test suite asserts `lookup_rate(ES, kind, on=date)` resolves
 to the correct rate for every window boundary (± 1 day).
@@ -443,27 +443,27 @@ simplificado casillas).
 
 ## Cross-references to existing artifacts
 
-- `src/aeat/financial/vat/_schema.py` — existing enum + record
+- `src/aeat/domain/financial/vat/_schema.py` — existing enum + record
   types. The new enums and classification records live in a new
   module `_classification.py` that re-uses the existing
   `_StrictFrozen` / `_StrictMutable` base and the existing
   `VATCategory` + `EUMemberState` enums. The addition of
   `DOMESTIC_REVERSE_CHARGE` is a single enum line and a matching
   `VATRegulation` record in the catalogue.
-- `src/aeat/financial/vat/_rates.py` — the 2024 ES rate set and
+- `src/aeat/domain/financial/vat/_rates.py` — the 2024 ES rate set and
   the Ley 7/2024 / Ley 38/2022 transitional windows are added
   here as additional `VATRate` entries on the ES row.
-- `src/aeat/financial/vat/_catalogue.py` — factored into a
+- `src/aeat/domain/financial/vat/_catalogue.py` — factored into a
   per-year catalogue builder. 2024 catalogue re-uses 2025
   regulation records unchanged (structurally stable) + ships
   one additional citation on `DOMESTIC_SUPER_REDUCED_4` quoting
   Ley 7/2024 (for reviewer trace).
-- `src/aeat/financial/vat/_modelo_303_mapping.py` — NEW module
+- `src/aeat/domain/financial/vat/_modelo_303_mapping.py` — NEW module
   exposing `MODELO_303_CASILLA_MAPPING` as the bridge between
   classification and ruleset.
-- `src/aeat/formulas/_rulesets/modelo_303_2024.py` and
+- `src/aeat/domain/formulas/_rulesets/modelo_303_2024.py` and
   `_2025.py` — NEW ruleset modules.
-- `src/aeat/formulas/_rulesets/__init__.py` — register new
+- `src/aeat/domain/formulas/_rulesets/__init__.py` — register new
   rulesets.
 - Tests colocated under each module (Rust-style).
 
@@ -481,7 +481,7 @@ This catches rate drift between the two substrates at test time.
 - **Relative-imports mandate** (#162) — every new internal import
   inside `src/aeat/` uses relative syntax.
 - **Public-API discipline** — new classification types are re-
-  exported from `aeat.financial.vat.__init__` so downstream callers
+  exported from `aeat.domain.financial.vat.__init__` so downstream callers
   never reach `_classification.py` directly.
 - **Pydantic v2 strict+frozen** on every record.
 - **Trilingual contract** — the new category labels are
@@ -489,26 +489,26 @@ This catches rate drift between the two substrates at test time.
 - **Decimal discipline** — all rate percentages stored and
   compared as `Decimal`; floats rejected.
 - **Logging** — every new module uses
-  `aeat.logging.get_logger(__name__)`.
+  `aeat.core.logging.get_logger(__name__)`.
 - **Testing** — `@pytest.mark.unit` tests colocated; every
   classification rule has at least two cases (match + boundary
   miss).
 
 ## Deliverables
 
-1. `src/aeat/formulas/_rulesets/modelo_303_2024.py`
-2. `src/aeat/formulas/_rulesets/modelo_303_2025.py`
-3. Updated `src/aeat/formulas/_rulesets/__init__.py` registry.
-4. `src/aeat/financial/vat/_classification.py` — new enums,
+1. `src/aeat/domain/formulas/_rulesets/modelo_303_2024.py`
+2. `src/aeat/domain/formulas/_rulesets/modelo_303_2025.py`
+3. Updated `src/aeat/domain/formulas/_rulesets/__init__.py` registry.
+4. `src/aeat/domain/financial/vat/_classification.py` — new enums,
    criteria record, classification record, `classify_vat()` resolver.
-5. `src/aeat/financial/vat/_modelo_303_mapping.py` — bridge table.
-6. Extended `src/aeat/financial/vat/_rates.py` — 2024 ES rates,
+5. `src/aeat/domain/financial/vat/_modelo_303_mapping.py` — bridge table.
+6. Extended `src/aeat/domain/financial/vat/_rates.py` — 2024 ES rates,
    Ley 7/2024 + Ley 38/2022 transitional windows.
-7. Extended `src/aeat/financial/vat/_catalogue.py` — per-year
+7. Extended `src/aeat/domain/financial/vat/_catalogue.py` — per-year
    builder, `VAT_CATALOGUES_BY_YEAR`, `resolve_catalogue(on)`.
-8. Extended `src/aeat/financial/vat/_schema.py` — one new
+8. Extended `src/aeat/domain/financial/vat/_schema.py` — one new
    `VATCategory.DOMESTIC_REVERSE_CHARGE` enum member.
-9. Extended `src/aeat/financial/vat/__init__.py` — public
+9. Extended `src/aeat/domain/financial/vat/__init__.py` — public
    re-exports.
 10. Colocated unit tests:
     - `test_modelo_303_2024.py` — formula values for ≥10

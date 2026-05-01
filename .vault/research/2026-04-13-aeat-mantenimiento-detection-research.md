@@ -38,10 +38,10 @@ Handover scope (authoritative), summarised for downstream ADR/plan:
 - Settings: site_health_probe_url and
   site_health_rate_limit_retry_after_default.
 - Fixtures under tests/fixtures/site_health/*.html, 5+ per parser.
-- Out of scope: aeat.auth (#94), aeat.filing (#93), Track B.
+- Out of scope: aeat.adapters.outbound.aeat.auth (#94), aeat.application.filing (#93), Track B.
 
 Important deviation from the issue body: #95 originally proposed
-src/aeat/browser/aeat_service_health.py plus AeatServiceState. The
+src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/aeat_service_health.py plus AeatServiceState. The
 handover prompt moves the model and parsers to aeat.status and adds a
 thin browser session hook. This research doc follows the handover.
 
@@ -59,11 +59,11 @@ looking like a regression rather than a typed AEAT-is-down signal.
 
 ### 2.2 existing health surfaces
 
-- src/aeat/browser/health.py exposes run_health_check, a Playwright
+- src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/health.py exposes run_health_check, a Playwright
   smoke test that navigates to https://example.com to verify the
   evasion patches load. It does not touch AEAT. Not a site-health
   probe; only a browser-install sanity check. No CLI wiring yet.
-- src/aeat/browser/evasion.py carries the stealth JS; unrelated but
+- src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/evasion.py carries the stealth JS; unrelated but
   shares the same subpackage.
 
 ### 2.3 navigation entry points that must grow a probe
@@ -75,25 +75,25 @@ a candidate injection point. Found surfaces:
   StatusReader. Currently raises StatusAuthError on response.status
   >= 400. Primary injection point because it funnels every fetch_*
   surface through one method.
-- src/aeat/submission/_engine.py delegates navigation to the per-modelo
-  submitters in src/aeat/submission/_submitters/modelo130.py, which
+- src/aeat/adapters/outbound/aeat/export/_engine.py delegates navigation to the per-modelo
+  submitters in src/aeat/adapters/outbound/aeat/export/_submitters/modelo130.py, which
   use a BrowserSessionLike passed in from the engine.
 - src/aeat/inbox/_fetcher.py is a composition layer; navigation sits
   behind the NotificacionSource Protocol stub (#43 plumbing).
-- src/aeat/sync/_runner.py abstracts navigation behind a
+- src/aeat/application/sync/_runner.py abstracts navigation behind a
   LivePayloadFetcher Protocol, documented as driven by a Playwright
   session in production.
 
 Architectural conclusion: the cleanest chokepoint is
 BrowserSession.create_context, or a wrapper around Page.goto on the
 session side. Every subpackage already consumes
-aeat.browser.BrowserSession, so a session-level hook can raise
+aeat.adapters.outbound.aeat.browser.BrowserSession, so a session-level hook can raise
 SiteHealthError once and every caller inherits the pause-and-alert
 contract without editing four subpackages independently.
 
 The _stage_syncing_catalogues, _stage_checking_inbox,
 _stage_building_draft, _stage_running_preflight and
-_stage_dry_run_submit stages in src/aeat/workflow/_engine.py all run
+_stage_dry_run_submit stages in src/aeat/application/workflow/_engine.py all run
 their component calls inside try/except Exception blocks that call
 self._record_unhandled(...). That means a new typed SiteHealthError
 currently collapses into WorkflowAbortReason.UNHANDLED_EXCEPTION. The
@@ -101,7 +101,7 @@ plan must add a dedicated catch arm (see section 5).
 
 ## 3. pydantic model conventions to mirror
 
-From src/aeat/status/_models.py and src/aeat/workflow/_models.py:
+From src/aeat/status/_models.py and src/aeat/application/workflow/_models.py:
 
 - Shared config: ConfigDict(strict=True, frozen=True, extra=forbid).
   aeat.status defines a private _StatusRecord base with this config -
@@ -115,7 +115,7 @@ From src/aeat/status/_models.py and src/aeat/workflow/_models.py:
   _reader.py).
 - Timestamps use AwareDatetime for frozen records, or datetime with
   explicit UTC in engine code (_utcnow in workflow/_engine.py).
-- Trilingual free text uses aeat.i18n.Translatable. Evidence is raw
+- Trilingual free text uses aeat.core.i18n.Translatable. Evidence is raw
   HTML, so html_fragment is plain str (not Translatable).
 - Field(min_length, max_length) guards for all string fields;
   html_fragment should be bounded (e.g. max_length=4096) to avoid
@@ -128,10 +128,10 @@ From src/aeat/status/_models.py and src/aeat/workflow/_models.py:
 src/aeat/errors.py defines only AeatError plus fixture errors. Each
 subpackage layers its own base:
 
-- aeat.browser.BrowserError(AeatError) in browser/session.py.
+- aeat.adapters.outbound.aeat.browser.BrowserError(AeatError) in browser/session.py.
 - aeat.status._errors: StatusReaderError(AeatError) then
   StatusAuthError, StatusParseError, StatusNotFoundError.
-- aeat.workflow._errors.WorkflowComponentError wraps unhandled
+- aeat.application.workflow._errors.WorkflowComponentError wraps unhandled
   component exceptions.
 
 For #95 the cleanest placement, given the handover keeps the model in
@@ -142,10 +142,10 @@ aeat.status, is either:
   from aeat.status.
 
 Standalone is preferred because the browser session hook (in
-aeat.browser) must raise the error before any StatusReader call
-completes, and aeat.browser must not import from aeat.status. Decision
-to be locked in the ADR: hoist SiteHealthError to aeat.errors (next to
-AeatError) so both aeat.browser and aeat.status can raise it without a
+aeat.adapters.outbound.aeat.browser) must raise the error before any StatusReader call
+completes, and aeat.adapters.outbound.aeat.browser must not import from aeat.status. Decision
+to be locked in the ADR: hoist SiteHealthError to aeat.core.errors (next to
+AeatError) so both aeat.adapters.outbound.aeat.browser and aeat.status can raise it without a
 circular import. The pydantic SiteHealthStatus model stays in
 aeat.status.
 
@@ -156,7 +156,7 @@ component calls with _record_unhandled, which re-raises as
 UNHANDLED_EXCEPTION. Plan must:
 
 - Add WorkflowAbortReason.SITE_UNAVAILABLE (or AEAT_DOWN) to the
-  closed enum in aeat.workflow._models.
+  closed enum in aeat.application.workflow._models.
 - In each stage that calls a Protocol that can raise, special-case
   SiteHealthError before the generic Exception handler, record a
   WorkflowStep carrying the SiteHealthAlert, and raise _AbortError
@@ -273,23 +273,23 @@ inside site_health/ should document each fixture provenance
 ## 7. cli wiring for aeat browser sub-app
 
 There is no existing aeat browser Typer sub-app - browser is currently
-only a Python subpackage. src/aeat/cli/__init__.py wires sub-apps with
+only a Python subpackage. src/aeat/entrypoints/cli/__init__.py wires sub-apps with
 the pattern:
 
-- from aeat.cli import casillas as casillas_module
+- from aeat.entrypoints.cli import casillas as casillas_module
 - app.add_typer(casillas_module.app, name=casillas, help=...)
 
 Each sub-app is a module that exports app = typer.Typer(name=..., ...).
-Canonical reference is src/aeat/cli/casillas.py (flat-file sub-app,
-mirrors aeat.casillas package). For a directory-backed sub-app see
-src/aeat/cli/status/__init__.py, src/aeat/cli/submission/__init__.py
-and src/aeat/cli/workflow/__init__.py.
+Canonical reference is src/aeat/entrypoints/cli/casillas.py (flat-file sub-app,
+mirrors aeat.domain.casillas package). For a directory-backed sub-app see
+src/aeat/entrypoints/cli/status/__init__.py, src/aeat/entrypoints/cli/submission/__init__.py
+and src/aeat/entrypoints/cli/workflow/__init__.py.
 
-Plan: add src/aeat/cli/browser/__init__.py (directory-backed, so
+Plan: add src/aeat/entrypoints/cli/browser/__init__.py (directory-backed, so
 health can live in its own file and a future profile, trace, etc. can
 join without churn). Wire in cli/__init__.py:
 
-- from aeat.cli import browser as browser_module
+- from aeat.entrypoints.cli import browser as browser_module
 - app.add_typer(browser_module.app, name=browser, help=Playwright
   browser session health probes)
 
@@ -317,8 +317,8 @@ Both must land in .env.example with doc strings.
 
 ## 9. open questions for the adr phase
 
-- Error placement: hoist SiteHealthError to aeat.errors
-  (cross-subpackage) vs. duplicate in aeat.browser plus aeat.status.
+- Error placement: hoist SiteHealthError to aeat.core.errors
+  (cross-subpackage) vs. duplicate in aeat.adapters.outbound.aeat.browser plus aeat.status.
   Recommended: hoist (see section 4).
 - Browser session hook: wrap BrowserSession.create_context to return
   a custom HealthAwarePage proxy, or add an explicit

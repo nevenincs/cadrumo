@@ -12,9 +12,9 @@ related:
 
 `RENAME-CORPUS-REVIEW-001 | MEDIUM | Remove the manuals alias migration claim`
 The first ADR draft claimed that alias-backed parsing plus canonical
-serialization would rewrite local persisted JSON in both `aeat.casillas` and
-`aeat.manuals`. That was only true for `casillas`, which has real JSON writers.
-`aeat.manuals` has loaders for structured `manual.json` / section JSON but no
+serialization would rewrite local persisted JSON in both `aeat.domain.casillas` and
+`aeat.domain.manuals`. That was only true for `casillas`, which has real JSON writers.
+`aeat.domain.manuals` has loaders for structured `manual.json` / section JSON but no
 production writer for those records, so the ADR overstated the migration story
 for stale local manual structures.
 

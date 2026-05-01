@@ -1,6 +1,6 @@
 ---
 name: 2026-04-13-modelo-inventory-plan
-description: Implementation plan for the authoritative AEAT modelo inventory + pydantic registry under aeat.models (#108)
+description: Implementation plan for the authoritative AEAT modelo inventory + pydantic registry under aeat.domain.modelos (#108)
 type: plan
 tags:
   - "#plan"
@@ -22,7 +22,7 @@ Issue: wgergely/aeat#108
 
 ## Goal
 
-Materialise the authoritative AEAT modelo catalogue under `src/aeat/models/`
+Materialise the authoritative AEAT modelo catalogue under `src/aeat/domain/modelos/`
 as a strict pydantic v2 registry covering all 20 modelos enumerated in the
 research doc, wire it into the `aeat` CLI via four Typer commands
 (`list`, `show`, `applicable-to`, `year-plan`), and ship a fully green
@@ -36,16 +36,16 @@ gives #77/#93 a stable `ModeloCode` import surface.
 - Research (data): `.vault/research/2026-04-13-modelo-inventory-research.md`
   sections 3.1–3.20 (D1) and 4 (D2 matrix).
 - Existing public surfaces consumed by this feature:
-  - `src/aeat/deadlines/__init__.py` — `DeadlineEngine`, `CALENDAR`,
+  - `src/aeat/domain/deadlines/__init__.py` — `DeadlineEngine`, `CALENDAR`,
     `CanonicalWindow`, `PeriodKind`, `AutonomoProfile`, `IVARegime`,
     `applies_to`, `explain`.
-  - `src/aeat/i18n/__init__.py` — `Translatable`, `Language`,
+  - `src/aeat/core/i18n/__init__.py` — `Translatable`, `Language`,
     `require_authoritative`.
   - `src/aeat/errors.py` — `AeatError` base.
-  - `src/aeat/logging/...` — `get_logger`.
-  - `src/aeat/casillas/...` — catalogue loader (used only from
+  - `src/aeat/core/logging/...` — `get_logger`.
+  - `src/aeat/domain/casillas/...` — catalogue loader (used only from
     `test_casilla_cross_reference.py`).
-  - `src/aeat/cli/__init__.py` — Typer root `app`; sub-apps wired via
+  - `src/aeat/entrypoints/cli/__init__.py` — Typer root `app`; sub-apps wired via
     `app.add_typer(...)`.
 
 ## Constraints
@@ -57,15 +57,15 @@ gives #77/#93 a stable `ModeloCode` import surface.
   `ModeloCadence`, `TaxpayerProfile`, `LegalCitationSource`). `StrEnum`,
   never `IntEnum`.
 - **Google-style docstrings + full type hints** on every public symbol.
-- **Public API discipline.** Consumers import from `aeat.models` only;
+- **Public API discipline.** Consumers import from `aeat.domain.modelos` only;
   `_*` modules are internal. `__all__` is the ADR-locked tuple.
-- **Errors.** All new errors inherit from `aeat.errors.AeatError` via a
+- **Errors.** All new errors inherit from `aeat.core.errors.AeatError` via a
   `ModeloRegistryError` root.
-- **Logging.** Every module uses `aeat.logging.get_logger(__name__)`.
+- **Logging.** Every module uses `aeat.core.logging.get_logger(__name__)`.
 - **Trilingual contract.** `display_label: Translatable` must carry `es`,
   `en`, `hu` keys. Spanish is authoritative.
 - **Testing.** `pytest` only, every test marked `@pytest.mark.unit`,
-  colocated under `src/aeat/models/`. Zero mocks, patches, fakes, stubs,
+  colocated under `src/aeat/domain/modelos/`. Zero mocks, patches, fakes, stubs,
   skips. No `type: ignore` bandages.
 - **Conventional commits** on every commit — literal messages below.
 - **No `.github/workflows/`** files. `tests/test_release_config.py`
@@ -77,22 +77,22 @@ gives #77/#93 a stable `ModeloCode` import surface.
 ### Critical ADR clarification — `DeadlineRule`
 
 The ADR (§7) describes `ModeloMetadata.deadline_rule: DeadlineRule`
-imported from `aeat.deadlines`. **No such type exists on `main`.**
-`aeat.deadlines` publicly exposes `CanonicalWindow` (a concrete
+imported from `aeat.domain.deadlines`. **No such type exists on `main`.**
+`aeat.domain.deadlines` publicly exposes `CanonicalWindow` (a concrete
 `(modelo, year, period)` window) and the `CALENDAR` tuple keyed by
 modelo code string; rule-shaped abstractions are internal to
 `_applies.py` and not re-exported. This plan resolves the contradiction
-**without** widening `aeat.deadlines`:
+**without** widening `aeat.domain.deadlines`:
 
 - Drop the `deadline_rule: DeadlineRule` field from `ModeloMetadata` for
   v1. In its place, keep a single typed field
   `cadence: ModeloCadence` plus a helper `year_plan(year, profile)` that
   resolves deadlines **at query time** by calling
-  `aeat.deadlines.DeadlineEngine.compute(profile, year=year)` and
+  `aeat.domain.deadlines.DeadlineEngine.compute(profile, year=year)` and
   filtering obligations by `modelo == metadata.code.value`.
 - `year_plan` is the only public callable that touches
-  `aeat.deadlines`; registry construction does not import it, keeping
-  `aeat.models` import-time free of `aeat.deadlines` as a hard
+  `aeat.domain.deadlines`; registry construction does not import it, keeping
+  `aeat.domain.modelos` import-time free of `aeat.domain.deadlines` as a hard
   dependency.
 - The ADR's intent — "the CLI `year-plan` command consumes the deadline
   engine to produce a calendar listing" — is preserved exactly. The
@@ -112,53 +112,53 @@ marker wired on every new test file. No data, no validators, no
 re-exports beyond typing stubs.
 
 - Create directories and empty/near-empty files:
-  - `src/aeat/models/_codes.py`
-  - `src/aeat/models/_categories.py`
-  - `src/aeat/models/_citations.py`
-  - `src/aeat/models/_applicability.py`
-  - `src/aeat/models/_metadata.py`
-  - `src/aeat/models/_registry.py`
-  - `src/aeat/models/_cli.py`
-  - `src/aeat/models/_errors.py`
-  - `src/aeat/models/_entries/__init__.py`
-  - `src/aeat/models/_entries/modelo_036.py`
-  - `src/aeat/models/_entries/modelo_037.py`
-  - `src/aeat/models/_entries/modelo_100.py`
-  - `src/aeat/models/_entries/modelo_111.py`
-  - `src/aeat/models/_entries/modelo_115.py`
-  - `src/aeat/models/_entries/modelo_123.py`
-  - `src/aeat/models/_entries/modelo_130.py`
-  - `src/aeat/models/_entries/modelo_131.py`
-  - `src/aeat/models/_entries/modelo_180.py`
-  - `src/aeat/models/_entries/modelo_190.py`
-  - `src/aeat/models/_entries/modelo_200.py`
-  - `src/aeat/models/_entries/modelo_202.py`
-  - `src/aeat/models/_entries/modelo_232.py`
-  - `src/aeat/models/_entries/modelo_303.py`
-  - `src/aeat/models/_entries/modelo_347.py`
-  - `src/aeat/models/_entries/modelo_349.py`
-  - `src/aeat/models/_entries/modelo_369.py`
-  - `src/aeat/models/_entries/modelo_390.py`
-  - `src/aeat/models/_entries/modelo_720.py`
-  - `src/aeat/models/_entries/modelo_840.py`
+  - `src/aeat/domain/modelos/_codes.py`
+  - `src/aeat/domain/modelos/_categories.py`
+  - `src/aeat/domain/modelos/_citations.py`
+  - `src/aeat/domain/modelos/_applicability.py`
+  - `src/aeat/domain/modelos/_metadata.py`
+  - `src/aeat/domain/modelos/_registry.py`
+  - `src/aeat/domain/modelos/_cli.py`
+  - `src/aeat/domain/modelos/_errors.py`
+  - `src/aeat/domain/modelos/_entries/__init__.py`
+  - `src/aeat/domain/modelos/_entries/modelo_036.py`
+  - `src/aeat/domain/modelos/_entries/modelo_037.py`
+  - `src/aeat/domain/modelos/_entries/modelo_100.py`
+  - `src/aeat/domain/modelos/_entries/modelo_111.py`
+  - `src/aeat/domain/modelos/_entries/modelo_115.py`
+  - `src/aeat/domain/modelos/_entries/modelo_123.py`
+  - `src/aeat/domain/modelos/_entries/modelo_130.py`
+  - `src/aeat/domain/modelos/_entries/modelo_131.py`
+  - `src/aeat/domain/modelos/_entries/modelo_180.py`
+  - `src/aeat/domain/modelos/_entries/modelo_190.py`
+  - `src/aeat/domain/modelos/_entries/modelo_200.py`
+  - `src/aeat/domain/modelos/_entries/modelo_202.py`
+  - `src/aeat/domain/modelos/_entries/modelo_232.py`
+  - `src/aeat/domain/modelos/_entries/modelo_303.py`
+  - `src/aeat/domain/modelos/_entries/modelo_347.py`
+  - `src/aeat/domain/modelos/_entries/modelo_349.py`
+  - `src/aeat/domain/modelos/_entries/modelo_369.py`
+  - `src/aeat/domain/modelos/_entries/modelo_390.py`
+  - `src/aeat/domain/modelos/_entries/modelo_720.py`
+  - `src/aeat/domain/modelos/_entries/modelo_840.py`
 - Create empty test shells:
-  - `src/aeat/models/test_codes.py`
-  - `src/aeat/models/test_registry.py`
-  - `src/aeat/models/test_applicability.py`
-  - `src/aeat/models/test_citations.py`
-  - `src/aeat/models/test_metadata.py`
-  - `src/aeat/models/test_cli.py`
-  - `src/aeat/models/test_casilla_cross_reference.py`
-- Leave `src/aeat/models/test_smoke.py` untouched.
-- `src/aeat/models/__init__.py` remains an empty-`__all__` stub for the
+  - `src/aeat/domain/modelos/test_codes.py`
+  - `src/aeat/domain/modelos/test_registry.py`
+  - `src/aeat/domain/modelos/test_applicability.py`
+  - `src/aeat/domain/modelos/test_citations.py`
+  - `src/aeat/domain/modelos/test_metadata.py`
+  - `src/aeat/domain/modelos/test_cli.py`
+  - `src/aeat/domain/modelos/test_casilla_cross_reference.py`
+- Leave `src/aeat/domain/modelos/test_smoke.py` untouched.
+- `src/aeat/domain/modelos/__init__.py` remains an empty-`__all__` stub for the
   duration of Phase 1 (final lock happens in Phase 8).
 - Each test file carries `pytestmark = pytest.mark.unit` at module
   level; bodies are `def test_placeholder() -> None: ...` passing.
 
 **Success criterion.** `just test` runs green; `just lint` clean; no new
-imports from `aeat.models` leak outside the package.
+imports from `aeat.domain.modelos` leak outside the package.
 
-**Commit.** `feat(models): scaffold aeat.models registry module skeleton (#108)`
+**Commit.** `feat(models): scaffold aeat.domain.modelos registry module skeleton (#108)`
 
 ### Phase 2 — Enums + primitive pydantic models
 
@@ -249,7 +249,7 @@ models. No registry data yet; no CLI.
     invariants are violated.
 - No tests in this phase beyond a compile-time import smoke inside an
   existing `test_codes.py` (ensure error classes are importable from
-  `aeat.models._errors`). Full error-path coverage lands in Phase 5.
+  `aeat.domain.modelos._errors`). Full error-path coverage lands in Phase 5.
 
 **Commit.** `feat(models): error hierarchy for registry lookups (#108)`
 
@@ -371,7 +371,7 @@ the entry file's import to fail during Phase 5 registry assembly).
 
 ### Phase 6 — Casilla cross-reference test
 
-- `test_casilla_cross_reference.py` lazily imports `aeat.casillas`,
+- `test_casilla_cross_reference.py` lazily imports `aeat.domain.casillas`,
   enumerates the on-disk casilla catalogues it knows about (the
   loader's public surface), extracts the set of modelo codes referenced
   by those catalogues (currently `"130"`, `"303"`, `"390"`), and
@@ -382,7 +382,7 @@ the entry file's import to fail during Phase 5 registry assembly).
   `ModeloMetadata` references only known casilla codes) lands in a
   later iteration once `ModeloMetadata` carries structured casilla
   references.
-- If `aeat.casillas` does not expose a direct "list catalogues" API,
+- If `aeat.domain.casillas` does not expose a direct "list catalogues" API,
   the test scans `corpus/casillas/modelo_<code>/` directory names
   using `pathlib.Path` relative to the package root, extracts the
   `<code>` part, and asserts each resolves via `get_modelo`.
@@ -417,15 +417,15 @@ the entry file's import to fail during Phase 5 registry assembly).
     helper inside `_cli.py`), and emits either a table or JSON.
 - Table rendering:
   - Check `pyproject.toml` for `rich` before committing to it. The
-    existing CLI (e.g. `aeat.cli.deadlines`) already uses `rich`; this
+    existing CLI (e.g. `aeat.entrypoints.cli.deadlines`) already uses `rich`; this
     plan assumes it is available but the executor must verify and fall
     back to plain aligned text via `typer.echo` if not.
 - Wire-up:
-  - Create `src/aeat/cli/modelos/__init__.py` that re-exports the Typer
-    `app` from `aeat.models._cli`, matching the pattern used by
-    `src/aeat/cli/deadlines/__init__.py`.
-  - Add a single line to `src/aeat/cli/__init__.py`:
-    `from aeat.cli import modelos as modelos_module` and
+  - Create `src/aeat/entrypoints/cli/modelos/__init__.py` that re-exports the Typer
+    `app` from `aeat.domain.modelos._cli`, matching the pattern used by
+    `src/aeat/entrypoints/cli/deadlines/__init__.py`.
+  - Add a single line to `src/aeat/entrypoints/cli/__init__.py`:
+    `from aeat.entrypoints.cli import modelos as modelos_module` and
     `app.add_typer(modelos_module.app, name="modelos", help="AEAT modelo inventory + applicability helpers.")`
     in alphabetical position.
 - `test_cli.py` uses `typer.testing.CliRunner` and exercises:
@@ -444,7 +444,7 @@ the entry file's import to fail during Phase 5 registry assembly).
 
 ### Phase 8 — Public API lock + docstrings
 
-- `src/aeat/models/__init__.py` sets `__all__` to the exact tuple from
+- `src/aeat/domain/modelos/__init__.py` sets `__all__` to the exact tuple from
   the ADR §12 **minus any symbol that the `DeadlineRule` clarification
   removes**. The v1 `__all__` is:
   ```
@@ -493,68 +493,68 @@ the entry file's import to fail during Phase 5 registry assembly).
 
 | Path | Status | Purpose |
 |:--|:--|:--|
-| `src/aeat/models/__init__.py` | modified | Public re-exports + locked `__all__` + package docstring |
-| `src/aeat/models/_codes.py` | new | `ModeloCode` `StrEnum` |
-| `src/aeat/models/_categories.py` | new | `ModeloCategory`, `ModeloCadence`, `TaxpayerProfile`, `LegalCitationSource` `StrEnum`s |
-| `src/aeat/models/_citations.py` | new | `LegalCitation` pydantic model + `quoted_text_es` validator |
-| `src/aeat/models/_applicability.py` | new | `ModeloApplicability` model + partition validator |
-| `src/aeat/models/_metadata.py` | new | `ModeloMetadata` model + trilingual label validator |
-| `src/aeat/models/_errors.py` | new | `ModeloRegistryError` / `UnknownModeloError` / `RegistryIntegrityError` |
-| `src/aeat/models/_registry.py` | new | `MODELO_REGISTRY`, `_finalise_registry`, `get_modelo`, `modelos_for_profile`, `year_plan` |
-| `src/aeat/models/_cli.py` | new | Typer sub-app with `list` / `show` / `applicable-to` / `year-plan` commands |
-| `src/aeat/models/_entries/__init__.py` | new | Empty marker (entries imported explicitly by `_registry.py`) |
-| `src/aeat/models/_entries/modelo_036.py` | new | `ENTRY: ModeloMetadata` for modelo 036 |
-| `src/aeat/models/_entries/modelo_037.py` | new | `ENTRY` for modelo 037 |
-| `src/aeat/models/_entries/modelo_100.py` | new | `ENTRY` for modelo 100 |
-| `src/aeat/models/_entries/modelo_111.py` | new | `ENTRY` for modelo 111 |
-| `src/aeat/models/_entries/modelo_115.py` | new | `ENTRY` for modelo 115 |
-| `src/aeat/models/_entries/modelo_123.py` | new | `ENTRY` for modelo 123 |
-| `src/aeat/models/_entries/modelo_130.py` | new | `ENTRY` for modelo 130 |
-| `src/aeat/models/_entries/modelo_131.py` | new | `ENTRY` for modelo 131 |
-| `src/aeat/models/_entries/modelo_180.py` | new | `ENTRY` for modelo 180 |
-| `src/aeat/models/_entries/modelo_190.py` | new | `ENTRY` for modelo 190 |
-| `src/aeat/models/_entries/modelo_200.py` | new | `ENTRY` for modelo 200 |
-| `src/aeat/models/_entries/modelo_202.py` | new | `ENTRY` for modelo 202 |
-| `src/aeat/models/_entries/modelo_232.py` | new | `ENTRY` for modelo 232 |
-| `src/aeat/models/_entries/modelo_303.py` | new | `ENTRY` for modelo 303 |
-| `src/aeat/models/_entries/modelo_347.py` | new | `ENTRY` for modelo 347 |
-| `src/aeat/models/_entries/modelo_349.py` | new | `ENTRY` for modelo 349 |
-| `src/aeat/models/_entries/modelo_369.py` | new | `ENTRY` for modelo 369 |
-| `src/aeat/models/_entries/modelo_390.py` | new | `ENTRY` for modelo 390 |
-| `src/aeat/models/_entries/modelo_720.py` | new | `ENTRY` for modelo 720 |
-| `src/aeat/models/_entries/modelo_840.py` | new | `ENTRY` for modelo 840 |
-| `src/aeat/models/test_codes.py` | new | `ModeloCode` unit tests |
-| `src/aeat/models/test_citations.py` | new | `LegalCitation` validator tests |
-| `src/aeat/models/test_applicability.py` | new | Partition invariant tests |
-| `src/aeat/models/test_metadata.py` | new | `ModeloMetadata` strict/frozen tests |
-| `src/aeat/models/test_registry.py` | new | Registry completeness + `caps_into` + helper tests |
-| `src/aeat/models/test_cli.py` | new | Typer `CliRunner` smoke tests |
-| `src/aeat/models/test_casilla_cross_reference.py` | new | Casilla catalogue cross-ref test |
-| `src/aeat/models/test_smoke.py` | untouched | Existing smoke test preserved |
-| `src/aeat/cli/modelos/__init__.py` | new | Re-exports the Typer app from `aeat.models._cli` |
-| `src/aeat/cli/__init__.py` | modified | Wires `modelos_module.app` into the root Typer app |
+| `src/aeat/domain/modelos/__init__.py` | modified | Public re-exports + locked `__all__` + package docstring |
+| `src/aeat/domain/modelos/_codes.py` | new | `ModeloCode` `StrEnum` |
+| `src/aeat/domain/modelos/_categories.py` | new | `ModeloCategory`, `ModeloCadence`, `TaxpayerProfile`, `LegalCitationSource` `StrEnum`s |
+| `src/aeat/domain/modelos/_citations.py` | new | `LegalCitation` pydantic model + `quoted_text_es` validator |
+| `src/aeat/domain/modelos/_applicability.py` | new | `ModeloApplicability` model + partition validator |
+| `src/aeat/domain/modelos/_metadata.py` | new | `ModeloMetadata` model + trilingual label validator |
+| `src/aeat/domain/modelos/_errors.py` | new | `ModeloRegistryError` / `UnknownModeloError` / `RegistryIntegrityError` |
+| `src/aeat/domain/modelos/_registry.py` | new | `MODELO_REGISTRY`, `_finalise_registry`, `get_modelo`, `modelos_for_profile`, `year_plan` |
+| `src/aeat/domain/modelos/_cli.py` | new | Typer sub-app with `list` / `show` / `applicable-to` / `year-plan` commands |
+| `src/aeat/domain/modelos/_entries/__init__.py` | new | Empty marker (entries imported explicitly by `_registry.py`) |
+| `src/aeat/domain/modelos/_entries/modelo_036.py` | new | `ENTRY: ModeloMetadata` for modelo 036 |
+| `src/aeat/domain/modelos/_entries/modelo_037.py` | new | `ENTRY` for modelo 037 |
+| `src/aeat/domain/modelos/_entries/modelo_100.py` | new | `ENTRY` for modelo 100 |
+| `src/aeat/domain/modelos/_entries/modelo_111.py` | new | `ENTRY` for modelo 111 |
+| `src/aeat/domain/modelos/_entries/modelo_115.py` | new | `ENTRY` for modelo 115 |
+| `src/aeat/domain/modelos/_entries/modelo_123.py` | new | `ENTRY` for modelo 123 |
+| `src/aeat/domain/modelos/_entries/modelo_130.py` | new | `ENTRY` for modelo 130 |
+| `src/aeat/domain/modelos/_entries/modelo_131.py` | new | `ENTRY` for modelo 131 |
+| `src/aeat/domain/modelos/_entries/modelo_180.py` | new | `ENTRY` for modelo 180 |
+| `src/aeat/domain/modelos/_entries/modelo_190.py` | new | `ENTRY` for modelo 190 |
+| `src/aeat/domain/modelos/_entries/modelo_200.py` | new | `ENTRY` for modelo 200 |
+| `src/aeat/domain/modelos/_entries/modelo_202.py` | new | `ENTRY` for modelo 202 |
+| `src/aeat/domain/modelos/_entries/modelo_232.py` | new | `ENTRY` for modelo 232 |
+| `src/aeat/domain/modelos/_entries/modelo_303.py` | new | `ENTRY` for modelo 303 |
+| `src/aeat/domain/modelos/_entries/modelo_347.py` | new | `ENTRY` for modelo 347 |
+| `src/aeat/domain/modelos/_entries/modelo_349.py` | new | `ENTRY` for modelo 349 |
+| `src/aeat/domain/modelos/_entries/modelo_369.py` | new | `ENTRY` for modelo 369 |
+| `src/aeat/domain/modelos/_entries/modelo_390.py` | new | `ENTRY` for modelo 390 |
+| `src/aeat/domain/modelos/_entries/modelo_720.py` | new | `ENTRY` for modelo 720 |
+| `src/aeat/domain/modelos/_entries/modelo_840.py` | new | `ENTRY` for modelo 840 |
+| `src/aeat/domain/modelos/test_codes.py` | new | `ModeloCode` unit tests |
+| `src/aeat/domain/modelos/test_citations.py` | new | `LegalCitation` validator tests |
+| `src/aeat/domain/modelos/test_applicability.py` | new | Partition invariant tests |
+| `src/aeat/domain/modelos/test_metadata.py` | new | `ModeloMetadata` strict/frozen tests |
+| `src/aeat/domain/modelos/test_registry.py` | new | Registry completeness + `caps_into` + helper tests |
+| `src/aeat/domain/modelos/test_cli.py` | new | Typer `CliRunner` smoke tests |
+| `src/aeat/domain/modelos/test_casilla_cross_reference.py` | new | Casilla catalogue cross-ref test |
+| `src/aeat/domain/modelos/test_smoke.py` | untouched | Existing smoke test preserved |
+| `src/aeat/entrypoints/cli/modelos/__init__.py` | new | Re-exports the Typer app from `aeat.domain.modelos._cli` |
+| `src/aeat/entrypoints/cli/__init__.py` | modified | Wires `modelos_module.app` into the root Typer app |
 
 ## Risks + mitigations
 
-- **`DeadlineRule` does not exist on `aeat.deadlines`.** The ADR names
+- **`DeadlineRule` does not exist on `aeat.domain.deadlines`.** The ADR names
   a `DeadlineRule` type that is nowhere in the current public API
-  (`src/aeat/deadlines/__init__.py` exposes `CanonicalWindow`, `CALENDAR`,
+  (`src/aeat/domain/deadlines/__init__.py` exposes `CanonicalWindow`, `CALENDAR`,
   `DeadlineEngine`, `applies_to`, `explain` only). **Mitigation:** drop
   the `deadline_rule` field from `ModeloMetadata` for v1 and resolve
   deadlines at query time through `DeadlineEngine.compute`. The
   deviation is documented in the constraints section and must be
   accepted in the self-review below. No new public surface is added to
-  `aeat.deadlines`.
+  `aeat.domain.deadlines`.
 - **Two-pass `caps_into` validation needs careful import ordering.**
   **Mitigation:** centralise all entry imports inside `_registry.py`'s
   module body and run `_finalise_registry()` as the last top-level
   statement. No entry imports another entry.
 - **`rich` availability.** The CLI plan assumes `rich` is already a
-  dependency because `aeat.cli.deadlines` uses it. **Mitigation:** the
+  dependency because `aeat.entrypoints.cli.deadlines` uses it. **Mitigation:** the
   executor must `rg -n "^rich" pyproject.toml` before committing to
   `rich.table.Table`; fall back to plain aligned `typer.echo` if not.
 - **Casilla catalogue API shape.** The test in Phase 6 may find that
-  `aeat.casillas` does not expose a "list catalogues" function.
+  `aeat.domain.casillas` does not expose a "list catalogues" function.
   **Mitigation:** the plan allows the test to scan
   `corpus/casillas/modelo_*/` directories directly via `pathlib.Path`.
 - **Preserving `test_smoke.py`.** **Mitigation:** the file is listed
@@ -594,15 +594,15 @@ import surface via the locked `__all__` tuple).
 **Findings.**
 
 - **ADR deviation required.** ADR §7 names `DeadlineRule` as a field
-  on `ModeloMetadata` imported from `aeat.deadlines`. **No such type
+  on `ModeloMetadata` imported from `aeat.domain.deadlines`. **No such type
   exists on `main`.** The plan resolves this by dropping the field
   from `ModeloMetadata` for v1 and resolving deadlines at query time
   via `DeadlineEngine.compute`. This is the minimum deviation that
-  keeps the plan executable without widening `aeat.deadlines`'s
+  keeps the plan executable without widening `aeat.domain.deadlines`'s
   public surface (which would be scope creep out of #108). The ADR's
   functional intent — CLI `year-plan` consumes the deadline engine —
   is preserved exactly. **The executor must NOT add a `DeadlineRule`
-  type to `aeat.deadlines`; any such addition is scope creep and
+  type to `aeat.domain.deadlines`; any such addition is scope creep and
   should be rejected in code review.**
 - **Modelo 123 `caps_into` gap.** The research says `caps_into=193`;
   193 is not in the v1 registry. The plan stores `None` with a
@@ -620,7 +620,7 @@ import surface via the locked `__all__` tuple).
   ADR §12 exactly except for `DeadlineRule` removal (which is not in
   the ADR's `__all__` either). `ModeloCode` member names are
   `MODELO_<code>` as ADR §2 locks. #77 and #93 can import
-  `aeat.models.ModeloCode` without surprise.
+  `aeat.domain.modelos.ModeloCode` without surprise.
 - **No CI workflows; no config drift; no new settings.** Verified in
   Phase 9.
 - **Commit messages** follow conventional-commits with
@@ -631,15 +631,15 @@ import surface via the locked `__all__` tuple).
   `yyyy-mm-dd`; no `feature:` key. Compliant.
 - **No wiki-links in the body.** Only frontmatter `related` carries
   them. Compliant.
-- **Scope creep check.** The plan touches only `src/aeat/models/`
-  plus two lines in `src/aeat/cli/__init__.py` and one new thin
-  `src/aeat/cli/modelos/__init__.py`. No sibling branches touched;
-  no `aeat.deadlines` widening; no builder work; no workflow files.
+- **Scope creep check.** The plan touches only `src/aeat/domain/modelos/`
+  plus two lines in `src/aeat/entrypoints/cli/__init__.py` and one new thin
+  `src/aeat/entrypoints/cli/modelos/__init__.py`. No sibling branches touched;
+  no `aeat.domain.deadlines` widening; no builder work; no workflow files.
 
 **Verdict.** **Approved — execution may proceed**, with the single
 documented deviation on `DeadlineRule` explicitly accepted. No
 further ADR clarification is required; the deviation is minimal,
-localised to `aeat.models`, and preserves the ADR's functional
+localised to `aeat.domain.modelos`, and preserves the ADR's functional
 intent.
 
 ## Acceptance checklist

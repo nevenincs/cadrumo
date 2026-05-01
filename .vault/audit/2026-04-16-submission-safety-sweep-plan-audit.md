@@ -17,7 +17,7 @@ Verdict: EXECUTABLE WITH ONE CONTRACT CORRECTION.
 
 ## Plan-to-code fit
 
-- Phase 1 matched the real write boundary: `src/aeat/submission/_engine.py`, `src/aeat/config.py`, and the missing private helper modules were the correct center of gravity for issues `#142` and `#143`.
+- Phase 1 matched the real write boundary: `src/aeat/adapters/outbound/aeat/export/_engine.py`, `src/aeat/config.py`, and the missing private helper modules were the correct center of gravity for issues `#142` and `#143`.
 - Phase 2 matched the real caller drift: CLI submission, complementaria, workflow protocol, workflow adapters, and workflow CLI helpers all required signature tightening for issue `#145`.
 - Phase 3 matched the required verification surface: submission engine, submission CLI, filing CLI, workflow engine, workflow CLI, and live dry-run tests were the right regression set.
 
@@ -28,14 +28,14 @@ Verdict: EXECUTABLE WITH ONE CONTRACT CORRECTION.
 
 ## Final verification surface
 
-- `src/aeat/submission/test_engine.py`
-- `src/aeat/submission/test_safety_helpers.py`
-- `src/aeat/cli/submission/test_cli.py`
-- `src/aeat/cli/filing/test_filing_cli.py`
-- `src/aeat/workflow/test_engine.py`
-- `src/aeat/cli/workflow/test_cli.py`
-- `src/aeat/submission/test_live_submission.py`
-- `src/aeat/filing/test_live_complementaria.py`
+- `src/aeat/adapters/outbound/aeat/export/test_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py`
+- `src/aeat/entrypoints/cli/submission/test_cli.py`
+- `src/aeat/entrypoints/cli/filing/test_filing_cli.py`
+- `src/aeat/application/workflow/test_engine.py`
+- `src/aeat/entrypoints/cli/workflow/test_cli.py`
+- `src/aeat/adapters/outbound/aeat/export/test_live_submission.py`
+- `src/aeat/application/filing/test_live_complementaria.py`
 
 ## Result
 

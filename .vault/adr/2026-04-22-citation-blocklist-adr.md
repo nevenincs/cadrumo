@@ -15,7 +15,7 @@ related:
 ## status
 
 Accepted — 2026-04-22. Ships in wave 69 of EPIC #305 as
-`src/aeat/models/_citation_registry.py` + a `LegalCitation` model
+`src/aeat/domain/modelos/_citation_registry.py` + a `LegalCitation` model
 validator.
 
 ## context
@@ -65,7 +65,7 @@ prevent what the author didn't think to double-check.
 
 ### 1. Known-bad blocklist (this ADR)
 
-Ship `src/aeat/models/_citation_registry.py` with a frozen
+Ship `src/aeat/domain/modelos/_citation_registry.py` with a frozen
 `_KNOWN_BAD_CITATIONS` tuple of `(source, article, role_substring)`
 triples. Every triple corresponds to a documented prior miscite.
 `LegalCitation`'s model validator refuses construction when the
@@ -153,9 +153,9 @@ When a future audit surfaces a new citation error:
 
 ## references
 
-- `src/aeat/models/_citation_registry.py` — blocklist
-- `src/aeat/models/_citations.py` — `LegalCitation` validator
-- `src/aeat/models/test_citation_registry.py` — coverage
+- `src/aeat/domain/modelos/_citation_registry.py` — blocklist
+- `src/aeat/domain/modelos/_citations.py` — `LegalCitation` validator
+- `src/aeat/domain/modelos/test_citation_registry.py` — coverage
 - Wave 64, 66, 68 audit docs — surfacing miscites
 - `[[2026-04-22-ruleset-architecture-adr]]` §External-anchoring
   convention — the author checklist that complements this blocklist

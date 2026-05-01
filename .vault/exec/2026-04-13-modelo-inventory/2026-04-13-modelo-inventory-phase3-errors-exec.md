@@ -18,7 +18,7 @@ related:
   `UnknownModeloError` (carries offending code string),
   `RegistryIntegrityError` for import-time structural violations.
 - `test_codes.py` — added subclass smoke asserting the error classes
-  import from `aeat.models._errors` and chain through `AeatError`.
+  import from `aeat.domain.modelos._errors` and chain through `AeatError`.
 
 ## gate outcomes
 

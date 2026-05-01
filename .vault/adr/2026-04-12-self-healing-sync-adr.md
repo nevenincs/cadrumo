@@ -29,8 +29,8 @@ already locked by #12.
 
 ## decision
 
-1. **Single subpackage: `src/aeat/sync/`.** All public exports
-   go through `aeat.sync.__init__`. Internal modules are
+1. **Single subpackage: `src/aeat/application/sync/`.** All public exports
+   go through `aeat.application.sync.__init__`. Internal modules are
    `_`-prefixed. Callers never import from internal modules.
 
 2. **Pydantic v2 strict everywhere.** Every boundary-crossing
@@ -47,7 +47,7 @@ already locked by #12.
    slice of surface we consume. On rebase after the dependency
    merges, the Protocol is swapped for the real import in a
    single focused commit. Protocols live under
-   `src/aeat/sync/_protocols.py`:
+   `src/aeat/application/sync/_protocols.py`:
 
    - `CertificateBackend` (stub for #8 `LoadedCertificate` +
      `preload_into_browser_context`)
@@ -59,7 +59,7 @@ already locked by #12.
    - `ModeloIdentifier` + `PortalIdentifier` — typed string IDs
      with validators, matching the planned #6/#7 enum surfaces.
 
-   `aeat.browser.BrowserSession` and `aeat.i18n.Translatable /
+   `aeat.adapters.outbound.aeat.browser.BrowserSession` and `aeat.core.i18n.Translatable /
    Language` are imported directly; those branches have merged.
 
 4. **Semantic diffing, not structural.** `DivergenceClassifier`
@@ -119,13 +119,13 @@ already locked by #12.
      planned persistence layer, selected when
      `AEAT_SYNC_DIVERGENCE_SINK=STORAGE`. Marked rebase-swap.
 
-9. **Errors inherit from `aeat.errors.AeatError`.** Concrete
+9. **Errors inherit from `aeat.core.errors.AeatError`.** Concrete
    subclasses: `SyncError`, `WireValidationError`,
    `DivergenceClassificationError`, `HealingError`,
    `DivergenceRepositoryError`.
 
 10. **CLI surface.** Subcommands are wired through the existing
-    typer-based CLI under `src/aeat/cli/sync/`:
+    typer-based CLI under `src/aeat/entrypoints/cli/sync/`:
 
     - `aeat sync run [--modelo ID] [--period P] [--auto-heal]`
     - `aeat sync list-divergences [--state S] [--since DATE]`
@@ -134,7 +134,7 @@ already locked by #12.
       approve|reject [--notes TEXT]`
 
 11. **Additive settings only.** New env vars added to
-    `aeat.config.Settings` and documented in `env/.env.example`:
+    `aeat.core.config.Settings` and documented in `env/.env.example`:
 
     - `AEAT_SYNC_CONCURRENCY` (default 4)
     - `AEAT_SYNC_AUTO_HEAL_ALLOWLIST` (CSV, default
@@ -190,9 +190,9 @@ already locked by #12.
 - A UI beyond the CLI listing.
 - Remediating AEAT-side server errors.
 - Notifications beyond structured logs + divergence records.
-- Hard imports from `aeat.corpus`, `aeat.schema`, `aeat.manuals`,
-  `aeat.llm`, `aeat.storage`, `aeat.auth.certificate`,
-  `aeat.models`, `aeat.portals` (all Protocol-stubbed).
+- Hard imports from `aeat.corpus`, `aeat.domain.schema`, `aeat.domain.manuals`,
+  `aeat.adapters.outbound.llm`, `aeat.adapters.persistence.storage`, `aeat.adapters.outbound.aeat.auth.certificate`,
+  `aeat.domain.modelos`, `aeat.domain.portals` (all Protocol-stubbed).
 
 ## suspicious-divergence runbook
 
@@ -214,7 +214,7 @@ When a `SUSPICIOUS` record lands:
 ## acceptance criteria
 
 - Vault research + ADR + plan + exec records landed.
-- `src/aeat/sync/` exposes `LiveSyncRunner`, `WireValidator`,
+- `src/aeat/application/sync/` exposes `LiveSyncRunner`, `WireValidator`,
   `DivergenceClassifier`, `HealingDispatcher`, every wire
   schema, every divergence record type, every healing strategy.
   Pydantic v2 strict everywhere.

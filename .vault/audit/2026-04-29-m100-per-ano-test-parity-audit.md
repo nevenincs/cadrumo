@@ -34,5 +34,5 @@ Reviewed the M100 parity test modules for B2, C, D, E, F, G, and N across 2024 a
 - Lint: passed.
 - Full `just typecheck`: passed after the lockfile churn was reverted.
 - Full `just hooks`: passed.
-- Full `just test`: failed on existing unrelated workflow CLI persistence test `src/aeat/cli/workflow/test_cli.py::TestWorkflowCli::test_next_json_round_trips`; rerunning that single test also failed.
+- Full `just test`: failed on existing unrelated workflow CLI persistence test `src/aeat/entrypoints/cli/workflow/test_cli.py::TestWorkflowCli::test_next_json_round_trips`; rerunning that single test also failed.
 - Gemini follow-up focused pytest for D 2024, D 2026, G 2026, and N 2024: 52 passed.

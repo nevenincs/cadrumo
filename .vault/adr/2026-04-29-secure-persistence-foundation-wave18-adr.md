@@ -38,7 +38,7 @@ Both are scoped, surgical, and have zero operator-facing surface.
 ### D1 — blob-store rotation roots
 
 Change `default_blob_store_roots(settings)` in
-`src/aeat/storage/_rotation.py` to point at `aeat_blob_store_dir`
+`src/aeat/adapters/persistence/storage/_rotation.py` to point at `aeat_blob_store_dir`
 instead of `aeat_secret_store_dir`. The contract is "where the
 EncryptedBlobStore wraps DEKs"; `aeat_blob_store_dir` is the only
 location wired up by `get_secret_store()`. The
@@ -144,14 +144,14 @@ The lock acquisition in `rotate_master_key` switches to call
 
 ## Implementation surfaces touched
 
-- `src/aeat/storage/_rotation.py`:
+- `src/aeat/adapters/persistence/storage/_rotation.py`:
   - `default_blob_store_roots` — point at `aeat_blob_store_dir`.
   - `RotationPlanEntry` — add `lock_path_resolver` field.
   - `_default_lock_resolver` — new helper.
   - `default_rotation_plan` — pass explicit resolvers for
     single-file entries.
   - `rotate_master_key` — use the resolver.
-- `src/aeat/storage/_test_rotation.py`:
+- `src/aeat/adapters/persistence/storage/_test_rotation.py`:
   - New test: `default_blob_store_roots` against production defaults
     visits `var/blobs` and `var/attachments`, deduplicates on
     overlap.

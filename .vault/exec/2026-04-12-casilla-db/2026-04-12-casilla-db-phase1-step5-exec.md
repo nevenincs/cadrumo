@@ -11,10 +11,10 @@ related:
 
 Added test coverage and contributor documentation for the new workflow.
 
-- Created: `src/aeat/casillas/test_smoke.py`
-- Created: `src/aeat/casillas/_test_catalogue.py`
-- Created: `src/aeat/casillas/_test_cli.py`
-- Created: `src/aeat/casillas/test_live_cli.py`
+- Created: `src/aeat/domain/casillas/test_smoke.py`
+- Created: `src/aeat/domain/casillas/_test_catalogue.py`
+- Created: `src/aeat/domain/casillas/_test_cli.py`
+- Created: `src/aeat/domain/casillas/test_live_cli.py`
 - Created: `docs/casillas.md`
 - Modified: `README.md`
 

@@ -85,7 +85,7 @@ The scrypt code path is **only invoked here** — it does not exist in the regul
 
 ### Phase 3 — CLI: `aeat security migrate-master-key-kdf`
 
-New command in `src/aeat/cli/security.py`:
+New command in `src/aeat/entrypoints/cli/security.py`:
 
 ```
 aeat security migrate-master-key-kdf [--store-dir <path>]

@@ -17,9 +17,9 @@ Phased implementation plan for the wave-17 ADR. Eight phases, each landing as on
 **Goal**: `aeat doctor` reports the security layer's health.
 
 **Files**:
-- `src/aeat/cli/doctor.py` — extend `collect_rows`.
-- `src/aeat/cli/test_doctor.py` — add tests.
-- `src/aeat/storage/__init__.py` — re-export any helpers required.
+- `src/aeat/entrypoints/cli/doctor.py` — extend `collect_rows`.
+- `src/aeat/entrypoints/cli/test_doctor.py` — add tests.
+- `src/aeat/adapters/persistence/storage/__init__.py` — re-export any helpers required.
 
 **New rows** (each follows the existing `Row(label, status, detail, hint)` pattern):
 
@@ -45,10 +45,10 @@ Phased implementation plan for the wave-17 ADR. Eight phases, each landing as on
 **Goal**: distinguish keychain-locked / passphrase-mismatch / material-missing in error type + message.
 
 **Files**:
-- `src/aeat/storage/errors.py` — three new subclasses.
-- `src/aeat/errors/_registry.py` — three trilingual entries.
-- `src/aeat/storage/_master_key.py` — narrow throw sites in both providers.
-- `src/aeat/storage/_test_master_key.py` — assert subclass instances.
+- `src/aeat/adapters/persistence/storage/errors.py` — three new subclasses.
+- `src/aeat/core/errors/_registry.py` — three trilingual entries.
+- `src/aeat/adapters/persistence/storage/_master_key.py` — narrow throw sites in both providers.
+- `src/aeat/adapters/persistence/storage/_test_master_key.py` — assert subclass instances.
 
 **New error classes**:
 
@@ -92,13 +92,13 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
 **Goal**: introduce the deterministic-key provider that powers the `--insecure-no-encryption` mode.
 
 **Files**:
-- `src/aeat/storage/_master_key.py` — new `UnsecuredMasterKeyProvider` class.
-- `src/aeat/storage/__init__.py` — export.
-- `src/aeat/storage/errors.py` — `UnsecuredModeRefusedError(SecretStoreError)`.
-- `src/aeat/errors/_registry.py` — trilingual entry.
+- `src/aeat/adapters/persistence/storage/_master_key.py` — new `UnsecuredMasterKeyProvider` class.
+- `src/aeat/adapters/persistence/storage/__init__.py` — export.
+- `src/aeat/adapters/persistence/storage/errors.py` — `UnsecuredModeRefusedError(SecretStoreError)`.
+- `src/aeat/core/errors/_registry.py` — trilingual entry.
 - `src/aeat/config.py` — add `aeat_allow_unencrypted` setting + `SecretStoreBackend.UNSECURED`.
-- `src/aeat/storage/_master_key.py::get_master_key_provider` — wire `unsecured` backend.
-- `src/aeat/setup/_env_writer.py` — NIF-canary refusal at profile-load time.
+- `src/aeat/adapters/persistence/storage/_master_key.py::get_master_key_provider` — wire `unsecured` backend.
+- `src/aeat/application/setup/_env_writer.py` — NIF-canary refusal at profile-load time.
 
 **`UnsecuredMasterKeyProvider`**:
 
@@ -160,10 +160,10 @@ def _refuse_unsecured_with_real_nif(profile: AutonomoProfile, provider: MasterKe
 **Goal**: the canonical first-run command for setting up the security layer.
 
 **Files**:
-- `src/aeat/cli/security.py` — new `provision_cmd`.
-- `src/aeat/cli/test_security.py` — `TestProvisionCommand` test class.
-- `src/aeat/storage/_recovery.py` — new module: recovery-key generation + BIP-39-style mnemonic encoding + recovery-key wrapping.
-- `src/aeat/storage/_test_recovery.py` — round-trip tests.
+- `src/aeat/entrypoints/cli/security.py` — new `provision_cmd`.
+- `src/aeat/entrypoints/cli/test_security.py` — `TestProvisionCommand` test class.
+- `src/aeat/adapters/persistence/storage/_recovery.py` — new module: recovery-key generation + BIP-39-style mnemonic encoding + recovery-key wrapping.
+- `src/aeat/adapters/persistence/storage/_test_recovery.py` — round-trip tests.
 
 **`aeat security provision` flow**:
 
@@ -186,7 +186,7 @@ def _refuse_unsecured_with_real_nif(profile: AutonomoProfile, provider: MasterKe
 8. Print "Security layer provisioned." + the recovery-key mnemonic ONCE.
 ```
 
-**Recovery key encoding** (`src/aeat/storage/_recovery.py`):
+**Recovery key encoding** (`src/aeat/adapters/persistence/storage/_recovery.py`):
 - BIP-39-style: 24 words from a fixed 2048-word wordlist (English, fits in repo at ~13 KB).
 - Each word encodes 11 bits → 24 words = 264 bits = 32 bytes + checksum.
 - Standard BIP-39 checksum (SHA-256 first byte / 4 bits for 32-byte payload).
@@ -208,9 +208,9 @@ def _refuse_unsecured_with_real_nif(profile: AutonomoProfile, provider: MasterKe
 **Goal**: complete the recovery + backup story.
 
 **Files**:
-- `src/aeat/cli/security.py` — `recover_cmd` + `key_export_cmd`.
-- `src/aeat/cli/test_security.py` — tests.
-- `src/aeat/storage/_recovery.py` — recovery-key unwrap helper.
+- `src/aeat/entrypoints/cli/security.py` — `recover_cmd` + `key_export_cmd`.
+- `src/aeat/entrypoints/cli/test_security.py` — tests.
+- `src/aeat/adapters/persistence/storage/_recovery.py` — recovery-key unwrap helper.
 
 **`aeat security recover --recovery-key "<24 words>" [--new-passphrase]`**:
 
@@ -257,9 +257,9 @@ The export is encrypted-at-rest already — it just packages the existing wrappe
 **Goal**: `aeat setup` invokes `aeat security provision` after the profile-write step.
 
 **Files**:
-- `src/aeat/setup/_wizard.py` — call into provision flow.
-- `src/aeat/setup/_env_writer.py` — refactor profile-write to NOT silently mint; require provision-first.
-- `src/aeat/setup/test_cli.py` — update tests.
+- `src/aeat/application/setup/_wizard.py` — call into provision flow.
+- `src/aeat/application/setup/_env_writer.py` — refactor profile-write to NOT silently mint; require provision-first.
+- `src/aeat/application/setup/test_cli.py` — update tests.
 
 **Sequencing**:
 
@@ -343,7 +343,7 @@ aeat setup [--non-interactive]
 
 | Risk | Mitigation |
 | ---- | ---------- |
-| BIP-39 wordlist license | Use the public-domain English BIP-39 list (Bitcoin Core uses it; well-established). Bundled in `src/aeat/storage/_bip39_wordlist.py`. |
+| BIP-39 wordlist license | Use the public-domain English BIP-39 list (Bitcoin Core uses it; well-established). Bundled in `src/aeat/adapters/persistence/storage/_bip39_wordlist.py`. |
 | Recovery-key UX clarity | Mirror Cryptomator's "print this and store it" wording verbatim (already battle-tested). |
 | Setup-wizard regression | All existing setup tests must pass unchanged after phase 6 (the wizard's external behaviour for existing-store operators is identical). |
 | `aeat doctor` check explosion | New rows are scoped to a `_security_rows()` helper so the doctor's main path stays readable. |

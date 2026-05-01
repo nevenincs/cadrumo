@@ -11,9 +11,9 @@ related:
 
 Wired the `aeat casillas` command group into the root CLI.
 
-- Created: `src/aeat/cli/casillas.py`
-- Modified: `src/aeat/cli/__init__.py`
-- Modified: `src/aeat/cli/test_smoke.py`
+- Created: `src/aeat/entrypoints/cli/casillas.py`
+- Modified: `src/aeat/entrypoints/cli/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/test_smoke.py`
 
 ## Description
 

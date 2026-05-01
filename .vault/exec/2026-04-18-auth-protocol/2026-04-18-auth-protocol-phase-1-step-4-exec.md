@@ -11,12 +11,12 @@ related:
 
 Completed focused verification and lint cleanup for the auth-protocol refactor.
 
-- Modified: `src/aeat/auth/test_authenticator.py`
-- Modified: `src/aeat/submission/test_preflight.py`
-- Modified: `src/aeat/submission/test_engine.py`
-- Modified: `src/aeat/submission/test_live_submission.py`
-- Modified: `src/aeat/submission/test_safety_helpers.py`
-- Modified: `src/aeat/workflow/test_engine.py`
+- Modified: `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/test_preflight.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/test_engine.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/test_live_submission.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py`
+- Modified: `src/aeat/application/workflow/test_engine.py`
 
 ## Description
 
@@ -26,4 +26,4 @@ Updated the affected test doubles so they model provider descriptions instead of
 
 Executed `uv run ruff check` across the touched auth, browser, submission, workflow, and CLI modules, then reran the focused pytest batch:
 
-- `uv run pytest src/aeat/auth/test_authenticator.py src/aeat/browser/test_session.py src/aeat/submission/test_preflight.py src/aeat/submission/test_engine.py src/aeat/submission/test_safety_helpers.py src/aeat/workflow/test_engine.py src/aeat/cli/_test_doctor.py src/aeat/cli/submission/test_cli.py -q`
+- `uv run pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py src/aeat/adapters/outbound/aeat/export/test_preflight.py src/aeat/adapters/outbound/aeat/export/test_engine.py src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py src/aeat/application/workflow/test_engine.py src/aeat/entrypoints/cli/_test_doctor.py src/aeat/entrypoints/cli/submission/test_cli.py -q`

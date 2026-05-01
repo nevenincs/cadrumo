@@ -12,7 +12,7 @@ related:
 
 ## add-settings-fields-and-mirror-env-example
 
-Added two additive `Field(default=..., description=...)` entries to `aeat.config.Settings` under a new `── Live-write bypass (charter #116 R1) ──` header:
+Added two additive `Field(default=..., description=...)` entries to `aeat.core.config.Settings` under a new `── Live-write bypass (charter #116 R1) ──` header:
 
 - `aeat_live_write_unsafe_bypass: bool = Field(default=False, description="UNSAFE. Pytest collection bypass factor 1 of 3 ...")`
 - `aeat_live_write_unsafe_bypass_confirm: str = Field(default="", description="UNSAFE. Pytest collection bypass factor 2 of 3 ... I ACCEPT THE RISK OF FILING A LIVE TAX RETURN ...")`

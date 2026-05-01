@@ -81,8 +81,8 @@ Performed against the ADR's acceptance criteria, file by file.
 - ✅ One paragraph per arrow, naming the responsible subpackage for
   each step. The smoke test pins ≥ 5 on-main subpackages by name; the
   prose names 18.
-- ✅ Cross-cutting section explains `aeat.i18n`, `aeat.llm`,
-  `aeat.normatives`, `aeat.testing`.
+- ✅ Cross-cutting section explains `aeat.core.i18n`, `aeat.adapters.outbound.llm`,
+  `aeat.domain.normatives`, `aeat.domain.testing`.
 - ✅ Cross-links README, RELEASING, and getting-started.
 
 ### `RELEASING.md`
@@ -97,7 +97,7 @@ Performed against the ADR's acceptance criteria, file by file.
   subpackage and not under `tests/README/` which feature-15 owns).
 - ✅ Four `@pytest.mark.unit` cases. No mocks, no patches, no fakes,
   no stubs. No skips.
-- ✅ Reuses `aeat.config.PROJECT_ROOT` (no path duplication).
+- ✅ Reuses `aeat.core.config.PROJECT_ROOT` (no path duplication).
 - ✅ Asserts each of the four invariants from the ADR.
 - ✅ The architecture-subpackages assertion floor is 5; the actual
   diagram references 18, so the test has comfortable headroom.
@@ -114,8 +114,8 @@ Performed against the ADR's acceptance criteria, file by file.
 - ✅ No new env var (verified — `tests/test_config.py` still green).
 - ✅ No `src/aeat/` change (verified by `git status`).
 - ✅ No change to sibling-branch territory: `pyproject.toml
-  [tool.pytest]`, `conftest.py`, `tests/README/`, `src/aeat/workflow/`,
-  `src/aeat/setup/` — none touched.
+  [tool.pytest]`, `conftest.py`, `tests/README/`, `src/aeat/application/workflow/`,
+  `src/aeat/application/setup/` — none touched.
 - ✅ Conventional commits ready (commit will be `docs(...): ...`).
 
 ### Gates

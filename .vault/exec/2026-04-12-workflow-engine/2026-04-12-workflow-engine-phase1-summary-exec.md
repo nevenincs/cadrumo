@@ -16,25 +16,25 @@ related:
 
 ## delivered
 
-- `aeat.workflow` public API: `WorkflowEngine`, `run_next`,
+- `aeat.application.workflow` public API: `WorkflowEngine`, `run_next`,
   `run_for_period`, `WorkflowResult`, `WorkflowStep`,
   `WorkflowStage`, `WorkflowAbortReason`, error hierarchy, persistence
   helpers, eight `typing.Protocol` handles, adapters, and
   `default_engine(...)` factory.
 - `aeat workflow {next,run,show,list}` typer sub-app mounted through
-  `aeat.cli.__init__` via `app.add_typer`. Live-submit double-gate
+  `aeat.entrypoints.cli.__init__` via `app.add_typer`. Live-submit double-gate
   (`--no-dry-run --i-understand-this-is-real`) matches the
   submission engine's contract verbatim.
 - Three additive settings — `AEAT_WORKFLOW_RUNS_DIR`,
   `AEAT_WORKFLOW_SYNC_FIRST_DEFAULT`,
-  `AEAT_WORKFLOW_DRAFT_INPUTS_PATH` — landed in `aeat.config.Settings`
+  `AEAT_WORKFLOW_DRAFT_INPUTS_PATH` — landed in `aeat.core.config.Settings`
   and `env/.env.example`; `tests/test_config.py` alignment green.
 - Unit test suite covers every `WorkflowAbortReason`, the happy path,
   the dry-run default, the stable `run_id` hash, the JSON round-trip,
   and the CLI surface. All tests use hand-rolled
   Protocol-conforming doubles.
 - One `@pytest.mark.live` smoke test gated via
-  `aeat.cli._live.requires_live_enabled()`; skipped by default per
+  `aeat.entrypoints.cli._live.requires_live_enabled()`; skipped by default per
   the project's `AEAT_LIVE_TESTS_ENABLED` contract.
 
 ## gates
@@ -48,7 +48,7 @@ related:
 
 - Live AEAT submission; live path is documented but requires the
   double gate on every call.
-- Persistence via the `aeat.storage` subpackage (#10); files-only in
+- Persistence via the `aeat.adapters.persistence.storage` subpackage (#10); files-only in
   v1.
 - Rebasing onto the in-flight `#8 cert`, `#43 status`, `#46 inbox`
   branches — the Protocol slots remain `None`-by-default and rebase

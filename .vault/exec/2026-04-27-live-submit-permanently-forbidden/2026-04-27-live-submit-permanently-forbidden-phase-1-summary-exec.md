@@ -13,7 +13,7 @@ Completed the code, test, and documentation hardening that turns live AEAT
 submission from "future-gated" into "permanently forbidden".
 
 - Modified: `src/aeat/`, `docs/`, `ROADMAP.md`, `CONTRIBUTING.md`, `env/.env.example`, `.vault/adr/`, `.vault/plan/`, `.vault/research/`, `.vaultspec/rules/rules/`
-- Created: `src/aeat/submission/test_live_submit_permanently_forbidden.py`
+- Created: `src/aeat/adapters/outbound/aeat/export/test_live_submit_permanently_forbidden.py`
 
 ## Description
 

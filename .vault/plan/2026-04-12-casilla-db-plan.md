@@ -14,15 +14,15 @@ This plan implements issue #23 on top of the current `main` branch state while r
 
 ## Proposed Changes
 
-Introduce a new `aeat.casillas` subpackage that owns the public casilla catalogue API, protocol stubs, JSON loader/saver/verification helpers, and Typer command group. Add the `AEAT_CASILLAS_ROOT` and `AEAT_CASILLAS_REVIEW_REQUIRED` settings, create canonical JSON catalogues for `MODELO_130`, `MODELO_303`, and `MODELO_390`, and add unit/live coverage plus a contributor reference doc for extending the corpus with a new modelo and period.
+Introduce a new `aeat.domain.casillas` subpackage that owns the public casilla catalogue API, protocol stubs, JSON loader/saver/verification helpers, and Typer command group. Add the `AEAT_CASILLAS_ROOT` and `AEAT_CASILLAS_REVIEW_REQUIRED` settings, create canonical JSON catalogues for `MODELO_130`, `MODELO_303`, and `MODELO_390`, and add unit/live coverage plus a contributor reference doc for extending the corpus with a new modelo and period.
 
 ## Tasks
 
 - Phase 1
-  1. Scaffold `aeat.casillas` package and protocol surfaces
+  1. Scaffold `aeat.domain.casillas` package and protocol surfaces
      - Step summary: `.vault/exec/2026-04-12-casilla-db/2026-04-12-casilla-db-phase1-step1.md`
      - Executing agent: vaultspec-standard-executor
-     - Details: Add `src/aeat/casillas/` with public exports, strict pydantic models, Protocol stubs, errors, and package smoke tests.
+     - Details: Add `src/aeat/domain/casillas/` with public exports, strict pydantic models, Protocol stubs, errors, and package smoke tests.
   2. Implement loaders, verification, serialization, and config
      - Step summary: `.vault/exec/2026-04-12-casilla-db/2026-04-12-casilla-db-phase1-step2.md`
      - Executing agent: vaultspec-high-executor
@@ -50,7 +50,7 @@ Most of the coding work is sequential because the package API, config, CLI, and 
 
 ## Verification
 
-- `aeat.casillas` public exports are complete and importable.
+- `aeat.domain.casillas` public exports are complete and importable.
 - `tests/test_config.py` remains aligned after adding the new env vars.
 - Unit tests cover malformed records, dangling references, review-required enforcement, schema round-tripping, strict optional provenance typing, and trilingual Spanish-authoritative completeness.
 - Live tests stay opt-in and avoid mocks.
@@ -61,7 +61,7 @@ Most of the coding work is sequential because the package API, config, CLI, and 
 
 ## EXPLICIT PLAN REVIEW
 
-- **Issue scope check**: The plan stays inside issue #23 by using a new `aeat.casillas` package instead of touching `aeat.schema`, by stubbing in-flight siblings behind Protocols, and by limiting the corpus to the three requested modelos.
-- **Coordination check**: No work is planned inside `src/aeat/models/`, `src/aeat/schema/`, `src/aeat/llm/`, `src/aeat/manuals/`, `src/aeat/testing/`, or the sibling-owned corpus/manual areas.
+- **Issue scope check**: The plan stays inside issue #23 by using a new `aeat.domain.casillas` package instead of touching `aeat.domain.schema`, by stubbing in-flight siblings behind Protocols, and by limiting the corpus to the three requested modelos.
+- **Coordination check**: No work is planned inside `src/aeat/domain/modelos/`, `src/aeat/domain/schema/`, `src/aeat/adapters/outbound/llm/`, `src/aeat/domain/manuals/`, `src/aeat/domain/testing/`, or the sibling-owned corpus/manual areas.
 - **Review outcome**: APPROVED for autonomous execution.
 - **Approval note**: The repository’s normal human approval gate is satisfied here by the explicit user instruction to run the full vaultspec pipeline end-to-end with no human-in-the-loop pause.

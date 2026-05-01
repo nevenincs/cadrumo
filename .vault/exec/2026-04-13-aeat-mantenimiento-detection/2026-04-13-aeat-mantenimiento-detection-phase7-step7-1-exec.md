@@ -13,7 +13,7 @@ related:
 
 Add `site_health_probe_url` and
 `site_health_rate_limit_retry_after_default` to
-`aeat.config.Settings`.
+`aeat.core.config.Settings`.
 
 ## Changes
 

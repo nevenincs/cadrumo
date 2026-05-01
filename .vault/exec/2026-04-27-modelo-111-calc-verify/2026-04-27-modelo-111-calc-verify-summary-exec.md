@@ -73,7 +73,7 @@ OK  modelo_111.2026                  modelo 111 2026-01-01…2026-12-31  compute
 
 Aggregate: `computed=114, with_citation=114, coverage=100.00%` (was
 110 / 110 pre-`#318`). All three M111 years are blocklist-clean per
-`src/aeat/models/_citation_registry.py`.
+`src/aeat/domain/modelos/_citation_registry.py`.
 
 ## Mutation harness fingerprint
 
@@ -112,31 +112,31 @@ mapping (out of scope for the formula DSL — sub-EPIC
 
 ### Source code
 
-- `src/aeat/formulas/_rulesets/modelo_111_2026.py` — **new**, 73
+- `src/aeat/domain/formulas/_rulesets/modelo_111_2026.py` — **new**, 73
   lines. Structural clone of 2024 / 2025.
-- `src/aeat/formulas/_rulesets/__init__.py` — +3 lines
+- `src/aeat/domain/formulas/_rulesets/__init__.py` — +3 lines
   (`MODELO_111_2026` import, `ALL_RULESETS` entry, `__all__` entry).
-- `src/aeat/declaracion/_extractors/modelo_111_v2025.py` — extended
+- `src/aeat/adapters/inbound/declaracion/_extractors/modelo_111_v2025.py` — extended
   from 60 lines to 113 lines. Adds `Modelo111V2024Extractor` +
   `Modelo111V2026Extractor` sibling classes (post-PR-440 fix).
-- `src/aeat/declaracion/_extractors/__init__.py` — extended with
+- `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py` — extended with
   sibling-class imports + registrations.
 
 ### Tests
 
-- `src/aeat/formulas/_rulesets/test_modelo_111_2024.py` — **new**, 7
+- `src/aeat/domain/formulas/_rulesets/test_modelo_111_2024.py` — **new**, 7
   parametrised cases (happy path + 2024-vs-2025 no-drift + external-
   anchored worked example + zero boundary + premios typo + arrendamiento
   typical + ruleset-id-and-effective-range).
-- `src/aeat/formulas/_rulesets/test_modelo_111_2026.py` — **new**, 8
+- `src/aeat/domain/formulas/_rulesets/test_modelo_111_2026.py` — **new**, 8
   cases (happy path + 2026-vs-2025 no-drift + external-anchored worked
   example + premios typical + zero boundary + complementaria
   subtraction + arrendamiento typo + ruleset-id-and-effective-range).
-- `src/aeat/formulas/_rulesets/test_mutator_kill_rate.py` — +12 lines
+- `src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py` — +12 lines
   (`modelo_111.2026` row in `EXPECTED_COUNTS`).
-- `src/aeat/formulas/_rulesets/test_percent_rate_mutation.py` — +3
+- `src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py` — +3
   lines (import + two `_ruleset_cases` entries).
-- `src/aeat/formulas/_rulesets/test_operand_swap_mutation.py` — +7
+- `src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py` — +7
   lines (import + one `pytest.param` entry).
 
 ### Vault
@@ -173,7 +173,7 @@ Soft collisions on three shared files at PR-open time:
   class was already at the Tier-L bar via `#340`).
 - `docs/coverage/modelos.md` — different row (M111); textual union
   is mechanical.
-- `src/aeat/formulas/_rulesets/__init__.py` — different ruleset
+- `src/aeat/domain/formulas/_rulesets/__init__.py` — different ruleset
   register (`MODELO_111_2026`); textual union is mechanical.
 
 Coordination at PR-open time: the soft collisions resolve via
@@ -185,11 +185,11 @@ in this PR.
 
 All gates green at HEAD:
 
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_111_*.py` —
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_111_*.py` —
   23/23 pass.
-- `uv run pytest src/aeat/formulas/_rulesets/test_mutator_kill_rate.py
-  src/aeat/formulas/_rulesets/test_percent_rate_mutation.py
-  src/aeat/formulas/_rulesets/test_operand_swap_mutation.py -k 111` —
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py
+  src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py
+  src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py -k 111` —
   17/17 pass.
 - `uv run pytest tests/integration/test_kent_workflows.py::TestKentImportsModelo111Declaracion` —
   4/4 pass.

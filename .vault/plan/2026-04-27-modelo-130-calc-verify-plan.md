@@ -53,7 +53,7 @@ threshold-edge minoración cases (#321)`.
 
 ## Phase 2 — author 2026 ruleset
 
-### Step 2.1 — `src/aeat/formulas/_rulesets/modelo_130_2026.py`
+### Step 2.1 — `src/aeat/domain/formulas/_rulesets/modelo_130_2026.py`
 
 New module mirroring the 2025 file's shape:
 
@@ -75,7 +75,7 @@ Add `from .modelo_130_2026 import RULESET as MODELO_130_2026` and
 extend `ALL_RULESETS` + `__all__`. Insert in numerically-ascending
 order between `MODELO_130_2025` and `MODELO_131_2024`.
 
-### Step 2.3 — `src/aeat/formulas/_rulesets/test_modelo_130_2026.py`
+### Step 2.3 — `src/aeat/domain/formulas/_rulesets/test_modelo_130_2026.py`
 
 Mirror `test_modelo_130_2025.py`:
 
@@ -161,7 +161,7 @@ post-extraction).
 
 ### Step 4.3 — colocated extractor test (if missing) or extend existing
 
-Verify if `src/aeat/declaracion/_extractors/test_modelo_130_v2025.py`
+Verify if `src/aeat/adapters/inbound/declaracion/_extractors/test_modelo_130_v2025.py`
 exists (or similar). If yes, extend its parametrisation to 19 casillas;
 if no, ship a minimal one that round-trips a 19-casilla synthetic PDF
 through `Modelo130V2025Extractor.extract` and asserts every casilla
@@ -225,8 +225,8 @@ M130 rulesets (2024, 2025, 2026) report `coverage=100.00%`.
 ### Step 7.3 — mutation kill-rate
 
 Run the mutation harness:
-`just test src/aeat/formulas/_rulesets/test_*_mutation.py
-src/aeat/formulas/_rulesets/test_mutator_kill_rate.py`.
+`just test src/aeat/domain/formulas/_rulesets/test_*_mutation.py
+src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py`.
 Confirm aggregate kill-rate ≥ 90 % (and the per-class harnesses pass
 on M130 nodes).
 
@@ -272,17 +272,17 @@ Walk the 8 safety invariants documented in the handover STEP 2:
 ### Conventions
 
 - ✅ Python modules under `src/aeat/<subpackage>/` only — the new
-  ruleset lives at `src/aeat/formulas/_rulesets/modelo_130_2026.py`.
-- ✅ Public API discipline — callers import from `aeat.formulas`,
-  `aeat.declaracion`, `aeat.testing` only. The new ruleset is
-  re-exported via `aeat.formulas._rulesets.__init__`.
+  ruleset lives at `src/aeat/domain/formulas/_rulesets/modelo_130_2026.py`.
+- ✅ Public API discipline — callers import from `aeat.domain.formulas`,
+  `aeat.adapters.inbound.declaracion`, `aeat.domain.testing` only. The new ruleset is
+  re-exported via `aeat.domain.formulas._rulesets.__init__`.
 - ✅ Pydantic v2 strict — `CasillaDefinition`, `LegalCitation`,
   `Ruleset`, `ParameterTable`, `Modelo130GenParams` already strict;
   no new boundary-crossing types in this issue.
-- ✅ Errors inherit from `aeat.errors.AeatError` — no new exceptions
+- ✅ Errors inherit from `aeat.core.errors.AeatError` — no new exceptions
   raised in this issue (the existing `RulesetValidationError` is the
   only failure mode of `_require_legal_basis_for_computed`).
-- ✅ Logging via `aeat.logging.get_logger(__name__)` only — no new
+- ✅ Logging via `aeat.core.logging.get_logger(__name__)` only — no new
   logger calls in this issue.
 - ✅ Pytest markers at MODULE level — the new ruleset test file uses
   `pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]`.
@@ -308,7 +308,7 @@ Walk the 8 safety invariants documented in the handover STEP 2:
   `ParameterTable`. No `unittest.mock`, `pytest_mock`,
   `time_machine`, `freezegun`, or `vcr`.
 - ✅ The integration test 4th case uses `Typer.testing.CliRunner`
-  + real synthetic PDF generation via `aeat.testing` factories. No
+  + real synthetic PDF generation via `aeat.domain.testing` factories. No
   mocked filesystem or subprocess.
 - ✅ The mutation harness extensions reuse the existing `_modelo_130_*`
   fixtures (they are real ruleset evaluations under
@@ -342,13 +342,13 @@ Per ADR § Out of scope, this plan **does not touch**:
   #325, #326, #327).
 - Tier-S (#328-#331) or Tier-R (#332-#337).
 - Any sub-umbrella (#341, #345).
-- `src/aeat/sede/`, `src/aeat/auth/_clave_movil.py`,
-  `src/aeat/cli/sede/`, `src/aeat/cli/sanitize/`,
-  `src/aeat/cli/filing/_reconcile.py`,
-  `src/aeat/justificante/_extract.py`.
-- `src/aeat/errors/_registry.py` or any error-registry surface.
+- `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/sede/`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_clave_movil.py`,
+  `src/aeat/entrypoints/cli/sede/`, `src/aeat/entrypoints/cli/sanitize/`,
+  `src/aeat/entrypoints/cli/filing/_reconcile.py`,
+  `src/aeat/domain/justificante/_extract.py`.
+- `src/aeat/core/errors/_registry.py` or any error-registry surface.
 - `--json` schemas / exit-code table.
-- `src/aeat/cli/audit/__init__.py` or `src/aeat/cli/__init__.py`.
+- `src/aeat/entrypoints/cli/audit/__init__.py` or `src/aeat/entrypoints/cli/__init__.py`.
 - The live-submit forbidden enforcement sweep (#432).
 - Any new CLI commands or root-level Typer changes.
 

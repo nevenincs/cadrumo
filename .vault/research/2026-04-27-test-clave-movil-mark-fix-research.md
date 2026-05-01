@@ -8,7 +8,7 @@ related: []
 
 # `test-clave-movil-mark-fix` research: Cl@ve Movil test marker hygiene
 
-Issue 436 reported that `src/aeat/auth/test_clave_movil.py` was marked as unit while its tests appeared to cover the Cl@ve Movil phone-approval login path. Follow-up review corrected that premise: the local tests use hand-written browser-session stand-ins and do not authenticate against AEAT or require operator Cl@ve approval.
+Issue 436 reported that `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py` was marked as unit while its tests appeared to cover the Cl@ve Movil phone-approval login path. Follow-up review corrected that premise: the local tests use hand-written browser-session stand-ins and do not authenticate against AEAT or require operator Cl@ve approval.
 
 ## Findings
 
@@ -30,4 +30,4 @@ No provider-internal raw HTTP client was found in `ClaveMovilAuthProvider`; `_re
 
 The provider previously auto-submitted AEAT's `DialogoRepresentacion` representation form after Cl@ve approval. That is a remote form submission and is no longer acceptable as an automatic provider action. The corrected provider refuses that page instead of clicking through.
 
-The documentation cleanup search found no current `--ignore=src/aeat/auth/test_clave_movil.py` references in `justfile`, `.github/workflows`, `docs`, `tests/README.md`, `src/aeat`, or `.vaultspec/rules/rules`.
+The documentation cleanup search found no current `--ignore=src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_clave_movil.py` references in `justfile`, `.github/workflows`, `docs`, `tests/README.md`, `src/aeat`, or `.vaultspec/rules/rules`.

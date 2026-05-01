@@ -49,7 +49,7 @@ Ruleset/test work and vault documentation can run in parallel after the BOE sour
 
 Focused verification:
 
-- `uv run pytest src/aeat/formulas/_rulesets/test_modelo_303_2026.py src/aeat/formulas/_rulesets/test_percent_rate_mutation.py src/aeat/formulas/_rulesets/test_operand_swap_mutation.py src/aeat/formulas/_rulesets/test_scalar_mutation.py src/aeat/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/declaracion/test_modelo_303_v2025.py tests/integration/test_kent_workflows.py::TestKentImportsModelo303Declaracion src/aeat/formulas/test_registry.py src/aeat/formulas/test_cli.py src/aeat/formulas/test_smoke.py`
+- `uv run pytest src/aeat/domain/formulas/_rulesets/test_modelo_303_2026.py src/aeat/domain/formulas/_rulesets/test_percent_rate_mutation.py src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py src/aeat/domain/formulas/_rulesets/test_scalar_mutation.py src/aeat/domain/formulas/_rulesets/test_mutator_kill_rate.py src/aeat/adapters/inbound/declaracion/test_modelo_303_v2025.py tests/integration/test_kent_workflows.py::TestKentImportsModelo303Declaracion src/aeat/domain/formulas/test_registry.py src/aeat/domain/formulas/test_cli.py src/aeat/domain/formulas/test_smoke.py`
 - `uv run aeat audit rulesets citations`
 
 Full gates:

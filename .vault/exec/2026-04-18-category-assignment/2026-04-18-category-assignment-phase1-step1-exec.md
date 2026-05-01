@@ -13,9 +13,9 @@ related:
 Executing step 1 to 3 from the category assignment implementation plan.
 
 ## Actions Taken
-- Updated `src/aeat/financial/transactions/_service.py` (`set_classification` function) to accept and persist `category_id` and `notes`.
-- Updated `src/aeat/cli/financial/txs.py` (`classify_cmd`) to add optional `--category` and `--reason` flags and map them to the service.
-- Updated `src/aeat/financial/transactions/test_cli.py` to add `test_financial_txs_classify_accepts_category_and_reason` testing the new functionality.
+- Updated `src/aeat/domain/financial/transactions/_service.py` (`set_classification` function) to accept and persist `category_id` and `notes`.
+- Updated `src/aeat/entrypoints/cli/financial/txs.py` (`classify_cmd`) to add optional `--category` and `--reason` flags and map them to the service.
+- Updated `src/aeat/domain/financial/transactions/test_cli.py` to add `test_financial_txs_classify_accepts_category_and_reason` testing the new functionality.
 - Ran tests successfully.
 
 ## Findings

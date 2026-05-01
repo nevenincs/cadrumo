@@ -21,7 +21,7 @@ Research to seed the feature/108 modelo inventory. Target user profile:
 `autonomo_ed_solo` (Spanish autÃ³nomo, estimaciÃ³n directa simplificada, no
 employees, no rental, no intracomunitario, no bienes en el extranjero).
 The catalogue must be extensible to the other seven profiles tracked by
-`aeat.deadlines.AutonomoProfile`, and must leave a narrow door for SL
+`aeat.domain.deadlines.AutonomoProfile`, and must leave a narrow door for SL
 entities without polluting the autÃ³nomo core.
 
 ## 1. executive summary
@@ -56,10 +56,10 @@ Sources consulted on 2026-04-13 from the worktree:
 - `corpus/casillas/modelo_303/2025Q4.json`,
   `corpus/casillas/modelo_130/2025Q4.json`,
   `corpus/casillas/modelo_390/2025.json`
-- `src/aeat/filing/_builders/` â€” existing builder surface (130, 303, 390)
-- `src/aeat/models/__init__.py` â€” confirmed stub (empty `__all__`)
-- `src/aeat/deadlines/_models.py` â€” `AutonomoProfile`, `IVARegime`
-- `src/aeat/casillas/` â€” catalogue loader surface
+- `src/aeat/application/filing/_builders/` â€” existing builder surface (130, 303, 390)
+- `src/aeat/domain/modelos/__init__.py` â€” confirmed stub (empty `__all__`)
+- `src/aeat/domain/deadlines/_models.py` â€” `AutonomoProfile`, `IVARegime`
+- `src/aeat/domain/casillas/` â€” catalogue loader surface
 - Project knowledge of AEAT public Sede ElectrÃ³nica form URLs (hint only)
 
 **Citation discipline.** The on-disk normatives corpus stores Spanish
@@ -201,7 +201,7 @@ otherwise noted.
     mensuales segÃºn el rÃ©gimen) y remite a los modelos oficiales
     aprobados por Orden Ministerial."
 - **Applicability.** Mandatory for any sujeto pasivo del IVA not in
-  recargo de equivalencia or exento. Gated by `aeat.deadlines.IVARegime`:
+  recargo de equivalencia or exento. Gated by `aeat.domain.deadlines.IVARegime`:
   GENERAL/SIMPLIFICADO filed; RECARGO_EQUIVALENCIA/EXENTO not.
 - **Thresholds.** None; filed even with zero activity.
 - **Relationships.** `caps_into = {390}`; interacts with 349 when
@@ -618,7 +618,7 @@ Footnotes:
 
 ### 5.1 already on main (builders)
 
-Confirmed by `src/aeat/filing/_builders/`:
+Confirmed by `src/aeat/application/filing/_builders/`:
 
 - `modelo_130.py` + `_modelo_130_schema.py` â€” IRPF pago fraccionado.
 - `modelo_303.py` + `_modelo_303_schema.py` â€” IVA autoliquidaciÃ³n.
@@ -638,9 +638,9 @@ Every other modelo has zero catalogue coverage.
 
 ### 5.3 enum / registry references
 
-`src/aeat/models/__init__.py` is a **stub** with empty `__all__`. No
+`src/aeat/domain/modelos/__init__.py` is a **stub** with empty `__all__`. No
 `ModeloCode` enum, no registry, no metadata. The deadline engine at
-`src/aeat/deadlines/_models.py` references modelos as free-form `str`
+`src/aeat/domain/deadlines/_models.py` references modelos as free-form `str`
 (`FilingObligation.modelo: str`) and must migrate once #108 lands. The
 `AutonomoProfile` carries four boolean triggers (`has_employees`,
 `pays_rent_with_retencion`, `does_intracomunitario`,
@@ -681,8 +681,8 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.1 modelo 111
 
 - **Title.** `feat(filing): modelo 111 builder + submitter`
-- **Path.** `src/aeat/filing/_builders/modelo_111.py`,
-  `src/aeat/casillas/catalogues/modelo_111/`
+- **Path.** `src/aeat/application/filing/_builders/modelo_111.py`,
+  `src/aeat/domain/casillas/catalogues/modelo_111/`
 - **Scope.** Builder + JSON schema + casilla catalogue + unit tests +
   CLI wire-up.
 - **Deps.** `has_employees` OR new `pays_professionals_with_retencion`;
@@ -692,7 +692,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.2 modelo 190
 
 - **Title.** `feat(filing): modelo 190 annual summary builder`
-- **Path.** `src/aeat/filing/_builders/modelo_190.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_190.py`
 - **Scope.** Builder + subclave enum + casilla catalogue + reconciliation
   against four M111 + tests.
 - **Deps.** Blocked by 111.
@@ -701,7 +701,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.3 modelo 115
 
 - **Title.** `feat(filing): modelo 115 builder`
-- **Path.** `src/aeat/filing/_builders/modelo_115.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_115.py`
 - **Scope.** Builder + 5 casillas + tests.
 - **Deps.** `pays_rent_with_retencion`; lessor NIF contacts store.
 - **Track / effort / priority.** A / **S** / **P1**.
@@ -709,7 +709,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.4 modelo 180
 
 - **Title.** `feat(filing): modelo 180 annual summary builder`
-- **Path.** `src/aeat/filing/_builders/modelo_180.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_180.py`
 - **Scope.** Builder + per-lessor rows + reconciliation vs M115.
 - **Deps.** Blocked by 115.
 - **Track / effort / priority.** A / **M** / **P1**.
@@ -717,7 +717,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.5 modelo 349
 
 - **Title.** `feat(filing): modelo 349 recapitulativa builder`
-- **Path.** `src/aeat/filing/_builders/modelo_349.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_349.py`
 - **Scope.** Builder + cadence flip + ROI gate + tests.
 - **Deps.** `does_intracomunitario` + M036 ROI precondition.
 - **Track / effort / priority.** A / **M** / **P2**.
@@ -725,7 +725,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.6 modelo 347
 
 - **Title.** `feat(filing): modelo 347 annual third-party return`
-- **Path.** `src/aeat/filing/_builders/modelo_347.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_347.py`
 - **Scope.** Builder + counterparty threshold + SII exemption + per-
   counterparty row generation from TDP T1â€“T6.
 - **Deps.** Track B TDP counterparty totaliser.
@@ -734,7 +734,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.7 modelo 100
 
 - **Title.** `feat(filing): modelo 100 draft builder`
-- **Path.** `src/aeat/filing/_builders/modelo_100.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_100.py`
 - **Scope.** Builder + ~500 casillas + reconciliation against four
   M130 + M190 perceptor rows + CCAA deductions catalogue + Renta Web
   borrador interop.
@@ -745,7 +745,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.8 modelo 131
 
 - **Title.** `feat(filing): modelo 131 builder`
-- **Path.** `src/aeat/filing/_builders/modelo_131.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_131.py`
 - **Scope.** Builder + module-regime casillas + tests.
 - **Deps.** `autonomo_eo` profile branch.
 - **Track / effort / priority.** A / **M** / **P2**.
@@ -753,7 +753,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.9 modelo 720
 
 - **Title.** `feat(filing): modelo 720 informativa`
-- **Path.** `src/aeat/filing/_builders/modelo_720.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_720.py`
 - **Scope.** Builder + three bloques + 50 000 EUR gate + tests.
 - **Deps.** `bienes_extranjero_above_threshold`.
 - **Track / effort / priority.** A / **M** / **P2**.
@@ -761,8 +761,8 @@ autÃ³nomo; P2 = SL / deferrable.
 ### 6.10 modelo 036 / 037
 
 - **Title.** `feat(filing): modelo 036/037 censal builders`
-- **Path.** `src/aeat/filing/_builders/modelo_036.py`,
-  `src/aeat/filing/_builders/modelo_037.py`
+- **Path.** `src/aeat/application/filing/_builders/modelo_036.py`,
+  `src/aeat/application/filing/_builders/modelo_037.py`
 - **Scope.** Shared schema (037 = subset of 036) + event-driven cadence
   + tests.
 - **Deps.** Event-driven branch in deadline engine (not modelled).
@@ -798,7 +798,7 @@ autÃ³nomo; P2 = SL / deferrable.
 ## 7. downstream code shape (informative)
 
 The execution phase â€” after the ADR fixes decisions â€” will materialise a
-pydantic v2 shape under `src/aeat/models/`. Candidate types:
+pydantic v2 shape under `src/aeat/domain/modelos/`. Candidate types:
 
 - `ModeloCode(StrEnum)` â€” closed enum of codes (`M_100`, `M_130`,
   `M_131`, `M_303`, `M_390`, `M_349`, `M_369`, `M_111`, `M_115`,
@@ -831,7 +831,7 @@ pydantic v2 shape under `src/aeat/models/`. Candidate types:
   `caps_into` references only known codes, registry covers every value
   of `ModeloCode`.
 
-`Translatable` reuses the project's `aeat.i18n.Translatable` (es / en /
+`Translatable` reuses the project's `aeat.core.i18n.Translatable` (es / en /
 hu).
 
 ## 8. open questions for the adr
@@ -847,7 +847,7 @@ hu).
 - **Portal URL hints.** Freeze `channel_hint` shape now or defer until
   the submitter work for #7 lands? Risk of URL drift.
 - **Profile boolean.** `pays_professionals_with_retencion` is implied
-  by 111/190 but absent from `aeat.deadlines.AutonomoProfile`. Add a
+  by 111/190 but absent from `aeat.domain.deadlines.AutonomoProfile`. Add a
   new flag or overload `has_employees` (semantically wrong)?
 - **Citation provenance.** The on-disk corpus stores `summary.es`, not
   the BOE literal body. Is the ADR OK treating `summary.es` as
@@ -856,7 +856,7 @@ hu).
 - **Manual prÃ¡ctico extraction.** Manuals are PDF-manifest only. Block
   on extraction for modelos where ley/reglamento is thin (e.g. 369 OSS)?
 - **Deadline-engine integration.** Does the registry own the
-  `DeadlineRule` for each modelo, or does `aeat.deadlines` keep
+  `DeadlineRule` for each modelo, or does `aeat.domain.deadlines` keep
   ownership and the registry only reference rules by key?
 - **037 vs 036 default.** For `autonomo_ed_solo`, mark 037 as
   `must_file` at alta or `may_file` (the user may have historically

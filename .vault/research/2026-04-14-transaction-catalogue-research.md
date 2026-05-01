@@ -12,13 +12,13 @@ related:
 
 # `transaction-catalogue` research: `tdp-t1-t2-seam`
 
-This research grounds issue `#74` at the seam between T1 ingest and T2/T3 downstream consumers. The goal is to define a strict immutable transaction wrapper around `RawTransaction`, preserve provenance without mutation, keep sibling-branch imports out of the surface, and land a usable catalogue plus CLI on top of the existing `aeat.financial` package.
+This research grounds issue `#74` at the seam between T1 ingest and T2/T3 downstream consumers. The goal is to define a strict immutable transaction wrapper around `RawTransaction`, preserve provenance without mutation, keep sibling-branch imports out of the surface, and land a usable catalogue plus CLI on top of the existing `aeat.domain.financial` package.
 
 ## Findings
 
 ### Upstream contract already on main
 
-- Issue `#73` already landed the T1 boundary on `main`: `aeat.financial.RawTransaction` is the upstream producer contract and is publicly re-exported from both `aeat.financial` and `aeat.financial.providers`.
+- Issue `#73` already landed the T1 boundary on `main`: `aeat.domain.financial.RawTransaction` is the upstream producer contract and is publicly re-exported from both `aeat.domain.financial` and `aeat.domain.financial.providers`.
 - The current `RawTransaction` shape differs from the older issue-body wording. It already carries `transaction_id`, `booked_date`, `value_date`, `amount`, `currency`, `counterparty`, `description`, `provenance`, and immutable `raw_fields`.
 - `RawTransaction` is already strict, frozen, and provenance-rich. Issue `#74` therefore must wrap the raw record instead of redefining or normalizing T1.
 
@@ -30,16 +30,16 @@ This research grounds issue `#74` at the seam between T1 ingest and T2/T3 downst
 
 ### Sibling-branch boundary constraints
 
-- `src/aeat/submission/` is explicitly out of scope and owned by `feature/117-live-submit-hardening`; only additive changes in `src/aeat/config.py` are allowed there.
-- `src/aeat/models/` is owned by `feature/108-modelo-inventory-catalogue`; transaction work must not touch the modelo catalogue and should import from `aeat.models` only when needed. This issue does not need it.
-- `src/aeat/financial/invoices/` and `src/aeat/financial/tax_categories/` are not on `main`, so invoice/category foreign keys must stay as plain `str | None` at runtime with internal `Protocol` placeholders used only for typing and documentation.
-- The existing `src/aeat/financial/categories/` package on `main` is not the future `tax_categories/` sibling described by the issue. The transaction package must avoid coupling to it to prevent locking in the wrong downstream dependency.
+- `src/aeat/adapters/outbound/aeat/export/` is explicitly out of scope and owned by `feature/117-live-submit-hardening`; only additive changes in `src/aeat/config.py` are allowed there.
+- `src/aeat/domain/modelos/` is owned by `feature/108-modelo-inventory-catalogue`; transaction work must not touch the modelo catalogue and should import from `aeat.domain.modelos` only when needed. This issue does not need it.
+- `src/aeat/domain/financial/invoices/` and `src/aeat/domain/financial/tax_categories/` are not on `main`, so invoice/category foreign keys must stay as plain `str | None` at runtime with internal `Protocol` placeholders used only for typing and documentation.
+- The existing `src/aeat/domain/financial/categories/` package on `main` is not the future `tax_categories/` sibling described by the issue. The transaction package must avoid coupling to it to prevent locking in the wrong downstream dependency.
 
 ### Public API and package-shape precedent
 
 - Existing financial subpackages on `main` follow the pattern `public __init__.py + private underscore modules + colocated tests`.
-- The root `aeat.financial` package re-exports only selected upstream boundaries. Child packages such as `aeat.financial.vat` expose their own public surfaces and explicitly forbid deep imports.
-- The transaction package should follow the same shape: `aeat.financial.transactions` as the only public import surface, with implementation in underscored modules and no re-export of internal helpers.
+- The root `aeat.domain.financial` package re-exports only selected upstream boundaries. Child packages such as `aeat.domain.financial.vat` expose their own public surfaces and explicitly forbid deep imports.
+- The transaction package should follow the same shape: `aeat.domain.financial.transactions` as the only public import surface, with implementation in underscored modules and no re-export of internal helpers.
 
 ### Transaction identity requirements
 
@@ -70,6 +70,6 @@ This research grounds issue `#74` at the seam between T1 ingest and T2/T3 downst
 
 ### Verification strategy
 
-- Colocated unit tests under `src/aeat/financial/transactions/` match the repo’s current style for financial subpackages.
+- Colocated unit tests under `src/aeat/domain/financial/transactions/` match the repo’s current style for financial subpackages.
 - CLI smoke tests should exercise the root `aeat` app via `CliRunner`, as existing `aeat financial` tests do.
 - The strongest regression checks for this issue are deterministic hash stability, immutable-return semantics for catalogue updates, JSON round-trip, and explicit validation of `business_pct` / `classified_by`.

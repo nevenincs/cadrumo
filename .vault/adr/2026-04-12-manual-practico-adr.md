@@ -32,7 +32,7 @@ Two structural constraints collide inside the original `#25` scope:
    records lacking these fields. LLM output is a draft accelerant,
    never the source of truth.
 2. The rule-extraction, chapter-tree extraction, and translation phases
-   depend on `aeat.llm` (`#21`), which has not landed yet and is stubbed
+   depend on `aeat.adapters.outbound.llm` (`#21`), which has not landed yet and is stubbed
    via `Protocol` on this branch. An autonomous run on `#25` therefore
    cannot honestly produce real extracted content, and cannot sign
    reviewer metadata without fabricating it.
@@ -50,7 +50,7 @@ The original `#25` deliverable has three layers:
 
 - **Layer A — structure**: schema types, loader, query API, error
   hierarchy, deterministic rule-id generator, settings, CLI skeleton,
-  Protocol stubs for `aeat.corpus`/`aeat.llm`/`aeat.models`, unit tests.
+  Protocol stubs for `aeat.corpus`/`aeat.adapters.outbound.llm`/`aeat.domain.modelos`, unit tests.
   No dependency on LLM output or human review.
 - **Layer B — raw corpus**: fetched source PDFs, sha256-verified
   `manifest.json` per manual part, git-ignored PDF blobs (binary policy
@@ -70,7 +70,7 @@ record.
 Reinforced on `#25` itself: every record, every manifest, every fixture
 must be a strict pydantic v2 model. Closed catalogues are
 `enum.StrEnum`. Internal-only value objects may remain plain dataclasses,
-but `aeat.manuals`' public surface exposes pydantic models exclusively.
+but `aeat.domain.manuals`' public surface exposes pydantic models exclusively.
 No bare `dict[str, Any]` in public signatures or persisted files. Where
 frozen is compatible with the usage, `ConfigDict(strict=True,
 frozen=True)` is used; where the loader needs to reshape a field during
@@ -88,9 +88,9 @@ that draft LLM output cannot land in the committed corpus.
 
 ### Dependency-graph stubbing
 
-On this branch neither `aeat.llm` nor `aeat.corpus.Fetcher` exists. To
-keep `aeat.manuals` compiling and testable today without reaching into
-sibling branch territory, the `aeat.manuals._stubs` module declares
+On this branch neither `aeat.adapters.outbound.llm` nor `aeat.corpus.Fetcher` exists. To
+keep `aeat.domain.manuals` compiling and testable today without reaching into
+sibling branch territory, the `aeat.domain.manuals._stubs` module declares
 three `typing.Protocol`s:
 
 - `LLMClientProtocol` — matches `#21`'s planned `LLMClient.complete`
@@ -101,7 +101,7 @@ three `typing.Protocol`s:
 
 Modelo identifiers are accepted as string fields validated against the
 regex `^MODELO_[0-9]{3}(?::[0-9A-Z_]+)?$`, not imported from
-`aeat.models`. When `#6` lands, a follow-up PR replaces the string
+`aeat.domain.modelos`. When `#6` lands, a follow-up PR replaces the string
 constraint with a real `ModeloId` cross-reference.
 
 ### Primary structuring surface (PDF vs HTML)
@@ -153,16 +153,16 @@ before any follow-up lands structured content.
 ## Constraints
 
 - Python `>=3.13`. All new code under `src/aeat/`. Public API
-  discipline: callers import from `aeat.manuals` only.
+  discipline: callers import from `aeat.domain.manuals` only.
 - No new runtime dependencies beyond what is already in
   `pyproject.toml`. `httpx`, `pydantic`, `pydantic-settings`, and
   `typer` cover the entire v1 implementation surface. PDF-parsing
   libraries are deferred until the follow-up that actually needs them.
-- No hard imports from `aeat.corpus`, `aeat.llm`, `aeat.models`, or
-  `aeat.storage`. Only `aeat.config`, `aeat.errors`, `aeat.logging`,
-  and `aeat.i18n` are consumed from the wider project.
+- No hard imports from `aeat.corpus`, `aeat.adapters.outbound.llm`, `aeat.domain.modelos`, or
+  `aeat.adapters.persistence.storage`. Only `aeat.core.config`, `aeat.core.errors`, `aeat.core.logging`,
+  and `aeat.core.i18n` are consumed from the wider project.
 - All tests are `@pytest.mark.unit`, colocated under
-  `src/aeat/manuals/`. No mocks, patches, fakes, stubs, shadows, or
+  `src/aeat/domain/manuals/`. No mocks, patches, fakes, stubs, shadows, or
   skips. One opt-in `@pytest.mark.live` test is scoped but not
   implemented for v1, because it would need the real `#21` LLM client.
 - `just lint && just typecheck && just test && just hooks` must be
@@ -179,59 +179,59 @@ The implementation is laid out in detail by the companion plan
 (`2026-04-12-manual-practico-plan`). High-level slices, in the order
 they will be executed:
 
-1. **Schema package** under `src/aeat/manuals/_schema.py` containing
+1. **Schema package** under `src/aeat/domain/manuals/_schema.py` containing
    `ManualId`, `ManualPart`, `RuleKind` (`enum.StrEnum`), and the
    pydantic v2 strict models `LLMProvenance`, `SectionSource`,
    `RuleSource`, `Paragraph`, `Rule`, `SectionRef`, `Section`,
    `Chapter`, and `Manual`. Every required-review record exposes
    `reviewed_by: str` and `reviewed_at: date`. Every translatable field
-   uses `aeat.i18n.Translatable`.
-2. **Stubs** under `src/aeat/manuals/_stubs.py` with the three
+   uses `aeat.core.i18n.Translatable`.
+2. **Stubs** under `src/aeat/domain/manuals/_stubs.py` with the three
    Protocols. Clearly marked `TODO(#17)`, `TODO(#21)`, `TODO(#6)`.
-3. **Errors** under `src/aeat/manuals/errors.py` exposing
+3. **Errors** under `src/aeat/domain/manuals/errors.py` exposing
    `ManualError(AeatError)`, `ManualParseError(ManualError)`,
    `RuleExtractionError(ManualError)`,
    `ManualNotFoundError(ManualError)`, and
    `ManualReviewRequiredError(ManualError)`.
-4. **IDs** under `src/aeat/manuals/_ids.py` exposing
+4. **IDs** under `src/aeat/domain/manuals/_ids.py` exposing
    `generate_rule_id(manual_id, year, part, chapter_id, section_id,
    ordinal) -> str`.
-5. **Loader** under `src/aeat/manuals/_loader.py` exposing
+5. **Loader** under `src/aeat/domain/manuals/_loader.py` exposing
    `load_manual(manual_id, year, part=SINGLE) -> Manual` and
    `ManualCatalogue` plus `find_rules(catalogue, *, casilla_id=None,
    kind=None, lang=None) -> Iterator[Rule]`. The loader reads from the
    directory hierarchy above, walks the chapter tree, and constructs
    strict pydantic models from committed JSON files.
-6. **Verification** under `src/aeat/manuals/_verify.py` exposing
+6. **Verification** under `src/aeat/domain/manuals/_verify.py` exposing
    `verify_manual_dir(path, *, review_required=True) ->
    VerificationReport`. The report is a pydantic model; the function
    walks the directory, validates every JSON file against the schema,
    and records dangling cross-references and missing reviewer fields.
-7. **Fetch + manifest** under `src/aeat/manuals/_fetch.py` exposing
+7. **Fetch + manifest** under `src/aeat/domain/manuals/_fetch.py` exposing
    `fetch_manual_part(manual_id, year, part, *, dest, settings) ->
    FetchedManualPart`. Uses `httpx` synchronously, streams the PDF,
    computes sha256, writes `manifest.json`, and returns a strict
    pydantic model describing the fetched file. A `PartSpec` table
-   (`aeat.manuals._fetch.PART_SPECS`) hard-codes the verified AEAT
+   (`aeat.domain.manuals._fetch.PART_SPECS`) hard-codes the verified AEAT
    URLs for the three v1 parts.
-8. **Public `__init__.py`** under `src/aeat/manuals/__init__.py`
+8. **Public `__init__.py`** under `src/aeat/domain/manuals/__init__.py`
    re-exports: `Manual`, `Chapter`, `Section`, `SectionRef`, `Rule`,
    `Paragraph`, `LLMProvenance`, `SectionSource`, `RuleSource`,
    `ManualCatalogue`, `ManualId`, `ManualPart`, `RuleKind`,
    `load_manual`, `find_rules`, `generate_rule_id`,
    `verify_manual_dir`, `fetch_manual_part`, and the error hierarchy.
-9. **CLI** under `src/aeat/cli/manual.py` defines a `typer.Typer`
+9. **CLI** under `src/aeat/entrypoints/cli/manual.py` defines a `typer.Typer`
    `app` with seven subcommands. `fetch`, `verify`, `list`, and `show`
    are fully functional. `structure`, `extract-rules`, and `translate`
    raise `RuleExtractionError("pending #21 — not yet implemented")`
    so the interface is locked but the implementation is gated on the
-   LLM client landing. `src/aeat/cli/__init__.py` grows an
+   LLM client landing. `src/aeat/entrypoints/cli/__init__.py` grows an
    `app.add_typer(manual_module.app, name="manual", help="...")` line.
-10. **Settings** extends `aeat.config.Settings` with `aeat_manuals_
+10. **Settings** extends `aeat.core.config.Settings` with `aeat_manuals_
     root: Path = Field(default=PROJECT_ROOT / "corpus" / "manuals", ...)`
     and `aeat_manuals_review_required: bool = Field(default=True, ...)`.
     Matching entries land in `env/.env.example`.
-11. **Unit tests** colocated under `src/aeat/manuals/`: one per module
+11. **Unit tests** colocated under `src/aeat/domain/manuals/`: one per module
     under test. Coverage: loader round-trip on a temp-directory fixture,
     malformed-record rejection, cross-reference validator, trilingual
     completeness, deterministic rule ID, verify rejects unreviewed,
@@ -261,7 +261,7 @@ Why this shape over the alternatives:
   forces follow-ups to respect the review gate; they cannot bypass it
   by landing ad-hoc JSON.
 - **Why Protocol stubs rather than direct imports.** The worktree has
-  confirmed `aeat.llm` does not exist yet. Directly importing would
+  confirmed `aeat.adapters.outbound.llm` does not exist yet. Directly importing would
   break the branch build and fail ty. Protocols let the schema and
   the `extract-rules`/`translate` commands declare their dependency on
   `#21` in type-checked form without reaching across the branch
@@ -317,7 +317,7 @@ Why this shape over the alternatives:
   implemented; the error message points at `#21`.
 - The Protocol stubs create a small maintenance burden: when `#21`
   (and later `#17` and `#6`) lands, a follow-up PR must rebase
-  `aeat.manuals` onto the real surfaces. That follow-up is expected
+  `aeat.domain.manuals` onto the real surfaces. That follow-up is expected
   to be small and mechanical.
 - The raw PDFs are git-ignored. A fresh clone needs to run `aeat
   manual fetch --manual renta --year 2025 --part parte1` (and
@@ -325,7 +325,7 @@ Why this shape over the alternatives:
   PDFs against the committed manifest sha256, so tampering is
   detectable.
 - The `#17` corpus fetcher is not yet available, so the v1 fetcher is
-  implemented directly on top of `httpx` in `aeat.manuals._fetch`.
+  implemented directly on top of `httpx` in `aeat.domain.manuals._fetch`.
   When `#17` lands the real `Fetcher`, a follow-up PR re-wires
   `_fetch.py` to delegate through the real fetcher and drops the
   local `httpx` usage. The `FetcherProtocol` in `_stubs.py` is the

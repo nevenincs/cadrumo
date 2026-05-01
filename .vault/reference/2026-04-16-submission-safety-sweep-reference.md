@@ -18,41 +18,41 @@ Scope: production hardening for issues `#142` through `#146`, limited to the cur
 
 - The AEAT write leaf remains `Modelo130Submitter.submit`, but the missing charter gates are all above it in the engine/CLI/workflow contract.
 - The safest contract change is to make `dry_run` required keyword-only at the submission and workflow boundaries while removing the legacy `override_confirmation` boolean from those APIs.
-- The missing confirmation and audit surfaces belong inside `aeat.submission` as private modules, invoked only from the live branch of the engine.
+- The missing confirmation and audit surfaces belong inside `aeat.adapters.outbound.aeat.export` as private modules, invoked only from the live branch of the engine.
 - The current CLI submission helper is still stub-only, so any live command that depends on it must fail closed rather than report success.
 
 ## Primary code surfaces
 
 ### Engine and package root
 
-- `src/aeat/submission/_engine.py`
-- `src/aeat/submission/_errors.py`
-- `src/aeat/submission/_models.py`
-- `src/aeat/submission/__init__.py`
+- `src/aeat/adapters/outbound/aeat/export/_engine.py`
+- `src/aeat/adapters/outbound/aeat/export/_errors.py`
+- `src/aeat/adapters/outbound/aeat/export/_models.py`
+- `src/aeat/adapters/outbound/aeat/export/__init__.py`
 
 ### New internal modules
 
-- `src/aeat/submission/_confirm.py`
-- `src/aeat/submission/_audit.py`
+- `src/aeat/adapters/outbound/aeat/export/_confirm.py`
+- `src/aeat/adapters/outbound/aeat/export/_audit.py`
 
 ### CLI surfaces
 
-- `src/aeat/cli/submission/_helpers.py`
-- `src/aeat/cli/submission/submit.py`
-- `src/aeat/cli/submission/test_cli.py`
-- `src/aeat/cli/filing/__init__.py`
-- `src/aeat/cli/filing/test_filing_cli.py`
+- `src/aeat/entrypoints/cli/submission/_helpers.py`
+- `src/aeat/entrypoints/cli/submission/submit.py`
+- `src/aeat/entrypoints/cli/submission/test_cli.py`
+- `src/aeat/entrypoints/cli/filing/__init__.py`
+- `src/aeat/entrypoints/cli/filing/test_filing_cli.py`
 
 ### Workflow surfaces
 
-- `src/aeat/workflow/_protocols.py`
-- `src/aeat/workflow/_engine.py`
-- `src/aeat/workflow/_adapters.py`
-- `src/aeat/workflow/test_engine.py`
-- `src/aeat/cli/workflow/_helpers.py`
-- `src/aeat/cli/workflow/run.py`
-- `src/aeat/cli/workflow/next.py`
-- `src/aeat/cli/workflow/test_cli.py`
+- `src/aeat/application/workflow/_protocols.py`
+- `src/aeat/application/workflow/_engine.py`
+- `src/aeat/application/workflow/_adapters.py`
+- `src/aeat/application/workflow/test_engine.py`
+- `src/aeat/entrypoints/cli/workflow/_helpers.py`
+- `src/aeat/entrypoints/cli/workflow/run.py`
+- `src/aeat/entrypoints/cli/workflow/next.py`
+- `src/aeat/entrypoints/cli/workflow/test_cli.py`
 
 ### Config and environment contract
 
@@ -80,7 +80,7 @@ Scope: production hardening for issues `#142` through `#146`, limited to the cur
 
 ### R4: dedicated confirmation hook
 
-- Add a private confirmation helper in `aeat.submission._confirm`.
+- Add a private confirmation helper in `aeat.adapters.outbound.aeat.export._confirm`.
 - The helper should render:
   - modelo
   - period
@@ -88,11 +88,11 @@ Scope: production hardening for issues `#142` through `#146`, limited to the cur
   - submission URL
   - filing checksum
 - The helper should require an exact phrase, not `y/n`.
-- The helper should remain private to `aeat.submission`; do not re-export it from `aeat.submission.__init__`.
+- The helper should remain private to `aeat.adapters.outbound.aeat.export`; do not re-export it from `aeat.adapters.outbound.aeat.export.__init__`.
 
 ### R6: append-only audit log
 
-- Add a private audit helper in `aeat.submission._audit`.
+- Add a private audit helper in `aeat.adapters.outbound.aeat.export._audit`.
 - Persist live-write records to `.aeat/live-submit-audit.log` as append-only structured JSON lines.
 - Record:
   - UTC timestamp

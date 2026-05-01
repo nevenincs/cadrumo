@@ -41,7 +41,7 @@ whitelisting.
 - Created: `src/aeat/remote/_schema.py` (`RemoteCasilla`, `RemoteReceipt`, `RemoteFiling`, `RemoteExpediente`, `RemoteNotification`, `RemoteNavigationGraph`, `RemoteFilingRef`).
 - Created: `src/aeat/remote/_status.py` (closed `RemoteFilingStatus` StrEnum + `classify_status` helper with `UNKNOWN` fallback and warning log).
 - Created: `src/aeat/remote/_protocols.py` (`RemoteFilingFetcher`, `NotificationReader` runtime-checkable Protocols).
-- Created: `src/aeat/remote/_errors.py` (`RemoteFetchError` hierarchy plus `RemoteParseError`, `RemoteNavigationError`, rooted at `aeat.errors.AeatError`).
+- Created: `src/aeat/remote/_errors.py` (`RemoteFetchError` hierarchy plus `RemoteParseError`, `RemoteNavigationError`, rooted at `aeat.core.errors.AeatError`).
 - Created: `src/aeat/remote/filings/__init__.py`, `src/aeat/remote/filings/_filing_detail_130.py`, `src/aeat/remote/filings/_filing_detail_303.py`, `src/aeat/remote/filings/_filing_detail_390.py` (per-modelo typed record shapes; concrete parsers deferred to Phase 2).
 - Created: `src/aeat/remote/test_schema.py`, `src/aeat/remote/test_status.py`, `src/aeat/remote/test_protocols.py` (strict / frozen / extra-forbid / enum-exhaustiveness / Protocol-conformance coverage).
 - Created: `src/aeat/remote/test_no_write_surface.py` + `src/aeat/remote/_no_write_surface_fixture.txt` (Layer 3 grep guard walking the full tree without whitelisting; forbidden tokens loaded from the sidecar fixture at runtime).
@@ -50,7 +50,7 @@ whitelisting.
 
 Every pydantic record uses `ConfigDict(strict=True, frozen=True,
 extra="forbid")` and carries a `mode: Literal["read"] = "read"`
-field. `CasillaDataType` is reused from `aeat.schema` so remote
+field. `CasillaDataType` is reused from `aeat.domain.schema` so remote
 casillas type-check against the curated catalogue without fanning
 out a duplicate enum. `AwareDatetime` is used for every timestamp
 so tz-naive datetimes fail validation up-front. Monetary values in
@@ -62,7 +62,7 @@ the per-modelo detail records are typed `Decimal`.
 `classify_status` helper that performs case-insensitive,
 whitespace-tolerant, accent-sensitive matching against the known
 Spanish strings. Unknown input folds into `UNKNOWN` and emits a
-`logging.warning` through `aeat.logging.get_logger(__name__)` with
+`logging.warning` through `aeat.core.logging.get_logger(__name__)` with
 the raw string and optional modelo / period context.
 
 `RemoteFilingFetcher` and `NotificationReader` are
@@ -98,7 +98,7 @@ under the subpackage.
 - Repository-wide `uv run pytest` (default unit-only selector) -
   3126 passed, 5 skipped, 28 deselected. One pre-existing, unrelated
   failure in `tests/test_marker_integrity.py` against
-  `src/aeat/submission/_formats/_test_fixtures.py` that predates
+  `src/aeat/adapters/outbound/aeat/export/_formats/_test_fixtures.py` that predates
   this branch and is out of Phase 1 scope (verified by stashing the
   working tree; failure persists on the unmodified branch tip).
 

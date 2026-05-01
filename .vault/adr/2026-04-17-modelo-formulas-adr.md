@@ -35,10 +35,10 @@ Spanish autónomo in estimación directa owes.
 
 Today:
 
-- `aeat.casillas` ships a `FormulaReference` pydantic stub with a
+- `aeat.domain.casillas` ships a `FormulaReference` pydantic stub with a
   free-form `expression: str` field. The string is never parsed or
   executed; it is documentation-only.
-- `aeat.filing._builders.modelo_130` ships a hard-coded Python
+- `aeat.application.filing._builders.modelo_130` ships a hard-coded Python
   computation of a synthetic 7-casilla Modelo 130, explicitly marked
   as a stand-in until #173 lands. The synthetic layout does not
   match the real AEAT Modelo 130 19-casilla form.
@@ -52,7 +52,7 @@ Today:
 #173 must deliver:
 
 1. A deterministic, sandboxed, period-aware **formula engine**
-   (`aeat.formulas`).
+   (`aeat.domain.formulas`).
 2. A codified **Modelo 130 ruleset** (19 casillas, 2024 and 2025
    periods) as the proof-of-concept.
 3. **Forward (derive)** and **reverse (audit)** evaluation modes
@@ -86,11 +86,11 @@ Today:
   computed value records formula id, operator, operand refs,
   operand values, ruleset version, and result.
 - **Relative-imports mandate** (#162): every internal import inside
-  `src/aeat/formulas/` must be relative (`from ._casilla import ...`
+  `src/aeat/domain/formulas/` must be relative (`from ._casilla import ...`
   or `from ..models import ...`). Absolute `aeat.*` imports allowed
   only in `tests/` and `scripts/`.
 - **Public-API discipline**: external callers import from
-  `aeat.formulas` only. Internal modules are prefixed with `_`.
+  `aeat.domain.formulas` only. Internal modules are prefixed with `_`.
 - **Testing mandate**: `@pytest.mark.unit` colocated next to each
   module. No mocks / patches / stubs — real pydantic instances and
   real `graphlib` invocations. Coverage contributes to the 60%
@@ -104,10 +104,10 @@ Today:
 
 ### 1. Subpackage location and layout
 
-A new public subpackage `aeat.formulas` is created. Layout:
+A new public subpackage `aeat.domain.formulas` is created. Layout:
 
 ```
-src/aeat/formulas/
+src/aeat/domain/formulas/
   __init__.py          # public API re-exports
   _codes.py            # FormulaOp StrEnum (ADD, SUB, MUL, DIV, MIN, MAX, IF,
                        #   BRACKETS, PERCENT, ROUND, LITERAL, CASILLA_REF,
@@ -119,7 +119,7 @@ src/aeat/formulas/
   _registry.py         # RulesetRegistry.resolve(modelo, period, territory)
   _ledger.py           # ComputationLedger, LedgerEntry, Discrepancy
   _engine.py           # Engine.derive / Engine.audit_against
-  _errors.py           # FormulasError hierarchy under aeat.errors.AeatError
+  _errors.py           # FormulasError hierarchy under aeat.core.errors.AeatError
   _rulesets/           # concrete ruleset modules
     __init__.py
     _common.py         # shared helpers (build_ruleset, param_table, ...)
@@ -130,10 +130,10 @@ src/aeat/formulas/
 ```
 
 Rationale: follows the existing subpackage precedent
-(`aeat.casillas`, `aeat.models`, `aeat.portals`). Keeps the public
-import surface clean (`from aeat.formulas import Engine`) and avoids
-any collision with the issue-#9 `aeat.schema` namespace that may
-land later — #173 owns `aeat.formulas`, #9 owns `aeat.schema`.
+(`aeat.domain.casillas`, `aeat.domain.modelos`, `aeat.domain.portals`). Keeps the public
+import surface clean (`from aeat.domain.formulas import Engine`) and avoids
+any collision with the issue-#9 `aeat.domain.schema` namespace that may
+land later — #173 owns `aeat.domain.formulas`, #9 owns `aeat.domain.schema`.
 
 ### 2. Formula representation — pydantic-graph DSL (no parser)
 
@@ -179,7 +179,7 @@ Operand, Operand, Operand])` enforces arity 3; etc.
 ParamRef | Formula`. Recursive — formulas nest arbitrarily deep.
 
 `CasillaDefinition` ships human-facing labels via the
-`Translatable` TypedDict from `aeat.i18n` (trilingual contract):
+`Translatable` TypedDict from `aeat.core.i18n` (trilingual contract):
 
 ```python
 class CasillaDefinition(BaseModel):
@@ -188,7 +188,7 @@ class CasillaDefinition(BaseModel):
     casilla_id: str
     label: Translatable          # es (authoritative), en, hu
     computed: bool
-    data_type: CasillaDataType   # from aeat.casillas
+    data_type: CasillaDataType   # from aeat.domain.casillas
     legal_basis: tuple[LegalCitation, ...]
 ```
 
@@ -211,7 +211,7 @@ class Ruleset(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     ruleset_id: str                 # e.g. "modelo_130.2024"
-    modelo: ModeloCode              # from aeat.models._codes (authoritative)
+    modelo: ModeloCode              # from aeat.domain.modelos._codes (authoritative)
     effective_from: date
     effective_to: date | None       # None = open-ended
     casillas: tuple[CasillaDefinition, ...]
@@ -335,15 +335,15 @@ class Engine:
 
 - Tolerance defaults to 1 cent (`Decimal("0.01")`), matching the
   presentation rounding precision.
-- Logging uses `aeat.logging.get_logger(__name__)` on every
-  module under `aeat.formulas` (per project mandate). The engine
+- Logging uses `aeat.core.logging.get_logger(__name__)` on every
+  module under `aeat.domain.formulas` (per project mandate). The engine
   logs one `info` line per ruleset evaluation (ruleset id +
   casilla count) and `debug` lines per ledger entry; no `print`
   calls anywhere.
 
 ### 7. Error hierarchy
 
-All formula errors inherit from `aeat.errors.AeatError` via an
+All formula errors inherit from `aeat.core.errors.AeatError` via an
 intermediate `FormulasError`:
 
 ```
@@ -364,32 +364,32 @@ to raise `AuditDiscrepancyError` when they want a strict guard.
 
 ### 8. Integration with existing subpackages
 
-- **`aeat.casillas.FormulaReference` stub**: deprecated in-place.
+- **`aeat.domain.casillas.FormulaReference` stub**: deprecated in-place.
   The existing `CasillaRecord.formula: FormulaReference | None`
   slot accepts the old `expression: str` free-form field; we do
-  NOT modify `aeat.casillas.models` in this wave (it would be a
-  breaking change beyond #173 scope). Instead, `aeat.formulas`
+  NOT modify `aeat.domain.casillas.models` in this wave (it would be a
+  breaking change beyond #173 scope). Instead, `aeat.domain.formulas`
   declares its own canonical `FormulaDefinition`, and the
-  `aeat.casillas` stub remains for documentation of the casilla
+  `aeat.domain.casillas` stub remains for documentation of the casilla
   catalogue's intent until a future wave re-plumbs the catalogue
-  onto `aeat.formulas`.
-- **`aeat.models.ModeloCode`**: referenced as the single source of
+  onto `aeat.domain.formulas`.
+- **`aeat.domain.modelos.ModeloCode`**: referenced as the single source of
   truth for modelo identifiers. Rulesets bind to `ModeloCode`.
-  **Naming-collision warning:** `aeat.casillas.models.ModeloCode`
+  **Naming-collision warning:** `aeat.domain.casillas.models.ModeloCode`
   is a *different* symbol (a restricted enum containing only
   `MODELO_130 / 303 / 390` for the casilla corpus). Ruleset
   authors MUST import `from ..models import ModeloCode` (the
-  authoritative registry), NOT from `aeat.casillas.models`. A
+  authoritative registry), NOT from `aeat.domain.casillas.models`. A
   test asserts the ruleset registry binds exclusively to
-  `aeat.models.ModeloCode`.
-- **`aeat.filing._builders.modelo_130`**: NOT modified in this
+  `aeat.domain.modelos.ModeloCode`.
+- **`aeat.application.filing._builders.modelo_130`**: NOT modified in this
   wave. The existing synthetic builder continues to satisfy its
   tests; replacing it with a ruleset-driven equivalent is a
   downstream integration step covered by a follow-up issue and
   plan. Scope-protection: #173 asks for the engine + Modelo 130
   ruleset; it does not ask for the filing-builder rewrite.
-- **`aeat.portals`**, **`aeat.deadlines`**: not touched.
-- **`aeat.cli`**: new `aeat formulas` subcommand wired in.
+- **`aeat.domain.portals`**, **`aeat.domain.deadlines`**: not touched.
+- **`aeat.entrypoints.cli`**: new `aeat formulas` subcommand wired in.
 
 ### 9. Sandboxing / supply-chain hygiene
 
@@ -406,7 +406,7 @@ to raise `AuditDiscrepancyError` when they want a strict guard.
 
 ### 10. Public API surface
 
-From `aeat.formulas`:
+From `aeat.domain.formulas`:
 
 - `Engine`, `ComputationLedger`, `LedgerEntry`, `Discrepancy`,
   `AuditReport`
@@ -434,7 +434,7 @@ All underscored modules are implementation-private.
   malformed ruleset, period ambiguity detection on a constructed
   overlap.
 - The existing synthetic `Modelo130Builder` in
-  `aeat.filing._builders` is NOT modified; its swap to the new
+  `aeat.application.filing._builders` is NOT modified; its swap to the new
   engine is a follow-up issue.
 - Future waves (Modelo 303, 100, 390, ...) reuse the same engine
   without modifying it: each wave adds new rulesets under
@@ -443,9 +443,9 @@ All underscored modules are implementation-private.
   plumbed via `Territory` but NOT exercised in wave 1 — they land
   in wave 2 with their own overlays, tests, and legal-citation
   review.
-- The FormulaReference stub in `aeat.casillas.models` remains; a
+- The FormulaReference stub in `aeat.domain.casillas.models` remains; a
   future wave will re-plumb the casilla catalogue onto
-  `aeat.formulas`. No breakage in wave 1.
+  `aeat.domain.formulas`. No breakage in wave 1.
 
 ## Wave plan (out of scope for this PR; tracked as follow-up)
 

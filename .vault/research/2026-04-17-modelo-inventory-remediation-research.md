@@ -55,11 +55,11 @@ Operational conclusion:
 
 Affected implementation surfaces:
 
-- `src/aeat/models/_codes.py`
-- `src/aeat/models/_entries/modelo_036.py`
-- `src/aeat/models/_entries/modelo_037.py`
-- `src/aeat/models/test_registry.py`
-- `src/aeat/models/test_codes.py`
+- `src/aeat/domain/modelos/_codes.py`
+- `src/aeat/domain/modelos/_entries/modelo_036.py`
+- `src/aeat/domain/modelos/_entries/modelo_037.py`
+- `src/aeat/domain/modelos/test_registry.py`
+- `src/aeat/domain/modelos/test_codes.py`
 
 #### 2. Modelo 130 remains real, but it is conditional for professionals
 
@@ -85,12 +85,12 @@ Operational conclusion:
 
 Affected implementation surfaces:
 
-- `src/aeat/deadlines/_models.py`
-- `src/aeat/deadlines/_applies.py`
-- `src/aeat/deadlines/test_applies.py`
-- `src/aeat/deadlines/test_engine.py`
-- `src/aeat/models/_cli.py`
-- `src/aeat/models/_entries/modelo_130.py`
+- `src/aeat/domain/deadlines/_models.py`
+- `src/aeat/domain/deadlines/_applies.py`
+- `src/aeat/domain/deadlines/test_applies.py`
+- `src/aeat/domain/deadlines/test_engine.py`
+- `src/aeat/domain/modelos/_cli.py`
+- `src/aeat/domain/modelos/_entries/modelo_130.py`
 
 #### 3. Modelo 347 is a real threshold-based annual obligation and belongs in year-plan
 
@@ -111,13 +111,13 @@ Operational conclusion:
 
 Affected implementation surfaces:
 
-- `src/aeat/deadlines/_models.py`
-- `src/aeat/deadlines/_calendar.py`
-- `src/aeat/deadlines/_applies.py`
-- `src/aeat/deadlines/test_applies.py`
-- `src/aeat/deadlines/test_engine.py`
-- `src/aeat/models/_entries/modelo_347.py`
-- `src/aeat/models/_cli.py`
+- `src/aeat/domain/deadlines/_models.py`
+- `src/aeat/domain/deadlines/_calendar.py`
+- `src/aeat/domain/deadlines/_applies.py`
+- `src/aeat/domain/deadlines/test_applies.py`
+- `src/aeat/domain/deadlines/test_engine.py`
+- `src/aeat/domain/modelos/_entries/modelo_347.py`
+- `src/aeat/domain/modelos/_cli.py`
 
 #### 4. Modelo 193 must exist if the catalogue claims annualized retenciones are covered
 
@@ -137,12 +137,12 @@ Operational conclusion:
 
 Affected implementation surfaces:
 
-- `src/aeat/models/_codes.py`
-- `src/aeat/models/_entries/modelo_123.py`
-- new `src/aeat/models/_entries/modelo_193.py`
-- `src/aeat/models/_registry.py`
-- `src/aeat/models/test_codes.py`
-- `src/aeat/models/test_registry.py`
+- `src/aeat/domain/modelos/_codes.py`
+- `src/aeat/domain/modelos/_entries/modelo_123.py`
+- new `src/aeat/domain/modelos/_entries/modelo_193.py`
+- `src/aeat/domain/modelos/_registry.py`
+- `src/aeat/domain/modelos/test_codes.py`
+- `src/aeat/domain/modelos/test_registry.py`
 
 #### 5. Registry and year-plan are not equivalent today
 

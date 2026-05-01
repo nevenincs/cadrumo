@@ -57,7 +57,7 @@ The generic generator `QuarterlyGenParams(modelo, año, template_revision,
 tax_id, ejercicio, period_printed, labels, casilla_values, csv,
 presented_at, thousands_sep)` accepts an arbitrary modelo + label map +
 casilla-value map. It is exactly the surface used by
-`src/aeat/declaracion/test_quarterly_extractors.py` to exercise Modelos
+`src/aeat/adapters/inbound/declaracion/test_quarterly_extractors.py` to exercise Modelos
 111 / 115 / 123 / 131 / 180 / 190 / 193 / 200 / 202 / 347 / 349 / 369 /
 390 / 720 / 840 at the parser level. The label maps for every modelo in
 scope of #340 are already authored in that ruleset-test module; reusing
@@ -70,7 +70,7 @@ layer.
 ### CLI handler shapes
 
 `aeat filing import --from-declaracion <pdf>` → `_handle_declaracion_import`
-in `src/aeat/cli/filing/__init__.py`:
+in `src/aeat/entrypoints/cli/filing/__init__.py`:
 
 1. `parse_declaracion(path, modelo_override, año_override)` →
    `DeclaracionFiling`.
@@ -149,7 +149,7 @@ that production actually emits.
 
 ### PARTIAL threshold
 
-`src/aeat/declaracion/_generic_extractor.py:_derive_status` returns:
+`src/aeat/adapters/inbound/declaracion/_generic_extractor.py:_derive_status` returns:
 - `COMPLETE` when every required casilla is reliably resolved.
 - `PARTIAL` when `coverage >= 0.5`.
 - `FAILED` otherwise.

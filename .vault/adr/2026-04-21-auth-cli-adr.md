@@ -88,10 +88,10 @@ is no top-level entry point that hands out an authenticated
 
 ## Implementation
 
-Create a new sub-app `src/aeat/cli/auth/` with this shape:
+Create a new sub-app `src/aeat/entrypoints/cli/auth/` with this shape:
 
 - `_registry.py` — maps every `AuthProviderKind` to either an
-  implemented provider (delegating to :func:`aeat.auth.select_provider`)
+  implemented provider (delegating to :func:`aeat.adapters.outbound.aeat.auth.select_provider`)
   or an "unavailable" placeholder description. The registry is the
   single source of truth for provider ordering, default resolution,
   and list rendering. Other providers land by flipping
@@ -128,7 +128,7 @@ Create a new sub-app `src/aeat/cli/auth/` with this shape:
 - Resolves the provider via the registry. Unknown kinds → exit code 2.
 - Not-implemented kinds (Cl@ve) → exit code 2 with the message
   "provider {kind} is known but not yet implemented; see EPIC #279".
-- Builds the provider via :func:`aeat.auth.select_provider` and runs
+- Builds the provider via :func:`aeat.adapters.outbound.aeat.auth.select_provider` and runs
   ``await provider.authenticate()``. The authenticator itself enforces
   the AEAT access gate and the cert-health proactive gate.
 - `--non-interactive` short-circuits to an error when the provider's
@@ -168,7 +168,7 @@ Default provider resolution in `_registry.default_kind(settings)`:
 - Else raise `NoConfiguredProviderError` which the CLI wraps in a
   `typer.BadParameter`.
 
-Register the sub-app in `src/aeat/cli/__init__.py` alongside the existing
+Register the sub-app in `src/aeat/entrypoints/cli/__init__.py` alongside the existing
 `status`, `submission`, etc. entries. Help string leads with the Kent
 capability: "AEAT authentication provider management (#285)."
 
@@ -185,9 +185,9 @@ protocol, `AeatAuthenticator`, and the `select_provider` factory.
 
 ## Consequences
 
-- New module tree: `src/aeat/cli/auth/` with the four helpers plus
+- New module tree: `src/aeat/entrypoints/cli/auth/` with the four helpers plus
   tests colocated per `tests/README.md`.
-- `src/aeat/cli/__init__.py` gains one `add_typer` call.
+- `src/aeat/entrypoints/cli/__init__.py` gains one `add_typer` call.
 - `src/aeat/config.py` gains a new `aeat_auth_provider` Settings field
   so `AEAT_AUTH_PROVIDER` is declared in the one authoritative place
   and reflected in `.env.example` per the project mandates.

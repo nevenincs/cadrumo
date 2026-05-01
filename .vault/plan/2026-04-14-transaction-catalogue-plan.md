@@ -11,11 +11,11 @@ related:
 
 # `transaction-catalogue` `phase-1` plan
 
-Deliver issue `#74` as the immutable transaction wrapper and catalogue layer at the T1/T2 seam: new `aeat.financial.transactions` models and helpers, catalogue persistence, `aeat financial txs` CLI commands, additive settings wiring, colocated tests, and mandatory verification/review artefacts.
+Deliver issue `#74` as the immutable transaction wrapper and catalogue layer at the T1/T2 seam: new `aeat.domain.financial.transactions` models and helpers, catalogue persistence, `aeat financial txs` CLI commands, additive settings wiring, colocated tests, and mandatory verification/review artefacts.
 
 ## Proposed Changes
 
-- Create the `aeat.financial.transactions` subpackage with strict enums, models, errors, persistence helpers, internal typing stubs, and a single public API surface.
+- Create the `aeat.domain.financial.transactions` subpackage with strict enums, models, errors, persistence helpers, internal typing stubs, and a single public API surface.
 - Implement deterministic transaction ID generation from the merged T1 `RawTransaction` shape while preserving the wrapped raw record verbatim.
 - Add immutable catalogue operations for lookup, invoice linking, and manual/automatic classification updates.
 - Add JSON persistence with atomic writes and a configured default storage directory.
@@ -25,7 +25,7 @@ Deliver issue `#74` as the immutable transaction wrapper and catalogue layer at 
 ## Tasks
 
 - `Phase 1: establish the transaction package surface`
-  1. Create `aeat.financial.transactions` with public `__init__.py` and private underscore modules.
+  1. Create `aeat.domain.financial.transactions` with public `__init__.py` and private underscore modules.
   1. Define enums, errors, `Transaction`, `TransactionCatalogue`, and internal `Protocol` stubs.
   1. Implement deterministic transaction ID helpers and catalogue constructors that reject duplicate logical IDs.
 - `Phase 2: add persistence and immutable service functions`
@@ -59,7 +59,7 @@ This work is best executed sequentially because the package surface, persistence
 - **Scope check against issue `#74`:** The plan covers the new transaction subpackage, persistence, CLI, settings, Protocol stubs, and colocated tests, and excludes submission writes, provider ingest changes, invoice/tax-category implementations, VAT logic, and modelo catalogue work.
 - **TDP check against issue `#104`:** The plan keeps the work at the T1/T2 seam, preserves raw provenance verbatim, and avoids reaching into T3/T4 classification-rule ownership beyond the data slots this issue explicitly owns.
 - **Convention check against active repo instructions:** The plan stays inside `src/aeat/`, uses strict pydantic v2, `StrEnum`, pytest-only tests, additive settings changes, and the canonical `AEAT_LIVE_TESTS_ENABLED` contract.
-- **Sibling-surface check:** The plan avoids `src/aeat/submission/`, avoids `src/aeat/models/`, imports `RawTransaction` from `aeat.financial.providers`, and keeps invoice/category references as internal typing-only stubs.
+- **Sibling-surface check:** The plan avoids `src/aeat/adapters/outbound/aeat/export/`, avoids `src/aeat/domain/modelos/`, imports `RawTransaction` from `aeat.domain.financial.providers`, and keeps invoice/category references as internal typing-only stubs.
 - **Repository policy check:** No GitHub Actions work is introduced; local gates remain authoritative.
 - **`CLAUDE.md` check:** No `CLAUDE.md` file exists in this worktree. The review was therefore performed against the active `AGENTS.md`, vaultspec rules, the issue set named by the user, and the existing codebase conventions.
 - **Review outcome:** Approved for execution under the user’s explicit instruction to run the full pipeline without pausing for plan approval.

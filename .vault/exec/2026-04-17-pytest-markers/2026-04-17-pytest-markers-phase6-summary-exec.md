@@ -31,7 +31,7 @@ related:
 
 | Sub-check | Env state                                          | Command                                                                                  | Expected | Result |
 | :-------- | :------------------------------------------------- | :--------------------------------------------------------------------------------------- | :------- | :----- |
-| 6.1a      | no env, non-TTY                                    | `uv run pytest --collect-only src/aeat/submission/ -m live_write -q`                    | 0        | 0      |
+| 6.1a      | no env, non-TTY                                    | `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/ -m live_write -q`                    | 0        | 0      |
 | 6.1b      | both env set, non-TTY                              | `AEAT_LIVE_WRITE_UNSAFE_BYPASS=1 AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM="..." uv run ...` | 0        | 0      |
 | 6.1c      | both env set + interactive TTY (manual-only)       | (documented in tests/README.md for human execution)                                       | positive | deferred to operator |
 | 6.1d      | confirm phrase alone, non-TTY                      | `AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM="..." uv run ...`                                  | 0        | 0      |
@@ -41,7 +41,7 @@ related:
 
 ## charter-invariants-preserved
 
-- `git diff src/aeat/submission/_engine.py` -> empty. Charter R5 runtime refusal byte-identical.
+- `git diff src/aeat/adapters/outbound/aeat/export/_engine.py` -> empty. Charter R5 runtime refusal byte-identical.
 - `git diff src/aeat/config.py` shows only: two additive new fields, plus a cosmetic description text change on `aeat_live_tests_enabled` replacing `@pytest.mark.live` with `@pytest.mark.live_read` (no default/name/type changes, no touching of `aeat_live_submit_enabled`). Charter R3 invariants preserved.
 - `grep -n "aeat_live_submit_enabled" src/aeat/config.py env/.env.example` returns identical lines to pre-refactor: the env gate is untouched.
 

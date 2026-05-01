@@ -1,6 +1,6 @@
 ---
 name: 2026-04-13-modelo-inventory-phase2-enums-models
-description: Phase 2 execution record — enums and primitive pydantic models for aeat.models (#108)
+description: Phase 2 execution record — enums and primitive pydantic models for aeat.domain.modelos (#108)
 type: exec
 tags:
   - "#exec"

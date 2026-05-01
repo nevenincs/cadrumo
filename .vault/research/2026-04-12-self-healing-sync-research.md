@@ -53,11 +53,11 @@ AEAT-side state. The runner is strictly read-only against AEAT.
   plan, every run result is a strict frozen pydantic v2 model.
   Closed enumerations are `enum.StrEnum`. No bare `dict[str, Any]`
   in public signatures or persisted files.
-- **Public API discipline.** Callers import from `aeat.sync` only.
+- **Public API discipline.** Callers import from `aeat.application.sync` only.
   Internal modules are `_`-prefixed.
-- **Subpackage layout.** All Python under `src/aeat/sync/`.
-- **Errors** inherit from `aeat.errors.AeatError` via `SyncError`.
-- **Logging** via `aeat.logging.get_logger(__name__)`.
+- **Subpackage layout.** All Python under `src/aeat/application/sync/`.
+- **Errors** inherit from `aeat.core.errors.AeatError` via `SyncError`.
+- **Logging** via `aeat.core.logging.get_logger(__name__)`.
 - **Tests** use pytest, `@pytest.mark.unit` / `@pytest.mark.live`.
   NO mocks/patches/fakes — test doubles are real Protocol-
   conforming classes.
@@ -134,7 +134,7 @@ property of the runner.
 
 ## investigation: live fetch approach
 
-- Authenticated Playwright browser session via `aeat.browser.
+- Authenticated Playwright browser session via `aeat.adapters.outbound.aeat.browser.
   BrowserSession` (already merged from #16).
 - Certificate loaded via #8's planned `LoadedCertificate` +
   `preload_into_browser_context` surface — Protocol-stub for now.

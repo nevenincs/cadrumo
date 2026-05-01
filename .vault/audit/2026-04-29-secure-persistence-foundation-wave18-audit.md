@@ -27,11 +27,11 @@ Wave-18 in scope:
   roots) and D2 (rotation lock-target alignment with the writer
   convention).
 - ``default_blob_store_roots`` correction in
-  ``src/aeat/storage/_rotation.py``.
+  ``src/aeat/adapters/persistence/storage/_rotation.py``.
 - ``RotationPlanEntry.lock_path_for`` method + ``rotate_master_key``
   call-site update.
 - 8 new regression tests in
-  ``src/aeat/storage/_test_rotation.py`` (3 covering the blob-store
+  ``src/aeat/adapters/persistence/storage/_test_rotation.py`` (3 covering the blob-store
   helper, 5 covering the lock-target alignment).
 - Operator runbook note in ``docs/security-runbook.md`` for
   installations that ran rotation before the fix.

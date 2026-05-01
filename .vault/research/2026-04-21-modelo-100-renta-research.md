@@ -76,7 +76,7 @@ Each is a one-line formula; the tarifa table is a small constant table. This is 
 
 ## Structural implementation
 
-New module: `src/aeat/borrador/` (following cluster A's taxonomy naming — the BORRADOR / declaración / predeclaración all feed Modelo 100 import).
+New module: `src/aeat/adapters/inbound/borrador/` (following cluster A's taxonomy naming — the BORRADOR / declaración / predeclaración all feed Modelo 100 import).
 
 Registry extends cluster D's pattern with a `ModeloClass` axis: "summary-block-only" vs. "full-anexo" (future). MVP registers one extractor: `_extractors/modelo_100_summary_v2024.py`.
 
@@ -89,7 +89,7 @@ Registry extends cluster D's pattern with a `ModeloClass` axis: "summary-block-o
 ## Open questions (for ADR)
 
 1. **Cluster F as its own EPIC?** Recommendation: **within EPIC #305** for the summary-block MVP; open a follow-up EPIC for full-anexo coverage later.
-2. **Ruleset ownership**: does Modelo 100's ruleset live in `src/aeat/formulas/_rulesets/` like the others, or in a dedicated `src/aeat/formulas/_rulesets/renta/` subfolder given the eventual size? Recommendation: same folder for MVP; split later.
+2. **Ruleset ownership**: does Modelo 100's ruleset live in `src/aeat/domain/formulas/_rulesets/` like the others, or in a dedicated `src/aeat/domain/formulas/_rulesets/renta/` subfolder given the eventual size? Recommendation: same folder for MVP; split later.
 3. **XFA fallback**: any Renta PDF < 2020 probably has XFA. Recommendation: **MVP targets 2020+**; older Rentas need their own plan.
 4. **Kent's first Renta might be the borrador, not the declaración**. CLI should accept both under `--from-borrador` and `--from-declaracion` flags — dispatch to the same summary-block extractor internally.
 5. **Watermarked Renta-Web-Open PDFs** have a "VISTA PREVIA" watermark across every page. Does this interfere with extraction? Answer: **no, text layer is unaffected by watermark rendering** — confirmed via spot-inspection.

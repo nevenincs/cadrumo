@@ -36,7 +36,7 @@ modified. Additions:
    pattern.
 
 3. Per-modelo label maps inlined as module-level constants (mirroring
-   the existing `aeat.declaracion.test_quarterly_extractors` references
+   the existing `aeat.adapters.inbound.declaracion.test_quarterly_extractors` references
    so the values stay aligned with parser ground truth).
 
 4. Per-modelo happy-path values that satisfy the formulas in each

@@ -12,7 +12,7 @@ related:
 
 ## What
 
-`src/aeat/formulas/_rulesets/test_operand_swap_mutation.py`:
+`src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py`:
 
 - Imported `MODELO_100_2024 / 2025 / 2026`.
 - Added `_modelo_100_full_fixture()` — single asymmetric fixture
@@ -43,7 +43,7 @@ clamp_pos-wrapped sub_op chain). 0545 requires the
 
 ## Verification
 
-`uv run pytest src/aeat/formulas/_rulesets/test_operand_swap_mutation.py -q`
+`uv run pytest src/aeat/domain/formulas/_rulesets/test_operand_swap_mutation.py -q`
 → 60 passed. Each M100 sub_op swap produces:
 
 - 0720: baseline 4 600,75 € → mutated -4 600,75 €, delta 9 201,50 €.

@@ -49,10 +49,10 @@ This research is grounded in four source classes:
 - Kent-journey failure analysis in
   `.vault/audit/2026-04-17-kent-ux-journey-audit.md` and
   `.vault/audit/2026-04-18-kent-data-prep-journey-audit.md`
-- The shipped CLI tree and help text in `src/aeat/cli/__init__.py`,
-  `src/aeat/cli/status/__init__.py`, `src/aeat/cli/financial/__init__.py`,
-  `src/aeat/cli/review/__init__.py`, `src/aeat/cli/filing/__init__.py`,
-  `src/aeat/cli/workflow/next.py`, `src/aeat/cli/workflow/run.py`, and live
+- The shipped CLI tree and help text in `src/aeat/entrypoints/cli/__init__.py`,
+  `src/aeat/entrypoints/cli/status/__init__.py`, `src/aeat/entrypoints/cli/financial/__init__.py`,
+  `src/aeat/entrypoints/cli/review/__init__.py`, `src/aeat/entrypoints/cli/filing/__init__.py`,
+  `src/aeat/entrypoints/cli/workflow/next.py`, `src/aeat/entrypoints/cli/workflow/run.py`, and live
   `uv run aeat ... --help` output
 
 Two older audit findings are already partially remediated on `main` and must
@@ -81,7 +81,7 @@ commands such as `hello`.
 
 #### Important current-state facts
 
-- `status` is publicly advertised but effectively empty for Kent today. `aeat status --help` shows no visible subcommands, while `src/aeat/cli/status/__init__.py` still registers `expedientes`, `notificaciones`, `devoluciones`, `borrador`, `datos-fiscales`, and `calendario` as `hidden=True`.
+- `status` is publicly advertised but effectively empty for Kent today. `aeat status --help` shows no visible subcommands, while `src/aeat/entrypoints/cli/status/__init__.py` still registers `expedientes`, `notificaciones`, `devoluciones`, `borrador`, `datos-fiscales`, and `calendario` as `hidden=True`.
 - `submission` is the cleanest statement of the export-first contract. It advertises `preflight`, `dry-run`, `export`, `verify`, `diff`, `schemas`, `check-nif`, `show`, and `list`, and explicitly says there is no default CLI live-submit command.
 - `workflow` duplicates part of the `filing -> review -> submission` path and still exposes `--no-dry-run` plus `--i-understand-this-is-real`. That is a naming and policy tension the ADR must address.
 - `financial` is materially ahead of the April 18 audit snapshot. The shipped surface now includes `txs build`, `classify`, `classify-llm`, invoice linking and reconciliation, and `financial profile set-ratio`. The data-prep language is still system-shaped, but the surface is no longer purely browse-only.

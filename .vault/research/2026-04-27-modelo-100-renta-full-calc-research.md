@@ -124,13 +124,13 @@ artefact and the gap from the megaproject DoD.
 
 | Existing artefact | Path | Coverage | Gap to megaproject DoD |
 |---|---|---|---|
-| Summary ruleset (2025 only) | `src/aeat/formulas/_rulesets/modelo_100_summary_2025.py` | 12 casillas (4 inputs + 4 inputs + 4 computed). `variant="summary"`; default slot reserved | Need full-form 2024/2025/2026 default-variant rulesets |
-| Summary ruleset tests | `src/aeat/formulas/_rulesets/test_modelo_100_summary_2025.py` | Engine-anchored; 6 cases | Need per-anexo per-year worked examples |
-| Borrador summary extractor | `src/aeat/borrador/_extractors/modelo_100_summary_v2025.py` | 27 casilla regex map | Need multi-anexo extension for 2024/2025/2026 |
+| Summary ruleset (2025 only) | `src/aeat/domain/formulas/_rulesets/modelo_100_summary_2025.py` | 12 casillas (4 inputs + 4 inputs + 4 computed). `variant="summary"`; default slot reserved | Need full-form 2024/2025/2026 default-variant rulesets |
+| Summary ruleset tests | `src/aeat/domain/formulas/_rulesets/test_modelo_100_summary_2025.py` | Engine-anchored; 6 cases | Need per-anexo per-year worked examples |
+| Borrador summary extractor | `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py` | 27 casilla regex map | Need multi-anexo extension for 2024/2025/2026 |
 | Synthetic generator | `tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_100_generator.py` | `Modelo100GenParams` Pydantic v2; `casilla_values: Mapping[str, Decimal]` flexible | Multi-anexo layout; per-año variant |
-| Declaración parser dir | `src/aeat/declaracion/_parsers/modelo_100/{_extractor.py,_scanner.py}` | Three template revisions: 2021 legacy, 2022 modern, 2023 modern. 84/83/86 casillas. `ExtractionStatus.UNVERIFIABLE` (empty required-set) | Need 2024/2025/2026 template revisions; tighter required-set |
-| Modelo entry metadata | `src/aeat/models/_entries/modelo_100.py` | LIRPF art. 27 citation + Orden HAC/265/2025 (BOE-A-2025-5049) | Already aware of M100 2024 Orden — useful BOE anchor |
-| Borrador-dispatch CLI | `aeat filing import --from-borrador` | Routes M100 PDFs through `aeat.borrador` parser | M100 is the **only** Tier-L modelo that dispatches via `--from-borrador`; this is unique |
+| Declaración parser dir | `src/aeat/adapters/inbound/declaracion/_parsers/modelo_100/{_extractor.py,_scanner.py}` | Three template revisions: 2021 legacy, 2022 modern, 2023 modern. 84/83/86 casillas. `ExtractionStatus.UNVERIFIABLE` (empty required-set) | Need 2024/2025/2026 template revisions; tighter required-set |
+| Modelo entry metadata | `src/aeat/domain/modelos/_entries/modelo_100.py` | LIRPF art. 27 citation + Orden HAC/265/2025 (BOE-A-2025-5049) | Already aware of M100 2024 Orden — useful BOE anchor |
+| Borrador-dispatch CLI | `aeat filing import --from-borrador` | Routes M100 PDFs through `aeat.adapters.inbound.borrador` parser | M100 is the **only** Tier-L modelo that dispatches via `--from-borrador`; this is unique |
 | Kent integration test | `tests/integration/test_kent_workflows.py::TestKentImportsModelo100SummaryBorrador` | 3 cases (EN happy / ES happy / drift NEEDS_REVIEW) | Extend with per-año 2024/2025/2026 + multi-anexo cases |
 | Coverage matrix row | `docs/coverage/modelos.md` row for M100 | Schema 🚧, ruleset 🚧 (summary 12), CLI ✅ (`--from-borrador`), declaración ✅ (summary MVP) | Flip to ✅ in every applicable column |
 
@@ -246,7 +246,7 @@ per-modelo node count must be added to the `EXPECTED_COUNTS` dict in
 `percent_rate_compound_skipped`, `percent_rate_casilla_ref_skipped`,
 `brackets_threshold_non_terminal`, `mul_div_scalar`. The
 `test_mutator_exhaustiveness.py` orphan-node defense auto-fails if any
-new Formula/Operand subclass appears in `aeat.formulas` without
+new Formula/Operand subclass appears in `aeat.domain.formulas` without
 mutator registration, but per-ruleset counts are explicit (forces
 coverage review).
 
@@ -321,16 +321,16 @@ emits per-ruleset coverage + aggregate report; exit 1 on any gap.
 
 ### Errors + logging
 
-All domain errors inherit from `aeat.errors.AeatError`. Formula layer
+All domain errors inherit from `aeat.core.errors.AeatError`. Formula layer
 exposes `FormulasError`, `RulesetValidationError`, `FormulaCycleError`,
 `CasillaNotDefinedError`, `MissingRulesetError`, `AmbiguousPeriodError`,
 `EvaluationError`, `AuditDiscrepancyError`. Logging uses
-`aeat.logging.get_logger(__name__)` (never bare logging); the logger
+`aeat.core.logging.get_logger(__name__)` (never bare logging); the logger
 applies `SecretScrubbingFilter` automatically (NIF, api_key, etc.).
 
 ### Synthetic factory layer
 
-`aeat.testing` exposes `FilingRecord`, `FixtureCasilla`,
+`aeat.domain.testing` exposes `FilingRecord`, `FixtureCasilla`,
 `FilingRecordPeriodKind`, `FilingRecordScenario`, plus
 `load_filing_history`, `compute_record_id`, `synthesize_filing_draft`.
 Every fixture file carries top-level `synthetic: true` literal +
@@ -338,7 +338,7 @@ Every fixture file carries top-level `synthetic: true` literal +
 
 ### Registry pattern
 
-`src/aeat/formulas/_rulesets/__init__.py`: import each `RULESET` with
+`src/aeat/domain/formulas/_rulesets/__init__.py`: import each `RULESET` with
 alias `MODELO_<code>_<year>`, add to `ALL_RULESETS` tuple in numeric +
 year ascending order, mirror in `__all__`. New M100 rulesets land at
 `MODELO_100_2024`, `MODELO_100_2025`, `MODELO_100_2026` (default
@@ -661,7 +661,7 @@ below is cited to its BOE consolidated-text URL or modifying law.
 | Ejercicio | Orden HAC | Fecha | BOE id | Status at 2026-04-27 |
 |---|---|---|---|---|
 | 2023 | HAC/265/2024 | 18 marzo 2024 | `BOE-A-2024-5721` | published |
-| 2024 | HAC/242/2025 | 13 marzo 2025 | `BOE-A-2025-5049` | published (already cited in `src/aeat/models/_entries/modelo_100.py`) |
+| 2024 | HAC/242/2025 | 13 marzo 2025 | `BOE-A-2025-5049` | published (already cited in `src/aeat/domain/modelos/_entries/modelo_100.py`) |
 | 2025 | HAC/277/2026 | 25 marzo 2026 | `BOE-A-2026-7041` | published |
 | 2026 | not yet | — | — | **unverifiable**; precedent ~feb-mar 2027 |
 
@@ -954,7 +954,7 @@ final. Each review's findings captured in per-wave exec record.
 
 After each implementation wave: `aeat audit rulesets citations` 100%;
 `just lint && just typecheck && just hooks` green;
-`just test src/aeat/formulas/_rulesets/test_modelo_100*` green;
+`just test src/aeat/domain/formulas/_rulesets/test_modelo_100*` green;
 mutation kill-rate ≥ 90% on newly-added M100 nodes; per-wave exec
 record captures audit results.
 
@@ -962,7 +962,7 @@ record captures audit results.
 
 1. **Sub-package precedent.** No `_rulesets/` sub-package exists today.
    ADR D1 introduces one. Confirm with the user / sibling reviewer that
-   `src/aeat/formulas/_rulesets/modelo_100/` as a sub-package is
+   `src/aeat/domain/formulas/_rulesets/modelo_100/` as a sub-package is
    acceptable, or fall back to flat-per-year.
 2. **Per-CCAA scope discipline.** The original `#317` issue body
    permitted "either all 17 CCAA or Kent's declared CCAA only with
@@ -984,7 +984,7 @@ record captures audit results.
 
 ## 10. Implementation patterns to mirror — quick reference card
 
-When authoring `src/aeat/formulas/_rulesets/modelo_100/anexo_<X>_<año>.py`:
+When authoring `src/aeat/domain/formulas/_rulesets/modelo_100/anexo_<X>_<año>.py`:
 
 1. Module docstring narrating year-delta vs. prior año + scope.
 2. `_label(es, en, hu)` private helper.
@@ -1012,7 +1012,7 @@ When authoring `src/aeat/formulas/_rulesets/modelo_100/anexo_<X>_<año>.py`:
 - Foral regimes (País Vasco / Navarra) — `#424`.
 - Tier-S / Tier-R modelos.
 - IVA umbrella `#345`.
-- Modifications to `aeat.storage` / `aeat.financial` (`#216`).
+- Modifications to `aeat.adapters.persistence.storage` / `aeat.domain.financial` (`#216`).
 - Any new CLI commands beyond `aeat audit rulesets citations`.
 - Live AEAT submission (permanently forbidden per `#432`).
 - Pre-2020 RENTA XFA template support.

@@ -24,7 +24,7 @@ Delivered the read-only AEAT status reader as
 surface, a fully-wired *Mis expedientes* parser tested against a
 trimmed fixture, stub fetchers for the remaining five surfaces, a
 short-lived file cache, a `StatusReader` driver composing
-`aeat.browser.BrowserSession` and a `CertificateBackend` Protocol
+`aeat.adapters.outbound.aeat.browser.BrowserSession` and a `CertificateBackend` Protocol
 stub, CLI subcommands under `aeat status`, and 49 colocated unit
 tests.
 
@@ -51,7 +51,7 @@ tests.
   `test_live.py` — colocated unit + live tests.
 - `src/aeat/status/_parsers/test_expedientes.py` — fixture-driven
   parser test.
-- `src/aeat/cli/status/__init__.py` — typer sub-app.
+- `src/aeat/entrypoints/cli/status/__init__.py` — typer sub-app.
 - `tests/fixtures/aeat-pages/README.md` — trimming procedure.
 - `tests/fixtures/aeat-pages/expedientes/sample.html` — trimmed,
   PII-scrubbed fixture.
@@ -67,7 +67,7 @@ tests.
 - `src/aeat/config.py` — three additive fields under a new
   `Status reader (#43)` block.
 - `env/.env.example` — three corresponding env vars.
-- `src/aeat/cli/__init__.py` — registers the `aeat status`
+- `src/aeat/entrypoints/cli/__init__.py` — registers the `aeat status`
   sub-app.
 
 ## Code review findings
@@ -83,8 +83,8 @@ Self-review against the mandatory code-review checklist:
 - Cache TTL is enforced and configurable: ✔
   (`AEAT_STATUS_CACHE_TTL_S`, `test_cache.py::test_ttl_expiry`).
 - Typed signatures, Google-style docstrings: ✔.
-- Errors inherit from `aeat.errors.AeatError`: ✔ (`test_errors.py`).
-- Logging via `aeat.logging.get_logger(__name__)`: ✔.
+- Errors inherit from `aeat.core.errors.AeatError`: ✔ (`test_errors.py`).
+- Logging via `aeat.core.logging.get_logger(__name__)`: ✔.
 - Public API discipline: callers import from `aeat.status` only:
   ✔ (single-surface re-export list in `__init__.py`).
 - No mocks/patches/fakes/stubs in any test: ✔ — the reader tests

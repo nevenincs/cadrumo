@@ -17,9 +17,9 @@ This research grounds issue `#76` at the T3 Enrich step of the Transaction Data 
 
 ### Upstream contract already on main
 
-- `aeat.financial.transactions.Transaction` (`#74`) is on `main`. It exposes a `transaction_id` foreign-key slot callable from attachment records. Attachments must treat that identifier as opaque and hold references as plain strings validated at typing level only.
-- `aeat.financial.providers.RawTransaction` (`#73`) carries byte-level provenance via `RawProvenance` with a 64-character lowercase SHA-256 discipline and timezone-aware `ingested_at`. The attachment service must mirror that discipline for file hashes and `captured_at` timestamps.
-- `aeat.financial.invoices/` (issue `#75`) is **not yet on main**. Invoice foreign keys must be modelled as plain `str` runtime fields with internal `Protocol` placeholders for typing only.
+- `aeat.domain.financial.transactions.Transaction` (`#74`) is on `main`. It exposes a `transaction_id` foreign-key slot callable from attachment records. Attachments must treat that identifier as opaque and hold references as plain strings validated at typing level only.
+- `aeat.domain.financial.providers.RawTransaction` (`#73`) carries byte-level provenance via `RawProvenance` with a 64-character lowercase SHA-256 discipline and timezone-aware `ingested_at`. The attachment service must mirror that discipline for file hashes and `captured_at` timestamps.
+- `aeat.domain.financial.invoices/` (issue `#75`) is **not yet on main**. Invoice foreign keys must be modelled as plain `str` runtime fields with internal `Protocol` placeholders for typing only.
 
 ### Content-addressed identity
 
@@ -56,14 +56,14 @@ This research grounds issue `#76` at the T3 Enrich step of the Transaction Data 
 
 ### Sibling-branch boundary constraints
 
-- `src/aeat/financial/invoices/` is not on `main` (`#75`). Typing-only `Protocol` stubs in a private `_stubs.py` describe the invoice-reference shape without hard-importing unmerged siblings.
-- `src/aeat/financial/transactions/` *is* on `main` (`#74`) and exposes stable `Transaction`/`transaction_id` surfaces; attachment linking can reference those types at typing level but the service only stores the identifier string at runtime to avoid tight coupling.
-- `src/aeat/submission/` is out of scope entirely.
+- `src/aeat/domain/financial/invoices/` is not on `main` (`#75`). Typing-only `Protocol` stubs in a private `_stubs.py` describe the invoice-reference shape without hard-importing unmerged siblings.
+- `src/aeat/domain/financial/transactions/` *is* on `main` (`#74`) and exposes stable `Transaction`/`transaction_id` surfaces; attachment linking can reference those types at typing level but the service only stores the identifier string at runtime to avoid tight coupling.
+- `src/aeat/adapters/outbound/aeat/export/` is out of scope entirely.
 - `src/aeat/config.py` accepts one additive setting (`AEAT_ATTACHMENTS_DIR`).
 
 ### Verification strategy
 
-- Colocated unit tests under `src/aeat/financial/attachments/` match the repo's financial-subpackage style (see `aeat.financial.transactions`, `aeat.financial.providers`).
+- Colocated unit tests under `src/aeat/domain/financial/attachments/` match the repo's financial-subpackage style (see `aeat.domain.financial.transactions`, `aeat.domain.financial.providers`).
 - Strongest regression checks:
   - Content-addressed deduplication: storing the same bytes twice yields the same `attachment_id` and the same on-disk byte path.
   - Link-merge idempotence: adding an attachment a second time with a new transaction link must merge, not replace.

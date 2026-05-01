@@ -11,16 +11,16 @@ related:
 
 Migrated the modernized downstream consumers to provider-agnostic auth probes.
 
-- Modified: `src/aeat/submission/_protocols.py`
-- Modified: `src/aeat/submission/_preflight.py`
-- Modified: `src/aeat/submission/_engine.py`
-- Modified: `src/aeat/submission/__init__.py`
-- Modified: `src/aeat/cli/submission/_helpers.py`
-- Modified: `src/aeat/cli/submission/preflight.py`
-- Modified: `src/aeat/cli/submission/submit.py`
-- Modified: `src/aeat/cli/doctor.py`
-- Modified: `src/aeat/workflow/_protocols.py`
-- Modified: `src/aeat/workflow/_engine.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/_protocols.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/_preflight.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/_engine.py`
+- Modified: `src/aeat/adapters/outbound/aeat/export/__init__.py`
+- Modified: `src/aeat/entrypoints/cli/submission/_helpers.py`
+- Modified: `src/aeat/entrypoints/cli/submission/preflight.py`
+- Modified: `src/aeat/entrypoints/cli/submission/submit.py`
+- Modified: `src/aeat/entrypoints/cli/doctor.py`
+- Modified: `src/aeat/application/workflow/_protocols.py`
+- Modified: `src/aeat/application/workflow/_engine.py`
 
 ## Description
 
@@ -28,4 +28,4 @@ Replaced `CertificateBackend` / `LoadedCertificate` naming in the modernized sub
 
 ## Tests
 
-Validated the downstream migration with `uv run pytest src/aeat/submission/test_preflight.py src/aeat/submission/test_engine.py src/aeat/submission/test_safety_helpers.py src/aeat/workflow/test_engine.py src/aeat/cli/_test_doctor.py src/aeat/cli/submission/test_cli.py -q`. The submission, workflow, and CLI suites stayed green after the protocol swap.
+Validated the downstream migration with `uv run pytest src/aeat/adapters/outbound/aeat/export/test_preflight.py src/aeat/adapters/outbound/aeat/export/test_engine.py src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py src/aeat/application/workflow/test_engine.py src/aeat/entrypoints/cli/_test_doctor.py src/aeat/entrypoints/cli/submission/test_cli.py -q`. The submission, workflow, and CLI suites stayed green after the protocol swap.

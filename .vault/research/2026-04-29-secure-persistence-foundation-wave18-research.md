@@ -25,9 +25,9 @@ the security blast-radius, and feeds the wave-18 ADR.
 
 ### Evidence
 
-- `src/aeat/storage/_rotation.py:451-453` — `default_blob_store_roots(settings)`
+- `src/aeat/adapters/persistence/storage/_rotation.py:451-453` — `default_blob_store_roots(settings)`
   appends `Path(settings.aeat_secret_store_dir)` (default `var/secrets`).
-- `src/aeat/storage/_materialisation.py:72-75` — the live `SecretStore`
+- `src/aeat/adapters/persistence/storage/_materialisation.py:72-75` — the live `SecretStore`
   is wired with `EncryptedBlobStore(root_dir=Path(resolved.aeat_blob_store_dir))`
   (default `var/blobs`).
 - `src/aeat/config.py:260-267` — the two settings have **distinct
@@ -72,15 +72,15 @@ is untested.
 
 ### Evidence
 
-- `src/aeat/storage/_lock.py:47-49` — `_lock_path_for(target)`
+- `src/aeat/adapters/persistence/storage/_lock.py:47-49` — `_lock_path_for(target)`
   appends `.lock` to whatever path the caller passes. Every
   `exclusive_file_lock(X)` call therefore protects the byte-range on
   `X.lock` (and writes the lock-file as `X.lock`).
-- `src/aeat/filing/_repository.py:102-105` — wave-4 writers compute
+- `src/aeat/application/filing/_repository.py:102-105` — wave-4 writers compute
   `lock_target_for(draft_id)` as `<store>/<draft_id>.lock`, then call
   `exclusive_file_lock(self.lock_target_for(...))`. The actual lock
   file is `<store>/<draft_id>.lock.lock`.
-- `src/aeat/storage/_rotation.py:226-227` — rotation computes
+- `src/aeat/adapters/persistence/storage/_rotation.py:226-227` — rotation computes
   `lock_target = path.with_suffix(path.suffix + ".lock")` for the
   envelope file `<store>/<draft_id>.envelope.json`, yielding
   `<store>/<draft_id>.envelope.json.lock`. Then `exclusive_file_lock`

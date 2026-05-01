@@ -66,7 +66,7 @@ wave:
 - **PR2** - Sanitiser tooling. **Superseded** by the standalone
   `pdf-sanitizer` sub-feature (its own research / ADR / plan
   triad — see `related:` above). The sanitiser is no longer a
-  loose `scripts/` helper; it is the `aeat.sanitizer` subpackage
+  loose `scripts/` helper; it is the `aeat.adapters.inbound.sanitizer` subpackage
   with strict-frozen pydantic v2 records, an `aeat sanitize` CLI
   bridge, an adversarial-absence test, and a determinism contract.
   PR2 here means "the sub-feature's plan has reached at least
@@ -117,7 +117,7 @@ should be missing.
 
 ### Walker coverage gap
 
-The `aeat.sede` walker walks `Mis Expedientes` at
+The `aeat.adapters.outbound.aeat.sede` walker walks `Mis Expedientes` at
 `/wlpl/TEWV-CORE/ResumenVlt`. That surface lists *procedures*
 (rectificaciones, sancionadores, gestión recaudación, plus the
 per-year IRPF detail entries for Renta Web filings) — not the
@@ -140,7 +140,7 @@ for offline analysis.
 
 A new feature is needed:
 
-- Extend `aeat.sede` (or a new `aeat.sede._declarations` module)
+- Extend `aeat.adapters.outbound.aeat.sede` (or a new `aeat.adapters.outbound.aeat.sede._declarations` module)
   with a `walk_declarations_register(session, *, modelo: str |
   None = None, ejercicio: int | None = None) -> tuple[
   Declaration, ...]` helper that drives the ZK form via stable-
@@ -306,7 +306,7 @@ For each non-empty wave:
    `scratch/sede-discovery/<utc-ts>/<N>/`.
 2. Verify each PDF is non-empty + content-type was `application/pdf`
    (the discover report records this).
-3. Spot-parse one PDF with `aeat.justificante.parse_justificante`.
+3. Spot-parse one PDF with `aeat.domain.justificante.parse_justificante`.
    If parse fails, P3 is the next phase rather than P4.
 4. No commit yet — captures live in `scratch/`, gitignored.
 
@@ -315,7 +315,7 @@ For each non-empty wave:
 For each modelo whose PDF the existing parser misses:
 
 1. Inspect the failing field via `pdfplumber` text dump.
-2. Extend the regex set in `aeat.justificante._extract`
+2. Extend the regex set in `aeat.domain.justificante._extract`
    (e.g. annual-modelo presented_at variants, NRC line variations).
 3. Add a unit test exercising the extension against the captured
    PDF.
@@ -338,14 +338,14 @@ public API.
    tests/fixtures/justificantes/<modelo>/<year>-<period>.pdf
    --report tests/fixtures/justificantes/<modelo>/<year>-<period>.json`.
 3. Verify the sanitised PDF still parses through
-   `aeat.justificante.parse_justificante` and produces the
+   `aeat.domain.justificante.parse_justificante` and produces the
    synthetic NIF / name / CSV / NRC / IMPORTE values
    (`aeat sanitize check` runs both checks).
 4. Run `aeat sanitize verify <fixture-pdf> --against <yaml>`. Must
    exit zero; non-zero means a `real:` value leaked into the
    sanitised output and the fixture must NOT be committed.
 5. Append the fixture's SHA-256 to
-   `aeat.sanitizer.fixtures.SANITIZED_SHAS` so future
+   `aeat.adapters.inbound.sanitizer.fixtures.SANITIZED_SHAS` so future
    re-sanitisation attempts hit `AlreadySanitizedError`.
 6. Commit: `chore(fixtures): sanitised modelo <N> <year>-<period>
    justificante (#239)`. Per-capture mapping YAML stays gitignored.
@@ -361,12 +361,12 @@ ad-hoc handling here.
 For modelos whose PDFs carry a body beyond the metadata page:
 
 1. Add a new package under
-   `src/aeat/declaracion/_parsers/<modelo>/` mirroring the Modelo
+   `src/aeat/adapters/inbound/declaracion/_parsers/<modelo>/` mirroring the Modelo
    100 layout: `_scanner.py` (per-page text scan +
    value-typing), `_extractor.py` (per-template-revision driver),
    `__init__.py`, `test_extractor.py`.
 2. Register the new template revisions in
-   `src/aeat/declaracion/_extractors/__init__.py`.
+   `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py`.
 3. Tests assert: ≥N casillas extracted (N >= the page-count *
    approximate-rows-per-page floor), every casilla typed
    correctly (`Decimal | int | str | date`), spot-checks for
@@ -389,7 +389,7 @@ When a wave's aggregator inputs all have P5 fixtures landed:
 ### Phase 7 (per wave) — Live reconcile dry-run
 
 1. Build a synthetic APPROVED `FilingDraft` from the sanitised
-   fixture (using `aeat.filing.testing` helpers) under a
+   fixture (using `aeat.application.filing.testing` helpers) under a
    throwaway `--drafts-dir`.
 2. Run `uv run aeat filing reconcile --last --modelo <N> --period
    <P>` against the live (Cl@ve-authenticated) sede.
@@ -404,8 +404,8 @@ When a wave's aggregator inputs all have P5 fixtures landed:
 ### Phase 8 (per wave) — Write-guard re-verify
 
 1. Run `uv run pytest -m unit -k no_write_surface` (existing
-   guards across `aeat.sede`, `aeat.filing.reconciliation`,
-   `aeat.cli.filing._reconcile`).
+   guards across `aeat.adapters.outbound.aeat.sede`, `aeat.application.filing.reconciliation`,
+   `aeat.entrypoints.cli.filing._reconcile`).
 2. If the wave introduced a new module, add a sibling
    `test_no_write_surface.py` per the established pattern.
 3. Commit (only if a new guard test was needed):

@@ -34,9 +34,9 @@ The committed `google-workspace` MCP entry fails on a fresh clone because `works
 
 ## Implementation
 
-- Add a new `aeat.mcp` package with `launch_google_workspace.py` as the dedicated bridge for the `google-workspace` MCP server.
+- Add a new `aeat.entrypoints.mcp` package with `launch_google_workspace.py` as the dedicated bridge for the `google-workspace` MCP server.
 - The launcher will:
-  - load `Settings` via `aeat.config.load_settings()`
+  - load `Settings` via `aeat.core.config.load_settings()`
   - validate that either OAuth desktop credentials or a service-account key path is configured
   - copy the repo-owned settings into the exact upstream env vars `workspace-mcp` expects
   - map `GOOGLE_APPLICATION_CREDENTIALS` to `GOOGLE_SERVICE_ACCOUNT_KEY_FILE`
@@ -44,7 +44,7 @@ The committed `google-workspace` MCP entry fails on a fresh clone because `works
   - force `WORKSPACE_MCP_CREDENTIALS_DIR` to a project-local gitignored directory under `env/`
   - create that credential directory before exec so the upstream credential store never falls back to a home-directory cache
   - replace the current process with the real server invocation
-- `.mcp.json` will be rewired from direct `uvx workspace-mcp` execution to `uv run python -m aeat.mcp.launch_google_workspace`, with no `env` block.
+- `.mcp.json` will be rewired from direct `uvx workspace-mcp` execution to `uv run python -m aeat.entrypoints.mcp.launch_google_workspace`, with no `env` block.
 - The credential cache path is fixed in code as a repo-local path under `env/` rather than introduced as a new `Settings` field, because this issue is about securely consuming the existing credential store, not adding a new operator-facing secret surface.
 - The execution and verification phases must explicitly prove that the new credential-cache location remains a secret surface only in gitignored paths and that the committed tree still contains no copied OAuth values, secret-bearing `env` blocks, or `.mcp.json` secret leakage.
 
@@ -59,5 +59,5 @@ Pinning `WORKSPACE_MCP_CREDENTIALS_DIR` to a repo-local directory is the hardeni
 - `workspace-mcp` refresh tokens and per-user credential files will move under a gitignored repo-local directory instead of `~/.google_workspace_mcp/credentials`.
 - Service-account launches will now work through the MCP shim without requiring operators to learn upstream's alternate env var name.
 - Service-account impersonation remains in scope because `GOOGLE_IMPERSONATE_EMAIL` will cross the launcher boundary unchanged when configured.
-- The project gains a small `aeat.mcp` package and a focused launcher unit-test surface.
+- The project gains a small `aeat.entrypoints.mcp` package and a focused launcher unit-test surface.
 - Fresh-clone startup becomes deterministic, but any future change to upstream auth env names will require updating the launcher bridge explicitly rather than silently inheriting new defaults.

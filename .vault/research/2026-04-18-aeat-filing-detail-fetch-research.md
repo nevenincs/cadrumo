@@ -97,8 +97,8 @@ The missing piece is the **live driver** that:
   to keep module import order safe.
 - **Preserve the #43 Protocol stubs.** The status reader's
   `_protocols.py` (`BrowserSessionLike`, `CertificateBackend`) is the
-  contract boundary; do not add hard imports to `aeat.auth` /
-  `aeat.browser`.
+  contract boundary; do not add hard imports to `aeat.adapters.outbound.aeat.auth` /
+  `aeat.adapters.outbound.aeat.browser`.
 
 ## portal surface — what we know
 

@@ -12,7 +12,7 @@ related:
 
 ## Phase 1 — module skeleton + shared primitives
 
-### Step 1.1 — Create `src/aeat/declaracion/` package
+### Step 1.1 — Create `src/aeat/adapters/inbound/declaracion/` package
 
 - `__init__.py` exporting `parse_declaracion`, `DeclaracionFiling`, `DeclaracionParseError`, `TemplateRevision`, `ExtractionWarning`.
 - `_schema.py` with the pydantic records per ADR §3.
@@ -26,7 +26,7 @@ related:
 
 ### Step 1.2 — Promote shared helpers
 
-Move `_parse_decimal`, `_strip_accents`, `_require` from `src/aeat/justificante/_extract.py` into `src/aeat/_pdf_import/_shared.py`. Retain backwards-compatible re-imports in the justificante module.
+Move `_parse_decimal`, `_strip_accents`, `_require` from `src/aeat/domain/justificante/_extract.py` into `src/aeat/adapters/inbound/pdf/_shared.py`. Retain backwards-compatible re-imports in the justificante module.
 
 ### Step 1.3 — Unit tests for primitives
 
@@ -60,11 +60,11 @@ Move `_parse_decimal`, `_strip_accents`, `_require` from `src/aeat/justificante/
 ### Step 2.4 — CLI wiring
 
 - Extend `aeat filing import` with `--from-declaracion PATH --modelo 130 --año 2025` path.
-- Smoke test in `src/aeat/cli/filing/test_filing_cli.py`.
+- Smoke test in `src/aeat/entrypoints/cli/filing/test_filing_cli.py`.
 
 ### Step 2.5 — Audit pass
 
-- Subagent runs: walk `src/aeat/declaracion/` + its tests, report any TODO / hardcoded path / missing marker / bare dict / non-relative import. Findings → audit doc under `.vault/audit/2026-04-21-declaracion-extractor-phase-2-audit.md`. Any hard findings block phase 3.
+- Subagent runs: walk `src/aeat/adapters/inbound/declaracion/` + its tests, report any TODO / hardcoded path / missing marker / bare dict / non-relative import. Findings → audit doc under `.vault/audit/2026-04-21-declaracion-extractor-phase-2-audit.md`. Any hard findings block phase 3.
 
 ## Phase 3 — Modelo 303 v2024-Sept extractor
 
@@ -86,7 +86,7 @@ Mirrors phase 2 with ~88 casillas and the post-HAC/819/2024 renumbering.
 
 ## Phase 5 — CI + coverage-matrix updates
 
-Per concrete extractor landing, update `docs/coverage/modelos.md` L3 / L1 / L2 anchor columns + the `aeat.declaracion` column.
+Per concrete extractor landing, update `docs/coverage/modelos.md` L3 / L1 / L2 anchor columns + the `aeat.adapters.inbound.declaracion` column.
 
 ## Phase 6 — Loop audit
 
@@ -94,9 +94,9 @@ After phases 2, 3, 4 each: run `vaultspec-code-review` subagent with scope = the
 
 ## Exit criteria (per phase)
 
-- All tests green under `uv run pytest -m unit src/aeat/declaracion/`.
-- `uv run ruff check src/aeat/declaracion/` clean.
-- `uv run ty check src/aeat/declaracion/` clean.
+- All tests green under `uv run pytest -m unit src/aeat/adapters/inbound/declaracion/`.
+- `uv run ruff check src/aeat/adapters/inbound/declaracion/` clean.
+- `uv run ty check src/aeat/adapters/inbound/declaracion/` clean.
 - Code-review audit doc has zero open severity-high findings.
 - Kent UX roleplay recorded in the phase's exec summary.
 

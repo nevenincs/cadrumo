@@ -32,9 +32,9 @@ the authenticated AEAT sede electronica surface and the
 `FilingDraft` to `RemoteFiling` reconciliation layer that surfaces the three
 Kent-observable states `MATCH`, `DIVERGENT`, and `NOT_YET_FOUND`. The ADR
 derived from this document must lock (a) the naming boundary (no collisions
-with the existing local `aeat.verification` module), (b) the
+with the existing local `aeat.application.verification` module), (b) the
 `aeat.remote` subpackage shape, (c) the reconciliation vocabulary built on
-top of `aeat.sync._divergence`, and (d) a five-layer write guard that makes
+top of `aeat.application.sync._divergence`, and (d) a five-layer write guard that makes
 state mutation structurally unreachable.
 
 ## 1. Post-auth AEAT sede electronica navigation graph
@@ -42,7 +42,7 @@ state mutation structurally unreachable.
 ### Known / canonical URL surfaces
 
 The codebase already encodes the following post-auth paths. Values marked
-`Settings` are overridable via `aeat.config.Settings`; constants inline in a
+`Settings` are overridable via `aeat.core.config.Settings`; constants inline in a
 module are provisional (owned by the first feature that needed them).
 
 | Surface | Path / template | Owner | Status |
@@ -53,7 +53,7 @@ module are provisional (owned by the first feature that needed them).
 | Expediente detail page | `/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}` | `Settings.aeat_status_detail_url_template` | provisional, templated fallback - real URL usually comes from the parsed anchor |
 | Mis notificaciones | `AEAT_STATUS_NOTIFICACIONES_PATH` (added by PR #312) | `Settings` | landing in PR #312 (open) |
 | Justificante PDF URL | `Expediente.justificante_url` (parser-captured) | `src/aeat/status/_models.py` | captured live but not navigated by the reader - PDF parse is offline |
-| Portal entries (pre-auth and mixed) | 44 entry modules under `src/aeat/portals/_entries/` | `aeat.portals` | rich metadata, but pre-auth / entry surfaces only |
+| Portal entries (pre-auth and mixed) | 44 entry modules under `src/aeat/domain/portals/_entries/` | `aeat.domain.portals` | rich metadata, but pre-auth / entry surfaces only |
 
 ### Post-auth surfaces the project has not yet modelled
 
@@ -145,7 +145,7 @@ Notable provisional details:
 - `FiledModelo.calculations` is a `RawCalculationPayload` whose `casillas:
   dict[str, str]` is deliberately string-typed (casilla coercion is the
   consumer's job) - the reconciler has to resolve the `data_type` via
-  `aeat.casillas.CasillaRecord` before doing any numeric comparison.
+  `aeat.domain.casillas.CasillaRecord` before doing any numeric comparison.
 - The `complementaria_of` field is captured only when the per-modelo HTML
   surface prints a parent reference; 390 is the annual summary and has no
   rectifying chain.
@@ -165,13 +165,13 @@ Notable provisional details:
   `^(submit|send|ack|acknowledge|mark_|confirm|file_|post_)`.
 
 This is the template issue 239 must replicate verbatim for `aeat.remote` and
-`aeat.filing.reconciliation`, extended with the Spanish verb set.
+`aeat.application.filing.reconciliation`, extended with the Spanish verb set.
 
-## 3. `aeat.auth` surface consumed as-is
+## 3. `aeat.adapters.outbound.aeat.auth` surface consumed as-is
 
 ### Entry points for live authentication
 
-The sanctioned Cl@ve-movil entry points exported from `src/aeat/auth/__init__.py`:
+The sanctioned Cl@ve-movil entry points exported from `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/__init__.py`:
 
 - `ClaveMovilAuthProvider` - the concrete provider that drives a headed
   Playwright session to the QR page, waits on AEAT's own JS polling, and
@@ -224,7 +224,7 @@ The sanctioned Cl@ve-movil entry points exported from `src/aeat/auth/__init__.py
 `Settings` field: `aeat_live_tests_enabled: bool` - gates
 `@pytest.mark.live_read` tests. The canonical env var is
 `AEAT_LIVE_TESTS_ENABLED` (not `AEAT_LIVE_TESTS`). The helper
-`aeat.cli._live.requires_live_enabled()` skips the calling test with a clear
+`aeat.entrypoints.cli._live.requires_live_enabled()` skips the calling test with a clear
 message when the flag is false. `AeatGateEnvSnapshot` also captures two
 sibling vars for the audit log: `AEAT_LIVE_SUBMIT_ENABLED` (write gate, must
 remain false for issue 239) and `PYTEST_CURRENT_TEST` (presence-only signal that
@@ -240,31 +240,31 @@ across `src/aeat/`:
 
 | Symbol | Module | Purpose |
 | --- | --- | --- |
-| `VerificationStatus`, `VerificationVerdict`, `ClassifiedDiscrepancy`, `DiscrepancyCause`, `VerificationError`, `verify_declaracion` | `aeat.verification` | PDF-printed-value vs. formula-engine recomputation of an imported `DeclaracionFiling`. Entirely local - no remote touch. |
-| `VerifyError` | `aeat.casillas.errors` | Casilla-catalogue verifier error. |
-| `VerifySeverity`, `VerifyFinding` | `aeat.setup._models` | Bootstrap doctor verifier records. |
-| `VerificationIssue`, `VerificationReport` | `aeat.financial.vat._schema` | VAT catalogue verifier output. |
-| `VerificationIssue`, `VerificationReport` | `aeat.normatives._schema` | Normative catalogue verifier output. |
-| `VerificationIssue`, `VerificationReport` | `aeat.manuals._verify` | Manual-rules verifier output. |
-| `DivergenceClassification`, `DivergenceKind`, `DivergencePayload`, `DivergenceRecord`, `DivergenceClassifier`, 10 divergence payload variants | `aeat.sync` | Schema-level live-to-local divergence (corpus / ruleset / portal drift), not filing-instance divergence. |
-| `DivergenceReviewItem` | `aeat.review._models` | Reviewer queue item referring to an existing divergence. |
-| `DivergenceClassificationError`, `DivergenceRepositoryError`, `DivergenceRecordRepository` | `aeat.sync._errors`, `aeat.sync._repository` | Sync infrastructure. |
-| `DivergenceSink` | `aeat.config` | Enum for sync-divergence sink (`FILE` / `STORAGE`). |
-| `CompareOp` | `aeat.schema._enums` | Comparison operator enum for schema constraints. |
+| `VerificationStatus`, `VerificationVerdict`, `ClassifiedDiscrepancy`, `DiscrepancyCause`, `VerificationError`, `verify_declaracion` | `aeat.application.verification` | PDF-printed-value vs. formula-engine recomputation of an imported `DeclaracionFiling`. Entirely local - no remote touch. |
+| `VerifyError` | `aeat.domain.casillas.errors` | Casilla-catalogue verifier error. |
+| `VerifySeverity`, `VerifyFinding` | `aeat.application.setup._models` | Bootstrap doctor verifier records. |
+| `VerificationIssue`, `VerificationReport` | `aeat.domain.financial.vat._schema` | VAT catalogue verifier output. |
+| `VerificationIssue`, `VerificationReport` | `aeat.domain.normatives._schema` | Normative catalogue verifier output. |
+| `VerificationIssue`, `VerificationReport` | `aeat.domain.manuals._verify` | Manual-rules verifier output. |
+| `DivergenceClassification`, `DivergenceKind`, `DivergencePayload`, `DivergenceRecord`, `DivergenceClassifier`, 10 divergence payload variants | `aeat.application.sync` | Schema-level live-to-local divergence (corpus / ruleset / portal drift), not filing-instance divergence. |
+| `DivergenceReviewItem` | `aeat.application.review._models` | Reviewer queue item referring to an existing divergence. |
+| `DivergenceClassificationError`, `DivergenceRepositoryError`, `DivergenceRecordRepository` | `aeat.application.sync._errors`, `aeat.application.sync._repository` | Sync infrastructure. |
+| `DivergenceSink` | `aeat.core.config` | Enum for sync-divergence sink (`FILE` / `STORAGE`). |
+| `CompareOp` | `aeat.domain.schema._enums` | Comparison operator enum for schema constraints. |
 
 ### Existing CLI verbs
 
-Grep of `@app.command` / `name="..."` across `src/aeat/cli/` for `verify`,
+Grep of `@app.command` / `name="..."` across `src/aeat/entrypoints/cli/` for `verify`,
 `reconcile`, `compare`, `diff`, `match`:
 
 | Verb | Module | Purpose |
 | --- | --- | --- |
-| `aeat casillas verify` | `src/aeat/cli/casillas.py` | Validate canonical catalogue for a modelo / period. |
-| `aeat submission verify` | `src/aeat/cli/submission/__init__.py` | Re-parse an exported fichero-BOE file and print its decoded headers + casillas. |
-| `aeat submission diff` | `src/aeat/cli/submission/__init__.py` | Diff two fichero-BOE files and report byte + per-casilla deltas. |
-| `aeat setup verify` | `src/aeat/cli/setup.py` | Run the verifier against a `SetupAnswers` JSON file. |
-| `aeat justificante verify` | `src/aeat/cli/justificante/__init__.py` | Verify a justificante PDF. |
-| `aeat vat verify` | `src/aeat/cli/vat.py` | Validate `VAT_CATALOGUE_2025` against the cross-record schema. |
+| `aeat casillas verify` | `src/aeat/entrypoints/cli/casillas.py` | Validate canonical catalogue for a modelo / period. |
+| `aeat submission verify` | `src/aeat/entrypoints/cli/submission/__init__.py` | Re-parse an exported fichero-BOE file and print its decoded headers + casillas. |
+| `aeat submission diff` | `src/aeat/entrypoints/cli/submission/__init__.py` | Diff two fichero-BOE files and report byte + per-casilla deltas. |
+| `aeat setup verify` | `src/aeat/entrypoints/cli/setup.py` | Run the verifier against a `SetupAnswers` JSON file. |
+| `aeat justificante verify` | `src/aeat/entrypoints/cli/justificante/__init__.py` | Verify a justificante PDF. |
+| `aeat vat verify` | `src/aeat/entrypoints/cli/vat.py` | Validate `VAT_CATALOGUE_2025` against the cross-record schema. |
 
 No `reconcile`, `compare`, or `match` verbs exist today. `diff` is owned
 exclusively by `aeat submission diff` (byte / file-level). `reconcile` is
@@ -281,13 +281,13 @@ Primary recommendation - the ADR should lock this:
   `aeat.status.StatusReader` + `aeat.history.HistoryFetcher`. Every record
   carries the structural `mode: Literal["read"]` write-guard marker
   (section 8). This cleanly slots between `aeat.status` (raw AEAT
-  primitives) and `aeat.filing` (local drafts).
-- Reconciliation engine: `aeat.filing.reconciliation` (new submodule of
-  `aeat.filing`). Exports `FilingReconciler`, `ReconciliationOutcome`
+  primitives) and `aeat.application.filing` (local drafts).
+- Reconciliation engine: `aeat.application.filing.reconciliation` (new submodule of
+  `aeat.application.filing`). Exports `FilingReconciler`, `ReconciliationOutcome`
   (closed enum `MATCH | DIVERGENT | NOT_YET_FOUND`),
   `FilingReconciliationReport` (pydantic record: outcome + timestamp +
   divergence list), and `FilingDivergenceKind` (section 5). Sibling to
-  `aeat.filing._import` which is the nearest-existing neighbour (also a
+  `aeat.application.filing._import` which is the nearest-existing neighbour (also a
   local vs remote transform, in the opposite direction).
 - CLI verb: `aeat filing reconcile <draft-path>` - no existing
   collision. Runs automatically as a stage inside `aeat sync run` once the
@@ -295,12 +295,12 @@ Primary recommendation - the ADR should lock this:
   CLI verb is the Kent-observable command; the sync integration is the
   "do not make Kent remember" surface.
 
-Why not reuse `aeat.verification` for the new reconciler? The existing
+Why not reuse `aeat.application.verification` for the new reconciler? The existing
 `VerificationVerdict` record is already a published shape that Kent's UX
 refers to as the "calc-verification" verdict (PDF vs engine). Overloading
 `verify` to mean two different things (engine vs AEAT) would collapse two
 orthogonal axes into one name and break the ADR-locked contract of
-`aeat.verification`.
+`aeat.application.verification`.
 
 Alternative split 1 - `aeat.reconcile` top-level subpackage with both the
 remote domain model and the reconciler inside it. Trade-off: keeps
@@ -309,18 +309,18 @@ of line with `aeat.status` / `aeat.history`, which are already the
 "how we talk to AEAT" subpackages.
 
 Alternative split 2 - keep the remote subpackage name `aeat.remote` but
-put the reconciler in `aeat.sync._reconciliation`. Trade-off: `aeat.sync`
+put the reconciler in `aeat.application.sync._reconciliation`. Trade-off: `aeat.application.sync`
 already owns schema-level divergence, and mixing filing-instance
 divergence in there dilutes its invariant (ADDITIVE allowlist auto-heal is
 safe only for schema-level additive changes, never for filing values).
 
 Alternative split 3 - put everything under `aeat.verify.remote`.
-Trade-off: creates a sibling of `aeat.verification` that reads the same
+Trade-off: creates a sibling of `aeat.application.verification` that reads the same
 but means something different; high cognitive cost for future contributors.
 
-## 5. Reusable divergence vocabulary from `aeat.sync`
+## 5. Reusable divergence vocabulary from `aeat.application.sync`
 
-### Inventory of `src/aeat/sync/_divergence.py`
+### Inventory of `src/aeat/application/sync/_divergence.py`
 
 Three enums and twelve pydantic records. The enums:
 
@@ -357,7 +357,7 @@ filing-instance divergence because:
 - The classification table is tuned for auto-heal safety (ADDITIVE
   implies heal), which is never safe for filing values.
 
-### Proposed `FilingDivergenceKind` (for `aeat.filing.reconciliation`)
+### Proposed `FilingDivergenceKind` (for `aeat.application.filing.reconciliation`)
 
 | Variant | Reconciliation outcome | Payload shape (proposed) |
 | --- | --- | --- |
@@ -403,10 +403,10 @@ while keeping the vocabulary isolated.
 
 ### PR #312 file footprint (26 files changed)
 
-CLI: `src/aeat/cli/_live_reader.py`, `src/aeat/cli/filing/__init__.py` and
-its test, `src/aeat/cli/inbox/_helpers.py`, `src/aeat/cli/inbox/fetch.py`
-and its test, `src/aeat/cli/submission/test_help_text_contract.py`,
-`src/aeat/cli/test_live_reader.py`.
+CLI: `src/aeat/entrypoints/cli/_live_reader.py`, `src/aeat/entrypoints/cli/filing/__init__.py` and
+its test, `src/aeat/entrypoints/cli/inbox/_helpers.py`, `src/aeat/entrypoints/cli/inbox/fetch.py`
+and its test, `src/aeat/entrypoints/cli/submission/test_help_text_contract.py`,
+`src/aeat/entrypoints/cli/test_live_reader.py`.
 
 Inbox: `src/aeat/inbox/__init__.py`, `src/aeat/inbox/_live_source.py`,
 `src/aeat/inbox/test_live_source.py`.
@@ -432,7 +432,7 @@ Fixtures: `tests/fixtures/aeat-pages/notificaciones/sample*.html`.
   structurally conforms to `aeat.inbox.NotificacionSource`, already
   declared at `src/aeat/inbox/_protocols.py`.
 - `build_live_status_reader` async context manager in
-  `src/aeat/cli/_live_reader.py` surfacing `LiveSessionUnavailableError`
+  `src/aeat/entrypoints/cli/_live_reader.py` surfacing `LiveSessionUnavailableError`
   when no persisted auth sidecar exists.
 - `import_filing_from_justificante` CLI path gains a
   `--from-aeat --modelo M --period P` variant that drives
@@ -474,7 +474,7 @@ No cross-import of PR #312's private modules; Protocols live in
 
 ### Modelos shipped by the existing corpora
 
-Ruleset modules under `src/aeat/formulas/_rulesets/`:
+Ruleset modules under `src/aeat/domain/formulas/_rulesets/`:
 `MODELO_100_SUMMARY_2025`, `MODELO_111_2024 / 2025`, `MODELO_115_2024 / 2025`,
 `MODELO_123_2024 / 2025`, `MODELO_130_2024 / 2025`,
 `MODELO_131_2024 / 2025`, `MODELO_180_2024 / 2025`, `MODELO_200_2024`,
@@ -482,13 +482,13 @@ Ruleset modules under `src/aeat/formulas/_rulesets/`:
 rulesets across 14 modelos (plus 100-summary which is a derived annual
 synthesis).
 
-Declaracion extractors under `src/aeat/declaracion/_extractors/` (PDF to
+Declaracion extractors under `src/aeat/adapters/inbound/declaracion/_extractors/` (PDF to
 `DeclaracionFiling`): 036, 037, 111, 115, 123, 130, 131, 180, 190, 193,
 200, 202, 232, 303, 347, 349, 369, 390, 720, 840. Superset of the
 rulesets - 190, 193, 232, 347, 349, 369, 720, 840, 036, 037 have PDF
 extractors but no rulesets yet.
 
-Submission export formats under `src/aeat/submission/_formats/` (fichero
+Submission export formats under `src/aeat/adapters/outbound/aeat/export/_formats/` (fichero
 BOE generation): 130 (2024, 2025) and 303 (2024, 2024 preview, 2025).
 
 History (AEAT-scraped `FiledModelo`) parsers under
@@ -544,7 +544,7 @@ each gated on the corresponding history-parser PR.
 
 ### Layer 1 - Structural pydantic marker
 
-Every record in `aeat.remote` and `aeat.filing.reconciliation` whose data
+Every record in `aeat.remote` and `aeat.application.filing.reconciliation` whose data
 originates from an AEAT-authenticated interaction carries a literal-typed
 field `mode: Literal["read"] = "read"` on a frozen strict pydantic model.
 No `"write"` literal exists in the issue 239 surface at all - not as a reserved
@@ -555,7 +555,7 @@ force an explicit widening of the `Literal` that the code reviewer will see.
 ### Layer 2 - Public API contract
 
 Every public function / method exported from `aeat.remote` and
-`aeat.filing.reconciliation` satisfies two invariants:
+`aeat.application.filing.reconciliation` satisfies two invariants:
 
 - Return type is a frozen pydantic record or a tuple of frozen records;
   never a handle that supports a `.submit()` / `.send()` / `.commit()` /
@@ -574,7 +574,7 @@ This contract is asserted by Layer 3.
 Augment the existing `test_no_write_surface.py` pattern for the two new
 subpackages. Add a unit test under
 `src/aeat/remote/test_no_write_surface.py` and
-`src/aeat/filing/reconciliation/test_no_write_surface.py` that walks every
+`src/aeat/application/filing/reconciliation/test_no_write_surface.py` that walks every
 `.py` file in its tree and asserts no match on the union pattern made of:
 
 - `page\.(fill|click|type|select_option|check|press|set_input_files)`
@@ -606,16 +606,16 @@ Layer 1 structural marker checked at runtime.
 
 Existing write-safety charter artefacts grep-confirmed in the tree:
 
-- `src/aeat/submission/test_live_write_4factor_gate_documented.py` -
+- `src/aeat/adapters/outbound/aeat/export/test_live_write_4factor_gate_documented.py` -
   codifies the four-factor gate for ANY live write.
-- `src/aeat/submission/test_safety_helpers.py` - tests around the
+- `src/aeat/adapters/outbound/aeat/export/test_safety_helpers.py` - tests around the
   `AeatLiveSubmit*` helpers.
-- `src/aeat/submission/_engine.py::_submit_with_transport` - the sole
+- `src/aeat/adapters/outbound/aeat/export/_engine.py::_submit_with_transport` - the sole
   production call site that can write to AEAT.
 - `Settings.aeat_live_submit_enabled`, `Settings.aeat_live_write_unsafe_bypass`,
   `Settings.aeat_live_write_unsafe_bypass_confirm` - the three env gates
   that all must be `True` / exact-phrase-match before any write may fire.
-- `AeatLiveReadNotEnabledError` at `src/aeat/auth/certificate.py` -
+- `AeatLiveReadNotEnabledError` at `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` -
   exception raised when the live-read gate is not satisfied. Issue 239's
   reconciler must wrap its live path in `AeatAccessGate` and propagate
   this error shape rather than inventing a new one.
@@ -630,7 +630,7 @@ first place.
 
 ### Layer 5 - Test discipline
 
-- Every live test in issue 239 uses `aeat.cli._live.requires_live_enabled()`
+- Every live test in issue 239 uses `aeat.entrypoints.cli._live.requires_live_enabled()`
   at the top of the test body. No ad-hoc env checks, no
   `@pytest.mark.skipif(os.environ.get(...))`.
 - Every live test is marked `@pytest.mark.live_read` (never
@@ -656,7 +656,7 @@ first place.
   surface as a `FILING_STATUS_DIVERGENCE` during reconciliation? Both are
   defensible; the ADR must pick one.
 - `ROUNDING_ONLY` tolerance - reuse the `Decimal("0.01")` default from
-  `aeat.verification` or source it from `Settings` under a new
+  `aeat.application.verification` or source it from `Settings` under a new
   `aeat_reconciliation_rounding_tolerance` field? The former keeps the
   two verifiers aligned (and Kent sees one "rounding" definition across
   the CLI); the latter gives per-deployment tuning.

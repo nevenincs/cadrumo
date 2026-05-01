@@ -26,7 +26,7 @@ Auto-generated index of all documents tagged with `#normatives`.
 
 ### plan
 
-- `2026-04-12-normatives-plan` - normatives plan: phased delivery of `aeat.normatives` v1
+- `2026-04-12-normatives-plan` - normatives plan: phased delivery of `aeat.domain.normatives` v1
 
 ### research
 

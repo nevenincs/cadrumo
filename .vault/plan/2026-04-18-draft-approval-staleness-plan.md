@@ -19,7 +19,7 @@ when a previously approved draft has gone stale.
 
 ## Proposed Changes
 
-Add review-approval data structures to `src/aeat/filing/_schema.py` and expose
+Add review-approval data structures to `src/aeat/application/filing/_schema.py` and expose
 stable helpers in `src/aeat/filing` for:
 
 - building canonical approval-basis fingerprints
@@ -46,7 +46,7 @@ test harness escape hatches.
 
 - `Phase 1: Review provenance model and hashing helpers`
   1. Add approval data structures and serialization support to
-     `src/aeat/filing/_schema.py`.
+     `src/aeat/application/filing/_schema.py`.
   2. Implement canonical fingerprint helpers for payload, validation surface,
      transaction catalogue, category profiles, and schema/formula provenance in
      the filing domain.
@@ -55,16 +55,16 @@ test harness escape hatches.
 
 - `Phase 2: Review CLI and draft surfaces`
   1. Add `aeat review approve <draft_id>` and supporting helpers under
-     `src/aeat/cli/review`.
-  2. Register the new review command in `src/aeat/cli/__init__.py`.
+     `src/aeat/entrypoints/cli/review`.
+  2. Register the new review command in `src/aeat/entrypoints/cli/__init__.py`.
   3. Update filing show/list output so operators can see approval and stale
      state on persisted drafts without needing to inspect raw JSON.
 
 - `Phase 3: Submission and workflow enforcement`
-  1. Update submit preflight helpers in `src/aeat/submission/_preflight.py` to
+  1. Update submit preflight helpers in `src/aeat/adapters/outbound/aeat/export/_preflight.py` to
      require both `READY_TO_SUBMIT` and a non-stale approval result.
-  2. Align `src/aeat/submission/_protocols.py` and
-     `src/aeat/workflow/_engine.py` with the new review-state check so legacy
+  2. Align `src/aeat/adapters/outbound/aeat/export/_protocols.py` and
+     `src/aeat/application/workflow/_engine.py` with the new review-state check so legacy
      protocol assumptions cannot bypass approval gating.
   3. Keep existing non-approval build/validate flows unchanged apart from the
      new approval awareness.
