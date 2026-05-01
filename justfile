@@ -75,6 +75,24 @@ typecheck:
 test:
     uv run pytest
 
+# Run the produce → verify → export end-to-end smoke tests (Modelo 130 + 303).
+# Used as the behavioural CI gate for the restructure (#476) per ADR
+# Acceptance criterion 13: structural import-resolution alone is not
+# sufficient proof of restructure correctness.
+test-smoke-produce-verify-export:
+    uv run pytest src/aeat/submission/_formats/test_integration_kent_e2e.py src/aeat/submission/_formats/test_integration_kent_303_e2e.py -v
+
+# Verify every documented re-export shim still resolves its symbols
+# (Step 8 acceptance precondition for the deterministic semver-bump rule).
+verify-shims:
+    uv run --no-sync python scripts/verify_shims.py
+
+# Run the import-linter contract against the current layout.
+# Pre-Step-7 reports "no matches" warnings for the future paths;
+# post-Step-7 enforces the layered + independence + forbidden contracts.
+lint-imports:
+    uv run --no-sync lint-imports
+
 # Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
 test-live:
     uv run pytest -m "unit or live_read"

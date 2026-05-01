@@ -1,0 +1,246 @@
+"""Top-level orchestrator for :mod:`aeat.sanitizer`.
+
+Implements the 8-step order of operations from the sanitiser ADR:
+
+1. Open source bytes; refuse if signed; refuse if already sanitised.
+2. Strip dynamic surfaces (attachments, JS, OpenAction/AA,
+   annotations, OCG, AcroForm).
+3. Drop page thumbnails.
+4. Drop outlines + page labels.
+5. Drop StructTreeRoot (lossy).
+6. Rewrite content streams against the TokenMap.
+7. Scrub static metadata (DocInfo + XMP).
+8. Save with deterministic flags.
+
+Order matters: dynamic surfaces (step 2) before content rewrite
+(step 6) so a JS action cannot re-inject PII the rewriter just
+stripped. Content rewrite before metadata scrub (step 7) because
+some XMP-write paths in pikepdf re-stamp metadata if they detect a
+content change. Save last with the named flags (step 8).
+"""
+
+from __future__ import annotations
+
+import hashlib
+import io
+from pathlib import Path
+from typing import Literal
+
+import pikepdf
+from pikepdf import PdfError as PikepdfError
+
+from ....core.logging import get_logger
+from . import fixtures as _fixtures
+from ._determinism import save_with_deterministic_flags
+from ._dynamic import (
+    strip_acroform,
+    strip_annotations,
+    strip_attachments,
+    strip_javascript,
+    strip_optional_content_groups,
+    strip_outlines,
+    strip_page_labels,
+    strip_thumbnails,
+)
+from ._errors import (
+    AlreadySanitizedError,
+    SanitizerSourceParseError,
+    SignaturePresentError,
+)
+from ._metadata import scrub_docinfo, scrub_xmp
+from ._records import (
+    Replacement,
+    SanitizationResult,
+    SanitizationWarning,
+    ScrubbedSurface,
+    TokenMap,
+)
+from ._streams import apply_token_map_to_pdf
+from ._structtree import drop_struct_tree as _drop_struct_tree_helper
+
+_LOG = get_logger(__name__)
+SANITIZER_VERSION = "0.1.0"
+
+
+def sanitize_pdf(
+    source: bytes | Path,
+    mapping: TokenMap,
+    *,
+    drop_attachments: bool = True,
+    drop_javascript: bool = True,
+    drop_annotations: bool = True,
+    drop_outlines: bool = True,
+    drop_optional_content_groups: bool = True,
+    drop_struct_tree: bool = True,
+    drop_acroform: bool = False,
+    scrub_docinfo_dict: bool = True,
+    scrub_xmp_packet: bool = True,
+    scrub_xmp_strategy: Literal["delete", "rewrite"] = "delete",
+    refuse_if_already_sanitized: bool = True,
+) -> SanitizationResult:
+    """Strips PII from ``source`` against ``mapping``.
+
+    Args:
+        source: Raw bytes of the source PDF, or a :class:`Path`
+            pointing to it. Path inputs are read once at the top
+            of the function.
+        mapping: Declarative cleartext-to-synthetic
+            :class:`TokenMap`.
+        drop_attachments: When True, removes every embedded file.
+        drop_javascript: When True, removes embedded JavaScript
+            and document-level actions (OpenAction, AA).
+        drop_annotations: When True, drops every page annotation.
+        drop_outlines: When True, drops the outline tree.
+        drop_optional_content_groups: When True, removes
+            ``Root.OCProperties``.
+        drop_struct_tree: When True, drops ``Root.StructTreeRoot``
+            (and emits ``structtree_dropped_lossy`` warning when
+            the tree was present).
+        drop_acroform: When True, deletes ``Root.AcroForm``
+            entirely; otherwise clears field values in place.
+        scrub_docinfo_dict: When True, deletes the legacy DocInfo
+            dictionary.
+        scrub_xmp_packet: When True, scrubs the XMP packet via the
+            ``scrub_xmp_strategy`` policy.
+        scrub_xmp_strategy: ``"delete"`` (default) drops the
+            entire XMP packet; ``"rewrite"`` clears only the
+            PII-bearing keys.
+        refuse_if_already_sanitized: When True, raises
+            :class:`AlreadySanitizedError` if ``source`` SHA-256
+            is in :data:`fixtures.SANITIZED_SHAS`. Pass False to
+            opt out (useful when intentionally re-sanitising an
+            existing fixture against an extended TokenMap).
+
+    Returns:
+        A :class:`SanitizationResult` carrying the sanitised
+        bytes, audit log, and warnings.
+
+    Raises:
+        SanitizerSourceParseError: If the source bytes cannot be
+            opened by :mod:`pikepdf`.
+        SignaturePresentError: If the source carries a digital
+            signature dictionary.
+        AlreadySanitizedError: If ``refuse_if_already_sanitized``
+            is True and the source SHA-256 is in
+            :data:`fixtures.SANITIZED_SHAS`.
+    """
+    source_sha, source_size_bytes = _digest_source(source)
+
+    if refuse_if_already_sanitized and source_sha in _fixtures.SANITIZED_SHAS:
+        raise AlreadySanitizedError(source_sha256=source_sha)
+
+    try:
+        # Path inputs feed pikepdf directly so QPDF's memory-mapping
+        # path can avoid a full in-memory copy of the source bytes.
+        # bytes inputs (uncommon — used by tests + library consumers
+        # with the bytes already in hand) take the BytesIO path.
+        pdf = pikepdf.Pdf.open(io.BytesIO(source) if isinstance(source, bytes) else source)
+    except PikepdfError as exc:
+        raise SanitizerSourceParseError(f"pikepdf could not parse source bytes: {exc}") from exc
+
+    _refuse_if_signed(pdf)
+
+    surfaces: list[ScrubbedSurface] = []
+    warnings: list[SanitizationWarning] = []
+
+    if drop_attachments:
+        surfaces.append(strip_attachments(pdf))
+    if drop_javascript:
+        js, oa, aa = strip_javascript(pdf)
+        surfaces.extend((js, oa, aa))
+    if drop_annotations:
+        surfaces.append(strip_annotations(pdf))
+    if drop_optional_content_groups:
+        surfaces.append(strip_optional_content_groups(pdf))
+    acroform_scrubbed, acroform_warnings = strip_acroform(pdf, drop_entirely=drop_acroform)
+    surfaces.append(acroform_scrubbed)
+    warnings.extend(acroform_warnings)
+    surfaces.append(strip_thumbnails(pdf))
+    if drop_outlines:
+        surfaces.append(strip_outlines(pdf))
+        surfaces.append(strip_page_labels(pdf))
+    if drop_struct_tree:
+        struct, struct_warnings = _drop_struct_tree_helper(pdf)
+        surfaces.append(struct)
+        warnings.extend(struct_warnings)
+
+    replacements: tuple[Replacement, ...] = apply_token_map_to_pdf(pdf, mapping)
+
+    if scrub_docinfo_dict:
+        surfaces.append(scrub_docinfo(pdf))
+    if scrub_xmp_packet:
+        scrubbed, xmp_warnings = scrub_xmp(pdf, strategy=scrub_xmp_strategy)
+        surfaces.append(scrubbed)
+        warnings.extend(xmp_warnings)
+
+    output_bytes, flags = save_with_deterministic_flags(pdf)
+    output_sha = hashlib.sha256(output_bytes).hexdigest()
+
+    return SanitizationResult(
+        output_bytes=output_bytes,
+        source_sha256=source_sha,
+        output_sha256=output_sha,
+        source_size_bytes=source_size_bytes,
+        output_size_bytes=len(output_bytes),
+        sanitizer_version=SANITIZER_VERSION,
+        determinism_flags=flags,
+        replacements_applied=replacements,
+        surfaces_scrubbed=tuple(surfaces),
+        warnings=tuple(warnings),
+    )
+
+
+def _digest_source(source: bytes | Path) -> tuple[str, int]:
+    """Returns ``(sha256_hex, size_bytes)`` for ``source``.
+
+    Streams ``Path`` inputs through hashlib in 1 MiB chunks so a
+    multi-hundred-megabyte capture never has to be fully resident
+    in memory. ``bytes`` inputs (rare — used by library consumers
+    with the bytes already in hand) hash directly. Result mirrors
+    the previous ``_read_source`` + ``hashlib.sha256(...)`` pair
+    but without the load-everything intermediate buffer.
+
+    Args:
+        source: Raw bytes of the source PDF, or a :class:`Path`.
+
+    Returns:
+        Tuple of (lowercase hex SHA-256 digest, byte count).
+    """
+    if isinstance(source, bytes):
+        return hashlib.sha256(source).hexdigest(), len(source)
+    digest = hashlib.sha256()
+    size = 0
+    with source.open("rb") as fh:
+        while True:
+            chunk = fh.read(1 << 20)  # 1 MiB
+            if not chunk:
+                break
+            digest.update(chunk)
+            size += len(chunk)
+    return digest.hexdigest(), size
+
+
+def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
+    """Raises :class:`SignaturePresentError` if ``pdf`` is signed.
+
+    AEAT justificantes are not signed at the capture step; if a
+    future modelo's PDF carries a signature, the sanitiser must
+    refuse rather than silently invalidate the signature.
+    """
+    acroform = pdf.Root.get("/AcroForm")
+    if acroform is not None:
+        sig_flags = acroform.get("/SigFlags")
+        if sig_flags is not None and int(sig_flags) != 0:
+            raise SignaturePresentError(
+                "Source PDF carries a digital signature (SigFlags set); "
+                "the sanitiser refuses to modify signed documents."
+            )
+        fields = acroform.get("/Fields")
+        if fields is not None:
+            for index in range(len(fields)):
+                field = fields[index]
+                ft = field.get("/FT")
+                if ft is not None and ft == pikepdf.Name.Sig:
+                    raise SignaturePresentError(
+                        "Source PDF contains a signature field; the sanitiser refuses to modify signed documents."
+                    )

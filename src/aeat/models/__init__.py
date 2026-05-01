@@ -1,62 +1,12 @@
-"""Authoritative AEAT modelo catalogue and metadata.
+"""Internal re-export shim for `aeat.models`.
 
-This subpackage exposes the closed, strict, pydantic v2 registry of
-every AEAT modelo the project tracks in v1 (twenty-one codes: 036, 037,
-100, 111, 115, 123, 130, 131, 180, 190, 193, 200, 202, 232, 303, 347,
-349, 369, 390, 720, 840). The registry is built at import time from the
-per-modelo entries under the private ``_entries`` package and is
-frozen as a :class:`types.MappingProxyType`.
-
-Consumers outside :mod:`aeat.models` MUST import from this module
-only; the underscore-prefixed submodules are internal and unstable.
-The public surface is the :data:`__all__` tuple below.
-
-Architectural context: see the 2026-04-13 modelo-inventory ADR and
-the accompanying research document for the provenance of each
-modelo's data. Deadlines are resolved at query time through the
-:func:`year_plan` helper, which delegates to
-:mod:`aeat.deadlines` — the catalogue itself is import-time free
-of any deadline dependency.
+Canonical location: :mod:`aeat.domain.modelos` post the aeat-restructure layout move.
 """
 
 from __future__ import annotations
 
-from ._applicability import ModeloApplicability
-from ._categories import (
-    LegalCitationSource,
-    ModeloCadence,
-    ModeloCategory,
-    TaxpayerProfile,
-)
-from ._citations import LegalCitation
-from ._codes import ModeloCode
-from ._errors import (
-    ModeloRegistryError,
-    RegistryIntegrityError,
-    UnknownModeloError,
-)
-from ._metadata import ModeloMetadata
-from ._registry import (
-    MODELO_REGISTRY,
-    get_modelo,
-    modelos_for_profile,
-    year_plan,
-)
+import importlib as _importlib
 
-__all__ = (
-    "MODELO_REGISTRY",
-    "LegalCitation",
-    "LegalCitationSource",
-    "ModeloApplicability",
-    "ModeloCadence",
-    "ModeloCategory",
-    "ModeloCode",
-    "ModeloMetadata",
-    "ModeloRegistryError",
-    "RegistryIntegrityError",
-    "TaxpayerProfile",
-    "UnknownModeloError",
-    "get_modelo",
-    "modelos_for_profile",
-    "year_plan",
-)
+from ..domain.modelos import *  # noqa: F403
+
+__all__ = getattr(_importlib.import_module("aeat.domain.modelos"), "__all__", ())

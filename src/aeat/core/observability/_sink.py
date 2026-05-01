@@ -1,0 +1,165 @@
+"""Logging handler that bridges :mod:`logging` to JSONL run events.
+
+The handler subscribes to the standard :mod:`logging` machinery so any
+caller using ``aeat.logging.get_logger`` automatically picks up the
+JSONL sink while a run context is active. Records that do not carry a
+``run_event`` extra are skipped — bare log lines never leak into
+``events.jsonl``.
+
+The ``run_id`` / ``step_id`` attributes are stamped onto every
+:class:`logging.LogRecord` by the factory installed in
+:mod:`aeat.logging` (``_install_run_context_record_factory``).
+
+Each sink instance is bound to a single ``run_id`` and filters any
+event whose ``run_id`` does not match. This prevents cross-run
+contamination when several :func:`aeat.observability.run_context`
+blocks execute concurrently (e.g. tasks in an ``asyncio`` event
+loop) and therefore have competing sinks attached to the root
+logger at the same time.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import threading
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, TextIO
+
+from ._models import RunEvent
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.storage._classification import RedactionRule
+
+
+# The DIAGNOSTIC-class rule set is resolved lazily on first emit so the
+# observability package does not pull aeat.storage (which imports
+# Alembic plugin discovery and emits INFO log lines on stderr at import
+# time) into every CLI command's import chain. The cost of resolving
+# the rule set once is negligible compared with one-time Alembic
+# discovery.
+_DIAGNOSTIC_RULES: tuple[Any, ...] | None = None
+
+
+def _diagnostic_rules() -> tuple[RedactionRule, ...]:
+    """Return the AUDIT-class default rule set, resolved on first call."""
+    global _DIAGNOSTIC_RULES
+    if _DIAGNOSTIC_RULES is None:
+        from ...adapters.persistence.storage import SensitivityClass
+        from ...adapters.persistence.storage._redaction import default_rules_for_class
+
+        _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
+    return _DIAGNOSTIC_RULES  # type: ignore[return-value]
+
+
+class JsonlRunSink(logging.Handler):
+    """Append-only JSONL sink for :class:`RunEvent` records.
+
+    The handler opens the target path lazily on first emit so a
+    ``run_context`` enter is cheap when no events ever fire. Each emit
+    flushes the file handle; ``close()`` additionally calls
+    :func:`os.fsync` so a process kill mid-run still leaves a
+    durable JSONL trailer on disk.
+
+    Concurrency: the sink is bound to a single ``run_id`` and
+    rejects events carrying a different ``run_id``. File-handle
+    mutations are guarded by an internal :class:`threading.Lock`
+    so multiple worker threads may emit concurrently without
+    interleaving bytes on disk.
+    """
+
+    def __init__(self, target: Path, *, run_id: str) -> None:
+        """Construct the sink for a specific JSONL file path and run.
+
+        Args:
+            target: Path of the ``events.jsonl`` file this sink writes.
+            run_id: The owning run identifier. Events whose ``run_id``
+                does not match are dropped silently — this isolates
+                concurrent runs that share the same root logger.
+        """
+        super().__init__(level=logging.DEBUG)
+        self._target: Path = target
+        self._run_id: str = run_id
+        self._handle: TextIO | None = None
+        self._lock: threading.Lock = threading.Lock()
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def run_id(self) -> str:
+        """The run identifier this sink is bound to."""
+        return self._run_id
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Write the JSON-encoded :class:`RunEvent` carried by ``record``.
+
+        Drops the record when there is no ``run_event`` extra or when
+        the event belongs to a different run — see the module docstring
+        for the concurrency rationale.
+
+        JSON serialization runs outside the file-handle lock so
+        concurrent threads can encode in parallel; only the write +
+        flush are serialized. The whole emit path (including the
+        encode) is wrapped in a single ``try`` — a serialization
+        failure (e.g. the pydantic model grew a non-JSON-safe field
+        in some future refactor) must not crash the logging system;
+        it must fall through to :meth:`handleError` like any other
+        handler failure.
+        """
+        event = getattr(record, "run_event", None)
+        if not isinstance(event, RunEvent):
+            return
+        if event.run_id != self._run_id:
+            return
+        try:
+            # Run traces are DIAGNOSTIC class. The substrate's redaction
+            # rule set walks every string leaf (NIF SHA-256-prefixed, URL
+            # host-only, bearer-shaped tokens fingerprinted, opaque
+            # bearers fingerprinted) before serialisation so the JSONL
+            # never carries a plaintext NIF / token / URL path even if
+            # a caller feeds one in. Encoding happens outside the lock
+            # — pydantic dump and dict walk are CPU-bound and
+            # thread-safe on a frozen model, so holding the lock across
+            # the encode step would serialise work that does not need
+            # mutual exclusion.
+            from ...adapters.persistence.storage import redact_structured
+
+            redacted = redact_structured(event.model_dump(mode="json"), rules=_diagnostic_rules())
+            line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
+            with self._lock:
+                handle = self._open()
+                handle.write(line)
+                handle.flush()
+        except Exception:
+            self.handleError(record)
+
+    def _open(self) -> TextIO:
+        """Lazily open the JSONL file in append mode.
+
+        ``newline=""`` disables the Python text-mode newline translation
+        (CRLF on Windows) so events.jsonl is byte-stable across
+        platforms — we emit exactly one ``\\n`` per record on every OS.
+        """
+        if self._handle is None:
+            self._handle = self._target.open("a", encoding="utf-8", newline="")
+        return self._handle
+
+    def close(self) -> None:
+        """Flush + fsync + close the underlying file handle."""
+        try:
+            with self._lock:
+                handle = self._handle
+                if handle is not None:
+                    try:
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                    finally:
+                        handle.close()
+                        self._handle = None
+        finally:
+            super().close()
+
+
+__all__ = [
+    "JsonlRunSink",
+]

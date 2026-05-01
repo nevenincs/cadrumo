@@ -11,10 +11,10 @@ from __future__ import annotations
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from aeat.config import load_settings
-from aeat.logging import get_logger
-from aeat.storage import _orm
-from aeat.storage.engine import _ensure_sqlite_parent
+from aeat.adapters.persistence.storage import _orm
+from aeat.adapters.persistence.storage.engine import _ensure_sqlite_parent
+from aeat.core.config import load_settings
+from aeat.core.logging import get_logger
 
 _log = get_logger(__name__)
 

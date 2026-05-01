@@ -21,7 +21,7 @@
         "run",
         "python",
         "-m",
-        "aeat.mcp.launch_google_workspace"
+        "aeat.entrypoints.mcp.launch_google_workspace"
       ]
     },
     "vaultspec-core": {
