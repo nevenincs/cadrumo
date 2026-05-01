@@ -28,6 +28,7 @@ from ._schema import (
     VerificationVerdict,
 )
 from ._verify import verify_declaracion
+from ._verify_summary import verify_modelo_347_summary
 
 __all__ = [
     "ClassifiedDiscrepancy",
@@ -36,4 +37,5 @@ __all__ = [
     "VerificationStatus",
     "VerificationVerdict",
     "verify_declaracion",
+    "verify_modelo_347_summary",
 ]

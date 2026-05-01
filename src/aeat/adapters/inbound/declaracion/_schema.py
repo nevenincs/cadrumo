@@ -10,6 +10,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core.i18n import Translatable
+from ....domain.modelos.m347 import Modelo347RecordLine
 from ..pdf._shared import ExtractedCasilla
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -84,6 +85,7 @@ class DeclaracionFiling(BaseModel):
     tax_id: str = Field(min_length=4, max_length=32)
     template_revision: TemplateRevision
     values: tuple[ExtractedCasilla, ...]
+    modelo_347_records: tuple[Modelo347RecordLine, ...] = ()
     warnings: tuple[ExtractionWarning, ...] = ()
     source_pdf_path: Path
     source_pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")

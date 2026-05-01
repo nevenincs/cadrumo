@@ -585,7 +585,7 @@ def _handle_declaracion_import(
 ) -> None:
     """Dispatch the declaración (#305 + E) import path."""
     from ....adapters.inbound.declaracion import DeclaracionParseError, parse_declaracion
-    from ....application.verification import verify_declaracion
+    from ....application.verification import verify_declaracion, verify_modelo_347_summary
 
     try:
         filing = parse_declaracion(
@@ -623,12 +623,15 @@ def _handle_declaracion_import(
             rendered = get_translation(warning.message, lang)
             typer.echo(f"  - casilla {warning.casilla_id or '-'}: {rendered}")
 
-    ruleset = _resolve_ruleset_for_filing(
-        filing_modelo=filing.modelo,
-        filing_period=filing.period,
-        filing_ejercicio=filing.ejercicio,
-    )
-    verdict = verify_declaracion(filing, ruleset=ruleset)
+    if filing.modelo == "347":
+        verdict = verify_modelo_347_summary(filing)
+    else:
+        ruleset = _resolve_ruleset_for_filing(
+            filing_modelo=filing.modelo,
+            filing_period=filing.period,
+            filing_ejercicio=filing.ejercicio,
+        )
+        verdict = verify_declaracion(filing, ruleset=ruleset)
     typer.echo(f"Verification status: {verdict.status.value}")
     typer.echo(f"  {get_translation(verdict.narrative, lang)}")
     for discrepancy in verdict.discrepancies:

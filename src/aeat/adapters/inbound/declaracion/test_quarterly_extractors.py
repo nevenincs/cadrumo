@@ -168,7 +168,9 @@ class TestRegistryKnowsNewExtractors:
         assert ("180", 2025, "2025.01") in keys
         assert ("190", 2025, "2025.01") in keys
         assert ("193", 2025, "2025.01") in keys
+        assert ("347", 2024, "2024.01") in keys
         assert ("347", 2025, "2025.01") in keys
+        assert ("347", 2026, "2026.01") in keys
         assert ("349", 2025, "2025.01") in keys
         assert ("369", 2025, "2025.01") in keys
         assert ("390", 2025, "2025.01") in keys
@@ -244,6 +246,107 @@ def _make_annual_pdf(
     return path
 
 
+def _make_m347_detail_pdf(
+    tmp_path: Path,
+    *,
+    ejercicio: int,
+    records: tuple[Mapping[str, str], ...],
+    summary_total_override: Decimal | None = None,
+) -> Path:
+    import io
+
+    from reportlab.lib.units import mm
+    from reportlab.pdfgen import canvas
+    from tests.fixtures.pdf_corpus.l3_synthetic._generators._generator_shared import (
+        A4_HEIGHT,
+        A4_WIDTH,
+        MARGIN_LEFT,
+        VALUE_FONT,
+        VALUE_FONT_SIZE,
+        CasillaBox,
+        draw_casilla_box,
+        draw_footer,
+        draw_header,
+    )
+
+    total = summary_total_override
+    if total is None:
+        total = sum((Decimal(record["TOTAL"]) for record in records), Decimal("0.00"))
+    cash_total = sum((Decimal(record.get("CASH", "0.00")) for record in records), Decimal("0.00"))
+    values = {
+        "01": Decimal(len(records)),
+        "02": total,
+        "03": Decimal(sum(1 for record in records if Decimal(record.get("CASH", "0.00")) > Decimal("0.00"))),
+        "04": cash_total,
+    }
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=(A4_WIDTH, A4_HEIGHT))
+    c.setTitle(f"Modelo 347 {ejercicio}")
+    draw_header(c, modelo="347", ejercicio=str(ejercicio), periodo="0A", page_num=1, page_count=1)
+    for index, (casilla_id, label) in enumerate(_MODELO_347_LABELS.items()):
+        draw_casilla_box(
+            c,
+            CasillaBox(casilla_id=casilla_id, label_es=label, x_mm=15.0, y_mm=50.0 + index * 4.5),
+            values[casilla_id],
+        )
+    c.setFont(VALUE_FONT, VALUE_FONT_SIZE)
+    y = A4_HEIGHT - 80 * mm
+    for index, record in enumerate(records):
+        fields = " | ".join(f"{key}={value}" for key, value in record.items())
+        c.drawString(MARGIN_LEFT, y - index * 5 * mm, f"M347-RECORD | {fields}")
+    draw_footer(c, tax_id="00000000T", presented_at=f"{ejercicio + 1}-02-20 10:00:00")
+    c.showPage()
+    c.save()
+
+    path = tmp_path / f"modelo_347_{ejercicio}_detail.pdf"
+    path.write_bytes(buffer.getvalue())
+    return path
+
+
+def _make_m347_human_detail_pdf(tmp_path: Path) -> Path:
+    import io
+
+    from reportlab.lib.units import mm
+    from reportlab.pdfgen import canvas
+    from tests.fixtures.pdf_corpus.l3_synthetic._generators._generator_shared import (
+        A4_HEIGHT,
+        A4_WIDTH,
+        MARGIN_LEFT,
+        VALUE_FONT,
+        VALUE_FONT_SIZE,
+        CasillaBox,
+        draw_casilla_box,
+        draw_footer,
+        draw_header,
+    )
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=(A4_WIDTH, A4_HEIGHT))
+    c.setTitle("Modelo 347 human detail")
+    draw_header(c, modelo="347", ejercicio="2025", periodo="0A", page_num=1, page_count=1)
+    summary_values = {"01": Decimal("1"), "02": Decimal("12000.00"), "03": Decimal("0"), "04": Decimal("0.00")}
+    for index, (casilla_id, label) in enumerate(_MODELO_347_LABELS.items()):
+        draw_casilla_box(
+            c,
+            CasillaBox(casilla_id=casilla_id, label_es=label, x_mm=15.0, y_mm=50.0 + index * 4.5),
+            summary_values[casilla_id],
+        )
+    c.setFont(VALUE_FONT, VALUE_FONT_SIZE)
+    c.drawString(
+        MARGIN_LEFT,
+        A4_HEIGHT - 80 * mm,
+        "Declarado B12345678 Cliente Uno SL Clave B Total 12000.00 1T 3000.00 2T 3000.00 3T 3000.00 4T 3000.00",
+    )
+    draw_footer(c, tax_id="00000000T", presented_at="2026-02-20 10:00:00")
+    c.showPage()
+    c.save()
+
+    path = tmp_path / "modelo_347_2025_human_detail.pdf"
+    path.write_bytes(buffer.getvalue())
+    return path
+
+
 class TestModelo180V2025Extractor:
     def test_roundtrip_annual_summary(self, tmp_path: Path) -> None:
         values = {"01": "5.00", "02": "48000.00", "03": "9120.00", "04": "0.00"}
@@ -297,6 +400,56 @@ class TestModelo347V2025Extractor:
         filing = parse_declaracion(pdf)
         assert filing.modelo == "347"
         assert filing.extraction_status is ExtractionStatus.COMPLETE
+
+    @pytest.mark.parametrize("ejercicio", [2024, 2025, 2026])
+    def test_roundtrip_detail_records(self, ejercicio: int, tmp_path: Path) -> None:
+        records = (
+            {
+                "NIF": "B12345678",
+                "NAME": "Cliente Uno SL",
+                "KEY": "B",
+                "TOTAL": "12000.00",
+                "Q1": "3000.00",
+                "Q2": "3000.00",
+                "Q3": "3000.00",
+                "Q4": "3000.00",
+                "CASH": "6100.00",
+                "CASH_YEAR": str(ejercicio),
+            },
+            {
+                "NIF": "A87654321",
+                "NAME": "Proveedor Dos SA",
+                "KEY": "A",
+                "TOTAL": "4500.50",
+                "Q1": "1000.00",
+                "Q2": "1100.00",
+                "Q3": "1200.00",
+                "Q4": "1200.50",
+            },
+        )
+        pdf = _make_m347_detail_pdf(tmp_path, ejercicio=ejercicio, records=records)
+        filing = parse_declaracion(pdf)
+        assert filing.modelo == "347"
+        assert filing.period == f"{ejercicio}A"
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+        assert len(filing.modelo_347_records) == 2
+        first = filing.modelo_347_records[0]
+        assert first.declared_tax_id == "B12345678"
+        assert first.declared_name == "Cliente Uno SL"
+        assert first.annual_operation_amount == Decimal("12000.00")
+        assert first.cash_received_amount == Decimal("6100.00")
+        second = filing.modelo_347_records[1]
+        assert second.fourth_quarter_amount == Decimal("1200.50")
+
+    def test_roundtrip_human_detail_line(self, tmp_path: Path) -> None:
+        pdf = _make_m347_human_detail_pdf(tmp_path)
+        filing = parse_declaracion(pdf)
+        assert filing.extraction_status is ExtractionStatus.COMPLETE
+        assert len(filing.modelo_347_records) == 1
+        record = filing.modelo_347_records[0]
+        assert record.declared_tax_id == "B12345678"
+        assert record.operation_key == "B"
+        assert record.annual_operation_amount == Decimal("12000.00")
 
 
 class TestModelo390V2025Extractor:
