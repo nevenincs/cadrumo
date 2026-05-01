@@ -1,7 +1,7 @@
 """Immutable transaction catalogue surface for the financial pipeline.
 
 Public surface — callers must import transaction models, errors, and
-service functions exclusively from ``aeat.domain.financial.transactions`` and
+service functions exclusively from ``aeat.domain.transactions`` and
 must not reach into the private underscore modules inside this package.
 """
 

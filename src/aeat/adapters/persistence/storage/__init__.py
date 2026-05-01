@@ -24,7 +24,7 @@ write migrations.
 
 from __future__ import annotations
 
-from ._blob_store import (
+from .blob_store import (
     BlobManifest,
     BlobReference,
     EncryptedBlobStore,
@@ -50,23 +50,21 @@ from ....core.corpus_manifest import (
     save_corpus_manifest,
     verify_corpus_manifest,
 )
-from ._crypto import (
+from .crypto import (
     GCM_TAG_SIZE,
     KEY_SIZE,
     NONCE_SIZE,
     EncryptedBlob,
-    decrypt_record,
-    derive_key,
-    encrypt_record,
-)
-from ._encrypted_columns import (
     EncryptedBytes,
     EncryptedJSON,
     EncryptedString,
     HashedLookup,
+    decrypt_record,
+    derive_key,
+    encrypt_record,
     override_master_key_provider,
 )
-from ._envelope import (
+from .envelope import (
     AeadAlgorithm,
     CipherEnvelope,
     EncryptionMetadata,
@@ -79,37 +77,35 @@ from ._envelope import (
     save_envelope,
 )
 from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
-from ._master_key import (
+from .master_key import (
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
     MigrationResult,
+    RecoveryKey,
     UnsecuredMasterKeyProvider,
+    WrappedMasterKey,
     atomic_write_secure_bytes,
+    decode_mnemonic,
+    encode_mnemonic,
+    generate_recovery_key,
     get_master_key_provider,
+    load_wrapped_master_key,
     looks_like_real_tax_id,
     migrate_master_key_kdf,
     refuse_unsecured_with_real_nif,
+    save_wrapped_master_key,
+    unwrap_master_key,
+    wrap_master_key,
 )
-from ._materialisation import (
+from .blob_store import (
     export_to_temp_path,
     get_secret_store,
     materialise_secret,
     override_secret_store,
 )
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
-from ._recovery import (
-    RecoveryKey,
-    WrappedMasterKey,
-    decode_mnemonic,
-    encode_mnemonic,
-    generate_recovery_key,
-    load_wrapped_master_key,
-    save_wrapped_master_key,
-    unwrap_master_key,
-    wrap_master_key,
-)
 from ....core.redaction import (
     default_rules,
     default_rules_for,
@@ -126,8 +122,8 @@ from ._rotation import (
     rotate_blob_stores,
     rotate_master_key,
 )
-from ._secret_store import SecretRecord, SecretStore
-from .engine import create_engine_from_settings, dispose_engine, get_engine
+from .secret_store import SecretRecord, SecretStore
+from .sql import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
     BlobIntegrityError,
     BlobNotFoundError,

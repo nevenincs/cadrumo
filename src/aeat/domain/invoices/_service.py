@@ -334,7 +334,7 @@ def _rollback_invoice_file(
             writer = rollback_temp_writer or _write_bytes
             writer(tmp, prior_bytes)
             os.replace(tmp, invoices_path)
-            from ....adapters.persistence.storage._lock import fsync_parent_dir
+            from ....core.locks import fsync_parent_dir
 
             fsync_parent_dir(invoices_path)
     except OSError as restore_exc:

@@ -6,13 +6,13 @@ from decimal import Decimal
 
 import typer
 
-from ....core.config import load_settings
-from ....core.i18n import Language, Translatable, get_translation
-from ....domain.financial._decimal import canonical_decimal
 from ....application.aggregation import (
     AggregationError,
     CasillaAggregation,
 )
+from ....core.config import load_settings
+from ....core.i18n import Language, Translatable, get_translation
+from ....domain.financial._decimal import canonical_decimal
 from .._errors import json_output_requested
 from .._schemas import OutputRootSchema, emit_json_success, register_schema
 from ._catalogue import catalogue_repository

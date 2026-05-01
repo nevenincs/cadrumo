@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from ...adapters.outbound.aeat.auth import GoogleAuthPath
+from ...adapters.outbound.google import GoogleAuthPath
 from ...core.config import Settings
 from . import doctor as doctor_module
 from .doctor import (

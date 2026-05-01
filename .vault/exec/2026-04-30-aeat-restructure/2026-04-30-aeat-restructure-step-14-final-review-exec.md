@@ -52,7 +52,7 @@ The ADR has an "Outcomes (rollout, 2026-05-01)" section recording:
 - Step-13 issues: 2 umbrellas (#498, #499) + 1 STRIKE (#500 closed)
 - Sanitization: source 197 + tests 405+ + vault 589
 - Override list: 9-entry import-linter carve-out registry, unchanged
-- Shim removal: scheduled for second-minor-after-introduction window
+- Migration model: hard-cutover; no backward-compat re-export layer was introduced; no removal window needed
 
 ## findings disposition
 
