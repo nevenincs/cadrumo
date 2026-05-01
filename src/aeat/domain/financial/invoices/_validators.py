@@ -1,9 +1,9 @@
 """Counterparty identity validators for invoice records.
 
 The Spanish tax-identity algorithm (:func:`validate_spanish_tax_id`)
-moved to :mod:`aeat.identity` so other subpackages (storage,
-sanitiser, CLI submission gates) can import it from a public surface
-instead of reaching into this private module. The function is
+moved to :mod:`aeat.adapters.inbound.identity` so other subpackages
+(storage, sanitizer, CLI submission gates) can import it from a public
+surface instead of reaching into this private module. The function is
 re-exported here for invoice-side callers that bind to the name
 locally.
 
