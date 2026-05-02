@@ -236,6 +236,39 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Comunidad de Madrid", "Comunitat de Madrid"),
     ("Región de Murcia", "Regió de Múrcia"),
     ("País Vasco", "País Basc"),
+    # Administrative geography (municipal / provincial level)
+    ("Municipio", "Municipi"),
+    ("municipio", "municipi"),
+    ("municipios", "municipis"),
+    ("Municipios", "Municipis"),
+    ("Provincia", "Província"),
+    ("provincia", "província"),
+    ("provincias", "províncies"),
+    ("Provincias", "Províncies"),
+    ("Cuadro", "Quadre"),
+    ("cuadro", "quadre"),
+    ("Núm. registros", "Núm. registres"),
+    ("núm. registros", "núm. registres"),
+    ("número de registros", "nombre de registres"),
+    ("Número de registros", "Nombre de registres"),
+    ("personas o entidades vinculadas", "persones o entitats vinculades"),
+    ("entidades vinculadas", "entitats vinculades"),
+    ("activos intangibles", "actius intangibles"),
+    ("activos", "actius"),
+    ("Activos", "Actius"),
+    ("activo", "actiu"),
+    ("Activo", "Actiu"),
+    ("beneficio fiscal", "benefici fiscal"),
+    ("beneficios fiscales", "beneficis fiscals"),
+    ("sujeto pasivo", "subjecte passiu"),
+    ("Sujeto pasivo", "Subjecte passiu"),
+    ("empresarial, profesional o artística", "empresarial, professional o artística"),
+    ("profesional", "professional"),
+    ("Profesional", "Professional"),
+    ("artística", "artística"),
+    ("artístico", "artístic"),
+    ("se ejerce la actividad", "s'exerceix l'activitat"),
+    ("ejerce la actividad", "exerceix l'activitat"),
     # Common nouns / domain terms
     ("Marque si tributa por", "Marqueu si tributeu per"),
     ("Marque si tributa", "Marqueu si tributeu"),
@@ -317,7 +350,19 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Estatal", "Estatal"),
     ("estatales", "estatals"),
     ("Estatales", "Estatals"),
+    ("Real Decreto-Ley", "Reial Decret-Llei"),
+    ("Real Decreto-ley", "Reial Decret-llei"),
     ("Real Decreto", "Reial Decret"),
+    ("Reglamento", "Reglament"),
+    ("reglamento", "reglament"),
+    ("Reglamentos", "Reglaments"),
+    ("reglamentos", "reglaments"),
+    ("Orden Ministerial", "Ordre Ministerial"),
+    ("orden ministerial", "ordre ministerial"),
+    ("Órdenes", "Ordres"),
+    ("órdenes", "ordres"),
+    ("Orden", "Ordre"),
+    ("orden", "ordre"),
     ("Ley", "Llei"),
     ("Leyes", "Lleis"),
     ("artículo", "article"),
@@ -583,6 +628,267 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("base legal", "base legal"),
     ("Base legal", "Base legal"),
     ("Ley, art.", "Llei, art."),
+    # IVA additional batch
+    ("Base — adquisiciones intracomunitarias corrientes",
+     "Base — adquisicions intracomunitàries corrents"),
+    ("Base — adquisiciones intracomunitarias de inversión",
+     "Base — adquisicions intracomunitàries d'inversió"),
+    ("Compensaciones régimen especial A.G.P.", "Compensacions règim especial A.G.P."),
+    ("compensaciones", "compensacions"),
+    ("Compensaciones", "Compensacions"),
+    ("compensación", "compensació"),
+    ("Compensación", "Compensació"),
+    ("Suma de resultados", "Suma de resultats"),
+    ("suma de resultados", "suma de resultats"),
+    ("% atribuible al Estado", "% atribuïble a l'Estat"),
+    ("Atribuible al Estado", "Atribuïble a l'Estat"),
+    ("atribuible", "atribuïble"),
+    ("Atribuible", "Atribuïble"),
+    ("Estado", "Estat"),
+    ("estado", "estat"),
+    ("N.º total operadores intracomunitarios", "Nre. total operadors intracomunitaris"),
+    ("N.º operadores con rectificaciones", "Nre. operadors amb rectificacions"),
+    ("operadores", "operadors"),
+    ("Operadores", "Operadors"),
+    ("operador", "operador"),
+    ("Operador", "Operador"),
+    ("rectificaciones", "rectificacions"),
+    ("Rectificaciones", "Rectificacions"),
+    ("rectificación", "rectificació"),
+    ("Rectificación", "Rectificació"),
+    ("intracomunitarios", "intracomunitaris"),
+    ("Intracomunitarios", "Intracomunitaris"),
+    ("intracomunitario", "intracomunitari"),
+    ("Intracomunitario", "Intracomunitari"),
+    ("Suma de las cuotas de IVA devengadas en los Estados miembros de consumo",
+     "Suma de les quotes d'IVA meritades als Estats membres de consum"),
+    ("Estados miembros de consumo", "Estats membres de consum"),
+    ("estados miembros", "estats membres"),
+    ("Estados miembros", "Estats membres"),
+    ("Estado miembro", "Estat membre"),
+    ("Total cuotas IVA devengadas", "Total quotes IVA meritades"),
+    ("cuotas IVA", "quotes IVA"),
+    ("Cuotas IVA", "Quotes IVA"),
+    ("cuotas", "quotes"),
+    ("Cuotas", "Quotes"),
+    ("Fecha de efectos", "Data d'efectes"),
+    ("fecha de efectos", "data d'efectes"),
+    # IRPF — Modelo 100 sub-labels
+    ("Reducción art. 18 — rendimientos irregulares",
+     "Reducció art. 18 — rendiments irregulars"),
+    ("Reducción art. 20 rendimientos del trabajo",
+     "Reducció art. 20 rendiments del treball"),
+    ("Reducción art. 26.2 — irregularidad capital mobiliario",
+     "Reducció art. 26.2 — irregularitat capital mobiliari"),
+    ("Reducción art. 23.2 — tramos 50/60/70/90 %",
+     "Reducció art. 23.2 — trams 50/60/70/90 %"),
+    ("Reducción LIRPF art. 32 — E.D. simplificada",
+     "Reducció LIRPF art. 32 — E.D. simplificada"),
+    ("Reducción LIRPF art. 32", "Reducció LIRPF art. 32"),
+    ("rendimientos irregulares", "rendiments irregulars"),
+    ("Rendimientos irregulares", "Rendiments irregulars"),
+    ("Otros rendimientos del capital mobiliario",
+     "Altres rendiments del capital mobiliari"),
+    ("Ganancias patrimoniales brutas", "Guanys patrimonials bruts"),
+    ("Pérdidas patrimoniales brutas", "Pèrdues patrimonials brutes"),
+    ("Reducción por aportaciones a sistemas de previsión social",
+     "Reducció per aportacions a sistemes de previsió social"),
+    ("Reducción por tributación conjunta",
+     "Reducció per tributació conjunta"),
+    ("Mínimo del contribuyente", "Mínim del contribuent"),
+    ("Mínimo por descendientes", "Mínim per descendents"),
+    ("Mínimo por ascendientes", "Mínim per ascendents"),
+    ("Mínimo por discapacidad", "Mínim per discapacitat"),
+    ("Mínimo del cónyuge", "Mínim del cònjuge"),
+    ("aportaciones", "aportacions"),
+    ("Aportaciones", "Aportacions"),
+    ("aportación", "aportació"),
+    ("Aportación", "Aportació"),
+    ("sistemas de previsión social", "sistemes de previsió social"),
+    ("previsión social", "previsió social"),
+    ("Previsión social", "Previsió social"),
+    ("tributación", "tributació"),
+    ("Tributación", "Tributació"),
+    ("tributación conjunta", "tributació conjunta"),
+    ("Tributación conjunta", "Tributació conjunta"),
+    ("discapacidad", "discapacitat"),
+    ("Discapacidad", "Discapacitat"),
+    ("contribuyentes", "contribuents"),
+    ("Contribuyentes", "Contribuents"),
+    ("contribuyente", "contribuent"),
+    ("Contribuyente", "Contribuent"),
+    ("descendientes", "descendents"),
+    ("Descendientes", "Descendents"),
+    ("descendiente", "descendent"),
+    ("Descendiente", "Descendent"),
+    ("ascendientes", "ascendents"),
+    ("Ascendientes", "Ascendents"),
+    ("ascendiente", "ascendent"),
+    ("Ascendiente", "Ascendent"),
+    ("cónyuge", "cònjuge"),
+    ("Cónyuge", "Cònjuge"),
+    ("irregulares", "irregulars"),
+    ("Irregulares", "Irregulars"),
+    ("irregularidad", "irregularitat"),
+    ("Irregularidad", "Irregularitat"),
+    ("simplificada", "simplificada"),
+    ("Simplificada", "Simplificada"),
+    ("brutas", "brutes"),
+    ("Brutas", "Brutes"),
+    ("bruta", "bruta"),
+    ("Bruta", "Bruta"),
+    ("brutos", "bruts"),
+    ("Brutos", "Bruts"),
+    ("bruto", "brut"),
+    ("Bruto", "Brut"),
+    ("netas", "netes"),
+    ("Netas", "Netes"),
+    ("neta", "neta"),
+    ("Neta", "Neta"),
+    ("netos", "nets"),
+    ("Netos", "Nets"),
+    ("neto", "net"),
+    ("Neto", "Net"),
+    ("tramos", "trams"),
+    ("Tramos", "Trams"),
+    ("tramo", "tram"),
+    ("Tramo", "Tram"),
+    # Final long-tail batch
+    ("Minimo personal y familiar total", "Mínim personal i familiar total"),
+    ("Total base retencion", "Total base retenció"),
+    ("Base retenciones", "Base retencions"),
+    ("Compensacion BINs", "Compensació BINs"),
+    ("Compensación BINs", "Compensació BINs"),
+    ("Abono de deducciones", "Abonament de deduccions"),
+    ("abono de deducciones", "abonament de deduccions"),
+    ("Incremento por perdida beneficios fiscales", "Increment per pèrdua beneficis fiscals"),
+    ("Incremento por pérdida beneficios fiscales", "Increment per pèrdua beneficis fiscals"),
+    ("incremento", "increment"),
+    ("Incremento", "Increment"),
+    ("Total de registros de operaciones con personas o entidades vinculadas declarados",
+     "Total de registres d'operacions amb persones o entitats vinculades declarats"),
+    ("operaciones con personas o entidades vinculadas",
+     "operacions amb persones o entitats vinculades"),
+    ("personas o entidades vinculadas", "persones o entitats vinculades"),
+    ("Total de registros de operaciones con activos intangibles",
+     "Total de registres d'operacions amb actius intangibles"),
+    ("operaciones con activos intangibles", "operacions amb actius intangibles"),
+    ("activos intangibles", "actius intangibles"),
+    ("Activos intangibles", "Actius intangibles"),
+    ("activos", "actius"),
+    ("Activos", "Actius"),
+    ("activo", "actiu"),
+    ("Activo", "Actiu"),
+    ("intangible", "intangible"),
+    ("Intangible", "Intangible"),
+    ("intangibles", "intangibles"),
+    ("Intangibles", "Intangibles"),
+    ("operaciones con paraísos fiscales", "operacions amb paradisos fiscals"),
+    ("paraísos fiscales", "paradisos fiscals"),
+    ("Paraísos fiscales", "Paradisos fiscals"),
+    ("paraíso", "paradís"),
+    ("Paraíso", "Paradís"),
+    ("paraísos", "paradisos"),
+    ("Paraísos", "Paradisos"),
+    ("registros", "registres"),
+    ("Registros", "Registres"),
+    ("registro", "registre"),
+    ("Registro", "Registre"),
+    ("vinculadas", "vinculades"),
+    ("Vinculadas", "Vinculades"),
+    ("vinculados", "vinculats"),
+    ("Vinculados", "Vinculats"),
+    ("vinculada", "vinculada"),
+    ("vinculado", "vinculat"),
+    ("vinculación", "vinculació"),
+    ("Vinculación", "Vinculació"),
+    ("entidades", "entitats"),
+    ("Entidades", "Entitats"),
+    ("entidad", "entitat"),
+    ("Entidad", "Entitat"),
+    ("personas", "persones"),
+    ("Personas", "Persones"),
+    ("persona", "persona"),
+    ("Persona", "Persona"),
+    ("acogido al", "acollit al"),
+    ("se han acogido", "s'han acollit"),
+    ("Suma agregada anual de las operaciones con terceros declaradas en el modelo 347.",
+     "Suma agregada anual de les operacions amb tercers declarades al model 347."),
+    ("operaciones con terceros", "operacions amb tercers"),
+    ("Operaciones con terceros", "Operacions amb tercers"),
+    ("terceros", "tercers"),
+    ("Terceros", "Tercers"),
+    ("tercero", "tercer"),
+    ("Tercero", "Tercer"),
+    ("declaradas", "declarades"),
+    ("Declaradas", "Declarades"),
+    ("declarados", "declarats"),
+    ("Declarados", "Declarats"),
+    ("declarada", "declarada"),
+    ("Declarada", "Declarada"),
+    ("declarado", "declarat"),
+    ("Declarado", "Declarat"),
+    ("agregada", "agregada"),
+    ("agregado", "agregat"),
+    ("modelo", "model"),
+    ("modelos", "models"),
+    ("Modelos", "Models"),
+    ("N.º total registros — cobros en metálico", "Nre. total registres — cobraments en metàl·lic"),
+    ("cobros en metálico", "cobraments en metàl·lic"),
+    ("Cobros en metálico", "Cobraments en metàl·lic"),
+    ("Suma anual de los cobros en metálico superiores a",
+     "Suma anual dels cobraments en metàl·lic superiors a"),
+    ("cobros", "cobraments"),
+    ("Cobros", "Cobraments"),
+    ("cobro", "cobrament"),
+    ("Cobro", "Cobrament"),
+    ("metálico", "metàl·lic"),
+    ("Metálico", "Metàl·lic"),
+    ("superiores a", "superiors a"),
+    ("Superiores a", "Superiors a"),
+    ("superior a", "superior a"),
+    ("Superior a", "Superior a"),
+    ("Suma de las cuotas de IVA devengadas en los Estados miembros de consumo",
+     "Suma de les quotes d'IVA meritades als Estats membres de consum"),
+    ("Total cuotas repercutidas", "Total quotes repercutides"),
+    ("cuotas repercutidas", "quotes repercutides"),
+    ("Cuotas repercutidas", "Quotes repercutides"),
+    ("Tipo de actividad: empresarial, profesional o artística.",
+     "Tipus d'activitat: empresarial, professional o artística."),
+    ("Tipo de actividad", "Tipus d'activitat"),
+    ("tipo de actividad", "tipus d'activitat"),
+    ("empresarial", "empresarial"),
+    ("Empresarial", "Empresarial"),
+    ("profesional", "professional"),
+    ("Profesional", "Professional"),
+    ("artística", "artística"),
+    ("Artística", "Artística"),
+    ("artístico", "artístic"),
+    ("Artístico", "Artístic"),
+    ("Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo.",
+     "Grup o epígraf de l'IAE assignat a l'activitat econòmica del subjecte passiu."),
+    ("Grupo o epígrafe", "Grup o epígraf"),
+    ("grupo o epígrafe", "grup o epígraf"),
+    ("Grupo", "Grup"),
+    ("grupo", "grup"),
+    ("epígrafe", "epígraf"),
+    ("Epígrafe", "Epígraf"),
+    ("asignado", "assignat"),
+    ("Asignado", "Assignat"),
+    ("asignada", "assignada"),
+    ("Asignada", "Assignada"),
+)
+
+
+# Sorted longest-first so multi-word compound phrases match before
+# their constituent shorter lemmas can consume the substring. Without
+# this ordering, generic lemmas inserted earlier in the source tuple
+# would translate the inner words first, leaving the longer compound
+# unable to match (e.g. "personas o entidades vinculadas" → "persones
+# o entitats vinculades" would prevent the full sentence variant from
+# applying its idiomatic Catalan rendering).
+_ES_TO_CA_LEMMAS_ORDERED: tuple[tuple[str, str], ...] = tuple(
+    sorted(_ES_TO_CA_LEMMAS, key=lambda pair: -len(pair[0]))
 )
 
 
@@ -601,7 +907,134 @@ def _es_to_ca_via_lemmas(es_text: str) -> str:
     if not es_text:
         return es_text
     out = es_text
-    for old, new in _ES_TO_CA_LEMMAS:
+    for old, new in _ES_TO_CA_LEMMAS_ORDERED:
+        if old == new:
+            continue
+        pattern = r'(?<![A-Za-zÀ-ɏ])' + re.escape(old) + r'(?![A-Za-zÀ-ɏ])'
+        out = re.sub(pattern, new, out)
+    return out
+
+
+# Hungarian diacritic restoration table. Applied to ``label_hu`` /
+# ``help_hu`` slots that the curated _Casilla record left ASCII-only;
+# this catches cases where an upstream extractor or earlier hand-edit
+# typed Hungarian without the required ő/ű/á/é/í/ó/ú accents.
+_HU_DIACRITIC_LEMMAS: tuple[tuple[str, str], ...] = (
+    ("autonom", "autonóm"),
+    ("Autonom", "Autonóm"),
+    ("levonasok", "levonások"),
+    ("Levonasok", "Levonások"),
+    ("levonas", "levonás"),
+    ("Levonas", "Levonás"),
+    ("osszesen", "összesen"),
+    ("Osszesen", "Összesen"),
+    ("osszeg", "összeg"),
+    ("Osszeg", "Összeg"),
+    ("brutto", "bruttó"),
+    ("Brutto", "Bruttó"),
+    ("netto", "nettó"),
+    ("Netto", "Nettó"),
+    ("altalanos", "általános"),
+    ("Altalanos", "Általános"),
+    ("allami", "állami"),
+    ("Allami", "Állami"),
+    ("megtakaritasi", "megtakarítási"),
+    ("Megtakaritasi", "Megtakarítási"),
+    ("megtakaritas", "megtakarítás"),
+    ("teljes", "teljes"),
+    ("adoalap", "adóalap"),
+    ("Adoalap", "Adóalap"),
+    ("szemelyi", "személyi"),
+    ("Szemelyi", "Személyi"),
+    ("alapba", "alapba"),
+    ("szamitando", "számítandó"),
+    ("Szamitando", "Számítandó"),
+    ("egyenleg", "egyenleg"),
+    ("csokkentes", "csökkentés"),
+    ("Csokkentes", "Csökkentés"),
+    ("szerinti", "szerinti"),
+    ("likvidalt", "likvidált"),
+    ("tarifa", "tarifa"),
+    ("ccaafuggo", "ccaafüggő"),
+    ("kozosseg", "közösség"),
+    ("Kozosseg", "Közösség"),
+    ("kozossegi", "közösségi"),
+    ("Kozossegi", "Közösségi"),
+    ("keszletvaltozas", "készletváltozás"),
+    ("Keszletvaltozas", "Készletváltozás"),
+    ("keszlet", "készlet"),
+    ("Keszlet", "Készlet"),
+    ("nyito", "nyitó"),
+    ("Nyito", "Nyitó"),
+    ("zaro", "záró"),
+    ("Zaro", "Záró"),
+    ("vagyongyarapodas", "vagyongyarapodás"),
+    ("vagyonveszteseg", "vagyonveszteség"),
+    ("vagyon", "vagyon"),
+    ("veszteseg", "veszteség"),
+    ("Veszteseg", "Veszteség"),
+    ("leszarmazok", "leszármazók"),
+    ("Leszarmazok", "Leszármazók"),
+    ("felmenok", "felmenők"),
+    ("Felmenok", "Felmenők"),
+    ("fogyatekossagi", "fogyatékossági"),
+    ("Fogyatekossagi", "Fogyatékossági"),
+    ("csaladi", "családi"),
+    ("Csaladi", "Családi"),
+    ("hivo", "hívó"),
+    ("Hivo", "Hívó"),
+    ("szolgaltatja", "szolgáltatja"),
+    ("eloleg", "előleg"),
+    ("Eloleg", "Előleg"),
+    ("befizetesek", "befizetések"),
+    ("Befizetesek", "Befizetések"),
+    ("befizetes", "befizetés"),
+    ("reszletfizetesek", "részletfizetések"),
+    ("Reszletfizetesek", "Részletfizetések"),
+    ("reszletfizetes", "részletfizetés"),
+    ("modell", "modell"),
+    ("egyuttes", "együttes"),
+    ("Egyuttes", "Együttes"),
+    ("adobevallasi", "adóbevallási"),
+    ("Adobevallasi", "Adóbevallási"),
+    ("adobevallas", "adóbevallás"),
+    ("Adobevallas", "Adóbevallás"),
+    ("eredmenye", "eredménye"),
+    ("Eredmenye", "Eredménye"),
+    ("eredmeny", "eredmény"),
+    ("Eredmeny", "Eredmény"),
+    ("kulonbozeti", "különbözeti"),
+    ("Kulonbozeti", "Különbözeti"),
+    ("kulonbozet", "különbözet"),
+    ("Kulonbozet", "Különbözet"),
+    ("onbevallas", "önbevallás"),
+    ("Onbevallas", "Önbevallás"),
+    ("kulcs", "kulcs"),
+    ("jogalap", "jogalap"),
+    ("minimum", "minimum"),
+    ("nyugdijrendszer", "nyugdíjrendszer"),
+    ("Nyugdijrendszer", "Nyugdíjrendszer"),
+    ("hozzajarulasi", "hozzájárulási"),
+    ("Hozzajarulasi", "Hozzájárulási"),
+    ("ado-bevallasi", "adó-bevallási"),
+    ("Ado-bevallasi", "Adó-bevallási"),
+    ("blgre", "BL-re"),
+)
+
+
+def _hu_restore_diacritics(hu_text: str) -> str:
+    """Restore Hungarian diacritics on ASCII-degraded ``label_hu`` slots.
+
+    Some upstream casilla data records carry HU text without ő/ű/á/é
+    diacritics. This pass walks a curated lemma map and substitutes
+    the diacritic-bearing form. Idempotent — already-correct HU text
+    matches no lemma keys and passes through unchanged.
+    """
+
+    if not hu_text:
+        return hu_text
+    out = hu_text
+    for old, new in _HU_DIACRITIC_LEMMAS:
         if old == new:
             continue
         pattern = r'(?<![A-Za-zÀ-ɏ])' + re.escape(old) + r'(?![A-Za-zÀ-ɏ])'
@@ -675,6 +1108,7 @@ def _collect_casilla_refs(node: object) -> list[str]:
     seen: list[str] = []
 
     def walk(n: object) -> None:
+        """Walk the catalogue tree and yield records in declaration order."""
         if isinstance(n, FormulaCasillaRef):
             if n.casilla_id not in seen:
                 seen.append(n.casilla_id)
@@ -740,7 +1174,7 @@ class _Casilla:
         for lang in languages:
             value = getattr(self, f"label_{lang}", "")
             if value:
-                out[lang] = value
+                out[lang] = _hu_restore_diacritics(value) if lang == "hu" else value
             elif lang == "ca":
                 out[lang] = _es_to_ca_via_lemmas(es)
             else:
@@ -759,7 +1193,7 @@ class _Casilla:
         for lang in languages:
             value = getattr(self, f"help_{lang}", "")
             if value:
-                out[lang] = value
+                out[lang] = _hu_restore_diacritics(value) if lang == "hu" else value
             elif lang == "ca":
                 out[lang] = _es_to_ca_via_lemmas(es)
             else:
@@ -1681,13 +2115,11 @@ def _expand_label_to_supported_languages(label: dict[str, str]) -> dict[str, str
     for lang in _supported_language_codes():
         if lang not in out or not out[lang]:
             if lang == "ca":
-                # Catalan ≠ Spanish — never copy ES into CA. Fall back
-                # through the lemma-based translator so the CA slot
-                # carries a grounded Catalan rendering whenever the
-                # source-of-truth ruleset omits Catalan content.
                 out[lang] = _es_to_ca_via_lemmas(es)
             else:
                 out[lang] = es
+        elif lang == "hu":
+            out[lang] = _hu_restore_diacritics(out[lang])
     return out
 
 
@@ -1780,7 +2212,9 @@ def _help_from_label(
         # lemma translator (Catalan ≠ Spanish) and every other language
         # falls back to the Spanish authoritative text.
         if lang in label and label[lang]:
-            lang_label = label[lang]
+            lang_label = (
+                _hu_restore_diacritics(label[lang]) if lang == "hu" else label[lang]
+            )
         elif lang == "ca":
             lang_label = _es_to_ca_via_lemmas(label_es)
         else:
@@ -1793,6 +2227,12 @@ def _help_from_label(
         legal_clause = ""
         if legal_hint:
             legal_clause = legal_hint.replace("Base legal:", _LEGAL_HINT_LABEL.get(lang, "Base legal:"))
+            # The legal_hint body carries Spanish legal-source nouns
+            # ("Reglamento", "Orden", "Ley", "Real Decreto"); translate
+            # them via the lemma map for Catalan so the inline citation
+            # reads natively rather than echoing the Spanish source text.
+            if lang == "ca":
+                legal_clause = _es_to_ca_via_lemmas(legal_clause)
         cross_clause = cross_hints.get(lang, "")
         if lang == "es" and notes_es:
             out["es"] = notes_es + formula_clause + cross_clause + legal_clause
@@ -2395,6 +2835,13 @@ def _additional_rulesets_for(modelo: str, year: int) -> list[Ruleset]:
 
 
 def generate_records(modelo: str, period: str, year: int) -> list[CasillaRecord]:
+    """Build the canonical :class:`CasillaRecord` list for ``modelo`` / ``period`` / ``year``.
+
+    Resolves the period schema (when known) and the formula ruleset
+    against the manual práctico catalogues, cross-linking each casilla
+    with the legal citations that apply to the requested fiscal year.
+    Used by :func:`run` to materialise the on-disk casilla corpus.
+    """
     src = _source_url_for(modelo, year)
 
     schema_ruleset = _schema_ruleset_for(modelo, year)
@@ -2548,6 +2995,13 @@ def _years_for(modelo: str) -> tuple[int, ...]:
 
 
 def run() -> None:
+    """Hydrate every supported (modelo, period, year) catalogue to disk.
+
+    Walks the closed modelo enumeration, computes each modelo's active
+    period set under its filing cadence, regenerates the on-disk
+    casilla corpus via :func:`generate_records`, and writes JSON
+    catalogues into the repository's ``corpus/casillas`` tree.
+    """
     _assert_manual_data_tracks_extractors()
     written = 0
     for modelo in ALL_MODELOS:
