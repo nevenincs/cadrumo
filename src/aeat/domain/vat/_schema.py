@@ -1,16 +1,15 @@
-"""Strict pydantic v2 schema for the ``aeat.domain.vat`` subpackage.
+"""Strict pydantic v2 schema for the :mod:`aeat.domain.vat` subpackage.
 
 Every record the subpackage exposes — enumerations, per-rate values,
-citations, regulations, catalogues, verification reports — is defined
-here. The schema is frozen and strict wherever the loader idiom
-permits it, mirroring the pattern established by
-:mod:`aeat.domain.normatives._schema`.
+citations, regulations, catalogues, verification reports — is defined here.
+The schema is frozen and strict wherever the loader idiom permits it,
+mirroring the pattern established by :mod:`aeat.domain.normatives._schema`.
 
 Closed catalogues (:class:`VATCategory`, :class:`EUMemberState`,
-:class:`VATRateKind`, :class:`CitationSource`) are
-:class:`enum.StrEnum`. Trilingual fields use
-:class:`aeat.core.i18n.Translatable` and the authoritative ``es`` key is
-enforced at construction time on every ``VATRegulation``.
+:class:`VATRateKind`, :class:`VatCitationSource`) are :class:`enum.StrEnum`
+subclasses. Multilingual fields use :class:`aeat.core.i18n.Translatable` and
+the authoritative Spanish (``es``) key is enforced at construction time on
+every :class:`VATRegulation`.
 """
 
 from __future__ import annotations
@@ -35,10 +34,10 @@ from ...core.i18n import Translatable
 class VATCategory(StrEnum):
     """Closed catalogue of Spanish VAT (IVA) situations.
 
-    Drawn from the TDP Step R-1 contract on issue #85. The member
-    names and string values are the authoritative identifiers the
-    downstream classifier layers (providers #73, categories #77,
-    TDP engine) use to tag a transaction.
+    The member names and string values are the authoritative identifiers used
+    by the downstream classifier layers (financial providers, the spending
+    category taxonomy, and the transaction-data-pipeline engine) to tag a
+    transaction.
     """
 
     DOMESTIC_GENERAL_21 = "domestic_general_21"
@@ -63,9 +62,9 @@ class VATCategory(StrEnum):
 class EUMemberState(StrEnum):
     """Current 27 EU member states, ISO 3166-1 alpha-2 (lowercase).
 
-    Alphabetically ordered by ISO code. The list reflects the
-    composition of the European Union as of 2025 (post-Brexit,
-    post-Croatia, Schengen-irrelevant).
+    Alphabetically ordered by ISO code. The list reflects the composition of
+    the European Union after Brexit and after Croatia's accession; Schengen
+    membership is irrelevant to this taxonomy.
     """
 
     AT = "at"
@@ -107,7 +106,7 @@ class VATRateKind(StrEnum):
     EXEMPT = "exempt"
 
 
-class CitationSource(StrEnum):
+class VatCitationSource(StrEnum):
     """Closed catalogue of legal/regulatory sources cited by VAT rules."""
 
     LEY_37_1992 = "ley-37-1992"
@@ -120,28 +119,28 @@ _ArticleRef = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
-"""Free-form article reference shape, e.g. ``Art. 91.Uno.2.1º``."""
+"""Free-form article reference shape, for example ``Art. 91.Uno.2.1º``."""
 
 
 _SpanishQuote = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=2048),
 ]
-"""Non-empty Spanish quote extracted from (or paraphrased for) the citation."""
+"""Non-empty Spanish quote extracted from, or paraphrased for, the citation."""
 
 
 _BoeOrDirectiveRef = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=256),
 ]
-"""Free-form reference to the BOE or Council Directive backing a rate."""
+"""Free-form reference to the BOE entry or Council Directive backing a rate."""
 
 
 _ModeloRef = Annotated[
     str,
     StringConstraints(strip_whitespace=True, pattern=r"^[0-9]{3}$"),
 ]
-"""AEAT modelo number shape (three ASCII digits, e.g. ``303``)."""
+"""AEAT modelo number shape — three ASCII digits, for example ``303``."""
 
 
 _NormativeId = Annotated[
@@ -160,25 +159,25 @@ _ManualRef = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=256),
 ]
-"""Free-form reference to a Manual práctico IVA rule id or section ref."""
+"""Free-form reference to a Manual práctico IVA rule id or section reference."""
 
 
 def _require_spanish(translatable: Translatable, field_name: str) -> None:
-    """Assert a translatable carries the authoritative ``es`` key.
+    """Assert a :class:`aeat.core.i18n.Translatable` carries the ``es`` key.
 
     Args:
         translatable: The translatable mapping under validation.
         field_name: Dotted field name surfaced in the error message.
 
     Raises:
-        ValueError: If the ``es`` key is missing or empty.
+        :exc:`ValueError`: If the ``es`` key is missing or empty.
     """
     if not translatable.get("es"):
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
-class _StrictFrozen(BaseModel):
-    """Shared base config: strict validation, immutable, no extras."""
+class _VatStrictFrozen(BaseModel):
+    """Shared base config: strict validation, immutable, extras forbidden."""
 
     model_config = ConfigDict(
         strict=True,
@@ -187,8 +186,9 @@ class _StrictFrozen(BaseModel):
     )
 
 
-class _StrictMutable(BaseModel):
-    """Strict validation but mutable; used for aggregate catalogues."""
+class _VatStrictMutable(BaseModel):
+    """Strict validation but mutable; used for aggregate catalogues that the
+    loader populates incrementally."""
 
     model_config = ConfigDict(
         strict=True,
@@ -197,8 +197,19 @@ class _StrictMutable(BaseModel):
     )
 
 
-class VATRate(_StrictFrozen):
-    """A single VAT rate line item keyed by member state + kind."""
+class VATRate(_VatStrictFrozen):
+    """A single VAT rate line item keyed by member state and rate kind.
+
+    Attributes:
+        member_state: Issuing member state.
+        kind: Rate tier (general / reduced / ...).
+        pct: Rate percentage as a :class:`~decimal.Decimal` in ``[0, 100]``.
+        effective_from: First date the rate applies.
+        effective_until: Last date the rate applies, or ``None`` for
+            open-ended.
+        boe_or_directive_reference: Free-form reference to the BOE entry or
+            Council Directive article that backs this rate.
+    """
 
     member_state: EUMemberState = Field(description="Issuing member state.")
     kind: VATRateKind = Field(description="Rate tier (general / reduced / ...).")
@@ -221,7 +232,7 @@ class VATRate(_StrictFrozen):
 
     @model_validator(mode="after")
     def _validate_window(self) -> VATRate:
-        """Ensure ``effective_from <= effective_until`` when both are set."""
+        """Ensure :attr:`effective_from` precedes :attr:`effective_until`."""
         if self.effective_until is not None and self.effective_from > self.effective_until:
             raise ValueError(
                 f"VATRate[{self.member_state.value}/{self.kind.value}]: "
@@ -230,18 +241,25 @@ class VATRate(_StrictFrozen):
         return self
 
 
-class Citation(_StrictFrozen):
-    """A legal / regulatory citation backing a :class:`VATRegulation`.
+class VatCitation(_VatStrictFrozen):
+    """A legal or regulatory citation backing a :class:`VATRegulation`.
 
-    The ``quoted_text_es`` field must be a non-empty Spanish string.
-    It MAY be a faithful paraphrase of the article's statutory
-    language when a verbatim extract is not practical; the
-    paraphrase must match the article's subject matter and preserve
-    the operative fiscal meaning. Auditability relies on the
-    combination of ``source``, ``article`` and ``quoted_text_es``.
+    The :attr:`quoted_text_es` field must be a non-empty Spanish string. It
+    may be a faithful paraphrase of the article's statutory language when a
+    verbatim extract is not practical; the paraphrase must match the
+    article's subject matter and preserve the operative fiscal meaning.
+    Auditability relies on the combination of :attr:`source`, :attr:`article`
+    and :attr:`quoted_text_es`.
+
+    Attributes:
+        source: Legal source of the citation.
+        article: Article reference, for example ``Art. 91.Uno.2.1º``.
+        url: Optional deep link to the cited article.
+        quoted_text_es: Non-empty Spanish quote or faithful paraphrase.
+        retrieval_date: Date the citation was retrieved or last reviewed.
     """
 
-    source: CitationSource = Field(description="Legal source of the citation.")
+    source: VatCitationSource = Field(description="Legal source of the citation.")
     article: _ArticleRef = Field(
         description="Article reference, e.g. 'Art. 91.Uno.2.1º'.",
     )
@@ -257,14 +275,32 @@ class Citation(_StrictFrozen):
     )
 
 
-class VATRegulation(_StrictFrozen):
+class VATRegulation(_VatStrictFrozen):
     """A single codified VAT rule for a :class:`VATCategory`.
 
-    Every regulation carries at least one :class:`Citation`; the
-    substrate-level invariant enforced by :func:`verify_catalogue`
-    additionally requires every shipped regulation to cite real
-    Ley 37/1992 articles so downstream tools can surface the legal
-    backing of any classification.
+    Every regulation carries at least one :class:`VatCitation`. The
+    substrate-level invariant enforced by
+    :func:`aeat.domain.vat.verify_catalogue` additionally requires every
+    shipped regulation to cite real Ley 37/1992 articles so downstream tools
+    can surface the legal backing of any classification.
+
+    Attributes:
+        category: The VAT situation codified by this rule.
+        label: Short human-readable label.
+        description: One-paragraph plain-language description.
+        triggers_when: Plain-language description of when this rule fires.
+        iva_treatment: Plain-language description of the fiscal treatment.
+        declares_in_modelos: AEAT modelo numbers (for example
+            ``("303", "349")``) where this rule appears.
+        requires_reverse_charge: Whether the rule triggers
+            *inversión del sujeto pasivo*.
+        requires_supplier_vat_id: Whether a supplier NIF-VAT is mandatory.
+        boe_references: Normative ids (shared with
+            :mod:`aeat.domain.normatives`) backing this rule.
+        manual_references: Optional Manual práctico IVA rule ids or section
+            references.
+        citations: At least one :class:`VatCitation` is required.
+        notes: Free-form reviewer notes.
     """
 
     category: VATCategory = Field(description="The VAT situation codified by this rule.")
@@ -291,8 +327,8 @@ class VATRegulation(_StrictFrozen):
     manual_references: tuple[_ManualRef, ...] = Field(
         description="Optional Manual práctico IVA rule ids or section refs.",
     )
-    citations: tuple[Citation, ...] = Field(
-        description="At least one Citation is required.",
+    citations: tuple[VatCitation, ...] = Field(
+        description="At least one VatCitation is required.",
     )
     notes: str = Field(
         default="",
@@ -301,22 +337,26 @@ class VATRegulation(_StrictFrozen):
 
     @model_validator(mode="after")
     def _validate(self) -> VATRegulation:
-        """Enforce trilingual + citation invariants."""
+        """Enforce the multilingual-Spanish and at-least-one-citation invariants."""
         _require_spanish(self.label, f"VATRegulation[{self.category.value}].label")
         _require_spanish(self.description, f"VATRegulation[{self.category.value}].description")
         _require_spanish(self.triggers_when, f"VATRegulation[{self.category.value}].triggers_when")
         _require_spanish(self.iva_treatment, f"VATRegulation[{self.category.value}].iva_treatment")
         if not self.citations:
-            raise ValueError(f"VATRegulation[{self.category.value}]: at least one Citation is required")
+            raise ValueError(f"VATRegulation[{self.category.value}]: at least one VatCitation is required")
         return self
 
 
-class VATCatalogue(_StrictMutable):
-    """Aggregate view over a collection of :class:`VATRegulation`.
+class VATCatalogue(_VatStrictMutable):
+    """Aggregate view over a collection of :class:`VATRegulation` records.
 
-    The aggregate is mutable to keep the loader idiom simple (the
-    loader populates the mapping incrementally). Individual
-    :class:`VATRegulation` records remain frozen.
+    The aggregate is mutable to keep the loader idiom simple — the loader
+    populates the mapping incrementally. Individual :class:`VATRegulation`
+    records remain frozen.
+
+    Attributes:
+        regulations: Regulations keyed by their
+            :class:`VATCategory`.
     """
 
     regulations: dict[VATCategory, VATRegulation] = Field(
@@ -326,7 +366,7 @@ class VATCatalogue(_StrictMutable):
 
     @model_validator(mode="after")
     def _check_key_alignment(self) -> VATCatalogue:
-        """Ensure every mapping key matches its record's category."""
+        """Ensure every mapping key matches its record's :attr:`VATRegulation.category`."""
         for key, regulation in self.regulations.items():
             if key != regulation.category:
                 raise ValueError(
@@ -339,11 +379,11 @@ class VATCatalogue(_StrictMutable):
         return iter(self.regulations.values())
 
     def __len__(self) -> int:
-        """Return the number of loaded regulations."""
+        """Return the number of loaded :class:`VATRegulation` records."""
         return len(self.regulations)
 
     def __contains__(self, key: object) -> bool:
-        """Check whether ``key`` names a loaded :class:`VATCategory`."""
+        """Return ``True`` when ``key`` names a loaded :class:`VATCategory`."""
         return key in self.regulations
 
     def get(self, category: VATCategory) -> VATRegulation | None:
@@ -351,8 +391,15 @@ class VATCatalogue(_StrictMutable):
         return self.regulations.get(category)
 
 
-class VerificationIssue(_StrictFrozen):
-    """A single finding produced by :func:`verify_catalogue`."""
+class VatVerificationIssue(_VatStrictFrozen):
+    """A single finding produced by :func:`aeat.domain.vat.verify_catalogue`.
+
+    Attributes:
+        level: Severity, either ``"error"`` or ``"warning"``.
+        code: Short stable issue code.
+        message: Human-readable detail.
+        category_id: Affected VAT category value, if any.
+    """
 
     level: str = Field(description="'error' or 'warning'.")
     code: str = Field(description="Short, stable issue code.")
@@ -363,14 +410,19 @@ class VerificationIssue(_StrictFrozen):
     )
 
 
-class VerificationReport(_StrictFrozen):
-    """Aggregate verification report for :class:`VATCatalogue`."""
+class VatVerificationReport(_VatStrictFrozen):
+    """Aggregate verification report for a :class:`VATCatalogue`.
 
-    issues: tuple[VerificationIssue, ...] = Field(default_factory=tuple)
+    Attributes:
+        issues: All findings produced by
+            :func:`aeat.domain.vat.verify_catalogue`.
+    """
+
+    issues: tuple[VatVerificationIssue, ...] = Field(default_factory=tuple)
 
     @property
-    def errors(self) -> tuple[VerificationIssue, ...]:
-        """Return the subset of issues whose level is ``error``."""
+    def errors(self) -> tuple[VatVerificationIssue, ...]:
+        """Return the subset of issues whose :attr:`VatVerificationIssue.level` is ``"error"``."""
         return tuple(issue for issue in self.issues if issue.level == "error")
 
     @property

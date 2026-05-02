@@ -1,4 +1,4 @@
-"""``aeat filing`` sub-app — filing draft engine CLI (#39).
+"""``aeat filing`` sub-app — filing draft engine CLI.
 
 Subcommands:
 
@@ -7,13 +7,14 @@ Subcommands:
 - ``aeat filing show`` — pretty-print a draft.
 - ``aeat filing list`` — list drafts under the configured drafts dir.
 - ``aeat filing import`` — reconstruct a draft from a justificante /
-  declaración / borrador PDF (#271, #305).
+  declaración / borrador PDF.
 """
 
 from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, cast
@@ -22,7 +23,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ....adapters.outbound.aeat.export import SubmissionEngine
+from ....application.auth import AuthProviderDescription, AuthProviderKind
 from ....application.filing import (
     FilingAmendment,
     FilingAmendmentError,
@@ -41,23 +42,23 @@ from ....application.filing import (
     refresh_review_status,
     validate_draft,
 )
+from ....domain.submission import SubmissionEngine
 from ....application.filing.runtime import build_runtime_schema_provider, load_default_filing_profile
 from ....core.config import load_settings
 from ....core.i18n import Language, Translatable, get_translation
 from ....core.logging import get_logger
 from ....domain.justificante import JustificanteError
-from ..submission._helpers import build_engine as build_submission_engine
-from ._reconcile import register as _register_reconcile
+from .._i18n import output_language as _output_language, t as _t, tr as _msg
 
 app = typer.Typer(
     name="filing",
     no_args_is_help=True,
-    help="Filing draft engine commands (#39).",
+    help="Filing draft engine commands.",
 )
 complementaria_app = typer.Typer(
     name="complementaria",
     no_args_is_help=True,
-    help="Build amendment filings (#93).",
+    help="Build amendment filings.",
 )
 
 _console = Console()
@@ -77,7 +78,31 @@ def _drafts_dir() -> Path:
 
 def _submission_engine() -> SubmissionEngine:
     """Return a submission engine instance for amendment commands."""
-    return build_submission_engine()
+
+    class _OpenDeadlineChecker:
+        def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+            return True
+
+    class _CliAuthProvider:
+        kind = AuthProviderKind.CERTIFICATE
+
+        def describe(self) -> AuthProviderDescription:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="CLI certificate provider",
+                configured=True,
+                available=True,
+                identity_nif="12345678Z",
+                subject="CN=cli-provider",
+                expires_on=date(2099, 12, 31),
+                health_summary="OK:26800",
+            )
+
+    return SubmissionEngine(
+        auth_provider=_CliAuthProvider(),
+        deadline_checker=_OpenDeadlineChecker(),
+        settings=load_settings(),
+    )
 
 
 def _schema_provider():
@@ -88,24 +113,59 @@ def _schema_provider():
 def _load_inputs(path: Path) -> dict[str, object]:
     """Load and parse a JSON inputs file from disk."""
     if not path.exists():
-        raise typer.BadParameter(f"inputs file not found: {path}")
+        raise typer.BadParameter(
+            _msg(_t(
+                f"fichero de entradas no encontrado: {path}",
+                f"inputs file not found: {path}",
+                f"fitxer d'entrades no trobat: {path}",
+                f"bemeneti fájl nem található: {path}",
+            ))
+        )
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise typer.BadParameter(f"invalid JSON in {path}: {exc}") from exc
+        raise typer.BadParameter(
+            _msg(_t(
+                f"JSON inválido en {path}: {exc}",
+                f"invalid JSON in {path}: {exc}",
+                f"JSON no vàlid a {path}: {exc}",
+                f"érvénytelen JSON itt: {path}: {exc}",
+            ))
+        ) from exc
     if not isinstance(raw, dict):
-        raise typer.BadParameter(f"inputs file {path} must contain a JSON object")
+        raise typer.BadParameter(
+            _msg(_t(
+                f"el fichero de entradas {path} debe contener un objeto JSON",
+                f"inputs file {path} must contain a JSON object",
+                f"el fitxer d'entrades {path} ha de contenir un objecte JSON",
+                f"a bemeneti fájlnak ({path}) JSON objektumot kell tartalmaznia",
+            ))
+        )
     parsed: dict[str, object] = {}
     for key, value in raw.items():
         if not isinstance(key, str):
-            raise typer.BadParameter(f"input key must be string, got {type(key).__name__}")
+            raise typer.BadParameter(
+                _msg(_t(
+                    f"la clave de entrada debe ser cadena, recibido {type(key).__name__}",
+                    f"input key must be string, got {type(key).__name__}",
+                    f"la clau d'entrada ha de ser cadena, rebut {type(key).__name__}",
+                    f"a bemeneti kulcsnak szövegnek kell lennie, kapott: {type(key).__name__}",
+                ))
+            )
         if isinstance(value, str | int | bool) or value is None:
             parsed[key] = value
         elif isinstance(value, float):
             # Use Decimal so monetary precision is preserved.
             parsed[key] = Decimal(str(value))
         else:
-            raise typer.BadParameter(f"unsupported value type for casilla {key!r}: {type(value).__name__}")
+            raise typer.BadParameter(
+                _msg(_t(
+                    f"tipo de valor no soportado para casilla {key!r}: {type(value).__name__}",
+                    f"unsupported value type for casilla {key!r}: {type(value).__name__}",
+                    f"tipus de valor no admès per a la casella {key!r}: {type(value).__name__}",
+                    f"nem támogatott érték típus a rovathoz {key!r}: {type(value).__name__}",
+                ))
+            )
     return parsed
 
 
@@ -123,16 +183,35 @@ def _draft_repository():  # type: ignore[no-untyped-def]
 def _load_draft(path: Path) -> FilingDraft:
     """Load and parse a draft from a ciphertext envelope file."""
     if not path.exists():
-        raise typer.BadParameter(f"draft file not found: {path}")
+        raise typer.BadParameter(
+            _msg(_t(
+                f"fichero de borrador no encontrado: {path}",
+                f"draft file not found: {path}",
+                f"fitxer d'esborrany no trobat: {path}",
+                f"piszkozat fájl nem található: {path}",
+            ))
+        )
     if not path.name.endswith(".envelope.json"):
         raise typer.BadParameter(
-            f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file.",
+            _msg(_t(
+                f"fichero de borrador no reconocido: {path}; se esperaba <draft_id>.envelope.json.",
+                f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json file.",
+                f"fitxer d'esborrany no reconegut: {path}; s'esperava <draft_id>.envelope.json.",
+                f"fel nem ismert piszkozat fájl: {path}; várható: <draft_id>.envelope.json.",
+            )),
         )
     repository = _draft_repository()
     draft_id = path.name[: -len(".envelope.json")]
     loaded = repository.load(draft_id)
     if loaded is None:
-        raise typer.BadParameter(f"draft envelope not found: {path}")
+        raise typer.BadParameter(
+            _msg(_t(
+                f"sobre de borrador no encontrado: {path}",
+                f"draft envelope not found: {path}",
+                f"sobre d'esborrany no trobat: {path}",
+                f"piszkozat csomag nem található: {path}",
+            ))
+        )
     return loaded
 
 
@@ -173,17 +252,18 @@ def _load_persisted_draft_by_id(draft_id: str) -> FilingDraft | None:
 def _render_draft_next_steps(draft: FilingDraft, *, draft_path: Path) -> None:
     """Print the most likely next operator commands for ``draft``."""
 
+    next_label = _msg(_t("Siguiente:", "Next:", "Següent:", "Következő:"))
     if draft.status is FilingDraftStatus.APPROVED:
-        _console.print(f"Next: aeat submission preflight {draft_path}")
-        _console.print(f"Next: aeat submission export {draft_path}")
+        _console.print(f"{next_label} aeat submission preflight {draft_path}")
+        _console.print(f"{next_label} aeat submission export {draft_path}")
         return
     if draft.status is FilingDraftStatus.APPROVAL_STALE:
-        _console.print(f"Next: aeat review show {draft.draft_id}")
-        _console.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
+        _console.print(f"{next_label} aeat review show {draft.draft_id}")
+        _console.print(f"{next_label} aeat review approve {draft.draft_id} --approved-by <you>")
         return
-    _console.print(f"Next: aeat review show {draft.draft_id}")
+    _console.print(f"{next_label} aeat review show {draft.draft_id}")
     if draft.status is FilingDraftStatus.READY_TO_SUBMIT:
-        _console.print(f"Next: aeat review approve {draft.draft_id} --approved-by <you>")
+        _console.print(f"{next_label} aeat review approve {draft.draft_id} --approved-by <you>")
 
 
 def _parse_json_argument(raw: str) -> dict[str, object]:
@@ -193,9 +273,23 @@ def _parse_json_argument(raw: str) -> dict[str, object]:
     try:
         payload = json.loads(payload_text)
     except json.JSONDecodeError as exc:
-        raise typer.BadParameter(f"invalid amendment JSON {raw!r}: {exc}") from exc
+        raise typer.BadParameter(
+            _msg(_t(
+                f"JSON de complementaria inválido {raw!r}: {exc}",
+                f"invalid amendment JSON {raw!r}: {exc}",
+                f"JSON de complementària no vàlid {raw!r}: {exc}",
+                f"érvénytelen kiegészítő JSON {raw!r}: {exc}",
+            ))
+        ) from exc
     if not isinstance(payload, dict):
-        raise typer.BadParameter("amendment payload must be a JSON object")
+        raise typer.BadParameter(
+            _msg(_t(
+                "el payload de complementaria debe ser un objeto JSON",
+                "amendment payload must be a JSON object",
+                "el payload de complementària ha de ser un objecte JSON",
+                "a kiegészítő hasznos teher JSON objektum kell legyen",
+            ))
+        )
     return payload
 
 
@@ -204,7 +298,14 @@ def _parse_amendment_inputs(raw_inputs: Mapping[str, object]) -> dict[str, objec
     parsed: dict[str, object] = {}
     for key, value in raw_inputs.items():
         if not isinstance(key, str):
-            raise typer.BadParameter(f"updated input key must be a string, got {type(key).__name__}")
+            raise typer.BadParameter(
+                _msg(_t(
+                    f"la clave de entrada actualizada debe ser cadena, recibido {type(key).__name__}",
+                    f"updated input key must be a string, got {type(key).__name__}",
+                    f"la clau d'entrada actualitzada ha de ser cadena, rebut {type(key).__name__}",
+                    f"a frissített bemeneti kulcsnak szövegnek kell lennie, kapott: {type(key).__name__}",
+                ))
+            )
         if isinstance(value, dict):
             parsed[key] = _parse_amendment_inputs(cast(Mapping[str, object], value))
         elif isinstance(value, str | int | bool) or value is None:
@@ -212,7 +313,14 @@ def _parse_amendment_inputs(raw_inputs: Mapping[str, object]) -> dict[str, objec
         elif isinstance(value, float):
             parsed[key] = Decimal(str(value))
         else:
-            raise typer.BadParameter(f"unsupported amendment value type for {key!r}: {type(value).__name__}")
+            raise typer.BadParameter(
+                _msg(_t(
+                    f"tipo de valor de complementaria no soportado para {key!r}: {type(value).__name__}",
+                    f"unsupported amendment value type for {key!r}: {type(value).__name__}",
+                    f"tipus de valor de complementària no admès per a {key!r}: {type(value).__name__}",
+                    f"nem támogatott kiegészítő érték típus ehhez: {key!r}: {type(value).__name__}",
+                ))
+            )
     return parsed
 
 
@@ -365,7 +473,14 @@ def build(
     except FilingDraftError as exc:
         raise typer.BadParameter(str(exc)) from exc
     saved = _save_draft(draft)
-    typer.echo(f"Saved draft {draft.draft_id} -> {saved}")
+    typer.echo(
+        _msg(_t(
+            f"Borrador guardado {draft.draft_id} -> {saved}",
+            f"Saved draft {draft.draft_id} -> {saved}",
+            f"Esborrany desat {draft.draft_id} -> {saved}",
+            f"Piszkozat mentve {draft.draft_id} -> {saved}",
+        ))
+    )
     _render_draft(draft)
     _render_draft_next_steps(draft, draft_path=saved)
 
@@ -382,7 +497,14 @@ def validate(
     )
     refreshed = _refresh_persisted_draft(draft_path, refreshed)
     _draft_repository().save(refreshed)
-    typer.echo(f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})")
+    typer.echo(
+        _msg(_t(
+            f"Borrador re-validado {refreshed.draft_id} (estado={refreshed.status.value})",
+            f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})",
+            f"Esborrany re-validat {refreshed.draft_id} (estat={refreshed.status.value})",
+            f"Piszkozat ujra-validalva {refreshed.draft_id} (allapot={refreshed.status.value})",
+        ))
+    )
     _render_draft(refreshed)
     _render_draft_next_steps(refreshed, draft_path=draft_path)
 
@@ -421,8 +543,14 @@ def list_drafts(
         try:
             target_status = FilingDraftStatus(status)
         except ValueError as exc:
+            valid_statuses = [s.value for s in FilingDraftStatus]
             raise typer.BadParameter(
-                f"unknown status {status!r}; valid: {[s.value for s in FilingDraftStatus]}"
+                _msg(_t(
+                    f"estado desconocido {status!r}; válidos: {valid_statuses}",
+                    f"unknown status {status!r}; valid: {valid_statuses}",
+                    f"estat desconegut {status!r}; vàlids: {valid_statuses}",
+                    f"ismeretlen allapot {status!r}; ervenyesek: {valid_statuses}",
+                ))
             ) from exc
 
     table = Table(title="Filing drafts")
@@ -457,14 +585,14 @@ def import_(
         Path | None,
         typer.Option(
             "--from-justificante",
-            help="Path to an AEAT justificante (receipt) PDF; produces a metadata scaffold draft (#271).",
+            help="Path to an AEAT justificante (receipt) PDF; produces a metadata scaffold draft.",
         ),
     ] = None,
     from_declaracion: Annotated[
         Path | None,
         typer.Option(
             "--from-declaracion",
-            help=("Path to an AEAT declaración (full filing copy) PDF; produces a casilla-complete draft (#305)."),
+            help=("Path to an AEAT declaración (full filing copy) PDF; produces a casilla-complete draft."),
         ),
     ] = None,
     from_borrador: Annotated[
@@ -474,7 +602,7 @@ def import_(
             help=(
                 "Path to an AEAT Modelo 100 (Renta) borrador / "
                 "predeclaración / declaración PDF; extracts the summary "
-                "block (#305 MVP)."
+                "block."
             ),
         ),
     ] = None,
@@ -499,23 +627,36 @@ def import_(
     ``--from-borrador`` must be supplied.
 
     ``--from-justificante`` reconstructs a metadata scaffold draft +
-    companion submission record from the filing receipt (#271). Every
-    casilla lands EMPTY.
+    companion submission record from the filing receipt. Every casilla
+    lands EMPTY.
 
     ``--from-declaracion`` parses the full filing copy PDF and extracts
     every printed casilla value; produces a casilla-complete draft
-    ready for ``aeat filing verify`` (#305 / E).
+    ready for ``aeat filing verify``.
 
     ``--from-borrador`` parses a Modelo 100 (Renta) artefact (borrador,
     predeclaración, or declaración); extracts the summary-block casillas
-    and chains verification against the partial Modelo 100 ruleset
-    (#305 MVP).
+    and chains verification against the partial Modelo 100 ruleset.
     """
     provided = sum(bool(flag) for flag in (from_justificante, from_declaracion, from_borrador))
     if provided == 0:
-        raise typer.BadParameter("exactly one of --from-justificante, --from-declaracion, --from-borrador is required")
+        raise typer.BadParameter(
+            _msg(_t(
+                "se requiere exactamente uno de --from-justificante, --from-declaracion, --from-borrador",
+                "exactly one of --from-justificante, --from-declaracion, --from-borrador is required",
+                "es requereix exactament un de --from-justificante, --from-declaracion, --from-borrador",
+                "pontosan egy szükséges: --from-justificante, --from-declaracion, --from-borrador",
+            ))
+        )
     if provided > 1:
-        raise typer.BadParameter("only one --from-* flag at a time")
+        raise typer.BadParameter(
+            _msg(_t(
+                "solo una bandera --from-* a la vez",
+                "only one --from-* flag at a time",
+                "només una marca --from-* alhora",
+                "egyszerre csak egy --from-* kapcsoló",
+            ))
+        )
 
     if from_justificante is not None:
         _handle_justificante_import(from_justificante)
@@ -529,7 +670,7 @@ def import_(
 
 
 def _handle_justificante_import(from_justificante: Path) -> None:
-    """Dispatch the justificante (#271) import path."""
+    """Dispatch the justificante import path."""
     settings = load_settings()
     try:
         result = import_filing_from_justificante(
@@ -546,35 +687,36 @@ def _handle_justificante_import(from_justificante: Path) -> None:
     submission_repository.save(result.submission)
     submission_path = submission_repository.envelope_path_for(result.submission.submission_id)
 
+    justificante_csv = result.submission.justificante_csv
+    submission_id = result.submission.submission_id
+    draft_id = result.draft.draft_id
     typer.echo(
-        f"Imported draft {result.draft.draft_id} from justificante {result.submission.justificante_csv} -> {draft_path}"
+        _msg(_t(
+            f"Borrador importado {draft_id} desde justificante {justificante_csv} -> {draft_path}",
+            f"Imported draft {draft_id} from justificante {justificante_csv} -> {draft_path}",
+            f"Esborrany importat {draft_id} des de justificant {justificante_csv} -> {draft_path}",
+            f"Piszkozat importalva {draft_id} bizonylatbol {justificante_csv} -> {draft_path}",
+        ))
     )
-    typer.echo(f"Saved submission {result.submission.submission_id} -> {submission_path}")
+    typer.echo(
+        _msg(_t(
+            f"Envío guardado {submission_id} -> {submission_path}",
+            f"Saved submission {submission_id} -> {submission_path}",
+            f"Enviament desat {submission_id} -> {submission_path}",
+            f"Beadas mentve {submission_id} -> {submission_path}",
+        ))
+    )
     lang = _output_language()
+    warning_label = _msg(_t("[aviso]", "[warning]", "[avís]", "[figyelmeztetes]"))
     for warning in result.warnings:
         rendered = get_translation(warning, lang)
-        typer.echo(f"[warning] {rendered}")
+        typer.echo(f"{warning_label} {rendered}")
     _render_draft(result.draft)
 
 
-def _output_language() -> Language:
-    """Resolve the Kent-facing output language from settings.
-
-    Defaults to Spanish (Kent is a Spanish autónomo) per project mandate
-    ``AEAT_OUTPUT_LANGUAGE`` default = ``es``. Audit finding M5.
-    """
-    try:
-        return Language(load_settings().aeat_output_language)
-    except (KeyError, ValueError):
-        return Language.ES
-
-
-def _t(es: str, en: str, hu: str) -> Translatable:
-    return {"es": es, "en": en, "hu": hu}
-
-
-def _msg(message: Translatable) -> str:
-    return get_translation(message, _output_language())
+# `_output_language` / `_t` / `_msg` are imported from `..._i18n`
+# at the module top so every CLI submodule shares the same
+# multilingual helper surface; local copies are forbidden.
 
 
 def _handle_declaracion_import(
@@ -583,7 +725,7 @@ def _handle_declaracion_import(
     modelo: str | None,
     año: int | None,
 ) -> None:
-    """Dispatch the declaración (#305 + E) import path."""
+    """Dispatch the declaración import path."""
     from ....adapters.inbound.declaracion import DeclaracionParseError, parse_declaracion
     from ....application.verification import verify_declaracion
 
@@ -598,7 +740,7 @@ def _handle_declaracion_import(
 
     lang = _output_language()
     if filing.modelo == "100":
-        from ....domain.profile import require_tax_residence
+        from ....adapters.persistence.profile import require_tax_residence
 
         residence = require_tax_residence()
         typer.echo(
@@ -606,22 +748,51 @@ def _handle_declaracion_import(
                 _t(
                     f"CCAA de residencia fiscal: {residence.ccaa.value}",
                     f"Tax residence CCAA: {residence.ccaa.value}",
+                    f"CCAA de residència fiscal: {residence.ccaa.value}",
                     f"Adoilletosegi CCAA: {residence.ccaa.value}",
                 )
             )
         )
 
+    extracted = len(filing.values)
+    total = len(filing.values) + len(filing.warnings)
     typer.echo(
-        f"Parsed Modelo {filing.modelo} {filing.period} declaración "
-        f"(template {filing.template_revision.revision}). "
-        f"{len(filing.values)} of {len(filing.values) + len(filing.warnings)} casillas extracted."
+        _msg(_t(
+            f"Modelo {filing.modelo} {filing.period} declaración procesado "
+            f"(plantilla {filing.template_revision.revision}). "
+            f"{extracted} de {total} casillas extraídas.",
+            f"Parsed Modelo {filing.modelo} {filing.period} declaración "
+            f"(template {filing.template_revision.revision}). "
+            f"{extracted} of {total} casillas extracted.",
+            f"Modelo {filing.modelo} {filing.period} declaració processada "
+            f"(plantilla {filing.template_revision.revision}). "
+            f"{extracted} de {total} caselles extretes.",
+            f"Modelo {filing.modelo} {filing.period} bevallas feldolgozva "
+            f"(sablon {filing.template_revision.revision}). "
+            f"{extracted} / {total} rovat kinyerve.",
+        ))
     )
-    typer.echo(f"Extraction status: {filing.extraction_status.value}")
+    typer.echo(
+        _msg(_t(
+            f"Estado de extracción: {filing.extraction_status.value}",
+            f"Extraction status: {filing.extraction_status.value}",
+            f"Estat d'extracció: {filing.extraction_status.value}",
+            f"Kinyerés állapota: {filing.extraction_status.value}",
+        ))
+    )
     if filing.warnings:
-        typer.echo(f"[warnings] {len(filing.warnings)}:")
+        typer.echo(
+            _msg(_t(
+                f"[avisos] {len(filing.warnings)}:",
+                f"[warnings] {len(filing.warnings)}:",
+                f"[avisos] {len(filing.warnings)}:",
+                f"[figyelmeztetesek] {len(filing.warnings)}:",
+            ))
+        )
+        casilla_label = _msg(_t("casilla", "casilla", "casella", "rovat"))
         for warning in filing.warnings:
             rendered = get_translation(warning.message, lang)
-            typer.echo(f"  - casilla {warning.casilla_id or '-'}: {rendered}")
+            typer.echo(f"  - {casilla_label} {warning.casilla_id or '-'}: {rendered}")
 
     ruleset = _resolve_ruleset_for_filing(
         filing_modelo=filing.modelo,
@@ -629,14 +800,25 @@ def _handle_declaracion_import(
         filing_ejercicio=filing.ejercicio,
     )
     verdict = verify_declaracion(filing, ruleset=ruleset)
-    typer.echo(f"Verification status: {verdict.status.value}")
+    typer.echo(
+        _msg(_t(
+            f"Estado de verificación: {verdict.status.value}",
+            f"Verification status: {verdict.status.value}",
+            f"Estat de verificació: {verdict.status.value}",
+            f"Verifikalas allapota: {verdict.status.value}",
+        ))
+    )
     typer.echo(f"  {get_translation(verdict.narrative, lang)}")
+    casilla_label = _msg(_t("casilla", "casilla", "casella", "rovat"))
+    expected_label = _msg(_t("esperado", "expected", "esperat", "várható"))
+    actual_label = _msg(_t("real", "actual", "real", "tényleges"))
+    cause_label = _msg(_t("causa", "cause", "causa", "ok"))
     for discrepancy in verdict.discrepancies:
         rationale = get_translation(discrepancy.cause_rationale, lang)
         typer.echo(
-            f"  - casilla {discrepancy.casilla_id}: "
-            f"expected {discrepancy.expected}, actual {discrepancy.actual}, "
-            f"cause={discrepancy.cause.value} — {rationale}"
+            f"  - {casilla_label} {discrepancy.casilla_id}: "
+            f"{expected_label} {discrepancy.expected}, {actual_label} {discrepancy.actual}, "
+            f"{cause_label}={discrepancy.cause.value} — {rationale}"
         )
 
 
@@ -679,11 +861,11 @@ def _handle_borrador_import(
     *,
     año: int | None,
 ) -> None:
-    """Dispatch the Modelo 100 (Renta) import path (#305 MVP)."""
+    """Dispatch the Modelo 100 (Renta) import path."""
     from ....adapters.inbound.borrador import BorradorParseError, parse_borrador
     from ....adapters.inbound.borrador._tarifa import validate_tarifa_estatal
     from ....domain.formulas import MODELO_100_SUMMARY_2025, compute_cuota_autonomica_general
-    from ....domain.profile import require_tax_residence
+    from ....adapters.persistence.profile import require_tax_residence
 
     residence = require_tax_residence()
 
@@ -693,9 +875,20 @@ def _handle_borrador_import(
         raise typer.BadParameter(str(exc)) from exc
 
     typer.echo(
-        f"Parsed Modelo 100 Renta {filing.ejercicio} "
-        f"({filing.artefact_kind.value}). "
-        f"{len(filing.values)} summary-block casillas extracted."
+        _msg(_t(
+            f"Modelo 100 Renta {filing.ejercicio} procesado "
+            f"({filing.artefact_kind.value}). "
+            f"{len(filing.values)} casillas del bloque resumen extraídas.",
+            f"Parsed Modelo 100 Renta {filing.ejercicio} "
+            f"({filing.artefact_kind.value}). "
+            f"{len(filing.values)} summary-block casillas extracted.",
+            f"Modelo 100 Renta {filing.ejercicio} processat "
+            f"({filing.artefact_kind.value}). "
+            f"{len(filing.values)} caselles del bloc resum extretes.",
+            f"Modelo 100 Renta {filing.ejercicio} feldolgozva "
+            f"({filing.artefact_kind.value}). "
+            f"{len(filing.values)} osszegzo blokk rovat kinyerve.",
+        ))
     )
     if filing.csv is not None:
         typer.echo(f"CSV: {filing.csv}")
@@ -704,6 +897,7 @@ def _handle_borrador_import(
             _t(
                 f"CCAA de residencia fiscal: {residence.ccaa.value}",
                 f"Tax residence CCAA: {residence.ccaa.value}",
+                f"CCAA de residència fiscal: {residence.ccaa.value}",
                 f"Adoilletosegi CCAA: {residence.ccaa.value}",
             )
         )
@@ -722,13 +916,33 @@ def _handle_borrador_import(
         tolerance=Decimal("0.01"),
     )
     ruleset_clean = report.is_clean()
+    ruleset_id = MODELO_100_SUMMARY_2025.ruleset_id
     if ruleset_clean:
-        typer.echo(f"Verification status: VERIFIED (ruleset={MODELO_100_SUMMARY_2025.ruleset_id})")
+        typer.echo(
+            _msg(_t(
+                f"Estado de verificación: VERIFIED (ruleset={ruleset_id})",
+                f"Verification status: VERIFIED (ruleset={ruleset_id})",
+                f"Estat de verificació: VERIFIED (ruleset={ruleset_id})",
+                f"Verifikalas allapota: VERIFIED (ruleset={ruleset_id})",
+            ))
+        )
     else:
-        typer.echo(f"Verification status: NEEDS_REVIEW — {len(report.discrepancies)} discrepancies")
+        n = len(report.discrepancies)
+        typer.echo(
+            _msg(_t(
+                f"Estado de verificación: NEEDS_REVIEW — {n} discrepancias",
+                f"Verification status: NEEDS_REVIEW — {n} discrepancies",
+                f"Estat de verificació: NEEDS_REVIEW — {n} discrepàncies",
+                f"Verifikalas allapota: NEEDS_REVIEW — {n} elteres",
+            ))
+        )
+        casilla_label = _msg(_t("casilla", "casilla", "casella", "rovat"))
+        expected_label = _msg(_t("esperado", "expected", "esperat", "várható"))
+        actual_label = _msg(_t("real", "actual", "real", "tényleges"))
         for d in report.discrepancies:
             typer.echo(
-                f"  - casilla {d.casilla_id}: expected {d.computed_value}, actual {d.user_value}, delta {d.delta}"
+                f"  - {casilla_label} {d.casilla_id}: "
+                f"{expected_label} {d.computed_value}, {actual_label} {d.user_value}, delta {d.delta}"
             )
 
     # Tarifa progresiva estatal post-validator — checks that the extracted
@@ -745,19 +959,43 @@ def _handle_borrador_import(
             cuota_estatal_ahorro=provided.get("0560"),
         )
     except ValueError as exc:
-        typer.echo(f"Tarifa progresiva: skipped ({exc})")
+        typer.echo(
+            _msg(_t(
+                f"Tarifa progresiva: omitida ({exc})",
+                f"Tarifa progresiva: skipped ({exc})",
+                f"Tarifa progressiva: omesa ({exc})",
+                f"Progressziv tarifa: kihagyva ({exc})",
+            ))
+        )
         tarifa_findings = ()
 
     if tarifa_findings:
-        typer.echo(f"Tarifa progresiva: {len(tarifa_findings)} discrepancies vs. IRPF estatal scale {tarifa_ejercicio}")
+        n = len(tarifa_findings)
+        typer.echo(
+            _msg(_t(
+                f"Tarifa progresiva: {n} discrepancias frente a la escala IRPF estatal {tarifa_ejercicio}",
+                f"Tarifa progresiva: {n} discrepancies vs. IRPF estatal scale {tarifa_ejercicio}",
+                f"Tarifa progressiva: {n} discrepàncies enfront de l'escala IRPF estatal {tarifa_ejercicio}",
+                f"Progressziv tarifa: {n} elteres az allami IRPF skalahoz {tarifa_ejercicio} kepest",
+            ))
+        )
+        casilla_label = _msg(_t("casilla", "casilla", "casella", "rovat"))
+        from_base_label = _msg(_t("desde base", "from base", "des de base", "alapbol"))
         for finding in tarifa_findings:
             typer.echo(
-                f"  - casilla {finding.casilla_id} (from base {finding.base_casilla_id}): "
-                f"tarifa {finding.expected_cuota} vs. extracted {finding.actual_cuota}"
+                f"  - {casilla_label} {finding.casilla_id} ({from_base_label} {finding.base_casilla_id}): "
+                f"tarifa {finding.expected_cuota} vs. {finding.actual_cuota}"
                 f" (delta {finding.delta})"
             )
     elif ruleset_clean:
-        typer.echo(f"Tarifa progresiva: cuota íntegra estatal consistent with IRPF {tarifa_ejercicio} scale")
+        typer.echo(
+            _msg(_t(
+                f"Tarifa progresiva: cuota íntegra estatal consistente con la escala IRPF {tarifa_ejercicio}",
+                f"Tarifa progresiva: cuota íntegra estatal consistent with IRPF {tarifa_ejercicio} scale",
+                f"Tarifa progressiva: quota íntegra estatal coherent amb l'escala IRPF {tarifa_ejercicio}",
+                f"Progressziv tarifa: az allami teljes ado konzisztens az IRPF skalaval {tarifa_ejercicio}",
+            ))
+        )
 
     base_autonomica = provided.get("0545")
     cuota_autonomica = provided.get("0551")
@@ -776,6 +1014,8 @@ def _handle_borrador_import(
                         f"con la escala IRPF {tarifa_ejercicio} de {residence.ccaa.value}",
                         "Tarifa autonómica: cuota íntegra general consistent "
                         f"with {residence.ccaa.value} IRPF {tarifa_ejercicio} scale",
+                        "Tarifa autonòmica: quota íntegra general coherent "
+                        f"amb l'escala IRPF {tarifa_ejercicio} de {residence.ccaa.value}",
                         "Autonom tarifa: az altalanos teljes ado osszhangban van "
                         f"a(z) {residence.ccaa.value} IRPF {tarifa_ejercicio} skalaval",
                     )
@@ -791,6 +1031,9 @@ def _handle_borrador_import(
                         "Tarifa autonómica: discrepancy for casilla 0551 "
                         f"({residence.ccaa.value}): tarifa {expected_autonomica} "
                         f"vs. extracted {cuota_autonomica} (delta {delta})",
+                        "Tarifa autonòmica: discrepància a la casella 0551 "
+                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
+                        f"davant extret {cuota_autonomica} (delta {delta})",
                         "Autonom tarifa: elteres az 0551 mezonek "
                         f"({residence.ccaa.value}): tarifa {expected_autonomica} "
                         f"vs. kinyert {cuota_autonomica} (delta {delta})",
@@ -814,40 +1057,79 @@ def build_complementaria_cmd(
     payload = _parse_json_argument(delta_json)
     original_submission_id = payload.get("original_submission_id")
     if not isinstance(original_submission_id, str) or not original_submission_id:
-        raise typer.BadParameter("amendment payload must include non-empty 'original_submission_id'")
+        raise typer.BadParameter(
+            _msg(_t(
+                "el payload de complementaria debe incluir 'original_submission_id' no vacío",
+                "amendment payload must include non-empty 'original_submission_id'",
+                "el payload de complementària ha d'incloure 'original_submission_id' no buit",
+                "a kiegeszito hasznos teherben szükséges a nem üres 'original_submission_id'",
+            ))
+        )
     raw_inputs = payload.get("updated_inputs")
     if not isinstance(raw_inputs, dict):
-        raise typer.BadParameter("amendment payload must include object 'updated_inputs'")
+        raise typer.BadParameter(
+            _msg(_t(
+                "el payload de complementaria debe incluir el objeto 'updated_inputs'",
+                "amendment payload must include object 'updated_inputs'",
+                "el payload de complementària ha d'incloure l'objecte 'updated_inputs'",
+                "a kiegeszito hasznos teherben szükséges az 'updated_inputs' objektum",
+            ))
+        )
     reasons = payload.get("reasons")
     parsed_inputs = _parse_amendment_inputs(cast(Mapping[str, object], raw_inputs))
     if reasons is not None:
         if not isinstance(reasons, dict):
-            raise typer.BadParameter("'reasons' must be a JSON object of casilla -> reason")
+            raise typer.BadParameter(
+                _msg(_t(
+                    "'reasons' debe ser un objeto JSON de casilla -> motivo",
+                    "'reasons' must be a JSON object of casilla -> reason",
+                    "'reasons' ha de ser un objecte JSON de casella -> motiu",
+                    "a 'reasons' egy JSON objektum: rovat -> indok",
+                ))
+            )
         parsed_inputs["_reasons"] = _parse_amendment_inputs(cast(Mapping[str, object], reasons))
 
     engine = _submission_engine()
     original = engine.load_submission(original_submission_id)
     if original.modelo != modelo:
         raise typer.BadParameter(
-            f"payload modelo {modelo!r} does not match original submission modelo {original.modelo!r}"
+            _msg(_t(
+                f"el modelo del payload {modelo!r} no coincide con el modelo del envío original {original.modelo!r}",
+                f"payload modelo {modelo!r} does not match original submission modelo {original.modelo!r}",
+                f"el model del payload {modelo!r} no coincideix amb el model de l'enviament original {original.modelo!r}",
+                f"a hasznos teher modelje {modelo!r} nem egyezik az eredeti beadas modeljevel {original.modelo!r}",
+            ))
         )
     if original.period != period:
         raise typer.BadParameter(
-            f"payload period {period!r} does not match original submission period {original.period!r}"
+            _msg(_t(
+                f"el período del payload {period!r} no coincide con el período del envío original {original.period!r}",
+                f"payload period {period!r} does not match original submission period {original.period!r}",
+                f"el període del payload {period!r} no coincideix amb el període de l'enviament original {original.period!r}",
+                f"a hasznos teher idoszaka {period!r} nem egyezik az eredeti beadas idoszakaval {original.period!r}",
+            ))
         )
     try:
         amendment = build_complementaria(original, parsed_inputs)
     except FilingAmendmentError as exc:
         raise typer.BadParameter(str(exc)) from exc
     saved_amended_draft = _save_draft(amendment.amended_draft)
-    typer.echo(f"Saved amended draft {amendment.amended_draft.draft_id} -> {saved_amended_draft}")
-    _console.print(f"Next: aeat review show {amendment.amended_draft.draft_id}")
-    _console.print(f"Next: aeat review approve {amendment.amended_draft.draft_id} --approved-by <you>")
+    amended_draft_id = amendment.amended_draft.draft_id
+    typer.echo(
+        _msg(_t(
+            f"Borrador complementaria guardado {amended_draft_id} -> {saved_amended_draft}",
+            f"Saved amended draft {amended_draft_id} -> {saved_amended_draft}",
+            f"Esborrany complementària desat {amended_draft_id} -> {saved_amended_draft}",
+            f"Kiegeszito piszkozat mentve {amended_draft_id} -> {saved_amended_draft}",
+        ))
+    )
+    next_label = _msg(_t("Siguiente:", "Next:", "Següent:", "Következő:"))
+    _console.print(f"{next_label} aeat review show {amended_draft_id}")
+    _console.print(f"{next_label} aeat review approve {amended_draft_id} --approved-by <you>")
     _render_amendment(amendment)
 
 
-app.add_typer(complementaria_app, name="complementaria", help="Build amendment filings (#93).")
-_register_reconcile(app)
+app.add_typer(complementaria_app, name="complementaria", help="Build amendment filings.")
 
 
 __all__ = ["app"]

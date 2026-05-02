@@ -1,4 +1,4 @@
-"""Quad-lingual i18n support.
+"""Multilingual i18n support.
 
 Primitives for managing user-facing translations across the four
 languages of the project's i18n contract:
@@ -43,7 +43,7 @@ class TranslationError(AeatError):
 
 
 class Language(StrEnum):
-    """Quad-lingual contract languages.
+    """Multilingual contract languages.
 
     ISO 639-1 codes. Values are lowercase to match the storage shape
     used throughout the corpus and to round-trip cleanly through
@@ -57,7 +57,7 @@ class Language(StrEnum):
 
 
 class Translatable(TypedDict, total=False):
-    """A translatable string carrier in the quad-lingual contract.
+    """A translatable string carrier in the multilingual contract.
 
     Nested-dict shape, keyed by ISO 639-1 code:
 
@@ -68,7 +68,7 @@ class Translatable(TypedDict, total=False):
     - ``ca``: Catalan rendering for UX that targets Catalan-speaking
       autónomos. Tax acronyms (IVA, IRPF) are kept identical to
       Spanish per Generalitat / ATC publication conventions.
-    - ``hu``: Hungarian rendering for Kent's day-to-day CLI use.
+    - ``hu``: Hungarian rendering for the operator's day-to-day CLI use.
 
     Every key is ``total=False`` so callers may seed records
     incrementally, but the authoritative key for the record's domain
@@ -99,7 +99,7 @@ class TranslationFallback(StrEnum):
 
 
 def normalize_language_code(language: str | Language) -> str:
-    """Normalize and validate a language code against the trilingual contract."""
+    """Normalize and validate a language code against the multilingual contract."""
 
     value = language if isinstance(language, str) else language.value
     normalized = value.strip().lower()

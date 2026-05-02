@@ -1,4 +1,4 @@
-"""Unit tests for the trilingual i18n support."""
+"""Unit tests for the multilingual i18n support."""
 
 from __future__ import annotations
 
@@ -23,14 +23,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 class TestLanguage:
     def test_language_values(self) -> None:
-        """The quad-lingual contract carries es/en/ca/hu only."""
+        """The multilingual contract carries es/en/ca/hu only."""
         assert Language.ES == "es"
         assert Language.EN == "en"
         assert Language.CA == "ca"
         assert Language.HU == "hu"
 
     def test_language_membership_is_closed(self) -> None:
-        """Reject any language that is not part of the quad-lingual contract."""
+        """Reject any language that is not part of the multilingual contract."""
         members = {member.value for member in Language}
         assert members == {"es", "en", "ca", "hu"}
 

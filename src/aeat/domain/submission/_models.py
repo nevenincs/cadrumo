@@ -22,9 +22,16 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 class SubmissionStatus(StrEnum):
     """Lifecycle status of a :class:`SubmittedFiling`.
 
-    Values are retained for historical records imported from AEAT or
-    earlier project phases, even though live AEAT submission is now
-    permanently forbidden.
+    Values are retained for historical records imported from AEAT,
+    even though live AEAT submission is now permanently forbidden.
+
+    Attributes:
+        PENDING: Filing recorded but no attempt has run.
+        IN_PROGRESS: An attempt is currently underway.
+        SUBMITTED: Attempt completed; awaiting AEAT acknowledgement.
+        ACKNOWLEDGED: AEAT issued a justificante CSV and PDF.
+        REJECTED: AEAT explicitly rejected the filing.
+        FAILED: Attempt could not complete (transport / browser).
     """
 
     PENDING = "PENDING"
@@ -46,7 +53,7 @@ class SubmissionAttempt(BaseModel):
             failure).
         status: Terminal :class:`SubmissionStatus` for the attempt.
         error_code: Optional machine-readable error code.
-        error_message: Optional trilingual error message.
+        error_message: Optional multilingual error message.
         browser_trace_path: Optional path to a Playwright trace file
             written for this attempt.
     """
