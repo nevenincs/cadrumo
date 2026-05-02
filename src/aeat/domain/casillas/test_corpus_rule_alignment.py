@@ -367,3 +367,19 @@ def test_corpus_references_rules_is_uniform_within_year() -> None:
     ]
     if failures:
         pytest.fail("Corpus references_rules drift within year:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_must_derive_validation_aligns_with_computed_flag() -> None:
+    """``computed=True`` ↔ ``must_derive`` validation rule (both directions)."""
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            has_must_derive = any(v.rule == "must_derive" for v in rec.validation)
+            if rec.computed and not has_must_derive:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: computed but missing must_derive")
+            if not rec.computed and has_must_derive:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: must_derive on a non-computed record")
+    if failures:
+        pytest.fail("Corpus computed/validation drift:\n" + "\n".join(f" - {f}" for f in failures))
