@@ -1,4 +1,13 @@
-"""Strict pydantic model for a single modelo's authoritative metadata."""
+"""Strict pydantic model for a single modelo's authoritative metadata.
+
+Defines :class:`ModeloMetadata`, the frozen, ``extra="forbid"`` record
+that backs every entry in :data:`aeat.domain.modelos._registry.MODELO_REGISTRY`.
+Per-modelo entries are constructed in
+:mod:`aeat.domain.modelos._entries`; cross-registry invariants
+(``caps_into`` resolution, ``submission_portal`` round-trip against
+:data:`aeat.domain.portals.PORTAL_REGISTRY`) are enforced by
+:func:`aeat.domain.modelos._registry._finalise_registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,7 +35,7 @@ class ModeloMetadata(BaseModel):
         code: The :class:`ModeloCode` this entry describes.
         official_name_es: Authoritative Spanish name of the modelo.
             Non-empty after stripping.
-        display_label: Trilingual display label with non-empty
+        display_label: Quad-lingual display label with non-empty
             ``es`` / ``en`` / ``hu`` keys.
         category: Functional :class:`ModeloCategory`.
         cadence: Canonical filing :class:`ModeloCadence`. Exact
@@ -66,15 +75,38 @@ class ModeloMetadata(BaseModel):
     @field_validator("official_name_es")
     @classmethod
     def _not_blank(cls, value: str) -> str:
-        """Reject whitespace-only strings on string fields."""
+        """Reject whitespace-only strings on the official Spanish name.
+
+        Args:
+            value: The candidate string under validation.
+
+        Returns:
+            The original string when non-empty after stripping.
+
+        Raises:
+            ValueError: When ``value`` is empty or whitespace only.
+        """
         if not value.strip():
             raise ValueError("value must not be empty or whitespace-only")
         return value
 
     @field_validator("display_label")
     @classmethod
-    def _display_label_trilingual(cls, value: Translatable) -> Translatable:
-        """Require non-empty ``es`` / ``en`` / ``hu`` keys on display_label."""
+    def _display_label_quad_lingual(cls, value: Translatable) -> Translatable:
+        """Require non-empty ``es`` / ``en`` / ``hu`` keys on display_label.
+
+        Args:
+            value: The :class:`aeat.core.i18n.Translatable` mapping
+                under validation.
+
+        Returns:
+            The original mapping when every required language key is
+            present and non-empty.
+
+        Raises:
+            ValueError: When any of ``es``, ``en``, or ``hu`` is absent
+                or maps to an empty string.
+        """
         for key in ("es", "en", "hu"):
             raw = value.get(key)  # type: ignore[misc]
             if not isinstance(raw, str) or not raw.strip():

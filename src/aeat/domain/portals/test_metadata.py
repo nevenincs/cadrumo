@@ -153,13 +153,13 @@ def test_related_modelo_required_for_borrador() -> None:
         )
 
 
-def test_trilingual_label_requires_all_three_languages() -> None:
+def test_quad_lingual_label_requires_all_three_languages() -> None:
     """Missing ``hu`` key is rejected."""
     with pytest.raises(ValidationError):
         PortalMetadata.model_validate(_base_kwargs(label={"es": "x", "en": "x"}))
 
 
-def test_trilingual_label_rejects_blank_string() -> None:
+def test_quad_lingual_label_rejects_blank_string() -> None:
     """Whitespace-only label entries fail."""
     with pytest.raises(ValidationError):
         PortalMetadata.model_validate(_base_kwargs(label={"es": "x", "en": " ", "hu": "x"}))

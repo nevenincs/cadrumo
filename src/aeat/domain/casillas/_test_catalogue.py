@@ -178,7 +178,7 @@ def test_llm_provenance_is_optional_but_strict() -> None:
         )
 
 
-def test_trilingual_authoritative_spanish_is_required() -> None:
+def test_quad_lingual_authoritative_spanish_is_required() -> None:
     """Label and help must both carry the authoritative Spanish text."""
     with pytest.raises(ValidationError):
         CasillaRecord(
