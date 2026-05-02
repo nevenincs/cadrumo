@@ -309,3 +309,61 @@ def test_corpus_inline_boe_ids_well_formed() -> None:
                         failures.append(f"{modelo} {period} cas {rec.casilla_id}: implausible BOE year {m.group(0)}")
     if failures:
         pytest.fail("Corpus has malformed BOE identifiers:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_data_type_is_uniform_per_casilla() -> None:
+    """A casilla's ``data_type`` must not drift across periods."""
+    from collections import defaultdict
+
+    seen: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            seen[(modelo, rec.casilla_id)].add(rec.data_type.value)
+    failures = [
+        f"{modelo} cas {cid}: data_type drift = {sorted(types)}"
+        for (modelo, cid), types in seen.items()
+        if len(types) > 1
+    ]
+    if failures:
+        pytest.fail("Corpus data_type drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_label_es_is_uniform_per_casilla() -> None:
+    """A casilla's authoritative Spanish label must not drift across periods."""
+    from collections import defaultdict
+
+    seen: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            seen[(modelo, rec.casilla_id)].add(rec.label["es"])
+    failures = [
+        f"{modelo} cas {cid}: label drift {sorted(labels)}"
+        for (modelo, cid), labels in seen.items()
+        if len(labels) > 1
+    ]
+    if failures:
+        pytest.fail("Corpus label.es drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_references_rules_is_uniform_within_year() -> None:
+    """All periods within a single fiscal year must agree on references_rules."""
+    from collections import defaultdict
+
+    seen: dict[tuple[str, str, str], set[tuple[str, ...]]] = defaultdict(set)
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        year = period[:4]
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            seen[(modelo, year, rec.casilla_id)].add(tuple(rec.references_rules))
+    failures = [
+        f"{modelo} {year} cas {cid}: references_rules drift = {sorted(variants)}"
+        for (modelo, year, cid), variants in seen.items()
+        if len(variants) > 1
+    ]
+    if failures:
+        pytest.fail("Corpus references_rules drift within year:\n" + "\n".join(f" - {f}" for f in failures))
