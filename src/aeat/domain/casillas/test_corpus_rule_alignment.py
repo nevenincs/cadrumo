@@ -441,3 +441,24 @@ def test_corpus_directory_layout_matches_modelo_registry() -> None:
         failures.append(f"corpus directories without a ModeloCode entry: {sorted(extra_dirs)}")
     if failures:
         pytest.fail("Corpus / ModeloCode coverage mismatch:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_committed_records_are_canonical_not_drafts() -> None:
+    """No record may carry ``synthetic=True`` or ``llm_draft_provenance``.
+
+    The committed corpus is the human-reviewed canonical surface; LLM
+    draft payloads are temp-file only via :func:`write_extract_draft`
+    / :func:`write_translate_draft`. A record with either flag set
+    here means an unreviewed draft leaked into the canonical store.
+    """
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            if rec.synthetic:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: synthetic=True in canonical corpus")
+            if rec.llm_draft_provenance is not None:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: carries LLM draft provenance")
+    if failures:
+        pytest.fail("Corpus contains non-canonical records:\n" + "\n".join(f" - {f}" for f in failures))
