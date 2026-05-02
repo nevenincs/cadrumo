@@ -422,3 +422,22 @@ def test_corpus_formula_expression_mentions_match_references_casillas() -> None:
                 )
     if failures:
         pytest.fail("Corpus formula expression vs refs drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_directory_layout_matches_modelo_registry() -> None:
+    """Every ModeloCode must have a corpus directory and vice versa."""
+    from ..modelos import ModeloCode
+
+    corpus_root = PROJECT_ROOT / "corpus" / "casillas"
+    corpus_dirs = {p.name.removeprefix("modelo_").upper() for p in corpus_root.iterdir() if p.is_dir()}
+    enum_codes = {code.value for code in ModeloCode}
+
+    missing_dirs = enum_codes - corpus_dirs
+    extra_dirs = corpus_dirs - enum_codes
+    failures: list[str] = []
+    if missing_dirs:
+        failures.append(f"ModeloCode entries without a corpus directory: {sorted(missing_dirs)}")
+    if extra_dirs:
+        failures.append(f"corpus directories without a ModeloCode entry: {sorted(extra_dirs)}")
+    if failures:
+        pytest.fail("Corpus / ModeloCode coverage mismatch:\n" + "\n".join(f" - {f}" for f in failures))
