@@ -1,29 +1,26 @@
-"""Modelo 100 (RENTA / IRPF anual) full-form sub-package.
+"""Modelo 100 (RENTA / IRPF anual) full-form ruleset sub-package.
 
-This sub-package hosts the per-anexo per-año modules that the parent-
-level aggregators (``modelo_100_<año>.py``) compose into the public
-``RULESET`` constants.
+Hosts the per-anexo per-año modules that the parent-level aggregators
+(``modelo_100_<año>.py``) compose into the public ``RULESET`` constants.
 
-Layout overview:
+The layout splits cross-cutting helpers from the per-anexo per-año
+modules:
 
-- ``_common.py`` — shared label helper, BOE URL constants, citation
-  helpers reused across anexos.
-- ``_ccaa.py`` — closed ``CCAA`` enum + per-CCAA tarifa autonómica
-  brackets for all 15 ordinary CCAAs (13 stable + Asturias / Canarias
-  year-dependent post Ley 3/2025 + Ley 5/2024 respectively); País
-  Vasco / Navarra excluded as foral regimes.
-- ``_amortization.py`` — Pydantic ``AmortizationCategory`` + closed
-  ``AssetClass`` enum encoding the LIS art. 12.1.a) lineal table.
-- ``_inventario.py`` — Pydantic ``InventoryRecord`` + closed
-  ``ValuationMethod`` enum (FIFO / PMP / coste medio; LIFO forbidden
-  by construction per LIS art. 17).
-- ``anexo_<X>_<año>.py`` — per-anexo per-año modules exporting
-  ``CASILLAS``, ``FORMULAS``, ``PARAMETERS`` tuples.
-
-The ADR for this feature documents the rationale for the sub-package
-pattern (first sub-package within ``aeat.domain.formulas._rulesets`` — M100-
-specific, justified by the 5-10x scale relative to sibling Tier-L
-modelos).
+- :mod:`._common` exposes the multilingual label helper and BOE URL
+  constants reused across anexos.
+- :mod:`._ccaa` defines the closed :class:`._ccaa.CCAA` enum and
+  per-CCAA tarifa autonómica brackets for all 15 ordinary CCAAs (13
+  stable plus Asturias and Canarias year-dependent under Ley 3/2025 and
+  Ley 5/2024 respectively); País Vasco and Navarra are excluded as
+  foral regimes.
+- :mod:`._amortization` provides :class:`._amortization.AmortizationCategory`
+  and the closed :class:`._amortization.AssetClass` enum encoding the
+  LIS art. 12.1.a) lineal table.
+- :mod:`._inventario` provides :class:`._inventario.InventoryRecord`
+  and the closed :class:`._inventario.ValuationMethod` enum (FIFO,
+  PMP, coste medio; LIFO forbidden by construction per LIS art. 17).
+- ``anexo_<X>_<año>.py`` modules export the per-year ``CASILLAS``,
+  ``FORMULAS`` and ``PARAMETERS`` tuples.
 """
 
 from __future__ import annotations

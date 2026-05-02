@@ -81,8 +81,6 @@ class CertificateBackendSetting(StrEnum):
 class AuthProviderKindSetting(StrEnum):
     CERTIFICATE = "certificate"
     CLAVE_MOVIL = "clave_movil"
-    CLAVE_PERMANENTE = "clave_permanente"
-    CLAVE_PIN = "clave_pin"
 
 
 class JustificanteParserBackendSetting(StrEnum):
@@ -173,12 +171,12 @@ class Settings(BaseSettings):
     aeat_tax_residence_profile_path: Path | None = Field(
         default=None,
         description=(
-            "Optional override for Kent's tax-residence profile JSON. "
-            "When unset, aeat.domain.profile uses the OS config directory."
+            "Optional override for the operator's tax-residence profile JSON. "
+            "When unset, aeat.adapters.persistence.profile uses the OS config directory."
         ),
     )
 
-    # ── Financial ingest (#73) ─────────────────────────────────────────────
+    # ── Financial ingest ───────────────────────────────────────────────────
     financial_base_currency: str = Field(
         default="EUR",
         description="Fallback ISO 4217 currency used when a financial source omits a per-row currency",
@@ -193,7 +191,7 @@ class Settings(BaseSettings):
     )
     aeat_invoices_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "financial" / "invoices",
-        description="Directory where the invoice catalogue JSON file is stored (#75)",
+        description="Directory where the invoice catalogue JSON file is stored",
     )
     aeat_attachments_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "financial" / "attachments",
@@ -201,29 +199,42 @@ class Settings(BaseSettings):
     )
     aeat_usage_ratios_path: Path = Field(
         default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
-        description="User-configured per-category usage ratio overrides (#259)",
+        description="User-configured per-category usage ratio overrides",
     )
     aeat_ledgers_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "financial" / "ledgers",
-        description="Directory for encrypted inventory and amortization ledgers (#453)",
+        description="Directory for encrypted inventory and amortization ledgers",
     )
 
-    # ── Trilingual i18n ─────────────────────────────────────────────────────
+    # ── Multilingual i18n (es, en, ca, hu) ──────────────────────────────────
     aeat_output_language: str = Field(
         default="es",
-        description="Target output language for user-facing content (es, en, hu)",
+        description=(
+            "Target output language for user-facing content. "
+            "Accepts ISO 639-1 codes from the multilingual contract: "
+            "es (default, AEAT canonical), en, ca, hu."
+        ),
     )
     aeat_authoritative_language_aeat_terms: str = Field(
         default="es",
-        description="Authoritative language for AEAT domain terminology",
+        description=(
+            "Authoritative language for AEAT domain terminology "
+            "(modelos, casillas, BOE references). Must be 'es' — "
+            "the project's contract pins Spanish as the legal canonical."
+        ),
     )
     aeat_authoritative_language_project_docs: str = Field(
         default="en",
         description="Authoritative language for internal code and documentation",
     )
     aeat_fallback_languages: str = Field(
-        default="en,es",
-        description="Comma-separated list of fallback languages if the target language is missing",
+        default="es,en,ca,hu",
+        description=(
+            "Comma-separated fallback chain consulted when the target "
+            "language is missing on a Translatable. Default puts Spanish "
+            "first so AEAT legal text stays canonical, then English, then "
+            "the remaining co-official locales."
+        ),
     )
 
     # ── Scratch resources (provisioned by `aeat bootstrap`) ─────────────────
@@ -240,7 +251,7 @@ class Settings(BaseSettings):
         description="Document ID for the aeat-scratch sandbox doc",
     )
 
-    # ── Google test fixtures (provisioned by scripts/provision_google_fixtures.py) ──
+    # ── Google test fixture identifiers ────────────────────────────────────
     aeat_google_test_fixtures_folder_id: str = Field(
         default="",
         description="Drive folder ID that roots every Google Workspace test fixture",
@@ -323,7 +334,7 @@ class Settings(BaseSettings):
         description="Secondary opt-in specifically for Google Workspace fixture live tests",
     )
 
-    # ── Manuals corpus (aeat.domain.manuals, #25) ──────────────────────────────────
+    # ── Manuals corpus (aeat.domain.manuals) ───────────────────────────────────────
     aeat_manuals_root: Path = Field(
         default=PROJECT_ROOT / "corpus" / "manuals",
         description="Root directory for the structured AEAT Manual práctico corpus",
@@ -336,13 +347,13 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Normatives corpus (aeat.domain.normatives, #45) ────────────────────────────
+    # ── Normatives corpus (aeat.domain.normatives) ─────────────────────────────────
     aeat_normatives_root: Path = Field(
         default=PROJECT_ROOT / "corpus" / "normatives",
         description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
-    # ── VAT catalogue (aeat.domain.vat, #85) ─────────────────────────────
+    # ── VAT catalogue (aeat.domain.vat) ──────────────────────────────────
     aeat_vat_catalogue_root: Path = Field(
         default=PROJECT_ROOT / "corpus" / "financial" / "vat",
         description="Root directory for the hand-reviewed VAT taxonomy catalogue",
@@ -382,7 +393,7 @@ class Settings(BaseSettings):
         description="Minimum delay between AEAT requests in seconds",
     )
 
-    # ── Site-health detection (#95) ─────────────────────────────────────────
+    # ── Site-health detection ───────────────────────────────────────────────
     site_health_probe_url: str = Field(
         default="https://sede.agenciatributaria.gob.es/",
         description="AEAT Sede URL the site-health probe navigates to",
@@ -393,7 +404,7 @@ class Settings(BaseSettings):
         description="Fallback Retry-After seconds when a 429/503 omits the header",
     )
 
-    # ── AEAT certificate authentication (#8) ────────────────────────────────
+    # ── AEAT certificate authentication ─────────────────────────────────────
     aeat_certificate_path: Path | None = Field(
         default=None,
         description="Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle",
@@ -441,7 +452,7 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── AEAT auth provider default (#285) ───────────────────────────────────
+    # ── AEAT auth provider default ──────────────────────────────────────────
     aeat_auth_provider: AuthProviderKindSetting | None = Field(
         default=None,
         description=(
@@ -451,15 +462,15 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Cl@ve Móvil (#285 / #284) ───────────────────────────────────────────
+    # ── Cl@ve Móvil ─────────────────────────────────────────────────────────
     aeat_clave_movil_dni_nie: str | None = Field(
         default=None,
         description=(
             "Taxpayer DNI/NIE for `aeat auth login --provider clave_movil`. "
             "Used to stamp the persisted session with the operator's "
             "identity and to pre-fill the non-QR fallback form. Not a "
-            "secret on its own — the Cl@ve app on Kent's phone is the "
-            "actual second factor."
+            "secret on its own — the Cl@ve app on the operator's phone is "
+            "the actual second factor."
         ),
     )
     aeat_clave_movil_dni_fecha: str | None = Field(
@@ -483,7 +494,7 @@ class Settings(BaseSettings):
         description=(
             "When true, the Cl@ve Móvil provider uses the non-QR fallback "
             "(DNI/NIE + contraste) rather than the QR code. Still requires "
-            "Kent to approve the push notification on the Cl@ve app."
+            "the operator to approve the push notification on the Cl@ve app."
         ),
     )
     aeat_clave_movil_timeout_ms: int = Field(
@@ -492,8 +503,8 @@ class Settings(BaseSettings):
         le=600_000,
         description=(
             "Maximum time (milliseconds) the Cl@ve Móvil provider waits for "
-            "Kent to approve the push notification on his phone before "
-            "aborting. AEAT's own window is ~5 minutes; 300000 matches that."
+            "the operator to approve the push notification on their phone "
+            "before aborting. AEAT's own window is ~5 minutes; 300000 matches that."
         ),
     )
     aeat_clave_sede_access_url_template: str = Field(
@@ -553,7 +564,7 @@ class Settings(BaseSettings):
         description="Maximum retry attempts for retryable LLM failures",
     )
 
-    # ── Filing-deadline engine (#38) ────────────────────────────────────────
+    # ── Filing-deadline engine ──────────────────────────────────────────────
     aeat_default_profile_path: Path | None = Field(
         default=None,
         description=(
@@ -568,7 +579,7 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Submission engine (#42) ─────────────────────────────────────────────
+    # ── Submission engine ───────────────────────────────────────────────────
     aeat_submissions_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "submissions",
         description="Directory where SubmittedFiling JSON audit records are persisted",
@@ -578,7 +589,7 @@ class Settings(BaseSettings):
         description="Directory where submission-engine Playwright traces and screenshots are written",
     )
 
-    # ── Self-healing sync runner (#11) ──────────────────────────────────────
+    # ── Self-healing sync runner ────────────────────────────────────────────
     aeat_sync_concurrency: int = Field(
         default=4,
         description="Maximum number of concurrent sync fetches",
@@ -607,7 +618,7 @@ class Settings(BaseSettings):
         description="Initial exponential backoff delay (seconds) between retries",
     )
 
-    # ── Notifications inbox (#46) ───────────────────────────────────────────
+    # ── Notifications inbox ─────────────────────────────────────────────────
     aeat_inbox_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "inbox",
         description="Directory where the persisted Inbox JSON file lives",
@@ -624,7 +635,7 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Workflow engine (#59) ───────────────────────────────────────────────
+    # ── Workflow engine ─────────────────────────────────────────────────────
     aeat_workflow_runs_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "workflow-runs",
         description="Directory where WorkflowResult JSON audit records are persisted",
@@ -641,7 +652,7 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Filing draft engine (#39) ───────────────────────────────────────────
+    # ── Filing draft engine ─────────────────────────────────────────────────
     aeat_drafts_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "drafts",
         description="Directory where filing drafts are written as JSON files",
@@ -653,7 +664,7 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Status reader (#43) ─────────────────────────────────────────────────
+    # ── Status reader ───────────────────────────────────────────────────────
     aeat_status_cache_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "status-cache",
         description="Directory for the short-lived AEAT status-page cache",
@@ -681,12 +692,10 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Schema extraction (aeat.domain.schema, #9) ────────────────────────────────
+    # ── Schema extraction/cache ──────────────────────────────────────────────────
     aeat_schema_cache_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "schema-cache",
-        description=(
-            "Directory where extracted Modelo schemas and their provenance manifests are persisted by aeat.domain.schema."
-        ),
+        description=("Directory where inbound schema extraction persists Modelo schemas and provenance manifests."),
     )
     aeat_schema_source_urls_override: str = Field(
         default="",
@@ -701,7 +710,7 @@ class Settings(BaseSettings):
         description="Maximum number of BOE PDFs fetched in parallel by `aeat schema refresh`.",
     )
 
-    # ── Observability (#99) ────────────────────────────────────────────────
+    # ── Observability ──────────────────────────────────────────────────────
     aeat_runs_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "runs",
         description=(
@@ -710,17 +719,19 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Justificante parser (#44) ───────────────────────────────────────────
+    # ── Justificante parser ─────────────────────────────────────────────────
     aeat_justificantes_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "justificantes",
         description="Directory where parsed justificante PDFs and metadata are stored",
     )
     aeat_justificante_parser_backend: JustificanteParserBackendSetting = Field(
         default=JustificanteParserBackendSetting.PDFPLUMBER,
-        description="Parser backend for `aeat.domain.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)",
+        description=(
+            "Parser backend for `aeat.adapters.inbound.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)"
+        ),
     )
 
-    # ── Filing history (#168) ───────────────────────────────────────────────
+    # ── Filing history ──────────────────────────────────────────────────────
     aeat_filing_history_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "filing-history",
         description="Directory where the persisted FilingHistory JSON file lives",

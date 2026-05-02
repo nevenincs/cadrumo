@@ -1,35 +1,34 @@
-"""Modelo 100 Anexo D — E.D. simplificada (actividades económicas, ejercicio 2025).
+"""Modelo 100 Anexo D — estimación directa simplificada (actividades económicas, ejercicio 2025).
 
-Estimación directa simplificada applies when cifra de negocios <=
-600.000 € and the contribuyente has not opted out of the régimen
-(RIRPF art. 28). The defining characteristic vs E.D. normal is the
-**5 % gastos de difícil justificación cap** of RIRPF art. 30:
+Estimación directa simplificada applies when cifra de negocios is
+<= 600.000 € and the contribuyente has not opted out of the régimen
+(RIRPF art. 28). The defining characteristic versus E.D. normal is
+the 5 % gastos de difícil justificación cap of RIRPF art. 30::
 
-    gastos_dificil_justif = min( 5% * rendimiento_neto_previo,  2.000 EUR )
+    gastos_dificil_justif = min(0.05 * rendimiento_neto_previo, 2000.00)
 
 Aggregation chain on M100:
 
-- ``0210`` — ingresos de explotación (input)
-- ``0215`` — gastos generales deducibles (input — incluye gastos de
-  personal, servicios exteriores, tributos, amortización per tabla
-  simplificada — se imputan al casillero único 0215 en este régimen
-  para mantener la simplicidad operativa de la estimación
-  simplificada)
+- ``0210`` — ingresos de explotación (input).
+- ``0215`` — gastos generales deducibles (input — includes gastos de
+  personal, servicios exteriores, tributos and amortización per the
+  simplified table; they are imputed to the single casilla ``0215``
+  in this régimen to preserve operational simplicity).
 - ``0220`` (rendimiento neto antes del 5 % difícil justificación,
-  computed) = ``clamp_pos(0210 - 0215)``
+  computed) = ``clamp_pos(0210 - 0215)``.
 - ``0225`` (gastos difícil justificación, computed) =
-  ``min( 0.05 * 0220, 2000.00 )``
+  ``min(0.05 * 0220, 2000.00)``.
 - ``0230`` (rendimiento neto previo E.D. simplificada, computed) =
-  ``clamp_pos(0220 - 0225)``
+  ``clamp_pos(0220 - 0225)``.
 - ``0235`` — reducciones LIRPF art. 32 (input — irregularidad,
-  startup)
+  startup).
 - ``0240`` (rendimiento neto reducido E.D. simplificada, computed) =
-  ``clamp_pos(0230 - 0235)``
+  ``clamp_pos(0230 - 0235)``.
 
 RIRPF art. 30 has been stable since the modificación of 2018 (the
-2.000 € cap was introduced then); BOE consolidated-text consult
-2026-02-28 confirms no posterior modification. Stable across 2024 /
-2025 / 2026.
+2.000 € cap was introduced then); the BOE consolidated-text consult
+of 2026-02-28 confirms no posterior modification. Stable across 2024,
+2025 and 2026.
 """
 
 from __future__ import annotations
@@ -55,6 +54,7 @@ EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a multilingual label dict for a casilla in this anexo."""
     return {"es": es, "en": en, "hu": hu}
 
 

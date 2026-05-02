@@ -1,10 +1,13 @@
-"""The :class:`SetupWizard` orchestrator for the first-run setup flow (#61).
+"""The :class:`SetupWizard` orchestrator for the first-run setup flow.
 
 The wizard walks through every :class:`SetupStep` in order, calling
 into the :class:`Prompter` Protocol for interactive answers and the
-:class:`FirstRunRunner` Protocol for the optional read-only workflow check
-(#59). In non-interactive mode, a fully-populated :class:`SetupAnswers`
-short-circuits every prompt.
+:class:`FirstRunRunner` Protocol for the optional read-only workflow
+check.
+
+In non-interactive mode, a fully-populated :class:`SetupAnswers`
+short-circuits every prompt and the wizard runs the linear sequence
+without any I/O against the user.
 """
 
 from __future__ import annotations
@@ -38,14 +41,17 @@ _DEFAULT_ENV_FILE = Path("env") / ".env"
 
 
 def _utcnow() -> datetime:
+    """Return the current timezone-aware UTC instant."""
     return datetime.now(UTC)
 
 
 def _t(es: str, en: str, hu: str) -> Translatable:
+    """Build a multilingual :class:`Translatable` from the three language strings."""
     return {"es": es, "en": en, "hu": hu}
 
 
 def _setup_text(message: Translatable) -> str:
+    """Render ``message`` in the configured output language, defaulting to ES."""
     try:
         language = Language(load_settings().aeat_output_language)
     except (KeyError, ValueError):
@@ -54,9 +60,22 @@ def _setup_text(message: Translatable) -> str:
 
 
 class SetupWizard:
-    """Orchestrates the ten-step first-run setup flow."""
+    """Orchestrates the ten-step first-run setup flow.
+
+    Drives the wizard through every :class:`SetupStep` in order,
+    delegating user interaction to a :class:`Prompter` and the optional
+    end-of-flow workflow check to a :class:`FirstRunRunner`. The pure
+    post-write verifier is supplied via constructor injection.
+    """
 
     def __init__(self, *, verifier: Verifier | None = None) -> None:
+        """Construct the wizard with an optional pre-built verifier.
+
+        Args:
+            verifier: Override for the :class:`Verifier` instance the
+                wizard runs at the VERIFY step. Defaults to a fresh
+                :class:`Verifier`.
+        """
         self._verifier = verifier or Verifier()
 
     def run(
@@ -74,15 +93,15 @@ class SetupWizard:
         Args:
             env_file: Target path for the env file. Defaults to
                 ``env/.env`` relative to the current working directory.
-            non_interactive: If True, consume ``defaults`` without
+            non_interactive: If ``True``, consume ``defaults`` without
                 prompting. ``defaults`` must be supplied.
             defaults: Pre-populated :class:`SetupAnswers`. Required for
                 non-interactive mode; seeds prompter defaults in
                 interactive mode.
-            prompter: Interactive-mode only. The prompter driving the
+            prompter: Interactive-mode only — the prompter driving the
                 state machine.
-            first_run_runner: Optional read-only workflow check (#59).
-                If ``None``, the ``FIRST_RUN`` step is skipped cleanly.
+            first_run_runner: Optional read-only workflow check. If
+                ``None``, the ``FIRST_RUN`` step is skipped cleanly.
             now: Clock injection point. Defaults to
                 ``datetime.now(UTC)``.
 
@@ -90,8 +109,9 @@ class SetupWizard:
             A :class:`SetupResult` describing the run.
 
         Raises:
-            SetupError: If the arguments are inconsistent (e.g.
-                non-interactive mode without defaults).
+            SetupError: When the arguments are inconsistent — for
+                example, non-interactive mode without ``defaults``, or
+                interactive mode without a ``prompter``.
         """
         clock = now or _utcnow
         started_at = clock()
@@ -128,9 +148,8 @@ class SetupWizard:
             else:
                 completed.append(step)
 
-        # FIXTURE_PROVISIONING — captured opt-in; we never invoke the
-        # external script from within the wizard, we only record the
-        # choice.
+        # FIXTURE_PROVISIONING captures the operator's opt-in only; the
+        # wizard never invokes the external provisioning script itself.
         if SetupStep.FIXTURE_PROVISIONING in answers.steps_to_skip:
             skipped.append(SetupStep.FIXTURE_PROVISIONING)
         else:

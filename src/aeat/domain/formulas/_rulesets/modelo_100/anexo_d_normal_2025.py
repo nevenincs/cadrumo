@@ -1,39 +1,40 @@
-"""Modelo 100 Anexo D — E.D. normal (actividades económicas, ejercicio 2025).
+"""Modelo 100 Anexo D — estimación directa normal (actividades económicas, ejercicio 2025).
 
-Estimación directa normal applies to actividades económicas IRPF whose
-cifra de negocios > 600.000 € (RIRPF art. 28) — full P&L per LIS
-principles. Inventario per LIS art. 17 (FIFO / PMP / coste medio,
-LIFO forbidden); amortizaciones per LIS art. 12 (lineal table) +
-libertad de amortización art. 102 (PYMES) and DA 18ª LIS via Ley
-31/2022 + DA 59ª LIRPF via RD-Ley 4/2024 (vehículos eléctricos).
+Estimación directa normal applies to actividades económicas IRPF
+whose cifra de negocios is over 600.000 € (RIRPF art. 28) — full P&L
+per LIS principles. Inventario per LIS art. 17 (FIFO, PMP, coste
+medio; LIFO forbidden); amortizaciones per LIS art. 12 (lineal table)
+plus libertad de amortización art. 102 (PYMES) and DA 18ª LIS via Ley
+31/2022 plus DA 59ª LIRPF via RD-Ley 4/2024 (vehículos eléctricos).
 
 Aggregation chain on M100:
 
-- ``0140`` — ingresos de explotación (input)
-- ``0150`` — compras y consumos del ejercicio (input)
-- ``0155`` — variación de existencias (input — final - initial per
-  the caller's `InventoryRecord`; positive = increase = revenue
-  contribution)
-- ``0165`` — gastos de personal (input)
-- ``0170`` — servicios exteriores + tributos + otros gastos (input)
+- ``0140`` — ingresos de explotación (input).
+- ``0150`` — compras y consumos del ejercicio (input).
+- ``0155`` — variación de existencias (input — ``final - initial`` per
+  the caller's :class:`._inventario.InventoryRecord`; positive =
+  increase = revenue contribution).
+- ``0165`` — gastos de personal (input).
+- ``0170`` — servicios exteriores, tributos and otros gastos (input).
 - ``0173`` — amortización del inmovilizado (input — caller computes
-  per LIS art. 12 lineal table or libertad amortización)
-- ``0180`` — provisiones y deterioros (input — LIS arts. 13-14)
+  per LIS art. 12 lineal table or libertad amortización).
+- ``0180`` — provisiones y deterioros (input — LIS arts. 13-14).
 - ``0190`` (total gastos computables, computed) =
-  ``0150 + 0165 + 0170 + 0173 + 0180 - 0155``
-  (variación de existencias negativa — i.e. existencias finales
-  menores que iniciales — incrementa gastos; positiva incrementa
-  ingresos. We treat 0155 as signed: positive when stock grew, so
-  subtracted from gastos to net out)
+  ``0150 + 0165 + 0170 + 0173 + 0180 - 0155``. Variación de
+  existencias negativa — i.e. existencias finales menores que
+  iniciales — incrementa gastos; positiva incrementa ingresos.
+  ``0155`` is signed (positive when stock grew), so it is subtracted
+  from gastos to net out.
 - ``0195`` (rendimiento neto previo E.D. normal, computed) =
-  ``clamp_pos(0140 - 0190)``
+  ``clamp_pos(0140 - 0190)``.
 - ``0200`` — reducciones LIRPF art. 32 (input — start of activity,
-  irregularidad rendimientos)
+  irregularidad rendimientos).
 - ``0205`` (rendimiento neto reducido E.D. normal, computed) =
-  ``clamp_pos(0195 - 0200)``
+  ``clamp_pos(0195 - 0200)``.
 
-Stable across 2024 / 2025 / 2026 (LIRPF arts. 27-32 + LIS arts. 12-14
-+ 17 unchanged at BOE consolidated text consult 2026-02-28).
+Stable across 2024, 2025 and 2026 (LIRPF arts. 27-32 and LIS arts.
+12-14 plus 17 unchanged at the BOE consolidated-text consult of
+2026-02-28).
 """
 
 from __future__ import annotations
@@ -57,6 +58,7 @@ EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a multilingual label dict for a casilla in this anexo."""
     return {"es": es, "en": en, "hu": hu}
 
 

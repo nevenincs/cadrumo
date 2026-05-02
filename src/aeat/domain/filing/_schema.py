@@ -1,4 +1,4 @@
-"""Pydantic v2 schema for the :mod:`aeat.application.filing` subpackage.
+"""Pydantic v2 schema for the :mod:`aeat.domain.filing` subpackage.
 
 Every type in this module is a strict, frozen pydantic v2 model
 or a closed :class:`enum.StrEnum`. These are the boundary-crossing
@@ -98,7 +98,7 @@ class FilingValidationFinding(BaseModel):
         severity: ERROR / WARNING / INFO.
         code: A stable machine-readable code (e.g.
             ``"casilla-required-missing"``).
-        message: A trilingual :class:`Translatable` describing the
+        message: A multilingual :class:`Translatable` describing the
             finding.
         references_rules: Tuple of Manual práctico Rule IDs that
             justify the finding (see :class:`aeat.domain.manuals.Rule`).

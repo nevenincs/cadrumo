@@ -3,26 +3,26 @@
 Estimación objetiva (módulos) is a per-actividad lookup-table régimen
 governed by an annual Orden HAC. For ejercicio 2025 the relevant
 Orden is HAC/277/2026 (BOE-A-2026-7041); for ejercicio 2026 it is
-Orden HAC/1425/2025 (BOE-A-2025-25272 — published 11/12/2025 covering
+Orden HAC/1425/2025 (BOE-A-2025-25272, published 11/12/2025 covering
 módulos 2026).
 
 The per-actividad módulo computation (number of employed persons,
-floor area, kw of installed power, etc.) is not encoded here — it
+floor area, kW of installed power, etc.) is not encoded here — it
 lives in the caller's domain because it depends on the actividad code
 and the Orden HAC table for the given año. Anexo D módulos verifies
 the aggregate chain after the caller has computed the per-módulo
 rendimiento neto previo:
 
 - ``0250`` (rendimiento neto previo módulos, input — caller-computed
-  from the Orden HAC tabla per actividad)
-- ``0255`` — reducción del 5 % por incentivos al empleo / inversión
-  (input — caller-computed per the Orden HAC reductions)
+  from the Orden HAC tabla per actividad).
+- ``0255`` (reducción del 5 % por incentivos al empleo / inversión,
+  input — caller-computed per the Orden HAC reductions).
 - ``0260`` (rendimiento neto reducido módulos, computed) =
-  ``clamp_pos(0250 - 0255)``
+  ``clamp_pos(0250 - 0255)``.
 
-Stable structurally across 2024 / 2025 / 2026 — only the underlying
+Stable structurally across 2024, 2025 and 2026 — only the underlying
 Orden HAC tabla values change yearly; that variation is encapsulated
-in the caller-supplied 0250 input.
+in the caller-supplied ``0250`` input.
 """
 
 from __future__ import annotations
@@ -45,6 +45,7 @@ EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a multilingual label dict for a casilla in this anexo."""
     return {"es": es, "en": en, "hu": hu}
 
 

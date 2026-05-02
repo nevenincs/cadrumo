@@ -9,8 +9,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, TYPE_CHECKING, ClassVar
 
-from ._registry import ErrorCode
-
 if TYPE_CHECKING:
     from ..i18n import Translatable
 
@@ -43,7 +41,7 @@ class AeatError(Exception):
             context: Optional structured context that can be redacted and
                 emitted in the JSON envelope.
             suggestion: Optional copy-paste recovery command override.
-            translated_message: Optional trilingual message override.
+            translated_message: Optional multilingual message override.
         """
 
         if message is None:
@@ -56,7 +54,7 @@ class AeatError(Exception):
 
 
 class AeatObservabilityError(AeatError):
-    """Base class for observability-layer errors (#99).
+    """Base class for observability-layer errors.
 
     Lives in :mod:`aeat.core.errors` (rather than the leaf
     :mod:`aeat.core.observability` subpackage) so other subpackages can
@@ -77,7 +75,7 @@ class FixtureProvisioningError(AeatError):
 class FilingFixtureError(AeatError):
     """Raised when a synthetic filing-history fixture cannot be loaded.
 
-    Thrown by :mod:`aeat.domain.testing` when the fixtures directory cannot be
+    Thrown by :mod:`aeat.application.filing.testing` when the fixtures directory cannot be
     resolved, a fixture file cannot be read, JSON decoding fails, or a
     payload fails strict pydantic validation (including the synthetic-
     only invariant checks on the ``synthetic`` and ``_comment`` fields).
@@ -115,27 +113,15 @@ class SiteHealthError(AeatError):
         self.status: Any = status
 
 
-class WorkspaceLockedError(AeatError):
-    """Raised when a concurrent process already owns a workspace lock."""
-
-
-class DeprecatedAliasError(AeatError):
-    """Raised when a deprecated CLI alias needs to emit a stable notice."""
-
-
-class MovedAliasError(AeatError):
-    """Raised when a moved CLI alias needs to emit a stable notice."""
-
-
 class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
-# -- aeat.domain.formulas error hierarchy (#173) --------------------------------
-# The formula engine lives in :mod:`aeat.domain.formulas`. Per the project-wide
-# mandate (CLAUDE.md §Errors: "All domain errors inherit from
-# aeat.core.errors.AeatError"), the entire formula-engine error hierarchy is
-# declared here rather than inside the subpackage.
+# -- aeat.domain.formulas error hierarchy --------------------------------------
+# The formula engine lives in :mod:`aeat.domain.formulas`. All domain errors
+# inherit from :class:`aeat.core.errors.AeatError`, so the entire
+# formula-engine error hierarchy is declared here rather than inside the
+# subpackage.
 
 
 class FormulasError(AeatError):
@@ -190,6 +176,7 @@ from ._registry import (  # noqa: E402
     ErrorCategory,
     ErrorCode,
     ErrorEnvelope,
+    bind_error_code,
     build_error_envelope,
     get_error_exit_code,
     get_registered_error_code,
@@ -208,7 +195,6 @@ __all__ = [
     "AmbiguousPeriodError",
     "AuditDiscrepancyError",
     "CasillaNotDefinedError",
-    "DeprecatedAliasError",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
@@ -219,10 +205,9 @@ __all__ = [
     "FormulasError",
     "McpLaunchError",
     "MissingRulesetError",
-    "MovedAliasError",
     "RulesetValidationError",
     "SiteHealthError",
-    "WorkspaceLockedError",
+    "bind_error_code",
     "build_error_envelope",
     "get_error_exit_code",
     "get_registered_error_code",

@@ -1,4 +1,9 @@
-"""Domain errors for classified-transaction casilla aggregation."""
+"""Errors raised while aggregating classified transactions into casilla totals.
+
+Used by :mod:`aeat.application.aggregation` to signal contract
+violations when classified transaction streams are folded into the
+casilla ledger consumed by :mod:`aeat.domain.filing`.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +12,7 @@ from ...core.i18n import Translatable
 
 
 class AggregationError(AeatError):
-    """Base class for financial T6 aggregation failures."""
+    """Base class for financial transaction aggregation failures."""
 
 
 class AggregationPeriodError(AggregationError):
@@ -19,11 +24,11 @@ class AggregationUnsupportedModeloError(AggregationError):
 
 
 class AggregationMissingClassificationError(AggregationError):
-    """Raised when in-period transactions still need classification."""
+    """Raised when in-period transactions still need business classification."""
 
 
 class AggregationCategoryCoverageError(AggregationError):
-    """Raised when a business transaction lacks category/profile coverage."""
+    """Raised when a business transaction lacks category or profile coverage."""
 
 
 class AggregationCasillaMappingError(AggregationError):
@@ -31,7 +36,17 @@ class AggregationCasillaMappingError(AggregationError):
 
 
 def t(es: str, en: str, hu: str) -> Translatable:
-    """Build a trilingual message payload."""
+    """Build a multilingual :class:`aeat.core.i18n.Translatable` message payload.
+
+    Args:
+        es: Spanish message.
+        en: English message.
+        hu: Hungarian message.
+
+    Returns:
+        A :class:`aeat.core.i18n.Translatable` mapping carrying all
+        three languages keyed by ISO 639-1 code.
+    """
 
     return {"es": es, "en": en, "hu": hu}
 

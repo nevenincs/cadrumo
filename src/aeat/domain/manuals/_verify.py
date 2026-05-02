@@ -2,7 +2,7 @@
 
 Walks a committed manual part, validates every JSON file against the
 strict schema, and reports dangling cross-references, missing
-quad-lingual completeness, and records lacking reviewer metadata. The
+multilingual completeness, and records lacking reviewer metadata. The
 report is a pydantic model so the CLI can render it deterministically
 and so tests can assert on its shape.
 """
@@ -71,7 +71,7 @@ class ManualVerificationReport(BaseModel):
         return not self.errors
 
 
-def _section_quad_lingual_warnings(section: Section) -> list[ManualVerificationIssue]:
+def _section_multilingual_warnings(section: Section) -> list[ManualVerificationIssue]:
     """Warn when a :class:`~aeat.domain.manuals.Section` is missing ``en`` or ``hu`` translations."""
     issues: list[ManualVerificationIssue] = []
     for field_name, translatable in (("title", section.title), ("summary", section.summary)):
@@ -205,7 +205,7 @@ def verify_manual_dir(
     known_ids = _collect_section_ids(sections_tuple)
 
     for section in sections_tuple:
-        issues.extend(_section_quad_lingual_warnings(section))
+        issues.extend(_section_multilingual_warnings(section))
     issues.extend(_cross_reference_issues(sections_tuple, known_ids))
 
     _logger.info(

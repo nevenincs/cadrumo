@@ -1,15 +1,15 @@
 """Modelo 100 Anexo C — rendimientos del capital inmobiliario (ejercicio 2025).
 
 Anexo C covers arrendamientos urbanos and imputación de rentas
-inmobiliarias per LIRPF arts. 22-24 + 85.
+inmobiliarias per LIRPF arts. 22-24 and 85.
 
 The aggregation chain on M100:
 
 - ``0106`` (rendimiento neto previo capital inmobiliario) =
-  ``clamp_pos(0061 - 0066 - 0072)`` where:
-    - ``0061`` = ingresos íntegros arrendamiento (caller-summed across fincas)
-    - ``0066`` = gastos deducibles (financiación, IBI, comunidad, reparación)
-    - ``0072`` = amortización 3 % de la construcción (LIRPF art. 23.1)
+  ``clamp_pos(0061 - 0066 - 0072)`` where ``0061`` is the ingresos
+  íntegros arrendamiento (caller-summed across fincas), ``0066`` are
+  the gastos deducibles (financiación, IBI, comunidad, reparación) and
+  ``0072`` is the amortización 3 % de la construcción (LIRPF art. 23.1).
 - ``0107`` (rendimiento neto reducido capital inmobiliario) =
   ``clamp_pos(0106 - 0078)`` where ``0078`` is the LIRPF art. 23.2
   reducción at the applicable tier (50 % default / 60 % rehabilitación
@@ -19,14 +19,15 @@ The aggregation chain on M100:
   inquilino age, reducción versus prior contract).
 
 Imputación de rentas inmobiliarias (LIRPF art. 85, casilla 0085) is a
-parallel income category — caller computes 1,1 % / 2 % del valor
+parallel income category — caller computes 1,1 % or 2 % del valor
 catastral and supplies the resulting amount; it does NOT feed into
-0106 or 0107 (it lands in base imponible general directly via Anexo F).
+``0106`` or ``0107`` (it lands in base imponible general directly via
+Anexo F).
 
-Stable across 2024 / 2025 / 2026 — Ley 12/2023 set the tiered
+Stable across 2024, 2025 and 2026 — Ley 12/2023 set the tiered
 reducción art. 23.2 with effects on contracts celebrados desde
-26/5/2023; the framework is unchanged at BOE consolidated text consult
-2026-02-28.
+26/5/2023; the framework is unchanged at the BOE consolidated-text
+consult of 2026-02-28.
 """
 
 from __future__ import annotations
@@ -49,6 +50,7 @@ EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a multilingual label dict for a casilla in this anexo."""
     return {"es": es, "en": en, "hu": hu}
 
 

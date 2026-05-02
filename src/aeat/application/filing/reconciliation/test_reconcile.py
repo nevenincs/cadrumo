@@ -15,8 +15,9 @@ from pathlib import Path
 import pytest
 
 from ....core.config import PROJECT_ROOT
-from ....domain.justificante import Justificante, parse_justificante
-from ....domain.testing import synthesize_filing_draft
+from ....adapters.inbound.justificante import parse_justificante
+from ....domain.justificante import Justificante
+from ..testing import synthesize_filing_draft
 from ....domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
 from . import (
     FilingDivergenceKind,
@@ -186,15 +187,15 @@ class TestReadOnlyReconcile:
         assert report.status is ReconciliationStatus.MATCH, (
             f"{modelo}/{ejercicio}-{period} did not MATCH: mismatches={report.mismatches}"
         )
-        # The match path must produce a clean trilingual narrative.
+        # The match path must produce a clean multilingual narrative.
         assert report.narrative.get("es")
         assert report.narrative.get("en")
         assert report.narrative.get("hu")
 
     def test_synthesised_draft_with_wrong_modelo_diverges(self) -> None:
         from ....core.config import PROJECT_ROOT
-        from ....domain.justificante import parse_justificante
-        from ....domain.testing import synthesize_filing_draft
+        from ....adapters.inbound.justificante import parse_justificante
+        from ..testing import synthesize_filing_draft
 
         pdf_path = PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / "100" / "2022-0A.pdf"
         justificante = parse_justificante(pdf_path)

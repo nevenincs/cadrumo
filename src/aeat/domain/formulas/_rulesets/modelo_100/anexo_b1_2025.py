@@ -2,29 +2,29 @@
 
 Anexo B1 covers the rendimientos del trabajo block of the RENTA
 declaración. The numerical surface is anchored to LIRPF arts. 17-20
-(definición, reducción art. 18 30% rendimientos irregulares, gastos
-deducibles art. 19, reducción por obtención de rendimientos del trabajo
-art. 20 — modificada por RD-Ley 4/2024).
+(definición, reducción art. 18 30 % rendimientos irregulares, gastos
+deducibles art. 19, reducción por obtención de rendimientos del
+trabajo art. 20 — modificada por RD-Ley 4/2024).
 
 For ejercicio 2025 the LIRPF art. 20 reducción thresholds are stable
-relative to ejercicio 2024 (RD-Ley 4/2024 set them at 14.852 / 17.673,52
-/ 19.747,50 € with max reducción 7.302 €; no posterior law modified
-those values for 2025).
+relative to ejercicio 2024 (RD-Ley 4/2024 set them at 14.852 /
+17.673,52 / 19.747,50 € with max reducción 7.302 €; no posterior law
+modified those values for 2025).
 
 The DSL encodes art. 20 as a two-piece linear function via
 ``max_op(piece_a, piece_b)``:
 
-- piece_a covers rendimiento ≤ 17.673,52 with slope 1,75 from
-  reducción 7.302 € at 14.852 € down through 2.364,34 € at 17.673,52 €
-- piece_b covers rendimiento ≥ 17.673,52 with slope 1,14 from
-  reducción 2.364,34 € at 17.673,52 € down to ~0 at 19.747,50 €
-- ``max_op`` selects the active piece at any rendimiento level
+- piece_a covers rendimiento <= 17.673,52 with slope 1,75 from
+  reducción 7.302 € at 14.852 € down through 2.364,34 € at 17.673,52 €.
+- piece_b covers rendimiento >= 17.673,52 with slope 1,14 from
+  reducción 2.364,34 € at 17.673,52 € down to ~0 at 19.747,50 €.
+- ``max_op`` selects the active piece at any rendimiento level.
 - ``clamp_pos`` zeroes out the negative tails so the piecewise
-  function reaches 0 above 19.747,50 €
+  function reaches 0 above 19.747,50 €.
 
-This Anexo B1 module exports CASILLAS, FORMULAS, PARAMETERS for the
-parent-level aggregator (``modelo_100_2025.py``) to compose into the
-public ``RULESET``.
+This module exports ``CASILLAS``, ``FORMULAS`` and ``PARAMETERS`` for
+the parent-level aggregator (``modelo_100_2025.py``) to compose into
+the public ``RULESET``.
 """
 
 from __future__ import annotations
@@ -51,6 +51,7 @@ EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a multilingual label dict for a casilla in this anexo."""
     return {"es": es, "en": en, "hu": hu}
 
 

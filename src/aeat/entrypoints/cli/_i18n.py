@@ -1,4 +1,4 @@
-"""Quad-lingual i18n helpers for the CLI surface.
+"""Multilingual i18n helpers for the CLI surface.
 
 This module is the only place every CLI submodule resolves the
 operator's output language and constructs in-place
@@ -10,7 +10,7 @@ The helpers are intentionally tiny so call sites stay readable:
 
 - :func:`output_language` returns the resolved
   :class:`aeat.core.i18n.Language`.
-- :func:`t` constructs a quad-lingual
+- :func:`t` constructs a multilingual
   :class:`aeat.core.i18n.Translatable` in the AEAT-canonical-first
   order matched by the configured fallback-chain default.
 - :func:`tr` renders a :class:`aeat.core.i18n.Translatable` in the
@@ -45,7 +45,7 @@ def output_language() -> Language:
 
 
 def t(es: str, en: str, ca: str, hu: str) -> Translatable:
-    """Build a quad-lingual :class:`aeat.core.i18n.Translatable` literal.
+    """Build a multilingual :class:`aeat.core.i18n.Translatable` literal.
 
     Argument order matches the project's AEAT-canonical-first fallback
     chain: Spanish (legal canonical) -> English (project working
@@ -75,7 +75,7 @@ def tr(message: Translatable) -> str:
     ``typer.BadParameter``).
 
     Args:
-        message: Quad-lingual literal to render, typically built via
+        message: Multilingual literal to render, typically built via
             :func:`t`.
 
     Returns:

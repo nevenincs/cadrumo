@@ -1,4 +1,11 @@
-"""Verification orchestrator: DeclaracionFiling → VerificationVerdict."""
+"""Orchestrator turning a parsed declaración into a verification verdict.
+
+Bridges :class:`aeat.adapters.inbound.declaracion.DeclaracionFiling` and
+:meth:`aeat.domain.formulas.Engine.audit_against`, classifies every raw
+discrepancy by cause, derives a single-word
+:class:`aeat.application.verification.VerificationStatus`, and composes
+a multilingual narrative for the operator's UI.
+"""
 
 from __future__ import annotations
 
@@ -16,16 +23,17 @@ from ._schema import (
 )
 
 _DEFAULT_TOLERANCE = Decimal("0.01")
+"""Default per-casilla absolute tolerance (one cent) for verdicts."""
 
-# Extractor-warning codes that flag low-confidence extraction.
 _UNRELIABLE_WARNING_CODES: frozenset[str] = frozenset(
     {
         "bbox-fallback",
         "ambiguous-label",
         "value-unparseable",
-        "casilla-not-found",  # audit H1 — missing casillas also down-rank verdict
+        "casilla-not-found",
     }
 )
+"""Extractor warning codes that mark a casilla extraction as low-confidence."""
 
 
 def verify_declaracion(
@@ -37,15 +45,21 @@ def verify_declaracion(
     """Compare the printed casilla values against engine-derived ones.
 
     Args:
-        declaracion: The parsed filing from :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
-        ruleset: The formula ruleset to audit against; ``None`` → verdict is
-            :attr:`VerificationStatus.UNVERIFIABLE`.
-        tolerance: Maximum absolute delta between printed and computed values
-            to still count as a match. Defaults to 0.01 (one cent).
+        declaracion: The parsed filing returned by
+            :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
+        ruleset: The :class:`aeat.domain.formulas.Ruleset` to audit
+            against; ``None`` short-circuits to a verdict with status
+            :attr:`aeat.application.verification.VerificationStatus.UNVERIFIABLE`.
+        tolerance: Maximum absolute delta between printed and computed
+            values to still count as a match. Defaults to ``0.01`` (one
+            cent).
 
     Returns:
-        A frozen :class:`VerificationVerdict` with status + classified
-        discrepancies + trilingual narrative + timestamp.
+        A frozen :class:`aeat.application.verification.VerificationVerdict`
+        carrying the status, every
+        :class:`aeat.application.verification.ClassifiedDiscrepancy`,
+        the coverage fraction, a multilingual narrative, and the UTC
+        timestamp the verdict was produced.
     """
     if ruleset is None:
         return _unverifiable_verdict(declaracion)
@@ -100,7 +114,13 @@ def _classify_discrepancy(
     ruleset_casillas: set[str],
     tolerance: Decimal,
 ) -> ClassifiedDiscrepancy:
-    """Assign one of the four cause categories to a raw discrepancy."""
+    """Assign one of the four :class:`DiscrepancyCause` categories.
+
+    The classifier prefers extraction-unreliability over rounding so that
+    a casilla flagged by the extractor is never silently classified as a
+    rounding miss. Casillas absent from the ruleset are routed to
+    :attr:`DiscrepancyCause.UNMODELLED_RULE` regardless of delta size.
+    """
     casilla_id = discrepancy.casilla_id
     delta = discrepancy.delta
     abs_delta = abs(delta)
@@ -151,7 +171,12 @@ def _compute_coverage(
     declaracion: DeclaracionFiling,
     ruleset_casillas: set[str],
 ) -> float:
-    """Fraction of the ruleset's casillas that the extraction supplied."""
+    """Return the fraction of ruleset casillas the extraction supplied.
+
+    Returns ``0.0`` when the ruleset itself defines no casillas; this
+    keeps the downstream coverage threshold in :func:`_derive_status`
+    well-defined.
+    """
     if not ruleset_casillas:
         return 0.0
     provided_ids = {v.casilla_id for v in declaracion.values}
@@ -163,7 +188,13 @@ def _derive_status(
     classified: tuple[ClassifiedDiscrepancy, ...],
     coverage: float,
 ) -> VerificationStatus:
-    """Map discrepancies + coverage to a single-word status."""
+    """Map discrepancies and coverage onto a :class:`VerificationStatus`.
+
+    Returns :attr:`VerificationStatus.NEEDS_REVIEW` when any discrepancy
+    has a blocking cause (extraction-unreliable or
+    correctness-divergence) or when ruleset coverage drops below 30%;
+    otherwise :attr:`VerificationStatus.VERIFIED`.
+    """
     blocking = {
         DiscrepancyCause.CORRECTNESS_DIVERGENCE,
         DiscrepancyCause.EXTRACTION_UNRELIABLE,
@@ -181,7 +212,12 @@ def _compose_narrative(
     classified: tuple[ClassifiedDiscrepancy, ...],
     coverage: float,
 ) -> Translatable:
-    """Build the trilingual summary string Kent sees after import."""
+    """Build the multilingual summary string the operator sees after import.
+
+    The narrative collapses the verdict into one sentence per supported
+    UI language and embeds the coverage percentage and discrepancy count
+    so the operator can decide whether to drill into the classified list.
+    """
     coverage_pct = round(coverage * 100)
     n_discrepancies = len(classified)
     modelo = declaracion.modelo
@@ -219,7 +255,13 @@ def _compose_narrative(
 
 
 def _unverifiable_verdict(declaracion: DeclaracionFiling) -> VerificationVerdict:
-    """Produce the ``UNVERIFIABLE`` verdict when no ruleset is available."""
+    """Return the canonical
+    :attr:`VerificationStatus.UNVERIFIABLE` verdict.
+
+    Used when no ruleset is registered for the filing's
+    ``(modelo, período)`` pair; the verdict carries an empty discrepancy
+    tuple, zero coverage, and a multilingual explanatory narrative.
+    """
     return VerificationVerdict(
         modelo=declaracion.modelo,
         period=declaracion.period,

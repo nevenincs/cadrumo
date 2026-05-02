@@ -56,12 +56,12 @@ _LOGGER = get_logger(__name__)
 
 _SUMMARY_MAX = 80
 
-# Quad-lingual contract: every Translatable carries es / en / ca / hu.
+# Multilingual contract: every Translatable carries es / en / ca / hu.
 _LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
 
 
 def _t(es: str, en: str, ca: str, hu: str) -> Translatable:
-    """Build a quad-lingual :class:`Translatable` from positional strings.
+    """Build a multilingual :class:`Translatable` from positional strings.
 
     Local mirror of ``aeat.entrypoints.cli._i18n.t``; pulled in here so
     that domain-side adapters do not import the CLI surface (kept the
@@ -78,12 +78,12 @@ _DIRECTION_LABELS: dict[TransactionDirection, Translatable] = {
         "traspaso interno",
         "internal transfer",
         "traspàs intern",
-        "belso atutalas",
+        "belső átutalás",
     ),
 }
 _CLASSIFICATION_LABELS: dict[BusinessClassification, Translatable] = {
-    BusinessClassification.BUSINESS: _t("negocio", "business", "negoci", "uzleti"),
-    BusinessClassification.PERSONAL: _t("personal", "personal", "personal", "szemelyes"),
+    BusinessClassification.BUSINESS: _t("negocio", "business", "negoci", "üzleti"),
+    BusinessClassification.PERSONAL: _t("personal", "personal", "personal", "személyes"),
     BusinessClassification.MIXED: _t("mixto", "mixed", "mixt", "vegyes"),
     BusinessClassification.NOT_YET_PROCESSED: _t(
         "sin procesar",
@@ -95,31 +95,31 @@ _CLASSIFICATION_LABELS: dict[BusinessClassification, Translatable] = {
         "procesada sin clasificar",
         "processed unclassified",
         "processada sense classificar",
-        "feldolgozva, osztalyozatlan",
+        "feldolgozva, osztályozatlan",
     ),
     BusinessClassification.SKIPPED_BY_RULE: _t(
         "omitida por regla",
         "skipped by rule",
         "omesa per regla",
-        "szabaly altal kihagyva",
+        "szabály által kihagyva",
     ),
     BusinessClassification.FAILED_VALIDATION: _t(
         "validación fallida",
         "failed validation",
         "validació fallida",
-        "ervenytelen",
+        "érvénytelen",
     ),
 }
 _INVOICE_REASON_LABELS: dict[str, Translatable] = {
-    "unmatched": _t("sin emparejar", "unmatched", "sense aparellar", "parositatlan"),
+    "unmatched": _t("sin emparejar", "unmatched", "sense aparellar", "párosítatlan"),
     "overdue": _t("vencida", "overdue", "vençuda", "lejart"),
-    "payment-pending": _t("pago pendiente", "payment pending", "pagament pendent", "fizetes fuggoben"),
-    "partially-paid": _t("parcialmente pagada", "partially paid", "parcialment pagada", "reszben fizetve"),
+    "payment-pending": _t("pago pendiente", "payment pending", "pagament pendent", "fizetés függőben"),
+    "partially-paid": _t("parcialmente pagada", "partially paid", "parcialment pagada", "részben fizetve"),
 }
 
 
 def _per_lang_summary(template: Translatable, **fields: str | Translatable) -> Translatable:
-    """Build a quad-lingual summary by formatting *template* per language.
+    """Build a multilingual summary by formatting *template* per language.
 
     ``fields`` may carry either bare strings (interpolated identically
     into every language) or :class:`Translatable` values (per-language
@@ -155,7 +155,7 @@ def transactions_pending(
 
     Skips fully-classified rows (BUSINESS / PERSONAL / MIXED) and rows
     explicitly skipped by rule (``SKIPPED_BY_RULE``) — those have a
-    final disposition and do not want Kent's attention.
+    final disposition and do not want the operator's attention.
     """
     if catalogue is None:
         catalogue = _load_transactions(settings)
@@ -176,16 +176,16 @@ def transactions_low_confidence(
     threshold: Decimal,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[TransactionReviewItem, ...]:
-    """Return transactions whose decision confidence sits below a threshold (#236).
+    """Return transactions whose decision confidence sits below a threshold.
 
     Surfaces every transaction whose ``classification_confidence`` is
     non-None and strictly less than the threshold, regardless of
     classification state. A rule engine that tagged a
     ``PROCESSED_UNCLASSIFIED`` row with confidence 0.4 is just as
-    interesting to Kent as a ``BUSINESS`` classification accepted at
-    confidence 0.4 — both warrant his attention. Transactions with
-    ``None`` confidence are excluded because they have no claim to
-    filter against.
+    interesting to the operator as a ``BUSINESS`` classification
+    accepted at confidence 0.4 — both warrant attention. Transactions
+    with ``None`` confidence are excluded because they have no claim
+    to filter against.
     """
     if catalogue is None:
         catalogue = _load_transactions(settings)
@@ -201,10 +201,10 @@ def transactions_low_confidence(
 
 
 def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | None:
-    """First-match-wins severity per the post-#237 BusinessClassification states.
+    """First-match-wins severity per the BusinessClassification states.
 
     Returns ``None`` when the state has a final disposition that does
-    not warrant Kent's attention (classified or rule-excluded).
+    not warrant the operator's attention (classified or rule-excluded).
     """
     if is_classified(state):
         return None
@@ -220,7 +220,7 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
 
 
 def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
-    from ...domain.transactions._repository import TransactionCatalogueRepository
+    from ...domain.transactions import TransactionCatalogueRepository
 
     store_dir = settings.aeat_financial_txs_dir.resolve()
     repository = TransactionCatalogueRepository(store_dir=store_dir)
@@ -294,7 +294,7 @@ def invoices_pending(
 
 
 def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
-    from ...domain.invoices._repository import InvoiceCatalogueRepository
+    from ...domain.invoices import InvoiceCatalogueRepository
 
     store_dir = settings.aeat_invoices_dir.resolve()
     repository = InvoiceCatalogueRepository(store_dir=store_dir)
@@ -307,7 +307,7 @@ def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
 
 
 def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:
-    """First-match-wins severity + reason per ADR D5 invoices table."""
+    """First-match-wins severity + reason for invoices."""
     if invoice.linked_transaction_ids == ():
         return ReviewSeverity.HIGH, "unmatched"
     if invoice.payment_status is PaymentStatus.OVERDUE:
@@ -377,7 +377,7 @@ def divergences_pending(
 
 
 def _classify_divergence(record: DivergenceRecord) -> ReviewSeverity:
-    """First-match-wins severity per ADR D5 divergences table."""
+    """First-match-wins severity for divergences."""
     if record.classification in {
         DivergenceClassification.BREAKING,
         DivergenceClassification.SUSPICIOUS,
@@ -481,7 +481,7 @@ def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
 
 
 def _classify_finding(severity: FilingFindingSeverity) -> ReviewSeverity:
-    """Map FilingFindingSeverity to ReviewSeverity per ADR D5 findings table."""
+    """Map FilingFindingSeverity to ReviewSeverity for findings."""
     if severity is FilingFindingSeverity.ERROR:
         return ReviewSeverity.CRITICAL
     if severity is FilingFindingSeverity.WARNING:
@@ -523,7 +523,7 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
             "borrador no listo para enviar (estado={status})",
             "draft not ready to submit (status={status})",
             "esborrany no preparat per enviar (estat={status})",
-            "piszkozat nem all keszen kuldesre (allapot={status})",
+            "piszkozat nem áll készen küldésre (állapot={status})",
         ),
         status=draft.status.value,
     )
@@ -541,12 +541,12 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
 
 
 def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
-    """Emit a high-severity item for drafts whose stored approval is stale (#230)."""
+    """Emit a high-severity item for drafts whose stored approval is stale."""
     summary = _t(
         "aprobación caducada — requiere nueva revisión (estado=APPROVAL_STALE)",
         "approval stale — re-review required (status=APPROVAL_STALE)",
         "aprovació caducada — cal una nova revisió (estat=APPROVAL_STALE)",
-        "jovahagyas lejart — ujboli felulvizsgalat szukseges (allapot=APPROVAL_STALE)",
+        "jóváhagyás lejárt — újbóli felülvizsgálat szükséges (állapot=APPROVAL_STALE)",
     )
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",

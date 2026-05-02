@@ -1,19 +1,19 @@
 """Modelo 100 Anexo B2 — rendimientos del capital mobiliario (ejercicio 2025).
 
-Anexo B2 covers dividendos, intereses, and other rendimientos del
+Anexo B2 covers dividendos, intereses and other rendimientos del
 capital mobiliario per LIRPF arts. 25-26. Retenciones aplicables al
-19% per LIRPF art. 101.4 + RIRPF art. 90 (the rate applied via
+19 % per LIRPF art. 101.4 and RIRPF art. 90 (the rate applied via
 Modelo 123 declarations). The aggregation chain on M100:
 
 - ``0048`` (rendimiento neto previo capital mobiliario) =
-  ``0028 + 0029 + 0030 + 0031 - 0035`` clamped >= 0
+  ``clamp_pos(0028 + 0029 + 0030 + 0031 - 0035)``.
 - ``0049`` (rendimiento neto reducido capital mobiliario) =
   ``clamp_pos(0048 - 0032)`` where ``0032`` is the LIRPF art. 26.2
-  30% reducción over rendimientos irregulares (caller-supplied since
+  30 % reducción over rendimientos irregulares (caller-supplied since
   it depends on which sub-rendimientos qualify).
 
-Stable across 2024 / 2025 / 2026 (LIRPF arts. 25-26 unchanged at BOE
-consolidated text consult 2026-02-28).
+Stable across 2024, 2025 and 2026 (LIRPF arts. 25-26 unchanged at the
+BOE consolidated-text consult of 2026-02-28).
 """
 
 from __future__ import annotations
@@ -37,6 +37,7 @@ EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a multilingual label dict for a casilla in this anexo."""
     return {"es": es, "en": en, "hu": hu}
 
 

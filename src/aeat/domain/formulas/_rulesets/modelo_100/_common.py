@@ -1,7 +1,9 @@
 """Shared helpers for Modelo 100 per-anexo per-año modules.
 
-Centralises the trilingual label helper and the BOE URL constants the
-M100 sub-package's anexos cite. Cuts boilerplate in each anexo file.
+Centralises the multilingual label helper :func:`label` and the BOE URL
+constants the M100 sub-package's anexos cite via :func:`cite_lirpf`,
+:func:`cite_lis` and :func:`cite_rirpf`. Cuts boilerplate in each anexo
+file.
 """
 
 from __future__ import annotations
@@ -29,17 +31,35 @@ M100_RETRIEVAL_DATE = date(2026, 4, 27)
 
 
 def label(es: str, en: str, hu: str) -> Translatable:
-    """Build a trilingual `Translatable` label for a casilla.
+    """Build a multilingual :class:`~aeat.core.i18n.Translatable` label for a casilla.
 
-    Spanish is authoritative (matches the AEAT form text verbatim);
+    Spanish is authoritative — it matches the AEAT form text verbatim;
     English is a concise functional description; Hungarian is encoded
-    per project trilingual mandate.
+    per the project multilingual mandate.
+
+    Args:
+        es: Spanish (authoritative) label text.
+        en: English label text.
+        hu: Hungarian label text.
+
+    Returns:
+        Mapping of the three locale codes to their respective texts.
     """
     return {"es": es, "en": en, "hu": hu}
 
 
 def cite_lirpf(article: str, quoted_text_es: str) -> LegalCitation:
-    """Build a LIRPF (Ley 35/2006) citation pinned to 2026-02-28 consult."""
+    """Build a LIRPF (Ley 35/2006) citation pinned to the 2026-02-28 consult.
+
+    Args:
+        article: LIRPF article reference (for example ``"20"`` or ``"23.2"``).
+        quoted_text_es: Authoritative Spanish quotation from the BOE
+            consolidated text.
+
+    Returns:
+        A :class:`~aeat.domain.modelos.LegalCitation` anchored to the
+        LIRPF consolidated text URL.
+    """
     return _shared_make_citation(
         LegalCitationSource.LEY,
         article,
@@ -50,7 +70,17 @@ def cite_lirpf(article: str, quoted_text_es: str) -> LegalCitation:
 
 
 def cite_lis(article: str, quoted_text_es: str) -> LegalCitation:
-    """Build a LIS (Ley 27/2014) citation pinned to 2026-02-28 consult."""
+    """Build a LIS (Ley 27/2014) citation pinned to the 2026-02-28 consult.
+
+    Args:
+        article: LIS article reference (for example ``"12.1.a"``).
+        quoted_text_es: Authoritative Spanish quotation from the BOE
+            consolidated text.
+
+    Returns:
+        A :class:`~aeat.domain.modelos.LegalCitation` anchored to the
+        LIS consolidated text URL.
+    """
     return _shared_make_citation(
         LegalCitationSource.LEY,
         article,
@@ -61,7 +91,17 @@ def cite_lis(article: str, quoted_text_es: str) -> LegalCitation:
 
 
 def cite_rirpf(article: str, quoted_text_es: str) -> LegalCitation:
-    """Build a RIRPF (RD 439/2007) citation pinned to 2026-02-28 consult."""
+    """Build a RIRPF (RD 439/2007) citation pinned to the 2026-02-28 consult.
+
+    Args:
+        article: RIRPF article reference (for example ``"30"`` or ``"90"``).
+        quoted_text_es: Authoritative Spanish quotation from the BOE
+            consolidated text.
+
+    Returns:
+        A :class:`~aeat.domain.modelos.LegalCitation` anchored to the
+        RIRPF consolidated text URL.
+    """
     return _shared_make_citation(
         LegalCitationSource.REGLAMENTO,
         article,

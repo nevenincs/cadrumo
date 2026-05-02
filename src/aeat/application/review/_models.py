@@ -2,9 +2,19 @@
 
 Each per-kind model wraps the source record verbatim alongside the
 unified queue fields (``item_id``, ``modelo``, ``severity``,
-``summary``, ``drill_command``, ``since``). The :data:`ReviewItem`
-discriminated union mirrors the canonical ``DivergencePayload``
-pattern in ``aeat.application.sync._divergence`` (see ADR D1).
+``summary``, ``drill_command``, ``since``).
+
+The :data:`ReviewItem` discriminated union mirrors the canonical
+``DivergencePayload`` pattern in :mod:`aeat.domain.sync`: a single
+discriminator field (``kind``) selects the concrete model, and
+pydantic enforces the discriminator at validation time.
+
+Concrete models:
+
+* :class:`TransactionReviewItem` — pending bank transactions.
+* :class:`InvoiceReviewItem` — unmatched, disputed, or payment-pending invoices.
+* :class:`DivergenceReviewItem` — pending sync divergence records.
+* :class:`FindingReviewItem` — pending findings on filing drafts.
 """
 
 from __future__ import annotations
@@ -18,14 +28,26 @@ from ...core.i18n import Translatable
 from ...domain.invoices import Invoice
 from ...domain.transactions import Transaction
 from ..filing import FilingValidationFinding
-from ..sync import DivergenceRecord
+from ...domain.sync import DivergenceRecord
 from ._enums import ReviewItemKind, ReviewSeverity
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class _ReviewItemBase(BaseModel):
-    """Shared pydantic config + unified fields for every review item."""
+    """Shared pydantic config and unified fields for every review item.
+
+    Attributes:
+        item_id: Stable per-source identifier of the underlying record.
+        modelo: Modelo code the item belongs to, or ``None`` when the
+            source is not modelo-scoped (transactions, invoices).
+        severity: One of :class:`ReviewSeverity`.
+        summary: Multilingual one-line description.
+        drill_command: Suggested ``aeat`` CLI command the operator can
+            run to inspect or resolve the item.
+        since: Timezone-aware UTC timestamp marking when the item became
+            review-pending.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -39,18 +61,23 @@ class _ReviewItemBase(BaseModel):
     @field_validator("since")
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
-        """Reject naive timestamps so sorting across sources is deterministic."""
+        """Reject naive timestamps so cross-source sorting is deterministic."""
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("since must be timezone-aware")
         return value
 
 
 class TransactionReviewItem(_ReviewItemBase):
-    """One pending transaction wrapped for the queue.
+    """One pending bank transaction wrapped for the review queue.
 
-    Pending states (post-#237): ``NOT_YET_PROCESSED``,
-    ``PROCESSED_UNCLASSIFIED``, ``FAILED_VALIDATION``. Severity is
-    derived per state by ``_classify_transaction`` in ``_adapters``.
+    The pending states surfaced here are ``NOT_YET_PROCESSED``,
+    ``PROCESSED_UNCLASSIFIED``, and ``FAILED_VALIDATION``. Severity is
+    derived per state by the transaction-source adapter.
+
+    Attributes:
+        kind: Literal discriminator pinned to
+            :attr:`ReviewItemKind.TRANSACTION`.
+        source: The verbatim :class:`aeat.domain.transactions.Transaction`.
     """
 
     kind: Literal[ReviewItemKind.TRANSACTION] = ReviewItemKind.TRANSACTION
@@ -58,14 +85,26 @@ class TransactionReviewItem(_ReviewItemBase):
 
 
 class InvoiceReviewItem(_ReviewItemBase):
-    """One pending invoice (unmatched, disputed, or payment-pending)."""
+    """One pending invoice (unmatched, disputed, or payment-pending).
+
+    Attributes:
+        kind: Literal discriminator pinned to
+            :attr:`ReviewItemKind.INVOICE`.
+        source: The verbatim :class:`aeat.domain.invoices.Invoice`.
+    """
 
     kind: Literal[ReviewItemKind.INVOICE] = ReviewItemKind.INVOICE
     source: Invoice
 
 
 class DivergenceReviewItem(_ReviewItemBase):
-    """One pending sync divergence record."""
+    """One pending sync divergence record.
+
+    Attributes:
+        kind: Literal discriminator pinned to
+            :attr:`ReviewItemKind.DIVERGENCE`.
+        source: The verbatim :class:`aeat.domain.sync.DivergenceRecord`.
+    """
 
     kind: Literal[ReviewItemKind.DIVERGENCE] = ReviewItemKind.DIVERGENCE
     source: DivergenceRecord
@@ -74,10 +113,18 @@ class DivergenceReviewItem(_ReviewItemBase):
 class FindingReviewItem(_ReviewItemBase):
     """One pending finding extracted from a filing draft.
 
-    ``source`` is ``None`` for the placeholder row emitted when a
-    draft has no findings but is in DRAFT or VALIDATED status (see
-    ADR D2 drafts adapter rules). Otherwise it carries the verbatim
-    :class:`FilingValidationFinding`.
+    ``source`` is ``None`` for the placeholder row emitted when a draft
+    has no findings but is in a DRAFT or VALIDATED status. Otherwise it
+    carries the verbatim
+    :class:`aeat.application.filing.FilingValidationFinding`.
+
+    Attributes:
+        kind: Literal discriminator pinned to
+            :attr:`ReviewItemKind.FINDING`.
+        source: The underlying finding, or ``None`` for a status
+            placeholder row.
+        draft_id: Identifier of the originating filing draft.
+        draft_path: On-disk path of the originating filing draft.
     """
 
     kind: Literal[ReviewItemKind.FINDING] = ReviewItemKind.FINDING
@@ -90,3 +137,10 @@ ReviewItem = Annotated[
     TransactionReviewItem | InvoiceReviewItem | DivergenceReviewItem | FindingReviewItem,
     Field(discriminator="kind"),
 ]
+"""Discriminated union of every concrete review-queue item.
+
+Pydantic dispatches to the correct concrete model using the ``kind``
+field as the discriminator. Validate via
+``TypeAdapter(ReviewItem).validate_python(...)`` or
+``.validate_json(...)``.
+"""

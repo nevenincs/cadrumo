@@ -380,7 +380,7 @@ class TestModelo390CrossValidation:
         assert internal[0].severity is FilingFindingSeverity.ERROR
         assert internal[0].casilla_id == "09"
 
-    def test_quad_lingual_message_keys_present(self) -> None:
+    def test_multilingual_message_keys_present(self) -> None:
         quarterly = tuple(_build_303(q) for q in (1, 2, 3, 4))
         annual = build_draft(
             modelo="390",

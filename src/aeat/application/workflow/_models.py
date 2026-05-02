@@ -1,10 +1,11 @@
 """Strict pydantic v2 records for the composite workflow engine.
 
-Every boundary-crossing type in :mod:`aeat.application.workflow` is defined here as
-a frozen, strict, ``extra="forbid"`` :class:`pydantic.BaseModel` or as an
-:class:`enum.StrEnum` for closed enumerations. See
-[[2026-04-12-workflow-engine-adr]] for the ordering contract and the
-sole sanctioned ``dict[str, str]`` escape hatch.
+Every boundary-crossing type in :mod:`aeat.application.workflow` is
+defined here as a frozen, strict, ``extra="forbid"``
+:class:`pydantic.BaseModel` or as an :class:`enum.StrEnum` for closed
+enumerations. The module also pins the ordering contract for
+:class:`WorkflowStage` and the sole sanctioned ``dict[str, str]`` escape
+hatch on :attr:`WorkflowStep.details`.
 """
 
 from __future__ import annotations
@@ -26,8 +27,20 @@ class WorkflowStage(StrEnum):
     """The read-only stages of the composite workflow, in strict order.
 
     The engine walks the stages top-to-bottom. Downstream code (the CLI,
-    future schedulers, the UI) depends on the linear ordering for the
-    bailout matrix; the ordering is part of the public contract.
+    schedulers, the UI) depends on the linear ordering for the bailout
+    matrix; the ordering is part of the public contract.
+
+    Attributes:
+        LOADING_PROFILE: Resolve the autónomo profile and target run.
+        SYNCING_CATALOGUES: Run the self-healing catalogue sync.
+        COMPUTING_DEADLINES: Determine the next pending obligation.
+        CHECKING_INBOX: Probe the AEAT inbox for blocking requerimientos.
+        BUILDING_DRAFT: Compose the filing draft from inputs and rules.
+        VALIDATING_DRAFT: Apply ruleset validation to the draft.
+        RUNNING_PREFLIGHT: Execute the submission engine's preflight.
+        DONE: Terminal success stage.
+        ABORTED: Terminal failure stage; pairs with a
+            :class:`WorkflowAbortReason`.
     """
 
     LOADING_PROFILE = "LOADING_PROFILE"
@@ -44,9 +57,24 @@ class WorkflowStage(StrEnum):
 class WorkflowAbortReason(StrEnum):
     """Closed set of reasons the workflow may abort.
 
-    Every value is reachable from a specific stage via the bailout
-    matrix documented in [[2026-04-12-workflow-engine-adr]] and is
-    exhaustively tested.
+    Every value is reachable from a specific :class:`WorkflowStage` via
+    the bailout matrix and is exhaustively tested.
+
+    Attributes:
+        NO_PENDING_OBLIGATION: No filing is due in the requested window.
+        INBOX_BLOCKING_REQUERIMIENTO: An open requerimiento blocks the
+            obligation until resolved.
+        DEADLINE_PASSED: The statutory deadline has expired.
+        ALREADY_FILED: A filing for the obligation already exists.
+        DRAFT_HAS_ERRORS: Draft validation reported blocking errors.
+        PREFLIGHT_FAILED: The submission engine's preflight rejected the
+            draft.
+        CERT_INVALID: The certificate bundle is invalid or expired.
+        USER_CANCELLED: The operator interrupted the run.
+        SITE_UNAVAILABLE: AEAT site-health probe reports unavailable.
+        UNHANDLED_EXCEPTION: A wrapped component raised an unexpected
+            exception captured as
+            :class:`aeat.application.workflow.WorkflowComponentError`.
     """
 
     NO_PENDING_OBLIGATION = "NO_PENDING_OBLIGATION"
@@ -62,7 +90,14 @@ class WorkflowAbortReason(StrEnum):
 
 
 class SiteHealthAlert(BaseModel):
-    """Workflow-side alert wrapping a browser site-health status."""
+    """Workflow-side alert wrapping a browser site-health status.
+
+    Attributes:
+        stage: The :class:`WorkflowStage` that produced the alert.
+        status: The :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
+            captured by the probe.
+        run_id: Identifier of the workflow run that emitted the alert.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -82,15 +117,13 @@ class WorkflowStep(BaseModel):
         success: Whether the step completed without triggering a
             workflow abort. ``None`` only during construction of a
             still-running step; always set on completed steps.
-        summary: Trilingual human-readable summary of what happened in
+        summary: Multilingual human-readable summary of what happened in
             this step.
         details: Optional human-readable diagnostics dictionary. This
-            is the **single** sanctioned ``dict[str, str]`` in the
-            public schema, justified in
-            [[2026-04-12-workflow-engine-adr]]: per-stage diagnostics
-            are inherently free-form and modelling every possible
-            shape as a dedicated pydantic union adds no type-safety
-            over a string-valued dict.
+            is the **single** sanctioned ``dict[str, str]`` in the public
+            schema: per-stage diagnostics are inherently free-form and
+            modelling every possible shape as a dedicated pydantic union
+            adds no type-safety over a string-valued dict.
     """
 
     model_config = _STRICT_FROZEN
@@ -133,7 +166,7 @@ class WorkflowResult(BaseModel):
             workflow runs never create AEAT submission ids.
         steps: Tuple of :class:`WorkflowStep` in the order the engine
             executed them.
-        summary: Trilingual user-facing summary of the whole run.
+        summary: Multilingual user-facing summary of the whole run.
     """
 
     model_config = _STRICT_FROZEN

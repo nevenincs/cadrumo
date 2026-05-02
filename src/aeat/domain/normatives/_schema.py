@@ -3,9 +3,9 @@
 Every boundary-crossing record the subpackage reads from disk, writes
 to disk, or exposes over its public API is defined here. The schema is
 frozen and strict wherever the loader idiom permits it, per the
-project-wide pydantic v2 mandate reinforced by issue ``#45``.
+project-wide pydantic v2 mandate.
 
-Closed catalogues are :class:`enum.StrEnum`. Trilingual fields use
+Closed catalogues are :class:`enum.StrEnum`. Multilingual fields use
 :class:`aeat.core.i18n.Translatable`; the authoritative ``es`` key is
 enforced at load time on every title and summary.
 """
@@ -121,7 +121,7 @@ def _require_spanish(translatable: Translatable, field_name: str) -> None:
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
-class _StrictFrozen(BaseModel):
+class _NormativeStrictFrozen(BaseModel):
     """Shared base config: strict validation, immutable, no extras."""
 
     model_config = ConfigDict(
@@ -131,7 +131,7 @@ class _StrictFrozen(BaseModel):
     )
 
 
-class _StrictMutable(BaseModel):
+class _NormativeStrictMutable(BaseModel):
     """Strict validation but mutable; used for aggregate catalogues."""
 
     model_config = ConfigDict(
@@ -141,7 +141,7 @@ class _StrictMutable(BaseModel):
     )
 
 
-class Articulo(_StrictFrozen):
+class Articulo(_NormativeStrictFrozen):
     """A single article inside a :class:`NormativeReference`.
 
     The project codifies only the articles it actively cites. Missing
@@ -164,7 +164,7 @@ class Articulo(_StrictFrozen):
         return self
 
 
-class NormativeReference(_StrictFrozen):
+class NormativeReference(_NormativeStrictFrozen):
     """A single Spanish tax normative codified by the project."""
 
     id: _StableId = Field(description="Stable kebab-case id, e.g. 'ley-35-2006'.")
@@ -203,7 +203,7 @@ class NormativeReference(_StrictFrozen):
         return self
 
 
-class NormativeCatalogue(_StrictMutable):
+class NormativeCatalogue(_NormativeStrictMutable):
     """Aggregate view over every loaded :class:`NormativeReference`.
 
     The aggregate is mutable to keep the loader idiom simple (the
@@ -242,7 +242,7 @@ class NormativeCatalogue(_StrictMutable):
         return self.references.get(ref_id)
 
 
-class VerificationIssue(_StrictFrozen):
+class NormativeVerificationIssue(_NormativeStrictFrozen):
     """A single finding produced by :func:`aeat.domain.normatives.verify_catalogue`."""
 
     level: str = Field(description="'error' or 'warning'.")
@@ -251,13 +251,13 @@ class VerificationIssue(_StrictFrozen):
     reference_id: str | None = Field(default=None, description="Affected reference id, if any.")
 
 
-class VerificationReport(_StrictFrozen):
+class NormativeVerificationReport(_NormativeStrictFrozen):
     """Aggregate verification report for :class:`NormativeCatalogue`."""
 
-    issues: tuple[VerificationIssue, ...] = Field(default_factory=tuple)
+    issues: tuple[NormativeVerificationIssue, ...] = Field(default_factory=tuple)
 
     @property
-    def errors(self) -> tuple[VerificationIssue, ...]:
+    def errors(self) -> tuple[NormativeVerificationIssue, ...]:
         """Return the subset of issues whose level is ``error``."""
         return tuple(issue for issue in self.issues if issue.level == "error")
 

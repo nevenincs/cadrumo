@@ -1,10 +1,16 @@
-"""Strict pydantic records for FilingDraft → Justificante reconciliation.
+"""Strict pydantic v2 records for FilingDraft to Justificante reconciliation.
 
-These replace the speculative ``RemoteFiling``-based schema from the
-pre-discovery version of this feature. Every record is derived from
-what AEAT's live post-auth sede actually emits: a justificante PDF
-with metadata + totals. Per-casilla reconciliation is a modelo-specific
-follow-up handled elsewhere.
+Defines the closed set of record types consumed by :func:`reconcile`
+and surfaced in :class:`ReconciliationReport`. Every record is derived
+from what AEAT's live post-auth sede actually emits — a justificante
+PDF with metadata and totals.
+
+The schema deliberately covers only fields the justificante PDF exposes
+directly; per-casilla reconciliation is a modelo-specific follow-up
+handled elsewhere.
+
+See :class:`FilingDivergenceKind` for the closed taxonomy of divergence
+reasons referenced by :class:`FieldMismatch`.
 """
 
 from __future__ import annotations
@@ -27,7 +33,14 @@ _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
 
 
 class ReconciliationStatus(StrEnum):
-    """Kent-observable verdict of a FilingDraft ↔ Justificante compare."""
+    """Operator-observable verdict of a FilingDraft vs Justificante compare.
+
+    Attributes:
+        MATCH: Every compared field agreed within tolerance.
+        DIVERGENT: At least one :class:`FieldMismatch` was detected.
+        NOT_YET_FOUND: AEAT's sede has no record of a matching
+            submission for this ``(modelo, period)``.
+    """
 
     MATCH = "match"
     DIVERGENT = "divergent"
@@ -35,7 +48,17 @@ class ReconciliationStatus(StrEnum):
 
 
 class FilingDraftRef(BaseModel):
-    """Lightweight reference to the local FilingDraft side of a compare."""
+    """Lightweight reference to the local FilingDraft side of a compare.
+
+    Attributes:
+        draft_id: Stable identifier of the source
+            :class:`aeat.domain.filing.FilingDraft`.
+        modelo: Modelo code copied verbatim from the draft.
+        period: Period label copied verbatim from the draft.
+        profile_tax_id: NIF / NIE recorded on the draft's profile.
+        mode: Structural read-only marker enforcing the no-write
+            invariant of :mod:`aeat.application.filing.reconciliation`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -47,11 +70,23 @@ class FilingDraftRef(BaseModel):
 
 
 class JustificanteRefSummary(BaseModel):
-    """The trimmed Justificante snapshot shown in a ReconciliationReport.
+    """Trimmed :class:`aeat.domain.justificante.Justificante` snapshot for a report.
 
     Carries only the fields the reconciliation compare depends on, so
-    the full parsed Justificante (with source_pdf_path and friends)
-    doesn't bleed into persistence layers that don't need it.
+    the full parsed justificante (with ``source_pdf_path`` and friends)
+    does not bleed into persistence layers that have no need for it.
+
+    Attributes:
+        csv: Código Seguro de Verificación assigned by AEAT.
+        modelo: Modelo code printed on the justificante PDF.
+        period: Period label printed on the justificante PDF.
+        ejercicio: Four-digit fiscal year, when present.
+        tax_id: NIF / NIE printed on the justificante PDF.
+        presented_at: Timestamp at which AEAT recorded the presentation.
+        presentation_id: Número de justificante, when present.
+        total_a_ingresar: AEAT-recorded amount payable, in EUR.
+        total_a_devolver: AEAT-recorded amount refundable, in EUR.
+        mode: Structural read-only marker.
     """
 
     model_config = _STRICT_FROZEN
@@ -90,17 +125,23 @@ class FieldMismatch(BaseModel):
 
 
 class ReconciliationReport(BaseModel):
-    """The Kent-observable outcome of reconciling one FilingDraft.
+    """Operator-observable outcome of reconciling one FilingDraft.
+
+    Returned by :func:`reconcile` for every compare. The ``status``
+    field is the primary verdict; ``mismatches`` carries the detailed
+    per-field breakdown when ``status`` is
+    :attr:`ReconciliationStatus.DIVERGENT`.
 
     Attributes:
-        status: Kent-observable triad verdict.
+        status: One of :class:`ReconciliationStatus` — MATCH, DIVERGENT,
+            or NOT_YET_FOUND.
         draft_ref: Summary of the local draft that was compared.
-        justificante: Snapshot of the AEAT-side justificante — ``None``
+        justificante: Snapshot of the AEAT-side justificante; ``None``
             when ``status == NOT_YET_FOUND``.
-        mismatches: Tuple of concrete field-level divergences
-            (empty for ``MATCH``; always non-empty for ``DIVERGENT``).
+        mismatches: Tuple of concrete field-level divergences. Empty
+            for MATCH; always non-empty for DIVERGENT.
         reconciled_at: UTC timestamp at compare completion.
-        narrative: Trilingual (es/en/hu) human-readable summary.
+        narrative: Multilingual (es / en / hu) human-readable summary.
         mode: Structural read-only marker.
     """
 
