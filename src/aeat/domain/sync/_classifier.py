@@ -44,7 +44,13 @@ _LOGGER = get_logger(__name__)
 
 
 class DivergenceClassifier:
-    """Produce :class:`DivergenceRecord` sequences from paired wire payloads."""
+    """Produce :class:`DivergenceRecord` sequences from paired wire payloads.
+
+    Each ``diff_*`` method compares one local snapshot against its live
+    counterpart, emits a :class:`DivergencePayload` per semantic delta,
+    and wraps every payload in a :class:`DivergenceRecord` whose
+    classification is resolved through :func:`classify_kind`.
+    """
 
     def diff_modelo(
         self,
@@ -149,7 +155,17 @@ class DivergenceClassifier:
         local: WirePortalManifest,
         live: WirePortalManifest,
     ) -> tuple[DivergenceRecord, ...]:
-        """Emit divergence records for changes in the portal manifest."""
+        """Emit divergence records for changes in the portal manifest.
+
+        Args:
+            local: The local authoritative portal manifest snapshot.
+            live: The freshly-fetched live manifest snapshot.
+
+        Returns:
+            A tuple of :class:`DivergenceRecord` describing every
+            URL change for modelo-keyed links present in both
+            snapshots. Empty tuple when no URL changed.
+        """
         payloads: list[DivergencePayload] = []
         local_by_modelo = {link.modelo: link for link in local.links}
         live_by_modelo = {link.modelo: link for link in live.links}
@@ -173,7 +189,17 @@ class DivergenceClassifier:
         local: WireFilingHistory,
         live: WireFilingHistory,
     ) -> tuple[DivergenceRecord, ...]:
-        """Emit divergence records for changes in a filing history."""
+        """Emit divergence records for changes in a filing history.
+
+        Args:
+            local: The local authoritative filing-history snapshot.
+            live: The freshly-fetched live filing-history snapshot.
+
+        Returns:
+            A tuple of :class:`DivergenceRecord` describing every
+            ``status`` change on entries keyed by ``(modelo, period)``
+            present in both snapshots.
+        """
         records: list[DivergenceRecord] = []
         local_by_key = {(e.modelo, e.period): e for e in local.entries}
         live_by_key = {(e.modelo, e.period): e for e in live.entries}

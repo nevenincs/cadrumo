@@ -47,7 +47,7 @@ class EscalateStrategy(HealingStrategy):
                 the operator's auto-heal preference.
 
         Returns:
-            A :class:`aeat.application.sync._strategies._base.StrategyOutcome`
+            A :class:`aeat.application.sync._strategies.StrategyOutcome`
             with the record's ``resolution_state`` updated to
             :attr:`aeat.domain.sync.ResolutionState.PENDING`.
         """

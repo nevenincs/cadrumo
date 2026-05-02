@@ -12,9 +12,10 @@ languages of the project's i18n contract:
   and the Comunitat Valenciana; required for any UX that targets
   Catalan-speaking autónomos. Tax terminology grounded in the
   Generalitat de Catalunya / Agència Tributària de Catalunya
-  glossary (see ``.vault/reference/2026-05-01-quadlingual-i18n-legal-glossary.md``).
-- Hungarian (``hu``) — Kent's first language; user-facing output
-  for the operator who runs the tool day-to-day.
+  legal glossary.
+- Hungarian (``hu``) — secondary operator language for the day-to-day
+  user; provides a localised surface independent of the AEAT-facing
+  Spanish strings.
 """
 
 from __future__ import annotations

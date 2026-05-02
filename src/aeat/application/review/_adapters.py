@@ -4,7 +4,7 @@ Each adapter loads pending items from one on-disk source and emits a
 tuple of typed :class:`ReviewItem` records. Adapters are pure and
 stateless; they tolerate missing source files by returning an empty
 tuple. Severity is derived per source via a first-match-wins
-predicate table (see ADR D5).
+predicate table.
 """
 
 from __future__ import annotations
@@ -57,8 +57,6 @@ _LOGGER = get_logger(__name__)
 _SUMMARY_MAX = 80
 
 # Quad-lingual contract: every Translatable carries es / en / ca / hu.
-# The labels here are sourced from
-# .vault/reference/2026-05-01-quadlingual-i18n-legal-glossary.md.
 _LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
 
 

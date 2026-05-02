@@ -14,15 +14,6 @@ from typing import Any, cast
 import pytest
 
 from ...adapters.outbound.aeat.browser import BrowserSession
-from . import (
-    AdditiveAllowlistStrategy,
-    BenignRecordStrategy,
-    EscalateStrategy,
-    HealingDispatcher,
-    JsonFileDivergenceRepository,
-    LiveSyncRunner,
-    StrategyAction,
-)
 from ...domain.sync import (
     DivergenceClassifier,
     DivergenceKind,
@@ -34,6 +25,15 @@ from ...domain.sync import (
     WirePortalManifest,
     WireValidationError,
     WireValidator,
+)
+from . import (
+    AdditiveAllowlistStrategy,
+    BenignRecordStrategy,
+    EscalateStrategy,
+    HealingDispatcher,
+    JsonFileDivergenceRepository,
+    LiveSyncRunner,
+    StrategyAction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
