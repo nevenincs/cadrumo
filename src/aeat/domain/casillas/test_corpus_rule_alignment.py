@@ -541,6 +541,32 @@ def test_corpus_casilla_ids_match_extractor_for_non_ruleset_modelos() -> None:
         )
 
 
+def test_corpus_references_rules_have_no_duplicates() -> None:
+    """``references_rules`` must be dedup'd per record."""
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            if len(rec.references_rules) != len(set(rec.references_rules)):
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: duplicate references_rules {list(rec.references_rules)}")
+    if failures:
+        pytest.fail("Corpus has duplicate references_rules:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_references_casillas_have_no_duplicates() -> None:
+    """``references_casillas`` must be dedup'd per record."""
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            if len(rec.references_casillas) != len(set(rec.references_casillas)):
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: duplicate references_casillas {list(rec.references_casillas)}")
+    if failures:
+        pytest.fail("Corpus has duplicate references_casillas:\n" + "\n".join(f" - {f}" for f in failures))
+
+
 def test_corpus_modelo_840_label_es_matches_extractor_text_labels() -> None:
     """M840 corpus ``label.es`` must agree (modulo accents) with the extractor's ``text_labels`` map.
 
