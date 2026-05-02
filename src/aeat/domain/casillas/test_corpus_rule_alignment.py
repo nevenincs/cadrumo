@@ -462,3 +462,37 @@ def test_corpus_committed_records_are_canonical_not_drafts() -> None:
                 failures.append(f"{modelo} {period} cas {rec.casilla_id}: carries LLM draft provenance")
     if failures:
         pytest.fail("Corpus contains non-canonical records:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_casilla_id_set_matches_engine_ruleset() -> None:
+    """For each (modelo, year), the corpus' casilla IDs must be a superset of the engine ruleset's IDs.
+
+    The corpus may carry additional manually-curated user-input casillas
+    that the engine does not formula-derive (e.g., the M111 augmentation
+    perceptor / percepción rows). What it must NOT do is omit any ID
+    the engine declares — that would mean the engine derives a casilla
+    the corpus has no record of.
+    """
+    registry = get_registry()
+    rs_by_key: dict[tuple[str, int], list] = {}
+    for rs in registry.rulesets:
+        rs_by_key.setdefault((rs.modelo.value, rs.effective_from.year), []).append(rs)
+
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        modelo_code = modelo.removeprefix("MODELO_")
+        year = int(period[:4])
+        rulesets = rs_by_key.get((modelo_code, year), [])
+        if not rulesets:
+            continue
+        engine_ids = {c.casilla_id for rs in rulesets for c in rs.casillas}
+        catalogue = load_casillas(modelo, period)
+        corpus_ids = {r.casilla_id for r in catalogue.records}
+        missing = engine_ids - corpus_ids
+        if missing:
+            failures.append(
+                f"{modelo} {period}: engine ruleset declares casillas not in corpus: {sorted(missing)}"
+            )
+    if failures:
+        pytest.fail("Corpus is missing casillas that the engine declares:\n" + "\n".join(f" - {f}" for f in failures))
