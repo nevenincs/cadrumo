@@ -567,6 +567,45 @@ def test_corpus_references_casillas_have_no_duplicates() -> None:
         pytest.fail("Corpus has duplicate references_casillas:\n" + "\n".join(f" - {f}" for f in failures))
 
 
+def test_corpus_cross_modelo_hints_match_engine_caps_into() -> None:
+    """Annual summary modelos must mention every modelo whose ``caps_into`` resolves to them.
+
+    The engine's :class:`ModeloMetadata.caps_into` field encodes the
+    upstream relationship (e.g., M130 caps into M100). The corpus help
+    body for an annual modelo must mention each upstream modelo so the
+    cross-modelo dependency is visible to Kent inline.
+    """
+    from ..modelos import ModeloCode, get_modelo
+
+    upstream_by_modelo: dict[str, set[str]] = {}
+    for code in ModeloCode:
+        meta = get_modelo(code.value)
+        if meta.caps_into is not None:
+            upstream_by_modelo.setdefault(meta.caps_into.value, set()).add(code.value)
+
+    failures: list[str] = []
+    for downstream, upstream_set in upstream_by_modelo.items():
+        modelo = f"MODELO_{downstream}"
+        # Pick the latest year's catalogue.
+        candidates = sorted((PROJECT_ROOT / "corpus" / "casillas" / modelo.lower()).glob("*.json"))
+        if not candidates:
+            continue
+        catalogue = load_casillas(modelo, candidates[-1].stem)
+        if not catalogue.records:
+            continue
+        # Sample help.es of any single record (the cross-modelo hint
+        # is appended uniformly).
+        help_es = catalogue.records[0].help["es"]
+        for upstream in upstream_set:
+            if f"modelo {upstream}" not in help_es:
+                failures.append(
+                    f"{modelo}: help body does not mention upstream M{upstream} "
+                    f"(engine caps_into={sorted(upstream_set)})"
+                )
+    if failures:
+        pytest.fail("Corpus cross-modelo hint missing engine caps_into upstream:\n" + "\n".join(f" - {f}" for f in failures))
+
+
 def test_corpus_modelo_840_label_es_matches_extractor_text_labels() -> None:
     """M840 corpus ``label.es`` must agree (modulo accents) with the extractor's ``text_labels`` map.
 

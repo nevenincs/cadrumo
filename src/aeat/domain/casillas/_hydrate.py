@@ -1054,22 +1054,44 @@ def _legal_hint(legal_basis: tuple) -> str:
     return " (Base legal: " + "; ".join(parts) + ".)"
 
 
-_CROSS_MODELO = {
-    "180": ("M115", "Resumen anual que consolida los datos trimestrales del modelo 115."),
-    "190": ("M111", "Resumen anual que consolida los datos trimestrales del modelo 111."),
-    "193": ("M123", "Resumen anual que consolida los datos trimestrales del modelo 123."),
-    "390": ("M303", "Resumen anual que consolida los datos trimestrales del modelo 303."),
-    "100": ("M130/M131", "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos 130 y 131."),
-    "200": ("M202", "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202."),
-}
+def _upstream_modelos(modelo: str) -> tuple[str, ...]:
+    """Return the modelos whose ``caps_into`` resolves to ``modelo``.
+
+    Pulls from the engine's :class:`ModeloMetadata.caps_into` field so
+    the hydrate's cross-modelo hints inherit any future caps-into
+    additions automatically. ``M390`` will list ``("303",)``,
+    ``M100`` will list ``("130", "131")``, etc.
+    """
+    from ..modelos import ModeloCode, get_modelo
+
+    upstream: list[str] = []
+    for code in ModeloCode:
+        meta = get_modelo(code.value)
+        if meta.caps_into is not None and meta.caps_into.value == modelo:
+            upstream.append(code.value)
+    return tuple(sorted(upstream))
 
 
 def _cross_modelo_hint(modelo: str) -> str:
-    """Return a short Spanish note pointing at the upstream modelo, if any."""
-    if modelo not in _CROSS_MODELO:
+    """Return a short Spanish note pointing at the upstream modelos, if any.
+
+    Sourced from :class:`ModeloMetadata.caps_into` in the engine so the
+    upstream relationship is never re-declared in the corpus layer.
+    """
+    upstream = _upstream_modelos(modelo)
+    if not upstream:
         return ""
-    _, note = _CROSS_MODELO[modelo]
-    return f" {note}"
+    if modelo == "100":
+        # Annual IRPF — caps in pagos fraccionados from M130 / M131.
+        joined = " y ".join(f"modelo {m}" for m in upstream)
+        return f" Declaración anual del IRPF; recoge los pagos fraccionados de los {joined}."
+    if modelo == "200":
+        joined = " y ".join(f"modelo {m}" for m in upstream)
+        return f" Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del {joined}."
+    # Generic resumen-anual phrasing for the IRPF retention summaries
+    # and the M390 IVA summary.
+    joined = " y ".join(f"modelo {m}" for m in upstream)
+    return f" Resumen anual que consolida los datos trimestrales del {joined}."
 
 
 def _help_from_label(
