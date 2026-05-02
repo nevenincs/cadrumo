@@ -12,12 +12,14 @@
       "help": {
         "en": "Total accounts at foreign financial institutions declared (key C, DA 18 LGT).",
         "es": "Total de cuentas en entidades financieras situadas en el extranjero declaradas (clave C, DA 18ª LGT).",
-        "hu": "A bejelentett külföldi pénzintézeti számlák száma (C kulcs, LGT 18. kiegészítő rendelkezés)."
+        "hu": "A bejelentett külföldi pénzintézeti számlák száma (C kulcs, LGT 18. kiegészítő rendelkezés).",
+        "ca": "Total de cuentas en entidades financieras situadas en el extranjero declaradas (clave C, DA 18ª LGT)."
       },
       "label": {
         "en": "Records — key C (accounts in financial institutions)",
         "es": "N.º registros — clave C (cuentas en entidades financieras)",
-        "hu": "Rekordok — C kulcs (külföldi pénzintézeti számlák)"
+        "hu": "Rekordok — C kulcs (külföldi pénzintézeti számlák)",
+        "ca": "N.º registros — clave C (cuentas en entidades financieras)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_720",
@@ -42,12 +44,14 @@
       "help": {
         "en": "Total securities, insurance contracts and annuities held abroad (key V).",
         "es": "Total de valores, seguros y rentas situados en el extranjero declarados (clave V).",
-        "hu": "A bejelentett külföldi értékpapírok, biztosítások és járadékok száma (V kulcs)."
+        "hu": "A bejelentett külföldi értékpapírok, biztosítások és járadékok száma (V kulcs).",
+        "ca": "Total de valores, seguros y rentas situados en el extranjero declarados (clave V)."
       },
       "label": {
         "en": "Records — key V (securities, insurance, annuities)",
         "es": "N.º registros — clave V (valores, seguros, rentas)",
-        "hu": "Rekordok — V kulcs (értékpapírok, biztosítások, járadékok)"
+        "hu": "Rekordok — V kulcs (értékpapírok, biztosítások, járadékok)",
+        "ca": "N.º registros — clave V (valores, seguros, rentas)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_720",
@@ -72,12 +76,14 @@
       "help": {
         "en": "Total foreign real estate and rights thereon declared (key I).",
         "es": "Total de bienes inmuebles y derechos sobre ellos situados en el extranjero declarados (clave I).",
-        "hu": "A bejelentett külföldi ingatlanok és ingatlanjogok száma (I kulcs)."
+        "hu": "A bejelentett külföldi ingatlanok és ingatlanjogok száma (I kulcs).",
+        "ca": "Total de bienes inmuebles y derechos sobre ellos situados en el extranjero declarados (clave I)."
       },
       "label": {
         "en": "Records — key I (foreign real estate)",
         "es": "N.º registros — clave I (bienes inmuebles en el extranjero)",
-        "hu": "Rekordok — I kulcs (külföldi ingatlanok)"
+        "hu": "Rekordok — I kulcs (külföldi ingatlanok)",
+        "ca": "N.º registros — clave I (bienes inmuebles en el extranjero)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_720",
