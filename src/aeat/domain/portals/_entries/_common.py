@@ -51,7 +51,7 @@ def build_entry(
         category: The :class:`PortalCategory` classification.
         auth_methods: Iterable of accepted :class:`AuthMethod` values.
         url_stability: The :class:`UrlStability` tier.
-        label: Trilingual display label.
+        label: Multilingual display label.
         purpose_es: One-sentence Spanish purpose.
         related_modelo: Foreign key into :class:`ModeloCode`. Required
             for FILING / CENSUS / BORRADOR portals.

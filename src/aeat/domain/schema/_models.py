@@ -330,7 +330,7 @@ class Casilla(_SchemaStrictFrozenModel):
         casilla_id: Two- to four-digit AEAT casilla identifier.
         block: Optional heading the casilla sits under in the source
             document (Spanish authoritative).
-        label: Trilingual label; Spanish is required. English and
+        label: Multilingual label; Spanish is required. English and
             Hungarian MAY be absent in extracted records -- they are
             filled downstream by the reviewer / translator workflow.
         data_type: Closed data-type enum.
