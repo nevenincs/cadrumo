@@ -48,7 +48,7 @@
         "hu": "A tőkejövedelmek éves levonási alapjának összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 123-os modell."
       },
       "label": {
-        "ca": "Base retenciones",
+        "ca": "Base retencions",
         "en": "Withholding base",
         "es": "Base retenciones",
         "hu": "Levonási alap"
@@ -80,7 +80,7 @@
         "hu": "A tőkejövedelmekre alkalmazott 19%-os éves levonás összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 123-os modell."
       },
       "label": {
-        "ca": "Retencions e ingressos a cuenta",
+        "ca": "Retencions i ingressos a compte",
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások és előlegek"

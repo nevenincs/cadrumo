@@ -138,13 +138,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Reducción art. 18 — rendimientos irregulares Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 18, BOE-A-2006-20764.)",
+        "ca": "Reducció art. 18 — rendiments irregulars Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 18, BOE-A-2006-20764.)",
         "en": "Art. 18 reduction (irregular earnings) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 18, BOE-A-2006-20764.)",
         "es": "Importe ya minorado por el 30% del art. 18.2 sobre la base irregular, con un límite cuantitativo de 300.000 €. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 18, BOE-A-2006-20764.)",
         "hu": "18. cikk csökkentés (rendszertelen jövedelem) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 18, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción art. 18 — rendimientos irregulares",
+        "ca": "Reducció art. 18 — rendiments irregulars",
         "en": "Art. 18 reduction (irregular earnings)",
         "es": "Reducción art. 18 — rendimientos irregulares",
         "hu": "18. cikk csökkentés (rendszertelen jövedelem)"
@@ -230,13 +230,13 @@
         ]
       },
       "help": {
-        "ca": "Reducción art. 20 rendimientos del trabajo. Es calcula com min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52))))))). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 20, BOE-A-2006-20764.)",
+        "ca": "Reducció art. 20 rendiments del treball. Es calcula com min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52))))))). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 20, BOE-A-2006-20764.)",
         "en": "Art. 20 reduction (work-income obtention). Computed as min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52))))))). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 20, BOE-A-2006-20764.)",
         "es": "Reducción art. 20 rendimientos del trabajo. Se calcula como min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52))))))). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 20, BOE-A-2006-20764.)",
         "hu": "20. cikk csökkentés (munkajövedelem szerzés). Számítás: min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52))))))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 20, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción art. 20 rendimientos del trabajo",
+        "ca": "Reducció art. 20 rendiments del treball",
         "en": "Art. 20 reduction (work-income obtention)",
         "es": "Reducción art. 20 rendimientos del trabajo",
         "hu": "20. cikk csökkentés (munkajövedelem szerzés)"
@@ -417,13 +417,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Otros rendimientos del capital mobiliario Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 25, BOE-A-2006-20764.)",
+        "ca": "Altres rendiments del capital mobiliari Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 25, BOE-A-2006-20764.)",
         "en": "Other capital-income types Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 25, BOE-A-2006-20764.)",
         "es": "Otros rendimientos del capital mobiliario Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 25, BOE-A-2006-20764.)",
         "hu": "Egyéb tőkejövedelem Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 25, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Otros rendimientos del capital mobiliario",
+        "ca": "Altres rendiments del capital mobiliari",
         "en": "Other capital-income types",
         "es": "Otros rendimientos del capital mobiliario",
         "hu": "Egyéb tőkejövedelem"
@@ -449,13 +449,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Reducción art. 26.2 — irregularidad capital mobiliario Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 26, BOE-A-2006-20764.)",
+        "ca": "Reducció art. 26.2 — irregularitat capital mobiliari Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 26, BOE-A-2006-20764.)",
         "en": "Art. 26.2 reduction (irregular capital income) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 26, BOE-A-2006-20764.)",
         "es": "Importe ya minorado por el 30 % del art. 26.2 sobre la base irregular, con un límite de 300.000 €. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 26, BOE-A-2006-20764.)",
         "hu": "26.2 cikk csökkentés (rendszertelen tőkejövedelem) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 26, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción art. 26.2 — irregularidad capital mobiliario",
+        "ca": "Reducció art. 26.2 — irregularitat capital mobiliari",
         "en": "Art. 26.2 reduction (irregular capital income)",
         "es": "Reducción art. 26.2 — irregularidad capital mobiliario",
         "hu": "26.2 cikk csökkentés (rendszertelen tőkejövedelem)"
@@ -713,13 +713,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Reducción art. 23.2 — tramos 50/60/70/90 % Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 23, BOE-A-2006-20764.)",
+        "ca": "Reducció art. 23.2 — trams 50/60/70/90 % Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 23, BOE-A-2006-20764.)",
         "en": "Art. 23.2 reduction (50/60/70/90 % tiered) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 23, BOE-A-2006-20764.)",
         "es": "El consumidor calcula el tramo aplicable según los metadatos del contrato: por defecto 50 %, vivienda rehabilitada en los 2 años anteriores 60 %, primer alquiler en zona tensionada a inquilino joven o Administración Pública 70 %, zona tensionada con reducción >= 5 % sobre la renta inicial del contrato anterior 90 %. Se aplica sobre el rendimiento neto positivo declarado (0106 antes de la reducción). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 23, BOE-A-2006-20764.)",
         "hu": "23.2 cikk csökkentés (50/60/70/90 % többszintű) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 23, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción art. 23.2 — tramos 50/60/70/90 %",
+        "ca": "Reducció art. 23.2 — trams 50/60/70/90 %",
         "en": "Art. 23.2 reduction (50/60/70/90 % tiered)",
         "es": "Reducción art. 23.2 — tramos 50/60/70/90 %",
         "hu": "23.2 cikk csökkentés (50/60/70/90 % többszintű)"
@@ -944,13 +944,13 @@
         "ca": "Variació d'existències Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 17, BOE-A-2014-12328.)",
         "en": "Inventory variation (final - initial) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 17, BOE-A-2014-12328.)",
         "es": "Calculado por el consumidor a partir de `InventoryRecord` según LIS art. 17. Con signo: positivo = existencias finales > iniciales = contribución a ingresos; negativo = existencias finales < iniciales = contribución a gastos. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 17, BOE-A-2014-12328.)",
-        "hu": "Keszletvaltozas (zaro - nyito) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 17, BOE-A-2014-12328.)"
+        "hu": "Készletváltozás (záró - nyitó) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 17, BOE-A-2014-12328.)"
       },
       "label": {
         "ca": "Variació d'existències",
         "en": "Inventory variation (final - initial)",
         "es": "Variación de existencias",
-        "hu": "Keszletvaltozas (zaro - nyito)"
+        "hu": "Készletváltozás (záró - nyitó)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1207,13 +1207,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Reducción LIRPF art. 32 Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 32, BOE-A-2006-20764.)",
+        "ca": "Reducció LIRPF art. 32 Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 32, BOE-A-2006-20764.)",
         "en": "Art. 32 reduction (irregular / startup) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 32, BOE-A-2006-20764.)",
         "es": "Reducción LIRPF art. 32 Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 32, BOE-A-2006-20764.)",
         "hu": "32. cikk csökkentés (rendszertelen / induló) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 32, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción LIRPF art. 32",
+        "ca": "Reducció LIRPF art. 32",
         "en": "Art. 32 reduction (irregular / startup)",
         "es": "Reducción LIRPF art. 32",
         "hu": "32. cikk csökkentés (rendszertelen / induló)"
@@ -1497,13 +1497,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Reducción LIRPF art. 32 — E.D. simplificada Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 32, BOE-A-2006-20764.)",
+        "ca": "Reducció LIRPF art. 32 — E.D. simplificada Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 32, BOE-A-2006-20764.)",
         "en": "Art. 32 reduction (E.D. simplificada) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 32, BOE-A-2006-20764.)",
         "es": "Reducción LIRPF art. 32 — E.D. simplificada Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 32, BOE-A-2006-20764.)",
         "hu": "32. cikk csökkentés (egyszerűsített) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 32, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción LIRPF art. 32 — E.D. simplificada",
+        "ca": "Reducció LIRPF art. 32 — E.D. simplificada",
         "en": "Art. 32 reduction (E.D. simplificada)",
         "es": "Reducción LIRPF art. 32 — E.D. simplificada",
         "hu": "32. cikk csökkentés (egyszerűsített)"
@@ -1691,16 +1691,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Ganancias patrimoniales brutas Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 33, BOE-A-2006-20764.)",
+        "ca": "Guanys patrimonials bruts Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 33, BOE-A-2006-20764.)",
         "en": "Gross capital gains (Anexo E) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 33, BOE-A-2006-20764.)",
         "es": "Ganancias patrimoniales brutas Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 33, BOE-A-2006-20764.)",
-        "hu": "Brutto vagyongyarapodas Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 33, BOE-A-2006-20764.)"
+        "hu": "Bruttó vagyongyarapodás Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 33, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Ganancias patrimoniales brutas",
+        "ca": "Guanys patrimonials bruts",
         "en": "Gross capital gains (Anexo E)",
         "es": "Ganancias patrimoniales brutas",
-        "hu": "Brutto vagyongyarapodas"
+        "hu": "Bruttó vagyongyarapodás"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1723,16 +1723,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Pérdidas patrimoniales brutas Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 33, BOE-A-2006-20764.)",
+        "ca": "Pèrdues patrimonials brutes Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 33, BOE-A-2006-20764.)",
         "en": "Gross capital losses (Anexo E) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 33, BOE-A-2006-20764.)",
         "es": "Pérdidas patrimoniales brutas Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 33, BOE-A-2006-20764.)",
-        "hu": "Brutto vagyonveszteseg Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 33, BOE-A-2006-20764.)"
+        "hu": "Bruttó vagyonveszteség Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 33, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Pérdidas patrimoniales brutas",
+        "ca": "Pèrdues patrimonials brutes",
         "en": "Gross capital losses (Anexo E)",
         "es": "Pérdidas patrimoniales brutas",
-        "hu": "Brutto vagyonveszteseg"
+        "hu": "Bruttó vagyonveszteség"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1758,13 +1758,13 @@
         "ca": "Saldo a integrar en base general (<= 1 any) Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
         "en": "Net amount integrating into general base (held <= 1 yr) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 49, BOE-A-2006-20764.)",
         "es": "Caller-computed: net of ganancias - pérdidas con período de generación <= 1 año. Puede ser negativo (pérdida neta). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
-        "hu": "Altalanos alapba szamitando egyenleg (<= 1 ev) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 49, BOE-A-2006-20764.)"
+        "hu": "Általános alapba számítandó egyenleg (<= 1 ev) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 49, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Saldo a integrar en base general (<= 1 any)",
         "en": "Net amount integrating into general base (held <= 1 yr)",
         "es": "Saldo a integrar en base general (<= 1 año)",
-        "hu": "Altalanos alapba szamitando egyenleg (<= 1 ev)"
+        "hu": "Általános alapba számítandó egyenleg (<= 1 ev)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1790,13 +1790,13 @@
         "ca": "Saldo a integrar en base estalvi (> 1 any) Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
         "en": "Net amount integrating into savings base (held > 1 yr) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 49, BOE-A-2006-20764.)",
         "es": "Caller-computed: net of ganancias - pérdidas con período de generación > 1 año. Puede ser negativo. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
-        "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 49, BOE-A-2006-20764.)"
+        "hu": "Megtakarítási alapba számítandó egyenleg (> 1 ev) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 49, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Saldo a integrar en base estalvi (> 1 any)",
         "en": "Net amount integrating into savings base (held > 1 yr)",
         "es": "Saldo a integrar en base ahorro (> 1 año)",
-        "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev)"
+        "hu": "Megtakarítási alapba számítandó egyenleg (> 1 ev)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1828,13 +1828,13 @@
         "ca": "Saldo net patrimonial total. Es calcula com (0306 - 0307). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)",
         "en": "Total net capital gain/loss. Computed as (0306 - 0307). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)",
         "es": "Saldo neto patrimonial total. Se calcula como (0306 - 0307). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)",
-        "hu": "Teljes netto vagyon vagy veszteseg. Számítás: (0306 - 0307) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)"
+        "hu": "Teljes nettó vagyon vagy veszteség. Számítás: (0306 - 0307) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Saldo net patrimonial total",
         "en": "Total net capital gain/loss",
         "es": "Saldo neto patrimonial total",
-        "hu": "Teljes netto vagyon vagy veszteseg"
+        "hu": "Teljes nettó vagyon vagy veszteség"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1868,16 +1868,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Reducción por aportaciones a sistemas de previsión social Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)",
+        "ca": "Reducció per aportacions a sistemes de previsió social Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)",
         "en": "Pension-system contributions reduction (art. 51-52) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)",
         "es": "Verificado por el llamador: límite general de 1.500 EUR + hasta 8.500 EUR adicionales vía contribuciones empresariales a sistemas de previsión social (LIRPF art. 52). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)",
-        "hu": "Nyugdijrendszer-hozzajarulasi csokkentes Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)"
+        "hu": "Nyugdíjrendszer-hozzájárulási csökkentés Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción por aportaciones a sistemas de previsión social",
+        "ca": "Reducció per aportacions a sistemes de previsió social",
         "en": "Pension-system contributions reduction (art. 51-52)",
         "es": "Reducción por aportaciones a sistemas de previsión social",
-        "hu": "Nyugdijrendszer-hozzajarulasi csokkentes"
+        "hu": "Nyugdíjrendszer-hozzájárulási csökkentés"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1900,16 +1900,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Reducción por tributación conjunta Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 84, BOE-A-2006-20764.)",
+        "ca": "Reducció per tributació conjunta Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 84, BOE-A-2006-20764.)",
         "en": "Joint-filing reduction (art. 84) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 84, BOE-A-2006-20764.)",
         "es": "Reducción por tributación conjunta Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 84, BOE-A-2006-20764.)",
-        "hu": "Egyuttes ado-bevallasi csokkentes Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 84, BOE-A-2006-20764.)"
+        "hu": "Együttes adó-bevallási csökkentés Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 84, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción por tributación conjunta",
+        "ca": "Reducció per tributació conjunta",
         "en": "Joint-filing reduction (art. 84)",
         "es": "Reducción por tributación conjunta",
-        "hu": "Egyuttes ado-bevallasi csokkentes"
+        "hu": "Együttes adó-bevallási csökkentés"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1932,16 +1932,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Mínimo del contribuyente Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 57, BOE-A-2006-20764.)",
+        "ca": "Mínim del contribuent Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 57, BOE-A-2006-20764.)",
         "en": "Personal exemption (art. 57) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 57, BOE-A-2006-20764.)",
         "es": "Mínimo del contribuyente Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 57, BOE-A-2006-20764.)",
-        "hu": "Adoalany szemelyi minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 57, BOE-A-2006-20764.)"
+        "hu": "Adoalany személyi minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 57, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Mínimo del contribuyente",
+        "ca": "Mínim del contribuent",
         "en": "Personal exemption (art. 57)",
         "es": "Mínimo del contribuyente",
-        "hu": "Adoalany szemelyi minimum"
+        "hu": "Adoalany személyi minimum"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1964,16 +1964,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Mínimo por descendientes Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 58, BOE-A-2006-20764.)",
+        "ca": "Mínim per descendents Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 58, BOE-A-2006-20764.)",
         "en": "Dependents exemption (art. 58) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 58, BOE-A-2006-20764.)",
         "es": "Mínimo por descendientes Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 58, BOE-A-2006-20764.)",
-        "hu": "Leszarmazok szerinti minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 58, BOE-A-2006-20764.)"
+        "hu": "Leszármazók szerinti minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 58, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Mínimo por descendientes",
+        "ca": "Mínim per descendents",
         "en": "Dependents exemption (art. 58)",
         "es": "Mínimo por descendientes",
-        "hu": "Leszarmazok szerinti minimum"
+        "hu": "Leszármazók szerinti minimum"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1996,16 +1996,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Mínimo por ascendientes Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 59, BOE-A-2006-20764.)",
+        "ca": "Mínim per ascendents Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 59, BOE-A-2006-20764.)",
         "en": "Ascendants exemption (art. 59) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 59, BOE-A-2006-20764.)",
         "es": "Mínimo por ascendientes Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 59, BOE-A-2006-20764.)",
-        "hu": "Felmenok szerinti minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 59, BOE-A-2006-20764.)"
+        "hu": "Felmenők szerinti minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 59, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Mínimo por ascendientes",
+        "ca": "Mínim per ascendents",
         "en": "Ascendants exemption (art. 59)",
         "es": "Mínimo por ascendientes",
-        "hu": "Felmenok szerinti minimum"
+        "hu": "Felmenők szerinti minimum"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2028,16 +2028,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Mínimo por discapacidad Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 60, BOE-A-2006-20764.)",
+        "ca": "Mínim per discapacitat Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 60, BOE-A-2006-20764.)",
         "en": "Disability exemption (art. 60) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 60, BOE-A-2006-20764.)",
         "es": "Mínimo por discapacidad Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 60, BOE-A-2006-20764.)",
-        "hu": "Fogyatekossagi minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 60, BOE-A-2006-20764.)"
+        "hu": "Fogyatékossági minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 60, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Mínimo por discapacidad",
+        "ca": "Mínim per discapacitat",
         "en": "Disability exemption (art. 60)",
         "es": "Mínimo por discapacidad",
-        "hu": "Fogyatekossagi minimum"
+        "hu": "Fogyatékossági minimum"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2074,13 +2074,13 @@
         "ca": "Base imposable general. Es calcula com (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399)). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 48, BOE-A-2006-20764.)",
         "en": "General taxable base. Computed as (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399)). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 48, BOE-A-2006-20764.)",
         "es": "Base imponible general. Se calcula como (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399)). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 48, BOE-A-2006-20764.)",
-        "hu": "Altalanos adoalap. Számítás: (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 48, BOE-A-2006-20764.)"
+        "hu": "Általános adóalap. Számítás: (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 48, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Base imposable general",
         "en": "General taxable base",
         "es": "Base imponible general",
-        "hu": "Altalanos adoalap"
+        "hu": "Általános adóalap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2128,13 +2128,13 @@
         "ca": "Base imposable del estalvi. Es calcula com (0049 + 0400). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
         "en": "Savings taxable base. Computed as (0049 + 0400). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 49, BOE-A-2006-20764.)",
         "es": "Base imponible del ahorro. Se calcula como (0049 + 0400). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
-        "hu": "Megtakaritasi adoalap. Számítás: (0049 + 0400) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 49, BOE-A-2006-20764.)"
+        "hu": "Megtakarítási adóalap. Számítás: (0049 + 0400) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 49, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Base imposable del estalvi",
         "en": "Savings taxable base",
         "es": "Base imponible del ahorro",
-        "hu": "Megtakaritasi adoalap"
+        "hu": "Megtakarítási adóalap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2176,16 +2176,16 @@
         ]
       },
       "help": {
-        "ca": "Minimo personal y familiar total. Es calcula com ((0505 + 0510) + (0515 + 0520)). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 56, BOE-A-2006-20764.)",
+        "ca": "Mínim personal i familiar total. Es calcula com ((0505 + 0510) + (0515 + 0520)). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 56, BOE-A-2006-20764.)",
         "en": "Personal + family exemption (total). Computed as ((0505 + 0510) + (0515 + 0520)). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 56, BOE-A-2006-20764.)",
         "es": "Minimo personal y familiar total. Se calcula como ((0505 + 0510) + (0515 + 0520)). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 56, BOE-A-2006-20764.)",
-        "hu": "Szemelyi es csaladi minimum osszesen. Számítás: ((0505 + 0510) + (0515 + 0520)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 56, BOE-A-2006-20764.)"
+        "hu": "Személyi es családi minimum összesen. Számítás: ((0505 + 0510) + (0515 + 0520)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 56, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Minimo personal y familiar total",
+        "ca": "Mínim personal i familiar total",
         "en": "Personal + family exemption (total)",
         "es": "Minimo personal y familiar total",
-        "hu": "Szemelyi es csaladi minimum osszesen"
+        "hu": "Személyi es családi minimum összesen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2231,13 +2231,13 @@
         "ca": "Base liquidable general. Es calcula com max(0, ((0432 - 0445) - 0455)). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 50, BOE-A-2006-20764.)",
         "en": "General liquidable base. Computed as max(0, ((0432 - 0445) - 0455)). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 50, BOE-A-2006-20764.)",
         "es": "Base liquidable general. Se calcula como max(0, ((0432 - 0445) - 0455)). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 50, BOE-A-2006-20764.)",
-        "hu": "Altalanos likvidalt adoalap. Számítás: max(0, ((0432 - 0445) - 0455)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 50, BOE-A-2006-20764.)"
+        "hu": "Általános likvidált adóalap. Számítás: max(0, ((0432 - 0445) - 0455)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 50, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Base liquidable general",
         "en": "General liquidable base",
         "es": "Base liquidable general",
-        "hu": "Altalanos likvidalt adoalap"
+        "hu": "Általános likvidált adóalap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2280,13 +2280,13 @@
         "ca": "Base liquidable de l'estalvi. Es calcula com 0460. Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 50, BOE-A-2006-20764.)",
         "en": "Savings liquidable base. Computed as 0460. Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 50, BOE-A-2006-20764.)",
         "es": "Base liquidable del ahorro. Se calcula como 0460. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 50, BOE-A-2006-20764.)",
-        "hu": "Megtakaritasi likvidalt adoalap. Számítás: 0460 Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 50, BOE-A-2006-20764.)"
+        "hu": "Megtakarítási likvidált adóalap. Számítás: 0460 Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 50, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Base liquidable de l'estalvi",
         "en": "Savings liquidable base",
         "es": "Base liquidable del ahorro",
-        "hu": "Megtakaritasi likvidalt adoalap"
+        "hu": "Megtakarítási likvidált adóalap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2324,16 +2324,16 @@
         ]
       },
       "help": {
-        "ca": "Cuota tarifa estatal general sobre base liquidable. Es calcula com ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
+        "ca": "Quota tarifa estatal general sobre base liquidable. Es calcula com ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
         "en": "State general tarifa applied to BLG. Computed as ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 63, BOE-A-2006-20764.)",
         "es": "Cuota tarifa estatal general sobre base liquidable. Se calcula como ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
-        "hu": "Allami altalanos tarifa BLG-re alkalmazva. Számítás: ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764.)"
+        "hu": "Állami általános tarifa BLG-re alkalmazva. Számítás: ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota tarifa estatal general sobre base liquidable",
+        "ca": "Quota tarifa estatal general sobre base liquidable",
         "en": "State general tarifa applied to BLG",
         "es": "Cuota tarifa estatal general sobre base liquidable",
-        "hu": "Allami altalanos tarifa BLG-re alkalmazva"
+        "hu": "Állami általános tarifa BLG-re alkalmazva"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2372,16 +2372,16 @@
         ]
       },
       "help": {
-        "ca": "Cuota tarifa estatal sobre mínimo personal y familiar. Es calcula com ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
+        "ca": "Quota tarifa estatal sobre mínimo personal y familiar. Es calcula com ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
         "en": "State general tarifa applied to mínimo (capped at BLG). Computed as ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 63, BOE-A-2006-20764.)",
         "es": "Cuota tarifa estatal sobre mínimo personal y familiar. Se calcula como ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
-        "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva). Számítás: ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764.)"
+        "hu": "Állami általános tarifa személyi minimumra (BLG-re korlatozva). Számítás: ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota tarifa estatal sobre mínimo personal y familiar",
+        "ca": "Quota tarifa estatal sobre mínimo personal y familiar",
         "en": "State general tarifa applied to mínimo (capped at BLG)",
         "es": "Cuota tarifa estatal sobre mínimo personal y familiar",
-        "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva)"
+        "hu": "Állami általános tarifa személyi minimumra (BLG-re korlatozva)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2424,13 +2424,13 @@
         "ca": "Quota íntegra estatal general. Es calcula com max(0, (0540 - 0542)). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
         "en": "State general gross tax. Computed as max(0, (0540 - 0542)). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 63, BOE-A-2006-20764.)",
         "es": "Cuota íntegra estatal general. Se calcula como max(0, (0540 - 0542)). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
-        "hu": "Allami altalanos brutto ado. Számítás: max(0, (0540 - 0542)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764.)"
+        "hu": "Állami általános bruttó ado. Számítás: max(0, (0540 - 0542)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Quota íntegra estatal general",
         "en": "State general gross tax",
         "es": "Cuota íntegra estatal general",
-        "hu": "Allami altalanos brutto ado"
+        "hu": "Állami általános bruttó ado"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2467,13 +2467,13 @@
         "ca": "Quota íntegra autonòmica general Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 73, BOE-A-2006-20764.)",
         "en": "Autonomic general gross tax (per-CCAA caller input) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 73, BOE-A-2006-20764.)",
         "es": "Cuota íntegra autonómica general Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 73, BOE-A-2006-20764.)",
-        "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 73, BOE-A-2006-20764.)"
+        "hu": "Autonóm általános bruttó ado (CCAA-fuggo, hívó szolgáltatja) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 73, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Quota íntegra autonòmica general",
         "en": "Autonomic general gross tax (per-CCAA caller input)",
         "es": "Cuota íntegra autonómica general",
-        "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja)"
+        "hu": "Autonóm általános bruttó ado (CCAA-fuggo, hívó szolgáltatja)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2504,13 +2504,13 @@
         "ca": "Quota íntegra estatal del estalvi. Es calcula com ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 66, BOE-A-2006-20764.)",
         "en": "State savings gross tax. Computed as ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 66, BOE-A-2006-20764.)",
         "es": "Cuota íntegra estatal del ahorro. Se calcula como ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 66, BOE-A-2006-20764.)",
-        "hu": "Allami megtakaritasi brutto ado. Számítás: ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 66, BOE-A-2006-20764.)"
+        "hu": "Állami megtakarítási bruttó ado. Számítás: ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 66, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Quota íntegra estatal del estalvi",
         "en": "State savings gross tax",
         "es": "Cuota íntegra estatal del ahorro",
-        "hu": "Allami megtakaritasi brutto ado"
+        "hu": "Állami megtakarítási bruttó ado"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2546,13 +2546,13 @@
         "ca": "Quota íntegra autonòmica del estalvi Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 76, BOE-A-2006-20764.)",
         "en": "Autonomic savings gross tax (per-CCAA caller input) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 76, BOE-A-2006-20764.)",
         "es": "Cuota íntegra autonómica del ahorro Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 76, BOE-A-2006-20764.)",
-        "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 76, BOE-A-2006-20764.)"
+        "hu": "Autonóm megtakarítási bruttó ado (CCAA-fuggo) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 76, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Quota íntegra autonòmica del estalvi",
         "en": "Autonomic savings gross tax (per-CCAA caller input)",
         "es": "Cuota íntegra autonómica del ahorro",
-        "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo)"
+        "hu": "Autonóm megtakarítási bruttó ado (CCAA-fuggo)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2586,13 +2586,13 @@
         "ca": "Quota íntegra total (estatal + autonòmica). Es calcula com ((0550 + 0551) + (0560 + 0561)). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)",
         "en": "Total gross tax (state + autonomic). Computed as ((0550 + 0551) + (0560 + 0561)). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)",
         "es": "Cuota íntegra total (estatal + autonómica). Se calcula como ((0550 + 0551) + (0560 + 0561)). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)",
-        "hu": "Teljes brutto ado (allami + autonom). Számítás: ((0550 + 0551) + (0560 + 0561)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)"
+        "hu": "Teljes bruttó ado (állami + autonóm). Számítás: ((0550 + 0551) + (0560 + 0561)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Quota íntegra total (estatal + autonòmica)",
         "en": "Total gross tax (state + autonomic)",
         "es": "Cuota íntegra total (estatal + autonómica)",
-        "hu": "Teljes brutto ado (allami + autonom)"
+        "hu": "Teljes bruttó ado (állami + autonóm)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2631,13 +2631,13 @@
         "ca": "Deducción 60 % rendes Ceuta / Melilla Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 68, BOE-A-2006-20764.)",
         "en": "60 % deduction for Ceuta/Melilla income (LIRPF art. 68.4) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 68, BOE-A-2006-20764.)",
         "es": "Calculado por el consumidor: 60 % sobre la cuota íntegra proporcional a las rentas obtenidas en Ceuta o Melilla (tras Ley 6/2018). Tope: la deducción no puede exceder del 60 % de la cuota íntegra total. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 68, BOE-A-2006-20764.)",
-        "hu": "Ceuta/Melilla bevetel 60 %-os levonas Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 68, BOE-A-2006-20764.)"
+        "hu": "Ceuta/Melilla bevetel 60 %-os levonás Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 68, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Deducción 60 % rendes Ceuta / Melilla",
         "en": "60 % deduction for Ceuta/Melilla income (LIRPF art. 68.4)",
         "es": "Deducción 60 % rentas Ceuta / Melilla",
-        "hu": "Ceuta/Melilla bevetel 60 %-os levonas"
+        "hu": "Ceuta/Melilla bevetel 60 %-os levonás"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2663,13 +2663,13 @@
         "ca": "Deduccions estatals total Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 68, BOE-A-2006-20764.)",
         "en": "Total state deductions (donativos / vivienda / etc.) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 68, BOE-A-2006-20764.)",
         "es": "Deducciones estatales total Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 68, BOE-A-2006-20764.)",
-        "hu": "Allami levonasok osszesen Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 68, BOE-A-2006-20764.)"
+        "hu": "Állami levonások összesen Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 68, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Deduccions estatals total",
         "en": "Total state deductions (donativos / vivienda / etc.)",
         "es": "Deducciones estatales total",
-        "hu": "Allami levonasok osszesen"
+        "hu": "Állami levonások összesen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2701,13 +2701,13 @@
         "ca": "Total deduccions (estatals + autonòmiques). Es calcula com (0620 + 0622). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
         "en": "Total deductions (state + autonomic). Computed as (0620 + 0622). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
         "es": "Total deducciones (estatales + autonómicas). Se calcula como (0620 + 0622). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
-        "hu": "Teljes levonasok. Számítás: (0620 + 0622) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)"
+        "hu": "Teljes levonások. Számítás: (0620 + 0622) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Total deduccions (estatals + autonòmiques)",
         "en": "Total deductions (state + autonomic)",
         "es": "Total deducciones (estatales + autonómicas)",
-        "hu": "Teljes levonasok"
+        "hu": "Teljes levonások"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2751,13 +2751,13 @@
         "ca": "Quota líquida total. Es calcula com max(0, ((0595 - 0630) - 0612)). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
         "en": "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla). Computed as max(0, ((0595 - 0630) - 0612)). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
         "es": "Cuota líquida total. Se calcula como max(0, ((0595 - 0630) - 0612)). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
-        "hu": "Teljes netto ado. Számítás: max(0, ((0595 - 0630) - 0612)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)"
+        "hu": "Teljes nettó ado. Számítás: max(0, ((0595 - 0630) - 0612)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)"
       },
       "label": {
         "ca": "Quota líquida total",
         "en": "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla)",
         "es": "Cuota líquida total",
-        "hu": "Teljes netto ado"
+        "hu": "Teljes nettó ado"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2792,16 +2792,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retencions e ingressos a cuenta Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 99, BOE-A-2006-20764.)",
+        "ca": "Retencions i ingressos a compte Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 99, BOE-A-2006-20764.)",
         "en": "Withholdings and prepayments (LIRPF arts. 99-101) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 99, BOE-A-2006-20764.)",
         "es": "Retenciones e ingresos a cuenta Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 99, BOE-A-2006-20764.)",
-        "hu": "Levonasok es eloleg befizetesek Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 99, BOE-A-2006-20764.)"
+        "hu": "Levonások es előleg befizetések Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 99, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Retencions e ingressos a cuenta",
+        "ca": "Retencions i ingressos a compte",
         "en": "Withholdings and prepayments (LIRPF arts. 99-101)",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonasok es eloleg befizetesek"
+        "hu": "Levonások es előleg befizetések"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2824,16 +2824,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Pagaments fraccionats (Modelos 130 / 131) Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 99, BOE-A-2006-20764.)",
+        "ca": "Pagaments fraccionats (Models 130 / 131) Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 99, BOE-A-2006-20764.)",
         "en": "Fractional payments (Models 130 / 131) Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 99, BOE-A-2006-20764.)",
         "es": "Pagos fraccionados (Modelos 130 / 131) Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 99, BOE-A-2006-20764.)",
-        "hu": "Reszletfizetesek (130 / 131 modell) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 99, BOE-A-2006-20764.)"
+        "hu": "Részletfizetések (130 / 131 modell) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 99, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Pagaments fraccionats (Modelos 130 / 131)",
+        "ca": "Pagaments fraccionats (Models 130 / 131)",
         "en": "Fractional payments (Models 130 / 131)",
         "es": "Pagos fraccionados (Modelos 130 / 131)",
-        "hu": "Reszletfizetesek (130 / 131 modell)"
+        "hu": "Részletfizetések (130 / 131 modell)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2863,16 +2863,16 @@
         ]
       },
       "help": {
-        "ca": "Cuota diferencial / resultado de la autoliquidació. Es calcula com ((0698 - 0699) - 0700). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 79, BOE-A-2006-20764.)",
+        "ca": "Quota diferencial / resultat de la autoliquidació. Es calcula com ((0698 - 0699) - 0700). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 79, BOE-A-2006-20764.)",
         "en": "Differential cuota / autoliquidation result (art. 79). Computed as ((0698 - 0699) - 0700). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 79, BOE-A-2006-20764.)",
         "es": "Cuota diferencial / resultado de la autoliquidación. Se calcula como ((0698 - 0699) - 0700). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 79, BOE-A-2006-20764.)",
-        "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk). Számítás: ((0698 - 0699) - 0700) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 79, BOE-A-2006-20764.)"
+        "hu": "Önbevallás eredménye / különbözeti ado (79. cikk). Számítás: ((0698 - 0699) - 0700) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 79, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota diferencial / resultado de la autoliquidació",
+        "ca": "Quota diferencial / resultat de la autoliquidació",
         "en": "Differential cuota / autoliquidation result (art. 79)",
         "es": "Cuota diferencial / resultado de la autoliquidación",
-        "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk)"
+        "hu": "Önbevallás eredménye / különbözeti ado (79. cikk)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2910,13 +2910,13 @@
         "ca": "Total deduccions autonòmiques — Andalusia Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Andalusia Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Andalucía en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Andaluzia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Andaluzia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Andalusia",
         "en": "Total autonomic deductions — Andalusia",
         "es": "Total deducciones autonómicas — Andalucía",
-        "hu": "Autonom levonasok osszesen — Andaluzia"
+        "hu": "Autonóm levonások összesen — Andaluzia"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2942,13 +2942,13 @@
         "ca": "Total deduccions autonòmiques — Aragó Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Aragon Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Aragón en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Aragonia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Aragonia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Aragó",
         "en": "Total autonomic deductions — Aragon",
         "es": "Total deducciones autonómicas — Aragón",
-        "hu": "Autonom levonasok osszesen — Aragonia"
+        "hu": "Autonóm levonások összesen — Aragonia"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2974,13 +2974,13 @@
         "ca": "Total deduccions autonòmiques — Principat d'Astúries Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Asturias Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Principado de Asturias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Asztur Hercegseg Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Asztur Hercegseg Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Principat d'Astúries",
         "en": "Total autonomic deductions — Asturias",
         "es": "Total deducciones autonómicas — Principado de Asturias",
-        "hu": "Autonom levonasok osszesen — Asztur Hercegseg"
+        "hu": "Autonóm levonások összesen — Asztur Hercegseg"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3006,13 +3006,13 @@
         "ca": "Total deduccions autonòmiques — Illes Balears Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Balearic Islands Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Illes Balears en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Baleari-szigetek Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Baleari-szigetek Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Illes Balears",
         "en": "Total autonomic deductions — Balearic Islands",
         "es": "Total deducciones autonómicas — Illes Balears",
-        "hu": "Autonom levonasok osszesen — Baleari-szigetek"
+        "hu": "Autonóm levonások összesen — Baleari-szigetek"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3038,13 +3038,13 @@
         "ca": "Total deduccions autonòmiques — Canàries Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Canary Islands Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Canarias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Kanari-szigetek Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Kanari-szigetek Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Canàries",
         "en": "Total autonomic deductions — Canary Islands",
         "es": "Total deducciones autonómicas — Canarias",
-        "hu": "Autonom levonasok osszesen — Kanari-szigetek"
+        "hu": "Autonóm levonások összesen — Kanari-szigetek"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3070,13 +3070,13 @@
         "ca": "Total deduccions autonòmiques — Cantàbria Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Cantabria Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cantabria en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Kantabria Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Kantabria Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Cantàbria",
         "en": "Total autonomic deductions — Cantabria",
         "es": "Total deducciones autonómicas — Cantabria",
-        "hu": "Autonom levonasok osszesen — Kantabria"
+        "hu": "Autonóm levonások összesen — Kantabria"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3102,13 +3102,13 @@
         "ca": "Total deduccions autonòmiques — Castella-la Manxa Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Castile-La Mancha Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla-La Mancha en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Kasztilia-La Mancha Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Castella-la Manxa",
         "en": "Total autonomic deductions — Castile-La Mancha",
         "es": "Total deducciones autonómicas — Castilla-La Mancha",
-        "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha"
+        "hu": "Autonóm levonások összesen — Kasztilia-La Mancha"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3134,13 +3134,13 @@
         "ca": "Total deduccions autonòmiques — Castella i Lleó Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Castile and Leon Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla y León en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Kasztilia es Leon Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Kasztilia es Leon Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Castella i Lleó",
         "en": "Total autonomic deductions — Castile and Leon",
         "es": "Total deducciones autonómicas — Castilla y León",
-        "hu": "Autonom levonasok osszesen — Kasztilia es Leon"
+        "hu": "Autonóm levonások összesen — Kasztilia es Leon"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3166,13 +3166,13 @@
         "ca": "Total deduccions autonòmiques — Catalunya Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Catalonia Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cataluña en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Katalonia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Katalonia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Catalunya",
         "en": "Total autonomic deductions — Catalonia",
         "es": "Total deducciones autonómicas — Cataluña",
-        "hu": "Autonom levonasok osszesen — Katalonia"
+        "hu": "Autonóm levonások összesen — Katalonia"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3198,13 +3198,13 @@
         "ca": "Total deduccions autonòmiques — Comunitat Valenciana Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Valencian Community Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunitat Valenciana en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Valenciai kozosseg Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Valenciai közösség Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Comunitat Valenciana",
         "en": "Total autonomic deductions — Valencian Community",
         "es": "Total deducciones autonómicas — Comunitat Valenciana",
-        "hu": "Autonom levonasok osszesen — Valenciai kozosseg"
+        "hu": "Autonóm levonások összesen — Valenciai közösség"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3230,13 +3230,13 @@
         "ca": "Total deduccions autonòmiques — Extremadura Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Extremadura Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Extremadura en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Extremadura Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Extremadura Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Extremadura",
         "en": "Total autonomic deductions — Extremadura",
         "es": "Total deducciones autonómicas — Extremadura",
-        "hu": "Autonom levonasok osszesen — Extremadura"
+        "hu": "Autonóm levonások összesen — Extremadura"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3262,13 +3262,13 @@
         "ca": "Total deduccions autonòmiques — Galícia Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Galicia Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Galicia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Galicia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Galicia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Galícia",
         "en": "Total autonomic deductions — Galicia",
         "es": "Total deducciones autonómicas — Galicia",
-        "hu": "Autonom levonasok osszesen — Galicia"
+        "hu": "Autonóm levonások összesen — Galicia"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3294,13 +3294,13 @@
         "ca": "Total deduccions autonòmiques — Comunitat de Madrid Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Madrid Community Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunidad de Madrid en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Madridi kozosseg Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Madridi közösség Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Comunitat de Madrid",
         "en": "Total autonomic deductions — Madrid Community",
         "es": "Total deducciones autonómicas — Comunidad de Madrid",
-        "hu": "Autonom levonasok osszesen — Madridi kozosseg"
+        "hu": "Autonóm levonások összesen — Madridi közösség"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3326,13 +3326,13 @@
         "ca": "Total deduccions autonòmiques — Regió de Múrcia Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — Murcia Region Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Región de Murcia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Murcia regio Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — Murcia regio Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — Regió de Múrcia",
         "en": "Total autonomic deductions — Murcia Region",
         "es": "Total deducciones autonómicas — Región de Murcia",
-        "hu": "Autonom levonasok osszesen — Murcia regio"
+        "hu": "Autonóm levonások összesen — Murcia regio"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3358,13 +3358,13 @@
         "ca": "Total deduccions autonòmiques — La Rioja Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
         "en": "Total autonomic deductions — La Rioja Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
         "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para La Rioja en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — La Rioja Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
+        "hu": "Autonóm levonások összesen — La Rioja Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "ca": "Total deduccions autonòmiques — La Rioja",
         "en": "Total autonomic deductions — La Rioja",
         "es": "Total deducciones autonómicas — La Rioja",
-        "hu": "Autonom levonasok osszesen — La Rioja"
+        "hu": "Autonóm levonások összesen — La Rioja"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -3406,16 +3406,16 @@
         ]
       },
       "help": {
-        "ca": "Total deduccions autonòmiques (suma per-CCAA). Es calcula com (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 46-bis, BOE-A-2006-20764.)",
+        "ca": "Total deduccions autonòmiques (suma per CCAA). Es calcula com (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115). Declaració anual de l'IRPF; recull els pagaments fraccionats dels model 130 i model 131. (Base legal: Ley, art. 46-bis, BOE-A-2006-20764.)",
         "en": "Total autonomic deductions (sum across 15 CCAAs). Computed as (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115). Annual IRPF declaration; consolidates the fractional payments of form 130 and form 131. (Legal basis: Ley, art. 46-bis, BOE-A-2006-20764.)",
         "es": "Total deducciones autonómicas (suma per-CCAA). Se calcula como (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115). Declaración anual del IRPF; recoge los pagos fraccionados de los modelo 130 y modelo 131. (Base legal: Ley, art. 46-bis, BOE-A-2006-20764.)",
-        "hu": "Osszes autonom levonas (15 CCAA osszege). Számítás: (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 46-bis, BOE-A-2006-20764.)"
+        "hu": "Osszes autonóm levonás (15 CCAA osszege). Számítás: (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 46-bis, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Total deduccions autonòmiques (suma per-CCAA)",
+        "ca": "Total deduccions autonòmiques (suma per CCAA)",
         "en": "Total autonomic deductions (sum across 15 CCAAs)",
         "es": "Total deducciones autonómicas (suma per-CCAA)",
-        "hu": "Osszes autonom levonas (15 CCAA osszege)"
+        "hu": "Osszes autonóm levonás (15 CCAA osszege)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",

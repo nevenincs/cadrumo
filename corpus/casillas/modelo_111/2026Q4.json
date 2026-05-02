@@ -74,13 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retencions rendimientos del trabajo",
+        "ca": "Retencions rendiments del treball",
         "en": "Work income withholdings",
         "es": "Retenciones rendimientos del trabajo",
         "hu": "Munkajövedelem levonás"
       },
       "label": {
-        "ca": "Retencions rendimientos del trabajo",
+        "ca": "Retencions rendiments del treball",
         "en": "Work income withholdings",
         "es": "Retenciones rendimientos del trabajo",
         "hu": "Munkajövedelem levonás"
@@ -170,13 +170,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retencions actividades económicas",
+        "ca": "Retencions activitats econòmiques",
         "en": "Business income withholdings",
         "es": "Retenciones actividades económicas",
         "hu": "Gazdasági tev. levonás"
       },
       "label": {
-        "ca": "Retencions actividades económicas",
+        "ca": "Retencions activitats econòmiques",
         "en": "Business income withholdings",
         "es": "Retenciones actividades económicas",
         "hu": "Gazdasági tev. levonás"
@@ -673,13 +673,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "A deduir: exclusivamente en declaració complementària",
+        "ca": "A deduir: exclusivament en declaració complementària",
         "en": "Prior-filing deduction (complementary filings only)",
         "es": "A deducir: exclusivamente en declaración complementaria",
         "hu": "Korábbi bevallásból levonás (kiegészítő bevallás)"
       },
       "label": {
-        "ca": "A deduir: exclusivamente en declaració complementària",
+        "ca": "A deduir: exclusivament en declaració complementària",
         "en": "Prior-filing deduction (complementary filings only)",
         "es": "A deducir: exclusivamente en declaración complementaria",
         "hu": "Korábbi bevallásból levonás (kiegészítő bevallás)"

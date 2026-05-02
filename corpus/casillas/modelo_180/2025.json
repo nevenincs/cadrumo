@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total base retencion Resum anual que consolida les dades trimestrals del model 115.",
+        "ca": "Total base retenció Resum anual que consolida les dades trimestrals del model 115.",
         "en": "Total withholding base Annual summary consolidating the quarterly data of form 115.",
         "es": "Total base retencion Resumen anual que consolida los datos trimestrales del modelo 115.",
         "hu": "Teljes levonási alap Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell."
       },
       "label": {
-        "ca": "Total base retencion",
+        "ca": "Total base retenció",
         "en": "Total withholding base",
         "es": "Total base retencion",
         "hu": "Teljes levonási alap"

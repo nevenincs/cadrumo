@@ -114,7 +114,7 @@ _CASILLAS = (
         label={
             "es": "Tipo 4 %",
             "en": "Rate 4 %",
-            "hu": "Kulcs 4 %",
+            "hu": "Adókulcs 4 % (szuper-csökkentett)",
         },
         computed=True,
         legal_basis=_CITATIONS[1:2],
@@ -145,7 +145,7 @@ _CASILLAS = (
         label={
             "es": "Tipo 10 %",
             "en": "Rate 10 %",
-            "hu": "Kulcs 10 %",
+            "hu": "Adókulcs 10 % (csökkentett)",
         },
         computed=True,
         legal_basis=_CITATIONS[1:2],
@@ -176,7 +176,7 @@ _CASILLAS = (
         label={
             "es": "Tipo 21 %",
             "en": "Rate 21 %",
-            "hu": "Kulcs 21 %",
+            "hu": "Adókulcs 21 % (általános)",
         },
         computed=True,
         legal_basis=_CITATIONS[0:1],

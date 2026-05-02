@@ -10,13 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Compensacion BINs Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Compensació BINs Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "BIN compensation Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Compensacion BINs Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Veszteség-beszámítás Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Compensacion BINs",
+        "ca": "Compensació BINs",
         "en": "BIN compensation",
         "es": "Compensacion BINs",
         "hu": "Veszteség-beszámítás"
@@ -106,13 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Tipo de gravamen Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Tipus de gravamen Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Tax rate Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Tipo de gravamen Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Adókulcs Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Tipo de gravamen",
+        "ca": "Tipus de gravamen",
         "en": "Tax rate",
         "es": "Tipo de gravamen",
         "hu": "Adókulcs"
@@ -144,13 +144,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota integra previa Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Quota íntegra previa Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Gross tax (pre) Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Cuota integra previa Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Bruttó adó (elő) Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Cuota integra previa",
+        "ca": "Quota íntegra previa",
         "en": "Gross tax (pre)",
         "es": "Cuota integra previa",
         "hu": "Bruttó adó (elő)"
@@ -176,13 +176,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota integra Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "ca": "Quota íntegra Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "en": "Gross tax amount Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "es": "Cuota integra Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "hu": "Bruttó adóösszeg Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)"
       },
       "label": {
-        "ca": "Cuota integra",
+        "ca": "Quota íntegra",
         "en": "Gross tax amount",
         "es": "Cuota integra",
         "hu": "Bruttó adóösszeg"
@@ -208,13 +208,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Bonificaciones y deducciones doble imposición internacional Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Bonificacions y deducciones doble imposición internacional Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Bonuses and international double-taxation deductions Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Bonificaciones y deducciones doble imposición internacional Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Bónuszok és nemzetközi kettős adóztatás levonások Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Bonificaciones y deducciones doble imposición internacional",
+        "ca": "Bonificacions y deducciones doble imposición internacional",
         "en": "Bonuses and international double-taxation deductions",
         "es": "Bonificaciones y deducciones doble imposición internacional",
         "hu": "Bónuszok és nemzetközi kettős adóztatás levonások"
@@ -240,13 +240,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota liquida Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Quota liquida Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Net tax amount Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Cuota liquida Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Nettó adóösszeg Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Cuota liquida",
+        "ca": "Quota liquida",
         "en": "Net tax amount",
         "es": "Cuota liquida",
         "hu": "Nettó adóösszeg"
@@ -272,13 +272,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retencions e ingressos a cuenta Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Retencions i ingressos a compte Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Withholdings Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Retenciones e ingresos a cuenta Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Levonások Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Retencions e ingressos a cuenta",
+        "ca": "Retencions i ingressos a compte",
         "en": "Withholdings",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások"
@@ -400,13 +400,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Abono de deducciones Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Abonament de deduccions Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Deductions refund Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Abono de deducciones Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Kedvezmény-visszatérítés Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Abono de deducciones",
+        "ca": "Abonament de deduccions",
         "en": "Deductions refund",
         "es": "Abono de deducciones",
         "hu": "Kedvezmény-visszatérítés"
@@ -432,13 +432,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Incremento por perdida beneficios fiscales Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Increment per pèrdua beneficis fiscals Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Increment for lost tax benefits Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Incremento por perdida beneficios fiscales Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Növelés elveszett kedvezmények miatt Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Incremento por perdida beneficios fiscales",
+        "ca": "Increment per pèrdua beneficis fiscals",
         "en": "Increment for lost tax benefits",
         "es": "Incremento por perdida beneficios fiscales",
         "hu": "Növelés elveszett kedvezmények miatt"
@@ -464,13 +464,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota diferencial Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "ca": "Quota diferencial Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "en": "Tax differential Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "es": "Cuota diferencial Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "hu": "Adókülönbözet Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)"
       },
       "label": {
-        "ca": "Cuota diferencial",
+        "ca": "Quota diferencial",
         "en": "Tax differential",
         "es": "Cuota diferencial",
         "hu": "Adókülönbözet"

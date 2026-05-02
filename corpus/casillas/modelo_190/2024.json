@@ -596,7 +596,7 @@
         ]
       },
       "help": {
-        "ca": "Suma global de perceptors declarados en el modelo 190. Resum anual que consolida les dades trimestrals del model 111.",
+        "ca": "Suma global de perceptors declarats en el model 190. Resum anual que consolida les dades trimestrals del model 111.",
         "en": "Global sum of recipients declared in form 190. Annual summary consolidating the quarterly data of form 111.",
         "es": "Suma global de perceptores declarados en el modelo 190. Resumen anual que consolida los datos trimestrales del modelo 111.",
         "hu": "A 190-es nyomtatványban szereplő összes kedvezményezett. Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 111-os modell."
@@ -651,7 +651,7 @@
         ]
       },
       "help": {
-        "ca": "Suma global de las percepcions íntegras declaradas en el modelo 190. Resum anual que consolida les dades trimestrals del model 111.",
+        "ca": "Suma global de las percepcions íntegras declarades en el model 190. Resum anual que consolida les dades trimestrals del model 111.",
         "en": "Global sum of gross perceptions declared in form 190. Annual summary consolidating the quarterly data of form 111.",
         "es": "Suma global de las percepciones íntegras declaradas en el modelo 190. Resumen anual que consolida los datos trimestrales del modelo 111.",
         "hu": "A 190-es nyomtatványban szereplő bruttó jövedelmek összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 111-os modell."
@@ -706,7 +706,7 @@
         ]
       },
       "help": {
-        "ca": "Suma global de las retenciones e ingressos a cuenta declarados en el modelo 190. Resum anual que consolida les dades trimestrals del model 111.",
+        "ca": "Suma global de las retenciones e ingressos a cuenta declarats en el model 190. Resum anual que consolida les dades trimestrals del model 111.",
         "en": "Global sum of withholdings and payments on account declared in form 190. Annual summary consolidating the quarterly data of form 111.",
         "es": "Suma global de las retenciones e ingresos a cuenta declarados en el modelo 190. Resumen anual que consolida los datos trimestrales del modelo 111.",
         "hu": "A 190-es nyomtatványban szereplő levonások és előlegek összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 111-os modell."
