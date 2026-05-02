@@ -64,20 +64,15 @@
     },
     {
       "casilla_id": "03",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(irpf.arrendamientos_rate * 02)",
-        "references_casillas": [
-          "02"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total withholdings. Computed as (irpf.arrendamientos_rate * 02). (Legal basis: reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "es": "Total retenciones. Se calcula como (irpf.arrendamientos_rate * 02). (Base legal: reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "hu": "Teljes levonás. Számítás: (irpf.arrendamientos_rate * 02). (Jogalap: reglamento, art. 100.1, BOE-A-2007-6820.)"
+        "en": "Total withholdings (Legal basis: reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "es": "Total retenciones (Base legal: reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "hu": "Teljes levonás (Jogalap: reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total withholdings",
@@ -87,12 +82,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_180",
       "period": "2023",
-      "references_casillas": [
-        "02"
-      ],
-      "references_rules": [
-        "modelo_180.2025.total_retenciones"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -100,11 +91,6 @@
       "source_section": "Resumen anual — Retenciones e ingresos a cuenta",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 100.1: total retenciones = 19% de la base de retención (modelo 180 anual).",
           "rule": "equals_19_percent_of",

@@ -116,15 +116,15 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "max(0, (irpf.trimestral_rate * 03))",
+        "expression": "max(0, (20% * 03))",
         "references_casillas": [
           "03"
         ]
       },
       "help": {
-        "en": "Fractional payment (20% of 03, clamped ≥ 0). Computed as max(0, (irpf.trimestral_rate * 03)). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Importe del pago fraccionado (20%). Se calcula como max(0, (irpf.trimestral_rate * 03)). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Részletfizetés összege (03 x 20%, nem-negatív). Számítás: max(0, (irpf.trimestral_rate * 03)). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Fractional payment (20% of 03, clamped ≥ 0). Computed as max(0, (20% * 03)). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Importe del pago fraccionado (20%). Se calcula como max(0, (20% * 03)). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részletfizetés összege (03 x 20%, nem-negatív). Számítás: max(0, (20% * 03)). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Fractional payment (20% of 03, clamped ≥ 0)",
@@ -310,15 +310,15 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(agraria.trimestral_rate * 08)",
+        "expression": "(2% * 08)",
         "references_casillas": [
           "08"
         ]
       },
       "help": {
-        "en": "Fractional payment (2% of 08). Computed as (agraria.trimestral_rate * 08). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Importe del pago fraccionado (2%). Se calcula como (agraria.trimestral_rate * 08). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Részletfizetés összege (08 x 2%). Számítás: (agraria.trimestral_rate * 08). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Fractional payment (2% of 08). Computed as (2% * 08). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Importe del pago fraccionado (2%). Se calcula como (2% * 08). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részletfizetés összege (08 x 2%). Számítás: (2% * 08). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Fractional payment (2% of 08)",

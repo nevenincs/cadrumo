@@ -244,20 +244,15 @@
     },
     {
       "casilla_id": "09",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(irpf.premios_rate * 08)",
-        "references_casillas": [
-          "08"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Prize withholdings. Computed as (irpf.premios_rate * 08). (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
-        "es": "Retenciones premios. Se calcula como (irpf.premios_rate * 08). (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
-        "hu": "Nyeremény levonás. Számítás: (irpf.premios_rate * 08). (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
+        "en": "Prize withholdings (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Retenciones premios (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Nyeremény levonás (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Prize withholdings",
@@ -267,25 +262,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_111",
       "period": "2023Q2",
-      "references_casillas": [
-        "08"
-      ],
-      "references_rules": [
-        "modelo_111.2025.retenciones_premios"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "III. Premios",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "10",
@@ -349,20 +334,15 @@
     },
     {
       "casilla_id": "12",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(irpf.ganancias_arrendamiento_rate * 11)",
-        "references_casillas": [
-          "11"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Capital gains withholdings. Computed as (irpf.ganancias_arrendamiento_rate * 11). (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
-        "es": "Retenciones ganancias patrimoniales. Se calcula como (irpf.ganancias_arrendamiento_rate * 11). (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
-        "hu": "Vagyonnyereség levonás. Számítás: (irpf.ganancias_arrendamiento_rate * 11). (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
+        "en": "Capital gains withholdings (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Retenciones ganancias patrimoniales (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Vagyonnyereség levonás (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Capital gains withholdings",
@@ -372,25 +352,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_111",
       "period": "2023Q2",
-      "references_casillas": [
-        "11"
-      ],
-      "references_rules": [
-        "modelo_111.2025.retenciones_ganancias_arrendamiento"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "IV. Ganancias patrimoniales — aprovechamientos forestales",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "13",
@@ -574,25 +544,15 @@
     },
     {
       "casilla_id": "28",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(03 + 06 + 09 + 12 + 15 + 18)",
-        "references_casillas": [
-          "03",
-          "06",
-          "09",
-          "12",
-          "15",
-          "18"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total withholdings. Computed as (03 + 06 + 09 + 12 + 15 + 18). (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
-        "es": "Total retenciones. Se calcula como (03 + 06 + 09 + 12 + 15 + 18). (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
-        "hu": "Levonás összesen. Számítás: (03 + 06 + 09 + 12 + 15 + 18). (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
+        "en": "Total withholdings (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Total retenciones (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Levonás összesen (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total withholdings",
@@ -602,30 +562,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_111",
       "period": "2023Q2",
-      "references_casillas": [
-        "03",
-        "06",
-        "09",
-        "12",
-        "15",
-        "18"
-      ],
-      "references_rules": [
-        "modelo_111.2025.total_retenciones"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "Liquidación",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "29",
@@ -659,21 +604,15 @@
     },
     {
       "casilla_id": "30",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(28 - 29)",
-        "references_casillas": [
-          "28",
-          "29"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Net amount payable. Computed as (28 - 29). (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
-        "es": "Resultado a ingresar. Se calcula como (28 - 29). (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
-        "hu": "Fizetendő eredmény. Számítás: (28 - 29). (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
+        "en": "Net amount payable (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Resultado a ingresar (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Fizetendő eredmény (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Net amount payable",
@@ -683,13 +622,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_111",
       "period": "2023Q2",
-      "references_casillas": [
-        "28",
-        "29"
-      ],
-      "references_rules": [
-        "modelo_111.2025.resultado_a_ingresar"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -697,11 +631,6 @@
       "source_section": "Liquidación",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "Resultado a ingresar mensual/trimestral debe ser ≥ 0 (LIRPF arts. 99-101).",
           "rule": "non_negative",

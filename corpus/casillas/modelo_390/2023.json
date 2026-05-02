@@ -184,21 +184,15 @@
     },
     {
       "casilla_id": "104",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(100 + 101)",
-        "references_casillas": [
-          "100",
-          "101"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total deductible input VAT. Computed as (100 + 101). (Legal basis: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)",
-        "es": "Total IVA soportado deducible. Se calcula como (100 + 101). (Base legal: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)",
-        "hu": "Összes levonható ÁFA. Számítás: (100 + 101). (Jogalap: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)"
+        "en": "Total deductible input VAT (Legal basis: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)",
+        "es": "Total IVA soportado deducible (Base legal: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)",
+        "hu": "Összes levonható ÁFA (Jogalap: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Total deductible input VAT",
@@ -208,44 +202,27 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2023",
-      "references_casillas": [
-        "100",
-        "101"
-      ],
-      "references_rules": [
-        "modelo_390.2025.iva_soportado_total"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "Apartado 3 — Régimen general anual",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "105",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(96 - 104)",
-        "references_casillas": [
-          "96",
-          "104"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Result (general regime). Computed as (96 - 104). (Legal basis: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Resultado régimen general. Se calcula como (96 - 104). (Base legal: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Általános rendszer eredménye. Számítás: (96 - 104). (Jogalap: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Result (general regime) (Legal basis: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Resultado régimen general (Base legal: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Általános rendszer eredménye (Jogalap: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Result (general regime)",
@@ -255,26 +232,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2023",
-      "references_casillas": [
-        "96",
-        "104"
-      ],
-      "references_rules": [
-        "modelo_390.2025.resultado_regimen_general"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "Apartado 3 — Régimen general anual",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "108",
@@ -338,22 +304,15 @@
     },
     {
       "casilla_id": "190",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(105 + 108 + 109)",
-        "references_casillas": [
-          "105",
-          "108",
-          "109"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Result sum. Computed as (105 + 108 + 109). (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Suma resultado. Se calcula como (105 + 108 + 109). (Base legal: ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Eredmény összege. Számítás: (105 + 108 + 109). (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Result sum (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Suma resultado (Base legal: ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Eredmény összege (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Result sum",
@@ -363,45 +322,27 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2023",
-      "references_casillas": [
-        "105",
-        "108",
-        "109"
-      ],
-      "references_rules": [
-        "modelo_390.2025.suma_resultado"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "Apartado 6 — Resultado anual",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "191",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(190 - 662)",
-        "references_casillas": [
-          "190",
-          "662"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Annual result quota. Computed as (190 - 662). (Legal basis: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Cuota resultante anual. Se calcula como (190 - 662). (Base legal: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Éves eredmény-összeg. Számítás: (190 - 662). (Jogalap: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Annual result quota (Legal basis: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Cuota resultante anual (Base legal: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Éves eredmény-összeg (Jogalap: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Annual result quota",
@@ -411,43 +352,27 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2023",
-      "references_casillas": [
-        "190",
-        "662"
-      ],
-      "references_rules": [
-        "modelo_390.2025.cuota_resultante_anual"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "Apartado 6 — Resultado anual",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "192",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "max(0, 191)",
-        "references_casillas": [
-          "191"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total payable. Computed as max(0, 191). (Legal basis: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "es": "Total a ingresar. Se calcula como max(0, 191). (Base legal: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "hu": "Fizetendő összeg. Számítás: max(0, 191). (Jogalap: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)"
+        "en": "Total payable (Legal basis: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "es": "Total a ingresar (Base legal: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "hu": "Fizetendő összeg (Jogalap: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
         "en": "Total payable",
@@ -457,12 +382,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2023",
-      "references_casillas": [
-        "191"
-      ],
-      "references_rules": [
-        "modelo_390.2025.total_a_ingresar"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
@@ -470,11 +391,6 @@
       "source_section": "Apartado 6 — Resultado anual",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "LIVA art. 164 + RIVA art. 71.7: total a ingresar / a devolver son magnitudes no-negativas.",
           "rule": "non_negative",
@@ -484,20 +400,15 @@
     },
     {
       "casilla_id": "193",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "max(0, (0 - 191))",
-        "references_casillas": [
-          "191"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total refundable. Computed as max(0, (0 - 191)). (Legal basis: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "es": "Total a devolver. Se calcula como max(0, (0 - 191)). (Base legal: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "hu": "Visszatérítendő összeg. Számítás: max(0, (0 - 191)). (Jogalap: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)"
+        "en": "Total refundable (Legal basis: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "es": "Total a devolver (Base legal: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "hu": "Visszatérítendő összeg (Jogalap: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
         "en": "Total refundable",
@@ -507,12 +418,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
       "period": "2023",
-      "references_casillas": [
-        "191"
-      ],
-      "references_rules": [
-        "modelo_390.2025.total_a_devolver"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
@@ -520,11 +427,6 @@
       "source_section": "Apartado 6 — Resultado anual",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "LIVA art. 164 + RIVA art. 71.7: total a ingresar / a devolver son magnitudes no-negativas.",
           "rule": "non_negative",

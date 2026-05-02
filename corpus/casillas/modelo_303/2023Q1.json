@@ -34,18 +34,15 @@
     },
     {
       "casilla_id": "02",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "4",
-        "references_casillas": []
-      },
+      "formula": null,
       "help": {
-        "en": "Rate 4 % Computed as 4. (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
-        "es": "Tipo impositivo súper-reducido (constante). Se calcula como 4. (Base legal: ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Kulcs 4 % Számítás: 4. (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
+        "en": "Rate 4 % (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
+        "es": "Tipo impositivo súper-reducido (constante). (Base legal: ley, art. 91, BOE-A-1992-28740.)",
+        "hu": "Kulcs 4 % (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Rate 4 %",
@@ -56,9 +53,7 @@
       "modelo": "MODELO_303",
       "period": "2023Q1",
       "references_casillas": [],
-      "references_rules": [
-        "modelo_303.2025.tipo_superreducido"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
@@ -66,11 +61,6 @@
       "source_section": "IVA devengado — Régimen general (operaciones interiores)",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "LIVA arts. 90/91: tipo IVA constante (régimen general).",
           "rule": "constant",
@@ -80,20 +70,15 @@
     },
     {
       "casilla_id": "03",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(iva.rate_superreducido * 01)",
-        "references_casillas": [
-          "01"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Output VAT at 4 % (01 x 0.04). Computed as (iva.rate_superreducido * 01). (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 4 %. Se calcula como (iva.rate_superreducido * 01). (Base legal: ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 4 %-on (01 x 0.04). Számítás: (iva.rate_superreducido * 01). (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
+        "en": "Output VAT at 4 % (01 x 0.04) (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 4 % (Base legal: ley, art. 91, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 4 %-on (01 x 0.04) (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Output VAT at 4 % (01 x 0.04)",
@@ -103,25 +88,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "01"
-      ],
-      "references_rules": [
-        "modelo_303.2025.cuota_superreducido"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "IVA devengado — Régimen general (operaciones interiores)",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "04",
@@ -155,18 +130,15 @@
     },
     {
       "casilla_id": "05",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "10",
-        "references_casillas": []
-      },
+      "formula": null,
       "help": {
-        "en": "Rate 10 % Computed as 10. (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
-        "es": "Tipo impositivo reducido (constante). Se calcula como 10. (Base legal: ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Kulcs 10 % Számítás: 10. (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
+        "en": "Rate 10 % (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
+        "es": "Tipo impositivo reducido (constante). (Base legal: ley, art. 91, BOE-A-1992-28740.)",
+        "hu": "Kulcs 10 % (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Rate 10 %",
@@ -177,9 +149,7 @@
       "modelo": "MODELO_303",
       "period": "2023Q1",
       "references_casillas": [],
-      "references_rules": [
-        "modelo_303.2025.tipo_reducido"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
@@ -187,11 +157,6 @@
       "source_section": "IVA devengado — Régimen general (operaciones interiores)",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "LIVA arts. 90/91: tipo IVA constante (régimen general).",
           "rule": "constant",
@@ -201,20 +166,15 @@
     },
     {
       "casilla_id": "06",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(iva.rate_reducido * 04)",
-        "references_casillas": [
-          "04"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Output VAT at 10 % (04 x 0.10). Computed as (iva.rate_reducido * 04). (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 10 %. Se calcula como (iva.rate_reducido * 04). (Base legal: ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 10 %-on (04 x 0.10). Számítás: (iva.rate_reducido * 04). (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
+        "en": "Output VAT at 10 % (04 x 0.10) (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 10 % (Base legal: ley, art. 91, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 10 %-on (04 x 0.10) (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Output VAT at 10 % (04 x 0.10)",
@@ -224,25 +184,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "04"
-      ],
-      "references_rules": [
-        "modelo_303.2025.cuota_reducido"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "IVA devengado — Régimen general (operaciones interiores)",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "07",
@@ -276,18 +226,15 @@
     },
     {
       "casilla_id": "08",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "21",
-        "references_casillas": []
-      },
+      "formula": null,
       "help": {
-        "en": "Rate 21 % Computed as 21. (Legal basis: ley, art. 90, BOE-A-1992-28740.)",
-        "es": "Tipo impositivo general (constante). Se calcula como 21. (Base legal: ley, art. 90, BOE-A-1992-28740.)",
-        "hu": "Kulcs 21 % Számítás: 21. (Jogalap: ley, art. 90, BOE-A-1992-28740.)"
+        "en": "Rate 21 % (Legal basis: ley, art. 90, BOE-A-1992-28740.)",
+        "es": "Tipo impositivo general (constante). (Base legal: ley, art. 90, BOE-A-1992-28740.)",
+        "hu": "Kulcs 21 % (Jogalap: ley, art. 90, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Rate 21 %",
@@ -298,9 +245,7 @@
       "modelo": "MODELO_303",
       "period": "2023Q1",
       "references_casillas": [],
-      "references_rules": [
-        "modelo_303.2025.tipo_general"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
@@ -308,11 +253,6 @@
       "source_section": "IVA devengado — Régimen general (operaciones interiores)",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "LIVA arts. 90/91: tipo IVA constante (régimen general).",
           "rule": "constant",
@@ -322,20 +262,15 @@
     },
     {
       "casilla_id": "09",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(iva.rate_general * 07)",
-        "references_casillas": [
-          "07"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Output VAT at 21 % (07 x 0.21). Computed as (iva.rate_general * 07). (Legal basis: ley, art. 90, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 21 %. Se calcula como (iva.rate_general * 07). (Base legal: ley, art. 90, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 21 %-on (07 x 0.21). Számítás: (iva.rate_general * 07). (Jogalap: ley, art. 90, BOE-A-1992-28740.)"
+        "en": "Output VAT at 21 % (07 x 0.21) (Legal basis: ley, art. 90, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 21 % (Base legal: ley, art. 90, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 21 %-on (07 x 0.21) (Jogalap: ley, art. 90, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Output VAT at 21 % (07 x 0.21)",
@@ -345,25 +280,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "07"
-      ],
-      "references_rules": [
-        "modelo_303.2025.cuota_general"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "IVA devengado — Régimen general (operaciones interiores)",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "28",
@@ -847,29 +772,15 @@
     },
     {
       "casilla_id": "44",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(29 + 31 + 33 + 35 + 37 + 39 + 40 + 41 + 42 + 43)",
-        "references_casillas": [
-          "29",
-          "31",
-          "33",
-          "35",
-          "37",
-          "39",
-          "40",
-          "41",
-          "42",
-          "43"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total deductible (Σ deductibles + adjustments). Computed as (29 + 31 + 33 + 35 + 37 + 39 + 40 + 41 + 42 + 43). (Legal basis: ley, art. 92, BOE-A-1992-28740.)",
-        "es": "Total a deducir. Se calcula como (29 + 31 + 33 + 35 + 37 + 39 + 40 + 41 + 42 + 43). (Base legal: ley, art. 92, BOE-A-1992-28740.)",
-        "hu": "Összes levonható (Σ levonások + helyesbítések). Számítás: (29 + 31 + 33 + 35 + 37 + 39 + 40 + 41 + 42 + 43). (Jogalap: ley, art. 92, BOE-A-1992-28740.)"
+        "en": "Total deductible (Σ deductibles + adjustments) (Legal basis: ley, art. 92, BOE-A-1992-28740.)",
+        "es": "Total a deducir (Base legal: ley, art. 92, BOE-A-1992-28740.)",
+        "hu": "Összes levonható (Σ levonások + helyesbítések) (Jogalap: ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Total deductible (Σ deductibles + adjustments)",
@@ -879,54 +790,27 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "29",
-        "31",
-        "33",
-        "35",
-        "37",
-        "39",
-        "40",
-        "41",
-        "42",
-        "43"
-      ],
-      "references_rules": [
-        "modelo_303.2025.total_deducible"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "IVA deducible y resultado régimen general",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "45",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((03 + 06 + 09) - 44)",
-        "references_casillas": [
-          "03",
-          "06",
-          "09",
-          "44"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Régimen general result ((03+06+09) - 44). Computed as ((03 + 06 + 09) - 44). (Legal basis: ley, art. 92, BOE-A-1992-28740.)",
-        "es": "Resultado régimen general. Se calcula como ((03 + 06 + 09) - 44). (Base legal: ley, art. 92, BOE-A-1992-28740.)",
-        "hu": "Régimen general eredmény ((03+06+09) - 44). Számítás: ((03 + 06 + 09) - 44). (Jogalap: ley, art. 92, BOE-A-1992-28740.)"
+        "en": "Régimen general result ((03+06+09) - 44) (Legal basis: ley, art. 92, BOE-A-1992-28740.)",
+        "es": "Resultado régimen general (Base legal: ley, art. 92, BOE-A-1992-28740.)",
+        "hu": "Régimen general eredmény ((03+06+09) - 44) (Jogalap: ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Régimen general result ((03+06+09) - 44)",
@@ -936,45 +820,27 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "03",
-        "06",
-        "09",
-        "44"
-      ],
-      "references_rules": [
-        "modelo_303.2025.resultado_regimen_general"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "IVA deducible y resultado régimen general",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "64",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(45 + 0)",
-        "references_casillas": [
-          "45"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Sum of partial results (= 45 in v1). Computed as (45 + 0). (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Suma de resultados. Se calcula como (45 + 0). (Base legal: ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Részeredmények összege (= 45 v1-ben). Számítás: (45 + 0). (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Sum of partial results (= 45 in v1) (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Suma de resultados (Base legal: ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Részeredmények összege (= 45 v1-ben) (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Sum of partial results (= 45 in v1)",
@@ -984,25 +850,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "45"
-      ],
-      "references_rules": [
-        "modelo_303.2025.suma_resultados"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "Resultado de la liquidación — atribución al Estado",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "65",
@@ -1042,21 +898,15 @@
     },
     {
       "casilla_id": "66",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((65 * 64) / 100)",
-        "references_casillas": [
-          "65",
-          "64"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Attributable to the State (64 x 65 ÷ 100). Computed as ((65 * 64) / 100). (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Atribuible al Estado. Se calcula como ((65 * 64) / 100). (Base legal: ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Államnak juttatott rész (64 x 65 ÷ 100). Számítás: ((65 * 64) / 100). (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Attributable to the State (64 x 65 ÷ 100) (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Atribuible al Estado (Base legal: ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Államnak juttatott rész (64 x 65 ÷ 100) (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Attributable to the State (64 x 65 ÷ 100)",
@@ -1066,26 +916,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "65",
-        "64"
-      ],
-      "references_rules": [
-        "modelo_303.2025.atribuible_estado"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "Resultado de la liquidación — atribución al Estado",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "67",
@@ -1119,21 +958,15 @@
     },
     {
       "casilla_id": "69",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(66 - 67)",
-        "references_casillas": [
-          "66",
-          "67"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Result (66 - 67). Computed as (66 - 67). (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Resultado. Se calcula como (66 - 67). (Base legal: ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Eredmény (66 - 67). Számítás: (66 - 67). (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Result (66 - 67) (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Resultado (Base legal: ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Eredmény (66 - 67) (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Result (66 - 67)",
@@ -1143,43 +976,27 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "66",
-        "67"
-      ],
-      "references_rules": [
-        "modelo_303.2025.resultado"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "Resultado de la autoliquidación",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "71",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(69 + 0)",
-        "references_casillas": [
-          "69"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Self-assessment result (= 69 in v1). Computed as (69 + 0). (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Resultado de la autoliquidación. Se calcula como (69 + 0). (Base legal: ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Önadózás eredménye (= 69 v1-ben). Számítás: (69 + 0). (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Self-assessment result (= 69 in v1) (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Resultado de la autoliquidación (Base legal: ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Önadózás eredménye (= 69 v1-ben) (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Self-assessment result (= 69 in v1)",
@@ -1189,25 +1006,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
       "period": "2023Q1",
-      "references_casillas": [
-        "69"
-      ],
-      "references_rules": [
-        "modelo_303.2025.resultado_autoliquidacion"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2023.html",
       "source_page": 1,
       "source_section": "Resultado de la autoliquidación",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     }
   ]
 }

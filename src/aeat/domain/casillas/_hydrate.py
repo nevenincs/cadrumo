@@ -89,37 +89,73 @@ BOE_193_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
 # ---------------------------------------------------------------------
 
 
-def _render_operand(node: object) -> str:
+def _format_decimal(value: Decimal) -> str:
+    """Render a Decimal as a compact decimal literal (no trailing zeros)."""
+    s = format(value.normalize(), "f")
+    if "." in s and "e" not in s.lower():
+        s = s.rstrip("0").rstrip(".")
+    return s or "0"
+
+
+def _render_param_value(param_id: str, params: dict[str, Decimal] | None) -> str:
+    """Return the parameter's resolved value as a percent / decimal string.
+
+    Renders rates that look like ``0.21`` as ``21%`` and other small
+    fractions similarly so the resulting expression reads naturally
+    (``21% * 07`` rather than ``0.21 * 07``).
+    """
+    if not params or param_id not in params:
+        return param_id
+    value = params[param_id]
+    if Decimal("0") < value < Decimal("1") and abs(value) >= Decimal("0.0001"):
+        pct = value * Decimal(100)
+        return f"{_format_decimal(pct)}%"
+    return _format_decimal(value)
+
+
+def _render_operand(node: object, *, params: dict[str, Decimal] | None = None) -> str:
     if isinstance(node, FormulaCasillaRef):
         return node.casilla_id
     if isinstance(node, Literal):
         v = node.value
-        s = format(v.normalize(), "f") if isinstance(v, Decimal) else str(v)
-        return s.rstrip("0").rstrip(".") if "." in s and "e" not in s.lower() else s
+        if isinstance(v, Decimal):
+            return _format_decimal(v)
+        return str(v)
     if isinstance(node, ParamRef):
-        return node.param_id
+        return _render_param_value(node.param_id, params)
     if isinstance(node, RoundFormula):
-        # Outer round wrapper from the formula() helper — unwrap.
-        return _render_operand(node.operands[0])
+        return _render_operand(node.operands[0], params=params)
     if isinstance(node, AddFormula):
-        return "(" + " + ".join(_render_operand(o) for o in node.operands) + ")"
+        return "(" + " + ".join(_render_operand(o, params=params) for o in node.operands) + ")"
     if isinstance(node, SubFormula):
-        return "(" + _render_operand(node.operands[0]) + " - " + _render_operand(node.operands[1]) + ")"
+        return (
+            "("
+            + _render_operand(node.operands[0], params=params)
+            + " - "
+            + _render_operand(node.operands[1], params=params)
+            + ")"
+        )
     if isinstance(node, MulFormula):
-        return "(" + " * ".join(_render_operand(o) for o in node.operands) + ")"
+        return "(" + " * ".join(_render_operand(o, params=params) for o in node.operands) + ")"
     if isinstance(node, DivFormula):
-        return "(" + _render_operand(node.operands[0]) + " / " + _render_operand(node.operands[1]) + ")"
+        return (
+            "("
+            + _render_operand(node.operands[0], params=params)
+            + " / "
+            + _render_operand(node.operands[1], params=params)
+            + ")"
+        )
     if isinstance(node, MaxFormula):
-        return "max(" + ", ".join(_render_operand(o) for o in node.operands) + ")"
+        return "max(" + ", ".join(_render_operand(o, params=params) for o in node.operands) + ")"
     if isinstance(node, MinFormula):
-        return "min(" + ", ".join(_render_operand(o) for o in node.operands) + ")"
+        return "min(" + ", ".join(_render_operand(o, params=params) for o in node.operands) + ")"
     if isinstance(node, ClampPositiveFormula):
-        return "max(0, " + _render_operand(node.operands[0]) + ")"
+        return "max(0, " + _render_operand(node.operands[0], params=params) + ")"
     if isinstance(node, PercentFormula):
         rate, base = node.operands
-        return "(" + _render_operand(rate) + " * " + _render_operand(base) + ")"
+        return "(" + _render_operand(rate, params=params) + " * " + _render_operand(base, params=params) + ")"
     if isinstance(node, BracketsFormula):
-        return "brackets(" + _render_operand(node.operands[0]) + ")"
+        return "brackets(" + _render_operand(node.operands[0], params=params) + ")"
     return repr(node)
 
 
@@ -1349,6 +1385,7 @@ def _record_from_ruleset_casilla(
     references_rules: tuple[str, ...],
     source_url: str,
     section: str,
+    computed_override: bool | None = None,
 ) -> CasillaRecord:
     label = dict(cdef.label)
     legal_hint = _legal_hint(cdef.legal_basis)
@@ -1365,6 +1402,8 @@ def _record_from_ruleset_casilla(
         else None
     )
 
+    computed = cdef.computed if computed_override is None else computed_override
+
     return CasillaRecord(
         synthetic=False,
         modelo=f"MODELO_{modelo}",
@@ -1375,11 +1414,11 @@ def _record_from_ruleset_casilla(
         data_type=cdef.data_type,
         select_options=None,
         required=False,
-        computed=cdef.computed,
+        computed=computed,
         formula=formula_obj,
         references_casillas=tuple(formula_refs),
         references_rules=tuple(references_rules),
-        validation=_validation_for(modelo, cdef.casilla_id, cdef.computed),
+        validation=_validation_for(modelo, cdef.casilla_id, computed),
         source_manual_url=source_url,
         source_page=1,
         source_section=section,
@@ -1396,25 +1435,43 @@ def _records_from_ruleset(
     ruleset: Ruleset,
     source_url: str,
     extra_rulesets: list[Ruleset] | None = None,
+    link_formulas: bool = True,
 ) -> list[CasillaRecord]:
     formula_by_casilla = {f.casilla_id: f for f in ruleset.formulas}
     extra_formula_ids: dict[str, list[str]] = {}
     for extra in extra_rulesets or ():
         for f in extra.formulas:
             extra_formula_ids.setdefault(f.casilla_id, []).append(f.formula_id)
+    # Resolve parameter values active on the ruleset's effective_from.
+    params_resolved: dict[str, Decimal] = {}
+    try:
+        for param_id in ruleset.parameters.entries.keys():
+            params_resolved[param_id] = ruleset.parameters.resolve(param_id, on=ruleset.effective_from)
+    except Exception:
+        params_resolved = {}
     records: list[CasillaRecord] = []
 
     for cdef in ruleset.casillas:
         f = formula_by_casilla.get(cdef.casilla_id)
-        if f is not None:
+        if link_formulas and f is not None:
             inner = f.formula.operands[0] if isinstance(f.formula, RoundFormula) else f.formula
-            expr = _render_operand(inner)
+            expr = _render_operand(inner, params=params_resolved)
             refs = tuple(_collect_casilla_refs(f.formula))
             rules_ref: tuple[str, ...] = (f.formula_id,) + tuple(extra_formula_ids.get(cdef.casilla_id, ()))
+            computed = cdef.computed
+        elif f is not None:
+            # Schema-only fallback (cross-year): keep the casilla but
+            # drop the formula cross-link to avoid attaching a different
+            # year's ``formula_id`` to this period.
+            expr = None
+            refs = ()
+            rules_ref = ()
+            computed = False
         else:
             expr = None
             refs = ()
-            rules_ref = tuple(extra_formula_ids.get(cdef.casilla_id, ()))
+            rules_ref = tuple(extra_formula_ids.get(cdef.casilla_id, ())) if link_formulas else ()
+            computed = cdef.computed
         section = _section_for_casilla(modelo, cdef.casilla_id)
         records.append(
             _record_from_ruleset_casilla(
@@ -1426,6 +1483,7 @@ def _records_from_ruleset(
                 references_rules=rules_ref,
                 source_url=source_url,
                 section=section,
+                computed_override=computed,
             )
         )
     return records
@@ -1478,7 +1536,16 @@ def _record_from_manual(
 
 
 def _ruleset_for(modelo: str, year: int) -> Ruleset | None:
-    """Return the primary ruleset for (modelo, year) or None when missing."""
+    """Return the primary ruleset matching (modelo, year) exactly.
+
+    Returns None when no year-exact ruleset is registered. Fallback to
+    a different year is intentionally NOT done here — see
+    :func:`_schema_ruleset_for` for the schema fallback chain. The
+    caller cross-links a corpus record to ``formula_id``s only when the
+    year matches; using a different-year ruleset would attach a 2025
+    ``formula_id`` to a 2023 fiscal-period catalogue, which is a
+    legal-traceability lie.
+    """
     import importlib
 
     if modelo in {"190", "193", "347", "349"}:
@@ -1486,25 +1553,45 @@ def _ruleset_for(modelo: str, year: int) -> Ruleset | None:
     if modelo in {"036", "037", "232", "369", "720", "840"}:
         return None
 
-    candidates: list[str] = []
-    if modelo == "100":
-        candidates.append(f"aeat.domain.formulas._rulesets.modelo_100_{year}")
-        candidates.append("aeat.domain.formulas._rulesets.modelo_100_2025")
-    elif modelo == "200":
-        candidates.append(f"aeat.domain.formulas._rulesets.modelo_200_{year}")
-        candidates.append("aeat.domain.formulas._rulesets.modelo_200_2025")
-    elif modelo == "202":
-        candidates.append(f"aeat.domain.formulas._rulesets.modelo_202_{year}")
-        candidates.append("aeat.domain.formulas._rulesets.modelo_202_2025")
-    elif modelo in {"111", "115", "123", "130", "131", "180", "303", "390"}:
-        candidates.append(f"aeat.domain.formulas._rulesets.modelo_{modelo}_{year}")
-        candidates.append(f"aeat.domain.formulas._rulesets.modelo_{modelo}_2025")
-    else:
-        candidates.append(f"aeat.domain.formulas._rulesets.modelo_{modelo}_{year}")
-
+    candidates: list[str] = [f"aeat.domain.formulas._rulesets.modelo_{modelo}_{year}"]
     for mod_path in candidates:
         try:
             mod = importlib.import_module(mod_path)
+        except ModuleNotFoundError:
+            continue
+        return getattr(mod, "RULESET", None)
+    return None
+
+
+def _schema_ruleset_for(modelo: str, year: int) -> Ruleset | None:
+    """Return a ruleset whose ``casillas`` (labels, IDs, types) cover this year.
+
+    For years where the engine has no year-specific ruleset (e.g., M303
+    in 2023), fall back to the closest available ruleset's casilla
+    schema so the corpus still represents the form structure. Formulas
+    are NOT inherited across years; only labels / IDs / data types.
+    """
+    import importlib
+
+    exact = _ruleset_for(modelo, year)
+    if exact is not None:
+        return exact
+
+    if modelo in {"190", "193", "347", "349"}:
+        return None
+    if modelo in {"036", "037", "232", "369", "720", "840"}:
+        return None
+
+    fallback_years: list[int] = []
+    if year < 2024:
+        fallback_years = [2024, 2025, 2026]
+    elif year > 2026:
+        fallback_years = [2026, 2025, 2024]
+    else:
+        fallback_years = [year + 1, year - 1, 2025]
+    for fallback_year in fallback_years:
+        try:
+            mod = importlib.import_module(f"aeat.domain.formulas._rulesets.modelo_{modelo}_{fallback_year}")
         except ModuleNotFoundError:
             continue
         return getattr(mod, "RULESET", None)
@@ -1534,15 +1621,20 @@ def _additional_rulesets_for(modelo: str, year: int) -> list[Ruleset]:
 def generate_records(modelo: str, period: str, year: int) -> list[CasillaRecord]:
     src = _source_url_for(modelo, year)
 
-    ruleset = _ruleset_for(modelo, year)
-    if ruleset is not None:
-        extras = _additional_rulesets_for(modelo, year)
+    schema_ruleset = _schema_ruleset_for(modelo, year)
+    if schema_ruleset is not None:
+        # Cross-link formulas only when the year matches the ruleset's
+        # effective year — otherwise we'd attach a 2025 ``formula_id``
+        # to a 2023 fiscal-period catalogue, which is a legal lie.
+        primary_ruleset = _ruleset_for(modelo, year)
+        extras = _additional_rulesets_for(modelo, year) if primary_ruleset is not None else []
         records = _records_from_ruleset(
             modelo=modelo,
             period=period,
-            ruleset=ruleset,
+            ruleset=schema_ruleset,
             source_url=src,
             extra_rulesets=extras,
+            link_formulas=primary_ruleset is not None,
         )
         if modelo == "111":
             existing_ids = {r.casilla_id for r in records}
@@ -1605,13 +1697,36 @@ ALL_MODELOS: tuple[str, ...] = (
 )
 
 
+def _save_with_retry(catalogue: CasillaCatalogue, *, attempts: int = 5) -> None:
+    """Save the catalogue, retrying on transient OS errors.
+
+    Windows occasionally raises ``OSError: [Errno 22] Invalid argument``
+    when an indexer / antivirus / vaultspec-rag holds the file briefly.
+    Sleep+retry handles the common transient case without masking real
+    permission errors.
+    """
+    import time
+
+    last_exc: BaseException | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            save_casillas(catalogue)
+            return
+        except OSError as exc:
+            last_exc = exc
+            if attempt == attempts:
+                raise
+            time.sleep(0.2 * attempt)
+    if last_exc is not None:
+        raise last_exc
+
+
 def run() -> None:
     written = 0
     for modelo in ALL_MODELOS:
         meta = get_modelo(modelo)
         cadence = meta.cadence
 
-        # Modelo 100 also has 2021/2022 in the corpus tree.
         years = list(YEARS)
         if modelo == "100":
             years = [2021, 2022, 2023, 2024, 2025, 2026]
@@ -1624,7 +1739,7 @@ def run() -> None:
                     period=period,
                     records=tuple(records),
                 )
-                save_casillas(catalogue)
+                _save_with_retry(catalogue)
                 written += 1
     print(f"wrote {written} casilla catalogues to {CORPUS_ROOT}")
 

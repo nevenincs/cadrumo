@@ -64,21 +64,15 @@
     },
     {
       "casilla_id": "03",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(01 - 02)",
-        "references_casillas": [
-          "01",
-          "02"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Net return (01 - 02). Computed as (01 - 02). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Rendimiento neto. Se calcula como (01 - 02). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Nettó eredmény (01 - 02). Számítás: (01 - 02). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Net return (01 - 02) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Rendimiento neto (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Nettó eredmény (01 - 02) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Net return (01 - 02)",
@@ -88,43 +82,27 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "01",
-        "02"
-      ],
-      "references_rules": [
-        "modelo_130.2025.rendimiento_neto"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "I. Actividades económicas en estimación directa",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "04",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "max(0, (irpf.trimestral_rate * 03))",
-        "references_casillas": [
-          "03"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Fractional payment (20% of 03, clamped ≥ 0). Computed as max(0, (irpf.trimestral_rate * 03)). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Importe del pago fraccionado (20%). Se calcula como max(0, (irpf.trimestral_rate * 03)). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Részletfizetés összege (03 x 20%, nem-negatív). Számítás: max(0, (irpf.trimestral_rate * 03)). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Fractional payment (20% of 03, clamped ≥ 0) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Importe del pago fraccionado (20%) (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részletfizetés összege (03 x 20%, nem-negatív) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Fractional payment (20% of 03, clamped ≥ 0)",
@@ -134,12 +112,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "03"
-      ],
-      "references_rules": [
-        "modelo_130.2025.pago_fraccionado"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -147,11 +121,6 @@
       "source_section": "I. Actividades económicas en estimación directa",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
           "rule": "non_negative",
@@ -221,22 +190,15 @@
     },
     {
       "casilla_id": "07",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((04 - 05) - 06)",
-        "references_casillas": [
-          "04",
-          "05",
-          "06"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Partial Apartado I result (04 - 05 - 06). Computed as ((04 - 05) - 06). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Resultado parcial Apartado I. Se calcula como ((04 - 05) - 06). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "I. szakasz részösszeg (04 - 05 - 06). Számítás: ((04 - 05) - 06). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Partial Apartado I result (04 - 05 - 06) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Resultado parcial Apartado I (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "I. szakasz részösszeg (04 - 05 - 06) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Partial Apartado I result (04 - 05 - 06)",
@@ -246,14 +208,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "04",
-        "05",
-        "06"
-      ],
-      "references_rules": [
-        "modelo_130.2025.resultado_apartado_i"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -261,11 +217,6 @@
       "source_section": "I. Actividades económicas en estimación directa",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
           "rule": "non_negative",
@@ -305,20 +256,15 @@
     },
     {
       "casilla_id": "09",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(agraria.trimestral_rate * 08)",
-        "references_casillas": [
-          "08"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Fractional payment (2% of 08). Computed as (agraria.trimestral_rate * 08). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Importe del pago fraccionado (2%). Se calcula como (agraria.trimestral_rate * 08). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Részletfizetés összege (08 x 2%). Számítás: (agraria.trimestral_rate * 08). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Fractional payment (2% of 08) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Importe del pago fraccionado (2%) (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részletfizetés összege (08 x 2%) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Fractional payment (2% of 08)",
@@ -328,25 +274,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "08"
-      ],
-      "references_rules": [
-        "modelo_130.2025.pago_fraccionado_agraria"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "II. Actividades agrícolas, ganaderas, forestales y pesqueras",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "10",
@@ -380,21 +316,15 @@
     },
     {
       "casilla_id": "11",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(09 - 10)",
-        "references_casillas": [
-          "09",
-          "10"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Partial Apartado II result (09 - 10). Computed as (09 - 10). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Resultado parcial Apartado II. Se calcula como (09 - 10). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "II. szakasz részösszeg (09 - 10). Számítás: (09 - 10). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Partial Apartado II result (09 - 10) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Resultado parcial Apartado II (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "II. szakasz részösszeg (09 - 10) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Partial Apartado II result (09 - 10)",
@@ -404,13 +334,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "09",
-        "10"
-      ],
-      "references_rules": [
-        "modelo_130.2025.resultado_apartado_ii"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -418,11 +343,6 @@
       "source_section": "II. Actividades agrícolas, ganaderas, forestales y pesqueras",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
           "rule": "non_negative",
@@ -432,21 +352,15 @@
     },
     {
       "casilla_id": "12",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "max(0, (07 + 11))",
-        "references_casillas": [
-          "07",
-          "11"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Sum of Apartados I + II, clamped ≥ 0. Computed as max(0, (07 + 11)). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Suma de resultados parciales (nunca negativa). Se calcula como max(0, (07 + 11)). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Részösszegek összege, nem-negatív. Számítás: max(0, (07 + 11)). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Sum of Apartados I + II, clamped ≥ 0 (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Suma de resultados parciales (nunca negativa) (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részösszegek összege, nem-negatív (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Sum of Apartados I + II, clamped ≥ 0",
@@ -456,13 +370,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "07",
-        "11"
-      ],
-      "references_rules": [
-        "modelo_130.2025.suma_parciales"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -470,11 +379,6 @@
       "source_section": "III. Total liquidación trimestral (apartados I + II)",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
           "rule": "non_negative",
@@ -514,21 +418,15 @@
     },
     {
       "casilla_id": "14",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(12 - 13)",
-        "references_casillas": [
-          "12",
-          "13"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Net after minoration (12 - 13, signed). Computed as (12 - 13). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Neto tras minoración. Se calcula como (12 - 13). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Csökkentés utáni nettó (12 - 13, előjeles). Számítás: (12 - 13). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Net after minoration (12 - 13, signed) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Neto tras minoración (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Csökkentés utáni nettó (12 - 13, előjeles) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Net after minoration (12 - 13, signed)",
@@ -538,13 +436,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "12",
-        "13"
-      ],
-      "references_rules": [
-        "modelo_130.2025.neto_tras_minoracion"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -552,11 +445,6 @@
       "source_section": "III. Total liquidación trimestral (apartados I + II)",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
           "rule": "non_negative",
@@ -626,22 +514,15 @@
     },
     {
       "casilla_id": "17",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((14 - 15) - 16)",
-        "references_casillas": [
-          "14",
-          "15",
-          "16"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Difference (14 - 15 - 16, signed). Computed as ((14 - 15) - 16). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Diferencia. Se calcula como ((14 - 15) - 16). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Különbség (14 - 15 - 16, előjeles). Számítás: ((14 - 15) - 16). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Difference (14 - 15 - 16, signed) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Diferencia (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Különbség (14 - 15 - 16, előjeles) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Difference (14 - 15 - 16, signed)",
@@ -651,14 +532,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "14",
-        "15",
-        "16"
-      ],
-      "references_rules": [
-        "modelo_130.2025.diferencia"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -666,11 +541,6 @@
       "source_section": "Resultado final",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
           "rule": "non_negative",
@@ -710,21 +580,15 @@
     },
     {
       "casilla_id": "19",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(17 - 18)",
-        "references_casillas": [
-          "17",
-          "18"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Final result (17 - 18, signed). Computed as (17 - 18). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
-        "es": "Resultado final. Se calcula como (17 - 18). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
-        "hu": "Végeredmény (17 - 18, előjeles). Számítás: (17 - 18). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
+        "en": "Final result (17 - 18, signed) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Resultado final (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Végeredmény (17 - 18, előjeles) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Final result (17 - 18, signed)",
@@ -734,13 +598,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
       "period": "2023Q4",
-      "references_casillas": [
-        "17",
-        "18"
-      ],
-      "references_rules": [
-        "modelo_130.2025.resultado_final"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -748,11 +607,6 @@
       "source_section": "Resultado final",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110: pago fraccionado y resultado parcial no pueden ser negativos.",
           "rule": "non_negative",
