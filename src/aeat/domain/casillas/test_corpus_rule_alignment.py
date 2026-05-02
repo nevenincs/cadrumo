@@ -383,3 +383,18 @@ def test_corpus_must_derive_validation_aligns_with_computed_flag() -> None:
                 failures.append(f"{modelo} {period} cas {rec.casilla_id}: must_derive on a non-computed record")
     if failures:
         pytest.fail("Corpus computed/validation drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_formula_presence_aligns_with_computed_flag() -> None:
+    """``computed=True`` ↔ a non-null ``formula`` reference."""
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            if rec.computed and rec.formula is None:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: computed but formula is None")
+            if not rec.computed and rec.formula is not None:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: not computed but carries a formula")
+    if failures:
+        pytest.fail("Corpus formula/computed drift:\n" + "\n".join(f" - {f}" for f in failures))
