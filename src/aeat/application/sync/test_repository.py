@@ -23,7 +23,6 @@ from ...adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from . import JsonFileDivergenceRepository
 from ...domain.sync import (
     CasillaAddedWithDefault,
     DivergenceClassification,
@@ -32,6 +31,7 @@ from ...domain.sync import (
     ModeloIdentifier,
     ResolutionState,
 )
+from . import JsonFileDivergenceRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

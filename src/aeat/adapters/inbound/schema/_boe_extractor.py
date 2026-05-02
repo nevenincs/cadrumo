@@ -1,4 +1,4 @@
-﻿"""BOE-Orden extractor backend for AEAT modelo schemas.
+"""BOE-Orden extractor backend for AEAT modelo schemas.
 
 This module owns the pipeline that reads primary AEAT sources
 (currently BOE-published *Ordenes ministeriales*) and emits the typed,
@@ -487,4 +487,5 @@ class BoeOrdenExtractor:
 
 
 __all__ = ("BoeOrdenExtractor",)
+
 

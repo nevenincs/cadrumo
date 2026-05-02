@@ -1,13 +1,15 @@
 """Divergence taxonomy and record types.
 
-Every divergence emitted by the classifier is a concrete member of the
-``DivergencePayload`` discriminated union. Each member carries only the
-semantic data needed to describe the delta. Classification is assigned
-per-kind via a static table and is therefore deterministic.
+Every divergence emitted by the classifier is a concrete member of
+:data:`DivergencePayload`, a discriminated union over the
+:class:`DivergenceKind`-tagged payload models. Each member carries only
+the semantic data needed to describe the delta; classification is
+assigned per-kind via the static :data:`_CLASSIFICATION_TABLE` and is
+therefore deterministic.
 
-The bounded-auto-heal invariant — classification ∈ ADDITIVE AND kind ∈
-allowlist — is enforced in ``_dispatcher.py``; this module only
-provides the typed building blocks.
+The bounded-auto-heal invariant -- classification in ``ADDITIVE`` AND
+kind in the allowlist -- is enforced by the healing dispatcher; this
+module only provides the typed building blocks.
 """
 
 from __future__ import annotations
@@ -27,13 +29,14 @@ from ._protocols import ModeloIdentifier, PortalIdentifier
 class DivergenceClassification(StrEnum):
     """Semantic bucket for any single divergence.
 
-    - ``ADDITIVE``: live is a pure superset of local; safe to heal if
-      the kind is allowlisted.
-    - ``BREAKING``: live contradicts local in a way that requires
-      human review.
-    - ``BENIGN``: cosmetic / audit-only delta.
-    - ``SUSPICIOUS``: unexpected shape; always escalates and triggers
-      the suspicious runbook.
+    Attributes:
+        ADDITIVE: Live is a pure superset of local; safe to heal when
+            the kind is allowlisted.
+        BREAKING: Live contradicts local in a way that requires human
+            review.
+        BENIGN: Cosmetic / audit-only delta.
+        SUSPICIOUS: Unexpected shape; always escalates and triggers
+            the suspicious runbook.
     """
 
     ADDITIVE = "additive"
@@ -45,10 +48,25 @@ class DivergenceClassification(StrEnum):
 class DivergenceKind(StrEnum):
     """Concrete shape of a single divergence.
 
-    Every member of :class:`DivergencePayload` uses one of these as its
+    Every member of :data:`DivergencePayload` uses one of these as its
     ``kind`` discriminator. Additive kinds that are auto-heal candidates
     are listed first; the remaining kinds are either breaking or
     suspicious.
+
+    Attributes:
+        CASILLA_ADDED_WITH_DEFAULT: Live introduced a new casilla with
+            an explicit default value.
+        LABEL_TRANSLATION_ADDED: A new language key appeared inside a
+            :class:`aeat.core.i18n.Translatable` label.
+        VIGENCIA_EXTENDED: The modelo's ``vigencia_end`` moved forward.
+        CASILLA_REMOVED: A casilla present locally is missing live.
+        CASILLA_TYPE_CHANGED: The type of an existing casilla changed.
+        FORMULA_CHANGED: The formula on a casilla changed.
+        LABEL_ES_CHANGED: The authoritative ``es`` label on a casilla
+            changed.
+        PORTAL_URL_CHANGED: A portal link URL changed.
+        FILING_STATUS_CHANGED: A filing entry's status changed live.
+        UNKNOWN_SHAPE: Live payload shape failed semantic recognition.
     """
 
     CASILLA_ADDED_WITH_DEFAULT = "casilla_added_with_default"
@@ -64,7 +82,15 @@ class DivergenceKind(StrEnum):
 
 
 class ResolutionState(StrEnum):
-    """Operator-facing resolution state for a divergence record."""
+    """Operator-facing resolution state for a divergence record.
+
+    Attributes:
+        PENDING: Awaiting triage; the default for newly emitted records.
+        AUTO_HEALED: Healed automatically by an additive strategy.
+        HUMAN_APPROVED: Operator confirmed the divergence and applied a
+            healing action.
+        REJECTED: Operator explicitly refused to heal.
+    """
 
     PENDING = "pending"
     AUTO_HEALED = "auto_healed"
@@ -203,12 +229,33 @@ _CLASSIFICATION_TABLE: Mapping[DivergenceKind, DivergenceClassification] = Mappi
 
 
 def classify_kind(kind: DivergenceKind) -> DivergenceClassification:
-    """Return the static classification bucket for a divergence kind."""
+    """Return the static classification bucket for a divergence kind.
+
+    Args:
+        kind: The :class:`DivergenceKind` discriminator.
+
+    Returns:
+        The deterministic :class:`DivergenceClassification` bucket
+        registered for ``kind`` in the static classification table.
+    """
     return _CLASSIFICATION_TABLE[kind]
 
 
 class DivergenceRecord(BaseModel):
-    """Persistable divergence record for a single delta."""
+    """Persistable divergence record for a single delta.
+
+    Attributes:
+        record_id: Stable identifier (typically a hex UUID).
+        detected_at: UTC timestamp when the classifier emitted the
+            record.
+        modelo: Optional :class:`aeat.domain.sync._protocols.ModeloIdentifier`
+            scoping the divergence; ``None`` for portal-level deltas.
+        classification: Bucket assigned by :func:`classify_kind`.
+        payload: The concrete typed payload describing the delta.
+        resolution_state: Operator-facing lifecycle state; defaults to
+            :attr:`ResolutionState.PENDING` on creation.
+        notes: Optional free-text reviewer note.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 

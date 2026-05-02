@@ -1,4 +1,33 @@
-"""Sync domain package."""
+"""Self-healing sync domain package.
+
+Re-exports the typed building blocks consumed by the sync runner:
+
+- :class:`DivergenceClassifier` -- diffs paired wire payloads and emits
+  :class:`DivergenceRecord` instances.
+- :class:`WireValidator` -- strict JSON-to-pydantic validator for AEAT
+  wire payloads.
+- :class:`DivergencePayload` discriminated union and the concrete
+  :class:`CasillaAddedWithDefault` / :class:`CasillaRemoved` /
+  :class:`CasillaTypeChanged` / :class:`FormulaChanged` /
+  :class:`LabelEsChanged` / :class:`LabelTranslationAdded` /
+  :class:`PortalUrlChanged` / :class:`FilingStatusChanged` /
+  :class:`UnknownShape` / :class:`VigenciaExtended` payload variants.
+- :class:`DivergenceClassification`, :class:`DivergenceKind`,
+  :class:`ResolutionState`, :class:`DivergenceRecord` -- taxonomy and
+  record types persisted by the divergence repository.
+- :class:`WireCasilla` / :class:`WireFilingEntry` /
+  :class:`WireFilingHistory` / :class:`WireModeloDefinition` /
+  :class:`WirePayloadBase` / :class:`WirePortalLink` /
+  :class:`WirePortalManifest` -- strict frozen wire payload schemas.
+- :class:`SyncError` and its subclasses
+  (:class:`WireValidationError`, :class:`DivergenceClassificationError`,
+  :class:`HealingError`, :class:`DivergenceRepositoryError`).
+- :class:`ModeloIdentifier`, :class:`PortalIdentifier`,
+  :class:`CertificateContextPreloader`, :class:`LocalCatalogueLoader` --
+  Protocol surfaces and typed identifiers used at the live boundary.
+- :func:`classify_kind` -- looks up the static classification bucket
+  for a given :class:`DivergenceKind`.
+"""
 
 from __future__ import annotations
 

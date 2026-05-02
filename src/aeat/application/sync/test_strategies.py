@@ -14,12 +14,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from . import (
-    AdditiveAllowlistStrategy,
-    BenignRecordStrategy,
-    EscalateStrategy,
-    StrategyAction,
-)
 from ...domain.sync import (
     CasillaAddedWithDefault,
     DivergenceClassification,
@@ -30,6 +24,12 @@ from ...domain.sync import (
     ModeloIdentifier,
     ResolutionState,
     classify_kind,
+)
+from . import (
+    AdditiveAllowlistStrategy,
+    BenignRecordStrategy,
+    EscalateStrategy,
+    StrategyAction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

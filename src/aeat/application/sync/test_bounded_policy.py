@@ -17,13 +17,6 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from . import (
-    AdditiveAllowlistStrategy,
-    BenignRecordStrategy,
-    EscalateStrategy,
-    HealingDispatcher,
-    StrategyAction,
-)
 from ...domain.sync import (
     CasillaAddedWithDefault,
     CasillaRemoved,
@@ -42,6 +35,13 @@ from ...domain.sync import (
     UnknownShape,
     VigenciaExtended,
     classify_kind,
+)
+from . import (
+    AdditiveAllowlistStrategy,
+    BenignRecordStrategy,
+    EscalateStrategy,
+    HealingDispatcher,
+    StrategyAction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

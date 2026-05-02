@@ -1,8 +1,11 @@
 """Error hierarchy for the self-healing sync runner.
 
-All sync-layer errors inherit from :class:`SyncError` which in turn
-inherits from :class:`aeat.core.errors.AeatError`. See the ADR
-[[2026-04-12-self-healing-sync-adr]] for the full hierarchy rationale.
+All sync-layer errors inherit from :class:`SyncError`, which in turn
+inherits from :class:`aeat.core.errors.AeatError`. The narrow subclass
+hierarchy lets callers catch specific failures
+(:class:`WireValidationError`, :class:`DivergenceClassificationError`,
+:class:`HealingError`, :class:`DivergenceRepositoryError`) without
+swallowing unrelated sync errors.
 """
 
 from __future__ import annotations

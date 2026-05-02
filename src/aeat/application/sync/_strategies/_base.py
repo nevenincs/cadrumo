@@ -3,8 +3,8 @@
 Defines the :class:`HealingStrategy` interface every concrete strategy must
 implement and the :class:`StrategyOutcome` record returned by every strategy
 application. Concrete strategies live alongside this module
-(:class:`aeat.application.sync._strategies._benign.BenignRecordStrategy`,
-:class:`aeat.application.sync._strategies._escalate.EscalateStrategy`, and the
+(:class:`aeat.application.sync._strategies.BenignRecordStrategy`,
+:class:`aeat.application.sync._strategies.EscalateStrategy`, and the
 additive-allowlist strategy) and are composed by the dispatcher in
 :mod:`aeat.application.sync`.
 """
@@ -92,7 +92,7 @@ class HealingStrategy(ABC):
             record: The :class:`aeat.domain.sync.DivergenceRecord` to process.
             auto_heal: Whether the operator opted into auto-healing for this
                 run. Strategies that never auto-heal (e.g.
-                :class:`aeat.application.sync._strategies._escalate.EscalateStrategy`)
+                :class:`aeat.application.sync._strategies.EscalateStrategy`)
                 ignore the flag.
 
         Returns:
