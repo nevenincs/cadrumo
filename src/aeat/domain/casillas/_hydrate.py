@@ -12,7 +12,7 @@ modelo/year/period the project supports (2023-2026). Sources:
 
 - Modelos whose extractor exposes ``casilla_ids`` / ``text_casilla_ids``
   (190/193/347/349/840) and modelos extracted via named fields
-  (036/037/232/369/720) are hydrated from the curated quad-lingual data
+  (036/037/232/369/720) are hydrated from the curated multilingual data
   inside this script — sourced from BOE Órdenes and AEAT Manuales
   Prácticos for the supported period.
 
@@ -193,6 +193,8 @@ class _Casilla:
     help_es: str
     help_en: str
     help_hu: str
+    label_ca: str = ""
+    help_ca: str = ""
     data_type: CasillaDataType = CasillaDataType.CURRENCY_EUR
     computed: bool = False
     formula_expression: str | None = None
@@ -200,6 +202,30 @@ class _Casilla:
     references_rules: tuple[str, ...] = ()
     section: str = ""
     select_options: tuple[SelectOption, ...] | None = None
+
+    def label_for_languages(self, languages: tuple[str, ...]) -> dict[str, str]:
+        """Return ``{lang: label}`` for every language code in ``languages``.
+
+        Reads ``label_<lang>`` attributes via reflection, with the
+        Spanish authoritative text as a per-Generalitat fallback when
+        a language-specific label is empty. Iterating the engine's
+        :class:`Language` enum avoids hardcoding the language count.
+        """
+        es = self.label_es
+        out: dict[str, str] = {}
+        for lang in languages:
+            value = getattr(self, f"label_{lang}", "")
+            out[lang] = value or es
+        return out
+
+    def help_for_languages(self, languages: tuple[str, ...]) -> dict[str, str]:
+        """Return ``{lang: help}`` for every language code in ``languages``."""
+        es = self.help_es
+        out: dict[str, str] = {}
+        for lang in languages:
+            value = getattr(self, f"help_{lang}", "")
+            out[lang] = value or es
+        return out
 
 
 # ----- Modelo 036 / 037 (declaración censal) ------------------------
@@ -1063,26 +1089,113 @@ def _upstream_modelos(modelo: str) -> tuple[str, ...]:
     return tuple(sorted(upstream))
 
 
-def _cross_modelo_hint(modelo: str) -> str:
-    """Return a short Spanish note pointing at the upstream modelos, if any.
+# Per-language phrasing tables, keyed on Language.value. Adding or
+# removing a language is done by extending the engine's Language
+# enum and these tables; nothing in this module hardcodes the
+# language count.
+_CROSS_MODELO_PHRASING_DEFAULT: dict[str, dict[str, str]] = {
+    "es": {"separator": " y ", "modelo_word": "modelo", "lead": "Resumen anual que consolida los datos trimestrales del"},
+    "en": {"separator": " and ", "modelo_word": "form", "lead": "Annual summary consolidating the quarterly data of"},
+    "ca": {"separator": " i ", "modelo_word": "model", "lead": "Resum anual que consolida les dades trimestrals del"},
+    "hu": {"separator": " és ", "modelo_word_suffix": "-os modell", "lead": "Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze:"},
+}
 
-    Sourced from :class:`ModeloMetadata.caps_into` in the engine so the
-    upstream relationship is never re-declared in the corpus layer.
+_CROSS_MODELO_PHRASING_M100: dict[str, dict[str, str]] = {
+    "es": {"separator": " y ", "modelo_word": "modelo", "lead": "Declaración anual del IRPF; recoge los pagos fraccionados de los"},
+    "en": {"separator": " and ", "modelo_word": "form", "lead": "Annual IRPF declaration; consolidates the fractional payments of"},
+    "ca": {"separator": " i ", "modelo_word": "model", "lead": "Declaració anual de l'IRPF; recull els pagaments fraccionats dels"},
+    "hu": {"separator": " és ", "modelo_word_suffix": "-os modell", "lead": "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:"},
+}
+
+_CROSS_MODELO_PHRASING_M200: dict[str, dict[str, str]] = {
+    "es": {"separator": " y ", "modelo_word": "modelo", "lead": "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del"},
+    "en": {"separator": " and ", "modelo_word": "form", "lead": "Annual Corporate Income Tax declaration; consolidates the fractional payments of"},
+    "ca": {"separator": " i ", "modelo_word": "model", "lead": "Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del"},
+    "hu": {"separator": " és ", "modelo_word_suffix": "-os modell", "lead": "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:"},
+}
+
+
+def _supported_language_codes() -> tuple[str, ...]:
+    """Return the language codes from the engine's :class:`Language` enum.
+
+    The corpus' multilingual-ness is sourced from the engine, not
+    hardcoded here. Adding a language to ``Language`` widens the
+    corpus automatically (provided the per-language phrasing tables
+    in this module are updated to match).
     """
+    from ...core.i18n import Language
+
+    return tuple(lang.value for lang in Language)
+
+
+def _expand_label_to_supported_languages(label: dict[str, str]) -> dict[str, str]:
+    """Return ``label`` expanded to every supported language.
+
+    Missing keys default to the Spanish authoritative text. The
+    expansion ensures every committed corpus record carries a
+    language-complete ``label`` per the engine's
+    :class:`aeat.core.i18n.Language` enum, regardless of which subset
+    the upstream ruleset has curated.
+    """
+    es = label.get("es", "")
+    out = dict(label)
+    for lang in _supported_language_codes():
+        if lang not in out or not out[lang]:
+            out[lang] = es
+    return out
+
+
+def _format_modelo_token(lang: str, table: dict[str, dict[str, str]], modelo: str) -> str:
+    spec = table[lang]
+    if "modelo_word_suffix" in spec:
+        return f"{modelo}{spec['modelo_word_suffix']}"
+    return f"{spec['modelo_word']} {modelo}"
+
+
+def _cross_modelo_hint_for_languages(modelo: str) -> dict[str, str]:
+    """Return ``{lang: hint}`` upstream-modelo notes for every Language enum entry."""
     upstream = _upstream_modelos(modelo)
+    languages = _supported_language_codes()
     if not upstream:
-        return ""
+        return {lang: "" for lang in languages}
+    table = _CROSS_MODELO_PHRASING_DEFAULT
     if modelo == "100":
-        # Annual IRPF — caps in pagos fraccionados from M130 / M131.
-        joined = " y ".join(f"modelo {m}" for m in upstream)
-        return f" Declaración anual del IRPF; recoge los pagos fraccionados de los {joined}."
-    if modelo == "200":
-        joined = " y ".join(f"modelo {m}" for m in upstream)
-        return f" Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del {joined}."
-    # Generic resumen-anual phrasing for the IRPF retention summaries
-    # and the M390 IVA summary.
-    joined = " y ".join(f"modelo {m}" for m in upstream)
-    return f" Resumen anual que consolida los datos trimestrales del {joined}."
+        table = _CROSS_MODELO_PHRASING_M100
+    elif modelo == "200":
+        table = _CROSS_MODELO_PHRASING_M200
+    out: dict[str, str] = {}
+    for lang in languages:
+        if lang not in table:
+            out[lang] = ""
+            continue
+        spec = table[lang]
+        joined = spec["separator"].join(_format_modelo_token(lang, table, m) for m in upstream)
+        out[lang] = f" {spec['lead']} {joined}."
+    return out
+
+
+def _cross_modelo_hint(modelo: str) -> str:
+    """Return only the Spanish cross-modelo hint (kept for backwards compatibility)."""
+    return _cross_modelo_hint_for_languages(modelo).get("es", "")
+
+
+# Per-language formula and legal-hint phrasing. Adding a language
+# means extending these tables; the corpus help generator iterates
+# every Language enum entry and composes from these tables — no
+# language count is hardcoded.
+_FORMULA_CLAUSE_PREFIX: dict[str, str] = {
+    "es": " Se calcula como ",
+    "en": " Computed as ",
+    "ca": " Es calcula com ",
+    "hu": " Számítás: ",
+}
+
+_LEGAL_HINT_LABEL: dict[str, str] = {
+    "es": "Base legal:",
+    "en": "Legal basis:",
+    "ca": "Base legal:",
+    "hu": "Jogalap:",
+}
 
 
 def _help_from_label(
@@ -1091,70 +1204,56 @@ def _help_from_label(
     *,
     formula_expression: str | None = None,
     legal_hint: str = "",
-    cross_modelo_hint: str = "",
+    cross_modelo_hints: dict[str, str] | None = None,
 ) -> dict[str, str]:
-    """Return a quad-lingual help body distinct from the label.
+    """Return a help body distinct from the label, in every supported language.
+
+    Iterates :class:`aeat.core.i18n.Language` so the language count is
+    not hardcoded. Per-language phrasing comes from
+    :data:`_FORMULA_CLAUSE_PREFIX`, :data:`_LEGAL_HINT_LABEL` and the
+    ``cross_modelo_hints`` parameter (one entry per language code).
 
     Priority:
-      1. ``notes_es`` (engine-author note in Spanish) — paired with the
-         English / Hungarian labels for cross-lingual context.
+      1. ``notes_es`` (engine-author Spanish note) — paired with the
+         non-Spanish labels for cross-lingual context.
       2. Computed casillas: append a formula reminder so the help
          carries calculation provenance.
-      3. Otherwise: re-use the label quad-lingually as a stable fallback.
+      3. Otherwise: re-use the label as a stable fallback.
 
-    The ``legal_hint`` (``(Base legal: …)``) is appended to every variant
-    so the corpus carries the BOE / law / orden grounding inline,
-    matching what the rule engine's ``LegalCitation`` already encodes.
+    The ``legal_hint`` ``(Base legal: …)`` is translated per language
+    via :data:`_LEGAL_HINT_LABEL` so the corpus carries the BOE / law /
+    orden grounding inline in every language.
     """
-    suffix_es = f" Se calcula como {formula_expression}." if formula_expression else ""
-    legal_es = legal_hint
-    legal_en = legal_hint.replace("Base legal:", "Legal basis:") if legal_hint else ""
-    legal_hu = legal_hint.replace("Base legal:", "Jogalap:") if legal_hint else ""
-    cross_es = cross_modelo_hint
-    cross_en = cross_modelo_hint.replace(
-        "Resumen anual que consolida los datos trimestrales del modelo",
-        "Annual summary that consolidates the quarterly data of form",
-    ).replace(
-        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
-        "Annual IRPF declaration; consolidates the fractional payments of forms",
-    ).replace(
-        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
-        "Annual Corporate Income Tax declaration; consolidates the fractional payments of form",
-    )
-    cross_hu = cross_modelo_hint.replace(
-        "Resumen anual que consolida los datos trimestrales del modelo",
-        "Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja:",
-    ).replace(
-        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
-        "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:",
-    ).replace(
-        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
-        "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:",
-    )
-    if notes_es:
-        return {
-            "es": notes_es + suffix_es + cross_es + legal_es,
-            "en": label.get("en", label["es"])
-            + (f" Computed as {formula_expression}." if formula_expression else "")
-            + cross_en
-            + legal_en,
-            "hu": label.get("hu", label["es"])
-            + (f" Számítás: {formula_expression}." if formula_expression else "")
-            + cross_hu
-            + legal_hu,
-        }
-    if formula_expression:
-        return {
-            "es": f"{label['es']}. Se calcula como {formula_expression}.{cross_es}{legal_es}",
-            "en": f"{label.get('en', label['es'])}. Computed as {formula_expression}.{cross_en}{legal_en}",
-            "hu": f"{label.get('hu', label['es'])}. Számítás: {formula_expression}.{cross_hu}{legal_hu}",
-        }
-    if legal_hint or cross_modelo_hint:
-        return {
-            "es": label["es"] + cross_es + legal_es,
-            "en": label.get("en", label["es"]) + cross_en + legal_en,
-            "hu": label.get("hu", label["es"]) + cross_hu + legal_hu,
-        }
+    languages = _supported_language_codes()
+    cross_hints: dict[str, str] = cross_modelo_hints or {lang: "" for lang in languages}
+    label_es = label.get("es", "")
+    out: dict[str, str] = {}
+    for lang in languages:
+        # Per-language label fallback: when the engine ruleset hasn't
+        # provided a language-specific rendering, fall back to the
+        # Spanish authoritative text. Per Generalitat / ATC convention
+        # tax acronyms (IVA, IRPF) stay identical to Spanish anyway.
+        lang_label = label.get(lang, label_es)
+        formula_clause = ""
+        if formula_expression:
+            prefix = _FORMULA_CLAUSE_PREFIX.get(lang, _FORMULA_CLAUSE_PREFIX["en"])
+            suffix = "." if not prefix.endswith(": ") else ""
+            formula_clause = f"{prefix}{formula_expression}{suffix}"
+        legal_clause = ""
+        if legal_hint:
+            legal_clause = legal_hint.replace("Base legal:", _LEGAL_HINT_LABEL.get(lang, "Base legal:"))
+        cross_clause = cross_hints.get(lang, "")
+        if lang == "es" and notes_es:
+            out["es"] = notes_es + formula_clause + cross_clause + legal_clause
+        elif lang != "es" and notes_es:
+            out[lang] = lang_label + formula_clause + cross_clause + legal_clause
+        elif formula_expression:
+            out[lang] = f"{lang_label}.{formula_clause}{cross_clause}{legal_clause}"
+        elif legal_hint or any(cross_hints.values()):
+            out[lang] = lang_label + cross_clause + legal_clause
+        else:
+            out[lang] = lang_label
+    return out
     return {
         "es": label["es"],
         "en": label.get("en", label["es"]),
@@ -1506,14 +1605,15 @@ def _record_from_ruleset_casilla(
     section: str,
     computed_override: bool | None = None,
 ) -> CasillaRecord:
-    label = dict(cdef.label)
+    raw_label = dict(cdef.label)
+    label = _expand_label_to_supported_languages(raw_label)
     legal_hint = _legal_hint(cdef.legal_basis)
     help_text = _help_from_label(
         label,
         cdef.notes_es,
         formula_expression=formula_expression,
         legal_hint=legal_hint,
-        cross_modelo_hint=_cross_modelo_hint(modelo),
+        cross_modelo_hints=_cross_modelo_hint_for_languages(modelo),
     )
 
     formula_obj = (
@@ -1626,38 +1726,18 @@ def _record_from_manual(
         if c.formula_expression
         else None
     )
-    cross = _cross_modelo_hint(modelo)
-    cross_en = cross.replace(
-        "Resumen anual que consolida los datos trimestrales del modelo",
-        "Annual summary that consolidates the quarterly data of form",
-    ).replace(
-        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
-        "Annual IRPF declaration; consolidates the fractional payments of forms",
-    ).replace(
-        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
-        "Annual Corporate Income Tax declaration; consolidates the fractional payments of form",
-    )
-    cross_hu = cross.replace(
-        "Resumen anual que consolida los datos trimestrales del modelo",
-        "Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja:",
-    ).replace(
-        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
-        "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:",
-    ).replace(
-        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
-        "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:",
-    )
+    languages = _supported_language_codes()
+    cross_hints = _cross_modelo_hint_for_languages(modelo)
+    label_per_lang = c.label_for_languages(languages)
+    base_help = c.help_for_languages(languages)
+    help_per_lang = {lang: base_help[lang] + cross_hints.get(lang, "") for lang in languages}
     return CasillaRecord(
         synthetic=False,
         modelo=f"MODELO_{modelo}",
         period=period,
         casilla_id=c.casilla_id,
-        label={"es": c.label_es, "en": c.label_en, "hu": c.label_hu},
-        help={
-            "es": c.help_es + cross,
-            "en": c.help_en + cross_en,
-            "hu": c.help_hu + cross_hu,
-        },
+        label=label_per_lang,
+        help=help_per_lang,
         data_type=c.data_type,
         select_options=c.select_options,
         required=False,
@@ -1871,7 +1951,7 @@ def _assert_manual_data_tracks_extractors() -> None:
 
     The extractor classes (e.g. :class:`Modelo190V2025Extractor`) own
     the canonical casilla-id set for modelos that lack a rule-engine
-    ruleset. The hydrate script's curated tuples carry quad-lingual
+    ruleset. The hydrate script's curated tuples carry multilingual
     label / help / data_type which the extractor does not. To avoid
     shadowing, we never declare a casilla in the curated tuple that
     the extractor doesn't declare and vice versa.

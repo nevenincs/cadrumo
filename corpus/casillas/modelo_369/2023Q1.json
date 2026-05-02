@@ -10,11 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Suma de las bases imponibles declaradas para cada Estado miembro de consumo y tipo aplicable.",
         "en": "Sum of taxable bases declared for each Member State of consumption and applicable rate.",
         "es": "Suma de las bases imponibles declaradas para cada Estado miembro de consumo y tipo aplicable.",
         "hu": "A bejelentett adóalapok összege fogyasztási tagállam és alkalmazandó kulcs szerint."
       },
       "label": {
+        "ca": "Total bases imponibles",
         "en": "Total taxable bases",
         "es": "Total bases imponibles",
         "hu": "Összes adóalap"
@@ -40,11 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Suma de las cuotas de IVA devengadas en los Estados miembros de consumo en el régimen OSS / IOSS.",
         "en": "Sum of output VAT due in the Member States of consumption under OSS / IOSS.",
         "es": "Suma de las cuotas de IVA devengadas en los Estados miembros de consumo en el régimen OSS / IOSS.",
         "hu": "A fogyasztási tagállamokban felszámított ÁFA összege OSS / IOSS rendszerben."
       },
       "label": {
+        "ca": "Total cuotas IVA devengadas",
         "en": "Total output VAT",
         "es": "Total cuotas IVA devengadas",
         "hu": "Összes felszámított ÁFA"
@@ -70,11 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Importe total que debe ingresarse al erario español, equivalente a la suma de cuotas devengadas (no se admiten deducciones en este régimen).",
         "en": "Total amount payable to the Spanish treasury — equal to the output VAT sum (deductions are not allowed under this regime).",
         "es": "Importe total que debe ingresarse al erario español, equivalente a la suma de cuotas devengadas (no se admiten deducciones en este régimen).",
         "hu": "A spanyol kincstárnak fizetendő teljes összeg, ami megegyezik a felszámított ÁFA-val (e rendszerben levonás nem alkalmazható)."
       },
       "label": {
+        "ca": "Total a ingresar",
         "en": "Total payable",
         "es": "Total a ingresar",
         "hu": "Fizetendő összeg"
