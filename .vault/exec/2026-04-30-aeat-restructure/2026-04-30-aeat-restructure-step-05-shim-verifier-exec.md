@@ -15,6 +15,11 @@ related:
 
 Step 5 PR 2 of N. Lands the shim-verification subroutine that the Step 8 acceptance gate uses to deterministically classify the semver bump (minor vs major). Per ADR Shim-verification gate.
 
+Historical execution note: this step documents a pre-hard-cutover
+tooling path. The delivered rollout removed root compatibility modules
+and did not retain a shim layer; `scripts/verify_shims.py` was later
+removed as part of the hard-cutover continuation.
+
 ## scope
 
 - New script `scripts/verify_shims.py` declaring the public-surface SHIM_CONTRACT (4 module entries; ~50 symbols total).
@@ -29,7 +34,9 @@ Fix applied in this PR:
 - Add `from ._file_permissions import restrict_file_permissions` to `aeat.adapters.outbound.aeat.auth.__init__.py`.
 - Add `"restrict_file_permissions"` to the `__all__` list (alphabetical position between `preload_into_browser_context` and `select_provider`).
 
-This makes the ADR's public-surface promise concrete pre-Step-7 — the symbol will be reachable from the OLD path forever (today directly; post-Step-7 via the auth shim re-exporting from `aeat.core.file_permissions`).
+This made the ADR's public-surface promise concrete in the pre-cutover
+plan. It is not an active compatibility contract after the delivered
+hard cutover.
 
 ## SHIM_CONTRACT entries
 

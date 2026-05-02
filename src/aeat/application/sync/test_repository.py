@@ -1,4 +1,11 @@
-"""Unit tests for the divergence repository."""
+"""Unit tests for :class:`aeat.application.sync.JsonFileDivergenceRepository`.
+
+Covers the encrypted on-disk persistence of
+:class:`aeat.domain.sync.DivergenceRecord`, including LEAK-005 (no
+plaintext modelo / casilla canaries on disk), traversal-safe id
+validation, and writer/rotation lock-target alignment that prevents
+concurrent ``aeat security rotate-master-key`` from racing the writer.
+"""
 
 from __future__ import annotations
 
@@ -16,12 +23,12 @@ from ...adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from . import (
+from . import JsonFileDivergenceRepository
+from ...domain.sync import (
     CasillaAddedWithDefault,
     DivergenceClassification,
     DivergenceRecord,
     DivergenceRepositoryError,
-    JsonFileDivergenceRepository,
     ModeloIdentifier,
     ResolutionState,
 )
@@ -51,8 +58,11 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
 
 
 def test_divergence_envelope_is_ciphertext_at_audit_class(tmp_path: Path) -> None:
-    """The on-disk record must be a CipherEnvelope; the modelo / casilla canaries
-    must not survive in plaintext on disk (LEAK-005 regression)."""
+    """Verify the on-disk record is a ciphertext envelope (LEAK-005 regression).
+
+    The persisted file must be classified ``audit`` and must not contain
+    the modelo or casilla identifier in plaintext.
+    """
     repo = JsonFileDivergenceRepository(tmp_path / "divergences")
     record = DivergenceRecord(
         record_id=uuid.uuid4().hex,

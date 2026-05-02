@@ -11,18 +11,11 @@ actually consumes:
   rather than the closed :class:`aeat.domain.modelos.ModeloCode` /
   :class:`aeat.domain.portals.Portal` enums; live AEAT data is the source of
   truth here, not our internal catalogue.
-- :class:`CertificateBackend` — preloads the operator certificate into
+- :class:`CertificateContextPreloader` — preloads the operator certificate into
   the browser context.
 - :class:`LocalCatalogueLoader` — loads the local authoritative
   modelo / portal manifest / filing history snapshots that the diffing
   classifier compares the live fetch against.
-- :class:`SchemaLoader` / :class:`ModeloSchema` — schema lookup
-  surface the runner forwards to per-strategy adapters.
-- :class:`ManualRulesLoader` / :class:`Rule` — manual rule lookup
-  surface used by escalation strategies.
-- :class:`LLMClient` / :class:`LLMRequest` — an LLM probe the runner
-  carries on its signature for forward compatibility, even though the
-  happy path never invokes it.
 """
 
 from __future__ import annotations
@@ -33,37 +26,9 @@ from typing import Any, Protocol, runtime_checkable
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-_MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
+from .._identifiers import ModeloIdentifier
+
 _PORTAL_RE = re.compile(r"^[a-z][a-z0-9_\-]{1,63}$")
-
-
-class ModeloIdentifier(str):
-    """Typed string identifier for an AEAT modelo (e.g. ``"100"``, ``"303"``).
-
-    Format: three digits with an optional trailing uppercase letter.
-    The shape mirrors :class:`aeat.domain.deadlines.ModeloIdentifier` and is
-    intentionally wider than :class:`aeat.domain.modelos.ModeloCode` so live
-    AEAT payloads referencing modelos outside the v1 closed catalogue
-    can flow through the wire boundary without the runner crashing.
-    """
-
-    __slots__ = ()
-
-    def __new__(cls, value: str) -> ModeloIdentifier:
-        if not isinstance(value, str) or not _MODELO_RE.match(value):
-            raise ValueError(f"Invalid modelo identifier: {value!r}")
-        return super().__new__(cls, value)
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: Any,
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        return core_schema.no_info_after_validator_function(
-            cls,
-            core_schema.str_schema(pattern=_MODELO_RE.pattern),
-        )
 
 
 class PortalIdentifier(str):
@@ -95,7 +60,7 @@ class PortalIdentifier(str):
 
 
 @runtime_checkable
-class CertificateBackend(Protocol):
+class CertificateContextPreloader(Protocol):
     """Narrow surface over :mod:`aeat.adapters.outbound.aeat.auth.certificate` for the runner.
 
     Production wires this to
@@ -126,58 +91,4 @@ class LocalCatalogueLoader(Protocol):
 
     def load_filing_history(self, modelo: ModeloIdentifier) -> Any:
         """Return the local authoritative filing history snapshot."""
-        ...
-
-
-@runtime_checkable
-class ModeloSchema(Protocol):
-    """Narrow shape returned by :class:`SchemaLoader`."""
-
-    modelo: ModeloIdentifier
-
-
-@runtime_checkable
-class SchemaLoader(Protocol):
-    """Narrow surface over :mod:`aeat.domain.schema` for the runner."""
-
-    def load(self, modelo: ModeloIdentifier) -> ModeloSchema:
-        """Return the extracted schema for a modelo."""
-        ...
-
-
-@runtime_checkable
-class Rule(Protocol):
-    """Narrow shape for a single manual rule from :mod:`aeat.domain.manuals`."""
-
-    rule_id: str
-
-
-@runtime_checkable
-class ManualRulesLoader(Protocol):
-    """Narrow surface over :mod:`aeat.domain.manuals` for the runner."""
-
-    def load(self, modelo: ModeloIdentifier) -> tuple[Rule, ...]:
-        """Return the manual rules for a modelo."""
-        ...
-
-
-@runtime_checkable
-class LLMRequest(Protocol):
-    """Narrow shape for a request to :mod:`aeat.adapters.outbound.llm`."""
-
-    prompt: str
-
-
-@runtime_checkable
-class LLMClient(Protocol):
-    """Narrow surface over :mod:`aeat.adapters.outbound.llm` for the runner.
-
-    The runner does not invoke the LLM on its happy path, but it
-    carries the Protocol on its signature so escalation strategies
-    that consult the LLM can be wired in without changing the runner
-    constructor.
-    """
-
-    async def complete(self, request: LLMRequest) -> str:
-        """Return the completion for the given request."""
         ...

@@ -8,13 +8,13 @@ from enum import StrEnum
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 
-class _StrictFrozenModel(BaseModel):
+class _ProportionalityStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 
 
-class CitationSource(StrEnum):
+class CategoryCitationSource(StrEnum):
     """Allowed citation sources for explainable category profiles."""
 
     MANUAL_RENTA = "manual_renta"
@@ -24,10 +24,10 @@ class CitationSource(StrEnum):
     AEAT_HELP = "aeat_help"
 
 
-class Citation(_StrictFrozenModel):
+class CategoryCitation(_ProportionalityStrictFrozenModel):
     """A traceable citation backing one category or proportionality rule."""
 
-    source: CitationSource
+    source: CategoryCitationSource
     reference: str = Field(min_length=1, max_length=256)
     locator: str = Field(min_length=1, max_length=256)
     url: AnyHttpUrl
@@ -61,7 +61,7 @@ class StatutoryCapPeriod(StrEnum):
     YEAR_PER_PERSON = "year_per_person"
 
 
-class ProportionalityRule(_StrictFrozenModel):
+class ProportionalityRule(_ProportionalityStrictFrozenModel):
     """Deductibility and proportionality rule for one spending category."""
 
     kind: ProportionalityKind
@@ -70,7 +70,7 @@ class ProportionalityRule(_StrictFrozenModel):
     statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_period: StatutoryCapPeriod | None = None
-    citations: tuple[Citation, ...] = Field(default_factory=tuple)
+    citations: tuple[CategoryCitation, ...] = Field(default_factory=tuple)
     notes_es: str = Field(min_length=1, max_length=2048)
 
     @model_validator(mode="after")
