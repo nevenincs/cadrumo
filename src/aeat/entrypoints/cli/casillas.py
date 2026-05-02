@@ -1,4 +1,10 @@
-"""Typer commands for casilla catalogue workflows."""
+"""Typer commands for the curated AEAT casilla catalogue.
+
+Wraps :mod:`aeat.domain.casillas` so Kent can dump, verify, and
+(eventually) extract / translate per-modelo casilla catalogues from the
+command line. Real extraction and translation are gated on the LLM
+client surface and currently exit ``2`` with an explanatory message.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +24,19 @@ app = typer.Typer(
 
 
 def _load_for_cli(modelo: str, period: str, root: Path | None) -> CasillaCatalogue:
-    """Load a catalogue and convert parse failures into CLI exits."""
+    """Load a catalogue and convert parse failures into CLI exits.
+
+    Args:
+        modelo: Stable modelo identifier (e.g. ``MODELO_130``).
+        period: Filing period (e.g. ``2025Q4``).
+        root: Optional override of the casillas corpus root.
+
+    Returns:
+        The validated catalogue.
+
+    Raises:
+        typer.Exit: Exit code ``1`` when the catalogue cannot be parsed.
+    """
     try:
         return load_casillas(modelo, period, root=root)
     except CasillaParseError as exc:
@@ -32,7 +50,7 @@ def list_casillas(
     period: str = typer.Option(..., "--period", help="Filing period, e.g. 2025Q4."),
     root: Path | None = typer.Option(None, "--root", help="Optional casillas corpus root override."),
 ) -> None:
-    """Print a canonical catalogue as JSON."""
+    """Print the canonical :class:`aeat.domain.casillas.CasillaCatalogue` as JSON."""
     catalogue = _load_for_cli(modelo, period, root)
     typer.echo(json.dumps(catalogue.model_dump(mode="json"), indent=2, ensure_ascii=False))
 
@@ -43,7 +61,7 @@ def verify(
     period: str = typer.Option(..., "--period", help="Filing period, e.g. 2025Q4."),
     root: Path | None = typer.Option(None, "--root", help="Optional casillas corpus root override."),
 ) -> None:
-    """Verify a canonical catalogue and exit non-zero on failure."""
+    """Verify the catalogue via :func:`aeat.domain.casillas.verify_casillas` and exit non-zero on failure."""
     resolved_root = root if root is not None else load_settings().aeat_casillas_root
     path = resolved_root / modelo.lower() / f"{period}.json"
     catalogue = _load_for_cli(modelo, period, root)
@@ -61,7 +79,13 @@ def extract(
     period: str = typer.Option(..., "--period", help="Filing period, e.g. 2025Q4."),
     root: Path | None = typer.Option(None, "--root", help="Optional casillas corpus root override."),
 ) -> None:
-    """Report that real extraction is blocked on the issue-21 client surface."""
+    """Report that real extraction is blocked on the LLM client surface.
+
+    Raises:
+        typer.Exit: Always exits ``2`` until the LLM client surface ships;
+            only the protocol boundary and canonical corpus support are
+            available today.
+    """
     _load_for_cli(modelo, period, root)
     typer.secho(
         "aeat casillas extract requires the real issue-21 LLM client surface; "
@@ -71,13 +95,37 @@ def extract(
     raise typer.Exit(code=2)
 
 
+@app.command(
+    name="hydrate",
+    help="Re-generate the entire corpus/casillas/ tree from the rule engine + curated data.",
+)
+def hydrate() -> None:
+    """Run the deterministic corpus hydration generator.
+
+    Calls :func:`aeat.domain.casillas._hydrate.run`, which writes one
+    JSON catalogue per ``(modelo, period)`` for every modelo / year /
+    period the project supports. Idempotent; re-running produces zero
+    diff against the committed corpus when the rule engine and the
+    curated data are unchanged.
+    """
+    from ...domain.casillas._hydrate import run
+
+    run()
+
+
 @app.command(name="translate", help="Write a draft translation payload to a temp JSON file.")
 def translate(
     modelo: str = typer.Option(..., "--modelo", help="Stable modelo identifier, e.g. MODELO_130."),
     period: str = typer.Option(..., "--period", help="Filing period, e.g. 2025Q4."),
     root: Path | None = typer.Option(None, "--root", help="Optional casillas corpus root override."),
 ) -> None:
-    """Report that real translation is blocked on the issue-21 client surface."""
+    """Report that real translation is blocked on the bulk translator surface.
+
+    Raises:
+        typer.Exit: Always exits ``2`` until the bulk translator client
+            surface ships; only the protocol boundary and canonical
+            corpus support are available today.
+    """
     _load_for_cli(modelo, period, root)
     typer.secho(
         "aeat casillas translate requires the real issue-21 bulk translator surface; "
