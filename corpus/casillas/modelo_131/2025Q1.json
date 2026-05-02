@@ -12,14 +12,12 @@
       "help": {
         "en": "Modules net income sum",
         "es": "Suma rendimientos netos modulos",
-        "hu": "Modul nettó jövedelem",
-        "ca": "Suma rendimientos netos modulos"
+        "hu": "Modul nettó jövedelem"
       },
       "label": {
         "en": "Modules net income sum",
         "es": "Suma rendimientos netos modulos",
-        "hu": "Modul nettó jövedelem",
-        "ca": "Suma rendimientos netos modulos"
+        "hu": "Modul nettó jövedelem"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -44,14 +42,12 @@
       "help": {
         "en": "Quarterly instalment",
         "es": "Pago fraccionado del trimestre",
-        "hu": "Negyedéves részlet",
-        "ca": "Pago fraccionado del trimestre"
+        "hu": "Negyedéves részlet"
       },
       "label": {
         "en": "Quarterly instalment",
         "es": "Pago fraccionado del trimestre",
-        "hu": "Negyedéves részlet",
-        "ca": "Pago fraccionado del trimestre"
+        "hu": "Negyedéves részlet"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -76,14 +72,12 @@
       "help": {
         "en": "Sales volume",
         "es": "Volumen ventas sin datos-base",
-        "hu": "Értékesítési volumen",
-        "ca": "Volumen ventas sin datos-base"
+        "hu": "Értékesítési volumen"
       },
       "label": {
         "en": "Sales volume",
         "es": "Volumen ventas sin datos-base",
-        "hu": "Értékesítési volumen",
-        "ca": "Volumen ventas sin datos-base"
+        "hu": "Értékesítési volumen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -113,14 +107,12 @@
       "help": {
         "en": "2% on casilla 03. Computed as (2% * 03). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "2% s/casilla 03. Se calcula como (2% * 03). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "2%-os arány. Számítás: (2% * 03). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "ca": "2% s/casilla 03. Se calcula como (2% * 03). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "hu": "2%-os arány. Számítás: (2% * 03). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
       },
       "label": {
         "en": "2% on casilla 03",
         "es": "2% s/casilla 03",
-        "hu": "2%-os arány",
-        "ca": "2% s/casilla 03"
+        "hu": "2%-os arány"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -160,14 +152,12 @@
       "help": {
         "en": "Agricultural income",
         "es": "Volumen ingresos agricolas/ganaderas/forestales",
-        "hu": "Mezőgazdasági bevétel",
-        "ca": "Volumen ingresos agricolas/ganaderas/forestales"
+        "hu": "Mezőgazdasági bevétel"
       },
       "label": {
         "en": "Agricultural income",
         "es": "Volumen ingresos agricolas/ganaderas/forestales",
-        "hu": "Mezőgazdasági bevétel",
-        "ca": "Volumen ingresos agricolas/ganaderas/forestales"
+        "hu": "Mezőgazdasági bevétel"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -197,14 +187,12 @@
       "help": {
         "en": "2% on casilla 05. Computed as (2% * 05). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "2% s/casilla 05. Se calcula como (2% * 05). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "2%-os arány. Számítás: (2% * 05). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "ca": "2% s/casilla 05. Se calcula como (2% * 05). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "hu": "2%-os arány. Számítás: (2% * 05). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
       },
       "label": {
         "en": "2% on casilla 05",
         "es": "2% s/casilla 05",
-        "hu": "2%-os arány",
-        "ca": "2% s/casilla 05"
+        "hu": "2%-os arány"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -251,14 +239,12 @@
       "help": {
         "en": "Total. Computed as (02 + 04 + 06). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "Total 02+04+06. Se calcula como (02 + 04 + 06). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "Összesen. Számítás: (02 + 04 + 06). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "ca": "Total 02+04+06. Se calcula como (02 + 04 + 06). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "hu": "Összesen. Számítás: (02 + 04 + 06). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
       },
       "label": {
         "en": "Total",
         "es": "Total 02+04+06",
-        "hu": "Összesen",
-        "ca": "Total 02+04+06"
+        "hu": "Összesen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -300,14 +286,12 @@
       "help": {
         "en": "Withholdings",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonások",
-        "ca": "Retenciones e ingresos a cuenta"
+        "hu": "Levonások"
       },
       "label": {
         "en": "Withholdings",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonások",
-        "ca": "Retenciones e ingresos a cuenta"
+        "hu": "Levonások"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -332,14 +316,12 @@
       "help": {
         "en": "Prior-year minoration",
         "es": "Minoracion rendimientos ano anterior",
-        "hu": "Korábbi év mérséklés",
-        "ca": "Minoracion rendimientos ano anterior"
+        "hu": "Korábbi év mérséklés"
       },
       "label": {
         "en": "Prior-year minoration",
         "es": "Minoracion rendimientos ano anterior",
-        "hu": "Korábbi év mérséklés",
-        "ca": "Minoracion rendimientos ano anterior"
+        "hu": "Korábbi év mérséklés"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -371,14 +353,12 @@
       "help": {
         "en": "Result after credits. Computed as ((07 - 08) - 09). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "Resultado 07-08-09. Se calcula como ((07 - 08) - 09). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "Levonás utáni eredmény. Számítás: ((07 - 08) - 09). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "ca": "Resultado 07-08-09. Se calcula como ((07 - 08) - 09). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "hu": "Levonás utáni eredmény. Számítás: ((07 - 08) - 09). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
       },
       "label": {
         "en": "Result after credits",
         "es": "Resultado 07-08-09",
-        "hu": "Levonás utáni eredmény",
-        "ca": "Resultado 07-08-09"
+        "hu": "Levonás utáni eredmény"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -420,14 +400,12 @@
       "help": {
         "en": "Prior negatives",
         "es": "Resultados negativos autoliquidaciones anteriores",
-        "hu": "Korábbi negatív eredmény",
-        "ca": "Resultados negativos autoliquidaciones anteriores"
+        "hu": "Korábbi negatív eredmény"
       },
       "label": {
         "en": "Prior negatives",
         "es": "Resultados negativos autoliquidaciones anteriores",
-        "hu": "Korábbi negatív eredmény",
-        "ca": "Resultados negativos autoliquidaciones anteriores"
+        "hu": "Korábbi negatív eredmény"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -452,14 +430,12 @@
       "help": {
         "en": "Primary residence deduction",
         "es": "Deduccion vivienda habitual",
-        "hu": "Lakásvásárlási kedvezmény",
-        "ca": "Deduccion vivienda habitual"
+        "hu": "Lakásvásárlási kedvezmény"
       },
       "label": {
         "en": "Primary residence deduction",
         "es": "Deduccion vivienda habitual",
-        "hu": "Lakásvásárlási kedvezmény",
-        "ca": "Deduccion vivienda habitual"
+        "hu": "Lakásvásárlási kedvezmény"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -491,14 +467,12 @@
       "help": {
         "en": "Intermediate result. Computed as ((10 - 11) - 12). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "Resultado 10-11-12. Se calcula como ((10 - 11) - 12). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "Köztes eredmény. Számítás: ((10 - 11) - 12). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "ca": "Resultado 10-11-12. Se calcula como ((10 - 11) - 12). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "hu": "Köztes eredmény. Számítás: ((10 - 11) - 12). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
       },
       "label": {
         "en": "Intermediate result",
         "es": "Resultado 10-11-12",
-        "hu": "Köztes eredmény",
-        "ca": "Resultado 10-11-12"
+        "hu": "Köztes eredmény"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -540,14 +514,12 @@
       "help": {
         "en": "Prior-filing offset",
         "es": "A deducir autoliquidaciones anteriores",
-        "hu": "Korábbi bevallási levonás",
-        "ca": "A deducir autoliquidaciones anteriores"
+        "hu": "Korábbi bevallási levonás"
       },
       "label": {
         "en": "Prior-filing offset",
         "es": "A deducir autoliquidaciones anteriores",
-        "hu": "Korábbi bevallási levonás",
-        "ca": "A deducir autoliquidaciones anteriores"
+        "hu": "Korábbi bevallási levonás"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
@@ -578,14 +550,12 @@
       "help": {
         "en": "Net amount payable. Computed as (13 - 14). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "Resultado a ingresar. Se calcula como (13 - 14). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "Fizetendő eredmény. Számítás: (13 - 14). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "ca": "Resultado a ingresar. Se calcula como (13 - 14). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "hu": "Fizetendő eredmény. Számítás: (13 - 14). (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
       },
       "label": {
         "en": "Net amount payable",
         "es": "Resultado a ingresar",
-        "hu": "Fizetendő eredmény",
-        "ca": "Resultado a ingresar"
+        "hu": "Fizetendő eredmény"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",

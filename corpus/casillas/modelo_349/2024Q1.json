@@ -12,14 +12,12 @@
       "help": {
         "en": "Number of intra-Community operators declared in the period (supplies and/or acquisitions, Spanish VAT Act arts. 25-26).",
         "es": "Número de operadores intracomunitarios declarados en el período (entregas y/o adquisiciones, LIVA art. 25 y 26).",
-        "hu": "A bejelentett közösségi szereplők száma az időszakban (LIVA 25-26. cikk).",
-        "ca": "Número de operadores intracomunitarios declarados en el período (entregas y/o adquisiciones, LIVA art. 25 y 26)."
+        "hu": "A bejelentett közösségi szereplők száma az időszakban (LIVA 25-26. cikk)."
       },
       "label": {
         "en": "Intra-Community operators",
         "es": "N.º total operadores intracomunitarios",
-        "hu": "Közösségi gazdasági szereplők",
-        "ca": "N.º total operadores intracomunitarios"
+        "hu": "Közösségi gazdasági szereplők"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_349",
@@ -44,14 +42,12 @@
       "help": {
         "en": "Total amount of intra-Community operations declared (supplies + acquisitions + services).",
         "es": "Importe total de las operaciones intracomunitarias declaradas (entregas + adquisiciones + servicios).",
-        "hu": "A közösségi ügyletek teljes összege.",
-        "ca": "Importe total de las operaciones intracomunitarias declaradas (entregas + adquisiciones + servicios)."
+        "hu": "A közösségi ügyletek teljes összege."
       },
       "label": {
         "en": "Total operation amount",
         "es": "Importe total operaciones",
-        "hu": "Ügyletek teljes összege",
-        "ca": "Importe total operaciones"
+        "hu": "Ügyletek teljes összege"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_349",
@@ -76,14 +72,12 @@
       "help": {
         "en": "Operators whose operations are rectifying earlier periods.",
         "es": "Operadores cuyas operaciones se rectifican respecto de períodos anteriores.",
-        "hu": "Korábbi időszakok helyesbítésében érintett szereplők száma.",
-        "ca": "Operadores cuyas operaciones se rectifican respecto de períodos anteriores."
+        "hu": "Korábbi időszakok helyesbítésében érintett szereplők száma."
       },
       "label": {
         "en": "Operators with rectifications",
         "es": "N.º operadores con rectificaciones",
-        "hu": "Helyesbítéssel érintett szereplők",
-        "ca": "N.º operadores con rectificaciones"
+        "hu": "Helyesbítéssel érintett szereplők"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_349",
@@ -108,14 +102,12 @@
       "help": {
         "en": "Total amount of rectifications declared in the period (positive sign = increase).",
         "es": "Importe total de las rectificaciones declaradas en el período (signo positivo = aumento).",
-        "hu": "Az időszakban bejelentett helyesbítések teljes összege (pozitív jel = növekedés).",
-        "ca": "Importe total de las rectificaciones declaradas en el período (signo positivo = aumento)."
+        "hu": "Az időszakban bejelentett helyesbítések teljes összege (pozitív jel = növekedés)."
       },
       "label": {
         "en": "Rectifications amount",
         "es": "Importe rectificaciones",
-        "hu": "Helyesbítések összege",
-        "ca": "Importe rectificaciones"
+        "hu": "Helyesbítések összege"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_349",

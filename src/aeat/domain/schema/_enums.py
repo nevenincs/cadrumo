@@ -1,7 +1,12 @@
 """Closed taxonomies exposed by :mod:`aeat.domain.schema`.
 
-Every enum is a :class:`str.StrEnum` so members compare equal to
+Every enum is a :class:`enum.StrEnum` so members compare equal to
 their canonical string representation across JSON boundaries.
+
+The module re-exports :class:`aeat.domain.casillas.models.CasillaDataType`
+so consumers of :mod:`aeat.domain.schema` reach the same closed
+data-type taxonomy without importing through the casillas corpus
+package.
 """
 
 from __future__ import annotations
@@ -14,19 +19,28 @@ from ..casillas.models import CasillaDataType
 class SchemaSource(StrEnum):
     """Provenance class of an extracted :class:`aeat.domain.schema.Modelo`.
 
-    ``BOE_ORDEN`` is the only member implemented in the v1 PoC. Three
-    reserved follow-up extractor slots (``PORTAL_HTML_PROBE``,
-    ``MANUAL_LLM_DRAFT``, ``XSD_WIRE``) were dropped per restructure
-    ADR Decision 6 (#476) — no active branch or open issue references
-    them. Future extractors add new members here on first concrete
-    use.
+    ``BOE_ORDEN`` is the only currently implemented member. Future
+    extractors add new members here on first concrete use; reserved /
+    speculative slots are intentionally not pre-declared so the
+    :class:`pydantic.StrEnum` validator gates unknown source values
+    on parse.
+
+    Attributes:
+        BOE_ORDEN: Schema extracted from a BOE Orden Ministerial PDF.
     """
 
     BOE_ORDEN = "boe_orden"
 
 
 class BinaryFormulaOp(StrEnum):
-    """Binary arithmetic operators supported by the formula AST."""
+    """Binary arithmetic operators supported by the formula AST.
+
+    Attributes:
+        ADD: Addition (``a + b``).
+        SUB: Subtraction (``a - b``).
+        MUL: Multiplication (``a * b``).
+        DIV: Division (``a / b``); zero divisor raises at evaluation time.
+    """
 
     ADD = "add"
     SUB = "sub"
@@ -35,7 +49,17 @@ class BinaryFormulaOp(StrEnum):
 
 
 class CompareOp(StrEnum):
-    """Comparison operators supported by :class:`CrossCasillaRule`."""
+    """Comparison operators supported by
+    :class:`aeat.domain.schema._models.CrossCasillaRule`.
+
+    Attributes:
+        EQ: Equal.
+        NEQ: Not equal.
+        LT: Less than.
+        LTE: Less than or equal.
+        GT: Greater than.
+        GTE: Greater than or equal.
+    """
 
     EQ = "eq"
     NEQ = "neq"
