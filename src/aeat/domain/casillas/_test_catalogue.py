@@ -152,7 +152,7 @@ def test_llm_provenance_is_optional_but_strict() -> None:
     """Provenance can be omitted, but invalid typed values must be rejected."""
     ok = _record(
         llm_draft_provenance=LLMDraftProvenance(
-            provider="stub",
+            provider="synthetic",
             model="issue-21-pending",
             prompt_id="casilla_extract_v1",
             cache_hit=False,
@@ -167,7 +167,7 @@ def test_llm_provenance_is_optional_but_strict() -> None:
                 _record().model_dump(mode="python")
                 | {
                     "llm_draft_provenance": {
-                        "provider": "stub",
+                        "provider": "synthetic",
                         "model": "m",
                         "prompt_id": "x",
                         "cache_hit": "false",

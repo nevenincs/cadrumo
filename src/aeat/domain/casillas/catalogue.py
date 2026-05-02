@@ -1,4 +1,16 @@
-"""Catalogue loading, saving, and verification helpers."""
+"""Catalogue loading, saving, and verification helpers.
+
+Persistence layer for :class:`~aeat.domain.casillas.models.CasillaCatalogue`:
+resolves the corpus root from configuration, validates the on-disk
+JSON against the strict pydantic schema, and runs structural
+verification (authoritative Spanish text on label/help, review
+metadata when canonical, intra-catalogue cross-reference resolution).
+
+The verification pass is the trust boundary between operator-edited
+JSON and the rest of the system; failures are reported as
+:exc:`~aeat.domain.casillas.errors.VerifyError` instances so callers
+can surface every problem in a single batch.
+"""
 
 from __future__ import annotations
 
@@ -22,11 +34,12 @@ from .errors import (
 from .models import CasillaCatalogue, CasillaRecord, LLMDraftProvenance
 
 DEFAULT_CASILLAS_ROOT = PROJECT_ROOT / "corpus" / "casillas"
+"""Default on-disk root for committed casilla catalogue JSON files."""
 _log = get_logger(__name__)
 
 
 def _catalogue_root(root: Path | None) -> Path:
-    """Resolve the effective corpus root."""
+    """Resolve the effective corpus root, falling back to settings."""
     if root is not None:
         return root
     settings = load_settings()
@@ -34,17 +47,50 @@ def _catalogue_root(root: Path | None) -> Path:
 
 
 def catalogue_path(modelo: str, period: str, root: Path | None = None) -> Path:
-    """Return the canonical on-disk path for a modelo/period catalogue."""
+    """Return the canonical on-disk path for a modelo / period catalogue.
+
+    Args:
+        modelo: Modelo identifier (e.g. ``"MODELO_303"``); folded to
+            lowercase for the directory component.
+        period: Period label (e.g. ``"2025Q4"`` or ``"2025"``).
+        root: Optional corpus-root override; defaults to
+            :attr:`Settings.aeat_casillas_root` from
+            :func:`aeat.core.config.load_settings`.
+
+    Returns:
+        The expected ``<root>/<modelo>/<period>.json`` path.
+    """
     return _catalogue_root(root) / modelo.lower() / f"{period}.json"
 
 
 def iter_casillas(catalogue: CasillaCatalogue) -> Iterator[CasillaRecord]:
-    """Iterate over the records in a catalogue."""
+    """Iterate over the records in a catalogue.
+
+    Args:
+        catalogue: Catalogue to iterate.
+
+    Returns:
+        Iterator over the catalogue's records in declared order.
+    """
     return iter(catalogue.records)
 
 
 def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
-    """Return structured verification failures for a catalogue."""
+    """Return structured verification failures for a catalogue.
+
+    Runs every structural invariant the corpus must satisfy:
+    authoritative Spanish text on ``label`` and ``help``, review
+    metadata when the project is configured to require it, and that
+    every ``references_casillas`` entry points at another record in
+    the same catalogue.
+
+    Args:
+        catalogue: Catalogue to verify.
+
+    Returns:
+        Tuple of :exc:`VerifyError` instances describing every
+        violation. Empty when the catalogue is well-formed.
+    """
     errors: list[VerifyError] = []
     review_required = load_settings().aeat_casillas_review_required
     valid_ids = {record.casilla_id for record in catalogue.records}
@@ -108,7 +154,27 @@ def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
 
 
 def load_casillas(modelo: str, period: str, root: Path | None = None) -> CasillaCatalogue:
-    """Load and validate a canonical casilla catalogue."""
+    """Load and validate a canonical casilla catalogue from disk.
+
+    Reads the JSON file resolved by :func:`catalogue_path`, parses it
+    against :class:`CasillaCatalogue`, and runs
+    :func:`verify_casillas`. Any validation, parse, or structural
+    failure raises :exc:`CasillaParseError` so the caller cannot
+    accidentally consume partial data.
+
+    Args:
+        modelo: Modelo identifier (e.g. ``"MODELO_303"``).
+        period: Period label.
+        root: Optional corpus-root override.
+
+    Returns:
+        The validated :class:`CasillaCatalogue`.
+
+    Raises:
+        CasillaParseError: If the file is missing, the JSON is
+            malformed, the schema rejects it, or any structural
+            invariant fails.
+    """
     path = catalogue_path(modelo, period, root=root)
     if not path.exists():
         raise CasillaParseError(path, "catalogue file does not exist")
@@ -151,17 +217,36 @@ def save_casillas(catalogue: CasillaCatalogue, root: Path | None = None) -> None
 
 
 def write_extract_draft(catalogue: CasillaCatalogue) -> Path:
-    """Write a draft extraction payload to a temporary JSON file."""
+    """Write a draft extraction payload to a temporary JSON file.
+
+    Args:
+        catalogue: Draft catalogue produced by an extraction pipeline.
+
+    Returns:
+        Path to the temporary JSON file.
+    """
     return _write_temp_catalogue(catalogue, suffix="extract")
 
 
 def write_translate_draft(catalogue: CasillaCatalogue) -> Path:
-    """Write a draft translation payload to a temporary JSON file."""
+    """Write a draft translation payload to a temporary JSON file.
+
+    Args:
+        catalogue: Draft catalogue produced by a translation pipeline.
+
+    Returns:
+        Path to the temporary JSON file.
+    """
     return _write_temp_catalogue(catalogue, suffix="translate")
 
 
 def _write_temp_catalogue(catalogue: CasillaCatalogue, *, suffix: str) -> Path:
-    """Persist a catalogue to a named temporary file."""
+    """Persist a catalogue to a named temporary JSON file.
+
+    Internal helper shared by the ``extract`` and ``translate`` draft
+    writers. Cleans up the partial file when serialisation fails so
+    the temp directory does not accumulate half-written drafts.
+    """
     prefix = f"aeat-casillas-{catalogue.modelo.lower()}-{catalogue.period}-{suffix}-"
     draft_path: Path | None = None
     try:
@@ -189,6 +274,16 @@ def attach_draft_provenance(
     *,
     provenance: LLMDraftProvenance,
 ) -> CasillaCatalogue:
-    """Return a new catalogue with provenance set on every record."""
+    """Return a new catalogue with provenance set on every record.
+
+    Args:
+        catalogue: Source catalogue.
+        provenance: :class:`LLMDraftProvenance` to attach to every
+            record's ``llm_draft_provenance`` field.
+
+    Returns:
+        A copy of ``catalogue`` with the provenance applied. The
+        input is not mutated.
+    """
     records = tuple(record.model_copy(update={"llm_draft_provenance": provenance}) for record in catalogue.records)
     return catalogue.model_copy(update={"records": records})
