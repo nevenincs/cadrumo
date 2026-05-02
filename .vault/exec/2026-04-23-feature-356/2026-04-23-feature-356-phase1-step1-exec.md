@@ -4,7 +4,6 @@ tags:
   - "#feature-356"
 date: 2026-04-23
 related:
-  - "[[2026-04-21-feature-255-vat-classification-plan]]"
 ---
 
 # 2026-04-23-feature-356-phase1-step1
