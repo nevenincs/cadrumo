@@ -6,17 +6,15 @@
       "casilla_id": "01",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Perceptores dividendos",
         "en": "Dividend recipients",
         "es": "Perceptores dividendos",
         "hu": "Osztalék-kedvezményezettek"
       },
       "label": {
-        "ca": "Perceptores dividendos",
         "en": "Dividend recipients",
         "es": "Perceptores dividendos",
         "hu": "Osztalék-kedvezményezettek"
@@ -38,17 +36,15 @@
       "casilla_id": "02",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Perceptores otras rentas",
         "en": "Other recipients",
         "es": "Perceptores otras rentas",
         "hu": "Egyéb kedvezményezettek"
       },
       "label": {
-        "ca": "Perceptores otras rentas",
         "en": "Other recipients",
         "es": "Perceptores otras rentas",
         "hu": "Egyéb kedvezményezettek"
@@ -70,7 +66,7 @@
       "casilla_id": "03",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(01 + 02)",
@@ -80,13 +76,11 @@
         ]
       },
       "help": {
-        "ca": "Total perceptores. Se calcula como (01 + 02).",
-        "en": "Total recipients. Computed as (01 + 02).",
-        "es": "Total perceptores. Se calcula como (01 + 02).",
-        "hu": "Összes kedvezményezett. Számítás: (01 + 02)."
+        "en": "Total recipients. Computed as (01 + 02). (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "es": "Total perceptores. Se calcula como (01 + 02). (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "hu": "Összes kedvezményezett. Számítás: (01 + 02). (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Total perceptores",
         "en": "Total recipients",
         "es": "Total perceptores",
         "hu": "Összes kedvezményezett"
@@ -119,17 +113,15 @@
       "casilla_id": "04",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base retenciones dividendos",
         "en": "Dividend withholding base",
         "es": "Base retenciones dividendos",
         "hu": "Osztalék levonási alap"
       },
       "label": {
-        "ca": "Base retenciones dividendos",
         "en": "Dividend withholding base",
         "es": "Base retenciones dividendos",
         "hu": "Osztalék levonási alap"
@@ -151,17 +143,15 @@
       "casilla_id": "05",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base retenciones otras rentas",
         "en": "Other withholding base",
         "es": "Base retenciones otras rentas",
         "hu": "Egyéb levonási alap"
       },
       "label": {
-        "ca": "Base retenciones otras rentas",
         "en": "Other withholding base",
         "es": "Base retenciones otras rentas",
         "hu": "Egyéb levonási alap"
@@ -183,7 +173,7 @@
       "casilla_id": "06",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(04 + 05)",
@@ -193,13 +183,11 @@
         ]
       },
       "help": {
-        "ca": "Base total retenciones. Se calcula como (04 + 05).",
-        "en": "Total withholding base. Computed as (04 + 05).",
-        "es": "Base total retenciones. Se calcula como (04 + 05).",
-        "hu": "Teljes levonási alap. Számítás: (04 + 05)."
+        "en": "Total withholding base. Computed as (04 + 05). (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "es": "Base total retenciones. Se calcula como (04 + 05). (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "hu": "Teljes levonási alap. Számítás: (04 + 05). (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Base total retenciones",
         "en": "Total withholding base",
         "es": "Base total retenciones",
         "hu": "Teljes levonási alap"
@@ -232,17 +220,15 @@
       "casilla_id": "07",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones dividendos",
         "en": "Dividend withholdings",
         "es": "Retenciones dividendos",
         "hu": "Osztalék-levonás"
       },
       "label": {
-        "ca": "Retenciones dividendos",
         "en": "Dividend withholdings",
         "es": "Retenciones dividendos",
         "hu": "Osztalék-levonás"
@@ -264,17 +250,15 @@
       "casilla_id": "08",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones otras rentas",
         "en": "Other withholdings",
         "es": "Retenciones otras rentas",
         "hu": "Egyéb levonás"
       },
       "label": {
-        "ca": "Retenciones otras rentas",
         "en": "Other withholdings",
         "es": "Retenciones otras rentas",
         "hu": "Egyéb levonás"
@@ -296,7 +280,7 @@
       "casilla_id": "09",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(07 + 08)",
@@ -306,13 +290,11 @@
         ]
       },
       "help": {
-        "ca": "Total retenciones. Se calcula como (07 + 08).",
-        "en": "Total withholdings. Computed as (07 + 08).",
-        "es": "Total retenciones. Se calcula como (07 + 08).",
-        "hu": "Teljes levonás. Számítás: (07 + 08)."
+        "en": "Total withholdings. Computed as (07 + 08). (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "es": "Total retenciones. Se calcula como (07 + 08). (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "hu": "Teljes levonás. Számítás: (07 + 08). (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Total retenciones",
         "en": "Total withholdings",
         "es": "Total retenciones",
         "hu": "Teljes levonás"
@@ -345,17 +327,15 @@
       "casilla_id": "10",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado declaracion anterior (complementaria)",
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
         "hu": "Korábbi bevallás eredménye"
       },
       "label": {
-        "ca": "Resultado declaracion anterior (complementaria)",
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
         "hu": "Korábbi bevallás eredménye"
@@ -377,7 +357,7 @@
       "casilla_id": "11",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(09 - 10)",
@@ -387,13 +367,11 @@
         ]
       },
       "help": {
-        "ca": "Resultado a ingresar. Se calcula como (09 - 10).",
-        "en": "Net amount payable. Computed as (09 - 10).",
-        "es": "Resultado a ingresar. Se calcula como (09 - 10).",
-        "hu": "Fizetendő eredmény. Számítás: (09 - 10)."
+        "en": "Net amount payable. Computed as (09 - 10). (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "es": "Resultado a ingresar. Se calcula como (09 - 10). (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "hu": "Fizetendő eredmény. Számítás: (09 - 10). (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado a ingresar",
         "en": "Net amount payable",
         "es": "Resultado a ingresar",
         "hu": "Fizetendő eredmény"

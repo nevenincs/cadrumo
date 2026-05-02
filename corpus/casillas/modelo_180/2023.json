@@ -6,17 +6,15 @@
       "casilla_id": "01",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total perceptores",
         "en": "Total recipients",
         "es": "Total perceptores",
         "hu": "Összes bérbeadó"
       },
       "label": {
-        "ca": "Total perceptores",
         "en": "Total recipients",
         "es": "Total perceptores",
         "hu": "Összes bérbeadó"
@@ -38,17 +36,15 @@
       "casilla_id": "02",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total base retencion",
         "en": "Total withholding base",
         "es": "Total base retencion",
         "hu": "Teljes levonási alap"
       },
       "label": {
-        "ca": "Total base retencion",
         "en": "Total withholding base",
         "es": "Total base retencion",
         "hu": "Teljes levonási alap"
@@ -70,7 +66,7 @@
       "casilla_id": "03",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(irpf.arrendamientos_rate * 02)",
@@ -79,13 +75,11 @@
         ]
       },
       "help": {
-        "ca": "Total retenciones. Se calcula como (irpf.arrendamientos_rate * 02).",
-        "en": "Total withholdings. Computed as (irpf.arrendamientos_rate * 02).",
-        "es": "Total retenciones. Se calcula como (irpf.arrendamientos_rate * 02).",
-        "hu": "Teljes levonás. Számítás: (irpf.arrendamientos_rate * 02)."
+        "en": "Total withholdings. Computed as (irpf.arrendamientos_rate * 02). (Legal basis: reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "es": "Total retenciones. Se calcula como (irpf.arrendamientos_rate * 02). (Base legal: reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "hu": "Teljes levonás. Számítás: (irpf.arrendamientos_rate * 02). (Jogalap: reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Total retenciones",
         "en": "Total withholdings",
         "es": "Total retenciones",
         "hu": "Teljes levonás"
@@ -122,17 +116,15 @@
       "casilla_id": "04",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total ingresos a cuenta por retribuciones en especie",
         "en": "In-kind payments on account",
         "es": "Total ingresos a cuenta por retribuciones en especie",
         "hu": "Természetbeni előlegek"
       },
       "label": {
-        "ca": "Total ingresos a cuenta por retribuciones en especie",
         "en": "In-kind payments on account",
         "es": "Total ingresos a cuenta por retribuciones en especie",
         "hu": "Természetbeni előlegek"

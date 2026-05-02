@@ -6,17 +6,15 @@
       "casilla_id": "01",
       "computed": false,
       "data_type": "integer",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de perceptores con rendimientos del trabajo en el trimestre.",
         "en": "Number of recipients of work income in the quarter.",
         "es": "Número de perceptores con rendimientos del trabajo en el trimestre.",
         "hu": "A negyedévben munkajövedelemben részesülők száma."
       },
       "label": {
-        "ca": "N.º perceptores — rendimientos del trabajo",
         "en": "Recipients — work income",
         "es": "N.º perceptores — rendimientos del trabajo",
         "hu": "Munkajövedelem-kedvezményezettek"
@@ -38,17 +36,15 @@
       "casilla_id": "02",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Suma de las percepciones íntegras satisfechas por rendimientos del trabajo en el trimestre.",
         "en": "Sum of gross perceptions paid as work income in the quarter.",
         "es": "Suma de las percepciones íntegras satisfechas por rendimientos del trabajo en el trimestre.",
         "hu": "A negyedévben munkajövedelemként kifizetett bruttó jövedelmek összege."
       },
       "label": {
-        "ca": "Import de las percepciones — rendimientos del trabajo",
         "en": "Perceptions amount — work income",
         "es": "Importe de las percepciones — rendimientos del trabajo",
         "hu": "Munkajövedelem összege"
@@ -70,17 +66,15 @@
       "casilla_id": "03",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones rendimientos del trabajo",
         "en": "Work income withholdings",
         "es": "Retenciones rendimientos del trabajo",
         "hu": "Munkajövedelem levonás"
       },
       "label": {
-        "ca": "Retenciones rendimientos del trabajo",
         "en": "Work income withholdings",
         "es": "Retenciones rendimientos del trabajo",
         "hu": "Munkajövedelem levonás"
@@ -102,17 +96,15 @@
       "casilla_id": "04",
       "computed": false,
       "data_type": "integer",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de perceptores con rendimientos de actividades económicas en el trimestre.",
         "en": "Number of recipients of business income in the quarter.",
         "es": "Número de perceptores con rendimientos de actividades económicas en el trimestre.",
         "hu": "A negyedévben vállalkozói jövedelemben részesülők száma."
       },
       "label": {
-        "ca": "N.º perceptores — actividades económicas",
         "en": "Recipients — business income",
         "es": "N.º perceptores — actividades económicas",
         "hu": "Vállalkozói-jövedelem kedvezményezettek"
@@ -134,17 +126,15 @@
       "casilla_id": "05",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Suma de las percepciones íntegras satisfechas por actividades económicas en el trimestre.",
         "en": "Sum of gross perceptions paid as business income in the quarter.",
         "es": "Suma de las percepciones íntegras satisfechas por actividades económicas en el trimestre.",
         "hu": "A negyedévi vállalkozói bruttó jövedelmek összege."
       },
       "label": {
-        "ca": "Import de las percepciones — actividades económicas",
         "en": "Perceptions amount — business income",
         "es": "Importe de las percepciones — actividades económicas",
         "hu": "Vállalkozói jövedelem összege"
@@ -166,17 +156,15 @@
       "casilla_id": "06",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones actividades económicas",
         "en": "Business income withholdings",
         "es": "Retenciones actividades económicas",
         "hu": "Gazdasági tev. levonás"
       },
       "label": {
-        "ca": "Retenciones actividades económicas",
         "en": "Business income withholdings",
         "es": "Retenciones actividades económicas",
         "hu": "Gazdasági tev. levonás"
@@ -198,17 +186,15 @@
       "casilla_id": "07",
       "computed": false,
       "data_type": "integer",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de perceptores de premios sujetos a retención (LIRPF art. 101.7).",
         "en": "Number of prize recipients subject to withholding (LIRPF art. 101.7).",
         "es": "Número de perceptores de premios sujetos a retención (LIRPF art. 101.7).",
         "hu": "A nyereményadó-köteles kedvezményezettek száma."
       },
       "label": {
-        "ca": "N.º perceptores — premios",
         "en": "Recipients — prizes",
         "es": "N.º perceptores — premios",
         "hu": "Nyeremény-kedvezményezettek"
@@ -230,17 +216,15 @@
       "casilla_id": "08",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Percepciones premios",
         "en": "Prize perceptions",
         "es": "Percepciones premios",
         "hu": "Nyeremény jövedelem"
       },
       "label": {
-        "ca": "Percepciones premios",
         "en": "Prize perceptions",
         "es": "Percepciones premios",
         "hu": "Nyeremény jövedelem"
@@ -262,7 +246,7 @@
       "casilla_id": "09",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(irpf.premios_rate * 08)",
@@ -271,13 +255,11 @@
         ]
       },
       "help": {
-        "ca": "Retenciones premios. Se calcula como (irpf.premios_rate * 08).",
-        "en": "Prize withholdings. Computed as (irpf.premios_rate * 08).",
-        "es": "Retenciones premios. Se calcula como (irpf.premios_rate * 08).",
-        "hu": "Nyeremény levonás. Számítás: (irpf.premios_rate * 08)."
+        "en": "Prize withholdings. Computed as (irpf.premios_rate * 08). (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Retenciones premios. Se calcula como (irpf.premios_rate * 08). (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Nyeremény levonás. Számítás: (irpf.premios_rate * 08). (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Retenciones premios",
         "en": "Prize withholdings",
         "es": "Retenciones premios",
         "hu": "Nyeremény levonás"
@@ -309,17 +291,15 @@
       "casilla_id": "10",
       "computed": false,
       "data_type": "integer",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de perceptores con ganancias patrimoniales por aprovechamientos forestales en montes públicos.",
         "en": "Number of recipients of capital gains from forestry on public lands.",
         "es": "Número de perceptores con ganancias patrimoniales por aprovechamientos forestales en montes públicos.",
         "hu": "Az állami erdőkben elért vagyonnyereségben részesülők száma."
       },
       "label": {
-        "ca": "N.º perceptores — ganancias patrimoniales",
         "en": "Recipients — capital gains",
         "es": "N.º perceptores — ganancias patrimoniales",
         "hu": "Vagyonnyereség-kedvezményezettek"
@@ -341,17 +321,15 @@
       "casilla_id": "11",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Percepciones ganancias patrimoniales",
         "en": "Capital gains perceptions",
         "es": "Percepciones ganancias patrimoniales",
         "hu": "Vagyonnyereség jövedelem"
       },
       "label": {
-        "ca": "Percepciones ganancias patrimoniales",
         "en": "Capital gains perceptions",
         "es": "Percepciones ganancias patrimoniales",
         "hu": "Vagyonnyereség jövedelem"
@@ -373,7 +351,7 @@
       "casilla_id": "12",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(irpf.ganancias_arrendamiento_rate * 11)",
@@ -382,13 +360,11 @@
         ]
       },
       "help": {
-        "ca": "Retenciones ganancias patrimoniales. Se calcula como (irpf.ganancias_arrendamiento_rate * 11).",
-        "en": "Capital gains withholdings. Computed as (irpf.ganancias_arrendamiento_rate * 11).",
-        "es": "Retenciones ganancias patrimoniales. Se calcula como (irpf.ganancias_arrendamiento_rate * 11).",
-        "hu": "Vagyonnyereség levonás. Számítás: (irpf.ganancias_arrendamiento_rate * 11)."
+        "en": "Capital gains withholdings. Computed as (irpf.ganancias_arrendamiento_rate * 11). (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Retenciones ganancias patrimoniales. Se calcula como (irpf.ganancias_arrendamiento_rate * 11). (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Vagyonnyereség levonás. Számítás: (irpf.ganancias_arrendamiento_rate * 11). (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Retenciones ganancias patrimoniales",
         "en": "Capital gains withholdings",
         "es": "Retenciones ganancias patrimoniales",
         "hu": "Vagyonnyereség levonás"
@@ -420,17 +396,15 @@
       "casilla_id": "13",
       "computed": false,
       "data_type": "integer",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de perceptores de contraprestaciones en especie en el trimestre.",
         "en": "Number of in-kind perception recipients in the quarter.",
         "es": "Número de perceptores de contraprestaciones en especie en el trimestre.",
         "hu": "A természetbeni juttatásban részesülők száma a negyedévben."
       },
       "label": {
-        "ca": "N.º perceptores — contraprestaciones en especie",
         "en": "Recipients — in-kind perceptions",
         "es": "N.º perceptores — contraprestaciones en especie",
         "hu": "Természetbeni jövedelmek kedvezményezettjei"
@@ -452,17 +426,15 @@
       "casilla_id": "14",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Valor fiscal de las contraprestaciones en especie satisfechas en el trimestre.",
         "en": "Tax-valuation of in-kind perceptions paid in the quarter.",
         "es": "Valor fiscal de las contraprestaciones en especie satisfechas en el trimestre.",
         "hu": "A természetbeni juttatások adóértéke a negyedévben."
       },
       "label": {
-        "ca": "Valoración percepciones — contraprestaciones en especie",
         "en": "Valuation — in-kind perceptions",
         "es": "Valoración percepciones — contraprestaciones en especie",
         "hu": "Természetbeni juttatások értéke"
@@ -484,17 +456,15 @@
       "casilla_id": "15",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones contraprestaciones en especie",
         "en": "In-kind withholdings",
         "es": "Retenciones contraprestaciones en especie",
         "hu": "Természetbeni levonás"
       },
       "label": {
-        "ca": "Retenciones contraprestaciones en especie",
         "en": "In-kind withholdings",
         "es": "Retenciones contraprestaciones en especie",
         "hu": "Természetbeni levonás"
@@ -516,17 +486,15 @@
       "casilla_id": "16",
       "computed": false,
       "data_type": "integer",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de perceptores por imputación de rentas por cesión de derechos de imagen (LIRPF art. 92).",
         "en": "Number of recipients of imputed image-rights income (LIRPF art. 92).",
         "es": "Número de perceptores por imputación de rentas por cesión de derechos de imagen (LIRPF art. 92).",
         "hu": "Képmás-jog jövedelemben részesülők száma."
       },
       "label": {
-        "ca": "N.º perceptores — cesión de derechos de imagen",
         "en": "Recipients — image-rights assignment",
         "es": "N.º perceptores — cesión de derechos de imagen",
         "hu": "Képmás-jog átruházás kedvezményezettjei"
@@ -548,17 +516,15 @@
       "casilla_id": "17",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Suma de las imputaciones de rentas por cesión de derechos de imagen en el trimestre.",
         "en": "Sum of imputed image-rights income in the quarter.",
         "es": "Suma de las imputaciones de rentas por cesión de derechos de imagen en el trimestre.",
         "hu": "Képmás-jog átruházás miatti jövedelmek negyedévi összege."
       },
       "label": {
-        "ca": "Import percepciones — cesión de derechos de imagen",
         "en": "Perceptions amount — image rights",
         "es": "Importe percepciones — cesión de derechos de imagen",
         "hu": "Képmás-jog jövedelem"
@@ -580,17 +546,15 @@
       "casilla_id": "18",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones cesión de imagen",
         "en": "Image rights withholdings",
         "es": "Retenciones cesión de imagen",
         "hu": "Képmás-jog levonás"
       },
       "label": {
-        "ca": "Retenciones cesión de imagen",
         "en": "Image rights withholdings",
         "es": "Retenciones cesión de imagen",
         "hu": "Képmás-jog levonás"
@@ -612,7 +576,7 @@
       "casilla_id": "28",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(03 + 06 + 09 + 12 + 15 + 18)",
@@ -626,13 +590,11 @@
         ]
       },
       "help": {
-        "ca": "Total retenciones. Se calcula como (03 + 06 + 09 + 12 + 15 + 18).",
-        "en": "Total withholdings. Computed as (03 + 06 + 09 + 12 + 15 + 18).",
-        "es": "Total retenciones. Se calcula como (03 + 06 + 09 + 12 + 15 + 18).",
-        "hu": "Levonás összesen. Számítás: (03 + 06 + 09 + 12 + 15 + 18)."
+        "en": "Total withholdings. Computed as (03 + 06 + 09 + 12 + 15 + 18). (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Total retenciones. Se calcula como (03 + 06 + 09 + 12 + 15 + 18). (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Levonás összesen. Számítás: (03 + 06 + 09 + 12 + 15 + 18). (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Total retenciones",
         "en": "Total withholdings",
         "es": "Total retenciones",
         "hu": "Levonás összesen"
@@ -669,17 +631,15 @@
       "casilla_id": "29",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "A deducir: exclusivamente en declaración complementaria",
         "en": "Prior-filing deduction (complementary filings only)",
         "es": "A deducir: exclusivamente en declaración complementaria",
         "hu": "Korábbi bevallásból levonás (kiegészítő bevallás)"
       },
       "label": {
-        "ca": "A deducir: exclusivamente en declaración complementaria",
         "en": "Prior-filing deduction (complementary filings only)",
         "es": "A deducir: exclusivamente en declaración complementaria",
         "hu": "Korábbi bevallásból levonás (kiegészítő bevallás)"
@@ -701,7 +661,7 @@
       "casilla_id": "30",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(28 - 29)",
@@ -711,13 +671,11 @@
         ]
       },
       "help": {
-        "ca": "Resultado a ingresar. Se calcula como (28 - 29).",
-        "en": "Net amount payable. Computed as (28 - 29).",
-        "es": "Resultado a ingresar. Se calcula como (28 - 29).",
-        "hu": "Fizetendő eredmény. Számítás: (28 - 29)."
+        "en": "Net amount payable. Computed as (28 - 29). (Legal basis: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Resultado a ingresar. Se calcula como (28 - 29). (Base legal: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Fizetendő eredmény. Számítás: (28 - 29). (Jogalap: ley, art. 99-101, BOE-A-2006-20764; reglamento, art. 100, BOE-A-2007-6820; reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado a ingresar",
         "en": "Net amount payable",
         "es": "Resultado a ingresar",
         "hu": "Fizetendő eredmény"

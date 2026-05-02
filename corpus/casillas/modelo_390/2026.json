@@ -6,17 +6,15 @@
       "casilla_id": "01",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Règim general 1T base",
         "en": "General regime Q1 base",
         "es": "Régimen general 1T base",
         "hu": "Általános rendszer 1T alap"
       },
       "label": {
-        "ca": "Règim general 1T base",
         "en": "General regime Q1 base",
         "es": "Régimen general 1T base",
         "hu": "Általános rendszer 1T alap"
@@ -38,17 +36,15 @@
       "casilla_id": "04",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Règim general 1T cuota",
         "en": "General regime Q1 quota",
         "es": "Régimen general 1T cuota",
         "hu": "Általános rendszer 1T összeg"
       },
       "label": {
-        "ca": "Règim general 1T cuota",
         "en": "General regime Q1 quota",
         "es": "Régimen general 1T cuota",
         "hu": "Általános rendszer 1T összeg"
@@ -70,17 +66,15 @@
       "casilla_id": "95",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total bases imponibles",
         "en": "Total taxable bases",
         "es": "Total bases imponibles",
         "hu": "Összes adóalap"
       },
       "label": {
-        "ca": "Total bases imponibles",
         "en": "Total taxable bases",
         "es": "Total bases imponibles",
         "hu": "Összes adóalap"
@@ -102,17 +96,15 @@
       "casilla_id": "96",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total cuotas repercutidas",
         "en": "Total output VAT",
         "es": "Total cuotas repercutidas",
         "hu": "Áthárított ÁFA összesen"
       },
       "label": {
-        "ca": "Total cuotas repercutidas",
         "en": "Total output VAT",
         "es": "Total cuotas repercutidas",
         "hu": "Áthárított ÁFA összesen"
@@ -134,17 +126,15 @@
       "casilla_id": "100",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total IVA suportat deducible operaciones interiores",
         "en": "Total deductible input VAT (domestic)",
         "es": "Total IVA soportado deducible operaciones interiores",
         "hu": "Levonható ÁFA belföld"
       },
       "label": {
-        "ca": "Total IVA suportat deducible operaciones interiores",
         "en": "Total deductible input VAT (domestic)",
         "es": "Total IVA soportado deducible operaciones interiores",
         "hu": "Levonható ÁFA belföld"
@@ -166,17 +156,15 @@
       "casilla_id": "101",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total IVA suportat deducible importaciones",
         "en": "Total deductible input VAT (imports)",
         "es": "Total IVA soportado deducible importaciones",
         "hu": "Levonható ÁFA import"
       },
       "label": {
-        "ca": "Total IVA suportat deducible importaciones",
         "en": "Total deductible input VAT (imports)",
         "es": "Total IVA soportado deducible importaciones",
         "hu": "Levonható ÁFA import"
@@ -198,7 +186,7 @@
       "casilla_id": "104",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(100 + 101)",
@@ -208,13 +196,11 @@
         ]
       },
       "help": {
-        "ca": "Total IVA suportat deducible. Se calcula como (100 + 101).",
-        "en": "Total deductible input VAT. Computed as (100 + 101).",
-        "es": "Total IVA soportado deducible. Se calcula como (100 + 101).",
-        "hu": "Összes levonható ÁFA. Számítás: (100 + 101)."
+        "en": "Total deductible input VAT. Computed as (100 + 101). (Legal basis: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)",
+        "es": "Total IVA soportado deducible. Se calcula como (100 + 101). (Base legal: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)",
+        "hu": "Összes levonható ÁFA. Számítás: (100 + 101). (Jogalap: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Total IVA suportat deducible",
         "en": "Total deductible input VAT",
         "es": "Total IVA soportado deducible",
         "hu": "Összes levonható ÁFA"
@@ -247,7 +233,7 @@
       "casilla_id": "105",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(96 - 104)",
@@ -257,13 +243,11 @@
         ]
       },
       "help": {
-        "ca": "Resultado régimen general. Se calcula como (96 - 104).",
-        "en": "Result (general regime). Computed as (96 - 104).",
-        "es": "Resultado régimen general. Se calcula como (96 - 104).",
-        "hu": "Általános rendszer eredménye. Számítás: (96 - 104)."
+        "en": "Result (general regime). Computed as (96 - 104). (Legal basis: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Resultado régimen general. Se calcula como (96 - 104). (Base legal: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Általános rendszer eredménye. Számítás: (96 - 104). (Jogalap: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultado régimen general",
         "en": "Result (general regime)",
         "es": "Resultado régimen general",
         "hu": "Általános rendszer eredménye"
@@ -296,17 +280,15 @@
       "casilla_id": "108",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado régimen simplificado",
         "en": "Result (simplified regime)",
         "es": "Resultado régimen simplificado",
         "hu": "Egyszerűsített rendszer eredménye"
       },
       "label": {
-        "ca": "Resultado régimen simplificado",
         "en": "Result (simplified regime)",
         "es": "Resultado régimen simplificado",
         "hu": "Egyszerűsített rendszer eredménye"
@@ -328,17 +310,15 @@
       "casilla_id": "109",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado otros regímenes",
         "en": "Result (other regimes)",
         "es": "Resultado otros regímenes",
         "hu": "Egyéb rendszerek eredménye"
       },
       "label": {
-        "ca": "Resultado otros regímenes",
         "en": "Result (other regimes)",
         "es": "Resultado otros regímenes",
         "hu": "Egyéb rendszerek eredménye"
@@ -360,7 +340,7 @@
       "casilla_id": "190",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(105 + 108 + 109)",
@@ -371,13 +351,11 @@
         ]
       },
       "help": {
-        "ca": "Suma resultado. Se calcula como (105 + 108 + 109).",
-        "en": "Result sum. Computed as (105 + 108 + 109).",
-        "es": "Suma resultado. Se calcula como (105 + 108 + 109).",
-        "hu": "Eredmény összege. Számítás: (105 + 108 + 109)."
+        "en": "Result sum. Computed as (105 + 108 + 109). (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Suma resultado. Se calcula como (105 + 108 + 109). (Base legal: ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Eredmény összege. Számítás: (105 + 108 + 109). (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Suma resultado",
         "en": "Result sum",
         "es": "Suma resultado",
         "hu": "Eredmény összege"
@@ -411,7 +389,7 @@
       "casilla_id": "191",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(190 - 662)",
@@ -421,13 +399,11 @@
         ]
       },
       "help": {
-        "ca": "Quota resultante anual. Se calcula como (190 - 662).",
-        "en": "Annual result quota. Computed as (190 - 662).",
-        "es": "Cuota resultante anual. Se calcula como (190 - 662).",
-        "hu": "Éves eredmény-összeg. Számítás: (190 - 662)."
+        "en": "Annual result quota. Computed as (190 - 662). (Legal basis: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Cuota resultante anual. Se calcula como (190 - 662). (Base legal: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Éves eredmény-összeg. Számítás: (190 - 662). (Jogalap: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Quota resultante anual",
         "en": "Annual result quota",
         "es": "Cuota resultante anual",
         "hu": "Éves eredmény-összeg"
@@ -460,7 +436,7 @@
       "casilla_id": "192",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "max(0, 191)",
@@ -469,13 +445,11 @@
         ]
       },
       "help": {
-        "ca": "Total a ingresar. Se calcula como max(0, 191).",
-        "en": "Total payable. Computed as max(0, 191).",
-        "es": "Total a ingresar. Se calcula como max(0, 191).",
-        "hu": "Fizetendő összeg. Számítás: max(0, 191)."
+        "en": "Total payable. Computed as max(0, 191). (Legal basis: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "es": "Total a ingresar. Se calcula como max(0, 191). (Base legal: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "hu": "Fizetendő összeg. Számítás: max(0, 191). (Jogalap: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
-        "ca": "Total a ingresar",
         "en": "Total payable",
         "es": "Total a ingresar",
         "hu": "Fizetendő összeg"
@@ -512,7 +486,7 @@
       "casilla_id": "193",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "max(0, (0 - 191))",
@@ -521,13 +495,11 @@
         ]
       },
       "help": {
-        "ca": "Total a devolver. Se calcula como max(0, (0 - 191)).",
-        "en": "Total refundable. Computed as max(0, (0 - 191)).",
-        "es": "Total a devolver. Se calcula como max(0, (0 - 191)).",
-        "hu": "Visszatérítendő összeg. Számítás: max(0, (0 - 191))."
+        "en": "Total refundable. Computed as max(0, (0 - 191)). (Legal basis: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "es": "Total a devolver. Se calcula como max(0, (0 - 191)). (Base legal: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "hu": "Visszatérítendő összeg. Számítás: max(0, (0 - 191)). (Jogalap: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
-        "ca": "Total a devolver",
         "en": "Total refundable",
         "es": "Total a devolver",
         "hu": "Visszatérítendő összeg"
@@ -564,17 +536,15 @@
       "casilla_id": "662",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Regularización bienes de inversión",
         "en": "Capital-goods regularisation",
         "es": "Regularización bienes de inversión",
         "hu": "Tárgyi eszközök szabályozása"
       },
       "label": {
-        "ca": "Regularización bienes de inversión",
         "en": "Capital-goods regularisation",
         "es": "Regularización bienes de inversión",
         "hu": "Tárgyi eszközök szabályozása"
