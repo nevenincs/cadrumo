@@ -12,14 +12,12 @@
       "help": {
         "en": "Annual cumulative number of recipients of investment income subject to withholding (LIRPF art. 25).",
         "es": "Total acumulado anual de perceptores de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25).",
-        "hu": "Tőkejövedelemben részesülők éves száma.",
-        "ca": "Total acumulado anual de perceptores de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25)."
+        "hu": "Tőkejövedelemben részesülők éves száma."
       },
       "label": {
         "en": "Total recipients",
         "es": "N.º total perceptores",
-        "hu": "Összes kedvezményezett",
-        "ca": "N.º total perceptores"
+        "hu": "Összes kedvezményezett"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_193",
@@ -44,14 +42,12 @@
       "help": {
         "en": "Annual sum of bases subject to withholding on investment income.",
         "es": "Suma anual de las bases sujetas a retención sobre rendimientos del capital mobiliario.",
-        "hu": "A tőkejövedelmek éves levonási alapjának összege.",
-        "ca": "Suma anual de las bases sujetas a retención sobre rendimientos del capital mobiliario."
+        "hu": "A tőkejövedelmek éves levonási alapjának összege."
       },
       "label": {
         "en": "Withholding base",
         "es": "Base retenciones",
-        "hu": "Levonási alap",
-        "ca": "Base retenciones"
+        "hu": "Levonási alap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_193",
@@ -76,14 +72,12 @@
       "help": {
         "en": "Annual sum of withholdings and payments on account at the 19% rate (LIRPF art. 101.4).",
         "es": "Suma anual de las retenciones e ingresos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4).",
-        "hu": "A tőkejövedelmekre alkalmazott 19%-os éves levonás összege.",
-        "ca": "Suma anual de las retenciones e ingresos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4)."
+        "hu": "A tőkejövedelmekre alkalmazott 19%-os éves levonás összege."
       },
       "label": {
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonások és előlegek",
-        "ca": "Retenciones e ingresos a cuenta"
+        "hu": "Levonások és előlegek"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_193",

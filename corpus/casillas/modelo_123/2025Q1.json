@@ -12,14 +12,12 @@
       "help": {
         "en": "Dividend recipients",
         "es": "Perceptores dividendos",
-        "hu": "Osztalék-kedvezményezettek",
-        "ca": "Perceptores dividendos"
+        "hu": "Osztalék-kedvezményezettek"
       },
       "label": {
         "en": "Dividend recipients",
         "es": "Perceptores dividendos",
-        "hu": "Osztalék-kedvezményezettek",
-        "ca": "Perceptores dividendos"
+        "hu": "Osztalék-kedvezményezettek"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -44,14 +42,12 @@
       "help": {
         "en": "Other recipients",
         "es": "Perceptores otras rentas",
-        "hu": "Egyéb kedvezményezettek",
-        "ca": "Perceptores otras rentas"
+        "hu": "Egyéb kedvezményezettek"
       },
       "label": {
         "en": "Other recipients",
         "es": "Perceptores otras rentas",
-        "hu": "Egyéb kedvezményezettek",
-        "ca": "Perceptores otras rentas"
+        "hu": "Egyéb kedvezményezettek"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -82,14 +78,12 @@
       "help": {
         "en": "Total recipients. Computed as (01 + 02). (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Total perceptores. Se calcula como (01 + 02). (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
-        "hu": "Összes kedvezményezett. Számítás: (01 + 02). (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
-        "ca": "Total perceptores. Se calcula como (01 + 02). (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
+        "hu": "Összes kedvezményezett. Számítás: (01 + 02). (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total recipients",
         "es": "Total perceptores",
-        "hu": "Összes kedvezményezett",
-        "ca": "Total perceptores"
+        "hu": "Összes kedvezményezett"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -125,14 +119,12 @@
       "help": {
         "en": "Dividend withholding base",
         "es": "Base retenciones dividendos",
-        "hu": "Osztalék levonási alap",
-        "ca": "Base retenciones dividendos"
+        "hu": "Osztalék levonási alap"
       },
       "label": {
         "en": "Dividend withholding base",
         "es": "Base retenciones dividendos",
-        "hu": "Osztalék levonási alap",
-        "ca": "Base retenciones dividendos"
+        "hu": "Osztalék levonási alap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -157,14 +149,12 @@
       "help": {
         "en": "Other withholding base",
         "es": "Base retenciones otras rentas",
-        "hu": "Egyéb levonási alap",
-        "ca": "Base retenciones otras rentas"
+        "hu": "Egyéb levonási alap"
       },
       "label": {
         "en": "Other withholding base",
         "es": "Base retenciones otras rentas",
-        "hu": "Egyéb levonási alap",
-        "ca": "Base retenciones otras rentas"
+        "hu": "Egyéb levonási alap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -195,14 +185,12 @@
       "help": {
         "en": "Total withholding base. Computed as (04 + 05). (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Base total retenciones. Se calcula como (04 + 05). (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
-        "hu": "Teljes levonási alap. Számítás: (04 + 05). (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
-        "ca": "Base total retenciones. Se calcula como (04 + 05). (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
+        "hu": "Teljes levonási alap. Számítás: (04 + 05). (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total withholding base",
         "es": "Base total retenciones",
-        "hu": "Teljes levonási alap",
-        "ca": "Base total retenciones"
+        "hu": "Teljes levonási alap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -238,14 +226,12 @@
       "help": {
         "en": "Dividend withholdings",
         "es": "Retenciones dividendos",
-        "hu": "Osztalék-levonás",
-        "ca": "Retenciones dividendos"
+        "hu": "Osztalék-levonás"
       },
       "label": {
         "en": "Dividend withholdings",
         "es": "Retenciones dividendos",
-        "hu": "Osztalék-levonás",
-        "ca": "Retenciones dividendos"
+        "hu": "Osztalék-levonás"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -270,14 +256,12 @@
       "help": {
         "en": "Other withholdings",
         "es": "Retenciones otras rentas",
-        "hu": "Egyéb levonás",
-        "ca": "Retenciones otras rentas"
+        "hu": "Egyéb levonás"
       },
       "label": {
         "en": "Other withholdings",
         "es": "Retenciones otras rentas",
-        "hu": "Egyéb levonás",
-        "ca": "Retenciones otras rentas"
+        "hu": "Egyéb levonás"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -308,14 +292,12 @@
       "help": {
         "en": "Total withholdings. Computed as (07 + 08). (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Total retenciones. Se calcula como (07 + 08). (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
-        "hu": "Teljes levonás. Számítás: (07 + 08). (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
-        "ca": "Total retenciones. Se calcula como (07 + 08). (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
+        "hu": "Teljes levonás. Számítás: (07 + 08). (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total withholdings",
         "es": "Total retenciones",
-        "hu": "Teljes levonás",
-        "ca": "Total retenciones"
+        "hu": "Teljes levonás"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -351,14 +333,12 @@
       "help": {
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
-        "hu": "Korábbi bevallás eredménye",
-        "ca": "Resultado declaracion anterior (complementaria)"
+        "hu": "Korábbi bevallás eredménye"
       },
       "label": {
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
-        "hu": "Korábbi bevallás eredménye",
-        "ca": "Resultado declaracion anterior (complementaria)"
+        "hu": "Korábbi bevallás eredménye"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
@@ -389,14 +369,12 @@
       "help": {
         "en": "Net amount payable. Computed as (09 - 10). (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Resultado a ingresar. Se calcula como (09 - 10). (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
-        "hu": "Fizetendő eredmény. Számítás: (09 - 10). (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
-        "ca": "Resultado a ingresar. Se calcula como (09 - 10). (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
+        "hu": "Fizetendő eredmény. Számítás: (09 - 10). (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Net amount payable",
         "es": "Resultado a ingresar",
-        "hu": "Fizetendő eredmény",
-        "ca": "Resultado a ingresar"
+        "hu": "Fizetendő eredmény"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",

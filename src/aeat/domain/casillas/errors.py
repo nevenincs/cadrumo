@@ -1,4 +1,11 @@
-"""Casilla-domain exceptions."""
+"""Exception hierarchy for the :mod:`aeat.domain.casillas` subpackage.
+
+All errors derive from :exc:`~aeat.core.errors.AeatError` so they
+share the project-wide error envelope. The structured
+:exc:`VerifyError` family carries enough context
+(modelo / period / casilla id) to render actionable diagnostic output
+without re-parsing the catalogue.
+"""
 
 from __future__ import annotations
 
@@ -27,7 +34,19 @@ class CasillaParseError(CasillaError):
 
 
 class VerifyError(CasillaError):
-    """Base class for structured verification failures."""
+    """Base class for structured verification failures.
+
+    Subclasses set :attr:`casilla_code` to a stable kebab-style code
+    so :meth:`__str__` produces output that is greppable from CI
+    logs.
+
+    Attributes:
+        modelo: Modelo identifier the failing record belongs to.
+        period: Period identifier the failing record belongs to.
+        casilla_id: Identifier of the failing casilla, or ``None``
+            when the failure is at the catalogue level.
+        message: Human-readable failure summary.
+    """
 
     casilla_code = "verify_error"
 

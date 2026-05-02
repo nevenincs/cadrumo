@@ -1,20 +1,24 @@
-"""Lock the corpus ↔ rule-engine alignment in CI.
+"""Lock the corpus / rule-engine alignment in CI.
 
-Three invariants are enforced:
+Three invariants are enforced against the committed
+``corpus/casillas/`` JSON and the
+:mod:`aeat.domain.formulas` engine registry:
 
-1. Every formula declared in the rule-engine ruleset for a given
-   ``(modelo, year)`` is reflected in the matching corpus record's
-   ``references_rules`` tuple. A formula in the engine without a
-   corpus link is a legal-traceability gap.
+* Every formula declared in the rule-engine ruleset for a given
+  ``(modelo, year)`` is reflected in the matching corpus record's
+  ``references_rules`` tuple. A formula in the engine without a
+  corpus link is a legal-traceability gap.
+* Every ``references_rules`` entry in every corpus catalogue resolves
+  to a real ``formula_id`` in the engine registry. A dangling pointer
+  means the corpus claims a calculation that the engine cannot run.
+* For every corpus record marked ``computed=True``, the matching
+  engine formula's casilla refs equal the record's
+  ``references_casillas`` tuple. A divergence means the corpus and
+  the engine disagree on which casillas drive the calculation.
 
-2. Every ``references_rules`` entry in every corpus catalogue resolves
-   to a real ``formula_id`` in the engine registry. A dangling pointer
-   means the corpus claims a calculation that the engine cannot run.
-
-3. For every corpus record marked ``computed=True``, the matching
-   engine formula's casilla refs equal the record's
-   ``references_casillas`` tuple. A divergence means the corpus and
-   the engine disagree on which casillas drive the calculation.
+Two further sanity checks ensure every record carries authoritative
+Spanish text on ``label`` and ``help`` and that intra-catalogue
+``references_casillas`` resolve.
 """
 
 from __future__ import annotations

@@ -15,7 +15,6 @@ from . import (
     BinaryOp,
     Casilla,
     CasillaDataType,
-    SchemaCasillaRef,
     CompareOp,
     CrossCasillaRule,
     EnumRule,
@@ -24,6 +23,7 @@ from . import (
     Modelo,
     RangeRule,
     RegexRule,
+    SchemaCasillaRef,
     SchemaEvaluationError,
     SchemaProvenance,
     SchemaSource,
@@ -76,6 +76,8 @@ def _minimal_casilla(
 
 
 class TestFormulaAst:
+    """Round-trip and discriminator behaviour of the formula AST union."""
+
     def test_literal_round_trip(self) -> None:
         node: FormulaNode = LiteralFormula(value=Decimal("42.50"))
         adapter = TypeAdapter(FormulaNode)
@@ -109,6 +111,8 @@ class TestFormulaAst:
 
 
 class TestEvaluate:
+    """Behaviour of :func:`aeat.domain.schema.evaluate` over each AST node."""
+
     def test_literal(self) -> None:
         assert evaluate(LiteralFormula(value=Decimal("7.50")), {}) == Decimal("7.50")
 
@@ -179,6 +183,8 @@ class TestEvaluate:
 
 
 class TestValidationRules:
+    """Validators on each :class:`aeat.domain.schema._models.ValidationRule` variant."""
+
     def test_range_rule_requires_a_bound(self) -> None:
         with pytest.raises(ValidationError):
             RangeRule()  # type: ignore[call-arg]
@@ -218,6 +224,8 @@ class TestValidationRules:
 
 
 class TestCasillaValidators:
+    """Field- and model-level validators on :class:`aeat.domain.schema.Casilla`."""
+
     def test_formula_and_computed_must_agree(self) -> None:
         with pytest.raises(ValidationError):
             Casilla(
@@ -283,6 +291,8 @@ def _build_modelo(
 
 
 class TestModeloValidators:
+    """Cross-field invariants enforced on :class:`aeat.domain.schema.Modelo`."""
+
     def test_happy_path(self) -> None:
         modelo = _build_modelo()
         assert modelo.modelo_code is ModeloCode.MODELO_130
@@ -355,12 +365,16 @@ class TestModeloValidators:
 
 
 class TestValidatePeriodWhitespace:
+    """Whitespace pre-condition on :func:`aeat.domain.schema.validate_period_for_modelo`."""
+
     def test_rejects_surrounding_whitespace(self) -> None:
         with pytest.raises(SchemaValidationError, match="whitespace"):
             validate_period_for_modelo(ModeloCode.MODELO_130, " 2025Q4")
 
 
 class TestValidatePeriodForModelo:
+    """Cadence-derived regex dispatch in :func:`aeat.domain.schema.validate_period_for_modelo`."""
+
     def test_quarterly_accepts_period(self) -> None:
         validate_period_for_modelo(ModeloCode.MODELO_130, "2025Q4")
 

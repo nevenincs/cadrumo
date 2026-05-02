@@ -1,4 +1,9 @@
-"""Smoke tests for the casillas subpackage."""
+"""Smoke tests for :mod:`aeat.domain.casillas`.
+
+Verifies the subpackage is importable, the public-surface contract
+holds, and the conventional ties to :mod:`aeat.core.errors` and
+:mod:`aeat.core.logging` are wired up correctly.
+"""
 
 from __future__ import annotations
 

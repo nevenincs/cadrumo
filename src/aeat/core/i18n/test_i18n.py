@@ -23,10 +23,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 class TestLanguage:
     def test_language_values(self) -> None:
-        """Test the trilingual contract language values."""
+        """The quad-lingual contract carries es/en/ca/hu only."""
         assert Language.ES == "es"
         assert Language.EN == "en"
+        assert Language.CA == "ca"
         assert Language.HU == "hu"
+
+    def test_language_membership_is_closed(self) -> None:
+        """Reject any language that is not part of the quad-lingual contract."""
+        members = {member.value for member in Language}
+        assert members == {"es", "en", "ca", "hu"}
 
 
 class TestNormalization:
@@ -62,11 +68,24 @@ class TestNormalization:
 
 class TestGetTranslation:
     def test_exact_match(self) -> None:
-        """Test getting exact translation."""
-        translatable: Translatable = {"es": "Hola", "en": "Hello", "hu": "Szia"}
+        """Each language returns its own slot when populated."""
+        translatable: Translatable = {
+            "es": "Hola",
+            "en": "Hello",
+            "ca": "Hola",
+            "hu": "Szia",
+        }
         assert get_translation(translatable, Language.ES) == "Hola"
         assert get_translation(translatable, Language.EN) == "Hello"
+        assert get_translation(translatable, Language.CA) == "Hola"
         assert get_translation(translatable, Language.HU) == "Szia"
+
+    def test_catalan_falls_through_hardcoded_chain(self) -> None:
+        """When CA is missing and config offers nothing usable, the
+        hardcoded fallback order (es, en, ca, hu) takes over."""
+        translatable: Translatable = {"es": "Hola"}
+        # Drop the configured chain so the hardcoded order kicks in.
+        assert get_translation(translatable, Language.CA) == "Hola"
 
     def test_strict_fallback_policy(self) -> None:
         """Test strict fallback policy raises error when missing."""
@@ -86,7 +105,7 @@ class TestGetTranslation:
 
     def test_config_fallback(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test fallback using the configuration list."""
-        # Mock settings to prioritize Hungarian then Spanish
+        # Configure settings to prioritize Hungarian then Spanish.
         monkeypatch.setenv("AEAT_FALLBACK_LANGUAGES", "hu,es")
 
         translatable: Translatable = {"es": "Hola", "en": "Hello"}
