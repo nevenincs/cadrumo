@@ -6,7 +6,6 @@ classes (no mocks, no patches). Each Protocol declares only the
 surface the engine actually consumes, decoupling submission from the
 richer surfaces of its sibling subpackages.
 
-- ``ModeloIdentifier`` — typed validating string for an AEAT modelo.
 - ``AuthProviderProbe`` — narrow auth-provider surface for the preflight gate.
 - ``DeadlineWindowChecker`` — narrow surface over
   :mod:`aeat.domain.deadlines` used by preflight.
@@ -20,62 +19,18 @@ Every record is either a strict+frozen pydantic v2 model or a
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable, Mapping
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler
-from pydantic_core import CoreSchema, core_schema
+from pydantic import BaseModel, ConfigDict
 
 from ...core.i18n import Translatable
+from .._identifiers import ModeloIdentifier
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-_MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
-
-
-class ModeloIdentifier(str):
-    """Typed string identifier for an AEAT modelo (e.g. ``"130"``, ``"303"``).
-
-    Shape-compatible with :class:`aeat.domain.deadlines.ModeloIdentifier`.
-    Intentionally wider than :class:`aeat.domain.modelos.ModeloCode`: any
-    well-formed three-digit modelo identifier is accepted, including
-    modelos outside the v1 closed catalogue.
-    """
-
-    __slots__ = ()
-
-    def __new__(cls, value: str) -> ModeloIdentifier:
-        """Construct and validate a modelo identifier.
-
-        Args:
-            value: The raw string identifier.
-
-        Returns:
-            The validated :class:`ModeloIdentifier`.
-
-        Raises:
-            ValueError: If ``value`` does not match the
-                ``^\\d{3}[A-Z]?$`` pattern.
-        """
-        if not isinstance(value, str) or not _MODELO_RE.match(value):
-            raise ValueError(f"Invalid modelo identifier: {value!r}")
-        return super().__new__(cls, value)
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: Any,
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Return a pydantic core schema that validates via :meth:`__new__`."""
-        return core_schema.no_info_after_validator_function(
-            cls,
-            core_schema.str_schema(pattern=_MODELO_RE.pattern),
-        )
 
 
 @runtime_checkable
@@ -124,7 +79,13 @@ class DeadlineWindowChecker(Protocol):
 
 
 class FilingFindingSeverity(StrEnum):
-    """Severity of a filing/preflight finding."""
+    """Severity of a filing / preflight finding.
+
+    Attributes:
+        INFO: Informational only; never blocks.
+        WARNING: Surfaced to the operator but does not block.
+        ERROR: Blocks submission; preflight refuses to proceed.
+    """
 
     INFO = "INFO"
     WARNING = "WARNING"
@@ -141,7 +102,7 @@ class FilingFinding(BaseModel):
 
     Attributes:
         severity: The finding severity; ``ERROR`` blocks submission.
-        message: Trilingual finding message.
+        message: Multilingual finding message.
     """
 
     model_config = _STRICT_FROZEN
@@ -154,7 +115,20 @@ class DraftStatus(StrEnum):
     """Mirror of :class:`aeat.application.filing.FilingDraftStatus` for preflight.
 
     Kept in sync with the source enum; the engine uses only the
-    ``APPROVED`` and ``APPROVAL_STALE`` members on its happy path.
+    :attr:`APPROVED` and :attr:`APPROVAL_STALE` members on its happy
+    path.
+
+    Attributes:
+        DRAFT: New draft, not yet validated.
+        VALIDATED: Validation rules executed without errors.
+        READY_TO_SUBMIT: Draft fully prepared for an attempt.
+        APPROVED: Operator-approved for submission.
+        APPROVAL_STALE: Approval timestamp aged out.
+        SUBMITTED: A submission attempt is recorded.
+        ACKNOWLEDGED: AEAT acknowledged the filing.
+        REJECTED: AEAT rejected the filing.
+        AMENDED: Superseded by an amendment record.
+        CANCELLED: Operator cancelled before submission.
     """
 
     DRAFT = "DRAFT"

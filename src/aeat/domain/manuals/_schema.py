@@ -1,21 +1,22 @@
-"""Strict pydantic v2 schema for the AEAT *Manual prÃ¡ctico* corpus.
+"""Strict pydantic v2 schema for the AEAT *Manual práctico* corpus.
 
-Every boundary-crossing record the ``aeat.domain.manuals`` subpackage reads
-from disk, writes to disk, or exposes over its public API is defined
-here. The schema is frozen and strict wherever the loader idiom
-permits it, per the project-wide pydantic v2 mandate reinforced by
-issue ``#25``.
+Every boundary-crossing record the :mod:`aeat.domain.manuals`
+subpackage reads from disk, writes to disk, or exposes over its
+public API is defined here. The schema is frozen and strict wherever
+the loader idiom permits it, per the project-wide pydantic v2
+mandate.
 
-Closed catalogues are ``enum.StrEnum``. Trilingual fields use
-``aeat.core.i18n.Translatable``. Modelo casilla cross-references are stored
-as validated strings (``MODELO_130:01`` shape) so the manuals corpus
-stays loadable even when a citation references a casilla outside the
-:class:`aeat.domain.casillas.CasillaRecord` catalogue at load time.
+Closed catalogues are :class:`enum.StrEnum`. Multilingual fields use
+:class:`aeat.core.i18n.Translatable`. Modelo casilla cross-references
+are stored as validated strings (``MODELO_130:01`` shape) so the
+manuals corpus stays loadable even when a citation references a
+casilla outside the :class:`aeat.domain.casillas.CasillaRecord`
+catalogue at load time.
 
-Spanish is the authoritative language for AEAT-domain terminology per
-the trilingual i18n ADR. Spanish-authoritative translatable fields on
-persisted records are validated at load time to guarantee the ``es``
-key is present; missing ``en`` / ``hu`` are surfaced as warnings by
+Spanish is the authoritative language for AEAT-domain terminology.
+Spanish-authoritative translatable fields on persisted records are
+validated at load time to guarantee the ``es`` key is present;
+missing ``en`` and ``hu`` translations are surfaced as warnings by
 the verification pipeline, not hard errors.
 """
 
@@ -36,17 +37,21 @@ from ..modelos import ModeloCode
 # enum (each member's value is the three-character AEAT code string), so a
 # new modelo cannot be cited from the manuals corpus without first being
 # registered in `aeat.domain.modelos`. The optional ``:<casilla>`` suffix is a
-# validated string only â€” the casilla itself need not exist in the casilla
+# validated string only - the casilla itself need not exist in the casilla
 # catalogue at load time.
 _MODELO_CODE_ALTERNATION = "|".join(member.value for member in ModeloCode)
 _MODELO_CASILLA_PATTERN = rf"^MODELO_(?:{_MODELO_CODE_ALTERNATION})(?::[0-9A-Z_]+)?$"
 
 
 class ManualId(StrEnum):
-    """Identifier for a *Manual prÃ¡ctico* volume.
+    """Identifier for a *Manual práctico* volume.
 
-    The enum is intentionally small in v1 (only the handbooks relevant
-    to an autÃ³nomo) and extensible by follow-ups.
+    The enum is intentionally small (only the handbooks relevant to an
+    autónomo) and extensible by follow-on work.
+
+    Attributes:
+        RENTA: *Manual práctico de Renta* (IRPF).
+        IVA: *Manual práctico de IVA*.
     """
 
     RENTA = "renta"
@@ -56,9 +61,11 @@ class ManualId(StrEnum):
 class ManualPart(StrEnum):
     """Volume split for a handbook within a single tax year.
 
-    ``SINGLE`` covers IVA which is published as one volume. Renta from
-    2024 onward is split into a main ``PARTE_1`` and the autonÃ³mica
-    deductions ``PARTE_2_DEDUCCIONES_AUTONOMICAS``.
+    Attributes:
+        SINGLE: One-volume handbook (covers IVA).
+        PARTE_1: Main volume of the Renta handbook (2024 onward).
+        PARTE_2_DEDUCCIONES_AUTONOMICAS: Companion volume of the Renta
+            handbook covering autonomous-community deductions.
     """
 
     SINGLE = "single"
@@ -67,7 +74,17 @@ class ManualPart(StrEnum):
 
 
 class RuleKind(StrEnum):
-    """Closed catalogue of rule categories extracted from the handbook."""
+    """Closed catalogue of rule categories extracted from the handbook.
+
+    Attributes:
+        OBLIGATION: A statutory or regulatory obligation.
+        COMPUTATION: A computation step (formula or aggregation).
+        EXEMPTION: An exemption from an otherwise-applicable rule.
+        DEDUCTION: A deduction from the tax base or quota.
+        DEADLINE: A submission or payment deadline.
+        DEFINITION: A definitional clarification of terminology.
+        EXAMPLE: A worked example drawn from the handbook.
+    """
 
     OBLIGATION = "obligation"
     COMPUTATION = "computation"
@@ -101,7 +118,7 @@ _YearField = Annotated[int, Field(ge=2000, le=2100)]
 
 
 def _require_spanish(translatable: Translatable, field_name: str) -> None:
-    """Assert a translatable carries the authoritative ``es`` key."""
+    """Assert a :class:`~aeat.core.i18n.Translatable` carries the authoritative ``es`` key."""
     if not translatable.get("es"):
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
@@ -130,14 +147,21 @@ class _StrictLoose(BaseModel):
 class LLMProvenance(_ManualStrictFrozen):
     """Record of which LLM call produced a draft extraction.
 
-    Attached to every LLM-drafted ``Rule`` so reviewers can trace the
-    origin and so follow-ups can invalidate drafts keyed on a
+    Attached to every LLM-drafted :class:`Rule` so reviewers can trace
+    the origin and so follow-on work can invalidate drafts keyed on a
     deprecated prompt template.
+
+    Attributes:
+        provider: Provider key, e.g. ``'anthropic'``.
+        model: Concrete model name used for the draft.
+        prompt_id: Named prompt from the prompt registry.
+        cache_hit: Whether the draft was served from the LLM cache.
+        extracted_at: UTC timestamp the draft was produced.
     """
 
     provider: str = Field(min_length=1, max_length=64, description="Provider key, e.g. 'anthropic'.")
     model: str = Field(min_length=1, max_length=128, description="Concrete model name used for the draft.")
-    prompt_id: str = Field(min_length=1, max_length=128, description="Named prompt from the #21 prompt registry.")
+    prompt_id: str = Field(min_length=1, max_length=128, description="Named prompt from the prompt registry.")
     cache_hit: bool = Field(description="Whether the draft was served from the LLM cache.")
     extracted_at: datetime = Field(description="UTC timestamp the draft was produced.")
 
@@ -166,11 +190,34 @@ class Paragraph(_ManualStrictFrozen):
 
 
 class Rule(_ManualStrictFrozen):
-    """A single extracted rule from the *Manual prÃ¡ctico*.
+    """A single extracted rule from the *Manual práctico*.
 
     Every persisted rule carries reviewer metadata populated by a real
     human; the verify CLI rejects rules missing those fields when
     ``AEAT_MANUALS_REVIEW_REQUIRED`` is true.
+
+    Attributes:
+        rule_id: Stable kebab-case identifier produced by
+            :func:`~aeat.domain.manuals.generate_rule_id`.
+        manual_id: Owning handbook identifier.
+        year: Tax year the rule applies to.
+        part: Volume split within the year.
+        chapter_id: Stable identifier of the owning chapter.
+        section_id: Stable identifier of the owning section.
+        kind: Closed-catalogue rule category.
+        statement: Rule statement in all supplied languages.
+        applies_when: Optional natural-language predicate describing
+            the rule's applicability.
+        references_casillas: Cross-references to modelo casillas.
+        references_sections: Cross-references to sibling sections by
+            stable id.
+        references_legal_acts: Cross-references to external legal acts
+            (BOE orders, laws).
+        source: Provenance pointer back to the source PDF.
+        extracted_by: LLM provenance for the draft extraction.
+        definition_reviewed_by: Reviewer handle who signed off on the
+            curated definition.
+        definition_reviewed_at: Date of the reviewer sign-off.
     """
 
     rule_id: _StableId
@@ -333,20 +380,24 @@ class FetchedManualPart(_ManualStrictFrozen):
 
 
 class ManualCatalogue(_StrictLoose):
-    """Aggregate view over every ``Manual`` loaded from ``corpus/manuals/``.
+    """Aggregate view over every :class:`Manual` loaded from ``corpus/manuals/``.
 
-    The catalogue is keyed by ``(manual_id, year, part)`` and exposes a
-    flat rule iterator the rest of the project consumes. It is mutable
-    because loading is incremental; individual ``Manual`` instances are
-    frozen, so callers cannot corrupt loaded records in place.
+    The catalogue is keyed by ``(manual_id, year, part)`` and exposes
+    a flat rule iterator the rest of the project consumes. It is
+    mutable because loading is incremental; individual :class:`Manual`
+    instances are frozen, so callers cannot corrupt loaded records in
+    place.
+
+    Attributes:
+        manuals: The loaded :class:`Manual` records, in load order.
     """
 
     manuals: tuple[Manual, ...] = Field(default_factory=tuple)
 
     def __iter__(self):  # type: ignore[override]
-        """Iterate over every loaded ``Manual``."""
+        """Iterate over every loaded :class:`Manual`."""
         return iter(self.manuals)
 
     def __len__(self) -> int:
-        """Return the number of loaded ``Manual`` records."""
+        """Return the number of loaded :class:`Manual` records."""
         return len(self.manuals)

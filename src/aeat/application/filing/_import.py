@@ -1,10 +1,10 @@
-"""Reconstruct a :class:`FilingDraft` from an AEAT justificante PDF (#271).
+"""Reconstruct a :class:`FilingDraft` from an AEAT justificante PDF.
 
-Kent keeps the justificante PDF of a past filing on disk. This module
-parses the PDF via :mod:`aeat.domain.justificante`, materialises an empty draft
-scaffold (every casilla ``EMPTY``) via the registered builder for the
-modelo, and co-produces a ``SubmittedFiling`` record so the import is
-usable as the baseline for amendment flows (#93, #234, #235).
+The operator keeps the justificante PDF of a past filing on disk. This
+module parses the PDF via :mod:`aeat.adapters.inbound.justificante`,
+materialises an empty draft scaffold (every casilla ``EMPTY``) via the
+registered builder for the modelo, and co-produces a ``SubmittedFiling``
+record so the import is usable as the baseline for amendment flows.
 
 No AEAT certificate authentication or network call is involved — the
 command is a pure offline transform from (PDF bytes) → (draft, submission,
@@ -21,14 +21,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
+from ...adapters.inbound.justificante import parse_justificante
 from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.filing import CasillaSchemaProvider, FilingBuilderError, FilingDraft, FilingImportError
-from ...domain.justificante import Justificante, parse_justificante
+from ...domain.justificante import Justificante
 from .runtime import FilingOperatorProfile
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.export._models import SubmittedFiling
+    from ...domain.submission import SubmittedFiling
 
 _logger = get_logger(__name__)
 
@@ -69,11 +70,11 @@ class JustificanteImportResult:
 
     Attributes:
         draft: The freshly built scaffold with every casilla empty.
-        submission: The companion :class:`aeat.adapters.outbound.aeat.export._models.SubmittedFiling`
+        submission: The companion :class:`aeat.domain.submission.SubmittedFiling`
             that lets the amendment engine treat the imported draft as a
             baseline.
-        warnings: Trilingual advisory messages. The CLI renders these so
-            Kent knows which fields still need his input.
+        warnings: Multilingual advisory messages. The CLI renders these so
+            the operator knows which fields still need input.
     """
 
     draft: FilingDraft
@@ -207,11 +208,7 @@ def _build_submission_record(
     stays stable across re-imports of the same PDF and remains distinct
     from legacy local attempt ids.
     """
-    # Deferred import: :mod:`aeat.adapters.outbound.aeat.export._models` imports
-    # ``FilingAmendment`` from :mod:`aeat.application.filing`, so pulling it in at
-    # module scope would cycle through this module while
-    # :mod:`aeat.application.filing` is still loading.
-    from ...adapters.outbound.aeat.export._models import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+    from ...domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 
     submitted_at = justificante.presented_at.replace(tzinfo=_MADRID_TZ).astimezone(UTC)
     submission_id = hashlib.sha256(f"{justificante.csv}:{draft.draft_id}".encode()).hexdigest()[:16]
